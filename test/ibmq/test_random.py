@@ -19,10 +19,10 @@ from concurrent.futures import ThreadPoolExecutor
 
 import numpy as np
 from qiskit.providers.jobstatus import JobStatus
-from qiskit.providers.ibmq.random.cqcextractor import CQCExtractor
-from qiskit.providers.ibmq.random.utils import bitarray_to_bytes
-from qiskit.providers.ibmq.random.ibmqrandomservice import IBMQRandomService
-from qiskit.providers.ibmq.exceptions import IBMQError
+from qiskit_ibm.random.cqcextractor import CQCExtractor
+from qiskit_ibm.random.utils import bitarray_to_bytes
+from qiskit_ibm.random.ibmqrandomservice import IBMQRandomService
+from qiskit_ibm.exceptions import IBMQError
 
 from ..ibmqtestcase import IBMQTestCase
 from ..decorators import requires_provider

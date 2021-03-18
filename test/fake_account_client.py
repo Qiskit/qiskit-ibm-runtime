@@ -20,8 +20,8 @@ import uuid
 from concurrent.futures import ThreadPoolExecutor, wait
 
 from qiskit.test.mock.backends.poughkeepsie.fake_poughkeepsie import FakePoughkeepsie
-from qiskit.providers.ibmq.apiconstants import ApiJobStatus, API_JOB_FINAL_STATES
-from qiskit.providers.ibmq.api.exceptions import RequestsApiError, UserTimeoutExceededError
+from qiskit_ibm.apiconstants import ApiJobStatus, API_JOB_FINAL_STATES
+from qiskit_ibm.api.exceptions import RequestsApiError, UserTimeoutExceededError
 
 
 VALID_RESULT_RESPONSE = {

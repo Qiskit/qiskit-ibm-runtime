@@ -23,10 +23,11 @@ from dateutil import tz
 from qiskit.test import slow_test
 from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit.providers.jobstatus import JobStatus, JOB_FINAL_STATES
-from qiskit.providers.ibmq.job.exceptions import IBMQJobFailureError
-from qiskit.providers.ibmq.api.clients.account import AccountClient
-from qiskit.providers.ibmq.exceptions import IBMQBackendValueError, IBMQBackendApiProtocolError
 from qiskit.compiler import transpile
+
+from qiskit_ibm.job.exceptions import IBMQJobFailureError
+from qiskit_ibm.api.clients.account import AccountClient
+from qiskit_ibm.exceptions import IBMQBackendValueError, IBMQBackendApiProtocolError
 
 from ..ibmqtestcase import IBMQTestCase
 from ..decorators import requires_provider, requires_device

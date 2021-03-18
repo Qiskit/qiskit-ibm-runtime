@@ -1,6 +1,6 @@
-.. _qiskit-providers-ibmq:
+.. _qiskit_ibm:
 
-.. automodule:: qiskit.providers.ibmq
+.. automodule:: qiskit_ibm
    :no-members:
    :no-inherited-members:
    :no-special-members:

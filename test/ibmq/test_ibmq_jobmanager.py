@@ -22,10 +22,10 @@ from datetime import datetime, timedelta
 from qiskit import QuantumCircuit
 from qiskit.result import Result
 
-from qiskit.providers.ibmq.managed.ibmqjobmanager import IBMQJobManager
-from qiskit.providers.ibmq.managed.managedresults import ManagedResults
-from qiskit.providers.ibmq.managed import managedjob
-from qiskit.providers.ibmq.managed.exceptions import (
+from qiskit_ibm.managed.ibmqjobmanager import IBMQJobManager
+from qiskit_ibm.managed.managedresults import ManagedResults
+from qiskit_ibm.managed import managedjob
+from qiskit_ibm.managed.exceptions import (
     IBMQJobManagerJobNotFound, IBMQManagedResultDataNotAvailable)
 from qiskit.providers.jobstatus import JobStatus
 from qiskit.test.reference_circuits import ReferenceCircuits

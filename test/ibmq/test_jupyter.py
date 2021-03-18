@@ -17,15 +17,15 @@ from datetime import datetime, timedelta
 
 from qiskit import transpile
 from qiskit.test.reference_circuits import ReferenceCircuits
-from qiskit.providers.ibmq.jupyter.qubits_widget import qubits_tab
-from qiskit.providers.ibmq.jupyter.config_widget import config_tab
-from qiskit.providers.ibmq.jupyter.gates_widget import gates_tab
-from qiskit.providers.ibmq.jupyter.jobs_widget import jobs_tab
-from qiskit.providers.ibmq.visualization.interactive.error_map import iplot_error_map
-from qiskit.providers.ibmq.jupyter.dashboard.backend_widget import make_backend_widget
-from qiskit.providers.ibmq.jupyter.dashboard.utils import BackendWithProviders
-from qiskit.providers.ibmq.jupyter.dashboard.job_widgets import create_job_widget
-from qiskit.providers.ibmq.jupyter.dashboard.watcher_monitor import _job_checker
+from qiskit_ibm.jupyter.qubits_widget import qubits_tab
+from qiskit_ibm.jupyter.config_widget import config_tab
+from qiskit_ibm.jupyter.gates_widget import gates_tab
+from qiskit_ibm.jupyter.jobs_widget import jobs_tab
+from qiskit_ibm.visualization.interactive.error_map import iplot_error_map
+from qiskit_ibm.jupyter.dashboard.backend_widget import make_backend_widget
+from qiskit_ibm.jupyter.dashboard.utils import BackendWithProviders
+from qiskit_ibm.jupyter.dashboard.job_widgets import create_job_widget
+from qiskit_ibm.jupyter.dashboard.watcher_monitor import _job_checker
 
 from ..decorators import requires_provider
 from ..ibmqtestcase import IBMQTestCase

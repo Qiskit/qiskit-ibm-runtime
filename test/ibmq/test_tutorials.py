@@ -17,11 +17,12 @@ import os
 import glob
 import warnings
 
+from qiskit.test.decorators import TEST_OPTIONS
+
 import nbformat
 from nbconvert.preprocessors import ExecutePreprocessor
 
-from qiskit.test.decorators import TEST_OPTIONS
-from qiskit.providers.ibmq.utils.utils import to_python_identifier
+from qiskit_ibm.utils.utils import to_python_identifier
 
 from ..ibmqtestcase import IBMQTestCase
 

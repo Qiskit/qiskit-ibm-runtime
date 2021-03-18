@@ -17,11 +17,11 @@ import subprocess
 
 from requests.exceptions import ProxyError
 
-from qiskit.providers.ibmq import IBMQFactory
-from qiskit.providers.ibmq.api.clients import (AuthClient,
-                                               VersionClient)
-from qiskit.providers.ibmq.api.exceptions import RequestsApiError
-from qiskit.providers.ibmq.credentials import Credentials
+from qiskit_ibm import IBMQFactory
+from qiskit_ibm.api.clients import (AuthClient,
+                                    VersionClient)
+from qiskit_ibm.api.exceptions import RequestsApiError
+from qiskit_ibm.credentials import Credentials
 from ..ibmqtestcase import IBMQTestCase
 from ..decorators import requires_qe_access
 

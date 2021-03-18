@@ -18,11 +18,12 @@ from typing import Any, Dict, Optional
 import dateutil.parser
 from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit.test import slow_test
-from qiskit.providers.ibmq import least_busy
 from qiskit import transpile, schedule, QuantumCircuit
-from qiskit.providers.ibmq.utils.json_encoder import IQXJsonEncoder
 from qiskit.circuit import Parameter
 from qiskit.version import VERSION as terra_version
+
+from qiskit_ibm import least_busy
+from qiskit_ibm.utils.json_encoder import IQXJsonEncoder
 
 from ..decorators import requires_provider
 from ..utils import cancel_job

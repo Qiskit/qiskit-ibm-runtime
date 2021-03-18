@@ -19,11 +19,11 @@ from qiskit.test import providers, slow_test
 from qiskit.compiler import transpile
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.models.backendproperties import BackendProperties
-from qiskit.providers.ibmq.accountprovider import AccountProvider
-from qiskit.providers.ibmq.ibmqbackend import IBMQSimulator, IBMQBackend
-from qiskit.providers.ibmq.ibmqbackendservice import IBMQBackendService
-from qiskit.providers.ibmq.experiment import IBMExperimentService
-from qiskit.providers.ibmq.random.ibmqrandomservice import IBMQRandomService
+from qiskit_ibm.accountprovider import AccountProvider
+from qiskit_ibm.ibmqbackend import IBMQSimulator, IBMQBackend
+from qiskit_ibm.ibmqbackendservice import IBMQBackendService
+from qiskit_ibm.experiment import IBMExperimentService
+from qiskit_ibm.random.ibmqrandomservice import IBMQRandomService
 
 from ..decorators import requires_provider, requires_device
 from ..ibmqtestcase import IBMQTestCase

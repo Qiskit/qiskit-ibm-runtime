@@ -1,6 +1,6 @@
-# Qiskit IBM Quantum Provider
+# Qiskit IBM Provider
 
-[![License](https://img.shields.io/github/license/Qiskit/qiskit-ibmq-provider.svg?style=popout-square)](https://opensource.org/licenses/Apache-2.0)[![Build Status](https://img.shields.io/travis/com/Qiskit/qiskit-ibmq-provider/master.svg?style=popout-square)](https://travis-ci.com/Qiskit/qiskit-ibmq-provider)[![](https://img.shields.io/github/release/Qiskit/qiskit-ibmq-provider.svg?style=popout-square)](https://github.com/Qiskit/qiskit-ibmq-provider/releases)[![](https://img.shields.io/pypi/dm/qiskit-ibmq-provider.svg?style=popout-square)](https://pypi.org/project/qiskit-ibmq-provider/)
+[![License](https://img.shields.io/github/license/Qiskit-Partners/qiskit-ibm.svg?style=popout-square)](https://opensource.org/licenses/Apache-2.0)[![Build Status](https://img.shields.io/travis/com/Qiskit-Partners/qiskit-ibm/master.svg?style=popout-square)](https://travis-ci.com/Qiskit-Partners/qiskit-ibm)[![](https://img.shields.io/github/release/Qiskit-Partners/qiskit-ibm.svg?style=popout-square)](https://github.com/Qiskit-Partners/qiskit-ibm/releases)[![](https://img.shields.io/pypi/dm/qiskit-ibm.svg?style=popout-square)](https://pypi.org/project/qiskit-ibm/)
 
 **Qiskit** is an open-source SDK for working with quantum computers at the level of circuits, algorithms, and application modules.
 
@@ -25,12 +25,6 @@ To install from source, follow the instructions in the
 ## Setting up the IBM Quantum Provider
 
 Once the package is installed, you can access the provider from Qiskit.
-
-> **Note**: Since November 2019 (and with version `0.4` of this
-> `qiskit-ibmq-provider` package / version `0.14` of the `qiskit` package)
-> legacy Quantum Experience or QConsole (v1) accounts are no longer supported.
-> If you are still using a v1 account, please follow the steps described in
-> [update instructions](#updating-to-the-new-IBM-Q-Experience) to update your account.
 
 ### Configure your IBM Quantum Experience credentials
 
@@ -227,13 +221,13 @@ project at different levels. If you use Qiskit, please cite as per the included
 [IBM Quantum Experience]: https://quantum-computing.ibm.com
 [IBM Quantum Experience login page]:  https://quantum-computing.ibm.com/login
 [IBM Quantum Experience account page]: https://quantum-computing.ibm.com/account
-[contribution guidelines]: https://github.com/Qiskit/qiskit-ibmq-provider/blob/master/CONTRIBUTING.md
-[code of conduct]: https://github.com/Qiskit/qiskit-ibmq-provider/blob/master/CODE_OF_CONDUCT.md
-[GitHub issues]: https://github.com/Qiskit/qiskit-ibmq-provider/issues
+[contribution guidelines]: https://github.com/Qiskit-Partners/qiskit-ibm/blob/master/CONTRIBUTING.md
+[code of conduct]: https://github.com/Qiskit-Partners/qiskit-ibm/blob/master/CODE_OF_CONDUCT.md
+[GitHub issues]: https://github.com/Qiskit-Partners/qiskit-ibm/issues
 [slack]: https://qiskit.slack.com
 [Qiskit.org]: https://qiskit.org
 [Stack Exchange]: https://quantumcomputing.stackexchange.com/questions/tagged/qiskit
 [Qiskit Tutorial]: https://github.com/Qiskit/qiskit-tutorial
-[many people]: https://github.com/Qiskit/qiskit-ibmq-provider/graphs/contributors
+[many people]: https://github.com/Qiskit-Partners/qiskit-ibm/graphs/contributors
 [BibTeX file]: https://github.com/Qiskit/qiskit/blob/master/Qiskit.bib
-[Apache License 2.0]: https://github.com/Qiskit/qiskit-ibmq-provider/blob/master/LICENSE.txt
+[Apache License 2.0]: https://github.com/Qiskit-Partners/qiskit-ibm/blob/master/LICENSE.txt

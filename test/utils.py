@@ -24,10 +24,10 @@ from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit.pulse import Schedule
 from qiskit.providers.exceptions import JobError
 from qiskit.providers.jobstatus import JobStatus
-from qiskit.providers.ibmq.ibmqfactory import IBMQFactory
-from qiskit.providers.ibmq.accountprovider import AccountProvider
-from qiskit.providers.ibmq.ibmqbackend import IBMQBackend
-from qiskit.providers.ibmq.job import IBMQJob
+from qiskit_ibm.ibmqfactory import IBMQFactory
+from qiskit_ibm.accountprovider import AccountProvider
+from qiskit_ibm.ibmqbackend import IBMQBackend
+from qiskit_ibm.job import IBMQJob
 
 
 def setup_test_logging(logger: logging.Logger, filename: str):

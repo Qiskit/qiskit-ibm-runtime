@@ -56,7 +56,7 @@ The current categories for each label are as follows:
 ### Release Notes
 
 When making any end user facing changes in a contribution we have to make sure
-we document that when we release a new version of qiskit-ibmq-provider. The
+we document that when we release a new version of qiskit-ibm. The
 expectation is that if your code contribution has user facing changes that you
 will write the release documentation for these changes. This documentation must
 explain what was changed, why it was changed, and how users can either use or
@@ -155,7 +155,7 @@ as:
 fixes:
   - |
     Fixes a race condition in the function ``foo()``. Refer to
-    `#12345 <https://github.com/Qiskit/qiskit-ibmq-provider/issues/12345>`_ for
+    `#12345 <https://github.com/Qiskit-Partners/qiskit-ibm/issues/12345>`_ for
     more details.
 ```
 
@@ -183,7 +183,7 @@ https://github.com/Qiskit/qiskit/blob/master/docs/release_notes.rst)
 
 #### Building release notes locally
 
-Building The release notes are part of the standard qiskit-ibmq-provider
+Building The release notes are part of the standard qiskit-ibm
 documentation builds. To check what the rendered html output of the release
 notes will look like for the current state of the repo you can run:
 `tox -edocs` which will build all the documentation into `docs/_build/html`
@@ -278,7 +278,7 @@ out$> make mypy
 
 ### Development Cycle
 
-The development cycle for qiskit-ibmq-provider  is all handled in the open using
+The development cycle for qiskit-ibm  is all handled in the open using
 the project boards in Github for project management. We use milestones
 in Github to track work for specific releases. The features or other changes
 that we want to include in a release will be tagged and discussed in Github.
@@ -289,12 +289,12 @@ previous version in the release notes.
 
 * `master`:
 
-The master branch is used for development of the next version of qiskit-ibmq-provider.
+The master branch is used for development of the next version of qiskit-ibm.
 It will be updated frequently and should not be considered stable. The API
 can and will change on master as we introduce and refine new features.
 
 * `stable/*` branches:
-Branches under `stable/*` are used to maintain released versions of qiskit-ibmq-provider.
+Branches under `stable/*` are used to maintain released versions of qiskit-ibm.
 It contains the version of the code corresponding to the latest release for
 that minor version on pypi. For example, stable/0.8 contains the code for the
 0.8.2 release on pypi. The API on these branches are stable and the only changes
@@ -302,7 +302,7 @@ merged to it are bugfixes.
 
 ### Release cycle
 
-When it is time to release a new minor version of qiskit-ibmq-provider we will:
+When it is time to release a new minor version of qiskit-ibm we will:
 
 1.  Create a new tag with the version number and push it to github
 2.  Change the `master` version to the next release version.

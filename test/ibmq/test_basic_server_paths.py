@@ -17,9 +17,10 @@ from datetime import datetime, timedelta
 
 from qiskit import transpile
 from qiskit.test import slow_test
-from qiskit.providers.ibmq import least_busy
-from qiskit.providers.ibmq.exceptions import IBMQBackendJobLimitError
 from qiskit.test.reference_circuits import ReferenceCircuits
+
+from qiskit_ibm import least_busy
+from qiskit_ibm.exceptions import IBMQBackendJobLimitError
 
 from ..decorators import requires_providers
 from ..ibmqtestcase import IBMQTestCase

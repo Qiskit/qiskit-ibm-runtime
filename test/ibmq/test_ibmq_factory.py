@@ -16,16 +16,16 @@ import os
 from unittest import skipIf, mock
 from configparser import ConfigParser
 
-from qiskit.providers.ibmq.accountprovider import AccountProvider
-from qiskit.providers.ibmq import accountprovider
-from qiskit.providers.ibmq.api.exceptions import RequestsApiError
-from qiskit.providers.ibmq.api.clients import AccountClient
-from qiskit.providers.ibmq.exceptions import (IBMQAccountError, IBMQAccountValueError,
-                                              IBMQAccountCredentialsInvalidUrl,
-                                              IBMQAccountCredentialsInvalidToken)
-from qiskit.providers.ibmq import ibmqfactory
-from qiskit.providers.ibmq.ibmqfactory import IBMQFactory, QX_AUTH_URL
-from qiskit.providers.ibmq.credentials.hubgroupproject import HubGroupProject
+from qiskit_ibm.accountprovider import AccountProvider
+from qiskit_ibm import accountprovider
+from qiskit_ibm.api.exceptions import RequestsApiError
+from qiskit_ibm.api.clients import AccountClient
+from qiskit_ibm.exceptions import (IBMQAccountError, IBMQAccountValueError,
+                                   IBMQAccountCredentialsInvalidUrl,
+                                   IBMQAccountCredentialsInvalidToken)
+from qiskit_ibm import ibmqfactory
+from qiskit_ibm.ibmqfactory import IBMQFactory, QX_AUTH_URL
+from qiskit_ibm.credentials.hubgroupproject import HubGroupProject
 
 from ..ibmqtestcase import IBMQTestCase
 from ..decorators import requires_qe_access

@@ -20,10 +20,10 @@ from functools import partialmethod
 
 from qiskit.test.base import BaseQiskitTestCase
 
-from qiskit.providers.ibmq import IBMQ_PROVIDER_LOGGER_NAME
-from qiskit.providers.ibmq.exceptions import IBMQAccountCredentialsNotFound
-from qiskit.providers.ibmq.api.clients.account import AccountClient
-from qiskit.providers.ibmq.apiconstants import ApiJobStatus, API_JOB_FINAL_STATES
+from qiskit_ibm import IBMQ_PROVIDER_LOGGER_NAME
+from qiskit_ibm.exceptions import IBMQAccountCredentialsNotFound
+from qiskit_ibm.api.clients.account import AccountClient
+from qiskit_ibm.apiconstants import ApiJobStatus, API_JOB_FINAL_STATES
 
 from .utils import setup_test_logging
 
@@ -42,7 +42,7 @@ class IBMQTestCase(BaseQiskitTestCase):
     @classmethod
     def tearDownClass(cls) -> None:
         super().tearDownClass()
-        from qiskit.providers.ibmq import IBMQ
+        from qiskit_ibm import IBMQ
         try:
             IBMQ.disable_account()
         except IBMQAccountCredentialsNotFound:

@@ -1,6 +1,6 @@
-.. _qiskit-providers-ibmq-visualization:
+.. _qiskit_ibm-visualization:
 
-.. automodule:: qiskit.providers.ibmq.visualization
+.. automodule:: qiskit_ibm.visualization
    :no-members:
    :no-inherited-members:
    :no-special-members:

@@ -1,6 +1,6 @@
-.. _qiskit-providers-ibmq-job:
+.. _qiskit_ibm-job:
 
-.. automodule:: qiskit.providers.ibmq.job
+.. automodule:: qiskit_ibm.job
    :no-members:
    :no-inherited-members:
    :no-special-members:

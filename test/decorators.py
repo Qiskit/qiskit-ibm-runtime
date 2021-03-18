@@ -32,12 +32,12 @@ from unittest import SkipTest
 from typing import Optional
 
 from qiskit.test.testing_options import get_test_options
-from qiskit.providers.ibmq import least_busy
-from qiskit.providers.ibmq.ibmqfactory import IBMQFactory
-from qiskit.providers.ibmq.credentials import (Credentials,
-                                               discover_credentials)
-from qiskit.providers.ibmq.accountprovider import AccountProvider
-from qiskit.providers.ibmq import IBMQ
+from qiskit_ibm import least_busy
+from qiskit_ibm.ibmqfactory import IBMQFactory
+from qiskit_ibm.credentials import (Credentials,
+                                    discover_credentials)
+from qiskit_ibm.accountprovider import AccountProvider
+from qiskit_ibm import IBMQ
 
 
 def requires_qe_access(func):

@@ -1,6 +1,6 @@
-.. _qiskit-providers-ibmq-credentials:
+.. _qiskit_ibm-credentials:
 
-.. automodule:: qiskit.providers.ibmq.credentials
+.. automodule:: qiskit_ibm.credentials
    :no-members:
    :no-inherited-members:
    :no-special-members:

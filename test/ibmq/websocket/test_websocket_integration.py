@@ -20,8 +20,8 @@ from qiskit import transpile
 from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit.test import slow_test
 from qiskit.providers import JobTimeoutError
-from qiskit.providers.ibmq.api.clients import websocket
-from qiskit.providers.ibmq.api.clients import AccountClient
+from qiskit_ibm.api.clients import websocket
+from qiskit_ibm.api.clients import AccountClient
 from qiskit.providers.jobstatus import JobStatus
 
 from ...ibmqtestcase import IBMQTestCase

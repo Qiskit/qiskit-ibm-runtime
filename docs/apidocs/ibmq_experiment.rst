@@ -1,6 +1,6 @@
-.. _qiskit-providers-ibmq-experiment:
+.. _qiskit_ibm-experiment:
 
-.. automodule:: qiskit.providers.ibmq.experiment
+.. automodule:: qiskit_ibm.experiment
    :no-members:
    :no-inherited-members:
    :no-special-members:

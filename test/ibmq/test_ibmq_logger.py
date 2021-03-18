@@ -17,8 +17,8 @@ import logging
 from tempfile import NamedTemporaryFile
 from unittest import skipIf, mock
 
-from qiskit.providers.ibmq import (QISKIT_IBMQ_PROVIDER_LOG_LEVEL, QISKIT_IBMQ_PROVIDER_LOG_FILE)
-from qiskit.providers.ibmq.utils.utils import setup_logger
+from qiskit_ibm import (QISKIT_IBMQ_PROVIDER_LOG_LEVEL, QISKIT_IBMQ_PROVIDER_LOG_FILE)
+from qiskit_ibm.utils.utils import setup_logger
 
 from ..ibmqtestcase import IBMQTestCase
 

@@ -18,10 +18,9 @@ from contextlib import ContextDecorator, contextmanager
 from tempfile import NamedTemporaryFile
 from unittest.mock import patch
 
-from qiskit.providers.ibmq.credentials import configrc, Credentials
-from qiskit.providers.ibmq.credentials.environ import VARIABLES_MAP
-from qiskit.providers.ibmq import IBMQFactory
-
+from qiskit_ibm.credentials import configrc, Credentials
+from qiskit_ibm.credentials.environ import VARIABLES_MAP
+from qiskit_ibm import IBMQFactory
 
 CREDENTIAL_ENV_VARS = VARIABLES_MAP.keys()
 
