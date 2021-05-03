@@ -1,2 +1,6 @@
 
 .DS_Store
+
+docs/_build/*
+docs/stubs/*
+docs/**/_autodoc
