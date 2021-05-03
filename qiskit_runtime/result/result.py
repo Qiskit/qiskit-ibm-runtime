@@ -16,13 +16,25 @@ from qiskit.result import Result
 from qiskit.result.postprocess import _hex_to_bin
 from qiskit_runtime.classes import QuasiDistribution
 
+
 class RuntimeResult(Result):
     
     @classmethod
     def decode(cls, data):
+        """Decoding for results from Qiskit runtime jobs.
+        """
         return cls.from_dict(json.loads(data))
     
     def get_quasiprobabilities(self, experiment=None):
+        """Get quasiprobabilites associated with one or more experiments.
+
+        Parameters:
+            experiment (int or list): Indices of experiments to grab quasiprobabilities from.
+
+        Returns:
+            QuasiDistribution: Distribution for a single-experiment.
+            list: List of multiple distributions for requested list of experiments.
+        """
         if experiment is None:
             exp_keys = range(len(self.results))
         else:
@@ -38,7 +50,7 @@ class RuntimeResult(Result):
                 for key, val in hex_quasi.items():
                     quasi[_hex_to_bin(key).zfill(bit_lenth)] = val
 
-                out = QuasiDistribution(quasi)
+                out = QuasiDistribution(quasi, shots)
                 out.shots = shots
                 dict_list.append(out)
             else:
