@@ -10,7 +10,24 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Main entry point for the qiskit_runtime"""
+"""
+=======================================================
+Quantum runtime classes (:mod:`qiskit_runtime.classes`)
+=======================================================
+
+.. currentmodule:: qiskit_runtime.classes
+
+
+Distributions
+=============
+
+.. autosummary::
+   :toctree: ../stubs/
+
+   ProbDistribution
+   QuasiDistribution
+
+"""
 
 
 from .probability import ProbDistribution
