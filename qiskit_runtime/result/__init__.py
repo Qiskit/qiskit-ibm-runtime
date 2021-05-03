@@ -10,6 +10,18 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Runtime result module"""
+"""
+====================================================
+Qiskit runtime Result (:mod:`qiskit_runtime.result`)
+====================================================
+
+.. currentmodule:: qiskit_runtime.result
+
+
+.. autosummary::
+   :toctree: ../stubs/
+
+   RuntimeResult
+"""
 
 from .result import RuntimeResult

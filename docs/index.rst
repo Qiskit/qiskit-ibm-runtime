@@ -11,3 +11,4 @@ Qiskit runtime is a....
     :hidden:
   
     Classes <apidocs/classes>
+    Result <apidocs/result>

@@ -11,9 +11,9 @@
 # that they have been altered from the originals.
 
 """
-=======================================================
-Quantum runtime classes (:mod:`qiskit_runtime.classes`)
-=======================================================
+===============================================
+Runtime classes (:mod:`qiskit_runtime.classes`)
+===============================================
 
 .. currentmodule:: qiskit_runtime.classes
 
@@ -26,7 +26,6 @@ Distributions
 
    ProbDistribution
    QuasiDistribution
-
 """
 
 
