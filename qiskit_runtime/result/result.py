@@ -18,18 +18,20 @@ from qiskit_runtime.classes import QuasiDistribution
 
 
 class RuntimeResult(Result):
-    
+    """A result class for the Qiskit runtime.
+    """
     @classmethod
     def decode(cls, data):
         """Decoding for results from Qiskit runtime jobs.
         """
         return cls.from_dict(json.loads(data))
-    
+
     def get_quasiprobabilities(self, experiment=None):
         """Get quasiprobabilites associated with one or more experiments.
 
         Parameters:
-            experiment (int or list): Indices of experiments to grab quasiprobabilities from.
+            experiment (int or list): Indices of experiments to
+                                      grab quasiprobabilities from.
 
         Returns:
             QuasiDistribution: Distribution for a single-experiment.
