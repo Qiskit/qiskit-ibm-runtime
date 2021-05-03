@@ -47,6 +47,7 @@ class QuasiDistribution(dict):
         num_elems = len(sorted_probs)
         new_probs = {}
         beta = 0
+        diff = 0
         for key, val in sorted_probs.items():
             temp = val+beta/num_elems
             if temp < 0:

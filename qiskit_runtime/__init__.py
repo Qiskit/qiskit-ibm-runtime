@@ -11,3 +11,5 @@
 # that they have been altered from the originals.
 
 """Main entry point for the qiskit_runtime"""
+
+from .result import RuntimeResult

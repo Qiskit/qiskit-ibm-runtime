@@ -11,3 +11,5 @@
 # that they have been altered from the originals.
 
 """Runtime result module"""
+
+from .result import RuntimeResult
