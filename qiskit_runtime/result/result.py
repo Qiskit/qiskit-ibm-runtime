@@ -34,8 +34,9 @@ class RuntimeResult(Result):
                                       grab quasiprobabilities from.
 
         Returns:
-            QuasiDistribution: Distribution for a single-experiment.
-            list: List of multiple distributions for requested list of experiments.
+            QuasiDistribution or list: A Distribution for a single-experiment or
+                                       a list of multiple distributions for a list
+                                       of requested experiments.
         """
         if experiment is None:
             exp_keys = range(len(self.results))
