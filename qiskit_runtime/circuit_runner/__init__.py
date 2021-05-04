@@ -10,8 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Main entry point for the qiskit_runtime"""
+"""Circuit-runner helper functions"""
 
-
-from .probability import ProbDistribution
+from .result import RuntimeResult
 from .quasi import QuasiDistribution

@@ -14,7 +14,7 @@
 import json
 from qiskit.result import Result
 from qiskit.result.postprocess import _hex_to_bin
-from qiskit_runtime.classes import QuasiDistribution
+from .quasi import QuasiDistribution
 
 
 class RuntimeResult(Result):
