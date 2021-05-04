@@ -69,7 +69,8 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
     'sphinx.ext.extlinks',
-    'jupyter_sphinx'
+    'jupyter_sphinx',
+    'sphinx_automodapi.automodapi'
 ]
 html_static_path = ['_static']
 templates_path = ['_templates']
@@ -86,11 +87,9 @@ autosummary_generate = True
 # Autodoc
 # -----------------------------------------------------------------------------
 
-autodoc_default_options = {
-    'inherited-members': None,
-}
+automodsumm_inherited_members = False
 
-autoclass_content = 'both'
+autoclass_content = 'init'
 
 # If true, figures, tables and code-blocks are automatically numbered if they
 # have a caption.

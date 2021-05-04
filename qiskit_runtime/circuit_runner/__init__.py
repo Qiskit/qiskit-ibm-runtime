@@ -16,24 +16,6 @@ Circuit runner program (:mod:`qiskit_runtime.circuit_runner`)
 =============================================================
 
 .. currentmodule:: qiskit_runtime.circuit_runner
-
-Results
-=======
-
-.. autosummary::
-   :toctree: ../stubs/
-
-   RunnerResult
-
-Distributions
-=============
-
-.. autosummary::
-   :toctree: ../stubs/
-
-   ProbDistribution
-   QuasiDistribution
-
 """
 
 from .result import RunnerResult
