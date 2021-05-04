@@ -11,7 +11,7 @@
 # that they have been altered from the originals.
 
 """
-.. currentmodule:: qiskit_runtime.circuit_runner
+Qiskit circuit runner module
 """
 
 from .result import RunnerResult
