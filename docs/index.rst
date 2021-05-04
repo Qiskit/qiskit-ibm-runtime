@@ -10,5 +10,4 @@ Qiskit runtime is a....
     :caption: API documentation
     :hidden:
   
-    Classes <apidocs/classes>
-    Result <apidocs/result>
+    Circuit runner <apidocs/circuit_runner>

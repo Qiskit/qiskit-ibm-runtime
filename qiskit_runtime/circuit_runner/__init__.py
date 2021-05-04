@@ -12,7 +12,7 @@
 
 """
 =============================================================
-Circuit-runner program (:mod:`qiskit_runtime.circuit_runner`)
+Circuit runner program (:mod:`qiskit_runtime.circuit_runner`)
 =============================================================
 
 .. currentmodule:: qiskit_runtime.circuit_runner
