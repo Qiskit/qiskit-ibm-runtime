@@ -12,5 +12,5 @@
 
 """Circuit-runner helper functions"""
 
-from .result import RuntimeResult
+from .result import RunnerResult
 from .quasi import QuasiDistribution

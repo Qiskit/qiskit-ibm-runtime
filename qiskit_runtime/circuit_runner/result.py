@@ -17,7 +17,7 @@ from qiskit.result.postprocess import _hex_to_bin
 from .quasi import QuasiDistribution
 
 
-class RuntimeResult(Result):
+class RunnerResult(Result):
     """A result class for the Qiskit runtime.
     """
     @classmethod
