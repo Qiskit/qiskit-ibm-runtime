@@ -14,10 +14,10 @@
 import json
 from qiskit.result import Result
 from qiskit.result.postprocess import _hex_to_bin
-from qiskit_runtime.classes import QuasiDistribution
+from .quasi import QuasiDistribution
 
 
-class RuntimeResult(Result):
+class RunnerResult(Result):
     """A result class for the Qiskit runtime.
     """
     @classmethod
@@ -34,9 +34,8 @@ class RuntimeResult(Result):
                                       grab quasiprobabilities from.
 
         Returns:
-            QuasiDistribution or list: A Distribution for a single-experiment or
-                                       a list of multiple distributions for a list
-                                       of requested experiments.
+            QuasiDistribution: Distribution for a single-experiment.
+            list: List of multiple distributions for requested list of experiments.
         """
         if experiment is None:
             exp_keys = range(len(self.results))

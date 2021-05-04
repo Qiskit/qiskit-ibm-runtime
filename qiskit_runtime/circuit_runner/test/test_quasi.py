@@ -12,7 +12,7 @@
 
 """Test conversion to probability distribution"""
 from math import sqrt
-from qiskit_runtime.classes import QuasiDistribution
+from qiskit_runtime.circuit_runner.quasi import QuasiDistribution
 
 
 def test_known_quasi_conversion():

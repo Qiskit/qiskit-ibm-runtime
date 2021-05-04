@@ -11,12 +11,19 @@
 # that they have been altered from the originals.
 
 """
-===============================================
-Runtime classes (:mod:`qiskit_runtime.classes`)
-===============================================
+=============================================================
+Circuit-runner program (:mod:`qiskit_runtime.circuit_runner`)
+=============================================================
 
-.. currentmodule:: qiskit_runtime.classes
+.. currentmodule:: qiskit_runtime.circuit_runner
 
+Results
+=======
+
+.. autosummary::
+   :toctree: ../stubs/
+
+   RunnerResult
 
 Distributions
 =============
@@ -26,8 +33,9 @@ Distributions
 
    ProbDistribution
    QuasiDistribution
+
 """
 
-
+from .result import RunnerResult
 from .probability import ProbDistribution
 from .quasi import QuasiDistribution

@@ -9,7 +9,7 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
-"""Quasidistribution class"""
+"""mthree classes"""
 
 from math import sqrt
 from .probability import ProbDistribution
