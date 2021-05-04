@@ -1,6 +1,6 @@
-.. _qiskit_runtime-classes:
+.. _qiskit_runtime-circuit_runner:
 
-.. automodule:: qiskit_runtime.classes
+.. automodule:: qiskit_runtime.circuit_runner
    :no-members:
    :no-inherited-members:
    :no-special-members:
