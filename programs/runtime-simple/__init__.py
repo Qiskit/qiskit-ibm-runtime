@@ -11,5 +11,3 @@
 # that they have been altered from the originals.
 
 """Package containing ``runtime-simple`` runtime program."""
-
-from .runtime_simple import RuntimeResult
