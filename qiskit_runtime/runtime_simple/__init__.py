@@ -10,4 +10,4 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Package containing ``runtime-simple`` runtime program."""
+"""Package containing ``runtime-simple`` Qiskit quantum program."""
