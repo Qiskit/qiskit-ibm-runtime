@@ -5,7 +5,7 @@
   "version": "1.0",
   "backend_requirements": {"min_num_qubits":  5},
   "parameters": [
-    {"name": "iterations", "description": "Number of iterations to run. Each iteration generates a runs a random circuit.", "type": "int", "required": true}
+    {"name": "iterations", "description": "Number of iterations to run. Each iteration generates and runs a random circuit.", "type": "int", "required": true}
   ],
   "return_values": [
     {"name": "-", "description": "A string that says 'All done!'.", "type": "string"}
