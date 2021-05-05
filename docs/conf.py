@@ -70,7 +70,6 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.extlinks',
     'jupyter_sphinx',
-    'sphinx_automodapi.automodapi'
 ]
 html_static_path = ['_static']
 templates_path = ['_templates']
@@ -86,8 +85,6 @@ autosummary_generate = True
 # -----------------------------------------------------------------------------
 # Autodoc
 # -----------------------------------------------------------------------------
-
-automodsumm_inherited_members = False
 
 autoclass_content = 'init'
 

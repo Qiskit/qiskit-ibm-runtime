@@ -1,5 +1,4 @@
 Sphinx>=3.3
-sphinx-automodapi
 sphinx-autodoc-typehints
 jupyter-sphinx
 qiskit-sphinx-theme>=1.8.0
