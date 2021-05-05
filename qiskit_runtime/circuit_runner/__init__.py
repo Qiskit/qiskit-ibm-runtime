@@ -10,7 +10,10 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Circuit-runner helper functions"""
+"""
+Qiskit circuit runner module
+"""
 
 from .result import RunnerResult
+from .probability import ProbDistribution
 from .quasi import QuasiDistribution
