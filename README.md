@@ -1,4 +1,8 @@
-# qiskit-runtime
+# Qiskit Runtime
+
+[![License](https://img.shields.io/github/license/Qiskit/qiskit-terra.svg?style=popout-square)](https://opensource.org/licenses/Apache-2.0)
+[![](https://img.shields.io/github/release/Qiskit-Partners/qiskit-runtime.svg?style=popout-square)](https://github.com/Qiskit-Partners/qiskit-runtime/releases)
+[![](https://img.shields.io/pypi/dm/qiskit-runtime.svg?style=popout-square)](https://pypi.org/project/qiskit-runtime/)
 
 **Qiskit Runtime** is a new architecture offered by IBM Quantum that significantly reduces waiting time during 
 computational iterations. You can execute your experiments near the quantum hardware, without 
@@ -11,7 +15,7 @@ authorized users can then invoke these quantum programs by simply passing in the
 
 ---
 
-:warning: Qiskit Runtime is currently in private beta for members of the IBM Quantum Network — 
+:warning:  Qiskit Runtime is currently in private beta for members of the IBM Quantum Network — 
 but check back, as we’ll be releasing it publicly soon!
 
 ---
@@ -28,7 +32,7 @@ PIP will handle all dependencies automatically and you will always install the l
 
 ## Executing a runtime program
 
-#### Configuring your IBM Quantum credentials
+### Configuring your IBM Quantum credentials
 
 Before you can start using Qiskit Runtime, make sure you have an [IBM Quantum](https://quantum-computing.ibm.com)
 account. If this is 
@@ -37,7 +41,7 @@ your first time using IBM Quantum or Qiskit, please refer to the instruction in 
 repository to configure your IBM Quantum credentials.
 
 
-#### Finding available programs
+### Finding available programs
 
 To list all available programs:
 
@@ -72,7 +76,7 @@ runtime-simple:
   Max execution time: 300
   Parameters:
     - iterations:
-      Description: Number of iterations to run. Each iteration generates a runs a random circuit.
+      Description: Number of iterations to run. Each iteration generates and runs a random circuit.
       Type: int
       Required: True
   Interim results:
@@ -88,14 +92,14 @@ runtime-simple:
       Type: string
 ```
 
-`runtime-simple`, as the name suggests, is a small and simple program used mainly for testing. 
+`runtime-simple`, as the name suggests, is a simple program used mainly for testing. 
 It takes only 1 input parameter `iterations`, which indicates how many iterations to run. 
 For each iteration it generates and runs a random 5-qubit circuit and returns the counts as well 
 as the iteration number as the interim results. When the program finishes, it returns the sentence 
 `All done!`. This program has a maximum execution time of 300 seconds, after which the execution will
 be forcibly terminated.  
 
-#### Executing the `runtime-simple` program
+### Executing the `runtime-simple` program
 
 Because `runtime-simple` provides interim results, which are results available to you while the program is
 still running, we want to first define a callback function that would handle these interim results:
@@ -106,7 +110,8 @@ def interim_result_callback(job_id, interim_result):
 ``` 
 
 When an interim result is available, this callback function will be invoked and the result data passed to it.
-Not all programs provide interim results, and you don't have to provide a callback even if the program you're executing does.
+Not all programs provide interim results, and you don't have to provide a callback even if the program you're 
+executing does provide them.
 
 To run the `runtime-simple` program:
 
@@ -125,7 +130,7 @@ print(f"job ID: {job.job_id()}")
 result = job.result()
 ```
 
-#### Deleting your job
+### Deleting your job
 
 While not strictly necessary, deleting unwanted jobs can help with performance when you want to query
 for old jobs. To delete a job:
@@ -136,7 +141,7 @@ provider.runtime.delete_job('JOB_ID')
 
 ## Limitations
 
-#### Payload size
+### Payload size
 
 Qiskit Runtime is still in beta mode, so there is a limit of 127KB on the size of the payload you can send 
 to a program. To check the size of your payload:
@@ -158,12 +163,12 @@ print(f"input payload size={sys.getsizeof(serialized)}")  # Size needs to be sma
 If your payload is too large, you'll get an error message `'exec user process caused "argument list too long"'`.
 
 
-#### Backends
+### Backends
 
 Currently the only backend that support Qiskit Runtime is `ibmq_montreal`.
 
 
-#### API
+### API
 
 Qiskit Runtime is still in beta mode, and heavy modifications to both functionality and API 
 are likely to occur. Some of the changes might not be backward compatible and would require updating
