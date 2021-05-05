@@ -9,12 +9,20 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
+"""Class for probability distributions."""
 
-"""Main entry point for the qiskit_runtime"""
+from math import sqrt
 
 
-try:
-    from .version import version as __version__
-except ImportError:
-    __version__ = '0.0.0'
+class ProbDistribution(dict):
+    """A generic dict-like class for probability distributions.
+    """
+    def __init__(self, data, shots=None):
+        """Builds a probability distribution object.
 
+        Parameters:
+            data (dict): Input probability data.
+            shots (int): Number of shots the distribution was derived from.
+        """
+        self.shots = shots
+        super().__init__(data)

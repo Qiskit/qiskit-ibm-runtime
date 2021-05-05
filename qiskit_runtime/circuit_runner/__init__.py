@@ -10,11 +10,30 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Main entry point for the qiskit_runtime"""
+"""
+Qiskit circuit runner module
+============================
 
+.. currentmodule:: qiskit_runtime.circuit_runner
 
-try:
-    from .version import version as __version__
-except ImportError:
-    __version__ = '0.0.0'
+Result class
+--------------
 
+.. autosummary::
+   :toctree: ../stubs/
+
+    RunnerResult
+
+Distributions
+-------------
+
+.. autosummary::
+   :toctree: ../stubs/
+
+    ProbDistribution
+    QuasiDistribution
+"""
+
+from .result import RunnerResult
+from .probability import ProbDistribution
+from .quasi import QuasiDistribution
