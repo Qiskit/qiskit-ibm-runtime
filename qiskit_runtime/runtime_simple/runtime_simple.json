@@ -4,12 +4,9 @@
   "max_execution_time": 300,
   "version": 1.0,
   "backend_requirements": {"min_num_qubits":  5},
-  "parameters": {
-    "schema": {},
-    "doc": [
-      {"name": "iterations", "description": "Number of iterations to run. Each iteration generates a runs a random circuit.", "type": "int", "required": true}
-    ]
-  },
+  "parameters": [
+    {"name": "iterations", "description": "Number of iterations to run. Each iteration generates a runs a random circuit.", "type": "int", "required": true}
+  ],
   "return_values": [
     {"name": "-", "description": "A string that says 'All done!'.", "type": "string"}
   ],
