@@ -1,2 +1,2 @@
 qiskit-terra>=0.17
-qiskit-ibmq-provider>=0.12
+qiskit-ibmq-provider>=0.13
