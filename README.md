@@ -8,7 +8,10 @@
 computational iterations. You can execute your experiments near the quantum hardware, without 
 the interactions of multiple layers of classical and quantum hardware slowing it down.
 
-With Qiskit Runtime, authorized users can upload their Qiskit quantum programs for themselves or 
+Using Qiskit Runtime, for example, a research team at IBM Quantum was able to achieve 120x speed 
+up in their lithium hydride simulation (link to come). 
+
+Qiskit Runtime allows authorized users to upload their Qiskit quantum programs for themselves or 
 others to use. A Qiskit quantum program, also called a Qiskit runtime program, is a piece of Python code that takes certain inputs, performs
 quantum and maybe classical computation, and returns the processing results. The same or other
 authorized users can then invoke these quantum programs by simply passing in the required input parameters.
