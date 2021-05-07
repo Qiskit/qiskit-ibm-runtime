@@ -88,8 +88,8 @@
 
       <div class="main-menu">
         <ul>
-          <li {%- if pagename == 'getting_started' %} class="active"{% endif %}>
-            <a href="{{ pathto('getting_started') }}">Getting started</a>
+          <li {%- if pagename == 'docs' %} class="active"{% endif %}>
+            <a href="{{ theme_variables.external_urls['docs'] }}">Qiskit documentation</a>
           </li>
 
           <li {%- if pagename == 'tutorials' %} class="active"{% endif %}>
@@ -325,7 +325,7 @@
       <div class="main-menu">
         <ul>
           <li>
-            <a href="{{ pathto('getting_started') }}">Getting Started</a>
+            <a href="{{ theme_variables.external_urls['docs'] }}">Qiskit documentation</a>
           </li>
           <li>
             <a href="{{ pathto('tutorials') }}">Tutorials</a>

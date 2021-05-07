@@ -23,11 +23,10 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
-
 import os
+import sys
+sys.path.insert(0, os.path.abspath('.'))
+
 import re
 import warnings
 import shutil
@@ -69,12 +68,16 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
     'sphinx.ext.extlinks',
+    'nbsphinx',
     'jupyter_sphinx',
 ]
 html_static_path = ['_static']
 templates_path = ['_templates']
 html_css_files = ['gallery.css']
-
+nbsphinx_timeout = 300
+nbsphinx_execute = 'never'
+nbsphinx_widgets_path = ''
+html_sourcelink_suffix = ''
 exclude_patterns = ['_build', '**.ipynb_checkpoints']
 
 # -----------------------------------------------------------------------------
