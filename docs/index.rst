@@ -13,6 +13,9 @@ require many iterations of circuit executions and classical processing.  Program
 category are common, and span a wide variety of applications spaces including chemistry,
 machine learning, and optimization.  
 
+.. figure:: images/runtime_arch.png
+    :align: center
+
 In general, most users of the Qiskit runtime execute programs that are predefined
 and specified using a program name and a small number of input arguments, e.g.:
 
@@ -37,6 +40,7 @@ For additional information and usage examples see the :ref:`tutorials` page.
     :hidden:
 
     self
+    REST API <https://runtime-us-east.quantum-computing.ibm.com/openapi/>
 
 
 .. toctree::

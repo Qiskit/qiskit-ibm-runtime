@@ -133,6 +133,13 @@ html_theme = "qiskit_sphinx_theme"
 #html_sidebars = {'**': ['globaltoc.html']}
 html_last_updated_fmt = '%Y/%m/%d'
 
+html_theme_options = {
+    'logo_only': True,
+    'display_version': True,
+    'prev_next_buttons_location': 'bottom',
+    'style_external_links': True,
+}
+
 def load_tutorials(app):
     dest_dir = os.path.join(app.srcdir, 'tutorials')
     source_dir = os.path.dirname(app.srcdir)+'/tutorials'
