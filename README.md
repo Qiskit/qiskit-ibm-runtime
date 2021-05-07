@@ -28,7 +28,7 @@ but check back, as we’ll be releasing it publicly soon!
 We encourage installing via the pip tool (a python package manager):
 
 ```bash
-pip install qiskit
+pip install qiskit-runtime
 ```
 
 PIP will handle all dependencies automatically and you will always install the latest (and well-tested) version.
@@ -180,7 +180,7 @@ your Qiskit version.
 ## Next Steps
 
 This README only provides a quick overview of Qiskit Runtime. Check out the 
-[tutorials](https://github.com/Qiskit-Partners/qiskit-runtime/tree/main/docs).
+[tutorials](https://github.com/Qiskit-Partners/qiskit-runtime/tree/main/tutorials).
 The Qiskit user interface for accessing Qiskit Runtime is provided by `qiskit-ibmq-provider`, so you
 might want to also check out its [runtime API documentation](https://qiskit.org/documentation/apidoc/ibmq_runtime.html).
 
