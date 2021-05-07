@@ -1,5 +1,7 @@
 :orphan:
 
+.. _tutorials:
+
 =========
 Tutorials
 =========
