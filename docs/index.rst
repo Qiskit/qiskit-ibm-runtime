@@ -40,6 +40,7 @@ For additional information and usage examples see the :ref:`tutorials` page.
     :hidden:
 
     self
+    Current runtime limitations <limitations>
     REST API <https://runtime-us-east.quantum-computing.ibm.com/openapi/>
 
 
