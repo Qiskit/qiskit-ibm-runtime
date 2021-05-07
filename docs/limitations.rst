@@ -10,7 +10,7 @@ Runtime limitations
    IBM Quantum Network.  A general release will follow after this testing is
    completed. 
 
-- **Limited quantum systems available for qiskit runtime**
+- **Limited quantum systems available for Qiskit runtime**
    
    Currently only the *ibmq_montreal* and *ibmq_qasm_simulator* are accessible
    via the Qiskit runtime architecture.
