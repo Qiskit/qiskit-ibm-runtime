@@ -2,9 +2,9 @@
 
 [![License](https://img.shields.io/github/license/Qiskit/qiskit-terra.svg?style=popout-square)](https://opensource.org/licenses/Apache-2.0)
 
-**Qiskit Runtime** is a new architecture offered by IBM Quantum that significantly reduces waiting time during 
-computational iterations. You can execute your experiments near the quantum hardware, without 
-the interactions of multiple layers of classical and quantum hardware slowing it down.
+**Qiskit Runtime** is a new architecture offered by IBM Quantum that streamlines computations 
+requiring many iterations. These experiments will execute significantly faster within this 
+improved hybrid quantum/classical process.  
 
 Using Qiskit Runtime, for example, a research team at IBM Quantum was able to achieve 120x speed 
 up in their lithium hydride simulation (link to come). 
@@ -32,7 +32,7 @@ git clone https://github.com/Qiskit-Partners/qiskit-runtime.git
 cd qiskit-runtime
 pip install -r requirements.txt
 
-cd qiskit-runtime/tutorials
+cd tutorials
 jupyter notebook .
 ```
 
