@@ -52,10 +52,3 @@ For additional information and usage examples see the :ref:`tutorials` page.
   
     Circuit runner <example_scripts/circuit_runner>
     VQE <example_scripts/vqe>
-
-.. toctree::
-    :maxdepth: 1
-    :caption: API documentation
-    :hidden:
-  
-    Circuit runner <apidocs/circuit_runner>

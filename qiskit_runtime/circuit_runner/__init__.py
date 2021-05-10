@@ -12,28 +12,4 @@
 
 """
 Qiskit circuit runner module
-============================
-
-.. currentmodule:: qiskit_runtime.circuit_runner
-
-Result class
---------------
-
-.. autosummary::
-   :toctree: ../stubs/
-
-    RunnerResult
-
-Distributions
--------------
-
-.. autosummary::
-   :toctree: ../stubs/
-
-    ProbDistribution
-    QuasiDistribution
 """
-
-from .result import RunnerResult
-from .probability import ProbDistribution
-from .quasi import QuasiDistribution
