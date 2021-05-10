@@ -11,12 +11,10 @@
 # that they have been altered from the originals.
 """Class for probability distributions."""
 
-from math import sqrt
-
 
 class ProbDistribution(dict):
-    """A generic dict-like class for probability distributions.
-    """
+    """A generic dict-like class for probability distributions."""
+
     def __init__(self, data, shots=None):
         """Builds a probability distribution object.
 

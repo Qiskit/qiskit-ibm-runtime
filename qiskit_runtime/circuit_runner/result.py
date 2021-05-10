@@ -18,12 +18,11 @@ from .quasi import QuasiDistribution
 
 
 class RunnerResult(Result):
-    """A result class for the Qiskit runtime.
-    """
+    """A result class for the Qiskit runtime."""
+
     @classmethod
     def decode(cls, data):
-        """Decoding for results from Qiskit runtime jobs.
-        """
+        """Decoding for results from Qiskit runtime jobs."""
         return cls.from_dict(json.loads(data))
 
     def get_quasiprobabilities(self, experiment=None):
@@ -36,6 +35,9 @@ class RunnerResult(Result):
         Returns:
             QuasiDistribution: Distribution for a single-experiment.
             list: List of multiple distributions for requested list of experiments.
+
+        Raises:
+            Exception: If no quasiprobabilities are found for the experiment
         """
         if experiment is None:
             exp_keys = range(len(self.results))
@@ -44,13 +46,13 @@ class RunnerResult(Result):
 
         dict_list = []
         for key in exp_keys:
-            if 'quasiprobabilities' in self.data(key).keys():
+            if "quasiprobabilities" in self.data(key).keys():
                 shots = self.results[key].shots
                 hex_quasi = self.results[key].data.quasiprobabilities
                 bit_lenth = len(self.results[key].header.final_measurement_mapping)
                 quasi = {}
-                for key, val in hex_quasi.items():
-                    quasi[_hex_to_bin(key).zfill(bit_lenth)] = val
+                for hex_key, val in hex_quasi.items():
+                    quasi[_hex_to_bin(hex_key).zfill(bit_lenth)] = val
 
                 out = QuasiDistribution(quasi, shots)
                 out.shots = shots

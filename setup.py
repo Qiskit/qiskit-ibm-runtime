@@ -49,9 +49,9 @@ sys.path.insert(0, os.path.join(local_path, 'qiskit_runtime'))  # to retrive _ve
 def write_version_py(filename='qiskit_runtime/version.py'):
     cnt = """\
 # THIS FILE IS GENERATED FROM QISKIT_RUNTIME SETUP.PY
-# pylint: disable=missing-module-docstring
-short_version = '%(version)s'
-version = '%(fullversion)s'
+# pylint: disable=missing-module-docstring,invalid-name
+short_version = "%(version)s"
+version = "%(fullversion)s"
 release = %(isrelease)s
 """
     a = open(filename, 'w')

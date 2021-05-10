@@ -18,27 +18,42 @@ This is a simplified version of the circuit-runner program.
 from qiskit.compiler import transpile, schedule
 
 
-def main(backend, user_messenger, circuits,
-         initial_layout=None, seed_transpiler=None, optimization_level=None,
-         transpiler_options=None, scheduling_method=None,
-         schedule_circuit=False, inst_map=None, meas_map=None,
-         measurement_error_mitigation=False,
-         **kwargs):
+def main(
+    backend,
+    user_messenger,
+    circuits,
+    initial_layout=None,
+    seed_transpiler=None,
+    optimization_level=None,
+    transpiler_options=None,
+    scheduling_method=None,
+    schedule_circuit=False,
+    inst_map=None,
+    meas_map=None,
+    measurement_error_mitigation=False,
+    **kwargs,
+):
+    """Run the circuits on the backend."""
 
     # transpiling the circuits using given transpile options
     transpiler_options = transpiler_options or {}
-    circuits = transpile(circuits,
-                         initial_layout=initial_layout,
-                         seed_transpiler=seed_transpiler,
-                         optimization_level=optimization_level,
-                         backend=backend, **transpiler_options)
+    circuits = transpile(
+        circuits,
+        initial_layout=initial_layout,
+        seed_transpiler=seed_transpiler,
+        optimization_level=optimization_level,
+        backend=backend,
+        **transpiler_options,
+    )
 
     if schedule_circuit:
-        circuits = schedule(circuits=circuits,
-                            backend=backend,
-                            inst_map=inst_map,
-                            meas_map=meas_map,
-                            method=scheduling_method)
+        circuits = schedule(
+            circuits=circuits,
+            backend=backend,
+            inst_map=inst_map,
+            meas_map=meas_map,
+            method=scheduling_method,
+        )
 
     if not isinstance(circuits, list):
         circuits = [circuits]
