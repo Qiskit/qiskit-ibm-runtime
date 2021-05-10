@@ -1,2 +1,6 @@
 qiskit-terra>=0.17
 qiskit-ibmq-provider>=0.13.0
+jupyter
+numpy
+matplotlib
+pylatexenc

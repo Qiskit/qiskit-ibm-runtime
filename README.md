@@ -1,8 +1,6 @@
 # Qiskit Runtime
 
 [![License](https://img.shields.io/github/license/Qiskit/qiskit-terra.svg?style=popout-square)](https://opensource.org/licenses/Apache-2.0)
-[![](https://img.shields.io/github/release/Qiskit-Partners/qiskit-runtime.svg?style=popout-square)](https://github.com/Qiskit-Partners/qiskit-runtime/releases)
-[![](https://img.shields.io/pypi/dm/qiskit-runtime.svg?style=popout-square)](https://pypi.org/project/qiskit-runtime/)
 
 **Qiskit Runtime** is a new architecture offered by IBM Quantum that significantly reduces waiting time during 
 computational iterations. You can execute your experiments near the quantum hardware, without 
@@ -25,16 +23,18 @@ but check back, as we’ll be releasing it publicly soon!
 
 ## Installation
 
-You need to have the last version of [Qiskit](https://qiskit.org) and of [Qiskit IBM Quantum providers](https://github.com/Qiskit/qiskit-ibmq-provider) installed, in that case you can download this repository and use Jupyter Notebook/Lab to explore the tutorial and learn how Qiskit Runtime works.
+You need to install the required packages needed for the tutorials, which are documented in `requirements.txt`.
+After that, you can download this repository and use Jupyter Notebook/Lab to explore the 
+tutorials and learn how Qiskit Runtime works.
 
-'''bash
-pip install qiskit -U
-
+```bash
 git clone https://github.com/Qiskit-Partners/qiskit-runtime.git
+cd qiskit-runtime
+pip install -r requirements.txt
 
 cd qiskit-runtime/tutorials
 jupyter notebook .
-''' 
+```
 
 ## Executing a runtime program
 
