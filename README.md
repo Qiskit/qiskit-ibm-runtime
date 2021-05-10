@@ -120,13 +120,13 @@ To run the `runtime-simple` program:
 
 ```python
 backend = provider.get_backend('ibmq_montreal')
-runtime_inputs = {
+program_inputs = {
     'iterations': 3
 }
 options = {'backend_name': backend.name()}
 job = provider.runtime.run(program_id="runtime-simple",
                            options=options,
-                           inputs=runtime_inputs,
+                           inputs=program_inputs,
                            callback=interim_result_callback
                           )
 print(f"job ID: {job.job_id()}")
@@ -155,13 +155,15 @@ import json
 from qiskit.providers.ibmq.runtime import RuntimeEncoder
 
 # This is the input parameters to be passed to the program.
-runtime_inputs = {
+program_inputs = {
     'iterations': 3
 }
 
-serialized = json.dumps(runtime_inputs, cls=RuntimeEncoder)
+serialized = json.dumps(program_inputs, cls=RuntimeEncoder)
 print(f"input payload size={sys.getsizeof(serialized)}")  # Size needs to be smaller than 130048
 ```
+
+This roughly translates into a five circuit maximum per job.
 
 If your payload is too large, you'll get an error message `'exec user process caused "argument list too long"'`.
 

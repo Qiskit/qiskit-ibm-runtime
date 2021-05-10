@@ -21,13 +21,13 @@ and specified using a program name and a small number of input arguments, e.g.:
 
 .. code-block:: python
 
-    runtime_inputs = {'circuits': circuit,
+    program_inputs = {'circuits': circuit,
                       'optimization_level': 3
                      }
     options = {'backend_name': backend.name()}
     job = provider.runtime.run(program_id="circuit-runner",
                                options=options,
-                               inputs=runtime_inputs,
+                               inputs=program_inputs,
                               )
  
 It is also possible to define custom programs and upload them to the Cloud infrastructure,
