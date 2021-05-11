@@ -5,3 +5,5 @@ jupyter
 numpy
 matplotlib
 pylatexenc
+pandas
+scikit-learn
