@@ -95,7 +95,9 @@
           <li {%- if pagename == 'tutorials' %} class="active"{% endif %}>
             <a href="{{ pathto('tutorials') }}">Tutorials</a>
           </li>
-
+          <li>
+            <a href="{{ theme_variables.external_urls['api'] }}">REST API</a>
+          </li>
           <li>
             <a href="{{ theme_variables.external_urls['docs'] }}" target="_blank">Qiskit documentation</a>
           </li>
@@ -280,6 +282,9 @@
           </li>
           <li>
             <a href="{{ pathto('tutorials') }}">Tutorials</a>
+          </li>
+          <li>
+            <a href="{{ theme_variables.external_urls['api'] }}">REST API</a>
           </li>
           <li>
             <a href="{{ theme_variables.external_urls['docs'] }}">Qiskit documentation</a>
