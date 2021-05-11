@@ -47,7 +47,7 @@ For additional information and usage examples see the :ref:`tutorials` page.
 
 .. toctree::
     :maxdepth: 1
-    :caption: Program examples
+    :caption: Example programs
     :hidden:
   
     Circuit runner <example_scripts/circuit_runner>
