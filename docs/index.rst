@@ -53,4 +53,4 @@ For additional information and usage examples see the :ref:`tutorials` page and 
     :hidden:
   
     Circuit runner <example_scripts/circuit_runner>
-    VQE <example_scripts/vqe>
+    Quantum Kernel Alignment <example_scripts/qka>
