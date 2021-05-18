@@ -5,10 +5,9 @@ Runtime limitations
 ===================
 
 - **Currently in private beta**
-   
-   The Qiskit Runtime is currently in private beta testing with members of the
-   IBM Quantum Network.  A general release will follow after this testing is
-   completed. 
+
+   The Qiskit Runtime is currently in private beta testing with premium users.
+   A general release will follow after this testing is completed.
 
 - **Limited quantum systems available for Qiskit Runtime**
    

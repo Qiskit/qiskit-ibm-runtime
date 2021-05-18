@@ -7,7 +7,8 @@ requiring many iterations. These experiments will execute significantly faster w
 improved hybrid quantum/classical process.  
 
 Using Qiskit Runtime, for example, a research team at IBM Quantum was able to achieve 120x speed 
-up in their lithium hydride simulation (link to come). 
+up in their lithium hydride simulation. For more information, see the 
+[IBM Research blog](https://research.ibm.com/blog/120x-quantum-speedup) 
 
 Qiskit Runtime allows authorized users to upload their Qiskit quantum programs for themselves or 
 others to use. A Qiskit quantum program, also called a Qiskit runtime program, is a piece of Python code that takes certain inputs, performs
@@ -16,8 +17,9 @@ authorized users can then invoke these quantum programs by simply passing in the
 
 ---
 
-:warning:  Qiskit Runtime is currently in private beta for members of the IBM Quantum Network — 
-but check back, as we’ll be releasing it publicly soon!
+:warning:  Qiskit Runtime is now available on the ``ibmq_qasm_simulator`` for all premium users to 
+try out. Some members of the IBM Quantum Network also have Qiskit Runtime access in private beta mode 
+on ``ibmq_montreal``.
 
 ---
 
@@ -173,8 +175,8 @@ If your payload is too large, you'll get an error message `'exec user process ca
 
 ### Backends
 
-Currently the only backend that support Qiskit Runtime is `ibmq_montreal`.
-
+Currently the only backends that support Qiskit Runtime are `ibmq_montreal` for select IBM Quantum
+Network users and `ibmq_qasm_simulator` for all premium users.
 
 ### API
 
