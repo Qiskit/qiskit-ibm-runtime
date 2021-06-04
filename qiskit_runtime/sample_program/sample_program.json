@@ -1,6 +1,6 @@
 {
-  "name": "runtime-simple",
-  "description": "Simple runtime program used for testing.",
+  "name": "sample-program",
+  "description": "A sample runtime program.",
   "max_execution_time": 300,
   "version": "1.0",
   "backend_requirements": {"min_num_qubits":  5},

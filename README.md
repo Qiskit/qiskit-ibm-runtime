@@ -70,15 +70,15 @@ If you know the ID of the program you're looking for, you can also print out the
 that one program:
 
 ```python
-print(provider.runtime.program('runtime-simple'))
+print(provider.runtime.program('sample-program'))
 ```
 
 The output of the code above would be:
 
 ```
-runtime-simple:
-  Name: runtime-simple
-  Description: Simple runtime program used for testing.
+sample-program:
+  Name: sample-program
+  Description: A sample runtime program.
   Version: 1
   Creation date: 2021-05-04T01:38:21Z
   Max execution time: 300
@@ -100,16 +100,16 @@ runtime-simple:
       Type: string
 ```
 
-`runtime-simple`, as the name suggests, is a simple program used mainly for testing. 
+`sample-program`, as the name suggests, is a sample program used for demonstration. 
 It takes only 1 input parameter `iterations`, which indicates how many iterations to run. 
 For each iteration it generates and runs a random 5-qubit circuit and returns the counts as well 
 as the iteration number as the interim results. When the program finishes, it returns the sentence 
 `All done!`. This program has a maximum execution time of 300 seconds, after which the execution will
 be forcibly terminated.  
 
-### Executing the `runtime-simple` program
+### Executing the `sample-program` program
 
-Because `runtime-simple` provides interim results, which are results available to you while the program is
+Because `sample-program` provides interim results, which are results available to you while the program is
 still running, we want to first define a callback function that would handle these interim results:
 
 ```python
@@ -121,7 +121,7 @@ When an interim result is available, this callback function will be invoked and 
 Not all programs provide interim results, and you don't have to provide a callback even if the program you're 
 executing does provide them.
 
-To run the `runtime-simple` program:
+To run the `sample-program` program:
 
 ```python
 backend = provider.get_backend('ibmq_montreal')
@@ -129,7 +129,7 @@ program_inputs = {
     'iterations': 3
 }
 options = {'backend_name': backend.name()}
-job = provider.runtime.run(program_id="runtime-simple",
+job = provider.runtime.run(program_id="sample-program",
                            options=options,
                            inputs=program_inputs,
                            callback=interim_result_callback
