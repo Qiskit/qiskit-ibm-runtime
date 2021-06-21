@@ -4,10 +4,9 @@ Qiskit Runtime (|version|)
 
 .. important:: 
 
-    The Qiskit Runtime is currently in beta mode, and is in limited release.
-    Those interested in using the Qiskit Runtime can
-    `request access <https://airtable.com/shrm6zyNBns86hB4C>`_.
-
+    The Qiskit Runtime is currently in beta mode and is available on
+    select IBM Quantum systems and simulators to all premium users.
+    But check back, as we’ll be releasing it publicly soon!
 
 The Qiskit Runtime is a new execution model / architecture that markedly reduces
 IO overhead when submitting applications and algorithms to quantum processors that
