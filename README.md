@@ -176,29 +176,6 @@ provider.runtime.delete_job('JOB_ID')
 
 ## Limitations
 
-### Payload size
-
-Qiskit Runtime is still in beta mode, so there is a limit of 127KB on the size of the payload you can send 
-to a program. To check the size of your payload:
-
-```python
-import sys
-import json
-from qiskit.providers.ibmq.runtime import RuntimeEncoder
-
-# This is the input parameters to be passed to the program.
-program_inputs = {
-    'iterations': 3
-}
-
-serialized = json.dumps(program_inputs, cls=RuntimeEncoder)
-print(f"input payload size={sys.getsizeof(serialized)}")  # Size needs to be smaller than 130048
-```
-
-This roughly translates into a five circuit maximum per job.
-
-If your payload is too large, you'll get an error message `'exec user process caused "argument list too long"'`.
-
 ### API
 
 Qiskit Runtime is still in beta mode, and heavy modifications to both functionality and API 
