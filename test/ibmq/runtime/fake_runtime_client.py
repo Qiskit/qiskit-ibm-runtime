@@ -17,9 +17,9 @@ import uuid
 import json
 from concurrent.futures import ThreadPoolExecutor
 
-from qiskit.providers.ibmq.credentials import Credentials
-from qiskit.providers.ibmq.api.exceptions import RequestsApiError
-from qiskit.providers.ibmq.runtime.utils import RuntimeEncoder
+from qiskit_ibm.credentials import Credentials
+from qiskit_ibm.api.exceptions import RequestsApiError
+from qiskit_ibm.runtime.utils import RuntimeEncoder
 
 
 class BaseFakeProgram:

@@ -27,7 +27,7 @@ class RuntimeProgram:
     This class contains the metadata describing a program, such as its
     name, ID, description, etc.
 
-    You can use the :class:`~qiskit.providers.ibmq.runtime.IBMRuntimeService`
+    You can use the :class:`~qiskit_ibm.runtime.IBMRuntimeService`
     to retrieve the metadata of a specific program or all programs. For example::
 
         from qiskit import IBMQ
@@ -160,7 +160,7 @@ class RuntimeProgram:
         """Program parameter namespace.
 
         You can use the returned namespace to assign parameter values and pass
-        the namespace to :meth:`qiskit.providers.ibmq.runtime.IBMRuntimeService.run`.
+        the namespace to :meth:`qiskit_ibm.runtime.IBMRuntimeService.run`.
         The namespace allows you to use auto-completion to find program parameters.
 
         Note that each call to this method returns a new namespace instance and

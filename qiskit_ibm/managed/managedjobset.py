@@ -29,7 +29,7 @@ from qiskit_ibm.apiconstants import ApiJobShareLevel
 from qiskit_ibm.accountprovider import AccountProvider
 
 from .managedjob import ManagedJob
-from .managedresults import ManagedResults
+from .managedresults import ManagedResults  # pylint: disable=cyclic-import
 from .utils import (requires_submit, format_status_counts, format_job_details,
                     JOB_SET_NAME_FORMATTER, JOB_SET_NAME_RE)
 from .exceptions import (IBMQJobManagerInvalidStateError, IBMQJobManagerTimeoutError,

@@ -25,7 +25,8 @@ from requests_ntlm import HttpNtlmAuth
 from qiskit_ibm import IBMQ, IBMQFactory
 from qiskit_ibm.credentials import (
     Credentials, discover_credentials,
-    read_credentials_from_qiskitrc, store_credentials)
+    read_credentials_from_qiskitrc, store_credentials,
+    store_preferences, HubGroupProject)
 from qiskit_ibm.credentials.updater import (
     update_credentials, QE2_AUTH_URL, QE2_URL, QE_URL)
 from qiskit_ibm.credentials import configrc

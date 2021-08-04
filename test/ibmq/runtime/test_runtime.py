@@ -23,9 +23,9 @@ import random
 import subprocess
 import tempfile
 import warnings
-
 import numpy as np
 import scipy.sparse
+
 from qiskit.algorithms.optimizers import (
     ADAM,
     GSLS,
@@ -45,16 +45,15 @@ from qiskit.opflow import (PauliSumOp, MatrixOp, PauliOp, CircuitOp, EvolvedOp,
                            SparseVectorStateFn, CVaRMeasurement, ComposedOp, SummedOp, TensoredOp)
 from qiskit.quantum_info import SparsePauliOp, Pauli, PauliTable, Statevector
 from qiskit.providers.jobstatus import JobStatus
-from qiskit.providers.ibmq.exceptions import IBMQInputValueError
-from qiskit.providers.ibmq.accountprovider import AccountProvider
-from qiskit.providers.ibmq.credentials import Credentials
-from qiskit.providers.ibmq.runtime.utils import RuntimeEncoder, RuntimeDecoder
-from qiskit.providers.ibmq.runtime import IBMRuntimeService, RuntimeJob
-from qiskit.providers.ibmq.runtime.constants import API_TO_JOB_ERROR_MESSAGE
-from qiskit.providers.ibmq.runtime.exceptions import (RuntimeProgramNotFound,
-                                                      RuntimeJobFailureError)
-from qiskit.providers.ibmq.runtime.runtime_program import (
-    ParameterNamespace, ProgramParameter, ProgramResult)
+
+from qiskit_ibm.exceptions import IBMQInputValueError
+from qiskit_ibm.accountprovider import AccountProvider
+from qiskit_ibm.credentials import Credentials
+from qiskit_ibm.runtime.utils import RuntimeEncoder, RuntimeDecoder
+from qiskit_ibm.runtime import IBMRuntimeService, RuntimeJob
+from qiskit_ibm.runtime.constants import API_TO_JOB_ERROR_MESSAGE
+from qiskit_ibm.runtime.exceptions import RuntimeProgramNotFound, RuntimeJobFailureError
+from qiskit_ibm.runtime.runtime_program import ParameterNamespace, ProgramParameter, ProgramResult
 
 from ...ibmqtestcase import IBMQTestCase
 from .fake_runtime_client import (BaseFakeRuntimeClient, FailedRanTooLongRuntimeJob,
@@ -221,7 +220,7 @@ class TestRuntime(IBMQTestCase):
         script = """
 import sys
 import json
-from qiskit.providers.ibmq.runtime import RuntimeDecoder
+from qiskit_ibm.runtime import RuntimeDecoder
 if __name__ == '__main__':
     obj = json.loads(sys.argv[1], cls=RuntimeDecoder)
     print(obj.__class__.__name__)

@@ -14,8 +14,8 @@
 
 from unittest import SkipTest
 
-from qiskit.providers.ibmq.exceptions import IBMQNotAuthorizedError
-from qiskit.providers.ibmq.credentials import read_credentials_from_qiskitrc
+from qiskit_ibm.exceptions import IBMQNotAuthorizedError
+from qiskit_ibm.credentials import read_credentials_from_qiskitrc
 
 from ...ibmqtestcase import IBMQTestCase
 from ...decorators import requires_provider

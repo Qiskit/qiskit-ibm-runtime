@@ -15,16 +15,14 @@
 import os
 from unittest import mock, SkipTest, skipIf
 import contextlib
-
 import numpy as np
 
 from qiskit import transpile
 from qiskit.providers import JobStatus
 from qiskit.test.reference_circuits import ReferenceCircuits
-from qiskit.providers.ibmq.experiment import (IBMExperimentService,
-                                              ResultQuality,
-                                              IBMExperimentEntryNotFound)
 from qiskit.tools.visualization import HAS_MATPLOTLIB
+
+from qiskit_ibm.experiment import IBMExperimentService, ResultQuality, IBMExperimentEntryNotFound
 
 from ...ibmqtestcase import IBMQTestCase
 from ...decorators import requires_provider, requires_device

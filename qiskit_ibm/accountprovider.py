@@ -25,19 +25,21 @@ from qiskit.circuit import QuantumCircuit
 from qiskit.providers.backend import BackendV1 as Backend
 from qiskit.providers.basebackend import BaseBackend
 from qiskit.transpiler import Layout
-from qiskit.providers.ibmq.runtime import runtime_job  # pylint: disable=unused-import
-from qiskit.providers.ibmq import ibmqfactory  # pylint: disable=unused-import
+
+from qiskit_ibm.runtime import runtime_job  # pylint: disable=unused-import
+from qiskit_ibm import ibmqfactory  # pylint: disable=unused-import,cyclic-import
 
 from .api.clients import AccountClient
-from .ibmqbackend import IBMQBackend, IBMQSimulator
+from .ibmqbackend import IBMQBackend, IBMQSimulator  # pylint: disable=cyclic-import
 from .credentials import Credentials
-from .ibmqbackendservice import IBMQBackendService, IBMQDeprecatedBackendService
+from .ibmqbackendservice import (IBMQBackendService,  # pylint: disable=cyclic-import
+                                 IBMQDeprecatedBackendService)
 from .utils.json_decoder import decode_backend_configuration
-from .random.ibmqrandomservice import IBMQRandomService
-from .experiment import IBMExperimentService
-from .runtime.ibm_runtime_service import IBMRuntimeService
+from .random.ibmqrandomservice import IBMQRandomService  # pylint: disable=cyclic-import
+from .experiment import IBMExperimentService  # pylint: disable=cyclic-import
+from .runtime.ibm_runtime_service import IBMRuntimeService  # pylint: disable=cyclic-import
 from .exceptions import IBMQNotAuthorizedError, IBMQInputValueError
-from .runner_result import RunnerResult
+from .runner_result import RunnerResult  # pylint: disable=cyclic-import
 
 logger = logging.getLogger(__name__)
 

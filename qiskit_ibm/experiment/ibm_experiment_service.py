@@ -19,8 +19,9 @@ from typing import Optional, List, Dict, Union, Tuple, Any, Type
 from datetime import datetime
 from collections import defaultdict
 
+from qiskit.providers.exceptions import QiskitBackendNotFoundError
+
 from qiskit_ibm import accountprovider  # pylint: disable=unused-import
-from qiskit_ibm import QiskitBackendNotFoundError
 
 from .constants import (ExperimentShareLevel, ResultQuality,
                         RESULT_QUALITY_FROM_API, RESULT_QUALITY_TO_API)
@@ -43,7 +44,7 @@ class IBMExperimentService:
     experiment service, which allows you to create, delete, update, query, and
     retrieve experiments, experiment figures, and analysis results. The
     ``experiment`` attribute of
-    :class:`~qiskit.providers.ibmq.accountprovider.AccountProvider` is an
+    :class:`~qiskit_ibm.accountprovider.AccountProvider` is an
     instance of this class, and the main syntax for using the service is
     ``provider.experiment.<action>``. For example::
 

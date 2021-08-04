@@ -18,13 +18,14 @@ from typing import List, Optional, Union, Dict
 from concurrent.futures import ThreadPoolExecutor
 from threading import Lock
 
-from qiskit_ibm import IBMQBackend
 from qiskit.qobj import QasmQobj, PulseQobj
 from qiskit.circuit import QuantumCircuit
 from qiskit.pulse import Schedule
 from qiskit.result import Result
 from qiskit.providers.jobstatus import JobStatus
 from qiskit.providers.exceptions import JobError
+
+from qiskit_ibm import IBMQBackend
 from qiskit_ibm.apiconstants import ApiJobShareLevel, API_JOB_FINAL_STATES
 
 from ..job.ibmqjob import IBMQJob

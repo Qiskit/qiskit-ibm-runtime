@@ -20,9 +20,9 @@ from qiskit import transpile
 from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit.test import slow_test
 from qiskit.providers import JobTimeoutError
-from qiskit_ibm.api.clients import websocket
-from qiskit_ibm.api.clients import AccountClient
 from qiskit.providers.jobstatus import JobStatus
+
+from qiskit_ibm.api.clients import AccountClient, websocket
 
 from ...ibmqtestcase import IBMQTestCase
 from ...decorators import requires_provider, requires_device
@@ -213,7 +213,7 @@ class TestWebsocketIntegration(IBMQTestCase):
         invalid_proxy = {'https': 'http://{}:{}'.format(MockProxyServer.PROXY_IP_ADDRESS,
                                                         MockProxyServer.INVALID_PROXY_PORT)}
         with use_proxies(self.provider, invalid_proxy):
-            with self.assertLogs('qiskit.providers.ibmq', 'INFO') as log_cm:
+            with self.assertLogs('qiskit_ibm', 'INFO') as log_cm:
                 job.wait_for_final_state()
 
         self.assertIn("retrying using HTTP", ','.join(log_cm.output))

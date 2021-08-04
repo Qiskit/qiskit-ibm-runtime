@@ -21,14 +21,15 @@ from contextlib import suppress
 
 from qiskit.providers.jobstatus import JobStatus, JOB_FINAL_STATES
 from qiskit.test.reference_circuits import ReferenceCircuits
-from qiskit.providers.ibmq.runtime.constants import API_TO_JOB_ERROR_MESSAGE
-from qiskit.providers.ibmq.exceptions import IBMQNotAuthorizedError
-from qiskit.providers.ibmq.runtime.runtime_program import RuntimeProgram
-from qiskit.providers.ibmq.runtime.exceptions import (RuntimeDuplicateProgramError,
-                                                      RuntimeProgramNotFound,
-                                                      RuntimeJobFailureError,
-                                                      RuntimeInvalidStateError,
-                                                      RuntimeJobNotFound)
+
+from qiskit_ibm.runtime.constants import API_TO_JOB_ERROR_MESSAGE
+from qiskit_ibm.exceptions import IBMQNotAuthorizedError
+from qiskit_ibm.runtime.runtime_program import RuntimeProgram
+from qiskit_ibm.runtime.exceptions import (RuntimeDuplicateProgramError,
+                                           RuntimeProgramNotFound,
+                                           RuntimeJobFailureError,
+                                           RuntimeInvalidStateError,
+                                           RuntimeJobNotFound)
 
 from ...ibmqtestcase import IBMQTestCase
 from ...decorators import requires_runtime_device
@@ -424,7 +425,7 @@ def main(backend, user_messenger, **kwargs):
 
         final_it = 0
         iterations = 3
-        with self.assertLogs('qiskit.providers.ibmq.runtime', level='WARNING') as err_cm:
+        with self.assertLogs('qiskit_ibm.runtime', level='WARNING') as err_cm:
             job = self._run_program(iterations=iterations, interim_results="foo",
                                     callback=result_callback)
             job.wait_for_final_state()
@@ -553,7 +554,7 @@ def main(backend, user_messenger, **kwargs):
         invalid_proxy = {'https': 'http://{}:{}'.format(MockProxyServer.PROXY_IP_ADDRESS,
                                                         MockProxyServer.INVALID_PROXY_PORT)}
         with use_proxies(self.provider, invalid_proxy):
-            with self.assertLogs('qiskit.providers.ibmq', 'WARNING') as log_cm:
+            with self.assertLogs('qiskit_ibm', 'WARNING') as log_cm:
                 job = self._run_program(iterations=1, callback=result_callback)
                 job.wait_for_final_state()
             self.assertIn("WebsocketError", ','.join(log_cm.output))
@@ -562,7 +563,7 @@ def main(backend, user_messenger, **kwargs):
     def test_job_logs(self):
         """Test job logs."""
         job = self._run_program(final_result="foo")
-        with self.assertLogs('qiskit.providers.ibmq', 'WARN'):
+        with self.assertLogs('qiskit_ibm', 'WARN'):
             job.logs()
         job.wait_for_final_state()
         job_logs = job.logs()

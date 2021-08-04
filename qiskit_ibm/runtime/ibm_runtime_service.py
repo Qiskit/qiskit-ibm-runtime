@@ -53,7 +53,7 @@ class IBMRuntimeService:
     A sample workflow of using the runtime service::
 
         from qiskit import IBMQ, QuantumCircuit
-        from qiskit.providers.ibmq import RunnerResult
+        from qiskit_ibm import RunnerResult
 
         provider = IBMQ.load_account()
         backend = provider.backend.ibmq_qasm_simulator
@@ -89,7 +89,7 @@ class IBMRuntimeService:
     the results at a later time, but before the job finishes.
 
     The :meth:`run` method returns a
-    :class:`~qiskit.providers.ibmq.runtime.RuntimeJob` object. You can use its
+    :class:`~qiskit_ibm.runtime.RuntimeJob` object. You can use its
     methods to perform tasks like checking job status, getting job result, and
     canceling job.
     """

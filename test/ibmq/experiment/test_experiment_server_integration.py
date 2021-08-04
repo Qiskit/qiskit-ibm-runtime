@@ -18,14 +18,12 @@ from unittest import mock, SkipTest, skipIf
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
 import re
-
 from dateutil import tz
 import numpy as np
 
-from qiskit.providers.ibmq.experiment.constants import ExperimentShareLevel
-from qiskit.providers.ibmq.exceptions import IBMQNotAuthorizedError
-from qiskit.providers.ibmq.experiment import (ResultQuality,
-                                              IBMExperimentEntryNotFound)
+from qiskit_ibm.experiment.constants import ExperimentShareLevel
+from qiskit_ibm.exceptions import IBMQNotAuthorizedError
+from qiskit_ibm.experiment import ResultQuality, IBMExperimentEntryNotFound
 
 from ...ibmqtestcase import IBMQTestCase
 from ...decorators import requires_provider, requires_device

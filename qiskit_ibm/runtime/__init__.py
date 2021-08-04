@@ -12,10 +12,10 @@
 
 """
 ==============================================
-Runtime (:mod:`qiskit.providers.ibmq.runtime`)
+Runtime (:mod:`qiskit_ibm.runtime`)
 ==============================================
 
-.. currentmodule:: qiskit.providers.ibmq.runtime
+.. currentmodule:: qiskit_ibm.runtime
 
 Modules related to Qiskit Runtime Service.
 
@@ -90,7 +90,7 @@ You can use the :meth:`IBMRuntimeService.run` method to invoke a runtime program
 For example::
 
     from qiskit import IBMQ, QuantumCircuit
-    from qiskit.providers.ibmq import RunnerResult
+    from qiskit_ibm import RunnerResult
 
 
     provider = IBMQ.load_account()
@@ -130,7 +130,7 @@ program, a
 :class:`RuntimeJob` instance is returned. This class has all the basic job
 methods, such as :meth:`RuntimeJob.status`, :meth:`RuntimeJob.result`, and
 :meth:`RuntimeJob.cancel`. Note that it does not have the same methods as regular
-circuit jobs, which are instances of :class:`~qiskit.providers.ibmq.job.IBMQJob`.
+circuit jobs, which are instances of :class:`~qiskit_ibm.job.IBMQJob`.
 
 Interim results
 ---------------

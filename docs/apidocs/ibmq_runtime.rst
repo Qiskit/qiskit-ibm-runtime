@@ -1,6 +1,6 @@
-.. _qiskit-providers-ibmq-runtime:
+.. _qiskit_ibm-runtime:
 
-.. automodule:: qiskit.providers.ibmq.runtime
+.. automodule:: qiskit_ibm.runtime
    :no-members:
    :no-inherited-members:
    :no-special-members:
