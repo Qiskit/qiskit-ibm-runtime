@@ -30,7 +30,7 @@ from ...decorators import requires_provider, requires_device
 from .utils import ExperimentEncoder, ExperimentDecoder
 
 
-@skipIf(not os.environ.get('USE_STAGING_CREDENTIALS', ''), "Only runs on staging")
+@skipIf(not os.environ.get('QISKIT_IBM_USE_STAGING_CREDENTIALS', ''), "Only runs on staging")
 class TestExperimentServerIntegration(IBMQTestCase):
     """Test experiment modules."""
 

@@ -37,7 +37,7 @@ STATUS_FORCELIST = (
     522,  # Cloudflare connection timeout
     524,  # Cloudflare Timeout
 )
-CUSTOM_HEADER_ENV_VAR = 'QE_CUSTOM_CLIENT_APP_HEADER'
+CUSTOM_HEADER_ENV_VAR = 'QISKIT_IBM_CUSTOM_CLIENT_APP_HEADER'
 logger = logging.getLogger(__name__)
 # Regex used to match the `/devices` endpoint, capturing the device name as group(2).
 # The number of letters for group(2) must be greater than 1, so it does not match

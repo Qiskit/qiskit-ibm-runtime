@@ -19,11 +19,11 @@ from .credentials import Credentials
 from .hubgroupproject import HubGroupProject
 
 VARIABLES_MAP = {
-    'QE_TOKEN': 'token',
-    'QE_URL': 'url',
-    'QE_HUB': 'hub',
-    'QE_GROUP': 'group',
-    'QE_PROJECT': 'project'
+    'QISKIT_IBM_API_TOKEN': 'token',
+    'QISKIT_IBM_API_URL': 'url',
+    'QISKIT_IBM_HUB': 'hub',
+    'QISKIT_IBM_GROUP': 'group',
+    'QISKIT_IBM_PROJECT': 'project'
 }
 """Dictionary that maps `ENV_VARIABLE_NAME` to credential parameter."""
 
@@ -36,7 +36,7 @@ def read_credentials_from_environ() -> Dict[HubGroupProject, Credentials]:
         ``{credentials_unique_id: Credentials}`` format.
     """
     # The token is the only required parameter.
-    if not (os.getenv('QE_TOKEN') and os.getenv('QE_URL')):
+    if not (os.getenv('QISKIT_IBM_API_TOKEN') and os.getenv('QISKIT_IBM_API_URL')):
         return {}
 
     # Build the credentials based on environment variables.

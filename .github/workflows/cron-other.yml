@@ -23,10 +23,10 @@ jobs:
         python-version: [3.6, 3.7, 3.8, 3.9]
         os: ["windows-latest", "ubuntu-latest"]
     env:
-      QE_TOKEN: ${{ secrets.QE_TOKEN }}
-      QE_URL: https://auth.quantum-computing.ibm.com/api
-      QE_HGP: ${{ secrets.QE_HGP }}
-      QE_PRIVATE_HGP: ${{ secrets.QE_PRIVATE_HGP }}
+      QISKIT_IBM_API_TOKEN: ${{ secrets.QISKIT_IBM_API_TOKEN }}
+      QISKIT_IBM_API_URL: https://auth.quantum-computing.ibm.com/api
+      QISKIT_IBM_HGP: ${{ secrets.QISKIT_IBM_HGP }}
+      QISKIT_IBM_PRIVATE_HGP: ${{ secrets.QISKIT_IBM_PRIVATE_HGP }}
       LOG_LEVEL: DEBUG
       STREAM_LOG: True
       QISKIT_IN_PARALLEL: True
@@ -52,10 +52,10 @@ jobs:
         python-version: [3.6, 3.7, 3.8, 3.9]
         os: ["windows-latest", "ubuntu-latest"]
     env:
-      QE_TOKEN: ${{ secrets.QE_TOKEN }}
-      QE_URL: https://auth.quantum-computing.ibm.com/api
-      QE_HGP: ${{ secrets.QE_HGP }}
-      QE_PRIVATE_HGP: ${{ secrets.QE_PRIVATE_HGP }}
+      QISKIT_IBM_API_TOKEN: ${{ secrets.QISKIT_IBM_API_TOKEN }}
+      QISKIT_IBM_API_URL: https://auth.quantum-computing.ibm.com/api
+      QISKIT_IBM_HGP: ${{ secrets.QISKIT_IBM_HGP }}
+      QISKIT_IBM_PRIVATE_HGP: ${{ secrets.QISKIT_IBM_PRIVATE_HGP }}
       LOG_LEVEL: DEBUG
       STREAM_LOG: True
       QISKIT_IN_PARALLEL: True
@@ -80,10 +80,10 @@ jobs:
         python-version: [3.6, 3.7, 3.8, 3.9]
         os: ["windows-latest", "ubuntu-latest"]
     env:
-      QE_TOKEN: ${{ secrets.QE_TOKEN }}
-      QE_URL: https://auth.quantum-computing.ibm.com/api
-      QE_HGP: ${{ secrets.QE_HGP }}
-      QE_PRIVATE_HGP: ${{ secrets.QE_PRIVATE_HGP }}
+      QISKIT_IBM_API_TOKEN: ${{ secrets.QISKIT_IBM_API_TOKEN }}
+      QISKIT_IBM_API_URL: https://auth.quantum-computing.ibm.com/api
+      QISKIT_IBM_HGP: ${{ secrets.QISKIT_IBM_HGP }}
+      QISKIT_IBM_PRIVATE_HGP: ${{ secrets.QISKIT_IBM_PRIVATE_HGP }}
       LOG_LEVEL: DEBUG
       STREAM_LOG: True
       QISKIT_IN_PARALLEL: True

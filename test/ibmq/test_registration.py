@@ -96,8 +96,8 @@ class TestCredentials(IBMQTestCase):
         with custom_qiskitrc():
             # Prepare the credentials: both env and qiskitrc present
             store_credentials(credentials)
-            with custom_envs({'QE_TOKEN': 'ENVIRON_TOKEN',
-                              'QE_URL': 'ENVIRON_URL'}):
+            with custom_envs({'QISKIT_IBM_API_TOKEN': 'ENVIRON_TOKEN',
+                              'QISKIT_IBM_API_URL': 'ENVIRON_URL'}):
                 credentials, _ = discover_credentials()
 
         self.assertEqual(len(credentials), 1)

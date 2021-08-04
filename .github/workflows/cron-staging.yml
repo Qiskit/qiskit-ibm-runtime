@@ -19,10 +19,10 @@ jobs:
     name: runtime-integration
     runs-on: macOS-latest
     env:
-      QE_STAGING_TOKEN: ${{ secrets.QE_STAGING_TOKEN }}
-      QE_STAGING_URL: ${{ secrets.QE_STAGING_URL }}
-      QE_STAGING_RUNTIME_DEVICE: ${{ secrets.QE_STAGING_RUNTIME_DEVICE }}
-      USE_STAGING_CREDENTIALS: True
+      QISKIT_IBM_STAGING_API_TOKEN: ${{ secrets.QISKIT_IBM_STAGING_API_TOKEN }}
+      QISKIT_IBM_STAGING_API_URL: ${{ secrets.QISKIT_IBM_STAGING_API_URL }}
+      QISKIT_IBM_STAGING_RUNTIME_DEVICE: ${{ secrets.QISKIT_IBM_STAGING_RUNTIME_DEVICE }}
+      QISKIT_IBM_USE_STAGING_CREDENTIALS: True
       LOG_LEVEL: DEBUG
       STREAM_LOG: True
       QISKIT_IN_PARALLEL: True
@@ -43,10 +43,10 @@ jobs:
     name: experiment-integration
     runs-on: macOS-latest
     env:
-      QE_STAGING_TOKEN: ${{ secrets.QE_STAGING_TOKEN }}
-      QE_STAGING_URL: ${{ secrets.QE_STAGING_URL }}
-      QE_STAGING_DEVICE: "ibmq_qasm_simulator"
-      USE_STAGING_CREDENTIALS: True
+      QISKIT_IBM_STAGING_API_TOKEN: ${{ secrets.QISKIT_IBM_STAGING_API_TOKEN }}
+      QISKIT_IBM_STAGING_API_URL: ${{ secrets.QISKIT_IBM_STAGING_API_URL }}
+      QISKIT_IBM_STAGING_DEVICE: "ibmq_qasm_simulator"
+      QISKIT_IBM_USE_STAGING_CREDENTIALS: True
       LOG_LEVEL: DEBUG
       STREAM_LOG: True
       QISKIT_IN_PARALLEL: True

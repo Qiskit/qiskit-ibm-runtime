@@ -88,13 +88,13 @@ class TestAccountClient(IBMQTestCase):
     def test_custom_client_app_header(self):
         """Check custom client application header."""
         custom_header = 'batman'
-        with custom_envs({'QE_CUSTOM_CLIENT_APP_HEADER': custom_header}):
+        with custom_envs({'QISKIT_IBM_CUSTOM_CLIENT_APP_HEADER': custom_header}):
             client = self._get_client()
             self.assertIn(custom_header,
                           client._session.headers['X-Qx-Client-Application'])
 
         # Make sure the header is re-initialized
-        with no_envs(['QE_CUSTOM_CLIENT_APP_HEADER']):
+        with no_envs(['QISKIT_IBM_CUSTOM_CLIENT_APP_HEADER']):
             client = self._get_client()
             self.assertNotIn(custom_header,
                              client._session.headers['X-Qx-Client-Application'])
