@@ -47,7 +47,7 @@ from .credentials import Credentials
 from .exceptions import (IBMQBackendError, IBMQBackendValueError,
                          IBMQBackendApiError, IBMQBackendApiProtocolError,
                          IBMQBackendJobLimitError)
-from .job import IBMQJob
+from .job import IBMQJob  # pylint: disable=cyclic-import
 from .utils import validate_job_tags
 from .utils.converters import utc_to_local_all, local_to_utc
 from .utils.json_decoder import decode_pulse_defaults, decode_backend_properties

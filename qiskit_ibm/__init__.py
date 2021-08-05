@@ -87,8 +87,8 @@ from qiskit.providers import BaseBackend, Backend  # type: ignore[attr-defined]
 
 from .ibmqfactory import IBMQFactory
 from .ibmqbackend import IBMQBackend
-from .job import IBMQJob
-from .managed import IBMQJobManager
+from .job import IBMQJob  # pylint: disable=cyclic-import
+from .managed import IBMQJobManager  # pylint: disable=cyclic-import
 from .accountprovider import AccountProvider
 from .backendjoblimit import BackendJobLimit
 from .exceptions import *
