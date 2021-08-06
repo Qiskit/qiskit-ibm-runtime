@@ -24,7 +24,7 @@ jobs:
         os: ["windows-latest", "ubuntu-latest"]
     env:
       QISKIT_IBM_API_TOKEN: ${{ secrets.QISKIT_IBM_API_TOKEN }}
-      QISKIT_IBM_API_URL: https://auth.quantum-computing.ibm.com/api
+      QISKIT_IBM_API_URL: ${{ secrets.QISKIT_IBM_API_URL }}
       QISKIT_IBM_HGP: ${{ secrets.QISKIT_IBM_HGP }}
       QISKIT_IBM_PRIVATE_HGP: ${{ secrets.QISKIT_IBM_PRIVATE_HGP }}
       LOG_LEVEL: DEBUG
@@ -53,7 +53,7 @@ jobs:
         os: ["windows-latest", "ubuntu-latest"]
     env:
       QISKIT_IBM_API_TOKEN: ${{ secrets.QISKIT_IBM_API_TOKEN }}
-      QISKIT_IBM_API_URL: https://auth.quantum-computing.ibm.com/api
+      QISKIT_IBM_API_URL: ${{ secrets.QISKIT_IBM_API_URL }}
       QISKIT_IBM_HGP: ${{ secrets.QISKIT_IBM_HGP }}
       QISKIT_IBM_PRIVATE_HGP: ${{ secrets.QISKIT_IBM_PRIVATE_HGP }}
       LOG_LEVEL: DEBUG
@@ -81,7 +81,7 @@ jobs:
         os: ["windows-latest", "ubuntu-latest"]
     env:
       QISKIT_IBM_API_TOKEN: ${{ secrets.QISKIT_IBM_API_TOKEN }}
-      QISKIT_IBM_API_URL: https://auth.quantum-computing.ibm.com/api
+      QISKIT_IBM_API_URL: ${{ secrets.QISKIT_IBM_API_URL }}
       QISKIT_IBM_HGP: ${{ secrets.QISKIT_IBM_HGP }}
       QISKIT_IBM_PRIVATE_HGP: ${{ secrets.QISKIT_IBM_PRIVATE_HGP }}
       LOG_LEVEL: DEBUG
