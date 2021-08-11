@@ -13,7 +13,6 @@
 """Test IBM Quantum online QASM simulator."""
 
 from unittest import mock
-import copy
 
 from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister
 from qiskit.compiler import transpile, assemble
@@ -124,14 +123,21 @@ class TestIbmqQasmSimulator(IBMQTestCase):
                              f"qobj header={qobj.header}")
             return mock.MagicMock()
 
-        backend = copy.deepcopy(self.sim_backend)
-        backend._configuration._data['simulation_method'] = 'extended_stabilizer'
-        backend._submit_job = _new_submit
+        backend = self.sim_backend
 
-        circ = transpile(ReferenceCircuits.bell(), backend=backend)
-        backend.run(circ, header={'test': 'circuits'})
-        qobj = assemble(circ, backend=backend, header={'test': 'qobj'})
-        backend.run(qobj)
+        sim_method = backend._configuration._data.get('simulation_method', None)
+        submit_fn = backend._submit_job
+
+        try:
+            backend._configuration._data['simulation_method'] = 'extended_stabilizer'
+            backend._submit_job = _new_submit
+            circ = transpile(ReferenceCircuits.bell(), backend=backend)
+            backend.run(circ, header={'test': 'circuits'})
+            qobj = assemble(circ, backend=backend, header={'test': 'qobj'})
+            backend.run(qobj)
+        finally:
+            backend._configuration._data['simulation_method'] = sim_method
+            backend._submit_job = submit_fn
 
     def test_new_sim_method_no_overwrite(self):
         """Test custom method option is not overwritten."""
@@ -140,14 +146,21 @@ class TestIbmqQasmSimulator(IBMQTestCase):
             self.assertEqual(qobj.config.method, 'my_method', f"qobj header={qobj.header}")
             return mock.MagicMock()
 
-        backend = copy.deepcopy(self.sim_backend)
-        backend._configuration._data['simulation_method'] = 'extended_stabilizer'
-        backend._submit_job = _new_submit
+        backend = self.sim_backend
 
-        circ = transpile(ReferenceCircuits.bell(), backend=backend)
-        backend.run(circ, method='my_method', header={'test': 'circuits'})
-        qobj = assemble(circ, backend=backend, method='my_method', header={'test': 'qobj'})
-        backend.run(qobj)
+        sim_method = backend._configuration._data.get('simulation_method', None)
+        submit_fn = backend._submit_job
+
+        try:
+            backend._configuration._data['simulation_method'] = 'extended_stabilizer'
+            backend._submit_job = _new_submit
+            circ = transpile(ReferenceCircuits.bell(), backend=backend)
+            backend.run(circ, method='my_method', header={'test': 'circuits'})
+            qobj = assemble(circ, backend=backend, method='my_method', header={'test': 'qobj'})
+            backend.run(qobj)
+        finally:
+            backend._configuration._data['simulation_method'] = sim_method
+            backend._submit_job = submit_fn
 
     @requires_device
     def test_simulator_with_noise_model(self, backend):
