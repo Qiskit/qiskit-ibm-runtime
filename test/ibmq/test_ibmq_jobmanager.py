@@ -454,17 +454,6 @@ class TestIBMQJobManager(IBMQTestCase):
                              .format(name, name, managed_results_params,
                                      name, result_params))
 
-    def test_double_digit_jobs(self):
-        """Test converting ManagedResult to Result."""
-        max_per_job = 1
-        job_set = self._jm.run([self._qc]*max_per_job*10, backend=self.fake_api_backend,
-                               max_experiments_per_job=max_per_job)
-        result_manager = job_set.results()
-        combined_result = result_manager.combine_results()
-
-        for i in range(max_per_job*2):
-            self.assertEqual(result_manager.get_counts(i), combined_result.get_counts(i))
-
     def _get_class_methods(self, cls):
         """Get public class methods from its namespace.
 
