@@ -202,8 +202,9 @@ class TestIBMQJobManager(IBMQTestCase):
         """Test retrieving a set of jobs."""
         tags = ['test_retrieve_job_set']
 
-        circs_counts = [3, 4]
-        for count in circs_counts:
+        # circuit count, max expr
+        sub_tests = [(3, 2), (4, 2), (11, 1)]
+        for count, max_expr in sub_tests:
             with self.subTest(count=count):
                 circs = []
                 for i in range(count):
@@ -212,7 +213,7 @@ class TestIBMQJobManager(IBMQTestCase):
                     circs.append(new_qc)
 
                 job_set = self._jm.run(circs, backend=self.sim_backend,
-                                       max_experiments_per_job=2, job_tags=tags)
+                                       max_experiments_per_job=max_expr, job_tags=tags)
                 self.assertEqual(job_set.tags(), tags)
                 # Wait for jobs to be submitted.
                 while JobStatus.INITIALIZING in job_set.statuses():
@@ -452,6 +453,17 @@ class TestIBMQJobManager(IBMQTestCase):
                              "`ManagedResults.{}` params = {}."
                              .format(name, name, managed_results_params,
                                      name, result_params))
+
+    def test_double_digit_jobs(self):
+        """Test converting ManagedResult to Result."""
+        max_per_job = 1
+        job_set = self._jm.run([self._qc]*max_per_job*10, backend=self.fake_api_backend,
+                               max_experiments_per_job=max_per_job)
+        result_manager = job_set.results()
+        combined_result = result_manager.combine_results()
+
+        for i in range(max_per_job*2):
+            self.assertEqual(result_manager.get_counts(i), combined_result.get_counts(i))
 
     def _get_class_methods(self, cls):
         """Get public class methods from its namespace.
