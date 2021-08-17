@@ -10,8 +10,4 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""The VQE runtime program."""
-
-from .vqe_program import VQEProgram
-
-__all__ = ["VQEProgram"]
+"""Runtime test packages."""
