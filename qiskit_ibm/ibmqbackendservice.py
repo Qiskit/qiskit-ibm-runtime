@@ -15,7 +15,6 @@
 import logging
 import warnings
 import copy
-from functools import wraps
 
 from typing import Dict, List, Callable, Optional, Any, Union
 from datetime import datetime
@@ -529,53 +528,3 @@ class IBMQBackendService:
             'ibmq_16_rueschlikon': 'ibmqx5',
             'ibmq_20_austin': 'QS1_1'
             }
-
-
-def _issue_warning(func):  # type: ignore
-    @wraps(func)
-    def _wrapper(self, *args, **kwargs):  # type: ignore
-        if not self._backends_warning_issued:
-            warnings.warn("The `backends` attribute is deprecated. "
-                          "Please use `provider.backend` (singular) instead.",
-                          DeprecationWarning, stacklevel=2)
-            self._backends_warning_issued = True
-        return func(self, *args, **kwargs)
-    return _wrapper
-
-
-class IBMQDeprecatedBackendService:
-
-    # pylint: disable=W,C,R
-
-    def __init__(self, backend_service: IBMQBackendService):
-        self._backend_service = backend_service
-        self._backends_warning_issued = False
-
-    @_issue_warning
-    def jobs(self, *args, **kwargs):  # type: ignore
-        return self._backend_service.jobs(*args, **kwargs)
-
-    @_issue_warning
-    def retrieve_job(self, *args, **kwargs):  # type: ignore
-        return self._backend_service.retrieve_job(*args, **kwargs)
-
-    @_issue_warning
-    def my_reservations(self, *args, **kwargs):  # type: ignore
-        return self._backend_service.my_reservations(*args, **kwargs)
-
-    def __getattribute__(self, item):  # type: ignore
-        if item in ['_backend_service', '_backends_warning_issued']:
-            return super().__getattribute__(item)
-
-        if not self._backends_warning_issued:
-            warnings.warn("The `backends` provider attribute is deprecated. "
-                          "Please use `provider.backend` (singular) instead. "
-                          "You can continue to use `provider.backends()` to "
-                          "retrieve all backends.",
-                          DeprecationWarning, stacklevel=2)
-            self._backends_warning_issued = True
-
-        return self._backend_service.__getattribute__(item)
-
-    def __call__(self, *args, **kwargs):  # type: ignore
-        return self._backend_service.backends(*args, **kwargs)

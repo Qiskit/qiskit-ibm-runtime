@@ -14,7 +14,6 @@
 
 from inspect import getfullargspec
 from datetime import timedelta, datetime
-import warnings
 from unittest import SkipTest
 from unittest.mock import patch
 
@@ -230,20 +229,3 @@ class TestIBMQBackendService(IBMQTestCase):
                 self.assertIsNotNone(
                     getattr(reserv, attr),
                     "Reservation {} is missing attribute {}".format(reserv, attr))
-
-    def test_deprecated_service(self):
-        """Test deprecated backend service module."""
-        ref_job = self.provider.backend.jobs(limit=10, end_datetime=self.last_week)[-1]
-
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always", category=DeprecationWarning)
-            self.provider.backends()
-            self.assertEqual(len(w), 0, "DeprecationWarning issued for provider.backends()")
-
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always", category=DeprecationWarning)
-            _ = self.provider.backends.ibmq_qasm_simulator
-            self.provider.backends.retrieve_job(ref_job.job_id())
-            self.provider.backends.jobs(limit=1, end_datetime=self.last_week)
-            self.provider.backends.my_reservations()
-            self.assertGreaterEqual(len(w), 1)
