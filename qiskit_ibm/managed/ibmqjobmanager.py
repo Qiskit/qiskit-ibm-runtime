@@ -13,7 +13,6 @@
 """Job Manager used to manage jobs for IBM Quantum Experience."""
 
 import logging
-import warnings
 from typing import List, Optional, Union, Any
 from concurrent import futures
 
@@ -90,7 +89,6 @@ class IBMQJobManager:
             backend: IBMQBackend,
             name: Optional[str] = None,
             max_experiments_per_job: Optional[int] = None,
-            job_share_level: Optional[str] = None,
             job_tags: Optional[List[str]] = None,
             **run_config: Any
     ) -> ManagedJobSet:
@@ -111,9 +109,6 @@ class IBMQJobManager:
                 the backend.
                 If the specified value is greater the maximum allowed by the
                 backend, the default is used.
-            job_share_level: Allow sharing the jobs at the hub, group, project, or
-                global level. The level can be one of: ``global``, ``hub``,
-                ``group``, ``project``, and ``none``.
             job_tags: Tags to be assigned to the jobs. The tags can
                 subsequently be used as a filter in the
                 :meth:`IBMQBackend.jobs()<qiskit_ibm.ibmqbackend.IBMQBackend.jobs()>`
@@ -144,11 +139,6 @@ class IBMQJobManager:
                 not backend.configuration().open_pulse):
             raise IBMQJobManagerInvalidStateError(
                 'Pulse schedules found, but the backend does not support pulse schedules.')
-
-        if job_share_level:
-            warnings.warn("The `job_share_level` keyword is no longer supported "
-                          "and will be removed in a future release.",
-                          Warning, stacklevel=2)
 
         validate_job_tags(job_tags, IBMQJobManagerInvalidStateError)
 

@@ -151,7 +151,6 @@ class IBMQBackend(Backend):
             circuits: Union[QasmQobj, PulseQobj, QuantumCircuit, Schedule,
                             List[Union[QuantumCircuit, Schedule]]],
             job_name: Optional[str] = None,
-            job_share_level: Optional[str] = None,
             job_tags: Optional[List[str]] = None,
             experiment_id: Optional[str] = None,
             header: Optional[Dict] = None,
@@ -187,17 +186,6 @@ class IBMQBackend(Backend):
             job_name: Custom name to be assigned to the job. This job
                 name can subsequently be used as a filter in the
                 :meth:`jobs()` method. Job names do not need to be unique.
-            job_share_level: Allows sharing a job at the hub, group, project,
-                or global level. The possible job share levels are: ``global``, ``hub``,
-                ``group``, ``project``, and ``none``.
-
-                    * global: The job is public to any user.
-                    * hub: The job is shared between the users in the same hub.
-                    * group: The job is shared between the users in the same group.
-                    * project: The job is shared between the users in the same project.
-                    * none: The job is not shared at any level.
-
-                If the job share level is not specified, the job is not shared at any level.
             job_tags: Tags to be assigned to the job. The tags can subsequently be used
                 as a filter in the :meth:`jobs()` function call.
             experiment_id: Used to add a job to an "experiment", which is a collection
@@ -265,11 +253,6 @@ class IBMQBackend(Backend):
                 - If ESP readout is used and the backend does not support this.
         """
         # pylint: disable=arguments-differ
-        if job_share_level:
-            warnings.warn("The `job_share_level` keyword is no longer supported "
-                          "and will be removed in a future release.",
-                          Warning, stacklevel=3)
-
         validate_job_tags(job_tags, IBMQBackendValueError)
 
         sim_method = None
@@ -852,7 +835,6 @@ class IBMQSimulator(IBMQBackend):
             circuits: Union[QasmQobj, PulseQobj, QuantumCircuit, Schedule,
                             List[Union[QuantumCircuit, Schedule]]],
             job_name: Optional[str] = None,
-            job_share_level: Optional[str] = None,
             job_tags: Optional[List[str]] = None,
             experiment_id: Optional[str] = None,
             backend_options: Optional[Dict] = None,
@@ -871,8 +853,6 @@ class IBMQSimulator(IBMQBackend):
             job_name: Custom name to be assigned to the job. This job
                 name can subsequently be used as a filter in the
                 :meth:`jobs` method. Job names do not need to be unique.
-            job_share_level: Allows sharing a job at the hub, group, project and
-                global level (see :meth:`IBMQBackend.run()<IBMQBackend.run>` for more details).
             job_tags: Tags to be assigned to the jobs. The tags can subsequently be used
                 as a filter in the :meth:`IBMQBackend.jobs()<IBMQBackend.jobs>` method.
             experiment_id: Used to add a job to an "experiment", which is a collection
@@ -886,10 +866,6 @@ class IBMQSimulator(IBMQBackend):
             The job to be executed.
         """
         # pylint: disable=arguments-differ
-        if job_share_level:
-            warnings.warn("The `job_share_level` keyword is no longer supported "
-                          "and will be removed in a future release.",
-                          Warning, stacklevel=3)
         if backend_options is not None:
             warnings.warn("Use of `backend_options` is deprecated and will "
                           "be removed in a future release."

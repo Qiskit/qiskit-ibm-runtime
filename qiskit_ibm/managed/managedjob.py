@@ -26,7 +26,7 @@ from qiskit.providers.jobstatus import JobStatus
 from qiskit.providers.exceptions import JobError
 
 from qiskit_ibm import IBMQBackend
-from qiskit_ibm.apiconstants import ApiJobShareLevel, API_JOB_FINAL_STATES
+from qiskit_ibm.apiconstants import API_JOB_FINAL_STATES
 
 from ..job.ibmqjob import IBMQJob
 from ..job.exceptions import IBMQJobTimeoutError
@@ -66,7 +66,6 @@ class ManagedJob:
             backend: IBMQBackend,
             executor: ThreadPoolExecutor,
             submit_lock: Lock,
-            job_share_level: Optional[ApiJobShareLevel] = None,
             job_tags: Optional[List[str]] = None,
             **run_config: Dict
     ) -> None:
@@ -78,15 +77,9 @@ class ManagedJob:
             backend: Backend to execute the experiments on.
             executor: The thread pool used to submit the job.
             submit_lock: Lock used to synchronize job submission.
-            job_share_level: Job share level.
             job_tags: Tags to be assigned to the job.
             **run_config: Extra arguments used to configure the run.
         """
-        if job_share_level:
-            warnings.warn("The `job_share_level` keyword is no longer supported "
-                          "and will be removed in a future release.",
-                          Warning, stacklevel=2)
-
         # Submit the job in its own future.
         logger.debug("Submitting job %s in future", job_name)
         self.future = executor.submit(

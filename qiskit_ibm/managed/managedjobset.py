@@ -19,13 +19,11 @@ import time
 import logging
 import uuid
 import threading
-import warnings
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.pulse import Schedule
 from qiskit.qobj import QasmQobj, PulseQobj
 from qiskit.providers.jobstatus import JobStatus
-from qiskit_ibm.apiconstants import ApiJobShareLevel
 from qiskit_ibm.accountprovider import AccountProvider
 
 from .managedjob import ManagedJob
@@ -84,7 +82,6 @@ class ManagedJobSet:
             experiment_list: Union[List[List[QuantumCircuit]], List[List[Schedule]]],
             backend: IBMQBackend,
             executor: ThreadPoolExecutor,
-            job_share_level: Optional[ApiJobShareLevel] = None,
             job_tags: Optional[List[str]] = None,
             **run_config: Any
     ) -> None:
@@ -94,7 +91,6 @@ class ManagedJobSet:
             experiment_list : Circuit(s) or pulse schedule(s) to execute.
             backend: Backend to execute the experiments on.
             executor: The thread pool used to submit jobs asynchronously.
-            job_share_level: Job share level.
             job_tags: Tags to be assigned to the job.
             run_config: Additional arguments used to configure the Qobj
                 assembly. Refer to the :func:`qiskit.compiler.assemble` documentation
@@ -103,11 +99,6 @@ class ManagedJobSet:
         Raises:
             IBMQJobManagerInvalidStateError: If the jobs were already submitted.
         """
-        if job_share_level:
-            warnings.warn("The `job_share_level` keyword is no longer supported "
-                          "and will be removed in a future release.",
-                          Warning, stacklevel=2)
-
         if self._managed_jobs:
             raise IBMQJobManagerInvalidStateError(
                 'The jobs for this managed job set have already been submitted.')
