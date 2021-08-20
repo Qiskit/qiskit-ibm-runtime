@@ -14,6 +14,8 @@
 
 import enum
 
+QISKIT_IBM_API_URL = 'https://auth.quantum-computing.ibm.com/api'
+
 
 class ApiJobStatus(enum.Enum):
     """Possible values used by the API for a job status.

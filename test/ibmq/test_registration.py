@@ -15,20 +15,17 @@
 import logging
 import os
 import warnings
-from io import StringIO
 from unittest import skipIf
-from unittest.mock import patch
 from typing import Dict, Any
 import copy
 
 from requests_ntlm import HttpNtlmAuth
 from qiskit_ibm import IBMQ, IBMQFactory
+from qiskit_ibm.apiconstants import QISKIT_IBM_API_URL
 from qiskit_ibm.credentials import (
     Credentials, discover_credentials,
     read_credentials_from_qiskitrc, store_credentials,
     store_preferences, HubGroupProject)
-from qiskit_ibm.credentials.updater import (
-    update_credentials, QE2_AUTH_URL, QE2_URL, QE_URL)
 from qiskit_ibm.credentials import configrc
 from qiskit_ibm.exceptions import IBMQAccountError
 
@@ -63,8 +60,8 @@ class TestCredentials(IBMQTestCase):
 
     def test_store_credentials_overwrite(self) -> None:
         """Test overwriting qiskitrc credentials."""
-        credentials = Credentials('QISKITRC_TOKEN', url=QE2_AUTH_URL)
-        credentials2 = Credentials('QISKITRC_TOKEN_2', url=QE2_AUTH_URL)
+        credentials = Credentials('QISKITRC_TOKEN', url=QISKIT_IBM_API_URL)
+        credentials2 = Credentials('QISKITRC_TOKEN_2', url=QISKIT_IBM_API_URL)
 
         factory = IBMQFactory()
 
@@ -91,7 +88,7 @@ class TestCredentials(IBMQTestCase):
 
     def test_environ_over_qiskitrc(self) -> None:
         """Test credential discovery order."""
-        credentials = Credentials('QISKITRC_TOKEN', url=QE2_AUTH_URL)
+        credentials = Credentials('QISKITRC_TOKEN', url=QISKIT_IBM_API_URL)
 
         with custom_qiskitrc():
             # Prepare the credentials: both env and qiskitrc present
@@ -284,7 +281,7 @@ class TestPreferences(IBMQTestCase):
     def test_save_preferences_credentials(self):
         """Test saving both preferences and credentials."""
         preferences = self._get_pref_dict()
-        credentials = Credentials('QISKITRC_TOKEN', url=QE2_AUTH_URL)
+        credentials = Credentials('QISKITRC_TOKEN', url=QISKIT_IBM_API_URL)
         with custom_qiskitrc():
             store_preferences(preferences)
             store_credentials(credentials)
@@ -296,8 +293,8 @@ class TestPreferences(IBMQTestCase):
         """Test updating preferences with credentials."""
         preferences = self._get_pref_dict()
         pref2 = self._get_pref_dict(pref_val=False)
-        credentials = Credentials('QISKITRC_TOKEN', url=QE2_AUTH_URL)
-        credentials2 = Credentials('QISKITRC_TOKEN_2', url=QE2_AUTH_URL)
+        credentials = Credentials('QISKITRC_TOKEN', url=QISKIT_IBM_API_URL)
+        credentials2 = Credentials('QISKITRC_TOKEN_2', url=QISKIT_IBM_API_URL)
         with custom_qiskitrc():
             store_preferences(preferences)
             store_credentials(credentials)
@@ -315,7 +312,7 @@ class TestPreferences(IBMQTestCase):
     def test_remove_credentials(self):
         """Test removing credentials when preferences are set."""
         preferences = self._get_pref_dict()
-        credentials = Credentials('QISKITRC_TOKEN', url=QE2_AUTH_URL)
+        credentials = Credentials('QISKITRC_TOKEN', url=QISKIT_IBM_API_URL)
         with custom_qiskitrc():
             store_credentials(credentials)
             store_preferences(preferences)
@@ -334,118 +331,3 @@ class TestPreferences(IBMQTestCase):
         """Generate a new preference dictionary."""
         hub, group, project = hgp.split('/')
         return {HubGroupProject(hub, group, project): {cat: {pref_key: pref_val}}}
-
-
-@skipIf(os.name == 'nt', 'Test not supported in Windows')
-class TestIBMQAccountUpdater(IBMQTestCase):
-    """Tests for the ``update_credentials()`` helper."""
-
-    def setUp(self) -> None:
-        """Initial test setup."""
-        super().setUp()
-
-        # Avoid stdout output during tests.
-        self.patcher = patch('sys.stdout', new=StringIO())
-        self.patcher.start()
-
-    def tearDown(self) -> None:
-        """Test cleanup."""
-        super().tearDown()
-
-        # Reenable stdout output.
-        self.patcher.stop()
-
-    def assertCorrectApi2Credentials(self, token, credentials_dict) -> None:
-        """Asserts that there is only one credentials belonging to API 2."""
-        self.assertEqual(len(credentials_dict), 1)
-        credentials = list(credentials_dict.values())[0]
-        self.assertEqual(credentials.url, QE2_AUTH_URL)
-        self.assertIsNone(credentials.hub)
-        self.assertIsNone(credentials.group)
-        self.assertIsNone(credentials.project)
-        if token:
-            self.assertEqual(credentials.token, token)
-
-    def test_qe_credentials(self) -> None:
-        """Test converting QE credentials."""
-        with custom_qiskitrc():
-            store_credentials(Credentials('A', url=QE_URL))
-            _ = update_credentials(force=True)
-
-            # Assert over the stored (updated) credentials.
-            loaded_accounts, _ = read_credentials_from_qiskitrc()
-            self.assertCorrectApi2Credentials('A', loaded_accounts)
-
-    def test_qconsole_credentials(self) -> None:
-        """Test converting Qconsole credentials."""
-        with custom_qiskitrc():
-            store_credentials(Credentials('A',
-                                          url=IBMQ_TEMPLATE.format('a', 'b', 'c')))
-            _ = update_credentials(force=True)
-
-            # Assert over the stored (updated) credentials.
-            loaded_accounts, _ = read_credentials_from_qiskitrc()
-            self.assertCorrectApi2Credentials('A', loaded_accounts)
-
-    def test_proxy_credentials(self) -> None:
-        """Test converting credentials with proxy values."""
-        with custom_qiskitrc():
-            store_credentials(Credentials('A',
-                                          url=IBMQ_TEMPLATE.format('a', 'b', 'c'),
-                                          proxies=PROXIES))
-            _ = update_credentials(force=True)
-
-            # Assert over the stored (updated) credentials.
-            loaded_accounts, _ = read_credentials_from_qiskitrc()
-            self.assertCorrectApi2Credentials('A', loaded_accounts)
-
-            # Extra assert on preserving proxies.
-            credentials = list(loaded_accounts.values())[0]
-            self.assertEqual(credentials.proxies, PROXIES)
-
-    def test_multiple_credentials(self) -> None:
-        """Test converting multiple credentials."""
-        with custom_qiskitrc():
-            store_credentials(Credentials('A', url=QE2_AUTH_URL))
-            store_credentials(Credentials('B',
-                                          url=IBMQ_TEMPLATE.format('a', 'b', 'c')))
-            store_credentials(Credentials('C',
-                                          url=IBMQ_TEMPLATE.format('d', 'e', 'f')))
-            _ = update_credentials(force=True)
-
-            # Assert over the stored (updated) credentials.
-            loaded_accounts, _ = read_credentials_from_qiskitrc()
-            # We don't assert over the token, as it depends on the order of
-            # the qiskitrc, which is not guaranteed.
-            self.assertCorrectApi2Credentials(None, loaded_accounts)
-
-    def test_api2_non_auth_credentials(self) -> None:
-        """Test converting api 2 non auth credentials."""
-        with custom_qiskitrc():
-            store_credentials(Credentials('A', url=QE2_URL))
-            _ = update_credentials(force=True)
-
-            # Assert over the stored (updated) credentials.
-            loaded_accounts, _ = read_credentials_from_qiskitrc()
-            self.assertCorrectApi2Credentials('A', loaded_accounts)
-
-    def test_auth2_credentials(self) -> None:
-        """Test converting already API 2 auth credentials."""
-        with custom_qiskitrc():
-            store_credentials(Credentials('A', url=QE2_AUTH_URL))
-            credentials = update_credentials(force=True)
-
-            # No credentials should be returned.
-            self.assertIsNone(credentials)
-
-    def test_unknown_credentials(self) -> None:
-        """Test converting credentials with an unknown URL."""
-        with custom_qiskitrc():
-            store_credentials(Credentials('A', url='UNKNOWN_URL'))
-            credentials = update_credentials(force=True)
-
-            # No credentials should be returned nor updated.
-            self.assertIsNone(credentials)
-            loaded_accounts, _ = read_credentials_from_qiskitrc()
-            self.assertEqual(list(loaded_accounts.values())[0].url,
-                             'UNKNOWN_URL')

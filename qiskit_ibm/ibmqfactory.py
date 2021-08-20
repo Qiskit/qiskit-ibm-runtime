@@ -25,7 +25,6 @@ from .credentials.configrc import (read_credentials_from_qiskitrc,
                                    remove_credentials,
                                    store_credentials)
 from .credentials.exceptions import HubGroupProjectInvalidStateError
-from .credentials.updater import update_credentials
 from .exceptions import (IBMQAccountError, IBMQAccountValueError, IBMQProviderError,
                          IBMQAccountCredentialsInvalidFormat, IBMQAccountCredentialsNotFound,
                          IBMQAccountCredentialsInvalidUrl, IBMQAccountCredentialsInvalidToken,
@@ -351,19 +350,6 @@ class IBMQFactory:
             'token': self._credentials.token,
             'url': self._credentials.url,
         }
-
-    @staticmethod
-    def update_account(force: bool = False) -> Optional[Credentials]:
-        """Interactive helper for migrating stored credentials to IBM Quantum Experience v2.
-
-        Args:
-            force: If ``True``, disable interactive prompts and perform the changes.
-
-        Returns:
-            The credentials for IBM Quantum Experience v2 if updating is successful
-            or ``None`` otherwise.
-        """
-        return update_credentials(force)
 
     # Provider management functions.
 
