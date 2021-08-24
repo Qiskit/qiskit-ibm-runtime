@@ -1,0 +1,5 @@
+---
+upgrade:
+  - |
+    The deprecated ``client_version`` setter method in :class:`~qiskit.providers.ibmq.job.IBMQJob`
+    method has now been removed.

@@ -677,18 +677,6 @@ class IBMQJob(Job):
             self.refresh()
         return self._client_version
 
-    @client_version.setter
-    def client_version(self, data: Dict[str, str]) -> None:
-        """Set client version.
-
-        Args:
-            data: Client version.
-        """
-        warnings.warn('The ``client_version`` setter method is deprecated and '
-                      'will be removed in a future release.',
-                      DeprecationWarning, stacklevel=2)
-        self._set_client_version(data)
-
     def _set_client_version(self, data: Dict[str, str]) -> None:
         """Set client version.
 
