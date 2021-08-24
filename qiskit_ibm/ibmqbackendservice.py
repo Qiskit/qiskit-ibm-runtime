@@ -13,7 +13,6 @@
 """Backend namespace for an IBM Quantum Experience account provider."""
 
 import logging
-import warnings
 import copy
 
 from typing import Dict, List, Callable, Optional, Any, Union
@@ -86,7 +85,6 @@ class IBMQBackendService:
             self,
             name: Optional[str] = None,
             filters: Optional[Callable[[List[IBMQBackend]], bool]] = None,
-            timeout: Optional[float] = None,
             min_num_qubits: Optional[int] = None,
             input_allowed: Optional[Union[str, List[str]]] = None,
             **kwargs: Any
@@ -100,8 +98,6 @@ class IBMQBackendService:
 
                     AccountProvider.backends(
                         filters=lambda b: b.configuration().quantum_volume > 16)
-            timeout: Maximum number of seconds to wait for the discovery of
-                remote backends.
             min_num_qubits: Minimum number of qubits the backend has to have.
             input_allowed: Filter by the types of input the backend supports.
                 Valid input types are ``job`` (circuit job) and ``runtime`` (Qiskit Runtime).
@@ -117,10 +113,6 @@ class IBMQBackendService:
         Returns:
             The list of available backends that match the filter.
         """
-        if timeout:
-            warnings.warn("The `timeout` keyword argument is deprecated and will "
-                          "be removed in a future release.",
-                          DeprecationWarning, stacklevel=2)
 
         backends = list(self._provider._backends.values())
 

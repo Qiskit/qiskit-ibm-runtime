@@ -1,0 +1,5 @@
+---
+upgrade:
+  - |
+    The deprecated timeout keyword in :meth:`qiskit.providers.ibmq.IBMQBackendService.backends` 
+    has now been removed.
