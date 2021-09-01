@@ -35,4 +35,4 @@ class TestSampleProgram(TestCase):
         serialized_inputs = json.dumps(inputs, cls=RuntimeEncoder)
         unserialized_inputs = json.loads(serialized_inputs, cls=RuntimeDecoder)
         sample_program.main(self.backend, self.user_messenger, **unserialized_inputs)
-        self.assertEqual(self.user_messenger.call_count, inputs["iterations"] + 1)
+        self.assertEqual(self.user_messenger.call_count, inputs["iterations"])

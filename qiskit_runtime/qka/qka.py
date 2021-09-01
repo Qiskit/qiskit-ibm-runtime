@@ -515,4 +515,4 @@ def main(backend, user_messenger, **kwargs):
         C=C,
     )
 
-    user_messenger.publish(qka_results, final=True)
+    return qka_results

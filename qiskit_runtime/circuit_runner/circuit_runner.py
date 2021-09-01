@@ -20,7 +20,7 @@ from qiskit.compiler import transpile, schedule
 
 def main(
     backend,
-    user_messenger,
+    user_messenger,  # pylint: disable=unused-argument
     circuits,
     initial_layout=None,
     seed_transpiler=None,
@@ -65,4 +65,4 @@ def main(
         # Performs measurement error mitigation.
         pass
 
-    user_messenger.publish(result.to_dict(), final=True)
+    return result.to_dict()

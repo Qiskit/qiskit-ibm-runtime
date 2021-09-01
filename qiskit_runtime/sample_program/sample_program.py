@@ -13,6 +13,7 @@
 """A sample runtime program that submits random circuits for user-specified iterations."""
 
 import random
+from typing import Any
 
 from qiskit import transpile
 from qiskit.circuit.random import random_circuit
@@ -31,7 +32,7 @@ def prepare_circuits(backend):
     return transpile(circuit, backend)
 
 
-def main(backend, user_messenger, **kwargs):
+def main(backend, user_messenger, **kwargs) -> Any:
     """Main entry point of the program.
 
     Args:
@@ -39,6 +40,9 @@ def main(backend, user_messenger, **kwargs):
         user_messenger (qiskit.providers.ibmq.runtime.UserMessenger): Used to communicate with the
             program consumer.
         kwargs: User inputs.
+
+    Returns:
+        Final result of the program.
     """
     iterations = kwargs.pop("iterations", 5)
     for it in range(iterations):
@@ -46,4 +50,4 @@ def main(backend, user_messenger, **kwargs):
         result = backend.run(qc).result()
         user_messenger.publish({"iteration": it, "counts": result.get_counts()})
 
-    user_messenger.publish("All done!", final=True)
+    return "All done!"
