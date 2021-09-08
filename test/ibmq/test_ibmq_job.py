@@ -32,7 +32,6 @@ from qiskit_ibm.ibmqbackend import IBMQRetiredBackend
 from qiskit_ibm.exceptions import IBMQBackendError, IBMQBackendApiError
 from qiskit_ibm.utils.utils import api_status_to_job_status
 from qiskit_ibm.job.exceptions import IBMQJobTimeoutError
-from qiskit_ibm.utils.converters import local_to_utc
 from qiskit_ibm.api.rest.job import Job as RestJob
 from qiskit_ibm.api.exceptions import RequestsApiError
 
@@ -251,14 +250,8 @@ class TestIBMQJob(IBMQTestCase):
         """Test retrieving jobs filtered by multiple job statuses."""
         statuses_to_filter = [JobStatus.ERROR, JobStatus.CANCELLED]
         status_filters = [
-            {'status': [JobStatus.ERROR, JobStatus.CANCELLED],
-             'db_filter': None},
-            {'status': [JobStatus.CANCELLED],
-             'db_filter': {'or': [{'status': {'regexp': '^ERROR'}}]}},
-            {'status': [JobStatus.ERROR],
-             'db_filter': {'or': [{'status': 'CANCELLED'}]}}
+            {'status': [JobStatus.ERROR, JobStatus.CANCELLED]},
         ]
-
         job_to_cancel = submit_and_cancel(backend=self.sim_backend)
         job_to_fail = submit_job_bad_shots(backend=self.sim_backend)
         job_to_fail.wait_for_final_state()
@@ -267,7 +260,6 @@ class TestIBMQJob(IBMQTestCase):
             with self.subTest(status_filter=status_filter):
                 job_list = self.sim_backend.jobs(
                     status=status_filter['status'],
-                    db_filter=status_filter['db_filter'],
                     start_datetime=self.last_month)
                 job_list_ids = [_job.job_id() for _job in job_list]
                 if job_to_cancel.status() is JobStatus.CANCELLED:
@@ -380,70 +372,20 @@ class TestIBMQJob(IBMQTestCase):
         past_month = date_today - timedelta(30)
         past_two_month = date_today - timedelta(60)
 
-        # Used for `db_filter`, should not override `start_datetime` and `end_datetime` arguments.
-        past_ten_days = date_today - timedelta(10)
-        db_filters = [None, {'creationDate': {'gt': past_ten_days}}]
-
         # Add local tz in order to compare to `creation_date` which is tz aware.
         past_month_tz_aware = past_month.replace(tzinfo=tz.tzlocal())
         past_two_month_tz_aware = past_two_month.replace(tzinfo=tz.tzlocal())
 
-        for db_filter in db_filters:
-            with self.subTest(db_filter=db_filter):
-                job_list = self.provider.backend.jobs(
-                    backend_name=self.sim_backend.name(), limit=2,
-                    start_datetime=past_two_month, end_datetime=past_month, db_filter=db_filter)
-                self.assertTrue(job_list)
-                for job in job_list:
-                    self.assertTrue(
-                        (past_two_month_tz_aware <= job.creation_date() <= past_month_tz_aware),
-                        'job {} creation date {} not within range'.format(
-                            job.job_id(), job.creation_date()))
-
-    def test_retrieve_jobs_db_filter(self):
-        """Test retrieving jobs using db_filter."""
-        # Submit jobs with desired attributes.
-        qc = QuantumCircuit(3, 3)
-        qc.h(0)
-        qc.measure([0, 1, 2], [0, 1, 2])
-        job = self.sim_backend.run(transpile(qc, backend=self.sim_backend))
-        job.wait_for_final_state()
-
-        my_filter = {'backend.name': self.sim_backend.name(),
-                     'summaryData.summary.qobj_config.n_qubits': 3,
-                     'status': 'COMPLETED'}
-
-        job_list = self.provider.backend.jobs(backend_name=self.sim_backend.name(),
-                                              limit=2, skip=0, db_filter=my_filter,
-                                              start_datetime=self.last_month)
-        self.assertTrue(job_list)
-
-        for job in job_list:
-            job.refresh()
-            self.assertEqual(
-                job.summary_data_['summary']['qobj_config']['n_qubits'], 3,
-                "Job {} does not have correct data.".format(job.job_id())
-            )
-
-    def test_pagination_filter(self):
-        """Test db_filter that could conflict with pagination."""
-        jobs = self.sim_backend.jobs(limit=25, start_datetime=self.last_month)
-        job = jobs[3]
-        job_utc = local_to_utc(job.creation_date()).isoformat()
-
-        db_filters = [
-            {'id': {'neq': job.job_id()}},
-            {'and': [{'id': {'neq': job.job_id()}}]},
-            {'creationDate': {'neq': job_utc}},
-            {'and': [{'creationDate': {'gt': job_utc}}]}
-        ]
-        for db_filter in db_filters:
-            with self.subTest(filter=db_filter):
-                job_list = self.sim_backend.jobs(limit=25, db_filter=db_filter)
-                self.assertTrue(job_list)
-                self.assertNotIn(job.job_id(), [rjob.job_id() for rjob in job_list],
-                                 "Job {} with creation date {} should not be returned".format(
-                                     job.job_id(), job_utc))
+        with self.subTest():
+            job_list = self.provider.backend.jobs(
+                backend_name=self.sim_backend.name(), limit=2,
+                start_datetime=past_two_month, end_datetime=past_month)
+            self.assertTrue(job_list)
+            for job in job_list:
+                self.assertTrue(
+                    (past_two_month_tz_aware <= job.creation_date() <= past_month_tz_aware),
+                    'job {} creation date {} not within range'.format(
+                        job.job_id(), job.creation_date()))
 
     def test_retrieve_jobs_order(self):
         """Test retrieving jobs with different orders."""
@@ -500,10 +442,9 @@ class TestIBMQJob(IBMQTestCase):
             self.assertTrue(isinstance(new_job.backend(), IBMQRetiredBackend))
             self.assertNotEqual(new_job.backend().name(), 'unknown')
 
-            new_job2 = self.provider.backend.jobs(
-                db_filter={'id': self.sim_job.job_id()}, start_datetime=self.last_month)[0]
-            self.assertTrue(isinstance(new_job2.backend(), IBMQRetiredBackend))
-            self.assertNotEqual(new_job2.backend().name(), 'unknown')
+            last_month_jobs = map(lambda job: job.job_id(),
+                                  self.provider.backend.jobs(start_datetime=self.last_month))
+            self.assertIn(new_job.job_id(), last_month_jobs)
         finally:
             self.provider._backends = saved_backends
 

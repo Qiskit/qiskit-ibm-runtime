@@ -1,0 +1,5 @@
+---
+upgrade:
+  - |
+    The db_filter paramter has been removed from :meth:`qiskit.providers.ibmq.IBMQBackendService.jobs`
+    due to low adoption.

@@ -114,8 +114,7 @@ def _job_summary(backend: Union[IBMQBackend, FakeBackend]) -> PlotlyWidget:
     """
     now = datetime.datetime.now()
     past_year_date = now - datetime.timedelta(days=365)
-    date_filter = {'creationDate': {'gt': past_year_date.isoformat()}}
-    jobs = backend.jobs(limit=None, db_filter=date_filter)
+    jobs = backend.jobs(limit=None, start_datetime=past_year_date)
 
     num_jobs = len(jobs)
     main_str = "<b>Total Jobs</b><br>{}".format(num_jobs)

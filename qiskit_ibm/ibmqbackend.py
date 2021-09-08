@@ -565,7 +565,6 @@ class IBMQBackend(Backend):
             job_tags_operator: Optional[str] = "OR",
             experiment_id: Optional[str] = None,
             descending: bool = True,
-            db_filter: Optional[Dict[str, Any]] = None
     ) -> List[IBMQJob]:
         """Return the jobs submitted to this backend, subject to optional filtering.
 
@@ -602,19 +601,6 @@ class IBMQBackend(Backend):
             experiment_id: Filter by job experiment ID.
             descending: If ``True``, return the jobs in descending order of the job
                 creation date (newest first). If ``False``, return in ascending order.
-            db_filter: A `loopback-based filter
-                <https://loopback.io/doc/en/lb2/Querying-data.html>`_.
-                This is an interface to a database ``where`` filter. Some
-                examples of its usage are:
-
-                Filter last five jobs with errors::
-
-                   job_list = backend.jobs(limit=5, status=JobStatus.ERROR)
-
-                Filter last five jobs with hub name ``ibm-q``::
-
-                  filter = {'hubInfo.hub.name': 'ibm-q'}
-                  job_list = backend.jobs(limit=5, db_filter=filter)
 
         Returns:
             A list of jobs that match the criteria.
@@ -626,7 +612,7 @@ class IBMQBackend(Backend):
             limit=limit, skip=skip, backend_name=self.name(), status=status,
             job_name=job_name, start_datetime=start_datetime, end_datetime=end_datetime,
             job_tags=job_tags, job_tags_operator=job_tags_operator,
-            experiment_id=experiment_id, descending=descending, db_filter=db_filter)
+            experiment_id=experiment_id, descending=descending)
 
     def active_jobs(self, limit: int = 10) -> List[IBMQJob]:
         """Return the unfinished jobs submitted to this backend.
