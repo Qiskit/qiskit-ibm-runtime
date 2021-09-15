@@ -57,6 +57,7 @@ class TestProxies(IBMTestCase):
     @requires_qe_access
     def test_proxies_ibm_account(self, qe_token, qe_url):
         """Should reach the proxy using account.enable."""
+        IBMProvider._disable_account()
         provider = IBMProvider(qe_token, qe_url,
                                proxies={'urls': VALID_PROXIES})
 
