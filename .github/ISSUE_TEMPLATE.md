@@ -3,7 +3,7 @@
 
 ### Information
 
-- **Qiskit IBMQ Provider version**:
+- **Qiskit IBM Provider version**:
 - **Python version**:
 - **Operating system**:
 

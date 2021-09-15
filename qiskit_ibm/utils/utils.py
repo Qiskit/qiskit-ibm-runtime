@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2019.
+# (C) Copyright IBM 2021.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -102,19 +102,19 @@ def setup_logger(logger: logging.Logger) -> None:
     """Setup the logger for the provider modules with the appropriate level.
 
     It involves:
-        * Use the `QISKIT_IBMQ_PROVIDER_LOG_LEVEL` environment variable to
+        * Use the `QISKIT_IBM_PROVIDER_LOG_LEVEL` environment variable to
           determine the log level to use for the provider modules. If an invalid
           level is set, the log level defaults to ``WARNING``. The valid log levels
           are ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``
           (case-insensitive). If the environment variable is not set, then the parent
           logger's level is used, which also defaults to `WARNING`.
-        * Use the `QISKIT_IBMQ_PROVIDER_LOG_FILE` environment variable to specify the
+        * Use the `QISKIT_IBM_PROVIDER_LOG_FILE` environment variable to specify the
           filename to use when logging messages. If a log file is specified, the log
           messages will not be logged to the screen. If a log file is not specified,
           the log messages will only be logged to the screen and not to a file.
     """
-    log_level = os.getenv('QISKIT_IBMQ_PROVIDER_LOG_LEVEL', '')
-    log_file = os.getenv('QISKIT_IBMQ_PROVIDER_LOG_FILE', '')
+    log_level = os.getenv('QISKIT_IBM_PROVIDER_LOG_LEVEL', '')
+    log_file = os.getenv('QISKIT_IBM_PROVIDER_LOG_FILE', '')
 
     # Setup the formatter for the log messages.
     log_fmt = '%(module)s.%(funcName)s:%(levelname)s:%(asctime)s: %(message)s'

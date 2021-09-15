@@ -21,7 +21,7 @@ from collections import defaultdict
 
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 
-from qiskit_ibm import accountprovider  # pylint: disable=unused-import
+from qiskit_ibm import ibm_provider  # pylint: disable=unused-import
 
 from .constants import (ExperimentShareLevel, ResultQuality,
                         RESULT_QUALITY_FROM_API, RESULT_QUALITY_TO_API)
@@ -30,8 +30,8 @@ from .device_component import DeviceComponent
 from ..utils.converters import local_to_utc_str, utc_to_local
 from ..api.clients.experiment import ExperimentClient
 from ..api.exceptions import RequestsApiError
-from ..ibmqbackend import IBMQRetiredBackend
-from ..exceptions import IBMQApiError
+from ..ibm_backend import IBMRetiredBackend
+from ..exceptions import IBMApiError
 from ..credentials import store_preferences
 
 logger = logging.getLogger(__name__)
@@ -44,12 +44,12 @@ class IBMExperimentService:
     experiment service, which allows you to create, delete, update, query, and
     retrieve experiments, experiment figures, and analysis results. The
     ``experiment`` attribute of
-    :class:`~qiskit_ibm.accountprovider.AccountProvider` is an
+    :class:`~qiskit_ibm.ibm_provider.IBMProvider` is an
     instance of this class, and the main syntax for using the service is
     ``provider.experiment.<action>``. For example::
 
-        from qiskit import IBMQ
-        provider = IBMQ.load_account()
+        from qiskit_ibm import IBMProvider
+        provider = IBMProvider()
 
         # Retrieve all experiments.
         experiments = provider.experiment.experiments()
@@ -83,12 +83,12 @@ class IBMExperimentService:
 
     def __init__(
             self,
-            provider: 'accountprovider.AccountProvider'
+            provider: 'ibm_provider.IBMProvider'
     ) -> None:
         """IBMExperimentService constructor.
 
         Args:
-            provider: IBM Quantum Experience account provider.
+            provider: IBM Quantum account provider.
         """
         super().__init__()
 
@@ -148,7 +148,7 @@ class IBMExperimentService:
 
         Raises:
             IBMExperimentEntryExists: If the experiment already exits.
-            IBMQApiError: If the request to the server failed.
+            IBMApiError: If the request to the server failed.
         """
         # pylint: disable=arguments-differ
         if kwargs:
@@ -211,7 +211,7 @@ class IBMExperimentService:
 
         Raises:
             IBMExperimentEntryNotFound: If the experiment does not exist.
-            IBMQApiError: If the request to the server failed.
+            IBMApiError: If the request to the server failed.
         """
         # pylint: disable=arguments-differ
         if kwargs:
@@ -295,7 +295,7 @@ class IBMExperimentService:
 
         Raises:
             IBMExperimentEntryNotFound: If the experiment does not exist.
-            IBMQApiError: If the request to the server failed.
+            IBMApiError: If the request to the server failed.
         """
         with map_api_error(f"Experiment {experiment_id} not found."):
             raw_data = self._api_client.experiment_get(experiment_id)
@@ -404,7 +404,7 @@ class IBMExperimentService:
 
         Raises:
             ValueError: If an invalid parameter value is specified.
-            IBMQApiError: If the request to the server failed.
+            IBMApiError: If the request to the server failed.
         """
         # pylint: disable=arguments-differ
         if filters:
@@ -492,10 +492,10 @@ class IBMExperimentService:
         try:
             backend = self._provider.get_backend(backend_name)
         except QiskitBackendNotFoundError:
-            backend = IBMQRetiredBackend.from_name(backend_name=backend_name,
-                                                   provider=self._provider,
-                                                   credentials=self._provider.credentials,
-                                                   api=None)
+            backend = IBMRetiredBackend.from_name(backend_name=backend_name,
+                                                  provider=self._provider,
+                                                  credentials=self._provider.credentials,
+                                                  api=None)
         extra_data: Dict[str, Any] = {}
         self._convert_dt(raw_data.get('created_at', None), extra_data, 'creation_datetime')
         self._convert_dt(raw_data.get('start_time', None), extra_data, 'start_datetime')
@@ -547,7 +547,7 @@ class IBMExperimentService:
             This method prompts for confirmation and requires a response before proceeding.
 
         Raises:
-            IBMQApiError: If the request to the server failed.
+            IBMApiError: If the request to the server failed.
         """
         confirmation = input('\nAre you sure you want to delete the experiment? '
                              'Results and plots for the experiment will also be deleted. [y/N]: ')
@@ -560,7 +560,7 @@ class IBMExperimentService:
             if api_err.status_code == 404:
                 logger.warning("Experiment %s not found.", experiment_id)
             else:
-                raise IBMQApiError(f"Failed to process the request: {api_err}") from None
+                raise IBMApiError(f"Failed to process the request: {api_err}") from None
 
     def create_analysis_result(
             self,
@@ -599,7 +599,7 @@ class IBMExperimentService:
 
         Raises:
             IBMExperimentEntryExists: If the analysis result already exits.
-            IBMQApiError: If the request to the server failed.
+            IBMApiError: If the request to the server failed.
         """
         # pylint: disable=arguments-differ
         if kwargs:
@@ -659,7 +659,7 @@ class IBMExperimentService:
 
         Raises:
             IBMExperimentEntryNotFound: If the analysis result does not exist.
-            IBMQApiError: If the request to the server failed.
+            IBMApiError: If the request to the server failed.
         """
         # pylint: disable=arguments-differ
         if kwargs:
@@ -745,7 +745,7 @@ class IBMExperimentService:
 
         Raises:
             IBMExperimentEntryNotFound: If the analysis result does not exist.
-            IBMQApiError: If the request to the server failed.
+            IBMApiError: If the request to the server failed.
         """
         with map_api_error(f"Analysis result {result_id} not found."):
             raw_data = self._api_client.analysis_result_get(result_id)
@@ -829,7 +829,7 @@ class IBMExperimentService:
 
         Raises:
             ValueError: If an invalid parameter value is specified.
-            IBMQApiError: If the request to the server failed.
+            IBMApiError: If the request to the server failed.
         """
         # pylint: disable=arguments-differ
         if filters:
@@ -1039,7 +1039,7 @@ class IBMExperimentService:
             This method prompts for confirmation and requires a response before proceeding.
 
         Raises:
-            IBMQApiError: If the request to the server failed.
+            IBMApiError: If the request to the server failed.
         """
         confirmation = input('\nAre you sure you want to delete the analysis result? [y/N]: ')
         if confirmation not in ('y', 'Y'):
@@ -1051,7 +1051,7 @@ class IBMExperimentService:
             if api_err.status_code == 404:
                 logger.warning("Analysis result %s not found.", result_id)
             else:
-                raise IBMQApiError(f"Failed to process the request: {api_err}") from None
+                raise IBMApiError(f"Failed to process the request: {api_err}") from None
 
     def create_figure(
             self,
@@ -1078,7 +1078,7 @@ class IBMExperimentService:
 
         Raises:
             IBMExperimentEntryExists: If the figure already exits.
-            IBMQApiError: If the request to the server failed.
+            IBMApiError: If the request to the server failed.
         """
         if figure_name is None:
             if isinstance(figure, str):
@@ -1114,7 +1114,7 @@ class IBMExperimentService:
 
         Raises:
             IBMExperimentEntryNotFound: If the figure does not exist.
-            IBMQApiError: If the request to the server failed.
+            IBMApiError: If the request to the server failed.
         """
         with map_api_error(f"Figure {figure_name} not found."):
             response = self._api_client.experiment_plot_update(experiment_id, figure, figure_name,
@@ -1142,7 +1142,7 @@ class IBMExperimentService:
 
         Raises:
             IBMExperimentEntryNotFound: If the figure does not exist.
-            IBMQApiError: If the request to the server failed.
+            IBMApiError: If the request to the server failed.
         """
         with map_api_error(f"Figure {figure_name} not found."):
             data = self._api_client.experiment_plot_get(experiment_id, figure_name)
@@ -1169,7 +1169,7 @@ class IBMExperimentService:
             figure_name: Name of the figure.
 
         Raises:
-            IBMQApiError: If the request to the server failed.
+            IBMApiError: If the request to the server failed.
         """
         confirmation = input('\nAre you sure you want to delete the experiment plot? [y/N]: ')
         if confirmation not in ('y', 'Y'):
@@ -1181,7 +1181,7 @@ class IBMExperimentService:
             if api_err.status_code == 404:
                 logger.warning("Figure %s not found.", figure_name)
             else:
-                raise IBMQApiError(f"Failed to process the request: {api_err}") from None
+                raise IBMApiError(f"Failed to process the request: {api_err}") from None
 
     def device_components(
             self,
@@ -1198,7 +1198,7 @@ class IBMExperimentService:
             are lists of device components for the backends.
 
         Raises:
-            IBMQApiError: If the request to the server failed.
+            IBMApiError: If the request to the server failed.
         """
         with map_api_error(f"No device components found for backend {backend_name}"):
             raw_data = self._api_client.device_components(backend_name)

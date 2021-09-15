@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2018, 2020.
+# (C) Copyright IBM 2021.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -36,8 +36,8 @@ class Account(RestAdapterBase):
         'jobs_status': '/Jobs/status/v/1',
     }
 
-    TEMPLATE_IBMQ_HUBS = '/Network/{hub}/Groups/{group}/Projects/{project}'
-    """str: Template for creating an IBM Quantum Experience URL with
+    TEMPLATE_IBM_HUBS = '/Network/{hub}/Groups/{group}/Projects/{project}'
+    """str: Template for creating an IBM Quantum URL with
     hub/group/project information."""
 
     def __init__(self, session: RetrySession, hub: str, group: str, project: str) -> None:
@@ -49,7 +49,7 @@ class Account(RestAdapterBase):
             group: The group to use.
             project: The project to use.
         """
-        self.url_prefix = self.TEMPLATE_IBMQ_HUBS.format(hub=hub, group=group, project=project)
+        self.url_prefix = self.TEMPLATE_IBM_HUBS.format(hub=hub, group=group, project=project)
         super().__init__(session, self.url_prefix)
 
     # Function-specific rest adapters.

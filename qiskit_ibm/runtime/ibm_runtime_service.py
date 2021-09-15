@@ -18,7 +18,7 @@ import json
 import copy
 
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
-from qiskit_ibm import accountprovider  # pylint: disable=unused-import
+from qiskit_ibm import ibm_provider  # pylint: disable=unused-import
 
 from .runtime_job import RuntimeJob
 from .runtime_program import RuntimeProgram, ProgramParameter, ProgramResult, ParameterNamespace
@@ -29,8 +29,8 @@ from .program.result_decoder import ResultDecoder
 from ..api.clients.runtime import RuntimeClient
 
 from ..api.exceptions import RequestsApiError
-from ..exceptions import IBMQNotAuthorizedError, IBMQInputValueError, IBMQProviderError
-from ..ibmqbackend import IBMQRetiredBackend
+from ..exceptions import IBMNotAuthorizedError, IBMInputValueError, IBMProviderError
+from ..ibm_backend import IBMRetiredBackend
 from ..credentials import Credentials
 
 logger = logging.getLogger(__name__)
@@ -52,10 +52,10 @@ class IBMRuntimeService:
 
     A sample workflow of using the runtime service::
 
-        from qiskit import IBMQ, QuantumCircuit
-        from qiskit_ibm import RunnerResult
+        from qiskit import QuantumCircuit
+        from qiskit_ibm import IBMProvider, RunnerResult
 
-        provider = IBMQ.load_account()
+        provider = IBMProvider()
         backend = provider.backend.ibmq_qasm_simulator
 
         # List all available programs.
@@ -94,7 +94,7 @@ class IBMRuntimeService:
     canceling job.
     """
 
-    def __init__(self, provider: 'accountprovider.AccountProvider') -> None:
+    def __init__(self, provider: 'ibm_provider.IBMProvider') -> None:
         """IBMRuntimeService constructor.
 
         Args:
@@ -222,10 +222,10 @@ class IBMRuntimeService:
             A ``RuntimeJob`` instance representing the execution.
 
         Raises:
-            IBMQInputValueError: If input is invalid.
+            IBMInputValueError: If input is invalid.
         """
         if 'backend_name' not in options:
-            raise IBMQInputValueError('"backend_name" is required field in "options"')
+            raise IBMInputValueError('"backend_name" is required field in "options"')
         # If using params object, extract as dictionary
         if isinstance(inputs, ParameterNamespace):
             inputs.validate()
@@ -300,9 +300,9 @@ class IBMRuntimeService:
             Program ID.
 
         Raises:
-            IBMQInputValueError: If required metadata is missing.
+            IBMInputValueError: If required metadata is missing.
             RuntimeDuplicateProgramError: If a program with the same name already exists.
-            IBMQNotAuthorizedError: If you are not authorized to upload programs.
+            IBMNotAuthorizedError: If you are not authorized to upload programs.
             QiskitRuntimeError: If the upload failed.
         """
         program_metadata = self._merge_metadata(
@@ -316,7 +316,7 @@ class IBMRuntimeService:
 
         for req in ['name', 'description', 'max_execution_time']:
             if req not in program_metadata or not program_metadata[req]:
-                raise IBMQInputValueError(f"{req} is a required metadata field.")
+                raise IBMInputValueError(f"{req} is a required metadata field.")
 
         try:
             response = self._api_client.program_create(program_data=data, **program_metadata)
@@ -325,7 +325,7 @@ class IBMRuntimeService:
                 raise RuntimeDuplicateProgramError(
                     "Program with the same name already exists.") from None
             if ex.status_code == 403:
-                raise IBMQNotAuthorizedError(
+                raise IBMNotAuthorizedError(
                     "You are not authorized to upload programs.") from None
             raise QiskitRuntimeError(f"Failed to create program: {ex}") from None
         return response['id']
@@ -512,10 +512,10 @@ class IBMRuntimeService:
         if self._provider.credentials.unique_id().to_tuple() != (hub, group, project):
             # Try to find the right backend
             try:
-                original_provider = self._provider._factory.get_provider(hub, group, project)
+                original_provider = self._provider._get_provider(hub, group, project)
                 backend = original_provider.get_backend(raw_data['backend'])
-            except (IBMQProviderError, QiskitBackendNotFoundError):
-                backend = IBMQRetiredBackend.from_name(
+            except (IBMProviderError, QiskitBackendNotFoundError):
+                backend = IBMRetiredBackend.from_name(
                     backend_name=raw_data['backend'],
                     provider=None,
                     credentials=Credentials(token="", url="",

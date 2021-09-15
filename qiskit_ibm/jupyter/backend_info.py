@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2017, 2019.
+# (C) Copyright IBM 2021.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -19,7 +19,7 @@ from typing import Union
 import ipyvuetify as vue
 from IPython.display import display  # pylint: disable=import-error
 from qiskit.test.mock.fake_backend import FakeBackend
-from qiskit_ibm.ibmqbackend import IBMQBackend
+from qiskit_ibm.ibm_backend import IBMBackend
 from .config_widget import config_tab
 from .qubits_widget import qubits_tab
 from .gates_widget import gates_tab
@@ -27,7 +27,7 @@ from .jobs_widget import jobs_tab
 from ..visualization.interactive import iplot_error_map
 
 
-def _async_job_loader(tab: vue.TabItem, backend: Union[IBMQBackend, FakeBackend]) -> None:
+def _async_job_loader(tab: vue.TabItem, backend: Union[IBMBackend, FakeBackend]) -> None:
     """Asynchronous job loader.
 
     Args:
@@ -37,7 +37,7 @@ def _async_job_loader(tab: vue.TabItem, backend: Union[IBMQBackend, FakeBackend]
     tab.children = [jobs_tab(backend)]
 
 
-def backend_widget(backend: Union[IBMQBackend, FakeBackend]) -> None:
+def backend_widget(backend: Union[IBMBackend, FakeBackend]) -> None:
     """Display backend information as a widget.
 
     Args:

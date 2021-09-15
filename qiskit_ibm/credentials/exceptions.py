@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2017, 2019.
+# (C) Copyright IBM 2021.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -12,10 +12,10 @@
 
 """Exception for the ``Credentials`` module."""
 
-from ..exceptions import IBMQError
+from ..exceptions import IBMError
 
 
-class CredentialsError(IBMQError):
+class CredentialsError(IBMError):
     """Base class for errors raised during credential management."""
     pass
 
@@ -30,7 +30,7 @@ class CredentialsNotFoundError(CredentialsError):
     pass
 
 
-class HubGroupProjectError(IBMQError):
+class HubGroupProjectError(IBMError):
     """Base class for errors raised by the hubgroupproject module."""
     pass
 

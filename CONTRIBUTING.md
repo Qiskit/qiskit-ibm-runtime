@@ -7,11 +7,11 @@ included in the qiskit documentation:
 https://qiskit.org/documentation/contributing_to_qiskit.html
 
 
-Contributing Qiskit IBMQ Provider
+Contributing to Qiskit IBM Provider
 ---------------------------
 
 In addition to the general guidelines there are specific details for
-contributing to the IBMQ Provider, these are documented below.
+contributing to the Qiskit IBM Provider, these are documented below.
 
 ### Pull request checklist
 
@@ -165,7 +165,7 @@ After release notes have been added if you want to see what the full output of
 the release notes. In general the output from reno that we'll get is a rst
 (ReStructuredText) file that can be compiled by
 [sphinx](https://www.sphinx-doc.org/en/master/). To generate the rst file you
-use the ``reno report`` command. If you want to generate the full ibmq provider
+use the ``reno report`` command. If you want to generate the full Qiskit IBM provider
 release notes for all releases (since we started using reno during 0.9) you just
 run::
 
@@ -190,7 +190,7 @@ notes will look like for the current state of the repo you can run:
 and the release notes in particular will be located at
 `docs/_build/html/release_notes.html`
 
-## Installing Qiskit IBMQ Provider from source
+## Installing Qiskit IBM Provider from source
 Please see the [Installing IBM Quantum Provider from
 Source](https://qiskit.org/documentation/contributing_to_qiskit.html#installing-ibm-quantum-provider-from-source)
 section of the Qiskit documentation.
@@ -219,7 +219,7 @@ C:\..\> python -m unittest test/test_something.py
 ```
 
 Note many of the tests will not be executed unless you have setup an
-IBMQ account. To set this up please go to this
+IBM Quantum account. To set this up please go to this
 [page](https://quantum-computing.ibm.com/login) and
 register an account.
 
@@ -237,15 +237,15 @@ credentials are available, and `False` otherwise):
   Option          Description                             Default              If `True`, forces
   --------------- --------------------------------------- -------------------- -----------------------
   `skip_online`   Skips tests that require remote         `False`              `rec = False`
-                  requests (also, no mocked information                        
-                  is used). Does not require user                              
-                  credentials.                                                 
+                  requests (also, no mocked information
+                  is used). Does not require user
+                  credentials.
 
   `mock_online`   It runs the online tests using mocked   `not uc_available`   `skip_online = False`
-                  information. Does not require user                           
-                  credentials.                                                 
+                  information. Does not require user
+                  credentials.
 
-  `run_slow`      It runs tests tagged as *slow*.         `False`              
+  `run_slow`      It runs tests tagged as *slow*.         `False`
 
   `rec`           It records the remote requests. It      `False`              `skip_online = False`
                   requires user credentials.                                   `run_slow = False`
@@ -287,11 +287,11 @@ previous version in the release notes.
 
 ### Branches
 
-* `master`:
+* `main`:
 
-The master branch is used for development of the next version of qiskit-ibm.
+The main branch is used for development of the next version of qiskit-ibm.
 It will be updated frequently and should not be considered stable. The API
-can and will change on master as we introduce and refine new features.
+can and will change on main as we introduce and refine new features.
 
 * `stable/*` branches:
 Branches under `stable/*` are used to maintain released versions of qiskit-ibm.
@@ -305,16 +305,16 @@ merged to it are bugfixes.
 When it is time to release a new minor version of qiskit-ibm we will:
 
 1.  Create a new tag with the version number and push it to github
-2.  Change the `master` version to the next release version.
+2.  Change the `main` version to the next release version.
 
 The release automation processes will be triggered by the new tag and perform
 the following steps:
 
 1.  Create a stable branch for the new minor version from the release tag
-    on the `master` branch
+    on the `main` branch
 2.  Build and upload binary wheels to pypi
 3.  Create a github release page with a generated changelog
-4.  Generate a PR on the meta-repository to bump the ibmq provider version and
+4.  Generate a PR on the meta-repository to bump the Qiskit IBM Provider version and
     meta-package version.
 
 The `stable/*` branches should only receive changes in the form of bug

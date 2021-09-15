@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2020.
+# (C) Copyright IBM 2021.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -19,7 +19,7 @@ class BackendJobLimit:
     """Job limit for a backend.
 
     Represent the job limit for a backend on a specific provider. This
-    instance is returned by the :meth:`IBMQBackend.job_limit()<IBMQBackend.job_limit>`
+    instance is returned by the :meth:`IBMBackend.job_limit()<IBMBackend.job_limit>`
     method.
 
     Attributes:

@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2018, 2020.
+# (C) Copyright IBM 2021.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Client for accessing IBM Quantum Experience experiment services."""
+"""Client for accessing IBM Quantum experiment services."""
 
 import logging
 from typing import List, Dict, Optional, Union
@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 
 class ExperimentClient(BaseClient):
-    """Client for accessing IBM Quantum Experience experiment services."""
+    """Client for accessing IBM Quantum experiment services."""
 
     def __init__(
             self,

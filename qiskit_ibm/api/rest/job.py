@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2018, 2019.
+# (C) Copyright IBM 2021.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -22,7 +22,7 @@ from qiskit_ibm.utils import json_encoder
 
 from .base import RestAdapterBase
 from ..session import RetrySession
-from ..exceptions import ApiIBMQProtocolError
+from ..exceptions import ApiIBMProtocolError
 from .utils.data_mapper import map_job_response, map_job_status_response
 
 logger = logging.getLogger(__name__)
@@ -154,14 +154,14 @@ class Job(RestAdapterBase):
             JSON response of job status.
 
         Raises:
-            ApiIBMQProtocolError: If an unexpected result is received from the server.
+            ApiIBMProtocolError: If an unexpected result is received from the server.
         """
         url = self.get_url('status')
         raw_response = self.session.get(url)
         try:
             api_response = raw_response.json()
         except JSONDecodeError as err:
-            raise ApiIBMQProtocolError(
+            raise ApiIBMProtocolError(
                 'Unrecognized return value received from the server: {!r}. This could be caused'
                 ' by too many requests.'.format(raw_response.content)) from err
         return map_job_status_response(api_response)
@@ -185,7 +185,7 @@ class Job(RestAdapterBase):
         Returns:
             Text response, which is empty if the request was successful.
         """
-        data = json.dumps(qobj_dict, cls=json_encoder.IQXJsonEncoder)
+        data = json.dumps(qobj_dict, cls=json_encoder.IBMJsonEncoder)
         logger.debug('Uploading to object storage.')
         response = self.session.put(url, data=data, bare=True, timeout=600,
                                     headers={'Content-Type': 'application/json'})

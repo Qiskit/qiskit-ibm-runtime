@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2020.
+# (C) Copyright IBM 2021.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -17,7 +17,7 @@ Random Number Services (:mod:`qiskit_ibm.random`)
 
 .. currentmodule:: qiskit_ibm.random
 
-Modules related to IBM Quantum Experience random number generator services.
+Modules related to IBM Quantum random number generator services.
 
 .. caution::
 
@@ -39,12 +39,12 @@ Classes
 .. autosummary::
    :toctree: ../stubs/
 
-   IBMQRandomService
+   IBMRandomService
    CQCExtractor
    CQCExtractorJob
 
 """
 
-from .ibmqrandomservice import IBMQRandomService
+from .ibm_random_service import IBMRandomService
 from .cqcextractor import CQCExtractor
 from .cqcextractorjob import CQCExtractorJob

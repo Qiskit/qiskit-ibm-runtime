@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2017, 2018.
+# (C) Copyright IBM 2021.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -41,9 +41,24 @@ def read_credentials_from_environ() -> Dict[HubGroupProject, Credentials]:
 
     # Build the credentials based on environment variables.
     credentials_dict = {}
+    hub = None
+    group = None
+    project = None
+
     for envar_name, credential_key in VARIABLES_MAP.items():
         if os.getenv(envar_name):
             credentials_dict[credential_key] = os.getenv(envar_name)
+            if envar_name == 'QISKIT_IBM_API_URL':
+                credentials_dict['auth_url'] = os.getenv(envar_name)
+            elif envar_name == 'QISKIT_IBM_HUB':
+                hub = os.getenv(envar_name)
+            elif envar_name == 'QISKIT_IBM_GROUP':
+                group = os.getenv(envar_name)
+            elif envar_name == 'QISKIT_IBM_PROJECT':
+                project = os.getenv(envar_name)
+
+    if all([hub, group, project]):
+        credentials_dict['default_provider'] = HubGroupProject(hub, group, project)
 
     credentials = Credentials(**credentials_dict)  # type: ignore[arg-type]
     return {credentials.unique_id(): credentials}

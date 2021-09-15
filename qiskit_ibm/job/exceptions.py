@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2019.
+# (C) Copyright IBM 2021.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,33 +10,33 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Exceptions related to IBM Quantum Experience jobs."""
+"""Exceptions related to IBM Quantum jobs."""
 
 from qiskit.providers.exceptions import JobError, JobTimeoutError
 
-from ..exceptions import IBMQError
+from ..exceptions import IBMError
 
 
-class IBMQJobError(JobError, IBMQError):
+class IBMJobError(JobError, IBMError):
     """Base class for errors raised by the job modules."""
     pass
 
 
-class IBMQJobApiError(IBMQJobError):
+class IBMJobApiError(IBMJobError):
     """Errors that occur unexpectedly when querying the server."""
     pass
 
 
-class IBMQJobFailureError(IBMQJobError):
+class IBMJobFailureError(IBMJobError):
     """Errors raised when a job failed."""
     pass
 
 
-class IBMQJobInvalidStateError(IBMQJobError):
+class IBMJobInvalidStateError(IBMJobError):
     """Errors raised when a job is not in a valid state for the operation."""
     pass
 
 
-class IBMQJobTimeoutError(JobTimeoutError, IBMQJobError):
+class IBMJobTimeoutError(JobTimeoutError, IBMJobError):
     """Errors raised when a job operation times out."""
     pass

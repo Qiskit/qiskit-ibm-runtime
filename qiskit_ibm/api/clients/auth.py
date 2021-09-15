@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2018, 2019.
+# (C) Copyright IBM 2021.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Client for accessing IBM Quantum Experience authentication services."""
+"""Client for accessing IBM Quantum authentication services."""
 
 from typing import Dict, List, Optional, Any, Union
 from requests.exceptions import RequestException
@@ -23,13 +23,13 @@ from .base import BaseClient
 
 
 class AuthClient(BaseClient):
-    """Client for accessing IBM Quantum Experience authentication services."""
+    """Client for accessing IBM Quantum authentication services."""
 
     def __init__(self, api_token: str, auth_url: str, **request_kwargs: Any) -> None:
         """AuthClient constructor.
 
         Args:
-            api_token: IBM Quantum Experience API token.
+            api_token: IBM Quantum API token.
             auth_url: URL for the authentication service.
             **request_kwargs: Arguments for the request ``Session``.
         """

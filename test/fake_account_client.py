@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2019.
+# (C) Copyright IBM 2021.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -12,7 +12,7 @@
 
 """Fake AccountClient."""
 
-# TODO This can probably be merged with the one in test_ibmq_job_states
+# TODO This can probably be merged with the one in test_ibm_job_states
 import time
 import copy
 from random import randrange

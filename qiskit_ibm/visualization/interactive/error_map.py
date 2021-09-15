@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2017, 2019.
+# (C) Copyright IBM 2021.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -11,7 +11,7 @@
 # that they have been altered from the originals.
 # pylint: disable=invalid-name
 
-"""Interactive error map for IBM Quantum Experience devices."""
+"""Interactive error map for IBM Quantum devices."""
 
 import math
 from typing import Tuple, Union
@@ -20,7 +20,7 @@ import numpy as np
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 import matplotlib as mpl
-from qiskit_ibm.ibmqbackend import IBMQBackend
+from qiskit_ibm.ibm_backend import IBMBackend
 
 from .plotly_wrapper import PlotlyWidget, PlotlyFigure
 from ..device_layouts import DEVICE_LAYOUTS
@@ -30,7 +30,7 @@ from ..exceptions import VisualizationValueError, VisualizationTypeError
 
 
 def iplot_error_map(
-        backend: IBMQBackend,
+        backend: IBMBackend,
         figsize: Tuple[int] = (800, 500),
         show_title: bool = True,
         remove_badcal_edges: bool = True,
@@ -60,18 +60,15 @@ def iplot_error_map(
             :hide-code:
             :hide-output:
 
-            from qiskit.test.ibmq_mock import mock_get_backend
+            from qiskit_ibm.test.ibm_provider_mock import mock_get_backend
             mock_get_backend('FakeVigo')
-
 
         .. jupyter-execute::
 
-           from qiskit import IBMQ
+           from qiskit_ibm import IBMProvider
            from qiskit_ibm.visualization import iplot_error_map
 
-           IBMQ.load_account()
-
-           provider = IBMQ.get_provider(group='open', project='main')
+           provider = IBMProvider(group='open', project='main')
            backend = provider.get_backend('ibmq_vigo')
 
            iplot_error_map(backend, as_widget=True)

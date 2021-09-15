@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2018, 2020.
+# (C) Copyright IBM 2021.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -12,34 +12,34 @@
 
 """Exception for the Job Manager modules."""
 
-from ..exceptions import IBMQError
+from ..exceptions import IBMError
 
 
-class IBMQJobManagerError(IBMQError):
+class IBMJobManagerError(IBMError):
     """Base class for errors raise by the Job Manager."""
     pass
 
 
-class IBMQJobManagerInvalidStateError(IBMQJobManagerError):
+class IBMJobManagerInvalidStateError(IBMJobManagerError):
     """Errors raised when an operation is invoked in an invalid state."""
     pass
 
 
-class IBMQJobManagerTimeoutError(IBMQJobManagerError):
+class IBMJobManagerTimeoutError(IBMJobManagerError):
     """Errors raised when a Job Manager operation times out."""
     pass
 
 
-class IBMQJobManagerJobNotFound(IBMQJobManagerError):
+class IBMJobManagerJobNotFound(IBMJobManagerError):
     """Errors raised when a job cannot be found."""
     pass
 
 
-class IBMQManagedResultDataNotAvailable(IBMQJobManagerError):
+class IBMManagedResultDataNotAvailable(IBMJobManagerError):
     """Errors raised when result data is not available."""
     pass
 
 
-class IBMQJobManagerUnknownJobSet(IBMQJobManagerError):
+class IBMJobManagerUnknownJobSet(IBMJobManagerError):
     """Errors raised when the job set ID is unknown."""
     pass

@@ -13,10 +13,10 @@
 """Exceptions related to IBM Quantum runtime service."""
 
 
-from ..exceptions import IBMQError
+from ..exceptions import IBMError
 
 
-class QiskitRuntimeError(IBMQError):
+class QiskitRuntimeError(IBMError):
     """Base class for errors raised by the runtime service modules."""
     pass
 

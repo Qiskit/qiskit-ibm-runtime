@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2017, 2018.
+# (C) Copyright IBM 2021.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -16,10 +16,10 @@ import time
 
 from qiskit.providers import JobStatus
 
-from .ibmqtestcase import IBMQTestCase
+from .ibm_test_case import IBMTestCase
 
 
-class JobTestCase(IBMQTestCase):
+class JobTestCase(IBMTestCase):
     """Include common functionality when testing jobs."""
 
     def wait_for_initialization(self, job, timeout=1):

@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2020.
+# (C) Copyright IBM 2021.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -16,12 +16,12 @@ from typing import Optional, Union
 from datetime import datetime, timedelta
 
 from qiskit.test.mock.fake_backend import FakeBackend
-from qiskit_ibm.ibmqbackend import IBMQBackend
+from qiskit_ibm.ibm_backend import IBMBackend
 from qiskit_ibm.backendreservation import BackendReservation
 
 
 def get_next_reservation(
-        backend: Union[IBMQBackend, FakeBackend],
+        backend: Union[IBMBackend, FakeBackend],
         time_period_hr: int = 24
 ) -> Optional[BackendReservation]:
     """Get the next reservation within the input time period for the backend.
@@ -33,7 +33,7 @@ def get_next_reservation(
     Returns:
         The next reservation for the backend.
     """
-    if not isinstance(backend, IBMQBackend):
+    if not isinstance(backend, IBMBackend):
         return None
     reservations = backend.reservations(
         start_datetime=datetime.now(),

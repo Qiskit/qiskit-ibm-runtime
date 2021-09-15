@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2019.
+# (C) Copyright IBM 2021.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,8 +10,9 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Context managers for using with IBMQProvider unit tests."""
+"""Context managers for using with IBM Provider unit tests."""
 
+from collections import OrderedDict
 import os
 from typing import Optional, Dict
 from contextlib import ContextDecorator, contextmanager
@@ -20,7 +21,8 @@ from unittest.mock import patch
 
 from qiskit_ibm.credentials import configrc, Credentials
 from qiskit_ibm.credentials.environ import VARIABLES_MAP
-from qiskit_ibm import IBMQFactory
+from qiskit_ibm import IBMProvider
+from qiskit_ibm.credentials import HubGroupProject
 
 CREDENTIAL_ENV_VARS = VARIABLES_MAP.keys()
 
@@ -116,27 +118,51 @@ class no_file(ContextDecorator):
         return self.isfile_original(filename_)
 
 
-def _mocked_initialize_provider(
-        self,
-        credentials: Credentials,
-        preferences: Optional[Dict] = None
-) -> None:
-    """Mock ``_initialize_provider()``, just storing the credentials."""
-    self._credentials = credentials
-    if preferences:
-        credentials.preferences = preferences.get(credentials.unique_id(), {})
+class MockIBMProvider:
+    """Mock class for IBM Provider"""
+
+    @classmethod
+    def _mock_initialize_provider(
+            cls,
+            credentials: Credentials,
+            preferences: Optional[Dict] = None
+    ) -> None:
+        """Mock ``_initialize_provider()``, just storing the credentials."""
+        cls._providers = OrderedDict()
+        provider = dict()
+        provider['credentials'] = credentials
+        cls._providers[HubGroupProject('ibm-q', 'open', 'main')] = provider
+        if preferences:
+            credentials.preferences = preferences.get(credentials.unique_id(), {})
+
+    @classmethod
+    def _mock_get_provider(
+            cls,
+            token: Optional[str] = None,
+            url: Optional[str] = None,
+            hub: Optional[str] = None,
+            group: Optional[str] = None,
+            project: Optional[str] = None
+    ):
+        # pylint: disable=unused-argument
+        return cls._providers[HubGroupProject('ibm-q', 'open', 'main')]
 
 
 @contextmanager
-def mock_ibmq_provider():
-    """Mock the initialization of ``IBMQFactory``, so it does not query the API."""
-    patcher = patch.object(IBMQFactory, '_initialize_providers',
-                           side_effect=_mocked_initialize_provider,
+def mock_ibm_provider():
+    """Mock the initialization of ``IBMProvider``, so it does not query the API."""
+    patcher = patch.object(IBMProvider, '_initialize_providers',
+                           side_effect=MockIBMProvider._mock_initialize_provider,
                            autospec=True)
-    patcher2 = patch.object(IBMQFactory, '_check_api_version',
+    patcher2 = patch.object(IBMProvider, '_check_api_version',
                             return_value={'new_api': True, 'api-auth': '0.1'})
+    patcher3 = patch.object(IBMProvider, '_get_provider',
+                            side_effect=MockIBMProvider._mock_get_provider,
+                            autospec=True)
     patcher.start()
     patcher2.start()
+    patcher3.start()
     yield
+    patcher3.stop()
     patcher2.stop()
     patcher.stop()

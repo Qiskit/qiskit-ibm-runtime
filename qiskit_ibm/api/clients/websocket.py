@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2018, 2021.
+# (C) Copyright IBM 2021.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -22,7 +22,7 @@ from websocket import WebSocketApp, STATUS_NORMAL
 from qiskit_ibm.apiconstants import ApiJobStatus, API_JOB_FINAL_STATES
 from qiskit_ibm.utils.utils import filter_data
 from ..exceptions import (WebsocketError,
-                          WebsocketIBMQProtocolError,
+                          WebsocketIBMProtocolError,
                           WebsocketAuthenticationError)
 from ..rest.utils.data_mapper import map_job_status_response
 from .base import BaseWebsocketClient, WebsocketClientCloseCode
@@ -79,7 +79,7 @@ class WebsocketResponseMethod(WebsocketMessage):
         try:
             parsed_dict = json.loads(json_string)
         except (ValueError, AttributeError) as ex:
-            exception_to_raise = WebsocketIBMQProtocolError(
+            exception_to_raise = WebsocketIBMProtocolError(
                 'Unable to parse the message received from the server: {!r}'.format(json_string))
 
             logger.info('An exception occurred. Raising "%s" from "%s"',

@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Client for accessing an individual IBM Quantum Experience account."""
+"""Client for accessing an individual IBM Quantum account."""
 
 import logging
 import time
@@ -28,7 +28,7 @@ from ..exceptions import (RequestsApiError, WebsocketError,
 from ..rest import Api, Account
 from ..rest.backend import Backend
 from ..session import RetrySession
-from ..exceptions import ApiIBMQProtocolError
+from ..exceptions import ApiIBMProtocolError
 from .base import BaseClient
 from .websocket import WebsocketClient, WebsocketClientCloseCode
 
@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 
 class AccountClient(BaseClient):
-    """Client for accessing an individual IBM Quantum Experience account."""
+    """Client for accessing an individual IBM Quantum account."""
 
     def __init__(
             self,
@@ -267,7 +267,7 @@ class AccountClient(BaseClient):
             Job result.
 
         Raises:
-            ApiIBMQProtocolError: If unexpected data is received from the server.
+            ApiIBMProtocolError: If unexpected data is received from the server.
         """
         if use_object_storage:
             return self._job_result_object_storage(job_id)
@@ -275,7 +275,7 @@ class AccountClient(BaseClient):
         try:
             return self.job_get(job_id)['qObjectResult']
         except KeyError as err:
-            raise ApiIBMQProtocolError(
+            raise ApiIBMProtocolError(
                 'Unexpected return value received from the server: {}'.format(str(err))) from err
 
     def _job_result_object_storage(self, job_id: str) -> Dict:
@@ -327,7 +327,7 @@ class AccountClient(BaseClient):
             Job status.
 
         Raises:
-            ApiIBMQProtocolError: If unexpected data is received from the server.
+            ApiIBMProtocolError: If unexpected data is received from the server.
         """
         return self.account_api.job(job_id).status()
 
@@ -352,7 +352,7 @@ class AccountClient(BaseClient):
         Raises:
             UserTimeoutExceededError: If the job does not return results
                 before the specified timeout.
-            ApiIBMQProtocolError: If unexpected data is received from the server.
+            ApiIBMProtocolError: If unexpected data is received from the server.
         """
         status_response = None
         # Attempt to use websocket if available.

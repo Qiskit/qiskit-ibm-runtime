@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2017, 2020.
+# (C) Copyright IBM 2021.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -17,10 +17,10 @@ from typing import Union
 
 import ipywidgets as wid
 from qiskit.test.mock.fake_backend import FakeBackend
-from qiskit_ibm.ibmqbackend import IBMQBackend
+from qiskit_ibm.ibm_backend import IBMBackend
 
 
-def qubits_tab(backend: Union[IBMQBackend, FakeBackend]) -> wid.VBox:
+def qubits_tab(backend: Union[IBMBackend, FakeBackend]) -> wid.VBox:
     """The qubit properties widget.
 
     Args:

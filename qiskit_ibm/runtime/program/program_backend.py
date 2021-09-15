@@ -61,11 +61,11 @@ class ProgramBackend(Backend, ABC):
             The job to be executed.
 
         Raises:
-            IBMQBackendApiError: If an unexpected error occurred while submitting
+            IBMBackendApiError: If an unexpected error occurred while submitting
                 the job.
-            IBMQBackendApiProtocolError: If an unexpected value received from
+            IBMBackendApiProtocolError: If an unexpected value received from
                  the server.
-            IBMQBackendValueError: If an input parameter value is not valid.
+            IBMBackendValueError: If an input parameter value is not valid.
         """
         # pylint: disable=arguments-differ
         pass

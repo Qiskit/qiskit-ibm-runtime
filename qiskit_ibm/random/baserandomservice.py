@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2020.
+# (C) Copyright IBM 2021.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -17,7 +17,7 @@ from typing import List, Any
 from abc import ABC, abstractmethod
 
 
-from qiskit_ibm import accountprovider  # pylint: disable=unused-import
+from qiskit_ibm import ibm_provider  # pylint: disable=unused-import
 from ..api.clients.random import RandomClient
 
 logger = logging.getLogger(__name__)
@@ -29,7 +29,7 @@ class BaseRandomService(ABC):
     def __init__(
             self,
             name: str,
-            provider: 'accountprovider.AccountProvider',
+            provider: 'ibm_provider.IBMProvider',
             client: RandomClient,
             methods: List
     ):
@@ -37,7 +37,7 @@ class BaseRandomService(ABC):
 
         Args:
             name: Name of the extractor.
-            provider: IBM Quantum Experience account provider.
+            provider: IBM Quantum account provider.
             client: Client used to communicate with the server.
             methods: Service methods.
         """

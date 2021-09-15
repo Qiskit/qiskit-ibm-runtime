@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2020.
+# (C) Copyright IBM 2021.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -20,7 +20,7 @@ class BackendReservation:
     """Reservation information for a backend.
 
     Represent a reservation for a backend. This instance is returned by
-    the :meth:`IBMQBackend.reservations` method. Some of the attributes are
+    the :meth:`IBMBackend.reservations` method. Some of the attributes are
     only available if you're the owner of the reservation.
 
     Attributes:

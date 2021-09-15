@@ -17,7 +17,7 @@ from contextlib import contextmanager
 
 from .exceptions import IBMExperimentEntryNotFound, IBMExperimentEntryExists
 from ..api.exceptions import RequestsApiError
-from ..exceptions import IBMQApiError
+from ..exceptions import IBMApiError
 
 
 @contextmanager
@@ -30,4 +30,4 @@ def map_api_error(error_msg: str = "") -> Generator[None, None, None]:
             raise IBMExperimentEntryExists(error_msg + f" {api_err}") from None
         if api_err.status_code == 404:
             raise IBMExperimentEntryNotFound(error_msg + f" {api_err}") from None
-        raise IBMQApiError(f"Failed to process the request: {api_err}") from None
+        raise IBMApiError(f"Failed to process the request: {api_err}") from None

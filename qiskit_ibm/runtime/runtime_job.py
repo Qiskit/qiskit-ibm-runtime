@@ -28,7 +28,7 @@ from .constants import API_TO_JOB_ERROR_MESSAGE, API_TO_JOB_STATUS
 from .exceptions import RuntimeJobFailureError, RuntimeInvalidStateError, QiskitRuntimeError
 from .program.result_decoder import ResultDecoder
 from ..api.clients import RuntimeClient, RuntimeWebsocketClient, WebsocketClientCloseCode
-from ..exceptions import IBMQError
+from ..exceptions import IBMError
 from ..api.exceptions import RequestsApiError
 from ..utils.converters import utc_to_local
 from ..credentials import Credentials
@@ -282,12 +282,12 @@ class RuntimeJob:
             job_response: Job response from runtime API.
 
         Raises:
-            IBMQError: If an unknown status is returned from the server.
+            IBMError: If an unknown status is returned from the server.
         """
         try:
             self._status = API_TO_JOB_STATUS[job_response['status'].upper()]
         except KeyError:
-            raise IBMQError(f"Unknown status: {job_response['status']}")
+            raise IBMError(f"Unknown status: {job_response['status']}")
 
     def _set_error_message(self, job_response: Dict) -> None:
         """Set error message if the job failed.

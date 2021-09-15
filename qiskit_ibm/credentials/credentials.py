@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2017, 2018.
+# (C) Copyright IBM 2021.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Represent IBM Quantum Experience account credentials."""
+"""Represent IBM Quantum account credentials."""
 
 import re
 
@@ -20,18 +20,18 @@ from requests_ntlm import HttpNtlmAuth
 from .hubgroupproject import HubGroupProject
 
 
-REGEX_IBMQ_HUBS = (
+REGEX_IBM_HUBS = (
     '(?P<prefix>http[s]://.+/api)'
     '/Hubs/(?P<hub>[^/]+)/Groups/(?P<group>[^/]+)/Projects/(?P<project>[^/]+)'
 )
-"""str: Regex that matches an IBM Quantum Experience URL with hub information."""
+"""str: Regex that matches an IBM Quantum URL with hub information."""
 
-TEMPLATE_IBMQ_HUBS = '{prefix}/Network/{hub}/Groups/{group}/Projects/{project}'
-"""str: Template for creating an IBM Quantum Experience URL with hub/group/project information."""
+TEMPLATE_IBM_HUBS = '{prefix}/Network/{hub}/Groups/{group}/Projects/{project}'
+"""str: Template for creating an IBM Quantum URL with hub/group/project information."""
 
 
 class Credentials:
-    """IBM Quantum Experience account credentials and preferences.
+    """IBM Quantum account credentials and preferences.
 
     Note:
         By convention, two credentials that have the same hub, group,
@@ -42,6 +42,7 @@ class Credentials:
             self,
             token: str,
             url: str,
+            auth_url: Optional[str] = None,
             websockets_url: Optional[str] = None,
             hub: Optional[str] = None,
             group: Optional[str] = None,
@@ -51,13 +52,14 @@ class Credentials:
             services: Optional[Dict] = None,
             access_token: Optional[str] = None,
             preferences: Optional[Dict] = None,
-            default_provider: Optional[HubGroupProject] = None
+            default_provider: Optional[HubGroupProject] = None,
     ) -> None:
         """Credentials constructor.
 
         Args:
-            token: IBM Quantum Experience API token.
-            url: IBM Quantum Experience URL.
+            token: IBM Quantum API token.
+            url: IBM Quantum URL (gets replaced with a new-style URL with hub, group, project).
+            auth_url: IBM Quantum Auth API URL (always https://auth.quantum-computing.ibm.com/api).
             websockets_url: URL for websocket server.
             hub: The hub to use.
             group: The group to use.
@@ -73,8 +75,9 @@ class Credentials:
         self.token = token
         self.access_token = access_token
         (self.url, self.base_url,
-         self.hub, self.group, self.project) = _unify_ibmq_url(
+         self.hub, self.group, self.project) = _unify_ibm_quantum_url(
              url, hub, group, project)
+        self.auth_url = auth_url or url
         self.websockets_url = websockets_url
         self.proxies = proxies or {}
         self.verify = verify
@@ -87,8 +90,8 @@ class Credentials:
         self.experiment_url = services.get('resultsDB', None)
         self.runtime_url = services.get('runtime', None)
 
-    def is_ibmq(self) -> bool:
-        """Return whether the credentials represent an IBM Quantum Experience account."""
+    def is_ibm_quantum(self) -> bool:
+        """Return whether the credentials represent an IBM Quantum account."""
         return all([self.hub, self.group, self.project])
 
     def __eq__(self, other: object) -> bool:
@@ -132,7 +135,7 @@ class Credentials:
         return request_kwargs
 
 
-def _unify_ibmq_url(
+def _unify_ibm_quantum_url(
         url: str,
         hub: Optional[str] = None,
         group: Optional[str] = None,
@@ -141,7 +144,7 @@ def _unify_ibmq_url(
     """Return a new-style set of credential values (url and hub parameters).
 
     Args:
-        url: URL for IBM Quantum Experience.
+        url: URL for IBM Quantum.
         hub: The hub to use.
         group: The group to use.
         project: The project to use.
@@ -150,7 +153,7 @@ def _unify_ibmq_url(
         A tuple that consists of ``url``, ``base_url``, ``hub``, ``group``,
         and ``project``, where
 
-            * url: The new-style IBM Quantum Experience URL that contains
+            * url: The new-style IBM Quantum URL that contains
               the hub, group, and project names.
             * base_url: Base URL that does not contain the hub, group, and
               project names.
@@ -159,15 +162,15 @@ def _unify_ibmq_url(
             * project: The project to use.
     """
     # Check if the URL is "new style", and retrieve embedded parameters from it.
-    regex_match = re.match(REGEX_IBMQ_HUBS, url, re.IGNORECASE)
+    regex_match = re.match(REGEX_IBM_HUBS, url, re.IGNORECASE)
     base_url = url
     if regex_match:
         base_url, hub, group, project = regex_match.groups()
     else:
         if hub and group and project:
-            # Assume it is an IBMQ URL, and update the url.
-            url = TEMPLATE_IBMQ_HUBS.format(prefix=url, hub=hub, group=group,
-                                            project=project)
+            # Assume it is an IBM Quantum URL, and update the url.
+            url = TEMPLATE_IBM_HUBS.format(prefix=url, hub=hub, group=group,
+                                           project=project)
         else:
             # Cleanup the hub, group and project, without modifying the url.
             hub = group = project = None

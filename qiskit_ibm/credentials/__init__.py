@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2017, 2018.
+# (C) Copyright IBM 2021.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -17,7 +17,7 @@ Credentials (:mod:`qiskit_ibm.credentials`)
 
 .. currentmodule:: qiskit_ibm.credentials
 
-Utilities for working with IBM Quantum Experience account credentials.
+Utilities for working with IBM Quantum account credentials.
 
 Classes
 =========
@@ -54,12 +54,12 @@ logger = logging.getLogger(__name__)
 def discover_credentials(
         qiskitrc_filename: Optional[str] = None
 ) -> Tuple[Dict[HubGroupProject, Credentials], Dict]:
-    """Automatically discover credentials for IBM Quantum Experience.
+    """Automatically discover credentials for IBM Quantum.
 
     This method looks for credentials in the following places in order and
     returns the first ones found:
 
-        1. The the environment variables.
+        1. The environment variables.
         2. The ``qiskitrc`` configuration file
 
     Args:

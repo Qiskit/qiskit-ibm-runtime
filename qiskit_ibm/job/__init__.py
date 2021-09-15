@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2018, 2019.
+# (C) Copyright IBM 2021.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -17,7 +17,7 @@ Job (:mod:`qiskit_ibm.job`)
 
 .. currentmodule:: qiskit_ibm.job
 
-Modules representing IBM Quantum Experience jobs.
+Modules representing IBM Quantum jobs.
 
 Classes
 =========
@@ -25,7 +25,7 @@ Classes
 .. autosummary::
     :toctree: ../stubs/
 
-    IBMQJob
+    IBMJob
     QueueInfo
 
 Functions
@@ -41,15 +41,15 @@ Exception
 .. autosummary::
     :toctree: ../stubs/
 
-    IBMQJobError
-    IBMQJobApiError
-    IBMQJobFailureError
-    IBMQJobInvalidStateError
-    IBMQJobTimeoutError
+    IBMJobError
+    IBMJobApiError
+    IBMJobFailureError
+    IBMJobInvalidStateError
+    IBMJobTimeoutError
 """
 
-from .ibmqjob import IBMQJob
+from .ibm_job import IBMJob
 from .queueinfo import QueueInfo
-from .exceptions import (IBMQJobError, IBMQJobApiError, IBMQJobFailureError,
-                         IBMQJobInvalidStateError, IBMQJobTimeoutError)
+from .exceptions import (IBMJobError, IBMJobApiError, IBMJobFailureError,
+                         IBMJobInvalidStateError, IBMJobTimeoutError)
 from .job_monitor import job_monitor

@@ -15,7 +15,7 @@
 import logging
 from typing import Optional, List, NamedTuple, Dict
 from types import SimpleNamespace
-from qiskit_ibm.exceptions import IBMQInputValueError
+from qiskit_ibm.exceptions import IBMInputValueError
 
 
 logger = logging.getLogger(__name__)
@@ -30,9 +30,9 @@ class RuntimeProgram:
     You can use the :class:`~qiskit_ibm.runtime.IBMRuntimeService`
     to retrieve the metadata of a specific program or all programs. For example::
 
-        from qiskit import IBMQ
+        from qiskit_ibm import IBMProvider
 
-        provider = IBMQ.load_account()
+        provider = IBMProvider()
 
         # To retrieve metadata of all programs.
         programs = provider.runtime.programs()
@@ -317,7 +317,7 @@ class ParameterNamespace(SimpleNamespace):
             does not fail the validation if the namespace has extraneous parameters.
 
         Raises:
-            IBMQInputValueError: if validation fails
+            IBMInputValueError: if validation fails
         """
 
         # Iterate through the user's stored inputs
@@ -326,7 +326,7 @@ class ParameterNamespace(SimpleNamespace):
             value = getattr(self, param_name, None)
             # Check there exists a program parameter of that name.
             if value is None and program_param.required:
-                raise IBMQInputValueError('Param (%s) missing required value!' % param_name)
+                raise IBMInputValueError('Param (%s) missing required value!' % param_name)
 
     def __str__(self) -> str:
         """Creates string representation of object"""

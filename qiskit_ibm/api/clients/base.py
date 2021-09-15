@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2018, 2019.
+# (C) Copyright IBM 2021.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -61,7 +61,7 @@ class BaseWebsocketClient(BaseClient, ABC):
         """BaseWebsocketClient constructor.
 
         Args:
-            websocket_url: URL for websocket communication with IBM Quantum Experience.
+            websocket_url: URL for websocket communication with IBM Quantum.
             credentials: Account credentials.
             job_id: Job ID.
             message_queue: Queue used to hold received messages.

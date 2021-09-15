@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2020.
+# (C) Copyright IBM 2021.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -40,8 +40,8 @@ jobs:
           pip install -U -c constraints.txt -r requirements-dev.txt
       - name: Run Tests
         run: make test
-  terra-master:
-    name: terra-master
+  terra-main:
+    name: terra-main
     runs-on: macOS-latest
     env:
       QISKIT_IBM_API_TOKEN: ${{ secrets.QISKIT_IBM_API_TOKEN }}

@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2019.
+# (C) Copyright IBM 2021.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -21,7 +21,7 @@ from qiskit.circuit import QuantumCircuit
 from qiskit.pulse import Schedule
 
 from qiskit_ibm.managed import managedjobset  # pylint: disable=unused-import
-from .exceptions import IBMQManagedResultDataNotAvailable
+from .exceptions import IBMManagedResultDataNotAvailable
 from ..job.exceptions import JobError
 
 
@@ -73,8 +73,8 @@ class ManagedResults:
             information on return data.
 
         Raises:
-            IBMQManagedResultDataNotAvailable: If data for the experiment could not be retrieved.
-            IBMQJobManagerJobNotFound: If the job for the experiment could not
+            IBMManagedResultDataNotAvailable: If data for the experiment could not be retrieved.
+            IBMJobManagerJobNotFound: If the job for the experiment could not
                 be found.
         """
         result, exp_index = self._get_result(experiment)
@@ -96,8 +96,8 @@ class ManagedResults:
             for information on return data.
 
         Raises:
-            IBMQManagedResultDataNotAvailable: If data for the experiment could not be retrieved.
-            IBMQJobManagerJobNotFound: If the job for the experiment could not
+            IBMManagedResultDataNotAvailable: If data for the experiment could not be retrieved.
+            IBMJobManagerJobNotFound: If the job for the experiment could not
                 be found.
         """
         result, exp_index = self._get_result(experiment)
@@ -117,8 +117,8 @@ class ManagedResults:
             for information on return data.
 
         Raises:
-            IBMQManagedResultDataNotAvailable: If data for the experiment could not be retrieved.
-            IBMQJobManagerJobNotFound: If the job for the experiment could not
+            IBMManagedResultDataNotAvailable: If data for the experiment could not be retrieved.
+            IBMJobManagerJobNotFound: If the job for the experiment could not
                 be found.
         """
         result, exp_index = self._get_result(experiment)
@@ -141,8 +141,8 @@ class ManagedResults:
             for information on return data.
 
         Raises:
-            IBMQManagedResultDataNotAvailable: If data for the experiment could not be retrieved.
-            IBMQJobManagerJobNotFound: If the job for the experiment could not
+            IBMManagedResultDataNotAvailable: If data for the experiment could not be retrieved.
+            IBMJobManagerJobNotFound: If the job for the experiment could not
                 be found.
         """
         result, exp_index = self._get_result(experiment)
@@ -165,8 +165,8 @@ class ManagedResults:
             for information on return data.
 
         Raises:
-            IBMQManagedResultDataNotAvailable: If data for the experiment could not be retrieved.
-            IBMQJobManagerJobNotFound: If the job for the experiment could not
+            IBMManagedResultDataNotAvailable: If data for the experiment could not be retrieved.
+            IBMJobManagerJobNotFound: If the job for the experiment could not
                 be found.
         """
         result, exp_index = self._get_result(experiment)
@@ -183,14 +183,14 @@ class ManagedResults:
             A :class:`~qiskit.result.Result` object that contains results from
                 all jobs.
         Raises:
-            IBMQManagedResultDataNotAvailable: If results cannot be combined
+            IBMManagedResultDataNotAvailable: If results cannot be combined
                 because some jobs failed.
         """
         if self._combined_results:
             return self._combined_results
 
         if not self.success:
-            raise IBMQManagedResultDataNotAvailable(
+            raise IBMManagedResultDataNotAvailable(
                 "Results cannot be combined since some of the jobs failed.")
 
         jobs = self._job_set.jobs()
@@ -215,19 +215,19 @@ class ManagedResults:
                 the experiment index within the job.
 
         Raises:
-            IBMQManagedResultDataNotAvailable: If data for the experiment could not be retrieved.
-            IBMQJobManagerJobNotFound: If the job for the experiment could not
+            IBMManagedResultDataNotAvailable: If data for the experiment could not be retrieved.
+            IBMJobManagerJobNotFound: If the job for the experiment could not
                 be found.
         """
 
         (job, exp_index) = self._job_set.job(experiment)
         if job is None:
-            raise IBMQManagedResultDataNotAvailable(
+            raise IBMManagedResultDataNotAvailable(
                 'Job for experiment {} was not successfully submitted.'.format(experiment))
 
         try:
             result = job.result()
             return result, exp_index
         except JobError as err:
-            raise IBMQManagedResultDataNotAvailable(
+            raise IBMManagedResultDataNotAvailable(
                 'Result data for experiment {} is not available.'.format(experiment)) from err

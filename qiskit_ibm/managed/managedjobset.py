@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2019, 2020.
+# (C) Copyright IBM 2021.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""A set of jobs being managed by the :class:`IBMQJobManager`."""
+"""A set of jobs being managed by the :class:`IBMJobManager`."""
 
 from datetime import datetime
 from typing import List, Optional, Union, Any, Tuple
@@ -24,17 +24,17 @@ from qiskit.circuit import QuantumCircuit
 from qiskit.pulse import Schedule
 from qiskit.qobj import QasmQobj, PulseQobj
 from qiskit.providers.jobstatus import JobStatus
-from qiskit_ibm.accountprovider import AccountProvider
+from qiskit_ibm.ibm_provider import IBMProvider
 
 from .managedjob import ManagedJob
 from .managedresults import ManagedResults  # pylint: disable=cyclic-import
 from .utils import (requires_submit, format_status_counts, format_job_details,
                     JOB_SET_NAME_FORMATTER, JOB_SET_NAME_RE)
-from .exceptions import (IBMQJobManagerInvalidStateError, IBMQJobManagerTimeoutError,
-                         IBMQJobManagerJobNotFound, IBMQJobManagerUnknownJobSet)
-from ..job import IBMQJob
-from ..job.exceptions import IBMQJobTimeoutError, IBMQJobApiError
-from ..ibmqbackend import IBMQBackend
+from .exceptions import (IBMJobManagerInvalidStateError, IBMJobManagerTimeoutError,
+                         IBMJobManagerJobNotFound, IBMJobManagerUnknownJobSet)
+from ..job import IBMJob
+from ..job.exceptions import IBMJobTimeoutError, IBMJobApiError
+from ..ibm_backend import IBMBackend
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ class ManagedJobSet:
     """A set of managed jobs.
 
     An instance of this class is returned when you submit experiments using
-    :meth:`IBMQJobManager.run()`.
+    :meth:`IBMJobManager.run()`.
     It provides methods that allow you to interact
     with the jobs as a single entity. For example, you can retrieve the results
     for all of the jobs using :meth:`results()` and cancel all jobs using
@@ -67,7 +67,7 @@ class ManagedJobSet:
         """
         self._managed_jobs = []  # type: List[ManagedJob]
         self._name = name or datetime.utcnow().isoformat()
-        self._backend = None  # type: Optional[IBMQBackend]
+        self._backend = None  # type: Optional[IBMBackend]
         self._id = short_id or uuid.uuid4().hex + '-' + str(time.time()).replace('.', '')
         self._id_long = self._id_prefix + self._id + self._id_suffix
         self._tags = []  # type: List[str]
@@ -80,7 +80,7 @@ class ManagedJobSet:
     def run(
             self,
             experiment_list: Union[List[List[QuantumCircuit]], List[List[Schedule]]],
-            backend: IBMQBackend,
+            backend: IBMBackend,
             executor: ThreadPoolExecutor,
             job_tags: Optional[List[str]] = None,
             **run_config: Any
@@ -97,10 +97,10 @@ class ManagedJobSet:
                 for details on these arguments.
 
         Raises:
-            IBMQJobManagerInvalidStateError: If the jobs were already submitted.
+            IBMJobManagerInvalidStateError: If the jobs were already submitted.
         """
         if self._managed_jobs:
-            raise IBMQJobManagerInvalidStateError(
+            raise IBMJobManagerInvalidStateError(
                 'The jobs for this managed job set have already been submitted.')
 
         self._backend = backend
@@ -120,7 +120,7 @@ class ManagedJobSet:
             self._managed_jobs.append(mjob)
             exp_index += len(experiments)
 
-    def retrieve_jobs(self, provider: AccountProvider, refresh: bool = False) -> None:
+    def retrieve_jobs(self, provider: IBMProvider, refresh: bool = False) -> None:
         """Retrieve previously submitted jobs in this set.
 
         Args:
@@ -129,17 +129,17 @@ class ManagedJobSet:
                 Otherwise return the cached value.
 
         Raises:
-            IBMQJobManagerUnknownJobSet: If the job set cannot be found.
-            IBMQJobManagerInvalidStateError: If jobs for this job set are
+            IBMJobManagerUnknownJobSet: If the job set cannot be found.
+            IBMJobManagerInvalidStateError: If jobs for this job set are
                 found but have unexpected attributes.
         """
         if not refresh and self._managed_jobs:
             return
 
-        # IBMQBackend jobs() method does not have a way to pass in unlimited
+        # IBMBackend jobs() method does not have a way to pass in unlimited
         # number of jobs to retrieve. 1000 should be a sufficiently large
         # enough number.
-        jobs = []  # type: List[IBMQJob]
+        jobs = []  # type: List[IBMJob]
         page_limit = 1000
         while True:
             job_page = provider.backend.jobs(    # type: ignore[attr-defined]
@@ -149,7 +149,7 @@ class ManagedJobSet:
                 break
 
         if not jobs:
-            raise IBMQJobManagerUnknownJobSet(
+            raise IBMJobManagerUnknownJobSet(
                 '{} is not a known job set within the provider {}.'.format(
                     self.job_set_id(), provider))
 
@@ -166,7 +166,7 @@ class ManagedJobSet:
             # Verify the job is proper.
             job_set_name, job_index = self._parse_job_name(job)
             if job_set_name != self._name or job.backend().name() != self._backend.name():
-                raise IBMQJobManagerInvalidStateError(
+                raise IBMJobManagerInvalidStateError(
                     'Job {} is tagged for the job set {} but does not appear '
                     'to belong to the set.'.format(job.job_id(), self.job_set_id()))
             jobs_dict[job_index] = job
@@ -174,7 +174,7 @@ class ManagedJobSet:
         sorted_indexes = sorted(jobs_dict)
         # Verify we got all jobs.
         if sorted_indexes != list(range(len(sorted_indexes))):
-            raise IBMQJobManagerInvalidStateError(
+            raise IBMJobManagerInvalidStateError(
                 'Unable to retrieve all jobs for job set {}.'.format(self.job_set_id()))
 
         self._managed_jobs = []
@@ -234,7 +234,7 @@ class ManagedJobSet:
         the timeout is reached.
 
         Note:
-            Some IBM Quantum Experience job results can only be read once. A
+            Some IBM Quantum job results can only be read once. A
             second attempt to query the server for the same job will fail,
             since the job has already been "consumed".
 
@@ -275,7 +275,7 @@ class ManagedJobSet:
             for individual experiments.
 
         Raises:
-            IBMQJobManagerTimeoutError: if unable to retrieve all job results before the
+            IBMJobManagerTimeoutError: if unable to retrieve all job results before the
                 specified timeout.
         """
         if self._managed_results is not None and not refresh:
@@ -291,15 +291,15 @@ class ManagedJobSet:
                 result = mjob.result(timeout=timeout, partial=partial, refresh=refresh)
                 if result is None or not result.success:
                     success = False
-            except IBMQJobTimeoutError as ex:
-                raise IBMQJobManagerTimeoutError(
+            except IBMJobTimeoutError as ex:
+                raise IBMJobManagerTimeoutError(
                     'Timeout while waiting for the results for experiments {}-{}.'.format(
                         mjob.start_index, self._managed_jobs[-1].end_index)) from ex
 
             if timeout:
                 timeout = original_timeout - (time.time() - start_time)
                 if timeout <= 0:
-                    raise IBMQJobManagerTimeoutError(
+                    raise IBMJobManagerTimeoutError(
                         'Timeout while waiting for the results for experiments {}-{}.'.format(
                             mjob.start_index, self._managed_jobs[-1].end_index))
 
@@ -340,11 +340,11 @@ class ManagedJobSet:
             mjob.cancel()
 
     @requires_submit
-    def jobs(self) -> List[Union[IBMQJob, None]]:
+    def jobs(self) -> List[Union[IBMJob, None]]:
         """Return jobs in this job set.
 
         Returns:
-            A list of :class:`~qiskit_ibm.job.IBMQJob`
+            A list of :class:`~qiskit_ibm.job.IBMJob`
             instances that represents the submitted jobs.
             An entry in the list is ``None`` if the job failed to be submitted.
         """
@@ -354,11 +354,11 @@ class ManagedJobSet:
     def job(
             self,
             experiment: Union[str, QuantumCircuit, Schedule, int]
-    ) -> Tuple[Optional[IBMQJob], int]:
+    ) -> Tuple[Optional[IBMJob], int]:
         """Retrieve the job used to submit the specified experiment and its index.
 
-        For example, if :class:`IBMQJobManager` is used to submit 1000 experiments,
-        and :class:`IBMQJobManager` divides them into 2 jobs: job 1
+        For example, if :class:`IBMJobManager` is used to submit 1000 experiments,
+        and :class:`IBMJobManager` divides them into 2 jobs: job 1
         has experiments 0-499, and job 2 has experiments 500-999. In this
         case ``job_set.job(501)`` will return ``(job2, 1)``.
 
@@ -376,7 +376,7 @@ class ManagedJobSet:
             the job submit failed, and the experiment index.
 
         Raises:
-            IBMQJobManagerJobNotFound: If the job for the experiment could not
+            IBMJobManagerJobNotFound: If the job for the experiment could not
                 be found.
         """
         if isinstance(experiment, int):
@@ -391,7 +391,7 @@ class ManagedJobSet:
                     if hasattr(exp.header, 'name') and exp.header.name == experiment:
                         return job, i
 
-        raise IBMQJobManagerJobNotFound(
+        raise IBMJobManagerJobNotFound(
             'Unable to find the job for experiment {}.'.format(experiment))
 
     @requires_submit
@@ -429,7 +429,7 @@ class ManagedJobSet:
                     # Use the index found in the job name to update the name in order
                     # to preserve the job set order.
                     _ = job.update_name(JOB_SET_NAME_FORMATTER.format(name, job_index))
-                except IBMQJobApiError as ex:
+                except IBMJobApiError as ex:
                     # Log a warning with the job that failed to update.
                     logger.warning('There was an error updating the name for job %s, '
                                    'belonging to job set %s: %s',
@@ -487,7 +487,7 @@ class ManagedJobSet:
 
         Note:
             * Some tags, such as those starting with ``ibmq_jobset``, are used
-              internally by `ibmq-provider` and therefore cannot be modified.
+              internally by Qiskit IBM provider and therefore cannot be modified.
             * When removing tags, if the job does not have a specified tag, it
               will be ignored.
 
@@ -503,10 +503,10 @@ class ManagedJobSet:
             The new tags associated with this job set.
 
         Raises:
-            IBMQJobManagerInvalidStateError: If none of the input parameters are specified.
+            IBMJobManagerInvalidStateError: If none of the input parameters are specified.
         """
         if (replacement_tags is None) and (additional_tags is None) and (removal_tags is None):
-            raise IBMQJobManagerInvalidStateError(
+            raise IBMJobManagerInvalidStateError(
                 'The tags cannot be updated since none of the parameters are specified.')
 
         updated_tags = []  # type: List[str]
@@ -516,7 +516,7 @@ class ManagedJobSet:
                     updated_tags = job.update_tags(replacement_tags=replacement_tags,
                                                    additional_tags=additional_tags,
                                                    removal_tags=removal_tags)
-                except IBMQJobApiError as ex:
+                except IBMJobApiError as ex:
                     # Log a warning with the job that failed to update.
                     logger.warning('There was an error updating the tags for job %s, '
                                    'belonging to job set %s: %s',
@@ -528,7 +528,7 @@ class ManagedJobSet:
 
         return self._tags
 
-    def _parse_job_name(self, job: IBMQJob) -> Tuple[str, int]:
+    def _parse_job_name(self, job: IBMJob) -> Tuple[str, int]:
         """Parse the name of a job from the job set.
 
         Args:
@@ -539,12 +539,12 @@ class ManagedJobSet:
             placement in the job set: (<job_set_name>, <job_index_in_set>).
 
         Raises:
-            IBMQJobManagerInvalidStateError: If the job does not have a proper
+            IBMJobManagerInvalidStateError: If the job does not have a proper
                 job name.
         """
         matched = JOB_SET_NAME_RE.match(job.name())
         if not matched:
-            raise IBMQJobManagerInvalidStateError(
+            raise IBMJobManagerInvalidStateError(
                 'Job {} is tagged for the job set {} but does not '
                 'have a proper job name.'.format(job.job_id(), self.job_set_id()))
 
