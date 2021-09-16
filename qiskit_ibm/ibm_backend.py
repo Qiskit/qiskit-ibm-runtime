@@ -74,7 +74,7 @@ class IBMBackend(Backend):
         qx = random_circuit(n_qubits=5, depth=4)
         transpiled = transpile(qx, backend=backend)
         job = backend.run(transpiled)
-        retrieved_job = provider.backend.retrieve_job(job.job_id())
+        retrieved_job = provider.backend.job(job.job_id())
 
     Note:
 

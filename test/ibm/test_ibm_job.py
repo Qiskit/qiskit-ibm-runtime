@@ -185,7 +185,7 @@ class TestIBMJob(IBMTestCase):
 
     def test_retrieve_job(self):
         """Test retrieving a single job."""
-        retrieved_job = self.provider.backend.retrieve_job(self.sim_job.job_id())
+        retrieved_job = self.provider.backend.job(self.sim_job.job_id())
         self.assertEqual(self.sim_job.job_id(), retrieved_job.job_id())
         self.assertEqual(self.sim_job.qobj().to_dict(), retrieved_job.qobj().to_dict())
         self.assertEqual(self.sim_job.result().get_counts(), retrieved_job.result().get_counts())
@@ -208,9 +208,9 @@ class TestIBMJob(IBMTestCase):
         job_2 = backend_2.run(transpile(ReferenceCircuits.bell(), backend_2))
 
         # test a retrieved job's backend is the same as the queried backend
-        self.assertEqual(provider.backend.retrieve_job(job_1.job_id()).backend().name(),
+        self.assertEqual(provider.backend.job(job_1.job_id()).backend().name(),
                          backend_1.name())
-        self.assertEqual(provider.backend.retrieve_job(job_2.job_id()).backend().name(),
+        self.assertEqual(provider.backend.job(job_2.job_id()).backend().name(),
                          backend_2.name())
 
         # Cleanup
@@ -220,7 +220,7 @@ class TestIBMJob(IBMTestCase):
     def test_retrieve_job_error(self):
         """Test retrieving an invalid job."""
         self.assertRaises(IBMBackendError,
-                          self.provider.backend.retrieve_job, 'BAD_JOB_ID')
+                          self.provider.backend.job, 'BAD_JOB_ID')
 
     def test_retrieve_jobs_status(self):
         """Test retrieving jobs filtered by status."""
@@ -430,7 +430,7 @@ class TestIBMJob(IBMTestCase):
         saved_backends = copy.copy(self.provider._backends)
         try:
             del self.provider._backends[self.sim_backend.name()]
-            new_job = self.provider.backend.retrieve_job(self.sim_job.job_id())
+            new_job = self.provider.backend.job(self.sim_job.job_id())
             self.assertTrue(isinstance(new_job.backend(), IBMRetiredBackend))
             self.assertNotEqual(new_job.backend().name(), 'unknown')
             last_month_jobs = self.provider.backend.jobs(start_datetime=self.last_month)
@@ -543,7 +543,7 @@ class TestIBMJob(IBMTestCase):
                         self.sim_backend.run(self.bell)
 
                 self.assertTrue(job_id, "Job ID not saved.")
-                job = self.provider.backend.retrieve_job(job_id[0])
+                job = self.provider.backend.job(job_id[0])
                 self.assertEqual(job.status(), JobStatus.CANCELLED,
                                  f"Job {job.job_id()} status is {job.status()} and not cancelled!")
 

@@ -121,7 +121,7 @@ class TestIBMIntegration(IBMTestCase):
 
         # Wait a bit for databases to update.
         time.sleep(2)
-        rjob = provider.backend.retrieve_job(job.job_id())
+        rjob = provider.backend.job(job.job_id())
 
         with self.assertRaises(IBMJobApiError) as err_cm:
             rjob.qobj()
