@@ -123,8 +123,11 @@ def _job_summary(backend: Union[IBMBackend, FakeBackend], **kwargs: Any) -> Plot
     limit = kwargs.pop('limit', None)
     start_datetime = kwargs.pop('start_datetime', past_year_date)
     provider = backend.provider()
-    jobs = provider.backend.jobs(backend_name=backend.name(),
-                                 limit=limit, start_datetime=start_datetime)
+    if not provider:
+        jobs = []  # provider will be None when this is used in docs
+    else:
+        jobs = provider.backend.jobs(backend_name=backend.name(),
+                                     limit=limit, start_datetime=start_datetime)
 
     num_jobs = len(jobs)
     main_str = "<b>Total Jobs</b><br>{}".format(num_jobs)
