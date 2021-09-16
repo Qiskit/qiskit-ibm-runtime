@@ -127,6 +127,7 @@ class Runtime(RestAdapterBase):
             project: str,
             backend_name: str,
             params: str,
+            image: str
     ) -> Dict:
         """Execute the program.
 
@@ -137,6 +138,7 @@ class Runtime(RestAdapterBase):
             project: Project to be used.
             backend_name: Name of the backend.
             params: Program parameters.
+            image: Runtime image.
 
         Returns:
             JSON response.
@@ -148,7 +150,8 @@ class Runtime(RestAdapterBase):
             'group': group,
             'project': project,
             'backend': backend_name,
-            'params': [params]
+            'params': [params],
+            'runtime': image
         }
         data = json.dumps(payload)
         return self.session.post(url, data=data).json()
