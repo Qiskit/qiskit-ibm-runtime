@@ -28,7 +28,6 @@ from qiskit.qobj import QasmQobj, PulseQobj
 from qiskit.qobj.utils import MeasLevel, MeasReturnType
 from qiskit.providers.backend import BackendV1 as Backend
 from qiskit.providers.options import Options
-from qiskit.providers.jobstatus import JobStatus
 from qiskit.providers.models import (BackendStatus, BackendProperties,
                                      PulseDefaults, GateConfig)
 from qiskit.tools.events.pubsub import Publisher
@@ -66,7 +65,7 @@ class IBMBackend(Backend):
     instance that represents the submitted job. Each job has a unique job ID, which
     can later be used to retrieve the job. An example of this flow::
 
-        from qiskit import assemble, transpile
+        from qiskit import transpile
         from qiskit_ibm import IBMProvider
         from qiskit.circuit.random import random_circuit
 
@@ -75,7 +74,7 @@ class IBMBackend(Backend):
         qx = random_circuit(n_qubits=5, depth=4)
         transpiled = transpile(qx, backend=backend)
         job = backend.run(transpiled)
-        retrieved_job = backend.retrieve_job(job.job_id())
+        retrieved_job = provider.backend.retrieve_job(job.job_id())
 
     Note:
 
@@ -553,67 +552,6 @@ class IBMBackend(Backend):
 
         return job_limit.maximum_jobs - job_limit.active_jobs
 
-    def jobs(
-            self,
-            limit: int = 10,
-            skip: int = 0,
-            status: Optional[Union[JobStatus, str, List[Union[JobStatus, str]]]] = None,
-            job_name: Optional[str] = None,
-            start_datetime: Optional[python_datetime] = None,
-            end_datetime: Optional[python_datetime] = None,
-            job_tags: Optional[List[str]] = None,
-            job_tags_operator: Optional[str] = "OR",
-            experiment_id: Optional[str] = None,
-            descending: bool = True,
-    ) -> List[IBMJob]:
-        """Return the jobs submitted to this backend, subject to optional filtering.
-
-        Retrieve jobs submitted to this backend that match the given filters
-        and paginate the results if desired. Note that the server has a limit for the
-        number of jobs returned in a single call. As a result, this function might involve
-        making several calls to the server. See also the `skip` parameter for more control
-        over pagination.
-
-        Args:
-            limit: Number of jobs to retrieve.
-            skip: Starting index for the job retrieval.
-            status: Only get jobs with this status or one of the statuses.
-                For example, you can specify `status=JobStatus.RUNNING` or `status="RUNNING"`
-                or `status=["RUNNING", "ERROR"]`
-            job_name: Filter by job name. The `job_name` is matched partially
-                and `regular expressions
-                <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions>`_
-                can be used.
-            start_datetime: Filter by the given start date, in local time. This is used to
-                find jobs whose creation dates are after (greater than or equal to) this
-                local date/time.
-            end_datetime: Filter by the given end date, in local time. This is used to
-                find jobs whose creation dates are before (less than or equal to) this
-                local date/time.
-            job_tags: Filter by tags assigned to jobs.
-            job_tags_operator: Logical operator to use when filtering by job tags. Valid
-                values are "AND" and "OR":
-
-                    * If "AND" is specified, then a job must have all of the tags
-                      specified in ``job_tags`` to be included.
-                    * If "OR" is specified, then a job only needs to have any
-                      of the tags specified in ``job_tags`` to be included.
-            experiment_id: Filter by job experiment ID.
-            descending: If ``True``, return the jobs in descending order of the job
-                creation date (newest first). If ``False``, return in ascending order.
-
-        Returns:
-            A list of jobs that match the criteria.
-
-        Raises:
-            IBMBackendValueError: If a keyword value is not recognized.
-        """
-        return self._provider.backend.jobs(
-            limit=limit, skip=skip, backend_name=self.name(), status=status,
-            job_name=job_name, start_datetime=start_datetime, end_datetime=end_datetime,
-            job_tags=job_tags, job_tags_operator=job_tags_operator,
-            experiment_id=experiment_id, descending=descending)
-
     def active_jobs(self, limit: int = 10) -> List[IBMJob]:
         """Return the unfinished jobs submitted to this backend.
 
@@ -632,34 +570,8 @@ class IBMBackend(Backend):
         active_job_states = list({api_status_to_job_status(status)
                                   for status in ApiJobStatus
                                   if status not in API_JOB_FINAL_STATES})
-
-        return self.jobs(status=active_job_states, limit=limit)
-
-    def retrieve_job(self, job_id: str) -> IBMJob:
-        """Return a single job submitted to this backend.
-
-        Args:
-            job_id: The ID of the job to retrieve.
-
-        Returns:
-            The job with the given ID.
-
-        Raises:
-            IBMBackendError: If job retrieval failed.
-        """
-        job = self._provider.backend.retrieve_job(job_id)
-        job_backend = job.backend()
-
-        if self.name() != job_backend.name():
-            warnings.warn('Job {} belongs to another backend than the one queried. '
-                          'The query was made on backend {}, '
-                          'but the job actually belongs to backend {}.'
-                          .format(job_id, self.name(), job_backend.name()))
-            raise IBMBackendError('Failed to get job {}: '
-                                  'job does not belong to backend {}.'
-                                  .format(job_id, self.name()))
-
-        return job
+        provider = self.provider()
+        return provider.backend.jobs(status=active_job_states, limit=limit)
 
     def reservations(
             self,
@@ -840,7 +752,9 @@ class IBMSimulator(IBMBackend):
                 name can subsequently be used as a filter in the
                 :meth:`jobs` method. Job names do not need to be unique.
             job_tags: Tags to be assigned to the jobs. The tags can subsequently be used
-                as a filter in the :meth:`IBMBackend.jobs()<IBMBackend.jobs>` method.
+                as a filter in the
+                :meth:`IBMBackendService.jobs()
+                <qiskit_ibm.ibm_backend_service.IBMBackendService.jobs>` method.
             experiment_id: Used to add a job to an "experiment", which is a collection
                 of jobs and additional metadata.
             backend_options: DEPRECATED dictionary of backend options for the execution.

@@ -14,7 +14,7 @@
 """Interactive Jobs widget."""
 
 import datetime
-from typing import Union
+from typing import Any, Union
 
 import ipywidgets as wid
 import plotly.graph_objects as go
@@ -103,18 +103,28 @@ tr:nth-child(even) {background-color: #f6f6f6 !important;}
     return table_html
 
 
-def _job_summary(backend: Union[IBMBackend, FakeBackend]) -> PlotlyWidget:
+def _job_summary(backend: Union[IBMBackend, FakeBackend], **kwargs: Any) -> PlotlyWidget:
     """Interactive jobs summary for a backend.
 
     Args:
         backend: Display jobs summary for this backend.
+        **kwargs: Used only for testing purposes:
+
+            * limit - Number of jobs to retrieve.
+            * start_datetime - Filter by the given start date, in local time. This is used to
+                find jobs whose creation dates are after (greater than or equal to) this
+                local date/time.
 
     Returns:
         A figure for the rendered job summary.
     """
     now = datetime.datetime.now()
     past_year_date = now - datetime.timedelta(days=365)
-    jobs = backend.jobs(limit=None, start_datetime=past_year_date)
+    limit = kwargs.pop('limit', None)
+    start_datetime = kwargs.pop('start_datetime', past_year_date)
+    provider = backend.provider()
+    jobs = provider.backend.jobs(backend_name=backend.name(),
+                                 limit=limit, start_datetime=start_datetime)
 
     num_jobs = len(jobs)
     main_str = "<b>Total Jobs</b><br>{}".format(num_jobs)
@@ -253,11 +263,17 @@ def _job_summary(backend: Union[IBMBackend, FakeBackend]) -> PlotlyWidget:
     return sun_wid
 
 
-def jobs_tab(backend: Union[IBMBackend, FakeBackend]) -> wid.HBox:
+def jobs_tab(backend: Union[IBMBackend, FakeBackend], **kwargs: Any) -> wid.HBox:
     """Construct a widget containing job information for an input backend.
 
     Args:
         backend: Input backend.
+        **kwargs: Used only for testing purposes:
+
+            * limit - Number of jobs to retrieve.
+            * start_datetime - Filter by the given start date, in local time. This is used to
+                find jobs whose creation dates are after (greater than or equal to) this
+                local date/time.
 
     Returns:
         An widget containing job summary.
@@ -268,7 +284,7 @@ def jobs_tab(backend: Union[IBMBackend, FakeBackend]) -> wid.HBox:
                                            width='100%',
                                            overflow='hidden scroll',))
 
-    sun_wid = _job_summary(backend)
+    sun_wid = _job_summary(backend, **kwargs)
     sun_wid._table = table
     sun_wid._title = title
 

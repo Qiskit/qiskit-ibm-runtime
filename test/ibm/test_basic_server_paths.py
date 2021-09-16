@@ -53,7 +53,7 @@ class TestBasicServerPaths(IBMTestCase):
                 self.assertTrue(result.success)
 
                 # Fetch the qobj.
-                qobj_downloaded = backend.retrieve_job(job.job_id()).qobj()
+                qobj_downloaded = provider.backend.retrieve_job(job.job_id()).qobj()
                 self.assertEqual(qobj_downloaded.to_dict(), job.qobj().to_dict())
 
     def test_job_backend_properties_and_status(self):

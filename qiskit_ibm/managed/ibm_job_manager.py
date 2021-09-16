@@ -110,10 +110,11 @@ class IBMJobManager:
                 the backend.
                 If the specified value is greater the maximum allowed by the
                 backend, the default is used.
-            job_tags: Tags to be assigned to the jobs. The tags can
-                subsequently be used as a filter in the
-                :meth:`IBMBackend.jobs()<qiskit_ibm.ibm_backend.IBMBackend.jobs()>`
-                function call.
+            job_tags: Tags to be assigned to the jobs. The tags can subsequently be used
+                as a filter in the
+                :meth:`IBMBackendService.jobs()
+                <qiskit_ibm.ibm_backend_service.IBMBackendService.jobs>`
+                method.
             run_config: Configuration of the runtime environment. Some
                 examples of these configuration parameters include:
                 ``qobj_id``, ``qobj_header``, ``shots``, ``memory``,

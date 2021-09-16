@@ -76,17 +76,11 @@ class TestBackendInfo(IBMTestCase):
 
     def test_jobs_tab(self):
         """Test jobs tab."""
-        def _limit_jobs(**kwargs):
-            kwargs['limit'] = 5
-            kwargs['skip'] = 5
-            kwargs['start_datetime'] = datetime.now() - timedelta(days=7)
-            return original_backend_jobs(**kwargs)
-
         for backend in self.backends:
             with self.subTest(backend=backend):
-                original_backend_jobs = backend.jobs
-                backend.jobs = _limit_jobs
-                jobs_tab(backend)
+                limit = 5
+                start_datetime = datetime.now() - timedelta(days=7)
+                jobs_tab(backend, limit=limit, start_datetime=start_datetime)
 
 
 class TestIBMDashboard(IBMTestCase):

@@ -12,7 +12,6 @@
 
 """IBMBackend Test."""
 
-from inspect import getfullargspec
 from datetime import timedelta, datetime
 from unittest import SkipTest
 from unittest.mock import patch
@@ -20,8 +19,6 @@ from unittest.mock import patch
 from qiskit import QuantumCircuit, transpile, assemble
 from qiskit.providers.models import QasmBackendConfiguration
 from qiskit.test.reference_circuits import ReferenceCircuits
-from qiskit_ibm.ibm_backend import IBMBackend
-from qiskit_ibm.ibm_backend_service import IBMBackendService
 
 from ..ibm_test_case import IBMTestCase
 from ..decorators import requires_device, requires_provider
@@ -38,33 +35,6 @@ class TestIBMBackend(IBMTestCase):
         # pylint: disable=arguments-differ
         super().setUpClass()
         cls.backend = backend
-
-    def test_backend_jobs_signature(self):
-        """Test ``IBMBackend.jobs()`` signature is similar to ``IBMBackendService.jobs()``.
-
-        Ensure that the parameter list of ``IBMBackend.jobs()`` is a subset of that
-        of ``IBMBackendService.jobs()``.
-        """
-        # Acceptable params `IBMBackendService.jobs` has that `IBMBackend.jobs` does not.
-        acceptable_differing_params = {'backend_name'}
-
-        # Retrieve parameter lists for both classes.
-        backend_jobs_params = set(
-            getattr(getfullargspec(IBMBackend.jobs), 'args', [])
-        )
-        backend_service_jobs_params = set(
-            getattr(getfullargspec(IBMBackendService.jobs), 'args', [])
-        )
-
-        # Ensure parameter lists not empty
-        self.assertTrue(backend_jobs_params)
-        self.assertTrue(backend_service_jobs_params)
-
-        # Remove acceptable params from `IBMBackendService.jobs`.
-        backend_service_jobs_params.difference_update(acceptable_differing_params)
-
-        # Ensure method signatures are similar, other than the acceptable differences.
-        self.assertEqual(backend_service_jobs_params, backend_jobs_params)
 
     def test_backend_status(self):
         """Check the status of a real chip."""
@@ -156,7 +126,7 @@ class TestIBMBackend(IBMTestCase):
                             meas_lo_freq=[6.5e9, 6.6e9],
                             meas_level=2)
         job = backend.run(get_pulse_schedule(backend), meas_level=1, foo='foo')
-        qobj = backend.retrieve_job(job.job_id()).qobj()  # Use retrieved Qobj.
+        qobj = provider.backend.retrieve_job(job.job_id()).qobj()  # Use retrieved Qobj.
         self.assertEqual(qobj.config.shots, 2048)
         # Qobj config freq is in GHz.
         self.assertEqual(qobj.config.qubit_lo_freq, [4.9, 5.0])
@@ -172,7 +142,7 @@ class TestIBMBackend(IBMTestCase):
         backend.options.shots = 2048
         backend.set_options(memory=True)
         job = backend.run(ReferenceCircuits.bell(), shots=1024, foo='foo')
-        qobj = backend.retrieve_job(job.job_id()).qobj()
+        qobj = provider.backend.retrieve_job(job.job_id()).qobj()
         self.assertEqual(qobj.config.shots, 1024)
         self.assertTrue(qobj.config.memory)
         self.assertEqual(qobj.config.foo, 'foo')

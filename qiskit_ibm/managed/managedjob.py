@@ -120,7 +120,9 @@ class ManagedJob:
                 except IBMBackendJobLimitError:
                     non_final_job_statuses = [status.name for status in
                                               (list(set(JobStatus) - set(JOB_FINAL_STATES)))]
-                    oldest_running = backend.jobs(
+                    provider = backend.provider()
+                    oldest_running = provider.backend.jobs(
+                        backend_name=backend.name(),
                         limit=1, descending=False, status=non_final_job_statuses)
                     if oldest_running:
                         oldest_running = oldest_running[0]
