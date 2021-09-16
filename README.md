@@ -17,14 +17,16 @@ authorized users can then invoke these quantum programs by simply passing in the
 
 ---
 
-:warning: Qiskit Runtime is now available on select IBM Quantum systems and simulators 
-for all premium users to try out. We will be adding more systems and will be releasing it to all users soon! 
+:rocket: Qiskit Runtime is now available on all IBM Quantum systems. Open-access users
+can only execute runtime programs on `ibmq_qasm_simulator`, but premium users can execute them on
+any systems to which they have access. You are an open-access user if `ibm-q/open/main` is your 
+_only_ provider.
 
 ---
 
 ## Installation
 
-You need to install the required packages needed for the tutorials, which are documented in `requirements.txt`.
+You need to install the required packages for the tutorials, which are documented in `requirements.txt`.
 After that, you can download this repository and use Jupyter Notebook/Lab to explore the 
 tutorials and learn how Qiskit Runtime works.
 
@@ -46,35 +48,6 @@ account. If this is
 your first time using IBM Quantum or Qiskit, please refer to the instruction in the 
 [`qiskit-ibmq-provider`](https://github.com/Qiskit/qiskit-ibmq-provider#configure-your-ibm-quantum-experience-credentials)
 repository to configure your IBM Quantum credentials.
-
-### Checking for access
-
-You can use the `has_service()` method to check whether you have access to Qiskit Runtime:
-
-```python
-from qiskit import IBMQ
-
-provider = IBMQ.load_account()
-print(f"Do I have access to Qiskit Runtime? {provider.has_service('runtime')}")
-```
-
-### Checking for backend support
-
-A backend supports Qiskit Runtime if it has `runtime` in the `input_allowed` configuration attribute:
-
-```python
-backend = provider.backend.ibmq_montreal
-support_runtime = 'runtime' in backend.configuration().input_allowed
-print(f"Does {backend.name()} support Qiskit Runtime? {support_runtime}")
-```
-
-You can also use `input_allowed` as a filter in `backends()` (requires Qiskit 0.27.0 or later):
-
-```python
-# Get a list of all backends that support runtime.
-runtime_backends = provider.backends(input_allowed='runtime')
-print(f"Backends that support Qiskit Runtime: {runtime_backends}")
-```
 
 ### Finding available programs
 
