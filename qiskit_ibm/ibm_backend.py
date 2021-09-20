@@ -45,7 +45,7 @@ from .backendreservation import BackendReservation
 from .credentials import Credentials
 from .exceptions import (IBMBackendError, IBMBackendValueError, IBMBackendJobLimitError,
                          IBMBackendApiError, IBMBackendApiProtocolError)
-from .job import IBMJob  # pylint: disable=cyclic-import
+from .job import IBMJob, IBMCircuitJob, IBMCompositeJob
 from .utils import validate_job_tags
 from .utils.converters import utc_to_local_all, local_to_utc
 from .utils.json_decoder import decode_pulse_defaults, decode_backend_properties
@@ -151,7 +151,7 @@ class IBMBackend(Backend):
                             List[Union[QuantumCircuit, Schedule]]],
             job_name: Optional[str] = None,
             job_tags: Optional[List[str]] = None,
-            experiment_id: Optional[str] = None,
+            max_circuits_per_job: Optional[int] = None,
             header: Optional[Dict] = None,
             shots: Optional[int] = None,
             memory: Optional[bool] = None,
@@ -175,6 +175,12 @@ class IBMBackend(Backend):
         If a keyword specified here is also present in the ``options`` attribute/object,
         the value specified here will be used for this run.
 
+        If the length of the input circuits exceeds the maximum allowed by
+        the backend, or if `max_circuits_per_job` is not ``None``, then the
+        input circuits will be divided into multiple jobs, and an
+        :class:`~qiskit_ibm.job.IBMCompositeJob` instance is
+        returned.
+
         Args:
             circuits: An individual or a
                 list of :class:`~qiskit.circuits.QuantumCircuit` or
@@ -187,8 +193,7 @@ class IBMBackend(Backend):
                 :meth:`jobs()` method. Job names do not need to be unique.
             job_tags: Tags to be assigned to the job. The tags can subsequently be used
                 as a filter in the :meth:`jobs()` function call.
-            experiment_id: Used to add a job to an "experiment", which is a collection
-                of jobs and additional metadata.
+            max_circuits_per_job: Maximum number of circuits to have in a single job.
 
             The following arguments are NOT applicable if a Qobj is passed in.
 
@@ -304,9 +309,28 @@ class IBMBackend(Backend):
                 run_config_dict['parameter_binds'] = parameter_binds
             if sim_method and 'method' not in run_config_dict:
                 run_config_dict['method'] = sim_method
+
+            if isinstance(circuits, list):
+                chunk_size = None
+                if hasattr(self.configuration(), 'max_experiments'):
+                    backend_max = self.configuration().max_experiments
+                    chunk_size = backend_max if max_circuits_per_job is None \
+                        else min(backend_max, max_circuits_per_job)
+                elif max_circuits_per_job:
+                    chunk_size = max_circuits_per_job
+
+                if chunk_size and len(circuits) > chunk_size:
+                    circuits_list = [circuits[x:x + chunk_size]
+                                     for x in range(0, len(circuits), chunk_size)]
+                    return IBMCompositeJob(backend=self, api_client=self._api_client,
+                                           circuits_list=circuits_list,
+                                           run_config=run_config_dict,
+                                           name=job_name,
+                                           tags=job_tags)
+
             qobj = assemble(circuits, self, **run_config_dict)
 
-        return self._submit_job(qobj, job_name, job_tags, experiment_id)
+        return self._submit_job(qobj, job_name, job_tags)
 
     def _get_run_config(self, **kwargs: Any) -> Dict:
         """Return the consolidated runtime configuration."""
@@ -324,7 +348,7 @@ class IBMBackend(Backend):
             qobj: Union[QasmQobj, PulseQobj],
             job_name: Optional[str] = None,
             job_tags: Optional[List[str]] = None,
-            experiment_id: Optional[str] = None
+            composite_job_id: Optional[str] = None
     ) -> IBMJob:
         """Submit the Qobj to the backend.
 
@@ -335,7 +359,7 @@ class IBMBackend(Backend):
                 ``jobs()``method.
                 Job names do not need to be unique.
             job_tags: Tags to be assigned to the job.
-            experiment_id: Used to add a job to an experiment.
+            composite_job_id: Composite job ID, if this Qobj belongs to a composite job.
 
         Returns:
             The job to be executed.
@@ -360,7 +384,7 @@ class IBMBackend(Backend):
                 qobj_dict=qobj_dict,
                 job_name=job_name,
                 job_tags=job_tags,
-                experiment_id=experiment_id)
+                experiment_id=composite_job_id)
         except ApiError as ex:
             if 'Error code: 3458' in str(ex):
                 raise IBMBackendJobLimitError('Error submitting job: {}'.format(str(ex))) from ex
@@ -374,7 +398,8 @@ class IBMBackend(Backend):
 
         # Submission success.
         try:
-            job = IBMJob(backend=self, api_client=self._api_client, qobj=qobj, **submit_info)
+            job = IBMCircuitJob(backend=self, api_client=self._api_client,
+                                qobj=qobj, **submit_info)
             logger.debug('Job %s was successfully submitted.', job.job_id())
         except TypeError as err:
             logger.debug("Invalid job data received: %s", submit_info)
@@ -734,7 +759,6 @@ class IBMSimulator(IBMBackend):
                             List[Union[QuantumCircuit, Schedule]]],
             job_name: Optional[str] = None,
             job_tags: Optional[List[str]] = None,
-            experiment_id: Optional[str] = None,
             backend_options: Optional[Dict] = None,
             noise_model: Any = None,
             **kwargs: Dict
@@ -755,8 +779,6 @@ class IBMSimulator(IBMBackend):
                 as a filter in the
                 :meth:`IBMBackendService.jobs()
                 <qiskit_ibm.ibm_backend_service.IBMBackendService.jobs>` method.
-            experiment_id: Used to add a job to an "experiment", which is a collection
-                of jobs and additional metadata.
             backend_options: DEPRECATED dictionary of backend options for the execution.
             noise_model: Noise model.
             kwargs: Additional runtime configuration options. They take
@@ -781,7 +803,7 @@ class IBMSimulator(IBMBackend):
                 pass
         run_config.update(kwargs)
         return super().run(circuits, job_name=job_name,
-                           job_tags=job_tags, experiment_id=experiment_id,
+                           job_tags=job_tags,
                            noise_model=noise_model, **run_config)
 
 

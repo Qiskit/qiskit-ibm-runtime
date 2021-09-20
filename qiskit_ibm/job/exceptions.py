@@ -40,3 +40,8 @@ class IBMJobInvalidStateError(IBMJobError):
 class IBMJobTimeoutError(JobTimeoutError, IBMJobError):
     """Errors raised when a job operation times out."""
     pass
+
+
+class IBMJobNotFoundError(IBMJobError):
+    """Errors raised when a job cannot be found."""
+    pass

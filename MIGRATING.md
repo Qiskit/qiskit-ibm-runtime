@@ -13,15 +13,23 @@ Note: `qiskit-ibm` is not part of the `qiskit` meta package and hence will not b
 1. The `IBMQ` global variable which was an instance of the `IBMQFactory` has been removed.
 1. `IBMQFactory` and `AccountProvider` classes have been removed and the functionality provided by these two classes have been combined and refactored in the new `IBMProvider` class. This class will provide a simplified interface as shown below and serve as the entrypoint going forward.
 
-| Method / Constructor | Description |
-|--------|-------------|
-| IBMProvider.save_account(TOKEN, HUB, GROUP, PROJECT) | Save your account to disk for future use and optionally specify a default provider to return when loading your account. |
-| IBMProvider() | Load account and default provider using saved credentials. |
-| IBMProvider.providers() | List the providers available to your account. |
-| IBMProvider.saved_account() | View the account saved to disk. |
-| IBMProvider.delete_account() | Delete the saved account from disk. |
-| IBMProvider(TOKEN, HUB, GROUP, PROJECT) | Enable your account in the current session and optionally specify a default provider to return. |
-| IBMProvider.active_account() | List the account currently active in the session. |
+   | Method / Constructor | Description |
+   |--------|-------------|
+   | IBMProvider.save_account(TOKEN, HUB, GROUP, PROJECT) | Save your account to disk for future use and optionally specify a default provider to return when loading your account. |
+   | IBMProvider() | Load account and default provider using saved credentials. |
+   | IBMProvider.providers() | List the providers available to your account. |
+   | IBMProvider.saved_account() | View the account saved to disk. |
+   | IBMProvider.delete_account() | Delete the saved account from disk. |
+   | IBMProvider(TOKEN, HUB, GROUP, PROJECT) | Enable your account in the current session and optionally specify a default provider to return. |
+   | IBMProvider.active_account() | List the account currently active in the session. |
+
+1. `IBMBackend.run()`, formerly `IBMQBackend.run()`, now splits a long list of circuits into multiple jobs and manages them for you, replacing the
+`IBMQJobManager` feature that was in `qiskit-ibmq-provider`. Instead of initializing a separate `IBMQJobManager`
+instance, you can now pass a long list of circuits directly to `IBMBackend.run()` and receive an
+`IBMCompositeJob` instance back. This `IBMCompositeJob` is a subclass of `IBMJob` and supports the 
+same methods as a "traditional" job.
+
+## Migrating your existing code
 
 Use the examples below to migrate your existing code:
 
@@ -171,6 +179,23 @@ IBMProvider.active_account() # check active account
 #  'url': 'https://auth.quantum-computing.ibm.com/api'}
 ```
 
+### Job Manager
+
+Before
+```
+from qiskit.providers.ibmq.managed import IBMQJobManager
+
+job_manager = IBMQJobManager()
+job_set = job_manager.run(long_list_of_circuits, backend=backend)
+results = job_set.results()
+```
+
+After
+```
+job = backend.run(long_list_of_circuits)
+result = job.result()
+```
+
 ## Clean up
 1. Uninstall `qiskit-ibmq-provider`:
 
@@ -202,7 +227,6 @@ IBMProvider.active_account() # check active account
 | IBMQBackend  | IBMBackend |
 | IBMQBackendService  | IBMBackendService |
 | IBMQJob  | IBMJob |
-| IBMQJobManager  | IBMJobManager |
 | IBMQRandomService  | IBMRandomService |
 | IBMQError | IBMError |
 | IBMQProviderError | IBMProviderError |
@@ -225,12 +249,6 @@ IBMProvider.active_account() # check active account
 | IBMQJobFailureError | IBMJobFailureError |
 | IBMQJobInvalidStateError | IBMJobInvalidStateError |
 | IBMQJobTimeoutError | IBMJobTimeoutError |
-| IBMQJobManagerError | IBMJobManagerError |
-| IBMQJobManagerInvalidStateError | IBMJobManagerInvalidStateError |
-| IBMQJobManagerTimeoutError | IBMJobManagerTimeoutError |
-| IBMQJobManagerJobNotFound | IBMJobManagerJobNotFound |
-| IBMQManagedResultDataNotAvailable | IBMManagedResultDataNotAvailable |
-| IBMQJobManagerUnknownJobSet | IBMJobManagerUnknownJobSet |
 | WebsocketIBMQProtocolError | WebsocketIBMProtocolError |
 | ApiIBMQProtocolError | ApiIBMProtocolError |
 

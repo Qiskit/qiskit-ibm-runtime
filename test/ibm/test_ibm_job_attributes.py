@@ -32,8 +32,7 @@ from qiskit_ibm.exceptions import IBMBackendValueError, IBMBackendApiProtocolErr
 from ..ibm_test_case import IBMTestCase
 from ..decorators import requires_provider, requires_device
 from ..utils import (most_busy_backend, cancel_job, get_large_circuit,
-                     update_job_tags_and_verify, submit_job_bad_shots,
-                     submit_job_one_bad_instr)
+                     submit_job_bad_shots, submit_job_one_bad_instr)
 from ..fake_account_client import BaseFakeAccountClient, MissingFieldFakeJob
 
 
@@ -396,85 +395,19 @@ class TestIBMJobAttributes(IBMTestCase):
 
         tags_to_replace_subtests = [
             [],  # empty tags.
-            ['{}_new_tag_{}'.format(uuid.uuid4().hex, i) for i in range(2)]  # unique tags.
+            ['{}_new_tag_{}'.format(uuid.uuid4().hex, i) for i in range(2)],  # unique tags.
+            initial_job_tags + ["foo"]
         ]
         for tags_to_replace in tags_to_replace_subtests:
             with self.subTest(tags_to_replace=tags_to_replace):
-                update_job_tags_and_verify(job_to_update=job,
-                                           tags_after_update=tags_to_replace,
-                                           replacement_tags=tags_to_replace)
+                # Update the job tags.
+                _ = job.update_tags(new_tags=tags_to_replace)
 
-    def test_job_tags_add(self):
-        """Test updating job tags by adding to a job's existing tags."""
-        initial_job_tags = [uuid.uuid4().hex]
-        job = self.sim_backend.run(self.bell, job_tags=initial_job_tags)
+                # Wait a bit so we don't get cached results.
+                time.sleep(2)
+                job.refresh()
 
-        tags_to_add_subtests = [
-            [],  # empty tags.
-            ['{}_new_tag_{}'.format(uuid.uuid4().hex, i) for i in range(2)]  # unique tags.
-        ]
-        for tags_to_add in tags_to_add_subtests:
-            tags_after_add = job.tags() + tags_to_add
-            update_job_tags_and_verify(job_to_update=job,
-                                       tags_after_update=tags_after_add,
-                                       additional_tags=tags_to_add)
-
-    def test_job_tags_remove(self):
-        """Test updating job tags by removing from a job's existing tags."""
-        initial_job_tags = [uuid.uuid4().hex, uuid.uuid4().hex, uuid.uuid4().hex]
-        job = self.sim_backend.run(self.bell, job_tags=initial_job_tags)
-
-        tags_to_remove_subtests = [
-            [],
-            initial_job_tags[:2],  # Will be used to remove the first two tags of initial_job_tags.
-            ['phantom_tag', 'ghost_tag', initial_job_tags[-1]]  # Get the last initial tag.
-        ]
-        for tags_to_remove in tags_to_remove_subtests:
-            tags_after_removal_set = set(job.tags()) - set(tags_to_remove)
-            update_job_tags_and_verify(job_to_update=job,
-                                       tags_after_update=list(tags_after_removal_set),
-                                       removal_tags=tags_to_remove)
-
-    def test_job_tags_add_and_remove(self):
-        """Test updating job tags by adding and removing the same job tag."""
-        new_job_tags = [uuid.uuid4().hex]
-        update_job_tags_and_verify(job_to_update=self.sim_job,
-                                   tags_after_update=[],
-                                   additional_tags=new_job_tags,
-                                   removal_tags=new_job_tags)
-
-    def test_job_tags_replace_and_remove(self):
-        """Test updating job tags by replacing and removing tags."""
-        job = self.sim_backend.run(self.bell, job_tags=[uuid.uuid4().hex])
-
-        replacement_tags = [uuid.uuid4().hex, uuid.uuid4().hex]
-        # Remove the first tag in `replacement_tags`
-        removal_tags = replacement_tags[:1]
-        # After updating, the final tags should only be the second tag of `replacement_tags`.
-        tags_after_update = replacement_tags[1:]
-
-        update_job_tags_and_verify(job_to_update=job,
-                                   tags_after_update=tags_after_update,
-                                   replacement_tags=replacement_tags,
-                                   removal_tags=removal_tags)
-
-    def test_job_tags_all_parameters(self):
-        """Test updating job tags by replacing, adding, and removing tags."""
-        job = self.sim_backend.run(self.bell, job_tags=[uuid.uuid4().hex])
-
-        replacement_tags = [uuid.uuid4().hex, uuid.uuid4().hex]
-        additional_tags = [uuid.uuid4().hex, uuid.uuid4().hex]
-        # Remove the first tag of `replacement_tags` and `additional_tags`.
-        removal_tags = replacement_tags[:1] + additional_tags[:1]
-        # After updating, the final tags should contain the second tag of both
-        # `replacement_tags` and `additional_tags`.
-        tags_after_update = replacement_tags[1:] + additional_tags[1:]
-
-        update_job_tags_and_verify(job_to_update=job,
-                                   tags_after_update=tags_after_update,
-                                   replacement_tags=replacement_tags,
-                                   additional_tags=additional_tags,
-                                   removal_tags=removal_tags)
+                self.assertEqual(set(tags_to_replace), set(job.tags()))
 
     def test_invalid_job_tags(self):
         """Test using job tags with an and operator."""
@@ -507,16 +440,3 @@ class TestIBMJobAttributes(IBMTestCase):
         """Test job client version information."""
         self.assertIsNotNone(self.sim_job.result().client_version)
         self.assertIsNotNone(self.sim_job.client_version)
-
-    def test_experiment_id(self):
-        """Test job experiment id."""
-        exp_id = uuid.uuid4().hex
-        job = self.sim_backend.run(self.bell, experiment_id=exp_id)
-        self.assertEqual(job.experiment_id, exp_id)
-        rjob = self.provider.backend.job(job.job_id())
-        self.assertEqual(rjob.experiment_id, exp_id)
-        rjobs = self.provider.backend.jobs(experiment_id=exp_id)
-        for rjob in rjobs:
-            self.assertEqual(rjob.experiment_id, exp_id,
-                             f"Job {rjob.job_id()} has experiment ID {rjob.experiment_id} "
-                             f"instead of {exp_id}")

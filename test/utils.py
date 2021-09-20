@@ -13,9 +13,7 @@
 """General utility functions for testing."""
 
 import os
-import time
 import logging
-from typing import List, Optional
 
 from qiskit import QuantumCircuit
 from qiskit.qobj import QasmQobj
@@ -222,38 +220,3 @@ def get_provider(
     IBMProvider._disable_account()
 
     return provider_to_return
-
-
-def update_job_tags_and_verify(
-        job_to_update: IBMJob,
-        tags_after_update: List[str],
-        replacement_tags: Optional[List[str]] = None,
-        additional_tags: Optional[List[str]] = None,
-        removal_tags: Optional[List[str]] = None
-) -> None:
-    """Update the tags for a job and assert that the update was successful.
-
-    Args:
-        job_to_update: The job to update.
-        tags_after_update: The list of tags a job should be associated after updating.
-        replacement_tags: The tags that should replace the current tags
-            associated with this job set.
-        additional_tags: The new tags that should be added to the current tags
-            associated with this job set.
-        removal_tags: The tags that should be removed from the current tags
-            associated with this job set.
-    """
-    # Update the job tags.
-    _ = job_to_update.update_tags(replacement_tags=replacement_tags,
-                                  additional_tags=additional_tags,
-                                  removal_tags=removal_tags)
-
-    # Cached results may be returned if quickly refreshing,
-    # after an update, so wait some time.
-    time.sleep(2)
-    job_to_update.refresh()
-
-    assert set(job_to_update.tags()) == set(tags_after_update), (
-        'Updating the tags for job {} was unsuccessful. '
-        'The tags are {}, but they should be {}.'
-        .format(job_to_update.job_id(), job_to_update.tags(), tags_after_update))

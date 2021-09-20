@@ -15,7 +15,7 @@
 import time
 import copy
 from datetime import datetime, timedelta
-from unittest import SkipTest, mock, skip
+from unittest import SkipTest, mock
 from threading import Thread, Event
 
 from dateutil import tz
@@ -29,9 +29,9 @@ from qiskit.providers.jobstatus import JobStatus, JOB_FINAL_STATES
 from qiskit_ibm import least_busy
 from qiskit_ibm.apiconstants import ApiJobStatus, API_JOB_FINAL_STATES
 from qiskit_ibm.ibm_backend import IBMRetiredBackend
-from qiskit_ibm.exceptions import IBMBackendError, IBMBackendApiError
+from qiskit_ibm.exceptions import IBMBackendApiError
 from qiskit_ibm.utils.utils import api_status_to_job_status
-from qiskit_ibm.job.exceptions import IBMJobTimeoutError
+from qiskit_ibm.job.exceptions import IBMJobTimeoutError, IBMJobNotFoundError
 from qiskit_ibm.api.rest.job import Job as RestJob
 from qiskit_ibm.api.exceptions import RequestsApiError
 
@@ -178,7 +178,8 @@ class TestIBMJob(IBMTestCase):
     def test_retrieve_jobs(self):
         """Test retrieving jobs."""
         job_list = self.provider.backend.jobs(
-            backend_name=self.sim_backend.name(), limit=5, skip=0, start_datetime=self.last_month)
+            backend_name=self.sim_backend.name(), limit=5, skip=0,
+            start_datetime=self.last_month, ignore_composite_jobs=True)
         self.assertLessEqual(len(job_list), 5)
         for job in job_list:
             self.assertTrue(isinstance(job.job_id(), str))
@@ -219,7 +220,7 @@ class TestIBMJob(IBMTestCase):
 
     def test_retrieve_job_error(self):
         """Test retrieving an invalid job."""
-        self.assertRaises(IBMBackendError,
+        self.assertRaises(IBMJobNotFoundError,
                           self.provider.backend.job, 'BAD_JOB_ID')
 
     def test_retrieve_jobs_status(self):
@@ -229,7 +230,8 @@ class TestIBMJob(IBMTestCase):
             with self.subTest(arg=arg):
                 backend_jobs = self.provider.backend.jobs(
                     backend_name=self.sim_backend.name(),
-                    limit=5, skip=5, status=arg, start_datetime=self.last_month)
+                    limit=5, skip=5, status=arg, start_datetime=self.last_month,
+                    ignore_composite_jobs=True)
                 self.assertTrue(backend_jobs)
 
                 for job in backend_jobs:
@@ -241,7 +243,9 @@ class TestIBMJob(IBMTestCase):
         """Test retrieving jobs filtered by multiple job statuses."""
         statuses_to_filter = [JobStatus.ERROR, JobStatus.CANCELLED]
         status_filters = [
-            {'status': [JobStatus.ERROR, JobStatus.CANCELLED]},
+            [JobStatus.ERROR, JobStatus.CANCELLED],
+            ['ERROR', 'CANCELLED'],
+            [JobStatus.ERROR, 'CANCELLED']
         ]
         job_to_cancel = submit_and_cancel(backend=self.sim_backend)
         job_to_fail = submit_job_bad_shots(backend=self.sim_backend)
@@ -250,8 +254,9 @@ class TestIBMJob(IBMTestCase):
         for status_filter in status_filters:
             with self.subTest(status_filter=status_filter):
                 job_list = self.provider.backend.jobs(
-                    status=status_filter['status'],
-                    start_datetime=self.last_month)
+                    status=status_filter,
+                    start_datetime=self.last_month,
+                    ignore_composite_jobs=True)
                 job_list_ids = [_job.job_id() for _job in job_list]
                 if job_to_cancel.status() is JobStatus.CANCELLED:
                     self.assertIn(job_to_cancel.job_id(), job_list_ids)
@@ -296,7 +301,8 @@ class TestIBMJob(IBMTestCase):
 
         before_status = job._status
         job_list_queued = provider.backend.jobs(status=JobStatus.QUEUED, limit=5,
-                                                start_datetime=self.last_month)
+                                                start_datetime=self.last_month,
+                                                ignore_composite_jobs=True)
         if before_status is JobStatus.QUEUED and job.status() is JobStatus.QUEUED:
             self.assertIn(job.job_id(), [queued_job.job_id() for queued_job in job_list_queued],
                           "job {} is queued but not retrieved when filtering for queued jobs."
@@ -321,7 +327,8 @@ class TestIBMJob(IBMTestCase):
 
         before_status = job._status
         job_list_running = self.provider.backend.jobs(status=JobStatus.RUNNING, limit=5,
-                                                      start_datetime=self.last_month)
+                                                      start_datetime=self.last_month,
+                                                      ignore_composite_jobs=True)
         if before_status is JobStatus.RUNNING and job.status() is JobStatus.RUNNING:
             self.assertIn(job.job_id(), [rjob.job_id() for rjob in job_list_running])
 
@@ -337,7 +344,8 @@ class TestIBMJob(IBMTestCase):
         past_month_tz_aware = past_month.replace(tzinfo=tz.tzlocal())
 
         job_list = self.provider.backend.jobs(backend_name=self.sim_backend.name(),
-                                              limit=2, start_datetime=past_month)
+                                              limit=2, start_datetime=past_month,
+                                              ignore_composite_jobs=True)
         self.assertTrue(job_list)
         for job in job_list:
             self.assertGreaterEqual(job.creation_date(), past_month_tz_aware,
@@ -351,7 +359,8 @@ class TestIBMJob(IBMTestCase):
         past_month_tz_aware = past_month.replace(tzinfo=tz.tzlocal())
 
         job_list = self.provider.backend.jobs(backend_name=self.sim_backend.name(),
-                                              limit=2, end_datetime=past_month)
+                                              limit=2, end_datetime=past_month,
+                                              ignore_composite_jobs=True)
         self.assertTrue(job_list)
         for job in job_list:
             self.assertLessEqual(job.creation_date(), past_month_tz_aware,
@@ -384,14 +393,15 @@ class TestIBMJob(IBMTestCase):
         job = self.sim_backend.run(self.bell)
         job.wait_for_final_state()
         newest_jobs = self.provider.backend.jobs(
-            limit=10, status=JobStatus.DONE, descending=True, start_datetime=self.last_month)
+            limit=10, status=JobStatus.DONE, descending=True, start_datetime=self.last_month,
+            ignore_composite_jobs=True)
         self.assertIn(job.job_id(), [rjob.job_id() for rjob in newest_jobs])
 
         oldest_jobs = self.provider.backend.jobs(
-            limit=10, status=JobStatus.DONE, descending=False, start_datetime=self.last_month)
+            limit=10, status=JobStatus.DONE, descending=False, start_datetime=self.last_month,
+            ignore_composite_jobs=True)
         self.assertNotIn(job.job_id(), [rjob.job_id() for rjob in oldest_jobs])
 
-    @skip("Skip until aer issue 1214 is fixed")
     def test_retrieve_failed_job_simulator_partial(self):
         """Test retrieving partial results from a simulator backend."""
         job = submit_job_one_bad_instr(self.sim_backend)

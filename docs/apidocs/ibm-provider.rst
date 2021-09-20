@@ -7,7 +7,6 @@ Qiskit IBM Quantum Provider API Reference
 
    ibm_provider
    ibm_job
-   ibm_managed
    ibm_credentials
    ibm_visualization
    ibm_jupyter

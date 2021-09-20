@@ -9,6 +9,7 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
+# pylint: disable=cyclic-import
 
 """
 ======================================
@@ -25,7 +26,8 @@ Classes
 .. autosummary::
     :toctree: ../stubs/
 
-    IBMJob
+    IBMCircuitJob
+    IBMCompositeJob
     QueueInfo
 
 Functions
@@ -49,6 +51,8 @@ Exception
 """
 
 from .ibm_job import IBMJob
+from .ibm_circuit_job import IBMCircuitJob
+from .ibm_composite_job import IBMCompositeJob
 from .queueinfo import QueueInfo
 from .exceptions import (IBMJobError, IBMJobApiError, IBMJobFailureError,
                          IBMJobInvalidStateError, IBMJobTimeoutError)
