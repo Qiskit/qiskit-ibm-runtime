@@ -23,6 +23,7 @@ from qiskit.test.base import BaseQiskitTestCase
 from qiskit_ibm import QISKIT_IBM_PROVIDER_LOGGER_NAME
 from qiskit_ibm.api.clients.account import AccountClient
 from qiskit_ibm.apiconstants import ApiJobStatus, API_JOB_FINAL_STATES
+from qiskit_ibm.job.exceptions import IBMJobNotFoundError
 
 from .utils import setup_test_logging
 
@@ -88,7 +89,14 @@ class IBMTestCase(BaseQiskitTestCase):
                     if ApiJobStatus(job_status) not in API_JOB_FINAL_STATES:
                         client.job_cancel(job_id)
                         time.sleep(1)
-                    client.job_delete(job_id)
+                    retry = 3
+                    while retry > 0:
+                        try:
+                            client.job_delete(job_id)
+                            time.sleep(1)
+                            retry -= 1
+                        except IBMJobNotFoundError:
+                            retry = 0
                 except Exception:  # pylint: disable=broad-except
                     pass
 
