@@ -126,7 +126,7 @@ def main(backend, user_messenger, **kwargs):
             with suppress(Exception):
                 job.cancel()
             with suppress(Exception):
-                self.provider.runtime.delete_job(job.job_id())
+                self.provider.runtime.delete_job(job.job_id)
 
     def test_runtime_service(self):
         """Test getting runtime service."""
@@ -207,13 +207,13 @@ def main(backend, user_messenger, **kwargs):
         """Test a failed program execution."""
         options = {'backend_name': self.backend.name()}
         job = self.provider.runtime.run(program_id=self.program_id, inputs={}, options=options)
-        self.log.info("Runtime job %s submitted.", job.job_id())
+        self.log.info("Runtime job %s submitted.", job.job_id)
 
         job.wait_for_final_state()
-        job_result_raw = self.provider.runtime._api_client.job_results(job.job_id())
+        job_result_raw = self.provider.runtime._api_client.job_results(job.job_id)
         self.assertEqual(JobStatus.ERROR, job.status())
         self.assertIn(API_TO_JOB_ERROR_MESSAGE['FAILED'].format(
-            job.job_id(), job_result_raw), job.error_message())
+            job.job_id, job_result_raw), job.error_message())
         with self.assertRaises(RuntimeJobFailureError) as err_cm:
             job.result()
         self.assertIn('KeyError', str(err_cm.exception))
@@ -228,13 +228,13 @@ def main(backend, user_messenger, **kwargs):
         program_id = self._upload_program(max_execution_time=max_execution_time)
         options = {'backend_name': self.backend.name()}
         job = self.provider.runtime.run(program_id=program_id, inputs=inputs, options=options)
-        self.log.info("Runtime job %s submitted.", job.job_id())
+        self.log.info("Runtime job %s submitted.", job.job_id)
 
         job.wait_for_final_state()
-        job_result_raw = self.provider.runtime._api_client.job_results(job.job_id())
+        job_result_raw = self.provider.runtime._api_client.job_results(job.job_id)
         self.assertEqual(JobStatus.ERROR, job.status())
         self.assertIn(API_TO_JOB_ERROR_MESSAGE['CANCELLED - RAN TOO LONG'].format(
-            job.job_id(), job_result_raw), job.error_message())
+            job.job_id, job_result_raw), job.error_message())
         with self.assertRaises(RuntimeJobFailureError):
             job.result()
 
@@ -243,24 +243,24 @@ def main(backend, user_messenger, **kwargs):
         _ = self._run_program(iterations=10)
         job = self._run_program(iterations=2)
         self._wait_for_status(job, JobStatus.QUEUED)
-        rjob = self.provider.runtime.job(job.job_id())
-        self.assertEqual(job.job_id(), rjob.job_id())
+        rjob = self.provider.runtime.job(job.job_id)
+        self.assertEqual(job.job_id, rjob.job_id)
         self.assertEqual(self.program_id, rjob.program_id)
 
     def test_retrieve_job_running(self):
         """Test retrieving a running job."""
         job = self._run_program(iterations=10)
         self._wait_for_status(job, JobStatus.RUNNING)
-        rjob = self.provider.runtime.job(job.job_id())
-        self.assertEqual(job.job_id(), rjob.job_id())
+        rjob = self.provider.runtime.job(job.job_id)
+        self.assertEqual(job.job_id, rjob.job_id)
         self.assertEqual(self.program_id, job.program_id)
 
     def test_retrieve_job_done(self):
         """Test retrieving a finished job."""
         job = self._run_program()
         job.wait_for_final_state()
-        rjob = self.provider.runtime.job(job.job_id())
-        self.assertEqual(job.job_id(), rjob.job_id())
+        rjob = self.provider.runtime.job(job.job_id)
+        self.assertEqual(job.job_id, rjob.job_id)
         self.assertEqual(self.program_id, job.program_id)
 
     def test_retrieve_all_jobs(self):
@@ -269,12 +269,12 @@ def main(backend, user_messenger, **kwargs):
         rjobs = self.provider.runtime.jobs()
         found = False
         for rjob in rjobs:
-            if rjob.job_id() == job.job_id():
+            if rjob.job_id == job.job_id:
                 self.assertEqual(job.program_id, rjob.program_id)
                 self.assertEqual(job.inputs, rjob.inputs)
                 found = True
                 break
-        self.assertTrue(found, f"Job {job.job_id()} not returned.")
+        self.assertTrue(found, f"Job {job.job_id} not returned.")
 
     def test_retrieve_jobs_limit(self):
         """Test retrieving jobs with limit."""
@@ -284,8 +284,8 @@ def main(backend, user_messenger, **kwargs):
 
         rjobs = self.provider.runtime.jobs(limit=2)
         self.assertEqual(len(rjobs), 2)
-        job_ids = {job.job_id() for job in jobs}
-        rjob_ids = {rjob.job_id() for rjob in rjobs}
+        job_ids = {job.job_id for job in jobs}
+        rjob_ids = {rjob.job_id for rjob in rjobs}
         self.assertTrue(rjob_ids.issubset(job_ids))
 
     def test_retrieve_pending_jobs(self):
@@ -295,12 +295,12 @@ def main(backend, user_messenger, **kwargs):
         rjobs = self.provider.runtime.jobs(pending=True)
         found = False
         for rjob in rjobs:
-            if rjob.job_id() == job.job_id():
+            if rjob.job_id == job.job_id:
                 self.assertEqual(job.program_id, rjob.program_id)
                 self.assertEqual(job.inputs, rjob.inputs)
                 found = True
                 break
-        self.assertTrue(found, f"Pending job {job.job_id()} not retrieved.")
+        self.assertTrue(found, f"Pending job {job.job_id} not retrieved.")
 
     def test_retrieve_returned_jobs(self):
         """Test retrieving returned jobs (COMPLETED, FAILED, CANCELLED)."""
@@ -309,12 +309,12 @@ def main(backend, user_messenger, **kwargs):
         rjobs = self.provider.runtime.jobs(pending=False)
         found = False
         for rjob in rjobs:
-            if rjob.job_id() == job.job_id():
+            if rjob.job_id == job.job_id:
                 self.assertEqual(job.program_id, rjob.program_id)
                 self.assertEqual(job.inputs, rjob.inputs)
                 found = True
                 break
-        self.assertTrue(found, f"Returned job {job.job_id()} not retrieved.")
+        self.assertTrue(found, f"Returned job {job.job_id} not retrieved.")
 
     def test_cancel_job_queued(self):
         """Test canceling a queued job."""
@@ -324,7 +324,7 @@ def main(backend, user_messenger, **kwargs):
         job.cancel()
         self.assertEqual(job.status(), JobStatus.CANCELLED)
         time.sleep(10)  # Wait a bit for DB to update.
-        rjob = self.provider.runtime.job(job.job_id())
+        rjob = self.provider.runtime.job(job.job_id)
         self.assertEqual(rjob.status(), JobStatus.CANCELLED)
 
     def test_cancel_job_running(self):
@@ -334,7 +334,7 @@ def main(backend, user_messenger, **kwargs):
         job.cancel()
         self.assertEqual(job.status(), JobStatus.CANCELLED)
         time.sleep(10)  # Wait a bit for DB to update.
-        rjob = self.provider.runtime.job(job.job_id())
+        rjob = self.provider.runtime.job(job.job_id)
         self.assertEqual(rjob.status(), JobStatus.CANCELLED)
 
     def test_cancel_job_done(self):
@@ -354,9 +354,9 @@ def main(backend, user_messenger, **kwargs):
 
                 job = self._run_program(iterations=2)
                 self._wait_for_status(job, status)
-                self.provider.runtime.delete_job(job.job_id())
+                self.provider.runtime.delete_job(job.job_id)
                 with self.assertRaises(RuntimeJobNotFound):
-                    self.provider.runtime.job(job.job_id())
+                    self.provider.runtime.job(job.job_id)
 
     def test_interim_result_callback(self):
         """Test interim result callback."""
@@ -364,7 +364,7 @@ def main(backend, user_messenger, **kwargs):
             nonlocal final_it
             final_it = interim_result['iteration']
             nonlocal callback_err
-            if job_id != job.job_id():
+            if job_id != job.job_id:
                 callback_err.append(f"Unexpected job ID: {job_id}")
             if interim_result['interim_results'] != int_res:
                 callback_err.append(f"Unexpected interim result: {interim_result}")
@@ -386,7 +386,7 @@ def main(backend, user_messenger, **kwargs):
             nonlocal final_it
             final_it = interim_result['iteration']
             nonlocal callback_err
-            if job_id != job.job_id():
+            if job_id != job.job_id:
                 callback_err.append(f"Unexpected job ID: {job_id}")
             if interim_result['interim_results'] != int_res:
                 callback_err.append(f"Unexpected interim result: {interim_result}")
@@ -471,7 +471,7 @@ def main(backend, user_messenger, **kwargs):
         result = job.result(decoder=SerializableClassDecoder)
         self.assertEqual(final_result, result)
 
-        rresults = self.provider.runtime.job(job.job_id()).result(decoder=SerializableClassDecoder)
+        rresults = self.provider.runtime.job(job.job_id).result(decoder=SerializableClassDecoder)
         self.assertEqual(final_result, rresults)
 
     def test_job_status(self):
@@ -488,17 +488,17 @@ def main(backend, user_messenger, **kwargs):
         options = {'backend_name': self.backend.name()}
         job = self.provider.runtime.run(program_id=self.program_id, inputs=inputs,
                                         options=options)
-        self.log.info("Runtime job %s submitted.", job.job_id())
+        self.log.info("Runtime job %s submitted.", job.job_id)
         self.to_cancel.append(job)
         self.assertEqual(inputs, job.inputs)
-        rjob = self.provider.runtime.job(job.job_id())
+        rjob = self.provider.runtime.job(job.job_id)
         rinterim_results = rjob.inputs['interim_results']
         self._assert_complex_types_equal(interim_results, rinterim_results)
 
     def test_job_backend(self):
         """Test job backend."""
         job = self._run_program()
-        self.assertEqual(self.backend, job.backend())
+        self.assertEqual(self.backend, job.backend)
 
     def test_job_program_id(self):
         """Test job program ID."""
@@ -529,7 +529,7 @@ def main(backend, user_messenger, **kwargs):
         """Test job creation date."""
         job = self._run_program(iterations=1)
         self.assertTrue(job.creation_date)
-        rjob = self.provider.runtime.job(job.job_id())
+        rjob = self.provider.runtime.job(job.job_id)
         self.assertTrue(rjob.creation_date)
         rjobs = self.provider.runtime.jobs(limit=2)
         for rjob in rjobs:
@@ -622,7 +622,7 @@ def main(backend, user_messenger, **kwargs):
         options = {'backend_name': self.backend.name()}
         job = self.provider.runtime.run(program_id=pid, inputs=inputs,
                                         options=options, callback=callback)
-        self.log.info("Runtime job %s submitted.", job.job_id())
+        self.log.info("Runtime job %s submitted.", job.job_id)
         self.to_cancel.append(job)
         return job
 
@@ -632,4 +632,4 @@ def main(backend, user_messenger, **kwargs):
         while job.status() not in JOB_FINAL_STATES + (status,):
             time.sleep(wait_time)
         if job.status() != status:
-            self.skipTest(f"Job {job.job_id()} unable to reach status {status}.")
+            self.skipTest(f"Job {job.job_id} unable to reach status {status}.")

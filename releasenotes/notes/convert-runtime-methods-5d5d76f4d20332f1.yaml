@@ -1,0 +1,6 @@
+---
+upgrade:
+  - |
+    In order to be consistent with other properties in
+    :class:`qiskit_ibm.runtime.RuntimeJob` class 
+    the `job_id` and `backend` methods have been converted to properties.
