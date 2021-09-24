@@ -23,6 +23,7 @@ from qiskit_ibm.random.cqcextractor import CQCExtractor
 from qiskit_ibm.random.utils import bitarray_to_bytes
 from qiskit_ibm.random.ibm_random_service import IBMRandomService
 from qiskit_ibm.exceptions import IBMError
+from qiskit_ibm import IBMProvider
 
 from ..ibm_test_case import IBMTestCase
 from ..decorators import requires_provider
@@ -107,6 +108,12 @@ class TestRandom(IBMTestCase):
         random_service._random_client = FakeRandomClient()
         random_service._initialized = False
         cls.provider._random = random_service
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        """Class level teardown."""
+        super().tearDownClass()
+        IBMProvider._disable_account()
 
     def test_list_random_services(self):
         """Test listing random number services."""
