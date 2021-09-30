@@ -125,11 +125,10 @@ executing does provide them.
 To run the `sample-program` program:
 
 ```python
-backend = provider.get_backend('ibmq_montreal')
 program_inputs = {
     'iterations': 3
 }
-options = {'backend_name': backend.name()}
+options = {'backend_name': 'ibmq_montreal'}
 job = provider.runtime.run(program_id="sample-program",
                            options=options,
                            inputs=program_inputs,
