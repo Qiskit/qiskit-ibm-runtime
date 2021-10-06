@@ -16,6 +16,7 @@ import time
 import uuid
 from unittest import skipIf
 from concurrent.futures import ThreadPoolExecutor
+import pkg_resources
 
 import numpy as np
 from qiskit.providers.jobstatus import JobStatus
@@ -31,6 +32,7 @@ from ..decorators import requires_provider
 HAS_QISKIT_RNG = True
 try:
     from qiskit_rng import Generator
+    QISKIT_RNG_VERSION = pkg_resources.get_distribution("qiskit_rng").version
 except ImportError:
     HAS_QISKIT_RNG = False
 
@@ -55,6 +57,7 @@ class TestRandomIntegration(IBMTestCase):
         except IBMError:
             return False
 
+    @skipIf(QISKIT_RNG_VERSION <= '0.2.2', "Need qiskit_rng > 0.2.2")
     def test_cqc_extractor(self):
         """Test invoking the CQC extractors."""
         generator = Generator(self.provider.get_backend('ibmq_qasm_simulator'))

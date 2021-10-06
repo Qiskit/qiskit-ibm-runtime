@@ -16,7 +16,7 @@ from datetime import timedelta, datetime
 from unittest import SkipTest
 from unittest.mock import patch
 
-from qiskit import QuantumCircuit, transpile, assemble
+from qiskit import QuantumCircuit
 from qiskit.providers.models import QasmBackendConfiguration
 from qiskit.test.reference_circuits import ReferenceCircuits
 
@@ -106,13 +106,6 @@ class TestIBMBackend(IBMTestCase):
                     "Reservation {} found={}, used start datetime {}, end datetime {}".format(
                         reserv, found, start_dt, end_dt))
 
-    def test_run_qobj(self):
-        """Test running a Qobj."""
-        qobj = assemble(transpile(ReferenceCircuits.bell(), self.backend), self.backend)
-        with self.assertWarns(DeprecationWarning):
-            job = self.backend.run(qobj)
-        cancel_job(job)
-
     def test_backend_options(self):
         """Test backend options."""
         provider = self.backend.provider()
@@ -126,13 +119,13 @@ class TestIBMBackend(IBMTestCase):
                             meas_lo_freq=[6.5e9, 6.6e9],
                             meas_level=2)
         job = backend.run(get_pulse_schedule(backend), meas_level=1, foo='foo')
-        qobj = provider.backend.job(job.job_id()).qobj()  # Use retrieved Qobj.
-        self.assertEqual(qobj.config.shots, 2048)
+        backend_options = provider.backend.job(job.job_id()).backend_options()
+        self.assertEqual(backend_options['shots'], 2048)
         # Qobj config freq is in GHz.
-        self.assertEqual(qobj.config.qubit_lo_freq, [4.9, 5.0])
-        self.assertEqual(qobj.config.meas_lo_freq, [6.5, 6.6])
-        self.assertEqual(qobj.config.meas_level, 1)
-        self.assertEqual(qobj.config.foo, 'foo')
+        self.assertAlmostEqual(backend_options['qubit_lo_freq'], [4.9e9, 5.0e9])
+        self.assertEqual(backend_options['meas_lo_freq'], [6.5e9, 6.6e9])
+        self.assertEqual(backend_options['meas_level'], 1)
+        self.assertEqual(backend_options['foo'], 'foo')
         cancel_job(job)
 
     def test_sim_backend_options(self):
@@ -142,10 +135,10 @@ class TestIBMBackend(IBMTestCase):
         backend.options.shots = 2048
         backend.set_options(memory=True)
         job = backend.run(ReferenceCircuits.bell(), shots=1024, foo='foo')
-        qobj = provider.backend.job(job.job_id()).qobj()
-        self.assertEqual(qobj.config.shots, 1024)
-        self.assertTrue(qobj.config.memory)
-        self.assertEqual(qobj.config.foo, 'foo')
+        backend_options = provider.backend.job(job.job_id()).backend_options()
+        self.assertEqual(backend_options['shots'], 1024)
+        self.assertTrue(backend_options['memory'])
+        self.assertEqual(backend_options['foo'], 'foo')
 
     def test_deprecate_id_instruction(self):
         """Test replacement of 'id' Instructions with 'Delay' instructions."""

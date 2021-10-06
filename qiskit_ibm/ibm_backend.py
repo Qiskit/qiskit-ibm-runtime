@@ -33,7 +33,6 @@ from qiskit.providers.models import (BackendStatus, BackendProperties,
 from qiskit.tools.events.pubsub import Publisher
 from qiskit.providers.models import (QasmBackendConfiguration,
                                      PulseBackendConfiguration)
-from qiskit.util import deprecate_arguments
 
 from qiskit_ibm import ibm_provider  # pylint: disable=unused-import
 
@@ -102,7 +101,6 @@ class IBMBackend(Backend):
         job_limit = backend.job_limit()
     """
 
-    qobj_warning_issued = False
     id_warning_issued = False
 
     def __init__(
@@ -144,10 +142,9 @@ class IBMBackend(Backend):
                        rep_time=None, rep_delay=None,
                        init_qubits=True, use_measure_esp=None)
 
-    @deprecate_arguments({'qobj': 'circuits'})
     def run(
             self,
-            circuits: Union[QasmQobj, PulseQobj, QuantumCircuit, Schedule,
+            circuits: Union[QuantumCircuit, Schedule,
                             List[Union[QuantumCircuit, Schedule]]],
             job_name: Optional[str] = None,
             job_tags: Optional[List[str]] = None,
@@ -185,17 +182,12 @@ class IBMBackend(Backend):
             circuits: An individual or a
                 list of :class:`~qiskit.circuits.QuantumCircuit` or
                 :class:`~qiskit.pulse.Schedule` objects to run on the backend.
-                A :class:`~qiskit.qobj.QasmQobj` or a
-                :class:`~qiskit.qobj.PulseQobj` object is also supported but
-                is deprecated.
             job_name: Custom name to be assigned to the job. This job
                 name can subsequently be used as a filter in the
                 :meth:`jobs()` method. Job names do not need to be unique.
             job_tags: Tags to be assigned to the job. The tags can subsequently be used
                 as a filter in the :meth:`jobs()` function call.
             max_circuits_per_job: Maximum number of circuits to have in a single job.
-
-            The following arguments are NOT applicable if a Qobj is passed in.
 
             header: User input that will be attached to the job and will be
                 copied to the corresponding result header. Headers do not affect the run.
@@ -276,59 +268,46 @@ class IBMBackend(Backend):
         if not self.configuration().simulator:
             self._deprecate_id_instruction(circuits)
 
-        if isinstance(circuits, (QasmQobj, PulseQobj)):
-            if not self.qobj_warning_issued:
-                warnings.warn("Passing a Qobj to Backend.run is deprecated and will "
-                              "be removed in a future release. Please pass in circuits "
-                              "or pulse schedules instead.", DeprecationWarning,
-                              stacklevel=3)  # need level 3 because of decorator
-                self.qobj_warning_issued = True
-            qobj = circuits
-            if sim_method and not hasattr(qobj.config, 'method'):
-                qobj.config.method = sim_method
-        else:
-            qobj_header = run_config.pop('qobj_header', None)
-            header = header or qobj_header
-            run_config_dict = self._get_run_config(
-                qobj_header=header,
-                shots=shots,
-                memory=memory,
-                qubit_lo_freq=qubit_lo_freq,
-                meas_lo_freq=meas_lo_freq,
-                schedule_los=schedule_los,
-                meas_level=meas_level,
-                meas_return=meas_return,
-                memory_slots=memory_slots,
-                memory_slot_size=memory_slot_size,
-                rep_time=rep_time,
-                rep_delay=rep_delay,
-                init_qubits=init_qubits,
-                use_measure_esp=use_measure_esp,
-                **run_config)
-            if parameter_binds:
-                run_config_dict['parameter_binds'] = parameter_binds
-            if sim_method and 'method' not in run_config_dict:
-                run_config_dict['method'] = sim_method
+        run_config_dict = self._get_run_config(
+            qobj_header=header,
+            shots=shots,
+            memory=memory,
+            qubit_lo_freq=qubit_lo_freq,
+            meas_lo_freq=meas_lo_freq,
+            schedule_los=schedule_los,
+            meas_level=meas_level,
+            meas_return=meas_return,
+            memory_slots=memory_slots,
+            memory_slot_size=memory_slot_size,
+            rep_time=rep_time,
+            rep_delay=rep_delay,
+            init_qubits=init_qubits,
+            use_measure_esp=use_measure_esp,
+            **run_config)
+        if parameter_binds:
+            run_config_dict['parameter_binds'] = parameter_binds
+        if sim_method and 'method' not in run_config_dict:
+            run_config_dict['method'] = sim_method
 
-            if isinstance(circuits, list):
-                chunk_size = None
-                if hasattr(self.configuration(), 'max_experiments'):
-                    backend_max = self.configuration().max_experiments
-                    chunk_size = backend_max if max_circuits_per_job is None \
-                        else min(backend_max, max_circuits_per_job)
-                elif max_circuits_per_job:
-                    chunk_size = max_circuits_per_job
+        if isinstance(circuits, list):
+            chunk_size = None
+            if hasattr(self.configuration(), 'max_experiments'):
+                backend_max = self.configuration().max_experiments
+                chunk_size = backend_max if max_circuits_per_job is None \
+                    else min(backend_max, max_circuits_per_job)
+            elif max_circuits_per_job:
+                chunk_size = max_circuits_per_job
 
-                if chunk_size and len(circuits) > chunk_size:
-                    circuits_list = [circuits[x:x + chunk_size]
-                                     for x in range(0, len(circuits), chunk_size)]
-                    return IBMCompositeJob(backend=self, api_client=self._api_client,
-                                           circuits_list=circuits_list,
-                                           run_config=run_config_dict,
-                                           name=job_name,
-                                           tags=job_tags)
+            if chunk_size and len(circuits) > chunk_size:
+                circuits_list = [circuits[x:x + chunk_size]
+                                 for x in range(0, len(circuits), chunk_size)]
+                return IBMCompositeJob(backend=self, api_client=self._api_client,
+                                       circuits_list=circuits_list,
+                                       run_config=run_config_dict,
+                                       name=job_name,
+                                       tags=job_tags)
 
-            qobj = assemble(circuits, self, **run_config_dict)
+        qobj = assemble(circuits, self, **run_config_dict)
 
         return self._submit_job(qobj, job_name, job_tags)
 
@@ -649,7 +628,7 @@ class IBMBackend(Backend):
 
     def _deprecate_id_instruction(
             self,
-            circuits: Union[QasmQobj, PulseQobj, QuantumCircuit, Schedule,
+            circuits: Union[QuantumCircuit, Schedule,
                             List[Union[QuantumCircuit, Schedule]]]
     ) -> None:
         """Raise a DeprecationWarning if any circuit contains an 'id' instruction.
@@ -666,27 +645,19 @@ class IBMBackend(Backend):
             None
         """
 
-        if isinstance(circuits, PulseQobj):
-            return
-
         id_support = 'id' in getattr(self.configuration(), 'basis_gates', [])
         delay_support = 'delay' in getattr(self.configuration(), 'supported_instructions', [])
 
         if not delay_support:
             return
 
-        if isinstance(circuits, QasmQobj):
-            circuit_has_id = any(instr.name == 'id'
-                                 for experiment in circuits.experiments
-                                 for instr in experiment.instructions)
-        else:
-            if not isinstance(circuits, List):
-                circuits = [circuits]
+        if not isinstance(circuits, List):
+            circuits = [circuits]
 
-            circuit_has_id = any(instr.name == 'id'
-                                 for circuit in circuits
-                                 if isinstance(circuit, QuantumCircuit)
-                                 for instr, qargs, cargs in circuit.data)
+        circuit_has_id = any(instr.name == 'id'
+                             for circuit in circuits
+                             if isinstance(circuit, QuantumCircuit)
+                             for instr, qargs, cargs in circuit.data)
 
         if not circuit_has_id:
             return
@@ -709,29 +680,19 @@ class IBMBackend(Backend):
 
         dt_in_s = self.configuration().dt
 
-        if isinstance(circuits, QasmQobj):
-            for experiment in circuits.experiments:
-                for instr in experiment.instructions:
-                    if instr.name == 'id':
-                        sx_duration = self.properties().gate_length('sx', instr.qubits[0])
-                        sx_duration_in_dt = duration_in_dt(sx_duration, dt_in_s)
+        for circuit in circuits:
+            if isinstance(circuit, Schedule):
+                continue
 
-                        instr.name = 'delay'
-                        instr.params = [sx_duration_in_dt]
-        else:
-            for circuit in circuits:
-                if isinstance(circuit, Schedule):
-                    continue
+            for idx, (instr, qargs, cargs) in enumerate(circuit.data):
+                if instr.name == 'id':
 
-                for idx, (instr, qargs, cargs) in enumerate(circuit.data):
-                    if instr.name == 'id':
+                    sx_duration = self.properties().gate_length('sx', qargs[0].index)
+                    sx_duration_in_dt = duration_in_dt(sx_duration, dt_in_s)
 
-                        sx_duration = self.properties().gate_length('sx', qargs[0].index)
-                        sx_duration_in_dt = duration_in_dt(sx_duration, dt_in_s)
+                    delay_instr = Delay(sx_duration_in_dt)
 
-                        delay_instr = Delay(sx_duration_in_dt)
-
-                        circuit.data[idx] = (delay_instr, qargs, cargs)
+                    circuit.data[idx] = (delay_instr, qargs, cargs)
 
 
 class IBMSimulator(IBMBackend):
@@ -752,10 +713,9 @@ class IBMSimulator(IBMBackend):
         """Return ``None``, simulators do not have backend properties."""
         return None
 
-    @deprecate_arguments({'qobj': 'circuits'})
     def run(    # type: ignore[override]
             self,
-            circuits: Union[QasmQobj, PulseQobj, QuantumCircuit, Schedule,
+            circuits: Union[QuantumCircuit, Schedule,
                             List[Union[QuantumCircuit, Schedule]]],
             job_name: Optional[str] = None,
             job_tags: Optional[List[str]] = None,
@@ -763,15 +723,12 @@ class IBMSimulator(IBMBackend):
             noise_model: Any = None,
             **kwargs: Dict
     ) -> IBMJob:
-        """Run a Qobj asynchronously.
+        """Run a Circuit asynchronously.
 
         Args:
             circuits: An individual or a
                 list of :class:`~qiskit.circuits.QuantumCircuit` or
                 :class:`~qiskit.pulse.Schedule` objects to run on the backend.
-                A :class:`~qiskit.qobj.QasmQobj` or a
-                :class:`~qiskit.qobj.PulseQobj` object is also supported but
-                is deprecated.
             job_name: Custom name to be assigned to the job. This job
                 name can subsequently be used as a filter in the
                 :meth:`jobs` method. Job names do not need to be unique.
@@ -878,7 +835,7 @@ class IBMRetiredBackend(IBMBackend):
             *args: Any,
             **kwargs: Any
     ) -> None:
-        """Run a Qobj."""
+        """Run a Circuit."""
         # pylint: disable=arguments-differ
         raise IBMBackendError('This backend ({}) is no longer available.'.format(self.name()))
 

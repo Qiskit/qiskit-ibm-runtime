@@ -46,9 +46,9 @@ class TestSerialization(IBMTestCase):
     def test_qasm_qobj(self):
         """Test serializing qasm qobj data."""
         job = self.sim_backend.run(self.bell)
-        rqobj = self.provider.backend.job(job.job_id()).qobj()
+        rqobj = self.provider.backend.job(job.job_id())._get_qobj()
 
-        self.assertEqual(_array_to_list(job.qobj().to_dict()), rqobj.to_dict())
+        self.assertEqual(_array_to_list(job._get_qobj().to_dict()), rqobj.to_dict())
 
     def test_pulse_qobj(self):
         """Test serializing pulse qobj data."""
@@ -66,11 +66,10 @@ class TestSerialization(IBMTestCase):
         schedules = x | measure
 
         job = backend.run(schedules, meas_level=1, shots=256)
-        rqobj = self.provider.backend.job(job.job_id()).qobj()
-
+        rqobj = self.provider.backend.job(job.job_id())._get_qobj()
         # Convert numpy arrays to lists since they now get converted right
         # before being sent to the server.
-        self.assertEqual(_array_to_list(job.qobj().to_dict()), rqobj.to_dict())
+        self.assertEqual(_array_to_list(job._get_qobj().to_dict()), rqobj.to_dict())
 
         cancel_job(job)
 

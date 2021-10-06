@@ -16,7 +16,6 @@ import logging
 from typing import Union, List, Dict, Optional
 from abc import abstractmethod, ABC
 
-from qiskit.qobj import QasmQobj, PulseQobj
 from qiskit.pulse import Schedule
 from qiskit.providers.backend import BackendV1 as Backend
 from qiskit.providers.job import JobV1 as Job
@@ -35,7 +34,7 @@ class ProgramBackend(Backend, ABC):
     @abstractmethod
     def run(
             self,
-            circuits: Union[QasmQobj, PulseQobj, QuantumCircuit, Schedule,
+            circuits: Union[QuantumCircuit, Schedule,
                             List[Union[QuantumCircuit, Schedule]]],
             timeout: Optional[int] = None,
             **run_config: Dict
@@ -51,9 +50,6 @@ class ProgramBackend(Backend, ABC):
             circuits: An individual or a
                 list of :class:`~qiskit.circuits.QuantumCircuit` or
                 :class:`~qiskit.pulse.Schedule` objects to run on the backend.
-                A :class:`~qiskit.qobj.QasmQobj` or a
-                :class:`~qiskit.qobj.PulseQobj` object is also supported but
-                is deprecated.
             timeout: Seconds to wait for circuit execution to finish.
             **run_config: Extra arguments used to configure the run.
 

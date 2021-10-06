@@ -16,7 +16,6 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Dict, Optional, Any, List, Union
 from datetime import datetime
-import warnings
 
 from qiskit.providers.job import JobV1 as Job
 from qiskit.providers.models import BackendProperties
@@ -247,23 +246,11 @@ class IBMJob(Job, ABC):
         """
         return self._tags.copy()
 
-    def qobj(self) -> Optional[Union[QasmQobj, PulseQobj]]:
-        """Return the Qobj for this job.
-
-        Returns:
-            The Qobj for this job, or ``None`` if the job does not have a Qobj.
-
-        Raises:
-            IBMJobApiError: If an unexpected error occurred when retrieving
-                job information from the server.
-        """
-        warnings.warn("The ``job.qobj()`` method is deprecated and will "
-                      "be removed in a future release. You can now pass circuits "
-                      "to ``backend.run()`` and use ``job.circuits()``, "
-                      "``job.backend_options()``, and ``job.header()`` to retrieve "
-                      "circuits, run configuration, and Qobj header, respectively.",
-                      DeprecationWarning, stacklevel=2)
-        return self._get_qobj()
+    def __getattr__(self, name: str) -> Any:
+        try:
+            return self._data[name]
+        except KeyError:
+            raise AttributeError('Attribute {} is not defined.'.format(name)) from None
 
     @abstractmethod
     def _get_qobj(self) -> Optional[Union[QasmQobj, PulseQobj]]:
@@ -273,9 +260,3 @@ class IBMJob(Job, ABC):
             The Qobj for this job, or ``None`` if the job does not have a Qobj.
         """
         pass
-
-    def __getattr__(self, name: str) -> Any:
-        try:
-            return self._data[name]
-        except KeyError:
-            raise AttributeError('Attribute {} is not defined.'.format(name)) from None

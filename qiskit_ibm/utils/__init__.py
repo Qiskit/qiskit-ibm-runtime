@@ -27,13 +27,6 @@ Conversion
     seconds_to_duration
     utc_to_local
 
-Qobj Utils
-==========
-.. autosummary::
-    :toctree: ../stubs/
-
-    update_qobj_config
-
 Misc Functions
 ==============
 .. autosummary::
@@ -46,5 +39,4 @@ Misc Functions
 
 from .converters import (utc_to_local, local_to_utc, seconds_to_duration,
                          duration_difference)
-from .qobj_utils import update_qobj_config
 from .utils import to_python_identifier, validate_job_tags

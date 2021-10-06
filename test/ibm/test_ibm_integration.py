@@ -116,7 +116,7 @@ class TestIBMIntegration(IBMTestCase):
         backend = provider.get_backend('ibmq_qasm_simulator')
         qc = ReferenceCircuits.bell()
         job = execute(qc, backend=backend)
-        self.assertIsNotNone(job.qobj())
+        self.assertIsNotNone(job.circuits())
         self.assertIsNotNone(job.result())
 
         # Wait a bit for databases to update.
@@ -124,7 +124,7 @@ class TestIBMIntegration(IBMTestCase):
         rjob = provider.backend.job(job.job_id())
 
         with self.assertRaises(IBMJobApiError) as err_cm:
-            rjob.qobj()
+            rjob.circuits()
         self.assertIn('2801', str(err_cm.exception))
 
         with self.assertRaises(IBMJobApiError) as err_cm:

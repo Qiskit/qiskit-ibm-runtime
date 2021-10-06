@@ -188,7 +188,7 @@ class TestIBMJob(IBMTestCase):
         """Test retrieving a single job."""
         retrieved_job = self.provider.backend.job(self.sim_job.job_id())
         self.assertEqual(self.sim_job.job_id(), retrieved_job.job_id())
-        self.assertEqual(self.sim_job.qobj().to_dict(), retrieved_job.qobj().to_dict())
+        self.assertEqual(self.sim_job.circuits(), retrieved_job.circuits())
         self.assertEqual(self.sim_job.result().get_counts(), retrieved_job.result().get_counts())
 
     @requires_device
