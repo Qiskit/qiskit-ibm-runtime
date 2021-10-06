@@ -2,17 +2,16 @@
 
 [![License](https://img.shields.io/github/license/Qiskit/qiskit-terra.svg?style=popout-square)](https://opensource.org/licenses/Apache-2.0)
 
-**Qiskit Runtime** is a new architecture offered by IBM Quantum that streamlines computations 
-requiring many iterations. These experiments will execute significantly faster within this 
-improved hybrid quantum/classical process.  
+**Qiskit Runtime** is a new architecture offered by IBM Quantum that streamlines quantum computations.
+It is designed to use classical compute resources to execute quantum circuits with more efficiency on quantum processors.
 
 Using Qiskit Runtime, for example, a research team at IBM Quantum was able to achieve 120x speed 
 up in their lithium hydride simulation. For more information, see the 
 [IBM Research blog](https://research.ibm.com/blog/120x-quantum-speedup) 
 
-Qiskit Runtime allows authorized users to upload their Qiskit quantum programs for themselves or 
-others to use. A Qiskit quantum program, also called a Qiskit runtime program, is a piece of Python code that takes certain inputs, performs
-quantum and maybe classical computation, and returns the processing results. The same or other
+Qiskit Runtime allows authorized users to upload their quantum programs for themselves or 
+others to use. A quantum program, also called a Qiskit runtime program, is a piece of Python code that takes certain inputs, performs
+quantum and classical computation, and returns the processing results. The same or other
 authorized users can then invoke these quantum programs by simply passing in the required input parameters.
 
 ---
@@ -40,7 +39,7 @@ cd tutorials
 jupyter notebook .
 ```
 
-## Executing a runtime program
+## Executing a Qiskit Runtime program
 
 ### Configuring your IBM Quantum credentials
 
