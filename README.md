@@ -15,12 +15,10 @@ quantum and classical computation, and returns the processing results. The same 
 authorized users can then invoke these quantum programs by simply passing in the required input parameters.
 
 ---
-
-:rocket: Qiskit Runtime is now available on all IBM Quantum systems. Open-access users
-can only execute runtime programs on `ibmq_qasm_simulator`, but premium users can execute them on
-any systems to which they have access. Premium users are also allowed to upload Qiskit Runtime programs.
-You are an open-access user if `ibm-q/open/main` is your _only_ provider, and you are a premium user
-if you have access to more than one provider.
+:rocket: Qiskit Runtime is now available on all IBM Quantum systems. If `ibm-q/open/main` is the 
+only hub/group/project in your account, then you can only execute runtime programs on 
+`ibmq_qasm_simulator`. If you have more than one hub/group/project, you can execute runtime programs
+on any systems to which you have access and upload your custom programs.
 
 ---
 
