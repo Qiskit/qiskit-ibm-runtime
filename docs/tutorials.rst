@@ -24,6 +24,7 @@ In-depth
    :glob:
 
    tutorials/sample_vqe_program/*
+   tutorials/sample_expval_program/*
 
 
 .. Hiding - Indices and tables
