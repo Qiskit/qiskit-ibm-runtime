@@ -74,17 +74,10 @@ class TestExperimentDataIntegration(IBMTestCase):
         """Test level setup."""
         super().setUp()
         self.experiments_to_delete = []
-        self.results_to_delete = []
         self.jobs_to_cancel = []
 
     def tearDown(self):
         """Test level tear down."""
-        for result_uuid in self.results_to_delete:
-            try:
-                with mock.patch('builtins.input', lambda _: 'y'):
-                    self.experiment.delete_analysis_result(result_uuid)
-            except Exception as err:    # pylint: disable=broad-except
-                self.log.info("Unable to delete analysis result %s: %s", result_uuid, err)
         for expr_uuid in self.experiments_to_delete:
             try:
                 with mock.patch('builtins.input', lambda _: 'y'):
@@ -465,7 +458,6 @@ class TestExperimentDataIntegration(IBMTestCase):
                                  experiment_id=exp_data.experiment_id)
         exp_data.add_analysis_results(aresult)
         exp_data.save()
-        self.results_to_delete.append(aresult.result_id)
         return aresult, exp_data
 
     def _run_circuit(self, circuit=None):

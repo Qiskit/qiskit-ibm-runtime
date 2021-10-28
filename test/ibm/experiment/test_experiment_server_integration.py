@@ -62,16 +62,9 @@ class TestExperimentServerIntegration(IBMTestCase):
         """Test level setup."""
         super().setUp()
         self.experiments_to_delete = []
-        self.results_to_delete = []
 
     def tearDown(self):
         """Test level tear down."""
-        for result_uuid in self.results_to_delete:
-            try:
-                with mock.patch('builtins.input', lambda _: 'y'):
-                    self.provider.experiment.delete_analysis_result(result_uuid)
-            except Exception as err:    # pylint: disable=broad-except
-                self.log.info("Unable to delete analysis result %s: %s", result_uuid, err)
         for expr_uuid in self.experiments_to_delete:
             try:
                 with mock.patch('builtins.input', lambda _: 'y'):
@@ -573,7 +566,6 @@ class TestExperimentServerIntegration(IBMTestCase):
             result_id=result_id,
             chisq=chisq
         )
-        self.results_to_delete.append(aresult_id)
 
         rresult = self.provider.experiment.analysis_result(aresult_id)
         self.assertEqual(exp_id, rresult["experiment_id"])
@@ -1054,7 +1046,6 @@ class TestExperimentServerIntegration(IBMTestCase):
             result_type=result_type,
             **kwargs
         )
-        self.results_to_delete.append(aresult_id)
         return aresult_id
 
     def _find_backend_device_components(self, min_components):
