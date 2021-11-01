@@ -1,0 +1,5 @@
+---
+upgrade:
+  - |
+    The default number of ``shots`` (represents the number of repetitions of each circuit,
+    for sampling) in :meth:`qiskit_ibm.IBMBackend.run`, has been increased from 1024 to 4000.

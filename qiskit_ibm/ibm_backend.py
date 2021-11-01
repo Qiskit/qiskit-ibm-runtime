@@ -192,7 +192,7 @@ class IBMBackend(Backend):
             header: User input that will be attached to the job and will be
                 copied to the corresponding result header. Headers do not affect the run.
                 This replaces the old ``Qobj`` header.
-            shots: Number of repetitions of each circuit, for sampling. Default: 1024
+            shots: Number of repetitions of each circuit, for sampling. Default: 4000
                 or ``max_shots`` from the backend configuration, whichever is smaller.
             memory: If ``True``, per-shot measurement bitstrings are returned as well
                 (provided the backend supports it). For OpenPulse jobs, only
