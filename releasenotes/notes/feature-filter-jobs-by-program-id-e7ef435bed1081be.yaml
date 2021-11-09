@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    You can now pass ``program_id`` parameter to :meth:`qiskit_ibm.runtime.IBMRuntimeService.jobs`
+    method to filter jobs by Program ID.
