@@ -5,8 +5,10 @@ Qiskit Runtime (|version|)
 .. important:: 
 
     The Qiskit Runtime is currently in beta mode and is available on
-    select IBM Quantum systems and simulators to all premium users.
-    But check back, as we’ll be releasing it publicly soon!
+    all IBM Quantum systems and simulators. If ``ibm-q/open/main`` is the
+    only hub/group/project in your account, then you can only execute runtime programs on
+    simulators. If you have more than one hub/group/project, you can execute runtime programs
+    on any systems to which you have access, as well as upload your custom programs.
 
 The Qiskit Runtime is a new execution model / architecture that markedly reduces
 IO overhead when submitting applications and algorithms to quantum processors that
@@ -25,7 +27,7 @@ and specified using a program name and a small number of input arguments, e.g.:
     program_inputs = {'circuits': circuit,
                       'optimization_level': 3
                      }
-    options = {'backend_name': backend.name()}
+    options = {'backend_name': "ibmq_bogota"}
     job = provider.runtime.run(program_id="circuit-runner",
                                options=options,
                                inputs=program_inputs,

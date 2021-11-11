@@ -4,9 +4,10 @@
 Runtime limitations
 ===================
 
-- **Uploading custom quantum programs not supported**
+- **Open-access users can only execute runtime programs on simulators.**
    
-   At present, uploading custom programs to the Qiskit Runtime is not supported.
+   At present, open-access users can only execute runtime programs on
+   simulators and cannot upload custom programs.
    This will be relaxed in upcoming releases.
 
 
