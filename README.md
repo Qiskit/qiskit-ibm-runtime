@@ -77,25 +77,29 @@ The output of the code above would be:
 sample-program:
   Name: sample-program
   Description: A sample runtime program.
-  Version: 1
-  Creation date: 2021-05-04T01:38:21Z
+  Creation date: 2021-07-02T13:45:13Z
+  Update date: 2021-07-02T13:45:13Z
   Max execution time: 300
-  Parameters:
-    - iterations:
-      Description: Number of iterations to run. Each iteration generates and runs a random circuit.
-      Type: int
-      Required: True
+  Input parameters:
+    Properties:
+        - iterations:
+            Description: Number of iterations to run. Each iteration generates a runs a random circuit.
+            Minimum: 0
+            Type: integer
+            Required: True
   Interim results:
-    - iteration:
-      Description: Iteration number.
-      Type: int
-    - counts:
-      Description: Histogram data of the circuit result.
-      Type: dict
+    Properties:
+        - counts:
+            Description: Histogram data of the circuit result.
+            Type: object
+            Required: False
+        - iteration:
+            Description: Iteration number.
+            Type: integer
+            Required: False
   Returns:
-    - -:
-      Description: A string that says 'All done!'.
-      Type: string
+    Description: A string that says 'All done!'.
+    Type: string
 ```
 
 `sample-program`, as the name suggests, is a sample program used for demonstration. 
