@@ -1,5 +1,4 @@
 mypy==0.812
-pycodestyle
 pylint==2.4.4
 vcrpy
 pproxy==2.1.8
@@ -24,3 +23,4 @@ nbconvert>=5.3.1
 qiskit-aer
 websockets>=8
 scikit-quant;platform_system != 'Windows'
+black==black-21.11b0
