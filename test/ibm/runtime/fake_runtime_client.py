@@ -125,6 +125,7 @@ class BaseFakeRuntimeJob:
     def interim_results(self):
         """Return job interim results."""
         return self._interim_results
+        
 
 class FailedRuntimeJob(BaseFakeRuntimeJob):
     """Class for faking a failed runtime job."""

@@ -129,10 +129,13 @@ class RuntimeJob:
 
     def interim_results(self, decoder: Optional[Type[ResultDecoder]] = None) -> Any:
         """Return the interim results of the job.
+
         Args:
             decoder: A :class:`ResultDecoder` subclass used to decode interim results.
+
         Returns:
             Runtime job interim results.
+            
         Raises:
             RuntimeJobFailureError: If the job failed.
         """

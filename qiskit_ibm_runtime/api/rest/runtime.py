@@ -319,6 +319,7 @@ class ProgramJob(RestAdapterBase):
 
     def interim_results(self) -> str:
         """Return program job interim results.
+        
         Returns:
             Interim results.
         """
