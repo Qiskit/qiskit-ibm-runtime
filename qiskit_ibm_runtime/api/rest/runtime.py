@@ -55,18 +55,20 @@ class Runtime(RestAdapterBase):
         """
         return ProgramJob(self.session, job_id)
 
-    def list_programs(self, limit: int = None, skip: int = None) -> Dict[str, Any]:
+    def list_programs(self, name: str = "", limit: int = None, skip: int = None) -> Dict[str, Any]:
         """Return a list of runtime programs.
 
         Args:
             limit: The number of programs to return.
             skip: The number of programs to skip.
-
+            name: Name of the program.
         Returns:
             A list of runtime programs.
         """
         url = self.get_url('programs')
-        payload: Dict[str, int] = {}
+        payload: Dict[str, Union[int, str]] = {}
+        if name:
+            payload['name'] = name
         if limit:
             payload['limit'] = limit
         if skip:

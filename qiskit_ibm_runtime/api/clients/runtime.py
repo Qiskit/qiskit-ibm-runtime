@@ -39,17 +39,17 @@ class RuntimeClient:
                                      **credentials.connection_parameters())
         self.api = Runtime(self._session)
 
-    def list_programs(self, limit: int = None, skip: int = None) -> Dict[str, Any]:
+    def list_programs(self, name: str = "", limit: int = None, skip: int = None) -> Dict[str, Any]:
         """Return a list of runtime programs.
 
         Args:
             limit: The number of programs to return.
             skip: The number of programs to skip.
-
+            name: Name of the program.
         Returns:
             A list of runtime programs.
         """
-        return self.api.list_programs(limit, skip)
+        return self.api.list_programs(name, limit, skip)
 
     def program_create(
             self,
