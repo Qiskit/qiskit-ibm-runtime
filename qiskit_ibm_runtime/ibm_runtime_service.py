@@ -742,18 +742,19 @@ class IBMRuntimeService:
                         hub=hub, group=group, project=project)
 
     def pprint_programs(self, refresh: bool = False, detailed: bool = False,
-                        limit: int = 20, skip: int = 0) -> None:
+                        search: Optional[str] = "", limit: int = 20, skip: int = 0) -> None:
         """Pretty print information about available runtime programs.
 
         Args:
             refresh: If ``True``, re-query the server for the programs. Otherwise
                 return the cached value.
             detailed: If ``True`` print all details about available runtime programs.
+            search: Returns programs containing search word in name or description.
             limit: The number of programs returned at a time. Default and maximum
                 value of 20.
             skip: The number of programs to skip.
         """
-        programs = self.programs(refresh, limit, skip)
+        programs = self.programs(refresh, search, limit, skip)
         for prog in programs:
             print("="*50)
             if detailed:
@@ -763,7 +764,7 @@ class IBMRuntimeService:
                 print(f"  Name: {prog.name}")
                 print(f"  Description: {prog.description}")
 
-    def programs(self, refresh: bool = False,
+    def programs(self, refresh: bool = False, search: Optional[str] = "",
                  limit: int = 20, skip: int = 0) -> List[RuntimeProgram]:
         """Return available runtime programs.
 
@@ -772,6 +773,7 @@ class IBMRuntimeService:
         Args:
             refresh: If ``True``, re-query the server for the programs. Otherwise
                 return the cached value.
+            search: Returns programs containing search word in name or description.
             limit: The number of programs returned at a time. ``None`` means no limit.
             skip: The number of programs to skip.
 
@@ -780,12 +782,19 @@ class IBMRuntimeService:
         """
         if skip is None:
             skip = 0
+        if search:
+            for program in list(self._programs.values())[skip: limit+skip]:
+                if search in program.name or search in program.description:
+                    self._programs[program.program_id] = program
+                else:
+                    del self._programs[program.program_id]
         if not self._programs or refresh:
             self._programs = {}
             current_page_limit = 20
             offset = 0
             while True:
-                response = self._api_client.list_programs(limit=current_page_limit, skip=offset)
+                response = self._api_client.list_programs(search=search,
+                                                          limit=current_page_limit, skip=offset)
                 program_page = response.get("programs", [])
                 # count is the total number of programs that would be returned if
                 # there was no limit or skip
