@@ -1,0 +1,8 @@
+---
+upgrade:
+  - |
+    The ``search`` parameter has been added to 
+    :meth:`qiskit_ibm_runtime.IBMRuntimeService.programs` and 
+    :meth:`qiskit_ibm_runtime.IBMRuntimeService.pprint_programs`
+    which can be used to query programs containing the 
+    search word in its name or description.
