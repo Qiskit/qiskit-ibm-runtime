@@ -141,6 +141,17 @@ def main(backend, user_messenger, **kwargs):
                 found = True
         self.assertTrue(found, f"Program {self.program_id} not found!")
 
+    def test_filter_programs_with_search(self):
+        """Test filtering programs with the search parameter"""
+        program_id = self._upload_program()
+        programs = self.runtime.programs(search="test program")
+        print(programs)
+        all_ids = [prog.program_id for prog in programs]
+        self.assertIn(program_id, all_ids)
+        programs = self.runtime.programs(search="test sample")
+        all_ids = [prog.program_id for prog in programs]
+        self.assertNotIn(program_id, all_ids)
+
     def test_list_programs_with_limit_skip(self):
         """Test listing programs with limit and skip."""
         self._upload_program()
