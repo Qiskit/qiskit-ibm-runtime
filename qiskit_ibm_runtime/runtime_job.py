@@ -105,6 +105,7 @@ class RuntimeJob:
         self._backend = backend
         self._api_client = api_client
         self._results: Optional[Any] = None
+        self._interim_results: Optional[Any] = None
         self._params = params or {}
         self._creation_date = creation_date
         self._program_id = program_id
@@ -112,6 +113,7 @@ class RuntimeJob:
         self._error_message = None  # type: Optional[str]
         self._result_decoder = result_decoder
         self._image = image
+        self._final_interim_results = False
 
         # Used for streaming
         self._ws_client_future = None  # type: Optional[futures.Future]
@@ -124,6 +126,23 @@ class RuntimeJob:
 
         if user_callback is not None:
             self.stream_results(user_callback)
+
+    def interim_results(self, decoder: Optional[Type[ResultDecoder]] = None) -> Any:
+        """Return the interim results of the job.
+        Args:
+            decoder: A :class:`ResultDecoder` subclass used to decode interim results.
+        Returns:
+            Runtime job interim results.
+        Raises:
+            RuntimeJobFailureError: If the job failed.
+        """
+        if not self._final_interim_results:
+            _decoder = decoder or self._result_decoder
+            interim_results_raw = self._api_client.job_interim_results(job_id=self.job_id)
+            self._interim_results = _decoder.decode(interim_results_raw)
+            if self.status() in JOB_FINAL_STATES:
+                self._final_interim_results = True
+        return self._interim_results
 
     def result(
             self,

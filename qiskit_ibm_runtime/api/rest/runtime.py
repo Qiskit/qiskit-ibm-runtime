@@ -30,7 +30,8 @@ class Runtime(RestAdapterBase):
     URL_MAP = {
         'programs': '/programs',
         'jobs': '/jobs',
-        'logout': '/logout'
+        'logout': '/logout',
+        'interim_results': '/interim_results'
     }
 
     def program(self, program_id: str) -> 'Program':
@@ -315,6 +316,14 @@ class ProgramJob(RestAdapterBase):
     def delete(self) -> None:
         """Delete program job."""
         self.session.delete(self.get_url('self'))
+
+    def interim_results(self) -> str:
+        """Return program job interim results.
+        Returns:
+            Interim results.
+        """
+        response = self.session.get(self.get_url('interim_results'))
+        return response.text
 
     def results(self) -> str:
         """Return program job results.
