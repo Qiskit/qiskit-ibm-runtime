@@ -139,7 +139,7 @@ class Runtime(RestAdapterBase):
             'backend': backend_name,
             'params': params,
             'runtime': image
-            # TODO: update here
+            # TODO: update here for #11
         }
         data = json.dumps(payload, cls=RuntimeEncoder)
         return self.session.post(url, data=data).json()
