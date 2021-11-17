@@ -33,6 +33,7 @@ logger = logging.getLogger(__name__)
 
 class BaseClient:
     """Abstract class for clients."""
+
     pass
 
 
@@ -52,11 +53,11 @@ class BaseWebsocketClient(BaseClient, ABC):
     """Maximum time to wait between retries."""
 
     def __init__(
-            self,
-            websocket_url: str,
-            credentials: Credentials,
-            job_id: str,
-            message_queue: Optional[Queue] = None
+        self,
+        websocket_url: str,
+        credentials: Credentials,
+        job_id: str,
+        message_queue: Optional[Queue] = None,
     ) -> None:
         """BaseWebsocketClient constructor.
 
@@ -66,8 +67,10 @@ class BaseWebsocketClient(BaseClient, ABC):
             job_id: Job ID.
             message_queue: Queue used to hold received messages.
         """
-        self._websocket_url = websocket_url.rstrip('/')
-        self._proxy_params = ws_proxy_params(credentials=credentials, ws_url=self._websocket_url)
+        self._websocket_url = websocket_url.rstrip("/")
+        self._proxy_params = ws_proxy_params(
+            credentials=credentials, ws_url=self._websocket_url
+        )
         self._access_token = credentials.access_token
         self._job_id = job_id
         self._message_queue = message_queue
@@ -128,8 +131,12 @@ class BaseWebsocketClient(BaseClient, ABC):
         # Assume abnormal close if no code is given.
         self._server_close_code = status_code or STATUS_ABNORMAL_CLOSED
         self.connected = False
-        logger.debug("Websocket connection for job %s closed. status code=%s, message=%s",
-                     self._job_id, status_code, msg)
+        logger.debug(
+            "Websocket connection for job %s closed. status code=%s, message=%s",
+            self._job_id,
+            status_code,
+            msg,
+        )
 
     def on_error(self, wsa: WebSocketApp, error: Exception) -> None:
         """Called when a websocket error occurred.
@@ -141,10 +148,10 @@ class BaseWebsocketClient(BaseClient, ABC):
         self._error = self._format_exception(error)
 
     def stream(
-            self,
-            url: str,
-            retries: int = 5,
-            backoff_factor: float = 0.5,
+        self,
+        url: str,
+        retries: int = 5,
+        backoff_factor: float = 0.5,
     ) -> Any:
         """Stream from the websocket.
 
@@ -165,15 +172,20 @@ class BaseWebsocketClient(BaseClient, ABC):
         self._cancelled = False
 
         while self._current_retry <= retries:
-            self._ws = WebSocketApp(url,
-                                    header=self._header,
-                                    on_open=self.on_open,
-                                    on_message=self.on_message,
-                                    on_error=self.on_error,
-                                    on_close=self.on_close)
+            self._ws = WebSocketApp(
+                url,
+                header=self._header,
+                on_open=self.on_open,
+                on_message=self.on_message,
+                on_error=self.on_error,
+                on_close=self.on_close,
+            )
             try:
-                logger.debug('Starting new websocket connection: %s using proxy %s',
-                             url, self._proxy_params)
+                logger.debug(
+                    "Starting new websocket connection: %s using proxy %s",
+                    url,
+                    self._proxy_params,
+                )
                 self._reset_state()
                 self._ws.run_forever(**self._proxy_params)
                 self.connected = False
@@ -183,28 +195,35 @@ class BaseWebsocketClient(BaseClient, ABC):
                 # Handle path-specific errors
                 self._handle_stream_iteration()
 
-                if self._client_close_code in (WebsocketClientCloseCode.NORMAL,
-                                               WebsocketClientCloseCode.CANCEL):
+                if self._client_close_code in (
+                    WebsocketClientCloseCode.NORMAL,
+                    WebsocketClientCloseCode.CANCEL,
+                ):
                     # If we closed the connection with a normal code.
                     return self._last_message
 
                 if self._client_close_code == WebsocketClientCloseCode.TIMEOUT:
                     raise WebsocketTimeoutError(
-                        'Timeout reached while getting job status.') from None
+                        "Timeout reached while getting job status."
+                    ) from None
 
                 if self._server_close_code == STATUS_NORMAL and self._error is None:
                     return self._last_message
 
-                msg_to_log = f"A websocket error occurred while streaming for job " \
-                             f"{self._job_id}. Connection closed with {self._server_close_code}."
+                msg_to_log = (
+                    f"A websocket error occurred while streaming for job "
+                    f"{self._job_id}. Connection closed with {self._server_close_code}."
+                )
                 if self._error is not None:
                     msg_to_log += f"\n{self._error}"
                 logger.info(msg_to_log)
 
                 self._current_retry += 1
                 if self._current_retry > retries:
-                    error_message = "Max retries exceeded: Failed to establish a " \
-                                    f"websocket connection."
+                    error_message = (
+                        "Max retries exceeded: Failed to establish a "
+                        f"websocket connection."
+                    )
                     if self._error:
                         error_message += f" Error: {self._error}"
 
@@ -214,13 +233,19 @@ class BaseWebsocketClient(BaseClient, ABC):
 
             # Sleep then retry.
             backoff_time = self._backoff_time(backoff_factor, self._current_retry)
-            logger.info('Retrying get_job_status via websocket after %s seconds: '
-                        'Attempt #%s', backoff_time, self._current_retry)
+            logger.info(
+                "Retrying get_job_status via websocket after %s seconds: "
+                "Attempt #%s",
+                backoff_time,
+                self._current_retry,
+            )
             time.sleep(backoff_time)
 
         # Execution should not reach here, sanity check.
-        exception_message = 'Max retries exceeded: Failed to establish a websocket ' \
-                            'connection due to a network error.'
+        exception_message = (
+            "Max retries exceeded: Failed to establish a websocket "
+            "connection due to a network error."
+        )
 
         logger.info(exception_message)
         raise WebsocketError(exception_message)
@@ -247,8 +272,10 @@ class BaseWebsocketClient(BaseClient, ABC):
         return min(self.BACKOFF_MAX, backoff_time)
 
     def disconnect(
-            self,
-            close_code: Optional[WebsocketClientCloseCode] = WebsocketClientCloseCode.NORMAL
+        self,
+        close_code: Optional[
+            WebsocketClientCloseCode
+        ] = WebsocketClientCloseCode.NORMAL,
     ) -> None:
         """Close the websocket connection.
 
@@ -256,7 +283,9 @@ class BaseWebsocketClient(BaseClient, ABC):
             close_code: Disconnect status code.
         """
         if self._ws is not None:
-            logger.debug("Client closing websocket connection with code %s.", close_code)
+            logger.debug(
+                "Client closing websocket connection with code %s.", close_code
+            )
             self._client_close_code = close_code
             self._ws.close()
         if close_code == WebsocketClientCloseCode.CANCEL:
@@ -271,8 +300,11 @@ class BaseWebsocketClient(BaseClient, ABC):
         Returns:
             Formatted exception.
         """
-        return "".join(traceback.format_exception(
-            type(error), error, getattr(error, '__traceback__', "")))
+        return "".join(
+            traceback.format_exception(
+                type(error), error, getattr(error, "__traceback__", "")
+            )
+        )
 
     def _reset_state(self) -> None:
         """Reset state for a new connection."""

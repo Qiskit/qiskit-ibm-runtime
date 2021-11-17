@@ -24,29 +24,38 @@ from requests_ntlm import HttpNtlmAuth
 from qiskit_ibm_runtime import IBMRuntimeService
 from qiskit_ibm_runtime.apiconstants import QISKIT_IBM_RUNTIME_API_URL
 from qiskit_ibm_runtime.credentials import (
-    Credentials, discover_credentials,
-    read_credentials_from_qiskitrc, store_credentials,
-    store_preferences, HubGroupProjectID)
+    Credentials,
+    discover_credentials,
+    read_credentials_from_qiskitrc,
+    store_credentials,
+    store_preferences,
+    HubGroupProjectID,
+)
 from qiskit_ibm_runtime.credentials import configrc
 from qiskit_ibm_runtime.exceptions import IBMProviderError
 
 from ..ibm_test_case import IBMTestCase
-from ..contextmanagers import (custom_envs, no_envs, custom_qiskitrc, CREDENTIAL_ENV_VARS,
-                               mock_ibm_provider)
+from ..contextmanagers import (
+    custom_envs,
+    no_envs,
+    custom_qiskitrc,
+    CREDENTIAL_ENV_VARS,
+    mock_ibm_provider,
+)
 
 
-IBM_TEMPLATE = 'https://localhost/api/Hubs/{}/Groups/{}/Projects/{}'
+IBM_TEMPLATE = "https://localhost/api/Hubs/{}/Groups/{}/Projects/{}"
 
 PROXIES = {
-    'urls': {
-        'http': 'http://user:password@127.0.0.1:5678',
-        'https': 'https://user:password@127.0.0.1:5678'
+    "urls": {
+        "http": "http://user:password@127.0.0.1:5678",
+        "https": "https://user:password@127.0.0.1:5678",
     }
 }
 
 
 # TODO: NamedTemporaryFiles do not support name in Windows
-@skipIf(os.name == 'nt', 'Test not supported in Windows')
+@skipIf(os.name == "nt", "Test not supported in Windows")
 class TestCredentials(IBMTestCase):
     """Tests for the credential modules."""
 
@@ -57,19 +66,22 @@ class TestCredentials(IBMTestCase):
             with self.assertRaises(IBMProviderError) as context_manager:
                 IBMRuntimeService()
 
-        self.assertIn('No IBM Quantum credentials found',
-                      str(context_manager.exception))
+        self.assertIn(
+            "No IBM Quantum credentials found", str(context_manager.exception)
+        )
 
     # Test not supported in Python 3.6 since patching a classmethod
     # (in mock_ibm_provider) incorrectly throws
     # TypeError: 'NonCallableMagicMock' object is not callable
     # which was fixed in later versions
-    @skipIf(sys.version_info.major == 3 and sys.version_info.minor == 6,
-            'Test not supported on Python 3.6')
+    @skipIf(
+        sys.version_info.major == 3 and sys.version_info.minor == 6,
+        "Test not supported on Python 3.6",
+    )
     def test_store_credentials_overwrite(self) -> None:
         """Test overwriting qiskitrc credentials."""
-        credentials = Credentials('QISKITRC_TOKEN', url=QISKIT_IBM_RUNTIME_API_URL)
-        credentials2 = Credentials('QISKITRC_TOKEN_2', url=QISKIT_IBM_RUNTIME_API_URL)
+        credentials = Credentials("QISKITRC_TOKEN", url=QISKIT_IBM_RUNTIME_API_URL)
+        credentials2 = Credentials("QISKITRC_TOKEN_2", url=QISKIT_IBM_RUNTIME_API_URL)
 
         with custom_qiskitrc():
             store_credentials(credentials)
@@ -80,9 +92,11 @@ class TestCredentials(IBMTestCase):
             config_rc_logger = logging.getLogger(store_credentials.__module__)
 
             # Attempt overwriting.
-            with self.assertLogs(logger=config_rc_logger, level='WARNING') as log_records:
+            with self.assertLogs(
+                logger=config_rc_logger, level="WARNING"
+            ) as log_records:
                 store_credentials(credentials)
-                self.assertIn('already present', log_records.output[0])
+                self.assertIn("already present", log_records.output[0])
 
             with no_envs(CREDENTIAL_ENV_VARS), mock_ibm_provider():
                 # Attempt overwriting.
@@ -91,21 +105,25 @@ class TestCredentials(IBMTestCase):
 
         # Ensure that the credentials are the overwritten ones.
         # pylint: disable=no-member
-        self.assertEqual(service._hgp['credentials'].token, credentials2.token)
+        self.assertEqual(service._hgp["credentials"].token, credentials2.token)
 
     def test_environ_over_qiskitrc(self) -> None:
         """Test credential discovery order."""
-        credentials = Credentials('QISKITRC_TOKEN', url=QISKIT_IBM_RUNTIME_API_URL)
+        credentials = Credentials("QISKITRC_TOKEN", url=QISKIT_IBM_RUNTIME_API_URL)
 
         with custom_qiskitrc():
             # Prepare the credentials: both env and qiskitrc present
             store_credentials(credentials)
-            with custom_envs({'QISKIT_IBM_RUNTIME_API_TOKEN': 'ENVIRON_TOKEN',
-                              'QISKIT_IBM_RUNTIME_API_URL': 'ENVIRON_URL'}):
+            with custom_envs(
+                {
+                    "QISKIT_IBM_RUNTIME_API_TOKEN": "ENVIRON_TOKEN",
+                    "QISKIT_IBM_RUNTIME_API_URL": "ENVIRON_URL",
+                }
+            ):
                 credentials, _ = discover_credentials()
 
         self.assertEqual(len(credentials), 1)
-        self.assertEqual(list(credentials.values())[0].token, 'ENVIRON_TOKEN')
+        self.assertEqual(list(credentials.values())[0].token, "ENVIRON_TOKEN")
 
 
 class TestCredentialsKwargs(IBMTestCase):
@@ -113,87 +131,88 @@ class TestCredentialsKwargs(IBMTestCase):
 
     def test_no_proxy_params(self) -> None:
         """Test when no proxy parameters are passed."""
-        no_params_expected_result = {'verify': True}
-        no_params_credentials = Credentials('dummy_token', 'https://dummy_url')
+        no_params_expected_result = {"verify": True}
+        no_params_credentials = Credentials("dummy_token", "https://dummy_url")
         result = no_params_credentials.connection_parameters()
         self.assertDictEqual(no_params_expected_result, result)
 
     def test_verify_param(self) -> None:
         """Test 'verify' arg is acknowledged."""
-        false_verify_expected_result = {'verify': False}
+        false_verify_expected_result = {"verify": False}
         false_verify_credentials = Credentials(
-            'dummy_token', 'https://dummy_url', verify=False)
+            "dummy_token", "https://dummy_url", verify=False
+        )
         result = false_verify_credentials.connection_parameters()
         self.assertDictEqual(false_verify_expected_result, result)
 
     def test_proxy_param(self) -> None:
         """Test using only proxy urls (no NTLM credentials)."""
-        urls = {'http': 'localhost:8080', 'https': 'localhost:8080'}
-        proxies_only_expected_result = {'verify': True, 'proxies': urls}
+        urls = {"http": "localhost:8080", "https": "localhost:8080"}
+        proxies_only_expected_result = {"verify": True, "proxies": urls}
         proxies_only_credentials = Credentials(
-            'dummy_token', 'https://dummy_url', proxies={'urls': urls})
+            "dummy_token", "https://dummy_url", proxies={"urls": urls}
+        )
         result = proxies_only_credentials.connection_parameters()
         self.assertDictEqual(proxies_only_expected_result, result)
 
     def test_proxies_param_with_ntlm(self) -> None:
         """Test proxies with NTLM credentials."""
-        urls = {'http': 'localhost:8080', 'https': 'localhost:8080'}
+        urls = {"http": "localhost:8080", "https": "localhost:8080"}
         proxies_with_ntlm_dict = {
-            'urls': urls,
-            'username_ntlm': 'domain\\username',
-            'password_ntlm': 'password'
+            "urls": urls,
+            "username_ntlm": "domain\\username",
+            "password_ntlm": "password",
         }
         ntlm_expected_result = {
-            'verify': True,
-            'proxies': urls,
-            'auth': HttpNtlmAuth('domain\\username', 'password')
+            "verify": True,
+            "proxies": urls,
+            "auth": HttpNtlmAuth("domain\\username", "password"),
         }
         proxies_with_ntlm_credentials = Credentials(
-            'dummy_token', 'https://dummy_url', proxies=proxies_with_ntlm_dict)
+            "dummy_token", "https://dummy_url", proxies=proxies_with_ntlm_dict
+        )
         result = proxies_with_ntlm_credentials.connection_parameters()
 
         # Verify the NTLM credentials.
-        self.assertEqual(
-            ntlm_expected_result['auth'].username, result['auth'].username)
-        self.assertEqual(
-            ntlm_expected_result['auth'].password, result['auth'].password)
+        self.assertEqual(ntlm_expected_result["auth"].username, result["auth"].username)
+        self.assertEqual(ntlm_expected_result["auth"].password, result["auth"].password)
 
         # Remove the HttpNtlmAuth objects for direct comparison of the dicts.
-        ntlm_expected_result.pop('auth')
-        result.pop('auth')
+        ntlm_expected_result.pop("auth")
+        result.pop("auth")
         self.assertDictEqual(ntlm_expected_result, result)
 
     def test_malformed_proxy_param(self) -> None:
         """Test input with malformed nesting of the proxies dictionary."""
-        urls = {'http': 'localhost:8080', 'https': 'localhost:8080'}
-        malformed_nested_proxies_dict = {'proxies': urls}
+        urls = {"http": "localhost:8080", "https": "localhost:8080"}
+        malformed_nested_proxies_dict = {"proxies": urls}
         malformed_nested_credentials = Credentials(
-            'dummy_token', 'https://dummy_url',
-            proxies=malformed_nested_proxies_dict)
+            "dummy_token", "https://dummy_url", proxies=malformed_nested_proxies_dict
+        )
 
         # Malformed proxy entries should be ignored.
-        expected_result = {'verify': True}
+        expected_result = {"verify": True}
         result = malformed_nested_credentials.connection_parameters()
         self.assertDictEqual(expected_result, result)
 
     def test_malformed_ntlm_params(self) -> None:
         """Test input with malformed NTLM credentials."""
-        urls = {'http': 'localhost:8080', 'https': 'localhost:8080'}
+        urls = {"http": "localhost:8080", "https": "localhost:8080"}
         malformed_ntlm_credentials_dict = {
-            'urls': urls,
-            'username_ntlm': 1234,
-            'password_ntlm': 5678
+            "urls": urls,
+            "username_ntlm": 1234,
+            "password_ntlm": 5678,
         }
         malformed_ntlm_credentials = Credentials(
-            'dummy_token', 'https://dummy_url',
-            proxies=malformed_ntlm_credentials_dict)
+            "dummy_token", "https://dummy_url", proxies=malformed_ntlm_credentials_dict
+        )
         # Should raise when trying to do username.split('\\', <int>)
         # in NTLM credentials due to int not facilitating 'split'.
         with self.assertRaises(AttributeError):
             _ = malformed_ntlm_credentials.connection_parameters()
 
 
-@skipIf(os.name == 'nt', 'Test not supported in Windows')
+@skipIf(os.name == "nt", "Test not supported in Windows")
 class TestPreferences(IBMTestCase):
     """Tests for the preferences."""
 
@@ -220,7 +239,7 @@ class TestPreferences(IBMTestCase):
         pref1 = self._get_pref_dict()
         with custom_qiskitrc():
             store_preferences(pref1)
-            pref2 = self._get_pref_dict('hub2/group2/project2', pref_val=False)
+            pref2 = self._get_pref_dict("hub2/group2/project2", pref_val=False)
             store_preferences(pref2)
             _, stored_pref = read_credentials_from_qiskitrc()
             self.assertEqual({**pref1, **pref2}, stored_pref)
@@ -228,7 +247,7 @@ class TestPreferences(IBMTestCase):
     def test_update_one_of_many_providers(self):
         """Test updating one of many provider preferences."""
         pref1 = self._get_pref_dict(pref_val=False)
-        pref2 = self._get_pref_dict('hub2/group2/project2', pref_val=False)
+        pref2 = self._get_pref_dict("hub2/group2/project2", pref_val=False)
         with custom_qiskitrc():
             store_preferences(pref1)
             store_preferences(pref2)
@@ -253,11 +272,12 @@ class TestPreferences(IBMTestCase):
         pref1 = self._get_pref_dict()
         orig_active_pref = copy.deepcopy(configrc._ACTIVE_PREFERENCES)
         try:
-            configrc._ACTIVE_PREFERENCES.update(
-                {'foo': {'bar': str}})
+            configrc._ACTIVE_PREFERENCES.update({"foo": {"bar": str}})
             with custom_qiskitrc():
                 store_preferences(pref1)
-                new_cat = self._get_pref_dict(cat="foo", pref_key="bar", pref_val='foobar')
+                new_cat = self._get_pref_dict(
+                    cat="foo", pref_key="bar", pref_val="foobar"
+                )
                 store_preferences(new_cat)
                 _, stored_pref = read_credentials_from_qiskitrc()
 
@@ -272,15 +292,15 @@ class TestPreferences(IBMTestCase):
         pref1 = self._get_pref_dict()
         orig_active_pref = copy.deepcopy(configrc._ACTIVE_PREFERENCES)
         try:
-            configrc._ACTIVE_PREFERENCES['experiment'].update({'foo': str})
+            configrc._ACTIVE_PREFERENCES["experiment"].update({"foo": str})
             with custom_qiskitrc():
                 store_preferences(pref1)
-                new_cat = self._get_pref_dict(pref_key="foo", pref_val='bar')
+                new_cat = self._get_pref_dict(pref_key="foo", pref_val="bar")
                 store_preferences(new_cat)
                 _, stored_pref = read_credentials_from_qiskitrc()
 
                 key = list(pref1.keys())[0]
-                pref1[key]['experiment'] = {'foo': 'bar'}
+                pref1[key]["experiment"] = {"foo": "bar"}
                 self.assertEqual(pref1, stored_pref)
         finally:
             configrc._ACTIVE_PREFERENCES = orig_active_pref
@@ -288,7 +308,7 @@ class TestPreferences(IBMTestCase):
     def test_save_preferences_credentials(self):
         """Test saving both preferences and credentials."""
         preferences = self._get_pref_dict()
-        credentials = Credentials('QISKITRC_TOKEN', url=QISKIT_IBM_RUNTIME_API_URL)
+        credentials = Credentials("QISKITRC_TOKEN", url=QISKIT_IBM_RUNTIME_API_URL)
         with custom_qiskitrc():
             store_preferences(preferences)
             store_credentials(credentials)
@@ -300,8 +320,8 @@ class TestPreferences(IBMTestCase):
         """Test updating preferences with credentials."""
         preferences = self._get_pref_dict()
         pref2 = self._get_pref_dict(pref_val=False)
-        credentials = Credentials('QISKITRC_TOKEN', url=QISKIT_IBM_RUNTIME_API_URL)
-        credentials2 = Credentials('QISKITRC_TOKEN_2', url=QISKIT_IBM_RUNTIME_API_URL)
+        credentials = Credentials("QISKITRC_TOKEN", url=QISKIT_IBM_RUNTIME_API_URL)
+        credentials2 = Credentials("QISKITRC_TOKEN_2", url=QISKIT_IBM_RUNTIME_API_URL)
         with custom_qiskitrc():
             store_preferences(preferences)
             store_credentials(credentials)
@@ -319,7 +339,7 @@ class TestPreferences(IBMTestCase):
     def test_remove_credentials(self):
         """Test removing credentials when preferences are set."""
         preferences = self._get_pref_dict()
-        credentials = Credentials('QISKITRC_TOKEN', url=QISKIT_IBM_RUNTIME_API_URL)
+        credentials = Credentials("QISKITRC_TOKEN", url=QISKIT_IBM_RUNTIME_API_URL)
         with custom_qiskitrc():
             store_credentials(credentials)
             store_preferences(preferences)
@@ -329,12 +349,12 @@ class TestPreferences(IBMTestCase):
             self.assertFalse(stored_cred)
 
     def _get_pref_dict(
-            self,
-            hgp_id: str = 'my-hub/my-group/my-project',
-            cat: str = 'experiment',
-            pref_key: str = 'auto_save',
-            pref_val: Any = True
+        self,
+        hgp_id: str = "my-hub/my-group/my-project",
+        cat: str = "experiment",
+        pref_key: str = "auto_save",
+        pref_val: Any = True,
     ) -> Dict:
         """Generate a new preference dictionary."""
-        hub, group, project = hgp_id.split('/')
+        hub, group, project = hgp_id.split("/")
         return {HubGroupProjectID(hub, group, project): {cat: {pref_key: pref_val}}}

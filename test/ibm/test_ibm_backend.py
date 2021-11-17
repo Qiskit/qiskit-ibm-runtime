@@ -65,8 +65,13 @@ class TestIBMBackend(IBMTestCase):
         """Test backend reservations."""
         service = self.backend.provider()
         backend = reservations = None
-        for backend in service.backends(simulator=False, operational=True, hub=self.backend.hub,
-                                        group=self.backend.group, project=self.backend.project):
+        for backend in service.backends(
+            simulator=False,
+            operational=True,
+            hub=self.backend.hub,
+            group=self.backend.group,
+            project=self.backend.project,
+        ):
             reservations = backend.reservations()
             if reservations:
                 break
@@ -85,63 +90,77 @@ class TestIBMBackend(IBMTestCase):
         # Each tuple contains the start datetime, end datetime, whether a
         # reservation should be found, and the description.
         sub_tests = [
-            (before_start, after_end, True, 'before start, after end'),
-            (before_start, before_end, True, 'before start, before end'),
-            (after_start, before_end, True, 'after start, before end'),
-            (before_start, None, True, 'before start, None'),
-            (None, after_end, True, 'None, after end'),
-            (before_start, before_start, False, 'before start, before start'),
-            (after_end, after_end, False, 'after end, after end')
+            (before_start, after_end, True, "before start, after end"),
+            (before_start, before_end, True, "before start, before end"),
+            (after_start, before_end, True, "after start, before end"),
+            (before_start, None, True, "before start, None"),
+            (None, after_end, True, "None, after end"),
+            (before_start, before_start, False, "before start, before start"),
+            (after_end, after_end, False, "after end, after end"),
         ]
 
         for start_dt, end_dt, should_find, name in sub_tests:
             with self.subTest(name=name):
-                f_reservs = backend.reservations(start_datetime=start_dt, end_datetime=end_dt)
+                f_reservs = backend.reservations(
+                    start_datetime=start_dt, end_datetime=end_dt
+                )
                 found = False
                 for f_reserv in f_reservs:
                     if f_reserv == reserv:
                         found = True
                         break
                 self.assertEqual(
-                    found, should_find,
+                    found,
+                    should_find,
                     "Reservation {} found={}, used start datetime {}, end datetime {}".format(
-                        reserv, found, start_dt, end_dt))
+                        reserv, found, start_dt, end_dt
+                    ),
+                )
 
     def test_backend_options(self):
         """Test backend options."""
         service = self.backend.provider()
-        backends = service.backends(open_pulse=True, operational=True, hub=self.backend.hub,
-                                    group=self.backend.group, project=self.backend.project)
+        backends = service.backends(
+            open_pulse=True,
+            operational=True,
+            hub=self.backend.hub,
+            group=self.backend.group,
+            project=self.backend.project,
+        )
         if not backends:
-            raise SkipTest('Skipping pulse test since no pulse backend found.')
+            raise SkipTest("Skipping pulse test since no pulse backend found.")
 
         backend = backends[0]
         backend.options.shots = 2048
-        backend.set_options(qubit_lo_freq=[4.9e9, 5.0e9],
-                            meas_lo_freq=[6.5e9, 6.6e9],
-                            meas_level=2)
-        job = backend.run(get_pulse_schedule(backend), meas_level=1, foo='foo')
+        backend.set_options(
+            qubit_lo_freq=[4.9e9, 5.0e9], meas_lo_freq=[6.5e9, 6.6e9], meas_level=2
+        )
+        job = backend.run(get_pulse_schedule(backend), meas_level=1, foo="foo")
         backend_options = service.backend.job(job.job_id()).backend_options()
-        self.assertEqual(backend_options['shots'], 2048)
+        self.assertEqual(backend_options["shots"], 2048)
         # Qobj config freq is in GHz.
-        self.assertAlmostEqual(backend_options['qubit_lo_freq'], [4.9e9, 5.0e9])
-        self.assertEqual(backend_options['meas_lo_freq'], [6.5e9, 6.6e9])
-        self.assertEqual(backend_options['meas_level'], 1)
-        self.assertEqual(backend_options['foo'], 'foo')
+        self.assertAlmostEqual(backend_options["qubit_lo_freq"], [4.9e9, 5.0e9])
+        self.assertEqual(backend_options["meas_lo_freq"], [6.5e9, 6.6e9])
+        self.assertEqual(backend_options["meas_level"], 1)
+        self.assertEqual(backend_options["foo"], "foo")
         cancel_job(job)
 
     def test_sim_backend_options(self):
         """Test simulator backend options."""
         service = self.backend.provider()
-        backend = service.get_backend('ibmq_qasm_simulator', hub=self.backend.hub,
-                                      group=self.backend.group, project=self.backend.project)
+        backend = service.get_backend(
+            "ibmq_qasm_simulator",
+            hub=self.backend.hub,
+            group=self.backend.group,
+            project=self.backend.project,
+        )
         backend.options.shots = 2048
         backend.set_options(memory=True)
-        job = backend.run(ReferenceCircuits.bell(), shots=1024, foo='foo')
+        job = backend.run(ReferenceCircuits.bell(), shots=1024, foo="foo")
         backend_options = service.backend.job(job.job_id()).backend_options()
-        self.assertEqual(backend_options['shots'], 1024)
-        self.assertTrue(backend_options['memory'])
-        self.assertEqual(backend_options['foo'], 'foo')
+        self.assertEqual(backend_options["shots"], 1024)
+        self.assertTrue(backend_options["memory"])
+        self.assertEqual(backend_options["foo"], "foo")
 
     def test_deprecate_id_instruction(self):
         """Test replacement of 'id' Instructions with 'Delay' instructions."""
@@ -152,10 +171,10 @@ class TestIBMBackend(IBMTestCase):
         circuit_with_id.id(1)
 
         config = QasmBackendConfiguration(
-            basis_gates=['id'],
-            supported_instructions=['delay'],
+            basis_gates=["id"],
+            supported_instructions=["delay"],
             dt=0.25,
-            backend_name='test',
+            backend_name="test",
             backend_version=0.0,
             n_qubits=1,
             gates=[],
@@ -168,11 +187,11 @@ class TestIBMBackend(IBMTestCase):
             coupling_map=None,
         )
 
-        with patch.object(self.backend, 'configuration', return_value=config):
+        with patch.object(self.backend, "configuration", return_value=config):
             with self.assertWarnsRegex(DeprecationWarning, r"'id' instruction"):
                 self.backend._deprecate_id_instruction(circuit_with_id)
 
-            self.assertEqual(circuit_with_id.count_ops(), {'delay': 3})
+            self.assertEqual(circuit_with_id.count_ops(), {"delay": 3})
 
 
 class TestIBMBackendService(IBMTestCase):
@@ -197,4 +216,5 @@ class TestIBMBackendService(IBMTestCase):
             for attr in reserv.__dict__:
                 self.assertIsNotNone(
                     getattr(reserv, attr),
-                    "Reservation {} is missing attribute {}".format(reserv, attr))
+                    "Reservation {} is missing attribute {}".format(reserv, attr),
+                )

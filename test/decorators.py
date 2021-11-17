@@ -34,8 +34,7 @@ from typing import Tuple
 from qiskit.test.testing_options import get_test_options
 from qiskit_ibm_runtime import least_busy
 from qiskit_ibm_runtime import IBMRuntimeService
-from qiskit_ibm_runtime.credentials import (Credentials,
-                                            discover_credentials)
+from qiskit_ibm_runtime.credentials import Credentials, discover_credentials
 
 
 def requires_qe_access(func):
@@ -58,14 +57,15 @@ def requires_qe_access(func):
     Returns:
         callable: the decorated function.
     """
+
     @wraps(func)
     def _wrapper(obj, *args, **kwargs):
-        if get_test_options()['skip_online']:
-            raise SkipTest('Skipping online tests')
+        if get_test_options()["skip_online"]:
+            raise SkipTest("Skipping online tests")
         credentials = _get_credentials()
-        kwargs.update({'qe_token': credentials.token,
-                       'qe_url': credentials.url})
+        kwargs.update({"qe_token": credentials.token, "qe_url": credentials.url})
         return func(obj, *args, **kwargs)
+
     return _wrapper
 
 
@@ -81,34 +81,40 @@ def requires_providers(func):
     Returns:
         callable: The decorated function.
     """
+
     @wraps(func)
     @requires_qe_access
     def _wrapper(*args, **kwargs):
-        qe_token = kwargs.pop('qe_token')
-        qe_url = kwargs.pop('qe_url')
+        qe_token = kwargs.pop("qe_token")
+        qe_url = kwargs.pop("qe_url")
         service = IBMRuntimeService(qe_token, qe_url)
         # Get open access hgp
         open_hgp = service._get_hgp()
         # Get a premium hgp
         premium_hub, premium_group, premium_project = _get_custom_hgp()
         if not all([premium_hub, premium_group, premium_project]):
-            raise SkipTest('Requires both the open access and premium hub/group/project.')
-        kwargs.update({
-            'service': service,
-            'hgps': {
-                'open_hgp': {
-                    'hub': open_hgp.credentials.hub,
-                    'group': open_hgp.credentials.group,
-                    'project': open_hgp.credentials.project
+            raise SkipTest(
+                "Requires both the open access and premium hub/group/project."
+            )
+        kwargs.update(
+            {
+                "service": service,
+                "hgps": {
+                    "open_hgp": {
+                        "hub": open_hgp.credentials.hub,
+                        "group": open_hgp.credentials.group,
+                        "project": open_hgp.credentials.project,
+                    },
+                    "premium_hgp": {
+                        "hub": premium_hub,
+                        "group": premium_group,
+                        "project": premium_project,
+                    },
                 },
-                'premium_hgp': {
-                    'hub': premium_hub,
-                    'group': premium_group,
-                    'project': premium_project
-                }
             }
-        })
+        )
         return func(*args, **kwargs)
+
     return _wrapper
 
 
@@ -125,20 +131,19 @@ def requires_provider(func):
     Returns:
         callable: the decorated function.
     """
+
     @wraps(func)
     @requires_qe_access
     def _wrapper(*args, **kwargs):
-        token = kwargs.pop('qe_token')
-        url = kwargs.pop('qe_url')
+        token = kwargs.pop("qe_token")
+        url = kwargs.pop("qe_url")
         service = IBMRuntimeService(token, url)
         hub, group, project = _get_custom_hgp()
-        kwargs.update({
-            'service': service,
-            'hub': hub,
-            'group': group,
-            'project': project
-        })
+        kwargs.update(
+            {"service": service, "hub": hub, "group": group, "project": project}
+        )
         return func(*args, **kwargs)
+
     return _wrapper
 
 
@@ -154,20 +159,19 @@ def requires_private_provider(func):
     Returns:
         callable: the decorated function.
     """
+
     @wraps(func)
     @requires_qe_access
     def _wrapper(*args, **kwargs):
-        token = kwargs.pop('qe_token')
-        url = kwargs.pop('qe_url')
+        token = kwargs.pop("qe_token")
+        url = kwargs.pop("qe_url")
         service = IBMRuntimeService(token, url)
         hub, group, project = _get_private_hgp()
-        kwargs.update({
-            'service': service,
-            'hub': hub,
-            'group': group,
-            'project': project
-        })
+        kwargs.update(
+            {"service": service, "hub": hub, "group": group, "project": project}
+        )
         return func(*args, **kwargs)
+
     return _wrapper
 
 
@@ -190,17 +194,23 @@ def requires_device(func):
     Returns:
         callable: the decorated function.
     """
+
     @wraps(func)
     @requires_qe_access
     def _wrapper(obj, *args, **kwargs):
-        backend_name = os.getenv('QISKIT_IBM_RUNTIME_STAGING_DEVICE', None) \
-            if os.getenv('QISKIT_IBM_RUNTIME_USE_STAGING_CREDENTIALS', '') \
-            else os.getenv('QISKIT_IBM_RUNTIME_DEVICE', None)
-        _backend = _get_backend(qe_token=kwargs.pop('qe_token'),
-                                qe_url=kwargs.pop('qe_url'),
-                                backend_name=backend_name)
-        kwargs.update({'backend': _backend})
+        backend_name = (
+            os.getenv("QISKIT_IBM_RUNTIME_STAGING_DEVICE", None)
+            if os.getenv("QISKIT_IBM_RUNTIME_USE_STAGING_CREDENTIALS", "")
+            else os.getenv("QISKIT_IBM_RUNTIME_DEVICE", None)
+        )
+        _backend = _get_backend(
+            qe_token=kwargs.pop("qe_token"),
+            qe_url=kwargs.pop("qe_url"),
+            backend_name=backend_name,
+        )
+        kwargs.update({"backend": _backend})
         return func(obj, *args, **kwargs)
+
     return _wrapper
 
 
@@ -213,19 +223,25 @@ def requires_runtime_device(func):
     Returns:
         callable: the decorated function.
     """
+
     @wraps(func)
     @requires_qe_access
     def _wrapper(obj, *args, **kwargs):
-        backend_name = os.getenv('QISKIT_IBM_RUNTIME_STAGING_DEVICE', None) \
-            if os.getenv('QISKIT_IBM_RUNTIME_USE_STAGING_CREDENTIALS', '') \
-            else os.getenv('QISKIT_IBM_RUNTIME_DEVICE', None)
+        backend_name = (
+            os.getenv("QISKIT_IBM_RUNTIME_STAGING_DEVICE", None)
+            if os.getenv("QISKIT_IBM_RUNTIME_USE_STAGING_CREDENTIALS", "")
+            else os.getenv("QISKIT_IBM_RUNTIME_DEVICE", None)
+        )
         if not backend_name:
             raise SkipTest("Runtime device not specified")
-        _backend = _get_backend(qe_token=kwargs.pop('qe_token'),
-                                qe_url=kwargs.pop('qe_url'),
-                                backend_name=backend_name)
-        kwargs.update({'backend': _backend})
+        _backend = _get_backend(
+            qe_token=kwargs.pop("qe_token"),
+            qe_url=kwargs.pop("qe_url"),
+            backend_name=backend_name,
+        )
+        kwargs.update({"backend": _backend})
         return func(obj, *args, **kwargs)
+
     return _wrapper
 
 
@@ -235,12 +251,17 @@ def _get_backend(qe_token, qe_url, backend_name):
     _backend = None
     hub, group, project = _get_custom_hgp()
     if backend_name:
-        _backend = service.get_backend(name=backend_name, hub=hub, group=group, project=project)
+        _backend = service.get_backend(
+            name=backend_name, hub=hub, group=group, project=project
+        )
     else:
-        _backend = least_busy(service.backends(
-            simulator=False, min_num_qubits=5, hub=hub, group=group, project=project))
+        _backend = least_busy(
+            service.backends(
+                simulator=False, min_num_qubits=5, hub=hub, group=group, project=project
+            )
+        )
     if not _backend:
-        raise Exception('Unable to find a suitable backend.')
+        raise Exception("Unable to find a suitable backend.")
     return _backend
 
 
@@ -254,14 +275,14 @@ def _get_credentials():
         Exception: When the credential could not be set and they are needed
             for that set of options.
     """
-    if os.getenv('QISKIT_IBM_RUNTIME_USE_STAGING_CREDENTIALS', ''):
+    if os.getenv("QISKIT_IBM_RUNTIME_USE_STAGING_CREDENTIALS", ""):
         # Special case: instead of using the standard credentials mechanism,
         # load them from different environment variables. This assumes they
         # will always be in place, as is used by the CI setup.
         return Credentials(
-            token=os.getenv('QISKIT_IBM_RUNTIME_STAGING_API_TOKEN'),
-            url=os.getenv('QISKIT_IBM_RUNTIME_STAGING_API_URL'),
-            auth_url=os.getenv('QISKIT_IBM_RUNTIME_STAGING_API_URL')
+            token=os.getenv("QISKIT_IBM_RUNTIME_STAGING_API_TOKEN"),
+            url=os.getenv("QISKIT_IBM_RUNTIME_STAGING_API_URL"),
+            auth_url=os.getenv("QISKIT_IBM_RUNTIME_STAGING_API_URL"),
         )
     # Attempt to read the standard credentials.
     discovered_credentials, _ = discover_credentials()
@@ -275,7 +296,7 @@ def _get_credentials():
                 pass
         # Use the first available credentials.
         return list(discovered_credentials.values())[0]
-    raise Exception('Unable to locate valid credentials.')
+    raise Exception("Unable to locate valid credentials.")
 
 
 def _get_custom_hgp() -> Tuple[str, str, str]:
@@ -290,11 +311,13 @@ def _get_custom_hgp() -> Tuple[str, str, str]:
     hub = None
     group = None
     project = None
-    hgp = os.getenv('QISKIT_IBM_RUNTIME_STAGING_HGP', None) \
-        if os.getenv('QISKIT_IBM_RUNTIME_USE_STAGING_CREDENTIALS', '') \
-        else os.getenv('QISKIT_IBM_RUNTIME_HGP', None)
+    hgp = (
+        os.getenv("QISKIT_IBM_RUNTIME_STAGING_HGP", None)
+        if os.getenv("QISKIT_IBM_RUNTIME_USE_STAGING_CREDENTIALS", "")
+        else os.getenv("QISKIT_IBM_RUNTIME_HGP", None)
+    )
     if hgp:
-        hub, group, project = hgp.split('/')
+        hub, group, project = hgp.split("/")
     return hub, group, project
 
 
@@ -313,10 +336,12 @@ def _get_private_hgp() -> Tuple[str, str, str]:
     hub = None
     group = None
     project = None
-    hgp = os.getenv('QISKIT_IBM_RUNTIME_STAGING_PRIVATE_HGP', None) \
-        if os.getenv('QISKIT_IBM_RUNTIME_USE_STAGING_CREDENTIALS', '') \
-        else os.getenv('QISKIT_IBM_RUNTIME_PRIVATE_HGP', None)
+    hgp = (
+        os.getenv("QISKIT_IBM_RUNTIME_STAGING_PRIVATE_HGP", None)
+        if os.getenv("QISKIT_IBM_RUNTIME_USE_STAGING_CREDENTIALS", "")
+        else os.getenv("QISKIT_IBM_RUNTIME_PRIVATE_HGP", None)
+    )
     if not hgp:
-        raise SkipTest('Requires private provider.')
-    hub, group, project = hgp.split('/')
+        raise SkipTest("Requires private provider.")
+    hub, group, project = hgp.split("/")
     return hub, group, project

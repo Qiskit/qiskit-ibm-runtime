@@ -25,14 +25,16 @@ class Backend(RestAdapterBase):
     """Rest adapter for backend related endpoints."""
 
     URL_MAP = {
-        'properties': '/properties',
-        'pulse_defaults': '/defaults',
-        'status': '/queue/status',
-        'jobs_limit': '/jobsLimit',
-        'bookings': '/bookings/v2'
+        "properties": "/properties",
+        "pulse_defaults": "/defaults",
+        "status": "/queue/status",
+        "jobs_limit": "/jobsLimit",
+        "bookings": "/bookings/v2",
     }
 
-    def __init__(self, session: RetrySession, backend_name: str, url_prefix: str = '') -> None:
+    def __init__(
+        self, session: RetrySession, backend_name: str, url_prefix: str = ""
+    ) -> None:
         """Backend constructor.
 
         Args:
@@ -41,7 +43,7 @@ class Backend(RestAdapterBase):
             url_prefix: Base URL.
         """
         self.backend_name = backend_name
-        super().__init__(session, '{}/devices/{}'.format(url_prefix, backend_name))
+        super().__init__(session, "{}/devices/{}".format(url_prefix, backend_name))
 
     def properties(self, datetime: Optional[datetime] = None) -> Dict[str, Any]:
         """Return backend properties.
@@ -53,23 +55,21 @@ class Backend(RestAdapterBase):
             JSON response of backend properties.
         """
         # pylint: disable=redefined-outer-name
-        url = self.get_url('properties')
+        url = self.get_url("properties")
 
-        params = {
-            'version': 1
-        }
+        params = {"version": 1}
 
         query = {}
         if datetime:
-            extra_filter = {'last_update_date': {'lt': datetime.isoformat()}}
-            query['where'] = extra_filter
-            params['filter'] = json.dumps(query)  # type: ignore[assignment]
+            extra_filter = {"last_update_date": {"lt": datetime.isoformat()}}
+            query["where"] = extra_filter
+            params["filter"] = json.dumps(query)  # type: ignore[assignment]
 
         response = self.session.get(url, params=params).json()
 
         # Adjust name of the backend.
         if response:
-            response['backend_name'] = self.backend_name
+            response["backend_name"] = self.backend_name
 
         return response
 
@@ -79,7 +79,7 @@ class Backend(RestAdapterBase):
         Returns:
             JSON response of pulse defaults.
         """
-        url = self.get_url('pulse_defaults')
+        url = self.get_url("pulse_defaults")
         return self.session.get(url).json()
 
     def status(self) -> Dict[str, Any]:
@@ -88,26 +88,26 @@ class Backend(RestAdapterBase):
         Returns:
             JSON response of backend status.
         """
-        url = self.get_url('status')
+        url = self.get_url("status")
         response = self.session.get(url).json()
 
         # Adjust fields according to the specs (BackendStatus).
         ret = {
-            'backend_name': self.backend_name,
-            'backend_version': response.get('backend_version', '0.0.0'),
-            'status_msg': response.get('status', ''),
-            'operational': bool(response.get('state', False))
+            "backend_name": self.backend_name,
+            "backend_version": response.get("backend_version", "0.0.0"),
+            "status_msg": response.get("status", ""),
+            "operational": bool(response.get("state", False)),
         }
 
         # 'pending_jobs' is required, and should be >= 0.
-        if 'lengthQueue' in response:
-            ret['pending_jobs'] = max(response['lengthQueue'], 0)
+        if "lengthQueue" in response:
+            ret["pending_jobs"] = max(response["lengthQueue"], 0)
         else:
-            ret['pending_jobs'] = 0
+            ret["pending_jobs"] = 0
 
         # Not part of the schema.
-        if 'busy' in response:
-            ret['dedicated'] = response['busy']
+        if "busy" in response:
+            ret["dedicated"] = response["busy"]
 
         return ret
 
@@ -117,13 +117,13 @@ class Backend(RestAdapterBase):
         Returns:
             JSON response of job limit.
         """
-        url = self.get_url('jobs_limit')
+        url = self.get_url("jobs_limit")
         return map_jobs_limit_response(self.session.get(url).json())
 
     def reservations(
-            self,
-            start_datetime: Optional[datetime] = None,
-            end_datetime: Optional[datetime] = None
+        self,
+        start_datetime: Optional[datetime] = None,
+        end_datetime: Optional[datetime] = None,
     ) -> List:
         """Return backend reservation information.
 
@@ -136,8 +136,8 @@ class Backend(RestAdapterBase):
         """
         params = {}
         if start_datetime:
-            params['initialDate'] = start_datetime.isoformat()
+            params["initialDate"] = start_datetime.isoformat()
         if end_datetime:
-            params['endDate'] = end_datetime.isoformat()
-        url = self.get_url('bookings')
+            params["endDate"] = end_datetime.isoformat()
+        url = self.get_url("bookings")
         return self.session.get(url, params=params).json()

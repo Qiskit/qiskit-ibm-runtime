@@ -14,7 +14,9 @@
 
 STAT_FONT_VALUE = "<font size='4' face='monospace'>{}</font>"
 """Font used for backend stat values."""
-STAT_FONT_VALUE_COLOR = "<font size='4' style='color:{color}' face='monospace'>{msg}</font>"
+STAT_FONT_VALUE_COLOR = (
+    "<font size='4' style='color:{color}' face='monospace'>{msg}</font>"
+)
 """Font used for backend stat values with color."""
 STAT_FONT_TITLE = "<font size='3'>{}</font>"
 """Font used for backend stat titles."""
@@ -22,5 +24,5 @@ STAT_FONT_TITLE = "<font size='3'>{}</font>"
 RESERVATION_STR = STAT_FONT_VALUE.format("in {start_dt} ({duration}m)")
 """String used to format reservation information. ``start_dt`` is time until
 reservation starts. ``duration`` is reservation duration."""
-RESERVATION_NONE = STAT_FONT_VALUE.format('-')
+RESERVATION_NONE = STAT_FONT_VALUE.format("-")
 """String used when there is no reservation."""

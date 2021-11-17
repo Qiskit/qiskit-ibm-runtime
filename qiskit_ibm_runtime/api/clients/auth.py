@@ -56,8 +56,9 @@ class AuthClient(BaseClient):
         self._service_urls = self.user_urls()
 
         # Create the api server client, using the access token.
-        base_api = Api(RetrySession(self._service_urls['http'], access_token,
-                                    **request_kwargs))
+        base_api = Api(
+            RetrySession(self._service_urls["http"], access_token, **request_kwargs)
+        )
 
         return base_api
 
@@ -73,19 +74,21 @@ class AuthClient(BaseClient):
         """
         try:
             response = self.auth_api.login(self.api_token)
-            return response['id']
+            return response["id"]
         except RequestsApiError as ex:
             # Get the original exception that raised.
             original_exception = ex.__cause__
 
             if isinstance(original_exception, RequestException):
                 # Get the response from the original request exception.
-                error_response = original_exception.response    # pylint: disable=no-member
+                error_response = (
+                    original_exception.response  # pylint: disable=no-member
+                )  # pylint: disable=no-member
                 if error_response is not None and error_response.status_code == 401:
                     try:
-                        error_code = error_response.json()['error']['name']
-                        if error_code == 'ACCEPT_LICENSE_REQUIRED':
-                            message = error_response.json()['error']['message']
+                        error_code = error_response.json()["error"]["name"]
+                        if error_code == "ACCEPT_LICENSE_REQUIRED":
+                            message = error_response.json()["error"]["message"]
                             raise AuthenticationLicenseError(message)
                     except (ValueError, KeyError):
                         # the response did not contain the expected json.
@@ -106,7 +109,7 @@ class AuthClient(BaseClient):
                 * ``services`: The API URL for additional services.
         """
         response = self.auth_api.user_info()
-        return response['urls']
+        return response["urls"]
 
     def user_hubs(self) -> List[Dict[str, str]]:
         """Retrieve the hub/group/project sets available to the user.
@@ -122,15 +125,17 @@ class AuthClient(BaseClient):
 
         hubs = []  # type: ignore[var-annotated]
         for hub in response:
-            hub_name = hub['name']
-            for group_name, group in hub['groups'].items():
-                for project_name, project in group['projects'].items():
-                    entry = {'hub': hub_name,
-                             'group': group_name,
-                             'project': project_name}
+            hub_name = hub["name"]
+            for group_name, group in hub["groups"].items():
+                for project_name, project in group["projects"].items():
+                    entry = {
+                        "hub": hub_name,
+                        "group": group_name,
+                        "project": project_name,
+                    }
 
                     # Move to the top if it is the default h/g/p.
-                    if project.get('isDefault'):
+                    if project.get("isDefault"):
                         hubs.insert(0, entry)
                     else:
                         hubs.append(entry)

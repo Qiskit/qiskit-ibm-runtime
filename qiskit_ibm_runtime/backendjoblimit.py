@@ -49,4 +49,4 @@ class BackendJobLimit:
         try:
             return self._data[name]
         except KeyError:
-            raise AttributeError('Attribute {} is not defined.'.format(name)) from None
+            raise AttributeError("Attribute {} is not defined.".format(name)) from None

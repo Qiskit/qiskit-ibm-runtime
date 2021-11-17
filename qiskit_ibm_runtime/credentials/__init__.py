@@ -43,16 +43,24 @@ import logging
 
 from .credentials import Credentials
 from .hub_group_project_id import HubGroupProjectID
-from .exceptions import (CredentialsError, InvalidCredentialsFormatError,
-                         CredentialsNotFoundError, HubGroupProjectIDInvalidStateError)
-from .configrc import read_credentials_from_qiskitrc, store_credentials, store_preferences
+from .exceptions import (
+    CredentialsError,
+    InvalidCredentialsFormatError,
+    CredentialsNotFoundError,
+    HubGroupProjectIDInvalidStateError,
+)
+from .configrc import (
+    read_credentials_from_qiskitrc,
+    store_credentials,
+    store_preferences,
+)
 from .environ import read_credentials_from_environ
 
 logger = logging.getLogger(__name__)
 
 
 def discover_credentials(
-        qiskitrc_filename: Optional[str] = None
+    qiskitrc_filename: Optional[str] = None,
 ) -> Tuple[Dict[HubGroupProjectID, Credentials], Dict]:
     """Automatically discover credentials for IBM Quantum.
 
@@ -81,27 +89,33 @@ def discover_credentials(
 
     # dict[str:function] that defines the different locations for looking for
     # credentials, and their precedence order.
-    readers = OrderedDict([
-        ('environment variables', (read_credentials_from_environ, {})),
-        ('qiskitrc', (read_credentials_from_qiskitrc,
-                      {'filename': qiskitrc_filename}))
-    ])  # type: OrderedDict[str, Any]
+    readers = OrderedDict(
+        [
+            ("environment variables", (read_credentials_from_environ, {})),
+            (
+                "qiskitrc",
+                (read_credentials_from_qiskitrc, {"filename": qiskitrc_filename}),
+            ),
+        ]
+    )  # type: OrderedDict[str, Any]
 
     # Attempt to read the credentials from the different sources.
     for display_name, (reader_function, kwargs) in readers.items():
         try:
             stored_account_info = reader_function(**kwargs)  # type: ignore[arg-type]
-            if display_name == 'qiskitrc':
+            if display_name == "qiskitrc":
                 # Read from `qiskitrc`, which may have stored preferences.
                 credentials_, preferences = stored_account_info
             else:
                 credentials_ = stored_account_info
             if credentials_:
-                logger.info('Using credentials from %s', display_name)
+                logger.info("Using credentials from %s", display_name)
                 break
         except CredentialsError as ex:
             logger.warning(
-                'Automatic discovery of %s credentials failed: %s',
-                display_name, str(ex))
+                "Automatic discovery of %s credentials failed: %s",
+                display_name,
+                str(ex),
+            )
 
     return credentials_, preferences

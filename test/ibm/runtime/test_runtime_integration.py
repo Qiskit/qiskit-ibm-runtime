@@ -27,11 +27,13 @@ from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit_ibm_runtime.constants import API_TO_JOB_ERROR_MESSAGE
 from qiskit_ibm_runtime.exceptions import IBMNotAuthorizedError
 from qiskit_ibm_runtime.runtime_program import RuntimeProgram
-from qiskit_ibm_runtime.exceptions import (RuntimeDuplicateProgramError,
-                                           RuntimeProgramNotFound,
-                                           RuntimeJobFailureError,
-                                           RuntimeInvalidStateError,
-                                           RuntimeJobNotFound)
+from qiskit_ibm_runtime.exceptions import (
+    RuntimeDuplicateProgramError,
+    RuntimeProgramNotFound,
+    RuntimeJobFailureError,
+    RuntimeInvalidStateError,
+    RuntimeJobNotFound,
+)
 
 from ...ibm_test_case import IBMTestCase
 from ...decorators import requires_runtime_device
@@ -73,9 +75,9 @@ def main(backend, user_messenger, **kwargs):
 
     RUNTIME_PROGRAM_METADATA = {
         "max_execution_time": 600,
-        "description": "Qiskit test program"
+        "description": "Qiskit test program",
     }
-    PROGRAM_PREFIX = 'qiskit-test'
+    PROGRAM_PREFIX = "qiskit-test"
 
     @classmethod
     @requires_runtime_device
@@ -87,11 +89,11 @@ def main(backend, user_messenger, **kwargs):
         cls.poll_time = 1 if backend.configuration().simulator else 5
         cls.service = backend.provider()
         metadata = copy.deepcopy(cls.RUNTIME_PROGRAM_METADATA)
-        metadata['name'] = cls._get_program_name()
+        metadata["name"] = cls._get_program_name()
         try:
             cls.program_id = cls.service.runtime.upload_program(
-                data=cls.RUNTIME_PROGRAM,
-                metadata=metadata)
+                data=cls.RUNTIME_PROGRAM, metadata=metadata
+            )
         except RuntimeDuplicateProgramError:
             pass
         except IBMNotAuthorizedError:
@@ -128,7 +130,7 @@ def main(backend, user_messenger, **kwargs):
 
     def test_runtime_service(self):
         """Test getting runtime service."""
-        self.assertTrue(self.service.service('runtime'))
+        self.assertTrue(self.service.service("runtime"))
 
     def test_list_programs(self):
         """Test listing programs."""
@@ -170,7 +172,7 @@ def main(backend, user_messenger, **kwargs):
 
     def test_retrieve_unauthorized_program_data(self):
         """Test retrieving program data when user is not the program author"""
-        program = self.service.runtime.program('sample-program')
+        program = self.service.runtime.program("sample-program")
         self._validate_program(program)
         with self.assertRaises(IBMNotAuthorizedError):
             return program.data
@@ -186,7 +188,7 @@ def main(backend, user_messenger, **kwargs):
 
     def test_upload_program_file(self):
         """Test uploading a program using a file."""
-        temp_fp = tempfile.NamedTemporaryFile(mode='w', delete=False)
+        temp_fp = tempfile.NamedTemporaryFile(mode="w", delete=False)
         self.addCleanup(os.remove, temp_fp.name)
         temp_fp.write(self.RUNTIME_PROGRAM)
         temp_fp.close()
@@ -197,15 +199,16 @@ def main(backend, user_messenger, **kwargs):
         self.assertTrue(program)
 
     @unittest.skipIf(
-        not os.environ.get('QISKIT_IBM_RUNTIME_USE_STAGING_CREDENTIALS', ''),
-        "Only runs on staging"
+        not os.environ.get("QISKIT_IBM_RUNTIME_USE_STAGING_CREDENTIALS", ""),
+        "Only runs on staging",
     )
     def test_upload_public_program(self):
         """Test uploading a public program."""
         max_execution_time = 3000
         is_public = True
-        program_id = self._upload_program(max_execution_time=max_execution_time,
-                                          is_public=is_public)
+        program_id = self._upload_program(
+            max_execution_time=max_execution_time, is_public=is_public
+        )
         self.assertTrue(program_id)
         program = self.service.runtime.program(program_id)
         self.assertTrue(program)
@@ -213,8 +216,8 @@ def main(backend, user_messenger, **kwargs):
         self.assertEqual(program.is_public, is_public)
 
     @unittest.skipIf(
-        not os.environ.get('QISKIT_IBM_RUNTIME_USE_STAGING_CREDENTIALS', ''),
-        "Only runs on staging"
+        not os.environ.get("QISKIT_IBM_RUNTIME_USE_STAGING_CREDENTIALS", ""),
+        "Only runs on staging",
     )
     def test_set_visibility(self):
         """Test setting the visibility of a program."""
@@ -268,13 +271,12 @@ def main(backend, user_messenger, **kwargs):
             "description": "test_update_program_metadata",
             "max_execution_time": original.max_execution_time + 100,
             "spec": {
-                "return_values": {
-                    "type": "object",
-                    "description": "Some return value"
-                }
-            }
+                "return_values": {"type": "object", "description": "Some return value"}
+            },
         }
-        self.service.runtime.update_program(program_id=program_id, metadata=new_metadata)
+        self.service.runtime.update_program(
+            program_id=program_id, metadata=new_metadata
+        )
         updated = self.service.runtime.program(program_id, refresh=True)
         self.assertEqual(new_metadata["name"], updated.name)
         self.assertEqual(new_metadata["description"], updated.description)
@@ -290,36 +292,43 @@ def main(backend, user_messenger, **kwargs):
 
     def test_run_program_failed(self):
         """Test a failed program execution."""
-        options = {'backend_name': self.backend.name()}
-        job = self.service.runtime.run(program_id=self.program_id, inputs={}, options=options)
+        options = {"backend_name": self.backend.name()}
+        job = self.service.runtime.run(
+            program_id=self.program_id, inputs={}, options=options
+        )
         self.log.info("Runtime job %s submitted.", job.job_id)
 
         job.wait_for_final_state()
         job_result_raw = self.service.runtime._api_client.job_results(job.job_id)
         self.assertEqual(JobStatus.ERROR, job.status())
-        self.assertIn(API_TO_JOB_ERROR_MESSAGE['FAILED'].format(
-            job.job_id, job_result_raw), job.error_message())
+        self.assertIn(
+            API_TO_JOB_ERROR_MESSAGE["FAILED"].format(job.job_id, job_result_raw),
+            job.error_message(),
+        )
         with self.assertRaises(RuntimeJobFailureError) as err_cm:
             job.result()
-        self.assertIn('KeyError', str(err_cm.exception))
+        self.assertIn("KeyError", str(err_cm.exception))
 
     def test_run_program_failed_ran_too_long(self):
         """Test a program that failed since it ran longer than maxiumum execution time."""
         max_execution_time = 60
-        inputs = {
-            'iterations': 1,
-            'sleep_per_iteration': 60
-        }
+        inputs = {"iterations": 1, "sleep_per_iteration": 60}
         program_id = self._upload_program(max_execution_time=max_execution_time)
-        options = {'backend_name': self.backend.name()}
-        job = self.service.runtime.run(program_id=program_id, inputs=inputs, options=options)
+        options = {"backend_name": self.backend.name()}
+        job = self.service.runtime.run(
+            program_id=program_id, inputs=inputs, options=options
+        )
         self.log.info("Runtime job %s submitted.", job.job_id)
 
         job.wait_for_final_state()
         job_result_raw = self.service.runtime._api_client.job_results(job.job_id)
         self.assertEqual(JobStatus.ERROR, job.status())
-        self.assertIn(API_TO_JOB_ERROR_MESSAGE['CANCELLED - RAN TOO LONG'].format(
-            job.job_id, job_result_raw), job.error_message())
+        self.assertIn(
+            API_TO_JOB_ERROR_MESSAGE["CANCELLED - RAN TOO LONG"].format(
+                job.job_id, job_result_raw
+            ),
+            job.error_message(),
+        )
         with self.assertRaises(RuntimeJobFailureError):
             job.result()
 
@@ -418,12 +427,14 @@ def main(backend, user_messenger, **kwargs):
         program_id = self._upload_program()
         job = self._run_program(program_id=program_id)
         job.wait_for_final_state()
-        rjobs = self.service.runtime.jobs(program_id=program_id,
-                                          hub=hub, group=group, project=project)
+        rjobs = self.service.runtime.jobs(
+            program_id=program_id, hub=hub, group=group, project=project
+        )
         self.assertEqual(program_id, rjobs[0].program_id)
         self.assertEqual(1, len(rjobs))
-        rjobs = self.service.runtime.jobs(program_id=program_id,
-                                          hub="test", group="test", project="test")
+        rjobs = self.service.runtime.jobs(
+            program_id=program_id, hub="test", group="test", project="test"
+        )
         self.assertFalse(rjobs)
 
     def test_cancel_job_queued(self):
@@ -470,35 +481,38 @@ def main(backend, user_messenger, **kwargs):
 
     def test_interim_result_callback(self):
         """Test interim result callback."""
+
         def result_callback(job_id, interim_result):
             nonlocal final_it
-            final_it = interim_result['iteration']
+            final_it = interim_result["iteration"]
             nonlocal callback_err
             if job_id != job.job_id:
                 callback_err.append(f"Unexpected job ID: {job_id}")
-            if interim_result['interim_results'] != int_res:
+            if interim_result["interim_results"] != int_res:
                 callback_err.append(f"Unexpected interim result: {interim_result}")
 
         int_res = "foo"
         final_it = 0
         callback_err = []
         iterations = 3
-        job = self._run_program(iterations=iterations, interim_results=int_res,
-                                callback=result_callback)
+        job = self._run_program(
+            iterations=iterations, interim_results=int_res, callback=result_callback
+        )
         job.wait_for_final_state()
-        self.assertEqual(iterations-1, final_it)
+        self.assertEqual(iterations - 1, final_it)
         self.assertFalse(callback_err)
         self.assertIsNotNone(job._ws_client._server_close_code)
 
     def test_stream_results(self):
         """Test stream_results method."""
+
         def result_callback(job_id, interim_result):
             nonlocal final_it
-            final_it = interim_result['iteration']
+            final_it = interim_result["iteration"]
             nonlocal callback_err
             if job_id != job.job_id:
                 callback_err.append(f"Unexpected job ID: {job_id}")
-            if interim_result['interim_results'] != int_res:
+            if interim_result["interim_results"] != int_res:
                 callback_err.append(f"Unexpected interim result: {interim_result}")
 
         int_res = "bar"
@@ -510,12 +524,13 @@ def main(backend, user_messenger, **kwargs):
         self._wait_for_status(job, JobStatus.RUNNING)
         job.stream_results(result_callback)
         job.wait_for_final_state()
-        self.assertEqual(iterations-1, final_it)
+        self.assertEqual(iterations - 1, final_it)
         self.assertFalse(callback_err)
         self.assertIsNotNone(job._ws_client._server_close_code)
 
     def test_stream_results_done(self):
         """Test streaming interim results after job is done."""
+
         def result_callback(job_id, interim_result):
             # pylint: disable=unused-argument
             nonlocal called_back
@@ -532,30 +547,33 @@ def main(backend, user_messenger, **kwargs):
 
     def test_callback_error(self):
         """Test error in callback method."""
+
         def result_callback(job_id, interim_result):
             # pylint: disable=unused-argument
-            if interim_result['iteration'] == 0:
+            if interim_result["iteration"] == 0:
                 raise ValueError("Kaboom!")
             nonlocal final_it
-            final_it = interim_result['iteration']
+            final_it = interim_result["iteration"]
 
         final_it = 0
         iterations = 3
-        with self.assertLogs('qiskit_ibm_runtime.runtime', level='WARNING') as err_cm:
-            job = self._run_program(iterations=iterations, interim_results="foo",
-                                    callback=result_callback)
+        with self.assertLogs("qiskit_ibm_runtime.runtime", level="WARNING") as err_cm:
+            job = self._run_program(
+                iterations=iterations, interim_results="foo", callback=result_callback
+            )
             job.wait_for_final_state()
 
-        self.assertIn("Kaboom", ', '.join(err_cm.output))
-        self.assertEqual(iterations-1, final_it)
+        self.assertIn("Kaboom", ", ".join(err_cm.output))
+        self.assertEqual(iterations - 1, final_it)
         self.assertIsNotNone(job._ws_client._server_close_code)
 
     def test_callback_cancel_job(self):
         """Test canceling a running job while streaming results."""
+
         def result_callback(job_id, interim_result):
             # pylint: disable=unused-argument
             nonlocal final_it
-            final_it = interim_result['iteration']
+            final_it = interim_result["iteration"]
 
         final_it = 0
         iterations = 3
@@ -566,8 +584,11 @@ def main(backend, user_messenger, **kwargs):
                 if status == JobStatus.QUEUED:
                     _ = self._run_program(iterations=10)
 
-                job = self._run_program(iterations=iterations, interim_results="foo",
-                                        callback=result_callback)
+                job = self._run_program(
+                    iterations=iterations,
+                    interim_results="foo",
+                    callback=result_callback,
+                )
                 self._wait_for_status(job, status)
                 job.cancel()
                 time.sleep(3)  # Wait for cleanup
@@ -581,7 +602,9 @@ def main(backend, user_messenger, **kwargs):
         result = job.result(decoder=SerializableClassDecoder)
         self.assertEqual(final_result, result)
 
-        rresults = self.service.runtime.job(job.job_id).result(decoder=SerializableClassDecoder)
+        rresults = self.service.runtime.job(job.job_id).result(
+            decoder=SerializableClassDecoder
+        )
         self.assertEqual(final_result, rresults)
 
     def test_job_status(self):
@@ -593,16 +616,16 @@ def main(backend, user_messenger, **kwargs):
     def test_job_inputs(self):
         """Test job inputs."""
         interim_results = get_complex_types()
-        inputs = {'iterations': 1,
-                  'interim_results': interim_results}
-        options = {'backend_name': self.backend.name()}
-        job = self.service.runtime.run(program_id=self.program_id, inputs=inputs,
-                                       options=options)
+        inputs = {"iterations": 1, "interim_results": interim_results}
+        options = {"backend_name": self.backend.name()}
+        job = self.service.runtime.run(
+            program_id=self.program_id, inputs=inputs, options=options
+        )
         self.log.info("Runtime job %s submitted.", job.job_id)
         self.to_cancel.append(job)
         self.assertEqual(inputs, job.inputs)
         rjob = self.service.runtime.job(job.job_id)
-        rinterim_results = rjob.inputs['interim_results']
+        rinterim_results = rjob.inputs["interim_results"]
         self._assert_complex_types_equal(interim_results, rinterim_results)
 
     def test_job_backend(self):
@@ -631,7 +654,8 @@ def main(backend, user_messenger, **kwargs):
     def test_run_circuit(self):
         """Test run_circuits"""
         job = self.service.run_circuits(
-            ReferenceCircuits.bell(), backend_name=self.backend.name(), shots=100)
+            ReferenceCircuits.bell(), backend_name=self.backend.name(), shots=100
+        )
         counts = job.result().get_counts()
         self.assertEqual(100, sum(counts.values()))
 
@@ -647,6 +671,7 @@ def main(backend, user_messenger, **kwargs):
 
     def test_websocket_proxy(self):
         """Test connecting to websocket via proxy."""
+
         def result_callback(job_id, interim_result):  # pylint: disable=unused-argument
             nonlocal callback_called
             callback_called = True
@@ -662,24 +687,28 @@ def main(backend, user_messenger, **kwargs):
 
     def test_websocket_proxy_invalid_port(self):
         """Test connecting to websocket via invalid proxy port."""
+
         def result_callback(job_id, interim_result):  # pylint: disable=unused-argument
             nonlocal callback_called
             callback_called = True
 
         callback_called = False
-        invalid_proxy = {'https': 'http://{}:{}'.format(MockProxyServer.PROXY_IP_ADDRESS,
-                                                        MockProxyServer.INVALID_PROXY_PORT)}
+        invalid_proxy = {
+            "https": "http://{}:{}".format(
+                MockProxyServer.PROXY_IP_ADDRESS, MockProxyServer.INVALID_PROXY_PORT
+            )
+        }
         with use_proxies(self.service._default_hgp, invalid_proxy):
-            with self.assertLogs('qiskit_ibm_runtime', 'WARNING') as log_cm:
+            with self.assertLogs("qiskit_ibm_runtime", "WARNING") as log_cm:
                 job = self._run_program(iterations=1, callback=result_callback)
                 job.wait_for_final_state()
-            self.assertIn("WebsocketError", ','.join(log_cm.output))
+            self.assertIn("WebsocketError", ",".join(log_cm.output))
         self.assertFalse(callback_called)
 
     def test_job_logs(self):
         """Test job logs."""
         job = self._run_program(final_result="foo")
-        with self.assertLogs('qiskit_ibm_runtime', 'WARN'):
+        with self.assertLogs("qiskit_ibm_runtime", "WARN"):
             job.logs()
         job.wait_for_final_state()
         job_logs = job.logs()
@@ -697,21 +726,16 @@ def main(backend, user_messenger, **kwargs):
         self.assertTrue(program.update_date)
 
     def _upload_program(
-            self,
-            name=None,
-            max_execution_time=300,
-            data=None,
-            is_public: bool = False):
+        self, name=None, max_execution_time=300, data=None, is_public: bool = False
+    ):
         """Upload a new program."""
         name = name or self._get_program_name()
         data = data or self.RUNTIME_PROGRAM
         metadata = copy.deepcopy(self.RUNTIME_PROGRAM_METADATA)
-        metadata['name'] = name
-        metadata['max_execution_time'] = max_execution_time
-        metadata['is_public'] = is_public
-        program_id = self.service.runtime.upload_program(
-            data=data,
-            metadata=metadata)
+        metadata["name"] = name
+        metadata["max_execution_time"] = max_execution_time
+        metadata["is_public"] = is_public
+        program_id = self.service.runtime.upload_program(data=data, metadata=metadata)
         self.to_delete.append(program_id)
         return program_id
 
@@ -722,22 +746,31 @@ def main(backend, user_messenger, **kwargs):
 
     def _assert_complex_types_equal(self, expected, received):
         """Verify the received data in complex types is expected."""
-        if 'serializable_class' in received:
-            received['serializable_class'] = \
-                SerializableClass.from_json(received['serializable_class'])
+        if "serializable_class" in received:
+            received["serializable_class"] = SerializableClass.from_json(
+                received["serializable_class"]
+            )
         self.assertEqual(expected, received)
 
-    def _run_program(self, program_id=None, iterations=1,
-                     interim_results=None, final_result=None,
-                     callback=None):
+    def _run_program(
+        self,
+        program_id=None,
+        iterations=1,
+        interim_results=None,
+        final_result=None,
+        callback=None,
+    ):
         """Run a program."""
-        inputs = {'iterations': iterations,
-                  'interim_results': interim_results or {},
-                  'final_result': final_result or {}}
+        inputs = {
+            "iterations": iterations,
+            "interim_results": interim_results or {},
+            "final_result": final_result or {},
+        }
         pid = program_id or self.program_id
-        options = {'backend_name': self.backend.name()}
-        job = self.service.runtime.run(program_id=pid, inputs=inputs,
-                                       options=options, callback=callback)
+        options = {"backend_name": self.backend.name()}
+        job = self.service.runtime.run(
+            program_id=pid, inputs=inputs, options=options, callback=callback
+        )
         self.log.info("Runtime job %s submitted.", job.job_id)
         self.to_cancel.append(job)
         return job

@@ -14,16 +14,16 @@
 
 import asyncio
 
-JOB_ID_PROGRESS_DONE = 'JOB_ID_PROGRESS_DONE'
-JOB_ID_ALREADY_DONE = 'JOB_ID_ALREADY_DONE'
-JOB_ID_RETRY_SUCCESS = 'JOB_ID_RETRY_SUCCESS'
-JOB_ID_RETRY_FAILURE = 'JOB_ID_RETRY_FAILURE'
+JOB_ID_PROGRESS_DONE = "JOB_ID_PROGRESS_DONE"
+JOB_ID_ALREADY_DONE = "JOB_ID_ALREADY_DONE"
+JOB_ID_RETRY_SUCCESS = "JOB_ID_RETRY_SUCCESS"
+JOB_ID_RETRY_FAILURE = "JOB_ID_RETRY_FAILURE"
 JOB_PROGRESS_RESULT_COUNT = 5
 
 
 async def websocket_handler(websocket, path):
     """Entry point for the websocket mock server."""
-    request = path.split('/')[-1]
+    request = path.split("/")[-1]
     await websocket.send("ACK")
 
     if request == JOB_ID_PROGRESS_DONE:
@@ -53,8 +53,8 @@ async def handle_job_already_done(websocket):
 
 async def handle_token_retry_success(websocket):
     """Close the socket once and force a retry."""
-    if not hasattr(handle_token_retry_success, 'retry_attempt'):
-        setattr(handle_token_retry_success, 'retry_attempt', True)
+    if not hasattr(handle_token_retry_success, "retry_attempt"):
+        setattr(handle_token_retry_success, "retry_attempt", True)
         await handle_token_retry_failure(websocket)
     else:
         await handle_job_progress_done(websocket)
