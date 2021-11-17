@@ -1,7 +1,7 @@
 ---
 features:
   - |
-    You can now use the :meth:`qiskit_ibm.runtime.RuntimeJob.interim_results`
+    You can now use the :meth:`qiskit_ibm_runtime.RuntimeJob.interim_results`
     method to retrieve runtime program interim results. 
     Note that interim results will only be available for
     up to two days.
