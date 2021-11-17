@@ -12,7 +12,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Setup qiskit_ibm"""
+"""Setup qiskit_ibm_runtime"""
 
 import os
 
@@ -30,7 +30,7 @@ REQUIREMENTS = [
 
 # Handle version.
 VERSION_PATH = os.path.join(os.path.dirname(__file__),
-                            "qiskit_ibm", "VERSION.txt")
+                            "qiskit_ibm_runtime", "VERSION.txt")
 with open(VERSION_PATH, "r") as version_file:
     VERSION = version_file.read().strip()
 
@@ -42,13 +42,13 @@ with open(README_PATH) as readme_file:
 
 
 setuptools.setup(
-    name="qiskit-ibm",
+    name="qiskit-ibm-runtime",
     version=VERSION,
-    description="Qiskit provider for accessing the quantum devices and "
+    description="Qiskit IBM Runtime service for accessing the quantum devices and "
                 "simulators at IBM",
     long_description=README,
     long_description_content_type='text/markdown',
-    url="https://github.com/Qiskit-Partners/qiskit-ibm",
+    url="https://github.com/Qiskit/qiskit-ibm-runtime",
     author="Qiskit Development Team",
     author_email="hello@qiskit.org",
     license="Apache 2.0",
@@ -67,7 +67,7 @@ setuptools.setup(
         "Programming Language :: Python :: 3.9",
         "Topic :: Scientific/Engineering",
     ],
-    keywords="qiskit sdk quantum api ibmq",
+    keywords="qiskit sdk quantum api runtime ibm",
     packages=setuptools.find_packages(exclude=['test*']),
     install_requires=REQUIREMENTS,
     include_package_data=True,
@@ -79,8 +79,8 @@ setuptools.setup(
                                       "ipython>=5.0.0", "traitlets!=5.0.5",
                                       "ipyvue>=1.4.1"]},
     project_urls={
-        "Bug Tracker": "https://github.com/Qiskit-Partners/qiskit-ibm/issues",
+        "Bug Tracker": "https://github.com/Qiskit/qiskit-ibm-runtime/issues",
         "Documentation": "https://qiskit.org/documentation/",
-        "Source Code": "https://github.com/Qiskit-Partners/qiskit-ibm",
+        "Source Code": "https://github.com/Qiskit/qiskit-ibm-runtime",
     },
 )

@@ -16,9 +16,9 @@ import time
 
 from qiskit.test.mock.fake_qasm_simulator import FakeQasmSimulator
 
-from qiskit_ibm.credentials import Credentials
-from qiskit_ibm.runtime import RuntimeJob
-from qiskit_ibm.runtime.exceptions import RuntimeInvalidStateError
+from qiskit_ibm_runtime.credentials import Credentials
+from qiskit_ibm_runtime import RuntimeJob
+from qiskit_ibm_runtime.exceptions import RuntimeInvalidStateError
 
 from ...ibm_test_case import IBMTestCase
 from ...ws_server import MockWsServer

@@ -22,8 +22,8 @@ from datetime import timedelta, datetime
 import warnings
 
 from qiskit.test.mock.backends.poughkeepsie.fake_poughkeepsie import FakePoughkeepsie
-from qiskit_ibm.apiconstants import ApiJobStatus, API_JOB_FINAL_STATES
-from qiskit_ibm.api.exceptions import RequestsApiError, UserTimeoutExceededError
+from qiskit_ibm_runtime.apiconstants import ApiJobStatus, API_JOB_FINAL_STATES
+from qiskit_ibm_runtime.api.exceptions import RequestsApiError, UserTimeoutExceededError
 
 
 VALID_RESULT_RESPONSE = {

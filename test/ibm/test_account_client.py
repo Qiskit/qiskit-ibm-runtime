@@ -20,10 +20,10 @@ from urllib3.exceptions import MaxRetryError
 
 from qiskit.circuit import ClassicalRegister, QuantumCircuit, QuantumRegister
 from qiskit.compiler import assemble, transpile
-from qiskit_ibm.apiconstants import ApiJobStatus
-from qiskit_ibm.api.clients import AccountClient, AuthClient
-from qiskit_ibm.api.exceptions import ApiError, RequestsApiError
-from qiskit_ibm.utils.utils import RefreshQueue
+from qiskit_ibm_runtime.apiconstants import ApiJobStatus
+from qiskit_ibm_runtime.api.clients import AccountClient, AuthClient
+from qiskit_ibm_runtime.api.exceptions import ApiError, RequestsApiError
+from qiskit_ibm_runtime.utils.utils import RefreshQueue
 
 from ..ibm_test_case import IBMTestCase
 from ..decorators import requires_qe_access, requires_provider
@@ -36,12 +36,16 @@ class TestAccountClient(IBMTestCase):
 
     @classmethod
     @requires_provider
-    def setUpClass(cls, provider):
+    def setUpClass(cls, service, hub, group, project):
         """Initial class level setup."""
         # pylint: disable=arguments-differ
         super().setUpClass()
-        cls.provider = provider
-        cls.access_token = cls.provider._api_client.account_api.session._access_token
+        cls.service = service
+        cls.hub = hub
+        cls.group = group
+        cls.project = project
+        default_hgp = cls.service.backend._default_hgp
+        cls.access_token = default_hgp._api_client.account_api.session._access_token
 
     def setUp(self):
         """Initial test setup."""
@@ -69,32 +73,19 @@ class TestAccountClient(IBMTestCase):
 
     def _get_client(self):
         """Helper for instantiating an AccountClient."""
-        return AccountClient(self.provider.credentials)  # pylint: disable=no-value-for-parameter
-
-    def test_exception_message(self):
-        """Check exception has proper message."""
-        client = self._get_client()
-
-        with self.assertRaises(RequestsApiError) as exception_context:
-            client.job_status('foo')
-
-        raised_exception = exception_context.exception
-        original_error = raised_exception.__cause__.response.json()['error']
-        self.assertIn(original_error['message'], raised_exception.message,
-                      "Original error message not in raised exception")
-        self.assertIn(str(original_error['code']), raised_exception.message,
-                      "Original error code not in raised exception")
+        # pylint: disable=no-value-for-parameter
+        return AccountClient(self.service.backend._default_hgp.credentials)
 
     def test_custom_client_app_header(self):
         """Check custom client application header."""
         custom_header = 'batman'
-        with custom_envs({'QISKIT_IBM_CUSTOM_CLIENT_APP_HEADER': custom_header}):
+        with custom_envs({'QISKIT_IBM_RUNTIME_CUSTOM_CLIENT_APP_HEADER': custom_header}):
             client = self._get_client()
             self.assertIn(custom_header,
                           client._session.headers['X-Qx-Client-Application'])
 
         # Make sure the header is re-initialized
-        with no_envs(['QISKIT_IBM_CUSTOM_CLIENT_APP_HEADER']):
+        with no_envs(['QISKIT_IBM_RUNTIME_CUSTOM_CLIENT_APP_HEADER']):
             client = self._get_client()
             self.assertNotIn(custom_header,
                              client._session.headers['X-Qx-Client-Application'])
@@ -102,7 +93,8 @@ class TestAccountClient(IBMTestCase):
     def test_access_token_not_in_exception_traceback(self):
         """Check that access token is replaced within chained request exceptions."""
         backend_name = 'ibmq_qasm_simulator'
-        backend = self.provider.get_backend(backend_name)
+        backend = self.service.get_backend(backend_name, hub=self.hub,
+                                           group=self.group, project=self.project)
         circuit = transpile(self.qc1, backend, seed_transpiler=self.seed)
         qobj = assemble(circuit, backend, shots=1)
         client = backend._api_client
@@ -169,14 +161,19 @@ class TestAccountClientJobs(IBMTestCase):
 
     @classmethod
     @requires_provider
-    def setUpClass(cls, provider):
+    def setUpClass(cls, service, hub, group, project):
         # pylint: disable=arguments-differ
         super().setUpClass()
-        cls.provider = provider
-        cls.access_token = cls.provider._api_client.account_api.session._access_token
+        cls.service = service
+        cls.hub = hub
+        cls.group = group
+        cls.project = project
+        default_hgp = cls.service.backend._default_hgp
+        cls.access_token = default_hgp._api_client.account_api.session._access_token
 
         backend_name = 'ibmq_qasm_simulator'
-        backend = cls.provider.get_backend(backend_name)
+        backend = cls.service.get_backend(backend_name, hub=cls.hub,
+                                          group=cls.group, project=cls.project)
         cls.client = backend._api_client
         cls.job = cls.client.job_submit(
             backend_name, cls._get_qobj(backend).to_dict())

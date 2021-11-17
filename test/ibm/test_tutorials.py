@@ -22,7 +22,7 @@ from qiskit.test.decorators import TEST_OPTIONS
 import nbformat
 from nbconvert.preprocessors import ExecutePreprocessor
 
-from qiskit_ibm.utils.utils import to_python_identifier
+from qiskit_ibm_runtime.utils.utils import to_python_identifier
 
 from ..ibm_test_case import IBMTestCase
 

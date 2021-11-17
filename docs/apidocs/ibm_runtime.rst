@@ -1,6 +1,6 @@
-.. _qiskit_ibm-runtime:
+.. _qiskit_ibm_runtime-runtime:
 
-.. automodule:: qiskit_ibm.runtime
+.. automodule:: qiskit_ibm_runtime.runtime
    :no-members:
    :no-inherited-members:
    :no-special-members:

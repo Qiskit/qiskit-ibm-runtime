@@ -22,8 +22,8 @@ from qiskit import transpile, schedule, QuantumCircuit
 from qiskit.circuit import Parameter
 from qiskit.version import VERSION as terra_version
 
-from qiskit_ibm import least_busy
-from qiskit_ibm.utils.json_encoder import IBMJsonEncoder
+from qiskit_ibm_runtime import least_busy
+from qiskit_ibm_runtime.utils.json_encoder import IBMJsonEncoder
 
 from ..decorators import requires_provider
 from ..utils import cancel_job
@@ -35,24 +35,29 @@ class TestSerialization(IBMTestCase):
 
     @classmethod
     @requires_provider
-    def setUpClass(cls, provider):
+    def setUpClass(cls, service, hub, group, project):
         """Initial class level setup."""
         # pylint: disable=arguments-differ
         super().setUpClass()
-        cls.provider = provider
-        cls.sim_backend = provider.get_backend('ibmq_qasm_simulator')
+        cls.service = service
+        cls.hub = hub
+        cls.group = group
+        cls.project = project
+        cls.sim_backend = service.get_backend('ibmq_qasm_simulator', hub=cls.hub,
+                                              group=cls.group, project=cls.project)
         cls.bell = transpile(ReferenceCircuits.bell(), backend=cls.sim_backend)
 
     def test_qasm_qobj(self):
         """Test serializing qasm qobj data."""
         job = self.sim_backend.run(self.bell)
-        rqobj = self.provider.backend.job(job.job_id())._get_qobj()
+        rqobj = self.service.backend.job(job.job_id())._get_qobj()
 
         self.assertEqual(_array_to_list(job._get_qobj().to_dict()), rqobj.to_dict())
 
     def test_pulse_qobj(self):
         """Test serializing pulse qobj data."""
-        backends = self.provider.backends(operational=True, open_pulse=True)
+        backends = self.service.backends(operational=True, open_pulse=True, hub=self.hub,
+                                         group=self.group, project=self.project)
         if not backends:
             self.skipTest('Need pulse backends.')
 
@@ -66,7 +71,7 @@ class TestSerialization(IBMTestCase):
         schedules = x | measure
 
         job = backend.run(schedules, meas_level=1, shots=256)
-        rqobj = self.provider.backend.job(job.job_id())._get_qobj()
+        rqobj = self.service.backend.job(job.job_id())._get_qobj()
         # Convert numpy arrays to lists since they now get converted right
         # before being sent to the server.
         self.assertEqual(_array_to_list(job._get_qobj().to_dict()), rqobj.to_dict())
@@ -75,7 +80,8 @@ class TestSerialization(IBMTestCase):
 
     def test_backend_configuration(self):
         """Test deserializing backend configuration."""
-        backends = self.provider.backends(operational=True, simulator=False)
+        backends = self.service.backends(operational=True, simulator=False, hub=self.hub,
+                                         group=self.group, project=self.project)
 
         # Known keys that look like a serialized complex number.
         good_keys = ('coupling_map', 'qubit_lo_range', 'meas_lo_range', 'gates.coupling_map',
@@ -90,7 +96,8 @@ class TestSerialization(IBMTestCase):
 
     def test_pulse_defaults(self):
         """Test deserializing backend configuration."""
-        backends = self.provider.backends(operational=True, open_pulse=True)
+        backends = self.service.backends(operational=True, open_pulse=True, hub=self.hub,
+                                         group=self.group, project=self.project)
         if not backends:
             self.skipTest('Need pulse backends.')
 
@@ -103,7 +110,8 @@ class TestSerialization(IBMTestCase):
 
     def test_backend_properties(self):
         """Test deserializing backend properties."""
-        backends = self.provider.backends(operational=True, simulator=False)
+        backends = self.service.backends(operational=True, simulator=False, hub=self.hub,
+                                         group=self.group, project=self.project)
 
         # Known keys that look like a serialized object.
         good_keys = ('gates.qubits', 'qubits.name', 'backend_version')
@@ -125,7 +133,8 @@ class TestSerialization(IBMTestCase):
     @slow_test
     def test_pulse_job_result(self):
         """Test deserializing a pulse job result."""
-        backends = self.provider.backends(open_pulse=True, operational=True)
+        backends = self.service.backends(open_pulse=True, operational=True, hub=self.hub,
+                                         group=self.group, project=self.project)
         if not backends:
             raise SkipTest('Skipping pulse test since no pulse backend found.')
 

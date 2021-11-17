@@ -54,8 +54,8 @@ class TestIBMBackend(IBMTestCase):
 
     def test_backend_pulse_defaults(self):
         """Check the backend pulse defaults of each backend."""
-        provider = self.backend.provider()
-        for backend in provider.backends():
+        service = self.backend.provider()
+        for backend in service.backends():
             with self.subTest(backend_name=backend.name()):
                 defaults = backend.defaults()
                 if backend.configuration().open_pulse:
@@ -63,9 +63,10 @@ class TestIBMBackend(IBMTestCase):
 
     def test_backend_reservations(self):
         """Test backend reservations."""
-        provider = self.backend.provider()
+        service = self.backend.provider()
         backend = reservations = None
-        for backend in provider.backends(simulator=False, operational=True):
+        for backend in service.backends(simulator=False, operational=True, hub=self.backend.hub,
+                                        group=self.backend.group, project=self.backend.project):
             reservations = backend.reservations()
             if reservations:
                 break
@@ -108,8 +109,9 @@ class TestIBMBackend(IBMTestCase):
 
     def test_backend_options(self):
         """Test backend options."""
-        provider = self.backend.provider()
-        backends = provider.backends(open_pulse=True, operational=True)
+        service = self.backend.provider()
+        backends = service.backends(open_pulse=True, operational=True, hub=self.backend.hub,
+                                    group=self.backend.group, project=self.backend.project)
         if not backends:
             raise SkipTest('Skipping pulse test since no pulse backend found.')
 
@@ -119,7 +121,7 @@ class TestIBMBackend(IBMTestCase):
                             meas_lo_freq=[6.5e9, 6.6e9],
                             meas_level=2)
         job = backend.run(get_pulse_schedule(backend), meas_level=1, foo='foo')
-        backend_options = provider.backend.job(job.job_id()).backend_options()
+        backend_options = service.backend.job(job.job_id()).backend_options()
         self.assertEqual(backend_options['shots'], 2048)
         # Qobj config freq is in GHz.
         self.assertAlmostEqual(backend_options['qubit_lo_freq'], [4.9e9, 5.0e9])
@@ -130,12 +132,13 @@ class TestIBMBackend(IBMTestCase):
 
     def test_sim_backend_options(self):
         """Test simulator backend options."""
-        provider = self.backend.provider()
-        backend = provider.get_backend('ibmq_qasm_simulator')
+        service = self.backend.provider()
+        backend = service.get_backend('ibmq_qasm_simulator', hub=self.backend.hub,
+                                      group=self.backend.group, project=self.backend.project)
         backend.options.shots = 2048
         backend.set_options(memory=True)
         job = backend.run(ReferenceCircuits.bell(), shots=1024, foo='foo')
-        backend_options = provider.backend.job(job.job_id()).backend_options()
+        backend_options = service.backend.job(job.job_id()).backend_options()
         self.assertEqual(backend_options['shots'], 1024)
         self.assertTrue(backend_options['memory'])
         self.assertEqual(backend_options['foo'], 'foo')
@@ -177,16 +180,19 @@ class TestIBMBackendService(IBMTestCase):
 
     @classmethod
     @requires_provider
-    def setUpClass(cls, provider):
+    def setUpClass(cls, service, hub, group, project):
         """Initial class level setup."""
         # pylint: disable=arguments-differ
         super().setUpClass()
-        cls.provider = provider
+        cls.service = service
+        cls.hub = hub
+        cls.group = group
+        cls.project = project
         cls.last_week = datetime.now() - timedelta(days=7)
 
     def test_my_reservations(self):
         """Test my_reservations method"""
-        reservations = self.provider.backend.my_reservations()
+        reservations = self.service.backend.my_reservations()
         for reserv in reservations:
             for attr in reserv.__dict__:
                 self.assertIsNotNone(

@@ -1,22 +1,26 @@
-<!-- ⚠️ If you do not respect this template, your issue may be be closed -->
-<!-- ⚠️ Make sure to browse the opened and closed issues -->
+---
+name: Bug report
+about: Create a report to help us improve
+title: ''
+labels: bug
+assignees: ''
 
-### Information
+---
 
-- **Qiskit IBM Provider version**:
+**Describe the bug**
+
+
+**Steps to reproduce**
+
+
+**Expected behavior**
+
+
+**Suggested solutions**
+
+
+**Additional Information**
+
+- **Qiskit IBM Runtime version**:
 - **Python version**:
 - **Operating system**:
-
-### What is the current behavior?
-
-
-
-### Steps to reproduce the problem
-
-
-
-### What is the expected behavior?
-
-
-
-### Suggested solutions

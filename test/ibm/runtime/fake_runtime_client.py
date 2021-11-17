@@ -19,9 +19,9 @@ import base64
 from typing import Optional, Dict
 from concurrent.futures import ThreadPoolExecutor
 
-from qiskit_ibm.credentials import Credentials
-from qiskit_ibm.api.exceptions import RequestsApiError
-from qiskit_ibm.runtime.utils import RuntimeEncoder
+from qiskit_ibm_runtime.credentials import Credentials
+from qiskit_ibm_runtime.api.exceptions import RequestsApiError
+from qiskit_ibm_runtime.utils import RuntimeEncoder
 
 
 class BaseFakeProgram:

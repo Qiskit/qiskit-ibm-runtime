@@ -49,14 +49,14 @@ from qiskit.opflow import (PauliSumOp, MatrixOp, PauliOp, CircuitOp, EvolvedOp,
 from qiskit.quantum_info import SparsePauliOp, Pauli, PauliTable, Statevector
 from qiskit.providers.jobstatus import JobStatus
 
-from qiskit_ibm.exceptions import IBMInputValueError
-from qiskit_ibm.ibm_provider import IBMProvider
-from qiskit_ibm.credentials import Credentials
-from qiskit_ibm.runtime.utils import RuntimeEncoder, RuntimeDecoder
-from qiskit_ibm.runtime import IBMRuntimeService, RuntimeJob
-from qiskit_ibm.runtime.constants import API_TO_JOB_ERROR_MESSAGE
-from qiskit_ibm.runtime.exceptions import RuntimeProgramNotFound, RuntimeJobFailureError
-from qiskit_ibm.runtime.runtime_program import ParameterNamespace
+from qiskit_ibm_runtime.exceptions import IBMInputValueError
+from qiskit_ibm_runtime import IBMRuntimeService, RuntimeJob
+from qiskit_ibm_runtime.credentials import Credentials
+from qiskit_ibm_runtime.hub_group_project import HubGroupProject
+from qiskit_ibm_runtime.utils import RuntimeEncoder, RuntimeDecoder
+from qiskit_ibm_runtime.constants import API_TO_JOB_ERROR_MESSAGE
+from qiskit_ibm_runtime.exceptions import RuntimeProgramNotFound, RuntimeJobFailureError
+from qiskit_ibm_runtime.runtime_program import ParameterNamespace
 
 from ...ibm_test_case import IBMTestCase
 from .fake_runtime_client import (BaseFakeRuntimeClient, FailedRanTooLongRuntimeJob,
@@ -121,10 +121,11 @@ class TestRuntime(IBMTestCase):
     def setUp(self):
         """Initial test setup."""
         super().setUp()
-        provider = mock.MagicMock(spec=IBMProvider)
-        provider.credentials = Credentials(
+        service = mock.MagicMock(spec=IBMRuntimeService)
+        hgp = mock.MagicMock(spec=HubGroupProject)
+        hgp.credentials = Credentials(
             token="", url="", services={"runtime": "https://quantum-computing.ibm.com"})
-        self.runtime = IBMRuntimeService(provider)
+        self.runtime = IBMRuntimeService(service, hgp)
         self.runtime._api_client = BaseFakeRuntimeClient()
 
     def test_coder(self):
@@ -271,7 +272,7 @@ class TestRuntime(IBMTestCase):
         script = """
 import sys
 import json
-from qiskit_ibm.runtime import RuntimeDecoder
+from qiskit_ibm_runtime import RuntimeDecoder
 if __name__ == '__main__':
     obj = json.loads(sys.argv[1], cls=RuntimeDecoder)
     print(obj.__class__.__name__)
@@ -736,7 +737,7 @@ if __name__ == '__main__':
         job = self._run_program(program_id)
         cred = Credentials(token="", url="", hub="hub2", group="group2", project="project2",
                            services={"runtime": "https://quantum-computing.ibm.com"})
-        self.runtime._provider.credentials = cred
+        self.runtime._default_hgp.credentials = cred
         rjob = self.runtime.job(job.job_id)
         self.assertIsNotNone(rjob.backend)
 
@@ -766,9 +767,11 @@ if __name__ == '__main__':
             self.runtime._api_client.set_hgp(hub, group, project)
         if program_id is None:
             program_id = self._upload_program()
-        job = self.runtime.run(program_id=program_id, inputs=inputs,
-                               options=options, result_decoder=decoder,
-                               image=image)
+        with patch('qiskit_ibm_runtime.ibm_runtime_service.RuntimeClient',
+                   return_value=self.runtime._api_client):
+            job = self.runtime.run(program_id=program_id, options=options,
+                                   inputs=inputs, result_decoder=decoder,
+                                   image=image)
         return job
 
     def _populate_jobs_with_all_statuses(self, jobs, program_id):

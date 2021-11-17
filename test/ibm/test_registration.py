@@ -21,14 +21,14 @@ import copy
 import sys
 
 from requests_ntlm import HttpNtlmAuth
-from qiskit_ibm import IBMProvider
-from qiskit_ibm.apiconstants import QISKIT_IBM_API_URL
-from qiskit_ibm.credentials import (
+from qiskit_ibm_runtime import IBMRuntimeService
+from qiskit_ibm_runtime.apiconstants import QISKIT_IBM_RUNTIME_API_URL
+from qiskit_ibm_runtime.credentials import (
     Credentials, discover_credentials,
     read_credentials_from_qiskitrc, store_credentials,
-    store_preferences, HubGroupProject)
-from qiskit_ibm.credentials import configrc
-from qiskit_ibm.exceptions import IBMProviderError
+    store_preferences, HubGroupProjectID)
+from qiskit_ibm_runtime.credentials import configrc
+from qiskit_ibm_runtime.exceptions import IBMProviderError
 
 from ..ibm_test_case import IBMTestCase
 from ..contextmanagers import (custom_envs, no_envs, custom_qiskitrc, CREDENTIAL_ENV_VARS,
@@ -55,7 +55,7 @@ class TestCredentials(IBMTestCase):
 
         with custom_qiskitrc(), no_envs(CREDENTIAL_ENV_VARS):
             with self.assertRaises(IBMProviderError) as context_manager:
-                IBMProvider()
+                IBMRuntimeService()
 
         self.assertIn('No IBM Quantum credentials found',
                       str(context_manager.exception))
@@ -68,8 +68,8 @@ class TestCredentials(IBMTestCase):
             'Test not supported on Python 3.6')
     def test_store_credentials_overwrite(self) -> None:
         """Test overwriting qiskitrc credentials."""
-        credentials = Credentials('QISKITRC_TOKEN', url=QISKIT_IBM_API_URL)
-        credentials2 = Credentials('QISKITRC_TOKEN_2', url=QISKIT_IBM_API_URL)
+        credentials = Credentials('QISKITRC_TOKEN', url=QISKIT_IBM_RUNTIME_API_URL)
+        credentials2 = Credentials('QISKITRC_TOKEN_2', url=QISKIT_IBM_RUNTIME_API_URL)
 
         with custom_qiskitrc():
             store_credentials(credentials)
@@ -87,21 +87,21 @@ class TestCredentials(IBMTestCase):
             with no_envs(CREDENTIAL_ENV_VARS), mock_ibm_provider():
                 # Attempt overwriting.
                 store_credentials(credentials2, overwrite=True)
-                provider = IBMProvider()
+                service = IBMRuntimeService()
 
         # Ensure that the credentials are the overwritten ones.
-        # pylint: disable=unsubscriptable-object
-        self.assertEqual(provider['credentials'].token, credentials2.token)
+        # pylint: disable=no-member
+        self.assertEqual(service._hgp['credentials'].token, credentials2.token)
 
     def test_environ_over_qiskitrc(self) -> None:
         """Test credential discovery order."""
-        credentials = Credentials('QISKITRC_TOKEN', url=QISKIT_IBM_API_URL)
+        credentials = Credentials('QISKITRC_TOKEN', url=QISKIT_IBM_RUNTIME_API_URL)
 
         with custom_qiskitrc():
             # Prepare the credentials: both env and qiskitrc present
             store_credentials(credentials)
-            with custom_envs({'QISKIT_IBM_API_TOKEN': 'ENVIRON_TOKEN',
-                              'QISKIT_IBM_API_URL': 'ENVIRON_URL'}):
+            with custom_envs({'QISKIT_IBM_RUNTIME_API_TOKEN': 'ENVIRON_TOKEN',
+                              'QISKIT_IBM_RUNTIME_API_URL': 'ENVIRON_URL'}):
                 credentials, _ = discover_credentials()
 
         self.assertEqual(len(credentials), 1)
@@ -288,7 +288,7 @@ class TestPreferences(IBMTestCase):
     def test_save_preferences_credentials(self):
         """Test saving both preferences and credentials."""
         preferences = self._get_pref_dict()
-        credentials = Credentials('QISKITRC_TOKEN', url=QISKIT_IBM_API_URL)
+        credentials = Credentials('QISKITRC_TOKEN', url=QISKIT_IBM_RUNTIME_API_URL)
         with custom_qiskitrc():
             store_preferences(preferences)
             store_credentials(credentials)
@@ -300,8 +300,8 @@ class TestPreferences(IBMTestCase):
         """Test updating preferences with credentials."""
         preferences = self._get_pref_dict()
         pref2 = self._get_pref_dict(pref_val=False)
-        credentials = Credentials('QISKITRC_TOKEN', url=QISKIT_IBM_API_URL)
-        credentials2 = Credentials('QISKITRC_TOKEN_2', url=QISKIT_IBM_API_URL)
+        credentials = Credentials('QISKITRC_TOKEN', url=QISKIT_IBM_RUNTIME_API_URL)
+        credentials2 = Credentials('QISKITRC_TOKEN_2', url=QISKIT_IBM_RUNTIME_API_URL)
         with custom_qiskitrc():
             store_preferences(preferences)
             store_credentials(credentials)
@@ -319,7 +319,7 @@ class TestPreferences(IBMTestCase):
     def test_remove_credentials(self):
         """Test removing credentials when preferences are set."""
         preferences = self._get_pref_dict()
-        credentials = Credentials('QISKITRC_TOKEN', url=QISKIT_IBM_API_URL)
+        credentials = Credentials('QISKITRC_TOKEN', url=QISKIT_IBM_RUNTIME_API_URL)
         with custom_qiskitrc():
             store_credentials(credentials)
             store_preferences(preferences)
@@ -330,11 +330,11 @@ class TestPreferences(IBMTestCase):
 
     def _get_pref_dict(
             self,
-            hgp: str = 'my-hub/my-group/my-project',
+            hgp_id: str = 'my-hub/my-group/my-project',
             cat: str = 'experiment',
             pref_key: str = 'auto_save',
             pref_val: Any = True
     ) -> Dict:
         """Generate a new preference dictionary."""
-        hub, group, project = hgp.split('/')
-        return {HubGroupProject(hub, group, project): {cat: {pref_key: pref_val}}}
+        hub, group, project = hgp_id.split('/')
+        return {HubGroupProjectID(hub, group, project): {cat: {pref_key: pref_val}}}

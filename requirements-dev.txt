@@ -5,7 +5,7 @@ vcrpy
 pproxy==2.1.8
 Sphinx>=1.8.3
 sphinx-rtd-theme>=0.4.0
-sphinx-tabs>=1.1.11 
+sphinx-tabs>=1.1.11
 sphinx-automodapi
 sphinx-autodoc-typehints
 matplotlib>=2.1
@@ -21,9 +21,6 @@ reno>=2.11.0
 scipy>=1.0
 nbformat>=4.4.0
 nbconvert>=5.3.1
-qiskit_rng
 qiskit-aer
 websockets>=8
 scikit-quant;platform_system != 'Windows'
-# TODO: Use released qiskit-experiments when it's released
-git+https://github.com/Qiskit/qiskit-experiments.git ; python_version > '3.6'

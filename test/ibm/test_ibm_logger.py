@@ -17,8 +17,8 @@ import logging
 from tempfile import NamedTemporaryFile
 from unittest import skipIf, mock
 
-from qiskit_ibm import (QISKIT_IBM_PROVIDER_LOG_LEVEL, QISKIT_IBM_PROVIDER_LOG_FILE)
-from qiskit_ibm.utils.utils import setup_logger
+from qiskit_ibm_runtime import (QISKIT_IBM_RUNTIME_LOG_LEVEL, QISKIT_IBM_RUNTIME_LOG_FILE)
+from qiskit_ibm_runtime.utils.utils import setup_logger
 
 from ..ibm_test_case import IBMTestCase
 
@@ -36,8 +36,8 @@ class TestLogger(IBMTestCase):
         default_level_not_set = logging.NOTSET
 
         with mock.patch.dict('os.environ'):
-            if QISKIT_IBM_PROVIDER_LOG_LEVEL in os.environ:
-                del os.environ[QISKIT_IBM_PROVIDER_LOG_LEVEL]
+            if QISKIT_IBM_RUNTIME_LOG_LEVEL in os.environ:
+                del os.environ[QISKIT_IBM_RUNTIME_LOG_LEVEL]
             setup_logger(logger)
             self.assertEqual(logger.level, default_level_not_set,
                              'The logger level was set to {}, but it should '
@@ -52,7 +52,7 @@ class TestLogger(IBMTestCase):
         logger = logging.getLogger(self.id())
         default_level_not_set = logging.NOTSET
 
-        with mock.patch.dict('os.environ', {QISKIT_IBM_PROVIDER_LOG_LEVEL: ''}):
+        with mock.patch.dict('os.environ', {QISKIT_IBM_RUNTIME_LOG_LEVEL: ''}):
             setup_logger(logger)
             self.assertEqual(logger.level, default_level_not_set,
                              'The logger level was set to {}, but it should '
@@ -71,7 +71,7 @@ class TestLogger(IBMTestCase):
         for invalid_log_level in invalid_log_levels:
             with self.subTest(invalid_log_level=invalid_log_level):
                 with mock.patch.dict('os.environ',
-                                     {QISKIT_IBM_PROVIDER_LOG_LEVEL: invalid_log_level}):
+                                     {QISKIT_IBM_RUNTIME_LOG_LEVEL: invalid_log_level}):
                     setup_logger(logger)
                     self.assertEqual(logger.level, default_level_invalid,
                                      'The logger level was set to {}, but it should '
@@ -87,7 +87,7 @@ class TestLogger(IBMTestCase):
 
         for level_name, level_value in all_valid_log_levels.items():
             with self.subTest(level_name=level_name):
-                with mock.patch.dict('os.environ', {QISKIT_IBM_PROVIDER_LOG_LEVEL: level_name}):
+                with mock.patch.dict('os.environ', {QISKIT_IBM_RUNTIME_LOG_LEVEL: level_name}):
                     setup_logger(logger)
                     self.assertEqual(logger.level, level_value,
                                      'The logger level was set to {}, but it should '
@@ -102,8 +102,8 @@ class TestLogger(IBMTestCase):
 
         with NamedTemporaryFile() as temp_log_file:
             # Set the environment variables, including the temp file name.
-            env_vars_to_patch = {QISKIT_IBM_PROVIDER_LOG_LEVEL: log_level_error[0],
-                                 QISKIT_IBM_PROVIDER_LOG_FILE: temp_log_file.name}
+            env_vars_to_patch = {QISKIT_IBM_RUNTIME_LOG_LEVEL: log_level_error[0],
+                                 QISKIT_IBM_RUNTIME_LOG_FILE: temp_log_file.name}
             with mock.patch.dict('os.environ', env_vars_to_patch):
                 setup_logger(logger)
 
@@ -124,7 +124,7 @@ class TestLogger(IBMTestCase):
                 logger.critical('This is a critical message that should be logged in the file.')
 
                 # Assert the file exists.
-                log_file_name = os.environ[QISKIT_IBM_PROVIDER_LOG_FILE]
+                log_file_name = os.environ[QISKIT_IBM_RUNTIME_LOG_FILE]
                 self.assertTrue(os.path.exists(log_file_name),
                                 'The file {} does not exist.'.format(log_file_name))
 

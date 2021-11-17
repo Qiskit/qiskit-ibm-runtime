@@ -63,10 +63,10 @@ jobs:
       matrix:
         python-version: [3.6, 3.7, 3.8, 3.9]
     env:
-      QISKIT_IBM_API_TOKEN: ${{ secrets.QISKIT_IBM_API_TOKEN }}
-      QISKIT_IBM_API_URL: ${{ secrets.QISKIT_IBM_API_URL }}
-      QISKIT_IBM_HGP: ${{ secrets.QISKIT_IBM_HGP }}
-      QISKIT_IBM_PRIVATE_HGP: ${{ secrets.QISKIT_IBM_PRIVATE_HGP }}
+      QISKIT_IBM_RUNTIME_API_TOKEN: ${{ secrets.QISKIT_IBM_RUNTIME_API_TOKEN }}
+      QISKIT_IBM_RUNTIME_API_URL: ${{ secrets.QISKIT_IBM_RUNTIME_API_URL }}
+      QISKIT_IBM_RUNTIME_HGP: ${{ secrets.QISKIT_IBM_RUNTIME_HGP }}
+      QISKIT_IBM_RUNTIME_PRIVATE_HGP: ${{ secrets.QISKIT_IBM_RUNTIME_PRIVATE_HGP }}
       LOG_LEVEL: DEBUG
       STREAM_LOG: True
       QISKIT_IN_PARALLEL: True

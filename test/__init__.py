@@ -10,4 +10,4 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Test for the qiskit_ibm package."""
+"""Test for the qiskit_ibm_runtime package."""

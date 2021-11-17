@@ -1,6 +1,6 @@
-.. _qiskit_ibm-job:
+.. _qiskit_ibm_runtime-job:
 
-.. automodule:: qiskit_ibm.job
+.. automodule:: qiskit_ibm_runtime.job
    :no-members:
    :no-inherited-members:
    :no-special-members:

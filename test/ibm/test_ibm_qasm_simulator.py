@@ -27,12 +27,16 @@ class TestIBMQasmSimulator(IBMTestCase):
     """Test IBM Quantum QASM Simulator."""
 
     @requires_provider
-    def setUp(self, provider):
+    def setUp(self, service, hub, group, project):
         """Initial test setup."""
         # pylint: disable=arguments-differ
         super().setUp()
-        self.provider = provider
-        self.sim_backend = self.provider.get_backend('ibmq_qasm_simulator')
+        self.service = service
+        self.hub = hub
+        self.group = group
+        self.project = project
+        self.sim_backend = self.service.get_backend('ibmq_qasm_simulator', hub=self.hub,
+                                                    group=self.group, project=self.project)
 
     def test_execute_one_circuit_simulator_online(self):
         """Test execute_one_circuit_simulator_online."""

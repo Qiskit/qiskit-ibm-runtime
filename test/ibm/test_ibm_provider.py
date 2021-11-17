@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Tests for the IBMProvider class."""
+"""Tests for the IBMRuntimeService class."""
 
 from datetime import datetime
 import os
@@ -22,86 +22,39 @@ from qiskit.compiler import transpile
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.models.backendproperties import BackendProperties
 
-from qiskit_ibm.ibm_backend import IBMSimulator, IBMBackend
-from qiskit_ibm.ibm_backend_service import IBMBackendService
-from qiskit_ibm.experiment import IBMExperimentService
-from qiskit_ibm.random.ibm_random_service import IBMRandomService
-from qiskit_ibm.ibm_provider import IBMProvider
-from qiskit_ibm import ibm_provider
-from qiskit_ibm.api.exceptions import RequestsApiError
-from qiskit_ibm.api.clients import AccountClient
-from qiskit_ibm.exceptions import (IBMProviderError, IBMProviderValueError,
-                                   IBMProviderCredentialsInvalidUrl,
-                                   IBMProviderCredentialsInvalidToken,
-                                   IBMProviderCredentialsNotFound)
-from qiskit_ibm.credentials.hubgroupproject import HubGroupProject
-from qiskit_ibm.apiconstants import QISKIT_IBM_API_URL
+from qiskit_ibm_runtime.ibm_backend import IBMSimulator, IBMBackend
+from qiskit_ibm_runtime import IBMRuntimeService
+from qiskit_ibm_runtime import hub_group_project
+from qiskit_ibm_runtime.api.exceptions import RequestsApiError
+from qiskit_ibm_runtime.api.clients import AccountClient
+from qiskit_ibm_runtime.exceptions import (IBMProviderError, IBMProviderValueError,
+                                           IBMProviderCredentialsInvalidUrl,
+                                           IBMProviderCredentialsInvalidToken,
+                                           IBMProviderCredentialsNotFound)
+from qiskit_ibm_runtime.credentials.hub_group_project_id import HubGroupProjectID
+from qiskit_ibm_runtime.apiconstants import QISKIT_IBM_RUNTIME_API_URL
 
 from ..ibm_test_case import IBMTestCase
-from ..decorators import requires_device, requires_provider, requires_qe_access
+from ..decorators import requires_device, requires_qe_access, requires_provider
 from ..contextmanagers import custom_qiskitrc, no_envs, CREDENTIAL_ENV_VARS
-from ..utils import get_provider
+from ..utils import get_hgp
 
 API_URL = 'https://api.quantum-computing.ibm.com/api'
 AUTH_URL = 'https://auth.quantum-computing.ibm.com/api'
 
 
 class TestIBMProviderEnableAccount(IBMTestCase):
-    """Tests for IBMProvider."""
+    """Tests for IBMRuntimeService."""
 
     # Enable Account Tests
 
     @requires_qe_access
     def test_provider_init_token(self, qe_token, qe_url):
-        """Test initializing IBMProvider with only API token."""
+        """Test initializing IBMRuntimeService with only API token."""
         # pylint: disable=unused-argument
-        provider = IBMProvider(token=qe_token)
-        self.assertIsInstance(provider, IBMProvider)
-        self.assertEqual(provider.credentials.token, qe_token)
-        self.assertEqual(provider.credentials.hub, 'ibm-q')
-        self.assertEqual(provider.credentials.group, 'open')
-        self.assertEqual(provider.credentials.project, 'main')
-
-    @requires_qe_access
-    def test_provider_init_token_url_hub(self, qe_token, qe_url):
-        """Test initializing IBMProvider with API token, URL and Hub."""
-        provider = IBMProvider(token=qe_token, url=qe_url, hub='ibm-q')
-        self.assertIsInstance(provider, IBMProvider)
-        self.assertEqual(provider.credentials.token, qe_token)
-        self.assertEqual(provider.credentials.hub, 'ibm-q')
-        self.assertEqual(provider.credentials.group, 'open')
-        self.assertEqual(provider.credentials.project, 'main')
-
-    @requires_qe_access
-    def test_provider_init_token_url_group(self, qe_token, qe_url):
-        """Test initializing IBMProvider with API token, URL and Group."""
-        provider = IBMProvider(token=qe_token, url=qe_url, group='open')
-        self.assertIsInstance(provider, IBMProvider)
-        self.assertEqual(provider.credentials.token, qe_token)
-        self.assertEqual(provider.credentials.hub, 'ibm-q')
-        self.assertEqual(provider.credentials.group, 'open')
-        self.assertEqual(provider.credentials.project, 'main')
-
-    @requires_qe_access
-    def test_provider_init_token_url_project(self, qe_token, qe_url):
-        """Test initializing IBMProvider with API token, URL and Project."""
-        provider = IBMProvider(token=qe_token, url=qe_url, project='main')
-        self.assertIsInstance(provider, IBMProvider)
-        self.assertEqual(provider.credentials.token, qe_token)
-        self.assertEqual(provider.credentials.hub, 'ibm-q')
-        self.assertEqual(provider.credentials.group, 'open')
-        self.assertEqual(provider.credentials.project, 'main')
-
-    @requires_qe_access
-    def test_provider_init_non_default_provider(self, qe_token, qe_url):
-        """Test initializing IBMProvider with a non default provider."""
-        non_default_provider = get_provider(qe_token, qe_url, default=False)
-        enabled_provider = IBMProvider(
-            token=qe_token, url=qe_url,
-            hub=non_default_provider.credentials.hub,
-            group=non_default_provider.credentials.group,
-            project=non_default_provider.credentials.project)
-        self.assertEqual(non_default_provider, enabled_provider)
+        service = IBMRuntimeService(token=qe_token)
+        self.assertIsInstance(service, IBMRuntimeService)
+        self.assertEqual(service._default_hgp.credentials.token, qe_token)
 
     @requires_qe_access
     def test_pass_unreachable_proxy(self, qe_token, qe_url):
@@ -113,36 +66,35 @@ class TestIBMProviderEnableAccount(IBMTestCase):
             }
         }
         with self.assertRaises(RequestsApiError) as context_manager:
-            IBMProvider._disable_account()
-            IBMProvider(qe_token, qe_url, proxies=proxies)
+            IBMRuntimeService(qe_token, qe_url, proxies=proxies)
         self.assertIn('ProxyError', str(context_manager.exception))
 
     def test_provider_init_non_auth_url(self):
-        """Test initializing IBMProvider with a non-auth URL."""
+        """Test initializing IBMRuntimeService with a non-auth URL."""
         qe_token = 'invalid'
         qe_url = API_URL
 
         with self.assertRaises(IBMProviderCredentialsInvalidUrl) as context_manager:
-            IBMProvider(token=qe_token, url=qe_url)
+            IBMRuntimeService(token=qe_token, url=qe_url)
 
         self.assertIn('authentication URL', str(context_manager.exception))
 
     def test_provider_init_non_auth_url_with_hub(self):
-        """Test initializing IBMProvider with a non-auth URL containing h/g/p."""
+        """Test initializing IBMRuntimeService with a non-auth URL containing h/g/p."""
         qe_token = 'invalid'
         qe_url = API_URL + '/Hubs/X/Groups/Y/Projects/Z'
 
         with self.assertRaises(IBMProviderCredentialsInvalidUrl) as context_manager:
-            IBMProvider(token=qe_token, url=qe_url)
+            IBMRuntimeService(token=qe_token, url=qe_url)
 
         self.assertIn('authentication URL', str(context_manager.exception))
 
     def test_provider_init_no_credentials(self):
-        """Test initializing IBMProvider with no credentials."""
+        """Test initializing IBMRuntimeService with no credentials."""
         with custom_qiskitrc(), \
              self.assertRaises(IBMProviderCredentialsNotFound) as context_manager, \
              no_envs(CREDENTIAL_ENV_VARS):
-            IBMProvider()
+            IBMRuntimeService()
 
         self.assertIn('No IBM Quantum credentials found.', str(context_manager.exception))
 
@@ -151,9 +103,8 @@ class TestIBMProviderEnableAccount(IBMTestCase):
         """Test discovering backends failed."""
         with mock.patch.object(AccountClient, 'list_backends',
                                return_value=[{'backend_name': 'bad_backend'}]):
-            with self.assertLogs(ibm_provider.logger, level='WARNING') as context_manager:
-                IBMProvider._disable_account()
-                IBMProvider(qe_token, qe_url)
+            with self.assertLogs(hub_group_project.logger, level='WARNING') as context_manager:
+                IBMRuntimeService(qe_token, qe_url)
         self.assertIn('bad_backend', str(context_manager.output))
 
 
@@ -170,38 +121,36 @@ class TestIBMProviderAccounts(IBMTestCase):
     def test_save_account(self):
         """Test saving an account."""
         with custom_qiskitrc():
-            IBMProvider.save_account(self.token, url=QISKIT_IBM_API_URL)
-            stored_cred = IBMProvider.saved_account()
+            IBMRuntimeService.save_account(self.token, url=QISKIT_IBM_RUNTIME_API_URL)
+            stored_cred = IBMRuntimeService.saved_account()
 
         self.assertEqual(stored_cred['token'], self.token)
-        self.assertEqual(stored_cred['url'], QISKIT_IBM_API_URL)
+        self.assertEqual(stored_cred['url'], QISKIT_IBM_RUNTIME_API_URL)
 
     @requires_qe_access
     def test_provider_init_saved_account(self, qe_token, qe_url):
-        """Test initializing IBMProvider with credentials from qiskitrc file."""
-        if qe_url != QISKIT_IBM_API_URL:
+        """Test initializing IBMRuntimeService with credentials from qiskitrc file."""
+        if qe_url != QISKIT_IBM_RUNTIME_API_URL:
             # save expects an auth production URL.
             self.skipTest('Test requires production auth URL')
 
         with custom_qiskitrc(), no_envs(CREDENTIAL_ENV_VARS):
-            IBMProvider.save_account(qe_token, url=qe_url)
-            provider = IBMProvider()
+            IBMRuntimeService.save_account(qe_token, url=qe_url)
+            service = IBMRuntimeService()
 
-        self.assertIsInstance(provider, IBMProvider)
-        self.assertEqual(provider.credentials.token, qe_token)
-        self.assertEqual(provider.credentials.auth_url, qe_url)
-        self.assertEqual(provider.credentials.hub, 'ibm-q')
-        self.assertEqual(provider.credentials.group, 'open')
-        self.assertEqual(provider.credentials.project, 'main')
+        self.assertIsInstance(service, IBMRuntimeService)
+        self.assertEqual(service._default_hgp.credentials.token, qe_token)
+        self.assertEqual(service._default_hgp.credentials.auth_url, qe_url)
 
     def test_save_account_specified_provider(self):
-        """Test saving an account with a specified provider."""
+        """Test saving an account with a specified hub/group/project."""
         default_hgp_to_save = 'ibm-q/open/main'
 
         with custom_qiskitrc() as custom_qiskitrc_cm:
-            hgp = HubGroupProject.from_stored_format(default_hgp_to_save)
-            IBMProvider.save_account(token=self.token, url=QISKIT_IBM_API_URL,
-                                     hub=hgp.hub, group=hgp.group, project=hgp.project)
+            hgp_id = HubGroupProjectID.from_stored_format(default_hgp_to_save)
+            IBMRuntimeService.save_account(token=self.token, url=QISKIT_IBM_RUNTIME_API_URL,
+                                           hub=hgp_id.hub, group=hgp_id.group,
+                                           project=hgp_id.project)
 
             # Ensure the `default_provider` name was written to the config file.
             config_parser = ConfigParser()
@@ -214,79 +163,81 @@ class TestIBMProviderAccounts(IBMTestCase):
 
     def test_save_account_specified_provider_invalid(self):
         """Test saving an account without specifying all the hub/group/project fields."""
-        invalid_hgps_to_save = [HubGroupProject('', 'default_group', ''),
-                                HubGroupProject('default_hub', None, 'default_project')]
-        for invalid_hgp in invalid_hgps_to_save:
-            with self.subTest(invalid_hgp=invalid_hgp), custom_qiskitrc():
+        invalid_hgp_ids_to_save = [HubGroupProjectID('', 'default_group', ''),
+                                   HubGroupProjectID('default_hub', None, 'default_project')]
+        for invalid_hgp_id in invalid_hgp_ids_to_save:
+            with self.subTest(invalid_hgp_id=invalid_hgp_id), custom_qiskitrc():
                 with self.assertRaises(IBMProviderValueError) as context_manager:
-                    IBMProvider.save_account(token=self.token,
-                                             url=QISKIT_IBM_API_URL,
-                                             hub=invalid_hgp.hub,
-                                             group=invalid_hgp.group,
-                                             project=invalid_hgp.project)
+                    IBMRuntimeService.save_account(token=self.token,
+                                                   url=QISKIT_IBM_RUNTIME_API_URL,
+                                                   hub=invalid_hgp_id.hub,
+                                                   group=invalid_hgp_id.group,
+                                                   project=invalid_hgp_id.project)
                 self.assertIn('The hub, group, and project parameters must all be specified',
                               str(context_manager.exception))
 
     def test_delete_account(self):
         """Test deleting an account."""
         with custom_qiskitrc():
-            IBMProvider.save_account(self.token, url=QISKIT_IBM_API_URL)
-            IBMProvider.delete_account()
-            stored_cred = IBMProvider.saved_account()
+            IBMRuntimeService.save_account(self.token, url=QISKIT_IBM_RUNTIME_API_URL)
+            IBMRuntimeService.delete_account()
+            stored_cred = IBMRuntimeService.saved_account()
 
         self.assertEqual(len(stored_cred), 0)
 
     @requires_qe_access
     def test_load_account_saved_provider(self, qe_token, qe_url):
-        """Test loading an account that contains a saved provider."""
-        if qe_url != QISKIT_IBM_API_URL:
+        """Test loading an account that contains a saved hub/group/project."""
+        if qe_url != QISKIT_IBM_RUNTIME_API_URL:
             # .save_account() expects an auth production URL.
             self.skipTest('Test requires production auth URL')
 
-        # Get a non default provider.
-        non_default_provider = get_provider(qe_token, qe_url, default=False)
+        # Get a non default hub/group/project.
+        non_default_hgp = get_hgp(qe_token, qe_url, default=False)
 
         with custom_qiskitrc(), no_envs(CREDENTIAL_ENV_VARS):
-            IBMProvider.save_account(token=qe_token, url=qe_url,
-                                     hub=non_default_provider.credentials.hub,
-                                     group=non_default_provider.credentials.group,
-                                     project=non_default_provider.credentials.project)
-            saved_provider = IBMProvider()
-            if saved_provider != non_default_provider:
+            IBMRuntimeService.save_account(token=qe_token, url=qe_url,
+                                           hub=non_default_hgp.credentials.hub,
+                                           group=non_default_hgp.credentials.group,
+                                           project=non_default_hgp.credentials.project)
+            saved_provider = IBMRuntimeService()
+            if saved_provider._default_hgp != non_default_hgp:
                 # Prevent tokens from being logged.
-                saved_provider.credentials.token = None
-                non_default_provider.credentials.token = None
-                self.fail("loaded default provider ({}) != expected ({})".format(
-                    saved_provider.credentials.__dict__,
-                    non_default_provider.credentials.__dict__))
+                saved_provider._default_hgp.credentials.token = None
+                non_default_hgp.credentials.token = None
+                self.fail("loaded default hgp ({}) != expected ({})".format(
+                    saved_provider._default_hgp.credentials.__dict__,
+                    non_default_hgp.credentials.__dict__))
 
-        self.assertEqual(saved_provider.credentials.token, qe_token)
-        self.assertEqual(saved_provider.credentials.auth_url, qe_url)
-        self.assertEqual(saved_provider.credentials.hub, non_default_provider.credentials.hub)
-        self.assertEqual(saved_provider.credentials.group, non_default_provider.credentials.group)
-        self.assertEqual(saved_provider.credentials.project,
-                         non_default_provider.credentials.project)
+        self.assertEqual(saved_provider._default_hgp.credentials.token, qe_token)
+        self.assertEqual(saved_provider._default_hgp.credentials.auth_url, qe_url)
+        self.assertEqual(saved_provider._default_hgp.credentials.hub,
+                         non_default_hgp.credentials.hub)
+        self.assertEqual(saved_provider._default_hgp.credentials.group,
+                         non_default_hgp.credentials.group)
+        self.assertEqual(saved_provider._default_hgp.credentials.project,
+                         non_default_hgp.credentials.project)
 
     @requires_qe_access
-    def test_load_account_saved_provider_invalid_hgp(self, qe_token, qe_url):
-        """Test loading an account that contains a saved provider that does not exist."""
-        if qe_url != QISKIT_IBM_API_URL:
+    def test_load_saved_account_invalid_hgp(self, qe_token, qe_url):
+        """Test loading an account that contains a saved hub/group/project that does not exist."""
+        if qe_url != QISKIT_IBM_RUNTIME_API_URL:
             # .save_account() expects an auth production URL.
             self.skipTest('Test requires production auth URL')
 
         # Hub, group, project in correct format but does not exists.
         invalid_hgp_to_store = 'invalid_hub/invalid_group/invalid_project'
         with custom_qiskitrc(), no_envs(CREDENTIAL_ENV_VARS):
-            hgp = HubGroupProject.from_stored_format(invalid_hgp_to_store)
+            hgp_id = HubGroupProjectID.from_stored_format(invalid_hgp_to_store)
             with self.assertRaises(IBMProviderError) as context_manager:
-                IBMProvider.save_account(token=qe_token, url=qe_url,
-                                         hub=hgp.hub, group=hgp.group, project=hgp.project)
-                IBMProvider()
+                IBMRuntimeService.save_account(token=qe_token, url=qe_url, hub=hgp_id.hub,
+                                               group=hgp_id.group, project=hgp_id.project)
+                IBMRuntimeService()
 
-            self.assertIn('No provider matches the specified criteria',
+            self.assertIn('No hub/group/project matches the specified criteria',
                           str(context_manager.exception))
 
-    def test_load_account_saved_provider_invalid_format(self):
+    def test_load_saved_account_invalid_hgp_format(self):
         """Test loading an account that contains a saved provider in an invalid format."""
         # Format {'test_case_input': 'error message from raised exception'}
         invalid_hgps = {
@@ -300,30 +251,20 @@ class TestIBMProviderAccounts(IBMTestCase):
                 with custom_qiskitrc() as temp_qiskitrc, \
                         no_envs(CREDENTIAL_ENV_VARS):
                     # Save the account.
-                    IBMProvider.save_account(token=self.token, url=QISKIT_IBM_API_URL)
+                    IBMRuntimeService.save_account(token=self.token, url=QISKIT_IBM_RUNTIME_API_URL)
                     # Add an invalid provider field to the account stored.
                     with open(temp_qiskitrc.tmp_file.name, 'a') as _file:
                         _file.write('default_provider = {}'.format(invalid_hgp))
                     # Ensure an error is raised if the stored provider is in an invalid format.
                     with self.assertRaises(IBMProviderError) as context_manager:
-                        IBMProvider()
+                        IBMRuntimeService()
                     self.assertIn(error_message, str(context_manager.exception))
-
-    @requires_qe_access
-    def test_disable_account(self, qe_token, qe_url):
-        """Test disabling an account """
-        IBMProvider(qe_token, qe_url)
-        IBMProvider._disable_account()
-        self.assertFalse(IBMProvider._providers)
 
     @requires_qe_access
     def test_active_account(self, qe_token, qe_url):
         """Test get active account """
-        IBMProvider._disable_account()
-        self.assertIsNone(IBMProvider.active_account())
-
-        IBMProvider(qe_token, qe_url)
-        active_account = IBMProvider.active_account()
+        service = IBMRuntimeService(qe_token, qe_url)
+        active_account = service.active_account()
         self.assertIsNotNone(active_account)
         self.assertEqual(active_account['token'], qe_token)
         self.assertEqual(active_account['url'], qe_url)
@@ -334,52 +275,53 @@ class TestIBMProviderAccounts(IBMTestCase):
         for invalid_token in invalid_tokens:
             with self.subTest(invalid_token=invalid_token):
                 with self.assertRaises(IBMProviderCredentialsInvalidToken) as context_manager:
-                    IBMProvider.save_account(token=invalid_token, url=QISKIT_IBM_API_URL)
+                    IBMRuntimeService.save_account(token=invalid_token,
+                                                   url=QISKIT_IBM_RUNTIME_API_URL)
                 self.assertIn('Invalid IBM Quantum token found',
                               str(context_manager.exception))
 
 
-class TestIBMProviderProvider(IBMTestCase):
-    """Tests for IBMProvider provider related methods."""
+class TestIBMProviderHubGroupProject(IBMTestCase):
+    """Tests for IBMRuntimeService HubGroupProject related methods."""
 
     @requires_qe_access
-    def _get_provider(self, qe_token=None, qe_url=None):
-        """Return default provider."""
-        return IBMProvider(qe_token, qe_url)
+    def _initialize_provider(self, qe_token=None, qe_url=None):
+        """Initialize and return provider."""
+        return IBMRuntimeService(qe_token, qe_url)
 
     def setUp(self):
         """Initial test setup."""
         super().setUp()
 
-        self.provider = self._get_provider()
-        self.credentials = self.provider.credentials
+        self.service = self._initialize_provider()
+        self.credentials = self.service._default_hgp.credentials
 
-    def test_get_provider(self):
-        """Test get single provider."""
-        provider = IBMProvider._get_provider(
+    def test_get_hgp(self):
+        """Test get single hgp."""
+        hgp = self.service._get_hgp(
             hub=self.credentials.hub,
             group=self.credentials.group,
             project=self.credentials.project)
-        self.assertEqual(self.provider, provider)
+        self.assertEqual(self.service._default_hgp, hgp)
 
-    def test_providers_with_filter(self):
-        """Test providers() with a filter."""
-        provider = IBMProvider.providers(
+    def test_get_hgps_with_filter(self):
+        """Test get hgps with a filter."""
+        hgp = self.service._get_hgps(
             hub=self.credentials.hub,
             group=self.credentials.group,
             project=self.credentials.project)[0]
-        self.assertEqual(self.provider, provider)
+        self.assertEqual(self.service._default_hgp, hgp)
 
-    def test_providers_no_filter(self):
-        """Test providers() without a filter."""
-        providers_list = IBMProvider.providers()
-        self.assertIn(self.provider, providers_list)
+    def test_get_hgps_no_filter(self):
+        """Test get hgps without a filter."""
+        hgps = self.service._get_hgps()
+        self.assertIn(self.service._default_hgp, hgps)
 
 
 class TestIBMProviderServices(IBMTestCase, providers.ProviderTestCase):
-    """Tests for services provided by the IBMProvider class."""
+    """Tests for services provided by the IBMRuntimeService class."""
 
-    provider_cls = IBMProvider
+    provider_cls = IBMRuntimeService
     backend_name = 'ibmq_qasm_simulator'
 
     def setUp(self):
@@ -392,43 +334,50 @@ class TestIBMProviderServices(IBMTestCase, providers.ProviderTestCase):
         self.qc1.measure(qr, cr)
 
     @requires_provider
-    def _get_provider(self, provider):
+    def _get_provider(self, provider, hub, group, project):
         """Return an instance of a provider."""
         # pylint: disable=arguments-differ
+        self.hub = hub
+        self.group = group
+        self.project = project
         return provider
 
     def test_remote_backends_exist_real_device(self):
         """Test if there are remote backends that are devices."""
-        remotes = self.provider.backends(simulator=False)
+        remotes = self.service.backends(simulator=False, hub=self.hub,
+                                        group=self.group, project=self.project)
         self.assertTrue(remotes)
 
     def test_remote_backends_exist_simulator(self):
         """Test if there are remote backends that are simulators."""
-        remotes = self.provider.backends(simulator=True)
+        remotes = self.service.backends(simulator=True, hub=self.hub,
+                                        group=self.group, project=self.project)
         self.assertTrue(remotes)
 
     def test_remote_backends_instantiate_simulators(self):
         """Test if remote backends that are simulators are an ``IBMSimulator`` instance."""
-        remotes = self.provider.backends(simulator=True)
+        remotes = self.service.backends(simulator=True, hub=self.hub,
+                                        group=self.group, project=self.project)
         for backend in remotes:
             with self.subTest(backend=backend):
                 self.assertIsInstance(backend, IBMSimulator)
 
     def test_remote_backend_status(self):
         """Test backend_status."""
-        remotes = self.provider.backends()
+        remotes = self.service.backends(hub=self.hub, group=self.group, project=self.project)
         for backend in remotes:
             _ = backend.status()
 
     def test_remote_backend_configuration(self):
         """Test backend configuration."""
-        remotes = self.provider.backends()
+        remotes = self.service.backends(hub=self.hub, group=self.group, project=self.project)
         for backend in remotes:
             _ = backend.configuration()
 
     def test_remote_backend_properties(self):
         """Test backend properties."""
-        remotes = self.provider.backends(simulator=False)
+        remotes = self.service.backends(simulator=False, hub=self.hub,
+                                        group=self.group, project=self.project)
         for backend in remotes:
             properties = backend.properties()
             if backend.configuration().simulator:
@@ -436,7 +385,8 @@ class TestIBMProviderServices(IBMTestCase, providers.ProviderTestCase):
 
     def test_headers_in_result_sims(self):
         """Test that the qobj headers are passed onto the results for sims."""
-        backend = self.provider.get_backend('ibmq_qasm_simulator')
+        backend = self.service.get_backend('ibmq_qasm_simulator', hub=self.hub, group=self.group,
+                                           project=self.project)
 
         custom_header = {'x': 1, 'y': [1, 2, 3], 'z': {'a': 4}}
         circuits = transpile(self.qc1, backend=backend)
@@ -468,18 +418,20 @@ class TestIBMProviderServices(IBMTestCase, providers.ProviderTestCase):
 
     def test_aliases(self):
         """Test that display names of devices map the regular names."""
-        aliased_names = self.provider.backend._aliased_backend_names()
+        aliased_names = self.service.backend._aliased_backend_names()
 
         for display_name, backend_name in aliased_names.items():
             with self.subTest(display_name=display_name,
                               backend_name=backend_name):
                 try:
-                    backend_by_name = self.provider.get_backend(backend_name)
+                    backend_by_name = self.service.get_backend(backend_name, hub=self.hub,
+                                                               group=self.group,
+                                                               project=self.project)
                 except QiskitBackendNotFoundError:
                     # The real name of the backend might not exist
                     pass
                 else:
-                    backend_by_display_name = self.provider.get_backend(
+                    backend_by_display_name = self.service.get_backend(
                         display_name)
                     self.assertEqual(backend_by_name, backend_by_display_name)
                     self.assertEqual(
@@ -487,7 +439,8 @@ class TestIBMProviderServices(IBMTestCase, providers.ProviderTestCase):
 
     def test_remote_backend_properties_filter_date(self):
         """Test backend properties filtered by date."""
-        backends = self.provider.backends(simulator=False)
+        backends = self.service.backends(simulator=False, hub=self.hub,
+                                         group=self.group, project=self.project)
 
         datetime_filter = datetime(2019, 2, 1).replace(tzinfo=None)
         for backend in backends:
@@ -501,22 +454,7 @@ class TestIBMProviderServices(IBMTestCase, providers.ProviderTestCase):
 
     def test_provider_backends(self):
         """Test provider_backends have correct attributes."""
-        provider_backends = {back for back in dir(self.provider.backend)
-                             if isinstance(getattr(self.provider.backend, back), IBMBackend)}
-        backends = {back.name().lower() for back in self.provider._backends.values()}
+        provider_backends = {back for back in dir(self.service.backend)
+                             if isinstance(getattr(self.service.backend, back), IBMBackend)}
+        backends = {back.name().lower() for back in self.service.backend._backends.values()}
         self.assertEqual(provider_backends, backends)
-
-    def test_provider_services(self):
-        """Test provider services."""
-        services = self.provider.services()
-        self.assertIn('backend', services)
-        self.assertIsInstance(services['backend'], IBMBackendService)
-        self.assertIsInstance(self.provider.service('backend'), IBMBackendService)
-        self.assertIsInstance(self.provider.backend, IBMBackendService)
-
-        if 'experiment' in services:
-            self.assertIsInstance(self.provider.service('experiment'), IBMExperimentService)
-            self.assertIsInstance(self.provider.experiment, IBMExperimentService)
-        if 'random' in services:
-            self.assertIsInstance(self.provider.service('random'), IBMRandomService)
-            self.assertIsInstance(self.provider.random, IBMRandomService)

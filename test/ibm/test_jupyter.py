@@ -12,20 +12,12 @@
 
 """Tests for Jupyter tools."""
 
-from unittest import mock
-from datetime import datetime, timedelta
-
-from qiskit import transpile
-from qiskit.test.reference_circuits import ReferenceCircuits
-from qiskit_ibm.jupyter.qubits_widget import qubits_tab
-from qiskit_ibm.jupyter.config_widget import config_tab
-from qiskit_ibm.jupyter.gates_widget import gates_tab
-from qiskit_ibm.jupyter.jobs_widget import jobs_tab
-from qiskit_ibm.visualization.interactive.error_map import iplot_error_map
-from qiskit_ibm.jupyter.dashboard.backend_widget import make_backend_widget
-from qiskit_ibm.jupyter.dashboard.utils import BackendWithProviders
-from qiskit_ibm.jupyter.dashboard.job_widgets import create_job_widget
-from qiskit_ibm.jupyter.dashboard.watcher_monitor import _job_checker
+from qiskit_ibm_runtime.jupyter.qubits_widget import qubits_tab
+from qiskit_ibm_runtime.jupyter.config_widget import config_tab
+from qiskit_ibm_runtime.jupyter.gates_widget import gates_tab
+from qiskit_ibm_runtime.visualization.interactive.error_map import iplot_error_map
+from qiskit_ibm_runtime.jupyter.dashboard.backend_widget import make_backend_widget
+from qiskit_ibm_runtime.jupyter.dashboard.utils import BackendWithProviders
 
 from ..decorators import requires_provider
 from ..ibm_test_case import IBMTestCase
@@ -36,9 +28,12 @@ class TestBackendInfo(IBMTestCase):
 
     @classmethod
     @requires_provider
-    def setUpClass(cls, provider):
+    def setUpClass(cls, provider, hub, group, project):
         # pylint: disable=arguments-differ
         super().setUpClass()
+        cls.hub = hub
+        cls.group = group
+        cls.project = project
         cls.backends = _get_backends(provider)
 
     def test_config_tab(self):
@@ -74,54 +69,36 @@ class TestBackendInfo(IBMTestCase):
             with self.subTest(backend=backend):
                 iplot_error_map(backend)
 
-    def test_jobs_tab(self):
-        """Test jobs tab."""
-        for backend in self.backends:
-            with self.subTest(backend=backend):
-                limit = 5
-                start_datetime = datetime.now() - timedelta(days=7)
-                jobs_tab(backend, limit=limit, start_datetime=start_datetime)
-
 
 class TestIBMDashboard(IBMTestCase):
     """Test backend information Jupyter widget."""
 
     @classmethod
     @requires_provider
-    def setUpClass(cls, provider):
+    def setUpClass(cls, service, hub, group, project):
         # pylint: disable=arguments-differ
         super().setUpClass()
-        cls.provider = provider
-        cls.backends = _get_backends(provider)
+        cls.service = service
+        cls.hub = hub
+        cls.group = group
+        cls.project = project
+        cls.backends = _get_backends(service)
 
     def test_backend_widget(self):
         """Test devices tab."""
         for backend in self.backends:
             with self.subTest(backend=backend):
-                cred = backend.provider().credentials
-                provider_str = "{}/{}/{}".format(cred.hub, cred.group, cred.project)
+                provider_str = "{}/{}/{}".format(backend.hub, backend.group, backend.project)
                 b_w_p = BackendWithProviders(backend=backend, providers=[provider_str])
                 make_backend_widget(b_w_p)
 
-    def test_job_widget(self):
-        """Test jobs tab."""
-        backend = self.provider.get_backend('ibmq_qasm_simulator')
-        job = backend.run(transpile(ReferenceCircuits.bell(), backend))
-        create_job_widget(mock.MagicMock(), job, backend=backend.name(), status=job.status().value)
 
-    def test_watcher_monitor(self):
-        """Test job watcher."""
-        backend = self.provider.get_backend('ibmq_qasm_simulator')
-        job = backend.run(transpile(ReferenceCircuits.bell(), backend))
-        _job_checker(job=job, status=job.status(), watcher=mock.MagicMock())
-
-
-def _get_backends(provider):
+def _get_backends(service):
     """Return backends for testing."""
     backends = []
     n_qubits = [1, 5]
     for n_qb in n_qubits:
-        filtered_backends = provider.backends(
+        filtered_backends = service.backends(
             operational=True, simulator=False, n_qubits=n_qb)
         if filtered_backends:
             backends.append(filtered_backends[0])

@@ -155,7 +155,7 @@ as:
 fixes:
   - |
     Fixes a race condition in the function ``foo()``. Refer to
-    `#12345 <https://github.com/Qiskit-Partners/qiskit-ibm/issues/12345>`_ for
+    `#12345 <https://github.com/Qiskit/qiskit-ibm-runtime/issues/12345>`_ for
     more details.
 ```
 

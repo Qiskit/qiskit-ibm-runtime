@@ -14,17 +14,16 @@
 
 import os
 import logging
+from typing import Optional
 
 from qiskit import QuantumCircuit
 from qiskit.qobj import QasmQobj
 from qiskit.compiler import assemble, transpile
 from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit.pulse import Schedule
-from qiskit.providers.exceptions import JobError
-from qiskit.providers.jobstatus import JobStatus
-from qiskit_ibm.ibm_provider import IBMProvider
-from qiskit_ibm.ibm_backend import IBMBackend
-from qiskit_ibm.job import IBMJob
+from qiskit_ibm_runtime.hub_group_project import HubGroupProject
+from qiskit_ibm_runtime import IBMRuntimeService
+from qiskit_ibm_runtime.ibm_backend import IBMBackend
 
 
 def setup_test_logging(logger: logging.Logger, filename: str):
@@ -53,7 +52,12 @@ def setup_test_logging(logger: logging.Logger, filename: str):
     logger.setLevel(os.getenv('LOG_LEVEL', 'DEBUG'))
 
 
-def most_busy_backend(provider: IBMProvider) -> IBMBackend:
+def most_busy_backend(
+        service: IBMRuntimeService,
+        hub: Optional[str] = None,
+        group: Optional[str] = None,
+        project: Optional[str] = None
+) -> IBMBackend:
     """Return the most busy backend for the provider given.
 
     Return the most busy available backend for those that
@@ -61,12 +65,16 @@ def most_busy_backend(provider: IBMProvider) -> IBMBackend:
     local backends that do not have this are not considered.
 
     Args:
-        provider: IBM Quantum account provider.
+        service: IBM Quantum account provider.
+        hub: Name of the hub.
+        group: Name of the group.
+        project: Name of the project.
 
     Returns:
         The most busy backend.
     """
-    backends = provider.backends(simulator=False, operational=True)
+    backends = service.backends(simulator=False, operational=True,
+                                hub=hub, group=group, project=project)
     return max([b for b in backends if b.configuration().n_qubits >= 5],
                key=lambda b: b.status().pending_jobs)
 
@@ -104,84 +112,6 @@ def bell_in_qobj(backend: IBMBackend, shots: int = 1024) -> QasmQobj:
                     backend=backend, shots=shots)
 
 
-def cancel_job(job: IBMJob, verify: bool = False) -> bool:
-    """Cancel a job.
-
-    Args:
-        job: Job to cancel.
-        verify: Verify job status.
-
-    Returns:
-        Whether job has been cancelled.
-    """
-    cancelled = False
-    for _ in range(2):
-        # Try twice in case job is not in a cancellable state
-        try:
-            cancelled = job.cancel()
-            if cancelled:
-                if verify:
-                    status = job.status()
-                    assert status is JobStatus.CANCELLED, \
-                        'cancel() was successful for job {} but its ' \
-                        'status is {}.'.format(job.job_id(), status)
-                break
-        except JobError:
-            pass
-
-    return cancelled
-
-
-def submit_job_bad_shots(backend: IBMBackend) -> IBMJob:
-    """Submit a job that will fail due to too many shots.
-
-    Args:
-        backend: Backend to submit the job to.
-
-    Returns:
-        Submitted job.
-    """
-    qobj = bell_in_qobj(backend=backend)
-    qobj.config.shots = 10000  # Modify the number of shots to be an invalid amount.
-    job_to_fail = backend._submit_job(qobj)
-    return job_to_fail
-
-
-def submit_job_one_bad_instr(backend: IBMBackend) -> IBMJob:
-    """Submit a job that contains one good and one bad instruction.
-
-    Args:
-        backend: Backend to submit the job to.
-
-    Returns:
-        Submitted job.
-    """
-    qc_new = transpile(ReferenceCircuits.bell(), backend)
-    if backend.configuration().simulator:
-        # Specify method so it doesn't fail at method selection.
-        qobj = assemble([qc_new]*2, backend=backend, method="statevector")
-    else:
-        qobj = assemble([qc_new]*2, backend=backend)
-    qobj.experiments[1].instructions[1].name = 'bad_instruction'
-    job = backend._submit_job(qobj)
-    return job
-
-
-def submit_and_cancel(backend: IBMBackend) -> IBMJob:
-    """Submit and cancel a job.
-
-    Args:
-        backend: Backend to submit the job to.
-
-    Returns:
-        Cancelled job.
-    """
-    circuit = transpile(ReferenceCircuits.bell(), backend=backend)
-    job = backend.run(circuit)
-    cancel_job(job, True)
-    return job
-
-
 def get_pulse_schedule(backend: IBMBackend) -> Schedule:
     """Return a pulse schedule."""
     config = backend.configuration()
@@ -197,30 +127,30 @@ def get_pulse_schedule(backend: IBMBackend) -> Schedule:
     return schedules
 
 
-def get_provider(
+def get_hgp(
         qe_token: str,
         qe_url: str,
         default: bool = True
-) -> IBMProvider:
-    """Return a provider for the account.
+) -> HubGroupProject:
+    """Return a HubGroupProject for the account.
 
     Args:
         qe_token: IBM Quantum token.
         qe_url: IBM Quantum auth URL.
-        default: If `True`, the default open access project provider is returned.
-            Otherwise, a non open access project provider is returned.
+        default: If `True`, the default open access hgp is returned.
+            Otherwise, a non open access hgp is returned.
 
     Returns:
-        A provider, as specified by `default`.
+        A HubGroupProject, as specified by `default`.
     """
-    provider_to_return = IBMProvider(qe_token, url=qe_url)  # Default provider.
+    service = IBMRuntimeService(qe_token, url=qe_url)  # Default hub/group/project.
+    open_hgp = service._get_hgp()  # Open access hgp
+    hgp_to_return = open_hgp
     if not default:
-        # Get a non default provider (i.e.not the default open access project).
-        providers = IBMProvider.providers()
-        for provider in providers:
-            if provider != provider_to_return:
-                provider_to_return = provider
+        # Get a non default hgp (i.e. not the default open access hgp).
+        hgps = service._get_hgps()
+        for hgp in hgps:
+            if hgp != open_hgp:
+                hgp_to_return = hgp
                 break
-    IBMProvider._disable_account()
-
-    return provider_to_return
+    return hgp_to_return

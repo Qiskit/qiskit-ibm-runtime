@@ -20,10 +20,10 @@ from functools import partialmethod
 
 from qiskit.test.base import BaseQiskitTestCase
 
-from qiskit_ibm import QISKIT_IBM_PROVIDER_LOGGER_NAME
-from qiskit_ibm.api.clients.account import AccountClient
-from qiskit_ibm.apiconstants import ApiJobStatus, API_JOB_FINAL_STATES
-from qiskit_ibm.job.exceptions import IBMJobNotFoundError
+from qiskit_ibm_runtime import QISKIT_IBM_RUNTIME_LOGGER_NAME
+from qiskit_ibm_runtime.api.clients.account import AccountClient
+from qiskit_ibm_runtime.apiconstants import ApiJobStatus, API_JOB_FINAL_STATES
+from qiskit_ibm_runtime.job.exceptions import IBMJobNotFoundError
 
 from .utils import setup_test_logging
 
@@ -37,7 +37,7 @@ class IBMTestCase(BaseQiskitTestCase):
         cls.log = logging.getLogger(cls.__name__)
         filename = '%s.log' % os.path.splitext(inspect.getfile(cls))[0]
         setup_test_logging(cls.log, filename)
-        cls._set_logging_level(logging.getLogger(QISKIT_IBM_PROVIDER_LOGGER_NAME))
+        cls._set_logging_level(logging.getLogger(QISKIT_IBM_RUNTIME_LOGGER_NAME))
 
     @classmethod
     def simple_job_callback(cls, job_id, job_status, job, **kwargs):
