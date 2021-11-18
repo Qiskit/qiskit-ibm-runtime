@@ -1,6 +1,0 @@
----
-upgrade:
-  - |
-    By default, :meth:`qiskit_ibm.runtime.IBMRuntimeService.pprint_programs()` now only prints
-    the summary of each runtime program instead of all of the details. There is a 
-    new parameter ``detailed`` that can be set to ``True`` to print all details.

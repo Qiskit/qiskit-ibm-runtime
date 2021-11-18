@@ -2,4 +2,4 @@
 features:
   - |
     You can now pass ``hub``, ``group``, and ``project`` parameters to
-    :meth:`qiskit_ibm.runtime.IBMRuntimeService.jobs` to filter jobs.
+    :meth:`qiskit_ibm_runtime.IBMRuntimeService.jobs` to filter jobs.
