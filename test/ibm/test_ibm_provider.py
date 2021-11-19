@@ -383,26 +383,9 @@ class TestIBMProviderServices(IBMTestCase, providers.ProviderTestCase):
             if backend.configuration().simulator:
                 self.assertEqual(properties, None)
 
-    def test_headers_in_result_sims(self):
-        """Test that the qobj headers are passed onto the results for sims."""
-        backend = self.service.get_backend('ibmq_qasm_simulator', hub=self.hub, group=self.group,
-                                           project=self.project)
-
-        custom_header = {'x': 1, 'y': [1, 2, 3], 'z': {'a': 4}}
-        circuits = transpile(self.qc1, backend=backend)
-
-        # TODO Use circuit metadata for individual header when terra PR-5270 is released.
-        # qobj.experiments[0].header.some_field = 'extra info'
-
-        job = backend.run(circuits, header=custom_header)
-        result = job.result()
-        self.assertTrue(custom_header.items() <= job.header().items())
-        self.assertTrue(custom_header.items() <= result.header.to_dict().items())
-        # self.assertEqual(result.results[0].header.some_field, 'extra info')
-
     def test_aliases(self):
         """Test that display names of devices map the regular names."""
-        aliased_names = self.service.backend._aliased_backend_names()
+        aliased_names = self.service._aliased_backend_names()
 
         for display_name, backend_name in aliased_names.items():
             with self.subTest(display_name=display_name,
@@ -440,5 +423,5 @@ class TestIBMProviderServices(IBMTestCase, providers.ProviderTestCase):
         """Test provider_backends have correct attributes."""
         provider_backends = {back for back in dir(self.service.backend)
                              if isinstance(getattr(self.service.backend, back), IBMBackend)}
-        backends = {back.name().lower() for back in self.service.backend._backends.values()}
+        backends = {back.name().lower() for back in self.service._backends.values()}
         self.assertEqual(provider_backends, backends)

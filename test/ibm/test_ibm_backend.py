@@ -22,7 +22,7 @@ from qiskit.test.reference_circuits import ReferenceCircuits
 
 from ..ibm_test_case import IBMTestCase
 from ..decorators import requires_device, requires_provider
-from ..utils import get_pulse_schedule, cancel_job
+from ..utils import get_pulse_schedule
 
 
 class TestIBMBackend(IBMTestCase):
@@ -107,42 +107,6 @@ class TestIBMBackend(IBMTestCase):
                     "Reservation {} found={}, used start datetime {}, end datetime {}".format(
                         reserv, found, start_dt, end_dt))
 
-    def test_backend_options(self):
-        """Test backend options."""
-        service = self.backend.provider()
-        backends = service.backends(open_pulse=True, operational=True, hub=self.backend.hub,
-                                    group=self.backend.group, project=self.backend.project)
-        if not backends:
-            raise SkipTest('Skipping pulse test since no pulse backend found.')
-
-        backend = backends[0]
-        backend.options.shots = 2048
-        backend.set_options(qubit_lo_freq=[4.9e9, 5.0e9],
-                            meas_lo_freq=[6.5e9, 6.6e9],
-                            meas_level=2)
-        job = backend.run(get_pulse_schedule(backend), meas_level=1, foo='foo')
-        backend_options = service.backend.job(job.job_id()).backend_options()
-        self.assertEqual(backend_options['shots'], 2048)
-        # Qobj config freq is in GHz.
-        self.assertAlmostEqual(backend_options['qubit_lo_freq'], [4.9e9, 5.0e9])
-        self.assertEqual(backend_options['meas_lo_freq'], [6.5e9, 6.6e9])
-        self.assertEqual(backend_options['meas_level'], 1)
-        self.assertEqual(backend_options['foo'], 'foo')
-        cancel_job(job)
-
-    def test_sim_backend_options(self):
-        """Test simulator backend options."""
-        service = self.backend.provider()
-        backend = service.get_backend('ibmq_qasm_simulator', hub=self.backend.hub,
-                                      group=self.backend.group, project=self.backend.project)
-        backend.options.shots = 2048
-        backend.set_options(memory=True)
-        job = backend.run(ReferenceCircuits.bell(), shots=1024, foo='foo')
-        backend_options = service.backend.job(job.job_id()).backend_options()
-        self.assertEqual(backend_options['shots'], 1024)
-        self.assertTrue(backend_options['memory'])
-        self.assertEqual(backend_options['foo'], 'foo')
-
     def test_deprecate_id_instruction(self):
         """Test replacement of 'id' Instructions with 'Delay' instructions."""
 
@@ -192,7 +156,7 @@ class TestIBMBackendService(IBMTestCase):
 
     def test_my_reservations(self):
         """Test my_reservations method"""
-        reservations = self.service.backend.my_reservations()
+        reservations = self.service.my_reservations()
         for reserv in reservations:
             for attr in reserv.__dict__:
                 self.assertIsNotNone(

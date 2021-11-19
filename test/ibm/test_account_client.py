@@ -44,7 +44,7 @@ class TestAccountClient(IBMTestCase):
         cls.hub = hub
         cls.group = group
         cls.project = project
-        default_hgp = cls.service.backend._default_hgp
+        default_hgp = cls.service._default_hgp
         cls.access_token = default_hgp._api_client.account_api.session._access_token
 
     def setUp(self):
@@ -74,7 +74,7 @@ class TestAccountClient(IBMTestCase):
     def _get_client(self):
         """Helper for instantiating an AccountClient."""
         # pylint: disable=no-value-for-parameter
-        return AccountClient(self.service.backend._default_hgp.credentials)
+        return AccountClient(self.service._default_hgp.credentials)
 
     def test_custom_client_app_header(self):
         """Check custom client application header."""
@@ -89,47 +89,6 @@ class TestAccountClient(IBMTestCase):
             client = self._get_client()
             self.assertNotIn(custom_header,
                              client._session.headers['X-Qx-Client-Application'])
-
-    def test_access_token_not_in_exception_traceback(self):
-        """Check that access token is replaced within chained request exceptions."""
-        backend_name = 'ibmq_qasm_simulator'
-        backend = self.service.get_backend(backend_name, hub=self.hub,
-                                           group=self.group, project=self.project)
-        circuit = transpile(self.qc1, backend, seed_transpiler=self.seed)
-        qobj = assemble(circuit, backend, shots=1)
-        client = backend._api_client
-
-        exception_message = 'The access token in this exception ' \
-                            'message should be replaced: {}'.format(self.access_token)
-        exception_traceback_str = ''
-        try:
-            with mock.patch.object(
-                    HTTPConnectionPool,
-                    'urlopen',
-                    side_effect=MaxRetryError(
-                        HTTPConnectionPool('host'), 'url', reason=exception_message)):
-                _ = client.job_submit(backend.name(), qobj.to_dict())
-        except RequestsApiError:
-            exception_traceback_str = traceback.format_exc()
-
-        self.assertTrue(exception_traceback_str)
-        if self.access_token in exception_traceback_str:
-            self.fail('Access token not replaced in request exception traceback.')
-
-    def test_job_submit_retry(self):
-        """Test job submit requests get retried."""
-        client = self._get_client()
-
-        # Send request to local server.
-        valid_data = {'id': 'fake_id',
-                      'objectStorageInfo': {'uploadUrl': SimpleServer.URL},
-                      'job': {'id': 'fake_id'}}
-        self.fake_server = SimpleServer(handler_class=ServerErrorOnceHandler)
-        self.fake_server.set_good_response(valid_data)
-        self.fake_server.start()
-        client.account_api.session.base_url = SimpleServer.URL
-
-        client.job_submit('ibmq_qasm_simulator', {})
 
     def test_client_error(self):
         """Test client error."""
@@ -168,16 +127,13 @@ class TestAccountClientJobs(IBMTestCase):
         cls.hub = hub
         cls.group = group
         cls.project = project
-        default_hgp = cls.service.backend._default_hgp
+        default_hgp = cls.service._default_hgp
         cls.access_token = default_hgp._api_client.account_api.session._access_token
 
         backend_name = 'ibmq_qasm_simulator'
         backend = cls.service.get_backend(backend_name, hub=cls.hub,
                                           group=cls.group, project=cls.project)
         cls.client = backend._api_client
-        cls.job = cls.client.job_submit(
-            backend_name, cls._get_qobj(backend).to_dict())
-        cls.job_id = cls.job['job_id']
 
     @staticmethod
     def _get_qobj(backend):
