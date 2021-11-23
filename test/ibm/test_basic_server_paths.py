@@ -51,6 +51,6 @@ class TestBasicServerPaths(IBMTestCase):
             with self.subTest(desc=desc, backend=backend):
                 self.assertTrue(backend.status())
                 job_limit = backend.job_limit()
-                if desc == 'public_provider':
+                if desc == 'open_hgp':
                     self.assertIsNotNone(job_limit.maximum_jobs)
                 self.assertTrue(job_limit)
