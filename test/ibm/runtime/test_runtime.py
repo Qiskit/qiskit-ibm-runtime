@@ -50,7 +50,7 @@ from qiskit.quantum_info import SparsePauliOp, Pauli, PauliTable, Statevector
 from qiskit.providers.jobstatus import JobStatus
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
-from qiskit_ibm_runtime import IBMRuntimeService, RuntimeJob
+from qiskit_ibm_runtime import IBMRuntimeService, RuntimeJob, IBMBackend
 from qiskit_ibm_runtime.credentials import Credentials
 from qiskit_ibm_runtime.hub_group_project import HubGroupProject
 from qiskit_ibm_runtime.utils import RuntimeEncoder, RuntimeDecoder
@@ -62,6 +62,7 @@ from ...ibm_test_case import IBMTestCase
 from .fake_runtime_client import (BaseFakeRuntimeClient, FailedRanTooLongRuntimeJob,
                                   FailedRuntimeJob, CancelableRuntimeJob, CustomResultRuntimeJob)
 from .utils import SerializableClass, SerializableClassDecoder, get_complex_types
+from ...contextmanagers import mock_ibm_provider
 
 
 class TestRuntime(IBMTestCase):
@@ -121,7 +122,15 @@ class TestRuntime(IBMTestCase):
     def setUp(self):
         """Initial test setup."""
         super().setUp()
-        self.service = mock.MagicMock(spec=IBMRuntimeService)
+        with mock_ibm_provider():
+            self.service = IBMRuntimeService("abc")
+        self.service._programs = {}
+        self.service._default_hgp = mock.MagicMock(spec=HubGroupProject)
+        self.service._default_hgp.credentials = Credentials(
+            token="", url="", services={"runtime": "https://quantum-computing.ibm.com"})
+        def get_backend(backend_name, hub=None, group=None, project=None):
+            return mock.MagicMock(spec=IBMBackend)
+        self.service.get_backend = get_backend
         self.service._api_client = BaseFakeRuntimeClient()
 
     def test_coder(self):

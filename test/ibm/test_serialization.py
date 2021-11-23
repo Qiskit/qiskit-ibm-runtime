@@ -12,21 +12,16 @@
 
 """Test serializing and deserializing data sent to the server."""
 
-from unittest import SkipTest, skipIf
+from unittest import skipIf
 from typing import Any, Dict, Optional
 
 import dateutil.parser
-from qiskit.test.reference_circuits import ReferenceCircuits
-from qiskit.test import slow_test
-from qiskit import transpile, schedule, QuantumCircuit
 from qiskit.circuit import Parameter
 from qiskit.version import VERSION as terra_version
 
-from qiskit_ibm_runtime import least_busy
 from qiskit_ibm_runtime.utils.json_encoder import IBMJsonEncoder
 
 from ..decorators import requires_provider
-from ..utils import cancel_job
 from ..ibm_test_case import IBMTestCase
 
 
@@ -45,7 +40,6 @@ class TestSerialization(IBMTestCase):
         cls.project = project
         cls.sim_backend = service.get_backend('ibmq_qasm_simulator', hub=cls.hub,
                                               group=cls.group, project=cls.project)
-        cls.bell = transpile(ReferenceCircuits.bell(), backend=cls.sim_backend)
 
     def test_backend_configuration(self):
         """Test deserializing backend configuration."""
