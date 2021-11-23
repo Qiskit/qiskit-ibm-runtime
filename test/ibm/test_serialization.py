@@ -12,21 +12,16 @@
 
 """Test serializing and deserializing data sent to the server."""
 
-from unittest import SkipTest, skipIf
+from unittest import skipIf
 from typing import Any, Dict, Optional
 
 import dateutil.parser
-from qiskit.test.reference_circuits import ReferenceCircuits
-from qiskit.test import slow_test
-from qiskit import transpile, schedule, QuantumCircuit
 from qiskit.circuit import Parameter
 from qiskit.version import VERSION as terra_version
 
-from qiskit_ibm_runtime import least_busy
 from qiskit_ibm_runtime.utils.json_encoder import IBMJsonEncoder
 
 from ..decorators import requires_provider
-from ..utils import cancel_job
 from ..ibm_test_case import IBMTestCase
 
 
@@ -45,38 +40,6 @@ class TestSerialization(IBMTestCase):
         cls.project = project
         cls.sim_backend = service.get_backend('ibmq_qasm_simulator', hub=cls.hub,
                                               group=cls.group, project=cls.project)
-        cls.bell = transpile(ReferenceCircuits.bell(), backend=cls.sim_backend)
-
-    def test_qasm_qobj(self):
-        """Test serializing qasm qobj data."""
-        job = self.sim_backend.run(self.bell)
-        rqobj = self.service.backend.job(job.job_id())._get_qobj()
-
-        self.assertEqual(_array_to_list(job._get_qobj().to_dict()), rqobj.to_dict())
-
-    def test_pulse_qobj(self):
-        """Test serializing pulse qobj data."""
-        backends = self.service.backends(operational=True, open_pulse=True, hub=self.hub,
-                                         group=self.group, project=self.project)
-        if not backends:
-            self.skipTest('Need pulse backends.')
-
-        backend = backends[0]
-        config = backend.configuration()
-        defaults = backend.defaults()
-        inst_map = defaults.instruction_schedule_map
-
-        x = inst_map.get('x', 0)
-        measure = inst_map.get('measure', range(config.n_qubits)) << x.duration
-        schedules = x | measure
-
-        job = backend.run(schedules, meas_level=1, shots=256)
-        rqobj = self.service.backend.job(job.job_id())._get_qobj()
-        # Convert numpy arrays to lists since they now get converted right
-        # before being sent to the server.
-        self.assertEqual(_array_to_list(job._get_qobj().to_dict()), rqobj.to_dict())
-
-        cancel_job(job)
 
     def test_backend_configuration(self):
         """Test deserializing backend configuration."""
@@ -120,35 +83,6 @@ class TestSerialization(IBMTestCase):
             with self.subTest(backend=backend):
                 properties = backend.properties()
                 self._verify_data(properties.to_dict(), good_keys)
-
-    def test_qasm_job_result(self):
-        """Test deserializing a QASM job result."""
-        result = self.sim_backend.run(self.bell).result()
-
-        # Known keys that look like a serialized complex number.
-        good_keys = ('results.metadata.input_qubit_map', 'results.metadata.active_input_qubits')
-
-        self._verify_data(result.to_dict(), good_keys=good_keys)
-
-    @slow_test
-    def test_pulse_job_result(self):
-        """Test deserializing a pulse job result."""
-        backends = self.service.backends(open_pulse=True, operational=True, hub=self.hub,
-                                         group=self.group, project=self.project)
-        if not backends:
-            raise SkipTest('Skipping pulse test since no pulse backend found.')
-
-        backend = least_busy(backends)
-        qc = QuantumCircuit(1, 1)
-        qc.x(0)
-        qc.measure([0], [0])
-        sched = schedule(transpile(qc, backend=backend), backend=backend)
-        job = backend.run(sched)
-        result = job.result()
-
-        # Known keys that look like a serialized object.
-        good_keys = ('header.backend_version', 'backend_version')
-        self._verify_data(result.to_dict(), good_keys)
 
     def _verify_data(
             self,

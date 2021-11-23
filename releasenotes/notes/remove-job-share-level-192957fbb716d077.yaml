@@ -1,8 +1,0 @@
----
-upgrade:
-  - |
-    Job share level is no longer supported due to low adoption and the
-    corresponding interface has been removed.
-    This means you can no longer pass `share_level` when creating a job. The
-    `qiskit.providers.ibmq.job.IBMQJob.share_level` method to get a job's share level
-    has also been removed.
