@@ -29,13 +29,14 @@
 import os
 from functools import wraps
 from unittest import SkipTest
-from typing import Tuple
+from typing import Tuple, Optional
 
 from qiskit.test.testing_options import get_test_options
 from qiskit_ibm_runtime import least_busy
 from qiskit_ibm_runtime import IBMRuntimeService
 from qiskit_ibm_runtime.credentials import (Credentials,
                                             discover_credentials)
+from qiskit_ibm_runtime.hub_group_project import HubGroupProject
 
 
 def requires_qe_access(func):
@@ -88,7 +89,9 @@ def requires_providers(func):
         qe_url = kwargs.pop('qe_url')
         service = IBMRuntimeService(qe_token, qe_url)
         # Get open access hgp
-        open_hgp = service._get_hgp()
+        open_hgp = _get_open_hgp(service)
+        if not open_hgp:
+            raise SkipTest('Requires open access hub/group/project.')
         # Get a premium hgp
         premium_hub, premium_group, premium_project = _get_custom_hgp()
         if not all([premium_hub, premium_group, premium_project]):
@@ -276,6 +279,19 @@ def _get_credentials():
         # Use the first available credentials.
         return list(discovered_credentials.values())[0]
     raise Exception('Unable to locate valid credentials.')
+
+
+def _get_open_hgp(service: IBMRuntimeService) -> Optional[HubGroupProject]:
+    """Get open hub/group/project
+
+    Returns:
+        Open hub/group/project or ``None``.
+    """
+    hgps = service._get_hgps()
+    for hgp in hgps:
+        if hgp.is_open:
+            return hgp
+    return None
 
 
 def _get_custom_hgp() -> Tuple[str, str, str]:
