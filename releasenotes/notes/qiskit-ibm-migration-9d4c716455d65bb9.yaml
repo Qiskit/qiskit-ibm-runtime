@@ -1,5 +1,0 @@
----
-prelude: >
-    The `qiskit-ibmq-provider` package has been deprecated in favor of `qiskit-ibm`. Follow the
-    Migration Guide https://github.com/Qiskit-Partners/qiskit-ibm/blob/main/MIGRATING.md
-    to switch to the new package.

@@ -1,11 +1,11 @@
 #########################################
-Qiskit IBM Quantum Provider documentation
+Qiskit IBM Runtime documentation
 #########################################
 
 .. toctree::
   :maxdepth: 2
 
-  API References <apidocs/ibm-provider>
+  API References <apidocs/ibm-runtime>
   Release Notes <release_notes>
 
 .. Hiding - Indices and tables

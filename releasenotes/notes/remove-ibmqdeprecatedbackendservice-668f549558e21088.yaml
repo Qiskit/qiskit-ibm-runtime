@@ -1,6 +1,0 @@
----
-upgrade:
-  - |
-    The deprecated `qiskit.providers.ibmq.IBMQDeprecatedBackendService` 
-    has now been removed. Backends can still be returned with 
-    :meth:`qiskit.providers.ibmq.IBMQBackendService.backends`.
