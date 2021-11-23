@@ -1,5 +1,0 @@
----
-upgrade:
-  - |
-    To align with terminology used in runtime jobs the IBMQBackendService method `retrieve_job`  
-    has been renamed to :meth:`qiskit.providers.ibmq.IBMQBackendService.job`.

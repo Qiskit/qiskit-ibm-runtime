@@ -12,10 +12,10 @@
 
 """
 ======================================================
-Credentials (:mod:`qiskit_ibm.credentials`)
+Credentials (:mod:`qiskit_ibm_runtime.credentials`)
 ======================================================
 
-.. currentmodule:: qiskit_ibm.credentials
+.. currentmodule:: qiskit_ibm_runtime.credentials
 
 Utilities for working with IBM Quantum account credentials.
 
