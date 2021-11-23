@@ -128,8 +128,11 @@ class TestRuntime(IBMTestCase):
         self.service._default_hgp = mock.MagicMock(spec=HubGroupProject)
         self.service._default_hgp.credentials = Credentials(
             token="", url="", services={"runtime": "https://quantum-computing.ibm.com"})
+
         def get_backend(backend_name, hub=None, group=None, project=None):
+            # pylint: disable=unused-argument
             return mock.MagicMock(spec=IBMBackend)
+
         self.service.get_backend = get_backend
         self.service._api_client = BaseFakeRuntimeClient()
 

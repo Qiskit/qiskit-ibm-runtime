@@ -13,16 +13,13 @@
 """IBMBackend Test."""
 
 from datetime import timedelta, datetime
-from unittest import SkipTest
 from unittest.mock import patch
 
 from qiskit import QuantumCircuit
 from qiskit.providers.models import QasmBackendConfiguration
-from qiskit.test.reference_circuits import ReferenceCircuits
 
 from ..ibm_test_case import IBMTestCase
 from ..decorators import requires_device, requires_provider
-from ..utils import get_pulse_schedule
 
 
 class TestIBMBackend(IBMTestCase):

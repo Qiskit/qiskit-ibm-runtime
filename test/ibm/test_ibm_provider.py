@@ -17,8 +17,7 @@ import os
 from unittest import skipIf, mock
 from configparser import ConfigParser
 from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister
-from qiskit.test import providers, slow_test
-from qiskit.compiler import transpile
+from qiskit.test import providers
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.models.backendproperties import BackendProperties
 
@@ -35,7 +34,7 @@ from qiskit_ibm_runtime.credentials.hub_group_project_id import HubGroupProjectI
 from qiskit_ibm_runtime.apiconstants import QISKIT_IBM_RUNTIME_API_URL
 
 from ..ibm_test_case import IBMTestCase
-from ..decorators import requires_device, requires_qe_access, requires_provider
+from ..decorators import requires_qe_access, requires_provider
 from ..contextmanagers import custom_qiskitrc, no_envs, CREDENTIAL_ENV_VARS
 from ..utils import get_hgp
 

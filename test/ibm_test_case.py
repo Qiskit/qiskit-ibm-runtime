@@ -15,14 +15,10 @@
 import os
 import logging
 import inspect
-import time
-from functools import partialmethod
 
 from qiskit.test.base import BaseQiskitTestCase
 
 from qiskit_ibm_runtime import QISKIT_IBM_RUNTIME_LOGGER_NAME
-from qiskit_ibm_runtime.api.clients.account import AccountClient
-from qiskit_ibm_runtime.apiconstants import ApiJobStatus, API_JOB_FINAL_STATES
 
 from .utils import setup_test_logging
 
@@ -55,11 +51,3 @@ class IBMTestCase(BaseQiskitTestCase):
         if not any(isinstance(handler, logging.StreamHandler) for handler in logger.handlers):
             logger.addHandler(logging.StreamHandler())
             logger.propagate = False
-
-    def setUp(self) -> None:
-        """Test level setup."""
-        super().setUp()
-
-    def tearDown(self) -> None:
-        """Test level tear down."""
-        super().tearDown()
