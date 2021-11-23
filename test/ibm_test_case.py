@@ -15,21 +15,16 @@
 import os
 import logging
 import inspect
-import time
-from functools import partialmethod
 
 from qiskit.test.base import BaseQiskitTestCase
 
 from qiskit_ibm_runtime import QISKIT_IBM_RUNTIME_LOGGER_NAME
-from qiskit_ibm_runtime.api.clients.account import AccountClient
-from qiskit_ibm_runtime.apiconstants import ApiJobStatus, API_JOB_FINAL_STATES
-from qiskit_ibm_runtime.job.exceptions import IBMJobNotFoundError
 
 from .utils import setup_test_logging
 
 
 class IBMTestCase(BaseQiskitTestCase):
-    """Custom TestCase for use with the IBM Provider."""
+    """Custom TestCase for use with the Qiskit IBM Runtime."""
 
     @classmethod
     def setUpClass(cls):
@@ -38,13 +33,6 @@ class IBMTestCase(BaseQiskitTestCase):
         filename = '%s.log' % os.path.splitext(inspect.getfile(cls))[0]
         setup_test_logging(cls.log, filename)
         cls._set_logging_level(logging.getLogger(QISKIT_IBM_RUNTIME_LOGGER_NAME))
-
-    @classmethod
-    def simple_job_callback(cls, job_id, job_status, job, **kwargs):
-        """A callback function that logs current job status."""
-        # pylint: disable=unused-argument
-        queue_info = kwargs.get('queue_info', 'unknown')
-        cls.log.info("Job %s status is %s, queue_info is %s", job_id, job_status, queue_info)
 
     @classmethod
     def _set_logging_level(cls, logger: logging.Logger) -> None:
@@ -63,45 +51,3 @@ class IBMTestCase(BaseQiskitTestCase):
         if not any(isinstance(handler, logging.StreamHandler) for handler in logger.handlers):
             logger.addHandler(logging.StreamHandler())
             logger.propagate = False
-
-    def setUp(self) -> None:
-        """Test level setup."""
-        super().setUp()
-        # Record submitted jobs.
-        self._jobs = []
-        self._saved_submit = AccountClient.job_submit
-        AccountClient.job_submit = partialmethod(self._recorded_submit)
-
-    def tearDown(self) -> None:
-        """Test level tear down."""
-        super().tearDown()
-        failed = False
-        # It's surprisingly difficult to find out whether the test failed.
-        # Using a private attribute is not ideal but it'll have to do.
-        for _, exc_info in self._outcome.errors:
-            if exc_info is not None:
-                failed = True
-
-        if not failed:
-            for client, job_id in self._jobs:
-                try:
-                    job_status = client.job_get(job_id)['status']
-                    if ApiJobStatus(job_status) not in API_JOB_FINAL_STATES:
-                        client.job_cancel(job_id)
-                        time.sleep(1)
-                    retry = 3
-                    while retry > 0:
-                        try:
-                            client.job_delete(job_id)
-                            time.sleep(1)
-                            retry -= 1
-                        except IBMJobNotFoundError:
-                            retry = 0
-                except Exception:  # pylint: disable=broad-except
-                    pass
-
-    def _recorded_submit(self, client, *args, **kwargs):
-        """Record submitted jobs."""
-        submit_info = self._saved_submit(client, *args, **kwargs)
-        self._jobs.append((client, submit_info['job_id']))
-        return submit_info

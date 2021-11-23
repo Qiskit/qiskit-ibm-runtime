@@ -13,22 +13,15 @@
 """Tests for the AccountClient class."""
 
 import re
-import traceback
-from unittest import mock
-from urllib3.connectionpool import HTTPConnectionPool
-from urllib3.exceptions import MaxRetryError
 
 from qiskit.circuit import ClassicalRegister, QuantumCircuit, QuantumRegister
-from qiskit.compiler import assemble, transpile
-from qiskit_ibm_runtime.apiconstants import ApiJobStatus
 from qiskit_ibm_runtime.api.clients import AccountClient, AuthClient
 from qiskit_ibm_runtime.api.exceptions import ApiError, RequestsApiError
-from qiskit_ibm_runtime.utils.utils import RefreshQueue
 
 from ..ibm_test_case import IBMTestCase
 from ..decorators import requires_qe_access, requires_provider
 from ..contextmanagers import custom_envs, no_envs
-from ..http_server import SimpleServer, ServerErrorOnceHandler, ClientErrorHandler
+from ..http_server import SimpleServer, ClientErrorHandler
 
 
 class TestAccountClient(IBMTestCase):
@@ -44,7 +37,7 @@ class TestAccountClient(IBMTestCase):
         cls.hub = hub
         cls.group = group
         cls.project = project
-        default_hgp = cls.service.backend._default_hgp
+        default_hgp = cls.service._default_hgp
         cls.access_token = default_hgp._api_client.account_api.session._access_token
 
     def setUp(self):
@@ -74,7 +67,7 @@ class TestAccountClient(IBMTestCase):
     def _get_client(self):
         """Helper for instantiating an AccountClient."""
         # pylint: disable=no-value-for-parameter
-        return AccountClient(self.service.backend._default_hgp.credentials)
+        return AccountClient(self.service._default_hgp.credentials)
 
     def test_custom_client_app_header(self):
         """Check custom client application header."""
@@ -89,47 +82,6 @@ class TestAccountClient(IBMTestCase):
             client = self._get_client()
             self.assertNotIn(custom_header,
                              client._session.headers['X-Qx-Client-Application'])
-
-    def test_access_token_not_in_exception_traceback(self):
-        """Check that access token is replaced within chained request exceptions."""
-        backend_name = 'ibmq_qasm_simulator'
-        backend = self.service.get_backend(backend_name, hub=self.hub,
-                                           group=self.group, project=self.project)
-        circuit = transpile(self.qc1, backend, seed_transpiler=self.seed)
-        qobj = assemble(circuit, backend, shots=1)
-        client = backend._api_client
-
-        exception_message = 'The access token in this exception ' \
-                            'message should be replaced: {}'.format(self.access_token)
-        exception_traceback_str = ''
-        try:
-            with mock.patch.object(
-                    HTTPConnectionPool,
-                    'urlopen',
-                    side_effect=MaxRetryError(
-                        HTTPConnectionPool('host'), 'url', reason=exception_message)):
-                _ = client.job_submit(backend.name(), qobj.to_dict())
-        except RequestsApiError:
-            exception_traceback_str = traceback.format_exc()
-
-        self.assertTrue(exception_traceback_str)
-        if self.access_token in exception_traceback_str:
-            self.fail('Access token not replaced in request exception traceback.')
-
-    def test_job_submit_retry(self):
-        """Test job submit requests get retried."""
-        client = self._get_client()
-
-        # Send request to local server.
-        valid_data = {'id': 'fake_id',
-                      'objectStorageInfo': {'uploadUrl': SimpleServer.URL},
-                      'job': {'id': 'fake_id'}}
-        self.fake_server = SimpleServer(handler_class=ServerErrorOnceHandler)
-        self.fake_server.set_good_response(valid_data)
-        self.fake_server.start()
-        client.account_api.session.base_url = SimpleServer.URL
-
-        client.job_submit('ibmq_qasm_simulator', {})
 
     def test_client_error(self):
         """Test client error."""
@@ -150,71 +102,6 @@ class TestAccountClient(IBMTestCase):
                     client.backend_status('ibmq_qasm_simulator')
                 if err_resp:
                     self.assertIn('Bad client input', str(err_cm.exception))
-
-
-class TestAccountClientJobs(IBMTestCase):
-    """Tests for AccountClient methods related to jobs.
-
-    This TestCase submits a Job during class invocation, available at
-    ``cls.job``. Tests should inspect that job according to their needs.
-    """
-
-    @classmethod
-    @requires_provider
-    def setUpClass(cls, service, hub, group, project):
-        # pylint: disable=arguments-differ
-        super().setUpClass()
-        cls.service = service
-        cls.hub = hub
-        cls.group = group
-        cls.project = project
-        default_hgp = cls.service.backend._default_hgp
-        cls.access_token = default_hgp._api_client.account_api.session._access_token
-
-        backend_name = 'ibmq_qasm_simulator'
-        backend = cls.service.get_backend(backend_name, hub=cls.hub,
-                                          group=cls.group, project=cls.project)
-        cls.client = backend._api_client
-        cls.job = cls.client.job_submit(
-            backend_name, cls._get_qobj(backend).to_dict())
-        cls.job_id = cls.job['job_id']
-
-    @staticmethod
-    def _get_qobj(backend):
-        """Return a Qobj."""
-        # Create a circuit.
-        qr = QuantumRegister(2)
-        cr = ClassicalRegister(2)
-        qc1 = QuantumCircuit(qr, cr, name='qc1')
-        seed = 73846087
-
-        # Assemble the Qobj.
-        qobj = assemble(transpile([qc1], backend=backend,
-                                  seed_transpiler=seed),
-                        backend=backend, shots=1)
-
-        return qobj
-
-    def test_job_get(self):
-        """Test job_get."""
-        response = self.client.job_get(self.job_id)
-        self.assertIn('status', response)
-
-    def test_job_final_status_polling(self):
-        """Test getting a job's final status via polling."""
-        status_queue = RefreshQueue(maxsize=1)
-        response = self.client._job_final_status_polling(self.job_id, status_queue=status_queue)
-        self.assertEqual(response.pop('status', None), ApiJobStatus.COMPLETED.value)
-        self.assertNotEqual(status_queue.qsize(), 0)
-
-    def test_list_jobs_statuses_skip(self):
-        """Test listing job statuses with an offset."""
-        jobs_raw = self.client.list_jobs_statuses(limit=1, skip=1, extra_filter={
-            'creationDate': {'lte': self.job['creation_date']}})
-
-        # Ensure our job is skipped
-        for job in jobs_raw:
-            self.assertNotEqual(job['job_id'], self.job_id)
 
 
 class TestAuthClient(IBMTestCase):
