@@ -17,7 +17,6 @@ import os
 from unittest import skipIf, mock
 from configparser import ConfigParser
 from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister
-from qiskit.test import providers
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.models.backendproperties import BackendProperties
 
@@ -317,29 +316,23 @@ class TestIBMProviderHubGroupProject(IBMTestCase):
         self.assertIn(self.service._default_hgp, hgps)
 
 
-class TestIBMProviderServices(IBMTestCase, providers.ProviderTestCase):
+class TestIBMProviderServices(IBMTestCase):
     """Tests for services provided by the IBMRuntimeService class."""
 
-    provider_cls = IBMRuntimeService
-    backend_name = 'ibmq_qasm_simulator'
-
-    def setUp(self):
+    @requires_provider
+    def setUp(self, service, hub, group, project):
         """Initial test setup."""
+        # pylint: disable=arguments-differ
         super().setUp()
+        self.service = service
+        self.hub = hub
+        self.group = group
+        self.project = project
         qr = QuantumRegister(1)
         cr = ClassicalRegister(1)
         self.qc1 = QuantumCircuit(qr, cr, name='circuit0')
         self.qc1.h(qr[0])
         self.qc1.measure(qr, cr)
-
-    @requires_provider
-    def _get_provider(self, provider, hub, group, project):
-        """Return an instance of a provider."""
-        # pylint: disable=arguments-differ
-        self.hub = hub
-        self.group = group
-        self.project = project
-        return provider
 
     def test_remote_backends_exist_real_device(self):
         """Test if there are remote backends that are devices."""
@@ -420,7 +413,7 @@ class TestIBMProviderServices(IBMTestCase, providers.ProviderTestCase):
 
     def test_provider_backends(self):
         """Test provider_backends have correct attributes."""
-        provider_backends = {back for back in dir(self.service.backend)
-                             if isinstance(getattr(self.service.backend, back), IBMBackend)}
+        provider_backends = {back for back in dir(self.service)
+                             if isinstance(getattr(self.service, back), IBMBackend)}
         backends = {back.name().lower() for back in self.service._backends.values()}
         self.assertEqual(provider_backends, backends)

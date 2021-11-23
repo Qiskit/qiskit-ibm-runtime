@@ -28,13 +28,13 @@ class TestBackendInfo(IBMTestCase):
 
     @classmethod
     @requires_provider
-    def setUpClass(cls, provider, hub, group, project):
+    def setUpClass(cls, service, hub, group, project):
         # pylint: disable=arguments-differ
         super().setUpClass()
         cls.hub = hub
         cls.group = group
         cls.project = project
-        cls.backends = _get_backends(provider)
+        cls.backends = _get_backends(service)
 
     def test_config_tab(self):
         """Test config tab."""
