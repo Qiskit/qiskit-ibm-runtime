@@ -21,7 +21,7 @@ mypy:
 	mypy --module qiskit_ibm_runtime
 
 style:
-	pycodestyle qiskit_ibm_runtime test
+	black --check qiskit_ibm_runtime test
 
 test:
 	python -m unittest -v
@@ -37,3 +37,6 @@ test3:
 
 runtime_integration:
 	python -m unittest -v test/ibm/runtime/test_runtime_integration.py
+
+black:
+	black qiskit_ibm_runtime test
