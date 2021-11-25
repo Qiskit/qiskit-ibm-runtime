@@ -17,109 +17,131 @@ from qiskit.exceptions import QiskitError
 
 class IBMError(QiskitError):
     """Base class for errors raised by the provider modules."""
+
     pass
 
 
 class IBMProviderError(IBMError):
     """Base class for errors raise by IBMRuntimeService."""
+
     pass
 
 
 class IBMProviderValueError(IBMProviderError):
     """Value errors raised by IBMRuntimeService."""
+
     pass
 
 
 class IBMProviderCredentialsNotFound(IBMProviderError):
     """Errors raised when credentials are not found."""
+
     pass
 
 
 class IBMProviderMultipleCredentialsFound(IBMProviderError):
     """Errors raised when multiple credentials are found."""
+
     pass
 
 
 class IBMProviderCredentialsInvalidFormat(IBMProviderError):
     """Errors raised when the credentials format is invalid."""
+
     pass
 
 
 class IBMProviderCredentialsInvalidToken(IBMProviderError):
     """Errors raised when an IBM Quantum token is invalid."""
+
     pass
 
 
 class IBMProviderCredentialsInvalidUrl(IBMProviderError):
     """Errors raised when an IBM Quantum URL is invalid."""
+
     pass
 
 
 class IBMBackendError(IBMError):
     """Base class for errors raised by the backend modules."""
+
     pass
 
 
 class IBMBackendApiError(IBMBackendError):
     """Errors that occur unexpectedly when querying the server."""
+
     pass
 
 
 class IBMBackendApiProtocolError(IBMBackendApiError):
     """Errors raised when an unexpected value is received from the server."""
+
     pass
 
 
 class IBMBackendValueError(IBMBackendError, ValueError):
     """Value errors raised by the backend modules."""
+
     pass
 
 
 class IBMBackendJobLimitError(IBMBackendError):
     """Errors raised when job limit is reached."""
+
     pass
 
 
 class IBMInputValueError(IBMError):
     """Error raised due to invalid input value."""
+
     pass
 
 
 class IBMNotAuthorizedError(IBMError):
     """Error raised when a service is invoked from an unauthorized account."""
+
     pass
 
 
 class IBMApiError(IBMError):
     """Error raised when a server error encountered."""
+
     pass
 
 
 class QiskitRuntimeError(IBMError):
     """Base class for errors raised by the runtime service modules."""
+
     pass
 
 
 class RuntimeDuplicateProgramError(QiskitRuntimeError):
     """Error raised when a program being uploaded already exists."""
+
     pass
 
 
 class RuntimeProgramNotFound(QiskitRuntimeError):
     """Error raised when a program is not found."""
+
     pass
 
 
 class RuntimeJobFailureError(QiskitRuntimeError):
     """Error raised when a runtime job failed."""
+
     pass
 
 
 class RuntimeJobNotFound(QiskitRuntimeError):
     """Error raised when a job is not found."""
+
     pass
 
 
 class RuntimeInvalidStateError(QiskitRuntimeError):
     """Errors raised when the state is not valid for the operation."""
+
     pass

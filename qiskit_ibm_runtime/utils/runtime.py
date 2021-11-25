@@ -30,12 +30,17 @@ import numpy as np
 
 try:
     import scipy.sparse
+
     HAS_SCIPY = True
 except ImportError:
     HAS_SCIPY = False
 
-from qiskit.circuit import (Instruction, ParameterExpression, QuantumCircuit,
-                            qpy_serialization)
+from qiskit.circuit import (
+    Instruction,
+    ParameterExpression,
+    QuantumCircuit,
+    qpy_serialization,
+)
 from qiskit.circuit.library import BlueprintCircuit
 from qiskit.result import Result
 
@@ -49,14 +54,11 @@ def to_base64_string(data: str) -> str:
     Returns:
         data as base64 string
     """
-    return base64.b64encode(data.encode('utf-8')).decode('utf-8')
+    return base64.b64encode(data.encode("utf-8")).decode("utf-8")
 
 
 def _serialize_and_encode(
-        data: Any,
-        serializer: Callable,
-        compress: bool = True,
-        **kwargs: Any
+    data: Any, serializer: Callable, compress: bool = True, **kwargs: Any
 ) -> str:
     """Serialize the input data and return the encoded string.
 
@@ -79,7 +81,9 @@ def _serialize_and_encode(
     return base64.standard_b64encode(serialized_data).decode("utf-8")
 
 
-def _decode_and_deserialize(data: str, deserializer: Callable, decompress: bool = True) -> Any:
+def _decode_and_deserialize(
+    data: str, deserializer: Callable, decompress: bool = True
+) -> Any:
     """Decode and deserialize input data.
 
     Args:
@@ -134,7 +138,7 @@ def _set_int_keys_flag(obj: Dict) -> Union[Dict, List]:
     if isinstance(obj, dict):
         for k, v in list(obj.items()):
             if isinstance(k, int):
-                obj['__int_keys__'] = True
+                obj["__int_keys__"] = True
             _set_int_keys_flag(v)
     return obj
 
@@ -151,7 +155,7 @@ def _cast_strings_keys_to_int(obj: Dict) -> Dict:
     if isinstance(obj, dict):
         int_keys: List[int] = []
         for k, v in list(obj.items()):
-            if '__int_keys__' in obj:
+            if "__int_keys__" in obj:
                 try:
                     int_keys.append(int(k))
                 except ValueError:
@@ -161,8 +165,8 @@ def _cast_strings_keys_to_int(obj: Dict) -> Dict:
             key = int_keys.pop()
             obj[key] = obj[str(key)]
             obj.pop(str(key))
-        if '__int_keys__' in obj:
-            del obj['__int_keys__']
+        if "__int_keys__" in obj:
+            del obj["__int_keys__"]
     return obj
 
 
@@ -171,49 +175,56 @@ class RuntimeEncoder(json.JSONEncoder):
 
     def default(self, obj: Any) -> Any:  # pylint: disable=arguments-differ
         if isinstance(obj, date):
-            return {'__type__': 'datetime', '__value__': obj.isoformat()}
+            return {"__type__": "datetime", "__value__": obj.isoformat()}
         if isinstance(obj, complex):
-            return {'__type__': 'complex', '__value__': [obj.real, obj.imag]}
+            return {"__type__": "complex", "__value__": [obj.real, obj.imag]}
         if isinstance(obj, np.ndarray):
             value = _serialize_and_encode(obj, np.save, allow_pickle=False)
-            return {'__type__': 'ndarray', '__value__': value}
+            return {"__type__": "ndarray", "__value__": value}
         if isinstance(obj, set):
-            return {'__type__': 'set', '__value__': list(obj)}
+            return {"__type__": "set", "__value__": list(obj)}
         if isinstance(obj, Result):
-            return {'__type__': 'Result', '__value__': obj.to_dict()}
-        if hasattr(obj, 'to_json'):
-            return {'__type__': 'to_json', '__value__': obj.to_json()}
+            return {"__type__": "Result", "__value__": obj.to_dict()}
+        if hasattr(obj, "to_json"):
+            return {"__type__": "to_json", "__value__": obj.to_json()}
         if isinstance(obj, QuantumCircuit):
             # TODO Remove the decompose when terra 6713 is released.
             if isinstance(obj, BlueprintCircuit):
                 obj = obj.decompose()
             value = _serialize_and_encode(
                 data=obj,
-                serializer=lambda buff, data: qpy_serialization.dump(data, buff)
+                serializer=lambda buff, data: qpy_serialization.dump(data, buff),
             )
-            return {'__type__': 'QuantumCircuit', '__value__': value}
+            return {"__type__": "QuantumCircuit", "__value__": value}
         if isinstance(obj, ParameterExpression):
             value = _serialize_and_encode(
                 data=obj,
                 serializer=qpy_serialization._write_parameter_expression,
                 compress=False,
             )
-            return {'__type__': 'ParameterExpression', '__value__': value}
+            return {"__type__": "ParameterExpression", "__value__": value}
         if isinstance(obj, Instruction):
             value = _serialize_and_encode(
-                data=obj, serializer=qpy_serialization._write_instruction, compress=False)
-            return {'__type__': 'Instruction', '__value__': value}
+                data=obj,
+                serializer=qpy_serialization._write_instruction,
+                compress=False,
+            )
+            return {"__type__": "Instruction", "__value__": value}
         if hasattr(obj, "settings"):
-            return {'__type__': 'settings',
-                    '__module__': obj.__class__.__module__,
-                    '__class__': obj.__class__.__name__,
-                    '__value__': _set_int_keys_flag(copy.deepcopy(obj.settings))}
+            return {
+                "__type__": "settings",
+                "__module__": obj.__class__.__module__,
+                "__class__": obj.__class__.__name__,
+                "__value__": _set_int_keys_flag(copy.deepcopy(obj.settings)),
+            }
         if callable(obj):
-            warnings.warn(f"Callable {obj} is not JSON serializable and will be set to None.")
+            warnings.warn(
+                f"Callable {obj} is not JSON serializable and will be set to None."
+            )
             return None
         if HAS_SCIPY and isinstance(obj, scipy.sparse.spmatrix):
             value = _serialize_and_encode(obj, scipy.sparse.save_npz, compress=False)
-            return {'__type__': 'spmatrix', '__value__': value}
+            return {"__type__": "spmatrix", "__value__": value}
         return super().default(obj)
 
 
@@ -225,36 +236,38 @@ class RuntimeDecoder(json.JSONDecoder):
 
     def object_hook(self, obj: Any) -> Any:
         """Called to decode object."""
-        if '__type__' in obj:
-            obj_type = obj['__type__']
-            obj_val = obj['__value__']
+        if "__type__" in obj:
+            obj_type = obj["__type__"]
+            obj_val = obj["__value__"]
 
-            if obj_type == 'datetime':
+            if obj_type == "datetime":
                 return dateutil.parser.parse(obj_val)
-            if obj_type == 'complex':
+            if obj_type == "complex":
                 return obj_val[0] + 1j * obj_val[1]
-            if obj_type == 'ndarray':
+            if obj_type == "ndarray":
                 return _decode_and_deserialize(obj_val, np.load)
-            if obj_type == 'set':
+            if obj_type == "set":
                 return set(obj_val)
-            if obj_type == 'QuantumCircuit':
+            if obj_type == "QuantumCircuit":
                 return _decode_and_deserialize(obj_val, qpy_serialization.load)[0]
-            if obj_type == 'ParameterExpression':
+            if obj_type == "ParameterExpression":
                 return _decode_and_deserialize(
-                    obj_val, qpy_serialization._read_parameter_expression, False)
-            if obj_type == 'Instruction':
-                return _decode_and_deserialize(
-                    obj_val, qpy_serialization._read_instruction, False)
-            if obj_type == 'settings':
-                return deserialize_from_settings(
-                    mod_name=obj['__module__'],
-                    class_name=obj['__class__'],
-                    settings=_cast_strings_keys_to_int(obj_val)
+                    obj_val, qpy_serialization._read_parameter_expression, False
                 )
-            if obj_type == 'Result':
+            if obj_type == "Instruction":
+                return _decode_and_deserialize(
+                    obj_val, qpy_serialization._read_instruction, False
+                )
+            if obj_type == "settings":
+                return deserialize_from_settings(
+                    mod_name=obj["__module__"],
+                    class_name=obj["__class__"],
+                    settings=_cast_strings_keys_to_int(obj_val),
+                )
+            if obj_type == "Result":
                 return Result.from_dict(obj_val)
-            if obj_type == 'spmatrix':
+            if obj_type == "spmatrix":
                 return _decode_and_deserialize(obj_val, scipy.sparse.load_npz, False)
-            if obj_type == 'to_json':
+            if obj_type == "to_json":
                 return obj_val
         return obj

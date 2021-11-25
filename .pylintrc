@@ -74,7 +74,8 @@ disable=no-self-use,        # disabled as it is too verbose
     import-outside-toplevel,
     docstring-first-line-empty,
     no-name-in-module,  # remove when pylint behaves
-    import-error    # remove when pylint behaves
+    import-error,    # remove when pylint behaves
+    bad-continuation, bad-whitespace # differences of opinion with black
 
 
 [REPORTS]
@@ -212,7 +213,7 @@ max-nested-blocks=5
 [FORMAT]
 
 # Maximum number of characters on a single line.
-max-line-length=100
+max-line-length=105
 
 # Regexp for a line that is allowed to be longer than the limit.
 ignore-long-lines=^\s*(# )?<?https?://\S+>?$

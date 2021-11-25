@@ -16,16 +16,16 @@ from qiskit.providers.jobstatus import JobStatus
 
 
 API_TO_JOB_STATUS = {
-    'QUEUED': JobStatus.QUEUED,
-    'RUNNING': JobStatus.RUNNING,
-    'COMPLETED': JobStatus.DONE,
-    'FAILED': JobStatus.ERROR,
-    'CANCELLED': JobStatus.CANCELLED,
-    'CANCELLED - RAN TOO LONG': JobStatus.ERROR
+    "QUEUED": JobStatus.QUEUED,
+    "RUNNING": JobStatus.RUNNING,
+    "COMPLETED": JobStatus.DONE,
+    "FAILED": JobStatus.ERROR,
+    "CANCELLED": JobStatus.CANCELLED,
+    "CANCELLED - RAN TOO LONG": JobStatus.ERROR,
 }
 
 API_TO_JOB_ERROR_MESSAGE = {
-    'FAILED': 'Job {} has failed:\n{}',
-    'CANCELLED - RAN TOO LONG': 'Job {} ran longer than maximum execution time. '
-                                'Job was cancelled:\n{}'
+    "FAILED": "Job {} has failed:\n{}",
+    "CANCELLED - RAN TOO LONG": "Job {} ran longer than maximum execution time. "
+    "Job was cancelled:\n{}",
 }

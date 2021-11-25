@@ -33,11 +33,14 @@ class TestBasicServerPaths(IBMTestCase):
     def test_device_properties_and_defaults(self):
         """Test the properties and defaults for an open pulse device."""
         for desc, hgp in self.hgps.items():
-            pulse_backends = self.service.backends(open_pulse=True, operational=True,
-                                                   **hgp)
+            pulse_backends = self.service.backends(
+                open_pulse=True, operational=True, **hgp
+            )
             if not pulse_backends:
-                raise self.skipTest('Skipping pulse test since no pulse backend '
-                                    'found for "{}"'.format(desc))
+                raise self.skipTest(
+                    "Skipping pulse test since no pulse backend "
+                    'found for "{}"'.format(desc)
+                )
 
             pulse_backend = pulse_backends[0]
             with self.subTest(desc=desc, backend=pulse_backend):
@@ -51,6 +54,6 @@ class TestBasicServerPaths(IBMTestCase):
             with self.subTest(desc=desc, backend=backend):
                 self.assertTrue(backend.status())
                 job_limit = backend.job_limit()
-                if desc == 'open_hgp':
+                if desc == "open_hgp":
                     self.assertIsNotNone(job_limit.maximum_jobs)
                 self.assertTrue(job_limit)

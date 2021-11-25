@@ -25,10 +25,10 @@ class UserMessenger:
     """
 
     def publish(
-            self,
-            message: Any,
-            encoder: Type[json.JSONEncoder] = RuntimeEncoder,
-            final: bool = False
+        self,
+        message: Any,
+        encoder: Type[json.JSONEncoder] = RuntimeEncoder,
+        final: bool = False,
     ) -> None:
         """Publish message.
 

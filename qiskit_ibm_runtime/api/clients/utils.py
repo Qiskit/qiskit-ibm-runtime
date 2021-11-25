@@ -32,29 +32,37 @@ def ws_proxy_params(credentials: Credentials, ws_url: str) -> Dict:
     out = {}
 
     if "proxies" in conn_data:
-        proxies = conn_data['proxies']
+        proxies = conn_data["proxies"]
         url_parts = urlparse(ws_url)
         proxy_keys = [
             ws_url,
-            'wss',
-            'https://' + url_parts.hostname,
-            'https',
-            'all://' + url_parts.hostname,
-            'all'
+            "wss",
+            "https://" + url_parts.hostname,
+            "https",
+            "all://" + url_parts.hostname,
+            "all",
         ]
         for key in proxy_keys:
             if key in proxies:
                 proxy_parts = urlparse(proxies[key], scheme="http")
-                out['http_proxy_host'] = proxy_parts.hostname
-                out['http_proxy_port'] = proxy_parts.port
-                out['proxy_type'] = \
-                    "http" if proxy_parts.scheme.startswith("http") else proxy_parts.scheme
+                out["http_proxy_host"] = proxy_parts.hostname
+                out["http_proxy_port"] = proxy_parts.port
+                out["proxy_type"] = (
+                    "http"
+                    if proxy_parts.scheme.startswith("http")
+                    else proxy_parts.scheme
+                )
                 if proxy_parts.username and proxy_parts.password:
-                    out['http_proxy_auth'] = (proxy_parts.username, proxy_parts.password)
+                    out["http_proxy_auth"] = (
+                        proxy_parts.username,
+                        proxy_parts.password,
+                    )
                 break
 
     if "auth" in conn_data:
-        out['http_proxy_auth'] = (credentials.proxies['username_ntlm'],
-                                  credentials.proxies['password_ntlm'])
+        out["http_proxy_auth"] = (
+            credentials.proxies["username_ntlm"],
+            credentials.proxies["password_ntlm"],
+        )
 
     return out

@@ -26,13 +26,12 @@ class RunnerResult(Result, ResultDecoder):
     """Result class for Qiskit Runtime program circuit-runner."""
 
     @classmethod
-    def decode(cls, data: str) -> 'RunnerResult':
+    def decode(cls, data: str) -> "RunnerResult":
         """Decoding for results from Qiskit runtime jobs."""
         return cls.from_dict(json.loads(data))
 
     def get_quasiprobabilities(
-            self,
-            experiment: Union[int, List] = None
+        self, experiment: Union[int, List] = None
     ) -> Union[QuasiDistribution, List[QuasiDistribution]]:
         """Get quasiprobabilites associated with one or more experiments.
 
@@ -52,7 +51,7 @@ class RunnerResult(Result, ResultDecoder):
 
         dict_list = []
         for key in exp_keys:
-            if 'quasiprobabilities' in self.data(key).keys():
+            if "quasiprobabilities" in self.data(key).keys():
                 shots = self.results[key].shots
                 hex_quasi = self.results[key].data.quasiprobabilities
                 bit_lenth = len(self.results[key].header.final_measurement_mapping)
@@ -64,7 +63,9 @@ class RunnerResult(Result, ResultDecoder):
                 out.shots = shots
                 dict_list.append(out)
             else:
-                raise QiskitError('No quasiprobabilities for experiment "{}"'.format(repr(key)))
+                raise QiskitError(
+                    'No quasiprobabilities for experiment "{}"'.format(repr(key))
+                )
 
         # Return first item of dict_list if size is 1
         if len(dict_list) == 1:

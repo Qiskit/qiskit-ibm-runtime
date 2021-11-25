@@ -17,24 +17,29 @@ from ..exceptions import IBMError
 
 class CredentialsError(IBMError):
     """Base class for errors raised during credential management."""
+
     pass
 
 
 class InvalidCredentialsFormatError(CredentialsError):
     """Errors raised when the credentials are in an invalid format."""
+
     pass
 
 
 class CredentialsNotFoundError(CredentialsError):
     """Errors raised when the credentials are not found."""
+
     pass
 
 
 class HubGroupProjectIDError(IBMError):
     """Base class for errors raised by the hub_group_project_id module."""
+
     pass
 
 
 class HubGroupProjectIDInvalidStateError(HubGroupProjectIDError):
     """Errors raised when a HubGroupProjectID is in an invalid state for an operation."""
+
     pass

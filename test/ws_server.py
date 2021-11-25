@@ -26,7 +26,7 @@ import websockets
 class MockWsServer:
     """Local websocket server for testing."""
 
-    WS_IP_ADDRESS = '127.0.0.1'
+    WS_IP_ADDRESS = "127.0.0.1"
     WS_PORT = 8765
     WS_INVALID_PORT = 9876
     VALID_WS_URL = f"ws://{WS_IP_ADDRESS}:{WS_PORT}"
@@ -43,7 +43,9 @@ class MockWsServer:
     def start(self):
         """Start the server."""
         start_event = threading.Event()
-        self._ws_future = self._executor.submit(self._server_thread, start_event=start_event)
+        self._ws_future = self._executor.submit(
+            self._server_thread, start_event=start_event
+        )
         start_event.wait(5)
         if not start_event.is_set():
             raise RuntimeError("Unable to start websocket server")
@@ -91,8 +93,13 @@ class MockWsServer:
             except Exception as err:  # pylint: disable=broad-except
                 self.logger.error(
                     "An error occurred canceling task %s: %s",
-                    str(task), "".join(traceback.format_exception(
-                        type(err), err, getattr(err, '__traceback__', ""))))
+                    str(task),
+                    "".join(
+                        traceback.format_exception(
+                            type(err), err, getattr(err, "__traceback__", "")
+                        )
+                    ),
+                )
 
         self.logger.debug("Finish shutting down mock websocket server.")
 
