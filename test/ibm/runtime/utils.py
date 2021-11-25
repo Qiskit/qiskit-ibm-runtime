@@ -19,10 +19,12 @@ from qiskit_ibm_runtime import ResultDecoder
 
 def get_complex_types():
     """Return a dictionary with values of more complicated types."""
-    return {"string": "foo",
-            "float": 1.5,
-            "complex": 2+3j,
-            "serializable_class": SerializableClass("foo")}
+    return {
+        "string": "foo",
+        "float": 1.5,
+        "complex": 2 + 3j,
+        "serializable_class": SerializableClass("foo"),
+    }
 
 
 class SerializableClass:
@@ -51,9 +53,10 @@ class SerializableClassDecoder(ResultDecoder):
     def decode(cls, data):
         """Decode input data."""
         decoded = super().decode(data)
-        if 'serializable_class' in decoded:
-            decoded['serializable_class'] = \
-                SerializableClass.from_json(decoded['serializable_class'])
+        if "serializable_class" in decoded:
+            decoded["serializable_class"] = SerializableClass.from_json(
+                decoded["serializable_class"]
+            )
         return decoded
 
 

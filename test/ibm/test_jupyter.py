@@ -52,8 +52,8 @@ class TestBackendInfo(IBMTestCase):
             with self.subTest(backend=backend):
                 tab_str = str(qubits_tab(backend))
                 props = backend.properties().to_dict()
-                q0_t1 = round(props['qubits'][0][0]['value'], 3)
-                q0_t2 = round(props['qubits'][0][1]['value'], 3)
+                q0_t1 = round(props["qubits"][0][0]["value"], 3)
+                q0_t2 = round(props["qubits"][0][1]["value"], 3)
                 self.assertIn(str(q0_t1), tab_str)
                 self.assertIn(str(q0_t2), tab_str)
 
@@ -88,7 +88,9 @@ class TestIBMDashboard(IBMTestCase):
         """Test devices tab."""
         for backend in self.backends:
             with self.subTest(backend=backend):
-                provider_str = "{}/{}/{}".format(backend.hub, backend.group, backend.project)
+                provider_str = "{}/{}/{}".format(
+                    backend.hub, backend.group, backend.project
+                )
                 b_w_p = BackendWithProviders(backend=backend, providers=[provider_str])
                 make_backend_widget(b_w_p)
 
@@ -99,7 +101,8 @@ def _get_backends(service):
     n_qubits = [1, 5]
     for n_qb in n_qubits:
         filtered_backends = service.backends(
-            operational=True, simulator=False, n_qubits=n_qb)
+            operational=True, simulator=False, n_qubits=n_qb
+        )
         if filtered_backends:
             backends.append(filtered_backends[0])
     return backends

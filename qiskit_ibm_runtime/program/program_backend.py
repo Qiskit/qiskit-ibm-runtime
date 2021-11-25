@@ -33,11 +33,12 @@ class ProgramBackend(Backend, ABC):
 
     @abstractmethod
     def run(
-            self,
-            circuits: Union[QuantumCircuit, Schedule,
-                            List[Union[QuantumCircuit, Schedule]]],
-            timeout: Optional[int] = None,
-            **run_config: Dict
+        self,
+        circuits: Union[
+            QuantumCircuit, Schedule, List[Union[QuantumCircuit, Schedule]]
+        ],
+        timeout: Optional[int] = None,
+        **run_config: Dict
     ) -> Job:
         """Run on the backend.
 

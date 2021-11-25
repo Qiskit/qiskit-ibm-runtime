@@ -14,5 +14,5 @@
 
 from collections import namedtuple
 
-BackendWithProviders = namedtuple('BackendWithProviders', ['backend', 'providers'])
+BackendWithProviders = namedtuple("BackendWithProviders", ["backend", "providers"])
 """Named tuple used to pass a backend and its providers."""

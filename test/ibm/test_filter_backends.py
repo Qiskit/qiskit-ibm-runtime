@@ -43,8 +43,13 @@ class TestBackendFilters(IBMTestCase):
         # Use the default backend as a reference for the filter.
         n_qubits = backend.configuration().n_qubits
 
-        filtered_backends = self.service.backends(n_qubits=n_qubits, local=False, hub=self.hub,
-                                                  group=self.group, project=self.project)
+        filtered_backends = self.service.backends(
+            n_qubits=n_qubits,
+            local=False,
+            hub=self.hub,
+            group=self.group,
+            project=self.project,
+        )
 
         self.assertTrue(filtered_backends)
         for filtered_backend in filtered_backends[:5]:
@@ -56,8 +61,12 @@ class TestBackendFilters(IBMTestCase):
         """Test filtering by dictionary of mixed status/configuration properties."""
         filtered_backends = self.service.backends(
             operational=True,  # from status
-            local=False, simulator=True,  # from configuration
-            hub=self.hub, group=self.group, project=self.project)
+            local=False,
+            simulator=True,  # from configuration
+            hub=self.hub,
+            group=self.group,
+            project=self.project,
+        )
 
         self.assertTrue(filtered_backends)
         for backend in filtered_backends[:5]:
@@ -69,9 +78,13 @@ class TestBackendFilters(IBMTestCase):
     def test_filter_config_callable(self):
         """Test filtering by lambda function on configuration properties."""
         filtered_backends = self.service.backends(
-            filters=lambda x: (not x.configuration().simulator
-                               and x.configuration().n_qubits >= 5),
-            hub=self.hub, group=self.group, project=self.project)
+            filters=lambda x: (
+                not x.configuration().simulator and x.configuration().n_qubits >= 5
+            ),
+            hub=self.hub,
+            group=self.group,
+            project=self.project,
+        )
 
         self.assertTrue(filtered_backends)
         for backend in filtered_backends[:5]:
@@ -81,16 +94,23 @@ class TestBackendFilters(IBMTestCase):
 
     def test_filter_least_busy(self):
         """Test filtering by least busy function."""
-        backends = self.service.backends(hub=self.hub, group=self.group, project=self.project)
+        backends = self.service.backends(
+            hub=self.hub, group=self.group, project=self.project
+        )
         least_busy_backend = least_busy(backends)
         self.assertTrue(least_busy_backend)
 
     def test_filter_least_busy_reservation(self):
         """Test filtering by least busy function, with reservations."""
         backend = reservations = None
-        for backend in self.service.backends(simulator=False, operational=True,
-                                             status_msg='active', hub=self.hub,
-                                             group=self.group, project=self.project):
+        for backend in self.service.backends(
+            simulator=False,
+            operational=True,
+            status_msg="active",
+            hub=self.hub,
+            group=self.group,
+            project=self.project,
+        ):
             reservations = backend.reservations()
             if reservations:
                 break
@@ -108,9 +128,14 @@ class TestBackendFilters(IBMTestCase):
         self.assertEqual(least_busy([backend], None), backend)
 
         backs = [backend]
-        for back in self.service.backends(simulator=False, operational=True,
-                                          status_msg='active', hub=self.hub,
-                                          group=self.group, project=self.project):
+        for back in self.service.backends(
+            simulator=False,
+            operational=True,
+            status_msg="active",
+            hub=self.hub,
+            group=self.group,
+            project=self.project,
+        ):
             if back.name() != backend.name():
                 backs.append(back)
                 break
@@ -118,26 +143,32 @@ class TestBackendFilters(IBMTestCase):
 
     def test_filter_least_busy_paused(self):
         """Test filtering by least busy function, with paused backend."""
-        backends = self.service.backends(hub=self.hub, group=self.group, project=self.project)
+        backends = self.service.backends(
+            hub=self.hub, group=self.group, project=self.project
+        )
         if len(backends) < 2:
             self.skipTest("Test needs at least 2 backends.")
         paused_backend = backends[0]
         paused_status = paused_backend.status()
-        paused_status.status_msg = 'internal'
+        paused_status.status_msg = "internal"
         paused_status.pending_jobs = 0
         paused_backend.status = mock.MagicMock(return_value=paused_status)
 
         least_busy_backend = least_busy(backends)
         self.assertTrue(least_busy_backend)
         self.assertNotEqual(least_busy_backend.name(), paused_backend.name())
-        self.assertEqual(least_busy_backend.status().status_msg, 'active')
+        self.assertEqual(least_busy_backend.status().status_msg, "active")
 
     def test_filter_min_num_qubits(self):
         """Test filtering by minimum number of qubits."""
         filtered_backends = self.service.backends(
-            min_num_qubits=5, simulator=False,
+            min_num_qubits=5,
+            simulator=False,
             filters=lambda b: b.configuration().quantum_volume >= 10,
-            hub=self.hub, group=self.group, project=self.project)
+            hub=self.hub,
+            group=self.group,
+            project=self.project,
+        )
 
         self.assertTrue(filtered_backends)
         for backend in filtered_backends[:5]:
@@ -147,14 +178,20 @@ class TestBackendFilters(IBMTestCase):
 
     def test_filter_input_allowed(self):
         """Test filtering by input allowed"""
-        subtests = ('job', ['job'], ['job', 'runtime'])
+        subtests = ("job", ["job"], ["job", "runtime"])
 
         for input_type in subtests:
             with self.subTest(input_type=input_type):
-                filtered = self.service.backends(input_allowed=input_type, hub=self.hub,
-                                                 group=self.group, project=self.project)
+                filtered = self.service.backends(
+                    input_allowed=input_type,
+                    hub=self.hub,
+                    group=self.group,
+                    project=self.project,
+                )
                 self.assertTrue(filtered)
                 if not isinstance(input_type, list):
                     input_type = [input_type]
                 for backend in filtered[:5]:
-                    self.assertTrue(set(input_type) <= set(backend.configuration().input_allowed))
+                    self.assertTrue(
+                        set(input_type) <= set(backend.configuration().input_allowed)
+                    )

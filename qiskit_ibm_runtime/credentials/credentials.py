@@ -21,12 +21,12 @@ from .hub_group_project_id import HubGroupProjectID
 
 
 REGEX_IBM_HUBS = (
-    '(?P<prefix>http[s]://.+/api)'
-    '/Hubs/(?P<hub>[^/]+)/Groups/(?P<group>[^/]+)/Projects/(?P<project>[^/]+)'
+    "(?P<prefix>http[s]://.+/api)"
+    "/Hubs/(?P<hub>[^/]+)/Groups/(?P<group>[^/]+)/Projects/(?P<project>[^/]+)"
 )
 """str: Regex that matches an IBM Quantum URL with hub information."""
 
-TEMPLATE_IBM_HUBS = '{prefix}/Network/{hub}/Groups/{group}/Projects/{project}'
+TEMPLATE_IBM_HUBS = "{prefix}/Network/{hub}/Groups/{group}/Projects/{project}"
 """str: Template for creating an IBM Quantum URL with hub/group/project information."""
 
 
@@ -39,20 +39,20 @@ class Credentials:
     """
 
     def __init__(
-            self,
-            token: str,
-            url: str,
-            auth_url: Optional[str] = None,
-            websockets_url: Optional[str] = None,
-            hub: Optional[str] = None,
-            group: Optional[str] = None,
-            project: Optional[str] = None,
-            proxies: Optional[Dict] = None,
-            verify: bool = True,
-            services: Optional[Dict] = None,
-            access_token: Optional[str] = None,
-            preferences: Optional[Dict] = None,
-            default_provider: Optional[HubGroupProjectID] = None,
+        self,
+        token: str,
+        url: str,
+        auth_url: Optional[str] = None,
+        websockets_url: Optional[str] = None,
+        hub: Optional[str] = None,
+        group: Optional[str] = None,
+        project: Optional[str] = None,
+        proxies: Optional[Dict] = None,
+        verify: bool = True,
+        services: Optional[Dict] = None,
+        access_token: Optional[str] = None,
+        preferences: Optional[Dict] = None,
+        default_provider: Optional[HubGroupProjectID] = None,
     ) -> None:
         """Credentials constructor.
 
@@ -74,9 +74,13 @@ class Credentials:
         """
         self.token = token
         self.access_token = access_token
-        (self.url, self.base_url,
-         self.hub, self.group, self.project) = _unify_ibm_quantum_url(
-             url, hub, group, project)
+        (
+            self.url,
+            self.base_url,
+            self.hub,
+            self.group,
+            self.project,
+        ) = _unify_ibm_quantum_url(url, hub, group, project)
         self.auth_url = auth_url or url
         self.websockets_url = websockets_url
         self.proxies = proxies or {}
@@ -86,9 +90,9 @@ class Credentials:
 
         # Initialize additional service URLs.
         services = services or {}
-        self.extractor_url = services.get('extractorsService', None)
-        self.experiment_url = services.get('resultsDB', None)
-        self.runtime_url = services.get('runtime', None)
+        self.extractor_url = services.get("extractorsService", None)
+        self.experiment_url = services.get("resultsDB", None)
+        self.runtime_url = services.get("runtime", None)
 
     def is_ibm_quantum(self) -> bool:
         """Return whether the credentials represent an IBM Quantum account."""
@@ -118,28 +122,25 @@ class Credentials:
             expected by ``requests``. The following keys can be present:
             ``proxies``, ``verify``, and ``auth``.
         """
-        request_kwargs = {
-            'verify': self.verify
-        }
+        request_kwargs = {"verify": self.verify}
 
         if self.proxies:
-            if 'urls' in self.proxies:
-                request_kwargs['proxies'] = self.proxies['urls']
+            if "urls" in self.proxies:
+                request_kwargs["proxies"] = self.proxies["urls"]
 
-            if 'username_ntlm' in self.proxies and 'password_ntlm' in self.proxies:
-                request_kwargs['auth'] = HttpNtlmAuth(
-                    self.proxies['username_ntlm'],
-                    self.proxies['password_ntlm']
+            if "username_ntlm" in self.proxies and "password_ntlm" in self.proxies:
+                request_kwargs["auth"] = HttpNtlmAuth(
+                    self.proxies["username_ntlm"], self.proxies["password_ntlm"]
                 )
 
         return request_kwargs
 
 
 def _unify_ibm_quantum_url(
-        url: str,
-        hub: Optional[str] = None,
-        group: Optional[str] = None,
-        project: Optional[str] = None
+    url: str,
+    hub: Optional[str] = None,
+    group: Optional[str] = None,
+    project: Optional[str] = None,
 ) -> Tuple[str, str, Optional[str], Optional[str], Optional[str]]:
     """Return a new-style set of credential values (url and hub parameters).
 
@@ -169,8 +170,9 @@ def _unify_ibm_quantum_url(
     else:
         if hub and group and project:
             # Assume it is an IBM Quantum URL, and update the url.
-            url = TEMPLATE_IBM_HUBS.format(prefix=url, hub=hub, group=group,
-                                           project=project)
+            url = TEMPLATE_IBM_HUBS.format(
+                prefix=url, hub=hub, group=group, project=project
+            )
         else:
             # Cleanup the hub, group and project, without modifying the url.
             hub = group = project = None

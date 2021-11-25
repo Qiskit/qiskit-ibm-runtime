@@ -30,9 +30,7 @@ from .utils import BackendWithProviders
 class AccordionWithThread(wid.Accordion):
     """An ``Accordion`` that will close an attached thread."""
 
-    def __init__(self,
-                 children: Optional[List] = None,
-                 **kwargs: Any):
+    def __init__(self, children: Optional[List] = None, **kwargs: Any):
         """AccordionWithThread constructor.
 
         Args:
@@ -47,7 +45,7 @@ class AccordionWithThread(wid.Accordion):
 
     def __del__(self):
         """Object disposal."""
-        if hasattr(self, '_thread'):
+        if hasattr(self, "_thread"):
             try:
                 self._thread.do_run = False
                 self._thread.join()
@@ -56,8 +54,7 @@ class AccordionWithThread(wid.Accordion):
         self.close()
 
 
-def _add_device_to_list(backend: BackendWithProviders,
-                        device_list: wid.VBox) -> None:
+def _add_device_to_list(backend: BackendWithProviders, device_list: wid.VBox) -> None:
     """Add the backend to the device list widget.
 
     Args:
@@ -90,14 +87,17 @@ class IBMDashboard(Subscriber):
 
         ibm_backends = {}
         for pro in self.service._get_hgps():
-            pro_name = "{hub}/{group}/{project}".format(hub=pro.credentials.hub,
-                                                        group=pro.credentials.group,
-                                                        project=pro.credentials.project)
+            pro_name = "{hub}/{group}/{project}".format(
+                hub=pro.credentials.hub,
+                group=pro.credentials.group,
+                project=pro.credentials.project,
+            )
             for back in pro.backends():
                 if not back.configuration().simulator:
                     if back.name() not in ibm_backends.keys():
-                        ibm_backends[back.name()] = \
-                            BackendWithProviders(backend=back, providers=[pro_name])
+                        ibm_backends[back.name()] = BackendWithProviders(
+                            backend=back, providers=[pro_name]
+                        )
                     else:
                         ibm_backends[back.name()].providers.append(pro_name)
 
@@ -109,8 +109,9 @@ class IBMDashboard(Subscriber):
             _wid.close()
         self.dashboard._device_list.children = []
         for back in self.backend_dict.values():
-            _thread = threading.Thread(target=_add_device_to_list,
-                                       args=(back, self.dashboard._device_list))
+            _thread = threading.Thread(
+                target=_add_device_to_list, args=(back, self.dashboard._device_list)
+            )
             _thread.start()
 
     def start_dashboard(self, service: IBMRuntimeService) -> None:
@@ -119,8 +120,9 @@ class IBMDashboard(Subscriber):
         self.dashboard = build_dashboard_widget()
         self._get_backends()
         self.refresh_device_list()
-        self.dashboard._thread = threading.Thread(target=update_backend_info,
-                                                  args=(self.dashboard._device_list,))
+        self.dashboard._thread = threading.Thread(
+            target=update_backend_info, args=(self.dashboard._device_list,)
+        )
         self.dashboard._thread.do_run = True
         self.dashboard._thread.start()
 
@@ -139,34 +141,32 @@ def build_dashboard_widget() -> AccordionWithThread:
     Returns:
         Dashboard widget.
     """
-    tabs = wid.Tab(layout=wid.Layout(width='760px',
-                                     max_height='650px')
-                   )
+    tabs = wid.Tab(layout=wid.Layout(width="760px", max_height="650px"))
 
-    devices = wid.VBox(children=[],
-                       layout=wid.Layout(width='740px',
-                                         height='100%')
-                       )
+    devices = wid.VBox(children=[], layout=wid.Layout(width="740px", height="100%"))
 
-    device_list = wid.Box(children=[devices], layout=wid.Layout(width='auto',
-                                                                max_height='600px'
-                                                                ))
+    device_list = wid.Box(
+        children=[devices], layout=wid.Layout(width="auto", max_height="600px")
+    )
 
     tabs.children = [device_list]
-    tabs.set_title(0, 'Devices')
+    tabs.set_title(0, "Devices")
 
-    acc = AccordionWithThread(children=[tabs],
-                              layout=wid.Layout(width='auto',
-                                                max_height='700px',
-                                                ))
+    acc = AccordionWithThread(
+        children=[tabs],
+        layout=wid.Layout(
+            width="auto",
+            max_height="700px",
+        ),
+    )
 
     acc._device_list = acc.children[0].children[0].children[0]
 
-    acc.set_title(0, 'IBM Quantum Dashboard')
+    acc.set_title(0, "IBM Quantum Dashboard")
     acc.selected_index = None
-    acc.layout.visibility = 'hidden'
+    acc.layout.visibility = "hidden"
     display(acc)
-    acc.layout.visibility = 'visible'
+    acc.layout.visibility = "visible"
     return acc
 
 
@@ -175,19 +175,18 @@ class IBMDashboardMagic(Magics):
     """A class for enabling/disabling the IBM Quantum dashboard."""
 
     @line_magic
-    def ibm_quantum_dashboard(self, line='', cell=None) -> None:
+    def ibm_quantum_dashboard(self, line="", cell=None) -> None:
         """A Jupyter magic function to enable the dashboard."""
         # pylint: disable=unused-argument
         try:
             service = IBMRuntimeService()
         except Exception:
-            raise QiskitError(
-                "Could not load IBM Quantum account from the local file.")
+            raise QiskitError("Could not load IBM Quantum account from the local file.")
         _IBM_DASHBOARD.stop_dashboard()
         _IBM_DASHBOARD.start_dashboard(service)
 
     @line_magic
-    def disable_ibm_quantum_dashboard(self, line='', cell=None) -> None:
+    def disable_ibm_quantum_dashboard(self, line="", cell=None) -> None:
         """A Jupyter magic function to disable the dashboard."""
         # pylint: disable=unused-argument
         _IBM_DASHBOARD.stop_dashboard()

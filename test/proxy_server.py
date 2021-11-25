@@ -19,10 +19,10 @@ from contextlib import contextmanager
 class MockProxyServer:
     """Local proxy server for testing."""
 
-    PROXY_IP_ADDRESS = '127.0.0.1'
+    PROXY_IP_ADDRESS = "127.0.0.1"
     PROXY_PORT = 8085
     INVALID_PROXY_PORT = 6666
-    VALID_PROXIES = {'https': 'http://{}:{}'.format(PROXY_IP_ADDRESS, PROXY_PORT)}
+    VALID_PROXIES = {"https": "http://{}:{}".format(PROXY_IP_ADDRESS, PROXY_PORT)}
 
     def __init__(self, test_case, logger):
         self._test_case = test_case
@@ -32,8 +32,12 @@ class MockProxyServer:
     def start(self):
         """Start the server."""
         self._logger.debug("Starting proxy server at port %s", self.PROXY_PORT)
-        command = ['pproxy', '-v', '-l', 'http://{}:{}'.format(
-            self.PROXY_IP_ADDRESS, self.PROXY_PORT)]
+        command = [
+            "pproxy",
+            "-v",
+            "-l",
+            "http://{}:{}".format(self.PROXY_IP_ADDRESS, self.PROXY_PORT),
+        ]
         self.proxy_process = subprocess.Popen(command, stdout=subprocess.PIPE)
         self._test_case.addCleanup(self.stop)
 
@@ -51,7 +55,7 @@ class MockProxyServer:
 def use_proxies(hgp, proxies):
     """Context manager to set and restore proxies setting."""
     try:
-        hgp.credentials.proxies = {'urls': proxies}
+        hgp.credentials.proxies = {"urls": proxies}
         yield
     finally:
         hgp.credentials.proxies = None

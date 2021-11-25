@@ -35,13 +35,15 @@ def to_python_identifier(name: str) -> str:
     # and underscores and cannot start with a digit.
     pattern = re.compile(r"\W|^(?=\d)", re.ASCII)
     if not name.isidentifier():
-        name = re.sub(pattern, '_', name)
+        name = re.sub(pattern, "_", name)
 
     # Convert to snake case
-    name = re.sub('((?<=[a-z0-9])[A-Z]|(?!^)(?<!_)[A-Z](?=[a-z]))', r'_\1', name).lower()
+    name = re.sub(
+        "((?<=[a-z0-9])[A-Z]|(?!^)(?<!_)[A-Z](?=[a-z]))", r"_\1", name
+    ).lower()
 
     while keyword.iskeyword(name):
-        name += '_'
+        name += "_"
 
     return name
 
@@ -61,11 +63,11 @@ def setup_logger(logger: logging.Logger) -> None:
           messages will not be logged to the screen. If a log file is not specified,
           the log messages will only be logged to the screen and not to a file.
     """
-    log_level = os.getenv('QISKIT_IBM_RUNTIME_LOG_LEVEL', '')
-    log_file = os.getenv('QISKIT_IBM_RUNTIME_LOG_FILE', '')
+    log_level = os.getenv("QISKIT_IBM_RUNTIME_LOG_LEVEL", "")
+    log_file = os.getenv("QISKIT_IBM_RUNTIME_LOG_FILE", "")
 
     # Setup the formatter for the log messages.
-    log_fmt = '%(module)s.%(funcName)s:%(levelname)s:%(asctime)s: %(message)s'
+    log_fmt = "%(module)s.%(funcName)s:%(levelname)s:%(asctime)s: %(message)s"
     formatter = logging.Formatter(log_fmt)
 
     # Set propagate to `False` since handlers are to be attached.
@@ -88,8 +90,11 @@ def setup_logger(logger: logging.Logger) -> None:
         # Default to `WARNING` if the specified level is not valid.
         level = logging.getLevelName(log_level.upper())
         if not isinstance(level, int):
-            logger.warning('"%s" is not a valid log level. The valid log levels are: '
-                           '`DEBUG`, `INFO`, `WARNING`, `ERROR`, and `CRITICAL`.', log_level)
+            logger.warning(
+                '"%s" is not a valid log level. The valid log levels are: '
+                "`DEBUG`, `INFO`, `WARNING`, `ERROR`, and `CRITICAL`.",
+                log_level,
+            )
             level = logging.WARNING
         logger.debug('The logger is being set to level "%s"', level)
         logger.setLevel(level)
@@ -110,12 +115,14 @@ def filter_data(data: Dict[str, Any]) -> Dict[str, Any]:
         return data
 
     data_to_filter = copy.deepcopy(data)
-    keys_to_filter = ['hubInfo']
+    keys_to_filter = ["hubInfo"]
     _filter_value(data_to_filter, keys_to_filter)  # type: ignore[arg-type]
     return data_to_filter
 
 
-def _filter_value(data: Dict[str, Any], filter_keys: List[Union[str, Tuple[str, str]]]) -> None:
+def _filter_value(
+    data: Dict[str, Any], filter_keys: List[Union[str, Tuple[str, str]]]
+) -> None:
     """Recursive function to filter out the values of the input keys.
 
     Args:
@@ -128,9 +135,9 @@ def _filter_value(data: Dict[str, Any], filter_keys: List[Union[str, Tuple[str, 
     for key, value in data.items():
         for filter_key in filter_keys:
             if isinstance(filter_key, str) and key == filter_key:
-                data[key] = '...'
+                data[key] = "..."
             elif key == filter_key[0] and filter_key[1] in value:
-                data[filter_key[0]][filter_key[1]] = '...'
+                data[filter_key[0]][filter_key[1]] = "..."
             elif isinstance(value, dict):
                 _filter_value(value, filter_keys)
 
