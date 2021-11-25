@@ -82,8 +82,9 @@ class AuthClient(BaseClient):
             if isinstance(original_exception, RequestException):
                 # Get the response from the original request exception.
                 error_response = (
+                    # pylint: disable=no-member
                     original_exception.response
-                )  # pylint: disable=no-member
+                )
                 if error_response is not None and error_response.status_code == 401:
                     try:
                         error_code = error_response.json()["error"]["name"]

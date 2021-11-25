@@ -19,10 +19,10 @@ from typing import Any, Dict, Optional
 
 from qiskit.providers.backend import BackendV1 as Backend
 from qiskit.providers.models import PulseBackendConfiguration, QasmBackendConfiguration
-from qiskit_ibm_runtime import (
+from qiskit_ibm_runtime import (  # pylint: disable=unused-import
     ibm_runtime_service,
     ibm_backend,
-)  # pylint: disable=unused-import
+)
 
 from .utils.json_decoder import decode_backend_configuration
 from .api.clients import AccountClient
