@@ -24,10 +24,13 @@ from qiskit.pulse import Schedule
 from qiskit.qobj.utils import MeasLevel, MeasReturnType
 from qiskit.providers.backend import BackendV1 as Backend
 from qiskit.providers.options import Options
-from qiskit.providers.models import (BackendStatus, BackendProperties,
-                                     PulseDefaults, GateConfig)
-from qiskit.providers.models import (QasmBackendConfiguration,
-                                     PulseBackendConfiguration)
+from qiskit.providers.models import (
+    BackendStatus,
+    BackendProperties,
+    PulseDefaults,
+    GateConfig,
+)
+from qiskit.providers.models import QasmBackendConfiguration, PulseBackendConfiguration
 
 # pylint: disable=unused-import, cyclic-import
 from qiskit_ibm_runtime import ibm_runtime_service
@@ -73,11 +76,11 @@ class IBMBackend(Backend):
     id_warning_issued = False
 
     def __init__(
-            self,
-            configuration: Union[QasmBackendConfiguration, PulseBackendConfiguration],
-            service: 'ibm_runtime_service.IBMRuntimeService',
-            credentials: Credentials,
-            api_client: AccountClient
+        self,
+        configuration: Union[QasmBackendConfiguration, PulseBackendConfiguration],
+        service: "ibm_runtime_service.IBMRuntimeService",
+        credentials: Credentials,
+        api_client: AccountClient,
     ) -> None:
         """IBMBackend constructor.
 
@@ -102,19 +105,24 @@ class IBMBackend(Backend):
     @classmethod
     def _default_options(cls) -> Options:
         """Default runtime options."""
-        return Options(shots=4000, memory=False,
-                       qubit_lo_freq=None, meas_lo_freq=None,
-                       schedule_los=None,
-                       meas_level=MeasLevel.CLASSIFIED,
-                       meas_return=MeasReturnType.AVERAGE,
-                       memory_slots=None, memory_slot_size=100,
-                       rep_time=None, rep_delay=None,
-                       init_qubits=True, use_measure_esp=None)
+        return Options(
+            shots=4000,
+            memory=False,
+            qubit_lo_freq=None,
+            meas_lo_freq=None,
+            schedule_los=None,
+            meas_level=MeasLevel.CLASSIFIED,
+            meas_return=MeasReturnType.AVERAGE,
+            memory_slots=None,
+            memory_slot_size=100,
+            rep_time=None,
+            rep_delay=None,
+            init_qubits=True,
+            use_measure_esp=None,
+        )
 
     def properties(
-            self,
-            refresh: bool = False,
-            datetime: Optional[python_datetime] = None
+        self, refresh: bool = False, datetime: Optional[python_datetime] = None
     ) -> Optional[BackendProperties]:
         """Return the backend properties, subject to optional filtering.
 
@@ -142,8 +150,10 @@ class IBMBackend(Backend):
         """
         # pylint: disable=arguments-differ
         if not isinstance(refresh, bool):
-            raise TypeError("The 'refresh' argument needs to be a boolean. "
-                            "{} is of type {}".format(refresh, type(refresh)))
+            raise TypeError(
+                "The 'refresh' argument needs to be a boolean. "
+                "{} is of type {}".format(refresh, type(refresh))
+            )
         if datetime and not isinstance(datetime, python_datetime):
             raise TypeError("'{}' is not of type 'datetime'.")
 
@@ -151,13 +161,15 @@ class IBMBackend(Backend):
             datetime = local_to_utc(datetime)
 
         if datetime or refresh or self._properties is None:
-            api_properties = self._api_client.backend_properties(self.name(), datetime=datetime)
+            api_properties = self._api_client.backend_properties(
+                self.name(), datetime=datetime
+            )
             if not api_properties:
                 return None
             decode_backend_properties(api_properties)
             api_properties = utc_to_local_all(api_properties)
             backend_properties = BackendProperties.from_dict(api_properties)
-            if datetime:    # Don't cache result.
+            if datetime:  # Don't cache result.
                 return backend_properties
             self._properties = backend_properties
         return self._properties
@@ -182,8 +194,9 @@ class IBMBackend(Backend):
             return BackendStatus.from_dict(api_status)
         except TypeError as ex:
             raise IBMBackendApiProtocolError(
-                'Unexpected return value received from the server when '
-                'getting backend status: {}'.format(str(ex))) from ex
+                "Unexpected return value received from the server when "
+                "getting backend status: {}".format(str(ex))
+            ) from ex
 
     def defaults(self, refresh: bool = False) -> Optional[PulseDefaults]:
         """Return the pulse defaults for the backend.
@@ -250,8 +263,9 @@ class IBMBackend(Backend):
             return job_limit
         except TypeError as ex:
             raise IBMBackendApiProtocolError(
-                'Unexpected return value received from the server when '
-                'querying job limit data for the backend: {}.'.format(ex)) from ex
+                "Unexpected return value received from the server when "
+                "querying job limit data for the backend: {}.".format(ex)
+            ) from ex
 
     def remaining_jobs_count(self) -> Optional[int]:
         """Return the number of remaining jobs that could be submitted to the backend.
@@ -281,9 +295,9 @@ class IBMBackend(Backend):
         return job_limit.maximum_jobs - job_limit.active_jobs
 
     def reservations(
-            self,
-            start_datetime: Optional[python_datetime] = None,
-            end_datetime: Optional[python_datetime] = None
+        self,
+        start_datetime: Optional[python_datetime] = None,
+        end_datetime: Optional[python_datetime] = None,
     ) -> List[BackendReservation]:
         """Return backend reservations.
 
@@ -303,10 +317,13 @@ class IBMBackend(Backend):
         start_datetime = local_to_utc(start_datetime) if start_datetime else None
         end_datetime = local_to_utc(end_datetime) if end_datetime else None
         raw_response = self._api_client.backend_reservations(
-            self.name(), start_datetime, end_datetime)
+            self.name(), start_datetime, end_datetime
+        )
         return convert_reservation_data(raw_response, self.name())
 
-    def configuration(self) -> Union[QasmBackendConfiguration, PulseBackendConfiguration]:
+    def configuration(
+        self,
+    ) -> Union[QasmBackendConfiguration, PulseBackendConfiguration]:
         """Return the backend configuration.
 
         Backend configuration contains fixed information about the backend, such
@@ -325,9 +342,10 @@ class IBMBackend(Backend):
         return "<{}('{}')>".format(self.__class__.__name__, self.name())
 
     def _deprecate_id_instruction(
-            self,
-            circuits: Union[QuantumCircuit, Schedule,
-                            List[Union[QuantumCircuit, Schedule]]]
+        self,
+        circuits: Union[
+            QuantumCircuit, Schedule, List[Union[QuantumCircuit, Schedule]]
+        ],
     ) -> None:
         """Raise a DeprecationWarning if any circuit contains an 'id' instruction.
 
@@ -343,8 +361,10 @@ class IBMBackend(Backend):
             None
         """
 
-        id_support = 'id' in getattr(self.configuration(), 'basis_gates', [])
-        delay_support = 'delay' in getattr(self.configuration(), 'supported_instructions', [])
+        id_support = "id" in getattr(self.configuration(), "basis_gates", [])
+        delay_support = "delay" in getattr(
+            self.configuration(), "supported_instructions", []
+        )
 
         if not delay_support:
             return
@@ -352,27 +372,35 @@ class IBMBackend(Backend):
         if not isinstance(circuits, List):
             circuits = [circuits]
 
-        circuit_has_id = any(instr.name == 'id'
-                             for circuit in circuits
-                             if isinstance(circuit, QuantumCircuit)
-                             for instr, qargs, cargs in circuit.data)
+        circuit_has_id = any(
+            instr.name == "id"
+            for circuit in circuits
+            if isinstance(circuit, QuantumCircuit)
+            for instr, qargs, cargs in circuit.data
+        )
 
         if not circuit_has_id:
             return
 
         if not self.id_warning_issued:
             if id_support and delay_support:
-                warnings.warn("Support for the 'id' instruction has been deprecated "
-                              "from IBM hardware backends. Any 'id' instructions "
-                              "will be replaced with their equivalent 'delay' instruction. "
-                              "Please use the 'delay' instruction instead.", DeprecationWarning,
-                              stacklevel=4)
+                warnings.warn(
+                    "Support for the 'id' instruction has been deprecated "
+                    "from IBM hardware backends. Any 'id' instructions "
+                    "will be replaced with their equivalent 'delay' instruction. "
+                    "Please use the 'delay' instruction instead.",
+                    DeprecationWarning,
+                    stacklevel=4,
+                )
             else:
-                warnings.warn("Support for the 'id' instruction has been removed "
-                              "from IBM hardware backends. Any 'id' instructions "
-                              "will be replaced with their equivalent 'delay' instruction. "
-                              "Please use the 'delay' instruction instead.", DeprecationWarning,
-                              stacklevel=4)
+                warnings.warn(
+                    "Support for the 'id' instruction has been removed "
+                    "from IBM hardware backends. Any 'id' instructions "
+                    "will be replaced with their equivalent 'delay' instruction. "
+                    "Please use the 'delay' instruction instead.",
+                    DeprecationWarning,
+                    stacklevel=4,
+                )
 
             self.id_warning_issued = True
 
@@ -383,9 +411,9 @@ class IBMBackend(Backend):
                 continue
 
             for idx, (instr, qargs, cargs) in enumerate(circuit.data):
-                if instr.name == 'id':
+                if instr.name == "id":
 
-                    sx_duration = self.properties().gate_length('sx', qargs[0].index)
+                    sx_duration = self.properties().gate_length("sx", qargs[0].index)
                     sx_duration_in_dt = duration_in_dt(sx_duration, dt_in_s)
 
                     delay_instr = Delay(sx_duration_in_dt)
@@ -409,9 +437,7 @@ class IBMSimulator(IBMBackend):
         return options
 
     def properties(
-            self,
-            refresh: bool = False,
-            datetime: Optional[python_datetime] = None
+        self, refresh: bool = False, datetime: Optional[python_datetime] = None
     ) -> None:
         """Return ``None``, simulators do not have backend properties."""
         return None
@@ -426,11 +452,11 @@ class IBMRetiredBackend(IBMBackend):
     """Backend class interfacing with an IBM Quantum device no longer available."""
 
     def __init__(
-            self,
-            configuration: Union[QasmBackendConfiguration, PulseBackendConfiguration],
-            service: 'ibm_runtime_service.IBMRuntimeService',
-            credentials: Credentials,
-            api_client: AccountClient
+        self,
+        configuration: Union[QasmBackendConfiguration, PulseBackendConfiguration],
+        service: "ibm_runtime_service.IBMRuntimeService",
+        credentials: Credentials,
+        api_client: AccountClient,
     ) -> None:
         """IBMRetiredBackend constructor.
 
@@ -446,7 +472,8 @@ class IBMRetiredBackend(IBMBackend):
             backend_version=self.configuration().backend_version,
             operational=False,
             pending_jobs=0,
-            status_msg='This backend is no longer available.')
+            status_msg="This backend is no longer available.",
+        )
 
     @classmethod
     def _default_options(cls) -> Options:
@@ -454,9 +481,7 @@ class IBMRetiredBackend(IBMBackend):
         return Options()
 
     def properties(
-            self,
-            refresh: bool = False,
-            datetime: Optional[python_datetime] = None
+        self, refresh: bool = False, datetime: Optional[python_datetime] = None
     ) -> None:
         """Return the backend properties."""
         return None
@@ -478,33 +503,31 @@ class IBMRetiredBackend(IBMBackend):
         return None
 
     def reservations(
-            self,
-            start_datetime: Optional[python_datetime] = None,
-            end_datetime: Optional[python_datetime] = None
+        self,
+        start_datetime: Optional[python_datetime] = None,
+        end_datetime: Optional[python_datetime] = None,
     ) -> List[BackendReservation]:
         return []
 
-    def run(    # type: ignore[override]
-            self,
-            *args: Any,
-            **kwargs: Any
-    ) -> None:
+    def run(self, *args: Any, **kwargs: Any) -> None:  # type: ignore[override]
         """Run a Circuit."""
         # pylint: disable=arguments-differ
-        raise IBMBackendError('This backend ({}) is no longer available.'.format(self.name()))
+        raise IBMBackendError(
+            "This backend ({}) is no longer available.".format(self.name())
+        )
 
     @classmethod
     def from_name(
-            cls,
-            backend_name: str,
-            service: 'ibm_runtime_service.IBMRuntimeService',
-            credentials: Credentials,
-            api: AccountClient
-    ) -> 'IBMRetiredBackend':
+        cls,
+        backend_name: str,
+        service: "ibm_runtime_service.IBMRuntimeService",
+        credentials: Credentials,
+        api: AccountClient,
+    ) -> "IBMRetiredBackend":
         """Return a retired backend from its name."""
         configuration = QasmBackendConfiguration(
             backend_name=backend_name,
-            backend_version='0.0.0',
+            backend_version="0.0.0",
             n_qubits=1,
             basis_gates=[],
             simulator=False,
@@ -513,7 +536,7 @@ class IBMRetiredBackend(IBMBackend):
             open_pulse=False,
             memory=False,
             max_shots=1,
-            gates=[GateConfig(name='TODO', parameters=[], qasm_def='TODO')],
+            gates=[GateConfig(name="TODO", parameters=[], qasm_def="TODO")],
             coupling_map=[[0, 1]],
         )
         return cls(configuration, service, credentials, api)

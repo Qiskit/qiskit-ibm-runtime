@@ -62,8 +62,13 @@ class TestIBMBackend(IBMTestCase):
         """Test backend reservations."""
         service = self.backend.provider()
         backend = reservations = None
-        for backend in service.backends(simulator=False, operational=True, hub=self.backend.hub,
-                                        group=self.backend.group, project=self.backend.project):
+        for backend in service.backends(
+            simulator=False,
+            operational=True,
+            hub=self.backend.hub,
+            group=self.backend.group,
+            project=self.backend.project,
+        ):
             reservations = backend.reservations()
             if reservations:
                 break
@@ -82,27 +87,32 @@ class TestIBMBackend(IBMTestCase):
         # Each tuple contains the start datetime, end datetime, whether a
         # reservation should be found, and the description.
         sub_tests = [
-            (before_start, after_end, True, 'before start, after end'),
-            (before_start, before_end, True, 'before start, before end'),
-            (after_start, before_end, True, 'after start, before end'),
-            (before_start, None, True, 'before start, None'),
-            (None, after_end, True, 'None, after end'),
-            (before_start, before_start, False, 'before start, before start'),
-            (after_end, after_end, False, 'after end, after end')
+            (before_start, after_end, True, "before start, after end"),
+            (before_start, before_end, True, "before start, before end"),
+            (after_start, before_end, True, "after start, before end"),
+            (before_start, None, True, "before start, None"),
+            (None, after_end, True, "None, after end"),
+            (before_start, before_start, False, "before start, before start"),
+            (after_end, after_end, False, "after end, after end"),
         ]
 
         for start_dt, end_dt, should_find, name in sub_tests:
             with self.subTest(name=name):
-                f_reservs = backend.reservations(start_datetime=start_dt, end_datetime=end_dt)
+                f_reservs = backend.reservations(
+                    start_datetime=start_dt, end_datetime=end_dt
+                )
                 found = False
                 for f_reserv in f_reservs:
                     if f_reserv == reserv:
                         found = True
                         break
                 self.assertEqual(
-                    found, should_find,
+                    found,
+                    should_find,
                     "Reservation {} found={}, used start datetime {}, end datetime {}".format(
-                        reserv, found, start_dt, end_dt))
+                        reserv, found, start_dt, end_dt
+                    ),
+                )
 
     def test_deprecate_id_instruction(self):
         """Test replacement of 'id' Instructions with 'Delay' instructions."""
@@ -113,10 +123,10 @@ class TestIBMBackend(IBMTestCase):
         circuit_with_id.id(1)
 
         config = QasmBackendConfiguration(
-            basis_gates=['id'],
-            supported_instructions=['delay'],
+            basis_gates=["id"],
+            supported_instructions=["delay"],
             dt=0.25,
-            backend_name='test',
+            backend_name="test",
             backend_version=0.0,
             n_qubits=1,
             gates=[],
@@ -129,11 +139,11 @@ class TestIBMBackend(IBMTestCase):
             coupling_map=None,
         )
 
-        with patch.object(self.backend, 'configuration', return_value=config):
+        with patch.object(self.backend, "configuration", return_value=config):
             with self.assertWarnsRegex(DeprecationWarning, r"'id' instruction"):
                 self.backend._deprecate_id_instruction(circuit_with_id)
 
-            self.assertEqual(circuit_with_id.count_ops(), {'delay': 3})
+            self.assertEqual(circuit_with_id.count_ops(), {"delay": 3})
 
 
 class TestIBMBackendService(IBMTestCase):
@@ -158,4 +168,5 @@ class TestIBMBackendService(IBMTestCase):
             for attr in reserv.__dict__:
                 self.assertIsNotNone(
                     getattr(reserv, attr),
-                    "Reservation {} is missing attribute {}".format(reserv, attr))
+                    "Reservation {} is missing attribute {}".format(reserv, attr),
+                )

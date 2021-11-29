@@ -37,31 +37,31 @@ STATUS_FORCELIST = (
     522,  # Cloudflare connection timeout
     524,  # Cloudflare Timeout
 )
-CUSTOM_HEADER_ENV_VAR = 'QISKIT_IBM_RUNTIME_CUSTOM_CLIENT_APP_HEADER'
+CUSTOM_HEADER_ENV_VAR = "QISKIT_IBM_RUNTIME_CUSTOM_CLIENT_APP_HEADER"
 logger = logging.getLogger(__name__)
 # Regex used to match the `/devices` endpoint, capturing the device name as group(2).
 # The number of letters for group(2) must be greater than 1, so it does not match
 # the `/devices/v/1` endpoint.
 # Capture groups: (/devices/)(<device_name>)(</optional rest of the url>)
-RE_DEVICES_ENDPOINT = re.compile(r'^(.*/devices/)([^/}]{2,})(.*)$', re.IGNORECASE)
+RE_DEVICES_ENDPOINT = re.compile(r"^(.*/devices/)([^/}]{2,})(.*)$", re.IGNORECASE)
 
 
 def _get_client_header() -> str:
     """Return the client version."""
     try:
-        client_header = 'qiskit/' + pkg_resources.get_distribution('qiskit').version
+        client_header = "qiskit/" + pkg_resources.get_distribution("qiskit").version
         return client_header
     except Exception:  # pylint: disable=broad-except
         pass
 
-    qiskit_pkgs = ['qiskit-terra', 'qiskit-aer', 'qiskit-ignis', 'qiskit-aqua']
+    qiskit_pkgs = ["qiskit-terra", "qiskit-aer", "qiskit-ignis", "qiskit-aqua"]
     pkg_versions = {"qiskit-ibm": ibm_provider_version}
     for pkg_name in qiskit_pkgs:
         try:
             pkg_versions[pkg_name] = pkg_resources.get_distribution(pkg_name).version
         except Exception:  # pylint: disable=broad-except
             pass
-    return ','.join(pkg_versions.keys()) + '/' + ','.join(pkg_versions.values())
+    return ",".join(pkg_versions.keys()) + "/" + ",".join(pkg_versions.values())
 
 
 CLIENT_APPLICATION = _get_client_header()
@@ -77,13 +77,13 @@ class PostForcelistRetry(Retry):
     """
 
     def increment(  # type: ignore[no-untyped-def]
-            self,
-            method=None,
-            url=None,
-            response=None,
-            error=None,
-            _pool=None,
-            _stacktrace=None,
+        self,
+        method=None,
+        url=None,
+        response=None,
+        error=None,
+        _pool=None,
+        _stacktrace=None,
     ):
         """Overwrites parent class increment method for logging."""
         if logger.getEffectiveLevel() is logging.DEBUG:
@@ -92,16 +92,26 @@ class PostForcelistRetry(Retry):
                 status = response.status
                 data = response.data
                 headers = response.headers
-            logger.debug("Retrying method=%s, url=%s, status=%s, error=%s, data=%s, headers=%s",
-                         method, url, status, error, data, headers)
-        return super().increment(method=method, url=url, response=response,
-                                 error=error, _pool=_pool, _stacktrace=_stacktrace)
+            logger.debug(
+                "Retrying method=%s, url=%s, status=%s, error=%s, data=%s, headers=%s",
+                method,
+                url,
+                status,
+                error,
+                data,
+                headers,
+            )
+        return super().increment(
+            method=method,
+            url=url,
+            response=response,
+            error=error,
+            _pool=_pool,
+            _stacktrace=_stacktrace,
+        )
 
     def is_retry(
-            self,
-            method: str,
-            status_code: int,
-            has_retry_after: bool = False
+        self, method: str, status_code: int, has_retry_after: bool = False
     ) -> bool:
         """Indicate whether the request should be retried.
 
@@ -113,7 +123,7 @@ class PostForcelistRetry(Retry):
         Returns:
             ``True`` if the request should be retried, ``False`` otherwise.
         """
-        if method.upper() == 'POST' and status_code in self.status_forcelist:
+        if method.upper() == "POST" and status_code in self.status_forcelist:
             return True
 
         return super().is_retry(method, status_code, has_retry_after)
@@ -127,16 +137,16 @@ class RetrySession(Session):
     """
 
     def __init__(
-            self,
-            base_url: str,
-            access_token: Optional[str] = None,
-            retries_total: int = 5,
-            retries_connect: int = 3,
-            backoff_factor: float = 0.5,
-            verify: bool = True,
-            proxies: Optional[Dict[str, str]] = None,
-            auth: Optional[AuthBase] = None,
-            timeout: Tuple[float, Union[float, None]] = (5.0, None)
+        self,
+        base_url: str,
+        access_token: Optional[str] = None,
+        retries_total: int = 5,
+        retries_connect: int = 3,
+        backoff_factor: float = 0.5,
+        verify: bool = True,
+        proxies: Optional[Dict[str, str]] = None,
+        auth: Optional[AuthBase] = None,
+        timeout: Tuple[float, Union[float, None]] = (5.0, None),
     ) -> None:
         """RetrySession constructor.
 
@@ -176,15 +186,12 @@ class RetrySession(Session):
         """Set the session access token."""
         self._access_token = value
         if value:
-            self.headers.update({'X-Access-Token': value})  # type: ignore[attr-defined]
+            self.headers.update({"X-Access-Token": value})  # type: ignore[attr-defined]
         else:
-            self.headers.pop('X-Access-Token', None)  # type: ignore[attr-defined]
+            self.headers.pop("X-Access-Token", None)  # type: ignore[attr-defined]
 
     def _initialize_retry(
-            self,
-            retries_total: int,
-            retries_connect: int,
-            backoff_factor: float
+        self, retries_total: int, retries_connect: int, backoff_factor: float
     ) -> None:
         """Set the session retry policy.
 
@@ -201,14 +208,11 @@ class RetrySession(Session):
         )
 
         retry_adapter = HTTPAdapter(max_retries=retry)
-        self.mount('http://', retry_adapter)
-        self.mount('https://', retry_adapter)
+        self.mount("http://", retry_adapter)
+        self.mount("https://", retry_adapter)
 
     def _initialize_session_parameters(
-            self,
-            verify: bool,
-            proxies: Dict[str, str],
-            auth: Optional[AuthBase] = None
+        self, verify: bool, proxies: Dict[str, str], auth: Optional[AuthBase] = None
     ) -> None:
         """Set the session parameters and attributes.
 
@@ -224,18 +228,14 @@ class RetrySession(Session):
         if custom_header:
             client_app_header += "/" + custom_header
 
-        self.headers.update({'X-Qx-Client-Application': client_app_header})
+        self.headers.update({"X-Qx-Client-Application": client_app_header})
 
         self.auth = auth
         self.proxies = proxies or {}
         self.verify = verify
 
     def request(  # type: ignore[override]
-            self,
-            method: str,
-            url: str,
-            bare: bool = False,
-            **kwargs: Any
+        self, method: str, url: str, bare: bool = False, **kwargs: Any
     ) -> Response:
         """Construct, prepare, and send a ``Request``.
 
@@ -259,18 +259,18 @@ class RetrySession(Session):
         if bare:
             final_url = url
             # Explicitly pass `None` as the `access_token` param, disabling it.
-            params = kwargs.get('params', {})
-            params.update({'access_token': None})
-            kwargs.update({'params': params})
+            params = kwargs.get("params", {})
+            params.update({"access_token": None})
+            kwargs.update({"params": params})
         else:
             final_url = self.base_url + url
 
         # Add a timeout to the connection for non-proxy connections.
-        if not self.proxies and 'timeout' not in kwargs:
-            kwargs.update({'timeout': self._timeout})
+        if not self.proxies and "timeout" not in kwargs:
+            kwargs.update({"timeout": self._timeout})
 
         headers = self.headers.copy()
-        headers.update(kwargs.pop('headers', {}))
+        headers.update(kwargs.pop("headers", {}))
 
         try:
             self._log_request_info(url, method, kwargs)
@@ -284,16 +284,20 @@ class RetrySession(Session):
             if ex.response is not None:
                 status_code = ex.response.status_code
                 try:
-                    error_json = ex.response.json()['error']
+                    error_json = ex.response.json()["error"]
                     message += ". {}, Error code: {}.".format(
-                        error_json['message'], error_json['code'])
-                    logger.debug("Response uber-trace-id: %s", ex.response.headers['uber-trace-id'])
+                        error_json["message"], error_json["code"]
+                    )
+                    logger.debug(
+                        "Response uber-trace-id: %s",
+                        ex.response.headers["uber-trace-id"],
+                    )
                 except Exception:  # pylint: disable=broad-except
                     # the response did not contain the expected json.
                     message += f". {ex.response.text}"
 
             if self.access_token:
-                message = message.replace(self.access_token, '...')
+                message = message.replace(self.access_token, "...")
                 # Modify the original message on the chained exceptions.
                 self._modify_chained_exception_messages(ex)
 
@@ -317,15 +321,12 @@ class RetrySession(Session):
         for arg in exc.args:
             exc_message = arg
             if isinstance(exc_message, str):
-                exc_message = exc_message.replace(self.access_token, '...')
+                exc_message = exc_message.replace(self.access_token, "...")
             modified_args.append(exc_message)
         exc.args = tuple(modified_args)
 
     def _log_request_info(
-            self,
-            url: str,
-            method: str,
-            request_data: Dict[str, Any]
+        self, url: str, method: str, request_data: Dict[str, Any]
     ) -> None:
         """Log the request data, filtering out specific information.
 
@@ -348,20 +349,28 @@ class RetrySession(Session):
             Exception: If there was an error logging the request information.
         """
         # Replace the device name in the URL with `...` if it matches, otherwise leave it as is.
-        filtered_url = re.sub(RE_DEVICES_ENDPOINT, '\\1...\\3', url)
+        filtered_url = re.sub(RE_DEVICES_ENDPOINT, "\\1...\\3", url)
 
         if self._is_worth_logging(filtered_url):
             try:
                 if logger.getEffectiveLevel() is logging.DEBUG:
                     request_data_to_log = ""
-                    if filtered_url in ('/devices/.../properties', '/Jobs'):
+                    if filtered_url in ("/devices/.../properties", "/Jobs"):
                         # Log filtered request data for these endpoints.
-                        request_data_to_log = 'Request Data: {}.'.format(filter_data(request_data))
-                    logger.debug('Endpoint: %s. Method: %s. %s',
-                                 filtered_url, method.upper(), request_data_to_log)
+                        request_data_to_log = "Request Data: {}.".format(
+                            filter_data(request_data)
+                        )
+                    logger.debug(
+                        "Endpoint: %s. Method: %s. %s",
+                        filtered_url,
+                        method.upper(),
+                        request_data_to_log,
+                    )
             except Exception as ex:  # pylint: disable=broad-except
                 # Catch general exception so as not to disturb the program if filtering fails.
-                logger.info('Filtering failed when logging request information: %s', str(ex))
+                logger.info(
+                    "Filtering failed when logging request information: %s", str(ex)
+                )
 
     def _is_worth_logging(self, endpoint_url: str) -> bool:
         """Returns whether the endpoint URL should be logged.
@@ -375,16 +384,23 @@ class RetrySession(Session):
         Returns:
             Whether the endpoint URL should be logged.
         """
-        if endpoint_url.endswith(('/queue/status', '/devices/v/1', '/Jobs/status',
-                                  '/.../properties', '/.../defaults')):
+        if endpoint_url.endswith(
+            (
+                "/queue/status",
+                "/devices/v/1",
+                "/Jobs/status",
+                "/.../properties",
+                "/.../defaults",
+            )
+        ):
             return False
-        if endpoint_url.startswith(('/users', '/version')):
+        if endpoint_url.startswith(("/users", "/version")):
             return False
-        if endpoint_url == '/Network':
+        if endpoint_url == "/Network":
             return False
-        if 'objectstorage' in endpoint_url:
+        if "objectstorage" in endpoint_url:
             return False
-        if 'bookings' in endpoint_url:
+        if "bookings" in endpoint_url:
             return False
 
         return True

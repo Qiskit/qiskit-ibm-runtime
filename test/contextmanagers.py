@@ -27,6 +27,7 @@ CREDENTIAL_ENV_VARS = VARIABLES_MAP.keys()
 
 class custom_envs(ContextDecorator):
     """Context manager that modifies environment variables."""
+
     # pylint: disable=invalid-name
 
     def __init__(self, new_environ):
@@ -50,6 +51,7 @@ class custom_envs(ContextDecorator):
 
 class no_envs(ContextDecorator):
     """Context manager that disables environment variables."""
+
     # pylint: disable=invalid-name
 
     def __init__(self, vars_to_remove):
@@ -63,8 +65,11 @@ class no_envs(ContextDecorator):
 
     def __enter__(self):
         # Remove the original variables from `os.environ`.
-        modified_environ = {key: value for key, value in os.environ.items()
-                            if key not in self.vars_to_remove}
+        modified_environ = {
+            key: value
+            for key, value in os.environ.items()
+            if key not in self.vars_to_remove
+        }
         os.environ = modified_environ
 
     def __exit__(self, *exc):
@@ -73,9 +78,10 @@ class no_envs(ContextDecorator):
 
 class custom_qiskitrc(ContextDecorator):
     """Context manager that uses a temporary qiskitrc."""
+
     # pylint: disable=invalid-name
 
-    def __init__(self, contents=b''):
+    def __init__(self, contents=b""):
         # Create a temporary file with the contents.
         self.tmp_file = NamedTemporaryFile()
         self.tmp_file.write(contents)
@@ -95,13 +101,14 @@ class custom_qiskitrc(ContextDecorator):
 
 class no_file(ContextDecorator):
     """Context manager that disallows access to a file."""
+
     # pylint: disable=invalid-name
 
     def __init__(self, filename):
         self.filename = filename
         # Store the original `os.path.isfile` function, for mocking.
         self.isfile_original = os.path.isfile
-        self.patcher = patch('os.path.isfile', side_effect=self.side_effect)
+        self.patcher = patch("os.path.isfile", side_effect=self.side_effect)
 
     def __enter__(self):
         self.patcher.start()
@@ -117,13 +124,11 @@ class no_file(ContextDecorator):
 
 
 def _mock_initialize_hgps(
-        self,
-        credentials: Credentials,
-        preferences: Optional[Dict] = None
+    self, credentials: Credentials, preferences: Optional[Dict] = None
 ) -> None:
     """Mock ``_initialize_hgps()``, just storing the credentials."""
     hgp = dict()
-    hgp['credentials'] = credentials
+    hgp["credentials"] = credentials
     self._hgp = hgp
     self._hgps = {}
     if preferences:
@@ -133,11 +138,17 @@ def _mock_initialize_hgps(
 @contextmanager
 def mock_ibm_provider():
     """Mock the initialization of ``IBMRuntimeService``, so it does not query the API."""
-    patcher = patch.object(IBMRuntimeService, '_initialize_hgps',
-                           side_effect=_mock_initialize_hgps,
-                           autospec=True)
-    patcher2 = patch.object(IBMRuntimeService, '_check_api_version',
-                            return_value={'new_api': True, 'api-auth': '0.1'})
+    patcher = patch.object(
+        IBMRuntimeService,
+        "_initialize_hgps",
+        side_effect=_mock_initialize_hgps,
+        autospec=True,
+    )
+    patcher2 = patch.object(
+        IBMRuntimeService,
+        "_check_api_version",
+        return_value={"new_api": True, "api-auth": "0.1"},
+    )
     patcher.start()
     patcher2.start()
     yield

@@ -30,7 +30,7 @@ class IBMTestCase(BaseQiskitTestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.log = logging.getLogger(cls.__name__)
-        filename = '%s.log' % os.path.splitext(inspect.getfile(cls))[0]
+        filename = "%s.log" % os.path.splitext(inspect.getfile(cls))[0]
         setup_test_logging(cls.log, filename)
         cls._set_logging_level(logging.getLogger(QISKIT_IBM_RUNTIME_LOGGER_NAME))
 
@@ -47,7 +47,12 @@ class IBMTestCase(BaseQiskitTestCase):
             except Exception as ex:  # pylint: disable=broad-except
                 logger.warning(
                     'Error while trying to set the level for the "%s" logger to %s. %s.',
-                    logger, os.getenv('LOG_LEVEL'), str(ex))
-        if not any(isinstance(handler, logging.StreamHandler) for handler in logger.handlers):
+                    logger,
+                    os.getenv("LOG_LEVEL"),
+                    str(ex),
+                )
+        if not any(
+            isinstance(handler, logging.StreamHandler) for handler in logger.handlers
+        ):
             logger.addHandler(logging.StreamHandler())
             logger.propagate = False

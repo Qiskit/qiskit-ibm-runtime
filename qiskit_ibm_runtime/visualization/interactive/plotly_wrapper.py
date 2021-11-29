@@ -41,8 +41,7 @@ class PlotlyFigure:
         import plotly.io as pio
 
         if pio.renderers.render_on_display and pio.renderers.default:
-            pio.show(self._fig, config={'displayModeBar': False,
-                                        'editable': False})
+            pio.show(self._fig, config={"displayModeBar": False, "editable": False})
         else:
             print(repr(self))
 
@@ -56,18 +55,17 @@ class PlotlyFigure:
         import plotly.io as pio
 
         config = {}
-        if 'config' not in kwargs.keys():
-            config = {'displayModeBar': False,
-                      'editable': False}
+        if "config" not in kwargs.keys():
+            config = {"displayModeBar": False, "editable": False}
 
         pio.show(self._fig, *args, config=config, **kwargs)
 
     def savefig(
-            self,
-            filename: str,
-            figsize: Tuple[Optional[int]] = (None, None),
-            scale: float = 1,
-            transparent: bool = False
+        self,
+        filename: str,
+        figsize: Tuple[Optional[int]] = (None, None),
+        scale: float = 1,
+        transparent: bool = False,
     ) -> None:
         """Save the figure.
 
@@ -78,14 +76,16 @@ class PlotlyFigure:
             transparent: Whether to use transparent background.
         """
         if transparent:
-            plot_color = self._fig.layout['plot_bgcolor']
-            paper_color = self._fig.layout['paper_bgcolor']
-            self._fig.update_layout(paper_bgcolor='rgba(0,0,0,0)',
-                                    plot_bgcolor='rgba(0,0,0,0)')
-        self._fig.write_image(filename, width=figsize[0], height=figsize[1], scale=scale)
+            plot_color = self._fig.layout["plot_bgcolor"]
+            paper_color = self._fig.layout["paper_bgcolor"]
+            self._fig.update_layout(
+                paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)"
+            )
+        self._fig.write_image(
+            filename, width=figsize[0], height=figsize[1], scale=scale
+        )
         if transparent:
-            self._fig.update_layout(plot_bgcolor=plot_color,
-                                    paper_bgcolor=paper_color)
+            self._fig.update_layout(plot_bgcolor=plot_color, paper_bgcolor=paper_color)
 
 
 class PlotlyWidget(go.FigureWidget):
@@ -101,19 +101,17 @@ class PlotlyWidget(go.FigureWidget):
         import plotly.io as pio
 
         config = {}
-        if 'config' not in kwargs.keys():
-            config = {'scrollZoom': False,
-                      'displayModeBar': False,
-                      'editable': False}
+        if "config" not in kwargs.keys():
+            config = {"scrollZoom": False, "displayModeBar": False, "editable": False}
 
         pio.show(self, *args, config=config, **kwargs)
 
     def savefig(
-            self,
-            filename: str,
-            figsize: Tuple[Optional[int]] = (None, None),
-            scale: float = 1,
-            transparent: bool = False
+        self,
+        filename: str,
+        figsize: Tuple[Optional[int]] = (None, None),
+        scale: float = 1,
+        transparent: bool = False,
     ) -> None:
         """Save the figure as a static image.
 
@@ -124,12 +122,12 @@ class PlotlyWidget(go.FigureWidget):
             transparent (bool): Set the background to transparent.
         """
         if transparent:
-            plot_color = self.layout['plot_bgcolor']
-            paper_color = self.layout['paper_bgcolor']
-            self.update_layout(paper_bgcolor='rgba(0,0,0,0)',
-                               plot_bgcolor='rgba(0,0,0,0)')
+            plot_color = self.layout["plot_bgcolor"]
+            paper_color = self.layout["paper_bgcolor"]
+            self.update_layout(
+                paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)"
+            )
 
         self.write_image(filename, width=figsize[0], height=figsize[1], scale=scale)
         if transparent:
-            self.update_layout(plot_bgcolor=plot_color,
-                               paper_bgcolor=paper_color)
+            self.update_layout(plot_bgcolor=plot_color, paper_bgcolor=paper_color)

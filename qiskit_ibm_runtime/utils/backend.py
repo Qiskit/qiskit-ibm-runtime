@@ -19,8 +19,7 @@ from ..utils.converters import utc_to_local
 
 
 def convert_reservation_data(
-        raw_reservations: List,
-        backend_name: Optional[str] = None
+    raw_reservations: List, backend_name: Optional[str] = None
 ) -> List[BackendReservation]:
     """Convert a list of raw reservation data to ``BackendReservation`` objects.
 
@@ -33,15 +32,20 @@ def convert_reservation_data(
     """
     reservations = []
     for raw_res in raw_reservations:
-        creation_datetime = raw_res.get('creationDate', None)
-        creation_datetime = utc_to_local(creation_datetime) if creation_datetime else None
-        backend_name = backend_name or raw_res.get('backendName', None)
-        reservations.append(BackendReservation(
-            backend_name=backend_name,
-            start_datetime=utc_to_local(raw_res['initialDate']),
-            end_datetime=utc_to_local(raw_res['endDate']),
-            mode=raw_res.get('mode', None),
-            reservation_id=raw_res.get('id', None),
-            creation_datetime=creation_datetime,
-            hub_info=raw_res.get('hubInfo', None)))
+        creation_datetime = raw_res.get("creationDate", None)
+        creation_datetime = (
+            utc_to_local(creation_datetime) if creation_datetime else None
+        )
+        backend_name = backend_name or raw_res.get("backendName", None)
+        reservations.append(
+            BackendReservation(
+                backend_name=backend_name,
+                start_datetime=utc_to_local(raw_res["initialDate"]),
+                end_datetime=utc_to_local(raw_res["endDate"]),
+                mode=raw_res.get("mode", None),
+                reservation_id=raw_res.get("id", None),
+                creation_datetime=creation_datetime,
+                hub_info=raw_res.get("hubInfo", None),
+            )
+        )
     return reservations

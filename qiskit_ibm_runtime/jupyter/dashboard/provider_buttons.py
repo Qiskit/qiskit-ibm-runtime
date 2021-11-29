@@ -28,10 +28,13 @@ def _copy_text_thread(button: vue.Btn) -> None:
         button: Button whose text is to be copied.
     """
     old_text = button.children[0]
-    hub, group, project = old_text.split('/')
-    pyperclip.copy(f"IBMRuntimeService(hub='{hub}', group='{group}', project='{project}')"
-                   .format(hub=hub, group=group, project=project))
-    button.children = ['Copied to clipboard.']
+    hub, group, project = old_text.split("/")
+    pyperclip.copy(
+        f"IBMRuntimeService(hub='{hub}', group='{group}', project='{project}')".format(
+            hub=hub, group=group, project=project
+        )
+    )
+    button.children = ["Copied to clipboard."]
     time.sleep(1)
     button.children = [old_text]
 
@@ -56,16 +59,21 @@ def provider_buttons(providers: List[str]) -> wid.VBox:
     """
     vbox_buttons = []
     for pro in providers:
-        button = wid.Box(children=[vue.Btn(color='#f5f5f5', small=True,
-                                           children=[pro],
-                                           style_="font-family: Arial,"
-                                                  "sans-serif; font-size:10px;")],
-                         layout=wid.Layout(margin="0px 0px 2px 0px",
-                                           width='350px'))
+        button = wid.Box(
+            children=[
+                vue.Btn(
+                    color="#f5f5f5",
+                    small=True,
+                    children=[pro],
+                    style_="font-family: Arial," "sans-serif; font-size:10px;",
+                )
+            ],
+            layout=wid.Layout(margin="0px 0px 2px 0px", width="350px"),
+        )
 
-        button.children[0].on_event('click', _copy_text)
+        button.children[0].on_event("click", _copy_text)
         vbox_buttons.append(button)
 
-    return wid.VBox(children=vbox_buttons,
-                    layout=wid.Layout(width='350px',
-                                      max_width='350px'))
+    return wid.VBox(
+        children=vbox_buttons, layout=wid.Layout(width="350px", max_width="350px")
+    )

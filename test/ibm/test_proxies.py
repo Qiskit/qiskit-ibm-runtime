@@ -24,11 +24,11 @@ from qiskit_ibm_runtime.credentials import Credentials
 from ..ibm_test_case import IBMTestCase
 from ..decorators import requires_qe_access
 
-ADDRESS = '127.0.0.1'
+ADDRESS = "127.0.0.1"
 PORT = 8085
-VALID_PROXIES = {'https': 'http://{}:{}'.format(ADDRESS, PORT)}
-INVALID_PORT_PROXIES = {'https': 'http://{}:{}'.format(ADDRESS, '6666')}
-INVALID_ADDRESS_PROXIES = {'https': 'http://{}:{}'.format('invalid', PORT)}
+VALID_PROXIES = {"https": "http://{}:{}".format(ADDRESS, PORT)}
+INVALID_PORT_PROXIES = {"https": "http://{}:{}".format(ADDRESS, "6666")}
+INVALID_ADDRESS_PROXIES = {"https": "http://{}:{}".format("invalid", PORT)}
 
 
 class TestProxies(IBMTestCase):
@@ -38,7 +38,7 @@ class TestProxies(IBMTestCase):
         """Initial test setup."""
         super().setUp()
         # launch a mock server.
-        command = ['pproxy', '-v', '-l', 'http://{}:{}'.format(ADDRESS, PORT)]
+        command = ["pproxy", "-v", "-l", "http://{}:{}".format(ADDRESS, PORT)]
         self.proxy_process = subprocess.Popen(command, stdout=subprocess.PIPE)
 
     def tearDown(self):
@@ -56,14 +56,13 @@ class TestProxies(IBMTestCase):
     @requires_qe_access
     def test_proxies_ibm_account(self, qe_token, qe_url):
         """Should reach the proxy using account.enable."""
-        service = IBMRuntimeService(qe_token, qe_url,
-                                    proxies={'urls': VALID_PROXIES})
+        service = IBMRuntimeService(qe_token, qe_url, proxies={"urls": VALID_PROXIES})
 
         self.proxy_process.terminate()  # kill to be able of reading the output
 
         auth_line = pproxy_desired_access_log_line(qe_url)
         api_line = pproxy_desired_access_log_line(service._default_hgp.credentials.url)
-        proxy_output = self.proxy_process.stdout.read().decode('utf-8')
+        proxy_output = self.proxy_process.stdout.read().decode("utf-8")
 
         # Check if the authentication call went through proxy.
         self.assertIn(auth_line, proxy_output)
@@ -78,8 +77,10 @@ class TestProxies(IBMTestCase):
         _ = AuthClient(qe_token, qe_url, proxies=VALID_PROXIES)
 
         self.proxy_process.terminate()  # kill to be able of reading the output
-        self.assertIn(pproxy_desired_access_log_line_,
-                      self.proxy_process.stdout.read().decode('utf-8'))
+        self.assertIn(
+            pproxy_desired_access_log_line_,
+            self.proxy_process.stdout.read().decode("utf-8"),
+        )
 
     # pylint: disable=unused-argument
     @requires_qe_access
@@ -91,8 +92,10 @@ class TestProxies(IBMTestCase):
         version_finder.version()
 
         self.proxy_process.terminate()  # kill to be able of reading the output
-        self.assertIn(pproxy_desired_access_log_line_,
-                      self.proxy_process.stdout.read().decode('utf-8'))
+        self.assertIn(
+            pproxy_desired_access_log_line_,
+            self.proxy_process.stdout.read().decode("utf-8"),
+        )
 
     @requires_qe_access
     def test_invalid_proxy_port_authclient(self, qe_token, qe_url):
@@ -125,8 +128,7 @@ class TestProxies(IBMTestCase):
         """Should raise RequestApiError with ProxyError using VersionClient."""
         # pylint: disable=unused-argument
         with self.assertRaises(RequestsApiError) as context_manager:
-            version_finder = VersionClient(qe_url,
-                                           proxies=INVALID_ADDRESS_PROXIES)
+            version_finder = VersionClient(qe_url, proxies=INVALID_ADDRESS_PROXIES)
             version_finder.version()
 
         self.assertIsInstance(context_manager.exception.__cause__, ProxyError)
@@ -135,22 +137,24 @@ class TestProxies(IBMTestCase):
     def test_proxy_urls(self, qe_token, qe_url):
         """Test different forms of the proxy urls."""
         test_urls = [
-            'http://{}:{}'.format(ADDRESS, PORT),
-            '//{}:{}'.format(ADDRESS, PORT),
-            'http:{}:{}'.format(ADDRESS, PORT),
-            'http://user:123@{}:{}'.format(ADDRESS, PORT)
+            "http://{}:{}".format(ADDRESS, PORT),
+            "//{}:{}".format(ADDRESS, PORT),
+            "http:{}:{}".format(ADDRESS, PORT),
+            "http://user:123@{}:{}".format(ADDRESS, PORT),
         ]
         for proxy_url in test_urls:
             with self.subTest(proxy_url=proxy_url):
                 credentials = Credentials(
-                    qe_token, qe_url, proxies={'urls': {'https': proxy_url}})
-                version_finder = VersionClient(credentials.base_url,
-                                               **credentials.connection_parameters())
+                    qe_token, qe_url, proxies={"urls": {"https": proxy_url}}
+                )
+                version_finder = VersionClient(
+                    credentials.base_url, **credentials.connection_parameters()
+                )
                 version_finder.version()
 
 
 def pproxy_desired_access_log_line(url):
     """Return a desired pproxy log entry given a url."""
     qe_url_parts = urllib.parse.urlparse(url)
-    protocol_port = '443' if qe_url_parts.scheme == 'https' else '80'
-    return '{}:{}'.format(qe_url_parts.hostname, protocol_port)
+    protocol_port = "443" if qe_url_parts.scheme == "https" else "80"
+    return "{}:{}".format(qe_url_parts.hostname, protocol_port)

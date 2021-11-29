@@ -25,15 +25,15 @@ logger = logging.getLogger(__name__)
 class Account(RestAdapterBase):
     """Rest adapter for hub/group/project related endpoints."""
 
-    URL_MAP = {
-        'backends': '/devices/v/1'
-    }
+    URL_MAP = {"backends": "/devices/v/1"}
 
-    TEMPLATE_IBM_HUBS = '/Network/{hub}/Groups/{group}/Projects/{project}'
+    TEMPLATE_IBM_HUBS = "/Network/{hub}/Groups/{group}/Projects/{project}"
     """str: Template for creating an IBM Quantum URL with
     hub/group/project information."""
 
-    def __init__(self, session: RetrySession, hub: str, group: str, project: str) -> None:
+    def __init__(
+        self, session: RetrySession, hub: str, group: str, project: str
+    ) -> None:
         """Account constructor.
 
         Args:
@@ -42,7 +42,9 @@ class Account(RestAdapterBase):
             group: The group to use.
             project: The project to use.
         """
-        self.url_prefix = self.TEMPLATE_IBM_HUBS.format(hub=hub, group=group, project=project)
+        self.url_prefix = self.TEMPLATE_IBM_HUBS.format(
+            hub=hub, group=group, project=project
+        )
         super().__init__(session, self.url_prefix)
 
     # Function-specific rest adapters.
@@ -69,5 +71,5 @@ class Account(RestAdapterBase):
         Returns:
             JSON response.
         """
-        url = self.get_url('backends')
+        url = self.get_url("backends")
         return self.session.get(url, timeout=timeout).json()

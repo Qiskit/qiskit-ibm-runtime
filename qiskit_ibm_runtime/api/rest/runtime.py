@@ -27,13 +27,9 @@ logger = logging.getLogger(__name__)
 class Runtime(RestAdapterBase):
     """Rest adapter for Runtime base endpoints."""
 
-    URL_MAP = {
-        'programs': '/programs',
-        'jobs': '/jobs',
-        'logout': '/logout'
-    }
+    URL_MAP = {"programs": "/programs", "jobs": "/jobs", "logout": "/logout"}
 
-    def program(self, program_id: str) -> 'Program':
+    def program(self, program_id: str) -> "Program":
         """Return an adapter for the program.
 
         Args:
@@ -44,7 +40,7 @@ class Runtime(RestAdapterBase):
         """
         return Program(self.session, program_id)
 
-    def program_job(self, job_id: str) -> 'ProgramJob':
+    def program_job(self, job_id: str) -> "ProgramJob":
         """Return an adapter for the job.
 
         Args:
@@ -55,8 +51,9 @@ class Runtime(RestAdapterBase):
         """
         return ProgramJob(self.session, job_id)
 
-    def list_programs(self, search: str = "", 
-                      limit: int = None, skip: int = None) -> Dict[str, Any]:
+    def list_programs(
+        self, search: str = "", limit: int = None, skip: int = None
+    ) -> Dict[str, Any]:
         """Return a list of runtime programs.
 
         Args:
@@ -67,24 +64,24 @@ class Runtime(RestAdapterBase):
         Returns:
             A list of runtime programs.
         """
-        url = self.get_url('programs')
+        url = self.get_url("programs")
         payload: Dict[str, Union[int, str]] = {}
         if search:
-            payload['search'] = search
+            payload["search"] = search
         if limit:
-            payload['limit'] = limit
+            payload["limit"] = limit
         if skip:
-            payload['offset'] = skip
+            payload["offset"] = skip
         return self.session.get(url, params=payload).json()
 
     def create_program(
-            self,
-            program_data: str,
-            name: str,
-            description: str,
-            max_execution_time: int,
-            is_public: Optional[bool] = False,
-            spec: Optional[Dict] = None
+        self,
+        program_data: str,
+        name: str,
+        description: str,
+        max_execution_time: int,
+        is_public: Optional[bool] = False,
+        spec: Optional[Dict] = None,
     ) -> Dict:
         """Upload a new program.
 
@@ -99,26 +96,28 @@ class Runtime(RestAdapterBase):
         Returns:
             JSON response.
         """
-        url = self.get_url('programs')
-        payload = {'name': name,
-                   'data': program_data,
-                   'cost': max_execution_time,
-                   'description': description,
-                   'is_public': is_public}
+        url = self.get_url("programs")
+        payload = {
+            "name": name,
+            "data": program_data,
+            "cost": max_execution_time,
+            "description": description,
+            "is_public": is_public,
+        }
         if spec is not None:
-            payload['spec'] = spec
+            payload["spec"] = spec
         data = json.dumps(payload)
         return self.session.post(url, data=data).json()
 
     def program_run(
-            self,
-            program_id: str,
-            hub: str,
-            group: str,
-            project: str,
-            backend_name: str,
-            params: Dict,
-            image: str
+        self,
+        program_id: str,
+        hub: str,
+        group: str,
+        project: str,
+        backend_name: str,
+        params: Dict,
+        image: str,
     ) -> Dict:
         """Execute the program.
 
@@ -134,28 +133,28 @@ class Runtime(RestAdapterBase):
         Returns:
             JSON response.
         """
-        url = self.get_url('jobs')
+        url = self.get_url("jobs")
         payload = {
-            'program_id': program_id,
-            'hub': hub,
-            'group': group,
-            'project': project,
-            'backend': backend_name,
-            'params': params,
-            'runtime': image
+            "program_id": program_id,
+            "hub": hub,
+            "group": group,
+            "project": project,
+            "backend": backend_name,
+            "params": params,
+            "runtime": image,
         }
         data = json.dumps(payload, cls=RuntimeEncoder)
         return self.session.post(url, data=data).json()
 
     def jobs_get(
-            self,
-            limit: int = None,
-            skip: int = None,
-            pending: bool = None,
-            program_id: str = None,
-            hub: str = None,
-            group: str = None,
-            project: str = None
+        self,
+        limit: int = None,
+        skip: int = None,
+        pending: bool = None,
+        program_id: str = None,
+        hub: str = None,
+        group: str = None,
+        project: str = None,
     ) -> Dict:
         """Get a list of job data.
 
@@ -172,23 +171,23 @@ class Runtime(RestAdapterBase):
         Returns:
             JSON response.
         """
-        url = self.get_url('jobs')
+        url = self.get_url("jobs")
         payload: Dict[str, Union[int, str]] = {}
         if limit:
-            payload['limit'] = limit
+            payload["limit"] = limit
         if skip:
-            payload['offset'] = skip
+            payload["offset"] = skip
         if pending is not None:
-            payload['pending'] = 'true' if pending else 'false'
+            payload["pending"] = "true" if pending else "false"
         if program_id:
-            payload['program'] = program_id
+            payload["program"] = program_id
         if all([hub, group, project]):
-            payload['provider'] = f"{hub}/{group}/{project}"
+            payload["provider"] = f"{hub}/{group}/{project}"
         return self.session.get(url, params=payload).json()
 
     def logout(self) -> None:
         """Clear authorization cache."""
-        url = self.get_url('logout')
+        url = self.get_url("logout")
         self.session.post(url)
 
 
@@ -196,16 +195,18 @@ class Program(RestAdapterBase):
     """Rest adapter for program related endpoints."""
 
     URL_MAP = {
-        'self': '',
-        'data': '/data',
-        'run': '/jobs',
-        'private': '/private',
-        'public': '/public'
+        "self": "",
+        "data": "/data",
+        "run": "/jobs",
+        "private": "/private",
+        "public": "/public",
     }
 
     _executor = futures.ThreadPoolExecutor()
 
-    def __init__(self, session: RetrySession, program_id: str, url_prefix: str = '') -> None:
+    def __init__(
+        self, session: RetrySession, program_id: str, url_prefix: str = ""
+    ) -> None:
         """Job constructor.
 
         Args:
@@ -213,7 +214,7 @@ class Program(RestAdapterBase):
             program_id: ID of the runtime program.
             url_prefix: Prefix to use in the URL.
         """
-        super().__init__(session, '{}/programs/{}'.format(url_prefix, program_id))
+        super().__init__(session, "{}/programs/{}".format(url_prefix, program_id))
 
     def get(self) -> Dict[str, Any]:
         """Return program information.
@@ -221,17 +222,17 @@ class Program(RestAdapterBase):
         Returns:
             JSON response.
         """
-        url = self.get_url('self')
+        url = self.get_url("self")
         return self.session.get(url).json()
 
     def make_public(self) -> None:
         """Sets a runtime program's visibility to public."""
-        url = self.get_url('public')
+        url = self.get_url("public")
         self.session.put(url)
 
     def make_private(self) -> None:
         """Sets a runtime program's visibility to private."""
-        url = self.get_url('private')
+        url = self.get_url("private")
         self.session.put(url)
 
     def delete(self) -> None:
@@ -240,7 +241,7 @@ class Program(RestAdapterBase):
         Returns:
             JSON response.
         """
-        url = self.get_url('self')
+        url = self.get_url("self")
         self.session.delete(url)
 
     def update_data(self, program_data: str) -> None:
@@ -250,15 +251,16 @@ class Program(RestAdapterBase):
             program_data: Program data (base64 encoded).
         """
         url = self.get_url("data")
-        self.session.put(url, data=program_data,
-                         headers={'Content-Type': 'application/octet-stream'})
+        self.session.put(
+            url, data=program_data, headers={"Content-Type": "application/octet-stream"}
+        )
 
     def update_metadata(
-            self,
-            name: str = None,
-            description: str = None,
-            max_execution_time: int = None,
-            spec: Optional[Dict] = None
+        self,
+        name: str = None,
+        description: str = None,
+        max_execution_time: int = None,
+        spec: Optional[Dict] = None,
     ) -> None:
         """Update program metadata.
 
@@ -285,18 +287,10 @@ class Program(RestAdapterBase):
 class ProgramJob(RestAdapterBase):
     """Rest adapter for program job related endpoints."""
 
-    URL_MAP = {
-        'self': '',
-        'results': '/results',
-        'cancel': '/cancel',
-        'logs': '/logs'
-    }
+    URL_MAP = {"self": "", "results": "/results", "cancel": "/cancel", "logs": "/logs"}
 
     def __init__(
-            self,
-            session: RetrySession,
-            job_id: str,
-            url_prefix: str = ''
+        self, session: RetrySession, job_id: str, url_prefix: str = ""
     ) -> None:
         """ProgramJob constructor.
 
@@ -305,8 +299,7 @@ class ProgramJob(RestAdapterBase):
             job_id: ID of the program job.
             url_prefix: Prefix to use in the URL.
         """
-        super().__init__(session, '{}/jobs/{}'.format(
-            url_prefix, job_id))
+        super().__init__(session, "{}/jobs/{}".format(url_prefix, job_id))
 
     def get(self) -> Dict:
         """Return program job information.
@@ -314,11 +307,11 @@ class ProgramJob(RestAdapterBase):
         Returns:
             JSON response.
         """
-        return self.session.get(self.get_url('self')).json()
+        return self.session.get(self.get_url("self")).json()
 
     def delete(self) -> None:
         """Delete program job."""
-        self.session.delete(self.get_url('self'))
+        self.session.delete(self.get_url("self"))
 
     def results(self) -> str:
         """Return program job results.
@@ -326,12 +319,12 @@ class ProgramJob(RestAdapterBase):
         Returns:
             Job results.
         """
-        response = self.session.get(self.get_url('results'))
+        response = self.session.get(self.get_url("results"))
         return response.text
 
     def cancel(self) -> None:
         """Cancel the job."""
-        self.session.post(self.get_url('cancel'))
+        self.session.post(self.get_url("cancel"))
 
     def logs(self) -> str:
         """Retrieve job logs.
@@ -339,4 +332,4 @@ class ProgramJob(RestAdapterBase):
         Returns:
             Job logs.
         """
-        return self.session.get(self.get_url('logs')).text
+        return self.session.get(self.get_url("logs")).text
