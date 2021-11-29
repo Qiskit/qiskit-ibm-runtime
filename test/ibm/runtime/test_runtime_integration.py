@@ -143,7 +143,6 @@ def main(backend, user_messenger, **kwargs):
         """Test filtering programs with the search parameter"""
         program_id = self._upload_program()
         programs = self.service.programs(search="test program")
-        print(programs)
         all_ids = [prog.program_id for prog in programs]
         self.assertIn(program_id, all_ids)
         programs = self.service.programs(search="test sample")
