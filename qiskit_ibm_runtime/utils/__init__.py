@@ -17,7 +17,7 @@ Utilities (:mod:`qiskit_ibm_runtime.utils`)
 
 .. currentmodule:: qiskit_ibm_runtime.utils
 
-Utility functions related to the IBM Quantum Provider.
+Utility functions related to the IBM Runtime Services.
 
 Conversion
 ==========
@@ -26,6 +26,14 @@ Conversion
 
     seconds_to_duration
     utc_to_local
+
+JSON Encoder and Decoder
+========================
+.. autosummary::
+    :toctree: ../stubs/
+
+    RuntimeEncoder
+    RuntimeDecoder
 
 Misc Functions
 ==============
@@ -42,4 +50,4 @@ from .converters import (
     duration_difference,
 )
 from .utils import to_python_identifier
-from .runtime import *
+from .json import RuntimeEncoder, RuntimeDecoder

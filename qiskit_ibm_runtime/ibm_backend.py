@@ -41,7 +41,7 @@ from .backendreservation import BackendReservation
 from .credentials import Credentials
 from .exceptions import IBMBackendApiProtocolError, IBMBackendError
 from .utils.converters import utc_to_local_all, local_to_utc
-from .utils.json_decoder import decode_pulse_defaults, decode_backend_properties
+from .utils.backend import decode_pulse_defaults, decode_backend_properties
 from .utils.backend import convert_reservation_data
 
 logger = logging.getLogger(__name__)
