@@ -42,7 +42,9 @@ class RuntimeClient:
         )
         self.api = Runtime(self._session)
 
-    def list_programs(self, name: str = "", limit: int = None, skip: int = None) -> Dict[str, Any]:
+    def list_programs(
+        self, name: str = "", limit: int = None, skip: int = None
+    ) -> Dict[str, Any]:
         """Return a list of runtime programs.
 
         Args:
