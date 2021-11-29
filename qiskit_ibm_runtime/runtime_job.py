@@ -13,14 +13,12 @@
 """Qiskit runtime job."""
 
 from typing import Any, Optional, Callable, Dict, Type
-import time
 import logging
 from concurrent import futures
 import traceback
 import queue
 from datetime import datetime
 
-from qiskit.providers.exceptions import JobTimeoutError
 from qiskit.providers.backend import Backend
 from qiskit.providers.jobstatus import JobStatus, JOB_FINAL_STATES
 
@@ -133,14 +131,12 @@ class RuntimeJob:
     def result(
         self,
         timeout: Optional[float] = None,
-        wait: float = 5,
         decoder: Optional[Type[ResultDecoder]] = None,
     ) -> Any:
         """Return the results of the job.
 
         Args:
             timeout: Number of seconds to wait for job.
-            wait: Seconds between queries.
             decoder: A :class:`ResultDecoder` subclass used to decode job results.
 
         Returns:
@@ -151,7 +147,7 @@ class RuntimeJob:
         """
         _decoder = decoder or self._result_decoder
         if self._results is None or (_decoder != self._result_decoder):
-            self.wait_for_final_state(timeout=timeout, wait=wait)
+            self.wait_for_final_state(timeout=timeout)
             if self._status == JobStatus.ERROR:
                 raise RuntimeJobFailureError(
                     f"Unable to retrieve job result. " f"{self.error_message()}"
@@ -196,29 +192,20 @@ class RuntimeJob:
         self._set_status_and_error_message()
         return self._error_message
 
-    def wait_for_final_state(
-        self, timeout: Optional[float] = None, wait: float = 5
-    ) -> None:
+    def wait_for_final_state(self, timeout: Optional[float] = None) -> None:
         """Poll the job status until it progresses to a final state such as ``DONE`` or ``ERROR``.
 
         Args:
             timeout: Seconds to wait for the job. If ``None``, wait indefinitely.
-            wait: Seconds between queries.
 
         Raises:
             JobTimeoutError: If the job does not reach a final state before the
                 specified timeout.
         """
-        start_time = time.time()
-        status = self.status()
-        while status not in JOB_FINAL_STATES:
-            elapsed_time = time.time() - start_time
-            if timeout is not None and elapsed_time >= timeout:
-                raise JobTimeoutError(
-                    "Timeout while waiting for job {}.".format(self.job_id)
-                )
-            time.sleep(wait)
-            status = self.status()
+        if self._status not in JOB_FINAL_STATES:
+            self._ws_client_future = self._executor.submit(self._start_websocket_client)
+        self._ws_client_future.result(timeout)
+        self.status()
 
     def stream_results(
         self, callback: Callable, decoder: Optional[Type[ResultDecoder]] = None
@@ -239,20 +226,25 @@ class RuntimeJob:
                 if the job already finished.
         """
         if self._is_streaming():
-            raise RuntimeInvalidStateError(
-                "A callback function is already streaming results."
+            try:
+                self._executor.submit(
+                    self._stream_results,
+                    result_queue=self._result_queue,
+                    user_callback=callback,
+                    decoder=decoder,
+                )
+            except Exception:
+                raise RuntimeInvalidStateError(
+                    "A callback function is already streaming results."
+                )
+        else:
+            self._ws_client_future = self._executor.submit(self._start_websocket_client)
+            self._executor.submit(
+                self._stream_results,
+                result_queue=self._result_queue,
+                user_callback=callback,
+                decoder=decoder,
             )
-
-        if self._status in JOB_FINAL_STATES:
-            raise RuntimeInvalidStateError("Job already finished.")
-
-        self._ws_client_future = self._executor.submit(self._start_websocket_client)
-        self._executor.submit(
-            self._stream_results,
-            result_queue=self._result_queue,
-            user_callback=callback,
-            decoder=decoder,
-        )
 
     def cancel_result_streaming(self) -> None:
         """Cancel result streaming."""

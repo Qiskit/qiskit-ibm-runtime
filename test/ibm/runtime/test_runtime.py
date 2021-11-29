@@ -456,9 +456,12 @@ if __name__ == '__main__':
         self.assertIsInstance(job, RuntimeJob)
         self.assertIsInstance(job.status(), JobStatus)
         self.assertEqual(job.inputs, params)
-        job.wait_for_final_state()
+        with mock.patch.object(
+            RuntimeJob, "wait_for_final_state", side_effect=time.sleep(3)
+        ):
+            job.wait_for_final_state()
+            self.assertTrue(job.result())
         self.assertEqual(job.status(), JobStatus.DONE)
-        self.assertTrue(job.result())
 
     def test_run_program_with_custom_runtime_image(self):
         """Test running program."""
@@ -469,9 +472,12 @@ if __name__ == '__main__':
         self.assertIsInstance(job, RuntimeJob)
         self.assertIsInstance(job.status(), JobStatus)
         self.assertEqual(job.inputs, params)
-        job.wait_for_final_state()
+        with mock.patch.object(
+            RuntimeJob, "wait_for_final_state", side_effect=time.sleep(3)
+        ):
+            job.wait_for_final_state()
+            self.assertTrue(job.result())
         self.assertEqual(job.status(), JobStatus.DONE)
-        self.assertTrue(job.result())
         self.assertEqual(job.image, image)
 
     def test_retrieve_program_data(self):
@@ -513,7 +519,10 @@ if __name__ == '__main__':
     def test_run_program_failed(self):
         """Test a failed program execution."""
         job = self._run_program(job_classes=FailedRuntimeJob)
-        job.wait_for_final_state()
+        with mock.patch.object(
+            RuntimeJob, "wait_for_final_state", side_effect=time.sleep(5)
+        ):
+            job.wait_for_final_state()
         job_result_raw = self.service._api_client.job_results(job.job_id)
         self.assertEqual(JobStatus.ERROR, job.status())
         self.assertEqual(
@@ -521,12 +530,18 @@ if __name__ == '__main__':
             job.error_message(),
         )
         with self.assertRaises(RuntimeJobFailureError):
-            job.result()
+            with mock.patch.object(
+                RuntimeJob, "wait_for_final_state", side_effect=time.sleep(5)
+            ):
+                job.result()
 
     def test_run_program_failed_ran_too_long(self):
         """Test a program that failed since it ran longer than maxiumum execution time."""
         job = self._run_program(job_classes=FailedRanTooLongRuntimeJob)
-        job.wait_for_final_state()
+        with mock.patch.object(
+            RuntimeJob, "wait_for_final_state", side_effect=time.sleep(3)
+        ):
+            job.wait_for_final_state()
         job_result_raw = self.service._api_client.job_results(job.job_id)
         self.assertEqual(JobStatus.ERROR, job.status())
         self.assertEqual(
@@ -536,7 +551,10 @@ if __name__ == '__main__':
             job.error_message(),
         )
         with self.assertRaises(RuntimeJobFailureError):
-            job.result()
+            with mock.patch.object(
+                RuntimeJob, "wait_for_final_state", side_effect=time.sleep(3)
+            ):
+                job.result()
 
     def test_retrieve_job(self):
         """Test retrieving a job."""
@@ -682,8 +700,11 @@ if __name__ == '__main__':
         program_id_1 = self._upload_program()
         job = self._run_program(program_id=program_id)
         job_1 = self._run_program(program_id=program_id_1)
-        job.wait_for_final_state()
-        job_1.wait_for_final_state()
+        with mock.patch.object(
+            RuntimeJob, "wait_for_final_state", side_effect=time.sleep(1)
+        ):
+            job.wait_for_final_state()
+            job_1.wait_for_final_state()
         rjobs = self.service.jobs(program_id=program_id)
         self.assertEqual(program_id, rjobs[0].program_id)
         self.assertEqual(1, len(rjobs))
@@ -697,7 +718,10 @@ if __name__ == '__main__':
             group="defaultGroup",
             project="defaultProject",
         )
-        job.wait_for_final_state()
+        with mock.patch.object(
+            RuntimeJob, "wait_for_final_state", side_effect=time.sleep(1)
+        ):
+            job.wait_for_final_state()
         rjobs = self.service.jobs(
             program_id=program_id,
             hub="defaultHub",
@@ -725,7 +749,10 @@ if __name__ == '__main__':
     def test_final_result(self):
         """Test getting final result."""
         job = self._run_program()
-        result = job.result()
+        with mock.patch.object(
+            RuntimeJob, "wait_for_final_state", side_effect=time.sleep(5)
+        ):
+            result = job.result()
         self.assertTrue(result)
 
     def test_job_status(self):
@@ -749,7 +776,10 @@ if __name__ == '__main__':
     def test_wait_for_final_state(self):
         """Test wait for final state."""
         job = self._run_program()
-        job.wait_for_final_state()
+        with mock.patch.object(
+            RuntimeJob, "wait_for_final_state", side_effect=time.sleep(3)
+        ):
+            job.wait_for_final_state()
         self.assertEqual(JobStatus.DONE, job.status())
 
     def test_result_decoder(self):
@@ -762,7 +792,10 @@ if __name__ == '__main__':
         for result_decoder, decoder in sub_tests:
             with self.subTest(decoder=decoder):
                 job = self._run_program(job_classes=job_cls, decoder=result_decoder)
-                result = job.result(decoder=decoder)
+                with mock.patch.object(
+                    RuntimeJob, "wait_for_final_state", side_effect=time.sleep(10)
+                ):
+                    result = job.result(decoder=decoder)
                 self.assertIsInstance(result["serializable_class"], SerializableClass)
 
     def test_get_result_twice(self):
@@ -772,8 +805,11 @@ if __name__ == '__main__':
         job_cls.custom_result = custom_result
 
         job = self._run_program(job_classes=job_cls)
-        _ = job.result()
-        _ = job.result()
+        with mock.patch.object(
+            RuntimeJob, "wait_for_final_state", side_effect=time.sleep(5)
+        ):
+            _ = job.result()
+            _ = job.result()
 
     def test_program_metadata(self):
         """Test program metadata."""
