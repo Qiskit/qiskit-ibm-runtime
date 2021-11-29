@@ -25,7 +25,7 @@ class IBMJsonEncoder(json.JSONEncoder):
 
     def default(self, o: Any) -> Any:
         # Convert numpy arrays:
-        if hasattr(o, 'tolist'):
+        if hasattr(o, "tolist"):
             return o.tolist()
         # Use Qobj complex json format:
         if isinstance(o, complex):

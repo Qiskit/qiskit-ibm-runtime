@@ -25,14 +25,14 @@ class Api(RestAdapterBase):
     """Rest adapter for general endpoints."""
 
     URL_MAP = {
-        'login': '/users/loginWithToken',
-        'user_info': '/users/me',
-        'hubs': '/Network',
-        'version': '/version',
-        'bookings': '/Network/bookings/v2'
+        "login": "/users/loginWithToken",
+        "user_info": "/users/me",
+        "hubs": "/Network",
+        "version": "/version",
+        "bookings": "/Network/bookings/v2",
     }
 
-# Client functions.
+    # Client functions.
 
     def hubs(self) -> List[Dict[str, Any]]:
         """Return the list of hub/group/project sets available to the user.
@@ -40,7 +40,7 @@ class Api(RestAdapterBase):
         Returns:
             JSON response.
         """
-        url = self.get_url('hubs')
+        url = self.get_url("hubs")
         return self.session.get(url).json()
 
     def version(self) -> Dict[str, Union[str, bool]]:
@@ -56,17 +56,14 @@ class Api(RestAdapterBase):
 
                 * ``api-*`` (str): The versions of each individual API component
         """
-        url = self.get_url('version')
+        url = self.get_url("version")
         response = self.session.get(url)
 
         try:
             version_info = response.json()
-            version_info['new_api'] = True
+            version_info["new_api"] = True
         except json.JSONDecodeError:
-            return {
-                'new_api': False,
-                'api': response.text
-            }
+            return {"new_api": False, "api": response.text}
 
         return version_info
 
@@ -79,8 +76,8 @@ class Api(RestAdapterBase):
         Returns:
             JSON response.
         """
-        url = self.get_url('login')
-        return self.session.post(url, json={'apiToken': api_token}).json()
+        url = self.get_url("login")
+        return self.session.post(url, json={"apiToken": api_token}).json()
 
     def user_info(self) -> Dict[str, Any]:
         """Return user information.
@@ -88,7 +85,7 @@ class Api(RestAdapterBase):
         Returns:
             JSON response of user information.
         """
-        url = self.get_url('user_info')
+        url = self.get_url("user_info")
         response = self.session.get(url).json()
 
         return response
@@ -99,5 +96,5 @@ class Api(RestAdapterBase):
         Returns:
             JSON response.
         """
-        url = self.get_url('bookings')
+        url = self.get_url("bookings")
         return self.session.get(url).json()

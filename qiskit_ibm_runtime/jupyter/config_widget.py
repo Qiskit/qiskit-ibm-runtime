@@ -37,32 +37,41 @@ def config_tab(backend: Union[IBMBackend, FakeBackend]) -> wid.GridBox:
     config = backend.configuration().to_dict()
     next_resrv = get_next_reservation(backend)
     if next_resrv:
-        reservation_str = "in {} ({}m)".format(duration_difference(next_resrv.start_datetime),
-                                               next_resrv.duration)
+        reservation_str = "in {} ({}m)".format(
+            duration_difference(next_resrv.start_datetime), next_resrv.duration
+        )
     else:
-        reservation_str = '-'
+        reservation_str = "-"
 
     config_dict = {**status, **config}
-    config_dict['reservation'] = reservation_str
+    config_dict["reservation"] = reservation_str
 
-    upper_list = ['n_qubits']
+    upper_list = ["n_qubits"]
 
-    if 'quantum_volume' in config.keys():
-        if config['quantum_volume']:
-            upper_list.append('quantum_volume')
+    if "quantum_volume" in config.keys():
+        if config["quantum_volume"]:
+            upper_list.append("quantum_volume")
 
-    upper_list.extend(['operational',
-                       'status_msg', 'pending_jobs', 'reservation',
-                       'backend_version', 'basis_gates',
-                       'max_shots', 'max_experiments'])
+    upper_list.extend(
+        [
+            "operational",
+            "status_msg",
+            "pending_jobs",
+            "reservation",
+            "backend_version",
+            "basis_gates",
+            "max_shots",
+            "max_experiments",
+        ]
+    )
 
     lower_list = list(set(config_dict.keys()).difference(upper_list))
     # Remove gates because they are in a different tab
-    lower_list.remove('gates')
+    lower_list.remove("gates")
     # Look for hamiltonian
-    if 'hamiltonian' in lower_list:
-        htex = config_dict['hamiltonian']['h_latex']
-        config_dict['hamiltonian'] = "$$%s$$" % htex
+    if "hamiltonian" in lower_list:
+        htex = config_dict["hamiltonian"]["h_latex"]
+        config_dict["hamiltonian"] = "$$%s$$" % htex
 
     upper_str = "<table>"
     upper_str += """<style>
@@ -86,25 +95,32 @@ tr:nth-child(even) {background-color: #f6f6f6;}
 
     upper_str += "<tr><th>Property</th><th>Value</th></tr>"
     for key in upper_list:
-        upper_str += "<tr><td><font style='font-weight:bold'>%s</font></td><td>%s</td></tr>" % (
-            key, config_dict[key])
+        upper_str += (
+            "<tr><td><font style='font-weight:bold'>%s</font></td><td>%s</td></tr>"
+            % (key, config_dict[key])
+        )
     upper_str += footer
 
     upper_table = wid.HTMLMath(
-        value=upper_str, layout=wid.Layout(width='100%', grid_area='left'))
+        value=upper_str, layout=wid.Layout(width="100%", grid_area="left")
+    )
 
     img_child = []
-    if not config['simulator']:
+    if not config["simulator"]:
         img_child = [iplot_gate_map(backend, as_widget=True)]
 
-    image_widget = wid.HBox(children=img_child,
-                            layout=wid.Layout(grid_area='right',
-                                              max_height='350px',
-                                              margin='0px 0px 0px 0px',
-                                              display='flex-inline',
-                                              align_items='center',
-                                              justify_content='center',
-                                              width='auto'))
+    image_widget = wid.HBox(
+        children=img_child,
+        layout=wid.Layout(
+            grid_area="right",
+            max_height="350px",
+            margin="0px 0px 0px 0px",
+            display="flex-inline",
+            align_items="center",
+            justify_content="center",
+            width="auto",
+        ),
+    )
 
     lower_str = "<table>"
     lower_str += """<style>
@@ -122,25 +138,28 @@ tr:nth-child(even) {background-color: #f6f6f6;}
 </style>"""
     lower_str += "<tr><th></th><th></th></tr>"
     for key in lower_list:
-        if key != 'name':
-            lower_str += "<tr><td>%s</td><td>%s</td></tr>" % (
-                key, config_dict[key])
+        if key != "name":
+            lower_str += "<tr><td>%s</td><td>%s</td></tr>" % (key, config_dict[key])
     lower_str += footer
 
-    lower_table = wid.HTMLMath(value=lower_str,
-                               layout=wid.Layout(width='auto',
-                                                 grid_area='bottom'))
+    lower_table = wid.HTMLMath(
+        value=lower_str, layout=wid.Layout(width="auto", grid_area="bottom")
+    )
 
-    grid = wid.GridBox(children=[upper_table, image_widget, lower_table],
-                       layout=wid.Layout(max_height='500px',
-                                         margin='10px',
-                                         overflow='hidden scroll',
-                                         grid_template_rows='auto auto',
-                                         grid_template_columns='33% 21% 21% 21%',
-                                         grid_template_areas='''
+    grid = wid.GridBox(
+        children=[upper_table, image_widget, lower_table],
+        layout=wid.Layout(
+            max_height="500px",
+            margin="10px",
+            overflow="hidden scroll",
+            grid_template_rows="auto auto",
+            grid_template_columns="33% 21% 21% 21%",
+            grid_template_areas="""
                                          "left right right right"
                                          "bottom bottom bottom bottom"
-                                         ''',
-                                         grid_gap='0px 0px'))
+                                         """,
+            grid_gap="0px 0px",
+        ),
+    )
 
     return grid

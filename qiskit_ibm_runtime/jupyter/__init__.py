@@ -68,9 +68,9 @@ IBM Quantum dashboard
 """
 import sys
 
-if ('ipykernel' in sys.modules) and ('spyder' not in sys.modules):
+if ("ipykernel" in sys.modules) and ("spyder" not in sys.modules):
 
-    from IPython import get_ipython          # pylint: disable=import-error
+    from IPython import get_ipython  # pylint: disable=import-error
     from .dashboard.dashboard import IBMDashboardMagic
     from qiskit.test.mock import FakeBackend
     from ..ibm_backend import IBMBackend
@@ -79,7 +79,7 @@ if ('ipykernel' in sys.modules) and ('spyder' not in sys.modules):
     _IP = get_ipython()
     if _IP is not None:
         _IP.register_magics(IBMDashboardMagic)
-        HTML_FORMATTER = _IP.display_formatter.formatters['text/html']
+        HTML_FORMATTER = _IP.display_formatter.formatters["text/html"]
         # Make backend_widget the html repr for IBM Quantum backends
         HTML_FORMATTER.for_type(IBMBackend, backend_widget)
         HTML_FORMATTER.for_type(FakeBackend, backend_widget)

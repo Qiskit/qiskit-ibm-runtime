@@ -30,11 +30,7 @@ logger = logging.getLogger(__name__)
 class AccountClient(BaseClient):
     """Client for accessing an individual IBM Quantum account."""
 
-    def __init__(
-            self,
-            credentials: Credentials,
-            **request_kwargs: Any
-    ) -> None:
+    def __init__(self, credentials: Credentials, **request_kwargs: Any) -> None:
         """AccountClient constructor.
 
         Args:
@@ -42,12 +38,17 @@ class AccountClient(BaseClient):
             **request_kwargs: Arguments for the request ``Session``.
         """
         self._session = RetrySession(
-            credentials.base_url, credentials.access_token, **request_kwargs)
+            credentials.base_url, credentials.access_token, **request_kwargs
+        )
         # base_api is used to handle endpoints that don't include h/g/p.
         # account_api is for h/g/p.
         self.base_api = Api(self._session)
-        self.account_api = Account(session=self._session, hub=credentials.hub,
-                                   group=credentials.group, project=credentials.project)
+        self.account_api = Account(
+            session=self._session,
+            hub=credentials.hub,
+            group=credentials.group,
+            project=credentials.project,
+        )
         self._credentials = credentials
 
     # Backend-related public functions.
@@ -75,9 +76,7 @@ class AccountClient(BaseClient):
         return self.account_api.backend(backend_name).status()
 
     def backend_properties(
-            self,
-            backend_name: str,
-            datetime: Optional[datetime] = None
+        self, backend_name: str, datetime: Optional[datetime] = None
     ) -> Dict[str, Any]:
         """Return the properties of the backend.
 
@@ -114,10 +113,10 @@ class AccountClient(BaseClient):
         return self.account_api.backend(backend_name).job_limit()
 
     def backend_reservations(
-            self,
-            backend_name: str,
-            start_datetime: Optional[datetime] = None,
-            end_datetime: Optional[datetime] = None
+        self,
+        backend_name: str,
+        start_datetime: Optional[datetime] = None,
+        end_datetime: Optional[datetime] = None,
     ) -> List:
         """Return backend reservation information.
 
@@ -129,7 +128,7 @@ class AccountClient(BaseClient):
         Returns:
             Backend reservation information.
         """
-        backend_api = Backend(self._session, backend_name, '/Network')
+        backend_api = Backend(self._session, backend_name, "/Network")
         return backend_api.reservations(start_datetime, end_datetime)
 
     def my_reservations(self) -> List:

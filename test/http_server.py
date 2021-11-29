@@ -40,11 +40,11 @@ class BaseHandler(BaseHTTPRequestHandler):
         """Respond to the client."""
         code = self._get_code()
         self.send_response(code)
-        self.send_header('Content-type', 'application/json')
+        self.send_header("Content-type", "application/json")
         self.end_headers()
-        self.rfile.read(int(self.headers.get('Content-Length', 0)))
+        self.rfile.read(int(self.headers.get("Content-Length", 0)))
         data = self._get_response_data() if code == 200 else self._get_error_data()
-        self.wfile.write(json.dumps(data).encode(encoding='utf_8'))
+        self.wfile.write(json.dumps(data).encode(encoding="utf_8"))
 
     def do_GET(self):
         """Process a GET request."""
@@ -86,7 +86,7 @@ class ClientErrorHandler(BaseHandler):
 class SimpleServer:
     """A simple test HTTP server."""
 
-    IP_ADDRESS = '127.0.0.1'
+    IP_ADDRESS = "127.0.0.1"
     PORT = 8123
     URL = "http://{}:{}".format(IP_ADDRESS, PORT)
 
@@ -111,8 +111,8 @@ class SimpleServer:
 
     def set_error_response(self, error_response: Dict):
         """Set the error response."""
-        setattr(self.httpd.RequestHandlerClass, 'error_response', error_response)
+        setattr(self.httpd.RequestHandlerClass, "error_response", error_response)
 
     def set_good_response(self, response: Dict):
         """Set good response."""
-        setattr(self.httpd.RequestHandlerClass, 'good_response', response)
+        setattr(self.httpd.RequestHandlerClass, "good_response", response)

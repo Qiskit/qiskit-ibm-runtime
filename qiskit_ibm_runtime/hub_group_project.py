@@ -19,7 +19,10 @@ from typing import Any, Dict, Optional
 
 from qiskit.providers.backend import BackendV1 as Backend
 from qiskit.providers.models import PulseBackendConfiguration, QasmBackendConfiguration
-from qiskit_ibm_runtime import ibm_runtime_service, ibm_backend  # pylint: disable=unused-import
+from qiskit_ibm_runtime import (  # pylint: disable=unused-import
+    ibm_runtime_service,
+    ibm_backend,
+)
 
 from .utils.json_decoder import decode_backend_configuration
 from .api.clients import AccountClient
@@ -33,10 +36,10 @@ class HubGroupProject:
     """Represents a hub/group/project with IBM Quantum backends and services associated with it."""
 
     def __init__(
-            self,
-            credentials: Credentials,
-            service: 'ibm_runtime_service.IBMRuntimeService',
-            is_open: bool
+        self,
+        credentials: Credentials,
+        service: "ibm_runtime_service.IBMRuntimeService",
+        is_open: bool,
     ) -> None:
         """HubGroupProject constructor
 
@@ -48,19 +51,20 @@ class HubGroupProject:
         self.credentials = credentials
         self._service = service
         self.is_open = is_open
-        self._api_client = AccountClient(self.credentials,
-                                         **self.credentials.connection_parameters())
+        self._api_client = AccountClient(
+            self.credentials, **self.credentials.connection_parameters()
+        )
         # Initialize the internal list of backends.
-        self._backends: Dict[str, 'ibm_backend.IBMBackend'] = {}
+        self._backends: Dict[str, "ibm_backend.IBMBackend"] = {}
         self._service_urls = {
-            'backend': self.credentials.url,
-            'experiment': self.credentials.experiment_url,
-            'random': self.credentials.extractor_url,
-            'runtime': self.credentials.runtime_url
+            "backend": self.credentials.url,
+            "experiment": self.credentials.experiment_url,
+            "random": self.credentials.extractor_url,
+            "runtime": self.credentials.runtime_url,
         }
 
     @property
-    def backends(self) -> Dict[str, 'ibm_backend.IBMBackend']:
+    def backends(self) -> Dict[str, "ibm_backend.IBMBackend"]:
         """Gets the backends for the hub/group/project, if not loaded.
 
         Returns:
@@ -71,7 +75,7 @@ class HubGroupProject:
         return self._backends
 
     @backends.setter
-    def backends(self, value: Dict[str, 'ibm_backend.IBMBackend']) -> None:
+    def backends(self, value: Dict[str, "ibm_backend.IBMBackend"]) -> None:
         """Sets the value for the hub/group/project's backends.
 
         Args:
@@ -80,9 +84,8 @@ class HubGroupProject:
         self._backends = value
 
     def _discover_remote_backends(
-            self,
-            timeout: Optional[float] = None
-    ) -> Dict[str, 'ibm_backend.IBMBackend']:
+        self, timeout: Optional[float] = None
+    ) -> Dict[str, "ibm_backend.IBMBackend"]:
         """Return the remote backends available for this hub/group/project.
 
         Args:
@@ -97,8 +100,10 @@ class HubGroupProject:
         for raw_config in configs_list:
             # Make sure the raw_config is of proper type
             if not isinstance(raw_config, dict):
-                logger.warning("An error occurred when retrieving backend "
-                               "information. Some backends might not be available.")
+                logger.warning(
+                    "An error occurred when retrieving backend "
+                    "information. Some backends might not be available."
+                )
                 continue
             try:
                 decode_backend_configuration(raw_config)
@@ -106,19 +111,25 @@ class HubGroupProject:
                     config = PulseBackendConfiguration.from_dict(raw_config)
                 except (KeyError, TypeError):
                     config = QasmBackendConfiguration.from_dict(raw_config)
-                backend_cls = ibm_backend.IBMSimulator if config.simulator \
+                backend_cls = (
+                    ibm_backend.IBMSimulator
+                    if config.simulator
                     else ibm_backend.IBMBackend
+                )
                 ret[config.backend_name] = backend_cls(
                     configuration=config,
                     service=self._service,
                     credentials=self.credentials,
-                    api_client=self._api_client)
+                    api_client=self._api_client,
+                )
             except Exception:  # pylint: disable=broad-except
                 logger.warning(
                     'Remote backend "%s" for provider %s could not be instantiated due to an '
-                    'invalid config: %s',
-                    raw_config.get('backend_name', raw_config.get('name', 'unknown')),
-                    repr(self), traceback.format_exc())
+                    "invalid config: %s",
+                    raw_config.get("backend_name", raw_config.get("name", "unknown")),
+                    repr(self),
+                    traceback.format_exc(),
+                )
         return ret
 
     def get_backend(self, name: str) -> Optional[Backend]:
@@ -133,13 +144,11 @@ class HubGroupProject:
 
     def __repr__(self) -> str:
         credentials_info = "hub='{}', group='{}', project='{}'".format(
-            self.credentials.hub, self.credentials.group, self.credentials.project)
+            self.credentials.hub, self.credentials.group, self.credentials.project
+        )
         return "<{}({})>".format(self.__class__.__name__, credentials_info)
 
-    def __eq__(
-            self,
-            other: Any
-    ) -> bool:
+    def __eq__(self, other: Any) -> bool:
         if not isinstance(other, HubGroupProject):
             return False
         return self.credentials == other.credentials

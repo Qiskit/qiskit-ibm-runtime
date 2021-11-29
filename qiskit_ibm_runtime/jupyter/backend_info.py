@@ -32,28 +32,43 @@ def backend_widget(backend: Union[IBMBackend, FakeBackend]) -> None:
         backend: Display information about this backend.
     """
     cred = backend._credentials
-    card = vue.Card(height=600, outlined=True,
-                    children=[
-                        vue.Toolbar(flat=True, color="#002d9c",
-                                    children=[
-                                        vue.ToolbarTitle(children=['{} @ ({}/{}/{})'.format(
-                                            backend.name(),
-                                            cred.hub,
-                                            cred.group,
-                                            cred.project)],
-                                                         style_="color:white")]),
-                        vue.Tabs(vertical=True,
-                                 children=[
-                                     vue.Tab(children=['Configuration']),
-                                     vue.Tab(children=['Qubits']),
-                                     vue.Tab(children=['Non-local Gates']),
-                                     vue.Tab(children=['Error map']),
-                                     vue.TabItem(children=[config_tab(backend)]),
-                                     vue.TabItem(children=[qubits_tab(backend)]),
-                                     vue.TabItem(children=[gates_tab(backend)]),
-                                     vue.TabItem(children=[iplot_error_map(backend,
-                                                                           figsize=(None, None),
-                                                                           as_widget=True)])
-                                 ])
-                    ])
+    card = vue.Card(
+        height=600,
+        outlined=True,
+        children=[
+            vue.Toolbar(
+                flat=True,
+                color="#002d9c",
+                children=[
+                    vue.ToolbarTitle(
+                        children=[
+                            "{} @ ({}/{}/{})".format(
+                                backend.name(), cred.hub, cred.group, cred.project
+                            )
+                        ],
+                        style_="color:white",
+                    )
+                ],
+            ),
+            vue.Tabs(
+                vertical=True,
+                children=[
+                    vue.Tab(children=["Configuration"]),
+                    vue.Tab(children=["Qubits"]),
+                    vue.Tab(children=["Non-local Gates"]),
+                    vue.Tab(children=["Error map"]),
+                    vue.TabItem(children=[config_tab(backend)]),
+                    vue.TabItem(children=[qubits_tab(backend)]),
+                    vue.TabItem(children=[gates_tab(backend)]),
+                    vue.TabItem(
+                        children=[
+                            iplot_error_map(
+                                backend, figsize=(None, None), as_widget=True
+                            )
+                        ]
+                    ),
+                ],
+            ),
+        ],
+    )
     display(card)

@@ -22,9 +22,14 @@ from qiskit_ibm_runtime.exceptions import RuntimeInvalidStateError
 
 from ...ibm_test_case import IBMTestCase
 from ...ws_server import MockWsServer
-from .ws_handler import (websocket_handler, JOB_ID_PROGRESS_DONE, JOB_ID_ALREADY_DONE,
-                         JOB_ID_RETRY_SUCCESS, JOB_ID_RETRY_FAILURE,
-                         JOB_PROGRESS_RESULT_COUNT)
+from .ws_handler import (
+    websocket_handler,
+    JOB_ID_PROGRESS_DONE,
+    JOB_ID_ALREADY_DONE,
+    JOB_ID_RETRY_SUCCESS,
+    JOB_ID_RETRY_FAILURE,
+    JOB_PROGRESS_RESULT_COUNT,
+)
 from .fake_runtime_client import BaseFakeRuntimeClient
 
 
@@ -49,6 +54,7 @@ class TestRuntimeWebsocketClient(IBMTestCase):
 
     def test_interim_result_callback(self):
         """Test interim result callback."""
+
         def result_callback(job_id, interim_result):
             nonlocal results
             results.append(interim_result)
@@ -56,12 +62,13 @@ class TestRuntimeWebsocketClient(IBMTestCase):
 
         results = []
         job = self._get_job(callback=result_callback)
-        time.sleep(JOB_PROGRESS_RESULT_COUNT+2)
+        time.sleep(JOB_PROGRESS_RESULT_COUNT + 2)
         self.assertEqual(JOB_PROGRESS_RESULT_COUNT, len(results))
         self.assertFalse(job._ws_client.connected)
 
     def test_stream_results(self):
         """Test streaming results."""
+
         def result_callback(job_id, interim_result):
             nonlocal results
             results.append(interim_result)
@@ -70,12 +77,13 @@ class TestRuntimeWebsocketClient(IBMTestCase):
         results = []
         job = self._get_job()
         job.stream_results(callback=result_callback)
-        time.sleep(JOB_PROGRESS_RESULT_COUNT+2)
+        time.sleep(JOB_PROGRESS_RESULT_COUNT + 2)
         self.assertEqual(JOB_PROGRESS_RESULT_COUNT, len(results))
         self.assertFalse(job._ws_client.connected)
 
     def test_duplicate_streaming(self):
         """Testing duplicate streaming."""
+
         def result_callback(job_id, interim_result):
             nonlocal results
             results.append(interim_result)
@@ -89,6 +97,7 @@ class TestRuntimeWebsocketClient(IBMTestCase):
 
     def test_cancel_streaming(self):
         """Test canceling streaming."""
+
         def result_callback(job_id, interim_result):
             nonlocal results
             results.append(interim_result)
@@ -107,6 +116,7 @@ class TestRuntimeWebsocketClient(IBMTestCase):
 
     def test_cancel_closed_streaming(self):
         """Test canceling streaming that's already closed."""
+
         def result_callback(job_id, interim_result):
             nonlocal results
             results.append(interim_result)
@@ -120,6 +130,7 @@ class TestRuntimeWebsocketClient(IBMTestCase):
 
     def test_completed_job(self):
         """Test callback from completed job."""
+
         def result_callback(job_id, interim_result):
             nonlocal results
             results.append(interim_result)
@@ -133,6 +144,7 @@ class TestRuntimeWebsocketClient(IBMTestCase):
 
     def test_completed_job_stream(self):
         """Test streaming from completed job."""
+
         def result_callback(job_id, interim_result):
             nonlocal results
             results.append(interim_result)
@@ -147,6 +159,7 @@ class TestRuntimeWebsocketClient(IBMTestCase):
 
     def test_websocket_retry_success(self):
         """Test successful retry."""
+
         def result_callback(job_id, interim_result):
             nonlocal results
             results.append(interim_result)
@@ -154,12 +167,13 @@ class TestRuntimeWebsocketClient(IBMTestCase):
 
         results = []
         job = self._get_job(job_id=JOB_ID_RETRY_SUCCESS, callback=result_callback)
-        time.sleep(JOB_PROGRESS_RESULT_COUNT+2)
+        time.sleep(JOB_PROGRESS_RESULT_COUNT + 2)
         self.assertEqual(JOB_PROGRESS_RESULT_COUNT, len(results))
         self.assertFalse(job._ws_client.connected)
 
     def test_websocket_retry_failure(self):
         """Test failed retry."""
+
         def result_callback(job_id, interim_result):
             nonlocal results
             results.append(interim_result)
@@ -173,12 +187,15 @@ class TestRuntimeWebsocketClient(IBMTestCase):
 
     def _get_job(self, callback=None, job_id=JOB_ID_PROGRESS_DONE):
         """Get a runtime job."""
-        cred = Credentials(token="my_token", url="",
-                           services={"runtime": MockWsServer.VALID_WS_URL})
-        job = RuntimeJob(backend=FakeQasmSimulator(),
-                         api_client=BaseFakeRuntimeClient(),
-                         credentials=cred,
-                         job_id=job_id,
-                         program_id="my-program",
-                         user_callback=callback)
+        cred = Credentials(
+            token="my_token", url="", services={"runtime": MockWsServer.VALID_WS_URL}
+        )
+        job = RuntimeJob(
+            backend=FakeQasmSimulator(),
+            api_client=BaseFakeRuntimeClient(),
+            credentials=cred,
+            job_id=job_id,
+            program_id="my-program",
+            user_callback=callback,
+        )
         return job

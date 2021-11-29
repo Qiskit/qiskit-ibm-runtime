@@ -25,7 +25,11 @@ from qiskit.providers.backend import Backend
 from qiskit.providers.jobstatus import JobStatus, JOB_FINAL_STATES
 
 from .constants import API_TO_JOB_ERROR_MESSAGE, API_TO_JOB_STATUS
-from .exceptions import RuntimeJobFailureError, RuntimeInvalidStateError, QiskitRuntimeError
+from .exceptions import (
+    RuntimeJobFailureError,
+    RuntimeInvalidStateError,
+    QiskitRuntimeError,
+)
 from .program.result_decoder import ResultDecoder
 from .api.clients import RuntimeClient, RuntimeWebsocketClient, WebsocketClientCloseCode
 from .exceptions import IBMError
@@ -75,17 +79,17 @@ class RuntimeJob:
     _executor = futures.ThreadPoolExecutor(thread_name_prefix="runtime_job")
 
     def __init__(
-            self,
-            backend: Backend,
-            api_client: RuntimeClient,
-            credentials: Credentials,
-            job_id: str,
-            program_id: str,
-            params: Optional[Dict] = None,
-            creation_date: Optional[str] = None,
-            user_callback: Optional[Callable] = None,
-            result_decoder: Type[ResultDecoder] = ResultDecoder,
-            image: Optional[str] = ""
+        self,
+        backend: Backend,
+        api_client: RuntimeClient,
+        credentials: Credentials,
+        job_id: str,
+        program_id: str,
+        params: Optional[Dict] = None,
+        creation_date: Optional[str] = None,
+        user_callback: Optional[Callable] = None,
+        result_decoder: Type[ResultDecoder] = ResultDecoder,
+        image: Optional[str] = "",
     ) -> None:
         """RuntimeJob constructor.
 
@@ -117,19 +121,20 @@ class RuntimeJob:
         self._ws_client_future = None  # type: Optional[futures.Future]
         self._result_queue = queue.Queue()  # type: queue.Queue
         self._ws_client = RuntimeWebsocketClient(
-            websocket_url=credentials.runtime_url.replace('https', 'wss'),
+            websocket_url=credentials.runtime_url.replace("https", "wss"),
             credentials=credentials,
             job_id=job_id,
-            message_queue=self._result_queue)
+            message_queue=self._result_queue,
+        )
 
         if user_callback is not None:
             self.stream_results(user_callback)
 
     def result(
-            self,
-            timeout: Optional[float] = None,
-            wait: float = 5,
-            decoder: Optional[Type[ResultDecoder]] = None
+        self,
+        timeout: Optional[float] = None,
+        wait: float = 5,
+        decoder: Optional[Type[ResultDecoder]] = None,
     ) -> Any:
         """Return the results of the job.
 
@@ -148,8 +153,9 @@ class RuntimeJob:
         if self._results is None or (_decoder != self._result_decoder):
             self.wait_for_final_state(timeout=timeout, wait=wait)
             if self._status == JobStatus.ERROR:
-                raise RuntimeJobFailureError(f"Unable to retrieve job result. "
-                                             f"{self.error_message()}")
+                raise RuntimeJobFailureError(
+                    f"Unable to retrieve job result. " f"{self.error_message()}"
+                )
             result_raw = self._api_client.job_results(job_id=self.job_id)
             self._results = _decoder.decode(result_raw)
         return self._results
@@ -165,7 +171,9 @@ class RuntimeJob:
             self._api_client.job_cancel(self.job_id)
         except RequestsApiError as ex:
             if ex.status_code == 409:
-                raise RuntimeInvalidStateError(f"Job cannot be cancelled: {ex}") from None
+                raise RuntimeInvalidStateError(
+                    f"Job cannot be cancelled: {ex}"
+                ) from None
             raise QiskitRuntimeError(f"Failed to cancel job: {ex}") from None
         self.cancel_result_streaming()
         self._status = JobStatus.CANCELLED
@@ -189,9 +197,7 @@ class RuntimeJob:
         return self._error_message
 
     def wait_for_final_state(
-            self,
-            timeout: Optional[float] = None,
-            wait: float = 5
+        self, timeout: Optional[float] = None, wait: float = 5
     ) -> None:
         """Poll the job status until it progresses to a final state such as ``DONE`` or ``ERROR``.
 
@@ -209,14 +215,13 @@ class RuntimeJob:
             elapsed_time = time.time() - start_time
             if timeout is not None and elapsed_time >= timeout:
                 raise JobTimeoutError(
-                    'Timeout while waiting for job {}.'.format(self.job_id))
+                    "Timeout while waiting for job {}.".format(self.job_id)
+                )
             time.sleep(wait)
             status = self.status()
 
     def stream_results(
-            self,
-            callback: Callable,
-            decoder: Optional[Type[ResultDecoder]] = None
+        self, callback: Callable, decoder: Optional[Type[ResultDecoder]] = None
     ) -> None:
         """Start streaming job results.
 
@@ -234,15 +239,20 @@ class RuntimeJob:
                 if the job already finished.
         """
         if self._is_streaming():
-            raise RuntimeInvalidStateError("A callback function is already streaming results.")
+            raise RuntimeInvalidStateError(
+                "A callback function is already streaming results."
+            )
 
         if self._status in JOB_FINAL_STATES:
             raise RuntimeInvalidStateError("Job already finished.")
 
         self._ws_client_future = self._executor.submit(self._start_websocket_client)
-        self._executor.submit(self._stream_results,
-                              result_queue=self._result_queue, user_callback=callback,
-                              decoder=decoder)
+        self._executor.submit(
+            self._stream_results,
+            result_queue=self._result_queue,
+            user_callback=callback,
+            decoder=decoder,
+        )
 
     def cancel_result_streaming(self) -> None:
         """Cancel result streaming."""
@@ -288,7 +298,7 @@ class RuntimeJob:
             IBMError: If an unknown status is returned from the server.
         """
         try:
-            self._status = API_TO_JOB_STATUS[job_response['status'].upper()]
+            self._status = API_TO_JOB_STATUS[job_response["status"].upper()]
         except KeyError:
             raise IBMError(f"Unknown status: {job_response['status']}")
 
@@ -300,8 +310,9 @@ class RuntimeJob:
         """
         if self._status == JobStatus.ERROR:
             job_result_raw = self._api_client.job_results(job_id=self.job_id)
-            self._error_message = API_TO_JOB_ERROR_MESSAGE[job_response['status'].upper()].format(
-                self.job_id, job_result_raw)
+            self._error_message = API_TO_JOB_ERROR_MESSAGE[
+                job_response["status"].upper()
+            ].format(self.job_id, job_result_raw)
         else:
             self._error_message = None
 
@@ -319,9 +330,7 @@ class RuntimeJob:
 
         return True
 
-    def _start_websocket_client(
-            self
-    ) -> None:
+    def _start_websocket_client(self) -> None:
         """Start websocket client to stream results."""
         try:
             logger.debug("Start websocket client for job %s", self.job_id)
@@ -329,15 +338,18 @@ class RuntimeJob:
         except Exception:  # pylint: disable=broad-except
             logger.warning(
                 "An error occurred while streaming results "
-                "from the server for job %s:\n%s", self.job_id, traceback.format_exc())
+                "from the server for job %s:\n%s",
+                self.job_id,
+                traceback.format_exc(),
+            )
         finally:
             self._result_queue.put_nowait(self._POISON_PILL)
 
     def _stream_results(
-            self,
-            result_queue: queue.Queue,
-            user_callback: Callable,
-            decoder: Optional[Type[ResultDecoder]] = None
+        self,
+        result_queue: queue.Queue,
+        user_callback: Callable,
+        decoder: Optional[Type[ResultDecoder]] = None,
     ) -> None:
         """Stream interim results.
 
@@ -357,8 +369,10 @@ class RuntimeJob:
                 user_callback(self.job_id, _decoder.decode(response))
             except Exception:  # pylint: disable=broad-except
                 logger.warning(
-                    "An error occurred while streaming results "
-                    "for job %s:\n%s", self.job_id, traceback.format_exc())
+                    "An error occurred while streaming results " "for job %s:\n%s",
+                    self.job_id,
+                    traceback.format_exc(),
+                )
 
     def _empty_result_queue(self, result_queue: queue.Queue) -> None:
         """Empty the result queue.
@@ -428,7 +442,7 @@ class RuntimeJob:
         """
         if not self._creation_date:
             response = self._api_client.job_get(job_id=self.job_id)
-            self._creation_date = response.get('created', None)
+            self._creation_date = response.get("created", None)
 
         if not self._creation_date:
             return None

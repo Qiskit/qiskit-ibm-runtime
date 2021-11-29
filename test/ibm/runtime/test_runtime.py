@@ -42,10 +42,29 @@ from qiskit.result import Result
 from qiskit.circuit import Parameter, QuantumCircuit
 from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit.circuit.library import EfficientSU2
-from qiskit.opflow import (PauliSumOp, MatrixOp, PauliOp, CircuitOp, EvolvedOp,
-                           TaperedPauliSumOp, Z2Symmetries, I, X, Y, Z,
-                           StateFn, CircuitStateFn, DictStateFn, VectorStateFn, OperatorStateFn,
-                           SparseVectorStateFn, CVaRMeasurement, ComposedOp, SummedOp, TensoredOp)
+from qiskit.opflow import (
+    PauliSumOp,
+    MatrixOp,
+    PauliOp,
+    CircuitOp,
+    EvolvedOp,
+    TaperedPauliSumOp,
+    Z2Symmetries,
+    I,
+    X,
+    Y,
+    Z,
+    StateFn,
+    CircuitStateFn,
+    DictStateFn,
+    VectorStateFn,
+    OperatorStateFn,
+    SparseVectorStateFn,
+    CVaRMeasurement,
+    ComposedOp,
+    SummedOp,
+    TensoredOp,
+)
 from qiskit.quantum_info import SparsePauliOp, Pauli, PauliTable, Statevector
 from qiskit.providers.jobstatus import JobStatus
 
@@ -59,8 +78,13 @@ from qiskit_ibm_runtime.exceptions import RuntimeProgramNotFound, RuntimeJobFail
 from qiskit_ibm_runtime.runtime_program import ParameterNamespace
 
 from ...ibm_test_case import IBMTestCase
-from .fake_runtime_client import (BaseFakeRuntimeClient, FailedRanTooLongRuntimeJob,
-                                  FailedRuntimeJob, CancelableRuntimeJob, CustomResultRuntimeJob)
+from .fake_runtime_client import (
+    BaseFakeRuntimeClient,
+    FailedRanTooLongRuntimeJob,
+    FailedRuntimeJob,
+    CancelableRuntimeJob,
+    CustomResultRuntimeJob,
+)
 from .utils import SerializableClass, SerializableClassDecoder, get_complex_types
 from ...contextmanagers import mock_ibm_provider
 
@@ -74,49 +98,31 @@ class TestRuntime(IBMTestCase):
         "description": "Test program.",
         "max_execution_time": 300,
         "spec": {
-            "backend_requirements": {
-                "min_num_qubits":  5
-            },
+            "backend_requirements": {"min_num_qubits": 5},
             "parameters": {
                 "properties": {
                     "param1": {
                         "description": "Desc 1",
                         "type": "string",
-                        "enum": [
-                            "a",
-                            "b",
-                            "c"
-                        ]
+                        "enum": ["a", "b", "c"],
                     },
-                    "param2": {
-                        "description": "Desc 2",
-                        "type": "integer",
-                        "min": 0
-                    }
+                    "param2": {"description": "Desc 2", "type": "integer", "min": 0},
                 },
-                "required": [
-                    "param1"
-                ]
+                "required": ["param1"],
             },
             "return_values": {
                 "type": "object",
                 "description": "Return values",
                 "properties": {
-                    "ret_val": {
-                        "description": "Some return value.",
-                        "type": "string"
-                    }
-                }
+                    "ret_val": {"description": "Some return value.", "type": "string"}
+                },
             },
             "interim_results": {
                 "properties": {
-                    "int_res": {
-                        "description": "Some interim result",
-                        "type": "string"
-                    }
+                    "int_res": {"description": "Some interim result", "type": "string"}
                 }
-            }
-        }
+            },
+        },
     }
 
     def setUp(self):
@@ -127,7 +133,8 @@ class TestRuntime(IBMTestCase):
         self.service._programs = {}
         self.service._default_hgp = mock.MagicMock(spec=HubGroupProject)
         self.service._default_hgp.credentials = Credentials(
-            token="", url="", services={"runtime": "https://quantum-computing.ibm.com"})
+            token="", url="", services={"runtime": "https://quantum-computing.ibm.com"}
+        )
 
         def get_backend(backend_name, hub=None, group=None, project=None):
             # pylint: disable=unused-argument
@@ -138,29 +145,32 @@ class TestRuntime(IBMTestCase):
 
     def test_coder(self):
         """Test runtime encoder and decoder."""
-        result = Result(backend_name='ibmqx2',
-                        backend_version='1.1',
-                        qobj_id='12345',
-                        job_id='67890',
-                        success=False,
-                        results=[])
+        result = Result(
+            backend_name="ibmqx2",
+            backend_version="1.1",
+            qobj_id="12345",
+            job_id="67890",
+            success=False,
+            results=[],
+        )
 
-        data = {"string": "foo",
-                "float": 1.5,
-                "complex": 2+3j,
-                "array": np.array([[1, 2, 3], [4, 5, 6]]),
-                "result": result,
-                "sclass": SerializableClass("foo"),
-                }
+        data = {
+            "string": "foo",
+            "float": 1.5,
+            "complex": 2 + 3j,
+            "array": np.array([[1, 2, 3], [4, 5, 6]]),
+            "result": result,
+            "sclass": SerializableClass("foo"),
+        }
         encoded = json.dumps(data, cls=RuntimeEncoder)
         decoded = json.loads(encoded, cls=RuntimeDecoder)
-        decoded["sclass"] = SerializableClass.from_json(decoded['sclass'])
+        decoded["sclass"] = SerializableClass.from_json(decoded["sclass"])
 
-        decoded_result = decoded.pop('result')
-        data.pop('result')
+        decoded_result = decoded.pop("result")
+        data.pop("result")
 
-        decoded_array = decoded.pop('array')
-        orig_array = data.pop('array')
+        decoded_array = decoded.pop("array")
+        orig_array = data.pop("array")
 
         self.assertEqual(decoded, data)
         self.assertIsInstance(decoded_result, Result)
@@ -169,12 +179,8 @@ class TestRuntime(IBMTestCase):
     def test_coder_qc(self):
         """Test runtime encoder and decoder for circuits."""
         bell = ReferenceCircuits.bell()
-        unbound = EfficientSU2(num_qubits=4, reps=1, entanglement='linear')
-        subtests = (
-            bell,
-            unbound,
-            [bell, unbound]
-        )
+        unbound = EfficientSU2(num_qubits=4, reps=1, entanglement="linear")
+        subtests = (bell, unbound, [bell, unbound])
         for circ in subtests:
             with self.subTest(circ=circ):
                 encoded = json.dumps(circ, cls=RuntimeEncoder)
@@ -182,7 +188,9 @@ class TestRuntime(IBMTestCase):
                 decoded = json.loads(encoded, cls=RuntimeDecoder)
                 if not isinstance(circ, list):
                     decoded = [decoded]
-                self.assertTrue(all(isinstance(item, QuantumCircuit) for item in decoded))
+                self.assertTrue(
+                    all(isinstance(item, QuantumCircuit) for item in decoded)
+                )
 
     def test_coder_operators(self):
         """Test runtime encoder and decoder for operators."""
@@ -192,9 +200,12 @@ class TestRuntime(IBMTestCase):
         qc.h(0)
         coeffs = np.array([1, 2, 3, 4, 5, 6])
         table = PauliTable.from_labels(["III", "IXI", "IYY", "YIZ", "XYZ", "III"])
-        op = (2.0 * I ^ I)
+        op = 2.0 * I ^ I
         z2_symmetries = Z2Symmetries(
-            [Pauli("IIZI"), Pauli("ZIII")], [Pauli("IIXI"), Pauli("XIII")], [1, 3], [-1, 1]
+            [Pauli("IIZI"), Pauli("ZIII")],
+            [Pauli("IIXI"), Pauli("XIII")],
+            [1, 3],
+            [-1, 1],
         )
         isqrt2 = 1 / np.sqrt(2)
         sparse = scipy.sparse.csr_matrix([[0, isqrt2, 0, isqrt2]])
@@ -203,7 +214,9 @@ class TestRuntime(IBMTestCase):
             PauliSumOp(SparsePauliOp(Pauli("XYZX"), coeffs=[2]), coeff=3),
             PauliSumOp(SparsePauliOp(Pauli("XYZX"), coeffs=[1]), coeff=y),
             PauliSumOp(SparsePauliOp(Pauli("XYZX"), coeffs=[1 + 2j]), coeff=3 - 2j),
-            PauliSumOp.from_list([("II", -1.052373245772859), ("IZ", 0.39793742484318045)]),
+            PauliSumOp.from_list(
+                [("II", -1.052373245772859), ("IZ", 0.39793742484318045)]
+            ),
             PauliSumOp(SparsePauliOp(table, coeffs), coeff=10),
             MatrixOp(primitive=np.array([[0, -1j], [1j, 0]]), coeff=x),
             PauliOp(primitive=Pauli("Y"), coeff=x),
@@ -230,7 +243,7 @@ class TestRuntime(IBMTestCase):
                 decoded = json.loads(encoded, cls=RuntimeDecoder)
                 self.assertEqual(op, decoded)
 
-    @skipIf(os.name == 'nt', 'Test not supported on Windows')
+    @skipIf(os.name == "nt", "Test not supported on Windows")
     def test_coder_optimizers(self):
         """Test runtime encoder and decoder for optimizers."""
         subtests = (
@@ -259,7 +272,7 @@ class TestRuntime(IBMTestCase):
         subtests = (
             {"datetime": datetime.now()},
             {"datetime": datetime(2021, 8, 4)},
-            {"datetime": datetime.fromtimestamp(1326244364)}
+            {"datetime": datetime.fromtimestamp(1326244364)},
         )
         for obj in subtests:
             encoded = json.dumps(obj, cls=RuntimeEncoder)
@@ -285,7 +298,7 @@ if __name__ == '__main__':
     obj = json.loads(sys.argv[1], cls=RuntimeDecoder)
     print(obj.__class__.__name__)
 """
-        temp_fp = tempfile.NamedTemporaryFile(mode='w', delete=False)
+        temp_fp = tempfile.NamedTemporaryFile(mode="w", delete=False)
         self.addCleanup(os.remove, temp_fp.name)
         temp_fp.write(script)
         temp_fp.close()
@@ -300,8 +313,13 @@ if __name__ == '__main__':
                 encoded = json.dumps(op, cls=RuntimeEncoder)
                 self.assertIsInstance(encoded, str)
                 cmd = ["python", temp_fp.name, encoded]
-                proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                      universal_newlines=True, check=True)
+                proc = subprocess.run(
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    universal_newlines=True,
+                    check=True,
+                )
                 self.assertIn(op.__class__.__name__, proc.stdout)
 
     def test_list_programs(self):
@@ -348,7 +366,7 @@ if __name__ == '__main__':
             ids.append(self._upload_program(name=f"name_{idx}"))
 
         programs = self.service.programs()
-        with patch('sys.stdout', new=StringIO()) as mock_stdout:
+        with patch("sys.stdout", new=StringIO()) as mock_stdout:
             self.service.pprint_programs()
             stdout = mock_stdout.getvalue()
             for prog in programs:
@@ -366,8 +384,9 @@ if __name__ == '__main__':
         """Test uploading a program."""
         max_execution_time = 3000
         is_public = True
-        program_id = self._upload_program(max_execution_time=max_execution_time,
-                                          is_public=is_public)
+        program_id = self._upload_program(
+            max_execution_time=max_execution_time, is_public=is_public
+        )
         self.assertTrue(program_id)
         program = self.service.program(program_id)
         self.assertTrue(program)
@@ -390,8 +409,12 @@ if __name__ == '__main__':
             {"metadata": new_metadata},
             {"data": new_data, "metadata": new_metadata},
             {"metadata": new_metadata, "name": new_name},
-            {"data": new_data, "metadata": new_metadata, "description": new_description},
-            {"max_execution_time": new_cost, "spec": new_spec}
+            {
+                "data": new_data,
+                "metadata": new_metadata,
+                "description": new_description,
+            },
+            {"max_execution_time": new_cost, "spec": new_spec},
         ]
 
         for new_vals in sub_tests:
@@ -437,7 +460,7 @@ if __name__ == '__main__':
 
     def test_run_program(self):
         """Test running program."""
-        params = {'param1': 'foo'}
+        params = {"param1": "foo"}
         job = self._run_program(inputs=params)
         self.assertTrue(job.job_id)
         self.assertIsInstance(job, RuntimeJob)
@@ -449,7 +472,7 @@ if __name__ == '__main__':
 
     def test_run_program_with_custom_runtime_image(self):
         """Test running program."""
-        params = {'param1': 'foo'}
+        params = {"param1": "foo"}
         image = "name:tag"
         job = self._run_program(inputs=params, image=image)
         self.assertTrue(job.job_id)
@@ -472,25 +495,27 @@ if __name__ == '__main__':
     def test_program_params_validation(self):
         """Test program parameters validation process"""
         program_id = self.service.upload_program(
-            data=self.DEFAULT_DATA, metadata=self.DEFAULT_METADATA)
+            data=self.DEFAULT_DATA, metadata=self.DEFAULT_METADATA
+        )
         program = self.service.program(program_id)
         params: ParameterNamespace = program.parameters()
-        params.param1 = 'Hello, World'
+        params.param1 = "Hello, World"
         # Check OK params
         params.validate()
         # Check OK params - contains unnecessary param
-        params.param3 = 'Hello, World'
+        params.param3 = "Hello, World"
         params.validate()
         # Check bad params - missing required param
         params.param1 = None
         with self.assertRaises(IBMInputValueError):
             params.validate()
-        params.param1 = 'foo'
+        params.param1 = "foo"
 
     def test_program_params_namespace(self):
         """Test running a program using parameter namespace."""
         program_id = self.service.upload_program(
-            data=self.DEFAULT_DATA, metadata=self.DEFAULT_METADATA)
+            data=self.DEFAULT_DATA, metadata=self.DEFAULT_METADATA
+        )
         params = self.service.program(program_id).parameters()
         params.param1 = "Hello World"
         self._run_program(program_id, inputs=params)
@@ -501,8 +526,10 @@ if __name__ == '__main__':
         job.wait_for_final_state()
         job_result_raw = self.service._api_client.job_results(job.job_id)
         self.assertEqual(JobStatus.ERROR, job.status())
-        self.assertEqual(API_TO_JOB_ERROR_MESSAGE['FAILED'].format(
-            job.job_id, job_result_raw), job.error_message())
+        self.assertEqual(
+            API_TO_JOB_ERROR_MESSAGE["FAILED"].format(job.job_id, job_result_raw),
+            job.error_message(),
+        )
         with self.assertRaises(RuntimeJobFailureError):
             job.result()
 
@@ -512,15 +539,19 @@ if __name__ == '__main__':
         job.wait_for_final_state()
         job_result_raw = self.service._api_client.job_results(job.job_id)
         self.assertEqual(JobStatus.ERROR, job.status())
-        self.assertEqual(API_TO_JOB_ERROR_MESSAGE['CANCELLED - RAN TOO LONG'].format(
-            job.job_id, job_result_raw), job.error_message())
+        self.assertEqual(
+            API_TO_JOB_ERROR_MESSAGE["CANCELLED - RAN TOO LONG"].format(
+                job.job_id, job_result_raw
+            ),
+            job.error_message(),
+        )
         with self.assertRaises(RuntimeJobFailureError):
             job.result()
 
     def test_retrieve_job(self):
         """Test retrieving a job."""
         program_id = self._upload_program()
-        params = {'param1': 'foo'}
+        params = {"param1": "foo"}
         job = self._run_program(program_id, inputs=params)
         rjob = self.service.job(job.job_id)
         self.assertEqual(job.job_id, rjob.job_id)
@@ -572,7 +603,8 @@ if __name__ == '__main__':
         jobs = []
         program_id = self._upload_program()
         (jobs, pending_jobs_count, _) = self._populate_jobs_with_all_statuses(
-            jobs=jobs, program_id=program_id)
+            jobs=jobs, program_id=program_id
+        )
         rjobs = self.service.jobs(pending=True)
         self.assertEqual(pending_jobs_count, len(rjobs))
 
@@ -580,7 +612,9 @@ if __name__ == '__main__':
         """Test retrieving pending jobs (QUEUED, RUNNING) with limit."""
         jobs = []
         program_id = self._upload_program()
-        (jobs, *_) = self._populate_jobs_with_all_statuses(jobs=jobs, program_id=program_id)
+        (jobs, *_) = self._populate_jobs_with_all_statuses(
+            jobs=jobs, program_id=program_id
+        )
         limit = 4
         rjobs = self.service.jobs(limit=limit, pending=True)
         self.assertEqual(limit, len(rjobs))
@@ -590,7 +624,8 @@ if __name__ == '__main__':
         jobs = []
         program_id = self._upload_program()
         (jobs, pending_jobs_count, _) = self._populate_jobs_with_all_statuses(
-            jobs=jobs, program_id=program_id)
+            jobs=jobs, program_id=program_id
+        )
         skip = 4
         rjobs = self.service.jobs(skip=skip, pending=True)
         self.assertEqual(pending_jobs_count - skip, len(rjobs))
@@ -599,7 +634,9 @@ if __name__ == '__main__':
         """Test retrieving pending jobs (QUEUED, RUNNING) with limit and skip."""
         jobs = []
         program_id = self._upload_program()
-        (jobs, *_) = self._populate_jobs_with_all_statuses(jobs=jobs, program_id=program_id)
+        (jobs, *_) = self._populate_jobs_with_all_statuses(
+            jobs=jobs, program_id=program_id
+        )
         limit = 2
         skip = 3
         rjobs = self.service.jobs(limit=limit, skip=skip, pending=True)
@@ -610,7 +647,8 @@ if __name__ == '__main__':
         jobs = []
         program_id = self._upload_program()
         (jobs, _, returned_jobs_count) = self._populate_jobs_with_all_statuses(
-            jobs=jobs, program_id=program_id)
+            jobs=jobs, program_id=program_id
+        )
         rjobs = self.service.jobs(pending=False)
         self.assertEqual(returned_jobs_count, len(rjobs))
 
@@ -618,7 +656,9 @@ if __name__ == '__main__':
         """Test retrieving returned jobs (COMPLETED, FAILED, CANCELLED) with limit."""
         jobs = []
         program_id = self._upload_program()
-        (jobs, *_) = self._populate_jobs_with_all_statuses(jobs=jobs, program_id=program_id)
+        (jobs, *_) = self._populate_jobs_with_all_statuses(
+            jobs=jobs, program_id=program_id
+        )
         limit = 6
         rjobs = self.service.jobs(limit=limit, pending=False)
         self.assertEqual(limit, len(rjobs))
@@ -628,7 +668,8 @@ if __name__ == '__main__':
         jobs = []
         program_id = self._upload_program()
         (jobs, _, returned_jobs_count) = self._populate_jobs_with_all_statuses(
-            jobs=jobs, program_id=program_id)
+            jobs=jobs, program_id=program_id
+        )
         skip = 4
         rjobs = self.service.jobs(skip=skip, pending=False)
         self.assertEqual(returned_jobs_count - skip, len(rjobs))
@@ -637,7 +678,9 @@ if __name__ == '__main__':
         """Test retrieving returned jobs (COMPLETED, FAILED, CANCELLED) with limit and skip."""
         jobs = []
         program_id = self._upload_program()
-        (jobs, *_) = self._populate_jobs_with_all_statuses(jobs=jobs, program_id=program_id)
+        (jobs, *_) = self._populate_jobs_with_all_statuses(
+            jobs=jobs, program_id=program_id
+        )
         limit = 6
         skip = 2
         rjobs = self.service.jobs(limit=limit, skip=skip, pending=False)
@@ -658,15 +701,24 @@ if __name__ == '__main__':
     def test_jobs_filter_by_provider(self):
         """Test retrieving jobs by provider."""
         program_id = self._upload_program()
-        job = self._run_program(program_id=program_id,
-                                hub="defaultHub", group="defaultGroup", project="defaultProject")
+        job = self._run_program(
+            program_id=program_id,
+            hub="defaultHub",
+            group="defaultGroup",
+            project="defaultProject",
+        )
         job.wait_for_final_state()
-        rjobs = self.service.jobs(program_id=program_id,
-                                  hub="defaultHub", group="defaultGroup", project="defaultProject")
+        rjobs = self.service.jobs(
+            program_id=program_id,
+            hub="defaultHub",
+            group="defaultGroup",
+            project="defaultProject",
+        )
         self.assertEqual(program_id, rjobs[0].program_id)
         self.assertEqual(1, len(rjobs))
-        rjobs = self.service.jobs(program_id=program_id,
-                                  hub="test", group="test", project="test")
+        rjobs = self.service.jobs(
+            program_id=program_id, hub="test", group="test", project="test"
+        )
         self.assertFalse(rjobs)
         with self.assertRaises(IBMInputValueError):
             self.service.jobs(hub="defaultHub")
@@ -721,7 +773,7 @@ if __name__ == '__main__':
             with self.subTest(decoder=decoder):
                 job = self._run_program(job_classes=job_cls, decoder=result_decoder)
                 result = job.result(decoder=decoder)
-                self.assertIsInstance(result['serializable_class'], SerializableClass)
+                self.assertIsInstance(result["serializable_class"], SerializableClass)
 
     def test_get_result_twice(self):
         """Test getting results multiple times."""
@@ -736,7 +788,7 @@ if __name__ == '__main__':
     def test_program_metadata(self):
         """Test program metadata."""
         file_name = "test_metadata.json"
-        with open(file_name, 'w') as file:
+        with open(file_name, "w") as file:
             json.dump(self.DEFAULT_METADATA, file)
         self.addCleanup(os.remove, file_name)
 
@@ -744,7 +796,9 @@ if __name__ == '__main__':
 
         for metadata in sub_tests:
             with self.subTest(metadata_type=type(metadata)):
-                program_id = self.service.upload_program(data=self.DEFAULT_DATA, metadata=metadata)
+                program_id = self.service.upload_program(
+                    data=self.DEFAULT_DATA, metadata=metadata
+                )
                 program = self.service.program(program_id)
                 self.service.delete_program(program_id)
                 self._validate_program(program)
@@ -753,14 +807,21 @@ if __name__ == '__main__':
         """Test retrieving job submitted with different provider."""
         program_id = self._upload_program()
         job = self._run_program(program_id)
-        cred = Credentials(token="", url="", hub="hub2", group="group2", project="project2",
-                           services={"runtime": "https://quantum-computing.ibm.com"})
+        cred = Credentials(
+            token="",
+            url="",
+            hub="hub2",
+            group="group2",
+            project="project2",
+            services={"runtime": "https://quantum-computing.ibm.com"},
+        )
         self.service._default_hgp.credentials = cred
         rjob = self.service.job(job.job_id)
         self.assertIsNotNone(rjob.backend)
 
-    def _upload_program(self, name=None, max_execution_time=300,
-                        is_public: bool = False):
+    def _upload_program(
+        self, name=None, max_execution_time=300, is_public: bool = False
+    ):
         """Upload a new program."""
         name = name or uuid.uuid4().hex
         data = self.DEFAULT_DATA
@@ -768,15 +829,23 @@ if __name__ == '__main__':
         metadata.update(name=name)
         metadata.update(is_public=is_public)
         metadata.update(max_execution_time=max_execution_time)
-        program_id = self.service.upload_program(
-            data=data,
-            metadata=metadata)
+        program_id = self.service.upload_program(data=data, metadata=metadata)
         return program_id
 
-    def _run_program(self, program_id=None, inputs=None, job_classes=None, final_status=None,
-                     decoder=None, image="", hub=None, group=None, project=None):
+    def _run_program(
+        self,
+        program_id=None,
+        inputs=None,
+        job_classes=None,
+        final_status=None,
+        decoder=None,
+        image="",
+        hub=None,
+        group=None,
+        project=None,
+    ):
         """Run a program."""
-        options = {'backend_name': "some_backend"}
+        options = {"backend_name": "some_backend"}
         if final_status is not None:
             self.service._api_client.set_final_status(final_status)
         elif job_classes:
@@ -785,46 +854,58 @@ if __name__ == '__main__':
             self.service._api_client.set_hgp(hub, group, project)
         if program_id is None:
             program_id = self._upload_program()
-        with patch('qiskit_ibm_runtime.ibm_runtime_service.RuntimeClient',
-                   return_value=self.service._api_client):
-            job = self.service.run(program_id=program_id, options=options,
-                                   inputs=inputs, result_decoder=decoder,
-                                   image=image)
+        with patch(
+            "qiskit_ibm_runtime.ibm_runtime_service.RuntimeClient",
+            return_value=self.service._api_client,
+        ):
+            job = self.service.run(
+                program_id=program_id,
+                options=options,
+                inputs=inputs,
+                result_decoder=decoder,
+                image=image,
+            )
         return job
 
     def _populate_jobs_with_all_statuses(self, jobs, program_id):
         pending_jobs_count = 0
         returned_jobs_count = 0
         for _ in range(3):
-            jobs.append(self._run_program(program_id, final_status='RUNNING'))
+            jobs.append(self._run_program(program_id, final_status="RUNNING"))
             pending_jobs_count += 1
         for _ in range(4):
-            jobs.append(self._run_program(program_id, final_status='COMPLETED'))
+            jobs.append(self._run_program(program_id, final_status="COMPLETED"))
             returned_jobs_count += 1
         for _ in range(2):
-            jobs.append(self._run_program(program_id, final_status='QUEUED'))
+            jobs.append(self._run_program(program_id, final_status="QUEUED"))
             pending_jobs_count += 1
         for _ in range(3):
-            jobs.append(self._run_program(program_id, final_status='FAILED'))
+            jobs.append(self._run_program(program_id, final_status="FAILED"))
             returned_jobs_count += 1
         for _ in range(2):
-            jobs.append(self._run_program(program_id, final_status='CANCELLED'))
+            jobs.append(self._run_program(program_id, final_status="CANCELLED"))
             returned_jobs_count += 1
         return (jobs, pending_jobs_count, returned_jobs_count)
 
     def _validate_program(self, program):
         """Validate a program."""
-        self.assertEqual(self.DEFAULT_METADATA['name'], program.name)
-        self.assertEqual(self.DEFAULT_METADATA['description'], program.description)
-        self.assertEqual(self.DEFAULT_METADATA['max_execution_time'],
-                         program.max_execution_time)
+        self.assertEqual(self.DEFAULT_METADATA["name"], program.name)
+        self.assertEqual(self.DEFAULT_METADATA["description"], program.description)
+        self.assertEqual(
+            self.DEFAULT_METADATA["max_execution_time"], program.max_execution_time
+        )
         self.assertTrue(program.creation_date)
         self.assertTrue(program.update_date)
-        self.assertEqual(self.DEFAULT_METADATA['spec']['backend_requirements'],
-                         program.backend_requirements)
-        self.assertEqual(self.DEFAULT_METADATA['spec']['parameters'],
-                         program.parameters().metadata)
-        self.assertEqual(self.DEFAULT_METADATA['spec']['return_values'],
-                         program.return_values)
-        self.assertEqual(self.DEFAULT_METADATA['spec']['interim_results'],
-                         program.interim_results)
+        self.assertEqual(
+            self.DEFAULT_METADATA["spec"]["backend_requirements"],
+            program.backend_requirements,
+        )
+        self.assertEqual(
+            self.DEFAULT_METADATA["spec"]["parameters"], program.parameters().metadata
+        )
+        self.assertEqual(
+            self.DEFAULT_METADATA["spec"]["return_values"], program.return_values
+        )
+        self.assertEqual(
+            self.DEFAULT_METADATA["spec"]["interim_results"], program.interim_results
+        )

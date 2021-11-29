@@ -18,25 +18,20 @@ import numpy as np
 import seaborn as sns
 from matplotlib.colors import ListedColormap
 
-HELIX_LIGHT_CMAP = sns.cubehelix_palette(start=3.1,
-                                         hue=1.5,
-                                         light=0.9,
-                                         dark=0.1,
-                                         reverse=True,
-                                         as_cmap=True)
+HELIX_LIGHT_CMAP = sns.cubehelix_palette(
+    start=3.1, hue=1.5, light=0.9, dark=0.1, reverse=True, as_cmap=True
+)
 """Color map with a white background."""
 
-HELIX_DARK_CMAP = sns.cubehelix_palette(start=3.1,
-                                        hue=1.5,
-                                        light=0.97,
-                                        dark=0.25,
-                                        reverse=True,
-                                        as_cmap=True)
+HELIX_DARK_CMAP = sns.cubehelix_palette(
+    start=3.1, hue=1.5, light=0.97, dark=0.25, reverse=True, as_cmap=True
+)
 """Color map in dark mode, with a black background."""
 
 
-def _sns_to_plotly(cmap: ListedColormap, pl_entries: int = 255
-                   ) -> List[List[Union[float, str]]]:
+def _sns_to_plotly(
+    cmap: ListedColormap, pl_entries: int = 255
+) -> List[List[Union[float, str]]]:
     """Convert a color map to a plotly color scale.
 
     Args:
@@ -46,12 +41,12 @@ def _sns_to_plotly(cmap: ListedColormap, pl_entries: int = 255
     Returns:
         Color scale.
     """
-    hgt = 1.0/(pl_entries-1)
+    hgt = 1.0 / (pl_entries - 1)
     pl_colorscale = []
 
     for k in range(pl_entries):
-        clr = list(map(np.uint8, np.array(cmap(k*hgt)[:3])*255))
-        pl_colorscale.append([k*hgt, 'rgb'+str((clr[0], clr[1], clr[2]))])
+        clr = list(map(np.uint8, np.array(cmap(k * hgt)[:3]) * 255))
+        pl_colorscale.append([k * hgt, "rgb" + str((clr[0], clr[1], clr[2]))])
 
     return pl_colorscale
 

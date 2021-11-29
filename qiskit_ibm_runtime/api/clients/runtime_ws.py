@@ -26,11 +26,11 @@ class RuntimeWebsocketClient(BaseWebsocketClient):
     """Client for websocket communication with the IBM Quantum runtime service."""
 
     def __init__(
-            self,
-            websocket_url: str,
-            credentials: Credentials,
-            job_id: str,
-            message_queue: Optional[Queue] = None
+        self,
+        websocket_url: str,
+        credentials: Credentials,
+        job_id: str,
+        message_queue: Optional[Queue] = None,
     ) -> None:
         """WebsocketClient constructor.
 
@@ -55,11 +55,7 @@ class RuntimeWebsocketClient(BaseWebsocketClient):
             self._message_queue.put_nowait(message)
             self._current_retry = 0
 
-    def job_results(
-            self,
-            max_retries: int = 5,
-            backoff_factor: float = 0.5
-    ) -> None:
+    def job_results(self, max_retries: int = 5, backoff_factor: float = 0.5) -> None:
         """Return the interim result of a runtime job.
 
         Args:
@@ -70,7 +66,7 @@ class RuntimeWebsocketClient(BaseWebsocketClient):
         Raises:
             WebsocketError: If a websocket error occurred.
         """
-        url = '{}/stream/jobs/{}'.format(self._websocket_url, self._job_id)
+        url = "{}/stream/jobs/{}".format(self._websocket_url, self._job_id)
         self.stream(url=url, retries=max_retries, backoff_factor=backoff_factor)
 
     def _handle_stream_iteration(self) -> None:

@@ -21,9 +21,9 @@ class RestAdapterBase:
     URL_MAP = {}  # type: ignore[var-annotated]
     """Mapping between the internal name of an endpoint and the actual URL."""
 
-    _HEADER_JSON_CONTENT = {'Content-Type': 'application/json'}
+    _HEADER_JSON_CONTENT = {"Content-Type": "application/json"}
 
-    def __init__(self, session: RetrySession, prefix_url: str = '') -> None:
+    def __init__(self, session: RetrySession, prefix_url: str = "") -> None:
         """RestAdapterBase constructor.
 
         Args:
@@ -42,4 +42,4 @@ class RestAdapterBase:
         Returns:
             The resolved URL of the endpoint (relative to the session base URL).
         """
-        return '{}{}'.format(self.prefix_url, self.URL_MAP[identifier])
+        return "{}{}".format(self.prefix_url, self.URL_MAP[identifier])

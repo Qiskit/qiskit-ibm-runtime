@@ -37,14 +37,14 @@ class BackendReservation:
     """
 
     def __init__(
-            self,
-            backend_name: str,
-            start_datetime: datetime,
-            end_datetime: datetime,
-            creation_datetime: Optional[datetime] = None,
-            mode: Optional[str] = None,
-            reservation_id: Optional[str] = None,
-            hub_info: Optional[dict] = None
+        self,
+        backend_name: str,
+        start_datetime: datetime,
+        end_datetime: datetime,
+        creation_datetime: Optional[datetime] = None,
+        mode: Optional[str] = None,
+        reservation_id: Optional[str] = None,
+        hub_info: Optional[dict] = None,
     ) -> None:
         """BackendReservation constructor.
 
@@ -65,31 +65,46 @@ class BackendReservation:
         self.reservation_id = reservation_id
         self.creation_datetime = creation_datetime
         if hub_info:
-            self.hub = hub_info['hub']['name']
-            self.group = hub_info['group']['name']
-            self.project = hub_info['project']['name']
+            self.hub = hub_info["hub"]["name"]
+            self.group = hub_info["group"]["name"]
+            self.project = hub_info["project"]["name"]
         else:
             self.hub = self.group = self.project = None
 
     def __repr__(self) -> str:
         out_str = "<{}(backend_name={}, start_datetime={}, end_datetime={}".format(
-            self.__class__.__name__, self.backend_name, self.start_datetime.isoformat(),
-            self.end_datetime.isoformat())
-        for attr in ['mode', 'duration', 'reservation_id', 'creation_datetime',
-                     'hub', 'group', 'project']:
+            self.__class__.__name__,
+            self.backend_name,
+            self.start_datetime.isoformat(),
+            self.end_datetime.isoformat(),
+        )
+        for attr in [
+            "mode",
+            "duration",
+            "reservation_id",
+            "creation_datetime",
+            "hub",
+            "group",
+            "project",
+        ]:
             val = getattr(self, attr)
             if isinstance(val, datetime):
                 val = val.isoformat()
             if val is not None:
                 out_str += ", {}={}".format(attr, val)
-        out_str += ')>'
+        out_str += ")>"
         return out_str
 
     def __eq__(self, other: Any) -> bool:
-        if isinstance(other, BackendReservation) and self.backend_name == other.backend_name:
+        if (
+            isinstance(other, BackendReservation)
+            and self.backend_name == other.backend_name
+        ):
             if self.reservation_id and self.reservation_id == other.reservation_id:
                 return True
-            if self.start_datetime == other.start_datetime and \
-                    self.end_datetime == other.end_datetime:
+            if (
+                self.start_datetime == other.start_datetime
+                and self.end_datetime == other.end_datetime
+            ):
                 return True
         return False
