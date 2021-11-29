@@ -142,10 +142,10 @@ def main(backend, user_messenger, **kwargs):
     def test_filter_programs_with_program_name(self):
         """Test filter programs with program name."""
         program_id = self._upload_program(name="qiskit-test-sample")
-        programs = self.provider.runtime.programs(name="qiskit-test-sample")
+        programs = self.service.programs(name="qiskit-test-sample")
         all_ids = [prog.program_id for prog in programs]
         self.assertIn(program_id, all_ids)
-        programs = self.provider.runtime.programs(name="qiskit-test")
+        programs = self.service.programs(name="qiskit-test")
         all_ids = [prog.program_id for prog in programs]
         self.assertNotIn(program_id, all_ids)
 
