@@ -50,4 +50,4 @@ from .converters import (
     duration_difference,
 )
 from .utils import to_python_identifier
-from .json import RuntimeEncoder, RuntimeDecoder
+from .json import RuntimeEncoder, RuntimeDecoder, to_base64_string

@@ -105,7 +105,7 @@ def _decode_and_deserialize(
     return orig
 
 
-def deserialize_from_settings(mod_name: str, class_name: str, settings: Dict) -> Any:
+def _deserialize_from_settings(mod_name: str, class_name: str, settings: Dict) -> Any:
     """Deserialize an object from its settings.
 
     Args:
@@ -259,7 +259,7 @@ class RuntimeDecoder(json.JSONDecoder):
                     obj_val, qpy_serialization._read_instruction, False
                 )
             if obj_type == "settings":
-                return deserialize_from_settings(
+                return _deserialize_from_settings(
                     mod_name=obj["__module__"],
                     class_name=obj["__class__"],
                     settings=_cast_strings_keys_to_int(obj_val),
