@@ -296,17 +296,17 @@ logger = logging.getLogger(__name__)
 setup_logger(logger)
 
 # Constants used by the IBM Quantum logger.
-QISKIT_IBM_RUNTIME_LOGGER_NAME = 'qiskit_ibm_runtime'
+QISKIT_IBM_RUNTIME_LOGGER_NAME = "qiskit_ibm_runtime"
 """The name of the IBM Quantum logger."""
-QISKIT_IBM_RUNTIME_LOG_LEVEL = 'QISKIT_IBM_RUNTIME_LOG_LEVEL'
+QISKIT_IBM_RUNTIME_LOG_LEVEL = "QISKIT_IBM_RUNTIME_LOG_LEVEL"
 """The environment variable name that is used to set the level for the IBM Quantum logger."""
-QISKIT_IBM_RUNTIME_LOG_FILE = 'QISKIT_IBM_RUNTIME_LOG_FILE'
+QISKIT_IBM_RUNTIME_LOG_FILE = "QISKIT_IBM_RUNTIME_LOG_FILE"
 """The environment variable name that is used to set the file for the IBM Quantum logger."""
 
 
 def least_busy(
-        backends: List[Union[Backend, BaseBackend]],
-        reservation_lookahead: Optional[int] = 60
+    backends: List[Union[Backend, BaseBackend]],
+    reservation_lookahead: Optional[int] = 60,
 ) -> Union[Backend, BaseBackend]:
     """Return the least busy backend from a list.
 
@@ -330,14 +330,15 @@ def least_busy(
             does not have the ``pending_jobs`` attribute in its status.
     """
     if not backends:
-        raise IBMError('Unable to find the least_busy '
-                       'backend from an empty list.') from None
+        raise IBMError(
+            "Unable to find the least_busy backend from an empty list."
+        ) from None
     try:
         candidates = []
         now = datetime.now()
         for back in backends:
             backend_status = back.status()
-            if not backend_status.operational or backend_status.status_msg != 'active':
+            if not backend_status.operational or backend_status.status_msg != "active":
                 continue
             if reservation_lookahead and isinstance(back, IBMBackend):
                 end_time = now + timedelta(minutes=reservation_lookahead)
@@ -345,12 +346,17 @@ def least_busy(
                     if back.reservations(now, end_time):
                         continue
                 except Exception as err:  # pylint: disable=broad-except
-                    logger.warning("Unable to find backend reservation information. "
-                                   "It will not be taken into consideration. %s", str(err))
+                    logger.warning(
+                        "Unable to find backend reservation information. "
+                        "It will not be taken into consideration. %s",
+                        str(err),
+                    )
             candidates.append(back)
         if not candidates:
-            raise IBMError('No backend matches the criteria.')
+            raise IBMError("No backend matches the criteria.")
         return min(candidates, key=lambda b: b.status().pending_jobs)
     except AttributeError as ex:
-        raise IBMError('A backend in the list does not have the `pending_jobs` '
-                       'attribute in its status.') from ex
+        raise IBMError(
+            "A backend in the list does not have the `pending_jobs` "
+            "attribute in its status."
+        ) from ex

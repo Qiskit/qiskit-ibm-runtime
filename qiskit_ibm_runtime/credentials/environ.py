@@ -19,11 +19,11 @@ from .credentials import Credentials
 from .hub_group_project_id import HubGroupProjectID
 
 VARIABLES_MAP = {
-    'QISKIT_IBM_RUNTIME_API_TOKEN': 'token',
-    'QISKIT_IBM_RUNTIME_API_URL': 'url',
-    'QISKIT_IBM_RUNTIME_HUB': 'hub',
-    'QISKIT_IBM_RUNTIME_GROUP': 'group',
-    'QISKIT_IBM_RUNTIME_PROJECT': 'project'
+    "QISKIT_IBM_RUNTIME_API_TOKEN": "token",
+    "QISKIT_IBM_RUNTIME_API_URL": "url",
+    "QISKIT_IBM_RUNTIME_HUB": "hub",
+    "QISKIT_IBM_RUNTIME_GROUP": "group",
+    "QISKIT_IBM_RUNTIME_PROJECT": "project",
 }
 """Dictionary that maps `ENV_VARIABLE_NAME` to credential parameter."""
 
@@ -36,7 +36,10 @@ def read_credentials_from_environ() -> Dict[HubGroupProjectID, Credentials]:
         ``{credentials_unique_id: Credentials}`` format.
     """
     # The token is the only required parameter.
-    if not (os.getenv('QISKIT_IBM_RUNTIME_API_TOKEN') and os.getenv('QISKIT_IBM_RUNTIME_API_URL')):
+    if not (
+        os.getenv("QISKIT_IBM_RUNTIME_API_TOKEN")
+        and os.getenv("QISKIT_IBM_RUNTIME_API_URL")
+    ):
         return {}
 
     # Build the credentials based on environment variables.
@@ -48,17 +51,17 @@ def read_credentials_from_environ() -> Dict[HubGroupProjectID, Credentials]:
     for envar_name, credential_key in VARIABLES_MAP.items():
         if os.getenv(envar_name):
             credentials_dict[credential_key] = os.getenv(envar_name)
-            if envar_name == 'QISKIT_IBM_RUNTIME_API_URL':
-                credentials_dict['auth_url'] = os.getenv(envar_name)
-            elif envar_name == 'QISKIT_IBM_RUNTIME_HUB':
+            if envar_name == "QISKIT_IBM_RUNTIME_API_URL":
+                credentials_dict["auth_url"] = os.getenv(envar_name)
+            elif envar_name == "QISKIT_IBM_RUNTIME_HUB":
                 hub = os.getenv(envar_name)
-            elif envar_name == 'QISKIT_IBM_RUNTIME_GROUP':
+            elif envar_name == "QISKIT_IBM_RUNTIME_GROUP":
                 group = os.getenv(envar_name)
-            elif envar_name == 'QISKIT_IBM_RUNTIME_PROJECT':
+            elif envar_name == "QISKIT_IBM_RUNTIME_PROJECT":
                 project = os.getenv(envar_name)
 
     if all([hub, group, project]):
-        credentials_dict['default_provider'] = HubGroupProjectID(hub, group, project)
+        credentials_dict["default_provider"] = HubGroupProjectID(hub, group, project)
 
     credentials = Credentials(**credentials_dict)  # type: ignore[arg-type]
     return {credentials.unique_id(): credentials}

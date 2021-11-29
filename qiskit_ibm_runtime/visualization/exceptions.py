@@ -17,14 +17,17 @@ from ..exceptions import IBMError
 
 class VisualizationError(IBMError):
     """Base class for errors raised by the visualization modules."""
+
     pass
 
 
 class VisualizationValueError(VisualizationError, ValueError):
     """Value errors raised by the visualization modules."""
+
     pass
 
 
 class VisualizationTypeError(VisualizationError, TypeError):
     """Type errors raised by the visualization modules."""
+
     pass

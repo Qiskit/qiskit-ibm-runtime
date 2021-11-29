@@ -26,17 +26,19 @@ from qiskit_ibm_runtime.utils.utils import to_python_identifier
 
 from ..ibm_test_case import IBMTestCase
 
-TUTORIAL_PATH = 'docs/tutorials/**/*.ipynb'
+TUTORIAL_PATH = "docs/tutorials/**/*.ipynb"
 
 
 class TutorialsTestCaseMeta(type):
     """Metaclass that dynamically appends a "test_TUTORIAL_NAME" method to the class."""
-    def __new__(mcs, name, bases, dict_):
 
+    def __new__(mcs, name, bases, dict_):
         def create_test(filename):
             """Return a new test function."""
+
             def test_function(self):
                 self._run_notebook(filename)
+
             return test_function
 
         tutorials = sorted(glob.glob(TUTORIAL_PATH, recursive=True))
@@ -49,14 +51,14 @@ class TutorialsTestCaseMeta(type):
         return type.__new__(mcs, name, bases, dict_)
 
 
-@skipIf(not TEST_OPTIONS['run_slow'], 'Skipping slow tests.')
+@skipIf(not TEST_OPTIONS["run_slow"], "Skipping slow tests.")
 class TestTutorials(IBMTestCase, metaclass=TutorialsTestCaseMeta):
     """Tests for tutorials."""
 
     @staticmethod
     def _run_notebook(filename):
         # Create the preprocessor.
-        execute_preprocessor = ExecutePreprocessor(timeout=6000, kernel_name='python3')
+        execute_preprocessor = ExecutePreprocessor(timeout=6000, kernel_name="python3")
 
         # Open the notebook.
         file_path = os.path.dirname(os.path.abspath(filename))
@@ -65,7 +67,6 @@ class TestTutorials(IBMTestCase, metaclass=TutorialsTestCaseMeta):
 
         with warnings.catch_warnings():
             # Silence some spurious warnings.
-            warnings.filterwarnings('ignore', category=DeprecationWarning)
+            warnings.filterwarnings("ignore", category=DeprecationWarning)
             # Finally, run the notebook.
-            execute_preprocessor.preprocess(notebook,
-                                            {'metadata': {'path': file_path}})
+            execute_preprocessor.preprocess(notebook, {"metadata": {"path": file_path}})

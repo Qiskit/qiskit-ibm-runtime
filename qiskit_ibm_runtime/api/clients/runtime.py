@@ -27,16 +27,19 @@ class RuntimeClient:
     """Client for accessing runtime service."""
 
     def __init__(
-            self,
-            credentials: Credentials,
+        self,
+        credentials: Credentials,
     ) -> None:
         """RandomClient constructor.
 
         Args:
             credentials: Account credentials.
         """
-        self._session = RetrySession(credentials.runtime_url, credentials.access_token,
-                                     **credentials.connection_parameters())
+        self._session = RetrySession(
+            credentials.runtime_url,
+            credentials.access_token,
+            **credentials.connection_parameters()
+        )
         self.api = Runtime(self._session)
 
     def list_programs(self, limit: int = None, skip: int = None) -> Dict[str, Any]:
@@ -52,13 +55,13 @@ class RuntimeClient:
         return self.api.list_programs(limit, skip)
 
     def program_create(
-            self,
-            program_data: str,
-            name: str,
-            description: str,
-            max_execution_time: int,
-            is_public: Optional[bool] = False,
-            spec: Optional[Dict] = None
+        self,
+        program_data: str,
+        name: str,
+        description: str,
+        max_execution_time: int,
+        is_public: Optional[bool] = False,
+        spec: Optional[Dict] = None,
     ) -> Dict:
         """Create a new program.
 
@@ -76,8 +79,10 @@ class RuntimeClient:
         return self.api.create_program(
             program_data=program_data,
             name=name,
-            description=description, max_execution_time=max_execution_time,
-            is_public=is_public, spec=spec
+            description=description,
+            max_execution_time=max_execution_time,
+            is_public=is_public,
+            spec=spec,
         )
 
     def program_get(self, program_id: str) -> Dict:
@@ -106,12 +111,12 @@ class RuntimeClient:
             self.api.program(program_id).make_private()
 
     def program_run(
-            self,
-            program_id: str,
-            credentials: Credentials,
-            backend_name: str,
-            params: Dict,
-            image: str
+        self,
+        program_id: str,
+        credentials: Credentials,
+        backend_name: str,
+        params: Dict,
+        image: str,
     ) -> Dict:
         """Run the specified program.
 
@@ -125,10 +130,15 @@ class RuntimeClient:
         Returns:
             JSON response.
         """
-        return self.api.program_run(program_id=program_id, hub=credentials.hub,
-                                    group=credentials.group, project=credentials.project,
-                                    backend_name=backend_name, params=params,
-                                    image=image)
+        return self.api.program_run(
+            program_id=program_id,
+            hub=credentials.hub,
+            group=credentials.group,
+            project=credentials.project,
+            backend_name=backend_name,
+            params=params,
+            image=image,
+        )
 
     def program_delete(self, program_id: str) -> None:
         """Delete the specified program.
@@ -139,13 +149,13 @@ class RuntimeClient:
         self.api.program(program_id).delete()
 
     def program_update(
-            self,
-            program_id: str,
-            program_data: str = None,
-            name: str = None,
-            description: str = None,
-            max_execution_time: int = None,
-            spec: Optional[Dict] = None
+        self,
+        program_id: str,
+        program_data: str = None,
+        name: str = None,
+        description: str = None,
+        max_execution_time: int = None,
+        spec: Optional[Dict] = None,
     ) -> None:
         """Update a program.
 
@@ -162,8 +172,11 @@ class RuntimeClient:
 
         if any([name, description, max_execution_time, spec]):
             self.api.program(program_id).update_metadata(
-                name=name, description=description,
-                max_execution_time=max_execution_time, spec=spec)
+                name=name,
+                description=description,
+                max_execution_time=max_execution_time,
+                spec=spec,
+            )
 
     def job_get(self, job_id: str) -> Dict:
         """Get job data.
@@ -179,14 +192,14 @@ class RuntimeClient:
         return response
 
     def jobs_get(
-            self,
-            limit: int = None,
-            skip: int = None,
-            pending: bool = None,
-            program_id: str = None,
-            hub: str = None,
-            group: str = None,
-            project: str = None
+        self,
+        limit: int = None,
+        skip: int = None,
+        pending: bool = None,
+        program_id: str = None,
+        hub: str = None,
+        group: str = None,
+        project: str = None,
     ) -> Dict:
         """Get job data for all jobs.
 
@@ -203,8 +216,15 @@ class RuntimeClient:
         Returns:
             JSON response.
         """
-        return self.api.jobs_get(limit=limit, skip=skip, pending=pending,
-                                 program_id=program_id, hub=hub, group=group, project=project)
+        return self.api.jobs_get(
+            limit=limit,
+            skip=skip,
+            pending=pending,
+            program_id=program_id,
+            hub=hub,
+            group=group,
+            project=project,
+        )
 
     def job_results(self, job_id: str) -> str:
         """Get the results of a program job.

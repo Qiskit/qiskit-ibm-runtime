@@ -46,20 +46,20 @@ class RuntimeProgram:
     """
 
     def __init__(
-            self,
-            program_name: str,
-            program_id: str,
-            description: str,
-            parameters: Optional[Dict] = None,
-            return_values: Optional[Dict] = None,
-            interim_results: Optional[Dict] = None,
-            max_execution_time: int = 0,
-            backend_requirements: Optional[Dict] = None,
-            creation_date: str = "",
-            update_date: str = "",
-            is_public: Optional[bool] = False,
-            data: str = "",
-            api_client: Optional[RuntimeClient] = None
+        self,
+        program_name: str,
+        program_id: str,
+        description: str,
+        parameters: Optional[Dict] = None,
+        return_values: Optional[Dict] = None,
+        interim_results: Optional[Dict] = None,
+        max_execution_time: int = 0,
+        backend_requirements: Optional[Dict] = None,
+        creation_date: str = "",
+        update_date: str = "",
+        is_public: Optional[bool] = False,
+        data: str = "",
+        api_client: Optional[RuntimeClient] = None,
     ) -> None:
         """RuntimeProgram constructor.
 
@@ -96,50 +96,59 @@ class RuntimeProgram:
         def _format_common(schema: Dict) -> None:
             """Add title, description and property details to `formatted`."""
             if "description" in schema:
-                formatted.append(" "*4 + "Description: {}".format(schema["description"]))
+                formatted.append(
+                    " " * 4 + "Description: {}".format(schema["description"])
+                )
             if "type" in schema:
-                formatted.append(" "*4 + "Type: {}".format(str(schema["type"])))
+                formatted.append(" " * 4 + "Type: {}".format(str(schema["type"])))
             if "properties" in schema:
-                formatted.append(" "*4 + "Properties:")
+                formatted.append(" " * 4 + "Properties:")
                 for property_name, property_value in schema["properties"].items():
-                    formatted.append(" "*8 + "- " + property_name + ":")
+                    formatted.append(" " * 8 + "- " + property_name + ":")
                     for key, value in property_value.items():
-                        formatted.append(" "*12 + "{}: {}".format(sentence_case(key), str(value)))
-                    formatted.append(" "*12 + "Required: " +
-                                     str(property_name in schema.get("required", [])))
+                        formatted.append(
+                            " " * 12 + "{}: {}".format(sentence_case(key), str(value))
+                        )
+                    formatted.append(
+                        " " * 12
+                        + "Required: "
+                        + str(property_name in schema.get("required", []))
+                    )
 
         def sentence_case(camel_case_text: str) -> str:
             """Converts camelCase to Sentence case"""
-            if camel_case_text == '':
+            if camel_case_text == "":
                 return camel_case_text
-            sentence_case_text = re.sub('([A-Z])', r' \1', camel_case_text)
+            sentence_case_text = re.sub("([A-Z])", r" \1", camel_case_text)
             return sentence_case_text[:1].upper() + sentence_case_text[1:].lower()
 
-        formatted = [f'{self.program_id}:',
-                     f"  Name: {self.name}",
-                     f"  Description: {self.description}",
-                     f"  Creation date: {self.creation_date}",
-                     f"  Update date: {self.update_date}",
-                     f"  Max execution time: {self.max_execution_time}"]
+        formatted = [
+            f"{self.program_id}:",
+            f"  Name: {self.name}",
+            f"  Description: {self.description}",
+            f"  Creation date: {self.creation_date}",
+            f"  Update date: {self.update_date}",
+            f"  Max execution time: {self.max_execution_time}",
+        ]
 
         formatted.append("  Input parameters:")
         if self._parameters:
             _format_common(self._parameters)
         else:
-            formatted.append(" "*4 + "none")
+            formatted.append(" " * 4 + "none")
 
         formatted.append("  Interim results:")
         if self._interim_results:
             _format_common(self._interim_results)
         else:
-            formatted.append(" "*4 + "none")
+            formatted.append(" " * 4 + "none")
 
         formatted.append("  Returns:")
         if self._return_values:
             _format_common(self._return_values)
         else:
-            formatted.append(" "*4 + "none")
-        return '\n'.join(formatted)
+            formatted.append(" " * 4 + "none")
+        return "\n".join(formatted)
 
     def to_dict(self) -> Dict:
         """Convert program metadata to dictionary format.
@@ -156,10 +165,10 @@ class RuntimeProgram:
             "parameters": self.parameters(),
             "return_values": self.return_values,
             "interim_results": self.interim_results,
-            "is_public": self._is_public
+            "is_public": self._is_public,
         }
 
-    def parameters(self) -> 'ParameterNamespace':
+    def parameters(self) -> "ParameterNamespace":
         """Program parameter namespace.
 
         You can use the returned namespace to assign parameter values and pass
@@ -280,7 +289,8 @@ class RuntimeProgram:
             self._refresh()
             if not self._data:
                 raise IBMNotAuthorizedError(
-                    'Only program authors are authorized to retrieve program data')
+                    "Only program authors are authorized to retrieve program data"
+                )
         return self._data
 
     def _refresh(self) -> None:
@@ -294,29 +304,33 @@ class RuntimeProgram:
             response = self._api_client.program_get(self._id)
         except RequestsApiError as ex:
             if ex.status_code == 404:
-                raise RuntimeProgramNotFound(f"Program not found: {ex.message}") from None
+                raise RuntimeProgramNotFound(
+                    f"Program not found: {ex.message}"
+                ) from None
             raise QiskitRuntimeError(f"Failed to get program: {ex}") from None
         self._backend_requirements = {}
         self._parameters = {}
         self._return_values = {}
         self._interim_results = {}
         if "spec" in response:
-            self._backend_requirements = response["spec"].get('backend_requirements', {})
-            self._parameters = response["spec"].get('parameters', {})
-            self._return_values = response["spec"].get('return_values', {})
-            self._interim_results = response["spec"].get('interim_results', {})
-        self._name = response['name']
-        self._id = response['id']
-        self._description = response.get('description', "")
-        self._max_execution_time = response.get('cost', 0)
-        self._creation_date = response.get('creation_date', "")
-        self._update_date = response.get('update_date', "")
-        self._is_public = response.get('is_public', False)
-        self._data = response.get('data', "")
+            self._backend_requirements = response["spec"].get(
+                "backend_requirements", {}
+            )
+            self._parameters = response["spec"].get("parameters", {})
+            self._return_values = response["spec"].get("return_values", {})
+            self._interim_results = response["spec"].get("interim_results", {})
+        self._name = response["name"]
+        self._id = response["id"]
+        self._description = response.get("description", "")
+        self._max_execution_time = response.get("cost", 0)
+        self._creation_date = response.get("creation_date", "")
+        self._update_date = response.get("update_date", "")
+        self._is_public = response.get("is_public", False)
+        self._data = response.get("data", "")
 
 
 class ParameterNamespace(SimpleNamespace):
-    """ A namespace for program parameters with validation.
+    """A namespace for program parameters with validation.
 
     This class provides a namespace for program parameters with auto-completion
     and validation support.
@@ -362,27 +376,31 @@ class ParameterNamespace(SimpleNamespace):
             value = getattr(self, parameter_name, None)
             # Check there exists a program parameter of that name.
             if value is None and parameter_name in self.metadata.get("required", []):
-                raise IBMInputValueError('Param (%s) missing required value!' % parameter_name)
+                raise IBMInputValueError(
+                    "Param (%s) missing required value!" % parameter_name
+                )
 
     def __str__(self) -> str:
         """Creates string representation of object"""
         # Header
-        header = '| {:10.10} | {:12.12} | {:12.12} ' \
-                 '| {:8.8} | {:>15} |'.format(
-                     'Name',
-                     'Value',
-                     'Type',
-                     'Required',
-                     'Description'
-                     )
-        params_str = '\n'.join([
-            '| {:10.10} | {:12.12} | {:12.12}| {:8.8} | {:>15} |'.format(
-                parameter_name,
-                str(getattr(self, parameter_name, "None")),
-                str(parameter_value.get("type", "None")),
-                str(parameter_name in self.metadata.get("required", [])),
-                str(parameter_value.get("description", "None"))
-            ) for parameter_name, parameter_value in self.__program_params.items()])
+        header = "| {:10.10} | {:12.12} | {:12.12} " "| {:8.8} | {:>15} |".format(
+            "Name", "Value", "Type", "Required", "Description"
+        )
+        params_str = "\n".join(
+            [
+                "| {:10.10} | {:12.12} | {:12.12}| {:8.8} | {:>15} |".format(
+                    parameter_name,
+                    str(getattr(self, parameter_name, "None")),
+                    str(parameter_value.get("type", "None")),
+                    str(parameter_name in self.metadata.get("required", [])),
+                    str(parameter_value.get("description", "None")),
+                )
+                for parameter_name, parameter_value in self.__program_params.items()
+            ]
+        )
 
-        return "ParameterNamespace (Values):\n%s\n%s\n%s" \
-               % (header, '-' * len(header), params_str)
+        return "ParameterNamespace (Values):\n%s\n%s\n%s" % (
+            header,
+            "-" * len(header),
+            params_str,
+        )

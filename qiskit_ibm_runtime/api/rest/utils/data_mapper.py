@@ -26,10 +26,7 @@ def map_jobs_limit_response(data: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         Mapped data.
     """
-    field_map = {
-        'maximumJobs': 'maximum_jobs',
-        'runningJobs': 'running_jobs'
-    }
+    field_map = {"maximumJobs": "maximum_jobs", "runningJobs": "running_jobs"}
     dict_to_identifier(data, field_map)
     return data
 
@@ -67,12 +64,14 @@ def to_python_identifier(name: str) -> str:
     # and underscores and cannot start with a digit.
     pattern = re.compile(r"\W|^(?=\d)", re.ASCII)
     if not name.isidentifier():
-        name = re.sub(pattern, '_', name)
+        name = re.sub(pattern, "_", name)
 
     # Convert to snake case
-    name = re.sub('((?<=[a-z0-9])[A-Z]|(?!^)(?<!_)[A-Z](?=[a-z]))', r'_\1', name).lower()
+    name = re.sub(
+        "((?<=[a-z0-9])[A-Z]|(?!^)(?<!_)[A-Z](?=[a-z]))", r"_\1", name
+    ).lower()
 
     while keyword.iskeyword(name):
-        name += '_'
+        name += "_"
 
     return name

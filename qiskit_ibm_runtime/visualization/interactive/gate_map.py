@@ -22,18 +22,18 @@ from ..device_layouts import DEVICE_LAYOUTS
 
 
 def iplot_gate_map(
-        backend: IBMBackend,
-        figsize: Tuple[Optional[int], Optional[int]] = (None, None),
-        label_qubits: bool = True,
-        qubit_size: Optional[float] = None,
-        line_width: Optional[float] = None,
-        font_size: Optional[int] = None,
-        qubit_color: Union[List[str], str] = "#2f4b7c",
-        qubit_labels: Optional[List[str]] = None,
-        line_color: Union[List[str], str] = "#2f4b7c",
-        font_color: str = "white",
-        background_color: str = 'white',
-        as_widget: bool = False
+    backend: IBMBackend,
+    figsize: Tuple[Optional[int], Optional[int]] = (None, None),
+    label_qubits: bool = True,
+    qubit_size: Optional[float] = None,
+    line_width: Optional[float] = None,
+    font_size: Optional[int] = None,
+    qubit_color: Union[List[str], str] = "#2f4b7c",
+    qubit_labels: Optional[List[str]] = None,
+    line_color: Union[List[str], str] = "#2f4b7c",
+    font_color: str = "white",
+    background_color: str = "white",
+    as_widget: bool = False,
 ) -> Union[PlotlyFigure, PlotlyWidget]:
     """Plots an interactive gate map of a device.
 
@@ -91,11 +91,14 @@ def iplot_gate_map(
         grid_data = DEVICE_LAYOUTS[n_qubits]
     else:
         fig = go.Figure()
-        fig.update_layout(showlegend=False,
-                          plot_bgcolor=background_color,
-                          paper_bgcolor=background_color,
-                          width=figsize[0], height=figsize[1],
-                          margin=dict(t=30, l=0, r=0, b=0))
+        fig.update_layout(
+            showlegend=False,
+            plot_bgcolor=background_color,
+            paper_bgcolor=background_color,
+            width=figsize[0],
+            height=figsize[1],
+            margin=dict(t=30, l=0, r=0, b=0),
+        )
 
         if as_widget:
             return PlotlyWidget(fig)
@@ -180,12 +183,14 @@ def iplot_gate_map(
                     y_mid = (y_end - y_start) / 2 + y_start
 
             fig.add_trace(
-                go.Scatter(x=[x_start, x_mid, x_end],
-                           y=[-y_start, -y_mid, -y_end],
-                           mode="lines",
-                           hoverinfo='none',
-                           line=dict(width=line_width,
-                                     color=line_color[ind])))
+                go.Scatter(
+                    x=[x_start, x_mid, x_end],
+                    y=[-y_start, -y_mid, -y_end],
+                    mode="lines",
+                    hoverinfo="none",
+                    line=dict(width=line_width, color=line_color[ind]),
+                )
+            )
 
     # Add the qubits themselves
     if qubit_labels is None:
@@ -200,18 +205,19 @@ def iplot_gate_map(
         if font_size is None:
             font_size = 9
 
-    fig.add_trace(go.Scatter(
-        x=[d[1] for d in grid_data],
-        y=[-d[0]-offset for d in grid_data],
-        mode="markers+text",
-        marker=go.scatter.Marker(size=qubit_size,
-                                 color=qubit_color,
-                                 opacity=1),
-        text=[str(ii) for ii in range(n_qubits)] if label_qubits else None,
-        textposition="middle center",
-        textfont=dict(size=font_size, color=font_color),
-        hoverinfo="text" if label_qubits else 'none',
-        hovertext=qubit_text))
+    fig.add_trace(
+        go.Scatter(
+            x=[d[1] for d in grid_data],
+            y=[-d[0] - offset for d in grid_data],
+            mode="markers+text",
+            marker=go.scatter.Marker(size=qubit_size, color=qubit_color, opacity=1),
+            text=[str(ii) for ii in range(n_qubits)] if label_qubits else None,
+            textposition="middle center",
+            textfont=dict(size=font_size, color=font_color),
+            hoverinfo="text" if label_qubits else "none",
+            hovertext=qubit_text,
+        )
+    )
 
     fig.update_xaxes(visible=False)
     _range = None
@@ -219,11 +225,14 @@ def iplot_gate_map(
         _range = [-3.5, 0.5]
     fig.update_yaxes(visible=False, range=_range)
 
-    fig.update_layout(showlegend=False,
-                      plot_bgcolor=background_color,
-                      paper_bgcolor=background_color,
-                      width=figsize[0], height=figsize[1],
-                      margin=dict(t=30, l=0, r=0, b=0))
+    fig.update_layout(
+        showlegend=False,
+        plot_bgcolor=background_color,
+        paper_bgcolor=background_color,
+        width=figsize[0],
+        height=figsize[1],
+        margin=dict(t=30, l=0, r=0, b=0),
+    )
 
     if as_widget:
         return PlotlyWidget(fig)

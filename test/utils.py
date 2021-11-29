@@ -34,29 +34,30 @@ def setup_test_logging(logger: logging.Logger, filename: str):
         filename: Name of the output file, if log to file is enabled.
     """
     # Set up formatter.
-    log_fmt = ('{}.%(funcName)s:%(levelname)s:%(asctime)s:'
-               ' %(message)s'.format(logger.name))
+    log_fmt = "{}.%(funcName)s:%(levelname)s:%(asctime)s:" " %(message)s".format(
+        logger.name
+    )
     formatter = logging.Formatter(log_fmt)
 
-    if os.getenv('STREAM_LOG', 'true'):
+    if os.getenv("STREAM_LOG", "true"):
         # Set up the stream handler.
         stream_handler = logging.StreamHandler()
         stream_handler.setFormatter(formatter)
         logger.addHandler(stream_handler)
 
-    if os.getenv('FILE_LOG', 'false'):
+    if os.getenv("FILE_LOG", "false"):
         file_handler = logging.FileHandler(filename)
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
 
-    logger.setLevel(os.getenv('LOG_LEVEL', 'DEBUG'))
+    logger.setLevel(os.getenv("LOG_LEVEL", "DEBUG"))
 
 
 def most_busy_backend(
-        service: IBMRuntimeService,
-        hub: Optional[str] = None,
-        group: Optional[str] = None,
-        project: Optional[str] = None
+    service: IBMRuntimeService,
+    hub: Optional[str] = None,
+    group: Optional[str] = None,
+    project: Optional[str] = None,
 ) -> IBMBackend:
     """Return the most busy backend for the provider given.
 
@@ -73,10 +74,13 @@ def most_busy_backend(
     Returns:
         The most busy backend.
     """
-    backends = service.backends(simulator=False, operational=True,
-                                hub=hub, group=group, project=project)
-    return max([b for b in backends if b.configuration().n_qubits >= 5],
-               key=lambda b: b.status().pending_jobs)
+    backends = service.backends(
+        simulator=False, operational=True, hub=hub, group=group, project=project
+    )
+    return max(
+        [b for b in backends if b.configuration().n_qubits >= 5],
+        key=lambda b: b.status().pending_jobs,
+    )
 
 
 def get_large_circuit(backend: IBMBackend) -> QuantumCircuit:
@@ -90,9 +94,9 @@ def get_large_circuit(backend: IBMBackend) -> QuantumCircuit:
     """
     n_qubits = min(backend.configuration().n_qubits, 20)
     circuit = QuantumCircuit(n_qubits, n_qubits)
-    for n in range(n_qubits-1):
+    for n in range(n_qubits - 1):
         circuit.h(n)
-        circuit.cx(n, n+1)
+        circuit.cx(n, n + 1)
     circuit.measure(list(range(n_qubits)), list(range(n_qubits)))
 
     return circuit
@@ -108,8 +112,11 @@ def bell_in_qobj(backend: IBMBackend, shots: int = 1024) -> QasmQobj:
     Returns:
         A bell circuit in Qobj format.
     """
-    return assemble(transpile(ReferenceCircuits.bell(), backend=backend),
-                    backend=backend, shots=shots)
+    return assemble(
+        transpile(ReferenceCircuits.bell(), backend=backend),
+        backend=backend,
+        shots=shots,
+    )
 
 
 def get_pulse_schedule(backend: IBMBackend) -> Schedule:
@@ -119,19 +126,15 @@ def get_pulse_schedule(backend: IBMBackend) -> Schedule:
     inst_map = defaults.instruction_schedule_map
 
     # Run 2 experiments - 1 with x pulse and 1 without
-    x = inst_map.get('x', 0)
-    measure = inst_map.get('measure', range(config.n_qubits)) << x.duration
+    x = inst_map.get("x", 0)
+    measure = inst_map.get("measure", range(config.n_qubits)) << x.duration
     ground_sched = measure
     excited_sched = x | measure
     schedules = [ground_sched, excited_sched]
     return schedules
 
 
-def get_hgp(
-        qe_token: str,
-        qe_url: str,
-        default: bool = True
-) -> HubGroupProject:
+def get_hgp(qe_token: str, qe_url: str, default: bool = True) -> HubGroupProject:
     """Return a HubGroupProject for the account.
 
     Args:
