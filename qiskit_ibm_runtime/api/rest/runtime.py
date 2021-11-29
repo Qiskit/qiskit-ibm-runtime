@@ -28,10 +28,10 @@ class Runtime(RestAdapterBase):
     """Rest adapter for Runtime base endpoints."""
 
     URL_MAP = {
-        'programs': '/programs',
-        'jobs': '/jobs',
-        'logout': '/logout',
-        'interim_results': '/interim_results'
+        "programs": "/programs",
+        "jobs": "/jobs",
+        "logout": "/logout",
+        "interim_results": "/interim_results",
     }
 
     def program(self, program_id: str) -> "Program":
@@ -252,8 +252,7 @@ class Program(RestAdapterBase):
         """
         url = self.get_url("data")
         self.session.put(
-            url, data=program_data, headers={
-                "Content-Type": "application/octet-stream"}
+            url, data=program_data, headers={"Content-Type": "application/octet-stream"}
         )
 
     def update_metadata(
@@ -288,8 +287,7 @@ class Program(RestAdapterBase):
 class ProgramJob(RestAdapterBase):
     """Rest adapter for program job related endpoints."""
 
-    URL_MAP = {"self": "", "results": "/results",
-               "cancel": "/cancel", "logs": "/logs"}
+    URL_MAP = {"self": "", "results": "/results", "cancel": "/cancel", "logs": "/logs"}
 
     def __init__(
         self, session: RetrySession, job_id: str, url_prefix: str = ""
@@ -321,7 +319,7 @@ class ProgramJob(RestAdapterBase):
         Returns:
             Interim results.
         """
-        response = self.session.get(self.get_url('interim_results'))
+        response = self.session.get(self.get_url("interim_results"))
         return response.text
 
     def results(self) -> str:

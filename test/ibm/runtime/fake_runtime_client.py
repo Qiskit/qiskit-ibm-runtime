@@ -147,7 +147,7 @@ class BaseFakeRuntimeJob:
     def interim_results(self):
         """Return job interim results."""
         return self._interim_results
-        
+
 
 class FailedRuntimeJob(BaseFakeRuntimeJob):
     """Class for faking a failed runtime job."""
@@ -426,7 +426,7 @@ class BaseFakeRuntimeClient:
     def job_results(self, job_id):
         """Get the results of a program job."""
         return self._get_job(job_id).result()
-    
+
     def job_interim_results(self, job_id):
         """Get the interim results of a program job."""
         return self._get_job(job_id).interim_results()

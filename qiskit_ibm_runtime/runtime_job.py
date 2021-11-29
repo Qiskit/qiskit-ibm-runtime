@@ -140,13 +140,15 @@ class RuntimeJob:
 
         Returns:
             Runtime job interim results.
-            
+
         Raises:
             RuntimeJobFailureError: If the job failed.
         """
         if not self._final_interim_results:
             _decoder = decoder or self._result_decoder
-            interim_results_raw = self._api_client.job_interim_results(job_id=self.job_id)
+            interim_results_raw = self._api_client.job_interim_results(
+                job_id=self.job_id
+            )
             self._interim_results = _decoder.decode(interim_results_raw)
             if self.status() in JOB_FINAL_STATES:
                 self._final_interim_results = True

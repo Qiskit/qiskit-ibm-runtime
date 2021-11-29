@@ -236,13 +236,13 @@ class RuntimeClient:
             Job result.
         """
         return self.api.program_job(job_id).results()
-    
+
     def job_interim_results(self, job_id: str) -> str:
         """Get the interim results of a program job.
 
         Args:
             job_id: Program job ID.
-            
+
         Returns:
             Job interim results.
         """
