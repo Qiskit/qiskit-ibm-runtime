@@ -27,12 +27,7 @@ logger = logging.getLogger(__name__)
 class Runtime(RestAdapterBase):
     """Rest adapter for Runtime base endpoints."""
 
-    URL_MAP = {
-        "programs": "/programs",
-        "jobs": "/jobs",
-        "logout": "/logout",
-        "interim_results": "/interim_results",
-    }
+    URL_MAP = {"programs": "/programs", "jobs": "/jobs", "logout": "/logout"}
 
     def program(self, program_id: str) -> "Program":
         """Return an adapter for the program.
@@ -287,7 +282,13 @@ class Program(RestAdapterBase):
 class ProgramJob(RestAdapterBase):
     """Rest adapter for program job related endpoints."""
 
-    URL_MAP = {"self": "", "results": "/results", "cancel": "/cancel", "logs": "/logs"}
+    URL_MAP = {
+        "self": "",
+        "results": "/results",
+        "cancel": "/cancel",
+        "logs": "/logs",
+        "interim_results": "/interim_results",
+    }
 
     def __init__(
         self, session: RetrySession, job_id: str, url_prefix: str = ""
