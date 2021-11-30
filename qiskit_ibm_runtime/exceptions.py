@@ -87,12 +87,6 @@ class IBMBackendValueError(IBMBackendError, ValueError):
     pass
 
 
-class IBMBackendJobLimitError(IBMBackendError):
-    """Errors raised when job limit is reached."""
-
-    pass
-
-
 class IBMInputValueError(IBMError):
     """Error raised due to invalid input value."""
 
