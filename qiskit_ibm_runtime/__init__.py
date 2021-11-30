@@ -289,7 +289,7 @@ from .runtime_program import RuntimeProgram, ParameterNamespace
 from .program.user_messenger import UserMessenger
 from .program.program_backend import ProgramBackend
 from .program.result_decoder import ResultDecoder
-from .utils.runtime import RuntimeEncoder, RuntimeDecoder
+from .utils.json import RuntimeEncoder, RuntimeDecoder
 
 # Setup the logger for the IBM Quantum Provider package.
 logger = logging.getLogger(__name__)
