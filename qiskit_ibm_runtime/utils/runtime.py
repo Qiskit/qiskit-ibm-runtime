@@ -71,11 +71,11 @@ def _serialize_and_encode(
     Returns:
         String representation.
     """
-    buff = io.BytesIO()
-    serializer(buff, data, **kwargs)
-    buff.seek(0)
-    serialized_data = buff.read()
-    buff.close()
+    with io.BytesIO() as buff:
+        serializer(buff, data, **kwargs)
+        buff.seek(0)
+        serialized_data = buff.read()
+
     if compress:
         serialized_data = zlib.compress(serialized_data)
     return base64.standard_b64encode(serialized_data).decode("utf-8")
@@ -98,11 +98,11 @@ def _decode_and_deserialize(
     decoded = base64.standard_b64decode(data)
     if decompress:
         decoded = zlib.decompress(decoded)
-    buff.write(decoded)
-    buff.seek(0)
-    orig = deserializer(buff)
-    buff.close()
-    return orig
+
+    with io.BytesIO() as buff:
+        buff.write(decoded)
+        buff.seek(0)
+        return deserializer(buff)
 
 
 def deserialize_from_settings(mod_name: str, class_name: str, settings: Dict) -> Any:
