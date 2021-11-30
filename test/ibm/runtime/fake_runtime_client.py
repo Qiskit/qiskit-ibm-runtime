@@ -268,7 +268,7 @@ class BaseFakeRuntimeClient:
                 programs.append(prog.to_dict())
             if name == prog.to_dict()["name"]:
                 programs.append(prog.to_dict())
-        return {"programs": programs[skip : limit + skip], "count": len(programs)}
+        return {"programs": programs[skip : limit + skip], "count": len(self._programs)}
 
     def program_create(
         self,
