@@ -225,6 +225,8 @@ class RuntimeJob:
             RuntimeInvalidStateError: If a callback function is already streaming results or
                 if the job already finished.
         """
+        if self._status in JOB_FINAL_STATES:
+            raise RuntimeInvalidStateError("Job already finished.")
         if self._is_streaming():
             try:
                 self._executor.submit(
