@@ -855,7 +855,7 @@ class IBMRuntimeService:
             for program in list(self._programs.values()):
                 if program.name == name:
                     matched_programs.append(program)
-            return matched_programs[skip: limit + skip]
+            return matched_programs[skip : limit + skip]
         if not self._programs or refresh:
             self._programs = {}
             current_page_limit = 20
