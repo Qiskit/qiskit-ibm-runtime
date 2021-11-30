@@ -33,7 +33,6 @@ from qiskit_ibm_runtime import runtime_job, ibm_backend  # pylint: disable=unuse
 from .api.clients import AuthClient, VersionClient
 from .api.clients.runtime import RuntimeClient
 from .api.exceptions import RequestsApiError
-from .apiconstants import QISKIT_IBM_RUNTIME_API_URL
 from .backendreservation import BackendReservation
 from .credentials import Credentials, HubGroupProjectID, discover_credentials
 from .credentials.configrc import (
@@ -42,6 +41,7 @@ from .credentials.configrc import (
     store_credentials,
 )
 from .credentials.exceptions import HubGroupProjectIDInvalidStateError
+from .constants import QISKIT_IBM_RUNTIME_API_URL
 from .exceptions import IBMNotAuthorizedError, IBMInputValueError, IBMProviderError
 from .exceptions import (
     QiskitRuntimeError,

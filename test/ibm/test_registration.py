@@ -22,7 +22,7 @@ import sys
 
 from requests_ntlm import HttpNtlmAuth
 from qiskit_ibm_runtime import IBMRuntimeService
-from qiskit_ibm_runtime.apiconstants import QISKIT_IBM_RUNTIME_API_URL
+from qiskit_ibm_runtime.constants import QISKIT_IBM_RUNTIME_API_URL
 from qiskit_ibm_runtime.credentials import (
     Credentials,
     discover_credentials,

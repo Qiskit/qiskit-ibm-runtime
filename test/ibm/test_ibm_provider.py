@@ -33,7 +33,7 @@ from qiskit_ibm_runtime.exceptions import (
     IBMProviderCredentialsNotFound,
 )
 from qiskit_ibm_runtime.credentials.hub_group_project_id import HubGroupProjectID
-from qiskit_ibm_runtime.apiconstants import QISKIT_IBM_RUNTIME_API_URL
+from qiskit_ibm_runtime.constants import QISKIT_IBM_RUNTIME_API_URL
 
 from ..ibm_test_case import IBMTestCase
 from ..decorators import requires_qe_access, requires_provider
