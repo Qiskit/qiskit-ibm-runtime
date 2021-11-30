@@ -64,7 +64,7 @@ class TestCredentials(IBMTestCase):
 
         with custom_qiskitrc(), no_envs(CREDENTIAL_ENV_VARS):
             with self.assertRaises(IBMProviderError) as context_manager:
-                IBMRuntimeService()
+                IBMRuntimeService(auth="legacy")
 
         self.assertIn(
             "No IBM Quantum credentials found", str(context_manager.exception)
@@ -101,7 +101,7 @@ class TestCredentials(IBMTestCase):
             with no_envs(CREDENTIAL_ENV_VARS), mock_ibm_provider():
                 # Attempt overwriting.
                 store_credentials(credentials2, overwrite=True)
-                service = IBMRuntimeService()
+                service = IBMRuntimeService(auth="legacy")
 
         # Ensure that the credentials are the overwritten ones.
         # pylint: disable=no-member

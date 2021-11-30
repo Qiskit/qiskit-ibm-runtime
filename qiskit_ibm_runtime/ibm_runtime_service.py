@@ -13,27 +13,36 @@
 """Qiskit runtime service."""
 
 import copy
-import logging
-from collections import OrderedDict
-from typing import Dict, Callable, Optional, Union, List, Any, Type, Tuple
 import json
+import logging
 import os
 import re
 import traceback
 import warnings
+from collections import OrderedDict
+from typing import Dict, Callable, Optional, Union, List, Any, Type, Tuple
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.providers.backend import BackendV1 as Backend
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.providerutils import filter_backends
 from qiskit.transpiler import Layout
+from typing_extensions import Literal
 
 from qiskit_ibm_runtime import runtime_job, ibm_backend  # pylint: disable=unused-import
-
-from .runtime_job import RuntimeJob
-from .runtime_program import RuntimeProgram, ParameterNamespace
-from .utils import RuntimeDecoder, to_base64_string, to_python_identifier
-from .utils.backend import convert_reservation_data
+from .api.clients import AuthClient, VersionClient
+from .api.clients.runtime import RuntimeClient
+from .api.exceptions import RequestsApiError
+from .apiconstants import QISKIT_IBM_RUNTIME_API_URL
+from .backendreservation import BackendReservation
+from .credentials import Credentials, HubGroupProjectID, discover_credentials
+from .credentials.configrc import (
+    remove_credentials,
+    read_credentials_from_qiskitrc,
+    store_credentials,
+)
+from .credentials.exceptions import HubGroupProjectIDInvalidStateError
+from .exceptions import IBMNotAuthorizedError, IBMInputValueError, IBMProviderError
 from .exceptions import (
     QiskitRuntimeError,
     RuntimeDuplicateProgramError,
@@ -46,22 +55,13 @@ from .exceptions import (
     IBMProviderCredentialsInvalidUrl,
     IBMProviderValueError,
 )
-from .program.result_decoder import ResultDecoder
-from .api.clients import AuthClient, VersionClient
-from .api.clients.runtime import RuntimeClient
-from .apiconstants import QISKIT_IBM_RUNTIME_API_URL
-from .api.exceptions import RequestsApiError
-from .backendreservation import BackendReservation
 from .hub_group_project import HubGroupProject  # pylint: disable=cyclic-import
-from .exceptions import IBMNotAuthorizedError, IBMInputValueError, IBMProviderError
-from .credentials import Credentials, HubGroupProjectID, discover_credentials
-from .credentials.configrc import (
-    remove_credentials,
-    read_credentials_from_qiskitrc,
-    store_credentials,
-)
-from .credentials.exceptions import HubGroupProjectIDInvalidStateError
+from .program.result_decoder import ResultDecoder
 from .runner_result import RunnerResult
+from .runtime_job import RuntimeJob
+from .runtime_program import RuntimeProgram, ParameterNamespace
+from .utils import RuntimeDecoder, to_base64_string, to_python_identifier
+from .utils.backend import convert_reservation_data
 
 logger = logging.getLogger(__name__)
 
@@ -127,13 +127,20 @@ class IBMRuntimeService:
     """
 
     def __init__(
-        self, token: Optional[str] = None, url: Optional[str] = None, **kwargs: Any
+        self,
+        auth: Optional[Literal["cloud", "legacy"]] = None,
+        token: Optional[str] = None,
+        locator: Optional[str] = None,
+        **kwargs: Any,
     ) -> None:
         """IBMRuntimeService constructor
 
         Args:
-            token: IBM Quantum token.
-            url: URL for the IBM Quantum authentication server.
+            auth: Authentication type. `cloud` or `legacy`. If not specified, the saved default is used.
+                If there is no default value, and both accounts were saved on disk, the cloud type is
+                used.
+            token: Token used for authentication. If not specified, the saved token is used.
+            locator: The authentication url, if `auth=legacy`. Otherwise the CRN.
             **kwargs: Additional settings for the connection:
 
                 * proxies (dict): proxy configuration.
@@ -150,10 +157,14 @@ class IBMRuntimeService:
                 a valid IBM Quantum authentication URL.
             IBMProviderCredentialsInvalidToken: If the `token` is not a valid IBM Quantum token.
         """
-        # pylint: disable=unused-argument,unsubscriptable-object
         super().__init__()
+        if auth == "cloud":
+            raise IBMProviderCredentialsNotFound(
+                "Support for auth type 'cloud' has not yet been implemented."
+            )
+
         account_credentials, account_preferences = self._resolve_credentials(
-            token=token, url=url, **kwargs
+            token=token, url=locator, **kwargs
         )
         self._initialize_hgps(
             credentials=account_credentials, preferences=account_preferences

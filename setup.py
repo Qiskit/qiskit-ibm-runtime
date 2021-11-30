@@ -25,18 +25,19 @@ REQUIREMENTS = [
     "numpy>=1.13",
     "urllib3>=1.21.1",
     "python-dateutil>=2.8.0",
-    "websocket-client>=1.0.1"
+    "websocket-client>=1.0.1",
+    "typing-extensions>=4.0.0",  # remove when support for Python 3.7 is dropped (use "from typing import" instead)
 ]
 
 # Handle version.
-VERSION_PATH = os.path.join(os.path.dirname(__file__),
-                            "qiskit_ibm_runtime", "VERSION.txt")
+VERSION_PATH = os.path.join(
+    os.path.dirname(__file__), "qiskit_ibm_runtime", "VERSION.txt"
+)
 with open(VERSION_PATH, "r") as version_file:
     VERSION = version_file.read().strip()
 
 # Read long description from README.
-README_PATH = os.path.join(os.path.abspath(os.path.dirname(__file__)),
-                           'README.md')
+README_PATH = os.path.join(os.path.abspath(os.path.dirname(__file__)), "README.md")
 with open(README_PATH) as readme_file:
     README = readme_file.read()
 
@@ -45,9 +46,9 @@ setuptools.setup(
     name="qiskit-ibm-runtime",
     version=VERSION,
     description="Qiskit IBM Runtime service for accessing the quantum devices and "
-                "simulators at IBM",
+    "simulators at IBM",
     long_description=README,
-    long_description_content_type='text/markdown',
+    long_description_content_type="text/markdown",
     url="https://github.com/Qiskit/qiskit-ibm-runtime",
     author="Qiskit Development Team",
     author_email="hello@qiskit.org",
@@ -68,16 +69,24 @@ setuptools.setup(
         "Topic :: Scientific/Engineering",
     ],
     keywords="qiskit sdk quantum api runtime ibm",
-    packages=setuptools.find_packages(exclude=['test*']),
+    packages=setuptools.find_packages(exclude=["test*"]),
     install_requires=REQUIREMENTS,
     include_package_data=True,
     python_requires=">=3.6",
     zip_safe=False,
-    extras_require={'visualization': ['matplotlib>=2.1', 'ipywidgets>=7.3.0',
-                                      "seaborn>=0.9.0", "plotly>=4.4",
-                                      "ipyvuetify>=1.1", "pyperclip>=1.7",
-                                      "ipython>=5.0.0", "traitlets!=5.0.5",
-                                      "ipyvue>=1.4.1"]},
+    extras_require={
+        "visualization": [
+            "matplotlib>=2.1",
+            "ipywidgets>=7.3.0",
+            "seaborn>=0.9.0",
+            "plotly>=4.4",
+            "ipyvuetify>=1.1",
+            "pyperclip>=1.7",
+            "ipython>=5.0.0",
+            "traitlets!=5.0.5",
+            "ipyvue>=1.4.1",
+        ]
+    },
     project_urls={
         "Bug Tracker": "https://github.com/Qiskit/qiskit-ibm-runtime/issues",
         "Documentation": "https://qiskit.org/documentation/",
