@@ -850,12 +850,12 @@ class IBMRuntimeService:
         """
         if skip is None:
             skip = 0
-        if search:
-            for program in list(self._programs.values())[skip : limit + skip]:
+        if search and not refresh and self._programs:
+            matched_programs = []
+            for program in list(self._programs.values()):
                 if search in program.name or search in program.description:
-                    self._programs[program.program_id] = program
-                else:
-                    del self._programs[program.program_id]
+                    matched_programs.append(program)
+            return matched_programs[skip : limit + skip]
         if not self._programs or refresh:
             self._programs = {}
             current_page_limit = 20
