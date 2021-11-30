@@ -277,7 +277,6 @@ from datetime import datetime, timedelta
 from qiskit.providers import BaseBackend, Backend  # type: ignore[attr-defined]
 
 from .ibm_backend import IBMBackend
-from .backendjoblimit import BackendJobLimit
 from .exceptions import *
 from .utils.utils import setup_logger
 from .runner_result import RunnerResult
