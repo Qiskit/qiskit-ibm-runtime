@@ -13,10 +13,6 @@
 """IBMBackend Test."""
 
 from datetime import timedelta, datetime
-from unittest.mock import patch
-
-from qiskit import QuantumCircuit
-from qiskit.providers.models import QasmBackendConfiguration
 
 from ..ibm_test_case import IBMTestCase
 from ..decorators import requires_device, requires_provider
@@ -40,14 +36,6 @@ class TestIBMBackend(IBMTestCase):
     def test_backend_properties(self):
         """Check the properties of calibration of a real chip."""
         self.assertIsNotNone(self.backend.properties())
-
-    def test_backend_job_limit(self):
-        """Check the backend job limits of a real backend."""
-        job_limit = self.backend.job_limit()
-        self.assertIsNotNone(job_limit)
-        self.assertIsNotNone(job_limit.active_jobs)
-        if job_limit.maximum_jobs:
-            self.assertGreater(job_limit.maximum_jobs, 0)
 
     def test_backend_pulse_defaults(self):
         """Check the backend pulse defaults of each backend."""
@@ -113,37 +101,6 @@ class TestIBMBackend(IBMTestCase):
                         reserv, found, start_dt, end_dt
                     ),
                 )
-
-    def test_deprecate_id_instruction(self):
-        """Test replacement of 'id' Instructions with 'Delay' instructions."""
-
-        circuit_with_id = QuantumCircuit(2)
-        circuit_with_id.id(0)
-        circuit_with_id.id(0)
-        circuit_with_id.id(1)
-
-        config = QasmBackendConfiguration(
-            basis_gates=["id"],
-            supported_instructions=["delay"],
-            dt=0.25,
-            backend_name="test",
-            backend_version=0.0,
-            n_qubits=1,
-            gates=[],
-            local=False,
-            simulator=False,
-            conditional=False,
-            open_pulse=False,
-            memory=False,
-            max_shots=1,
-            coupling_map=None,
-        )
-
-        with patch.object(self.backend, "configuration", return_value=config):
-            with self.assertWarnsRegex(DeprecationWarning, r"'id' instruction"):
-                self.backend._deprecate_id_instruction(circuit_with_id)
-
-            self.assertEqual(circuit_with_id.count_ops(), {"delay": 3})
 
 
 class TestIBMBackendService(IBMTestCase):
