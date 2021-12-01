@@ -49,7 +49,7 @@ from .exceptions import (
 from .program.result_decoder import ResultDecoder
 from .api.clients import AuthClient, VersionClient
 from .api.clients.runtime import RuntimeClient
-from .apiconstants import QISKIT_IBM_RUNTIME_API_URL
+from .constants import QISKIT_IBM_RUNTIME_API_URL
 from .api.exceptions import RequestsApiError
 from .backendreservation import BackendReservation
 from .hub_group_project import HubGroupProject  # pylint: disable=cyclic-import
