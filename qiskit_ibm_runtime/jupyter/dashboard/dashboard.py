@@ -179,7 +179,7 @@ class IBMDashboardMagic(Magics):
         """A Jupyter magic function to enable the dashboard."""
         # pylint: disable=unused-argument
         try:
-            service = IBMRuntimeService()
+            service = IBMRuntimeService(auth="legacy")
         except Exception:
             raise QiskitError("Could not load IBM Quantum account from the local file.")
         _IBM_DASHBOARD.stop_dashboard()
