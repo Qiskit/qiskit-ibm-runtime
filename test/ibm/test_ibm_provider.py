@@ -53,7 +53,7 @@ class TestIBMProviderEnableAccount(IBMTestCase):
     def test_provider_init_token(self, qe_token, qe_url):
         """Test initializing IBMRuntimeService with only API token."""
         # pylint: disable=unused-argument
-        service = IBMRuntimeService(token=qe_token)
+        service = IBMRuntimeService(auth="legacy", token=qe_token)
         self.assertIsInstance(service, IBMRuntimeService)
         self.assertEqual(service._default_hgp.credentials.token, qe_token)
 
@@ -67,7 +67,9 @@ class TestIBMProviderEnableAccount(IBMTestCase):
             }
         }
         with self.assertRaises(RequestsApiError) as context_manager:
-            IBMRuntimeService(qe_token, qe_url, proxies=proxies)
+            IBMRuntimeService(
+                auth="legacy", token=qe_token, locator=qe_url, proxies=proxies
+            )
         self.assertIn("ProxyError", str(context_manager.exception))
 
     def test_provider_init_non_auth_url(self):
@@ -76,7 +78,7 @@ class TestIBMProviderEnableAccount(IBMTestCase):
         qe_url = API_URL
 
         with self.assertRaises(IBMProviderCredentialsInvalidUrl) as context_manager:
-            IBMRuntimeService(token=qe_token, url=qe_url)
+            IBMRuntimeService(auth="legacy", token=qe_token, locator=qe_url)
 
         self.assertIn("authentication URL", str(context_manager.exception))
 
@@ -86,7 +88,7 @@ class TestIBMProviderEnableAccount(IBMTestCase):
         qe_url = API_URL + "/Hubs/X/Groups/Y/Projects/Z"
 
         with self.assertRaises(IBMProviderCredentialsInvalidUrl) as context_manager:
-            IBMRuntimeService(token=qe_token, url=qe_url)
+            IBMRuntimeService(auth="legacy", token=qe_token, locator=qe_url)
 
         self.assertIn("authentication URL", str(context_manager.exception))
 
@@ -95,7 +97,7 @@ class TestIBMProviderEnableAccount(IBMTestCase):
         with custom_qiskitrc(), self.assertRaises(
             IBMProviderCredentialsNotFound
         ) as context_manager, no_envs(CREDENTIAL_ENV_VARS):
-            IBMRuntimeService()
+            IBMRuntimeService(auth="legacy")
 
         self.assertIn(
             "No IBM Quantum credentials found.", str(context_manager.exception)
@@ -112,7 +114,7 @@ class TestIBMProviderEnableAccount(IBMTestCase):
             with self.assertLogs(
                 hub_group_project.logger, level="WARNING"
             ) as context_manager:
-                IBMRuntimeService(qe_token, qe_url)
+                IBMRuntimeService(auth="legacy", token=qe_token, locator=qe_url)
         self.assertIn("bad_backend", str(context_manager.output))
 
 
@@ -144,7 +146,7 @@ class TestIBMProviderAccounts(IBMTestCase):
 
         with custom_qiskitrc(), no_envs(CREDENTIAL_ENV_VARS):
             IBMRuntimeService.save_account(qe_token, url=qe_url)
-            service = IBMRuntimeService()
+            service = IBMRuntimeService(auth="legacy")
 
         self.assertIsInstance(service, IBMRuntimeService)
         self.assertEqual(service._default_hgp.credentials.token, qe_token)
@@ -223,7 +225,7 @@ class TestIBMProviderAccounts(IBMTestCase):
                 group=non_default_hgp.credentials.group,
                 project=non_default_hgp.credentials.project,
             )
-            saved_provider = IBMRuntimeService()
+            saved_provider = IBMRuntimeService(auth="legacy")
             if saved_provider._default_hgp != non_default_hgp:
                 # Prevent tokens from being logged.
                 saved_provider._default_hgp.credentials.token = None
@@ -268,7 +270,7 @@ class TestIBMProviderAccounts(IBMTestCase):
                     group=hgp_id.group,
                     project=hgp_id.project,
                 )
-                IBMRuntimeService()
+                IBMRuntimeService(auth="legacy")
 
             self.assertIn(
                 "No hub/group/project matches the specified criteria",
@@ -296,13 +298,13 @@ class TestIBMProviderAccounts(IBMTestCase):
                         _file.write("default_provider = {}".format(invalid_hgp))
                     # Ensure an error is raised if the stored provider is in an invalid format.
                     with self.assertRaises(IBMProviderError) as context_manager:
-                        IBMRuntimeService()
+                        IBMRuntimeService(auth="legacy")
                     self.assertIn(error_message, str(context_manager.exception))
 
     @requires_qe_access
     def test_active_account(self, qe_token, qe_url):
         """Test get active account"""
-        service = IBMRuntimeService(qe_token, qe_url)
+        service = IBMRuntimeService(auth="legacy", token=qe_token, locator=qe_url)
         active_account = service.active_account()
         self.assertIsNotNone(active_account)
         self.assertEqual(active_account["token"], qe_token)
@@ -330,7 +332,7 @@ class TestIBMProviderHubGroupProject(IBMTestCase):
     @requires_qe_access
     def _initialize_provider(self, qe_token=None, qe_url=None):
         """Initialize and return provider."""
-        return IBMRuntimeService(qe_token, qe_url)
+        return IBMRuntimeService(auth="legacy", token=qe_token, locator=qe_url)
 
     def setUp(self):
         """Initial test setup."""
