@@ -18,7 +18,6 @@ import warnings
 from unittest import skipIf
 from typing import Dict, Any
 import copy
-import sys
 
 from requests_ntlm import HttpNtlmAuth
 from qiskit_ibm_runtime import IBMRuntimeService
