@@ -304,7 +304,7 @@ class TestIBMProviderAccounts(IBMTestCase):
     @requires_qe_access
     def test_active_account(self, qe_token, qe_url):
         """Test get active account"""
-        service = IBMRuntimeService(auth="legacy", token=qe_token, url=qe_url)
+        service = IBMRuntimeService(auth="legacy", token=qe_token, locator=qe_url)
         active_account = service.active_account()
         self.assertIsNotNone(active_account)
         self.assertEqual(active_account["token"], qe_token)
