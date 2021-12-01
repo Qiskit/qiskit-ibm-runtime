@@ -47,13 +47,9 @@ class TestBasicServerPaths(IBMTestCase):
                 self.assertIsNotNone(pulse_backend.properties())
                 self.assertIsNotNone(pulse_backend.defaults())
 
-    def test_device_status_and_job_limit(self):
-        """Test the status and job limit for a device."""
+    def test_device_status(self):
+        """Test device status."""
         for desc, hgp in self.hgps.items():
             backend = self.service.backends(simulator=False, operational=True, **hgp)[0]
             with self.subTest(desc=desc, backend=backend):
                 self.assertTrue(backend.status())
-                job_limit = backend.job_limit()
-                if desc == "open_hgp":
-                    self.assertIsNotNone(job_limit.maximum_jobs)
-                self.assertTrue(job_limit)
