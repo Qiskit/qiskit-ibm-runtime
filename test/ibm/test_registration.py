@@ -18,7 +18,6 @@ import warnings
 from unittest import skipIf
 from typing import Dict, Any
 import copy
-import sys
 
 from requests_ntlm import HttpNtlmAuth
 from qiskit_ibm_runtime import IBMRuntimeService
@@ -70,14 +69,6 @@ class TestCredentials(IBMTestCase):
             "No IBM Quantum credentials found", str(context_manager.exception)
         )
 
-    # Test not supported in Python 3.6 since patching a classmethod
-    # (in mock_ibm_provider) incorrectly throws
-    # TypeError: 'NonCallableMagicMock' object is not callable
-    # which was fixed in later versions
-    @skipIf(
-        sys.version_info.major == 3 and sys.version_info.minor == 6,
-        "Test not supported on Python 3.6",
-    )
     def test_store_credentials_overwrite(self) -> None:
         """Test overwriting qiskitrc credentials."""
         credentials = Credentials("QISKITRC_TOKEN", url=QISKIT_IBM_RUNTIME_API_URL)
