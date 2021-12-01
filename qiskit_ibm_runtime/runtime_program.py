@@ -14,7 +14,7 @@
 
 import logging
 import re
-from typing import Optional, List, Dict
+from typing import Optional, Dict
 from types import SimpleNamespace
 from qiskit_ibm_runtime.exceptions import IBMInputValueError, IBMNotAuthorizedError
 from .exceptions import QiskitRuntimeError, RuntimeProgramNotFound
