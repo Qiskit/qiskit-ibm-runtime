@@ -1,5 +1,5 @@
 mypy==0.812
-pylint==2.4.4
+pylint==2.12.1
 vcrpy
 pproxy==2.1.8
 Sphinx>=1.8.3

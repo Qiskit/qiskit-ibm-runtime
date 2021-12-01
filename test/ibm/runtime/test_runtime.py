@@ -129,7 +129,7 @@ class TestRuntime(IBMTestCase):
         """Initial test setup."""
         super().setUp()
         with mock_ibm_provider():
-            self.service = IBMRuntimeService("abc")
+            self.service = IBMRuntimeService(auth="legacy", token="abc")
         self.service._programs = {}
         self.service._default_hgp = mock.MagicMock(spec=HubGroupProject)
         self.service._default_hgp.credentials = Credentials(
