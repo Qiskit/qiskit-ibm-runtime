@@ -13,14 +13,10 @@
 """Module for interfacing with an IBM Quantum Backend."""
 
 import logging
-import warnings
 
 from typing import List, Union, Optional, Any
 from datetime import datetime as python_datetime
 
-from qiskit.circuit import QuantumCircuit, Delay
-from qiskit.circuit.duration import duration_in_dt
-from qiskit.pulse import Schedule
 from qiskit.qobj.utils import MeasLevel, MeasReturnType
 from qiskit.providers.backend import BackendV1 as Backend
 from qiskit.providers.options import Options
@@ -36,10 +32,9 @@ from qiskit.providers.models import QasmBackendConfiguration, PulseBackendConfig
 from qiskit_ibm_runtime import ibm_runtime_service
 
 from .api.clients import AccountClient
-from .backendjoblimit import BackendJobLimit
 from .backendreservation import BackendReservation
 from .credentials import Credentials
-from .exceptions import IBMBackendApiProtocolError, IBMBackendError
+from .exceptions import IBMBackendApiProtocolError
 from .utils.converters import utc_to_local_all, local_to_utc
 from .utils.json_decoder import decode_pulse_defaults, decode_backend_properties
 from .utils.backend import convert_reservation_data
@@ -65,12 +60,6 @@ class IBMBackend(Backend):
         status = backend.status()
         is_operational = status.operational
         jobs_in_queue = status.pending_jobs
-
-    It is also possible to see the number of remaining jobs you are able to submit to the
-    backend with the :meth:`job_limit()` method, which returns a
-    :class:`BackendJobLimit<qiskit_ibm_runtime.BackendJobLimit>` instance::
-
-        job_limit = backend.job_limit()
     """
 
     id_warning_issued = False
@@ -222,78 +211,6 @@ class IBMBackend(Backend):
 
         return self._defaults
 
-    def job_limit(self) -> BackendJobLimit:
-        """Return the job limit for the backend.
-
-        The job limit information includes the current number of active jobs
-        you have on the backend and the maximum number of active jobs you can have
-        on it.
-
-        Note:
-            Job limit information for a backend is provider specific.
-            For example, if you have access to the same backend via
-            different providers, the job limit information might be
-            different for each provider.
-
-        If the method call was successful, you can inspect the job limit for
-        the backend by accessing the ``maximum_jobs`` and ``active_jobs`` attributes
-        of the :class:`BackendJobLimit<BackendJobLimit>` instance returned. For example::
-
-            backend_job_limit = backend.job_limit()
-            maximum_jobs = backend_job_limit.maximum_jobs
-            active_jobs = backend_job_limit.active_jobs
-
-        If ``maximum_jobs`` is equal to ``None``, then there is
-        no limit to the maximum number of active jobs you could
-        have on the backend.
-
-        Returns:
-            The job limit for the backend, with this provider.
-
-        Raises:
-            IBMBackendApiProtocolError: If an unexpected value is received from the server.
-        """
-        api_job_limit = self._api_client.backend_job_limit(self.name())
-
-        try:
-            job_limit = BackendJobLimit(**api_job_limit)
-            if job_limit.maximum_jobs == -1:
-                # Manually set `maximum` to `None` if backend has no job limit.
-                job_limit.maximum_jobs = None
-            return job_limit
-        except TypeError as ex:
-            raise IBMBackendApiProtocolError(
-                "Unexpected return value received from the server when "
-                "querying job limit data for the backend: {}.".format(ex)
-            ) from ex
-
-    def remaining_jobs_count(self) -> Optional[int]:
-        """Return the number of remaining jobs that could be submitted to the backend.
-
-        Note:
-            The number of remaining jobs for a backend is provider
-            specific. For example, if you have access to the same backend
-            via different providers, the number of remaining jobs might
-            be different for each. See :class:`BackendJobLimit<BackendJobLimit>`
-            for the job limit information of a backend.
-
-        If ``None`` is returned, there are no limits to the maximum
-        number of active jobs you could have on the backend.
-
-        Returns:
-            The remaining number of jobs a user could submit to the backend, with
-            this provider, before the maximum limit on active jobs is reached.
-
-        Raises:
-            IBMBackendApiProtocolError: If an unexpected value is received from the server.
-        """
-        job_limit = self.job_limit()
-
-        if job_limit.maximum_jobs is None:
-            return None
-
-        return job_limit.maximum_jobs - job_limit.active_jobs
-
     def reservations(
         self,
         start_datetime: Optional[python_datetime] = None,
@@ -341,89 +258,12 @@ class IBMBackend(Backend):
     def __repr__(self) -> str:
         return "<{}('{}')>".format(self.__class__.__name__, self.name())
 
-    def _deprecate_id_instruction(
-        self,
-        circuits: Union[
-            QuantumCircuit, Schedule, List[Union[QuantumCircuit, Schedule]]
-        ],
-    ) -> None:
-        """Raise a DeprecationWarning if any circuit contains an 'id' instruction.
-
-        Additionally, if 'delay' is a 'supported_instruction', replace each 'id'
-        instruction (in-place) with the equivalent ('sx'-length) 'delay' instruction.
-
-        Args:
-            circuits: The individual or list of :class:`~qiskit.circuits.QuantumCircuit` or
-                :class:`~qiskit.pulse.Schedule` objects passed to
-                :meth:`IBMBackend.run()<IBMBackend.run>`. Modified in-place.
-
-        Returns:
-            None
-        """
-
-        id_support = "id" in getattr(self.configuration(), "basis_gates", [])
-        delay_support = "delay" in getattr(
-            self.configuration(), "supported_instructions", []
-        )
-
-        if not delay_support:
-            return
-
-        if not isinstance(circuits, List):
-            circuits = [circuits]
-
-        circuit_has_id = any(
-            instr.name == "id"
-            for circuit in circuits
-            if isinstance(circuit, QuantumCircuit)
-            for instr, qargs, cargs in circuit.data
-        )
-
-        if not circuit_has_id:
-            return
-
-        if not self.id_warning_issued:
-            if id_support and delay_support:
-                warnings.warn(
-                    "Support for the 'id' instruction has been deprecated "
-                    "from IBM hardware backends. Any 'id' instructions "
-                    "will be replaced with their equivalent 'delay' instruction. "
-                    "Please use the 'delay' instruction instead.",
-                    DeprecationWarning,
-                    stacklevel=4,
-                )
-            else:
-                warnings.warn(
-                    "Support for the 'id' instruction has been removed "
-                    "from IBM hardware backends. Any 'id' instructions "
-                    "will be replaced with their equivalent 'delay' instruction. "
-                    "Please use the 'delay' instruction instead.",
-                    DeprecationWarning,
-                    stacklevel=4,
-                )
-
-            self.id_warning_issued = True
-
-        dt_in_s = self.configuration().dt
-
-        for circuit in circuits:
-            if isinstance(circuit, Schedule):
-                continue
-
-            for idx, (instr, qargs, cargs) in enumerate(circuit.data):
-                if instr.name == "id":
-
-                    sx_duration = self.properties().gate_length("sx", qargs[0].index)
-                    sx_duration_in_dt = duration_in_dt(sx_duration, dt_in_s)
-
-                    delay_instr = Delay(sx_duration_in_dt)
-
-                    circuit.data[idx] = (delay_instr, qargs, cargs)
-
     def run(self, *args: Any, **kwargs: Any) -> None:
-        """Run on the backend"""
+        """Not supported method"""
         # pylint: disable=arguments-differ
-        pass
+        raise RuntimeError(
+            "IBMBackend.run() is not supported in the Qiskit Runtime environment."
+        )
 
 
 class IBMSimulator(IBMBackend):
@@ -441,11 +281,6 @@ class IBMSimulator(IBMBackend):
     ) -> None:
         """Return ``None``, simulators do not have backend properties."""
         return None
-
-    def run(self, *args: Any, **kwargs: Any) -> None:
-        """Run on the backend"""
-        # pylint: disable=arguments-differ
-        pass
 
 
 class IBMRetiredBackend(IBMBackend):
@@ -494,27 +329,12 @@ class IBMRetiredBackend(IBMBackend):
         """Return the backend status."""
         return self._status
 
-    def job_limit(self) -> None:
-        """Return the job limits for the backend."""
-        return None
-
-    def remaining_jobs_count(self) -> None:
-        """Return the number of remaining jobs that could be submitted to the backend."""
-        return None
-
     def reservations(
         self,
         start_datetime: Optional[python_datetime] = None,
         end_datetime: Optional[python_datetime] = None,
     ) -> List[BackendReservation]:
         return []
-
-    def run(self, *args: Any, **kwargs: Any) -> None:  # type: ignore[override]
-        """Run a Circuit."""
-        # pylint: disable=arguments-differ
-        raise IBMBackendError(
-            "This backend ({}) is no longer available.".format(self.name())
-        )
 
     @classmethod
     def from_name(
