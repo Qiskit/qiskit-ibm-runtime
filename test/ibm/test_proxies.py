@@ -56,7 +56,12 @@ class TestProxies(IBMTestCase):
     @requires_qe_access
     def test_proxies_ibm_account(self, qe_token, qe_url):
         """Should reach the proxy using account.enable."""
-        service = IBMRuntimeService(qe_token, qe_url, proxies={"urls": VALID_PROXIES})
+        service = IBMRuntimeService(
+            auth="legacy",
+            token=qe_token,
+            locator=qe_url,
+            proxies={"urls": VALID_PROXIES},
+        )
 
         self.proxy_process.terminate()  # kill to be able of reading the output
 
