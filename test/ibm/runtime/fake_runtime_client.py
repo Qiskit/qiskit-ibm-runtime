@@ -264,13 +264,7 @@ class BaseFakeRuntimeClient:
         """List all programs."""
         programs = []
         for prog in self._programs.values():
-            if not search:
-                programs.append(prog.to_dict())
-            if (
-                search in prog.to_dict()["name"].lower()
-                or search in prog.to_dict()["description"].lower()
-            ):
-                programs.append(prog.to_dict())
+            programs.append(prog.to_dict())
         return {"programs": programs[skip : limit + skip], "count": len(self._programs)}
 
     def program_create(
