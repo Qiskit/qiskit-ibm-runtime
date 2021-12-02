@@ -260,7 +260,7 @@ class BaseFakeRuntimeClient:
         """Set job status to passed in final status instantly."""
         self._final_status = final_status
 
-    def list_programs(self, search, limit, skip):
+    def list_programs(self, limit, skip):
         """List all programs."""
         programs = []
         for prog in self._programs.values():
