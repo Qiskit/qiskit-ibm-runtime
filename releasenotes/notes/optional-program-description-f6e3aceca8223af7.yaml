@@ -1,0 +1,5 @@
+---
+upgrade:
+  - |
+    When uploading a program with :meth:`qiskit_ibm_runtime.IBMRuntimeService.upload_program`,
+    the program description is now optional. 
