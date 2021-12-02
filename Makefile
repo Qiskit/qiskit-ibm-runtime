@@ -27,13 +27,13 @@ test:
 	python -m unittest -v
 
 test1:
-	python -m unittest -v test/ibm/test_ibm_backend.py test/ibm/test_account_client.py test/ibm/test_tutorials.py test/ibm/test_basic_server_paths.py test/ibm/test_proxies.py test/ibm/test_ibm_logger.py test/ibm/test_filter_backends.py test/ibm/test_registration.py
+	python -m unittest -v test/ibm/test_ibm_backend.py test/ibm/test_account_client.py test/ibm/test_tutorials.py test/ibm/test_basic_server_paths.py
 
 test2:
-	python -m unittest -v test/ibm/test_serialization.py test/ibm/test_jupyter.py test/ibm/test_ibm_provider.py
+	python -m unittest -v test/ibm/test_proxies.py test/ibm/test_ibm_logger.py test/ibm/test_filter_backends.py test/ibm/test_registration.py
 
 test3:
-	python -m unittest -v test/ibm/test_ibm_job_attributes.py test/ibm/test_ibm_job.py
+	python -m unittest -v test/ibm/test_serialization.py test/ibm/test_jupyter.py test/ibm/test_ibm_provider.py
 
 runtime_integration:
 	python -m unittest -v test/ibm/runtime/test_runtime_integration.py
