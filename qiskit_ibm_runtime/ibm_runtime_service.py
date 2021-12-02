@@ -1066,7 +1066,6 @@ class IBMRuntimeService:
 
             - name
             - max_execution_time
-            - description
 
         Program metadata can be specified using the `metadata` parameter or
         individual parameter (for example, `name` and `description`). If the
@@ -1087,7 +1086,7 @@ class IBMRuntimeService:
 
                 * name: Name of the program. Required.
                 * max_execution_time: Maximum execution time in seconds. Required.
-                * description: Program description. Required.
+                * description: Program description.
                 * is_public: Whether the runtime program should be visible to the public.
                                     The default is ``False``.
                 * spec: Specifications for backend characteristics and input parameters
@@ -1109,7 +1108,7 @@ class IBMRuntimeService:
         """
         program_metadata = self._read_metadata(metadata=metadata)
 
-        for req in ["name", "description", "max_execution_time"]:
+        for req in ["name", "max_execution_time"]:
             if req not in program_metadata or not program_metadata[req]:
                 raise IBMInputValueError(f"{req} is a required metadata field.")
 
