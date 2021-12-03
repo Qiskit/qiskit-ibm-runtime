@@ -27,14 +27,6 @@ Conversion
     seconds_to_duration
     utc_to_local
 
-JSON Encoder and Decoder
-========================
-.. autosummary::
-    :toctree: ../stubs/
-
-    RuntimeEncoder
-    RuntimeDecoder
-
 Misc Functions
 ==============
 .. autosummary::
