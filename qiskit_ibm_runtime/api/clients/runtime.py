@@ -36,8 +36,8 @@ class RuntimeClient:
             credentials: Account credentials.
         """
         self._session = RetrySession(
-            credentials.runtime_url,
-            credentials.access_token,
+            base_url=credentials.runtime_url or credentials.base_url,
+            auth=credentials.get_auth_handler(),
             **credentials.connection_parameters()
         )
         self.api = Runtime(self._session)

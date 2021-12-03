@@ -15,6 +15,7 @@
 from typing import Dict, List, Optional, Any, Union
 from requests.exceptions import RequestException
 
+from ..auth import LegacyAuth
 from ..exceptions import AuthenticationLicenseError, RequestsApiError
 from ..rest import Api
 from ..session import RetrySession
@@ -53,11 +54,16 @@ class AuthClient(BaseClient):
         access_token = self._request_access_token()
         # Use the token for the next auth server requests.
         self.auth_api.session.access_token = access_token
+        self.auth_api.session.auth = LegacyAuth(access_token=access_token)
         self._service_urls = self.user_urls()
 
         # Create the api server client, using the access token.
         base_api = Api(
-            RetrySession(self._service_urls["http"], access_token, **request_kwargs)
+            RetrySession(
+                self._service_urls["http"],
+                auth=LegacyAuth(access_token=access_token),
+                **request_kwargs,
+            )
         )
 
         return base_api

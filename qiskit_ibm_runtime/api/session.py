@@ -139,7 +139,6 @@ class RetrySession(Session):
     def __init__(
         self,
         base_url: str,
-        access_token: Optional[str] = None,
         retries_total: int = 5,
         retries_connect: int = 3,
         backoff_factor: float = 0.5,
@@ -152,7 +151,6 @@ class RetrySession(Session):
 
         Args:
             base_url: Base URL for the session's requests.
-            access_token: Access token.
             retries_total: Number of total retries for the requests.
             retries_connect: Number of connect retries for the requests.
             backoff_factor: Backoff factor between retry attempts.
@@ -165,8 +163,6 @@ class RetrySession(Session):
         super().__init__()
 
         self.base_url = base_url
-        self._access_token = access_token
-        self.access_token = access_token
 
         self._initialize_retry(retries_total, retries_connect, backoff_factor)
         self._initialize_session_parameters(verify, proxies or {}, auth)
@@ -175,20 +171,6 @@ class RetrySession(Session):
     def __del__(self) -> None:
         """RetrySession destructor. Closes the session."""
         self.close()
-
-    @property
-    def access_token(self) -> Optional[str]:
-        """Return the session access token."""
-        return self._access_token
-
-    @access_token.setter
-    def access_token(self, value: Optional[str]) -> None:
-        """Set the session access token."""
-        self._access_token = value
-        if value:
-            self.headers.update({"X-Access-Token": value})  # type: ignore[attr-defined]
-        else:
-            self.headers.pop("X-Access-Token", None)  # type: ignore[attr-defined]
 
     def _initialize_retry(
         self, retries_total: int, retries_connect: int, backoff_factor: float
@@ -296,34 +278,9 @@ class RetrySession(Session):
                     # the response did not contain the expected json.
                     message += f". {ex.response.text}"
 
-            if self.access_token:
-                message = message.replace(self.access_token, "...")
-                # Modify the original message on the chained exceptions.
-                self._modify_chained_exception_messages(ex)
-
             raise RequestsApiError(message, status_code) from ex
 
         return response
-
-    def _modify_chained_exception_messages(self, exc: BaseException) -> None:
-        """Modify the chained exception messages.
-
-        Args:
-            exc: Exception whose parent messages are to be modified.
-        """
-        if exc.__cause__:
-            self._modify_chained_exception_messages(exc.__cause__)
-        elif exc.__context__:
-            self._modify_chained_exception_messages(exc.__context__)
-
-        # Loop through args, attempt to replace access token if string.
-        modified_args = []
-        for arg in exc.args:
-            exc_message = arg
-            if isinstance(exc_message, str):
-                exc_message = exc_message.replace(self.access_token, "...")
-            modified_args.append(exc_message)
-        exc.args = tuple(modified_args)
 
     def _log_request_info(
         self, url: str, method: str, request_data: Dict[str, Any]
