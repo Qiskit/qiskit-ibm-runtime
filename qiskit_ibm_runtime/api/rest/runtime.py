@@ -287,7 +287,13 @@ class Program(RestAdapterBase):
 class ProgramJob(RestAdapterBase):
     """Rest adapter for program job related endpoints."""
 
-    URL_MAP = {"self": "", "results": "/results", "cancel": "/cancel", "logs": "/logs"}
+    URL_MAP = {
+        "self": "",
+        "results": "/results",
+        "cancel": "/cancel",
+        "logs": "/logs",
+        "interim_results": "/interim_results",
+    }
 
     def __init__(
         self, session: RetrySession, job_id: str, url_prefix: str = ""
@@ -312,6 +318,15 @@ class ProgramJob(RestAdapterBase):
     def delete(self) -> None:
         """Delete program job."""
         self.session.delete(self.get_url("self"))
+
+    def interim_results(self) -> str:
+        """Return program job interim results.
+
+        Returns:
+            Interim results.
+        """
+        response = self.session.get(self.get_url("interim_results"))
+        return response.text
 
     def results(self) -> str:
         """Return program job results.

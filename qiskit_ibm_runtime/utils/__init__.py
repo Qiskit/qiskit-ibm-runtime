@@ -17,7 +17,7 @@ Utilities (:mod:`qiskit_ibm_runtime.utils`)
 
 .. currentmodule:: qiskit_ibm_runtime.utils
 
-Utility functions related to the IBM Quantum Provider.
+Utility functions related to the IBM Runtime Services.
 
 Conversion
 ==========
@@ -42,4 +42,4 @@ from .converters import (
     duration_difference,
 )
 from .utils import to_python_identifier
-from .runtime import *
+from .json import RuntimeEncoder, RuntimeDecoder, to_base64_string
