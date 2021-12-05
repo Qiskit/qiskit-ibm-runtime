@@ -534,6 +534,14 @@ def main(backend, user_messenger, **kwargs):
         self.assertFalse(called_back)
         self.assertIsNotNone(job._ws_client._server_close_code)
 
+    def test_retrieve_interim_results(self):
+        """Test retrieving interim results with API endpoint"""
+        int_res = "foo"
+        job = self._run_program(interim_results=int_res)
+        job.wait_for_final_state()
+        interim_results = job.interim_results()
+        self.assertIn(int_res, interim_results[0])
+
     def test_callback_error(self):
         """Test error in callback method."""
 
