@@ -860,37 +860,17 @@ class IBMRuntimeService:
         Returns:
             A list of runtime programs.
         """
-        refreshed = False
+        already_retrieved = False
         if skip is None:
             skip = 0
-        if not self._programs or refresh:
-            self._programs = {}
-            current_page_limit = 20
-            offset = 0
-            program_search = "" if self._programs_first_call else search
-            while True:
-                response = self._api_client.list_programs(
-                    search=program_search, limit=current_page_limit, skip=offset
-                )
-                program_page = response.get("programs", [])
-                # count is the total number of programs that would be returned if
-                # there was no limit or skip
-                count = response.get("count", 0)
-                for prog_dict in program_page:
-                    program = self._to_program(prog_dict)
-                    self._programs[program.program_id] = program
-                if len(self._programs) == count:
-                    if not self._programs_first_call:
-                        refreshed = True
-                    self._programs_first_call = False
-                    # Stop if there are no more programs returned by the server.
-                    break
-                offset += len(program_page)
+        if not self._programs or (refresh and not search):
+            self._retrieve_programs()
+            already_retrieved = True
         if limit is None:
             limit = len(self._programs)
         if search:
-            if refreshed:
-                return list(self._programs.values())[skip : limit + skip]
+            if refresh and not already_retrieved:
+                self._retrieve_programs(search)
             matched_programs = []
             for program in list(self._programs.values()):
                 if search in program.name or search in program.description:
@@ -928,6 +908,31 @@ class IBMRuntimeService:
             self._programs[program_id] = self._to_program(response)
 
         return self._programs[program_id]
+
+    def _retrieve_programs(self, search: str = "") -> None:
+        """Make an API call to fetch programs.
+
+        Args:
+            search: Search query for program name and description.
+        """
+        self._programs = {}
+        current_page_limit = 20
+        offset = 0
+        while True:
+            response = self._api_client.list_programs(
+                search=search, limit=current_page_limit, skip=offset
+            )
+            program_page = response.get("programs", [])
+            # count is the total number of programs that would be returned if
+            # there was no limit or skip
+            count = response.get("count", 0)
+            for prog_dict in program_page:
+                program = self._to_program(prog_dict)
+                self._programs[program.program_id] = program
+            if len(self._programs) == count:
+                # Stop if there are no more programs returned by the server.
+                break
+            offset += len(program_page)
 
     def _to_program(self, response: Dict) -> RuntimeProgram:
         """Convert server response to ``RuntimeProgram`` instances.
