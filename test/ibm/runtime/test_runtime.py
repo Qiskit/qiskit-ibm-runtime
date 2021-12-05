@@ -755,6 +755,12 @@ if __name__ == '__main__':
             result = job.result()
         self.assertTrue(result)
 
+    def test_interim_results(self):
+        """Test getting interim results."""
+        job = self._run_program()
+        interim_results = job.interim_results()
+        self.assertTrue(interim_results)
+
     def test_job_status(self):
         """Test job status."""
         job = self._run_program()
