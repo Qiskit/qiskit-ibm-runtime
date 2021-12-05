@@ -24,7 +24,7 @@ from qiskit_ibm_runtime import (  # pylint: disable=unused-import
     ibm_backend,
 )
 
-from .utils.json_decoder import decode_backend_configuration
+from .utils.backend import decode_backend_configuration
 from .api.clients import AccountClient
 from .credentials import Credentials
 from .exceptions import IBMInputValueError

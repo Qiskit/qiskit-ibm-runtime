@@ -15,7 +15,7 @@
 import json
 from typing import Any, Type
 
-from ..utils.runtime import RuntimeEncoder
+from ..utils.json import RuntimeEncoder
 
 
 class UserMessenger:
