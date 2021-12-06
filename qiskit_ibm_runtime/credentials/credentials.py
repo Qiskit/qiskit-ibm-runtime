@@ -20,6 +20,7 @@ from requests_ntlm import HttpNtlmAuth
 
 from .hub_group_project_id import HubGroupProjectID
 from ..api.auth import LegacyAuth, CloudAuth
+from ..utils import is_crn, crn_to_api_host
 
 REGEX_IBM_HUBS = (
     "(?P<prefix>http[s]://.+/api)"
@@ -96,7 +97,8 @@ class Credentials:
         self.runtime_url = services.get("runtime", None)
 
     def get_auth_handler(self) -> AuthBase:
-        if self.url.startswith("crn:"):
+        """Returns the respective authentication handler."""
+        if is_crn(self.url):
             return CloudAuth(api_key=self.token, crn=self.url)
 
         return LegacyAuth(access_token=self.access_token)
@@ -172,8 +174,9 @@ def _unify_ibm_quantum_url(
     # Check if the URL is "new style", and retrieve embedded parameters from it.
     regex_match = re.match(REGEX_IBM_HUBS, url, re.IGNORECASE)
     base_url = url
-    if url.startswith("crn:"):
-        base_url = "https://us-east.quantum-computing.cloud.ibm.com"
+
+    if is_crn(url):
+        base_url = crn_to_api_host(url)
     elif regex_match:
         base_url, hub, group, project = regex_match.groups()
     else:

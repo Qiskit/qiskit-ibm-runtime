@@ -160,7 +160,7 @@ class IBMRuntimeService:
         super().__init__()
 
         account_credentials, account_preferences = self._resolve_credentials(
-            auth=auth, token=token, locator=locator, **kwargs
+            token=token, locator=locator, **kwargs
         )
 
         if auth == "cloud":
@@ -185,12 +185,11 @@ class IBMRuntimeService:
                 self._ws_url = self._default_hgp.credentials.runtime_url.replace(
                     "https", "wss"
                 )
-                self._programs: Dict[str, RuntimeProgram] = {}
+                self._programs = {}
         self._discover_backends()
 
     def _resolve_credentials(
         self,
-        auth: Optional[Literal["cloud", "legacy"]] = None,
         token: Optional[str] = None,
         locator: Optional[str] = None,
         **kwargs: Any,

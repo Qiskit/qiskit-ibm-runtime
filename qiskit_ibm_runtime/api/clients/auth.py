@@ -51,17 +51,15 @@ class AuthClient(BaseClient):
             Client for the API server.
         """
         # Request an access token.
-        access_token = self._request_access_token()
-        # Use the token for the next auth server requests.
-        self.auth_api.session.access_token = access_token
-        self.auth_api.session.auth = LegacyAuth(access_token=access_token)
+        self.access_token = self._request_access_token()
+        self.auth_api.session.auth = LegacyAuth(access_token=self.access_token)
         self._service_urls = self.user_urls()
 
         # Create the api server client, using the access token.
         base_api = Api(
             RetrySession(
                 self._service_urls["http"],
-                auth=LegacyAuth(access_token=access_token),
+                auth=LegacyAuth(access_token=self.access_token),
                 **request_kwargs,
             )
         )
@@ -165,7 +163,7 @@ class AuthClient(BaseClient):
         Returns:
             The access token in use.
         """
-        return self.auth_api.session.access_token
+        return self.access_token
 
     def current_service_urls(self) -> Dict[str, str]:
         """Return the current service URLs.

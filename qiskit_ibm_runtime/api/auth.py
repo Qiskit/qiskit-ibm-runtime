@@ -10,8 +10,10 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-from __future__ import annotations
+"""Authentication helpers."""
 
+
+from requests import PreparedRequest
 from requests.auth import AuthBase
 
 
@@ -22,18 +24,20 @@ class CloudAuth(AuthBase):
         self.api_key = api_key
         self.crn = crn
 
-    def __eq__(self, other: CloudAuth):
-        return all(
-            [
-                self.api_key == other.api_key,
-                self.crn == other.crn,
-            ]
-        )
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, CloudAuth):
+            return all(
+                [
+                    self.api_key == other.api_key,
+                    self.crn == other.crn,
+                ]
+            )
+        return False
 
-    def __ne__(self, other):
+    def __ne__(self, other: object) -> bool:
         return not self == other
 
-    def __call__(self, r):
+    def __call__(self, r: PreparedRequest) -> PreparedRequest:
         r.headers["Service-CRN"] = self.crn
         r.headers["Authorization"] = f"apikey {self.api_key}"
         return r
@@ -45,12 +49,15 @@ class LegacyAuth(AuthBase):
     def __init__(self, access_token: str):
         self.access_token = access_token
 
-    def __eq__(self, other: LegacyAuth):
-        return self.access_token == other.access_token
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, LegacyAuth):
+            return self.access_token == other.access_token
 
-    def __ne__(self, other):
+        return False
+
+    def __ne__(self, other: object) -> bool:
         return not self == other
 
-    def __call__(self, r):
+    def __call__(self, r: PreparedRequest) -> PreparedRequest:
         r.headers["X-Access-Token"] = self.access_token
         return r
