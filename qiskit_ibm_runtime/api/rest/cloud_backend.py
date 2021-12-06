@@ -56,7 +56,6 @@ class CloudBackend(RestAdapterBase):
         Returns:
             JSON response of backend properties.
         """
-        # pylint: disable=redefined-outer-name
         url = self.get_url("properties")
         response = self.session.get(url).json()
         # Adjust name of the backend.
