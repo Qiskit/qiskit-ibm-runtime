@@ -10,16 +10,11 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Test serializing and deserializing data sent to the server."""
+"""Test deserializing server data."""
 
-from unittest import skipIf
 from typing import Any, Dict, Optional
 
 import dateutil.parser
-from qiskit.circuit import Parameter
-from qiskit.version import VERSION as terra_version
-
-from qiskit_ibm_runtime.utils.json_encoder import IBMJsonEncoder
 
 from ..decorators import requires_provider
 from ..ibm_test_case import IBMTestCase
@@ -134,16 +129,6 @@ class TestSerialization(IBMTestCase):
                     ckey for ckey in suspect_keys if not ckey.startswith(gkey)
                 }
         self.assertFalse(suspect_keys)
-
-    @skipIf(terra_version < "0.17", "Need Terra >= 0.17")
-    def test_convert_complex(self):
-        """Verify that real and complex ParameterExpressions are supported."""
-        param = Parameter("test")
-        self.assertEqual(IBMJsonEncoder().default(param.bind({param: 0.2})), 0.2)
-
-        val = IBMJsonEncoder().default(param.bind({param: 0.2 + 0.1j}))
-        self.assertEqual(val[0], 0.2)
-        self.assertEqual(val[1], 0.1)
 
 
 def _find_potential_encoded(data: Any, c_key: str, tally: set) -> None:
