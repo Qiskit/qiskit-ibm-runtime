@@ -13,13 +13,14 @@
 """Runtime REST adapter."""
 
 import logging
-from typing import Dict, Any, Union, Optional
+from typing import Dict, Any, List, Union, Optional
 import json
 
 from .base import RestAdapterBase
 from .program import Program
 from .program_job import ProgramJob
 from ...utils import RuntimeEncoder
+from .cloud_backend import CloudBackend
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +28,12 @@ logger = logging.getLogger(__name__)
 class Runtime(RestAdapterBase):
     """Rest adapter for Runtime base endpoints."""
 
-    URL_MAP = {"programs": "/programs", "jobs": "/jobs", "logout": "/logout"}
+    URL_MAP = {
+        "programs": "/programs",
+        "jobs": "/jobs",
+        "logout": "/logout",
+        "backends": "/devices",
+    }
 
     def program(self, program_id: str) -> "Program":
         """Return an adapter for the program.
@@ -184,3 +190,28 @@ class Runtime(RestAdapterBase):
         """Clear authorization cache."""
         url = self.get_url("logout")
         self.session.post(url)
+
+    # IBM Cloud only functions
+
+    def backend(self, backend_name: str) -> CloudBackend:
+        """Return an adapter for the IBM Cloud backend.
+
+        Args:
+            backend_name: Name of the backend.
+
+        Returns:
+            The backend adapter.
+        """
+        return CloudBackend(self.session, backend_name)
+
+    def backends(self, timeout: Optional[float] = None) -> List[Dict[str, Any]]:
+        """Return a list of IBM Cloud backends.
+
+        Args:
+            timeout: Number of seconds to wait for the request.
+
+        Returns:
+            JSON response.
+        """
+        url = self.get_url("backends")
+        return self.session.get(url, timeout=timeout).json()
