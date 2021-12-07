@@ -22,11 +22,7 @@ CRN_HOST_TUPLES = [
     [
         "crn:v1:bluemix:public:quantum-computing:us-east:a/...::",
         "https://us-east.quantum-computing.cloud.ibm.com",
-    ],
-    [
-        "crn:v1:staging:public:quantum-computing:us-east:a/...::",
-        "https://us-east.quantum-computing.test.cloud.ibm.com",
-    ],
+    ]
 ]
 
 

@@ -46,8 +46,6 @@ def crn_to_api_host(crn: str) -> str:
         # use a hard-coded list in a first step only, to be replaced with a more generic mapping function
         if crn.find("bluemix:public:quantum-computing:us-east") >= 0:
             api_host = "https://us-east.quantum-computing.cloud.ibm.com"
-        elif crn.find("staging:public:quantum-computing:us-east") >= 0:
-            api_host = "https://us-east.quantum-computing.test.cloud.ibm.com"
 
     if api_host is None:
         raise CannotMapCrnToApiHostError(f"Failed to map crn ({crn}) to API host.")
