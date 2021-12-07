@@ -171,7 +171,6 @@ class IBMRuntimeService:
         )
         self._backends: Dict[str, "ibm_backend.IBMBackend"] = {}
         self._api_client = None
-        self._programs_first_call = True
         hgps = self._get_hgps()
         for hgp in hgps:
             for name, backend in hgp.backends.items():
