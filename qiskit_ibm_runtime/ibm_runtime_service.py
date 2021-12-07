@@ -864,13 +864,14 @@ class IBMRuntimeService:
         if skip is None:
             skip = 0
         if not self._programs or (refresh and not search):
-            self._retrieve_programs()
+            self._programs = self._retrieve_programs()
             already_retrieved = True
         if limit is None:
             limit = len(self._programs)
         if search:
             if refresh and not already_retrieved:
-                self._retrieve_programs(search)
+                temp_programs = self._retrieve_programs(search)
+                return list(temp_programs.values())[skip : limit + skip]
             matched_programs = []
             for program in list(self._programs.values()):
                 if search in program.name or search in program.description:
@@ -909,13 +910,16 @@ class IBMRuntimeService:
 
         return self._programs[program_id]
 
-    def _retrieve_programs(self, search: str = "") -> None:
+    def _retrieve_programs(self, search: str = "") -> Dict[str, RuntimeProgram]:
         """Make an API call to fetch programs.
 
         Args:
             search: Search query for program name and description.
+
+        Returns:
+            A dict of ``RuntimeProgram`` instances, keyed by program name.
         """
-        self._programs = {}
+        programs = {}
         current_page_limit = 20
         offset = 0
         while True:
@@ -928,11 +932,12 @@ class IBMRuntimeService:
             count = response.get("count", 0)
             for prog_dict in program_page:
                 program = self._to_program(prog_dict)
-                self._programs[program.program_id] = program
-            if len(self._programs) == count:
+                programs[program.program_id] = program
+            if len(programs) == count:
                 # Stop if there are no more programs returned by the server.
                 break
             offset += len(program_page)
+        return programs
 
     def _to_program(self, response: Dict) -> RuntimeProgram:
         """Convert server response to ``RuntimeProgram`` instances.
