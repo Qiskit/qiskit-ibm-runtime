@@ -868,13 +868,13 @@ class IBMRuntimeService:
         if limit is None:
             limit = len(self._programs)
         if name:
-            if refresh and not already_retrieved:
-                temp_programs = self._retrieve_programs(name)
-                return list(temp_programs.values())[skip : limit + skip]
             matched_programs = []
-            for program in list(self._programs.values()):
-                if program.name == name:
-                    matched_programs.append(program)
+            if refresh and not already_retrieved:
+                matched_programs = list(self._retrieve_programs(name).values())
+            else:
+                for program in list(self._programs.values()):
+                    if program.name == name:
+                        matched_programs.append(program)
             return matched_programs[skip : limit + skip]
         return list(self._programs.values())[skip : limit + skip]
 
