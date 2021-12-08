@@ -101,6 +101,15 @@ class RuntimeProgram:
                 )
             if "type" in schema:
                 formatted.append(" " * 4 + "Type: {}".format(str(schema["type"])))
+            if "input_allowed" in schema:
+                formatted.append(
+                    " " * 4 + "Input Allowed: {}".format(str(schema["input_allowed"]))
+                )
+            if "min_num_qubits" in schema:
+                formatted.append(
+                    " " * 4
+                    + "Minimum number qubits: {}".format(str(schema["min_num_qubits"]))
+                )
             if "properties" in schema:
                 formatted.append(" " * 4 + "Properties:")
                 for property_name, property_value in schema["properties"].items():
@@ -130,6 +139,12 @@ class RuntimeProgram:
             f"  Update date: {self.update_date}",
             f"  Max execution time: {self.max_execution_time}",
         ]
+
+        formatted.append("  Backend requirements:")
+        if self._backend_requirements:
+            _format_common(self._backend_requirements)
+        else:
+            formatted.append(" " * 4 + "none")
 
         formatted.append("  Input parameters:")
         if self._parameters:
