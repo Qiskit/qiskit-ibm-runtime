@@ -158,14 +158,16 @@ class IBMRuntimeService:
             IBMProviderCredentialsInvalidToken: If the `token` is not a valid IBM Quantum token.
         """
         super().__init__()
-        if auth == "cloud":
-            raise IBMProviderCredentialsNotFound(
-                "Support for auth type 'cloud' has not yet been implemented."
-            )
 
         account_credentials, account_preferences = self._resolve_credentials(
-            token=token, url=locator, **kwargs
+            token=token, locator=locator, **kwargs
         )
+
+        if auth == "cloud":
+            self._api_client = RuntimeClient(credentials=account_credentials)
+            self._programs: Dict[str, RuntimeProgram] = {}
+            return
+
         self._initialize_hgps(
             credentials=account_credentials, preferences=account_preferences
         )
@@ -183,11 +185,14 @@ class IBMRuntimeService:
                 self._ws_url = self._default_hgp.credentials.runtime_url.replace(
                     "https", "wss"
                 )
-                self._programs: Dict[str, RuntimeProgram] = {}
+                self._programs = {}
         self._discover_backends()
 
     def _resolve_credentials(
-        self, token: Optional[str] = None, url: Optional[str] = None, **kwargs: Any
+        self,
+        token: Optional[str] = None,
+        locator: Optional[str] = None,
+        **kwargs: Any,
     ) -> Tuple[Credentials, Dict]:
         """Resolve credentials after looking up env variables and credentials saved on disk
 
@@ -216,7 +221,7 @@ class IBMRuntimeService:
                     'found: "{}" of type {}.'.format(token, type(token))
                 )
             url = (
-                url
+                locator
                 or os.getenv("QISKIT_IBM_RUNTIME_API_URL")
                 or QISKIT_IBM_RUNTIME_API_URL
             )
