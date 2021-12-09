@@ -41,5 +41,5 @@ from .converters import (
     seconds_to_duration,
     duration_difference,
 )
-from .utils import to_python_identifier
+from .utils import to_python_identifier, is_crn, crn_to_api_host
 from .json import RuntimeEncoder, RuntimeDecoder, to_base64_string

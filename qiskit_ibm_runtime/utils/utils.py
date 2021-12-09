@@ -20,6 +20,37 @@ import copy
 from typing import List, Optional, Any, Dict, Union, Tuple
 from threading import Condition
 from queue import Queue
+from ..exceptions import CannotMapCrnToApiHostError
+
+
+def is_crn(locator: str) -> bool:
+    """Check if a given value is a CRN (Cloud Resource Name).
+
+    Args:
+        locator: The value to check.
+    """
+    return isinstance(locator, str) and locator.startswith("crn:")
+
+
+def crn_to_api_host(crn: str) -> str:
+    """Convert a CRN to an API host.
+
+    Args:
+        crn: The CRN.
+
+    Raises:
+        CannotMapCrnToApiHostError: If the corresponding API host cannot be determined.
+    """
+    api_host = None
+    if is_crn(crn):
+        # use a hard-coded list in a first step only, to be replaced with a more generic mapping function
+        if crn.find("bluemix:public:quantum-computing:us-east") >= 0:
+            api_host = "https://us-east.quantum-computing.cloud.ibm.com"
+
+    if api_host is None:
+        raise CannotMapCrnToApiHostError(f"Failed to map crn ({crn}) to API host.")
+
+    return api_host
 
 
 def to_python_identifier(name: str) -> str:

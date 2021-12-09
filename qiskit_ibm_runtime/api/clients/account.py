@@ -38,7 +38,7 @@ class AccountClient(BaseClient):
             **request_kwargs: Arguments for the request ``Session``.
         """
         self._session = RetrySession(
-            credentials.base_url, credentials.access_token, **request_kwargs
+            credentials.base_url, auth=credentials.get_auth_handler(), **request_kwargs
         )
         # base_api is used to handle endpoints that don't include h/g/p.
         # account_api is for h/g/p.
