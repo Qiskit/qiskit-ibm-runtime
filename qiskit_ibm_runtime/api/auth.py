@@ -34,9 +34,6 @@ class CloudAuth(AuthBase):
             )
         return False
 
-    def __ne__(self, other: object) -> bool:
-        return not self == other
-
     def __call__(self, r: PreparedRequest) -> PreparedRequest:
         r.headers["Service-CRN"] = self.crn
         r.headers["Authorization"] = f"apikey {self.api_key}"
@@ -54,9 +51,6 @@ class LegacyAuth(AuthBase):
             return self.access_token == other.access_token
 
         return False
-
-    def __ne__(self, other: object) -> bool:
-        return not self == other
 
     def __call__(self, r: PreparedRequest) -> PreparedRequest:
         r.headers["X-Access-Token"] = self.access_token
