@@ -31,7 +31,7 @@ from qiskit.providers.models import QasmBackendConfiguration, PulseBackendConfig
 # pylint: disable=unused-import, cyclic-import
 from qiskit_ibm_runtime import ibm_runtime_service
 
-from .api.clients import AccountClient
+from .api.clients import AccountClient, RuntimeClient
 from .backendreservation import BackendReservation
 from .credentials import Credentials
 from .exceptions import IBMBackendApiProtocolError
@@ -69,7 +69,7 @@ class IBMBackend(Backend):
         configuration: Union[QasmBackendConfiguration, PulseBackendConfiguration],
         service: "ibm_runtime_service.IBMRuntimeService",
         credentials: Credentials,
-        api_client: AccountClient,
+        api_client: Union[AccountClient, RuntimeClient],
     ) -> None:
         """IBMBackend constructor.
 
@@ -151,7 +151,7 @@ class IBMBackend(Backend):
 
         if datetime or refresh or self._properties is None:
             api_properties = self._api_client.backend_properties(
-                self.name(), datetime=datetime
+                self.name(), datetime=datetime  # type: ignore
             )
             if not api_properties:
                 return None
@@ -233,7 +233,7 @@ class IBMBackend(Backend):
         """
         start_datetime = local_to_utc(start_datetime) if start_datetime else None
         end_datetime = local_to_utc(end_datetime) if end_datetime else None
-        raw_response = self._api_client.backend_reservations(
+        raw_response = self._api_client.backend_reservations(  # type: ignore
             self.name(), start_datetime, end_datetime
         )
         return convert_reservation_data(raw_response, self.name())
