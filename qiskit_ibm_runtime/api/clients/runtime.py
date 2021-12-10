@@ -281,16 +281,13 @@ class RuntimeClient:
 
     # IBM Cloud only functions
 
-    def list_backends(self, timeout: Optional[float] = None) -> List[Dict[str, Any]]:
+    def list_backends(self) -> List[Dict[str, Any]]:
         """Return IBM Cloud backends available for this service instance.
-
-        Args:
-            timeout: Number of seconds to wait for the request.
 
         Returns:
             IBM Cloud backends available for this service instance.
         """
-        return self.api.backends(timeout=timeout)
+        return self.api.backends()
 
     def backend_configuration(self, backend_name: str) -> Dict[str, Any]:
         """Return the configuration of the IBM Cloud backend.
