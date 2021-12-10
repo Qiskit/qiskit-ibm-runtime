@@ -13,7 +13,7 @@
 """Client for accessing IBM Quantum runtime service."""
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from qiskit_ibm_runtime.credentials import Credentials
 from qiskit_ibm_runtime.api.session import RetrySession
@@ -278,3 +278,60 @@ class RuntimeClient:
     def logout(self) -> None:
         """Clear authorization cache."""
         self.api.logout()
+
+    # IBM Cloud only functions
+
+    def list_backends(self, timeout: Optional[float] = None) -> List[Dict[str, Any]]:
+        """Return IBM Cloud backends available for this service instance.
+
+        Args:
+            timeout: Number of seconds to wait for the request.
+
+        Returns:
+            IBM Cloud backends available for this service instance.
+        """
+        return self.api.backends(timeout=timeout)
+
+    def backend_configuration(self, backend_name: str) -> Dict[str, Any]:
+        """Return the configuration of the IBM Cloud backend.
+
+        Args:
+            backend_name: The name of the IBM Cloud backend.
+
+        Returns:
+            Backend configuration.
+        """
+        return self.api.backend(backend_name).configuration()
+
+    def backend_status(self, backend_name: str) -> Dict[str, Any]:
+        """Return the status of the IBM Cloud backend.
+
+        Args:
+            backend_name: The name of the IBM Cloud backend.
+
+        Returns:
+            Backend status.
+        """
+        return self.api.backend(backend_name).status()
+
+    def backend_properties(self, backend_name: str) -> Dict[str, Any]:
+        """Return the properties of the IBM Cloud backend.
+
+        Args:
+            backend_name: The name of the IBM Cloud backend.
+
+        Returns:
+            Backend properties.
+        """
+        return self.api.backend(backend_name).properties()
+
+    def backend_pulse_defaults(self, backend_name: str) -> Dict:
+        """Return the pulse defaults of the IBM Cloud backend.
+
+        Args:
+            backend_name: The name of the IBM Cloud backend.
+
+        Returns:
+            Backend pulse defaults.
+        """
+        return self.api.backend(backend_name).pulse_defaults()
