@@ -248,20 +248,14 @@ class IBMRuntimeService:
             account_credentials = credentials_list[0]
         return account_credentials, preferences
 
-    def _discover_remote_backends(
-        self, timeout: Optional[float] = None
-    ) -> Dict[str, "ibm_backend.IBMBackend"]:
+    def _discover_remote_backends(self) -> Dict[str, "ibm_backend.IBMBackend"]:
         """Return the remote backends available for this service instance.
-
-        Args:
-            timeout: Maximum number of seconds to wait for the discovery of
-                remote backends.
 
         Returns:
             A dict of the remote backend instances, keyed by backend name.
         """
         ret = OrderedDict()  # type: ignore[var-annotated]
-        backends_list = self._api_client.list_backends(timeout=timeout)
+        backends_list = self._api_client.list_backends()
         for backend_name in backends_list:
             raw_config = self._api_client.backend_configuration(
                 backend_name=backend_name
@@ -288,7 +282,7 @@ class IBMRuntimeService:
                     configuration=config,
                     service=self,
                     credentials=self.account_credentials,
-                    api_client=self._api_client,
+                    runtime_client=self._api_client,
                 )
             except Exception:  # pylint: disable=broad-except
                 logger.warning(
