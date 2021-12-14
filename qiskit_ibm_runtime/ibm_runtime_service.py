@@ -132,7 +132,7 @@ class IBMRuntimeService:
             token: IBM Cloud API key or IBM Quantum token.
             url: The API URL.
                 Defaults to https://cloud.ibm.com (cloud) or https://auth.quantum-computing.ibm.com/api (legacy).
-            instance: The CRN (cloud) or provider string (legacy).
+            instance: The CRN (cloud) or hub/group/project (legacy).
             proxies: Proxy configuration for the server.
             verify: If False, ignores SSL certificates errors
 
