@@ -204,7 +204,7 @@ class Runtime(RestAdapterBase):
         """
         return CloudBackend(self.session, backend_name)
 
-    def backends(self, timeout: Optional[float] = None) -> List[Dict[str, Any]]:
+    def backends(self, timeout: Optional[float] = None) -> Dict[str, List[str]]:
         """Return a list of IBM Cloud backends.
 
         Args:
