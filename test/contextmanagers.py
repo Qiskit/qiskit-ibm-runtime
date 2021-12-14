@@ -13,14 +13,13 @@
 """Context managers for using with IBM Provider unit tests."""
 
 import os
-from typing import Optional, Dict
 from contextlib import ContextDecorator, contextmanager
-from tempfile import NamedTemporaryFile
+from typing import Optional, Dict
 from unittest.mock import patch
 
-from qiskit_ibm_runtime.credentials import configrc, Credentials
-from qiskit_ibm_runtime.credentials.environ import VARIABLES_MAP
 from qiskit_ibm_runtime import IBMRuntimeService
+from qiskit_ibm_runtime.credentials import Credentials
+from qiskit_ibm_runtime.credentials.environ import VARIABLES_MAP
 
 CREDENTIAL_ENV_VARS = VARIABLES_MAP.keys()
 
@@ -74,29 +73,6 @@ class no_envs(ContextDecorator):
 
     def __exit__(self, *exc):
         os.environ = self.os_environ_original
-
-
-class custom_qiskitrc(ContextDecorator):
-    """Context manager that uses a temporary qiskitrc."""
-
-    # pylint: disable=invalid-name
-
-    def __init__(self, contents=b""):
-        # Create a temporary file with the contents.
-        self.tmp_file = NamedTemporaryFile()
-        self.tmp_file.write(contents)
-        self.tmp_file.flush()
-        self.default_qiskitrc_file_original = configrc.DEFAULT_QISKITRC_FILE
-
-    def __enter__(self):
-        # Temporarily modify the default location of the qiskitrc file.
-        configrc.DEFAULT_QISKITRC_FILE = self.tmp_file.name
-        return self
-
-    def __exit__(self, *exc):
-        # Delete the temporary file and restore the default location.
-        self.tmp_file.close()
-        configrc.DEFAULT_QISKITRC_FILE = self.default_qiskitrc_file_original
 
 
 class no_file(ContextDecorator):
