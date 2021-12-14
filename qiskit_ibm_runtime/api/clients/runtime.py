@@ -281,13 +281,13 @@ class RuntimeClient:
 
     # IBM Cloud only functions
 
-    def list_backends(self) -> List[Dict[str, Any]]:
+    def list_backends(self) -> List[str]:
         """Return IBM Cloud backends available for this service instance.
 
         Returns:
             IBM Cloud backends available for this service instance.
         """
-        return self.api.backends()
+        return self.api.backends()["devices"]
 
     def backend_configuration(self, backend_name: str) -> Dict[str, Any]:
         """Return the configuration of the IBM Cloud backend.

@@ -24,6 +24,7 @@ from typing import Dict, Callable, Optional, Union, List, Any, Type
 from qiskit.circuit import QuantumCircuit
 from qiskit.providers.backend import BackendV1 as Backend
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
+from qiskit.providers.models import PulseBackendConfiguration, QasmBackendConfiguration
 from qiskit.providers.providerutils import filter_backends
 from qiskit.transpiler import Layout
 
@@ -49,7 +50,7 @@ from .runner_result import RunnerResult
 from .runtime_job import RuntimeJob
 from .runtime_program import RuntimeProgram, ParameterNamespace
 from .utils import RuntimeDecoder, to_base64_string, to_python_identifier
-from .utils.backend import convert_reservation_data
+from .utils.backend import convert_reservation_data, decode_backend_configuration
 
 logger = logging.getLogger(__name__)
 
@@ -156,7 +157,7 @@ class IBMRuntimeService:
                 verify=verify,
             )
         )
-        account_credentials = Credentials(
+        self.account_credentials = Credentials(
             auth=self.account.auth,
             token=self.account.token,
             url=self.account.url,
@@ -164,29 +165,76 @@ class IBMRuntimeService:
             proxies=self.account.proxies,
             verify=self.account.verify,
         )
-
-        if self.account.auth == "cloud":
-            self._api_client = RuntimeClient(credentials=account_credentials)
-            self._programs: Dict[str, RuntimeProgram] = {}
-            return
-
-        self._initialize_hgps(credentials=account_credentials)
+        self._programs: Dict[str, RuntimeProgram] = {}
         self._backends: Dict[str, "ibm_backend.IBMBackend"] = {}
-        self._api_client = None
-        hgps = self._get_hgps()
-        for hgp in hgps:
-            for backend_name, backend in hgp.backends.items():
-                if backend_name not in self._backends:
-                    self._backends[backend_name] = backend
-            if not self._api_client and hgp.has_service("runtime"):
-                self._default_hgp = hgp
-                self._api_client = RuntimeClient(self._default_hgp.credentials)
-                self._access_token = self._default_hgp.credentials.access_token
-                self._ws_url = self._default_hgp.credentials.runtime_url.replace(
-                    "https", "wss"
-                )
-                self._programs = {}
+
+        if auth == "cloud":
+            self._api_client = RuntimeClient(credentials=self.account_credentials)
+            self._backends = self._discover_remote_backends()
+        else:
+            self._initialize_hgps(credentials=self.account_credentials)
+            self._api_client = None
+            hgps = self._get_hgps()
+            for hgp in hgps:
+                for backend_name, backend in hgp.backends.items():
+                    if backend_name not in self._backends:
+                        self._backends[backend_name] = backend
+                if not self._api_client and hgp.has_service("runtime"):
+                    self._default_hgp = hgp
+                    self._api_client = RuntimeClient(self._default_hgp.credentials)
+                    self._access_token = self._default_hgp.credentials.access_token
+                    self._ws_url = self._default_hgp.credentials.runtime_url.replace(
+                        "https", "wss"
+                    )
+                    self._programs = {}
+
         self._discover_backends()
+
+    def _discover_remote_backends(self) -> Dict[str, "ibm_backend.IBMBackend"]:
+        """Return the remote backends available for this service instance.
+
+        Returns:
+            A dict of the remote backend instances, keyed by backend name.
+        """
+        ret = OrderedDict()  # type: ignore[var-annotated]
+        backends_list = self._api_client.list_backends()
+        for backend_name in backends_list:
+            raw_config = self._api_client.backend_configuration(
+                backend_name=backend_name
+            )
+            # Make sure the raw_config is of proper type
+            if not isinstance(raw_config, dict):
+                logger.warning(
+                    "An error occurred when retrieving backend "
+                    "information. Some backends might not be available."
+                )
+                continue
+            try:
+                decode_backend_configuration(raw_config)
+                try:
+                    config = PulseBackendConfiguration.from_dict(raw_config)
+                except (KeyError, TypeError):
+                    config = QasmBackendConfiguration.from_dict(raw_config)
+                backend_cls = (
+                    ibm_backend.IBMSimulator
+                    if config.simulator
+                    else ibm_backend.IBMBackend
+                )
+                ret[config.backend_name] = backend_cls(
+                    configuration=config,
+                    service=self,
+                    credentials=self.account_credentials,
+                    runtime_client=self._api_client,
+                )
+            except Exception:  # pylint: disable=broad-except
+                logger.warning(
+                    'Remote backend "%s" for service instance %s could not be instantiated due to an '
+                    "invalid config: %s",
+                    raw_config.get("backend_name", raw_config.get("name", "unknown")),
+                    repr(self),
+                    traceback.format_exc(),
+                )
+        return ret
 
     def _initialize_hgps(
         self, credentials: Credentials, preferences: Optional[Dict] = None
