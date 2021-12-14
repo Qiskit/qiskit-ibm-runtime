@@ -116,11 +116,11 @@ class IBMRuntimeService:
 
     def __init__(
         self,
-        name: Optional[str] = None,
-        auth: Optional[AccountType] = None,
         token: Optional[str] = None,
         url: Optional[str] = None,
         instance: Optional[str] = None,
+        auth: Optional[AccountType] = None,
+        name: Optional[str] = None,
         proxies: Optional[dict] = None,
         verify: Optional[bool] = None,
     ) -> None:
