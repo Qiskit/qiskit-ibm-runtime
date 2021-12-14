@@ -127,12 +127,12 @@ class IBMRuntimeService:
         """IBMRuntimeService constructor
 
         Args:
-            name: Name of the account to load.
-            auth: Authentication type. `cloud` or `legacy`.
             token: IBM Cloud API key or IBM Quantum API token.
             url: The API URL.
                 Defaults to https://cloud.ibm.com (cloud) or https://auth.quantum-computing.ibm.com/api (legacy).
             instance: The CRN (cloud) or hub/group/project (legacy).
+            auth: Authentication type. `cloud` or `legacy`.
+            name: Name of the account to load.
             proxies: Proxy configuration for the server.
             verify: If False, ignores SSL certificates errors
 
@@ -501,37 +501,35 @@ class IBMRuntimeService:
 
     @staticmethod
     def save_account(
-        auth: AccountType,
-        token: str,
-        name: Optional[str] = None,
+        token: Optional[str] = None,
         url: Optional[str] = None,
         instance: Optional[str] = None,
+        auth: Optional[AccountType] = None,
+        name: Optional[str] = None,
         proxies: Optional[dict] = None,
         verify: Optional[bool] = None,
     ) -> None:
         """Save the account to disk for future use.
 
         Args:
-            auth: Authentication type. `cloud` or `legacy`.
-            token: IBM Cloud API key or IBM Quantum token.
-            name: Custom name of the saved account. Defaults to "default".
+            token: IBM Cloud API key or IBM Quantum API token.
             url: The API URL.
                 Defaults to https://cloud.ibm.com (cloud) or https://auth.quantum-computing.ibm.com/api (legacy).
-            instance: The CRN (cloud) or provider string (legacy).
+            instance: The CRN (cloud) or hub/group/project (legacy).
+            auth: Authentication type. `cloud` or `legacy`.
+            name: Name of the account to save.
             proxies: Proxy configuration for the server.
             verify: If False, ignores SSL certificates errors
         """
 
-        AccountManager.save(
+        return AccountManager.save(
+            token=token,
+            url=url,
+            instance=instance,
+            auth=auth,
             name=name,
-            account=Account(
-                auth=auth,
-                url=url,
-                token=token,
-                instance=instance,
-                proxies=proxies,
-                verify=verify,
-            ),
+            proxies=proxies,
+            verify=verify,
         )
 
     @staticmethod

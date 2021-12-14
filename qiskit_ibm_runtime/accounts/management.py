@@ -15,7 +15,7 @@
 import os
 from typing import Optional, Union
 
-from .account import Account
+from .account import Account, AccountType
 from .storage import save_config, read_config, delete_config
 
 _DEFAULT_ACCOUNG_CONFIG_JSON_FILE = os.path.join(
@@ -28,13 +28,28 @@ class AccountManager:
     """Class that bundles account management related functionality."""
 
     @staticmethod
-    def save(account: Account, name: Optional[str] = _DEFAULT_ACCOUNT_NAME) -> None:
+    def save(
+        token: Optional[str] = None,
+        url: Optional[str] = None,
+        instance: Optional[str] = None,
+        auth: Optional[AccountType] = None,
+        name: Optional[str] = _DEFAULT_ACCOUNT_NAME,
+        proxies: Optional[dict] = None,
+        verify: Optional[bool] = None,
+    ) -> None:
         """Save account on disk."""
 
         return save_config(
             filename=_DEFAULT_ACCOUNG_CONFIG_JSON_FILE,
             name=name,
-            config=account.to_saved_format(),
+            config=Account(
+                token=token,
+                url=url,
+                instance=instance,
+                auth=auth,
+                proxies=proxies,
+                verify=verify,
+            ).to_saved_format(),
         )
 
     @staticmethod
