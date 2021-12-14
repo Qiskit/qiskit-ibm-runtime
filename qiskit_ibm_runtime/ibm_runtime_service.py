@@ -129,7 +129,7 @@ class IBMRuntimeService:
         Args:
             name: Name of the account to load.
             auth: Authentication type. `cloud` or `legacy`.
-            token: IBM Cloud API key or IBM Quantum token.
+            token: IBM Cloud API key or IBM Quantum API token.
             url: The API URL.
                 Defaults to https://cloud.ibm.com (cloud) or https://auth.quantum-computing.ibm.com/api (legacy).
             instance: The CRN (cloud) or hub/group/project (legacy).
