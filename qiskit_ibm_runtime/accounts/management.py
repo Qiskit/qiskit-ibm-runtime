@@ -67,5 +67,5 @@ class AccountManager:
 
     @staticmethod
     def delete(name: Optional[str] = _DEFAULT_ACCOUNT_NAME) -> bool:
-        """Read account from disk."""
+        """Delete account from disk."""
         return delete_config(name=name, filename=_DEFAULT_ACCOUNG_CONFIG_JSON_FILE)
