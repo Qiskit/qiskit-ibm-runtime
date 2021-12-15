@@ -170,7 +170,7 @@ class IBMRuntimeService:
 
         if auth == "cloud":
             self._api_client = RuntimeClient(credentials=account_credentials)
-            self._credentials = account_preferences
+            self._credentials = account_credentials
             return
 
         self._hgps = self._initialize_hgps(
