@@ -33,9 +33,6 @@ class TestSerialization(IBMTestCase):
         cls.hub = hub
         cls.group = group
         cls.project = project
-        cls.sim_backend = service.get_backend(
-            "ibmq_qasm_simulator", hub=cls.hub, group=cls.group, project=cls.project
-        )
 
     def test_backend_configuration(self):
         """Test deserializing backend configuration."""

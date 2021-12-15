@@ -162,30 +162,27 @@ class IBMRuntimeService:
         account_credentials, account_preferences = self._resolve_credentials(
             token=token, locator=locator, **kwargs
         )
+        self._auth = auth
+
+        # Common attributes
+        self._backends: Dict[str, "ibm_backend.IBMBackend"] = {}
+        self._programs: Dict[str, RuntimeProgram] = {}
 
         if auth == "cloud":
             self._api_client = RuntimeClient(credentials=account_credentials)
-            self._programs: Dict[str, RuntimeProgram] = {}
+            self._credentials = account_preferences
             return
 
-        self._initialize_hgps(
-            credentials=account_credentials, preferences=account_preferences
+        self._hgps = self._initialize_hgps(
+            credentials=account_credentials
         )
-        self._backends: Dict[str, "ibm_backend.IBMBackend"] = {}
-        self._api_client = None
-        hgps = self._get_hgps()
-        for hgp in hgps:
+        for hgp in self._hgps.values():
             for name, backend in hgp.backends.items():
                 if name not in self._backends:
                     self._backends[name] = backend
-            if not self._api_client and hgp.has_service("runtime"):
-                self._default_hgp = hgp
-                self._api_client = RuntimeClient(self._default_hgp.credentials)
-                self._access_token = self._default_hgp.credentials.access_token
-                self._ws_url = self._default_hgp.credentials.runtime_url.replace(
-                    "https", "wss"
-                )
-                self._programs = {}
+
+        self._default_hgp = list(self._hgps.values())[0]
+        self._api_client = RuntimeClient(self._default_hgp.credentials)
         self._discover_backends()
 
     def _resolve_credentials(
@@ -250,20 +247,22 @@ class IBMRuntimeService:
         return account_credentials, preferences
 
     def _initialize_hgps(
-        self, credentials: Credentials, preferences: Optional[Dict] = None
-    ) -> None:
+        self, credentials: Credentials
+    ) -> Dict:
         """Authenticate against IBM Quantum and populate the hub/group/projects.
 
         Args:
             credentials: Credentials for IBM Quantum.
-            preferences: Account preferences.
 
         Raises:
             IBMProviderCredentialsInvalidUrl: If the URL specified is not
                 a valid IBM Quantum authentication URL.
             IBMProviderError: If no hub/group/project could be found for this account.
+
+        Returns:
+            The hub/group/projects for this account.
         """
-        self._hgps: Dict[HubGroupProjectID, HubGroupProject] = OrderedDict()
+        hgps: OrderedDict[str, HubGroupProject] = OrderedDict()
         version_info = self._check_api_version(credentials)
         # Check the URL is a valid authentication URL.
         if not version_info["new_api"] or "api-auth" not in version_info:
@@ -280,10 +279,11 @@ class IBMRuntimeService:
         )
         service_urls = auth_client.current_service_urls()
         user_hubs = auth_client.user_hubs()
-        preferences = preferences or {}
-        is_open = True  # First hgp is open access
         for hub_info in user_hubs:
             # Build credentials.
+            if not service_urls.get("services", {}).get("runtime"):
+                # Skip those that don't support runtime.
+                continue
             hgp_credentials = Credentials(
                 credentials.token,
                 access_token=auth_client.current_access_token(),
@@ -296,16 +296,12 @@ class IBMRuntimeService:
                 default_provider=credentials.default_provider,
                 **hub_info,
             )
-            hgp_credentials.preferences = preferences.get(
-                hgp_credentials.unique_id(), {}
-            )
             # Build the hgp.
             try:
                 hgp = HubGroupProject(
-                    credentials=hgp_credentials, service=self, is_open=is_open
+                    credentials=hgp_credentials
                 )
-                self._hgps[hgp.credentials.unique_id()] = hgp
-                is_open = False  # hgps after first are premium and not open access
+                hgps[hgp.name] = hgp
             except Exception:  # pylint: disable=broad-except
                 # Catch-all for errors instantiating the hgp.
                 logger.warning(
@@ -313,19 +309,24 @@ class IBMRuntimeService:
                     hub_info,
                     traceback.format_exc(),
                 )
-        if not self._hgps:
+        if not hgps:
             raise IBMProviderError(
-                "No hub/group/project could be found for this account."
+                "No hub/group/project that supports Qiskit Runtime could "
+                "be found for this account."
             )
         # Move open hgp to end of the list
-        if len(self._hgps) > 1:
-            open_hgp = self._get_hgp()
-            self._hgps.move_to_end(open_hgp.credentials.unique_id())
+        if len(hgps) > 1:
+            open_key, open_val = hgps.popitem(last=False)
+            hgps[open_key] = open_val
         if credentials.default_provider:
-            # Move user selected hgp to front of the list
-            hub, group, project = credentials.default_provider.to_tuple()
-            default_hgp = self._get_hgp(hub=hub, group=group, project=project)
-            self._hgps.move_to_end(default_hgp.credentials.unique_id(), last=False)
+            default_hgp = HubGroupProject.to_name(*credentials.default_provider.to_tuple())
+            if default_hgp in hgps:
+                # Move user selected hgp to front of the list
+                hgps.move_to_end(default_hgp, last=False)
+            else:
+                warnings.warn(f"Default hub/group/project {default_hgp} not "
+                              "found for the account and is ignored.")
+        return hgps
 
     @staticmethod
     def _check_api_version(credentials: Credentials) -> Dict[str, Union[bool, str]]:
@@ -343,92 +344,45 @@ class IBMRuntimeService:
         return version_finder.version()
 
     def _get_hgp(
-        self,
-        hub: Optional[str] = None,
-        group: Optional[str] = None,
-        project: Optional[str] = None,
-        backend_name: Optional[str] = None,
-        service_name: Optional[str] = None,
+            self,
+            instance: Optional[str] = None,
+            backend_name: Optional[str] = None,
     ) -> HubGroupProject:
-        """Return an instance of `HubGroupProject` for a single hub/group/project combination.
+        """Return an instance of `HubGroupProject`.
 
         This function also allows to find the `HubGroupProject` that contains a backend
-        `backend_name` providing service `service_name`.
+        `backend_name`.
 
         Args:
-            hub: Name of the hub.
-            group: Name of the group.
-            project: Name of the project.
+            instance: The hub/group/project to use.
             backend_name: Name of the IBM Quantum backend.
-            service_name: Name of the IBM Quantum service.
 
         Returns:
             An instance of `HubGroupProject` that matches the specified criteria or the default.
 
         Raises:
-            IBMProviderError: If no hub/group/project matches the specified criteria,
-                if more than one hub/group/project matches the specified criteria, if
-                no hub/group/project could be found for this account or if no backend matches the
-                criteria.
+            IBMInputValueError: If no hub/group/project matches the specified criteria,
+                or if the input value is in an incorrect format.
         """
-        # If any `hub`, `group`, or `project` is specified, make sure all parameters are set.
-        if any([hub, group, project]) and not all([hub, group, project]):
-            raise IBMProviderError(
-                "The hub, group, and project parameters must all be "
-                "specified. "
-                'hub = "{}", group = "{}", project = "{}"'.format(hub, group, project)
-            )
-        hgps = self._get_hgps(hub=hub, group=group, project=project)
-        if any([hub, group, project]):
-            if not hgps:
-                raise IBMProviderError(
-                    "No hub/group/project matches the specified criteria: "
-                    "hub = {}, group = {}, project = {}".format(hub, group, project)
-                )
-            if len(hgps) > 1:
-                raise IBMProviderError(
-                    "More than one hub/group/project matches the "
-                    "specified criteria. hub = {}, group = {}, project = {}".format(
-                        hub, group, project
-                    )
-                )
-        elif not hgps:
-            # Prevent edge case where no hub/group/project is available.
-            raise IBMProviderError(
-                "No hub/group/project could be found for this account."
-            )
-        elif backend_name and service_name:
-            for hgp in hgps:
-                if hgp.has_service(service_name) and hgp.get_backend(backend_name):
-                    return hgp
-            raise IBMProviderError("No backend matches the criteria.")
-        return hgps[0]
+        if instance:
+            HubGroupProject.verify_format(instance)
+            if instance not in self._hgps:
+                raise IBMInputValueError(f"Hub/group/project {instance} "
+                                         "could not be found for this account.")
+            if backend_name and not self._hgps[instance].get_backend(backend_name):
+                raise IBMInputValueError(f"Backend {backend_name} cannot be found in "
+                                         f"hub/group/project {instance}")
+            return self._hgps[instance]
 
-    def _get_hgps(
-        self,
-        hub: Optional[str] = None,
-        group: Optional[str] = None,
-        project: Optional[str] = None,
-    ) -> List[HubGroupProject]:
-        """Return a list of `HubGroupProject` instances, subject to optional filtering.
+        if not backend_name:
+            return list(self._hgps.values())[0]
 
-        Args:
-            hub: Name of the hub.
-            group: Name of the group.
-            project: Name of the project.
+        for hgp in self._hgps.values():
+            if hgp.get_backend(backend_name):
+                return hgp
 
-        Returns:
-            A list of `HubGroupProject` instances that match the specified criteria.
-        """
-        filters: List[Callable[[HubGroupProjectID], bool]] = []
-        if hub:
-            filters.append(lambda hgp: hgp.hub == hub)
-        if group:
-            filters.append(lambda hgp: hgp.group == group)
-        if project:
-            filters.append(lambda hgp: hgp.project == project)
-        hgps = [hgp for key, hgp in self._hgps.items() if all(f(key) for f in filters)]
-        return hgps
+        raise IBMInputValueError(f"Backend {backend_name} cannot be found in any"
+                                 f"hub/group/project for this account.")
 
     def _discover_backends(self) -> None:
         """Discovers the remote backends for this account, if not already known."""
@@ -445,9 +399,7 @@ class IBMRuntimeService:
         filters: Optional[Callable[[List["ibm_backend.IBMBackend"]], bool]] = None,
         min_num_qubits: Optional[int] = None,
         input_allowed: Optional[Union[str, List[str]]] = None,
-        hub: Optional[str] = None,
-        group: Optional[str] = None,
-        project: Optional[str] = None,
+        instance: Optional[str] = None,
         **kwargs: Any,
     ) -> List["ibm_backend.IBMBackend"]:
         """Return all backends accessible via this account, subject to optional filtering.
@@ -465,9 +417,8 @@ class IBMRuntimeService:
                 For example, ``inputs_allowed='runtime'`` will return all backends
                 that support Qiskit Runtime. If a list is given, the backend must
                 support all types specified in the list.
-            hub: Name of the hub.
-            group: Name of the group.
-            project: Name of the project.
+            instance: The service instance to use. For cloud runtime, this is the Cloud Resource
+                Name (CRN). For legacy runtime, this is the hub/group/project in that format.
             kwargs: Simple filters that specify a ``True``/``False`` criteria in the
                 backend configuration, backends status, or provider credentials.
                 An example to get the operational backends with 5 qubits::
@@ -482,11 +433,12 @@ class IBMRuntimeService:
                 `project` are specified.
         """
         backends: List["ibm_backend.IBMBackend"] = list()
-        if all([hub, group, project]):
-            hgp = self._get_hgp(hub, group, project)
-            backends = list(hgp.backends.values())
-        else:
-            backends = list(self._backends.values())
+        if self._auth == "legacy":
+            if instance:
+                backends = list(self._get_hgp(instance=instance).backends.values())
+            else:
+                backends = list(self._backends.values())
+
         # Special handling of the `name` parameter, to support alias resolution.
         if name:
             aliases = self._aliased_backend_names()
@@ -711,9 +663,7 @@ class IBMRuntimeService:
         transpiler_options: Optional[dict] = None,
         measurement_error_mitigation: bool = False,
         use_measure_esp: Optional[bool] = None,
-        hub: Optional[str] = None,
-        group: Optional[str] = None,
-        project: Optional[str] = None,
+        instance: Optional[str] = None,
         **run_config: Dict,
     ) -> "runtime_job.RuntimeJob":
         """Execute the input circuit(s) on a backend using the runtime service.
@@ -767,11 +717,8 @@ class IBMRuntimeService:
                 than standard measurement sequences. See
                 `here <https://arxiv.org/pdf/2008.08571.pdf>`_.
 
-            hub: Name of the hub.
-
-            group: Name of the group.
-
-            project: Name of the project.
+            instance: The service instance to use. For cloud runtime, this is the Cloud Resource
+                Name (CRN). For legacy runtime, this is the hub/group/project in that format.
 
             **run_config: Extra arguments used to configure the circuit execution.
 
@@ -807,9 +754,7 @@ class IBMRuntimeService:
             options=options,
             inputs=inputs,
             result_decoder=RunnerResult,
-            hub=hub,
-            group=group,
-            project=project,
+            instance=instance
         )
 
     def pprint_programs(
@@ -880,7 +825,7 @@ class IBMRuntimeService:
                 offset += len(program_page)
         if limit is None:
             limit = len(self._programs)
-        return list(self._programs.values())[skip : limit + skip]
+        return list(self._programs.values())[skip: limit + skip]
 
     def program(self, program_id: str, refresh: bool = False) -> RuntimeProgram:
         """Retrieve a runtime program.
@@ -955,10 +900,8 @@ class IBMRuntimeService:
         inputs: Union[Dict, ParameterNamespace],
         callback: Optional[Callable] = None,
         result_decoder: Optional[Type[ResultDecoder]] = None,
-        image: Optional[str] = "",
-        hub: Optional[str] = None,
-        group: Optional[str] = None,
-        project: Optional[str] = None,
+        image: str = "",
+        instance: Optional[str] = None
     ) -> RuntimeJob:
         """Execute the runtime program.
 
@@ -978,9 +921,8 @@ class IBMRuntimeService:
                 ``ResultDecoder`` is used if not specified.
             image: The runtime image used to execute the program, specified in the form
                 of image_name:tag. Not all accounts are authorized to select a different image.
-            hub: Name of the hub.
-            group: Name of the group.
-            project: Name of the project.
+            instance: The service instance to use. For cloud runtime, this is the Cloud Resource
+                Name (CRN). For legacy runtime, this is the hub/group/project in that format.
 
         Returns:
             A ``RuntimeJob`` instance representing the execution.
@@ -988,8 +930,6 @@ class IBMRuntimeService:
         Raises:
             IBMInputValueError: If input is invalid.
         """
-        if "backend_name" not in options:
-            raise IBMInputValueError('"backend_name" is required field in "options"')
         # If using params object, extract as dictionary
         if isinstance(inputs, ParameterNamespace):
             inputs.validate()
@@ -1000,36 +940,34 @@ class IBMRuntimeService:
             image,
         ):
             raise IBMInputValueError('"image" needs to be in form of image_name:tag')
-        backend_name = options["backend_name"]
-        if not all([hub, group, project]) and self._default_hgp.get_backend(
-            backend_name
-        ):
-            hgp = self._default_hgp
+
+        backend_name = options.get("backend_name", "")
+        hgp_tuple = None
+        if self._auth == "legacy":
+            if not backend_name:
+                raise IBMInputValueError(
+                    '"backend_name" is required field in "options" for legacy runtime.')
+            # Find the right hgp
+            hgp = self._get_hgp(instance=instance, backend_name=backend_name)
+            hgp_tuple = hgp.to_tuple()
+            credentials = hgp.credentials
+            backend = hgp.get_backend(backend_name)
         else:
-            hgp = self._get_hgp(
-                hub=hub,
-                group=group,
-                project=project,
-                backend_name=backend_name,
-                service_name=SERVICE_NAME,
-            )
-        credentials = hgp.credentials
-        api_client = (
-            self._api_client if hgp == self._default_hgp else RuntimeClient(credentials)
-        )
+            credentials = self._credentials
+            backend = self.get_backend(backend_name)  # TODO Need cloud backend
+
         result_decoder = result_decoder or ResultDecoder
-        response = api_client.program_run(
+        response = self._api_client.program_run(
             program_id=program_id,
-            credentials=credentials,
             backend_name=backend_name,
             params=inputs,
             image=image,
+            hgp=hgp_tuple
         )
 
-        backend = self.get_backend(backend_name)
         job = RuntimeJob(
             backend=backend,
-            api_client=api_client,
+            api_client=self._api_client,
             credentials=credentials,
             job_id=response["id"],
             program_id=program_id,

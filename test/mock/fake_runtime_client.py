@@ -16,7 +16,7 @@ import time
 import uuid
 import json
 import base64
-from typing import Optional, Dict
+from typing import Optional, Dict, Tuple
 from concurrent.futures import ThreadPoolExecutor
 
 from qiskit_ibm_runtime.credentials import Credentials
@@ -339,10 +339,10 @@ class BaseFakeRuntimeClient:
     def program_run(
         self,
         program_id: str,
-        credentials: Credentials,
         backend_name: str,
-        params: str,
-        image: Optional[str] = "",
+        params: Dict,
+        image: str,
+        hgp: Optional[Tuple[str, str, str]]
     ):
         """Run the specified program."""
         job_id = uuid.uuid4().hex
@@ -351,9 +351,7 @@ class BaseFakeRuntimeClient:
             if len(self._job_classes) > 0
             else BaseFakeRuntimeJob
         )
-        hub = self._hub or credentials.hub
-        group = self._group or credentials.group
-        project = self._project or credentials.project
+        hub, group, project = hgp
         job = job_cls(
             job_id=job_id,
             program_id=program_id,

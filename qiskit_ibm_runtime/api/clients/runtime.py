@@ -13,7 +13,7 @@
 """Client for accessing IBM Quantum runtime service."""
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 
 from qiskit_ibm_runtime.credentials import Credentials
 from qiskit_ibm_runtime.api.session import RetrySession
@@ -113,31 +113,33 @@ class RuntimeClient:
     def program_run(
         self,
         program_id: str,
-        credentials: Credentials,
         backend_name: str,
         params: Dict,
         image: str,
+        hgp: Optional[Tuple[str, str, str]]
     ) -> Dict:
         """Run the specified program.
 
         Args:
             program_id: Program ID.
-            credentials: Credentials used to run the program.
             backend_name: Name of the backend to run the program.
             params: Parameters to use.
             image: The runtime image to use.
+            hgp: Hub/group/project to use.
 
         Returns:
             JSON response.
         """
+        hgp_dict = {}
+        if hgp:
+            hub, group, project = hgp
+            hgp_dict = {"hub": hub, "group": group, "project": project}
         return self.api.program_run(
             program_id=program_id,
-            hub=credentials.hub,
-            group=credentials.group,
-            project=credentials.project,
             backend_name=backend_name,
             params=params,
             image=image,
+            **hgp_dict
         )
 
     def program_delete(self, program_id: str) -> None:

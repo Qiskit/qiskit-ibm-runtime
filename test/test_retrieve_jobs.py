@@ -1,0 +1,261 @@
+# This code is part of Qiskit.
+#
+# (C) Copyright IBM 2021.
+#
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE.txt file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
+
+"""Tests for runtime job retrieval."""
+
+from unittest import skip
+
+from .ibm_test_case import IBMTestCase
+from .mock.fake_runtime_service import FakeRuntimeService
+from .utils.program import run_program, upload_program
+
+
+class TestRetrieveJobs(IBMTestCase):
+    """Class for testing job retrieval."""
+
+    def setUp(self):
+        """Initial test setup."""
+        super().setUp()
+        self._legacy_service = FakeRuntimeService(auth="legacy", token="some_token")
+        self._cloud_service = FakeRuntimeService(auth="cloud", token="some_token")
+
+    def test_retrieve_job(self):
+        """Test retrieving a job."""
+        service = self._legacy_service
+        program_id = upload_program(service)
+        params = {"param1": "foo"}
+        job = run_program(service=service, program_id=program_id, inputs=params)
+        rjob = service.job(job.job_id)
+        self.assertEqual(job.job_id, rjob.job_id)
+        self.assertEqual(program_id, rjob.program_id)
+
+    def test_jobs_no_limit(self):
+        """Test retrieving jobs without limit."""
+        service = self._legacy_service
+        program_id = upload_program(service)
+
+        jobs = []
+        for _ in range(25):
+            jobs.append(run_program(service, program_id))
+        rjobs = service.jobs(limit=None)
+        self.assertEqual(25, len(rjobs))
+
+    def test_jobs_limit(self):
+        """Test retrieving jobs with limit."""
+        service = self._legacy_service
+        program_id = upload_program(service)
+
+        jobs = []
+        job_count = 25
+        for _ in range(job_count):
+            jobs.append(run_program(service, program_id))
+
+        limits = [21, 30]
+        for limit in limits:
+            with self.subTest(limit=limit):
+                rjobs = service.jobs(limit=limit)
+                self.assertEqual(min(limit, job_count), len(rjobs))
+
+    def test_jobs_skip(self):
+        """Test retrieving jobs with skip."""
+        service = self._legacy_service
+        program_id = upload_program(service)
+
+        jobs = []
+        for _ in range(5):
+            jobs.append(run_program(service, program_id))
+        rjobs = service.jobs(skip=4)
+        self.assertEqual(1, len(rjobs))
+
+    def test_jobs_skip_limit(self):
+        """Test retrieving jobs with skip and limit."""
+        service = self._legacy_service
+        program_id = upload_program(service)
+
+        jobs = []
+        for _ in range(10):
+            jobs.append(run_program(service, program_id))
+        rjobs = service.jobs(skip=4, limit=2)
+        self.assertEqual(2, len(rjobs))
+
+    def test_jobs_pending(self):
+        """Test retrieving pending jobs (QUEUED, RUNNING)."""
+        service = self._legacy_service
+        program_id = upload_program(service)
+
+        _, pending_jobs_count, _ = self._populate_jobs_with_all_statuses(
+            service, program_id=program_id
+        )
+        rjobs = service.jobs(pending=True)
+        self.assertEqual(pending_jobs_count, len(rjobs))
+
+    def test_jobs_limit_pending(self):
+        """Test retrieving pending jobs (QUEUED, RUNNING) with limit."""
+        service = self._legacy_service
+        program_id = upload_program(service)
+
+        self._populate_jobs_with_all_statuses(
+            service, program_id=program_id
+        )
+        limit = 4
+        rjobs = service.jobs(limit=limit, pending=True)
+        self.assertEqual(limit, len(rjobs))
+
+    def test_jobs_skip_pending(self):
+        """Test retrieving pending jobs (QUEUED, RUNNING) with skip."""
+        service = self._legacy_service
+        program_id = upload_program(service)
+
+        _, pending_jobs_count, _ = self._populate_jobs_with_all_statuses(
+            service, program_id=program_id
+        )
+        skip = 4
+        rjobs = service.jobs(skip=skip, pending=True)
+        self.assertEqual(pending_jobs_count - skip, len(rjobs))
+
+    def test_jobs_limit_skip_pending(self):
+        """Test retrieving pending jobs (QUEUED, RUNNING) with limit and skip."""
+        service = self._legacy_service
+        program_id = upload_program(service)
+
+        self._populate_jobs_with_all_statuses(
+            service, program_id=program_id
+        )
+        limit = 2
+        skip = 3
+        rjobs = service.jobs(limit=limit, skip=skip, pending=True)
+        self.assertEqual(limit, len(rjobs))
+
+    def test_jobs_returned(self):
+        """Test retrieving returned jobs (COMPLETED, FAILED, CANCELLED)."""
+        service = self._legacy_service
+        program_id = upload_program(service)
+
+        _, _, returned_jobs_count = self._populate_jobs_with_all_statuses(
+            service, program_id=program_id
+        )
+        rjobs = service.jobs(pending=False)
+        self.assertEqual(returned_jobs_count, len(rjobs))
+
+    def test_jobs_limit_returned(self):
+        """Test retrieving returned jobs (COMPLETED, FAILED, CANCELLED) with limit."""
+        service = self._legacy_service
+        program_id = upload_program(service)
+
+        self._populate_jobs_with_all_statuses(
+            service, program_id=program_id
+        )
+        limit = 6
+        rjobs = service.jobs(limit=limit, pending=False)
+        self.assertEqual(limit, len(rjobs))
+
+    def test_jobs_skip_returned(self):
+        """Test retrieving returned jobs (COMPLETED, FAILED, CANCELLED) with skip."""
+        service = self._legacy_service
+        program_id = upload_program(service)
+
+        _, _, returned_jobs_count = self._populate_jobs_with_all_statuses(
+            service, program_id=program_id
+        )
+        skip = 4
+        rjobs = service.jobs(skip=skip, pending=False)
+        self.assertEqual(returned_jobs_count - skip, len(rjobs))
+
+    def test_jobs_limit_skip_returned(self):
+        """Test retrieving returned jobs (COMPLETED, FAILED, CANCELLED) with limit and skip."""
+        service = self._legacy_service
+        program_id = upload_program(service)
+
+        self._populate_jobs_with_all_statuses(
+            service, program_id=program_id
+        )
+        limit = 6
+        skip = 2
+        rjobs = service.jobs(limit=limit, skip=skip, pending=False)
+        self.assertEqual(limit, len(rjobs))
+
+    def test_jobs_filter_by_program_id(self):
+        """Test retrieving jobs by Program ID."""
+        service = self._legacy_service
+        program_id = upload_program(service)
+        program_id_1 = upload_program(service)
+
+        job = run_program(service=service, program_id=program_id)
+        job_1 = run_program(service=service, program_id=program_id_1)
+        job.wait_for_final_state()
+        job_1.wait_for_final_state()
+        rjobs = service.jobs(program_id=program_id)
+        self.assertEqual(program_id, rjobs[0].program_id)
+        self.assertEqual(1, len(rjobs))
+
+    def test_jobs_filter_by_instance(self):
+        """Test retrieving jobs by instance."""
+        service = self._legacy_service
+        program_id = upload_program(service)
+
+        job = run_program(
+            service=service,
+            program_id=program_id,
+            instance="hub1/group1/project1"
+        )
+        job.wait_for_final_state()
+        rjobs = service.jobs(
+            program_id=program_id,
+            hub="hub1",
+            group="group1",
+            project="project1",
+        )
+        self.assertEqual(program_id, rjobs[0].program_id)
+        self.assertEqual(1, len(rjobs))
+        rjobs = service.jobs(
+            program_id=program_id, hub="test", group="test", project="test"
+        )
+        self.assertFalse(rjobs)
+
+    def test_jobs_bad_instance(self):
+        """Test retrieving jobs with bad instance values."""
+        # TODO
+        pass
+
+    @skip("Skip until instance is supported")
+    def test_different_hgps(self):
+        """Test retrieving job submitted with different hgp."""
+        # Initialize with hgp0
+        service = FakeRuntimeService(auth="legacy", token="some_token",
+                                     instance="hub0/group0/project0")
+        program_id = upload_program(service)
+
+        # Run with hgp1 backend.
+        job = run_program(service, program_id=program_id, backend_name="unique_backend_1")
+
+        rjob = service.job(job.job_id)
+        self.assertIsNotNone(rjob.backend)
+
+    def _populate_jobs_with_all_statuses(self, service, program_id):
+        """Populate the database with jobs of all statuses."""
+        jobs = []
+        pending_jobs_count = 0
+        returned_jobs_count = 0
+        status_count = {"RUNNING": 3,
+                        "COMPLETED": 4,
+                        "QUEUED": 2,
+                        "FAILED": 3,
+                        "CANCELLED": 2}
+        pending_status = ["RUNNING", "QUEUED"]
+        for stat, count in status_count.items():
+            for _ in range(count):
+                jobs.append(run_program(service=service, program_id=program_id, final_status=stat))
+                if stat in pending_status:
+                    pending_jobs_count += 1
+                else:
+                    returned_jobs_count += 1
+        return jobs, pending_jobs_count, returned_jobs_count

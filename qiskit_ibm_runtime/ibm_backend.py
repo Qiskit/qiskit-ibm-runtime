@@ -67,7 +67,6 @@ class IBMBackend(Backend):
     def __init__(
         self,
         configuration: Union[QasmBackendConfiguration, PulseBackendConfiguration],
-        service: "ibm_runtime_service.IBMRuntimeService",
         credentials: Credentials,
         api_client: AccountClient,
     ) -> None:
@@ -75,11 +74,10 @@ class IBMBackend(Backend):
 
         Args:
             configuration: Backend configuration.
-            service: IBM Quantum account provider.
             credentials: IBM Quantum credentials.
             api_client: IBM Quantum client used to communicate with the server.
         """
-        super().__init__(provider=service, configuration=configuration)
+        super().__init__(configuration=configuration)
 
         self._api_client = api_client
         self._credentials = credentials
@@ -289,19 +287,17 @@ class IBMRetiredBackend(IBMBackend):
     def __init__(
         self,
         configuration: Union[QasmBackendConfiguration, PulseBackendConfiguration],
-        service: "ibm_runtime_service.IBMRuntimeService",
         credentials: Credentials,
-        api_client: AccountClient,
+        api_client: Optional[AccountClient] = None,
     ) -> None:
         """IBMRetiredBackend constructor.
 
         Args:
             configuration: Backend configuration.
-            service: IBM Quantum account provider.
             credentials: IBM Quantum credentials.
             api_client: IBM Quantum client used to communicate with the server.
         """
-        super().__init__(configuration, service, credentials, api_client)
+        super().__init__(configuration, credentials, api_client)
         self._status = BackendStatus(
             backend_name=self.name(),
             backend_version=self.configuration().backend_version,
@@ -342,7 +338,7 @@ class IBMRetiredBackend(IBMBackend):
         backend_name: str,
         service: "ibm_runtime_service.IBMRuntimeService",
         credentials: Credentials,
-        api: AccountClient,
+        api: Optional[AccountClient] = None,
     ) -> "IBMRetiredBackend":
         """Return a retired backend from its name."""
         configuration = QasmBackendConfiguration(
@@ -359,4 +355,4 @@ class IBMRetiredBackend(IBMBackend):
             gates=[GateConfig(name="TODO", parameters=[], qasm_def="TODO")],
             coupling_map=[[0, 1]],
         )
-        return cls(configuration, service, credentials, api)
+        return cls(configuration, credentials, api)

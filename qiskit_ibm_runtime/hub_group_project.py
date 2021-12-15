@@ -15,12 +15,10 @@
 import logging
 from collections import OrderedDict
 import traceback
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 
-from qiskit.providers.backend import BackendV1 as Backend
 from qiskit.providers.models import PulseBackendConfiguration, QasmBackendConfiguration
 from qiskit_ibm_runtime import (  # pylint: disable=unused-import
-    ibm_runtime_service,
     ibm_backend,
 )
 
@@ -38,30 +36,22 @@ class HubGroupProject:
     def __init__(
         self,
         credentials: Credentials,
-        service: "ibm_runtime_service.IBMRuntimeService",
-        is_open: bool,
     ) -> None:
         """HubGroupProject constructor
 
         Args:
             credentials: IBM Quantum credentials.
-            service: IBM Quantum account provider.
-            is_open: True means open access, False means premium
         """
         self.credentials = credentials
-        self._service = service
-        self.is_open = is_open
         self._api_client = AccountClient(
             self.credentials, **self.credentials.connection_parameters()
         )
         # Initialize the internal list of backends.
         self._backends: Dict[str, "ibm_backend.IBMBackend"] = {}
-        self._service_urls = {
-            "backend": self.credentials.url,
-            "experiment": self.credentials.experiment_url,
-            "random": self.credentials.extractor_url,
-            "runtime": self.credentials.runtime_url,
-        }
+        self._backend_url = credentials.url
+        self._hub = credentials.hub
+        self._group = credentials.group
+        self._project = credentials.project
 
     @property
     def backends(self) -> Dict[str, "ibm_backend.IBMBackend"]:
@@ -118,7 +108,6 @@ class HubGroupProject:
                 )
                 ret[config.backend_name] = backend_cls(
                     configuration=config,
-                    service=self._service,
                     credentials=self.credentials,
                     api_client=self._api_client,
                 )
@@ -132,15 +121,22 @@ class HubGroupProject:
                 )
         return ret
 
-    def get_backend(self, name: str) -> Optional[Backend]:
+    def get_backend(self, name: str) -> Optional["ibm_backend.IBMBackend"]:
         """Get backend by name."""
         return self._backends.get(name, None)
 
-    def has_service(self, name: str) -> bool:
-        """Check if hgp has service by name."""
-        if name not in self._service_urls:
-            raise IBMInputValueError(f"Unknown service {name} specified.")
-        return self._service_urls[name] is not None
+    @property
+    def name(self) -> str:
+        """Returns the unique id.
+
+        Returns:
+            An ID uniquely represents this h/g/p.
+        """
+        return f"{self._hub}/{self._group}/{self._project}"
+
+    def to_tuple(self) -> Tuple[str, str, str]:
+        """Returns hub, group, project as a tuple."""
+        return self._hub, self._group, self._project
 
     def __repr__(self) -> str:
         credentials_info = "hub='{}', group='{}', project='{}'".format(
@@ -152,3 +148,33 @@ class HubGroupProject:
         if not isinstance(other, HubGroupProject):
             return False
         return self.credentials == other.credentials
+
+    @staticmethod
+    def to_name(hub: str, group: str, project: str) -> str:
+        """Convert the input hub/group/project to the 'name' format.
+
+        Args:
+            hub: Hub name.
+            group: Group name.
+            project: Project name.
+
+        Returns:
+            Input in hub/group/project format.
+        """
+        return f"{hub}/{group}/{project}"
+
+    @staticmethod
+    def verify_format(instance: str) -> None:
+        """Verify the input instance is in proper hub/group/project format.
+
+        Args:
+            instance: Service instance in hub/group/project format.
+
+        Raises:
+            IBMInputValueError: If input is not in the correct format.
+        """
+        try:
+            instance.split("/")
+        except (ValueError, AttributeError):
+            raise IBMInputValueError(f"Input instance value {instance} is not in the"
+                                     f"correct hub/group/project format.")

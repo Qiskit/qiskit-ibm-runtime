@@ -13,14 +13,18 @@
 """Context managers for using with IBM Provider unit tests."""
 
 import os
-from typing import Optional, Dict
+from typing import Dict
 from contextlib import ContextDecorator, contextmanager
 from tempfile import NamedTemporaryFile
 from unittest.mock import patch
+from collections import OrderedDict
 
 from qiskit_ibm_runtime.credentials import configrc, Credentials
 from qiskit_ibm_runtime.credentials.environ import VARIABLES_MAP
 from qiskit_ibm_runtime import IBMRuntimeService
+from qiskit_ibm_runtime.hub_group_project import HubGroupProject
+
+from .mock.fake_account_client import BaseFakeAccountClient
 
 CREDENTIAL_ENV_VARS = VARIABLES_MAP.keys()
 
@@ -124,15 +128,32 @@ class no_file(ContextDecorator):
 
 
 def _mock_initialize_hgps(
-    self, credentials: Credentials, preferences: Optional[Dict] = None
-) -> None:
-    """Mock ``_initialize_hgps()``, just storing the credentials."""
-    hgp = dict()
-    hgp["credentials"] = credentials
-    self._hgp = hgp
-    self._hgps = {}
-    if preferences:
-        credentials.preferences = preferences.get(credentials.unique_id(), {})
+    self, *args, **kwargs
+) -> Dict:
+    """Mock ``_initialize_hgps()``."""
+    hgps = OrderedDict()
+
+    for idx in range(2):
+        hub = f"hub{idx}"
+        group = f"group{idx}"
+        project = f"project{idx}"
+
+        cred = Credentials(
+            token="some_token",
+            url="some_url",
+            access_token="some_token",
+            auth_url="some_url",
+            websockets_url="some_ws_url",
+            services={"runtime": "runtime_url"},
+            hub=hub,
+            group=group,
+            project=project
+        )
+        hgp = HubGroupProject(cred)
+        hgp._api_client = BaseFakeAccountClient()
+        hgps[f"{hub}/{group}/{project}"] = hgp
+
+    return hgps
 
 
 @contextmanager

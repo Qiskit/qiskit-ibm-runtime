@@ -20,7 +20,7 @@ from qiskit.test.base import BaseQiskitTestCase
 
 from qiskit_ibm_runtime import QISKIT_IBM_RUNTIME_LOGGER_NAME
 
-from .utils import setup_test_logging
+from .utils.utils import setup_test_logging
 
 
 class IBMTestCase(BaseQiskitTestCase):

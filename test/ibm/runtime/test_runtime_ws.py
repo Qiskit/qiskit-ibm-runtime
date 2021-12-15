@@ -30,7 +30,7 @@ from .ws_handler import (
     JOB_ID_RETRY_FAILURE,
     JOB_PROGRESS_RESULT_COUNT,
 )
-from .fake_runtime_client import BaseFakeRuntimeClient
+from test.mock.fake_runtime_client import BaseFakeRuntimeClient
 
 
 class TestRuntimeWebsocketClient(IBMTestCase):
