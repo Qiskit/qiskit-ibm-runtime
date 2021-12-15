@@ -13,13 +13,14 @@
 """Runtime REST adapter."""
 
 import logging
-from typing import Dict, List, Any, Union, Optional
+from typing import Dict, Any, List, Union, Optional
 import json
-from concurrent import futures
 
 from .base import RestAdapterBase
-from ..session import RetrySession
+from .program import Program
+from .program_job import ProgramJob
 from ...utils import RuntimeEncoder
+from .cloud_backend import CloudBackend
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +28,12 @@ logger = logging.getLogger(__name__)
 class Runtime(RestAdapterBase):
     """Rest adapter for Runtime base endpoints."""
 
-    URL_MAP = {"programs": "/programs", "jobs": "/jobs", "logout": "/logout"}
+    URL_MAP = {
+        "programs": "/programs",
+        "jobs": "/jobs",
+        "logout": "/logout",
+        "backends": "/devices",
+    }
 
     def program(self, program_id: str) -> "Program":
         """Return an adapter for the program.
@@ -185,161 +191,27 @@ class Runtime(RestAdapterBase):
         url = self.get_url("logout")
         self.session.post(url)
 
+    # IBM Cloud only functions
 
-class Program(RestAdapterBase):
-    """Rest adapter for program related endpoints."""
-
-    URL_MAP = {
-        "self": "",
-        "data": "/data",
-        "run": "/jobs",
-        "private": "/private",
-        "public": "/public",
-    }
-
-    _executor = futures.ThreadPoolExecutor()
-
-    def __init__(
-        self, session: RetrySession, program_id: str, url_prefix: str = ""
-    ) -> None:
-        """Job constructor.
+    def backend(self, backend_name: str) -> CloudBackend:
+        """Return an adapter for the IBM Cloud backend.
 
         Args:
-            session: Session to be used in the adapter.
-            program_id: ID of the runtime program.
-            url_prefix: Prefix to use in the URL.
-        """
-        super().__init__(session, "{}/programs/{}".format(url_prefix, program_id))
+            backend_name: Name of the backend.
 
-    def get(self) -> Dict[str, Any]:
-        """Return program information.
+        Returns:
+            The backend adapter.
+        """
+        return CloudBackend(self.session, backend_name)
+
+    def backends(self, timeout: Optional[float] = None) -> Dict[str, List[str]]:
+        """Return a list of IBM Cloud backends.
+
+        Args:
+            timeout: Number of seconds to wait for the request.
 
         Returns:
             JSON response.
         """
-        url = self.get_url("self")
-        return self.session.get(url).json()
-
-    def make_public(self) -> None:
-        """Sets a runtime program's visibility to public."""
-        url = self.get_url("public")
-        self.session.put(url)
-
-    def make_private(self) -> None:
-        """Sets a runtime program's visibility to private."""
-        url = self.get_url("private")
-        self.session.put(url)
-
-    def delete(self) -> None:
-        """Delete this program.
-
-        Returns:
-            JSON response.
-        """
-        url = self.get_url("self")
-        self.session.delete(url)
-
-    def update_data(self, program_data: str) -> None:
-        """Update program data.
-
-        Args:
-            program_data: Program data (base64 encoded).
-        """
-        url = self.get_url("data")
-        self.session.put(
-            url, data=program_data, headers={"Content-Type": "application/octet-stream"}
-        )
-
-    def update_metadata(
-        self,
-        name: str = None,
-        description: str = None,
-        max_execution_time: int = None,
-        spec: Optional[Dict] = None,
-    ) -> None:
-        """Update program metadata.
-
-        Args:
-            name: Name of the program.
-            description: Program description.
-            max_execution_time: Maximum execution time.
-            spec: Backend requirements, parameters, interim results, return values, etc.
-        """
-        url = self.get_url("self")
-        payload: Dict = {}
-        if name:
-            payload["name"] = name
-        if description:
-            payload["description"] = description
-        if max_execution_time:
-            payload["cost"] = max_execution_time
-        if spec:
-            payload["spec"] = spec
-
-        self.session.patch(url, json=payload)
-
-
-class ProgramJob(RestAdapterBase):
-    """Rest adapter for program job related endpoints."""
-
-    URL_MAP = {
-        "self": "",
-        "results": "/results",
-        "cancel": "/cancel",
-        "logs": "/logs",
-        "interim_results": "/interim_results",
-    }
-
-    def __init__(
-        self, session: RetrySession, job_id: str, url_prefix: str = ""
-    ) -> None:
-        """ProgramJob constructor.
-
-        Args:
-            session: Session to be used in the adapter.
-            job_id: ID of the program job.
-            url_prefix: Prefix to use in the URL.
-        """
-        super().__init__(session, "{}/jobs/{}".format(url_prefix, job_id))
-
-    def get(self) -> Dict:
-        """Return program job information.
-
-        Returns:
-            JSON response.
-        """
-        return self.session.get(self.get_url("self")).json()
-
-    def delete(self) -> None:
-        """Delete program job."""
-        self.session.delete(self.get_url("self"))
-
-    def interim_results(self) -> str:
-        """Return program job interim results.
-
-        Returns:
-            Interim results.
-        """
-        response = self.session.get(self.get_url("interim_results"))
-        return response.text
-
-    def results(self) -> str:
-        """Return program job results.
-
-        Returns:
-            Job results.
-        """
-        response = self.session.get(self.get_url("results"))
-        return response.text
-
-    def cancel(self) -> None:
-        """Cancel the job."""
-        self.session.post(self.get_url("cancel"))
-
-    def logs(self) -> str:
-        """Retrieve job logs.
-
-        Returns:
-            Job logs.
-        """
-        return self.session.get(self.get_url("logs")).text
+        url = self.get_url("backends")
+        return self.session.get(url, timeout=timeout).json()

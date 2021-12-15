@@ -13,12 +13,14 @@
 """Represent IBM Quantum account credentials."""
 
 import re
-
 from typing import Dict, Tuple, Optional, Any
+
+from requests.auth import AuthBase
 from requests_ntlm import HttpNtlmAuth
 
 from .hub_group_project_id import HubGroupProjectID
-
+from ..api.auth import LegacyAuth, CloudAuth
+from ..utils import is_crn, crn_to_api_host
 
 REGEX_IBM_HUBS = (
     "(?P<prefix>http[s]://.+/api)"
@@ -94,6 +96,13 @@ class Credentials:
         self.experiment_url = services.get("resultsDB", None)
         self.runtime_url = services.get("runtime", None)
 
+    def get_auth_handler(self) -> AuthBase:
+        """Returns the respective authentication handler."""
+        if is_crn(self.url):
+            return CloudAuth(api_key=self.token, crn=self.url)
+
+        return LegacyAuth(access_token=self.access_token)
+
     def is_ibm_quantum(self) -> bool:
         """Return whether the credentials represent an IBM Quantum account."""
         return all([self.hub, self.group, self.project])
@@ -165,7 +174,10 @@ def _unify_ibm_quantum_url(
     # Check if the URL is "new style", and retrieve embedded parameters from it.
     regex_match = re.match(REGEX_IBM_HUBS, url, re.IGNORECASE)
     base_url = url
-    if regex_match:
+
+    if is_crn(url):
+        base_url = crn_to_api_host(url)
+    elif regex_match:
         base_url, hub, group, project = regex_match.groups()
     else:
         if hub and group and project:
@@ -176,5 +188,4 @@ def _unify_ibm_quantum_url(
         else:
             # Cleanup the hub, group and project, without modifying the url.
             hub = group = project = None
-
     return url, base_url, hub, group, project
