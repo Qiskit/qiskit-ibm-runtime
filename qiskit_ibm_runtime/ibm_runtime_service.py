@@ -130,7 +130,8 @@ class IBMRuntimeService:
         Args:
             token: IBM Cloud API key or IBM Quantum API token.
             url: The API URL.
-                Defaults to https://cloud.ibm.com (cloud) or https://auth.quantum-computing.ibm.com/api (legacy).
+                Defaults to https://cloud.ibm.com (cloud) or
+                https://auth.quantum-computing.ibm.com/api (legacy).
             instance: The CRN (cloud) or hub/group/project (legacy).
             auth: Authentication type. `cloud` or `legacy`.
             name: Name of the account to load.
@@ -542,7 +543,8 @@ class IBMRuntimeService:
             name: Custom name of the saved account. Defaults to "default".
 
         Returns:
-            True if the account with the given name was deleted. False if no account was found for the given name.
+            True if the account with the given name was deleted.
+            False if no account was found for the given name.
         """
 
         return AccountManager.delete(name=name)
@@ -562,7 +564,8 @@ class IBMRuntimeService:
         Args:
             token: IBM Cloud API key or IBM Quantum API token.
             url: The API URL.
-                Defaults to https://cloud.ibm.com (cloud) or https://auth.quantum-computing.ibm.com/api (legacy).
+                Defaults to https://cloud.ibm.com (cloud) or
+                https://auth.quantum-computing.ibm.com/api (legacy).
             instance: The CRN (cloud) or hub/group/project (legacy).
             auth: Authentication type. `cloud` or `legacy`.
             name: Name of the account to save.
