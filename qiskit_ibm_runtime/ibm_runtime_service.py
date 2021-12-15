@@ -136,7 +136,7 @@ class IBMRuntimeService:
             auth: Authentication type. `cloud` or `legacy`.
             name: Name of the account to load.
             proxies: Proxy configuration for the server.
-            verify: If False, ignores SSL certificates errors
+            verify: Verify the server's TLS certificate.
 
         Returns:
             An instance of IBMRuntimeService.
@@ -570,7 +570,7 @@ class IBMRuntimeService:
             auth: Authentication type. `cloud` or `legacy`.
             name: Name of the account to save.
             proxies: Proxy configuration for the server.
-            verify: If False, ignores SSL certificates errors
+            verify: Verify the server's TLS certificate.
         """
 
         return AccountManager.save(

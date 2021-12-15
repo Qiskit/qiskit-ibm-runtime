@@ -55,6 +55,7 @@ def _assert_valid_instance(auth: AccountType, instance: str) -> None:
             raise ValueError(
                 f"Inappropriate `instance` value. Expected a non-empty string."
             )
+    # TODO: add validation for legacy instance when adding test coverage
 
 
 class Account:
@@ -66,6 +67,7 @@ class Account:
         token: str,
         url: Optional[str],
         instance: Optional[str] = None,
+        # TODO: add validation for proxies input format
         proxies: Optional[dict] = None,
         verify: Optional[bool] = True,
     ):
