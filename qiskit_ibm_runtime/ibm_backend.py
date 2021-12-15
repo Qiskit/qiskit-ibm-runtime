@@ -31,7 +31,7 @@ from qiskit.providers.models import QasmBackendConfiguration, PulseBackendConfig
 # pylint: disable=unused-import, cyclic-import
 from qiskit_ibm_runtime import ibm_runtime_service
 
-from .api.clients import AccountClient
+from .api.clients import AccountClient, RuntimeClient
 from .backendreservation import BackendReservation
 from .credentials import Credentials
 from .exceptions import IBMBackendApiProtocolError
@@ -68,7 +68,8 @@ class IBMBackend(Backend):
         self,
         configuration: Union[QasmBackendConfiguration, PulseBackendConfiguration],
         credentials: Credentials,
-        api_client: AccountClient,
+        account_client: Optional[AccountClient] = None,
+        runtime_client: Optional[RuntimeClient] = None,
     ) -> None:
         """IBMBackend constructor.
 
@@ -79,7 +80,8 @@ class IBMBackend(Backend):
         """
         super().__init__(configuration=configuration)
 
-        self._api_client = api_client
+        self._account_client = account_client
+        self._runtime_client = runtime_client
         self._credentials = credentials
         self.hub = credentials.hub
         self.group = credentials.group
@@ -148,9 +150,12 @@ class IBMBackend(Backend):
             datetime = local_to_utc(datetime)
 
         if datetime or refresh or self._properties is None:
-            api_properties = self._api_client.backend_properties(
-                self.name(), datetime=datetime
-            )
+            if self._account_client:
+                api_properties = self._account_client.backend_properties(
+                    self.name(), datetime=datetime
+                )
+            elif self._runtime_client:
+                api_properties = self._runtime_client.backend_properties(self.name())
             if not api_properties:
                 return None
             decode_backend_properties(api_properties)
@@ -175,7 +180,10 @@ class IBMBackend(Backend):
         Raises:
             IBMBackendApiProtocolError: If the status for the backend cannot be formatted properly.
         """
-        api_status = self._api_client.backend_status(self.name())
+        if self._account_client:
+            api_status = self._account_client.backend_status(self.name())
+        elif self._runtime_client:
+            api_status = self._runtime_client.backend_status(self.name())
 
         try:
             return BackendStatus.from_dict(api_status)
@@ -200,7 +208,10 @@ class IBMBackend(Backend):
             The backend pulse defaults or ``None`` if the backend does not support pulse.
         """
         if refresh or self._defaults is None:
-            api_defaults = self._api_client.backend_pulse_defaults(self.name())
+            if self._account_client:
+                api_defaults = self._api_client.backend_pulse_defaults(self.name())
+            elif self._runtime_client:
+                api_defaults = self._runtime_client.backend_pulse_defaults(self.name())
             if api_defaults:
                 decode_pulse_defaults(api_defaults)
                 self._defaults = PulseDefaults.from_dict(api_defaults)
@@ -231,7 +242,7 @@ class IBMBackend(Backend):
         """
         start_datetime = local_to_utc(start_datetime) if start_datetime else None
         end_datetime = local_to_utc(end_datetime) if end_datetime else None
-        raw_response = self._api_client.backend_reservations(
+        raw_response = self._account_client.backend_reservations(
             self.name(), start_datetime, end_datetime
         )
         return convert_reservation_data(raw_response, self.name())

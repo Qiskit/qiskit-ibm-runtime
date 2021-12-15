@@ -26,6 +26,7 @@ from qiskit.circuit import QuantumCircuit
 from qiskit.providers.backend import BackendV1 as Backend
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.providerutils import filter_backends
+from qiskit.providers.models import PulseBackendConfiguration, QasmBackendConfiguration
 from qiskit.transpiler import Layout
 from typing_extensions import Literal
 
@@ -61,7 +62,7 @@ from .runner_result import RunnerResult
 from .runtime_job import RuntimeJob
 from .runtime_program import RuntimeProgram, ParameterNamespace
 from .utils import RuntimeDecoder, to_base64_string, to_python_identifier
-from .utils.backend import convert_reservation_data
+from .utils.backend import convert_reservation_data, decode_backend_configuration
 
 logger = logging.getLogger(__name__)
 
@@ -158,31 +159,28 @@ class IBMRuntimeService:
             IBMProviderCredentialsInvalidToken: If the `token` is not a valid IBM Quantum token.
         """
         super().__init__()
-
-        account_credentials, account_preferences = self._resolve_credentials(
+        self.account_credentials, account_preferences = self._resolve_credentials(
             token=token, locator=locator, **kwargs
         )
-        self._auth = auth
 
-        # Common attributes
-        self._backends: Dict[str, "ibm_backend.IBMBackend"] = {}
+        self._auth = auth
         self._programs: Dict[str, RuntimeProgram] = {}
+        self._backends: Dict[str, "ibm_backend.IBMBackend"] = {}
 
         if auth == "cloud":
-            self._api_client = RuntimeClient(credentials=account_credentials)
-            self._credentials = account_credentials
+            self._api_client = RuntimeClient(credentials=self.account_credentials)
+            self._backends = self._discover_remote_backends()
             return
-
-        self._hgps = self._initialize_hgps(
-            credentials=account_credentials
-        )
-        for hgp in self._hgps.values():
-            for name, backend in hgp.backends.items():
-                if name not in self._backends:
-                    self._backends[name] = backend
-
-        self._default_hgp = list(self._hgps.values())[0]
-        self._api_client = RuntimeClient(self._default_hgp.credentials)
+        else:
+            self._hgps = self._initialize_hgps(
+                credentials=self.account_credentials
+            )
+            for hgp in self._hgps.values():
+                for name, backend in hgp.backends.items():
+                    if name not in self._backends:
+                        self._backends[name] = backend
+            self._default_hgp = list(self._hgps.values())[0]
+            self._api_client = RuntimeClient(self._default_hgp.credentials)
         self._discover_backends()
 
     def _resolve_credentials(
@@ -245,6 +243,52 @@ class IBMRuntimeService:
                 )
             account_credentials = credentials_list[0]
         return account_credentials, preferences
+
+    def _discover_remote_backends(self) -> Dict[str, "ibm_backend.IBMBackend"]:
+        """Return the remote backends available for this service instance.
+
+        Returns:
+            A dict of the remote backend instances, keyed by backend name.
+        """
+        ret = OrderedDict()  # type: ignore[var-annotated]
+        backends_list = self._api_client.list_backends()
+        for backend_name in backends_list:
+            raw_config = self._api_client.backend_configuration(
+                backend_name=backend_name
+            )
+            # Make sure the raw_config is of proper type
+            if not isinstance(raw_config, dict):
+                logger.warning(
+                    "An error occurred when retrieving backend "
+                    "information. Some backends might not be available."
+                )
+                continue
+            try:
+                decode_backend_configuration(raw_config)
+                try:
+                    config = PulseBackendConfiguration.from_dict(raw_config)
+                except (KeyError, TypeError):
+                    config = QasmBackendConfiguration.from_dict(raw_config)
+                backend_cls = (
+                    ibm_backend.IBMSimulator
+                    if config.simulator
+                    else ibm_backend.IBMBackend
+                )
+                ret[config.backend_name] = backend_cls(
+                    configuration=config,
+                    service=self,
+                    credentials=self.account_credentials,
+                    runtime_client=self._api_client,
+                )
+            except Exception:  # pylint: disable=broad-except
+                logger.warning(
+                    'Remote backend "%s" for service instance %s could not be instantiated due to an '
+                    "invalid config: %s",
+                    raw_config.get("backend_name", raw_config.get("name", "unknown")),
+                    repr(self),
+                    traceback.format_exc(),
+                )
+        return ret
 
     def _initialize_hgps(
         self, credentials: Credentials
