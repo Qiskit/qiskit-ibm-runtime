@@ -32,47 +32,31 @@ Exceptions
 .. autosummary::
     :toctree: ../stubs/
 
-    CredentialsError
-    InvalidCredentialsFormatError
-    CredentialsNotFoundError
+
 """
 
-from collections import OrderedDict
-from typing import Dict, Optional, Tuple, Any
 import logging
+from collections import OrderedDict
+from typing import Dict, Tuple, Any
 
 from .credentials import Credentials
-from .hub_group_project_id import HubGroupProjectID
+from .environ import read_credentials_from_environ
 from .exceptions import (
     CredentialsError,
-    InvalidCredentialsFormatError,
-    CredentialsNotFoundError,
     HubGroupProjectIDInvalidStateError,
 )
-from .configrc import (
-    read_credentials_from_qiskitrc,
-    store_credentials,
-    store_preferences,
-)
-from .environ import read_credentials_from_environ
+from .hub_group_project_id import HubGroupProjectID
 
 logger = logging.getLogger(__name__)
 
 
-def discover_credentials(
-    qiskitrc_filename: Optional[str] = None,
-) -> Tuple[Dict[HubGroupProjectID, Credentials], Dict]:
+def discover_credentials() -> Tuple[Dict[HubGroupProjectID, Credentials], Dict]:
     """Automatically discover credentials for IBM Quantum.
 
     This method looks for credentials in the following places in order and
     returns the first ones found:
 
         1. The environment variables.
-        2. The ``qiskitrc`` configuration file
-
-    Args:
-        qiskitrc_filename: Full path to the ``qiskitrc`` configuration
-            file. If ``None``, ``$HOME/.qiskitrc/qiskitrc`` is used.
 
     Raises:
         HubGroupProjectIDInvalidStateError: If the default provider stored on
@@ -92,10 +76,6 @@ def discover_credentials(
     readers = OrderedDict(
         [
             ("environment variables", (read_credentials_from_environ, {})),
-            (
-                "qiskitrc",
-                (read_credentials_from_qiskitrc, {"filename": qiskitrc_filename}),
-            ),
         ]
     )  # type: OrderedDict[str, Any]
 

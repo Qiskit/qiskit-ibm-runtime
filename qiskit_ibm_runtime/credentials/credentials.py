@@ -19,8 +19,9 @@ from requests.auth import AuthBase
 from requests_ntlm import HttpNtlmAuth
 
 from .hub_group_project_id import HubGroupProjectID
+from ..accounts import AccountType
 from ..api.auth import LegacyAuth, CloudAuth
-from ..utils import is_crn, crn_to_api_host
+from ..utils import crn_to_api_host
 
 REGEX_IBM_HUBS = (
     "(?P<prefix>http[s]://.+/api)"
@@ -43,7 +44,9 @@ class Credentials:
     def __init__(
         self,
         token: str,
-        url: str,
+        url: str = None,
+        auth: Optional[AccountType] = None,
+        instance: Optional[str] = None,
         auth_url: Optional[str] = None,
         websockets_url: Optional[str] = None,
         hub: Optional[str] = None,
@@ -74,7 +77,9 @@ class Credentials:
                 action in services like the `ExperimentService`.
             default_provider: Default provider to use.
         """
+        self.auth = auth
         self.token = token
+        self.instance = instance
         self.access_token = access_token
         (
             self.url,
@@ -82,7 +87,7 @@ class Credentials:
             self.hub,
             self.group,
             self.project,
-        ) = _unify_ibm_quantum_url(url, hub, group, project)
+        ) = _unify_ibm_quantum_url(auth, url, instance, hub, group, project)
         self.auth_url = auth_url or url
         self.websockets_url = websockets_url
         self.proxies = proxies or {}
@@ -98,8 +103,8 @@ class Credentials:
 
     def get_auth_handler(self) -> AuthBase:
         """Returns the respective authentication handler."""
-        if is_crn(self.url):
-            return CloudAuth(api_key=self.token, crn=self.url)
+        if self.auth == "cloud":
+            return CloudAuth(api_key=self.token, crn=self.instance)
 
         return LegacyAuth(access_token=self.access_token)
 
@@ -146,7 +151,9 @@ class Credentials:
 
 
 def _unify_ibm_quantum_url(
-    url: str,
+    auth: AccountType,
+    url: Optional[str] = None,
+    instance: Optional[str] = None,
     hub: Optional[str] = None,
     group: Optional[str] = None,
     project: Optional[str] = None,
@@ -175,8 +182,8 @@ def _unify_ibm_quantum_url(
     regex_match = re.match(REGEX_IBM_HUBS, url, re.IGNORECASE)
     base_url = url
 
-    if is_crn(url):
-        base_url = crn_to_api_host(url)
+    if auth == "cloud":
+        base_url = crn_to_api_host(instance)
     elif regex_match:
         base_url, hub, group, project = regex_match.groups()
     else:

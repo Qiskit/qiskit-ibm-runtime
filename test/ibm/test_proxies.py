@@ -59,7 +59,7 @@ class TestProxies(IBMTestCase):
         service = IBMRuntimeService(
             auth="legacy",
             token=qe_token,
-            locator=qe_url,
+            url=qe_url,
             proxies={"urls": VALID_PROXIES},
         )
 

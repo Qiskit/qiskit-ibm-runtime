@@ -90,7 +90,7 @@ def requires_providers(func):
     def _wrapper(*args, **kwargs):
         qe_token = kwargs.pop("qe_token")
         qe_url = kwargs.pop("qe_url")
-        service = IBMRuntimeService(auth="legacy", token=qe_token, locator=qe_url)
+        service = IBMRuntimeService(auth="legacy", token=qe_token, url=qe_url)
         # Get open access hgp
         open_hgp = _get_open_hgp(service)
         if not open_hgp:
@@ -142,7 +142,7 @@ def requires_provider(func):
     def _wrapper(*args, **kwargs):
         token = kwargs.pop("qe_token")
         url = kwargs.pop("qe_url")
-        service = IBMRuntimeService(auth="legacy", token=token, locator=url)
+        service = IBMRuntimeService(auth="legacy", token=token, url=url)
         hub, group, project = _get_custom_hgp()
         kwargs.update(
             {"service": service, "hub": hub, "group": group, "project": project}
@@ -224,7 +224,7 @@ def requires_runtime_device(func):
 
 def _get_backend(qe_token, qe_url, backend_name):
     """Get the specified backend."""
-    service = IBMRuntimeService(auth="legacy", token=qe_token, locator=qe_url)
+    service = IBMRuntimeService(auth="legacy", token=qe_token, url=qe_url)
     _backend = None
     hub, group, project = _get_custom_hgp()
     if backend_name:
