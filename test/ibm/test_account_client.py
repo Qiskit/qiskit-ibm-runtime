@@ -37,8 +37,6 @@ class TestAccountClient(IBMTestCase):
         cls.hub = hub
         cls.group = group
         cls.project = project
-        default_hgp = cls.service._default_hgp
-        cls.access_token = default_hgp._api_client.account_api.session._access_token
 
     def setUp(self):
         """Initial test setup."""
@@ -117,7 +115,7 @@ class TestAuthClient(IBMTestCase):
     def test_valid_login(self, qe_token, qe_url):
         """Test valid authentication."""
         client = AuthClient(qe_token, qe_url)
-        self.assertTrue(client.base_api.session._access_token)
+        self.assertTrue(client.access_token)
 
     @requires_qe_access
     def test_url_404(self, qe_token, qe_url):

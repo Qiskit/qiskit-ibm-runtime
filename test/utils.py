@@ -39,13 +39,13 @@ def setup_test_logging(logger: logging.Logger, filename: str):
     )
     formatter = logging.Formatter(log_fmt)
 
-    if os.getenv("STREAM_LOG", "true"):
+    if os.getenv("STREAM_LOG", "true").lower() == "true":
         # Set up the stream handler.
         stream_handler = logging.StreamHandler()
         stream_handler.setFormatter(formatter)
         logger.addHandler(stream_handler)
 
-    if os.getenv("FILE_LOG", "false"):
+    if os.getenv("FILE_LOG", "false").lower() == "true":
         file_handler = logging.FileHandler(filename)
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
@@ -147,7 +147,7 @@ def get_hgp(qe_token: str, qe_url: str, default: bool = True) -> HubGroupProject
         A HubGroupProject, as specified by `default`.
     """
     service = IBMRuntimeService(
-        auth="legacy", token=qe_token, locator=qe_url
+        auth="legacy", token=qe_token, url=qe_url
     )  # Default hub/group/project.
     open_hgp = service._get_hgp()  # Open access hgp
     hgp_to_return = open_hgp

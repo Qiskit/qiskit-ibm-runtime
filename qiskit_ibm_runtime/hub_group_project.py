@@ -120,7 +120,7 @@ class HubGroupProject:
                     configuration=config,
                     service=self._service,
                     credentials=self.credentials,
-                    api_client=self._api_client,
+                    account_client=self._api_client,
                 )
             except Exception:  # pylint: disable=broad-except
                 logger.warning(
