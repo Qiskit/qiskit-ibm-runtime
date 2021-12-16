@@ -10,24 +10,10 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Exception for the ``Credentials`` module."""
+"""Exceptions for the ``Accounts`` module."""
 
 from ..exceptions import IBMError
 
 
-class CredentialsError(IBMError):
-    """Base class for errors raised during credential management."""
-
-    pass
-
-
-class HubGroupProjectIDError(IBMError):
-    """Base class for errors raised by the hub_group_project_id module."""
-
-    pass
-
-
-class HubGroupProjectIDInvalidStateError(HubGroupProjectIDError):
-    """Errors raised when a HubGroupProjectID is in an invalid state for an operation."""
-
-    pass
+class AccountsError(IBMError):
+    """Base class for errors raised during account management."""
