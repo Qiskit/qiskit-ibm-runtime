@@ -12,9 +12,12 @@
 
 """Utility functions related to storing account configuration on disk."""
 
+import logging
 import json
 import os
 from typing import Optional, Union
+
+logger = logging.getLogger(__name__)
 
 
 def save_config(
@@ -24,6 +27,7 @@ def save_config(
 ) -> None:
     """Save configuration data in a JSON file under the given name."""
 
+    logger.debug(f"Save configuration data for '{name}' in '{filename}'")
     _ensure_file_exists(filename)
 
     with open(filename, mode="r") as json_in:
@@ -40,6 +44,7 @@ def read_config(
 ) -> Union[dict, None]:
     """Save configuration data from a JSON file."""
 
+    logger.debug(f"Read configuration data for '{name}' from '{filename}'")
     _ensure_file_exists(filename)
 
     with open(filename) as json_file:
@@ -73,6 +78,7 @@ def delete_config(
 
 def _ensure_file_exists(filename: str, initial_content: str = "{}") -> None:
     if not os.path.isfile(filename):
+        logger.debug(f"Create empty configuration file at {filename}")
 
         # create parent directories
         os.makedirs(os.path.dirname(filename), exist_ok=True)

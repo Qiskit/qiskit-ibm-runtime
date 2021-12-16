@@ -13,7 +13,7 @@
 """Account management related classes and functions."""
 
 import os
-from typing import Optional, Union
+from typing import Optional
 
 from .account import Account, AccountType
 from .storage import save_config, read_config, delete_config
@@ -21,51 +21,61 @@ from .storage import save_config, read_config, delete_config
 _DEFAULT_ACCOUNG_CONFIG_JSON_FILE = os.path.join(
     os.path.expanduser("~"), ".qiskit", "qiskit-ibm.json"
 )
-_DEFAULT_ACCOUNT_NAME = "default"
+_DEFAULT_ACCOUNT_NAME_LEGACY = "default-legacy"
+_DEFAULT_ACCOUNT_NAME_CLOUD = "default-cloud"
+_DEFAULT_ACCOUNT_TYPE: AccountType = "cloud"
 
 
 class AccountManager:
     """Class that bundles account management related functionality."""
 
     @staticmethod
-    def save(
-        token: Optional[str] = None,
-        url: Optional[str] = None,
-        instance: Optional[str] = None,
-        auth: Optional[AccountType] = None,
-        name: Optional[str] = _DEFAULT_ACCOUNT_NAME,
-        proxies: Optional[dict] = None,
-        verify: Optional[bool] = None,
-    ) -> None:
+    def save(account: Account, name: Optional[str] = None) -> None:
         """Save account on disk."""
-
+        config_key = name or _get_default_account_name(account.auth)
         return save_config(
             filename=_DEFAULT_ACCOUNG_CONFIG_JSON_FILE,
-            name=name,
-            config=Account(
-                token=token,
-                url=url,
-                instance=instance,
-                auth=auth,
-                proxies=proxies,
-                verify=verify,
-            ).to_saved_format(),
+            name=config_key,
+            config=account.to_saved_format(),
         )
 
     @staticmethod
-    def list() -> Union[dict, None]:
-        """List all accounts saved on disk."""
-
-        return read_config(filename=_DEFAULT_ACCOUNG_CONFIG_JSON_FILE)
+    def list(
+        default: Optional[bool] = None, auth: Optional[str] = None
+    ) -> dict[str, Account]:
+        """List all accounts saved on disk by name."""
+        return dict(
+            filter(
+                lambda input: input[1],
+                map(
+                    lambda kv: (kv[0], Account.from_saved_format(kv[1])),
+                    read_config(filename=_DEFAULT_ACCOUNG_CONFIG_JSON_FILE).items(),
+                ),
+            ),
+        )
 
     @staticmethod
-    def get(name: Optional[str] = _DEFAULT_ACCOUNT_NAME) -> Account:
+    def get(
+        name: Optional[str] = None, auth: Optional[str] = _DEFAULT_ACCOUNT_TYPE
+    ) -> Account:
         """Read account from disk."""
+        config_key = name or _get_default_account_name(auth)
         return Account.from_saved_format(
-            read_config(filename=_DEFAULT_ACCOUNG_CONFIG_JSON_FILE, name=name)
+            read_config(filename=_DEFAULT_ACCOUNG_CONFIG_JSON_FILE, name=config_key)
         )
 
     @staticmethod
-    def delete(name: Optional[str] = _DEFAULT_ACCOUNT_NAME) -> bool:
+    def delete(
+        name: Optional[str] = None, auth: Optional[str] = _DEFAULT_ACCOUNT_TYPE
+    ) -> bool:
         """Delete account from disk."""
-        return delete_config(name=name, filename=_DEFAULT_ACCOUNG_CONFIG_JSON_FILE)
+        config_key = name or _get_default_account_name(auth)
+        return delete_config(
+            name=config_key, filename=_DEFAULT_ACCOUNG_CONFIG_JSON_FILE
+        )
+
+
+def _get_default_account_name(auth: AccountType):
+    return (
+        _DEFAULT_ACCOUNT_NAME_CLOUD if auth == "cloud" else _DEFAULT_ACCOUNT_NAME_LEGACY
+    )

@@ -65,7 +65,7 @@ class Account:
         self,
         auth: AccountType,
         token: str,
-        url: Optional[str],
+        url: Optional[str] = None,
         instance: Optional[str] = None,
         # TODO: add validation for proxies input format
         proxies: Optional[dict] = None,
@@ -101,4 +101,18 @@ class Account:
             instance=data.get("instance"),
             proxies=data.get("proxies"),
             verify=data.get("verify"),
+        )
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Account):
+            return False
+        return all(
+            [
+                self.auth == other.auth,
+                self.token == other.token,
+                self.url == other.url,
+                self.instance == other.instance,
+                self.proxies == other.proxies,
+                self.verify == other.verify,
+            ]
         )
