@@ -14,16 +14,18 @@
 
 import logging
 from typing import Any, Dict, List, Optional, Tuple
+from datetime import datetime
 
 from qiskit_ibm_runtime.credentials import Credentials
 from qiskit_ibm_runtime.api.session import RetrySession
 
+from .backend import BaseBackendClient
 from ..rest.runtime import Runtime
 
 logger = logging.getLogger(__name__)
 
 
-class RuntimeClient:
+class RuntimeClient(BaseBackendClient):
     """Client for accessing runtime service."""
 
     def __init__(
@@ -313,15 +315,22 @@ class RuntimeClient:
         """
         return self.api.backend(backend_name).status()
 
-    def backend_properties(self, backend_name: str) -> Dict[str, Any]:
+    def backend_properties(
+            self,
+            backend_name: str,
+            datetime: Optional[datetime] = None
+    ) -> Dict[str, Any]:
         """Return the properties of the IBM Cloud backend.
 
         Args:
             backend_name: The name of the IBM Cloud backend.
+            datetime: Date and time for additional filtering of backend properties.
 
         Returns:
             Backend properties.
         """
+        if datetime:
+            raise NotImplementedError("'datetime' is not supported with cloud runtime.")
         return self.api.backend(backend_name).properties()
 
     def backend_pulse_defaults(self, backend_name: str) -> Dict:

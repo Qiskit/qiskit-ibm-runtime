@@ -12,52 +12,69 @@
 
 """Utilities for working with IBM Quantum backends."""
 
-from typing import List, Optional, Dict, Union
+from typing import List, Dict, Union, Optional
+import logging
+import traceback
 
 import dateutil.parser
+from qiskit.providers.models import (
+    BackendProperties,
+    PulseDefaults,
+)
+from qiskit.providers.models import (
+    PulseBackendConfiguration,
+    QasmBackendConfiguration,
+)
 
-from ..backendreservation import BackendReservation
-from ..utils.converters import utc_to_local
+from .converters import utc_to_local_all
+
+logger = logging.getLogger(__name__)
 
 
-def convert_reservation_data(
-    raw_reservations: List, backend_name: Optional[str] = None
-) -> List[BackendReservation]:
-    """Convert a list of raw reservation data to ``BackendReservation`` objects.
+def configuration_from_server_data(
+        raw_config: Dict,
+        instance: str = "",
+) -> Optional[Union[QasmBackendConfiguration, PulseBackendConfiguration]]:
+    """Create an IBMBackend instance from raw server data.
 
     Args:
-        raw_reservations: Raw reservation data.
-        backend_name: Name of the backend.
+        raw_config: Raw configuration.
+        instance: Service instance.
 
     Returns:
-        A list of ``BackendReservation`` objects.
+        Backend configuration.
     """
-    reservations = []
-    for raw_res in raw_reservations:
-        creation_datetime = raw_res.get("creationDate", None)
-        creation_datetime = (
-            utc_to_local(creation_datetime) if creation_datetime else None
+    # Make sure the raw_config is of proper type
+    if not isinstance(raw_config, dict):
+        logger.warning(
+            "An error occurred when retrieving backend "
+            "information. Some backends might not be available."
         )
-        backend_name = backend_name or raw_res.get("backendName", None)
-        reservations.append(
-            BackendReservation(
-                backend_name=backend_name,
-                start_datetime=utc_to_local(raw_res["initialDate"]),
-                end_datetime=utc_to_local(raw_res["endDate"]),
-                mode=raw_res.get("mode", None),
-                reservation_id=raw_res.get("id", None),
-                creation_datetime=creation_datetime,
-                hub_info=raw_res.get("hubInfo", None),
-            )
+        return
+    try:
+        _decode_backend_configuration(raw_config)
+        try:
+            return PulseBackendConfiguration.from_dict(raw_config)
+        except (KeyError, TypeError):
+            return QasmBackendConfiguration.from_dict(raw_config)
+    except Exception:  # pylint: disable=broad-except
+        logger.warning(
+            'Remote backend "%s" for service instance %s could not be instantiated due to an '
+            "invalid config: %s",
+            raw_config.get("backend_name", raw_config.get("name", "unknown")),
+            repr(instance),
+            traceback.format_exc(),
         )
-    return reservations
 
 
-def decode_pulse_defaults(defaults: Dict) -> None:
+def defaults_from_server_data(defaults: Dict) -> PulseDefaults:
     """Decode pulse defaults data.
 
     Args:
-        defaults: A ``PulseDefaults`` in dictionary format.
+        defaults: Raw pulse defaults data.
+
+    Returns:
+        A ``PulseDefaults`` instance.
     """
     for item in defaults["pulse_library"]:
         _decode_pulse_library_item(item)
@@ -67,12 +84,17 @@ def decode_pulse_defaults(defaults: Dict) -> None:
             for instr in cmd["sequence"]:
                 _decode_pulse_qobj_instr(instr)
 
+    return PulseDefaults.from_dict(defaults)
 
-def decode_backend_properties(properties: Dict) -> None:
+
+def properties_from_server_data(properties: Dict) -> BackendProperties:
     """Decode backend properties.
 
     Args:
-        properties: A ``BackendProperties`` in dictionary format.
+        properties: Raw properties data.
+
+    Returns:
+        A ``BackendProperties`` instance.
     """
     properties["last_update_date"] = dateutil.parser.isoparse(
         properties["last_update_date"]
@@ -86,8 +108,11 @@ def decode_backend_properties(properties: Dict) -> None:
     for gen in properties["general"]:
         gen["date"] = dateutil.parser.isoparse(gen["date"])
 
+    properties = utc_to_local_all(properties)
+    return BackendProperties.from_dict(properties)
 
-def decode_backend_configuration(config: Dict) -> None:
+
+def _decode_backend_configuration(config: Dict) -> None:
     """Decode backend configuration.
 
     Args:

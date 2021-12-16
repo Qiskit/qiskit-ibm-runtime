@@ -14,18 +14,16 @@
 
 import logging
 from collections import OrderedDict
-import traceback
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple, List
 
-from qiskit.providers.models import PulseBackendConfiguration, QasmBackendConfiguration
 from qiskit_ibm_runtime import (  # pylint: disable=unused-import
     ibm_backend,
 )
 
-from .utils.backend import decode_backend_configuration
 from .api.clients import AccountClient
 from .credentials import Credentials
 from .exceptions import IBMInputValueError
+from .utils.backend_decoder import configuration_from_server_data
 
 logger = logging.getLogger(__name__)
 
@@ -73,52 +71,28 @@ class HubGroupProject:
         """
         self._backends = value
 
-    def _discover_remote_backends(
-        self, timeout: Optional[float] = None
-    ) -> Dict[str, "ibm_backend.IBMBackend"]:
+    def _discover_remote_backends(self) -> Dict[str, "ibm_backend.IBMBackend"]:
         """Return the remote backends available for this hub/group/project.
-
-        Args:
-            timeout: Maximum number of seconds to wait for the discovery of
-                remote backends.
 
         Returns:
             A dict of the remote backend instances, keyed by backend name.
         """
-        ret = OrderedDict()  # type: ignore[var-annotated]
-        configs_list = self._api_client.list_backends(timeout=timeout)
+        ret = OrderedDict()
+        configs_list = self._api_client.list_backends()
         for raw_config in configs_list:
-            # Make sure the raw_config is of proper type
-            if not isinstance(raw_config, dict):
-                logger.warning(
-                    "An error occurred when retrieving backend "
-                    "information. Some backends might not be available."
-                )
+            config = configuration_from_server_data(raw_config=raw_config, instance=self.name)
+            if not config:
                 continue
-            try:
-                decode_backend_configuration(raw_config)
-                try:
-                    config = PulseBackendConfiguration.from_dict(raw_config)
-                except (KeyError, TypeError):
-                    config = QasmBackendConfiguration.from_dict(raw_config)
-                backend_cls = (
-                    ibm_backend.IBMSimulator
-                    if config.simulator
-                    else ibm_backend.IBMBackend
-                )
-                ret[config.backend_name] = backend_cls(
-                    configuration=config,
-                    credentials=self.credentials,
-                    account_client=self._api_client,
-                )
-            except Exception:  # pylint: disable=broad-except
-                logger.warning(
-                    'Remote backend "%s" for provider %s could not be instantiated due to an '
-                    "invalid config: %s",
-                    raw_config.get("backend_name", raw_config.get("name", "unknown")),
-                    repr(self),
-                    traceback.format_exc(),
-                )
+            backend_cls = (
+                ibm_backend.IBMSimulator
+                if config.simulator
+                else ibm_backend.IBMBackend
+            )
+            ret[config.backend_name] = backend_cls(
+                configuration=config,
+                credentials=self.credentials,
+                api_client=self._api_client,
+            )
         return ret
 
     def get_backend(self, name: str) -> Optional["ibm_backend.IBMBackend"]:
@@ -164,17 +138,20 @@ class HubGroupProject:
         return f"{hub}/{group}/{project}"
 
     @staticmethod
-    def verify_format(instance: str) -> None:
+    def verify_format(instance: str) -> List[str]:
         """Verify the input instance is in proper hub/group/project format.
 
         Args:
             instance: Service instance in hub/group/project format.
 
+        Returns:
+            Hub, group, and project.
+
         Raises:
             IBMInputValueError: If input is not in the correct format.
         """
         try:
-            instance.split("/")
+            return instance.split("/")
         except (ValueError, AttributeError):
             raise IBMInputValueError(f"Input instance value {instance} is not in the"
                                      f"correct hub/group/project format.")

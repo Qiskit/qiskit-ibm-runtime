@@ -37,6 +37,8 @@ from qiskit_ibm_runtime import IBMRuntimeService
 from qiskit_ibm_runtime.credentials import Credentials, discover_credentials
 from qiskit_ibm_runtime.hub_group_project import HubGroupProject
 
+from .mock.fake_runtime_service import FakeRuntimeService
+
 
 def requires_qe_access(func):
     """Decorator that signals that the test uses the online API.
@@ -142,34 +144,6 @@ def requires_provider(func):
         url = kwargs.pop("qe_url")
         service = IBMRuntimeService(auth="legacy", token=token, locator=url)
         hub, group, project = _get_custom_hgp()
-        kwargs.update(
-            {"service": service, "hub": hub, "group": group, "project": project}
-        )
-        return func(*args, **kwargs)
-
-    return _wrapper
-
-
-def requires_private_provider(func):
-    """Decorator that signals the test requires a hub/group/project for private jobs.
-
-    This decorator appends `provider`, `hub`, `group` and `project` arguments to the decorated
-    function.
-
-    Args:
-        func (callable): test function to be decorated.
-
-    Returns:
-        callable: the decorated function.
-    """
-
-    @wraps(func)
-    @requires_qe_access
-    def _wrapper(*args, **kwargs):
-        token = kwargs.pop("qe_token")
-        url = kwargs.pop("qe_url")
-        service = IBMRuntimeService(auth="legacy", token=token, locator=url)
-        hub, group, project = _get_private_hgp()
         kwargs.update(
             {"service": service, "hub": hub, "group": group, "project": project}
         )
@@ -337,27 +311,15 @@ def _get_custom_hgp() -> Tuple[str, str, str]:
     return hub, group, project
 
 
-def _get_private_hgp() -> Tuple[str, str, str]:
-    """Get a private hub/group/project
+def run_legacy_and_cloud(func):
+    """Decorator that runs a test using both legacy and cloud services."""
 
-    Gets the hub/group/project set in QISKIT_IBM_RUNTIME_STAGING_PRIVATE_HGP for staging env or
-        QISKIT_IBM_RUNTIME_PRIVATE_HGP for production env.
-
-    Returns:
-        Tuple of custom hub/group/project or ``None`` if not set.
-
-    Raises:
-        SkipTest: requires private provider
-    """
-    hub = None
-    group = None
-    project = None
-    hgp = (
-        os.getenv("QISKIT_IBM_RUNTIME_STAGING_PRIVATE_HGP", None)
-        if os.getenv("QISKIT_IBM_RUNTIME_USE_STAGING_CREDENTIALS", "")
-        else os.getenv("QISKIT_IBM_RUNTIME_PRIVATE_HGP", None)
-    )
-    if not hgp:
-        raise SkipTest("Requires private provider.")
-    hub, group, project = hgp.split("/")
-    return hub, group, project
+    @wraps(func)
+    def _wrapper(self, *args, **kwargs):
+        legacy_service = FakeRuntimeService(auth="legacy", token="some_token")
+        cloud_service = FakeRuntimeService(auth="cloud", token="some_token")
+        for service in [legacy_service, cloud_service]:
+            with self.subTest(service=service.auth):
+                kwargs["service"] = service
+                func(self, *args, **kwargs)
+    return _wrapper

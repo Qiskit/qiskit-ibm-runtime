@@ -14,6 +14,7 @@
 
 from typing import Dict
 from collections import OrderedDict
+from unittest import mock
 
 from qiskit_ibm_runtime.ibm_runtime_service import IBMRuntimeService
 from qiskit_ibm_runtime.credentials import Credentials
@@ -33,10 +34,18 @@ class FakeRuntimeService(IBMRuntimeService):
     def __init__(self, *args, **kwargs):
         test_options = kwargs.pop("test_options", {})
         self._test_num_hgps = test_options.get("num_hgps", 2)
+        test_options = {
+            "backend_client": BaseFakeAccountClient(
+                backend_names=["common_backend", "unique_backend_0"])
+        }
 
-        super().__init__(*args, **kwargs)
+        with mock.patch(
+                "qiskit_ibm_runtime.ibm_runtime_service.RuntimeClient",
+                new=BaseFakeRuntimeClient,
+        ):
+            super().__init__(*args, **kwargs)
 
-        self._api_client = test_options.get("api_client", BaseFakeRuntimeClient())
+        # self._api_client = test_options.get("api_client", BaseFakeRuntimeClient())
 
     def _initialize_hgps(
         self, credentials: Credentials
@@ -67,3 +76,13 @@ class FakeRuntimeService(IBMRuntimeService):
             hgps[f"{hub}/{group}/{project}"] = hgp
 
         return hgps
+
+    def _discover_cloud_backends(self):
+        """Mock discovery cloud backends."""
+        test_options = {
+            "backend_client": BaseFakeAccountClient(
+                backend_names=["common_backend", "unique_backend_0"]),
+            "auth_type": "cloud"
+        }
+        self._api_client = BaseFakeRuntimeClient(test_options=test_options)
+        return super()._discover_cloud_backends()

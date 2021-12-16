@@ -85,16 +85,12 @@ def run_program(
         service._api_client.set_job_classes(job_classes)
     if program_id is None:
         program_id = upload_program(service)
-    with patch(
-            "qiskit_ibm_runtime.ibm_runtime_service.RuntimeClient",
-            return_value=service._api_client,
-    ):
-        job = service.run(
-            program_id=program_id,
-            options=options,
-            inputs=inputs,
-            result_decoder=decoder,
-            image=image,
-            instance=instance
-        )
+    job = service.run(
+        program_id=program_id,
+        options=options,
+        inputs=inputs,
+        result_decoder=decoder,
+        image=image,
+        instance=instance
+    )
     return job

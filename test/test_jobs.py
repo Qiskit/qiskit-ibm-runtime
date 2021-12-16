@@ -29,11 +29,10 @@ from .mock.fake_runtime_client import (FailedRuntimeJob,
                                        CustomResultRuntimeJob)
 from .utils.program import run_program, upload_program
 from .utils.serialization import get_complex_types
+from .decorators import run_legacy_and_cloud
 
 
-import unittest
-class TestRunProgram(unittest.TestCase):
-# class TestRunProgram(IBMTestCase):
+class TestRunProgram(IBMTestCase):
     """Class for testing runtime modules."""
 
     def setUp(self):
@@ -42,10 +41,11 @@ class TestRunProgram(unittest.TestCase):
         self._legacy_service = FakeRuntimeService(auth="legacy", token="some_token")
         self._cloud_service = FakeRuntimeService(auth="cloud", token="some_token")
 
-    def test_run_program(self):
+    @run_legacy_and_cloud
+    def test_run_program(self, service):
         """Test running program."""
         params = {"param1": "foo"}
-        job = run_program(service=self._legacy_service, inputs=params)
+        job = run_program(service=service, inputs=params)
         self.assertTrue(job.job_id)
         self.assertIsInstance(job, RuntimeJob)
         self.assertIsInstance(job.status(), JobStatus)

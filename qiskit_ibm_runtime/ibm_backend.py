@@ -14,7 +14,7 @@
 
 import logging
 
-from typing import List, Union, Optional, Any
+from typing import Union, Optional, Any
 from datetime import datetime as python_datetime
 
 from qiskit.qobj.utils import MeasLevel, MeasReturnType
@@ -28,16 +28,12 @@ from qiskit.providers.models import (
 )
 from qiskit.providers.models import QasmBackendConfiguration, PulseBackendConfiguration
 
-# pylint: disable=unused-import, cyclic-import
-from qiskit_ibm_runtime import ibm_runtime_service
-
 from .api.clients import AccountClient, RuntimeClient
-from .backendreservation import BackendReservation
+from .api.clients.backend import BaseBackendClient
 from .credentials import Credentials
 from .exceptions import IBMBackendApiProtocolError
-from .utils.converters import utc_to_local_all, local_to_utc
-from .utils.backend import decode_pulse_defaults, decode_backend_properties
-from .utils.backend import convert_reservation_data
+from .utils.converters import local_to_utc
+from .utils.backend_decoder import defaults_from_server_data, properties_from_server_data
 
 logger = logging.getLogger(__name__)
 
@@ -68,8 +64,7 @@ class IBMBackend(Backend):
         self,
         configuration: Union[QasmBackendConfiguration, PulseBackendConfiguration],
         credentials: Credentials,
-        account_client: Optional[AccountClient] = None,
-        runtime_client: Optional[RuntimeClient] = None,
+        api_client: BaseBackendClient
     ) -> None:
         """IBMBackend constructor.
 
@@ -80,8 +75,7 @@ class IBMBackend(Backend):
         """
         super().__init__(configuration=configuration)
 
-        self._account_client = account_client
-        self._runtime_client = runtime_client
+        self._api_client = api_client
         self._credentials = credentials
         self.hub = credentials.hub
         self.group = credentials.group
@@ -129,6 +123,7 @@ class IBMBackend(Backend):
             datetime: By specifying `datetime`, this function returns an instance
                 of the :class:`BackendProperties<qiskit.providers.models.BackendProperties>`
                 whose timestamp is closest to, but older than, the specified `datetime`.
+                Note that this is only supported using legacy runtime.
 
         Returns:
             The backend properties or ``None`` if the backend properties are not
@@ -136,6 +131,7 @@ class IBMBackend(Backend):
 
         Raises:
             TypeError: If an input argument is not of the correct type.
+            NotImplementedError: If `datetime` is specified when cloud rutime is used.
         """
         # pylint: disable=arguments-differ
         if not isinstance(refresh, bool):
@@ -143,24 +139,19 @@ class IBMBackend(Backend):
                 "The 'refresh' argument needs to be a boolean. "
                 "{} is of type {}".format(refresh, type(refresh))
             )
-        if datetime and not isinstance(datetime, python_datetime):
-            raise TypeError("'{}' is not of type 'datetime'.")
 
         if datetime:
+            if not isinstance(datetime, python_datetime):
+                raise TypeError("'{}' is not of type 'datetime'.")
+            if isinstance(self._api_client, RuntimeClient):
+                raise NotImplementedError("'datetime' is not supported by cloud runtime.")
             datetime = local_to_utc(datetime)
 
         if datetime or refresh or self._properties is None:
-            if self._account_client:
-                api_properties = self._account_client.backend_properties(
-                    self.name(), datetime=datetime
-                )
-            elif self._runtime_client:
-                api_properties = self._runtime_client.backend_properties(self.name())
+            api_properties = self._api_client.backend_properties(self.name(), datetime=datetime)
             if not api_properties:
                 return None
-            decode_backend_properties(api_properties)
-            api_properties = utc_to_local_all(api_properties)
-            backend_properties = BackendProperties.from_dict(api_properties)
+            backend_properties = properties_from_server_data(api_properties)
             if datetime:  # Don't cache result.
                 return backend_properties
             self._properties = backend_properties
@@ -180,10 +171,7 @@ class IBMBackend(Backend):
         Raises:
             IBMBackendApiProtocolError: If the status for the backend cannot be formatted properly.
         """
-        if self._account_client:
-            api_status = self._account_client.backend_status(self.name())
-        elif self._runtime_client:
-            api_status = self._runtime_client.backend_status(self.name())
+        api_status = self._api_client.backend_status(self.name())
 
         try:
             return BackendStatus.from_dict(api_status)
@@ -208,44 +196,13 @@ class IBMBackend(Backend):
             The backend pulse defaults or ``None`` if the backend does not support pulse.
         """
         if refresh or self._defaults is None:
-            if self._account_client:
-                api_defaults = self._api_client.backend_pulse_defaults(self.name())
-            elif self._runtime_client:
-                api_defaults = self._runtime_client.backend_pulse_defaults(self.name())
+            api_defaults = self._api_client.backend_pulse_defaults(self.name())
             if api_defaults:
-                decode_pulse_defaults(api_defaults)
-                self._defaults = PulseDefaults.from_dict(api_defaults)
+                self._defaults = defaults_from_server_data(api_defaults)
             else:
                 self._defaults = None
 
         return self._defaults
-
-    def reservations(
-        self,
-        start_datetime: Optional[python_datetime] = None,
-        end_datetime: Optional[python_datetime] = None,
-    ) -> List[BackendReservation]:
-        """Return backend reservations.
-
-        If start_datetime and/or end_datetime is specified, reservations with
-        time slots that overlap with the specified time window will be returned.
-
-        Some of the reservation information is only available if you are the
-        owner of the reservation.
-
-        Args:
-            start_datetime: Filter by the given start date/time, in local timezone.
-            end_datetime: Filter by the given end date/time, in local timezone.
-
-        Returns:
-            A list of reservations that match the criteria.
-        """
-        start_datetime = local_to_utc(start_datetime) if start_datetime else None
-        end_datetime = local_to_utc(end_datetime) if end_datetime else None
-        raw_response = self._account_client.backend_reservations(
-            self.name(), start_datetime, end_datetime
-        )
-        return convert_reservation_data(raw_response, self.name())
 
     def configuration(
         self,
@@ -336,18 +293,10 @@ class IBMRetiredBackend(IBMBackend):
         """Return the backend status."""
         return self._status
 
-    def reservations(
-        self,
-        start_datetime: Optional[python_datetime] = None,
-        end_datetime: Optional[python_datetime] = None,
-    ) -> List[BackendReservation]:
-        return []
-
     @classmethod
     def from_name(
         cls,
         backend_name: str,
-        service: "ibm_runtime_service.IBMRuntimeService",
         credentials: Credentials,
         api: Optional[AccountClient] = None,
     ) -> "IBMRetiredBackend":

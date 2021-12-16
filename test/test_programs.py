@@ -18,37 +18,32 @@ import os
 from io import StringIO
 from unittest.mock import patch
 import warnings
+import tempfile
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.exceptions import RuntimeProgramNotFound
 from qiskit_ibm_runtime.runtime_program import ParameterNamespace
 
 from .ibm_test_case import IBMTestCase
-from .mock.fake_runtime_service import FakeRuntimeService
 from .utils.program import upload_program, DEFAULT_DATA, DEFAULT_METADATA
+from .decorators import run_legacy_and_cloud
 
 
-import unittest
-class TestPrograms(unittest.TestCase):
+class TestPrograms(IBMTestCase):
     """Class for testing runtime modules."""
 
-    def setUp(self):
-        """Initial test setup."""
-        super().setUp()
-        self._legacy_service = FakeRuntimeService(auth="legacy", token="some_token")
-
-    def test_list_programs(self):
+    @run_legacy_and_cloud
+    def test_list_programs(self, service):
         """Test listing programs."""
-        service = self._legacy_service
         program_id = upload_program(service)
         programs = service.programs()
         all_ids = [prog.program_id for prog in programs]
         self.assertIn(program_id, all_ids)
 
-    def test_list_programs_with_limit_skip(self):
+    @run_legacy_and_cloud
+    def test_list_programs_with_limit_skip(self, service):
         """Test listing programs with limit and skip."""
         program_ids = []
-        service = self._legacy_service
         for _ in range(3):
             program_ids.append(upload_program(service))
         programs = service.programs(limit=2, skip=1)
@@ -60,16 +55,16 @@ class TestPrograms(unittest.TestCase):
         all_ids = [prog.program_id for prog in programs]
         self.assertIn(program_ids[0], all_ids)
 
-    def test_list_program(self):
+    @run_legacy_and_cloud
+    def test_list_program(self, service):
         """Test listing a single program."""
-        service = self._legacy_service
         program_id = upload_program(service)
         program = service.program(program_id)
         self.assertEqual(program_id, program.program_id)
 
-    def test_print_programs(self):
+    @run_legacy_and_cloud
+    def test_print_programs(self, service):
         """Test printing programs."""
-        service = self._legacy_service
         ids = []
         for idx in range(3):
             ids.append(upload_program(service, name=f"name_{idx}"))
@@ -89,9 +84,9 @@ class TestPrograms(unittest.TestCase):
                 self.assertIn(prog.name, stdout_detailed)
                 self.assertIn(str(prog.max_execution_time), stdout_detailed)
 
-    def test_upload_program(self):
+    @run_legacy_and_cloud
+    def test_upload_program(self, service):
         """Test uploading a program."""
-        service = self._legacy_service
         max_execution_time = 3000
         is_public = True
         program_id = upload_program(
@@ -103,9 +98,9 @@ class TestPrograms(unittest.TestCase):
         self.assertEqual(max_execution_time, program.max_execution_time)
         self.assertEqual(program.is_public, is_public)
 
-    def test_update_program(self):
+    @run_legacy_and_cloud
+    def test_update_program(self, service):
         """Test updating program."""
-        service = self._legacy_service
         new_data = "def main() {foo=bar}"
         new_metadata = copy.deepcopy(DEFAULT_METADATA)
         new_metadata["name"] = "test_update_program"
@@ -148,42 +143,42 @@ class TestPrograms(unittest.TestCase):
                     raw_program = service._api_client.program_get(program_id)
                     self.assertEqual(new_spec, raw_program["spec"])
 
-    def test_update_program_no_new_fields(self):
+    @run_legacy_and_cloud
+    def test_update_program_no_new_fields(self, service):
         """Test updating a program without any new data."""
-        service = self._legacy_service
         program_id = upload_program(service)
         with warnings.catch_warnings(record=True) as warn_cm:
             service.update_program(program_id=program_id)
             self.assertEqual(len(warn_cm), 1)
 
-    def test_delete_program(self):
+    @run_legacy_and_cloud
+    def test_delete_program(self, service):
         """Test deleting program."""
-        service = self._legacy_service
         program_id = upload_program(service)
         service.delete_program(program_id)
         with self.assertRaises(RuntimeProgramNotFound):
             service.program(program_id, refresh=True)
 
-    def test_double_delete_program(self):
+    @run_legacy_and_cloud
+    def test_double_delete_program(self, service):
         """Test deleting a deleted program."""
-        service = self._legacy_service
         program_id = upload_program(service)
         service.delete_program(program_id)
         with self.assertRaises(RuntimeProgramNotFound):
             service.delete_program(program_id)
 
-    def test_retrieve_program_data(self):
+    @run_legacy_and_cloud
+    def test_retrieve_program_data(self, service):
         """Test retrieving program data"""
-        service = self._legacy_service
         program_id = upload_program(service, name="qiskit-test")
         service.programs()
         program = service.program(program_id)
         self.assertEqual(program.data, DEFAULT_DATA)
         self._validate_program(program)
 
-    def test_program_params_validation(self):
+    @run_legacy_and_cloud
+    def test_program_params_validation(self, service):
         """Test program parameters validation process"""
-        service = self._legacy_service
         program_id = upload_program(service)
         program = service.program(program_id)
         params: ParameterNamespace = program.parameters()
@@ -199,25 +194,25 @@ class TestPrograms(unittest.TestCase):
             params.validate()
         params.param1 = "foo"
 
-    def test_program_metadata(self):
+    @run_legacy_and_cloud
+    def test_program_metadata(self, service):
         """Test program metadata."""
-        # TODO We should probably use a temp file
-        service = self._legacy_service
-        file_name = "test_metadata.json"
-        with open(file_name, "w") as file:
-            json.dump(DEFAULT_METADATA, file)
-        self.addCleanup(os.remove, file_name)
+        temp_fp = tempfile.NamedTemporaryFile(mode="w+", delete=False)
+        json.dump(DEFAULT_METADATA, temp_fp)
+        temp_fp.close()
 
-        sub_tests = [file_name, DEFAULT_METADATA]
-
-        for metadata in sub_tests:
-            with self.subTest(metadata_type=type(metadata)):
-                program_id = service.upload_program(
-                    data=DEFAULT_DATA, metadata=metadata
-                )
-                program = service.program(program_id)
-                service.delete_program(program_id)
-                self._validate_program(program)
+        sub_tests = [temp_fp.name, DEFAULT_METADATA]
+        try:
+            for metadata in sub_tests:
+                with self.subTest(metadata_type=type(metadata)):
+                    program_id = service.upload_program(
+                        data=DEFAULT_DATA, metadata=metadata
+                    )
+                    program = service.program(program_id)
+                    service.delete_program(program_id)
+                    self._validate_program(program)
+        finally:
+            os.remove(temp_fp.name)
 
     def _validate_program(self, program):
         """Validate a program."""

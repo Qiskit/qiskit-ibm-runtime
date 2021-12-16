@@ -66,3 +66,10 @@ class BaseFakeAccountClient:
     def backend_pulse_defaults(self, *args, **kwargs) -> Dict:
         """Return the pulse defaults of the backend."""
         return self._fake_backend.defaults()
+
+    # Test-only methods.
+
+    @property
+    def backend_names(self):
+        """Return names of the backends."""
+        return self._backend_names

@@ -18,10 +18,23 @@ import json
 import base64
 from typing import Optional, Dict, Tuple
 from concurrent.futures import ThreadPoolExecutor
+from functools import wraps
 
-from qiskit_ibm_runtime.credentials import Credentials
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
 from qiskit_ibm_runtime.utils import RuntimeEncoder
+
+from .fake_account_client import BaseFakeAccountClient
+
+
+def cloud_only(func):
+    """Decorator that runs a test using both legacy and cloud services."""
+
+    @wraps(func)
+    def _wrapper(self, *args, **kwargs):
+        if self._auth_type != "cloud":
+            raise ValueError(f"Method {func} called by a legacy client!")
+        return func(self, *args, **kwargs)
+    return _wrapper
 
 
 class BaseFakeProgram:
@@ -232,28 +245,18 @@ class BaseFakeRuntimeClient:
 
     def __init__(
         self,
-        job_classes=None,
-        final_status=None,
-        job_kwargs=None,
-        hub=None,
-        group=None,
-        project=None,
+        *args,
+        **kwargs
     ):
         """Initialize a fake runtime client."""
+        test_options = kwargs.pop("test_options", {})
         self._programs = {}
         self._jobs = {}
-        self._job_classes = job_classes or []
-        self._final_status = final_status
-        self._job_kwargs = job_kwargs or {}
-        self._hub = hub
-        self._group = group
-        self._project = project
-
-    def set_hgp(self, hub, group, project):
-        """Set hub, group and project"""
-        self._hub = hub
-        self._group = group
-        self._project = project
+        self._job_classes = test_options.get("job_classes", [])
+        self._final_status = test_options.get("final_status")
+        self._job_kwargs = test_options.get("job_kwargs", {})
+        self._backend_client = test_options.get("backend_client", BaseFakeAccountClient())
+        self._auth_type = test_options.get("auth_type", "legacy")
 
     def set_job_classes(self, classes):
         """Set job classes to use."""
@@ -351,7 +354,7 @@ class BaseFakeRuntimeClient:
             if len(self._job_classes) > 0
             else BaseFakeRuntimeJob
         )
-        hub, group, project = hgp
+        hub, group, project = hgp if hgp else None, None, None
         job = job_cls(
             job_id=job_id,
             program_id=program_id,
@@ -443,3 +446,44 @@ class BaseFakeRuntimeClient:
         if job_id not in self._jobs:
             raise RequestsApiError("Job not found", status_code=404)
         return self._jobs[job_id]
+
+    @cloud_only
+    def list_backends(self):
+        """Return IBM Cloud backends"""
+        self._check_cloud_only()
+        return self._backend_client.backend_names
+
+    @cloud_only
+    def backend_configuration(self, backend_name: str):
+        """Return the configuration of the IBM Cloud backend."""
+        configs = self._backend_client.list_backends()
+        for conf in configs:
+            if conf["backend_name"] == backend_name:
+                return conf
+        raise ValueError(f"Backend {backend_name} not found.")
+
+    @cloud_only
+    def backend_status(self, backend_name: str):
+        """Return the status of the IBM Cloud backend."""
+        return self._backend_client.backend_status(backend_name)
+
+    @cloud_only
+    def backend_properties(
+            self,
+            backend_name: str,
+            datetime=None
+    ):
+        """Return the properties of the IBM Cloud backend."""
+        if datetime:
+            raise NotImplementedError("'datetime' is not supported with cloud runtime.")
+        return self._backend_client.backend_properties(backend_name)
+
+    @cloud_only
+    def backend_pulse_defaults(self, backend_name: str):
+        """Return the pulse defaults of the IBM Cloud backend."""
+        return self._backend_client.backend_pulse_defaults(backend_name)
+
+    @cloud_only
+    def _check_cloud_only(self):
+        if self._auth_type != "cloud":
+            raise ValueError("A backend method is called by a legacy client!")

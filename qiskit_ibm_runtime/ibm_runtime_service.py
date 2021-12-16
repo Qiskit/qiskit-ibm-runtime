@@ -12,7 +12,6 @@
 
 """Qiskit runtime service."""
 
-import copy
 import json
 import logging
 import os
@@ -22,19 +21,15 @@ import warnings
 from collections import OrderedDict
 from typing import Dict, Callable, Optional, Union, List, Any, Type, Tuple
 
-from qiskit.circuit import QuantumCircuit
 from qiskit.providers.backend import BackendV1 as Backend
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.providerutils import filter_backends
-from qiskit.providers.models import PulseBackendConfiguration, QasmBackendConfiguration
-from qiskit.transpiler import Layout
 from typing_extensions import Literal
 
-from qiskit_ibm_runtime import runtime_job, ibm_backend  # pylint: disable=unused-import
+from qiskit_ibm_runtime import ibm_backend  # pylint: disable=unused-import
 from .api.clients import AuthClient, VersionClient
 from .api.clients.runtime import RuntimeClient
 from .api.exceptions import RequestsApiError
-from .backendreservation import BackendReservation
 from .credentials import Credentials, HubGroupProjectID, discover_credentials
 from .credentials.configrc import (
     remove_credentials,
@@ -58,11 +53,10 @@ from .exceptions import (
 )
 from .hub_group_project import HubGroupProject  # pylint: disable=cyclic-import
 from .program.result_decoder import ResultDecoder
-from .runner_result import RunnerResult
 from .runtime_job import RuntimeJob
 from .runtime_program import RuntimeProgram, ParameterNamespace
 from .utils import RuntimeDecoder, to_base64_string, to_python_identifier
-from .utils.backend import convert_reservation_data, decode_backend_configuration
+from .utils.backend_decoder import configuration_from_server_data
 
 logger = logging.getLogger(__name__)
 
@@ -159,7 +153,7 @@ class IBMRuntimeService:
             IBMProviderCredentialsInvalidToken: If the `token` is not a valid IBM Quantum token.
         """
         super().__init__()
-        self.account_credentials, account_preferences = self._resolve_credentials(
+        self._account_credentials, _ = self._resolve_credentials(
             token=token, locator=locator, **kwargs
         )
 
@@ -168,12 +162,13 @@ class IBMRuntimeService:
         self._backends: Dict[str, "ibm_backend.IBMBackend"] = {}
 
         if auth == "cloud":
-            self._api_client = RuntimeClient(credentials=self.account_credentials)
-            self._backends = self._discover_remote_backends()
+            self._api_client = RuntimeClient(credentials=self._account_credentials)
+            # TODO: We can make the backend discovery lazy
+            self._backends = self._discover_cloud_backends()
             return
         else:
             self._hgps = self._initialize_hgps(
-                credentials=self.account_credentials
+                credentials=self._account_credentials
             )
             for hgp in self._hgps.values():
                 for name, backend in hgp.backends.items():
@@ -181,7 +176,7 @@ class IBMRuntimeService:
                         self._backends[name] = backend
             self._default_hgp = list(self._hgps.values())[0]
             self._api_client = RuntimeClient(self._default_hgp.credentials)
-        self._discover_backends()
+        # self._discover_backends()
 
     def _resolve_credentials(
         self,
@@ -244,7 +239,7 @@ class IBMRuntimeService:
             account_credentials = credentials_list[0]
         return account_credentials, preferences
 
-    def _discover_remote_backends(self) -> Dict[str, "ibm_backend.IBMBackend"]:
+    def _discover_cloud_backends(self) -> Dict[str, "ibm_backend.IBMBackend"]:
         """Return the remote backends available for this service instance.
 
         Returns:
@@ -256,38 +251,21 @@ class IBMRuntimeService:
             raw_config = self._api_client.backend_configuration(
                 backend_name=backend_name
             )
-            # Make sure the raw_config is of proper type
-            if not isinstance(raw_config, dict):
-                logger.warning(
-                    "An error occurred when retrieving backend "
-                    "information. Some backends might not be available."
-                )
+            # TODO: pass instance when account management is merged
+            config = configuration_from_server_data(raw_config=raw_config)
+            if not config:
                 continue
-            try:
-                decode_backend_configuration(raw_config)
-                try:
-                    config = PulseBackendConfiguration.from_dict(raw_config)
-                except (KeyError, TypeError):
-                    config = QasmBackendConfiguration.from_dict(raw_config)
-                backend_cls = (
-                    ibm_backend.IBMSimulator
-                    if config.simulator
-                    else ibm_backend.IBMBackend
-                )
-                ret[config.backend_name] = backend_cls(
-                    configuration=config,
-                    service=self,
-                    credentials=self.account_credentials,
-                    runtime_client=self._api_client,
-                )
-            except Exception:  # pylint: disable=broad-except
-                logger.warning(
-                    'Remote backend "%s" for service instance %s could not be instantiated due to an '
-                    "invalid config: %s",
-                    raw_config.get("backend_name", raw_config.get("name", "unknown")),
-                    repr(self),
-                    traceback.format_exc(),
-                )
+            backend_cls = (
+                ibm_backend.IBMSimulator
+                if config.simulator
+                else ibm_backend.IBMBackend
+            )
+            ret[config.backend_name] = backend_cls(
+                configuration=config,
+                credentials=self._account_credentials,
+                api_client=self._api_client,
+            )
+
         return ret
 
     def _initialize_hgps(
@@ -471,23 +449,17 @@ class IBMRuntimeService:
 
         Returns:
             The list of available backends that match the filter.
-
-        Raises:
-            IBMBackendValueError: If only one or two parameters from `hub`, `group`,
-                `project` are specified.
         """
-        backends: List["ibm_backend.IBMBackend"] = list()
         if self._auth == "legacy":
             if instance:
                 backends = list(self._get_hgp(instance=instance).backends.values())
             else:
                 backends = list(self._backends.values())
+        else:
+            # TODO filtering by instance for cloud
+            backends = list(self._backends.values())
 
-        # Special handling of the `name` parameter, to support alias resolution.
         if name:
-            aliases = self._aliased_backend_names()
-            aliases.update(self._deprecated_backend_names())
-            name = aliases.get(name, name)
             kwargs["backend_name"] = name
         if min_num_qubits:
             backends = list(
@@ -504,34 +476,6 @@ class IBMRuntimeService:
                 )
             )
         return filter_backends(backends, filters=filters, **kwargs)
-
-    def my_reservations(self) -> List[BackendReservation]:
-        """Return your upcoming reservations.
-
-        Returns:
-            A list of your upcoming reservations.
-        """
-        raw_response = self._default_hgp._api_client.my_reservations()
-        return convert_reservation_data(raw_response)
-
-    @staticmethod
-    def _deprecated_backend_names() -> Dict[str, str]:
-        """Returns deprecated backend names."""
-        return {
-            "ibmqx_qasm_simulator": "ibmq_qasm_simulator",
-            "ibmqx_hpc_qasm_simulator": "ibmq_qasm_simulator",
-            "real": "ibmqx1",
-        }
-
-    @staticmethod
-    def _aliased_backend_names() -> Dict[str, str]:
-        """Returns aliased backend names."""
-        return {
-            "ibmq_5_yorktown": "ibmqx2",
-            "ibmq_5_tenerife": "ibmqx4",
-            "ibmq_16_rueschlikon": "ibmqx5",
-            "ibmq_20_austin": "QS1_1",
-        }
 
     def active_account(self) -> Optional[Dict[str, str]]:
         """Return the IBM Quantum account currently in use for the session.
@@ -658,148 +602,26 @@ class IBMRuntimeService:
     def get_backend(
         self,
         name: str = None,
-        hub: Optional[str] = None,
-        group: Optional[str] = None,
-        project: Optional[str] = None,
-        **kwargs: Any,
+        instance: Optional[str] = None,
     ) -> Backend:
         """Return a single backend matching the specified filtering.
 
         Args:
-            name (str): name of the backend.
-            hub: Name of the hub.
-            group: Name of the group.
-            project: Name of the project.
-            **kwargs: dict used for filtering.
-
-        Returns:
-            Backend: a backend matching the filtering.
-
-        Raises:
-            QiskitBackendNotFoundError: if no backend could be found or
-                more than one backend matches the filtering criteria.
-            IBMProviderValueError: If only one or two parameters from `hub`, `group`,
-                `project` are specified.
-        """
-        # pylint: disable=arguments-differ
-        backends = self.backends(name, hub=hub, group=group, project=project, **kwargs)
-        if len(backends) > 1:
-            raise QiskitBackendNotFoundError(
-                "More than one backend matches the criteria"
-            )
-        if not backends:
-            raise QiskitBackendNotFoundError("No backend matches the criteria")
-        return backends[0]
-
-    def run_circuits(
-        self,
-        circuits: Union[QuantumCircuit, List[QuantumCircuit]],
-        backend_name: str,
-        shots: Optional[int] = None,
-        initial_layout: Optional[Union[Layout, Dict, List]] = None,
-        layout_method: Optional[str] = None,
-        routing_method: Optional[str] = None,
-        translation_method: Optional[str] = None,
-        seed_transpiler: Optional[int] = None,
-        optimization_level: int = 1,
-        init_qubits: bool = True,
-        rep_delay: Optional[float] = None,
-        transpiler_options: Optional[dict] = None,
-        measurement_error_mitigation: bool = False,
-        use_measure_esp: Optional[bool] = None,
-        instance: Optional[str] = None,
-        **run_config: Dict,
-    ) -> "runtime_job.RuntimeJob":
-        """Execute the input circuit(s) on a backend using the runtime service.
-
-        Note:
-            This method uses the IBM Quantum runtime service which is not
-            available to all accounts.
-
-        Args:
-            circuits: Circuit(s) to execute.
-
-            backend_name: Name of the backend to execute circuits on.
-                Transpiler options are automatically grabbed from backend configuration
-                and properties unless otherwise specified.
-
-            shots: Number of repetitions of each circuit, for sampling. If not specified,
-                the backend default is used.
-
-            initial_layout: Initial position of virtual qubits on physical qubits.
-
-            layout_method: Name of layout selection pass ('trivial', 'dense',
-                'noise_adaptive', 'sabre').
-                Sometimes a perfect layout can be available in which case the layout_method
-                may not run.
-
-            routing_method: Name of routing pass ('basic', 'lookahead', 'stochastic', 'sabre')
-
-            translation_method: Name of translation pass ('unroller', 'translator', 'synthesis')
-
-            seed_transpiler: Sets random seed for the stochastic parts of the transpiler.
-
-            optimization_level: How much optimization to perform on the circuits.
-                Higher levels generate more optimized circuits, at the expense of longer
-                transpilation time.
-                If None, level 1 will be chosen as default.
-
-            init_qubits: Whether to reset the qubits to the ground state for each shot.
-
-            rep_delay: Delay between programs in seconds. Only supported on certain
-                backends (``backend.configuration().dynamic_reprate_enabled`` ). If supported,
-                ``rep_delay`` will be used instead of ``rep_time`` and must be from the
-                range supplied by the backend (``backend.configuration().rep_delay_range``).
-                Default is given by ``backend.configuration().default_rep_delay``.
-
-            transpiler_options: Additional transpiler options.
-
-            measurement_error_mitigation: Whether to apply measurement error mitigation.
-
-            use_measure_esp: Whether to use excited state promoted (ESP) readout for measurements
-                which are the final instruction on a qubit. ESP readout can offer higher fidelity
-                than standard measurement sequences. See
-                `here <https://arxiv.org/pdf/2008.08571.pdf>`_.
-
+            name: Name of the backend.
             instance: The service instance to use. For cloud runtime, this is the Cloud Resource
                 Name (CRN). For legacy runtime, this is the hub/group/project in that format.
 
-            **run_config: Extra arguments used to configure the circuit execution.
-
         Returns:
-            Runtime job.
+            Backend: A backend matching the filtering.
+
+        Raises:
+            QiskitBackendNotFoundError: if no backend could be found.
         """
-        inputs = copy.deepcopy(run_config)  # type: Dict[str, Any]
-        inputs["circuits"] = circuits
-        inputs["optimization_level"] = optimization_level
-        inputs["init_qubits"] = init_qubits
-        inputs["measurement_error_mitigation"] = measurement_error_mitigation
-        if shots:
-            inputs["shots"] = shots
-        if initial_layout:
-            inputs["initial_layout"] = initial_layout
-        if layout_method:
-            inputs["layout_method"] = layout_method
-        if routing_method:
-            inputs["routing_method"] = routing_method
-        if translation_method:
-            inputs["translation_method"] = translation_method
-        if seed_transpiler:
-            inputs["seed_transpiler"] = seed_transpiler
-        if rep_delay:
-            inputs["rep_delay"] = rep_delay
-        if transpiler_options:
-            inputs["transpiler_options"] = transpiler_options
-        if use_measure_esp is not None:
-            inputs["use_measure_esp"] = use_measure_esp
-        options = {"backend_name": backend_name}
-        return self.run(
-            "circuit-runner",
-            options=options,
-            inputs=inputs,
-            result_decoder=RunnerResult,
-            instance=instance
-        )
+        # pylint: disable=arguments-differ
+        backends = self.backends(name, instance=instance)
+        if not backends:
+            raise QiskitBackendNotFoundError("No backend matches the criteria")
+        return backends[0]
 
     def pprint_programs(
         self,
@@ -997,8 +819,8 @@ class IBMRuntimeService:
             credentials = hgp.credentials
             backend = hgp.get_backend(backend_name)
         else:
-            credentials = self._credentials
-            backend = self.get_backend(backend_name)  # TODO Need cloud backend
+            credentials = self._account_credentials
+            backend = self.get_backend(backend_name)
 
         result_decoder = result_decoder or ResultDecoder
         response = self._api_client.program_run(
@@ -1289,9 +1111,7 @@ class IBMRuntimeService:
         skip: int = 0,
         pending: bool = None,
         program_id: str = None,
-        hub: str = None,
-        group: str = None,
-        project: str = None,
+        instance: Optional[str] = None
     ) -> List[RuntimeJob]:
         """Retrieve all runtime jobs, subject to optional filtering.
 
@@ -1302,23 +1122,17 @@ class IBMRuntimeService:
                 jobs are included. If ``False``, 'DONE', 'CANCELLED' and 'ERROR' jobs
                 are included.
             program_id: Filter by Program ID.
-            hub: Filter by hub - hub, group, and project must all be specified.
-            group: Filter by group - hub, group, and project must all be specified.
-            project: Filter by project - hub, group, and project must all be specified.
+            instance: The service instance to use. Currently only supported for legacy runtime,
+                and should be in the hub/group/project.
 
         Returns:
             A list of runtime jobs.
-
-        Raises:
-            IBMInputValueError: If any but not all of the parameters ``hub``, ``group``
-                and ``project`` are given.
         """
-        if any([hub, group, project]) and not all([hub, group, project]):
-            raise IBMInputValueError(
-                "Hub, group and project "
-                "parameters must all be specified. "
-                'hub = "{}", group = "{}", project = "{}"'.format(hub, group, project)
-            )
+        if instance:
+            hub, group, project = HubGroupProject.verify_format(instance)
+        else:
+            hub = group = project = None
+
         job_responses = []  # type: List[Dict[str, Any]]
         current_page_limit = limit or 20
         offset = skip
@@ -1390,7 +1204,7 @@ class IBMRuntimeService:
         # Try to find the right backend
         try:
             backend = self.get_backend(
-                raw_data["backend"], hub=hub, group=group, project=project
+                raw_data["backend"], instance=f"{hub}/{group}/{project}"
             )
         except (IBMProviderError, QiskitBackendNotFoundError):
             backend = ibm_backend.IBMRetiredBackend.from_name(
@@ -1435,6 +1249,15 @@ class IBMRuntimeService:
             given the authority to upload a program.
         """
         self._api_client.logout()
+
+    @property
+    def auth(self) -> str:
+        """Return the authentication type used.
+
+        Returns:
+            The authentication type used.
+        """
+        return self._auth
 
     def __repr__(self) -> str:
         return "<{}>".format(self.__class__.__name__)

@@ -279,7 +279,6 @@ from qiskit.providers import BaseBackend, Backend  # type: ignore[attr-defined]
 from .ibm_backend import IBMBackend
 from .exceptions import *
 from .utils.utils import setup_logger
-from .runner_result import RunnerResult
 from .version import __version__
 
 from .ibm_runtime_service import IBMRuntimeService
