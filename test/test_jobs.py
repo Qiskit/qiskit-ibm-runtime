@@ -22,24 +22,17 @@ from qiskit_ibm_runtime.constants import API_TO_JOB_ERROR_MESSAGE
 from qiskit_ibm_runtime.exceptions import RuntimeJobFailureError
 
 from .ibm_test_case import IBMTestCase
-from .mock.fake_runtime_service import FakeRuntimeService
 from .mock.fake_runtime_client import (FailedRuntimeJob,
                                        FailedRanTooLongRuntimeJob,
                                        CancelableRuntimeJob,
                                        CustomResultRuntimeJob)
 from .utils.program import run_program, upload_program
 from .utils.serialization import get_complex_types
-from .decorators import run_legacy_and_cloud
+from .utils.decorators import run_legacy_and_cloud
 
 
-class TestRunProgram(IBMTestCase):
-    """Class for testing runtime modules."""
-
-    def setUp(self):
-        """Initial test setup."""
-        super().setUp()
-        self._legacy_service = FakeRuntimeService(auth="legacy", token="some_token")
-        self._cloud_service = FakeRuntimeService(auth="cloud", token="some_token")
+class TestRuntimeJob(IBMTestCase):
+    """Class for testing runtime jobs."""
 
     @run_legacy_and_cloud
     def test_run_program(self, service):
@@ -54,11 +47,12 @@ class TestRunProgram(IBMTestCase):
         self.assertEqual(job.status(), JobStatus.DONE)
         self.assertTrue(job.result())
 
-    def test_run_program_with_custom_runtime_image(self):
+    @run_legacy_and_cloud
+    def test_run_program_with_custom_runtime_image(self, service):
         """Test running program with a custom image."""
         params = {"param1": "foo"}
         image = "name:tag"
-        job = run_program(service=self._legacy_service, inputs=params, image=image)
+        job = run_program(service=service, inputs=params, image=image)
         self.assertTrue(job.job_id)
         self.assertIsInstance(job, RuntimeJob)
         self.assertIsInstance(job.status(), JobStatus)
@@ -68,11 +62,12 @@ class TestRunProgram(IBMTestCase):
         self.assertTrue(job.result())
         self.assertEqual(job.image, image)
 
-    def test_run_program_failed(self):
+    @run_legacy_and_cloud
+    def test_run_program_failed(self, service):
         """Test a failed program execution."""
-        job = run_program(service=self._legacy_service, job_classes=FailedRuntimeJob)
+        job = run_program(service=service, job_classes=FailedRuntimeJob)
         job.wait_for_final_state()
-        job_result_raw = self._legacy_service._api_client.job_results(job.job_id)
+        job_result_raw = service._api_client.job_results(job.job_id)
         self.assertEqual(JobStatus.ERROR, job.status())
         self.assertEqual(
             API_TO_JOB_ERROR_MESSAGE["FAILED"].format(job.job_id, job_result_raw),
@@ -81,11 +76,12 @@ class TestRunProgram(IBMTestCase):
         with self.assertRaises(RuntimeJobFailureError):
             job.result()
 
-    def test_run_program_failed_ran_too_long(self):
+    @run_legacy_and_cloud
+    def test_run_program_failed_ran_too_long(self, service):
         """Test a program that failed since it ran longer than maximum execution time."""
-        job = run_program(service=self._legacy_service, job_classes=FailedRanTooLongRuntimeJob)
+        job = run_program(service=service, job_classes=FailedRanTooLongRuntimeJob)
         job.wait_for_final_state()
-        job_result_raw = self._legacy_service._api_client.job_results(job.job_id)
+        job_result_raw = service._api_client.job_results(job.job_id)
         self.assertEqual(JobStatus.ERROR, job.status())
         self.assertEqual(
             API_TO_JOB_ERROR_MESSAGE["CANCELLED - RAN TOO LONG"].format(
@@ -96,17 +92,17 @@ class TestRunProgram(IBMTestCase):
         with self.assertRaises(RuntimeJobFailureError):
             job.result()
 
-    def test_program_params_namespace(self):
+    @run_legacy_and_cloud
+    def test_program_params_namespace(self, service):
         """Test running a program using parameter namespace."""
-        service = self._legacy_service
         program_id = upload_program(service)
         params = service.program(program_id).parameters()
         params.param1 = "Hello World"
         run_program(service, program_id, inputs=params)
 
-    def test_cancel_job(self):
+    @run_legacy_and_cloud
+    def test_cancel_job(self, service):
         """Test canceling a job."""
-        service = self._legacy_service
         job = run_program(service, job_classes=CancelableRuntimeJob)
         time.sleep(1)
         job.cancel()
@@ -114,52 +110,52 @@ class TestRunProgram(IBMTestCase):
         rjob = service.job(job.job_id)
         self.assertEqual(rjob.status(), JobStatus.CANCELLED)
 
-    def test_final_result(self):
+    @run_legacy_and_cloud
+    def test_final_result(self, service):
         """Test getting final result."""
-        service = self._legacy_service
         job = run_program(service)
         result = job.result()
         self.assertTrue(result)
 
-    def test_interim_results(self):
+    @run_legacy_and_cloud
+    def test_interim_results(self, service):
         """Test getting interim results."""
-        service = self._legacy_service
         job = run_program(service)
         # TODO maybe a bit more validation on the returned interim results
         interim_results = job.interim_results()
         self.assertTrue(interim_results)
 
-    def test_job_status(self):
+    @run_legacy_and_cloud
+    def test_job_status(self, service):
         """Test job status."""
-        service = self._legacy_service
         job = run_program(service)
         time.sleep(random.randint(1, 5))
         self.assertTrue(job.status())
 
-    def test_job_inputs(self):
+    @run_legacy_and_cloud
+    def test_job_inputs(self, service):
         """Test job inputs."""
         inputs = {"param1": "foo", "param2": "bar"}
-        service = self._legacy_service
         job = run_program(service, inputs=inputs)
         self.assertEqual(inputs, job.inputs)
 
-    def test_job_program_id(self):
+    @run_legacy_and_cloud
+    def test_job_program_id(self, service):
         """Test job program ID."""
-        service = self._legacy_service
         program_id = upload_program(service)
         job = run_program(service, program_id=program_id)
         self.assertEqual(program_id, job.program_id)
 
-    def test_wait_for_final_state(self):
+    @run_legacy_and_cloud
+    def test_wait_for_final_state(self, service):
         """Test wait for final state."""
-        service = self._legacy_service
         job = run_program(service)
         job.wait_for_final_state()
         self.assertEqual(JobStatus.DONE, job.status())
 
-    def test_get_result_twice(self):
+    @run_legacy_and_cloud
+    def test_get_result_twice(self, service):
         """Test getting results multiple times."""
-        service = self._legacy_service
         custom_result = get_complex_types()
         job_cls = CustomResultRuntimeJob
         job_cls.custom_result = custom_result

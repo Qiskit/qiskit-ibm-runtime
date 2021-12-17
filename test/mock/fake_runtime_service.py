@@ -17,8 +17,8 @@ from collections import OrderedDict
 from unittest import mock
 
 from qiskit_ibm_runtime.ibm_runtime_service import IBMRuntimeService
-from qiskit_ibm_runtime.credentials import Credentials
 from qiskit_ibm_runtime.hub_group_project import HubGroupProject
+from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 
 from .fake_account_client import BaseFakeAccountClient
 from .fake_runtime_client import BaseFakeRuntimeClient
@@ -48,32 +48,25 @@ class FakeRuntimeService(IBMRuntimeService):
         # self._api_client = test_options.get("api_client", BaseFakeRuntimeClient())
 
     def _initialize_hgps(
-        self, credentials: Credentials
+        self, client_params: ClientParameters
     ) -> Dict:
         """Mock hgp initialization."""
 
         hgps = OrderedDict()
 
         for idx in range(self._test_num_hgps):
-            hub = f"hub{idx}"
-            group = f"group{idx}"
-            project = f"project{idx}"
+            hgp_name = f"hub{idx}/group{idx}/project{idx}"
 
-            cred = Credentials(
+            hgp_params = ClientParameters(
+                auth_type="legacy",
                 token="some_token",
                 url="some_url",
-                access_token="some_token",
-                auth_url="some_url",
-                websockets_url="some_ws_url",
-                services={"runtime": "runtime_url"},
-                hub=hub,
-                group=group,
-                project=project
+                instance=hgp_name,
             )
-            hgp = HubGroupProject(cred)
+            hgp = HubGroupProject(client_params=hgp_params, instance=hgp_name)
             hgp._api_client = BaseFakeAccountClient(
                 backend_names=["common_backend", f"unique_backend_{idx}"])
-            hgps[f"{hub}/{group}/{project}"] = hgp
+            hgps[hgp_name] = hgp
 
         return hgps
 

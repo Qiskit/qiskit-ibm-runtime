@@ -26,7 +26,7 @@ from qiskit_ibm_runtime.runtime_program import ParameterNamespace
 
 from .ibm_test_case import IBMTestCase
 from .utils.program import upload_program, DEFAULT_DATA, DEFAULT_METADATA
-from .decorators import run_legacy_and_cloud
+from .utils.decorators import run_legacy_and_cloud
 
 
 class TestPrograms(IBMTestCase):

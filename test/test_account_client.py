@@ -14,46 +14,22 @@
 
 import re
 
-from qiskit.circuit import ClassicalRegister, QuantumCircuit, QuantumRegister
 from qiskit_ibm_runtime.api.clients import AccountClient, AuthClient
 from qiskit_ibm_runtime.api.exceptions import ApiError, RequestsApiError
+from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 
-from ..ibm_test_case import IBMTestCase
-from ..decorators import requires_qe_access, requires_provider
-from ..contextmanagers import custom_envs, no_envs
-from ..http_server import SimpleServer, ClientErrorHandler
+from .ibm_test_case import IBMTestCase
+from .mock.http_server import SimpleServer, ClientErrorHandler
+from .utils.contextmanagers import custom_envs, no_envs
+from .utils.decorators import requires_qe_access
 
 
 class TestAccountClient(IBMTestCase):
     """Tests for AccountClient."""
 
-    @classmethod
-    @requires_provider
-    def setUpClass(cls, service, hub, group, project):
-        """Initial class level setup."""
-        # pylint: disable=arguments-differ
-        super().setUpClass()
-        cls.service = service
-        cls.hub = hub
-        cls.group = group
-        cls.project = project
-
     def setUp(self):
         """Initial test setup."""
         super().setUp()
-        qr = QuantumRegister(2)
-        cr = ClassicalRegister(2)
-        self.qc1 = QuantumCircuit(qr, cr, name="qc1")
-        self.qc2 = QuantumCircuit(qr, cr, name="qc2")
-        self.qc1.h(qr)
-        self.qc2.h(qr[0])
-        self.qc2.cx(qr[0], qr[1])
-        self.qc1.measure(qr[0], cr[0])
-        self.qc1.measure(qr[1], cr[1])
-        self.qc2.measure(qr[0], cr[0])
-        self.qc2.measure(qr[1], cr[1])
-        self.seed = 73846087
-
         self.fake_server = None
 
     def tearDown(self) -> None:
@@ -65,7 +41,9 @@ class TestAccountClient(IBMTestCase):
     def _get_client(self):
         """Helper for instantiating an AccountClient."""
         # pylint: disable=no-value-for-parameter
-        return AccountClient(self.service._default_hgp.credentials)
+        params = ClientParameters(
+            auth_type="legacy", url=SimpleServer.URL, token="foo", instance="h/g/p")
+        return AccountClient(params)
 
     def test_custom_client_app_header(self):
         """Check custom client application header."""
@@ -90,7 +68,7 @@ class TestAccountClient(IBMTestCase):
         client = self._get_client()
         self.fake_server = SimpleServer(handler_class=ClientErrorHandler)
         self.fake_server.start()
-        client.account_api.session.base_url = SimpleServer.URL
+        # client.account_api.session.base_url = SimpleServer.URL
 
         sub_tests = [
             {"error": "Bad client input"},
@@ -114,7 +92,7 @@ class TestAuthClient(IBMTestCase):
     @requires_qe_access
     def test_valid_login(self, qe_token, qe_url):
         """Test valid authentication."""
-        client = AuthClient(qe_token, qe_url)
+        client = self._init_auth_client(qe_token, qe_url)
         self.assertTrue(client.access_token)
 
     @requires_qe_access
@@ -122,33 +100,33 @@ class TestAuthClient(IBMTestCase):
         """Test login against a 404 URL"""
         url_404 = re.sub(r"/api.*$", "/api/TEST_404", qe_url)
         with self.assertRaises(ApiError):
-            _ = AuthClient(qe_token, url_404)
+            _ = self._init_auth_client(qe_token, url_404)
 
     @requires_qe_access
     def test_invalid_token(self, qe_token, qe_url):
         """Test login using invalid token."""
         qe_token = "INVALID_TOKEN"
         with self.assertRaises(ApiError):
-            _ = AuthClient(qe_token, qe_url)
+            _ = self._init_auth_client(qe_token, qe_url)
 
     @requires_qe_access
     def test_url_unreachable(self, qe_token, qe_url):
         """Test login against an invalid (malformed) URL."""
         qe_url = "INVALID_URL"
         with self.assertRaises(ApiError):
-            _ = AuthClient(qe_token, qe_url)
+            _ = self._init_auth_client(qe_token, qe_url)
 
     @requires_qe_access
     def test_api_version(self, qe_token, qe_url):
         """Check the version of the QX API."""
-        client = AuthClient(qe_token, qe_url)
+        client = self._init_auth_client(qe_token, qe_url)
         version = client.api_version()
         self.assertIsNotNone(version)
 
     @requires_qe_access
     def test_user_urls(self, qe_token, qe_url):
         """Check the user urls of the QX API."""
-        client = AuthClient(qe_token, qe_url)
+        client = self._init_auth_client(qe_token, qe_url)
         user_urls = client.user_urls()
         self.assertIsNotNone(user_urls)
         self.assertTrue("http" in user_urls and "ws" in user_urls)
@@ -156,7 +134,7 @@ class TestAuthClient(IBMTestCase):
     @requires_qe_access
     def test_user_hubs(self, qe_token, qe_url):
         """Check the user hubs of the QX API."""
-        client = AuthClient(qe_token, qe_url)
+        client = self._init_auth_client(qe_token, qe_url)
         user_hubs = client.user_hubs()
         self.assertIsNotNone(user_hubs)
         for user_hub in user_hubs:
@@ -164,3 +142,8 @@ class TestAuthClient(IBMTestCase):
                 self.assertTrue(
                     "hub" in user_hub and "group" in user_hub and "project" in user_hub
                 )
+
+    def _init_auth_client(self, token, url):
+        """Return an AuthClient."""
+        params = ClientParameters(auth_type="legacy", token=token, url=url)
+        return AuthClient(params)

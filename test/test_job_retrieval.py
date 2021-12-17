@@ -12,11 +12,10 @@
 
 """Tests for runtime job retrieval."""
 
-from unittest import skip
-
 from .ibm_test_case import IBMTestCase
 from .mock.fake_runtime_service import FakeRuntimeService
 from .utils.program import run_program, upload_program
+from .utils.decorators import run_legacy_and_cloud
 
 
 class TestRetrieveJobs(IBMTestCase):
@@ -25,12 +24,11 @@ class TestRetrieveJobs(IBMTestCase):
     def setUp(self):
         """Initial test setup."""
         super().setUp()
-        self._legacy_service = FakeRuntimeService(auth="legacy", token="some_token")
-        self._cloud_service = FakeRuntimeService(auth="cloud", token="some_token")
+        self._legacy_service = FakeRuntimeService(auth="legacy", token="my_token", instance="my_instance")
 
-    def test_retrieve_job(self):
+    @run_legacy_and_cloud
+    def test_retrieve_job(self, service):
         """Test retrieving a job."""
-        service = self._legacy_service
         program_id = upload_program(service)
         params = {"param1": "foo"}
         job = run_program(service=service, program_id=program_id, inputs=params)
@@ -38,9 +36,9 @@ class TestRetrieveJobs(IBMTestCase):
         self.assertEqual(job.job_id, rjob.job_id)
         self.assertEqual(program_id, rjob.program_id)
 
-    def test_jobs_no_limit(self):
+    @run_legacy_and_cloud
+    def test_jobs_no_limit(self, service):
         """Test retrieving jobs without limit."""
-        service = self._legacy_service
         program_id = upload_program(service)
 
         jobs = []
@@ -49,9 +47,9 @@ class TestRetrieveJobs(IBMTestCase):
         rjobs = service.jobs(limit=None)
         self.assertEqual(25, len(rjobs))
 
-    def test_jobs_limit(self):
+    @run_legacy_and_cloud
+    def test_jobs_limit(self, service):
         """Test retrieving jobs with limit."""
-        service = self._legacy_service
         program_id = upload_program(service)
 
         jobs = []
@@ -65,9 +63,9 @@ class TestRetrieveJobs(IBMTestCase):
                 rjobs = service.jobs(limit=limit)
                 self.assertEqual(min(limit, job_count), len(rjobs))
 
-    def test_jobs_skip(self):
+    @run_legacy_and_cloud
+    def test_jobs_skip(self, service):
         """Test retrieving jobs with skip."""
-        service = self._legacy_service
         program_id = upload_program(service)
 
         jobs = []
@@ -87,9 +85,9 @@ class TestRetrieveJobs(IBMTestCase):
         rjobs = service.jobs(skip=4, limit=2)
         self.assertEqual(2, len(rjobs))
 
-    def test_jobs_pending(self):
+    @run_legacy_and_cloud
+    def test_jobs_pending(self, service):
         """Test retrieving pending jobs (QUEUED, RUNNING)."""
-        service = self._legacy_service
         program_id = upload_program(service)
 
         _, pending_jobs_count, _ = self._populate_jobs_with_all_statuses(
@@ -183,9 +181,9 @@ class TestRetrieveJobs(IBMTestCase):
         rjobs = service.jobs(limit=limit, skip=skip, pending=False)
         self.assertEqual(limit, len(rjobs))
 
-    def test_jobs_filter_by_program_id(self):
+    @run_legacy_and_cloud
+    def test_jobs_filter_by_program_id(self, service):
         """Test retrieving jobs by Program ID."""
-        service = self._legacy_service
         program_id = upload_program(service)
         program_id_1 = upload_program(service)
 
@@ -210,14 +208,13 @@ class TestRetrieveJobs(IBMTestCase):
         job.wait_for_final_state()
         rjobs = service.jobs(
             program_id=program_id,
-            hub="hub1",
-            group="group1",
-            project="project1",
+            instance="hub1/group1/project1"
         )
+        self.assertTrue(rjobs)
         self.assertEqual(program_id, rjobs[0].program_id)
         self.assertEqual(1, len(rjobs))
         rjobs = service.jobs(
-            program_id=program_id, hub="test", group="test", project="test"
+            program_id=program_id, instance="nohub1/nogroup1/noproject1"
         )
         self.assertFalse(rjobs)
 
@@ -226,7 +223,6 @@ class TestRetrieveJobs(IBMTestCase):
         # TODO
         pass
 
-    @skip("Skip until instance is supported")
     def test_different_hgps(self):
         """Test retrieving job submitted with different hgp."""
         # Initialize with hgp0

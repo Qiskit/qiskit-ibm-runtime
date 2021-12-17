@@ -16,12 +16,13 @@ import time
 import uuid
 import json
 import base64
-from typing import Optional, Dict, Tuple
+from typing import Optional, Dict
 from concurrent.futures import ThreadPoolExecutor
 from functools import wraps
 
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
 from qiskit_ibm_runtime.utils import RuntimeEncoder
+from qiskit_ibm_runtime.utils.hgp import from_instance_format
 
 from .fake_account_client import BaseFakeAccountClient
 
@@ -345,7 +346,7 @@ class BaseFakeRuntimeClient:
         backend_name: str,
         params: Dict,
         image: str,
-        hgp: Optional[Tuple[str, str, str]]
+        hgp: Optional[str]
     ):
         """Run the specified program."""
         job_id = uuid.uuid4().hex
@@ -354,7 +355,10 @@ class BaseFakeRuntimeClient:
             if len(self._job_classes) > 0
             else BaseFakeRuntimeJob
         )
-        hub, group, project = hgp if hgp else None, None, None
+        if hgp:
+            hub, group, project = from_instance_format(hgp)
+        else:
+            hub = group = project = None
         job = job_cls(
             job_id=job_id,
             program_id=program_id,

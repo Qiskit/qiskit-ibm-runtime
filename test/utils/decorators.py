@@ -13,17 +13,17 @@
 """Decorators for using with IBM Provider unit tests.
 
     Environment variables used by the decorators:
-        * QISKIT_IBM_RUNTIME_API_TOKEN: default API token to use.
-        * QISKIT_IBM_RUNTIME_API_URL: default API url to use.
-        * QISKIT_IBM_RUNTIME_HGP: default hub/group/project to use.
-        * QISKIT_IBM_RUNTIME_PRIVATE_HGP: hub/group/project to use for private jobs.
-        * QISKIT_IBM_RUNTIME_DEVICE: default device to use.
-        * QISKIT_IBM_RUNTIME_USE_STAGING_CREDENTIALS: True if use staging credentials.
-        * QISKIT_IBM_RUNTIME_STAGING_API_TOKEN: staging API token to use.
-        * QISKIT_IBM_RUNTIME_STAGING_API_URL: staging API url to use.
-        * QISKIT_IBM_RUNTIME_STAGING_HGP: staging hub/group/project to use.
-        * QISKIT_IBM_RUNTIME_STAGING_DEVICE: staging device to use.
-        * QISKIT_IBM_RUNTIME_STAGING_PRIVATE_HGP: staging hub/group/project to use for private jobs.
+        * QISKIT_IBM_API_TOKEN: default API token to use.
+        * QISKIT_IBM_API_URL: default API url to use.
+        * QISKIT_IBM_HGP: default hub/group/project to use.
+        * QISKIT_IBM_PRIVATE_HGP: hub/group/project to use for private jobs.
+        * QISKIT_IBM_DEVICE: default device to use.
+        * QISKIT_IBM_USE_STAGING_CREDENTIALS: True if use staging credentials.
+        * QISKIT_IBM_STAGING_API_TOKEN: staging API token to use.
+        * QISKIT_IBM_STAGING_API_URL: staging API url to use.
+        * QISKIT_IBM_STAGING_HGP: staging hub/group/project to use.
+        * QISKIT_IBM_STAGING_DEVICE: staging device to use.
+        * QISKIT_IBM_STAGING_PRIVATE_HGP: staging hub/group/project to use for private jobs.
 """
 
 import os
@@ -37,7 +37,17 @@ from qiskit_ibm_runtime import IBMRuntimeService
 from qiskit_ibm_runtime.credentials import Credentials, discover_credentials
 from qiskit_ibm_runtime.hub_group_project import HubGroupProject
 
-from .mock.fake_runtime_service import FakeRuntimeService
+from ..mock.fake_runtime_service import FakeRuntimeService
+
+
+def requires_online_access(func):
+    @wraps(func)
+    def _wrapper(*args, **kwargs):
+        if get_test_options()["skip_online"]:
+            raise SkipTest("Skipping online tests")
+        return func(*args, **kwargs)
+
+    return _wrapper
 
 
 def requires_qe_access(func):
@@ -46,11 +56,11 @@ def requires_qe_access(func):
     It involves:
         * determines if the test should be skipped by checking environment
             variables.
-        * if the `QISKIT_IBM_RUNTIME_USE_STAGING_CREDENTIALS` environment variable is
+        * if the `QISKIT_IBM_USE_STAGING_CREDENTIALS` environment variable is
           set, it reads the credentials from an alternative set of environment
           variables.
         * if the test is not skipped, it reads `qe_token` and `qe_url` from
-            environment variables or qiskitrc.
+            environment variables.
         * if the test is not skipped, it appends `qe_token` and `qe_url` as
             arguments to the test function.
 
@@ -65,8 +75,8 @@ def requires_qe_access(func):
     def _wrapper(obj, *args, **kwargs):
         if get_test_options()["skip_online"]:
             raise SkipTest("Skipping online tests")
-        credentials = _get_credentials()
-        kwargs.update({"qe_token": credentials.token, "qe_url": credentials.url})
+        token, url, instance = _get_legacy_token_url_instance()
+        kwargs.update({"qe_token": token, "qe_url": url})
         return func(obj, *args, **kwargs)
 
     return _wrapper
@@ -123,6 +133,56 @@ def requires_providers(func):
     return _wrapper
 
 
+def requires_legacy_service(func):
+    """Decorator that signals the test uses the legacy online API.
+
+    Args:
+        func (callable): test function to be decorated.
+
+    Returns:
+        callable: the decorated function.
+    """
+
+    @wraps(func)
+    @requires_qe_access
+    def _wrapper(*args, **kwargs):
+        token = kwargs.pop("qe_token")
+        url = kwargs.pop("qe_url")
+        instance = _get_custom_hgp()
+
+        service = IBMRuntimeService(
+            auth="legacy", token=token, url=url, instance=instance)
+        kwargs.update(
+            {"service": service, "instance": instance}
+        )
+        return func(*args, **kwargs)
+
+    return _wrapper
+
+
+def requires_cloud_service(func):
+    """Decorator that signals the test uses the cloud online API.
+
+    Args:
+        func (callable): test function to be decorated.
+
+    Returns:
+        callable: the decorated function.
+    """
+
+    @wraps(func)
+    def _wrapper(*args, **kwargs):
+        token, url, instance = _get_cloud_token_url_instance()
+        service = IBMRuntimeService(
+            auth="cloud", token=token, url=url, instance=instance)
+        kwargs.update(
+            {"service": service, "instance": instance}
+        )
+        return func(*args, **kwargs)
+
+    return _wrapper
+
+
 def requires_provider(func):
     """Decorator that signals the test uses the online API, via a custom hub/group/project.
 
@@ -158,9 +218,9 @@ def requires_device(func):
     It involves:
         * Enable the account using credentials obtained from the
             `requires_qe_access` decorator.
-        * Use the backend specified by `QISKIT_IBM_RUNTIME_STAGING_DEVICE` if
-            `QISKIT_IBM_RUNTIME_USE_STAGING_CREDENTIALS` is set, otherwise use the backend
-            specified by `QISKIT_IBM_RUNTIME_DEVICE`.
+        * Use the backend specified by `QISKIT_IBM_STAGING_DEVICE` if
+            `QISKIT_IBM_USE_STAGING_CREDENTIALS` is set, otherwise use the backend
+            specified by `QISKIT_IBM_DEVICE`.
         * if device environment variable is not set, use the least busy
             real backend.
         * appends arguments `backend` to the decorated function.
@@ -176,9 +236,9 @@ def requires_device(func):
     @requires_qe_access
     def _wrapper(obj, *args, **kwargs):
         backend_name = (
-            os.getenv("QISKIT_IBM_RUNTIME_STAGING_DEVICE", None)
-            if os.getenv("QISKIT_IBM_RUNTIME_USE_STAGING_CREDENTIALS", "")
-            else os.getenv("QISKIT_IBM_RUNTIME_DEVICE", None)
+            os.getenv("QISKIT_IBM_STAGING_DEVICE", None)
+            if os.getenv("QISKIT_IBM_USE_STAGING_CREDENTIALS", "")
+            else os.getenv("QISKIT_IBM_DEVICE", None)
         )
         _backend = _get_backend(
             qe_token=kwargs.pop("qe_token"),
@@ -205,9 +265,9 @@ def requires_runtime_device(func):
     @requires_qe_access
     def _wrapper(obj, *args, **kwargs):
         backend_name = (
-            os.getenv("QISKIT_IBM_RUNTIME_STAGING_DEVICE", None)
-            if os.getenv("QISKIT_IBM_RUNTIME_USE_STAGING_CREDENTIALS", "")
-            else os.getenv("QISKIT_IBM_RUNTIME_DEVICE", None)
+            os.getenv("QISKIT_IBM_STAGING_DEVICE", None)
+            if os.getenv("QISKIT_IBM_USE_STAGING_CREDENTIALS", "")
+            else os.getenv("QISKIT_IBM_DEVICE", None)
         )
         if not backend_name:
             raise SkipTest("Runtime device not specified")
@@ -242,6 +302,37 @@ def _get_backend(qe_token, qe_url, backend_name):
     return _backend
 
 
+def _get_legacy_token_url_instance():
+    """Finds the credentials for legacy runtime."""
+    if os.getenv("QISKIT_IBM_USE_STAGING_CREDENTIALS", ""):
+        # Special case: instead of using the standard credentials mechanism,
+        # load them from different environment variables. This assumes they
+        # will always be in place, as is used by the CI setup.
+        return os.getenv("QISKIT_IBM_STAGING_API_TOKEN"), \
+               os.getenv("QISKIT_IBM_STAGING_API_URL"), \
+               os.getenv("QISKIT_IBM_STAGING_HGP")
+
+    return os.getenv("QISKIT_IBM_API_TOKEN"), \
+           os.getenv("QISKIT_IBM_API_URL"), \
+           os.getenv("QISKIT_IBM_HGP")
+
+
+def _get_cloud_token_url_instance():
+    """Finds the credentials for cloud runtime."""
+    if os.getenv("QISKIT_IBM_USE_STAGING_CREDENTIALS", ""):
+        return os.getenv("QISKIT_IBM_STAGING_CLOUD_TOKEN"), \
+               os.getenv("QISKIT_IBM_STAGING_CLOUD_URL"), \
+               os.getenv("QISKIT_IBM_STAGING_CLOUD_CRN")
+
+    return os.getenv("QISKIT_IBM_STAGING_CLOUD_TOKEN"), \
+           os.getenv("QISKIT_IBM_STAGING_CLOUD_URL"), \
+           os.getenv("QISKIT_IBM_STAGING_CLOUD_CRN")
+
+    # return os.getenv("QISKIT_IBM_CLOUD_TOKEN"), \
+    #        os.getenv("QISKIT_IBM_CLOUD_URL"), \
+    #        os.getenv("QISKIT_IBM_CLOUD_CRN")
+
+
 def _get_credentials():
     """Finds the credentials for a specific test and options.
 
@@ -252,14 +343,14 @@ def _get_credentials():
         Exception: When the credential could not be set and they are needed
             for that set of options.
     """
-    if os.getenv("QISKIT_IBM_RUNTIME_USE_STAGING_CREDENTIALS", ""):
+    if os.getenv("QISKIT_IBM_USE_STAGING_CREDENTIALS", ""):
         # Special case: instead of using the standard credentials mechanism,
         # load them from different environment variables. This assumes they
         # will always be in place, as is used by the CI setup.
         return Credentials(
-            token=os.getenv("QISKIT_IBM_RUNTIME_STAGING_API_TOKEN"),
-            url=os.getenv("QISKIT_IBM_RUNTIME_STAGING_API_URL"),
-            auth_url=os.getenv("QISKIT_IBM_RUNTIME_STAGING_API_URL"),
+            token=os.getenv("QISKIT_IBM_STAGING_API_TOKEN"),
+            url=os.getenv("QISKIT_IBM_STAGING_API_URL"),
+            auth_url=os.getenv("QISKIT_IBM_STAGING_API_URL"),
         )
     # Attempt to read the standard credentials.
     discovered_credentials, _ = discover_credentials()
@@ -289,37 +380,53 @@ def _get_open_hgp(service: IBMRuntimeService) -> Optional[HubGroupProject]:
     return None
 
 
-def _get_custom_hgp() -> Tuple[str, str, str]:
+def _get_custom_hgp() -> Optional[str]:
     """Get a custom hub/group/project
 
-    Gets the hub/group/project set in QISKIT_IBM_RUNTIME_STAGING_HGP for staging env or
-        QISKIT_IBM_RUNTIME_HGP for production env.
+    Gets the hub/group/project set in QISKIT_IBM_STAGING_HGP for staging env or
+        QISKIT_IBM_HGP for production env.
 
     Returns:
-        Tuple of custom hub/group/project or ``None`` if not set.
+        Custom hub/group/project or ``None`` if not set.
     """
-    hub = None
-    group = None
-    project = None
     hgp = (
-        os.getenv("QISKIT_IBM_RUNTIME_STAGING_HGP", None)
-        if os.getenv("QISKIT_IBM_RUNTIME_USE_STAGING_CREDENTIALS", "")
-        else os.getenv("QISKIT_IBM_RUNTIME_HGP", None)
+        os.getenv("QISKIT_IBM_STAGING_HGP", None)
+        if os.getenv("QISKIT_IBM_USE_STAGING_CREDENTIALS", "")
+        else os.getenv("QISKIT_IBM_HGP", None)
     )
-    if hgp:
-        hub, group, project = hgp.split("/")
-    return hub, group, project
+    return hgp
 
 
 def run_legacy_and_cloud(func):
-    """Decorator that runs a test using both legacy and cloud services."""
+    """Decorator that runs a test using both legacy and cloud fake services."""
 
     @wraps(func)
     def _wrapper(self, *args, **kwargs):
-        legacy_service = FakeRuntimeService(auth="legacy", token="some_token")
-        cloud_service = FakeRuntimeService(auth="cloud", token="some_token")
+        legacy_service = FakeRuntimeService(auth="legacy", token="my_token", instance="my_instance")
+        cloud_service = FakeRuntimeService(auth="cloud", token="my_token", instance="my_instance")
         for service in [legacy_service, cloud_service]:
             with self.subTest(service=service.auth):
                 kwargs["service"] = service
+                func(self, *args, **kwargs)
+    return _wrapper
+
+
+def run_legacy_and_cloud_real(func):
+    """Decorator that runs a test using both legacy and cloud real services."""
+
+    @wraps(func)
+    @requires_online_access
+    def _wrapper(self, *args, **kwargs):
+        cloud_token, cloud_url, cloud_instance = _get_cloud_token_url_instance()
+        cloud_service = IBMRuntimeService(
+            auth="cloud", token=cloud_token, url=cloud_url, instance=cloud_instance)
+        legacy_token, legacy_url, legacy_instance = _get_legacy_token_url_instance()
+        legacy_service = IBMRuntimeService(
+            auth="legacy", token=legacy_token, url=legacy_url, instance=legacy_instance)
+
+        for service, instance in [(legacy_service, legacy_instance), (cloud_service, cloud_instance)]:
+            with self.subTest(service=service.auth):
+                kwargs["service"] = service
+                kwargs["instance"] = instance
                 func(self, *args, **kwargs)
     return _wrapper

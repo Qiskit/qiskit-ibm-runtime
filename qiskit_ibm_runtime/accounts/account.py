@@ -17,11 +17,14 @@ from typing import Optional
 from urllib.parse import urlparse
 
 from typing_extensions import Literal
+from requests.auth import AuthBase
+
+from ..api.auth import LegacyAuth, CloudAuth
 
 AccountType = Optional[Literal["cloud", "legacy"]]
 
 LEGACY_API_URL = "https://auth.quantum-computing.ibm.com/api"
-CLOUD_API_URL = "https://cloud.ibm.com"
+CLOUD_API_URL = "https://us-east.quantum-computing.cloud.ibm.com"
 
 
 def _assert_valid_auth(auth: AccountType) -> None:
@@ -71,14 +74,23 @@ class Account:
         proxies: Optional[dict] = None,
         verify: Optional[bool] = True,
     ):
-        """Account constructor."""
+        """Account constructor.
+
+        Args:
+            auth: Authentication type, ``cloud`` or ``legacy``.
+            token: Account token to use.
+            url: Authentication URL.
+            instance: Service instance to use.
+            proxies: Proxies to use.
+            verify: Whether to verify server's TLS certificate.
+        """
         _assert_valid_auth(auth)
         self.auth = auth
 
         _assert_valid_token(token)
         self.token = token
 
-        resolved_url = url or LEGACY_API_URL if auth == "legacy" else CLOUD_API_URL
+        resolved_url = url or (LEGACY_API_URL if auth == "legacy" else CLOUD_API_URL)
         _assert_valid_url(resolved_url)
         self.url = resolved_url
 
@@ -102,3 +114,10 @@ class Account:
             proxies=data.get("proxies"),
             verify=data.get("verify"),
         )
+
+    def get_auth_handler(self) -> AuthBase:
+        """Returns the respective authentication handler."""
+        if self.auth == "cloud":
+            return CloudAuth(api_key=self.token, crn=self.instance)
+
+        return LegacyAuth(access_token=self.token)

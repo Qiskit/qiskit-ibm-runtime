@@ -70,8 +70,7 @@ from .mock.fake_runtime_service import FakeRuntimeService
 from .mock.fake_runtime_client import CustomResultRuntimeJob
 
 
-import unittest
-class TestDataSerialization(unittest.TestCase):
+class TestDataSerialization(IBMTestCase):
     """Class for testing runtime data serialization."""
 
     def test_coder(self):

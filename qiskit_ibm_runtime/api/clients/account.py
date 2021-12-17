@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2018, 2020.
+# (C) Copyright IBM 2018, 2021.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -17,11 +17,12 @@ import logging
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 
-from qiskit_ibm_runtime.credentials import Credentials
+from qiskit_ibm_runtime.utils.hgp import from_instance_format
 
+from .backend import BaseBackendClient
 from ..rest import Account
 from ..session import RetrySession
-from .backend import BaseBackendClient
+from ..client_parameters import ClientParameters
 
 logger = logging.getLogger(__name__)
 
@@ -29,23 +30,22 @@ logger = logging.getLogger(__name__)
 class AccountClient(BaseBackendClient):
     """Client for accessing an individual IBM Quantum account."""
 
-    def __init__(self, credentials: Credentials, **request_kwargs: Any) -> None:
+    def __init__(self, params: ClientParameters) -> None:
         """AccountClient constructor.
 
         Args:
-            credentials: Account credentials.
-            **request_kwargs: Arguments for the request ``Session``.
+            params: Parameters used for server connection.
         """
         self._session = RetrySession(
-            credentials.base_url, auth=credentials.get_auth_handler(), **request_kwargs
+            params.url, auth=params.get_auth_handler(), **params.connection_parameters()
         )
+        hub, group, project = from_instance_format(params.instance)
         self.account_api = Account(
             session=self._session,
-            hub=credentials.hub,
-            group=credentials.group,
-            project=credentials.project,
+            hub=hub,
+            group=group,
+            project=project,
         )
-        self._credentials = credentials
 
     def list_backends(self) -> List[Dict[str, Any]]:
         """Return backends available for this provider.

@@ -63,23 +63,17 @@ class IBMBackend(Backend):
     def __init__(
         self,
         configuration: Union[QasmBackendConfiguration, PulseBackendConfiguration],
-        credentials: Credentials,
-        api_client: BaseBackendClient
+        api_client: BaseBackendClient,
     ) -> None:
         """IBMBackend constructor.
 
         Args:
             configuration: Backend configuration.
-            credentials: IBM Quantum credentials.
             api_client: IBM Quantum client used to communicate with the server.
         """
         super().__init__(configuration=configuration)
 
         self._api_client = api_client
-        self._credentials = credentials
-        self.hub = credentials.hub
-        self.group = credentials.group
-        self.project = credentials.project
 
         # Attributes used by caching functions.
         self._properties = None

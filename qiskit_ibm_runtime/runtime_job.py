@@ -36,6 +36,7 @@ from .exceptions import IBMError
 from .api.exceptions import RequestsApiError
 from .utils.converters import utc_to_local
 from .credentials import Credentials
+from .api.client_parameters import ClientParameters
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +83,7 @@ class RuntimeJob:
         self,
         backend: Backend,
         api_client: RuntimeClient,
-        credentials: Credentials,
+        client_params: ClientParameters,
         job_id: str,
         program_id: str,
         params: Optional[Dict] = None,
@@ -96,7 +97,7 @@ class RuntimeJob:
         Args:
             backend: The backend instance used to run this job.
             api_client: Object for connecting to the server.
-            credentials: Account credentials.
+            client_params: Parameters used for server connection.
             job_id: Job ID.
             program_id: ID of the program this job is for.
             params: Job parameters.
@@ -123,8 +124,8 @@ class RuntimeJob:
         self._ws_client_future = None  # type: Optional[futures.Future]
         self._result_queue = queue.Queue()  # type: queue.Queue
         self._ws_client = RuntimeWebsocketClient(
-            websocket_url=credentials.runtime_url.replace("https", "wss"),
-            credentials=credentials,
+            websocket_url=client_params.url.replace("https", "wss"),
+            client_params=client_params,
             job_id=job_id,
             message_queue=self._result_queue,
         )

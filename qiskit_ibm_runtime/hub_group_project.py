@@ -14,16 +14,16 @@
 
 import logging
 from collections import OrderedDict
-from typing import Any, Dict, Optional, Tuple, List
+from typing import Any, Dict, Optional
 
 from qiskit_ibm_runtime import (  # pylint: disable=unused-import
     ibm_backend,
 )
 
 from .api.clients import AccountClient
-from .credentials import Credentials
-from .exceptions import IBMInputValueError
 from .utils.backend_decoder import configuration_from_server_data
+from .api.client_parameters import ClientParameters
+from .utils.hgp import from_instance_format
 
 logger = logging.getLogger(__name__)
 
@@ -33,23 +33,19 @@ class HubGroupProject:
 
     def __init__(
         self,
-        credentials: Credentials,
+        client_params: ClientParameters,
+        instance: str,
     ) -> None:
         """HubGroupProject constructor
 
         Args:
-            credentials: IBM Quantum credentials.
+            client_params: Parameters used for server connection.
+            instance: Hub/group/project.
         """
-        self.credentials = credentials
-        self._api_client = AccountClient(
-            self.credentials, **self.credentials.connection_parameters()
-        )
+        self._api_client = AccountClient(client_params)
         # Initialize the internal list of backends.
         self._backends: Dict[str, "ibm_backend.IBMBackend"] = {}
-        self._backend_url = credentials.url
-        self._hub = credentials.hub
-        self._group = credentials.group
-        self._project = credentials.project
+        self._hub, self._group, self._project = from_instance_format(instance)
 
     @property
     def backends(self) -> Dict[str, "ibm_backend.IBMBackend"]:
@@ -90,7 +86,6 @@ class HubGroupProject:
             )
             ret[config.backend_name] = backend_cls(
                 configuration=config,
-                credentials=self.credentials,
                 api_client=self._api_client,
             )
         return ret
@@ -108,50 +103,13 @@ class HubGroupProject:
         """
         return f"{self._hub}/{self._group}/{self._project}"
 
-    def to_tuple(self) -> Tuple[str, str, str]:
-        """Returns hub, group, project as a tuple."""
-        return self._hub, self._group, self._project
-
     def __repr__(self) -> str:
         credentials_info = "hub='{}', group='{}', project='{}'".format(
-            self.credentials.hub, self.credentials.group, self.credentials.project
+            self._hub, self._group, self._project
         )
         return "<{}({})>".format(self.__class__.__name__, credentials_info)
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, HubGroupProject):
             return False
-        return self.credentials == other.credentials
-
-    @staticmethod
-    def to_name(hub: str, group: str, project: str) -> str:
-        """Convert the input hub/group/project to the 'name' format.
-
-        Args:
-            hub: Hub name.
-            group: Group name.
-            project: Project name.
-
-        Returns:
-            Input in hub/group/project format.
-        """
-        return f"{hub}/{group}/{project}"
-
-    @staticmethod
-    def verify_format(instance: str) -> List[str]:
-        """Verify the input instance is in proper hub/group/project format.
-
-        Args:
-            instance: Service instance in hub/group/project format.
-
-        Returns:
-            Hub, group, and project.
-
-        Raises:
-            IBMInputValueError: If input is not in the correct format.
-        """
-        try:
-            return instance.split("/")
-        except (ValueError, AttributeError):
-            raise IBMInputValueError(f"Input instance value {instance} is not in the"
-                                     f"correct hub/group/project format.")
+        return self.name == other.name

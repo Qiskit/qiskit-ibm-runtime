@@ -16,32 +16,20 @@ from typing import Any, Dict, Optional
 
 import dateutil.parser
 
-from ..decorators import requires_provider
-from ..ibm_test_case import IBMTestCase
+from .ibm_test_case import IBMTestCase
+from .utils.decorators import run_legacy_and_cloud_real
 
 
 class TestSerialization(IBMTestCase):
     """Test data serialization."""
 
-    @classmethod
-    @requires_provider
-    def setUpClass(cls, service, hub, group, project):
-        """Initial class level setup."""
-        # pylint: disable=arguments-differ
-        super().setUpClass()
-        cls.service = service
-        cls.hub = hub
-        cls.group = group
-        cls.project = project
-
-    def test_backend_configuration(self):
+    @run_legacy_and_cloud_real
+    def test_backend_configuration(self, service, instance):
         """Test deserializing backend configuration."""
-        backends = self.service.backends(
+        backends = service.backends(
             operational=True,
             simulator=False,
-            hub=self.hub,
-            group=self.group,
-            project=self.project,
+            instance=instance
         )
 
         # Known keys that look like a serialized complex number.
@@ -64,14 +52,13 @@ class TestSerialization(IBMTestCase):
                     backend.configuration().to_dict(), good_keys, good_keys_prefixes
                 )
 
-    def test_pulse_defaults(self):
+    @run_legacy_and_cloud_real
+    def test_pulse_defaults(self, service, instance):
         """Test deserializing backend configuration."""
-        backends = self.service.backends(
+        backends = service.backends(
             operational=True,
             open_pulse=True,
-            hub=self.hub,
-            group=self.group,
-            project=self.project,
+            instance=instance
         )
         if not backends:
             self.skipTest("Need pulse backends.")
@@ -83,14 +70,13 @@ class TestSerialization(IBMTestCase):
             with self.subTest(backend=backend):
                 self._verify_data(backend.defaults().to_dict(), good_keys)
 
-    def test_backend_properties(self):
+    @run_legacy_and_cloud_real
+    def test_backend_properties(self, service, instance):
         """Test deserializing backend properties."""
-        backends = self.service.backends(
+        backends = service.backends(
             operational=True,
             simulator=False,
-            hub=self.hub,
-            group=self.group,
-            project=self.project,
+            instance=instance
         )
 
         # Known keys that look like a serialized object.
