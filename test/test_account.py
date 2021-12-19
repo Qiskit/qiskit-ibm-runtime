@@ -14,6 +14,8 @@
 
 import uuid
 import logging
+import os
+from unittest import skipIf
 
 from qiskit_ibm_runtime.accounts.account import CLOUD_API_URL, LEGACY_API_URL
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
@@ -23,6 +25,8 @@ from .mock.fake_runtime_service import FakeRuntimeService
 from .utils.account import get_qiskitrc_contents, custom_qiskitrc, no_envs, custom_envs
 
 
+# NamedTemporaryFiles not support in Windows
+@skipIf(os.name == "nt", "Test not supported in Windows")
 class TestEnableAccount(IBMTestCase):
     """Tests for IBMRuntimeService enable account."""
 
