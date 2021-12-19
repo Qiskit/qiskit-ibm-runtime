@@ -657,6 +657,7 @@ class TestIntegrationJob(IBMTestCase):
             self.skipTest(f"Job {job.job_id} unable to reach status {status}.")
 
     def _get_real_device(self, service):
+        # pylint: disable=inconsistent-return-statements
         try:
             return service.least_busy(simulator=False).name()
         except QiskitBackendNotFoundError:
