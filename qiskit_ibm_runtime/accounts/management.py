@@ -127,7 +127,7 @@ class AccountManager:
         )
 
     @classmethod
-    def _get_default_account_name(cls, auth: AccountType):
+    def _get_default_account_name(cls, auth: AccountType) -> str:
         return (
             _DEFAULT_ACCOUNT_NAME_CLOUD
             if auth == "cloud"

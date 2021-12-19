@@ -12,9 +12,8 @@
 
 """Represent IBM Quantum account credentials."""
 
-from typing import Dict, Optional, Any
+from typing import Dict, Optional, Any, Union
 
-from requests.auth import AuthBase
 from requests_ntlm import HttpNtlmAuth
 
 from ..api.auth import LegacyAuth, CloudAuth
@@ -55,7 +54,7 @@ class ClientParameters:
         self.proxies = proxies
         self.verify = verify
 
-    def get_auth_handler(self) -> AuthBase:
+    def get_auth_handler(self) -> Union[CloudAuth, LegacyAuth]:
         """Returns the respective authentication handler."""
         if self.auth_type == "cloud":
             return CloudAuth(api_key=self.token, crn=self.instance)

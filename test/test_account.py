@@ -16,7 +16,7 @@ import uuid
 import logging
 
 from qiskit_ibm_runtime.accounts.account import CLOUD_API_URL, LEGACY_API_URL
-from qiskit_ibm_runtime.accounts.exceptions import AccountsError
+from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 from .ibm_test_case import IBMTestCase
 from .mock.fake_runtime_service import FakeRuntimeService
@@ -86,7 +86,7 @@ class TestEnableAccount(IBMTestCase):
         for url in urls:
             with self.subTest(url=url), no_envs(["QISKIT_IBM_API_TOKEN"]):
                 token = uuid.uuid4().hex
-                with self.assertRaises(AccountsError) as err:
+                with self.assertRaises(IBMInputValueError) as err:
                     _ = FakeRuntimeService(auth="cloud", token=token, url=url)
                 self.assertIn("instance", str(err.exception))
 

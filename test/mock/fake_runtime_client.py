@@ -245,8 +245,9 @@ class TimedRuntimeJob(BaseFakeRuntimeJob):
 class BaseFakeRuntimeClient:
     """Base class for faking the runtime client."""
 
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         """Initialize a fake runtime client."""
+        # pylint: disable=unused-argument
         test_options = kwargs.pop("test_options", {})
         self._programs = {}
         self._jobs = {}

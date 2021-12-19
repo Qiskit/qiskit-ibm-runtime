@@ -46,7 +46,7 @@ def configuration_from_server_data(
     """
     # Make sure the raw_config is of proper type
     if not isinstance(raw_config, dict):
-        logger.warning(
+        logger.warning(  # type: ignore[unreachable]
             "An error occurred when retrieving backend "
             "information. Some backends might not be available."
         )
@@ -65,6 +65,7 @@ def configuration_from_server_data(
             repr(instance),
             traceback.format_exc(),
         )
+    return None
 
 
 def defaults_from_server_data(defaults: Dict) -> PulseDefaults:
