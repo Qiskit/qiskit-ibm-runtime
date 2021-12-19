@@ -17,7 +17,7 @@ import re
 from typing import Optional, Dict
 from types import SimpleNamespace
 from qiskit_ibm_runtime.exceptions import IBMInputValueError, IBMNotAuthorizedError
-from .exceptions import QiskitRuntimeError, RuntimeProgramNotFound
+from .exceptions import IBMRuntimeError, RuntimeProgramNotFound
 from .api.clients.runtime import RuntimeClient
 from .api.exceptions import RequestsApiError
 
@@ -298,7 +298,7 @@ class RuntimeProgram:
 
         Raises:
             RuntimeProgramNotFound: If the program does not exist.
-            QiskitRuntimeError: If the request failed.
+            IBMRuntimeError: If the request failed.
         """
         try:
             response = self._api_client.program_get(self._id)
@@ -307,7 +307,7 @@ class RuntimeProgram:
                 raise RuntimeProgramNotFound(
                     f"Program not found: {ex.message}"
                 ) from None
-            raise QiskitRuntimeError(f"Failed to get program: {ex}") from None
+            raise IBMRuntimeError(f"Failed to get program: {ex}") from None
         self._backend_requirements = {}
         self._parameters = {}
         self._return_values = {}

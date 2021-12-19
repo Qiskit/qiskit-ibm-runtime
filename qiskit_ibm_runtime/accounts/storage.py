@@ -14,7 +14,7 @@
 
 import json
 import os
-from typing import Optional, Union
+from typing import Optional, Dict
 
 
 def save_config(
@@ -37,7 +37,7 @@ def save_config(
 def read_config(
     filename: str,
     name: Optional[str] = None,
-) -> Union[dict, None]:
+) -> Optional[Dict]:
     """Save configuration data from a JSON file."""
 
     _ensure_file_exists(filename)

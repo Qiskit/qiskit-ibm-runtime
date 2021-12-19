@@ -15,20 +15,20 @@
 from typing import Dict
 from urllib.parse import urlparse
 
-from ...credentials import Credentials
+from ..client_parameters import ClientParameters
 
 
-def ws_proxy_params(credentials: Credentials, ws_url: str) -> Dict:
+def ws_proxy_params(client_params: ClientParameters, ws_url: str) -> Dict:
     """Extract proxy information for websocket.
 
     Args:
-        credentials: Account credentials.
+        client_params: Parameters used for server connection.
         ws_url: Websocket URL.
 
     Returns:
         Proxy information to be used by the websocket client.
     """
-    conn_data = credentials.connection_parameters()
+    conn_data = client_params.connection_parameters()
     out = {}
 
     if "proxies" in conn_data:
@@ -61,8 +61,8 @@ def ws_proxy_params(credentials: Credentials, ws_url: str) -> Dict:
 
     if "auth" in conn_data:
         out["http_proxy_auth"] = (
-            credentials.proxies["username_ntlm"],
-            credentials.proxies["password_ntlm"],
+            client_params.proxies["username_ntlm"],
+            client_params.proxies["password_ntlm"],
         )
 
     return out
