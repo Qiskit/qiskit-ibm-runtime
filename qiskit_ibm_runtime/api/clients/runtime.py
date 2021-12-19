@@ -14,7 +14,7 @@
 
 import logging
 from typing import Any, Dict, List, Optional
-from datetime import datetime
+from datetime import datetime as python_datetime
 
 from qiskit_ibm_runtime.api.session import RetrySession
 
@@ -119,7 +119,7 @@ class RuntimeClient(BaseBackendClient):
         backend_name: str,
         params: Dict,
         image: str,
-        hgp: Optional[str]
+        hgp: Optional[str],
     ) -> Dict:
         """Run the specified program.
 
@@ -317,9 +317,7 @@ class RuntimeClient(BaseBackendClient):
         return self._api.backend(backend_name).status()
 
     def backend_properties(
-            self,
-            backend_name: str,
-            datetime: Optional[datetime] = None
+        self, backend_name: str, datetime: Optional[python_datetime] = None
     ) -> Dict[str, Any]:
         """Return the properties of the IBM Cloud backend.
 
@@ -329,6 +327,9 @@ class RuntimeClient(BaseBackendClient):
 
         Returns:
             Backend properties.
+
+        Raises:
+            NotImplementedError: If `datetime` is specified.
         """
         if datetime:
             raise NotImplementedError("'datetime' is not supported with cloud runtime.")

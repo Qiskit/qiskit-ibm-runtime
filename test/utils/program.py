@@ -14,7 +14,6 @@
 
 import uuid
 import copy
-from unittest.mock import patch
 
 
 DEFAULT_DATA = "def main() {}"
@@ -51,9 +50,7 @@ DEFAULT_METADATA = {
 }
 
 
-def upload_program(
-        service, name=None, max_execution_time=300, is_public: bool = False
-):
+def upload_program(service, name=None, max_execution_time=300, is_public: bool = False):
     """Upload a new program."""
     name = name or uuid.uuid4().hex
     data = DEFAULT_DATA
@@ -66,18 +63,18 @@ def upload_program(
 
 
 def run_program(
-        service,
-        program_id=None,
-        inputs=None,
-        job_classes=None,
-        final_status=None,
-        decoder=None,
-        image="",
-        instance=None,
-        backend_name=None,
+    service,
+    program_id=None,
+    inputs=None,
+    job_classes=None,
+    final_status=None,
+    decoder=None,
+    image="",
+    instance=None,
+    backend_name=None,
 ):
     """Run a program."""
-    backend_name = backend_name or "common_backend"
+    backend_name = backend_name if backend_name is not None else "common_backend"
     options = {"backend_name": backend_name}
     if final_status is not None:
         service._api_client.set_final_status(final_status)
@@ -91,6 +88,6 @@ def run_program(
         inputs=inputs,
         result_decoder=decoder,
         image=image,
-        instance=instance
+        instance=instance,
     )
     return job

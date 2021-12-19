@@ -21,7 +21,6 @@ from requests_ntlm import HttpNtlmAuth
 from .hub_group_project_id import HubGroupProjectID
 from ..accounts import AccountType
 from ..api.auth import LegacyAuth, CloudAuth
-from ..utils import crn_to_api_host
 
 REGEX_IBM_HUBS = (
     "(?P<prefix>http[s]://.+/api)"
@@ -84,7 +83,7 @@ class Credentials:
             self.hub,
             self.group,
             self.project,
-        ) = _unify_ibm_quantum_url(auth, url, instance, hub, group, project)
+        ) = _unify_ibm_quantum_url(auth, url, hub, group, project)
         self.auth_url = auth_url or url
         self.websockets_url = websockets_url
         self.proxies = proxies or {}
@@ -147,7 +146,6 @@ class Credentials:
 def _unify_ibm_quantum_url(
     auth: AccountType,
     url: Optional[str] = None,
-    instance: Optional[str] = None,
     hub: Optional[str] = None,
     group: Optional[str] = None,
     project: Optional[str] = None,

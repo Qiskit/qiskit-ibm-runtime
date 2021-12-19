@@ -187,7 +187,9 @@ class TestRuntimeWebsocketClient(IBMTestCase):
 
     def _get_job(self, callback=None, job_id=JOB_ID_PROGRESS_DONE):
         """Get a runtime job."""
-        params = ClientParameters(auth_type="legacy", token="my_token", url=MockWsServer.VALID_WS_URL)
+        params = ClientParameters(
+            auth_type="legacy", token="my_token", url=MockWsServer.VALID_WS_URL
+        )
         job = RuntimeJob(
             backend=FakeQasmSimulator(),
             api_client=BaseFakeRuntimeClient(),

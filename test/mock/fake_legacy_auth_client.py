@@ -33,18 +33,20 @@ class BaseFakeAuthClient:
                 * ``ws``: The API URL for websocket communication.
                 * ``services`: The API URL for additional services.
         """
-        return {"http": "http://127.0.0.1",
-                "ws": "ws://127.0.0.1",
-                "services": {"runtime": "http://127.0.0.1"}}
+        return {
+            "http": "http://127.0.0.1",
+            "ws": "ws://127.0.0.1",
+            "services": {"runtime": "http://127.0.0.1"},
+        }
 
     def user_hubs(self) -> List[Dict[str, str]]:
         """Retrieve the hub/group/project sets available to the user."""
 
         hubs = []
         for idx in range(2):
-            hubs.append({"hub": f"hub{idx}",
-                         "group": f"group{idx}",
-                         "project": f"project{idx}"})
+            hubs.append(
+                {"hub": f"hub{idx}", "group": f"group{idx}", "project": f"project{idx}"}
+            )
         return hubs
 
     def api_version(self) -> Dict[str, Union[str, bool]]:

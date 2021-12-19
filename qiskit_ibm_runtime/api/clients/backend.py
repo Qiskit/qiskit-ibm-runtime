@@ -14,7 +14,7 @@
 
 import logging
 from typing import Dict, Any, Optional
-from datetime import datetime
+from datetime import datetime as python_datetime
 from abc import ABC, abstractmethod
 
 from .base import BaseClient
@@ -39,13 +39,13 @@ class BaseBackendClient(BaseClient, ABC):
 
     @abstractmethod
     def backend_properties(
-            self, backend_name: str, timestamp: Optional[datetime] = None
+        self, backend_name: str, datetime: Optional[python_datetime] = None
     ) -> Dict[str, Any]:
         """Return the properties of the backend.
 
         Args:
             backend_name: The name of the backend.
-            timestamp: Date and time for additional filtering of backend properties.
+            datetime: Date and time for additional filtering of backend properties.
 
         Returns:
             Backend properties.

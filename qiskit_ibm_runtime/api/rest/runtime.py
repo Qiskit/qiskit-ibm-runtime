@@ -113,23 +113,23 @@ class Runtime(RestAdapterBase):
     def program_run(
         self,
         program_id: str,
-        hub: str,
-        group: str,
-        project: str,
         backend_name: str,
         params: Dict,
         image: str,
+        hub: Optional[str] = None,
+        group: Optional[str] = None,
+        project: Optional[str] = None,
     ) -> Dict:
         """Execute the program.
 
         Args:
             program_id: Program ID.
-            hub: Hub to be used.
-            group: Group to be used.
-            project: Project to be used.
             backend_name: Name of the backend.
             params: Program parameters.
             image: Runtime image.
+            hub: Hub to be used.
+            group: Group to be used.
+            project: Project to be used.
 
         Returns:
             JSON response.
@@ -137,13 +137,14 @@ class Runtime(RestAdapterBase):
         url = self.get_url("jobs")
         payload = {
             "program_id": program_id,
-            "hub": hub,
-            "group": group,
-            "project": project,
             "backend": backend_name,
             "params": params,
             "runtime": image,
         }
+        if all([hub, group, project]):
+            payload["hub"] = hub
+            payload["group"] = group
+            payload["project"] = project
         data = json.dumps(payload, cls=RuntimeEncoder)
         return self.session.post(url, data=data).json()
 

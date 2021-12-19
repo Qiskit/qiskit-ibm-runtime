@@ -12,11 +12,11 @@
 
 """Hub/group/project utility functions."""
 
-from typing import List
+from typing import Tuple
 from ..exceptions import IBMInputValueError
 
 
-def from_instance_format(instance: str) -> List[str]:
+def from_instance_format(instance: str) -> Tuple[str, str, str]:
     """Convert the input instance to [hub, group, project].
 
     Args:
@@ -29,10 +29,13 @@ def from_instance_format(instance: str) -> List[str]:
         IBMInputValueError: If input is not in the correct format.
     """
     try:
-        return instance.split("/")
+        hub, group, project = instance.split("/")
+        return hub, group, project
     except (ValueError, AttributeError):
-        raise IBMInputValueError(f"Input instance value {instance} is not in the"
-                                 f"correct hub/group/project format.")
+        raise IBMInputValueError(
+            f"Input instance value {instance} is not in the"
+            f"correct hub/group/project format."
+        )
 
 
 def to_instance_format(hub: str, group: str, project: str) -> str:

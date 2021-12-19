@@ -37,8 +37,12 @@ class AuthClient(BaseClient):
         self.auth_url = client_params.url
         self._service_urls = {}  # type: ignore[var-annotated]
 
-        self.auth_api = Api(RetrySession(self.auth_url, **client_params.connection_parameters()))
-        self.base_api = self._init_service_clients(**client_params.connection_parameters())
+        self.auth_api = Api(
+            RetrySession(self.auth_url, **client_params.connection_parameters())
+        )
+        self.base_api = self._init_service_clients(
+            **client_params.connection_parameters()
+        )
 
     def _init_service_clients(self, **request_kwargs: Any) -> Api:
         """Initialize the clients used for communicating with the API.
@@ -164,7 +168,7 @@ class AuthClient(BaseClient):
         """
         return self.access_token
 
-    def current_service_urls(self) -> Dict[str, str]:
+    def current_service_urls(self) -> Dict:
         """Return the current service URLs.
 
         Returns:

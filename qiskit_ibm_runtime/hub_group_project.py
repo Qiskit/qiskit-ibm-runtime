@@ -76,13 +76,13 @@ class HubGroupProject:
         ret = OrderedDict()
         configs_list = self._api_client.list_backends()
         for raw_config in configs_list:
-            config = configuration_from_server_data(raw_config=raw_config, instance=self.name)
+            config = configuration_from_server_data(
+                raw_config=raw_config, instance=self.name
+            )
             if not config:
                 continue
             backend_cls = (
-                ibm_backend.IBMSimulator
-                if config.simulator
-                else ibm_backend.IBMBackend
+                ibm_backend.IBMSimulator if config.simulator else ibm_backend.IBMBackend
             )
             ret[config.backend_name] = backend_cls(
                 configuration=config,

@@ -32,13 +32,13 @@ class ClientParameters:
     """
 
     def __init__(
-            self,
-            auth_type: str,
-            token: str,
-            url: str = None,
-            instance: Optional[str] = None,
-            proxies: Optional[Dict] = None,
-            verify: bool = True,
+        self,
+        auth_type: str,
+        token: str,
+        url: str = None,
+        instance: Optional[str] = None,
+        proxies: Optional[Dict] = None,
+        verify: bool = True,
     ) -> None:
         """Credentials constructor.
 

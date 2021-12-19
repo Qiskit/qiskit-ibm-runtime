@@ -94,7 +94,6 @@ class Account:
         _assert_valid_url(resolved_url)
         self.url = resolved_url
 
-        _assert_valid_instance(auth, instance)
         self.instance = instance
         self.proxies = proxies
         self.verify = verify
@@ -112,7 +111,7 @@ class Account:
             token=data.get("token"),
             instance=data.get("instance"),
             proxies=data.get("proxies"),
-            verify=data.get("verify"),
+            verify=data.get("verify", True),
         )
 
     def get_auth_handler(self) -> AuthBase:

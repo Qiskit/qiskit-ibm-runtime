@@ -20,7 +20,7 @@ from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 
 from .ibm_test_case import IBMTestCase
 from .mock.http_server import SimpleServer, ClientErrorHandler
-from .utils.contextmanagers import custom_envs, no_envs
+from .utils.account import custom_envs, no_envs
 from .utils.decorators import requires_qe_access
 
 
@@ -42,7 +42,8 @@ class TestAccountClient(IBMTestCase):
         """Helper for instantiating an AccountClient."""
         # pylint: disable=no-value-for-parameter
         params = ClientParameters(
-            auth_type="legacy", url=SimpleServer.URL, token="foo", instance="h/g/p")
+            auth_type="legacy", url=SimpleServer.URL, token="foo", instance="h/g/p"
+        )
         return AccountClient(params)
 
     def test_custom_client_app_header(self):

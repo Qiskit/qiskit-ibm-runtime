@@ -15,7 +15,7 @@
 import logging
 
 from typing import List, Dict, Any, Optional
-from datetime import datetime
+from datetime import datetime as python_datetime
 
 from qiskit_ibm_runtime.utils.hgp import from_instance_format
 
@@ -67,7 +67,7 @@ class AccountClient(BaseBackendClient):
         return self.account_api.backend(backend_name).status()
 
     def backend_properties(
-        self, backend_name: str, datetime: Optional[datetime] = None
+        self, backend_name: str, datetime: Optional[python_datetime] = None
     ) -> Dict[str, Any]:
         """Return the properties of the backend.
 
@@ -78,7 +78,6 @@ class AccountClient(BaseBackendClient):
         Returns:
             Backend properties.
         """
-        # pylint: disable=redefined-outer-name
         return self.account_api.backend(backend_name).properties(datetime=datetime)
 
     def backend_pulse_defaults(self, backend_name: str) -> Dict:

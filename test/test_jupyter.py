@@ -12,6 +12,8 @@
 
 """Tests for Jupyter tools."""
 
+import unittest
+
 from qiskit_ibm_runtime.jupyter.qubits_widget import qubits_tab
 from qiskit_ibm_runtime.jupyter.config_widget import config_tab
 from qiskit_ibm_runtime.jupyter.gates_widget import gates_tab
@@ -19,10 +21,11 @@ from qiskit_ibm_runtime.visualization.interactive.error_map import iplot_error_m
 from qiskit_ibm_runtime.jupyter.dashboard.backend_widget import make_backend_widget
 from qiskit_ibm_runtime.jupyter.dashboard.utils import BackendWithProviders
 
-from ..decorators import requires_provider
-from ..ibm_test_case import IBMTestCase
+from .ibm_test_case import IBMTestCase
+from .utils.decorators import requires_provider
 
 
+@unittest.skip("Skip until jupyter is done")
 class TestBackendInfo(IBMTestCase):
     """Test backend information Jupyter widget."""
 
@@ -70,6 +73,7 @@ class TestBackendInfo(IBMTestCase):
                 iplot_error_map(backend)
 
 
+@unittest.skip("Skip until jupyter is done")
 class TestIBMDashboard(IBMTestCase):
     """Test backend information Jupyter widget."""
 

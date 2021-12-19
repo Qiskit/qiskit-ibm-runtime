@@ -10,41 +10,32 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Test the registration and credentials modules."""
+"""Tests for ClientParameters."""
+
+import uuid
 
 from requests_ntlm import HttpNtlmAuth
 
-from qiskit_ibm_runtime.credentials import (
-    Credentials,
-)
-from ..ibm_test_case import IBMTestCase
+from qiskit_ibm_runtime.api.client_parameters import ClientParameters
+from qiskit_ibm_runtime.api.auth import CloudAuth, LegacyAuth
 
-IBM_TEMPLATE = "https://localhost/api/Hubs/{}/Groups/{}/Projects/{}"
-
-PROXIES = {
-    "urls": {
-        "http": "http://user:password@127.0.0.1:5678",
-        "https": "https://user:password@127.0.0.1:5678",
-    }
-}
+from .ibm_test_case import IBMTestCase
 
 
-class TestCredentialsKwargs(IBMTestCase):
-    """Test for ``Credentials.connection_parameters()``."""
+class TestClientParameters(IBMTestCase):
+    """Test for ``ClientParameters``."""
 
     def test_no_proxy_params(self) -> None:
         """Test when no proxy parameters are passed."""
         no_params_expected_result = {"verify": True}
-        no_params_credentials = Credentials("dummy_token", "https://dummy_url")
+        no_params_credentials = self._get_client_params()
         result = no_params_credentials.connection_parameters()
         self.assertDictEqual(no_params_expected_result, result)
 
     def test_verify_param(self) -> None:
         """Test 'verify' arg is acknowledged."""
         false_verify_expected_result = {"verify": False}
-        false_verify_credentials = Credentials(
-            "dummy_token", "https://dummy_url", verify=False
-        )
+        false_verify_credentials = self._get_client_params(verify=False)
         result = false_verify_credentials.connection_parameters()
         self.assertDictEqual(false_verify_expected_result, result)
 
@@ -52,9 +43,7 @@ class TestCredentialsKwargs(IBMTestCase):
         """Test using only proxy urls (no NTLM credentials)."""
         urls = {"http": "localhost:8080", "https": "localhost:8080"}
         proxies_only_expected_result = {"verify": True, "proxies": urls}
-        proxies_only_credentials = Credentials(
-            "dummy_token", "https://dummy_url", proxies={"urls": urls}
-        )
+        proxies_only_credentials = self._get_client_params(proxies={"urls": urls})
         result = proxies_only_credentials.connection_parameters()
         self.assertDictEqual(proxies_only_expected_result, result)
 
@@ -71,8 +60,8 @@ class TestCredentialsKwargs(IBMTestCase):
             "proxies": urls,
             "auth": HttpNtlmAuth("domain\\username", "password"),
         }
-        proxies_with_ntlm_credentials = Credentials(
-            "dummy_token", "https://dummy_url", proxies=proxies_with_ntlm_dict
+        proxies_with_ntlm_credentials = self._get_client_params(
+            proxies=proxies_with_ntlm_dict
         )
         result = proxies_with_ntlm_credentials.connection_parameters()
 
@@ -89,8 +78,8 @@ class TestCredentialsKwargs(IBMTestCase):
         """Test input with malformed nesting of the proxies dictionary."""
         urls = {"http": "localhost:8080", "https": "localhost:8080"}
         malformed_nested_proxies_dict = {"proxies": urls}
-        malformed_nested_credentials = Credentials(
-            "dummy_token", "https://dummy_url", proxies=malformed_nested_proxies_dict
+        malformed_nested_credentials = self._get_client_params(
+            proxies=malformed_nested_proxies_dict
         )
 
         # Malformed proxy entries should be ignored.
@@ -106,10 +95,51 @@ class TestCredentialsKwargs(IBMTestCase):
             "username_ntlm": 1234,
             "password_ntlm": 5678,
         }
-        malformed_ntlm_credentials = Credentials(
-            "dummy_token", "https://dummy_url", proxies=malformed_ntlm_credentials_dict
+        malformed_ntlm_credentials = self._get_client_params(
+            proxies=malformed_ntlm_credentials_dict
         )
         # Should raise when trying to do username.split('\\', <int>)
         # in NTLM credentials due to int not facilitating 'split'.
         with self.assertRaises(AttributeError):
             _ = malformed_ntlm_credentials.connection_parameters()
+
+    def test_auth_handler_legacy(self):
+        """Test getting legacy auth handler."""
+        token = uuid.uuid4().hex
+        params = self._get_client_params(auth_type="legacy", token=token)
+        handler = params.get_auth_handler()
+        self.assertIsInstance(handler, LegacyAuth)
+        self.assertIn(token, handler.get_headers().values())
+
+    def test_auth_handler_cloud(self):
+        """Test getting cloud auth handler."""
+        token = uuid.uuid4().hex
+        instance = uuid.uuid4().hex
+        params = self._get_client_params(
+            auth_type="cloud", token=token, instance=instance
+        )
+        handler = params.get_auth_handler()
+        self.assertIsInstance(handler, CloudAuth)
+        self.assertIn(f"apikey {token}", handler.get_headers().values())
+        self.assertIn(instance, handler.get_headers().values())
+
+    def _get_client_params(
+        self,
+        auth_type="legacy",
+        token="dummy_token",
+        url="https://dummy_url",
+        instance=None,
+        proxies=None,
+        verify=None,
+    ):
+        """Return a custom ClientParameters."""
+        if verify is None:
+            verify = True
+        return ClientParameters(
+            auth_type=auth_type,
+            token=token,
+            url=url,
+            instance=instance,
+            proxies=proxies,
+            verify=verify,
+        )

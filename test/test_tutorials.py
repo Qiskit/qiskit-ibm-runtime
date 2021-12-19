@@ -12,7 +12,7 @@
 
 """Tests for the tutorials, copied from ``qiskit-iqx-tutorials``."""
 
-from unittest import skipIf
+from unittest import skipIf, skip
 import os
 import glob
 import warnings
@@ -24,7 +24,7 @@ from nbconvert.preprocessors import ExecutePreprocessor
 
 from qiskit_ibm_runtime.utils.utils import to_python_identifier
 
-from ..ibm_test_case import IBMTestCase
+from .ibm_test_case import IBMTestCase
 
 TUTORIAL_PATH = "docs/tutorials/**/*.ipynb"
 
@@ -51,6 +51,7 @@ class TutorialsTestCaseMeta(type):
         return type.__new__(mcs, name, bases, dict_)
 
 
+@skip("Skip until we have tutorials")
 @skipIf(not TEST_OPTIONS["run_slow"], "Skipping slow tests.")
 class TestTutorials(IBMTestCase, metaclass=TutorialsTestCaseMeta):
     """Tests for tutorials."""

@@ -17,19 +17,28 @@ from typing import Any, Dict, Optional
 import dateutil.parser
 
 from .ibm_test_case import IBMTestCase
-from .utils.decorators import run_legacy_and_cloud_real
+from .utils.decorators import requires_cloud_legacy_services, run_cloud_legacy_real
 
 
 class TestSerialization(IBMTestCase):
     """Test data serialization."""
 
-    @run_legacy_and_cloud_real
-    def test_backend_configuration(self, service, instance):
+    @classmethod
+    @requires_cloud_legacy_services
+    def setUpClass(cls, services):
+        """Initial class level setup."""
+        # pylint: disable=arguments-differ
+        super().setUpClass()
+        cls.services = services
+        cls.instances = {}
+        for serv in services:
+            cls.instances[serv.auth] = serv._account.instance
+
+    @run_cloud_legacy_real
+    def test_backend_configuration(self, service):
         """Test deserializing backend configuration."""
         backends = service.backends(
-            operational=True,
-            simulator=False,
-            instance=instance
+            operational=True, simulator=False, instance=self.instances[service.auth]
         )
 
         # Known keys that look like a serialized complex number.
@@ -52,13 +61,11 @@ class TestSerialization(IBMTestCase):
                     backend.configuration().to_dict(), good_keys, good_keys_prefixes
                 )
 
-    @run_legacy_and_cloud_real
-    def test_pulse_defaults(self, service, instance):
+    @run_cloud_legacy_real
+    def test_pulse_defaults(self, service):
         """Test deserializing backend configuration."""
         backends = service.backends(
-            operational=True,
-            open_pulse=True,
-            instance=instance
+            operational=True, open_pulse=True, instance=self.instances[service.auth]
         )
         if not backends:
             self.skipTest("Need pulse backends.")
@@ -70,13 +77,11 @@ class TestSerialization(IBMTestCase):
             with self.subTest(backend=backend):
                 self._verify_data(backend.defaults().to_dict(), good_keys)
 
-    @run_legacy_and_cloud_real
-    def test_backend_properties(self, service, instance):
+    @run_cloud_legacy_real
+    def test_backend_properties(self, service):
         """Test deserializing backend properties."""
         backends = service.backends(
-            operational=True,
-            simulator=False,
-            instance=instance
+            operational=True, simulator=False, instance=self.instances[service.auth]
         )
 
         # Known keys that look like a serialized object.

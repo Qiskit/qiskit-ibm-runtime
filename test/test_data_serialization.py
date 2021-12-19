@@ -64,7 +64,11 @@ from qiskit.quantum_info import SparsePauliOp, Pauli, PauliTable, Statevector
 from qiskit_ibm_runtime.utils import RuntimeEncoder, RuntimeDecoder
 
 from .ibm_test_case import IBMTestCase
-from .utils.serialization import SerializableClass, SerializableClassDecoder, get_complex_types
+from .utils.serialization import (
+    SerializableClass,
+    SerializableClassDecoder,
+    get_complex_types,
+)
 from .utils.program import run_program
 from .mock.fake_runtime_service import FakeRuntimeService
 from .mock.fake_runtime_client import CustomResultRuntimeJob
@@ -262,6 +266,8 @@ if __name__ == '__main__':
         sub_tests = [(SerializableClassDecoder, None), (None, SerializableClassDecoder)]
         for result_decoder, decoder in sub_tests:
             with self.subTest(decoder=decoder):
-                job = run_program(service=legacy_service, job_classes=job_cls, decoder=result_decoder)
+                job = run_program(
+                    service=legacy_service, job_classes=job_cls, decoder=result_decoder
+                )
                 result = job.result(decoder=decoder)
                 self.assertIsInstance(result["serializable_class"], SerializableClass)

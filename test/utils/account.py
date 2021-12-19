@@ -13,10 +13,16 @@
 """Context managers for using with IBM Provider unit tests."""
 
 import os
-from contextlib import ContextDecorator, contextmanager
+import json
+import uuid
+from contextlib import ContextDecorator
+from tempfile import NamedTemporaryFile
 from unittest.mock import patch
 
+from qiskit_ibm_runtime.accounts import management
+from qiskit_ibm_runtime.accounts.account import CLOUD_API_URL, LEGACY_API_URL
 from qiskit_ibm_runtime.credentials.environ import VARIABLES_MAP
+
 
 CREDENTIAL_ENV_VARS = VARIABLES_MAP.keys()
 
@@ -94,3 +100,67 @@ class no_file(ContextDecorator):
         if filename_ == self.filename:
             return False
         return self.isfile_original(filename_)
+
+
+class custom_qiskitrc(ContextDecorator):
+    """Context manager that uses a temporary qiskitrc."""
+
+    # pylint: disable=invalid-name
+
+    def __init__(self, contents=None, **kwargs):
+        # Create a temporary file with the contents.
+        contents = contents or get_qiskitrc_contents(**kwargs)
+        self.tmp_file = NamedTemporaryFile(mode="w+")
+        json.dump(contents, self.tmp_file)
+        self.tmp_file.flush()
+        self.default_qiskitrc_file_original = (
+            management._DEFAULT_ACCOUNG_CONFIG_JSON_FILE
+        )
+
+    def __enter__(self):
+        # Temporarily modify the default location of the qiskitrc file.
+        management._DEFAULT_ACCOUNG_CONFIG_JSON_FILE = self.tmp_file.name
+        return self
+
+    def __exit__(self, *exc):
+        # Delete the temporary file and restore the default location.
+        self.tmp_file.close()
+        management._DEFAULT_ACCOUNG_CONFIG_JSON_FILE = (
+            self.default_qiskitrc_file_original
+        )
+
+
+def get_qiskitrc_contents(
+    name=None,
+    auth="cloud",
+    token=None,
+    url=None,
+    instance=None,
+    verify=None,
+    proxies=None,
+):
+    """Generate qiskitrc content"""
+    if instance is None:
+        instance = "some_instance" if auth == "cloud" else "hub/group/project"
+    token = token or uuid.uuid4().hex
+    if name is None:
+        name = (
+            management._DEFAULT_ACCOUNT_NAME_CLOUD
+            if auth == "cloud"
+            else management._DEFAULT_ACCOUNT_NAME_LEGACY
+        )
+    if url is None:
+        url = CLOUD_API_URL if auth == "cloud" else LEGACY_API_URL
+    out = {
+        name: {
+            "auth": auth,
+            "url": url,
+            "token": token,
+            "instance": instance,
+        }
+    }
+    if verify is not None:
+        out["verify"] = verify
+    if proxies is not None:
+        out["proxies"] = proxies
+    return out

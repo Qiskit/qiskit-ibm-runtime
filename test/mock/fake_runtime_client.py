@@ -35,6 +35,7 @@ def cloud_only(func):
         if self._auth_type != "cloud":
             raise ValueError(f"Method {func} called by a legacy client!")
         return func(self, *args, **kwargs)
+
     return _wrapper
 
 
@@ -244,11 +245,7 @@ class TimedRuntimeJob(BaseFakeRuntimeJob):
 class BaseFakeRuntimeClient:
     """Base class for faking the runtime client."""
 
-    def __init__(
-        self,
-        *args,
-        **kwargs
-    ):
+    def __init__(self, **kwargs):
         """Initialize a fake runtime client."""
         test_options = kwargs.pop("test_options", {})
         self._programs = {}
@@ -256,7 +253,9 @@ class BaseFakeRuntimeClient:
         self._job_classes = test_options.get("job_classes", [])
         self._final_status = test_options.get("final_status")
         self._job_kwargs = test_options.get("job_kwargs", {})
-        self._backend_client = test_options.get("backend_client", BaseFakeAccountClient())
+        self._backend_client = test_options.get(
+            "backend_client", BaseFakeAccountClient()
+        )
         self._auth_type = test_options.get("auth_type", "legacy")
 
     def set_job_classes(self, classes):
@@ -317,9 +316,7 @@ class BaseFakeRuntimeClient:
         spec: Optional[Dict] = None,
     ) -> None:
         """Update a program."""
-        if program_id not in self._programs:
-            raise RequestsApiError("Program not found", status_code=404)
-        program = self._programs[program_id]
+        program = self._get_program(program_id)
         program._data = program_data or program._data
         program._name = name or program._name
         program._description = description or program._description
@@ -346,9 +343,10 @@ class BaseFakeRuntimeClient:
         backend_name: str,
         params: Dict,
         image: str,
-        hgp: Optional[str]
+        hgp: Optional[str],
     ):
         """Run the specified program."""
+        _ = self._get_program(program_id)
         job_id = uuid.uuid4().hex
         job_cls = (
             self._job_classes.pop(0)
@@ -369,15 +367,14 @@ class BaseFakeRuntimeClient:
             params=params,
             final_status=self._final_status,
             image=image,
-            **self._job_kwargs
+            **self._job_kwargs,
         )
         self._jobs[job_id] = job
         return {"id": job_id}
 
     def program_delete(self, program_id: str) -> None:
         """Delete the specified program."""
-        if program_id not in self._programs:
-            raise RequestsApiError("Program not found", status_code=404)
+        self._get_program(program_id)
         del self._programs[program_id]
 
     def job_get(self, job_id):
@@ -426,7 +423,8 @@ class BaseFakeRuntimeClient:
             public: If ``True``, make the program visible to all.
                 If ``False``, make the program visible to just your account.
         """
-        self._programs[program_id]._is_public = public
+        program = self._get_program(program_id)
+        program._is_public = public
 
     def job_results(self, job_id):
         """Get the results of a program job."""
@@ -444,6 +442,12 @@ class BaseFakeRuntimeClient:
         """Delete the job."""
         self._get_job(job_id)
         del self._jobs[job_id]
+
+    def _get_program(self, program_id):
+        """Get program."""
+        if program_id not in self._programs:
+            raise RequestsApiError("Program not found", status_code=404)
+        return self._programs[program_id]
 
     def _get_job(self, job_id):
         """Get job."""
@@ -472,11 +476,7 @@ class BaseFakeRuntimeClient:
         return self._backend_client.backend_status(backend_name)
 
     @cloud_only
-    def backend_properties(
-            self,
-            backend_name: str,
-            datetime=None
-    ):
+    def backend_properties(self, backend_name: str, datetime=None):
         """Return the properties of the IBM Cloud backend."""
         if datetime:
             raise NotImplementedError("'datetime' is not supported with cloud runtime.")

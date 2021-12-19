@@ -28,14 +28,13 @@ from .constants import API_TO_JOB_ERROR_MESSAGE, API_TO_JOB_STATUS
 from .exceptions import (
     RuntimeJobFailureError,
     RuntimeInvalidStateError,
-    QiskitRuntimeError,
+    IBMRuntimeError,
 )
 from .program.result_decoder import ResultDecoder
 from .api.clients import RuntimeClient, RuntimeWebsocketClient, WebsocketClientCloseCode
 from .exceptions import IBMError
 from .api.exceptions import RequestsApiError
 from .utils.converters import utc_to_local
-from .credentials import Credentials
 from .api.client_parameters import ClientParameters
 
 logger = logging.getLogger(__name__)
@@ -190,7 +189,7 @@ class RuntimeJob:
 
         Raises:
             RuntimeInvalidStateError: If the job is in a state that cannot be cancelled.
-            QiskitRuntimeError: If unable to cancel job.
+            IBMRuntimeError: If unable to cancel job.
         """
         try:
             self._api_client.job_cancel(self.job_id)
@@ -199,7 +198,7 @@ class RuntimeJob:
                 raise RuntimeInvalidStateError(
                     f"Job cannot be cancelled: {ex}"
                 ) from None
-            raise QiskitRuntimeError(f"Failed to cancel job: {ex}") from None
+            raise IBMRuntimeError(f"Failed to cancel job: {ex}") from None
         self.cancel_result_streaming()
         self._status = JobStatus.CANCELLED
 
@@ -295,7 +294,7 @@ class RuntimeJob:
             Job logs, including standard output and error.
 
         Raises:
-            QiskitRuntimeError: If a network error occurred.
+            IBMRuntimeError: If a network error occurred.
         """
         if self.status() not in JOB_FINAL_STATES:
             logger.warning("Job logs are only available after the job finishes.")
@@ -304,7 +303,7 @@ class RuntimeJob:
         except RequestsApiError as err:
             if err.status_code == 404:
                 return ""
-            raise QiskitRuntimeError(f"Failed to get job logs: {err}") from None
+            raise IBMRuntimeError(f"Failed to get job logs: {err}") from None
 
     def _set_status_and_error_message(self) -> None:
         """Fetch and set status and error message."""

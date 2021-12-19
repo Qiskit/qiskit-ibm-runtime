@@ -26,13 +26,13 @@ from qiskit_ibm_runtime.runtime_program import ParameterNamespace
 
 from .ibm_test_case import IBMTestCase
 from .utils.program import upload_program, DEFAULT_DATA, DEFAULT_METADATA
-from .utils.decorators import run_legacy_and_cloud
+from .utils.decorators import run_legacy_and_cloud_fake
 
 
 class TestPrograms(IBMTestCase):
     """Class for testing runtime modules."""
 
-    @run_legacy_and_cloud
+    @run_legacy_and_cloud_fake
     def test_list_programs(self, service):
         """Test listing programs."""
         program_id = upload_program(service)
@@ -40,7 +40,7 @@ class TestPrograms(IBMTestCase):
         all_ids = [prog.program_id for prog in programs]
         self.assertIn(program_id, all_ids)
 
-    @run_legacy_and_cloud
+    @run_legacy_and_cloud_fake
     def test_list_programs_with_limit_skip(self, service):
         """Test listing programs with limit and skip."""
         program_ids = []
@@ -55,14 +55,14 @@ class TestPrograms(IBMTestCase):
         all_ids = [prog.program_id for prog in programs]
         self.assertIn(program_ids[0], all_ids)
 
-    @run_legacy_and_cloud
+    @run_legacy_and_cloud_fake
     def test_list_program(self, service):
         """Test listing a single program."""
         program_id = upload_program(service)
         program = service.program(program_id)
         self.assertEqual(program_id, program.program_id)
 
-    @run_legacy_and_cloud
+    @run_legacy_and_cloud_fake
     def test_print_programs(self, service):
         """Test printing programs."""
         ids = []
@@ -84,7 +84,7 @@ class TestPrograms(IBMTestCase):
                 self.assertIn(prog.name, stdout_detailed)
                 self.assertIn(str(prog.max_execution_time), stdout_detailed)
 
-    @run_legacy_and_cloud
+    @run_legacy_and_cloud_fake
     def test_upload_program(self, service):
         """Test uploading a program."""
         max_execution_time = 3000
@@ -98,7 +98,7 @@ class TestPrograms(IBMTestCase):
         self.assertEqual(max_execution_time, program.max_execution_time)
         self.assertEqual(program.is_public, is_public)
 
-    @run_legacy_and_cloud
+    @run_legacy_and_cloud_fake
     def test_update_program(self, service):
         """Test updating program."""
         new_data = "def main() {foo=bar}"
@@ -143,7 +143,7 @@ class TestPrograms(IBMTestCase):
                     raw_program = service._api_client.program_get(program_id)
                     self.assertEqual(new_spec, raw_program["spec"])
 
-    @run_legacy_and_cloud
+    @run_legacy_and_cloud_fake
     def test_update_program_no_new_fields(self, service):
         """Test updating a program without any new data."""
         program_id = upload_program(service)
@@ -151,7 +151,13 @@ class TestPrograms(IBMTestCase):
             service.update_program(program_id=program_id)
             self.assertEqual(len(warn_cm), 1)
 
-    @run_legacy_and_cloud
+    @run_legacy_and_cloud_fake
+    def test_update_phantom_program(self, service):
+        """Test updating a phantom program."""
+        with self.assertRaises(RuntimeProgramNotFound):
+            service.update_program("phantom_program", name="foo")
+
+    @run_legacy_and_cloud_fake
     def test_delete_program(self, service):
         """Test deleting program."""
         program_id = upload_program(service)
@@ -159,7 +165,7 @@ class TestPrograms(IBMTestCase):
         with self.assertRaises(RuntimeProgramNotFound):
             service.program(program_id, refresh=True)
 
-    @run_legacy_and_cloud
+    @run_legacy_and_cloud_fake
     def test_double_delete_program(self, service):
         """Test deleting a deleted program."""
         program_id = upload_program(service)
@@ -167,7 +173,7 @@ class TestPrograms(IBMTestCase):
         with self.assertRaises(RuntimeProgramNotFound):
             service.delete_program(program_id)
 
-    @run_legacy_and_cloud
+    @run_legacy_and_cloud_fake
     def test_retrieve_program_data(self, service):
         """Test retrieving program data"""
         program_id = upload_program(service, name="qiskit-test")
@@ -176,7 +182,7 @@ class TestPrograms(IBMTestCase):
         self.assertEqual(program.data, DEFAULT_DATA)
         self._validate_program(program)
 
-    @run_legacy_and_cloud
+    @run_legacy_and_cloud_fake
     def test_program_params_validation(self, service):
         """Test program parameters validation process"""
         program_id = upload_program(service)
@@ -194,7 +200,7 @@ class TestPrograms(IBMTestCase):
             params.validate()
         params.param1 = "foo"
 
-    @run_legacy_and_cloud
+    @run_legacy_and_cloud_fake
     def test_program_metadata(self, service):
         """Test program metadata."""
         temp_fp = tempfile.NamedTemporaryFile(mode="w+", delete=False)
@@ -213,6 +219,20 @@ class TestPrograms(IBMTestCase):
                     self._validate_program(program)
         finally:
             os.remove(temp_fp.name)
+
+    @run_legacy_and_cloud_fake
+    def test_set_program_visibility(self, service):
+        """Test setting program visibility."""
+        program_id = upload_program(service, is_public=False)
+        service.set_program_visibility(program_id, True)
+        program = service.program(program_id)
+        self.assertTrue(program.is_public)
+
+    @run_legacy_and_cloud_fake
+    def test_set_program_visibility_phantom_program(self, service):
+        """Test setting program visibility for a phantom program."""
+        with self.assertRaises(RuntimeProgramNotFound):
+            service.set_program_visibility("foo", True)
 
     def _validate_program(self, program):
         """Validate a program."""

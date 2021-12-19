@@ -30,10 +30,12 @@ from qiskit.providers.models import QasmBackendConfiguration, PulseBackendConfig
 
 from .api.clients import AccountClient, RuntimeClient
 from .api.clients.backend import BaseBackendClient
-from .credentials import Credentials
 from .exceptions import IBMBackendApiProtocolError
 from .utils.converters import local_to_utc
-from .utils.backend_decoder import defaults_from_server_data, properties_from_server_data
+from .utils.backend_decoder import (
+    defaults_from_server_data,
+    properties_from_server_data,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -138,11 +140,15 @@ class IBMBackend(Backend):
             if not isinstance(datetime, python_datetime):
                 raise TypeError("'{}' is not of type 'datetime'.")
             if isinstance(self._api_client, RuntimeClient):
-                raise NotImplementedError("'datetime' is not supported by cloud runtime.")
+                raise NotImplementedError(
+                    "'datetime' is not supported by cloud runtime."
+                )
             datetime = local_to_utc(datetime)
 
         if datetime or refresh or self._properties is None:
-            api_properties = self._api_client.backend_properties(self.name(), datetime=datetime)
+            api_properties = self._api_client.backend_properties(
+                self.name(), datetime=datetime
+            )
             if not api_properties:
                 return None
             backend_properties = properties_from_server_data(api_properties)
@@ -249,17 +255,15 @@ class IBMRetiredBackend(IBMBackend):
     def __init__(
         self,
         configuration: Union[QasmBackendConfiguration, PulseBackendConfiguration],
-        credentials: Credentials,
         api_client: Optional[AccountClient] = None,
     ) -> None:
         """IBMRetiredBackend constructor.
 
         Args:
             configuration: Backend configuration.
-            credentials: IBM Quantum credentials.
             api_client: IBM Quantum client used to communicate with the server.
         """
-        super().__init__(configuration, credentials, api_client)
+        super().__init__(configuration, api_client)
         self._status = BackendStatus(
             backend_name=self.name(),
             backend_version=self.configuration().backend_version,
@@ -291,7 +295,6 @@ class IBMRetiredBackend(IBMBackend):
     def from_name(
         cls,
         backend_name: str,
-        credentials: Credentials,
         api: Optional[AccountClient] = None,
     ) -> "IBMRetiredBackend":
         """Return a retired backend from its name."""
@@ -309,4 +312,4 @@ class IBMRetiredBackend(IBMBackend):
             gates=[GateConfig(name="TODO", parameters=[], qasm_def="TODO")],
             coupling_map=[[0, 1]],
         )
-        return cls(configuration, credentials, api)
+        return cls(configuration, api)

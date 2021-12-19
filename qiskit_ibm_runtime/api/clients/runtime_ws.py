@@ -41,7 +41,7 @@ class RuntimeWebsocketClient(BaseWebsocketClient):
             message_queue: Queue used to hold received messages.
         """
         super().__init__(websocket_url, client_params, job_id, message_queue)
-        self._header = {"X-Access-Token": client_params.token}
+        self._header = client_params.get_auth_handler().get_headers()
 
     def _handle_message(self, message: str) -> None:
         """Handle received message.
