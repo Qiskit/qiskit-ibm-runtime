@@ -170,13 +170,18 @@ def requires_cloud_legacy_devices(func):
 
     @wraps(func)
     def _wrapper(obj, *args, **kwargs):
-        legacy = _get_service("legacy")
-        cloud = _get_service("cloud")
-        legacy_backend = legacy.least_busy(simulator=False, min_num_qubits=5)
-        # TODO use real device when cloud supports it
-        cloud_backend = cloud.least_busy(min_num_qubits=5)
 
-        kwargs.update({"devices": [cloud_backend, legacy_backend]})
+        devices = []
+        token, url, instance = _get_token_url_instance("cloud")
+        service = IBMRuntimeService(auth="cloud", token=token, url=url, instance=instance)
+        # TODO use real device when cloud supports it
+        devices.append(service.least_busy(min_num_qubits=5))
+
+        token, url, instance = _get_token_url_instance("legacy")
+        service = IBMRuntimeService(auth="legacy", token=token, url=url, instance=instance)
+        devices.append(service.least_busy(simulator=False, min_num_qubits=5, instance=instance))
+
+        kwargs.update({"devices": devices})
         return func(obj, *args, **kwargs)
 
     return _wrapper
