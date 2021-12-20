@@ -173,13 +173,19 @@ def requires_cloud_legacy_devices(func):
 
         devices = []
         token, url, instance = _get_token_url_instance("cloud")
-        service = IBMRuntimeService(auth="cloud", token=token, url=url, instance=instance)
+        service = IBMRuntimeService(
+            auth="cloud", token=token, url=url, instance=instance
+        )
         # TODO use real device when cloud supports it
         devices.append(service.least_busy(min_num_qubits=5))
 
         token, url, instance = _get_token_url_instance("legacy")
-        service = IBMRuntimeService(auth="legacy", token=token, url=url, instance=instance)
-        devices.append(service.least_busy(simulator=False, min_num_qubits=5, instance=instance))
+        service = IBMRuntimeService(
+            auth="legacy", token=token, url=url, instance=instance
+        )
+        devices.append(
+            service.least_busy(simulator=False, min_num_qubits=5, instance=instance)
+        )
 
         kwargs.update({"devices": devices})
         return func(obj, *args, **kwargs)
