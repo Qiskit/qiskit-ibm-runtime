@@ -13,7 +13,7 @@
 """Account management related classes and functions."""
 
 import os
-from typing import Optional
+from typing import Optional, Dict
 
 from .account import Account, AccountType
 from .storage import save_config, read_config, delete_config
@@ -63,16 +63,16 @@ class AccountManager:
         default: Optional[bool] = None,
         auth: Optional[str] = None,
         name: Optional[str] = None,
-    ) -> dict[str, Account]:
+    ) -> Dict[str, Account]:
         """List all accounts saved on disk."""
 
-        def _matching_name(account_name: str):
+        def _matching_name(account_name: str) -> bool:
             return name is None or name == account_name
 
-        def _matching_auth(account: Account):
+        def _matching_auth(account: Account) -> bool:
             return auth is None or account.auth == auth
 
-        def _matching_default(account_name: str):
+        def _matching_default(account_name: str) -> bool:
             default_accounts = [
                 _DEFAULT_ACCOUNT_NAME,
                 _DEFAULT_ACCOUNT_NAME_LEGACY,
@@ -180,7 +180,7 @@ class AccountManager:
     @classmethod
     def _get_default_account_name(cls, auth: AccountType) -> str:
         return (
-            _DEFAULT_ACCOUNT_NAME_CLOUD
-            if auth == "cloud"
-            else _DEFAULT_ACCOUNT_NAME_LEGACY
+            _DEFAULT_ACCOUNT_NAME_LEGACY
+            if auth == "legacy"
+            else _DEFAULT_ACCOUNT_NAME_CLOUD
         )

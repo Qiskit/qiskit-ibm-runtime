@@ -522,7 +522,8 @@ class IBMRuntimeService:
 
         Args:
             name: Name of the saved account to delete.
-            auth: Authentication type of the default account to delete. Ignored if account name is provided.
+            auth: Authentication type of the default account to delete.
+                Ignored if account name is provided.
 
         Returns:
             True if the account was deleted.

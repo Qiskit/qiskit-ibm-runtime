@@ -47,8 +47,11 @@ _TEST_CLOUD_ACCOUNT = Account(
 
 
 class TestAccountManager(IBMTestCase):
+    """Tests for AccountManager class."""
+
     @temporary_account_config_file(contents={})
     def test_save_get(self):
+        """Test save and get."""
 
         # Each tuple contains the
         # - account to save
@@ -92,6 +95,8 @@ class TestAccountManager(IBMTestCase):
         )
     )
     def test_list(self):
+        """Test list."""
+
         with temporary_account_config_file(
             contents={
                 "key1": _TEST_CLOUD_ACCOUNT.to_saved_format(),
@@ -153,6 +158,8 @@ class TestAccountManager(IBMTestCase):
         }
     )
     def test_delete(self):
+        """Test delete."""
+
         with self.subTest("delete named account"):
             self.assertTrue(AccountManager.delete(name="key1"))
             self.assertFalse(AccountManager.delete(name="key1"))
@@ -163,7 +170,7 @@ class TestAccountManager(IBMTestCase):
         with self.subTest("delete default cloud account"):
             self.assertTrue(AccountManager.delete())
 
-        self.assertEquals(len(AccountManager.list()), 0)
+        self.assertTrue(len(AccountManager.list()) == 0)
 
 
 # NamedTemporaryFiles not support in Windows
