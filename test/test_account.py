@@ -45,7 +45,8 @@ _TEST_CLOUD_ACCOUNT = Account(
     instance="crn:v1:bluemix:public:quantum-computing:us-east:a/...::",
 )
 
-
+# NamedTemporaryFiles not supported in Windows
+@skipIf(os.name == "nt", "Test not supported in Windows")
 class TestAccountManager(IBMTestCase):
     """Tests for AccountManager class."""
 
@@ -173,7 +174,7 @@ class TestAccountManager(IBMTestCase):
         self.assertTrue(len(AccountManager.list()) == 0)
 
 
-# NamedTemporaryFiles not support in Windows
+# NamedTemporaryFiles not supported in Windows
 @skipIf(os.name == "nt", "Test not supported in Windows")
 class TestEnableAccount(IBMTestCase):
     """Tests for IBMRuntimeService enable account."""
