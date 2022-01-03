@@ -68,7 +68,7 @@ class Account:
         self,
         auth: AccountType,
         token: str,
-        url: Optional[str],
+        url: Optional[str] = None,
         instance: Optional[str] = None,
         # TODO: add validation for proxies input format
         proxies: Optional[dict] = None,

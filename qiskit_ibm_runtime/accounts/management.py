@@ -60,15 +60,50 @@ class AccountManager:
 
     @staticmethod
     def list(
-        default: Optional[bool] = None, auth: Optional[str] = None
+        default: Optional[bool] = None,
+        auth: Optional[str] = None,
+        name: Optional[str] = None,
     ) -> dict[str, Account]:
         """List all accounts saved on disk."""
-        return dict(
-            map(
-                lambda kv: (kv[0], Account.from_saved_format(kv[1])),
-                read_config(filename=_DEFAULT_ACCOUNG_CONFIG_JSON_FILE).items(),
-            ),
+
+        def _matching_name(account_name: str):
+            return name is None or name == account_name
+
+        def _matching_auth(account: Account):
+            return auth is None or account.auth == auth
+
+        def _matching_default(account_name: str):
+            default_accounts = [
+                _DEFAULT_ACCOUNT_NAME,
+                _DEFAULT_ACCOUNT_NAME_LEGACY,
+                _DEFAULT_ACCOUNT_NAME_CLOUD,
+            ]
+            if default is None:
+                return True
+            elif default is False:
+                return account_name not in default_accounts
+            else:
+                return account_name in default_accounts
+
+        # load all accounts
+        all_accounts = map(
+            lambda kv: (kv[0], Account.from_saved_format(kv[1])),
+            read_config(filename=_DEFAULT_ACCOUNG_CONFIG_JSON_FILE).items(),
         )
+
+        # filter based on input parameters
+        filtered_accounts = dict(
+            list(
+                filter(
+                    lambda kv: _matching_auth(kv[1])
+                    and _matching_default(kv[0])
+                    and _matching_name(kv[0]),
+                    all_accounts,
+                )
+            )
+        )
+
+        return filtered_accounts
 
     @classmethod
     def get(
@@ -122,9 +157,10 @@ class AccountManager:
     def delete(
         cls,
         name: Optional[str] = None,
-        auth: Optional[str] = _DEFAULT_ACCOUNT_TYPE,
+        auth: Optional[str] = None,
     ) -> bool:
         """Delete account from disk."""
+
         config_key = name or cls._get_default_account_name(auth)
         return delete_config(
             name=config_key, filename=_DEFAULT_ACCOUNG_CONFIG_JSON_FILE

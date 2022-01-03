@@ -97,18 +97,53 @@ class TestAccountManager(IBMTestCase):
                 "key1": _TEST_CLOUD_ACCOUNT.to_saved_format(),
                 "key2": _TEST_LEGACY_ACCOUNT.to_saved_format(),
             }
-        ), self.subTest("non-empty list of accounts and filtering"):
+        ), self.subTest("non-empty list of accounts"):
             accounts = AccountManager.list()
 
             self.assertEqual(len(accounts), 2)
             self.assertEqual(accounts["key1"], _TEST_CLOUD_ACCOUNT)
             self.assertTrue(accounts["key2"], _TEST_LEGACY_ACCOUNT)
-            # TODO: add test coverage for filtering by default/auth type
 
         with temporary_account_config_file(contents={}), self.subTest(
             "empty list of accounts"
         ):
             self.assertEqual(len(AccountManager.list()), 0)
+
+        with temporary_account_config_file(
+            contents={
+                "key1": _TEST_CLOUD_ACCOUNT.to_saved_format(),
+                "key2": _TEST_LEGACY_ACCOUNT.to_saved_format(),
+                management._DEFAULT_ACCOUNT_NAME_CLOUD: Account(
+                    "cloud", "token-legacy"
+                ).to_saved_format(),
+                management._DEFAULT_ACCOUNT_NAME_LEGACY: Account(
+                    "legacy", "token-cloud"
+                ).to_saved_format(),
+            }
+        ), self.subTest("filtered list of accounts"):
+            accounts = list(AccountManager.list(auth="cloud").keys())
+            self.assertEqual(len(accounts), 2)
+            self.assertListEqual(
+                accounts, ["key1", management._DEFAULT_ACCOUNT_NAME_CLOUD]
+            )
+
+            accounts = list(AccountManager.list(auth="legacy").keys())
+            self.assertEqual(len(accounts), 2)
+            self.assertListEqual(
+                accounts, ["key2", management._DEFAULT_ACCOUNT_NAME_LEGACY]
+            )
+
+            accounts = list(AccountManager.list(auth="cloud", default=True).keys())
+            self.assertEqual(len(accounts), 1)
+            self.assertListEqual(accounts, [management._DEFAULT_ACCOUNT_NAME_CLOUD])
+
+            accounts = list(AccountManager.list(auth="cloud", default=False).keys())
+            self.assertEqual(len(accounts), 1)
+            self.assertListEqual(accounts, ["key1"])
+
+            accounts = list(AccountManager.list(name="key1").keys())
+            self.assertEqual(len(accounts), 1)
+            self.assertListEqual(accounts, ["key1"])
 
     @temporary_account_config_file(
         contents={

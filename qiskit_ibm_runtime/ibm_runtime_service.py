@@ -517,18 +517,19 @@ class IBMRuntimeService:
         return self._account.to_saved_format()
 
     @staticmethod
-    def delete_account(name: Optional[str]) -> bool:
+    def delete_account(name: Optional[str] = None, auth: Optional[str] = None) -> bool:
         """Delete a saved account from disk.
 
         Args:
-            name: Custom name of the saved account. Defaults to "default".
+            name: Name of the saved account to delete.
+            auth: Authentication type of the default account to delete. Ignored if account name is provided.
 
         Returns:
-            True if the account with the given name was deleted.
-            False if no account was found for the given name.
+            True if the account was deleted.
+            False if no account was found.
         """
 
-        return AccountManager.delete(name=name)
+        return AccountManager.delete(name=name, auth=auth)
 
     @staticmethod
     def save_account(
@@ -565,8 +566,17 @@ class IBMRuntimeService:
         )
 
     @staticmethod
-    def saved_accounts() -> dict:
+    def saved_accounts(
+        default: Optional[bool] = None,
+        auth: Optional[str] = None,
+        name: Optional[str] = None,
+    ) -> dict:
         """List the accounts saved on disk.
+
+        Args:
+            default: If set to True, only default accounts are returned.
+            auth: If set, only accounts with the given authentication type are returned.
+            name: If set, only accounts with the given name are returned.
 
         Returns:
             A dictionary with information about the accounts saved on disk.
@@ -575,7 +585,13 @@ class IBMRuntimeService:
             IBMProviderCredentialsInvalidUrl: If invalid IBM Quantum
                 credentials are found on disk.
         """
-        return AccountManager.list()
+
+        return dict(
+            map(
+                lambda kv: (kv[0], Account.to_saved_format(kv[1])),
+                AccountManager.list(default=default, auth=auth, name=name).items(),
+            ),
+        )
 
     def get_backend(
         self,
