@@ -13,7 +13,7 @@
 """Account management related classes and functions."""
 
 import os
-from typing import Optional, Union
+from typing import Optional
 
 from .account import Account, AccountType
 from .storage import save_config, read_config, delete_config
@@ -31,8 +31,9 @@ _ACCOUNT_TYPES = [_DEFAULT_ACCOUNT_TYPE, "legacy"]
 class AccountManager:
     """Class that bundles account management related functionality."""
 
-    @staticmethod
+    @classmethod
     def save(
+        cls,
         token: Optional[str] = None,
         url: Optional[str] = None,
         instance: Optional[str] = None,
@@ -43,9 +44,10 @@ class AccountManager:
     ) -> None:
         """Save account on disk."""
 
+        config_key = name or cls._get_default_account_name(auth)
         return save_config(
             filename=_DEFAULT_ACCOUNG_CONFIG_JSON_FILE,
-            name=name,
+            name=config_key,
             config=Account(
                 token=token,
                 url=url,
@@ -57,10 +59,16 @@ class AccountManager:
         )
 
     @staticmethod
-    def list() -> Union[dict, None]:
+    def list(
+        default: Optional[bool] = None, auth: Optional[str] = None
+    ) -> dict[str, Account]:
         """List all accounts saved on disk."""
-
-        return read_config(filename=_DEFAULT_ACCOUNG_CONFIG_JSON_FILE)
+        return dict(
+            map(
+                lambda kv: (kv[0], Account.from_saved_format(kv[1])),
+                read_config(filename=_DEFAULT_ACCOUNG_CONFIG_JSON_FILE).items(),
+            ),
+        )
 
     @classmethod
     def get(
@@ -110,10 +118,17 @@ class AccountManager:
 
         return None
 
-    @staticmethod
-    def delete(name: Optional[str] = _DEFAULT_ACCOUNT_NAME) -> bool:
+    @classmethod
+    def delete(
+        cls,
+        name: Optional[str] = None,
+        auth: Optional[str] = _DEFAULT_ACCOUNT_TYPE,
+    ) -> bool:
         """Delete account from disk."""
-        return delete_config(name=name, filename=_DEFAULT_ACCOUNG_CONFIG_JSON_FILE)
+        config_key = name or cls._get_default_account_name(auth)
+        return delete_config(
+            name=config_key, filename=_DEFAULT_ACCOUNG_CONFIG_JSON_FILE
+        )
 
     @classmethod
     def _from_env_variables(cls, auth: Optional[AccountType]) -> Optional[Account]:

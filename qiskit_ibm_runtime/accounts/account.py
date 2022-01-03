@@ -120,3 +120,17 @@ class Account:
             return CloudAuth(api_key=self.token, crn=self.instance)
 
         return LegacyAuth(access_token=self.token)
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Account):
+            return False
+        return all(
+            [
+                self.auth == other.auth,
+                self.token == other.token,
+                self.url == other.url,
+                self.instance == other.instance,
+                self.proxies == other.proxies,
+                self.verify == other.verify,
+            ]
+        )
