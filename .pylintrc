@@ -68,6 +68,7 @@ confidence=
 # --disable=W".
 disable=arguments-renamed,              # TODO: investigate / re-enable
         bad-mcs-classmethod-argument,   # TODO: investigate / re-enable
+        bad-continuation, bad-whitespace # differences of opinion with black
         consider-iterating-dictionary,  # TODO: investigate / re-enable
         consider-using-dict-items,      # TODO: investigate / re-enable
         consider-using-f-string,        # TODO: investigate / re-enable

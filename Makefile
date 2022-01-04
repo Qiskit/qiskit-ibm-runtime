@@ -27,13 +27,10 @@ test:
 	python -m unittest -v
 
 test1:
-	python -m unittest -v test/ibm/test_ibm_backend.py test/ibm/test_account_client.py test/ibm/test_tutorials.py test/ibm/test_basic_server_paths.py
+	python -m unittest -v test/test_integration_backend.py test/test_integration_program.py
 
 test2:
-	python -m unittest -v test/ibm/test_proxies.py test/ibm/test_ibm_logger.py test/ibm/test_filter_backends.py test/ibm/test_registration.py
-
-test3:
-	python -m unittest -v test/ibm/test_serialization.py test/ibm/test_jupyter.py test/ibm/test_ibm_provider.py
+	python -m unittest -v test/test_integration_job.py
 
 runtime_integration:
 	python -m unittest -v test/ibm/runtime/test_runtime_integration.py

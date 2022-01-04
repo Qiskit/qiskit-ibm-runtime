@@ -16,8 +16,8 @@ import logging
 from typing import Optional
 from queue import Queue
 
-from ...credentials import Credentials
 from .base import BaseWebsocketClient
+from ..client_parameters import ClientParameters
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ class RuntimeWebsocketClient(BaseWebsocketClient):
     def __init__(
         self,
         websocket_url: str,
-        credentials: Credentials,
+        client_params: ClientParameters,
         job_id: str,
         message_queue: Optional[Queue] = None,
     ) -> None:
@@ -36,12 +36,12 @@ class RuntimeWebsocketClient(BaseWebsocketClient):
 
         Args:
             websocket_url: URL for websocket communication with IBM Quantum.
-            credentials: Account credentials.
+            client_params: Parameters used for server connection.
             job_id: Job ID.
             message_queue: Queue used to hold received messages.
         """
-        super().__init__(websocket_url, credentials, job_id, message_queue)
-        self._header = {"X-Access-Token": credentials.access_token}
+        super().__init__(websocket_url, client_params, job_id, message_queue)
+        self._header = client_params.get_auth_handler().get_headers()
 
     def _handle_message(self, message: str) -> None:
         """Handle received message.

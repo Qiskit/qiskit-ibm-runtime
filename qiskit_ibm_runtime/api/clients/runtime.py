@@ -14,33 +14,36 @@
 
 import logging
 from typing import Any, Dict, List, Optional
+from datetime import datetime as python_datetime
 
-from qiskit_ibm_runtime.credentials import Credentials
 from qiskit_ibm_runtime.api.session import RetrySession
 
+from .backend import BaseBackendClient
 from ..rest.runtime import Runtime
+from ..client_parameters import ClientParameters
+from ...utils.hgp import from_instance_format
 
 logger = logging.getLogger(__name__)
 
 
-class RuntimeClient:
+class RuntimeClient(BaseBackendClient):
     """Client for accessing runtime service."""
 
     def __init__(
         self,
-        credentials: Credentials,
+        params: ClientParameters,
     ) -> None:
-        """RandomClient constructor.
+        """RuntimeClient constructor.
 
         Args:
-            credentials: Account credentials.
+            params: Connection parameters.
         """
         self._session = RetrySession(
-            base_url=credentials.runtime_url or credentials.base_url,
-            auth=credentials.get_auth_handler(),
-            **credentials.connection_parameters()
+            base_url=params.url,
+            auth=params.get_auth_handler(),
+            **params.connection_parameters()
         )
-        self.api = Runtime(self._session)
+        self._api = Runtime(self._session)
 
     def list_programs(
         self, search: str = "", limit: int = None, skip: int = None
@@ -55,7 +58,7 @@ class RuntimeClient:
         Returns:
             A list of runtime programs.
         """
-        return self.api.list_programs(search, limit, skip)
+        return self._api.list_programs(search, limit, skip)
 
     def program_create(
         self,
@@ -79,7 +82,7 @@ class RuntimeClient:
         Returns:
             Server response.
         """
-        return self.api.create_program(
+        return self._api.create_program(
             program_data=program_data,
             name=name,
             description=description,
@@ -97,7 +100,7 @@ class RuntimeClient:
         Returns:
             Program information.
         """
-        return self.api.program(program_id).get()
+        return self._api.program(program_id).get()
 
     def set_program_visibility(self, program_id: str, public: bool) -> None:
         """Sets a program's visibility.
@@ -109,38 +112,40 @@ class RuntimeClient:
 
         """
         if public:
-            self.api.program(program_id).make_public()
+            self._api.program(program_id).make_public()
         else:
-            self.api.program(program_id).make_private()
+            self._api.program(program_id).make_private()
 
     def program_run(
         self,
         program_id: str,
-        credentials: Credentials,
         backend_name: str,
         params: Dict,
         image: str,
+        hgp: Optional[str],
     ) -> Dict:
         """Run the specified program.
 
         Args:
             program_id: Program ID.
-            credentials: Credentials used to run the program.
             backend_name: Name of the backend to run the program.
             params: Parameters to use.
             image: The runtime image to use.
+            hgp: Hub/group/project to use.
 
         Returns:
             JSON response.
         """
-        return self.api.program_run(
+        hgp_dict = {}
+        if hgp:
+            hub, group, project = from_instance_format(hgp)
+            hgp_dict = {"hub": hub, "group": group, "project": project}
+        return self._api.program_run(
             program_id=program_id,
-            hub=credentials.hub,
-            group=credentials.group,
-            project=credentials.project,
             backend_name=backend_name,
             params=params,
             image=image,
+            **hgp_dict
         )
 
     def program_delete(self, program_id: str) -> None:
@@ -149,7 +154,7 @@ class RuntimeClient:
         Args:
             program_id: Program ID.
         """
-        self.api.program(program_id).delete()
+        self._api.program(program_id).delete()
 
     def program_update(
         self,
@@ -171,10 +176,10 @@ class RuntimeClient:
             spec: Backend requirements, parameters, interim results, return values, etc.
         """
         if program_data:
-            self.api.program(program_id).update_data(program_data)
+            self._api.program(program_id).update_data(program_data)
 
         if any([name, description, max_execution_time, spec]):
-            self.api.program(program_id).update_metadata(
+            self._api.program(program_id).update_metadata(
                 name=name,
                 description=description,
                 max_execution_time=max_execution_time,
@@ -190,7 +195,7 @@ class RuntimeClient:
         Returns:
             JSON response.
         """
-        response = self.api.program_job(job_id).get()
+        response = self._api.program_job(job_id).get()
         logger.debug("Runtime job get response: %s", response)
         return response
 
@@ -219,7 +224,7 @@ class RuntimeClient:
         Returns:
             JSON response.
         """
-        return self.api.jobs_get(
+        return self._api.jobs_get(
             limit=limit,
             skip=skip,
             pending=pending,
@@ -238,7 +243,7 @@ class RuntimeClient:
         Returns:
             Job result.
         """
-        return self.api.program_job(job_id).results()
+        return self._api.program_job(job_id).results()
 
     def job_interim_results(self, job_id: str) -> str:
         """Get the interim results of a program job.
@@ -249,7 +254,7 @@ class RuntimeClient:
         Returns:
             Job interim results.
         """
-        return self.api.program_job(job_id).interim_results()
+        return self._api.program_job(job_id).interim_results()
 
     def job_cancel(self, job_id: str) -> None:
         """Cancel a job.
@@ -257,7 +262,7 @@ class RuntimeClient:
         Args:
             job_id: Runtime job ID.
         """
-        self.api.program_job(job_id).cancel()
+        self._api.program_job(job_id).cancel()
 
     def job_delete(self, job_id: str) -> None:
         """Delete a job.
@@ -265,7 +270,7 @@ class RuntimeClient:
         Args:
             job_id: Runtime job ID.
         """
-        self.api.program_job(job_id).delete()
+        self._api.program_job(job_id).delete()
 
     def job_logs(self, job_id: str) -> str:
         """Get the job logs.
@@ -276,11 +281,11 @@ class RuntimeClient:
         Returns:
             Job logs.
         """
-        return self.api.program_job(job_id).logs()
+        return self._api.program_job(job_id).logs()
 
     def logout(self) -> None:
         """Clear authorization cache."""
-        self.api.logout()
+        self._api.logout()
 
     # IBM Cloud only functions
 
@@ -290,7 +295,7 @@ class RuntimeClient:
         Returns:
             IBM Cloud backends available for this service instance.
         """
-        return self.api.backends()["devices"]
+        return self._api.backends()["devices"]
 
     def backend_configuration(self, backend_name: str) -> Dict[str, Any]:
         """Return the configuration of the IBM Cloud backend.
@@ -301,7 +306,7 @@ class RuntimeClient:
         Returns:
             Backend configuration.
         """
-        return self.api.backend(backend_name).configuration()
+        return self._api.backend(backend_name).configuration()
 
     def backend_status(self, backend_name: str) -> Dict[str, Any]:
         """Return the status of the IBM Cloud backend.
@@ -312,18 +317,26 @@ class RuntimeClient:
         Returns:
             Backend status.
         """
-        return self.api.backend(backend_name).status()
+        return self._api.backend(backend_name).status()
 
-    def backend_properties(self, backend_name: str) -> Dict[str, Any]:
+    def backend_properties(
+        self, backend_name: str, datetime: Optional[python_datetime] = None
+    ) -> Dict[str, Any]:
         """Return the properties of the IBM Cloud backend.
 
         Args:
             backend_name: The name of the IBM Cloud backend.
+            datetime: Date and time for additional filtering of backend properties.
 
         Returns:
             Backend properties.
+
+        Raises:
+            NotImplementedError: If `datetime` is specified.
         """
-        return self.api.backend(backend_name).properties()
+        if datetime:
+            raise NotImplementedError("'datetime' is not supported with cloud runtime.")
+        return self._api.backend(backend_name).properties()
 
     def backend_pulse_defaults(self, backend_name: str) -> Dict:
         """Return the pulse defaults of the IBM Cloud backend.
@@ -334,4 +347,4 @@ class RuntimeClient:
         Returns:
             Backend pulse defaults.
         """
-        return self.api.backend(backend_name).pulse_defaults()
+        return self._api.backend(backend_name).pulse_defaults()
