@@ -21,7 +21,6 @@ from requests_ntlm import HttpNtlmAuth
 from .hub_group_project_id import HubGroupProjectID
 from ..accounts import AccountType
 from ..api.auth import LegacyAuth, CloudAuth
-from ..utils import crn_to_api_host
 
 REGEX_IBM_HUBS = (
     "(?P<prefix>http[s]://.+/api)"
@@ -56,7 +55,6 @@ class Credentials:
         verify: bool = True,
         services: Optional[Dict] = None,
         access_token: Optional[str] = None,
-        preferences: Optional[Dict] = None,
         default_provider: Optional[HubGroupProjectID] = None,
     ) -> None:
         """Credentials constructor.
@@ -73,8 +71,6 @@ class Credentials:
             verify: If ``False``, ignores SSL certificates errors.
             services: Additional services for this account.
             access_token: IBM Quantum access token.
-            preferences: Application preferences. Used for dictating preferred
-                action in services like the `ExperimentService`.
             default_provider: Default provider to use.
         """
         self.auth = auth
@@ -87,18 +83,15 @@ class Credentials:
             self.hub,
             self.group,
             self.project,
-        ) = _unify_ibm_quantum_url(auth, url, instance, hub, group, project)
+        ) = _unify_ibm_quantum_url(auth, url, hub, group, project)
         self.auth_url = auth_url or url
         self.websockets_url = websockets_url
         self.proxies = proxies or {}
         self.verify = verify
-        self.preferences = preferences or {}
         self.default_provider = default_provider
 
         # Initialize additional service URLs.
         services = services or {}
-        self.extractor_url = services.get("extractorsService", None)
-        self.experiment_url = services.get("resultsDB", None)
         self.runtime_url = services.get("runtime", None)
 
     def get_auth_handler(self) -> AuthBase:
@@ -153,7 +146,6 @@ class Credentials:
 def _unify_ibm_quantum_url(
     auth: AccountType,
     url: Optional[str] = None,
-    instance: Optional[str] = None,
     hub: Optional[str] = None,
     group: Optional[str] = None,
     project: Optional[str] = None,
@@ -183,7 +175,7 @@ def _unify_ibm_quantum_url(
     base_url = url
 
     if auth == "cloud":
-        base_url = crn_to_api_host(instance)
+        base_url = url
     elif regex_match:
         base_url, hub, group, project = regex_match.groups()
     else:

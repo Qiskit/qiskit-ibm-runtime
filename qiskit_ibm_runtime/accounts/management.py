@@ -22,6 +22,10 @@ _DEFAULT_ACCOUNG_CONFIG_JSON_FILE = os.path.join(
     os.path.expanduser("~"), ".qiskit", "qiskit-ibm.json"
 )
 _DEFAULT_ACCOUNT_NAME = "default"
+_DEFAULT_ACCOUNT_NAME_LEGACY = "default-legacy"
+_DEFAULT_ACCOUNT_NAME_CLOUD = "default-cloud"
+_DEFAULT_ACCOUNT_TYPE: AccountType = "cloud"
+_ACCOUNT_TYPES = [_DEFAULT_ACCOUNT_TYPE, "legacy"]
 
 
 class AccountManager:
@@ -58,14 +62,74 @@ class AccountManager:
 
         return read_config(filename=_DEFAULT_ACCOUNG_CONFIG_JSON_FILE)
 
-    @staticmethod
-    def get(name: Optional[str] = _DEFAULT_ACCOUNT_NAME) -> Account:
-        """Read account from disk."""
-        return Account.from_saved_format(
-            read_config(filename=_DEFAULT_ACCOUNG_CONFIG_JSON_FILE, name=name)
-        )
+    @classmethod
+    def get(
+        cls, name: Optional[str] = None, auth: Optional[AccountType] = None
+    ) -> Optional[Account]:
+        """Read account from disk.
+
+        Args:
+            name: Account name. Takes precedence if `auth` is also specified.
+            auth: Account auth type.
+
+        Returns:
+            Account information.
+
+        Raises:
+            ValueError: If the input value cannot be found on disk.
+        """
+        if name:
+            saved_account = read_config(
+                filename=_DEFAULT_ACCOUNG_CONFIG_JSON_FILE, name=name
+            )
+            if not saved_account:
+                raise ValueError(
+                    f"Account with the name {name} does not exist on disk."
+                )
+            return Account.from_saved_format(saved_account)
+
+        auth_ = auth or _DEFAULT_ACCOUNT_TYPE
+        env_account = cls._from_env_variables(auth_)
+        if env_account is not None:
+            return env_account
+
+        if auth:
+            saved_account = read_config(
+                filename=_DEFAULT_ACCOUNG_CONFIG_JSON_FILE,
+                name=cls._get_default_account_name(auth),
+            )
+            if saved_account is None:
+                raise ValueError(f"No default {auth} account saved.")
+            return Account.from_saved_format(saved_account)
+
+        all_config = read_config(filename=_DEFAULT_ACCOUNG_CONFIG_JSON_FILE)
+        for account_type in _ACCOUNT_TYPES:
+            account_name = cls._get_default_account_name(account_type)
+            if account_name in all_config:
+                return Account.from_saved_format(all_config[account_name])
+
+        return None
 
     @staticmethod
     def delete(name: Optional[str] = _DEFAULT_ACCOUNT_NAME) -> bool:
         """Delete account from disk."""
         return delete_config(name=name, filename=_DEFAULT_ACCOUNG_CONFIG_JSON_FILE)
+
+    @classmethod
+    def _from_env_variables(cls, auth: Optional[AccountType]) -> Optional[Account]:
+        """Read account from environment variable."""
+        token = os.getenv("QISKIT_IBM_API_TOKEN")
+        url = os.getenv("QISKIT_IBM_API_URL")
+        if not (token and url):
+            return None
+        return Account(
+            token=token, url=url, instance=os.getenv("QISKIT_IBM_INSTANCE"), auth=auth
+        )
+
+    @classmethod
+    def _get_default_account_name(cls, auth: AccountType) -> str:
+        return (
+            _DEFAULT_ACCOUNT_NAME_CLOUD
+            if auth == "cloud"
+            else _DEFAULT_ACCOUNT_NAME_LEGACY
+        )
