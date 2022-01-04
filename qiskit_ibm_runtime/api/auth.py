@@ -12,6 +12,8 @@
 
 """Authentication helpers."""
 
+from typing import Dict
+
 
 from requests import PreparedRequest
 from requests.auth import AuthBase
@@ -35,9 +37,12 @@ class CloudAuth(AuthBase):
         return False
 
     def __call__(self, r: PreparedRequest) -> PreparedRequest:
-        r.headers["Service-CRN"] = self.crn
-        r.headers["Authorization"] = f"apikey {self.api_key}"
+        r.headers.update(self.get_headers())
         return r
+
+    def get_headers(self) -> Dict:
+        """Return authorization information to be stored in header."""
+        return {"Service-CRN": self.crn, "Authorization": f"apikey {self.api_key}"}
 
 
 class LegacyAuth(AuthBase):
@@ -53,5 +58,9 @@ class LegacyAuth(AuthBase):
         return False
 
     def __call__(self, r: PreparedRequest) -> PreparedRequest:
-        r.headers["X-Access-Token"] = self.access_token
+        r.headers.update(self.get_headers())
         return r
+
+    def get_headers(self) -> Dict:
+        """Return authorization information to be stored in header."""
+        return {"X-Access-Token": self.access_token}

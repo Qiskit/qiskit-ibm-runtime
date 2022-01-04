@@ -16,6 +16,7 @@
 
 import base64
 import copy
+import functools
 import importlib
 import inspect
 import io
@@ -23,7 +24,7 @@ import json
 import warnings
 import zlib
 from datetime import date
-from typing import Any, Callable, Dict, List, Union
+from typing import Any, Callable, Dict, List, Union, Tuple
 
 import dateutil.parser
 import numpy as np
@@ -38,11 +39,16 @@ except ImportError:
 from qiskit.circuit import (
     Instruction,
     ParameterExpression,
+    ParameterVector,
     QuantumCircuit,
     qpy_serialization,
 )
 from qiskit.circuit.library import BlueprintCircuit
 from qiskit.result import Result
+
+from qiskit.version import __version__ as _terra_version_string
+
+_TERRA_VERSION = tuple(int(x) for x in _terra_version_string.split(".")[:3])
 
 
 def to_base64_string(data: str) -> str:
@@ -233,6 +239,15 @@ class RuntimeDecoder(json.JSONDecoder):
 
     def __init__(self, *args: Any, **kwargs: Any):
         super().__init__(object_hook=self.object_hook, *args, **kwargs)
+        self.__parameter_vectors: Dict[str, Tuple[ParameterVector, set]] = {}
+        self.__read_parameter_expression = (
+            functools.partial(
+                qpy_serialization._read_parameter_expression_v3,
+                vectors=self.__parameter_vectors,
+            )
+            if _TERRA_VERSION >= (0, 19, 1)
+            else qpy_serialization._read_parameter_expression
+        )
 
     def object_hook(self, obj: Any) -> Any:
         """Called to decode object."""
@@ -252,7 +267,7 @@ class RuntimeDecoder(json.JSONDecoder):
                 return _decode_and_deserialize(obj_val, qpy_serialization.load)[0]
             if obj_type == "ParameterExpression":
                 return _decode_and_deserialize(
-                    obj_val, qpy_serialization._read_parameter_expression, False
+                    obj_val, self.__read_parameter_expression, False
                 )
             if obj_type == "Instruction":
                 return _decode_and_deserialize(

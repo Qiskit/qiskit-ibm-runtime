@@ -15,15 +15,14 @@
 import os
 import logging
 import inspect
-
-from qiskit.test.base import BaseQiskitTestCase
+from unittest import TestCase
 
 from qiskit_ibm_runtime import QISKIT_IBM_RUNTIME_LOGGER_NAME
 
-from .utils import setup_test_logging
+from .utils.utils import setup_test_logging
 
 
-class IBMTestCase(BaseQiskitTestCase):
+class IBMTestCase(TestCase):
     """Custom TestCase for use with the Qiskit IBM Runtime."""
 
     @classmethod

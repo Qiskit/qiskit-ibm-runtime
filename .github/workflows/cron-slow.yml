@@ -19,10 +19,12 @@ jobs:
     name: slow-test
     runs-on: macOS-latest
     env:
-      QISKIT_IBM_RUNTIME_API_TOKEN: ${{ secrets.QISKIT_IBM_RUNTIME_API_TOKEN }}
-      QISKIT_IBM_RUNTIME_API_URL: ${{ secrets.QISKIT_IBM_RUNTIME_API_URL }}
-      QISKIT_IBM_RUNTIME_HGP: ${{ secrets.QISKIT_IBM_RUNTIME_HGP }}
-      QISKIT_IBM_RUNTIME_PRIVATE_HGP: ${{ secrets.QISKIT_IBM_RUNTIME_PRIVATE_HGP }}
+      QISKIT_IBM_API_TOKEN: ${{ secrets.QISKIT_IBM_API_TOKEN }}
+      QISKIT_IBM_API_URL: ${{ secrets.QISKIT_IBM_API_URL }}
+      QISKIT_IBM_HGP: ${{ secrets.QISKIT_IBM_HGP }}
+      QISKIT_IBM_CLOUD_TOKEN: ${{ secrets.QISKIT_IBM_CLOUD_TOKEN }}
+      QISKIT_IBM_CLOUD_URL: ${{ secrets.QISKIT_IBM_CLOUD_URL }}
+      QISKIT_IBM_CLOUD_CRN: ${{ secrets.QISKIT_IBM_CLOUD_CRN }}
       LOG_LEVEL: DEBUG
       STREAM_LOG: True
       QISKIT_TESTS: run_slow
@@ -44,10 +46,12 @@ jobs:
     name: terra-main
     runs-on: macOS-latest
     env:
-      QISKIT_IBM_RUNTIME_API_TOKEN: ${{ secrets.QISKIT_IBM_RUNTIME_API_TOKEN }}
-      QISKIT_IBM_RUNTIME_API_URL: ${{ secrets.QISKIT_IBM_RUNTIME_API_URL }}
-      QISKIT_IBM_RUNTIME_HGP: ${{ secrets.QISKIT_IBM_RUNTIME_HGP }}
-      QISKIT_IBM_RUNTIME_PRIVATE_HGP: ${{ secrets.QISKIT_IBM_RUNTIME_PRIVATE_HGP }}
+      QISKIT_IBM_API_TOKEN: ${{ secrets.QISKIT_IBM_API_TOKEN }}
+      QISKIT_IBM_API_URL: ${{ secrets.QISKIT_IBM_API_URL }}
+      QISKIT_IBM_HGP: ${{ secrets.QISKIT_IBM_HGP }}
+      QISKIT_IBM_CLOUD_TOKEN: ${{ secrets.QISKIT_IBM_CLOUD_TOKEN }}
+      QISKIT_IBM_CLOUD_URL: ${{ secrets.QISKIT_IBM_CLOUD_URL }}
+      QISKIT_IBM_CLOUD_CRN: ${{ secrets.QISKIT_IBM_CLOUD_CRN }}
       LOG_LEVEL: DEBUG
       STREAM_LOG: True
       QISKIT_TESTS: run_slow
@@ -64,6 +68,5 @@ jobs:
           pip install -c constraints.txt -e .
           pip install -U -c constraints.txt -r requirements-dev.txt
           pip install -U git+https://github.com/Qiskit/qiskit-terra.git
-          pip install -U git+https://github.com/Qiskit/qiskit-aer.git
       - name: Run Tests
         run: make test
