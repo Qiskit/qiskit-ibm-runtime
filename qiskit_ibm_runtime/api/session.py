@@ -255,7 +255,7 @@ class RetrySession(Session):
         headers.update(kwargs.pop("headers", {}))
 
         try:
-            self._log_request_info(url, method, kwargs)
+            self._log_request_info(final_url, method, kwargs)
             response = super().request(method, final_url, headers=headers, **kwargs)
             response.raise_for_status()
         except RequestException as ex:

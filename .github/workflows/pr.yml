@@ -21,10 +21,12 @@ jobs:
         python-version: [3.7, 3.8, 3.9]
         os: ["macOS-latest", "ubuntu-latest", "windows-latest"]
     env:
-      QISKIT_IBM_RUNTIME_API_TOKEN: ${{ secrets.QISKIT_IBM_RUNTIME_API_TOKEN }}
-      QISKIT_IBM_RUNTIME_API_URL: ${{ secrets.QISKIT_IBM_RUNTIME_API_URL }}
-      QISKIT_IBM_RUNTIME_HGP: ${{ secrets.QISKIT_IBM_RUNTIME_HGP }}
-      QISKIT_IBM_RUNTIME_PRIVATE_HGP: ${{ secrets.QISKIT_IBM_RUNTIME_PRIVATE_HGP }}
+      QISKIT_IBM_API_TOKEN: ${{ secrets.QISKIT_IBM_API_TOKEN }}
+      QISKIT_IBM_API_URL: ${{ secrets.QISKIT_IBM_API_URL }}
+      QISKIT_IBM_HGP: ${{ secrets.QISKIT_IBM_HGP }}
+      QISKIT_IBM_CLOUD_TOKEN: ${{ secrets.QISKIT_IBM_CLOUD_TOKEN }}
+      QISKIT_IBM_CLOUD_URL: ${{ secrets.QISKIT_IBM_CLOUD_URL }}
+      QISKIT_IBM_CLOUD_CRN: ${{ secrets.QISKIT_IBM_CLOUD_CRN }}
       LOG_LEVEL: DEBUG
       STREAM_LOG: True
       QISKIT_TESTS: skip_online
