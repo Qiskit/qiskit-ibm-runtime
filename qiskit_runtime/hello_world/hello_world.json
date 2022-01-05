@@ -1,6 +1,6 @@
 {
-  "name": "sample-program",
-  "description": "(DEPRECATED) A sample runtime program. This runtime program is deprecated, please use hello-world instead.",
+  "name": "hello-world",
+  "description": "A sample runtime program.",
   "max_execution_time": 300,
   "spec": {
     "backend_requirements": {

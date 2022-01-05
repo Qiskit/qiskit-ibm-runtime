@@ -68,14 +68,14 @@ If you know the ID of the program you're looking for, you can also print out the
 that one program:
 
 ```python
-print(provider.runtime.program('sample-program'))
+print(provider.runtime.program('hello-world'))
 ```
 
 The output of the code above would be:
 
 ```
-sample-program:
-  Name: sample-program
+hello-world:
+  Name: hello-world
   Description: A sample runtime program.
   Creation date: 2021-07-02T13:45:13Z
   Update date: 2021-07-02T13:45:13Z
@@ -102,16 +102,16 @@ sample-program:
     Type: string
 ```
 
-`sample-program`, as the name suggests, is a sample program used for demonstration. 
+`hello-world` is a sample program used for demonstration. 
 It takes only 1 input parameter `iterations`, which indicates how many iterations to run. 
 For each iteration it generates and runs a random 5-qubit circuit and returns the counts as well 
 as the iteration number as the interim results. When the program finishes, it returns the sentence 
 `All done!`. This program has a maximum execution time of 300 seconds, after which the execution will
 be forcibly terminated.  
 
-### Executing the `sample-program` program
+### Executing the `hello-world` program
 
-Because `sample-program` provides interim results, which are results available to you while the program is
+Because `hello-world` provides interim results, which are results available to you while the program is
 still running, we want to first define a callback function that would handle these interim results:
 
 ```python
@@ -123,14 +123,14 @@ When an interim result is available, this callback function will be invoked and 
 Not all programs provide interim results, and you don't have to provide a callback even if the program you're 
 executing does provide them.
 
-To run the `sample-program` program:
+To run the `hello-world` program:
 
 ```python
 program_inputs = {
     'iterations': 3
 }
 options = {'backend_name': 'ibmq_montreal'}
-job = provider.runtime.run(program_id="sample-program",
+job = provider.runtime.run(program_id="hello-world",
                            options=options,
                            inputs=program_inputs,
                            callback=interim_result_callback

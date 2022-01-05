@@ -10,18 +10,18 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Test the sample_program."""
+"""Test the hello_world."""
 
 import json
 from test.fake_user_messenger import FakeUserMessenger
 from unittest import TestCase
 from qiskit.providers.aer import AerSimulator
 from qiskit.providers.ibmq.runtime.utils import RuntimeEncoder, RuntimeDecoder
-from qiskit_runtime.sample_program import sample_program
+from qiskit_runtime.hello_world import hello_world
 
 
-class TestSampleProgram(TestCase):
-    """Test sample_program."""
+class TestHelloWorld(TestCase):
+    """Test hello_world."""
 
     def setUp(self) -> None:
         """Test case setup."""
@@ -29,10 +29,10 @@ class TestSampleProgram(TestCase):
         user_messenger = FakeUserMessenger()
         self.user_messenger = user_messenger
 
-    def test_sample_program(self):
-        """Test sample program."""
+    def test_hello_world(self):
+        """Test hello_world."""
         inputs = {"iterations": 2}
         serialized_inputs = json.dumps(inputs, cls=RuntimeEncoder)
         unserialized_inputs = json.loads(serialized_inputs, cls=RuntimeDecoder)
-        sample_program.main(self.backend, self.user_messenger, **unserialized_inputs)
+        hello_world.main(self.backend, self.user_messenger, **unserialized_inputs)
         self.assertEqual(self.user_messenger.call_count, inputs["iterations"])
