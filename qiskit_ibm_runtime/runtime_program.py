@@ -101,15 +101,6 @@ class RuntimeProgram:
                 )
             if "type" in schema:
                 formatted.append(" " * 4 + "Type: {}".format(str(schema["type"])))
-            if "input_allowed" in schema:
-                formatted.append(
-                    " " * 4 + "Input Allowed: {}".format(str(schema["input_allowed"]))
-                )
-            if "min_num_qubits" in schema:
-                formatted.append(
-                    " " * 4
-                    + "Minimum number qubits: {}".format(str(schema["min_num_qubits"]))
-                )
             if "properties" in schema:
                 formatted.append(" " * 4 + "Properties:")
                 for property_name, property_value in schema["properties"].items():
@@ -123,6 +114,23 @@ class RuntimeProgram:
                         + "Required: "
                         + str(property_name in schema.get("required", []))
                     )
+
+        def _format_backend_requirements(schema: Dict) -> None:
+            """Add backend requirements details to `formatted`."""
+            if "input_allowed" in schema:
+                formatted.append(
+                    " " * 4 + "Input allowed: {}".format(str(schema["input_allowed"]))
+                )
+            if "min_num_qubits" in schema:
+                formatted.append(
+                    " " * 4
+                    + "Minimum number qubits: {}".format(str(schema["min_num_qubits"]))
+                )
+            if "supported_features" in schema:
+                formatted.append(
+                    " " * 4
+                    + "Supported features: {}".format(str(schema["supported_features"]))
+                )
 
         def sentence_case(camel_case_text: str) -> str:
             """Converts camelCase to Sentence case"""
@@ -142,7 +150,7 @@ class RuntimeProgram:
 
         formatted.append("  Backend requirements:")
         if self._backend_requirements:
-            _format_common(self._backend_requirements)
+            _format_backend_requirements(self._backend_requirements)
         else:
             formatted.append(" " * 4 + "none")
 
