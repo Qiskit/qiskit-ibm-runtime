@@ -56,6 +56,17 @@ class TestPrograms(IBMTestCase):
         self.assertIn(program_ids[0], all_ids)
 
     @run_legacy_and_cloud_fake
+    def test_filter_programs_with_search(self, service):
+        """Test filtering programs with the search parameter"""
+        program_id = upload_program(service)
+        programs = service.programs(search="Test program")
+        all_ids = [prog.program_id for prog in programs]
+        self.assertIn(program_id, all_ids)
+        programs = service.programs(search="Test sample")
+        all_ids = [prog.program_id for prog in programs]
+        self.assertNotIn(program_id, all_ids)
+
+    @run_legacy_and_cloud_fake
     def test_list_program(self, service):
         """Test listing a single program."""
         program_id = upload_program(service)
