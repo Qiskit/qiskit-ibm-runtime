@@ -85,6 +85,17 @@ class TestIntegrationProgram(IBMTestCase):
         self.assertIn(all_ids[2], some_ids)
 
     @run_cloud_legacy_real
+    def test_filter_programs_with_program_name(self, service):
+        """Test filter programs with the program name"""
+        program_id = self._upload_program(service, name="qiskit-test-sample")
+        programs = service.programs(name="qiskit-test-sample")
+        all_ids = [prog.program_id for prog in programs]
+        self.assertIn(program_id, all_ids)
+        programs = service.programs(name="qiskit-test")
+        all_ids = [prog.program_id for prog in programs]
+        self.assertNotIn(program_id, all_ids)
+
+    @run_cloud_legacy_real
     def test_list_program(self, service):
         """Test listing a single program."""
         program_id = self._upload_program(service)
