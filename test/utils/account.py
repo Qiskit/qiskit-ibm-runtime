@@ -21,10 +21,6 @@ from unittest.mock import patch
 
 from qiskit_ibm_runtime.accounts import management
 from qiskit_ibm_runtime.accounts.account import CLOUD_API_URL, LEGACY_API_URL
-from qiskit_ibm_runtime.credentials.environ import VARIABLES_MAP
-
-
-CREDENTIAL_ENV_VARS = VARIABLES_MAP.keys()
 
 
 class custom_envs(ContextDecorator):
