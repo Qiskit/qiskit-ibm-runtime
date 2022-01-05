@@ -18,7 +18,7 @@ from typing import Optional, Dict
 from .account import Account, AccountType
 from .storage import save_config, read_config, delete_config
 
-_DEFAULT_ACCOUNG_CONFIG_JSON_FILE = os.path.join(
+_DEFAULT_ACCOUNT_CONFIG_JSON_FILE = os.path.join(
     os.path.expanduser("~"), ".qiskit", "qiskit-ibm.json"
 )
 _DEFAULT_ACCOUNT_NAME = "default"
@@ -46,7 +46,7 @@ class AccountManager:
 
         config_key = name or cls._get_default_account_name(auth)
         return save_config(
-            filename=_DEFAULT_ACCOUNG_CONFIG_JSON_FILE,
+            filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE,
             name=config_key,
             config=Account(
                 token=token,
@@ -88,7 +88,7 @@ class AccountManager:
         # load all accounts
         all_accounts = map(
             lambda kv: (kv[0], Account.from_saved_format(kv[1])),
-            read_config(filename=_DEFAULT_ACCOUNG_CONFIG_JSON_FILE).items(),
+            read_config(filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE).items(),
         )
 
         # filter based on input parameters
@@ -123,7 +123,7 @@ class AccountManager:
         """
         if name:
             saved_account = read_config(
-                filename=_DEFAULT_ACCOUNG_CONFIG_JSON_FILE, name=name
+                filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE, name=name
             )
             if not saved_account:
                 raise ValueError(
@@ -138,14 +138,14 @@ class AccountManager:
 
         if auth:
             saved_account = read_config(
-                filename=_DEFAULT_ACCOUNG_CONFIG_JSON_FILE,
+                filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE,
                 name=cls._get_default_account_name(auth),
             )
             if saved_account is None:
                 raise ValueError(f"No default {auth} account saved.")
             return Account.from_saved_format(saved_account)
 
-        all_config = read_config(filename=_DEFAULT_ACCOUNG_CONFIG_JSON_FILE)
+        all_config = read_config(filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE)
         for account_type in _ACCOUNT_TYPES:
             account_name = cls._get_default_account_name(account_type)
             if account_name in all_config:
@@ -163,7 +163,7 @@ class AccountManager:
 
         config_key = name or cls._get_default_account_name(auth)
         return delete_config(
-            name=config_key, filename=_DEFAULT_ACCOUNG_CONFIG_JSON_FILE
+            name=config_key, filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE
         )
 
     @classmethod
