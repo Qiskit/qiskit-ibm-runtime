@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Represent IBM Quantum account credentials."""
+"""Represent IBM Quantum account client parameters."""
 
 from typing import Dict, Optional, Any, Union
 
@@ -23,12 +23,7 @@ TEMPLATE_IBM_HUBS = "{prefix}/Network/{hub}/Groups/{group}/Projects/{project}"
 
 
 class ClientParameters:
-    """IBM Quantum account credentials and preferences.
-
-    Note:
-        By convention, two credentials that have the same hub, group,
-        and project are considered equivalent, regardless of other attributes.
-    """
+    """IBM Quantum account client parameters."""
 
     def __init__(
         self,
@@ -39,7 +34,7 @@ class ClientParameters:
         proxies: Optional[Dict] = None,
         verify: bool = True,
     ) -> None:
-        """Credentials constructor.
+        """ClientParameters constructor.
 
         Args:
             token: IBM Quantum API token.
