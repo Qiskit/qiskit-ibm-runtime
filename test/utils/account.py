@@ -115,17 +115,17 @@ class temporary_account_config_file(ContextDecorator):
         self.tmp_file = NamedTemporaryFile(mode="w+")
         json.dump(contents, self.tmp_file)
         self.tmp_file.flush()
-        self.account_config_json_backup = management._DEFAULT_ACCOUNG_CONFIG_JSON_FILE
+        self.account_config_json_backup = management._DEFAULT_ACCOUNT_CONFIG_JSON_FILE
 
     def __enter__(self):
         # Temporarily modify the default location of the configuration file.
-        management._DEFAULT_ACCOUNG_CONFIG_JSON_FILE = self.tmp_file.name
+        management._DEFAULT_ACCOUNT_CONFIG_JSON_FILE = self.tmp_file.name
         return self
 
     def __exit__(self, *exc):
         # Delete the temporary file and restore the default location.
         self.tmp_file.close()
-        management._DEFAULT_ACCOUNG_CONFIG_JSON_FILE = self.account_config_json_backup
+        management._DEFAULT_ACCOUNT_CONFIG_JSON_FILE = self.account_config_json_backup
 
 
 def get_account_config_contents(
