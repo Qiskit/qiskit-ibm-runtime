@@ -12,8 +12,8 @@
 
 """Context managers for using with IBM Provider unit tests."""
 
-import os
 import json
+import os
 import uuid
 from contextlib import ContextDecorator
 from tempfile import NamedTemporaryFile
@@ -22,7 +22,6 @@ from unittest.mock import patch
 from qiskit_ibm_runtime.accounts import management
 from qiskit_ibm_runtime.accounts.account import CLOUD_API_URL, LEGACY_API_URL
 from qiskit_ibm_runtime.credentials.environ import VARIABLES_MAP
-
 
 CREDENTIAL_ENV_VARS = VARIABLES_MAP.keys()
 
@@ -102,35 +101,34 @@ class no_file(ContextDecorator):
         return self.isfile_original(filename_)
 
 
-class custom_qiskitrc(ContextDecorator):
+class temporary_account_config_file(ContextDecorator):
     """Context manager that uses a temporary qiskitrc."""
 
     # pylint: disable=invalid-name
 
     def __init__(self, contents=None, **kwargs):
         # Create a temporary file with the contents.
-        contents = contents or get_qiskitrc_contents(**kwargs)
+        contents = (
+            contents if contents is not None else get_account_config_contents(**kwargs)
+        )
+
         self.tmp_file = NamedTemporaryFile(mode="w+")
         json.dump(contents, self.tmp_file)
         self.tmp_file.flush()
-        self.default_qiskitrc_file_original = (
-            management._DEFAULT_ACCOUNG_CONFIG_JSON_FILE
-        )
+        self.account_config_json_backup = management._DEFAULT_ACCOUNT_CONFIG_JSON_FILE
 
     def __enter__(self):
-        # Temporarily modify the default location of the qiskitrc file.
-        management._DEFAULT_ACCOUNG_CONFIG_JSON_FILE = self.tmp_file.name
+        # Temporarily modify the default location of the configuration file.
+        management._DEFAULT_ACCOUNT_CONFIG_JSON_FILE = self.tmp_file.name
         return self
 
     def __exit__(self, *exc):
         # Delete the temporary file and restore the default location.
         self.tmp_file.close()
-        management._DEFAULT_ACCOUNG_CONFIG_JSON_FILE = (
-            self.default_qiskitrc_file_original
-        )
+        management._DEFAULT_ACCOUNT_CONFIG_JSON_FILE = self.account_config_json_backup
 
 
-def get_qiskitrc_contents(
+def get_account_config_contents(
     name=None,
     auth="cloud",
     token=None,
