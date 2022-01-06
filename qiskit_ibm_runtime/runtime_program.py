@@ -131,6 +131,11 @@ class RuntimeProgram:
                     " " * 4
                     + "Supported features: {}".format(str(schema["supported_features"]))
                 )
+            for key, value in schema.items():
+                if key not in ["input_allowed", "min_num_qubits", "supported_features"]:
+                    formatted.append(
+                        " " * 4 + "{}: {}".format(sentence_case(key), str(value))
+                    )
 
         def sentence_case(camel_case_text: str) -> str:
             """Converts camelCase to Sentence case"""
