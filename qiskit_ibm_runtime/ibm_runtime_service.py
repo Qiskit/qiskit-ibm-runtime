@@ -37,7 +37,6 @@ from .exceptions import (
     RuntimeDuplicateProgramError,
     RuntimeProgramNotFound,
     RuntimeJobNotFound,
-    IBMProviderCredentialsInvalidUrl,
 )
 from .hub_group_project import HubGroupProject  # pylint: disable=cyclic-import
 from .program.result_decoder import ResultDecoder
@@ -155,7 +154,7 @@ class IBMRuntimeService:
         """
         super().__init__()
 
-        self._account = self._discover_credentials(
+        self._account = self._discover_account(
             token=token,
             url=url,
             instance=instance,
@@ -205,7 +204,7 @@ class IBMRuntimeService:
         # just seems wrong since backends are not runtime service instances.
         # self._discover_backends()
 
-    def _discover_credentials(
+    def _discover_account(
         self,
         token: Optional[str] = None,
         url: Optional[str] = None,
@@ -215,7 +214,7 @@ class IBMRuntimeService:
         proxies: Optional[dict] = None,
         verify: Optional[bool] = None,
     ) -> Account:
-        """Discover account credentials."""
+        """Discover account."""
         account = None
         verify_ = verify or True
         if name:
@@ -298,8 +297,7 @@ class IBMRuntimeService:
             client_params: Parameters used for server connection.
 
         Raises:
-            IBMProviderCredentialsInvalidUrl: If the URL specified is not
-                a valid IBM Quantum authentication URL.
+            IBMInputValueError: If the URL specified is not a valid IBM Quantum authentication URL.
             IBMNotAuthorizedError: If the account is not authorized to use runtime.
 
         Returns:
@@ -308,7 +306,7 @@ class IBMRuntimeService:
         version_info = self._check_api_version(client_params)
         # Check the URL is a valid authentication URL.
         if not version_info["new_api"] or "api-auth" not in version_info:
-            raise IBMProviderCredentialsInvalidUrl(
+            raise IBMInputValueError(
                 "The URL specified ({}) is not an IBM Quantum authentication URL. "
                 "Valid authentication URL: {}.".format(
                     client_params.url, QISKIT_IBM_RUNTIME_API_URL
@@ -332,8 +330,7 @@ class IBMRuntimeService:
             auth_client: Authentication data.
 
         Raises:
-            IBMProviderCredentialsInvalidUrl: If the URL specified is not
-                a valid IBM Quantum authentication URL.
+            IBMInputValueError: If the URL specified is not a valid IBM Quantum authentication URL.
             IBMProviderError: If no hub/group/project could be found for this account.
 
         Returns:
@@ -393,7 +390,7 @@ class IBMRuntimeService:
 
     @staticmethod
     def _check_api_version(params: ClientParameters) -> Dict[str, Union[bool, str]]:
-        """Check the version of the remote server in a set of credentials.
+        """Check the version of the remote server in a set of client parameters.
 
         Args:
             params: Parameters used for server connection.
@@ -517,18 +514,20 @@ class IBMRuntimeService:
         return self._account.to_saved_format()
 
     @staticmethod
-    def delete_account(name: Optional[str]) -> bool:
+    def delete_account(name: Optional[str] = None, auth: Optional[str] = None) -> bool:
         """Delete a saved account from disk.
 
         Args:
-            name: Custom name of the saved account. Defaults to "default".
+            name: Name of the saved account to delete.
+            auth: Authentication type of the default account to delete.
+                Ignored if account name is provided.
 
         Returns:
-            True if the account with the given name was deleted.
-            False if no account was found for the given name.
+            True if the account was deleted.
+            False if no account was found.
         """
 
-        return AccountManager.delete(name=name)
+        return AccountManager.delete(name=name, auth=auth)
 
     @staticmethod
     def save_account(
@@ -565,17 +564,31 @@ class IBMRuntimeService:
         )
 
     @staticmethod
-    def saved_accounts() -> dict:
+    def saved_accounts(
+        default: Optional[bool] = None,
+        auth: Optional[str] = None,
+        name: Optional[str] = None,
+    ) -> dict:
         """List the accounts saved on disk.
+
+        Args:
+            default: If set to True, only default accounts are returned.
+            auth: If set, only accounts with the given authentication type are returned.
+            name: If set, only accounts with the given name are returned.
 
         Returns:
             A dictionary with information about the accounts saved on disk.
 
         Raises:
-            IBMProviderCredentialsInvalidUrl: If invalid IBM Quantum
-                credentials are found on disk.
+            ValueError: If an invalid account is found on disk.
         """
-        return AccountManager.list()
+
+        return dict(
+            map(
+                lambda kv: (kv[0], Account.to_saved_format(kv[1])),
+                AccountManager.list(default=default, auth=auth, name=name).items(),
+            ),
+        )
 
     def get_backend(
         self,

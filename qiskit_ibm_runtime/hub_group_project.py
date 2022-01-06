@@ -104,10 +104,10 @@ class HubGroupProject:
         return f"{self._hub}/{self._group}/{self._project}"
 
     def __repr__(self) -> str:
-        credentials_info = "hub='{}', group='{}', project='{}'".format(
+        hgp_info = "hub='{}', group='{}', project='{}'".format(
             self._hub, self._group, self._project
         )
-        return "<{}({})>".format(self.__class__.__name__, credentials_info)
+        return "<{}({})>".format(self.__class__.__name__, hgp_info)
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, HubGroupProject):

@@ -33,36 +33,6 @@ class IBMProviderValueError(IBMProviderError):
     pass
 
 
-class IBMProviderCredentialsNotFound(IBMProviderError):
-    """Errors raised when credentials are not found."""
-
-    pass
-
-
-class IBMProviderMultipleCredentialsFound(IBMProviderError):
-    """Errors raised when multiple credentials are found."""
-
-    pass
-
-
-class IBMProviderCredentialsInvalidFormat(IBMProviderError):
-    """Errors raised when the credentials format is invalid."""
-
-    pass
-
-
-class IBMProviderCredentialsInvalidToken(IBMProviderError):
-    """Errors raised when an IBM Quantum token is invalid."""
-
-    pass
-
-
-class IBMProviderCredentialsInvalidUrl(IBMProviderError):
-    """Errors raised when an IBM Quantum URL is invalid."""
-
-    pass
-
-
 class IBMBackendError(IBMError):
     """Base class for errors raised by the backend modules."""
 

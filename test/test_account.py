@@ -12,20 +12,169 @@
 
 """Tests for the account functions."""
 
+import json
 import uuid
 import logging
 import os
 from unittest import skipIf
 
 from qiskit_ibm_runtime.accounts.account import CLOUD_API_URL, LEGACY_API_URL
+from qiskit_ibm_runtime.accounts import AccountManager, Account, management
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 from .ibm_test_case import IBMTestCase
 from .mock.fake_runtime_service import FakeRuntimeService
-from .utils.account import get_qiskitrc_contents, custom_qiskitrc, no_envs, custom_envs
+from .utils.account import (
+    get_account_config_contents,
+    temporary_account_config_file,
+    no_envs,
+    custom_envs,
+)
+
+_TEST_LEGACY_ACCOUNT = Account(
+    auth="legacy",
+    token="token-x",
+    url="https://auth.quantum-computing.ibm.com/api",
+    instance="ibm-q/open/main",
+)
+
+_TEST_CLOUD_ACCOUNT = Account(
+    auth="cloud",
+    token="token-y",
+    url="https://cloud.ibm.com",
+    instance="crn:v1:bluemix:public:quantum-computing:us-east:a/...::",
+)
+
+# NamedTemporaryFiles not supported in Windows
+@skipIf(os.name == "nt", "Test not supported in Windows")
+class TestAccountManager(IBMTestCase):
+    """Tests for AccountManager class."""
+
+    @temporary_account_config_file(contents={})
+    def test_save_get(self):
+        """Test save and get."""
+
+        # Each tuple contains the
+        # - account to save
+        # - the name passed to AccountManager.save
+        # - the name passed to AccountManager.get
+        sub_tests = [
+            # verify accounts can be saved and retrieved via custom names
+            (_TEST_LEGACY_ACCOUNT, "acct-1", "acct-1"),
+            (_TEST_CLOUD_ACCOUNT, "acct-2", "acct-2"),
+            # verify default account name handling for cloud accounts
+            (_TEST_CLOUD_ACCOUNT, None, management._DEFAULT_ACCOUNT_NAME_CLOUD),
+            (_TEST_CLOUD_ACCOUNT, None, None),
+            # verify default account name handling for legacy accounts
+            (_TEST_LEGACY_ACCOUNT, None, management._DEFAULT_ACCOUNT_NAME_LEGACY),
+            # verify account override
+            (_TEST_LEGACY_ACCOUNT, "acct", "acct"),
+            (_TEST_CLOUD_ACCOUNT, "acct", "acct"),
+        ]
+        for account, name_save, name_get in sub_tests:
+            with self.subTest(
+                f"for account type '{account.auth}' "
+                f"using `save(name={name_save})` and `get(name={name_get})`"
+            ):
+                AccountManager.save(
+                    token=account.token,
+                    url=account.url,
+                    instance=account.instance,
+                    auth=account.auth,
+                    proxies=account.proxies,
+                    verify=account.verify,
+                    name=name_save,
+                )
+                self.assertEqual(account, AccountManager.get(name=name_get))
+
+    @temporary_account_config_file(
+        contents=json.dumps(
+            {
+                "cloud": _TEST_CLOUD_ACCOUNT.to_saved_format(),
+                "legacy": _TEST_LEGACY_ACCOUNT.to_saved_format(),
+            }
+        )
+    )
+    def test_list(self):
+        """Test list."""
+
+        with temporary_account_config_file(
+            contents={
+                "key1": _TEST_CLOUD_ACCOUNT.to_saved_format(),
+                "key2": _TEST_LEGACY_ACCOUNT.to_saved_format(),
+            }
+        ), self.subTest("non-empty list of accounts"):
+            accounts = AccountManager.list()
+
+            self.assertEqual(len(accounts), 2)
+            self.assertEqual(accounts["key1"], _TEST_CLOUD_ACCOUNT)
+            self.assertTrue(accounts["key2"], _TEST_LEGACY_ACCOUNT)
+
+        with temporary_account_config_file(contents={}), self.subTest(
+            "empty list of accounts"
+        ):
+            self.assertEqual(len(AccountManager.list()), 0)
+
+        with temporary_account_config_file(
+            contents={
+                "key1": _TEST_CLOUD_ACCOUNT.to_saved_format(),
+                "key2": _TEST_LEGACY_ACCOUNT.to_saved_format(),
+                management._DEFAULT_ACCOUNT_NAME_CLOUD: Account(
+                    "cloud", "token-legacy"
+                ).to_saved_format(),
+                management._DEFAULT_ACCOUNT_NAME_LEGACY: Account(
+                    "legacy", "token-cloud"
+                ).to_saved_format(),
+            }
+        ), self.subTest("filtered list of accounts"):
+            accounts = list(AccountManager.list(auth="cloud").keys())
+            self.assertEqual(len(accounts), 2)
+            self.assertListEqual(
+                accounts, ["key1", management._DEFAULT_ACCOUNT_NAME_CLOUD]
+            )
+
+            accounts = list(AccountManager.list(auth="legacy").keys())
+            self.assertEqual(len(accounts), 2)
+            self.assertListEqual(
+                accounts, ["key2", management._DEFAULT_ACCOUNT_NAME_LEGACY]
+            )
+
+            accounts = list(AccountManager.list(auth="cloud", default=True).keys())
+            self.assertEqual(len(accounts), 1)
+            self.assertListEqual(accounts, [management._DEFAULT_ACCOUNT_NAME_CLOUD])
+
+            accounts = list(AccountManager.list(auth="cloud", default=False).keys())
+            self.assertEqual(len(accounts), 1)
+            self.assertListEqual(accounts, ["key1"])
+
+            accounts = list(AccountManager.list(name="key1").keys())
+            self.assertEqual(len(accounts), 1)
+            self.assertListEqual(accounts, ["key1"])
+
+    @temporary_account_config_file(
+        contents={
+            "key1": _TEST_CLOUD_ACCOUNT.to_saved_format(),
+            management._DEFAULT_ACCOUNT_NAME_LEGACY: _TEST_LEGACY_ACCOUNT.to_saved_format(),
+            management._DEFAULT_ACCOUNT_NAME_CLOUD: _TEST_CLOUD_ACCOUNT.to_saved_format(),
+        }
+    )
+    def test_delete(self):
+        """Test delete."""
+
+        with self.subTest("delete named account"):
+            self.assertTrue(AccountManager.delete(name="key1"))
+            self.assertFalse(AccountManager.delete(name="key1"))
+
+        with self.subTest("delete default legacy account"):
+            self.assertTrue(AccountManager.delete(auth="legacy"))
+
+        with self.subTest("delete default cloud account"):
+            self.assertTrue(AccountManager.delete())
+
+        self.assertTrue(len(AccountManager.list()) == 0)
 
 
-# NamedTemporaryFiles not support in Windows
+# NamedTemporaryFiles not supported in Windows
 @skipIf(os.name == "nt", "Test not supported in Windows")
 class TestEnableAccount(IBMTestCase):
     """Tests for IBMRuntimeService enable account."""
@@ -34,7 +183,7 @@ class TestEnableAccount(IBMTestCase):
         """Test initializing account by name."""
         name = "foo"
         token = uuid.uuid4().hex
-        with custom_qiskitrc(name=name, token=token):
+        with temporary_account_config_file(name=name, token=token):
             service = FakeRuntimeService(name=name)
 
         self.assertTrue(service._account)
@@ -45,7 +194,7 @@ class TestEnableAccount(IBMTestCase):
         for auth in ["cloud", "legacy"]:
             with self.subTest(auth=auth), no_envs(["QISKIT_IBM_API_TOKEN"]):
                 token = uuid.uuid4().hex
-                with custom_qiskitrc(auth=auth, token=token):
+                with temporary_account_config_file(auth=auth, token=token):
                     service = FakeRuntimeService(auth=auth)
                 self.assertTrue(service._account)
                 self.assertEqual(service._account.token, token)
@@ -75,7 +224,9 @@ class TestEnableAccount(IBMTestCase):
         name = "foo"
         token = uuid.uuid4().hex
         for param in subtests:
-            with self.subTest(param=param), custom_qiskitrc(name=name, token=token):
+            with self.subTest(param=param), temporary_account_config_file(
+                name=name, token=token
+            ):
                 with self.assertLogs("qiskit_ibm_runtime", logging.WARNING) as logged:
                     service = FakeRuntimeService(name=name, **param)
 
@@ -111,7 +262,7 @@ class TestEnableAccount(IBMTestCase):
         for auth in subtests:
             with self.subTest(auth=auth):
                 token = uuid.uuid4().hex
-                with custom_qiskitrc(auth=auth, token=token), no_envs(
+                with temporary_account_config_file(auth=auth, token=token), no_envs(
                     ["QISKIT_IBM_API_TOKEN"]
                 ):
                     with self.assertLogs(
@@ -131,7 +282,7 @@ class TestEnableAccount(IBMTestCase):
         for auth in subtests:
             with self.subTest(auth=auth):
                 token = uuid.uuid4().hex
-                with custom_qiskitrc(auth=auth, token=token), no_envs(
+                with temporary_account_config_file(auth=auth, token=token), no_envs(
                     ["QISKIT_IBM_API_TOKEN"]
                 ):
                     service = FakeRuntimeService()
@@ -144,9 +295,13 @@ class TestEnableAccount(IBMTestCase):
     def test_enable_account_both_auth(self):
         """Test initializing account with both saved types."""
         token = uuid.uuid4().hex
-        contents = get_qiskitrc_contents(auth="cloud", token=token)
-        contents.update(get_qiskitrc_contents(auth="legacy", token=uuid.uuid4().hex))
-        with custom_qiskitrc(contents=contents), no_envs(["QISKIT_IBM_API_TOKEN"]):
+        contents = get_account_config_contents(auth="cloud", token=token)
+        contents.update(
+            get_account_config_contents(auth="legacy", token=uuid.uuid4().hex)
+        )
+        with temporary_account_config_file(contents=contents), no_envs(
+            ["QISKIT_IBM_API_TOKEN"]
+        ):
             service = FakeRuntimeService()
         self.assertTrue(service._account)
         self.assertEqual(service._account.token, token)
@@ -193,14 +348,14 @@ class TestEnableAccount(IBMTestCase):
     def test_enable_account_bad_name(self):
         """Test initializing account by bad name."""
         name = "phantom"
-        with custom_qiskitrc() as _, self.assertRaises(ValueError) as err:
+        with temporary_account_config_file() as _, self.assertRaises(ValueError) as err:
             _ = FakeRuntimeService(name=name)
         self.assertIn(name, str(err.exception))
 
     def test_enable_account_bad_auth(self):
         """Test initializing account by bad name."""
         auth = "phantom"
-        with custom_qiskitrc() as _, self.assertRaises(ValueError) as err:
+        with temporary_account_config_file() as _, self.assertRaises(ValueError) as err:
             _ = FakeRuntimeService(auth=auth)
         self.assertIn("auth", str(err.exception))
 
@@ -215,7 +370,9 @@ class TestEnableAccount(IBMTestCase):
         ]
         for extra in subtests:
             with self.subTest(extra=extra):
-                with custom_qiskitrc(name=name, verify=True, proxies="some proxies"):
+                with temporary_account_config_file(
+                    name=name, verify=True, proxies="some proxies"
+                ):
                     service = FakeRuntimeService(name=name, **extra)
                 self.assertTrue(service._account)
                 self._verify_prefs(extra, service._account)
@@ -230,9 +387,13 @@ class TestEnableAccount(IBMTestCase):
         ]
         for auth in ["cloud", "legacy"]:
             for extra in subtests:
-                with self.subTest(auth=auth, extra=extra), custom_qiskitrc(
+                with self.subTest(
+                    auth=auth, extra=extra
+                ), temporary_account_config_file(
                     auth=auth, verify=True, proxies="some proxies"
-                ), no_envs(["QISKIT_IBM_API_TOKEN"]):
+                ), no_envs(
+                    ["QISKIT_IBM_API_TOKEN"]
+                ):
                     service = FakeRuntimeService(auth=auth, **extra)
                     self.assertTrue(service._account)
                     self._verify_prefs(extra, service._account)
@@ -264,7 +425,7 @@ class TestEnableAccount(IBMTestCase):
         """Test initializing account by name and input instance."""
         name = "foo"
         instance = uuid.uuid4().hex
-        with custom_qiskitrc(name=name, instance=""):
+        with temporary_account_config_file(name=name, instance=""):
             service = FakeRuntimeService(name=name, instance=instance)
         self.assertTrue(service._account)
         self.assertEqual(service._account.instance, instance)
@@ -272,7 +433,7 @@ class TestEnableAccount(IBMTestCase):
     def test_enable_account_by_auth_input_instance(self):
         """Test initializing account by auth and input instance."""
         instance = uuid.uuid4().hex
-        with custom_qiskitrc(auth="cloud", instance=""):
+        with temporary_account_config_file(auth="cloud", instance=""):
             service = FakeRuntimeService(auth="cloud", instance=instance)
         self.assertTrue(service._account)
         self.assertEqual(service._account.instance, instance)
