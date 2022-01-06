@@ -660,6 +660,7 @@ class TestIntegrationJob(IBMTestCase):
         try:
             # TODO: Remove filters when ibmq_berlin is removed
             return service.least_busy(
-                simulator=False, filters=lambda b: b.name() != "ibmq_berlin").name()
+                simulator=False, filters=lambda b: b.name() != "ibmq_berlin"
+            ).name()
         except QiskitBackendNotFoundError:
             raise unittest.SkipTest("No real device")  # cloud has no real device
