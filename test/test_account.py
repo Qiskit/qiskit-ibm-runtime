@@ -45,12 +45,14 @@ _TEST_CLOUD_ACCOUNT = Account(
     instance="crn:v1:bluemix:public:quantum-computing:us-east:a/...::",
 )
 
+
 # NamedTemporaryFiles not supported in Windows
 @skipIf(os.name == "nt", "Test not supported in Windows")
 class TestAccountManager(IBMTestCase):
     """Tests for AccountManager class."""
 
     @temporary_account_config_file(contents={})
+    @no_envs(["QISKIT_IBM_API_TOKEN"])
     def test_save_get(self):
         """Test save and get."""
 
