@@ -32,10 +32,10 @@ from .utils.account import (
 )
 
 _TEST_LEGACY_ACCOUNT = Account(
-    "legacy",
-    "token-x",
-    "https://auth.quantum-computing.ibm.com/api",
-    "ibm-q/open/main",
+    auth="legacy",
+    token="token-x",
+    url="https://auth.quantum-computing.ibm.com/api",
+    instance="ibm-q/open/main",
 )
 
 _TEST_CLOUD_ACCOUNT = Account(

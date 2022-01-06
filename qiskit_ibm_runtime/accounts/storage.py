@@ -41,7 +41,7 @@ def read_config(
     filename: str,
     name: Optional[str] = None,
 ) -> Optional[Dict]:
-    """Save configuration data from a JSON file."""
+    """Read configuration data from a JSON file."""
     logger.debug("Read configuration data for '%s' from '%s'", name, filename)
     _ensure_file_exists(filename)
 
