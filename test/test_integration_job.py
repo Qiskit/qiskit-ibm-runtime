@@ -213,11 +213,13 @@ class TestIntegrationJob(IBMTestCase):
         for _ in range(3):
             jobs.append(self._run_program(service))
 
-        rjobs = service.jobs(limit=2)
+        rjobs = service.jobs(limit=2, program_id=self.program_ids[service.auth])
         self.assertEqual(len(rjobs), 2)
         job_ids = {job.job_id for job in jobs}
         rjob_ids = {rjob.job_id for rjob in rjobs}
-        self.assertTrue(rjob_ids.issubset(job_ids))
+        self.assertTrue(
+            rjob_ids.issubset(job_ids), f"Submitted: {job_ids}, Retrieved: {rjob_ids}"
+        )
 
     @run_cloud_legacy_real
     def test_retrieve_pending_jobs(self, service):
@@ -658,6 +660,9 @@ class TestIntegrationJob(IBMTestCase):
 
     def _get_real_device(self, service):
         try:
-            return service.least_busy(simulator=False).name()
+            # TODO: Remove filters when ibmq_berlin is removed
+            return service.least_busy(
+                simulator=False, filters=lambda b: b.name() != "ibmq_berlin"
+            ).name()
         except QiskitBackendNotFoundError:
             raise unittest.SkipTest("No real device")  # cloud has no real device

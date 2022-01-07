@@ -229,7 +229,6 @@ class TestProxies(IBMTestCase):
         test_urls = [
             "http://{}:{}".format(ADDRESS, PORT),
             "//{}:{}".format(ADDRESS, PORT),
-            "http:{}:{}".format(ADDRESS, PORT),
             "http://user:123@{}:{}".format(ADDRESS, PORT),
         ]
         for proxy_url in test_urls:
