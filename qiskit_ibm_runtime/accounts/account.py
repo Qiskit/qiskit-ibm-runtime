@@ -99,8 +99,10 @@ def _assert_valid_proxies(config: ProxyConfigurationType) -> None:
 def _assert_valid_instance(auth: AccountType, instance: str) -> None:
     """Assert that the instance name is valid for the given account type."""
     if auth == "cloud":
-        if not (isinstance(instance, str) and instance.find("crn:") != -1):
-            raise ValueError(f"Invalid `instance` value. Expected a non-empty CRN.")
+        if not (isinstance(instance, str) and len(instance) > 0):
+            raise ValueError(
+                f"Invalid `instance` value. Expected a non-empty string, got '{instance}'."
+            )
     if auth == "legacy":
         if instance is not None:
             try:

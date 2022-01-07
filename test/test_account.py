@@ -87,7 +87,7 @@ class TestAccount(IBMTestCase):
         """Test invalid values for instance parameter."""
 
         subtests = [
-            {"auth": "cloud", "instance": "no-valid-crn"},
+            {"auth": "cloud", "instance": ""},
             {"auth": "cloud"},
             {"auth": "legacy", "instance": "no-hgp-format"},
         ]
@@ -199,10 +199,10 @@ class TestAccountManager(IBMTestCase):
                 "key1": _TEST_CLOUD_ACCOUNT.to_saved_format(),
                 "key2": _TEST_LEGACY_ACCOUNT.to_saved_format(),
                 management._DEFAULT_ACCOUNT_NAME_CLOUD: Account(
-                    "cloud", "token-legacy"
+                    "cloud", "token-cloud", instance="crn:123"
                 ).to_saved_format(),
                 management._DEFAULT_ACCOUNT_NAME_LEGACY: Account(
-                    "legacy", "token-cloud"
+                    "legacy", "token-legacy"
                 ).to_saved_format(),
             }
         ), self.subTest("filtered list of accounts"):
@@ -320,7 +320,7 @@ class TestEnableAccount(IBMTestCase):
         for url in urls:
             with self.subTest(url=url), no_envs(["QISKIT_IBM_API_TOKEN"]):
                 token = uuid.uuid4().hex
-                with self.assertRaises(IBMInputValueError) as err:
+                with self.assertRaises(ValueError) as err:
                     _ = FakeRuntimeService(auth="cloud", token=token, url=url)
                 self.assertIn("instance", str(err.exception))
 
@@ -397,7 +397,7 @@ class TestEnableAccount(IBMTestCase):
                 envs = {
                     "QISKIT_IBM_API_TOKEN": token,
                     "QISKIT_IBM_API_URL": url,
-                    "QISKIT_IBM_INSTANCE": "my_crn",
+                    "QISKIT_IBM_INSTANCE": "h/g/p" if auth == "legacy" else "crn:123",
                 }
                 with custom_envs(envs):
                     service = FakeRuntimeService(auth=auth)
@@ -504,7 +504,7 @@ class TestEnableAccount(IBMTestCase):
         """Test initializing account by name and input instance."""
         name = "foo"
         instance = uuid.uuid4().hex
-        with temporary_account_config_file(name=name, instance=""):
+        with temporary_account_config_file(name=name, instance="stored-instance"):
             service = FakeRuntimeService(name=name, instance=instance)
         self.assertTrue(service._account)
         self.assertEqual(service._account.instance, instance)
@@ -512,7 +512,7 @@ class TestEnableAccount(IBMTestCase):
     def test_enable_account_by_auth_input_instance(self):
         """Test initializing account by auth and input instance."""
         instance = uuid.uuid4().hex
-        with temporary_account_config_file(auth="cloud", instance=""):
+        with temporary_account_config_file(auth="cloud", instance="bla"):
             service = FakeRuntimeService(auth="cloud", instance=instance)
         self.assertTrue(service._account)
         self.assertEqual(service._account.instance, instance)
@@ -520,7 +520,11 @@ class TestEnableAccount(IBMTestCase):
     def test_enable_account_by_env_input_instance(self):
         """Test initializing account by env and input instance."""
         instance = uuid.uuid4().hex
-        envs = {"QISKIT_IBM_API_TOKEN": "some_token", "QISKIT_IBM_API_URL": "some_url"}
+        envs = {
+            "QISKIT_IBM_API_TOKEN": "some_token",
+            "QISKIT_IBM_API_URL": "some_url",
+            "QISKIT_IBM_INSTANCE": "some_instance",
+        }
         with custom_envs(envs):
             service = FakeRuntimeService(auth="cloud", instance=instance)
         self.assertTrue(service._account)
