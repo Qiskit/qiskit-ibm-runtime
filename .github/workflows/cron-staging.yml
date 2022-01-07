@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-name: Cron-test
+name: Cron-staging
 on:
   schedule:
     - cron: '0 5 * * *'
@@ -60,7 +60,7 @@ jobs:
       QISKIT_IBM_STAGING_CLOUD_TOKEN: ${{ secrets.QISKIT_IBM_STAGING_CLOUD_TOKEN }}
       QISKIT_IBM_STAGING_CLOUD_URL: ${{ secrets.QISKIT_IBM_STAGING_CLOUD_URL }}
       QISKIT_IBM_STAGING_CLOUD_CRN: ${{ secrets.QISKIT_IBM_STAGING_CLOUD_CRN }}
-      USE_STAGING_CREDENTIALS: True
+      QISKIT_IBM_USE_STAGING_CREDENTIALS: True
       LOG_LEVEL: DEBUG
       STREAM_LOG: True
       QISKIT_IN_PARALLEL: True
