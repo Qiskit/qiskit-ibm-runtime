@@ -209,15 +209,19 @@ class TestIntegrationJob(IBMTestCase):
     @run_cloud_legacy_real
     def test_retrieve_jobs_limit(self, service):
         """Test retrieving jobs with limit."""
+        # Use a new program so we don't get jobs from another test.
+        program_id = self._upload_program(service)
         jobs = []
         for _ in range(3):
-            jobs.append(self._run_program(service))
+            jobs.append(self._run_program(service, program_id=program_id))
 
         rjobs = service.jobs(limit=2)
         self.assertEqual(len(rjobs), 2)
+
         job_ids = {job.job_id for job in jobs}
         rjob_ids = {rjob.job_id for rjob in rjobs}
-        self.assertTrue(rjob_ids.issubset(job_ids))
+        self.assertTrue(rjob_ids.issubset(job_ids),
+                        f"Submitted: {job_ids}, Retrieved: {rjob_ids}")
 
     @run_cloud_legacy_real
     def test_retrieve_pending_jobs(self, service):
