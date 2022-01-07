@@ -214,7 +214,7 @@ class TestIntegrationJob(IBMTestCase):
             jobs.append(self._run_program(service))
 
         rjobs = service.jobs(limit=2, program_id=self.program_ids[service.auth])
-        self.assertEqual(len(rjobs), 2)
+        self.assertEqual(len(rjobs), 2, f"Retrieved jobs: {[j.job_id for j in rjobs]}")
         job_ids = {job.job_id for job in jobs}
         rjob_ids = {rjob.job_id for rjob in rjobs}
         self.assertTrue(
@@ -259,7 +259,7 @@ class TestIntegrationJob(IBMTestCase):
         job.wait_for_final_state()
         rjobs = service.jobs(program_id=program_id)
         self.assertEqual(program_id, rjobs[0].program_id)
-        self.assertEqual(1, len(rjobs))
+        self.assertEqual(1, len(rjobs), f"Retrieved jobs: {[j.job_id for j in rjobs]}")
 
     def test_jobs_filter_by_hgp(self):
         """Test retrieving jobs by hgp."""
@@ -270,7 +270,7 @@ class TestIntegrationJob(IBMTestCase):
         job.wait_for_final_state()
         rjobs = service.jobs(program_id=program_id, instance=default_hgp)
         self.assertEqual(program_id, rjobs[0].program_id)
-        self.assertEqual(1, len(rjobs))
+        self.assertEqual(1, len(rjobs), f"Retrieved jobs: {[j.job_id for j in rjobs]}")
 
         uuid_ = uuid.uuid4().hex
         fake_hgp = f"{uuid_}/{uuid_}/{uuid_}"
@@ -602,6 +602,7 @@ class TestIntegrationJob(IBMTestCase):
         metadata["max_execution_time"] = max_execution_time
         metadata["is_public"] = is_public
         program_id = service.upload_program(data=data, metadata=metadata)
+        self.log.info("Uploaded runtime program %s", program_id)
         self.to_delete[service.auth].append(program_id)
         return program_id
 
