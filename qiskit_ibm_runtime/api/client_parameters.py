@@ -64,7 +64,7 @@ class ClientParameters:
             expected by ``requests``. The following keys can be present:
             ``proxies``, ``verify``, and ``auth``.
         """
-        request_kwargs = {"verify": self.verify}
+        request_kwargs: Any = {"verify": self.verify}
 
         if self.proxies:
             if "urls" in self.proxies:

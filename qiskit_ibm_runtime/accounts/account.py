@@ -13,7 +13,7 @@
 """Account related classes and functions."""
 
 
-from typing import Optional
+from typing import Optional, Dict
 from urllib.parse import urlparse
 
 from requests.auth import AuthBase
@@ -27,14 +27,14 @@ AccountType = Optional[Literal["cloud", "legacy"]]
 class ProxyConfigurationType(TypedDict, total=False):
     """Dictionary type for custom proxy configuration.
 
-    All items in the dictionary are optional. When ``urls`` are provided, they must contain a dictionary mapping
-    protocol or protocol and host to the URL of the proxy. Refer to
+    All items in the dictionary are optional. When ``urls`` are provided, they must contain a dictionary
+    mapping protocol or protocol and host to the URL of the proxy. Refer to
     https://docs.python-requests.org/en/latest/api/#requests.Session.proxies for details and examples.
 
     NTLM user authentication can be enabled by setting ``username_ntlm`` and ``password_ntlm``.
     """
 
-    urls: dict[str, str]
+    urls: Dict[str, str]
     username_ntlm: str
     password_ntlm: str
 
@@ -78,18 +78,18 @@ def _assert_valid_proxies(config: ProxyConfigurationType) -> None:
     ntlm_pass = config.get("password_ntlm")
     if not any(
         [
-            type(ntlm_user) == str and type(ntlm_pass) == str,
+            isinstance(ntlm_user, str) and isinstance(ntlm_pass, str),
             ntlm_user is None and ntlm_pass is None,
         ]
     ):
         raise ValueError(
-            f"Invalid proxy configuration for NTLM authentication. None or both of username and password must be "
-            f"provided. Got username_ntlm={ntlm_user}, password_ntlm={ntlm_pass}."
+            f"Invalid proxy configuration for NTLM authentication. None or both of username and "
+            f"password must be provided. Got username_ntlm={ntlm_user}, password_ntlm={ntlm_pass}."
         )
 
     # verify proxy configuration
     urls = config.get("urls")
-    if urls is not None and not type(urls) is dict:
+    if urls is not None and not isinstance(urls, dict):
         raise ValueError(
             f"Invalid proxy configuration. Expected `urls` to contain a dictionary mapping protocol "
             f"or protocol and host to the URL of the proxy. Got {urls}"

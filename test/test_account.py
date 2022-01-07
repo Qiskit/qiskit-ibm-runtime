@@ -54,12 +54,16 @@ class TestAccount(IBMTestCase):
     dummy_legacy_url = "https://auth.quantum-computing.ibm.com/api"
 
     def test_invalid_auth(self):
+        """Test invalid values for auth parameter."""
+
         with self.assertRaises(ValueError) as err:
             invalid_auth: Any = "phantom"
             Account(auth=invalid_auth, token=self.dummy_token, url=self.dummy_cloud_url)
         self.assertIn("Invalid `auth` value.", str(err.exception))
 
     def test_invalid_token(self):
+        """Test invalid values for token parameter."""
+
         invalid_tokens = [1, None, ""]
         for token in invalid_tokens:
             with self.subTest(token=token):
@@ -68,6 +72,8 @@ class TestAccount(IBMTestCase):
                 self.assertIn("Invalid `token` value.", str(err.exception))
 
     def test_invalid_url(self):
+        """Test invalid values for url parameter."""
+
         subtests = [
             {"auth": "cloud", "url": 123},
         ]
@@ -78,6 +84,8 @@ class TestAccount(IBMTestCase):
                 self.assertIn("Invalid `url` value.", str(err.exception))
 
     def test_invalid_instance(self):
+        """Test invalid values for instance parameter."""
+
         subtests = [
             {"auth": "cloud", "instance": "no-valid-crn"},
             {"auth": "cloud"},
@@ -90,6 +98,8 @@ class TestAccount(IBMTestCase):
                 self.assertIn("Invalid `instance` value.", str(err.exception))
 
     def test_invalid_proxy_config(self):
+        """Test invalid values for proxy configuration."""
+
         subtests = [
             {
                 "proxies": {"username_ntlm": "user-only"},
@@ -106,7 +116,7 @@ class TestAccount(IBMTestCase):
                 with self.assertRaises(ValueError) as err:
                     Account(
                         **params,
-                        auth="cloud",
+                        auth="legacy",
                         token=self.dummy_token,
                         url=self.dummy_cloud_url,
                     )

@@ -211,7 +211,7 @@ class IBMRuntimeService:
         instance: Optional[str] = None,
         auth: Optional[AccountType] = None,
         name: Optional[str] = None,
-        proxies: Optional[dict] = None,
+        proxies: Optional[ProxyConfigurationType] = None,
         verify: Optional[bool] = None,
     ) -> Account:
         """Discover account."""
