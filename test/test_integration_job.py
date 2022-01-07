@@ -447,7 +447,7 @@ class TestIntegrationJob(IBMTestCase):
             final_it = interim_result["iteration"]
 
         final_it = 0
-        iterations = 3
+        iterations = 5
         sub_tests = [JobStatus.QUEUED, JobStatus.RUNNING]
 
         for status in sub_tests:
@@ -462,7 +462,13 @@ class TestIntegrationJob(IBMTestCase):
                     callback=result_callback,
                 )
                 self._wait_for_status(job, status)
-                job.cancel()
+                try:
+                    job.cancel()
+                except RuntimeInvalidStateError:
+                    if job.status == JobStatus.DONE:
+                        self.log.warning("Unable to cancel job because it's already done.")
+                        return
+                    raise
                 time.sleep(3)  # Wait for cleanup
                 self.assertIsNotNone(job._ws_client._server_close_code)
                 self.assertLess(final_it, iterations)
