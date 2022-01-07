@@ -1155,7 +1155,7 @@ class IBMRuntimeService:
                 are included.
             program_id: Filter by Program ID.
             instance: The service instance to use. Currently only supported for legacy runtime,
-                and should be in the hub/group/project.
+                and should be in the hub/group/project format.
 
         Returns:
             A list of runtime jobs.
@@ -1295,6 +1295,22 @@ class IBMRuntimeService:
         **kwargs: Any,
     ) -> ibm_backend.IBMBackend:
         """Return the least busy available backend.
+
+        Args:
+            min_num_qubits: Minimum number of qubits the backend has to have.
+            instance: The service instance to use. For cloud runtime, this is the Cloud Resource
+                Name (CRN). For legacy runtime, this is the hub/group/project in that format.
+            filters: More complex filters, such as lambda functions.
+                For example::
+
+                    AccountProvider.backends(
+                        filters=lambda b: b.configuration().quantum_volume > 16)
+
+            kwargs: Simple filters that specify a ``True``/``False`` criteria in the
+                backend configuration, backends status, or provider credentials.
+                An example to get the operational backends with 5 qubits::
+
+                    IBMRuntimeService.least_busy(n_qubits=5, operational=True)
 
         Returns:
             The backend with the fewest number of pending jobs.
