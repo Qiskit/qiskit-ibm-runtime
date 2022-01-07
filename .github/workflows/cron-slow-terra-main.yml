@@ -10,13 +10,13 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-name: Slow-test
+name: Slow-test-terra-main
 on:
   schedule:
     - cron: '0 7 * * *'
 jobs:
-  slow-test:
-    name: slow-test
+  terra-main:
+    name: terra-main
     runs-on: macOS-latest
     env:
       QISKIT_IBM_API_TOKEN: ${{ secrets.QISKIT_IBM_API_TOKEN }}
@@ -40,5 +40,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install -c constraints.txt -e .
           pip install -U -c constraints.txt -r requirements-dev.txt
+          pip install -U git+https://github.com/Qiskit/qiskit-terra.git
       - name: Run Tests
         run: make test
