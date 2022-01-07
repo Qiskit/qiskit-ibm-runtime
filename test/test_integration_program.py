@@ -60,7 +60,7 @@ class TestIntegrationProgram(IBMTestCase):
     def test_list_programs(self, service):
         """Test listing programs."""
         program_id = self._upload_program(service)
-        programs = service.programs()
+        programs = service.programs(refresh=True)
         self.assertTrue(programs)
         found = False
         for prog in programs:
