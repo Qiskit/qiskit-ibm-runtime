@@ -41,6 +41,7 @@ from .utils.serialization import (
     SerializableClassDecoder,
     SerializableClass,
 )
+from .utils.utils import cancel_job_safe
 from .mock.proxy_server import MockProxyServer, use_proxies
 
 
@@ -284,8 +285,8 @@ class TestIntegrationJob(IBMTestCase):
         _ = self._run_program(service, iterations=10, backend=real_device)
         job = self._run_program(service, iterations=2, backend=real_device)
         self._wait_for_status(job, JobStatus.QUEUED)
-        job.cancel()
-        self.assertEqual(job.status(), JobStatus.CANCELLED)
+        if not cancel_job_safe(job, self.log):
+            return
         time.sleep(10)  # Wait a bit for DB to update.
         rjob = service.job(job.job_id)
         self.assertEqual(rjob.status(), JobStatus.CANCELLED)
@@ -295,8 +296,8 @@ class TestIntegrationJob(IBMTestCase):
         """Test canceling a running job."""
         job = self._run_program(service, iterations=3)
         self._wait_for_status(job, JobStatus.RUNNING)
-        job.cancel()
-        self.assertEqual(job.status(), JobStatus.CANCELLED)
+        if not cancel_job_safe(job, self.log):
+            return
         time.sleep(10)  # Wait a bit for DB to update.
         rjob = service.job(job.job_id)
         self.assertEqual(rjob.status(), JobStatus.CANCELLED)
@@ -447,7 +448,7 @@ class TestIntegrationJob(IBMTestCase):
             final_it = interim_result["iteration"]
 
         final_it = 0
-        iterations = 3
+        iterations = 5
         sub_tests = [JobStatus.QUEUED, JobStatus.RUNNING]
 
         for status in sub_tests:
@@ -462,7 +463,8 @@ class TestIntegrationJob(IBMTestCase):
                     callback=result_callback,
                 )
                 self._wait_for_status(job, status)
-                job.cancel()
+                if not cancel_job_safe(job, self.log):
+                    return
                 time.sleep(3)  # Wait for cleanup
                 self.assertIsNotNone(job._ws_client._server_close_code)
                 self.assertLess(final_it, iterations)
