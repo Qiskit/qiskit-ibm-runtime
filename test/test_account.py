@@ -21,7 +21,6 @@ from unittest import skipIf
 
 from qiskit_ibm_runtime.accounts import AccountManager, Account, management
 from qiskit_ibm_runtime.accounts.account import CLOUD_API_URL, LEGACY_API_URL
-from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from .ibm_test_case import IBMTestCase
 from .mock.fake_runtime_service import FakeRuntimeService
 from .utils.account import (
