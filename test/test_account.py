@@ -13,15 +13,15 @@
 """Tests for the account functions."""
 
 import json
-import uuid
 import logging
 import os
+import uuid
+from typing import Any
 from unittest import skipIf
 
-from qiskit_ibm_runtime.accounts.account import CLOUD_API_URL, LEGACY_API_URL
 from qiskit_ibm_runtime.accounts import AccountManager, Account, management
+from qiskit_ibm_runtime.accounts.account import CLOUD_API_URL, LEGACY_API_URL
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
-
 from .ibm_test_case import IBMTestCase
 from .mock.fake_runtime_service import FakeRuntimeService
 from .utils.account import (
@@ -44,6 +44,73 @@ _TEST_CLOUD_ACCOUNT = Account(
     url="https://cloud.ibm.com",
     instance="crn:v1:bluemix:public:quantum-computing:us-east:a/...::",
 )
+
+
+class TestAccount(IBMTestCase):
+    """Tests for Account class."""
+
+    dummy_token = "123"
+    dummy_cloud_url = "https://us-east.quantum-computing.cloud.ibm.com"
+    dummy_legacy_url = "https://auth.quantum-computing.ibm.com/api"
+
+    def test_invalid_auth(self):
+        with self.assertRaises(ValueError) as err:
+            invalid_auth: Any = "phantom"
+            Account(auth=invalid_auth, token=self.dummy_token, url=self.dummy_cloud_url)
+        self.assertIn("Invalid `auth` value.", str(err.exception))
+
+    def test_invalid_token(self):
+        invalid_tokens = [1, None, ""]
+        for token in invalid_tokens:
+            with self.subTest(token=token):
+                with self.assertRaises(ValueError) as err:
+                    Account(auth="cloud", token=token, url=self.dummy_cloud_url)
+                self.assertIn("Invalid `token` value.", str(err.exception))
+
+    def test_invalid_url(self):
+        subtests = [
+            {"auth": "cloud", "url": 123},
+        ]
+        for params in subtests:
+            with self.subTest(params=params):
+                with self.assertRaises(ValueError) as err:
+                    Account(**params, token=self.dummy_token)
+                self.assertIn("Invalid `url` value.", str(err.exception))
+
+    def test_invalid_instance(self):
+        subtests = [
+            {"auth": "cloud", "instance": "no-valid-crn"},
+            {"auth": "cloud"},
+            {"auth": "legacy", "instance": "no-hgp-format"},
+        ]
+        for params in subtests:
+            with self.subTest(params=params):
+                with self.assertRaises(ValueError) as err:
+                    Account(**params, token=self.dummy_token, url=self.dummy_cloud_url)
+                self.assertIn("Invalid `instance` value.", str(err.exception))
+
+    def test_invalid_proxy_config(self):
+        subtests = [
+            {
+                "proxies": {"username_ntlm": "user-only"},
+            },
+            {
+                "proxies": {"password_ntlm": "password-only"},
+            },
+            {
+                "proxies": {"urls": ""},
+            },
+        ]
+        for params in subtests:
+            with self.subTest(params=params):
+                with self.assertRaises(ValueError) as err:
+                    Account(
+                        **params,
+                        auth="cloud",
+                        token=self.dummy_token,
+                        url=self.dummy_cloud_url,
+                    )
+                self.assertIn("Invalid proxy configuration", str(err.exception))
 
 
 # NamedTemporaryFiles not supported in Windows

@@ -18,7 +18,7 @@ from urllib.parse import urlparse
 
 from requests.auth import AuthBase
 from typing_extensions import Literal, TypedDict
-
+from ..utils.hgp import from_instance_format
 from ..api.auth import LegacyAuth, CloudAuth
 
 AccountType = Optional[Literal["cloud", "legacy"]]
@@ -47,7 +47,7 @@ def _assert_valid_auth(auth: AccountType) -> None:
     """Assert that the auth parameter is valid."""
     if not (auth in ["cloud", "legacy"]):
         raise ValueError(
-            f"Inappropriate `auth` value. Expected one of ['cloud', 'legacy'], got '{auth}'."
+            f"Invalid `auth` value. Expected one of ['cloud', 'legacy'], got '{auth}'."
         )
 
 
@@ -55,7 +55,7 @@ def _assert_valid_token(token: str) -> None:
     """Assert that the token is valid."""
     if not (isinstance(token, str) and len(token) > 0):
         raise ValueError(
-            f"Inappropriate `token` value. Expected a non-empty string, got '{token}'."
+            f"Invalid `token` value. Expected a non-empty string, got '{token}'."
         )
 
 
@@ -64,17 +64,51 @@ def _assert_valid_url(url: str) -> None:
     try:
         urlparse(url)
     except:
-        raise ValueError(f"Inappropriate `url` value. Failed to parse '{url}' as URL.")
+        raise ValueError(f"Invalid `url` value. Failed to parse '{url}' as URL.")
+
+
+def _assert_valid_proxies(config: ProxyConfigurationType) -> None:
+    """Assert that the proxy configuration is valid."""
+
+    if config is None:
+        return
+
+    # verify NTLM authentication configuration
+    ntlm_user = config.get("username_ntlm")
+    ntlm_pass = config.get("password_ntlm")
+    if not any(
+        [
+            type(ntlm_user) == str and type(ntlm_pass) == str,
+            ntlm_user is None and ntlm_pass is None,
+        ]
+    ):
+        raise ValueError(
+            f"Invalid proxy configuration for NTLM authentication. None or both of username and password must be "
+            f"provided. Got username_ntlm={ntlm_user}, password_ntlm={ntlm_pass}."
+        )
+
+    # verify proxy configuration
+    urls = config.get("urls")
+    if urls is not None and not type(urls) is dict:
+        raise ValueError(
+            f"Invalid proxy configuration. Expected `urls` to contain a dictionary mapping protocol "
+            f"or protocol and host to the URL of the proxy. Got {urls}"
+        )
 
 
 def _assert_valid_instance(auth: AccountType, instance: str) -> None:
     """Assert that the instance name is valid for the given account type."""
     if auth == "cloud":
-        if not (isinstance(instance, str) and len(instance) > 0):
-            raise ValueError(
-                f"Inappropriate `instance` value. Expected a non-empty string."
-            )
-    # TODO: add validation for legacy instance when adding test coverage
+        if not (isinstance(instance, str) and instance.find("crn:") != -1):
+            raise ValueError(f"Invalid `instance` value. Expected a non-empty CRN.")
+    if auth == "legacy":
+        if instance is not None:
+            try:
+                from_instance_format(instance)
+            except:
+                raise ValueError(
+                    f"Invalid `instance` value. Expected hub/group/project format, got {instance}"
+                )
 
 
 class Account:
@@ -109,8 +143,12 @@ class Account:
         _assert_valid_url(resolved_url)
         self.url = resolved_url
 
+        _assert_valid_instance(auth, instance)
         self.instance = instance
+
+        _assert_valid_proxies(proxies)
         self.proxies = proxies
+
         self.verify = verify
 
     def to_saved_format(self) -> dict:
