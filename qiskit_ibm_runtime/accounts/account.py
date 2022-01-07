@@ -16,12 +16,28 @@
 from typing import Optional
 from urllib.parse import urlparse
 
-from typing_extensions import Literal
 from requests.auth import AuthBase
+from typing_extensions import Literal, TypedDict
 
 from ..api.auth import LegacyAuth, CloudAuth
 
 AccountType = Optional[Literal["cloud", "legacy"]]
+
+
+class ProxyConfigurationType(TypedDict, total=False):
+    """Dictionary type for custom proxy configuration.
+
+    All items in the dictionary are optional. When ``urls`` are provided, they must contain a dictionary mapping
+    protocol or protocol and host to the URL of the proxy. Refer to
+    https://docs.python-requests.org/en/latest/api/#requests.Session.proxies for details and examples.
+
+    NTLM user authentication can be enabled by setting ``username_ntlm`` and ``password_ntlm``.
+    """
+
+    urls: dict[str, str]
+    username_ntlm: str
+    password_ntlm: str
+
 
 LEGACY_API_URL = "https://auth.quantum-computing.ibm.com/api"
 CLOUD_API_URL = "https://us-east.quantum-computing.cloud.ibm.com"
@@ -70,8 +86,7 @@ class Account:
         token: str,
         url: Optional[str] = None,
         instance: Optional[str] = None,
-        # TODO: add validation for proxies input format
-        proxies: Optional[dict] = None,
+        proxies: Optional[ProxyConfigurationType] = None,
         verify: Optional[bool] = True,
     ):
         """Account constructor.
@@ -81,7 +96,7 @@ class Account:
             token: Account token to use.
             url: Authentication URL.
             instance: Service instance to use.
-            proxies: Proxies to use.
+            proxies: Proxy configuration.
             verify: Whether to verify server's TLS certificate.
         """
         _assert_valid_auth(auth)

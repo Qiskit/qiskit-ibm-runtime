@@ -15,7 +15,7 @@
 from typing import Dict, Optional, Any, Union
 
 from requests_ntlm import HttpNtlmAuth
-
+from ..accounts import ProxyConfigurationType
 from ..api.auth import LegacyAuth, CloudAuth
 
 TEMPLATE_IBM_HUBS = "{prefix}/Network/{hub}/Groups/{group}/Projects/{project}"
@@ -31,7 +31,7 @@ class ClientParameters:
         token: str,
         url: str = None,
         instance: Optional[str] = None,
-        proxies: Optional[Dict] = None,
+        proxies: Optional[ProxyConfigurationType] = None,
         verify: bool = True,
     ) -> None:
         """ClientParameters constructor.

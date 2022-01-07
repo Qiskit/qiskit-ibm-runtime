@@ -24,8 +24,8 @@ from qiskit.providers.backend import BackendV1 as Backend
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.providerutils import filter_backends
 
-from qiskit_ibm_runtime import ibm_backend  # pylint: disable=unused-import
-from .accounts import AccountManager, Account, AccountType
+from qiskit_ibm_runtime import ibm_backend
+from .accounts import AccountManager, Account, AccountType, ProxyConfigurationType
 from .accounts.exceptions import AccountsError
 from .api.clients import AuthClient, VersionClient
 from .api.clients.runtime import RuntimeClient
@@ -117,7 +117,7 @@ class IBMRuntimeService:
         url: Optional[str] = None,
         name: Optional[str] = None,
         instance: Optional[str] = None,
-        proxies: Optional[dict] = None,
+        proxies: Optional[ProxyConfigurationType] = None,
         verify: Optional[bool] = None,
     ) -> None:
         """IBMRuntimeService constructor
@@ -143,7 +143,7 @@ class IBMRuntimeService:
             name: Name of the account to load.
             instance: The service instance to use. For cloud runtime, this is the Cloud Resource
                 Name (CRN). For legacy runtime, this is the hub/group/project in that format.
-            proxies: Proxy configuration for the server.
+            proxies: Proxy configuration.
             verify: Whether to verify the server's TLS certificate.
 
         Returns:
@@ -536,7 +536,7 @@ class IBMRuntimeService:
         instance: Optional[str] = None,
         auth: Optional[AccountType] = None,
         name: Optional[str] = None,
-        proxies: Optional[dict] = None,
+        proxies: Optional[ProxyConfigurationType] = None,
         verify: Optional[bool] = None,
     ) -> None:
         """Save the account to disk for future use.
@@ -549,7 +549,7 @@ class IBMRuntimeService:
             instance: The CRN (cloud) or hub/group/project (legacy).
             auth: Authentication type. `cloud` or `legacy`.
             name: Name of the account to save.
-            proxies: Proxy configuration for the server.
+            proxies: Proxy configuration.
             verify: Verify the server's TLS certificate.
         """
 
