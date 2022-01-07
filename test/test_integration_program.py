@@ -60,7 +60,7 @@ class TestIntegrationProgram(IBMTestCase):
     def test_list_programs(self, service):
         """Test listing programs."""
         program_id = self._upload_program(service)
-        programs = service.programs()
+        programs = service.programs(refresh=True)
         self.assertTrue(programs)
         found = False
         for prog in programs:
@@ -88,10 +88,10 @@ class TestIntegrationProgram(IBMTestCase):
     def test_filter_programs_with_search(self, service):
         """Test filtering programs with the search parameter"""
         program_id = self._upload_program(service)
-        programs = service.programs(search="Test program")
+        programs = service.programs(search="test program")
         all_ids = [prog.program_id for prog in programs]
         self.assertIn(program_id, all_ids)
-        programs = service.programs(search="Test sample")
+        programs = service.programs(search="test sample")
         all_ids = [prog.program_id for prog in programs]
         self.assertNotIn(program_id, all_ids)
 
