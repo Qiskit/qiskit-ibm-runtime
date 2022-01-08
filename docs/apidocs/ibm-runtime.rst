@@ -8,4 +8,3 @@ Qiskit IBM Quantum Provider API Reference
    ibm_runtime
    ibm_visualization
    ibm_jupyter
-   ibm_utils
