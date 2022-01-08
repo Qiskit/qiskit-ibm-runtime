@@ -72,7 +72,7 @@ def iplot_gate_map(
             from qiskit_ibm_runtime import IBMRuntimeService
             from qiskit_ibm_runtime.visualization import iplot_gate_map
 
-            service = IBMRuntimeService(group='open', project='main')
+            service = IBMRuntimeService()
             backend = service.get_backend('ibmq_vigo')
 
             iplot_gate_map(backend, as_widget=True)
