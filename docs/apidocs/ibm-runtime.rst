@@ -1,5 +1,5 @@
 *****************************************
-Qiskit IBM Quantum Provider API Reference
+Qiskit IBM Runtime API Reference
 *****************************************
 
 .. toctree::
