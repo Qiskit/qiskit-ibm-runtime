@@ -1,5 +1,6 @@
 ---
 features:
   - |
-    You can now pass ``hub``, ``group``, and ``project`` parameters to
-    :meth:`qiskit_ibm_runtime.IBMRuntimeService.jobs` to filter jobs.
+    You can now pass ``instance`` parameter in the hub/group/project format to
+    :meth:`qiskit_ibm_runtime.IBMRuntimeService.jobs` to filter jobs. Currently
+    only supported for legacy authentication.
