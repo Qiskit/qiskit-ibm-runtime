@@ -41,7 +41,7 @@ Detailed information on a single backend
     from qiskit_ibm_runtime import IBMRuntimeService
     import qiskit_ibm_runtime.jupyter
 
-    service = IBMRuntimeService(hub='ibm-q')
+    service = IBMRuntimeService()
     backend = service.get_backend('ibmq_vigo')
 
 .. jupyter-execute::
@@ -53,17 +53,6 @@ Detailed information on a single backend
 .. jupyter-execute::
 
     backend
-
-
-IBM Quantum dashboard
-======================================
-
-.. code-block:: python
-
-    from qiskit_ibm_runtime import IBMRuntimeService
-    import qiskit_ibm_runtime.jupyter
-
-    %ibm_quantum_dashboard
 
 """
 import sys
