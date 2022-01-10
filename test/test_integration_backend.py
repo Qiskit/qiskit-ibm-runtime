@@ -49,7 +49,7 @@ class TestIntegrationBackend(IBMTestCase):
     def test_get_backend(self, service):
         """Test getting a backend."""
         backends = service.backends()
-        backend = service.get_backend(backends[0].name())
+        backend = service.backend(backends[0].name())
         self.assertTrue(backend)
 
 

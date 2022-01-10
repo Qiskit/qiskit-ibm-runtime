@@ -69,7 +69,7 @@ def iplot_error_map(
            from qiskit_ibm_runtime.visualization import iplot_error_map
 
            service = IBMRuntimeService()
-           backend = service.get_backend('ibmq_vigo')
+           backend = service.backend('ibmq_vigo')
 
            iplot_error_map(backend, as_widget=True)
     """
