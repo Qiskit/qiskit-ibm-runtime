@@ -328,6 +328,9 @@ class RuntimeProgram:
         self._is_public = response.get("is_public", False)
         self._data = response.get("data", "")
 
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__}('{self._name}')>"
+
 
 class ParameterNamespace(SimpleNamespace):
     """A namespace for program parameters with validation.
