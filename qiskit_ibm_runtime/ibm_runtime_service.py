@@ -430,7 +430,7 @@ class IBMRuntimeService:
                     f"Hub/group/project {instance} "
                     "could not be found for this account."
                 )
-            if backend_name and not self._hgps[instance].get_backend(backend_name):
+            if backend_name and not self._hgps[instance].backend(backend_name):
                 raise QiskitBackendNotFoundError(
                     f"Backend {backend_name} cannot be found in "
                     f"hub/group/project {instance}"
@@ -441,7 +441,7 @@ class IBMRuntimeService:
             return list(self._hgps.values())[0]
 
         for hgp in self._hgps.values():
-            if hgp.get_backend(backend_name):
+            if hgp.backend(backend_name):
                 return hgp
 
         raise QiskitBackendNotFoundError(
@@ -590,7 +590,7 @@ class IBMRuntimeService:
             ),
         )
 
-    def get_backend(
+    def backend(
         self,
         name: str = None,
         instance: Optional[str] = None,
@@ -810,12 +810,12 @@ class IBMRuntimeService:
                 )
             # Find the right hgp
             hgp = self._get_hgp(instance=instance, backend_name=backend_name)
-            backend = hgp.get_backend(backend_name)
+            backend = hgp.backend(backend_name)
             hgp_name = hgp.name
         else:
             # TODO Support instance for cloud
             # TODO Support optional backend name when fully supported by server
-            backend = self.get_backend(backend_name)
+            backend = self.backend(backend_name)
 
         result_decoder = result_decoder or ResultDecoder
         try:
@@ -1216,7 +1216,7 @@ class IBMRuntimeService:
         )
         # Try to find the right backend
         try:
-            backend = self.get_backend(raw_data["backend"], instance=instance)
+            backend = self.backend(raw_data["backend"], instance=instance)
         except (IBMProviderError, QiskitBackendNotFoundError):
             backend = ibm_backend.IBMRetiredBackend.from_name(
                 backend_name=raw_data["backend"],
