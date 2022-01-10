@@ -28,53 +28,6 @@ LEGACY_API_URL = "https://auth.quantum-computing.ibm.com/api"
 CLOUD_API_URL = "https://us-east.quantum-computing.cloud.ibm.com"
 
 
-def _assert_valid_auth(auth: AccountType) -> None:
-    """Assert that the auth parameter is valid."""
-    if not (auth in ["cloud", "legacy"]):
-        raise ValueError(
-            f"Invalid `auth` value. Expected one of ['cloud', 'legacy'], got '{auth}'."
-        )
-
-
-def _assert_valid_token(token: str) -> None:
-    """Assert that the token is valid."""
-    if not (isinstance(token, str) and len(token) > 0):
-        raise ValueError(
-            f"Invalid `token` value. Expected a non-empty string, got '{token}'."
-        )
-
-
-def _assert_valid_url(url: str) -> None:
-    """Assert that the URL is valid."""
-    try:
-        urlparse(url)
-    except:
-        raise ValueError(f"Invalid `url` value. Failed to parse '{url}' as URL.")
-
-
-def _assert_valid_proxies(config: ProxyConfiguration) -> None:
-    """Assert that the proxy configuration is valid."""
-    if config is not None:
-        config.validate()
-
-
-def _assert_valid_instance(auth: AccountType, instance: str) -> None:
-    """Assert that the instance name is valid for the given account type."""
-    if auth == "cloud":
-        if not (isinstance(instance, str) and len(instance) > 0):
-            raise ValueError(
-                f"Invalid `instance` value. Expected a non-empty string, got '{instance}'."
-            )
-    if auth == "legacy":
-        if instance is not None:
-            try:
-                from_instance_format(instance)
-            except:
-                raise ValueError(
-                    f"Invalid `instance` value. Expected hub/group/project format, got {instance}"
-                )
-
-
 class Account:
     """Class that represents an account."""
 
@@ -97,20 +50,20 @@ class Account:
             proxies: Proxy configuration.
             verify: Whether to verify server's TLS certificate.
         """
-        _assert_valid_auth(auth)
+        self._assert_valid_auth(auth)
         self.auth = auth
 
-        _assert_valid_token(token)
+        self._assert_valid_token(token)
         self.token = token
 
         resolved_url = url or (LEGACY_API_URL if auth == "legacy" else CLOUD_API_URL)
-        _assert_valid_url(resolved_url)
+        self._assert_valid_url(resolved_url)
         self.url = resolved_url
 
-        _assert_valid_instance(auth, instance)
+        self._assert_valid_instance(auth, instance)
         self.instance = instance
 
-        _assert_valid_proxies(proxies)
+        self._assert_valid_proxies(proxies)
         self.proxies = proxies
 
         self.verify = verify
@@ -155,3 +108,50 @@ class Account:
                 self.verify == other.verify,
             ]
         )
+
+    @staticmethod
+    def _assert_valid_auth(auth: AccountType) -> None:
+        """Assert that the auth parameter is valid."""
+        if not (auth in ["cloud", "legacy"]):
+            raise ValueError(
+                f"Invalid `auth` value. Expected one of ['cloud', 'legacy'], got '{auth}'."
+            )
+
+    @staticmethod
+    def _assert_valid_token(token: str) -> None:
+        """Assert that the token is valid."""
+        if not (isinstance(token, str) and len(token) > 0):
+            raise ValueError(
+                f"Invalid `token` value. Expected a non-empty string, got '{token}'."
+            )
+
+    @staticmethod
+    def _assert_valid_url(url: str) -> None:
+        """Assert that the URL is valid."""
+        try:
+            urlparse(url)
+        except:
+            raise ValueError(f"Invalid `url` value. Failed to parse '{url}' as URL.")
+
+    @staticmethod
+    def _assert_valid_proxies(config: ProxyConfiguration) -> None:
+        """Assert that the proxy configuration is valid."""
+        if config is not None:
+            config.validate()
+
+    @staticmethod
+    def _assert_valid_instance(auth: AccountType, instance: str) -> None:
+        """Assert that the instance name is valid for the given account type."""
+        if auth == "cloud":
+            if not (isinstance(instance, str) and len(instance) > 0):
+                raise ValueError(
+                    f"Invalid `instance` value. Expected a non-empty string, got '{instance}'."
+                )
+        if auth == "legacy":
+            if instance is not None:
+                try:
+                    from_instance_format(instance)
+                except:
+                    raise ValueError(
+                        f"Invalid `instance` value. Expected hub/group/project format, got {instance}"
+                    )

@@ -14,7 +14,9 @@
 
 
 from dataclasses import dataclass
-from typing import Optional, Dict
+from typing import Optional, Dict, Any
+from urllib.parse import urlparse
+
 from requests_ntlm import HttpNtlmAuth
 
 
@@ -82,3 +84,49 @@ class ProxyConfiguration:
             )
 
         return request_kwargs
+
+    def to_ws_params(self, ws_url: str) -> dict:
+        """Extract proxy information for websocket.
+
+        Args:
+            ws_url: Websocket URL.
+
+        Returns:
+            A dictionary with proxy configuration parameters in the format expected by websocket.
+            The following keys can be present: ``http_proxy_host``and ``http_proxy_port``,
+            ``proxy_type``, ``http_proxy_auth``.
+        """
+        out: Any = {}
+
+        if self.urls:
+            proxies = self.urls
+            url_parts = urlparse(ws_url)
+            proxy_keys = [
+                ws_url,
+                "wss",
+                "https://" + url_parts.hostname,
+                "https",
+                "all://" + url_parts.hostname,
+                "all",
+            ]
+            for key in proxy_keys:
+                if key in proxies:
+                    proxy_parts = urlparse(proxies[key], scheme="http")
+                    out["http_proxy_host"] = proxy_parts.hostname
+                    out["http_proxy_port"] = proxy_parts.port
+                    out["proxy_type"] = (
+                        "http"
+                        if proxy_parts.scheme.startswith("http")
+                        else proxy_parts.scheme
+                    )
+                    if proxy_parts.username and proxy_parts.password:
+                        out["http_proxy_auth"] = (
+                            proxy_parts.username,
+                            proxy_parts.password,
+                        )
+                    break
+
+        if self.username_ntlm and self.password_ntlm:
+            out["http_proxy_auth"] = (self.username_ntlm, self.password_ntlm)
+
+        return out
