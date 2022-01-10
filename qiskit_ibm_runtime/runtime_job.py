@@ -410,6 +410,9 @@ class RuntimeJob:
         except queue.Empty:
             pass
 
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__}('{self._job_id}', '{self._program_id}')>"
+
     @property
     def job_id(self) -> str:
         """Return a unique ID identifying the job.
