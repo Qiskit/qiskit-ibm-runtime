@@ -61,8 +61,8 @@ def ws_proxy_params(client_params: ClientParameters, ws_url: str) -> Dict:
 
     if "auth" in conn_data:
         out["http_proxy_auth"] = (
-            client_params.proxies["username_ntlm"],
-            client_params.proxies["password_ntlm"],
+            client_params.proxies.username_ntlm,
+            client_params.proxies.password_ntlm,
         )
 
     return out

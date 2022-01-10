@@ -14,9 +14,8 @@
 
 from typing import Dict, Optional, Any, Union
 
-from requests_ntlm import HttpNtlmAuth
-from ..accounts import ProxyConfigurationType
 from ..api.auth import LegacyAuth, CloudAuth
+from ..proxies import ProxyConfiguration
 
 TEMPLATE_IBM_HUBS = "{prefix}/Network/{hub}/Groups/{group}/Projects/{project}"
 """str: Template for creating an IBM Quantum URL with hub/group/project information."""
@@ -31,7 +30,7 @@ class ClientParameters:
         token: str,
         url: str = None,
         instance: Optional[str] = None,
-        proxies: Optional[ProxyConfigurationType] = None,
+        proxies: Optional[ProxyConfiguration] = None,
         verify: bool = True,
     ) -> None:
         """ClientParameters constructor.
@@ -67,12 +66,6 @@ class ClientParameters:
         request_kwargs: Any = {"verify": self.verify}
 
         if self.proxies:
-            if "urls" in self.proxies:
-                request_kwargs["proxies"] = self.proxies["urls"]
-
-            if "username_ntlm" in self.proxies and "password_ntlm" in self.proxies:
-                request_kwargs["auth"] = HttpNtlmAuth(
-                    self.proxies["username_ntlm"], self.proxies["password_ntlm"]
-                )
+            request_kwargs.update(self.proxies.to_request_params())
 
         return request_kwargs

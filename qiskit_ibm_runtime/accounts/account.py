@@ -13,31 +13,16 @@
 """Account related classes and functions."""
 
 
-from typing import Optional, Dict
+from typing import Optional
 from urllib.parse import urlparse
 
 from requests.auth import AuthBase
-from typing_extensions import Literal, TypedDict
+from typing_extensions import Literal
+from ..proxies import ProxyConfiguration
 from ..utils.hgp import from_instance_format
 from ..api.auth import LegacyAuth, CloudAuth
 
 AccountType = Optional[Literal["cloud", "legacy"]]
-
-
-class ProxyConfigurationType(TypedDict, total=False):
-    """Dictionary type for custom proxy configuration.
-
-    All items in the dictionary are optional. When ``urls`` are provided, they must contain a dictionary
-    mapping protocol or protocol and host to the URL of the proxy. Refer to
-    https://docs.python-requests.org/en/latest/api/#requests.Session.proxies for details and examples.
-
-    NTLM user authentication can be enabled by setting ``username_ntlm`` and ``password_ntlm``.
-    """
-
-    urls: Dict[str, str]
-    username_ntlm: str
-    password_ntlm: str
-
 
 LEGACY_API_URL = "https://auth.quantum-computing.ibm.com/api"
 CLOUD_API_URL = "https://us-east.quantum-computing.cloud.ibm.com"
@@ -67,33 +52,10 @@ def _assert_valid_url(url: str) -> None:
         raise ValueError(f"Invalid `url` value. Failed to parse '{url}' as URL.")
 
 
-def _assert_valid_proxies(config: ProxyConfigurationType) -> None:
+def _assert_valid_proxies(config: ProxyConfiguration) -> None:
     """Assert that the proxy configuration is valid."""
-
-    if config is None:
-        return
-
-    # verify NTLM authentication configuration
-    ntlm_user = config.get("username_ntlm")
-    ntlm_pass = config.get("password_ntlm")
-    if not any(
-        [
-            isinstance(ntlm_user, str) and isinstance(ntlm_pass, str),
-            ntlm_user is None and ntlm_pass is None,
-        ]
-    ):
-        raise ValueError(
-            f"Invalid proxy configuration for NTLM authentication. None or both of username and "
-            f"password must be provided. Got username_ntlm={ntlm_user}, password_ntlm={ntlm_pass}."
-        )
-
-    # verify proxy configuration
-    urls = config.get("urls")
-    if urls is not None and not isinstance(urls, dict):
-        raise ValueError(
-            f"Invalid proxy configuration. Expected `urls` to contain a dictionary mapping protocol "
-            f"or protocol and host to the URL of the proxy. Got {urls}"
-        )
+    if config is not None:
+        config.validate()
 
 
 def _assert_valid_instance(auth: AccountType, instance: str) -> None:
@@ -122,7 +84,7 @@ class Account:
         token: str,
         url: Optional[str] = None,
         instance: Optional[str] = None,
-        proxies: Optional[ProxyConfigurationType] = None,
+        proxies: Optional[ProxyConfiguration] = None,
         verify: Optional[bool] = True,
     ):
         """Account constructor.
@@ -155,17 +117,21 @@ class Account:
 
     def to_saved_format(self) -> dict:
         """Returns a dictionary that represents how the account is saved on disk."""
-        return {k: v for k, v in self.__dict__.items() if v is not None}
+        result = {k: v for k, v in self.__dict__.items() if v is not None}
+        if self.proxies:
+            result["proxies"] = self.proxies.to_dict()
+        return result
 
     @classmethod
     def from_saved_format(cls, data: dict) -> "Account":
         """Creates an account instance from data saved on disk."""
+        proxies = data.get("proxies")
         return cls(
             auth=data.get("auth"),
             url=data.get("url"),
             token=data.get("token"),
             instance=data.get("instance"),
-            proxies=data.get("proxies"),
+            proxies=ProxyConfiguration(**proxies) if proxies else None,
             verify=data.get("verify", True),
         )
 

@@ -15,7 +15,8 @@
 import os
 from typing import Optional, Dict
 
-from .account import Account, AccountType, ProxyConfigurationType
+from .account import Account, AccountType
+from ..proxies import ProxyConfiguration
 from .storage import save_config, read_config, delete_config
 
 _DEFAULT_ACCOUNT_CONFIG_JSON_FILE = os.path.join(
@@ -39,7 +40,7 @@ class AccountManager:
         instance: Optional[str] = None,
         auth: Optional[AccountType] = None,
         name: Optional[str] = _DEFAULT_ACCOUNT_NAME,
-        proxies: Optional[ProxyConfigurationType] = None,
+        proxies: Optional[ProxyConfiguration] = None,
         verify: Optional[bool] = None,
     ) -> None:
         """Save account on disk."""

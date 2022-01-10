@@ -20,6 +20,7 @@ from typing import Any
 from unittest import skipIf
 
 from qiskit_ibm_runtime.accounts import AccountManager, Account, management
+from qiskit_ibm_runtime.proxies import ProxyConfiguration
 from qiskit_ibm_runtime.accounts.account import CLOUD_API_URL, LEGACY_API_URL
 from .ibm_test_case import IBMTestCase
 from .mock.fake_runtime_service import FakeRuntimeService
@@ -42,6 +43,9 @@ _TEST_CLOUD_ACCOUNT = Account(
     token="token-y",
     url="https://cloud.ibm.com",
     instance="crn:v1:bluemix:public:quantum-computing:us-east:a/...::",
+    proxies=ProxyConfiguration(
+        username_ntlm="bla", password_ntlm="blub", urls={"https": "127.0.0.1"}
+    ),
 )
 
 
@@ -101,13 +105,13 @@ class TestAccount(IBMTestCase):
 
         subtests = [
             {
-                "proxies": {"username_ntlm": "user-only"},
+                "proxies": ProxyConfiguration(**{"username_ntlm": "user-only"}),
             },
             {
-                "proxies": {"password_ntlm": "password-only"},
+                "proxies": ProxyConfiguration(**{"password_ntlm": "password-only"}),
             },
             {
-                "proxies": {"urls": ""},
+                "proxies": ProxyConfiguration(**{"urls": ""}),
             },
         ]
         for params in subtests:
@@ -252,6 +256,9 @@ class TestAccountManager(IBMTestCase):
         self.assertTrue(len(AccountManager.list()) == 0)
 
 
+MOCK_PROXY_CONFIG_DICT = {
+    "urls": {"https": "127.0.0.1", "username_ntlm": "", "password_ntlm": ""}
+}
 # NamedTemporaryFiles not supported in Windows
 @skipIf(os.name == "nt", "Test not supported in Windows")
 class TestEnableAccount(IBMTestCase):
@@ -441,10 +448,10 @@ class TestEnableAccount(IBMTestCase):
         """Test initializing account by name and preferences."""
         name = "foo"
         subtests = [
-            {"proxies": "foo"},
+            {"proxies": MOCK_PROXY_CONFIG_DICT},
             {"verify": False},
             {"instance": "bar"},
-            {"proxies": "foo", "verify": False, "instance": "bar"},
+            {"proxies": MOCK_PROXY_CONFIG_DICT, "verify": False, "instance": "bar"},
         ]
         for extra in subtests:
             with self.subTest(extra=extra):
@@ -458,10 +465,10 @@ class TestEnableAccount(IBMTestCase):
     def test_enable_account_by_auth_pref(self):
         """Test initializing account by auth and preferences."""
         subtests = [
-            {"proxies": "foo"},
+            {"proxies": MOCK_PROXY_CONFIG_DICT},
             {"verify": False},
             {"instance": "bar"},
-            {"proxies": "foo", "verify": False, "instance": "bar"},
+            {"proxies": MOCK_PROXY_CONFIG_DICT, "verify": False, "instance": "bar"},
         ]
         for auth in ["cloud", "legacy"]:
             for extra in subtests:
@@ -479,10 +486,10 @@ class TestEnableAccount(IBMTestCase):
     def test_enable_account_by_env_pref(self):
         """Test initializing account by environment variable and preferences."""
         subtests = [
-            {"proxies": "foo"},
+            {"proxies": MOCK_PROXY_CONFIG_DICT},
             {"verify": False},
             {"instance": "bar"},
-            {"proxies": "foo", "verify": False, "instance": "bar"},
+            {"proxies": MOCK_PROXY_CONFIG_DICT, "verify": False, "instance": "bar"},
         ]
         for extra in subtests:
             with self.subTest(extra=extra):
@@ -531,7 +538,7 @@ class TestEnableAccount(IBMTestCase):
 
     def _verify_prefs(self, prefs, account):
         if "proxies" in prefs:
-            self.assertEqual(account.proxies, prefs["proxies"])
+            self.assertEqual(account.proxies, ProxyConfiguration(**prefs["proxies"]))
         if "verify" in prefs:
             self.assertEqual(account.verify, prefs["verify"])
         if "instance" in prefs:

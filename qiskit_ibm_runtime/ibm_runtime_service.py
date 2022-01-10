@@ -25,8 +25,9 @@ from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.providerutils import filter_backends
 
 from qiskit_ibm_runtime import ibm_backend
-from .accounts import AccountManager, Account, AccountType, ProxyConfigurationType
+from .accounts import AccountManager, Account, AccountType
 from .accounts.exceptions import AccountsError
+from .proxies import ProxyConfiguration
 from .api.clients import AuthClient, VersionClient
 from .api.clients.runtime import RuntimeClient
 from .api.exceptions import RequestsApiError
@@ -117,7 +118,7 @@ class IBMRuntimeService:
         url: Optional[str] = None,
         name: Optional[str] = None,
         instance: Optional[str] = None,
-        proxies: Optional[ProxyConfigurationType] = None,
+        proxies: Optional[dict] = None,
         verify: Optional[bool] = None,
     ) -> None:
         """IBMRuntimeService constructor
@@ -143,7 +144,11 @@ class IBMRuntimeService:
             name: Name of the account to load.
             instance: The service instance to use. For cloud runtime, this is the Cloud Resource
                 Name (CRN). For legacy runtime, this is the hub/group/project in that format.
-            proxies: Proxy configuration.
+            proxies: Proxy configuration. Supported optional keys are
+                ``urls`` (a dictionary mapping protocol or protocol and host to the URL of the proxy,
+                documented at https://docs.python-requests.org/en/latest/api/#requests.Session.proxies),
+                ```username_ntlm```, ```password_ntlm```(username and password to enable NTLM user
+                authentication)
             verify: Whether to verify the server's TLS certificate.
 
         Returns:
@@ -160,7 +165,7 @@ class IBMRuntimeService:
             instance=instance,
             auth=auth,
             name=name,
-            proxies=proxies,
+            proxies=ProxyConfiguration(**proxies) if proxies else None,
             verify=verify,
         )
         if self._account.auth == "cloud" and not self._account.instance:
@@ -211,7 +216,7 @@ class IBMRuntimeService:
         instance: Optional[str] = None,
         auth: Optional[AccountType] = None,
         name: Optional[str] = None,
-        proxies: Optional[ProxyConfigurationType] = None,
+        proxies: Optional[ProxyConfiguration] = None,
         verify: Optional[bool] = None,
     ) -> Account:
         """Discover account."""
@@ -536,7 +541,7 @@ class IBMRuntimeService:
         instance: Optional[str] = None,
         auth: Optional[AccountType] = None,
         name: Optional[str] = None,
-        proxies: Optional[ProxyConfigurationType] = None,
+        proxies: Optional[dict] = None,
         verify: Optional[bool] = None,
     ) -> None:
         """Save the account to disk for future use.
@@ -549,7 +554,11 @@ class IBMRuntimeService:
             instance: The CRN (cloud) or hub/group/project (legacy).
             auth: Authentication type. `cloud` or `legacy`.
             name: Name of the account to save.
-            proxies: Proxy configuration.
+            proxies: Proxy configuration. Supported optional keys are
+                ``urls`` (a dictionary mapping protocol or protocol and host to the URL of the proxy,
+                documented at https://docs.python-requests.org/en/latest/api/#requests.Session.proxies),
+                ```username_ntlm```, ```password_ntlm```(username and password to enable NTLM user
+                authentication)
             verify: Verify the server's TLS certificate.
         """
 
@@ -559,7 +568,7 @@ class IBMRuntimeService:
             instance=instance,
             auth=auth,
             name=name,
-            proxies=proxies,
+            proxies=ProxyConfiguration(**proxies) if proxies else None,
             verify=verify,
         )
 
