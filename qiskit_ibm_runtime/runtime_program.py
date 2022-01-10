@@ -329,7 +329,7 @@ class RuntimeProgram:
         self._data = response.get("data", "")
 
     def __repr__(self) -> str:
-        return f"<{self.__class__.__name__}('{self._name}')>"
+        return f"<{self.__class__.__name__}('{self._id}')>"
 
 
 class ParameterNamespace(SimpleNamespace):
