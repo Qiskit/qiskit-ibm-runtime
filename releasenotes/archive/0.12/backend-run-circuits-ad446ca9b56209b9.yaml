@@ -26,7 +26,7 @@ features:
       from qiskit.test.reference_circuits import ReferenceCircuits
 
       provider = IBMQ.load_account()
-      backend = provider.get_backend('ibmq_vigo')
+      backend = provider.backend('ibmq_vigo')
       circuits = transpile(ReferenceCircuits.bell(), backend=backend)
       default_shots = backend.options.shots  # Returns the backend default of 1024 shots.
       backend.set_options(shots=2048)        # All jobs will now have use 2048 shots.

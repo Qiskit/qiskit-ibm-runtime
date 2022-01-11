@@ -42,7 +42,7 @@ Detailed information on a single backend
     import qiskit_ibm_runtime.jupyter
 
     service = IBMRuntimeService()
-    backend = service.get_backend('ibmq_vigo')
+    backend = service.backend('ibmq_vigo')
 
 .. jupyter-execute::
     :hide-code:
