@@ -1,5 +1,0 @@
-qiskit-aer
-pytest
-black==21.5b0
-astroid==2.5.6
-pylint==2.8.2
