@@ -124,7 +124,7 @@ class RuntimeProgram:
             if "min_num_qubits" in schema:
                 formatted.append(
                     " " * 4
-                    + "Minimum number qubits: {}".format(str(schema["min_num_qubits"]))
+                    + "Minimum number of qubits: {}".format(str(schema["min_num_qubits"]))
                 )
             if "supported_features" in schema:
                 formatted.append(
