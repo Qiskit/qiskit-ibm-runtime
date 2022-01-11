@@ -39,13 +39,17 @@ class TestIntegrationBackend(IBMTestCase):
         backends = service.backends()
         self.assertTrue(backends)
         backend_names = [back.name() for back in backends]
-        self.assertEqual(len(backend_names), len(set(backend_names)))
+        self.assertEqual(
+            len(backend_names),
+            len(set(backend_names)),
+            f"backend_names={backend_names}",
+        )
 
     @run_cloud_legacy_real
     def test_get_backend(self, service):
         """Test getting a backend."""
         backends = service.backends()
-        backend = service.get_backend(backends[0].name())
+        backend = service.backend(backends[0].name())
         self.assertTrue(backend)
 
 

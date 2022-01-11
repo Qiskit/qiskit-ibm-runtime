@@ -41,6 +41,7 @@ from .utils.serialization import (
     SerializableClassDecoder,
     SerializableClass,
 )
+from .utils.utils import cancel_job_safe
 from .mock.proxy_server import MockProxyServer, use_proxies
 
 
@@ -214,7 +215,7 @@ class TestIntegrationJob(IBMTestCase):
             jobs.append(self._run_program(service))
 
         rjobs = service.jobs(limit=2, program_id=self.program_ids[service.auth])
-        self.assertEqual(len(rjobs), 2)
+        self.assertEqual(len(rjobs), 2, f"Retrieved jobs: {[j.job_id for j in rjobs]}")
         job_ids = {job.job_id for job in jobs}
         rjob_ids = {rjob.job_id for rjob in rjobs}
         self.assertTrue(
@@ -259,7 +260,7 @@ class TestIntegrationJob(IBMTestCase):
         job.wait_for_final_state()
         rjobs = service.jobs(program_id=program_id)
         self.assertEqual(program_id, rjobs[0].program_id)
-        self.assertEqual(1, len(rjobs))
+        self.assertEqual(1, len(rjobs), f"Retrieved jobs: {[j.job_id for j in rjobs]}")
 
     def test_jobs_filter_by_hgp(self):
         """Test retrieving jobs by hgp."""
@@ -270,7 +271,7 @@ class TestIntegrationJob(IBMTestCase):
         job.wait_for_final_state()
         rjobs = service.jobs(program_id=program_id, instance=default_hgp)
         self.assertEqual(program_id, rjobs[0].program_id)
-        self.assertEqual(1, len(rjobs))
+        self.assertEqual(1, len(rjobs), f"Retrieved jobs: {[j.job_id for j in rjobs]}")
 
         uuid_ = uuid.uuid4().hex
         fake_hgp = f"{uuid_}/{uuid_}/{uuid_}"
@@ -284,8 +285,8 @@ class TestIntegrationJob(IBMTestCase):
         _ = self._run_program(service, iterations=10, backend=real_device)
         job = self._run_program(service, iterations=2, backend=real_device)
         self._wait_for_status(job, JobStatus.QUEUED)
-        job.cancel()
-        self.assertEqual(job.status(), JobStatus.CANCELLED)
+        if not cancel_job_safe(job, self.log):
+            return
         time.sleep(10)  # Wait a bit for DB to update.
         rjob = service.job(job.job_id)
         self.assertEqual(rjob.status(), JobStatus.CANCELLED)
@@ -295,8 +296,8 @@ class TestIntegrationJob(IBMTestCase):
         """Test canceling a running job."""
         job = self._run_program(service, iterations=3)
         self._wait_for_status(job, JobStatus.RUNNING)
-        job.cancel()
-        self.assertEqual(job.status(), JobStatus.CANCELLED)
+        if not cancel_job_safe(job, self.log):
+            return
         time.sleep(10)  # Wait a bit for DB to update.
         rjob = service.job(job.job_id)
         self.assertEqual(rjob.status(), JobStatus.CANCELLED)
@@ -447,7 +448,7 @@ class TestIntegrationJob(IBMTestCase):
             final_it = interim_result["iteration"]
 
         final_it = 0
-        iterations = 3
+        iterations = 5
         sub_tests = [JobStatus.QUEUED, JobStatus.RUNNING]
 
         for status in sub_tests:
@@ -462,7 +463,8 @@ class TestIntegrationJob(IBMTestCase):
                     callback=result_callback,
                 )
                 self._wait_for_status(job, status)
-                job.cancel()
+                if not cancel_job_safe(job, self.log):
+                    return
                 time.sleep(3)  # Wait for cleanup
                 self.assertIsNotNone(job._ws_client._server_close_code)
                 self.assertLess(final_it, iterations)
@@ -602,6 +604,7 @@ class TestIntegrationJob(IBMTestCase):
         metadata["max_execution_time"] = max_execution_time
         metadata["is_public"] = is_public
         program_id = service.upload_program(data=data, metadata=metadata)
+        self.log.info("Uploaded runtime program %s", program_id)
         self.to_delete[service.auth].append(program_id)
         return program_id
 
