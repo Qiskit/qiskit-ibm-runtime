@@ -1,0 +1,23 @@
+{
+  "name": "circuit-runner",
+  "description": "A runtime program that takes one or more circuits, compiles them, executes them, and optionally applies measurement error mitigation.",
+  "max_execution_time": 14400,
+  "version": "1.0",
+  "parameters": [
+    {"name": "circuits", "description": "A circuit or a list of circuits.", "type": "A QuantumCircuit or a list of QuantumCircuits.", "required": true},
+    {"name": "shots", "description": "Number of repetitions of each circuit, for sampling. Default: 1024.", "type": "int", "required": false},
+    {"name": "initial_layout", "description": "Initial position of virtual qubits on physical qubits.", "type": "dict or list", "required": false},
+    {"name": "layout_method", "description": "Name of layout selection pass ('trivial', 'dense', 'noise_adaptive', 'sabre')", "type": "string", "required": false},
+    {"name": "routing_method", "description": "Name of routing pass ('basic', 'lookahead', 'stochastic', 'sabre').", "type": "string", "required": false},
+    {"name": "translation_method", "description": "Name of translation pass ('unroller', 'translator', 'synthesis').", "type": "string", "required": false},
+    {"name": "seed_transpiler", "description": "Sets random seed for the stochastic parts of the transpiler.", "type": "int", "required": false},
+    {"name": "optimization_level", "description": "How much optimization to perform on the circuits (0-3). Higher levels generate more optimized circuits. Default is 1.", "type": "int", "required": false},
+    {"name": "init_qubits", "description": "Whether to reset the qubits to the ground state for each shot.", "type": "bool", "required": false},
+    {"name": "rep_delay", "description": "Delay between programs in seconds.", "type": "float", "required": false},
+    {"name": "transpiler_options", "description": "Additional compilation options.", "type": "dict", "required": false},
+    {"name": "measurement_error_mitigation", "description": "Whether to apply measurement error mitigation. Default is False.", "type": "bool", "required": false}
+  ],
+  "return_values": [
+    {"name": "-", "description": "Circuit execution results.", "type": "RunnerResult object"}
+  ]
+}
