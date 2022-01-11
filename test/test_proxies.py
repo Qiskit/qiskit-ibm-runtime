@@ -60,7 +60,7 @@ class TestProxies(IBMTestCase):
         """Should reach the proxy using RuntimeClient."""
         # pylint: disable=unused-argument
         params = service._client_params
-        params.proxies = {"urls": VALID_PROXIES}
+        params.proxies = ProxyConfiguration(urls=VALID_PROXIES)
         client = RuntimeClient(params)
         client.list_programs(limit=1)
         api_line = pproxy_desired_access_log_line(params.url)
