@@ -52,6 +52,7 @@ class TestIBMBackend(IBMIntegrationTestCase):
     def setUpClass(cls, devices):
         """Initial class level setup."""
         # pylint: disable=arguments-differ
+        # pylint: disable=no-value-for-parameter
         super().setUpClass()
         cls.devices = devices
 

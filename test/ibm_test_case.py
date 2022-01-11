@@ -124,6 +124,7 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
     def setUpClass(cls):
         """Initial class level setup."""
         # pylint: disable=arguments-differ
+        # pylint: disable=no-value-for-parameter
         super().setUpClass()
         cls._create_default_program()
         cls._find_sim_backends()
