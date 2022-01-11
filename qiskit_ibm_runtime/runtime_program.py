@@ -107,7 +107,8 @@ class RuntimeProgram:
                     formatted.append(" " * 8 + "- " + property_name + ":")
                     for key, value in property_value.items():
                         formatted.append(
-                            " " * 12 + "{}: {}".format(sentence_case(key), str(value))
+                            " " * 12
+                            + "{}: {}".format(camel_to_sentence_case(key), str(value))
                         )
                     formatted.append(
                         " " * 12
@@ -117,10 +118,6 @@ class RuntimeProgram:
 
         def _format_backend_requirements(schema: Dict) -> None:
             """Add backend requirements details to `formatted`."""
-            if "input_allowed" in schema:
-                formatted.append(
-                    " " * 4 + "Input allowed: {}".format(str(schema["input_allowed"]))
-                )
             if "min_num_qubits" in schema:
                 formatted.append(
                     " " * 4
@@ -128,18 +125,22 @@ class RuntimeProgram:
                         str(schema["min_num_qubits"])
                     )
                 )
-            if "supported_features" in schema:
-                formatted.append(
-                    " " * 4
-                    + "Supported features: {}".format(str(schema["supported_features"]))
-                )
             for key, value in schema.items():
-                if key not in ["input_allowed", "min_num_qubits", "supported_features"]:
+                if key not in ["min_num_qubits"]:
+                    print(key)
                     formatted.append(
-                        " " * 4 + "{}: {}".format(sentence_case(key), str(value))
+                        " " * 4
+                        + "{}: {}".format(snake_to_sentence_case(key), str(value))
                     )
 
-        def sentence_case(camel_case_text: str) -> str:
+        def snake_to_sentence_case(snake_case_text: str) -> str:
+            """Converts snake_case to Sentence case"""
+            snake_case_words = snake_case_text.split("_")
+            return camel_to_sentence_case(
+                snake_case_words[0] + "".join(x.title() for x in snake_case_words[1:])
+            )
+
+        def camel_to_sentence_case(camel_case_text: str) -> str:
             """Converts camelCase to Sentence case"""
             if camel_case_text == "":
                 return camel_case_text
