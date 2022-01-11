@@ -56,7 +56,9 @@ class AccountManager:
                 auth=auth,
                 proxies=proxies,
                 verify=verify,
-            ).to_saved_format(),
+            )
+            # avoid storing invalid accounts
+            .validate().to_saved_format(),
         )
 
     @staticmethod

@@ -50,22 +50,13 @@ class Account:
             proxies: Proxy configuration.
             verify: Whether to verify server's TLS certificate.
         """
-        self._assert_valid_auth(auth)
-        self.auth = auth
-
-        self._assert_valid_token(token)
-        self.token = token
-
         resolved_url = url or (LEGACY_API_URL if auth == "legacy" else CLOUD_API_URL)
-        self._assert_valid_url(resolved_url)
+
+        self.auth = auth
+        self.token = token
         self.url = resolved_url
-
-        self._assert_valid_instance(auth, instance)
         self.instance = instance
-
-        self._assert_valid_proxies(proxies)
         self.proxies = proxies
-
         self.verify = verify
 
     def to_saved_format(self) -> dict:
@@ -108,6 +99,20 @@ class Account:
                 self.verify == other.verify,
             ]
         )
+
+    def validate(self) -> "Account":
+        """Validates the account instance.
+
+        Raises:
+            ValueError: if the account is invalid
+        """
+
+        self._assert_valid_auth(self.auth)
+        self._assert_valid_token(self.token)
+        self._assert_valid_url(self.url)
+        self._assert_valid_instance(self.auth, self.instance)
+        self._assert_valid_proxies(self.proxies)
+        return self
 
     @staticmethod
     def _assert_valid_auth(auth: AccountType) -> None:

@@ -168,10 +168,6 @@ class IBMRuntimeService:
             proxies=ProxyConfiguration(**proxies) if proxies else None,
             verify=verify,
         )
-        if self._account.auth == "cloud" and not self._account.instance:
-            raise IBMInputValueError(
-                f"Cloud account must have a service instance (CRN)."
-            )
 
         self._client_params = ClientParameters(
             auth_type=self._account.auth,
@@ -240,7 +236,7 @@ class IBMRuntimeService:
                     instance=instance,
                     proxies=proxies,
                     verify=verify_,
-                )
+                ).validate()
             if url:
                 logger.warning(
                     "Loading default %s account. Input 'url' is ignored.", auth
@@ -263,6 +259,9 @@ class IBMRuntimeService:
             account.proxies = proxies
         if verify is not None:
             account.verify = verify
+
+        # ensure account is valid, fail early if not
+        account.validate()
 
         return account
 

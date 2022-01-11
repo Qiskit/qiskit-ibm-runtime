@@ -61,7 +61,9 @@ class TestAccount(IBMTestCase):
 
         with self.assertRaises(ValueError) as err:
             invalid_auth: Any = "phantom"
-            Account(auth=invalid_auth, token=self.dummy_token, url=self.dummy_cloud_url)
+            Account(
+                auth=invalid_auth, token=self.dummy_token, url=self.dummy_cloud_url
+            ).validate()
         self.assertIn("Invalid `auth` value.", str(err.exception))
 
     def test_invalid_token(self):
@@ -71,7 +73,9 @@ class TestAccount(IBMTestCase):
         for token in invalid_tokens:
             with self.subTest(token=token):
                 with self.assertRaises(ValueError) as err:
-                    Account(auth="cloud", token=token, url=self.dummy_cloud_url)
+                    Account(
+                        auth="cloud", token=token, url=self.dummy_cloud_url
+                    ).validate()
                 self.assertIn("Invalid `token` value.", str(err.exception))
 
     def test_invalid_url(self):
@@ -83,7 +87,7 @@ class TestAccount(IBMTestCase):
         for params in subtests:
             with self.subTest(params=params):
                 with self.assertRaises(ValueError) as err:
-                    Account(**params, token=self.dummy_token)
+                    Account(**params, token=self.dummy_token).validate()
                 self.assertIn("Invalid `url` value.", str(err.exception))
 
     def test_invalid_instance(self):
@@ -97,7 +101,9 @@ class TestAccount(IBMTestCase):
         for params in subtests:
             with self.subTest(params=params):
                 with self.assertRaises(ValueError) as err:
-                    Account(**params, token=self.dummy_token, url=self.dummy_cloud_url)
+                    Account(
+                        **params, token=self.dummy_token, url=self.dummy_cloud_url
+                    ).validate()
                 self.assertIn("Invalid `instance` value.", str(err.exception))
 
     def test_invalid_proxy_config(self):
@@ -122,7 +128,7 @@ class TestAccount(IBMTestCase):
                         auth="legacy",
                         token=self.dummy_token,
                         url=self.dummy_cloud_url,
-                    )
+                    ).validate()
                 self.assertIn("Invalid proxy configuration", str(err.exception))
 
 
@@ -467,8 +473,8 @@ class TestEnableAccount(IBMTestCase):
         subtests = [
             {"proxies": MOCK_PROXY_CONFIG_DICT},
             {"verify": False},
-            {"instance": "bar"},
-            {"proxies": MOCK_PROXY_CONFIG_DICT, "verify": False, "instance": "bar"},
+            {"instance": "h/g/p"},
+            {"proxies": MOCK_PROXY_CONFIG_DICT, "verify": False, "instance": "h/g/p"},
         ]
         for auth in ["cloud", "legacy"]:
             for extra in subtests:
