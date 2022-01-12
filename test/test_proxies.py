@@ -12,17 +12,17 @@
 
 """Tests for the proxy support."""
 
-import urllib
 import subprocess
+import urllib
 
 from requests.exceptions import ProxyError
 
 from qiskit_ibm_runtime import IBMRuntimeService
-from qiskit_ibm_runtime.api.clients import AuthClient, VersionClient
-from qiskit_ibm_runtime.api.exceptions import RequestsApiError
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
+from qiskit_ibm_runtime.api.clients import AuthClient, VersionClient
 from qiskit_ibm_runtime.api.clients.runtime import RuntimeClient
-
+from qiskit_ibm_runtime.api.exceptions import RequestsApiError
+from qiskit_ibm_runtime.proxies import ProxyConfiguration
 from .ibm_test_case import IBMTestCase
 from .utils.decorators import requires_qe_access, requires_cloud_service
 
@@ -60,7 +60,7 @@ class TestProxies(IBMTestCase):
         """Should reach the proxy using RuntimeClient."""
         # pylint: disable=unused-argument
         params = service._client_params
-        params.proxies = {"urls": VALID_PROXIES}
+        params.proxies = ProxyConfiguration(urls=VALID_PROXIES)
         client = RuntimeClient(params)
         client.list_programs(limit=1)
         api_line = pproxy_desired_access_log_line(params.url)
@@ -120,7 +120,7 @@ class TestProxies(IBMTestCase):
             auth_type="legacy",
             token=qe_token,
             url=qe_url,
-            proxies={"urls": VALID_PROXIES},
+            proxies=ProxyConfiguration(urls=VALID_PROXIES),
         )
 
         _ = AuthClient(params)
@@ -153,7 +153,7 @@ class TestProxies(IBMTestCase):
             auth_type="legacy",
             token=qe_token,
             url=qe_url,
-            proxies={"urls": INVALID_PORT_PROXIES},
+            proxies=ProxyConfiguration(urls=INVALID_PORT_PROXIES),
         )
         with self.assertRaises(RequestsApiError) as context_manager:
             client = RuntimeClient(params)
@@ -167,7 +167,7 @@ class TestProxies(IBMTestCase):
             auth_type="legacy",
             token=qe_token,
             url=qe_url,
-            proxies={"urls": INVALID_PORT_PROXIES},
+            proxies=ProxyConfiguration(urls=INVALID_PORT_PROXIES),
         )
         with self.assertRaises(RequestsApiError) as context_manager:
             _ = AuthClient(params)
@@ -191,7 +191,7 @@ class TestProxies(IBMTestCase):
             auth_type="legacy",
             token=qe_token,
             url=qe_url,
-            proxies={"urls": INVALID_ADDRESS_PROXIES},
+            proxies=ProxyConfiguration(urls=INVALID_ADDRESS_PROXIES),
         )
         with self.assertRaises(RequestsApiError) as context_manager:
             client = RuntimeClient(params)
@@ -206,7 +206,7 @@ class TestProxies(IBMTestCase):
             auth_type="legacy",
             token=qe_token,
             url=qe_url,
-            proxies={"urls": INVALID_ADDRESS_PROXIES},
+            proxies=ProxyConfiguration(urls=INVALID_ADDRESS_PROXIES),
         )
         with self.assertRaises(RequestsApiError) as context_manager:
             _ = AuthClient(params)
@@ -237,7 +237,7 @@ class TestProxies(IBMTestCase):
                     auth_type="legacy",
                     token=qe_token,
                     url=qe_url,
-                    proxies={"urls": {"https": proxy_url}},
+                    proxies=ProxyConfiguration(urls={"https": proxy_url}),
                 )
                 version_finder = VersionClient(
                     params.url, **params.connection_parameters()

@@ -157,7 +157,7 @@ class TestBackendFilters(IBMTestCase):
         legacy_service = FakeRuntimeService(
             auth="legacy",
             token="my_token",
-            instance="my_instance",
+            instance="h/g/p",
             test_options=test_options,
         )
         backends = legacy_service.backends(instance="hub0/group0/project0")
@@ -182,7 +182,7 @@ class TestBackendFilters(IBMTestCase):
         legacy_service = FakeRuntimeService(
             auth="legacy",
             token="my_token",
-            instance="my_instance",
+            instance="h/g/p",
             test_options=test_options,
         )
         cloud_service = FakeRuntimeService(
@@ -200,35 +200,35 @@ class TestGetBackend(IBMTestCase):
     def test_get_common_backend(self):
         """Test getting a backend that is in default and non-default hgp."""
         service = FakeRuntimeService(auth="legacy", token="my_token")
-        backend = service.get_backend(FakeRuntimeService.DEFAULT_COMMON_BACKEND)
+        backend = service.backend(FakeRuntimeService.DEFAULT_COMMON_BACKEND)
         self.assertEqual(backend._api_client.hgp, list(service._hgps.keys())[0])
 
     def test_get_unique_backend_default_hgp(self):
         """Test getting a backend in the default hgp."""
         service = FakeRuntimeService(auth="legacy", token="my_token")
         backend_name = FakeRuntimeService.DEFAULT_UNIQUE_BACKEND_PREFIX + "0"
-        backend = service.get_backend(backend_name)
+        backend = service.backend(backend_name)
         self.assertEqual(backend._api_client.hgp, list(service._hgps.keys())[0])
 
     def test_get_unique_backend_non_default_hgp(self):
         """Test getting a backend in the non default hgp."""
         service = FakeRuntimeService(auth="legacy", token="my_token")
         backend_name = FakeRuntimeService.DEFAULT_UNIQUE_BACKEND_PREFIX + "1"
-        backend = service.get_backend(backend_name)
+        backend = service.backend(backend_name)
         self.assertEqual(backend._api_client.hgp, list(service._hgps.keys())[1])
 
     def test_get_phantom_backend(self):
         """Test getting a phantom backend."""
         service = FakeRuntimeService(auth="legacy", token="my_token")
         with self.assertRaises(QiskitBackendNotFoundError):
-            service.get_backend("phantom")
+            service.backend("phantom")
 
     def test_get_backend_by_hgp(self):
         """Test getting a backend by hgp."""
         hgp = FakeRuntimeService.DEFAULT_HGPS[1]
         backend_name = FakeRuntimeService.DEFAULT_COMMON_BACKEND
         service = FakeRuntimeService(auth="legacy", token="my_token")
-        backend = service.get_backend(backend_name, instance=hgp)
+        backend = service.backend(backend_name, instance=hgp)
         self.assertEqual(backend._api_client.hgp, hgp)
 
     def test_get_backend_by_bad_hgp(self):
@@ -237,4 +237,4 @@ class TestGetBackend(IBMTestCase):
         backend_name = FakeRuntimeService.DEFAULT_UNIQUE_BACKEND_PREFIX + "0"
         service = FakeRuntimeService(auth="legacy", token="my_token")
         with self.assertRaises(QiskitBackendNotFoundError):
-            _ = service.get_backend(backend_name, instance=hgp)
+            _ = service.backend(backend_name, instance=hgp)
