@@ -90,7 +90,7 @@ class HubGroupProject:
             )
         return ret
 
-    def get_backend(self, name: str) -> Optional["ibm_backend.IBMBackend"]:
+    def backend(self, name: str) -> Optional["ibm_backend.IBMBackend"]:
         """Get backend by name."""
         return self._backends.get(name, None)
 

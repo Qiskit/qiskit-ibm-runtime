@@ -76,10 +76,10 @@ class TestIntegrationProgram(IBMTestCase):
             self._upload_program(service)
         programs = service.programs(limit=3, refresh=True)
         all_ids = [prog.program_id for prog in programs]
-        self.assertEqual(len(all_ids), 3)
+        self.assertEqual(len(all_ids), 3, f"Retrieved programs: {all_ids}")
         programs = service.programs(limit=2, skip=1)
         some_ids = [prog.program_id for prog in programs]
-        self.assertEqual(len(some_ids), 2)
+        self.assertEqual(len(some_ids), 2, f"Retrieved programs: {some_ids}")
         self.assertNotIn(all_ids[0], some_ids)
         self.assertIn(all_ids[1], some_ids)
         self.assertIn(all_ids[2], some_ids)

@@ -24,9 +24,10 @@ from qiskit.providers.backend import BackendV1 as Backend
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.providerutils import filter_backends
 
-from qiskit_ibm_runtime import ibm_backend  # pylint: disable=unused-import
+from qiskit_ibm_runtime import ibm_backend
 from .accounts import AccountManager, Account, AccountType
 from .accounts.exceptions import AccountsError
+from .proxies import ProxyConfiguration
 from .api.clients import AuthClient, VersionClient
 from .api.clients.runtime import RuntimeClient
 from .api.exceptions import RequestsApiError
@@ -143,7 +144,11 @@ class IBMRuntimeService:
             name: Name of the account to load.
             instance: The service instance to use. For cloud runtime, this is the Cloud Resource
                 Name (CRN). For legacy runtime, this is the hub/group/project in that format.
-            proxies: Proxy configuration for the server.
+            proxies: Proxy configuration. Supported optional keys are
+                ``urls`` (a dictionary mapping protocol or protocol and host to the URL of the proxy,
+                documented at https://docs.python-requests.org/en/latest/api/#requests.Session.proxies),
+                ``username_ntlm``, ``password_ntlm`` (username and password to enable NTLM user
+                authentication)
             verify: Whether to verify the server's TLS certificate.
 
         Returns:
@@ -160,13 +165,9 @@ class IBMRuntimeService:
             instance=instance,
             auth=auth,
             name=name,
-            proxies=proxies,
+            proxies=ProxyConfiguration(**proxies) if proxies else None,
             verify=verify,
         )
-        if self._account.auth == "cloud" and not self._account.instance:
-            raise IBMInputValueError(
-                f"Cloud account must have a service instance (CRN)."
-            )
 
         self._client_params = ClientParameters(
             auth_type=self._account.auth,
@@ -211,7 +212,7 @@ class IBMRuntimeService:
         instance: Optional[str] = None,
         auth: Optional[AccountType] = None,
         name: Optional[str] = None,
-        proxies: Optional[dict] = None,
+        proxies: Optional[ProxyConfiguration] = None,
         verify: Optional[bool] = None,
     ) -> Account:
         """Discover account."""
@@ -235,7 +236,7 @@ class IBMRuntimeService:
                     instance=instance,
                     proxies=proxies,
                     verify=verify_,
-                )
+                ).validate()
             if url:
                 logger.warning(
                     "Loading default %s account. Input 'url' is ignored.", auth
@@ -258,6 +259,9 @@ class IBMRuntimeService:
             account.proxies = proxies
         if verify is not None:
             account.verify = verify
+
+        # ensure account is valid, fail early if not
+        account.validate()
 
         return account
 
@@ -430,7 +434,7 @@ class IBMRuntimeService:
                     f"Hub/group/project {instance} "
                     "could not be found for this account."
                 )
-            if backend_name and not self._hgps[instance].get_backend(backend_name):
+            if backend_name and not self._hgps[instance].backend(backend_name):
                 raise QiskitBackendNotFoundError(
                     f"Backend {backend_name} cannot be found in "
                     f"hub/group/project {instance}"
@@ -441,7 +445,7 @@ class IBMRuntimeService:
             return list(self._hgps.values())[0]
 
         for hgp in self._hgps.values():
-            if hgp.get_backend(backend_name):
+            if hgp.backend(backend_name):
                 return hgp
 
         raise QiskitBackendNotFoundError(
@@ -549,7 +553,11 @@ class IBMRuntimeService:
             instance: The CRN (cloud) or hub/group/project (legacy).
             auth: Authentication type. `cloud` or `legacy`.
             name: Name of the account to save.
-            proxies: Proxy configuration for the server.
+            proxies: Proxy configuration. Supported optional keys are
+                ``urls`` (a dictionary mapping protocol or protocol and host to the URL of the proxy,
+                documented at https://docs.python-requests.org/en/latest/api/#requests.Session.proxies),
+                ``username_ntlm``, ``password_ntlm`` (username and password to enable NTLM user
+                authentication)
             verify: Verify the server's TLS certificate.
         """
 
@@ -559,7 +567,7 @@ class IBMRuntimeService:
             instance=instance,
             auth=auth,
             name=name,
-            proxies=proxies,
+            proxies=ProxyConfiguration(**proxies) if proxies else None,
             verify=verify,
         )
 
@@ -590,7 +598,7 @@ class IBMRuntimeService:
             ),
         )
 
-    def get_backend(
+    def backend(
         self,
         name: str = None,
         instance: Optional[str] = None,
@@ -840,12 +848,12 @@ class IBMRuntimeService:
                 )
             # Find the right hgp
             hgp = self._get_hgp(instance=instance, backend_name=backend_name)
-            backend = hgp.get_backend(backend_name)
+            backend = hgp.backend(backend_name)
             hgp_name = hgp.name
         else:
             # TODO Support instance for cloud
             # TODO Support optional backend name when fully supported by server
-            backend = self.get_backend(backend_name)
+            backend = self.backend(backend_name)
 
         result_decoder = result_decoder or ResultDecoder
         try:
@@ -1246,7 +1254,7 @@ class IBMRuntimeService:
         )
         # Try to find the right backend
         try:
-            backend = self.get_backend(raw_data["backend"], instance=instance)
+            backend = self.backend(raw_data["backend"], instance=instance)
         except (IBMProviderError, QiskitBackendNotFoundError):
             backend = ibm_backend.IBMRetiredBackend.from_name(
                 backend_name=raw_data["backend"],
