@@ -30,7 +30,7 @@ class RuntimeOptions:
             the form of ``image_name:tag``. Not all accounts are
             authorized to select a different image.
         log_level: logging level to set in the execution environment. The default
-            level is WARNING.
+            level is ``WARNING``.
     """
 
     backend_name: Optional[str] = None
