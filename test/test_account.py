@@ -13,15 +13,15 @@
 """Tests for the account functions."""
 
 import json
-import uuid
 import logging
 import os
+import uuid
+from typing import Any
 from unittest import skipIf
 
-from qiskit_ibm_runtime.accounts.account import CLOUD_API_URL, LEGACY_API_URL
 from qiskit_ibm_runtime.accounts import AccountManager, Account, management
-from qiskit_ibm_runtime.exceptions import IBMInputValueError
-
+from qiskit_ibm_runtime.proxies import ProxyConfiguration
+from qiskit_ibm_runtime.accounts.account import CLOUD_API_URL, LEGACY_API_URL
 from .ibm_test_case import IBMTestCase
 from .mock.fake_runtime_service import FakeRuntimeService
 from .utils.account import (
@@ -43,7 +43,93 @@ _TEST_CLOUD_ACCOUNT = Account(
     token="token-y",
     url="https://cloud.ibm.com",
     instance="crn:v1:bluemix:public:quantum-computing:us-east:a/...::",
+    proxies=ProxyConfiguration(
+        username_ntlm="bla", password_ntlm="blub", urls={"https": "127.0.0.1"}
+    ),
 )
+
+
+class TestAccount(IBMTestCase):
+    """Tests for Account class."""
+
+    dummy_token = "123"
+    dummy_cloud_url = "https://us-east.quantum-computing.cloud.ibm.com"
+    dummy_legacy_url = "https://auth.quantum-computing.ibm.com/api"
+
+    def test_invalid_auth(self):
+        """Test invalid values for auth parameter."""
+
+        with self.assertRaises(ValueError) as err:
+            invalid_auth: Any = "phantom"
+            Account(
+                auth=invalid_auth, token=self.dummy_token, url=self.dummy_cloud_url
+            ).validate()
+        self.assertIn("Invalid `auth` value.", str(err.exception))
+
+    def test_invalid_token(self):
+        """Test invalid values for token parameter."""
+
+        invalid_tokens = [1, None, ""]
+        for token in invalid_tokens:
+            with self.subTest(token=token):
+                with self.assertRaises(ValueError) as err:
+                    Account(
+                        auth="cloud", token=token, url=self.dummy_cloud_url
+                    ).validate()
+                self.assertIn("Invalid `token` value.", str(err.exception))
+
+    def test_invalid_url(self):
+        """Test invalid values for url parameter."""
+
+        subtests = [
+            {"auth": "cloud", "url": 123},
+        ]
+        for params in subtests:
+            with self.subTest(params=params):
+                with self.assertRaises(ValueError) as err:
+                    Account(**params, token=self.dummy_token).validate()
+                self.assertIn("Invalid `url` value.", str(err.exception))
+
+    def test_invalid_instance(self):
+        """Test invalid values for instance parameter."""
+
+        subtests = [
+            {"auth": "cloud", "instance": ""},
+            {"auth": "cloud"},
+            {"auth": "legacy", "instance": "no-hgp-format"},
+        ]
+        for params in subtests:
+            with self.subTest(params=params):
+                with self.assertRaises(ValueError) as err:
+                    Account(
+                        **params, token=self.dummy_token, url=self.dummy_cloud_url
+                    ).validate()
+                self.assertIn("Invalid `instance` value.", str(err.exception))
+
+    def test_invalid_proxy_config(self):
+        """Test invalid values for proxy configuration."""
+
+        subtests = [
+            {
+                "proxies": ProxyConfiguration(**{"username_ntlm": "user-only"}),
+            },
+            {
+                "proxies": ProxyConfiguration(**{"password_ntlm": "password-only"}),
+            },
+            {
+                "proxies": ProxyConfiguration(**{"urls": ""}),
+            },
+        ]
+        for params in subtests:
+            with self.subTest(params=params):
+                with self.assertRaises(ValueError) as err:
+                    Account(
+                        **params,
+                        auth="legacy",
+                        token=self.dummy_token,
+                        url=self.dummy_cloud_url,
+                    ).validate()
+                self.assertIn("Invalid proxy configuration", str(err.exception))
 
 
 # NamedTemporaryFiles not supported in Windows
@@ -122,10 +208,10 @@ class TestAccountManager(IBMTestCase):
                 "key1": _TEST_CLOUD_ACCOUNT.to_saved_format(),
                 "key2": _TEST_LEGACY_ACCOUNT.to_saved_format(),
                 management._DEFAULT_ACCOUNT_NAME_CLOUD: Account(
-                    "cloud", "token-legacy"
+                    "cloud", "token-cloud", instance="crn:123"
                 ).to_saved_format(),
                 management._DEFAULT_ACCOUNT_NAME_LEGACY: Account(
-                    "legacy", "token-cloud"
+                    "legacy", "token-legacy"
                 ).to_saved_format(),
             }
         ), self.subTest("filtered list of accounts"):
@@ -176,6 +262,9 @@ class TestAccountManager(IBMTestCase):
         self.assertTrue(len(AccountManager.list()) == 0)
 
 
+MOCK_PROXY_CONFIG_DICT = {
+    "urls": {"https": "127.0.0.1", "username_ntlm": "", "password_ntlm": ""}
+}
 # NamedTemporaryFiles not supported in Windows
 @skipIf(os.name == "nt", "Test not supported in Windows")
 class TestEnableAccount(IBMTestCase):
@@ -243,7 +332,7 @@ class TestEnableAccount(IBMTestCase):
         for url in urls:
             with self.subTest(url=url), no_envs(["QISKIT_IBM_API_TOKEN"]):
                 token = uuid.uuid4().hex
-                with self.assertRaises(IBMInputValueError) as err:
+                with self.assertRaises(ValueError) as err:
                     _ = FakeRuntimeService(auth="cloud", token=token, url=url)
                 self.assertIn("instance", str(err.exception))
 
@@ -320,7 +409,7 @@ class TestEnableAccount(IBMTestCase):
                 envs = {
                     "QISKIT_IBM_API_TOKEN": token,
                     "QISKIT_IBM_API_URL": url,
-                    "QISKIT_IBM_INSTANCE": "my_crn",
+                    "QISKIT_IBM_INSTANCE": "h/g/p" if auth == "legacy" else "crn:123",
                 }
                 with custom_envs(envs):
                     service = FakeRuntimeService(auth=auth)
@@ -365,10 +454,10 @@ class TestEnableAccount(IBMTestCase):
         """Test initializing account by name and preferences."""
         name = "foo"
         subtests = [
-            {"proxies": "foo"},
+            {"proxies": MOCK_PROXY_CONFIG_DICT},
             {"verify": False},
             {"instance": "bar"},
-            {"proxies": "foo", "verify": False, "instance": "bar"},
+            {"proxies": MOCK_PROXY_CONFIG_DICT, "verify": False, "instance": "bar"},
         ]
         for extra in subtests:
             with self.subTest(extra=extra):
@@ -382,10 +471,10 @@ class TestEnableAccount(IBMTestCase):
     def test_enable_account_by_auth_pref(self):
         """Test initializing account by auth and preferences."""
         subtests = [
-            {"proxies": "foo"},
+            {"proxies": MOCK_PROXY_CONFIG_DICT},
             {"verify": False},
-            {"instance": "bar"},
-            {"proxies": "foo", "verify": False, "instance": "bar"},
+            {"instance": "h/g/p"},
+            {"proxies": MOCK_PROXY_CONFIG_DICT, "verify": False, "instance": "h/g/p"},
         ]
         for auth in ["cloud", "legacy"]:
             for extra in subtests:
@@ -403,10 +492,10 @@ class TestEnableAccount(IBMTestCase):
     def test_enable_account_by_env_pref(self):
         """Test initializing account by environment variable and preferences."""
         subtests = [
-            {"proxies": "foo"},
+            {"proxies": MOCK_PROXY_CONFIG_DICT},
             {"verify": False},
             {"instance": "bar"},
-            {"proxies": "foo", "verify": False, "instance": "bar"},
+            {"proxies": MOCK_PROXY_CONFIG_DICT, "verify": False, "instance": "bar"},
         ]
         for extra in subtests:
             with self.subTest(extra=extra):
@@ -427,7 +516,7 @@ class TestEnableAccount(IBMTestCase):
         """Test initializing account by name and input instance."""
         name = "foo"
         instance = uuid.uuid4().hex
-        with temporary_account_config_file(name=name, instance=""):
+        with temporary_account_config_file(name=name, instance="stored-instance"):
             service = FakeRuntimeService(name=name, instance=instance)
         self.assertTrue(service._account)
         self.assertEqual(service._account.instance, instance)
@@ -435,7 +524,7 @@ class TestEnableAccount(IBMTestCase):
     def test_enable_account_by_auth_input_instance(self):
         """Test initializing account by auth and input instance."""
         instance = uuid.uuid4().hex
-        with temporary_account_config_file(auth="cloud", instance=""):
+        with temporary_account_config_file(auth="cloud", instance="bla"):
             service = FakeRuntimeService(auth="cloud", instance=instance)
         self.assertTrue(service._account)
         self.assertEqual(service._account.instance, instance)
@@ -443,7 +532,11 @@ class TestEnableAccount(IBMTestCase):
     def test_enable_account_by_env_input_instance(self):
         """Test initializing account by env and input instance."""
         instance = uuid.uuid4().hex
-        envs = {"QISKIT_IBM_API_TOKEN": "some_token", "QISKIT_IBM_API_URL": "some_url"}
+        envs = {
+            "QISKIT_IBM_API_TOKEN": "some_token",
+            "QISKIT_IBM_API_URL": "some_url",
+            "QISKIT_IBM_INSTANCE": "some_instance",
+        }
         with custom_envs(envs):
             service = FakeRuntimeService(auth="cloud", instance=instance)
         self.assertTrue(service._account)
@@ -451,7 +544,7 @@ class TestEnableAccount(IBMTestCase):
 
     def _verify_prefs(self, prefs, account):
         if "proxies" in prefs:
-            self.assertEqual(account.proxies, prefs["proxies"])
+            self.assertEqual(account.proxies, ProxyConfiguration(**prefs["proxies"]))
         if "verify" in prefs:
             self.assertEqual(account.verify, prefs["verify"])
         if "instance" in prefs:
