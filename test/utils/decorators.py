@@ -272,10 +272,10 @@ def run_legacy_and_cloud_fake(func):
     @wraps(func)
     def _wrapper(self, *args, **kwargs):
         legacy_service = FakeRuntimeService(
-            auth="legacy", token="my_token", instance="my_instance"
+            auth="legacy", token="my_token", instance="h/g/p"
         )
         cloud_service = FakeRuntimeService(
-            auth="cloud", token="my_token", instance="my_instance"
+            auth="cloud", token="my_token", instance="crn:123"
         )
         for service in [legacy_service, cloud_service]:
             with self.subTest(service=service.auth):

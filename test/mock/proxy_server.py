@@ -15,6 +15,8 @@
 import subprocess
 from contextlib import contextmanager
 
+from qiskit_ibm_runtime.proxies import ProxyConfiguration
+
 
 class MockProxyServer:
     """Local proxy server for testing."""
@@ -55,7 +57,7 @@ class MockProxyServer:
 def use_proxies(service, proxies):
     """Context manager to set and restore proxies setting."""
     try:
-        service._client_params.proxies = {"urls": proxies}
+        service._client_params.proxies = ProxyConfiguration(urls=proxies)
         yield
     finally:
         service._client_params.proxies = None

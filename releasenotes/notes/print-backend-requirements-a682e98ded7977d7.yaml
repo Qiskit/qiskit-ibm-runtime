@@ -1,0 +1,6 @@
+---
+upgrade:
+  - |
+    When printing programs with :meth:`qiskit_ibm_runtime.IBMRuntimeService.pprint_programs`,
+    ``backend_requirements`` will now be listed.
+    

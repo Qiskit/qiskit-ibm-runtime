@@ -157,7 +157,7 @@ class TestBackendFilters(IBMTestCase):
         legacy_service = FakeRuntimeService(
             auth="legacy",
             token="my_token",
-            instance="my_instance",
+            instance="h/g/p",
             test_options=test_options,
         )
         backends = legacy_service.backends(instance="hub0/group0/project0")
@@ -182,7 +182,7 @@ class TestBackendFilters(IBMTestCase):
         legacy_service = FakeRuntimeService(
             auth="legacy",
             token="my_token",
-            instance="my_instance",
+            instance="h/g/p",
             test_options=test_options,
         )
         cloud_service = FakeRuntimeService(
