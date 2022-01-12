@@ -127,7 +127,6 @@ class RuntimeProgram:
                 )
             for key, value in schema.items():
                 if key not in ["min_num_qubits"]:
-                    print(key)
                     formatted.append(
                         " " * 4
                         + "{}: {}".format(snake_to_sentence_case(key), str(value))
