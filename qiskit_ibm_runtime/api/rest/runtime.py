@@ -115,10 +115,11 @@ class Runtime(RestAdapterBase):
         program_id: str,
         backend_name: str,
         params: Dict,
-        image: str,
+        image: Optional[str] = None,
         hub: Optional[str] = None,
         group: Optional[str] = None,
         project: Optional[str] = None,
+        log_level: Optional[str] = None,
     ) -> Dict:
         """Execute the program.
 
@@ -130,6 +131,7 @@ class Runtime(RestAdapterBase):
             hub: Hub to be used.
             group: Group to be used.
             project: Project to be used.
+            log_level: Log level to use.
 
         Returns:
             JSON response.
@@ -139,8 +141,11 @@ class Runtime(RestAdapterBase):
             "program_id": program_id,
             "backend": backend_name,
             "params": params,
-            "runtime": image,
         }
+        if image:
+            payload["runtime"] = image
+        if log_level:
+            payload["log_level"] = log_level
         if all([hub, group, project]):
             payload["hub"] = hub
             payload["group"] = group
