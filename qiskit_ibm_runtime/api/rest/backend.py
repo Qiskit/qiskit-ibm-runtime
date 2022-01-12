@@ -25,6 +25,7 @@ class Backend(RestAdapterBase):
     """Rest adapter for backend related endpoints."""
 
     URL_MAP = {
+        "configuration": "/fullConfiguration",
         "properties": "/properties",
         "pulse_defaults": "/defaults",
         "status": "/queue/status",
@@ -44,6 +45,15 @@ class Backend(RestAdapterBase):
         """
         self.backend_name = backend_name
         super().__init__(session, "{}/devices/{}".format(url_prefix, backend_name))
+
+    def configuration(self) -> Dict[str, Any]:
+        """Return backend configuration.
+
+        Returns:
+            JSON response of backend configuration.
+        """
+        url = self.get_url("configuration")
+        return self.session.get(url).json()
 
     def properties(self, datetime: Optional[datetime] = None) -> Dict[str, Any]:
         """Return backend properties.

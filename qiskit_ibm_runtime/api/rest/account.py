@@ -13,7 +13,6 @@
 """Account REST adapter."""
 
 import logging
-from typing import Dict, Optional, Any, List
 
 from .base import RestAdapterBase
 from .backend import Backend
@@ -24,8 +23,6 @@ logger = logging.getLogger(__name__)
 
 class Account(RestAdapterBase):
     """Rest adapter for hub/group/project related endpoints."""
-
-    URL_MAP = {"backends": "/devices/v/1"}
 
     TEMPLATE_IBM_HUBS = "/Network/{hub}/Groups/{group}/Projects/{project}"
     """str: Template for creating an IBM Quantum URL with
@@ -59,17 +56,3 @@ class Account(RestAdapterBase):
             The backend adapter.
         """
         return Backend(self.session, backend_name, self.url_prefix)
-
-    # Client functions.
-
-    def backends(self, timeout: Optional[float] = None) -> List[Dict[str, Any]]:
-        """Return a list of backends.
-
-        Args:
-            timeout: Number of seconds to wait for the request.
-
-        Returns:
-            JSON response.
-        """
-        url = self.get_url("backends")
-        return self.session.get(url, timeout=timeout).json()

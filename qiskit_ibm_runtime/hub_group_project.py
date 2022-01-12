@@ -14,7 +14,7 @@
 
 import logging
 from collections import OrderedDict
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from qiskit_ibm_runtime import (  # pylint: disable=unused-import
     ibm_backend,
@@ -35,6 +35,7 @@ class HubGroupProject:
         self,
         client_params: ClientParameters,
         instance: str,
+        backend_names: List[str],
     ) -> None:
         """HubGroupProject constructor
 
@@ -43,6 +44,7 @@ class HubGroupProject:
             instance: Hub/group/project.
         """
         self._api_client = AccountClient(client_params)
+        self._backend_names = backend_names
         # Initialize the internal list of backends.
         self._backends: Dict[str, "ibm_backend.IBMBackend"] = {}
         self._hub, self._group, self._project = from_instance_format(instance)
@@ -74,8 +76,10 @@ class HubGroupProject:
             A dict of the remote backend instances, keyed by backend name.
         """
         ret = OrderedDict()
-        configs_list = self._api_client.list_backends()
-        for raw_config in configs_list:
+        for backend_name in self._backend_names:
+            raw_config = self._api_client.backend_configuration(
+                backend_name=backend_name
+            )
             config = configuration_from_server_data(
                 raw_config=raw_config, instance=self.name
             )

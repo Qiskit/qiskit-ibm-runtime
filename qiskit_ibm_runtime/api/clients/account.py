@@ -47,13 +47,16 @@ class AccountClient(BaseBackendClient):
             project=project,
         )
 
-    def list_backends(self) -> List[Dict[str, Any]]:
-        """Return backends available.
+    def backend_configuration(self, backend_name: str) -> Dict[str, Any]:
+        """Return the configuration of the backend.
+
+        Args:
+            backend_name: The name of the backend.
 
         Returns:
-            Backends available for this hub/group/project.
+            Backend configuration.
         """
-        return self.account_api.backends()
+        return self.account_api.backend(backend_name).configuration()
 
     def backend_status(self, backend_name: str) -> Dict[str, Any]:
         """Return the status of the backend.

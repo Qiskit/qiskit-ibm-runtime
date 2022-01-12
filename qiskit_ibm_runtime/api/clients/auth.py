@@ -130,7 +130,6 @@ class AuthClient(BaseClient):
             ``hub``, ``group``, and ``project``, respectively.
         """
         response = self.base_api.hubs()
-
         hubs = []  # type: ignore[var-annotated]
         for hub in response:
             hub_name = hub["name"]
@@ -140,8 +139,11 @@ class AuthClient(BaseClient):
                         "hub": hub_name,
                         "group": group_name,
                         "project": project_name,
+                        "backend_names": [
+                            backend.get("name")
+                            for backend in project["devices"].values()
+                        ],
                     }
-
                     # Move to the top if it is the default h/g/p.
                     if project.get("isDefault"):
                         hubs.insert(0, entry)

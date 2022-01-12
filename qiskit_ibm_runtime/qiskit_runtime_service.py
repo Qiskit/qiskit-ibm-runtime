@@ -384,7 +384,9 @@ class QiskitRuntimeService:
             # Build the hgp.
             try:
                 hgp = HubGroupProject(
-                    client_params=hgp_params, instance=hgp_params.instance
+                    client_params=hgp_params,
+                    instance=hgp_params.instance,
+                    backend_names=hub_info["backend_names"],
                 )
                 hgps[hgp.name] = hgp
             except Exception:  # pylint: disable=broad-except
