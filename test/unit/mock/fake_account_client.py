@@ -74,7 +74,7 @@ class BaseFakeAccountClient:
     def backend_configuration(self, backend_name: str) -> Dict[str, Any]:
         """Return the configuration of the backend."""
         for backend in self._backends:
-            if backend["name"] == backend_name:
+            if backend.name == backend_name:
                 return backend.configuration.copy()
         raise ValueError(f"Backend {backend_name} not found.")
 
