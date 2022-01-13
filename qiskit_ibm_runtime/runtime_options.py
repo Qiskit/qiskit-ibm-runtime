@@ -29,8 +29,9 @@ class RuntimeOptions:
         image: the runtime image used to execute the program, specified in
             the form of ``image_name:tag``. Not all accounts are
             authorized to select a different image.
-        log_level: logging level to set in the execution environment. The default
-            level is ``WARNING``.
+        log_level: logging level to set in the execution environment. The valid
+            log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
+            The default level is ``WARNING``.
     """
 
     backend_name: Optional[str] = None
