@@ -113,7 +113,7 @@ class Runtime(RestAdapterBase):
     def program_run(
         self,
         program_id: str,
-        backend_name: str,
+        backend_name: Optional[str],
         params: Dict,
         image: Optional[str] = None,
         hub: Optional[str] = None,
@@ -139,13 +139,14 @@ class Runtime(RestAdapterBase):
         url = self.get_url("jobs")
         payload = {
             "program_id": program_id,
-            "backend": backend_name,
             "params": params,
         }
         if image:
             payload["runtime"] = image
         if log_level:
             payload["log_level"] = log_level
+        if backend_name:
+            payload["backend"] = backend_name
         if all([hub, group, project]):
             payload["hub"] = hub
             payload["group"] = group

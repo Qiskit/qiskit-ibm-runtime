@@ -116,7 +116,7 @@ class RuntimeClient(BaseBackendClient):
     def program_run(
         self,
         program_id: str,
-        backend_name: str,
+        backend_name: Optional[str],
         params: Dict,
         image: Optional[str],
         hgp: Optional[str],

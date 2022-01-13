@@ -343,7 +343,7 @@ class BaseFakeRuntimeClient:
     def program_run(
         self,
         program_id: str,
-        backend_name: str,
+        backend_name: Optional[str],
         params: Dict,
         image: str,
         hgp: Optional[str],
@@ -361,6 +361,10 @@ class BaseFakeRuntimeClient:
             hub, group, project = from_instance_format(hgp)
         else:
             hub = group = project = None
+
+        if backend_name is None:
+            backend_name = self.list_backends()[0]
+
         job = job_cls(
             job_id=job_id,
             program_id=program_id,
@@ -375,7 +379,7 @@ class BaseFakeRuntimeClient:
             **self._job_kwargs,
         )
         self._jobs[job_id] = job
-        return {"id": job_id}
+        return {"id": job_id, "backend": backend_name}
 
     def program_delete(self, program_id: str) -> None:
         """Delete the specified program."""

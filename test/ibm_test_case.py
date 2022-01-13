@@ -188,7 +188,9 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
             }
         )
         pid = program_id or self.program_ids[service.auth]
-        backend_name = backend or self.sim_backends[service.auth]
+        backend_name = (
+            backend if backend is not None else self.sim_backends[service.auth]
+        )
         options = {"backend_name": backend_name, "log_level": log_level}
         job = service.run(
             program_id=pid, inputs=inputs, options=options, callback=callback
