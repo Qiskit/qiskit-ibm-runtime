@@ -12,7 +12,7 @@
 
 """Tests for the tutorials, copied from ``qiskit-iqx-tutorials``."""
 
-from unittest import skipIf, skip
+from unittest import skipIf
 import os
 import glob
 import warnings
