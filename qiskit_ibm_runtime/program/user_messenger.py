@@ -21,14 +21,15 @@ from ..utils.json import RuntimeEncoder
 class UserMessenger:
     """Base class for handling communication with program users.
 
-    This class can be used when writing a new Qiskit Runtime program.
+    The ``main()`` function of your runtime program will receive an instance
+    of this class as the second parameter. You can then use the instance
+    to send results back to the program user.
     """
 
     def publish(
         self,
         message: Any,
         encoder: Type[json.JSONEncoder] = RuntimeEncoder,
-        final: bool = False,
     ) -> None:
         """Publish message.
 
@@ -36,14 +37,9 @@ class UserMessenger:
         to the program user. The messages will be made immediately available to the user,
         but they may choose not to receive the messages.
 
-        The `final` parameter is used to indicate whether the message is
-        the final result of the program. Final results may be processed differently
-        from interim results.
-
         Args:
             message: Message to be published. Can be any type.
             encoder: An optional JSON encoder for serializing
-            final: Whether the message being published is the final result.
         """
         # pylint: disable=unused-argument
         # Default implementation for testing.
