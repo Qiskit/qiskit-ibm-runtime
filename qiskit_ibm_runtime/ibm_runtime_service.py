@@ -761,8 +761,8 @@ class IBMRuntimeService:
     def run(
         self,
         program_id: str,
-        options: Dict,
         inputs: Union[Dict, ParameterNamespace],
+        options: Optional[Dict] = None,
         callback: Optional[Callable] = None,
         result_decoder: Optional[Type[ResultDecoder]] = None,
         image: str = "",
@@ -772,10 +772,11 @@ class IBMRuntimeService:
 
         Args:
             program_id: Program ID.
-            options: Runtime options that control the execution environment.
-                Currently the only available option is ``backend_name``, which is required.
             inputs: Program input parameters. These input values are passed
                 to the runtime program.
+            options: Runtime options that control the execution environment.
+                Currently the only available option is ``backend_name``, which is required if
+                you are using legacy runtime.
             callback: Callback function to be invoked for any interim results.
                 The callback function will receive 2 positional parameters:
 
@@ -808,7 +809,9 @@ class IBMRuntimeService:
         ):
             raise IBMInputValueError('"image" needs to be in form of image_name:tag')
 
-        backend_name = options.get("backend_name", "")
+        options = options or {}
+        backend_name = options.get("backend_name", None)
+        backend = None
 
         hgp_name = None
         if self._auth == "legacy":
@@ -820,10 +823,6 @@ class IBMRuntimeService:
             hgp = self._get_hgp(instance=instance, backend_name=backend_name)
             backend = hgp.backend(backend_name)
             hgp_name = hgp.name
-        else:
-            # TODO Support instance for cloud
-            # TODO Support optional backend name when fully supported by server
-            backend = self.backend(backend_name)
 
         result_decoder = result_decoder or ResultDecoder
         try:
@@ -840,6 +839,9 @@ class IBMRuntimeService:
                     f"Program not found: {ex.message}"
                 ) from None
             raise IBMRuntimeError(f"Failed to run program: {ex}") from None
+
+        if not backend:
+            backend = self.backend(name=response["backend"])
 
         job = RuntimeJob(
             backend=backend,
