@@ -105,6 +105,9 @@ class Account:
 
         Raises:
             ValueError: if the account is invalid
+
+        Returns:
+            This Account instance.
         """
 
         self._assert_valid_auth(self.auth)

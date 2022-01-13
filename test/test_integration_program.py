@@ -88,10 +88,16 @@ class TestIntegrationProgram(IBMIntegrationTestCase):
     @run_cloud_legacy_real
     def test_retrieve_unauthorized_program_data(self, service):
         """Test retrieving program data when user is not the program author"""
-        program = service.program("sample-program")
-        self._validate_program(program)
+        programs = service.programs()
+        not_mine = None
+        for prog in programs:
+            if prog.is_public:
+                not_mine = prog
+                break
+        if not_mine is None:
+            self.skipTest("Cannot find a program that's not mine!")
         with self.assertRaises(IBMNotAuthorizedError):
-            return program.data
+            return not_mine.data
 
     @run_cloud_legacy_real
     def test_upload_program(self, service):
