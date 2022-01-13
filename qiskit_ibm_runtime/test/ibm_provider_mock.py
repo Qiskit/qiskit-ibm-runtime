@@ -22,7 +22,7 @@ def mock_get_backend(backend):
     Note this will set the value of qiskit_ibm_runtime.IBMRuntimeService to a MagicMock object. It
     is intended to be run as part of docstrings with jupyter-example in a hidden
     cell so that later examples which rely on ibm quantum devices so that the docs can
-    be built without requiring configured credentials. If used outside of this
+    be built without requiring configured accounts. If used outside of this
     context be aware that you will have to manually restore qiskit_ibm_runtime.IBMRuntimeService
     the value to qiskit_ibm_runtime.IBMRuntimeService after you finish using your mock.
     Args:
@@ -37,6 +37,6 @@ def mock_get_backend(backend):
             "The specified backend name is not a valid mock from qiskit.test.mock"
         )
     fake_backend = getattr(backend_mocks, backend)()
-    mock_ibm_provider.get_backend.return_value = fake_backend
+    mock_ibm_provider.backend.return_value = fake_backend
     mock_ibm_provider.return_value = mock_ibm_provider
     qiskit_ibm_runtime.IBMRuntimeService = mock_ibm_provider

@@ -24,9 +24,10 @@ from qiskit.providers.backend import BackendV1 as Backend
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.providerutils import filter_backends
 
-from qiskit_ibm_runtime import ibm_backend  # pylint: disable=unused-import
+from qiskit_ibm_runtime import ibm_backend
 from .accounts import AccountManager, Account, AccountType
 from .accounts.exceptions import AccountsError
+from .proxies import ProxyConfiguration
 from .api.clients import AuthClient, VersionClient
 from .api.clients.runtime import RuntimeClient
 from .api.exceptions import RequestsApiError
@@ -37,7 +38,6 @@ from .exceptions import (
     RuntimeDuplicateProgramError,
     RuntimeProgramNotFound,
     RuntimeJobNotFound,
-    IBMProviderCredentialsInvalidUrl,
 )
 from .hub_group_project import HubGroupProject  # pylint: disable=cyclic-import
 from .program.result_decoder import ResultDecoder
@@ -144,7 +144,11 @@ class IBMRuntimeService:
             name: Name of the account to load.
             instance: The service instance to use. For cloud runtime, this is the Cloud Resource
                 Name (CRN). For legacy runtime, this is the hub/group/project in that format.
-            proxies: Proxy configuration for the server.
+            proxies: Proxy configuration. Supported optional keys are
+                ``urls`` (a dictionary mapping protocol or protocol and host to the URL of the proxy,
+                documented at https://docs.python-requests.org/en/latest/api/#requests.Session.proxies),
+                ``username_ntlm``, ``password_ntlm`` (username and password to enable NTLM user
+                authentication)
             verify: Whether to verify the server's TLS certificate.
 
         Returns:
@@ -155,19 +159,15 @@ class IBMRuntimeService:
         """
         super().__init__()
 
-        self._account = self._discover_credentials(
+        self._account = self._discover_account(
             token=token,
             url=url,
             instance=instance,
             auth=auth,
             name=name,
-            proxies=proxies,
+            proxies=ProxyConfiguration(**proxies) if proxies else None,
             verify=verify,
         )
-        if self._account.auth == "cloud" and not self._account.instance:
-            raise IBMInputValueError(
-                f"Cloud account must have a service instance (CRN)."
-            )
 
         self._client_params = ClientParameters(
             auth_type=self._account.auth,
@@ -205,17 +205,17 @@ class IBMRuntimeService:
         # just seems wrong since backends are not runtime service instances.
         # self._discover_backends()
 
-    def _discover_credentials(
+    def _discover_account(
         self,
         token: Optional[str] = None,
         url: Optional[str] = None,
         instance: Optional[str] = None,
         auth: Optional[AccountType] = None,
         name: Optional[str] = None,
-        proxies: Optional[dict] = None,
+        proxies: Optional[ProxyConfiguration] = None,
         verify: Optional[bool] = None,
     ) -> Account:
-        """Discover account credentials."""
+        """Discover account."""
         account = None
         verify_ = verify or True
         if name:
@@ -236,7 +236,7 @@ class IBMRuntimeService:
                     instance=instance,
                     proxies=proxies,
                     verify=verify_,
-                )
+                ).validate()
             if url:
                 logger.warning(
                     "Loading default %s account. Input 'url' is ignored.", auth
@@ -259,6 +259,9 @@ class IBMRuntimeService:
             account.proxies = proxies
         if verify is not None:
             account.verify = verify
+
+        # ensure account is valid, fail early if not
+        account.validate()
 
         return account
 
@@ -298,8 +301,7 @@ class IBMRuntimeService:
             client_params: Parameters used for server connection.
 
         Raises:
-            IBMProviderCredentialsInvalidUrl: If the URL specified is not
-                a valid IBM Quantum authentication URL.
+            IBMInputValueError: If the URL specified is not a valid IBM Quantum authentication URL.
             IBMNotAuthorizedError: If the account is not authorized to use runtime.
 
         Returns:
@@ -308,7 +310,7 @@ class IBMRuntimeService:
         version_info = self._check_api_version(client_params)
         # Check the URL is a valid authentication URL.
         if not version_info["new_api"] or "api-auth" not in version_info:
-            raise IBMProviderCredentialsInvalidUrl(
+            raise IBMInputValueError(
                 "The URL specified ({}) is not an IBM Quantum authentication URL. "
                 "Valid authentication URL: {}.".format(
                     client_params.url, QISKIT_IBM_RUNTIME_API_URL
@@ -332,8 +334,7 @@ class IBMRuntimeService:
             auth_client: Authentication data.
 
         Raises:
-            IBMProviderCredentialsInvalidUrl: If the URL specified is not
-                a valid IBM Quantum authentication URL.
+            IBMInputValueError: If the URL specified is not a valid IBM Quantum authentication URL.
             IBMProviderError: If no hub/group/project could be found for this account.
 
         Returns:
@@ -393,7 +394,7 @@ class IBMRuntimeService:
 
     @staticmethod
     def _check_api_version(params: ClientParameters) -> Dict[str, Union[bool, str]]:
-        """Check the version of the remote server in a set of credentials.
+        """Check the version of the remote server in a set of client parameters.
 
         Args:
             params: Parameters used for server connection.
@@ -433,7 +434,7 @@ class IBMRuntimeService:
                     f"Hub/group/project {instance} "
                     "could not be found for this account."
                 )
-            if backend_name and not self._hgps[instance].get_backend(backend_name):
+            if backend_name and not self._hgps[instance].backend(backend_name):
                 raise QiskitBackendNotFoundError(
                     f"Backend {backend_name} cannot be found in "
                     f"hub/group/project {instance}"
@@ -444,7 +445,7 @@ class IBMRuntimeService:
             return list(self._hgps.values())[0]
 
         for hgp in self._hgps.values():
-            if hgp.get_backend(backend_name):
+            if hgp.backend(backend_name):
                 return hgp
 
         raise QiskitBackendNotFoundError(
@@ -517,18 +518,20 @@ class IBMRuntimeService:
         return self._account.to_saved_format()
 
     @staticmethod
-    def delete_account(name: Optional[str]) -> bool:
+    def delete_account(name: Optional[str] = None, auth: Optional[str] = None) -> bool:
         """Delete a saved account from disk.
 
         Args:
-            name: Custom name of the saved account. Defaults to "default".
+            name: Name of the saved account to delete.
+            auth: Authentication type of the default account to delete.
+                Ignored if account name is provided.
 
         Returns:
-            True if the account with the given name was deleted.
-            False if no account was found for the given name.
+            True if the account was deleted.
+            False if no account was found.
         """
 
-        return AccountManager.delete(name=name)
+        return AccountManager.delete(name=name, auth=auth)
 
     @staticmethod
     def save_account(
@@ -550,7 +553,11 @@ class IBMRuntimeService:
             instance: The CRN (cloud) or hub/group/project (legacy).
             auth: Authentication type. `cloud` or `legacy`.
             name: Name of the account to save.
-            proxies: Proxy configuration for the server.
+            proxies: Proxy configuration. Supported optional keys are
+                ``urls`` (a dictionary mapping protocol or protocol and host to the URL of the proxy,
+                documented at https://docs.python-requests.org/en/latest/api/#requests.Session.proxies),
+                ``username_ntlm``, ``password_ntlm`` (username and password to enable NTLM user
+                authentication)
             verify: Verify the server's TLS certificate.
         """
 
@@ -560,24 +567,38 @@ class IBMRuntimeService:
             instance=instance,
             auth=auth,
             name=name,
-            proxies=proxies,
+            proxies=ProxyConfiguration(**proxies) if proxies else None,
             verify=verify,
         )
 
     @staticmethod
-    def saved_accounts() -> dict:
+    def saved_accounts(
+        default: Optional[bool] = None,
+        auth: Optional[str] = None,
+        name: Optional[str] = None,
+    ) -> dict:
         """List the accounts saved on disk.
+
+        Args:
+            default: If set to True, only default accounts are returned.
+            auth: If set, only accounts with the given authentication type are returned.
+            name: If set, only accounts with the given name are returned.
 
         Returns:
             A dictionary with information about the accounts saved on disk.
 
         Raises:
-            IBMProviderCredentialsInvalidUrl: If invalid IBM Quantum
-                credentials are found on disk.
+            ValueError: If an invalid account is found on disk.
         """
-        return AccountManager.list()
 
-    def get_backend(
+        return dict(
+            map(
+                lambda kv: (kv[0], Account.to_saved_format(kv[1])),
+                AccountManager.list(default=default, auth=auth, name=name).items(),
+            ),
+        )
+
+    def backend(
         self,
         name: str = None,
         instance: Optional[str] = None,
@@ -797,12 +818,12 @@ class IBMRuntimeService:
                 )
             # Find the right hgp
             hgp = self._get_hgp(instance=instance, backend_name=backend_name)
-            backend = hgp.get_backend(backend_name)
+            backend = hgp.backend(backend_name)
             hgp_name = hgp.name
         else:
             # TODO Support instance for cloud
             # TODO Support optional backend name when fully supported by server
-            backend = self.get_backend(backend_name)
+            backend = self.backend(backend_name)
 
         result_decoder = result_decoder or ResultDecoder
         try:
@@ -1112,7 +1133,7 @@ class IBMRuntimeService:
                 are included.
             program_id: Filter by Program ID.
             instance: The service instance to use. Currently only supported for legacy runtime,
-                and should be in the hub/group/project.
+                and should be in the hub/group/project format.
 
         Returns:
             A list of runtime jobs.
@@ -1203,7 +1224,7 @@ class IBMRuntimeService:
         )
         # Try to find the right backend
         try:
-            backend = self.get_backend(raw_data["backend"], instance=instance)
+            backend = self.backend(raw_data["backend"], instance=instance)
         except (IBMProviderError, QiskitBackendNotFoundError):
             backend = ibm_backend.IBMRetiredBackend.from_name(
                 backend_name=raw_data["backend"],
@@ -1252,6 +1273,22 @@ class IBMRuntimeService:
         **kwargs: Any,
     ) -> ibm_backend.IBMBackend:
         """Return the least busy available backend.
+
+        Args:
+            min_num_qubits: Minimum number of qubits the backend has to have.
+            instance: The service instance to use. For cloud runtime, this is the Cloud Resource
+                Name (CRN). For legacy runtime, this is the hub/group/project in that format.
+            filters: More complex filters, such as lambda functions.
+                For example::
+
+                    AccountProvider.backends(
+                        filters=lambda b: b.configuration().quantum_volume > 16)
+
+            kwargs: Simple filters that specify a ``True``/``False`` criteria in the
+                backend configuration, backends status, or provider credentials.
+                An example to get the operational backends with 5 qubits::
+
+                    IBMRuntimeService.least_busy(n_qubits=5, operational=True)
 
         Returns:
             The backend with the fewest number of pending jobs.

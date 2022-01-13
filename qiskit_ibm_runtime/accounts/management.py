@@ -13,12 +13,13 @@
 """Account management related classes and functions."""
 
 import os
-from typing import Optional, Union
+from typing import Optional, Dict
 
 from .account import Account, AccountType
+from ..proxies import ProxyConfiguration
 from .storage import save_config, read_config, delete_config
 
-_DEFAULT_ACCOUNG_CONFIG_JSON_FILE = os.path.join(
+_DEFAULT_ACCOUNT_CONFIG_JSON_FILE = os.path.join(
     os.path.expanduser("~"), ".qiskit", "qiskit-ibm.json"
 )
 _DEFAULT_ACCOUNT_NAME = "default"
@@ -31,21 +32,23 @@ _ACCOUNT_TYPES = [_DEFAULT_ACCOUNT_TYPE, "legacy"]
 class AccountManager:
     """Class that bundles account management related functionality."""
 
-    @staticmethod
+    @classmethod
     def save(
+        cls,
         token: Optional[str] = None,
         url: Optional[str] = None,
         instance: Optional[str] = None,
         auth: Optional[AccountType] = None,
         name: Optional[str] = _DEFAULT_ACCOUNT_NAME,
-        proxies: Optional[dict] = None,
+        proxies: Optional[ProxyConfiguration] = None,
         verify: Optional[bool] = None,
     ) -> None:
         """Save account on disk."""
 
+        config_key = name or cls._get_default_account_name(auth)
         return save_config(
-            filename=_DEFAULT_ACCOUNG_CONFIG_JSON_FILE,
-            name=name,
+            filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE,
+            name=config_key,
             config=Account(
                 token=token,
                 url=url,
@@ -53,14 +56,57 @@ class AccountManager:
                 auth=auth,
                 proxies=proxies,
                 verify=verify,
-            ).to_saved_format(),
+            )
+            # avoid storing invalid accounts
+            .validate().to_saved_format(),
         )
 
     @staticmethod
-    def list() -> Union[dict, None]:
+    def list(
+        default: Optional[bool] = None,
+        auth: Optional[str] = None,
+        name: Optional[str] = None,
+    ) -> Dict[str, Account]:
         """List all accounts saved on disk."""
 
-        return read_config(filename=_DEFAULT_ACCOUNG_CONFIG_JSON_FILE)
+        def _matching_name(account_name: str) -> bool:
+            return name is None or name == account_name
+
+        def _matching_auth(account: Account) -> bool:
+            return auth is None or account.auth == auth
+
+        def _matching_default(account_name: str) -> bool:
+            default_accounts = [
+                _DEFAULT_ACCOUNT_NAME,
+                _DEFAULT_ACCOUNT_NAME_LEGACY,
+                _DEFAULT_ACCOUNT_NAME_CLOUD,
+            ]
+            if default is None:
+                return True
+            elif default is False:
+                return account_name not in default_accounts
+            else:
+                return account_name in default_accounts
+
+        # load all accounts
+        all_accounts = map(
+            lambda kv: (kv[0], Account.from_saved_format(kv[1])),
+            read_config(filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE).items(),
+        )
+
+        # filter based on input parameters
+        filtered_accounts = dict(
+            list(
+                filter(
+                    lambda kv: _matching_auth(kv[1])
+                    and _matching_default(kv[0])
+                    and _matching_name(kv[0]),
+                    all_accounts,
+                )
+            )
+        )
+
+        return filtered_accounts
 
     @classmethod
     def get(
@@ -80,7 +126,7 @@ class AccountManager:
         """
         if name:
             saved_account = read_config(
-                filename=_DEFAULT_ACCOUNG_CONFIG_JSON_FILE, name=name
+                filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE, name=name
             )
             if not saved_account:
                 raise ValueError(
@@ -95,14 +141,14 @@ class AccountManager:
 
         if auth:
             saved_account = read_config(
-                filename=_DEFAULT_ACCOUNG_CONFIG_JSON_FILE,
+                filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE,
                 name=cls._get_default_account_name(auth),
             )
             if saved_account is None:
                 raise ValueError(f"No default {auth} account saved.")
             return Account.from_saved_format(saved_account)
 
-        all_config = read_config(filename=_DEFAULT_ACCOUNG_CONFIG_JSON_FILE)
+        all_config = read_config(filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE)
         for account_type in _ACCOUNT_TYPES:
             account_name = cls._get_default_account_name(account_type)
             if account_name in all_config:
@@ -110,10 +156,18 @@ class AccountManager:
 
         return None
 
-    @staticmethod
-    def delete(name: Optional[str] = _DEFAULT_ACCOUNT_NAME) -> bool:
+    @classmethod
+    def delete(
+        cls,
+        name: Optional[str] = None,
+        auth: Optional[str] = None,
+    ) -> bool:
         """Delete account from disk."""
-        return delete_config(name=name, filename=_DEFAULT_ACCOUNG_CONFIG_JSON_FILE)
+
+        config_key = name or cls._get_default_account_name(auth)
+        return delete_config(
+            name=config_key, filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE
+        )
 
     @classmethod
     def _from_env_variables(cls, auth: Optional[AccountType]) -> Optional[Account]:
@@ -129,7 +183,7 @@ class AccountManager:
     @classmethod
     def _get_default_account_name(cls, auth: AccountType) -> str:
         return (
-            _DEFAULT_ACCOUNT_NAME_CLOUD
-            if auth == "cloud"
-            else _DEFAULT_ACCOUNT_NAME_LEGACY
+            _DEFAULT_ACCOUNT_NAME_LEGACY
+            if auth == "legacy"
+            else _DEFAULT_ACCOUNT_NAME_CLOUD
         )

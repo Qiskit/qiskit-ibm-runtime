@@ -77,12 +77,14 @@ class TestPrograms(IBMTestCase):
                 self.assertIn(prog.program_id, stdout)
                 self.assertIn(prog.name, stdout)
                 self.assertNotIn(str(prog.max_execution_time), stdout)
+                self.assertNotIn("Backend requirements", stdout)
             service.pprint_programs(detailed=True)
             stdout_detailed = mock_stdout.getvalue()
             for prog in programs:
                 self.assertIn(prog.program_id, stdout_detailed)
                 self.assertIn(prog.name, stdout_detailed)
                 self.assertIn(str(prog.max_execution_time), stdout_detailed)
+                self.assertIn("Backend requirements", stdout_detailed)
 
     @run_legacy_and_cloud_fake
     def test_upload_program(self, service):

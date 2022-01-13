@@ -14,24 +14,15 @@
 
 from unittest import SkipTest
 
-from .ibm_test_case import IBMTestCase
+from .ibm_test_case import IBMIntegrationTestCase
 from .utils.decorators import (
-    requires_cloud_legacy_services,
     run_cloud_legacy_real,
     requires_cloud_legacy_devices,
 )
 
 
-class TestIntegrationBackend(IBMTestCase):
+class TestIntegrationBackend(IBMIntegrationTestCase):
     """Integration tests for backend functions."""
-
-    @classmethod
-    @requires_cloud_legacy_services
-    def setUpClass(cls, services):
-        """Initial class level setup."""
-        # pylint: disable=arguments-differ
-        super().setUpClass()
-        cls.services = services
 
     @run_cloud_legacy_real
     def test_backends(self, service):
@@ -39,17 +30,21 @@ class TestIntegrationBackend(IBMTestCase):
         backends = service.backends()
         self.assertTrue(backends)
         backend_names = [back.name() for back in backends]
-        self.assertEqual(len(backend_names), len(set(backend_names)))
+        self.assertEqual(
+            len(backend_names),
+            len(set(backend_names)),
+            f"backend_names={backend_names}",
+        )
 
     @run_cloud_legacy_real
     def test_get_backend(self, service):
         """Test getting a backend."""
         backends = service.backends()
-        backend = service.get_backend(backends[0].name())
+        backend = service.backend(backends[0].name())
         self.assertTrue(backend)
 
 
-class TestIBMBackend(IBMTestCase):
+class TestIBMBackend(IBMIntegrationTestCase):
     """Test ibm_backend module."""
 
     @classmethod
@@ -57,6 +52,7 @@ class TestIBMBackend(IBMTestCase):
     def setUpClass(cls, devices):
         """Initial class level setup."""
         # pylint: disable=arguments-differ
+        # pylint: disable=no-value-for-parameter
         super().setUpClass()
         cls.devices = devices
 
