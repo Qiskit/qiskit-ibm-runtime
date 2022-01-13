@@ -14,9 +14,12 @@
 
 import os
 import logging
+import time
+import unittest
 
 from qiskit import QuantumCircuit
 from qiskit.providers.jobstatus import JOB_FINAL_STATES, JobStatus
+from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit_ibm_runtime.hub_group_project import HubGroupProject
 from qiskit_ibm_runtime import IBMRuntimeService
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
@@ -113,3 +116,24 @@ def cancel_job_safe(job: RuntimeJob, logger: logging.Logger) -> bool:
             logger.warning("Unable to cancel job because it's already done.")
             return False
         raise
+
+
+def wait_for_status(job, status, poll_time=1, time_out=20):
+    """Wait for job to reach a certain status."""
+    wait_time = 1 if status == JobStatus.QUEUED else poll_time
+    while job.status() not in JOB_FINAL_STATES + (status,) and time_out > 0:
+        time.sleep(wait_time)
+        time_out -= wait_time
+    if job.status() != status:
+        raise unittest.SkipTest(f"Job {job.job_id} unable to reach status {status}.")
+
+
+def get_real_device(service):
+    """Get a real device for the service."""
+    try:
+        # TODO: Remove filters when ibmq_berlin is removed
+        return service.least_busy(
+            simulator=False, filters=lambda b: b.name() != "ibmq_berlin"
+        ).name()
+    except QiskitBackendNotFoundError:
+        raise unittest.SkipTest("No real device")  # cloud has no real device
