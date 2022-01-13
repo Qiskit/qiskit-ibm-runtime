@@ -804,7 +804,7 @@ class IBMRuntimeService:
             RuntimeProgramNotFound: If the program cannot be found.
             IBMRuntimeError: An error occurred running the program.
         """
-        if instance and self.auth != "legacy":
+        if instance and self._auth != "legacy":
             raise IBMInputValueError(
                 "The 'instance' keyword is only supported for legacy runtime. "
             )
