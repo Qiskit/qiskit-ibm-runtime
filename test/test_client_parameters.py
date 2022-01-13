@@ -15,7 +15,7 @@
 import uuid
 
 from requests_ntlm import HttpNtlmAuth
-
+from qiskit_ibm_runtime.proxies import ProxyConfiguration
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 from qiskit_ibm_runtime.api.auth import CloudAuth, LegacyAuth
 
@@ -43,7 +43,9 @@ class TestClientParameters(IBMTestCase):
         """Test using only proxy urls (no NTLM credentials)."""
         urls = {"http": "localhost:8080", "https": "localhost:8080"}
         proxies_only_expected_result = {"verify": True, "proxies": urls}
-        proxies_only_credentials = self._get_client_params(proxies={"urls": urls})
+        proxies_only_credentials = self._get_client_params(
+            proxies=ProxyConfiguration(**{"urls": urls})
+        )
         result = proxies_only_credentials.connection_parameters()
         self.assertDictEqual(proxies_only_expected_result, result)
 
@@ -61,7 +63,7 @@ class TestClientParameters(IBMTestCase):
             "auth": HttpNtlmAuth("domain\\username", "password"),
         }
         proxies_with_ntlm_credentials = self._get_client_params(
-            proxies=proxies_with_ntlm_dict
+            proxies=ProxyConfiguration(**proxies_with_ntlm_dict)
         )
         result = proxies_with_ntlm_credentials.connection_parameters()
 
@@ -73,19 +75,6 @@ class TestClientParameters(IBMTestCase):
         ntlm_expected_result.pop("auth")
         result.pop("auth")
         self.assertDictEqual(ntlm_expected_result, result)
-
-    def test_malformed_proxy_param(self) -> None:
-        """Test input with malformed nesting of the proxies dictionary."""
-        urls = {"http": "localhost:8080", "https": "localhost:8080"}
-        malformed_nested_proxies_dict = {"proxies": urls}
-        malformed_nested_credentials = self._get_client_params(
-            proxies=malformed_nested_proxies_dict
-        )
-
-        # Malformed proxy entries should be ignored.
-        expected_result = {"verify": True}
-        result = malformed_nested_credentials.connection_parameters()
-        self.assertDictEqual(expected_result, result)
 
     def test_malformed_ntlm_params(self) -> None:
         """Test input with malformed NTLM credentials."""
