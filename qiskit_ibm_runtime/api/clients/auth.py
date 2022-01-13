@@ -119,7 +119,7 @@ class AuthClient(BaseClient):
         response = self.auth_api.user_info()
         return response["urls"]
 
-    def user_hubs(self) -> List[Dict[str, str]]:
+    def user_hubs(self) -> List[Dict[str, Any]]:
         """Retrieve the hub/group/project sets available to the user.
 
         The first entry in the list will be the default set, as indicated by

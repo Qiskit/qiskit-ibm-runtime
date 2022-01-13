@@ -78,17 +78,16 @@ class FakeRuntimeService(QiskitRuntimeService):
                 url="some_url",
                 instance=hgp_name,
             )
-            hgp = HubGroupProject(client_params=hgp_params, instance=hgp_name)
+            unique_backend = self.DEFAULT_UNIQUE_BACKEND_PREFIX + str(idx)
+            backend_names = [self.DEFAULT_COMMON_BACKEND, unique_backend]
+            hgp = HubGroupProject(
+                client_params=hgp_params, instance=hgp_name, backend_names=backend_names
+            )
             fake_account_client = self._fake_account_client
             if not fake_account_client:
                 specs = [
                     {"configuration": {"backend_name": self.DEFAULT_COMMON_BACKEND}},
-                    {
-                        "configuration": {
-                            "backend_name": self.DEFAULT_UNIQUE_BACKEND_PREFIX
-                            + str(idx)
-                        }
-                    },
+                    {"configuration": {"backend_name": unique_backend}},
                 ]
                 fake_account_client = BaseFakeAccountClient(specs=specs, hgp=hgp_name)
             hgp._api_client = fake_account_client

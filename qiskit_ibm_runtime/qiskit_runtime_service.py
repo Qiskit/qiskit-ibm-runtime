@@ -380,13 +380,13 @@ class QiskitRuntimeService:
                 proxies=self._account.proxies,
                 verify=self._account.verify,
             )
-
+            backend_names = hub_info["backend_names"]
             # Build the hgp.
             try:
                 hgp = HubGroupProject(
                     client_params=hgp_params,
                     instance=hgp_params.instance,
-                    backend_names=hub_info["backend_names"],
+                    backend_names=backend_names,
                 )
                 hgps[hgp.name] = hgp
             except Exception:  # pylint: disable=broad-except
