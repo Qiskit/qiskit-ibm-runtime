@@ -224,9 +224,6 @@ Classes
    RuntimeJob
    RuntimeProgram
    ParameterNamespace
-   UserMessenger
-   ProgramBackend
-   ResultDecoder
    RuntimeEncoder
    RuntimeDecoder
 
@@ -238,9 +235,6 @@ from .ibm_runtime_service import IBMRuntimeService
 from .ibm_backend import IBMBackend
 from .runtime_job import RuntimeJob
 from .runtime_program import RuntimeProgram, ParameterNamespace
-from .program.user_messenger import UserMessenger
-from .program.program_backend import ProgramBackend
-from .program.result_decoder import ResultDecoder
 from .utils.json import RuntimeEncoder, RuntimeDecoder
 
 from .exceptions import *
