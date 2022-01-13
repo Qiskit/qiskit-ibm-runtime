@@ -51,7 +51,6 @@ class TutorialsTestCaseMeta(type):
         return type.__new__(mcs, name, bases, dict_)
 
 
-@skip("Skip until we have tutorials")
 @skipIf(not TEST_OPTIONS["run_slow"], "Skipping slow tests.")
 class TestTutorials(IBMTestCase, metaclass=TutorialsTestCaseMeta):
     """Tests for tutorials."""
