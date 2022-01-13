@@ -74,6 +74,12 @@ class TestRuntimeJob(IBMTestCase):
         with self.assertRaises(IBMInputValueError):
             _ = run_program(service=service, backend_name="")
 
+    def test_run_program_missing_backend_cloud(self):
+        """Test running a cloud program with no backend."""
+        service = FakeRuntimeService(auth="cloud", token="my_token", instance="crn:123")
+        job = run_program(service=service, backend_name="")
+        self.assertTrue(job.backend)
+
     def test_run_program_default_hgp_backend(self):
         """Test running a program with a backend in default hgp."""
         service = FakeRuntimeService(auth="legacy", token="my_token")
