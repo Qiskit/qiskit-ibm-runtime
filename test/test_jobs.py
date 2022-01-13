@@ -151,6 +151,13 @@ class TestRuntimeJob(IBMTestCase):
         self.assertEqual(job.image, image)
 
     @run_legacy_and_cloud_fake
+    def test_run_program_with_custom_log_level(self, service):
+        """Test running program with a custom image."""
+        job = run_program(service=service, log_level="DEBUG")
+        job_raw = service._api_client._get_job(job.job_id)
+        self.assertEqual(job_raw.log_level, "DEBUG")
+
+    @run_legacy_and_cloud_fake
     def test_run_program_failed(self, service):
         """Test a failed program execution."""
         job = run_program(service=service, job_classes=FailedRuntimeJob)

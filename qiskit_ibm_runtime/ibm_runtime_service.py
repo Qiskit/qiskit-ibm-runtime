@@ -14,7 +14,6 @@
 
 import json
 import logging
-import re
 import traceback
 import warnings
 from collections import OrderedDict
@@ -47,6 +46,7 @@ from .utils import RuntimeDecoder, to_base64_string, to_python_identifier
 from .utils.backend_decoder import configuration_from_server_data
 from .utils.hgp import to_instance_format, from_instance_format
 from .api.client_parameters import ClientParameters
+from .runtime_options import RuntimeOptions
 
 logger = logging.getLogger(__name__)
 
@@ -768,10 +768,9 @@ class IBMRuntimeService:
         self,
         program_id: str,
         inputs: Union[Dict, ParameterNamespace],
-        options: Optional[Dict] = None,
+        options: Optional[Union[RuntimeOptions, Dict]] = None,
         callback: Optional[Callable] = None,
         result_decoder: Optional[Type[ResultDecoder]] = None,
-        image: str = "",
         instance: Optional[str] = None,
     ) -> RuntimeJob:
         """Execute the runtime program.
@@ -780,9 +779,8 @@ class IBMRuntimeService:
             program_id: Program ID.
             inputs: Program input parameters. These input values are passed
                 to the runtime program.
-            options: Runtime options that control the execution environment.
-                Currently the only available option is ``backend_name``, which is required if
-                you are using legacy runtime.
+            options: Runtime options that control the execution environment. See
+                :class:`RuntimeOptions` for all available options.
             callback: Callback function to be invoked for any interim results.
                 The callback function will receive 2 positional parameters:
 
@@ -791,8 +789,6 @@ class IBMRuntimeService:
 
             result_decoder: A :class:`ResultDecoder` subclass used to decode job results.
                 ``ResultDecoder`` is used if not specified.
-            image: The runtime image used to execute the program, specified in the form
-                of image_name:tag. Not all accounts are authorized to select a different image.
             instance: This is only supported for legacy runtime and is in the
                 hub/group/project format.
 
@@ -814,35 +810,27 @@ class IBMRuntimeService:
             inputs.validate()
             inputs = vars(inputs)
 
-        if image and not re.match(
-            "[a-zA-Z0-9]+([/.\\-_][a-zA-Z0-9]+)*:[a-zA-Z0-9]+([.\\-_][a-zA-Z0-9]+)*$",
-            image,
-        ):
-            raise IBMInputValueError('"image" needs to be in form of image_name:tag')
+        if isinstance(options, dict):
+            options = RuntimeOptions(**options)
+        options.validate(self.auth)
 
-        options = options or {}
-        backend_name = options.get("backend_name", None)
         backend = None
-
         hgp_name = None
         if self._auth == "legacy":
-            if not backend_name:
-                raise IBMInputValueError(
-                    '"backend_name" is required field in "options" for legacy runtime.'
-                )
             # Find the right hgp
-            hgp = self._get_hgp(instance=instance, backend_name=backend_name)
-            backend = hgp.backend(backend_name)
+            hgp = self._get_hgp(instance=instance, backend_name=options.backend_name)
+            backend = hgp.backend(options.backend_name)
             hgp_name = hgp.name
 
         result_decoder = result_decoder or ResultDecoder
         try:
             response = self._api_client.program_run(
                 program_id=program_id,
-                backend_name=backend_name,
+                backend_name=options.backend_name,
                 params=inputs,
-                image=image,
+                image=options.image,
                 hgp=hgp_name,
+                log_level=options.log_level,
             )
         except RequestsApiError as ex:
             if ex.status_code == 404:
@@ -863,7 +851,7 @@ class IBMRuntimeService:
             params=inputs,
             user_callback=callback,
             result_decoder=result_decoder,
-            image=image,
+            image=options.image,
         )
         return job
 

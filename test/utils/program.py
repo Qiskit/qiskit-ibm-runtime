@@ -72,10 +72,11 @@ def run_program(
     image="",
     instance=None,
     backend_name=None,
+    log_level=None,
 ):
     """Run a program."""
     backend_name = backend_name if backend_name is not None else "common_backend"
-    options = {"backend_name": backend_name}
+    options = {"backend_name": backend_name, "image": image, "log_level": log_level}
     if final_status is not None:
         service._api_client.set_final_status(final_status)
     elif job_classes:
@@ -87,7 +88,6 @@ def run_program(
         options=options,
         inputs=inputs,
         result_decoder=decoder,
-        image=image,
         instance=instance,
     )
     return job
