@@ -291,7 +291,6 @@ def run_cloud_legacy_real(func):
     @wraps(func)
     def _wrapper(self, *args, **kwargs):
         for service in self.services:
-            # for service, instance in [(legacy_service, legacy_instance)]:
             with self.subTest(service=service.auth):
                 kwargs["service"] = service
                 func(self, *args, **kwargs)

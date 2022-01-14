@@ -113,6 +113,7 @@ class BaseFakeRuntimeJob:
         final_status,
         params,
         image,
+        log_level=None,
     ):
         """Initialize a fake job."""
         self._job_id = job_id
@@ -125,6 +126,7 @@ class BaseFakeRuntimeJob:
         self._params = params
         self._image = image
         self._interim_results = json.dumps("foo")
+        self.log_level = log_level
         if final_status is None:
             self._future = self._executor.submit(self._auto_progress)
             self._result = None
@@ -347,10 +349,11 @@ class BaseFakeRuntimeClient:
     def program_run(
         self,
         program_id: str,
-        backend_name: str,
+        backend_name: Optional[str],
         params: Dict,
         image: str,
         hgp: Optional[str],
+        log_level: Optional[str],
     ):
         """Run the specified program."""
         _ = self._get_program(program_id)
@@ -364,6 +367,10 @@ class BaseFakeRuntimeClient:
             hub, group, project = from_instance_format(hgp)
         else:
             hub = group = project = None
+
+        if backend_name is None:
+            backend_name = self.list_backends()[0]
+
         job = job_cls(
             job_id=job_id,
             program_id=program_id,
@@ -374,10 +381,11 @@ class BaseFakeRuntimeClient:
             params=params,
             final_status=self._final_status,
             image=image,
+            log_level=log_level,
             **self._job_kwargs,
         )
         self._jobs[job_id] = job
-        return {"id": job_id}
+        return {"id": job_id, "backend": backend_name}
 
     def program_delete(self, program_id: str) -> None:
         """Delete the specified program."""

@@ -77,3 +77,34 @@ jobs:
           pip install -U -c constraints.txt -r requirements-dev.txt
       - name: Run Tests
         run: make test2
+  test3:
+    name: tests3-python${{ matrix.python-version }}-${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: [3.7, 3.8, 3.9]
+        os: ["windows-latest", "ubuntu-latest"]
+    env:
+      QISKIT_IBM_STAGING_API_TOKEN: ${{ secrets.QISKIT_IBM_STAGING_API_TOKEN }}
+      QISKIT_IBM_STAGING_API_URL: ${{ secrets.QISKIT_IBM_STAGING_API_URL }}
+      QISKIT_IBM_STAGING_HGP: ${{ secrets.QISKIT_IBM_STAGING_HGP }}
+      QISKIT_IBM_STAGING_CLOUD_TOKEN: ${{ secrets.QISKIT_IBM_STAGING_CLOUD_TOKEN }}
+      QISKIT_IBM_STAGING_CLOUD_URL: ${{ secrets.QISKIT_IBM_STAGING_CLOUD_URL }}
+      QISKIT_IBM_STAGING_CLOUD_CRN: ${{ secrets.QISKIT_IBM_STAGING_CLOUD_CRN }}
+      QISKIT_IBM_USE_STAGING_CREDENTIALS: True
+      LOG_LEVEL: DEBUG
+      STREAM_LOG: True
+      QISKIT_IN_PARALLEL: True
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install Deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -c constraints.txt -e .
+          pip install -U -c constraints.txt -r requirements-dev.txt
+      - name: Run Tests
+        run: make test3

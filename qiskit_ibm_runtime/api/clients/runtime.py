@@ -119,10 +119,11 @@ class RuntimeClient(BaseBackendClient):
     def program_run(
         self,
         program_id: str,
-        backend_name: str,
+        backend_name: Optional[str],
         params: Dict,
-        image: str,
+        image: Optional[str],
         hgp: Optional[str],
+        log_level: Optional[str],
     ) -> Dict:
         """Run the specified program.
 
@@ -132,6 +133,7 @@ class RuntimeClient(BaseBackendClient):
             params: Parameters to use.
             image: The runtime image to use.
             hgp: Hub/group/project to use.
+            log_level: Log level to use.
 
         Returns:
             JSON response.
@@ -145,6 +147,7 @@ class RuntimeClient(BaseBackendClient):
             backend_name=backend_name,
             params=params,
             image=image,
+            log_level=log_level,
             **hgp_dict
         )
 
