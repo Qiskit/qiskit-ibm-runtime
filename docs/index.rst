@@ -8,6 +8,12 @@ Qiskit IBM Runtime documentation
   API References <apidocs/ibm-runtime>
   Release Notes <release_notes>
 
+.. toctree::
+  :titlesonly:
+
+  Maximum Execution Time <max_time.rst>
+
+
 .. Hiding - Indices and tables
    :ref:`genindex`
    :ref:`modindex`
