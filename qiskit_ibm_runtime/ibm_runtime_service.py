@@ -1252,20 +1252,6 @@ class IBMRuntimeService:
             creation_date=raw_data.get("created", None),
         )
 
-    def logout(self) -> None:
-        """Clears authorization cache on the server.
-
-        For better performance, the runtime server caches each user's
-        authorization information. This method is used to force the server
-        to clear its cache.
-
-        Note:
-            Invoke this method ONLY when your access level to the runtime
-            service has changed - for example, the first time your account is
-            given the authority to upload a program.
-        """
-        self._api_client.logout()
-
     def least_busy(
         self,
         min_num_qubits: Optional[int] = None,
