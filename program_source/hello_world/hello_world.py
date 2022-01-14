@@ -30,7 +30,9 @@ def prepare_circuits(backend):
     Returns:
         qiskit.QuantumCircuit: Generated circuit.
     """
-    circuit = random_circuit(num_qubits=5, depth=4, measure=True, seed=random.randint(0, 1000))
+    circuit = random_circuit(
+        num_qubits=5, depth=4, measure=True, seed=random.randint(0, 1000)
+    )
     return transpile(circuit, backend)
 
 

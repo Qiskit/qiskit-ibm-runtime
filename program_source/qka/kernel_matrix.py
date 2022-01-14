@@ -32,7 +32,9 @@ class KernelMatrix:
         """
 
         self._feature_map = feature_map
-        self._feature_map_circuit = self._feature_map.construct_circuit  # the feature map circuit
+        self._feature_map_circuit = (
+            self._feature_map.construct_circuit
+        )  # the feature map circuit
         self._backend = backend
         self._initial_layout = initial_layout
 
@@ -71,7 +73,9 @@ class KernelMatrix:
             for index_1, index_2 in my_product_list:
 
                 circuit_1 = self._feature_map_circuit(
-                    x=x1_vec[index_1], parameters=parameters, name="{}_{}".format(index_1, index_2)
+                    x=x1_vec[index_1],
+                    parameters=parameters,
+                    name="{}_{}".format(index_1, index_2),
                 )
                 circuit_2 = self._feature_map_circuit(
                     x=x1_vec[index_2], parameters=parameters, inverse=True
@@ -95,7 +99,9 @@ class KernelMatrix:
                 mat[index_1][index_2] = (
                     counts.get(measurement_basis, 0) / shots
                 )  # kernel matrix element is the probability of measuring all 0s
-                mat[index_2][index_1] = mat[index_1][index_2]  # kernel matrix is symmetric
+                mat[index_2][index_1] = mat[index_1][
+                    index_2
+                ]  # kernel matrix is symmetric
 
             return mat
 
@@ -105,7 +111,9 @@ class KernelMatrix:
                 for index_2, point_2 in enumerate(x2_vec):
 
                     circuit_1 = self._feature_map_circuit(
-                        x=point_1, parameters=parameters, name="{}_{}".format(index_1, index_2)
+                        x=point_1,
+                        parameters=parameters,
+                        name="{}_{}".format(index_1, index_2),
                     )
                     circuit_2 = self._feature_map_circuit(
                         x=point_2, parameters=parameters, inverse=True
@@ -134,5 +142,7 @@ class KernelMatrix:
     def _run_circuits(self, circuits):
         """Execute the input circuits."""
 
-        transpiled = transpile(circuits, backend=self._backend, initial_layout=self._initial_layout)
+        transpiled = transpile(
+            circuits, backend=self._backend, initial_layout=self._initial_layout
+        )
         return self._backend.run(transpiled, shots=8192).result()
