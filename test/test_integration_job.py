@@ -56,6 +56,27 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         self.assertEqual(JobStatus.DONE, job.status())
         self.assertEqual("foo", result)
 
+    def test_run_program_cloud_no_backend(self):
+        """Test running a cloud program with no backend."""
+        service = [serv for serv in self.services if serv.auth == "cloud"][0]
+        job = self._run_program(service, backend="")
+        self.assertTrue(job.backend, f"Job {job.job_id} has no backend.")
+
+    @run_cloud_legacy_real
+    def test_run_program_log_level(self, service):
+        """Test running with a custom log level."""
+        levels = ["INFO", "ERROR"]
+        for level in levels:
+            with self.subTest(level=level):
+                job = self._run_program(service, log_level=level)
+                job.wait_for_final_state()
+                expect_info_msg = level == "INFO"
+                self.assertEqual(
+                    "info log" in job.logs(),
+                    expect_info_msg,
+                    f"Job log is {job.logs()}",
+                )
+
     @run_cloud_legacy_real
     def test_run_program_failed(self, service):
         """Test a failed program execution."""

@@ -14,7 +14,6 @@
 
 import json
 import logging
-import re
 import traceback
 import warnings
 from collections import OrderedDict
@@ -47,6 +46,7 @@ from .utils import RuntimeDecoder, to_base64_string, to_python_identifier
 from .utils.backend_decoder import configuration_from_server_data
 from .utils.hgp import to_instance_format, from_instance_format
 from .api.client_parameters import ClientParameters
+from .runtime_options import RuntimeOptions
 
 logger = logging.getLogger(__name__)
 
@@ -475,8 +475,8 @@ class IBMRuntimeService:
         Args:
             name: Backend name to filter by.
             min_num_qubits: Minimum number of qubits the backend has to have.
-            instance: The service instance to use. For cloud runtime, this is the Cloud Resource
-                Name (CRN). For legacy runtime, this is the hub/group/project in that format.
+            instance: This is only supported for legacy runtime and is in the
+                hub/group/project format.
             filters: More complex filters, such as lambda functions.
                 For example::
 
@@ -490,6 +490,9 @@ class IBMRuntimeService:
 
         Returns:
             The list of available backends that match the filter.
+
+        Raises:
+            IBMInputValueError: If an input is invalid.
         """
         # TODO filter out input_allowed not having runtime
         if self._auth == "legacy":
@@ -498,7 +501,10 @@ class IBMRuntimeService:
             else:
                 backends = list(self._backends.values())
         else:
-            # TODO filtering by instance for cloud
+            if instance:
+                raise IBMInputValueError(
+                    "The 'instance' keyword is only supported for legacy runtime."
+                )
             backends = list(self._backends.values())
 
         if name:
@@ -607,8 +613,8 @@ class IBMRuntimeService:
 
         Args:
             name: Name of the backend.
-            instance: The service instance to use. For cloud runtime, this is the Cloud Resource
-                Name (CRN). For legacy runtime, this is the hub/group/project in that format.
+            instance: This is only supported for legacy runtime and is in the
+                hub/group/project format.
 
         Returns:
             Backend: A backend matching the filtering.
@@ -761,21 +767,20 @@ class IBMRuntimeService:
     def run(
         self,
         program_id: str,
-        options: Dict,
         inputs: Union[Dict, ParameterNamespace],
+        options: Optional[Union[RuntimeOptions, Dict]] = None,
         callback: Optional[Callable] = None,
         result_decoder: Optional[Type[ResultDecoder]] = None,
-        image: str = "",
         instance: Optional[str] = None,
     ) -> RuntimeJob:
         """Execute the runtime program.
 
         Args:
             program_id: Program ID.
-            options: Runtime options that control the execution environment.
-                Currently the only available option is ``backend_name``, which is required.
             inputs: Program input parameters. These input values are passed
                 to the runtime program.
+            options: Runtime options that control the execution environment. See
+                :class:`RuntimeOptions` for all available options.
             callback: Callback function to be invoked for any interim results.
                 The callback function will receive 2 positional parameters:
 
@@ -784,10 +789,8 @@ class IBMRuntimeService:
 
             result_decoder: A :class:`ResultDecoder` subclass used to decode job results.
                 ``ResultDecoder`` is used if not specified.
-            image: The runtime image used to execute the program, specified in the form
-                of image_name:tag. Not all accounts are authorized to select a different image.
-            instance: The service instance to use. For cloud runtime, this is the Cloud Resource
-                Name (CRN). For legacy runtime, this is the hub/group/project in that format.
+            instance: This is only supported for legacy runtime and is in the
+                hub/group/project format.
 
         Returns:
             A ``RuntimeJob`` instance representing the execution.
@@ -797,42 +800,37 @@ class IBMRuntimeService:
             RuntimeProgramNotFound: If the program cannot be found.
             IBMRuntimeError: An error occurred running the program.
         """
+        if instance and self._auth != "legacy":
+            raise IBMInputValueError(
+                "The 'instance' keyword is only supported for legacy runtime. "
+            )
+
         # If using params object, extract as dictionary
         if isinstance(inputs, ParameterNamespace):
             inputs.validate()
             inputs = vars(inputs)
 
-        if image and not re.match(
-            "[a-zA-Z0-9]+([/.\\-_][a-zA-Z0-9]+)*:[a-zA-Z0-9]+([.\\-_][a-zA-Z0-9]+)*$",
-            image,
-        ):
-            raise IBMInputValueError('"image" needs to be in form of image_name:tag')
+        if isinstance(options, dict):
+            options = RuntimeOptions(**options)
+        options.validate(self.auth)
 
-        backend_name = options.get("backend_name", "")
-
+        backend = None
         hgp_name = None
         if self._auth == "legacy":
-            if not backend_name:
-                raise IBMInputValueError(
-                    '"backend_name" is required field in "options" for legacy runtime.'
-                )
             # Find the right hgp
-            hgp = self._get_hgp(instance=instance, backend_name=backend_name)
-            backend = hgp.backend(backend_name)
+            hgp = self._get_hgp(instance=instance, backend_name=options.backend_name)
+            backend = hgp.backend(options.backend_name)
             hgp_name = hgp.name
-        else:
-            # TODO Support instance for cloud
-            # TODO Support optional backend name when fully supported by server
-            backend = self.backend(backend_name)
 
         result_decoder = result_decoder or ResultDecoder
         try:
             response = self._api_client.program_run(
                 program_id=program_id,
-                backend_name=backend_name,
+                backend_name=options.backend_name,
                 params=inputs,
-                image=image,
+                image=options.image,
                 hgp=hgp_name,
+                log_level=options.log_level,
             )
         except RequestsApiError as ex:
             if ex.status_code == 404:
@@ -840,6 +838,9 @@ class IBMRuntimeService:
                     f"Program not found: {ex.message}"
                 ) from None
             raise IBMRuntimeError(f"Failed to run program: {ex}") from None
+
+        if not backend:
+            backend = self.backend(name=response["backend"])
 
         job = RuntimeJob(
             backend=backend,
@@ -850,7 +851,7 @@ class IBMRuntimeService:
             params=inputs,
             user_callback=callback,
             result_decoder=result_decoder,
-            image=image,
+            image=options.image,
         )
         return job
 
@@ -1132,8 +1133,8 @@ class IBMRuntimeService:
                 jobs are included. If ``False``, 'DONE', 'CANCELLED' and 'ERROR' jobs
                 are included.
             program_id: Filter by Program ID.
-            instance: The service instance to use. Currently only supported for legacy runtime,
-                and should be in the hub/group/project format.
+            instance: This is only supported for legacy runtime and is in the
+                hub/group/project format.
 
         Returns:
             A list of runtime jobs.
@@ -1145,7 +1146,7 @@ class IBMRuntimeService:
         if instance:
             if self._auth == "cloud":
                 raise IBMInputValueError(
-                    "'instance' is not supported by cloud runtime."
+                    "The 'instance' keyword is only supported for legacy runtime."
                 )
             hub, group, project = from_instance_format(instance)
 
@@ -1276,8 +1277,8 @@ class IBMRuntimeService:
 
         Args:
             min_num_qubits: Minimum number of qubits the backend has to have.
-            instance: The service instance to use. For cloud runtime, this is the Cloud Resource
-                Name (CRN). For legacy runtime, this is the hub/group/project in that format.
+            instance: This is only supported for legacy runtime and is in the
+                hub/group/project format.
             filters: More complex filters, such as lambda functions.
                 For example::
 

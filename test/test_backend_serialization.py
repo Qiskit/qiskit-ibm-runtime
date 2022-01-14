@@ -37,8 +37,9 @@ class TestSerialization(IBMTestCase):
     @run_cloud_legacy_real
     def test_backend_configuration(self, service):
         """Test deserializing backend configuration."""
+        instance = self.instances[service.auth] if service.auth == "legacy" else None
         backends = service.backends(
-            operational=True, simulator=False, instance=self.instances[service.auth]
+            operational=True, simulator=False, instance=instance
         )
 
         # Known keys that look like a serialized complex number.
@@ -64,8 +65,9 @@ class TestSerialization(IBMTestCase):
     @run_cloud_legacy_real
     def test_pulse_defaults(self, service):
         """Test deserializing backend configuration."""
+        instance = self.instances[service.auth] if service.auth == "legacy" else None
         backends = service.backends(
-            operational=True, open_pulse=True, instance=self.instances[service.auth]
+            operational=True, open_pulse=True, instance=instance
         )
         if not backends:
             self.skipTest("Need pulse backends.")
@@ -80,8 +82,9 @@ class TestSerialization(IBMTestCase):
     @run_cloud_legacy_real
     def test_backend_properties(self, service):
         """Test deserializing backend properties."""
+        instance = self.instances[service.auth] if service.auth == "legacy" else None
         backends = service.backends(
-            operational=True, simulator=False, instance=self.instances[service.auth]
+            operational=True, simulator=False, instance=instance
         )
 
         # Known keys that look like a serialized object.
