@@ -218,17 +218,6 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         self.assertEqual(JobStatus.DONE, job.status())
 
     @run_cloud_legacy_real
-    def test_logout(self, service):
-        """Test logout."""
-        if service.auth == "cloud":
-            # TODO - re-enable when fixed
-            self.skipTest("Logout does not work for cloud")
-        service.logout()
-        # Make sure we can still do things.
-        self._upload_program(service)
-        _ = self._run_program(service)
-
-    @run_cloud_legacy_real
     def test_job_creation_date(self, service):
         """Test job creation date."""
         job = self._run_program(service, iterations=1)

@@ -31,7 +31,6 @@ class Runtime(RestAdapterBase):
     URL_MAP = {
         "programs": "/programs",
         "jobs": "/jobs",
-        "logout": "/logout",
         "backends": "/devices",
     }
 
@@ -192,11 +191,6 @@ class Runtime(RestAdapterBase):
         if all([hub, group, project]):
             payload["provider"] = f"{hub}/{group}/{project}"
         return self.session.get(url, params=payload).json()
-
-    def logout(self) -> None:
-        """Clear authorization cache."""
-        url = self.get_url("logout")
-        self.session.post(url)
 
     # IBM Cloud only functions
 
