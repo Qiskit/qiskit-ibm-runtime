@@ -286,10 +286,6 @@ class RuntimeClient(BaseBackendClient):
         """
         return self._api.program_job(job_id).logs()
 
-    def logout(self) -> None:
-        """Clear authorization cache."""
-        self._api.logout()
-
     # IBM Cloud only functions
 
     def list_backends(self) -> List[str]:
