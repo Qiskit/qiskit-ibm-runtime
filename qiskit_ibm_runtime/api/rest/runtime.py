@@ -31,7 +31,6 @@ class Runtime(RestAdapterBase):
     URL_MAP = {
         "programs": "/programs",
         "jobs": "/jobs",
-        "logout": "/logout",
         "backends": "/devices",
     }
 
@@ -119,10 +118,11 @@ class Runtime(RestAdapterBase):
         program_id: str,
         backend_name: Optional[str],
         params: Dict,
-        image: str,
+        image: Optional[str] = None,
         hub: Optional[str] = None,
         group: Optional[str] = None,
         project: Optional[str] = None,
+        log_level: Optional[str] = None,
     ) -> Dict:
         """Execute the program.
 
@@ -134,6 +134,7 @@ class Runtime(RestAdapterBase):
             hub: Hub to be used.
             group: Group to be used.
             project: Project to be used.
+            log_level: Log level to use.
 
         Returns:
             JSON response.
@@ -142,8 +143,11 @@ class Runtime(RestAdapterBase):
         payload = {
             "program_id": program_id,
             "params": params,
-            "runtime": image,
         }
+        if image:
+            payload["runtime"] = image
+        if log_level:
+            payload["log_level"] = log_level
         if backend_name:
             payload["backend"] = backend_name
         if all([hub, group, project]):
@@ -191,11 +195,6 @@ class Runtime(RestAdapterBase):
         if all([hub, group, project]):
             payload["provider"] = f"{hub}/{group}/{project}"
         return self.session.get(url, params=payload).json()
-
-    def logout(self) -> None:
-        """Clear authorization cache."""
-        url = self.get_url("logout")
-        self.session.post(url)
 
     # IBM Cloud only functions
 

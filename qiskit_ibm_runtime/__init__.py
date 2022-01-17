@@ -202,6 +202,7 @@ Classes
    RuntimeEncoder
    RuntimeDecoder
    ParameterNamespace
+   RuntimeOptions
 """
 # """
 # ===================================================
@@ -284,6 +285,7 @@ from .program.user_messenger import UserMessenger
 from .program.program_backend import ProgramBackend
 from .program.result_decoder import ResultDecoder
 from .utils.json import RuntimeEncoder, RuntimeDecoder
+from .runtime_options import RuntimeOptions
 
 # Setup the logger for the IBM Quantum Provider package.
 logger = logging.getLogger(__name__)
