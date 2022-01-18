@@ -79,12 +79,6 @@ for discussion and simple questions. To join our Slack community use the
 invite link at [Qiskit.org]. For questions that are more suited for a forum we
 use the `Qiskit` tag in [Stack Exchange].
 
-## Authors and Citation
-
-The Qiskit IBM Runtime is the work of [many people] who contribute to the
-project at different levels. If you use Qiskit, please cite as per the included
-[BibTeX file].
-
 ## License
 
 [Apache License 2.0].
