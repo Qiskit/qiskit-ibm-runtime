@@ -78,7 +78,10 @@ def _serialize_and_encode(
         String representation.
     """
     with io.BytesIO() as buff:
-        serializer(buff, data, **kwargs)
+        if isinstance(data, Instruction):
+            serializer(buff, (data, (), ()), {}, {}, **kwargs)
+        else:
+            serializer(buff, data, **kwargs)
         buff.seek(0)
         serialized_data = buff.read()
 
