@@ -19,6 +19,7 @@ from ..auth import LegacyAuth
 from ..exceptions import AuthenticationLicenseError, RequestsApiError
 from ..rest import Api
 from ..session import RetrySession
+from ..client_parameters import ClientParameters
 
 from .base import BaseClient
 
@@ -26,20 +27,22 @@ from .base import BaseClient
 class AuthClient(BaseClient):
     """Client for accessing IBM Quantum authentication services."""
 
-    def __init__(self, api_token: str, auth_url: str, **request_kwargs: Any) -> None:
+    def __init__(self, client_params: ClientParameters) -> None:
         """AuthClient constructor.
 
         Args:
-            api_token: IBM Quantum API token.
-            auth_url: URL for the authentication service.
-            **request_kwargs: Arguments for the request ``Session``.
+            client_params: Parameters used for server connection.
         """
-        self.api_token = api_token
-        self.auth_url = auth_url
+        self.api_token = client_params.token
+        self.auth_url = client_params.url
         self._service_urls = {}  # type: ignore[var-annotated]
 
-        self.auth_api = Api(RetrySession(auth_url, **request_kwargs))
-        self.base_api = self._init_service_clients(**request_kwargs)
+        self.auth_api = Api(
+            RetrySession(self.auth_url, **client_params.connection_parameters())
+        )
+        self.base_api = self._init_service_clients(
+            **client_params.connection_parameters()
+        )
 
     def _init_service_clients(self, **request_kwargs: Any) -> Api:
         """Initialize the clients used for communicating with the API.
@@ -165,7 +168,7 @@ class AuthClient(BaseClient):
         """
         return self.access_token
 
-    def current_service_urls(self) -> Dict[str, str]:
+    def current_service_urls(self) -> Dict:
         """Return the current service URLs.
 
         Returns:

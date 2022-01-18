@@ -28,6 +28,9 @@ def is_crn(locator: str) -> bool:
 
     Args:
         locator: The value to check.
+
+    Returns:
+        Whether the input is a CRN.
     """
     return isinstance(locator, str) and locator.startswith("crn:")
 
@@ -37,6 +40,9 @@ def crn_to_api_host(crn: str) -> str:
 
     Args:
         crn: The CRN.
+
+    Returns:
+        API host.
 
     Raises:
         CannotMapCrnToApiHostError: If the corresponding API host cannot be determined.

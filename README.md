@@ -40,7 +40,7 @@ pip install qiskit-ibm-runtime
    print(service.backends())
 
    # get IBM's simulator backend
-   simulator_backend = service.get_backend('ibmq_qasm_simulator')
+   simulator_backend = service.backend('ibmq_qasm_simulator')
    ```
 
 ### Load Account from Environment Variables

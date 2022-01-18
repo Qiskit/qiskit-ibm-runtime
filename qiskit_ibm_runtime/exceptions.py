@@ -33,36 +33,6 @@ class IBMProviderValueError(IBMProviderError):
     pass
 
 
-class IBMProviderCredentialsNotFound(IBMProviderError):
-    """Errors raised when credentials are not found."""
-
-    pass
-
-
-class IBMProviderMultipleCredentialsFound(IBMProviderError):
-    """Errors raised when multiple credentials are found."""
-
-    pass
-
-
-class IBMProviderCredentialsInvalidFormat(IBMProviderError):
-    """Errors raised when the credentials format is invalid."""
-
-    pass
-
-
-class IBMProviderCredentialsInvalidToken(IBMProviderError):
-    """Errors raised when an IBM Quantum token is invalid."""
-
-    pass
-
-
-class IBMProviderCredentialsInvalidUrl(IBMProviderError):
-    """Errors raised when an IBM Quantum URL is invalid."""
-
-    pass
-
-
 class IBMBackendError(IBMError):
     """Base class for errors raised by the backend modules."""
 
@@ -105,37 +75,37 @@ class IBMApiError(IBMError):
     pass
 
 
-class QiskitRuntimeError(IBMError):
+class IBMRuntimeError(IBMError):
     """Base class for errors raised by the runtime service modules."""
 
     pass
 
 
-class RuntimeDuplicateProgramError(QiskitRuntimeError):
+class RuntimeDuplicateProgramError(IBMRuntimeError):
     """Error raised when a program being uploaded already exists."""
 
     pass
 
 
-class RuntimeProgramNotFound(QiskitRuntimeError):
+class RuntimeProgramNotFound(IBMRuntimeError):
     """Error raised when a program is not found."""
 
     pass
 
 
-class RuntimeJobFailureError(QiskitRuntimeError):
+class RuntimeJobFailureError(IBMRuntimeError):
     """Error raised when a runtime job failed."""
 
     pass
 
 
-class RuntimeJobNotFound(QiskitRuntimeError):
+class RuntimeJobNotFound(IBMRuntimeError):
     """Error raised when a job is not found."""
 
     pass
 
 
-class RuntimeInvalidStateError(QiskitRuntimeError):
+class RuntimeInvalidStateError(IBMRuntimeError):
     """Errors raised when the state is not valid for the operation."""
 
     pass

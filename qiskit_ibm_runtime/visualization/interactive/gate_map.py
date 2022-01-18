@@ -9,6 +9,7 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
+# pylint: disable=consider-iterating-dictionary
 
 """Interactive gate map for IBM Quantum devices."""
 
@@ -71,8 +72,8 @@ def iplot_gate_map(
             from qiskit_ibm_runtime import IBMRuntimeService
             from qiskit_ibm_runtime.visualization import iplot_gate_map
 
-            service = IBMRuntimeService(group='open', project='main')
-            backend = service.get_backend('ibmq_vigo')
+            service = IBMRuntimeService()
+            backend = service.backend('ibmq_vigo')
 
             iplot_gate_map(backend, as_widget=True)
     """

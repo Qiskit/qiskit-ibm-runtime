@@ -28,14 +28,14 @@ from .constants import API_TO_JOB_ERROR_MESSAGE, API_TO_JOB_STATUS
 from .exceptions import (
     RuntimeJobFailureError,
     RuntimeInvalidStateError,
-    QiskitRuntimeError,
+    IBMRuntimeError,
 )
 from .program.result_decoder import ResultDecoder
 from .api.clients import RuntimeClient, RuntimeWebsocketClient, WebsocketClientCloseCode
 from .exceptions import IBMError
 from .api.exceptions import RequestsApiError
 from .utils.converters import utc_to_local
-from .credentials import Credentials
+from .api.client_parameters import ClientParameters
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +82,7 @@ class RuntimeJob:
         self,
         backend: Backend,
         api_client: RuntimeClient,
-        credentials: Credentials,
+        client_params: ClientParameters,
         job_id: str,
         program_id: str,
         params: Optional[Dict] = None,
@@ -96,7 +96,7 @@ class RuntimeJob:
         Args:
             backend: The backend instance used to run this job.
             api_client: Object for connecting to the server.
-            credentials: Account credentials.
+            client_params: Parameters used for server connection.
             job_id: Job ID.
             program_id: ID of the program this job is for.
             params: Job parameters.
@@ -123,8 +123,8 @@ class RuntimeJob:
         self._ws_client_future = None  # type: Optional[futures.Future]
         self._result_queue = queue.Queue()  # type: queue.Queue
         self._ws_client = RuntimeWebsocketClient(
-            websocket_url=credentials.runtime_url.replace("https", "wss"),
-            credentials=credentials,
+            websocket_url=client_params.url.replace("https", "wss"),
+            client_params=client_params,
             job_id=job_id,
             message_queue=self._result_queue,
         )
@@ -189,7 +189,7 @@ class RuntimeJob:
 
         Raises:
             RuntimeInvalidStateError: If the job is in a state that cannot be cancelled.
-            QiskitRuntimeError: If unable to cancel job.
+            IBMRuntimeError: If unable to cancel job.
         """
         try:
             self._api_client.job_cancel(self.job_id)
@@ -198,7 +198,7 @@ class RuntimeJob:
                 raise RuntimeInvalidStateError(
                     f"Job cannot be cancelled: {ex}"
                 ) from None
-            raise QiskitRuntimeError(f"Failed to cancel job: {ex}") from None
+            raise IBMRuntimeError(f"Failed to cancel job: {ex}") from None
         self.cancel_result_streaming()
         self._status = JobStatus.CANCELLED
 
@@ -294,7 +294,7 @@ class RuntimeJob:
             Job logs, including standard output and error.
 
         Raises:
-            QiskitRuntimeError: If a network error occurred.
+            IBMRuntimeError: If a network error occurred.
         """
         if self.status() not in JOB_FINAL_STATES:
             logger.warning("Job logs are only available after the job finishes.")
@@ -303,7 +303,7 @@ class RuntimeJob:
         except RequestsApiError as err:
             if err.status_code == 404:
                 return ""
-            raise QiskitRuntimeError(f"Failed to get job logs: {err}") from None
+            raise IBMRuntimeError(f"Failed to get job logs: {err}") from None
 
     def _set_status_and_error_message(self) -> None:
         """Fetch and set status and error message."""
@@ -409,6 +409,9 @@ class RuntimeJob:
                 result_queue.get_nowait()
         except queue.Empty:
             pass
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__}('{self._job_id}', '{self._program_id}')>"
 
     @property
     def job_id(self) -> str:
