@@ -224,9 +224,9 @@ Classes
    RuntimeJob
    RuntimeProgram
    ParameterNamespace
+   RuntimeOptions
    RuntimeEncoder
    RuntimeDecoder
-   RuntimeOptions
 """
 
 import logging

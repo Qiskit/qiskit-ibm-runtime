@@ -78,7 +78,7 @@ service = IBMRuntimeService()
 
 Alternatively, the service can discover credentials from environment variables:
 ```bash
-export QISKIT_IBM_API_TOKEN="MY_IBM_CLOUD_API_KEY"
+export QISKIT_IBM_TOKEN="MY_IBM_CLOUD_API_KEY"
 export QISKIT_IBM_INSTANCE="MY_IBM_CLOUD_CRN"
 ```
 
