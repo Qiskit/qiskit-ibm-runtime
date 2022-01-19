@@ -47,7 +47,7 @@ jobs:
       - name: Upload test coverage report
         uses: actions/upload-artifact@v2
         with:
-          name: coverage_report
+          name: coverage_report-${{ matrix.python-version }}
           path: htmlcov
   lint:
     name: lint & mypy
