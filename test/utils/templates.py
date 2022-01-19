@@ -16,9 +16,12 @@ RUNTIME_PROGRAM = """
 import random
 import time
 import warnings
+import logging
 
 from qiskit import transpile
 from qiskit.circuit.random import random_circuit
+
+logger = logging.getLogger("qiskit-test")
 
 def prepare_circuits(backend):
     circuit = random_circuit(num_qubits=5, depth=4, measure=True,
@@ -39,6 +42,7 @@ def main(backend, user_messenger, **kwargs):
     user_messenger.publish(final_result, final=True)
     print("this is a stdout message")
     warnings.warn("this is a stderr message")
+    logger.info("this is an info log")
     """
 
 RUNTIME_PROGRAM_METADATA = {

@@ -226,7 +226,7 @@ Classes
    ParameterNamespace
    RuntimeEncoder
    RuntimeDecoder
-
+   RuntimeOptions
 """
 
 import logging
@@ -235,11 +235,13 @@ from .ibm_runtime_service import IBMRuntimeService
 from .ibm_backend import IBMBackend
 from .runtime_job import RuntimeJob
 from .runtime_program import RuntimeProgram, ParameterNamespace
+from .runtime_options import RuntimeOptions
 from .utils.json import RuntimeEncoder, RuntimeDecoder
 
 from .exceptions import *
 from .utils.utils import setup_logger
 from .version import __version__
+
 
 # Setup the logger for the IBM Quantum Provider package.
 logger = logging.getLogger(__name__)

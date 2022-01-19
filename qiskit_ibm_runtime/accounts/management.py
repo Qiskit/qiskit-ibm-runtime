@@ -172,8 +172,8 @@ class AccountManager:
     @classmethod
     def _from_env_variables(cls, auth: Optional[AccountType]) -> Optional[Account]:
         """Read account from environment variable."""
-        token = os.getenv("QISKIT_IBM_API_TOKEN")
-        url = os.getenv("QISKIT_IBM_API_URL")
+        token = os.getenv("QISKIT_IBM_TOKEN")
+        url = os.getenv("QISKIT_IBM_URL")
         if not (token and url):
             return None
         return Account(

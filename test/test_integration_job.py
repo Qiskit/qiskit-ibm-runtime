@@ -63,6 +63,21 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         self.assertTrue(job.backend, f"Job {job.job_id} has no backend.")
 
     @run_cloud_legacy_real
+    def test_run_program_log_level(self, service):
+        """Test running with a custom log level."""
+        levels = ["INFO", "ERROR"]
+        for level in levels:
+            with self.subTest(level=level):
+                job = self._run_program(service, log_level=level)
+                job.wait_for_final_state()
+                expect_info_msg = level == "INFO"
+                self.assertEqual(
+                    "info log" in job.logs(),
+                    expect_info_msg,
+                    f"Job log is {job.logs()}",
+                )
+
+    @run_cloud_legacy_real
     def test_run_program_failed(self, service):
         """Test a failed program execution."""
         job = self._run_program(service, inputs={})
@@ -201,17 +216,6 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         job = self._run_program(service)
         job.wait_for_final_state()
         self.assertEqual(JobStatus.DONE, job.status())
-
-    @run_cloud_legacy_real
-    def test_logout(self, service):
-        """Test logout."""
-        if service.auth == "cloud":
-            # TODO - re-enable when fixed
-            self.skipTest("Logout does not work for cloud")
-        service.logout()
-        # Make sure we can still do things.
-        self._upload_program(service)
-        _ = self._run_program(service)
 
     @run_cloud_legacy_real
     def test_job_creation_date(self, service):
