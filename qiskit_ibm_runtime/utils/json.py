@@ -41,6 +41,7 @@ from qiskit.circuit import (
     ParameterExpression,
     ParameterVector,
     QuantumCircuit,
+    QuantumRegister,
     qpy_serialization,
 )
 from qiskit.circuit.library import BlueprintCircuit
@@ -78,10 +79,7 @@ def _serialize_and_encode(
         String representation.
     """
     with io.BytesIO() as buff:
-        if isinstance(data, Instruction):
-            serializer(buff, (data, (), ()), {}, {}, **kwargs)
-        else:
-            serializer(buff, data, **kwargs)
+        serializer(buff, data, **kwargs)
         buff.seek(0)
         serialized_data = buff.read()
 
@@ -213,10 +211,13 @@ class RuntimeEncoder(json.JSONEncoder):
             )
             return {"__type__": "ParameterExpression", "__value__": value}
         if isinstance(obj, Instruction):
+            # Append instruction to empty circuit
+            qr = QuantumRegister(obj.num_qubits)
+            qc = QuantumCircuit(qr)
+            qc.append(obj, qr)
             value = _serialize_and_encode(
-                data=obj,
-                serializer=qpy_serialization._write_instruction,
-                compress=False,
+                data=qc,
+                serializer=lambda buff, data: qpy_serialization.dump(data, buff),
             )
             return {"__type__": "Instruction", "__value__": value}
         if hasattr(obj, "settings"):
@@ -273,9 +274,8 @@ class RuntimeDecoder(json.JSONDecoder):
                     obj_val, self.__read_parameter_expression, False
                 )
             if obj_type == "Instruction":
-                return _decode_and_deserialize(
-                    obj_val, qpy_serialization._read_instruction, False
-                )
+                circuit = _decode_and_deserialize(obj_val, qpy_serialization.load)[0]
+                return circuit.data[0][0]
             if obj_type == "settings":
                 return _deserialize_from_settings(
                     mod_name=obj["__module__"],
