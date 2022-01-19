@@ -205,7 +205,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     def test_job_backend(self, service):
         """Test job backend."""
         job = self._run_program(service)
-        self.assertEqual(self.sim_backends[service.auth], job.backend.name())
+        self.assertEqual(self.sim_backends[service.auth], job.backend.name)
 
     @run_integration_test
     def test_job_program_id(self, service):

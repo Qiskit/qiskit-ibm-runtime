@@ -1221,7 +1221,7 @@ def main(backend, user_messenger, **kwargs):
 
 if __name__ == "__main__":
     # the code currently uses Aer instead of runtime provider
-    _backend = Aer.get_backend("qasm_simulator")
+    _backend = Aer.backend("qasm_simulator")
     user_params = {}
     if len(sys.argv) > 1:
         # If there are user parameters.

@@ -14,23 +14,29 @@
 
 import logging
 
-from typing import Union, Optional, Any
+from typing import Union, Optional, Any, List
 from datetime import datetime as python_datetime
 
 from qiskit.qobj.utils import MeasLevel, MeasReturnType
-from qiskit.providers.backend import BackendV1 as Backend
+from qiskit.providers.backend import BackendV2 as Backend, QubitProperties
 from qiskit.providers.options import Options
 from qiskit.providers.models import (
     BackendStatus,
     BackendProperties,
     PulseDefaults,
     GateConfig,
+    QasmBackendConfiguration,
+    PulseBackendConfiguration,
 )
-from qiskit.providers.models import QasmBackendConfiguration, PulseBackendConfiguration
+from qiskit.transpiler.target import Target
 
 from .api.clients import AccountClient, RuntimeClient
 from .api.clients.backend import BaseBackendClient
 from .exceptions import IBMBackendApiProtocolError
+from .utils.backend_converter import (
+    convert_to_target,
+    qubit_properties_dict_from_properties,
+)
 from .utils.converters import local_to_utc
 from .utils.backend_decoder import (
     defaults_from_server_data,
@@ -74,13 +80,61 @@ class IBMBackend(Backend):
             configuration: Backend configuration.
             api_client: IBM Quantum client used to communicate with the server.
         """
-        super().__init__(configuration=configuration)
-
+        super().__init__(
+            name=configuration.backend_name,
+            online_date=configuration.online_date,
+            backend_version=configuration.backend_version,
+        )
+        self._configuration = configuration
         self._api_client = api_client
-
-        # Attributes used by caching functions.
         self._properties = None
+        self._qubit_properties = None
         self._defaults = None
+        self._target = None
+        self._max_circuits = configuration.max_experiments
+
+    def __getattr__(self, name: str) -> Any:
+        self._get_properties()
+        self._get_defaults()
+        self._convert_to_target()
+        try:
+            return super().__getattribute__(name)
+        except AttributeError:
+            pass
+        try:
+            return self._configuration.__getattribute__(name)
+        except AttributeError:
+            raise AttributeError(
+                "'{}' object has no attribute '{}'".format(
+                    self.__class__.__name__, name
+                )
+            )
+
+    def _get_properties(self) -> None:
+        """Gets backend properties and decodes it"""
+        if not self._properties:
+            api_properties = self._api_client.backend_properties(self.name)
+            if api_properties:
+                backend_properties = properties_from_server_data(api_properties)
+                self._properties = backend_properties
+
+    def _get_defaults(self) -> None:
+        """Gets defaults if pulse backend and decodes it"""
+        if not self._defaults and isinstance(
+            self._configuration, PulseBackendConfiguration
+        ):
+            api_defaults = self._api_client.backend_pulse_defaults(self.name)
+            if api_defaults:
+                self._defaults = defaults_from_server_data(api_defaults)
+
+    def _convert_to_target(self) -> None:
+        """Converts backend configuration, properties and defaults to Target object"""
+        if not self._target:
+            self._target = convert_to_target(
+                configuration=self._configuration.to_dict(),
+                properties=self._properties.to_dict() if self._properties else None,
+                defaults=self._defaults.to_dict() if self._defaults else None,
+            )
 
     @classmethod
     def _default_options(cls) -> Options:
@@ -100,6 +154,47 @@ class IBMBackend(Backend):
             init_qubits=True,
             use_measure_esp=None,
         )
+
+    @property
+    def target(self) -> Target:
+        """A :class:`qiskit.transpiler.Target` object for the backend.
+
+        Returns:
+            Target
+        """
+        return self._target
+
+    @property
+    def max_circuits(self) -> int:
+        """The maximum number of circuits
+
+        The maximum number of circuits (or Pulse schedules) that can be
+        run in a single job. If there is no limit this will return None
+        """
+        return self._max_circuits
+
+    def qubit_properties(
+        self, qubit: Union[int, List[int]]
+    ) -> Union[QubitProperties, List[QubitProperties]]:
+        """Return QubitProperties for a given qubit.
+
+        Args:
+            qubit: The qubit to get the
+                :class:`~qiskit.provider.QubitProperties` object for. This can
+                be a single integer for 1 qubit or a list of qubits and a list
+                of :class:`~qiskit.provider.QubitProperties` objects will be
+                returned in the same order
+        """
+        self._get_properties()
+        if not self._qubit_properties:
+            self._qubit_properties = qubit_properties_dict_from_properties(
+                self._properties.to_dict()
+            )
+        if isinstance(qubit, int):  # type: ignore[unreachable]
+            return self._qubit_properties.get(qubit)
+        if isinstance(qubit, List):
+            return [self._qubit_properties.get(q) for q in qubit]
+        return None
 
     def properties(
         self, refresh: bool = False, datetime: Optional[python_datetime] = None
@@ -148,7 +243,7 @@ class IBMBackend(Backend):
 
         if datetime or refresh or self._properties is None:
             api_properties = self._api_client.backend_properties(
-                self.name(), datetime=datetime
+                self.name, datetime=datetime
             )
             if not api_properties:
                 return None
@@ -172,7 +267,7 @@ class IBMBackend(Backend):
         Raises:
             IBMBackendApiProtocolError: If the status for the backend cannot be formatted properly.
         """
-        api_status = self._api_client.backend_status(self.name())
+        api_status = self._api_client.backend_status(self.name)
 
         try:
             return BackendStatus.from_dict(api_status)
@@ -197,7 +292,7 @@ class IBMBackend(Backend):
             The backend pulse defaults or ``None`` if the backend does not support pulse.
         """
         if refresh or self._defaults is None:
-            api_defaults = self._api_client.backend_pulse_defaults(self.name())
+            api_defaults = self._api_client.backend_pulse_defaults(self.name)
             if api_defaults:
                 self._defaults = defaults_from_server_data(api_defaults)
             else:
@@ -223,7 +318,7 @@ class IBMBackend(Backend):
         return self._configuration
 
     def __repr__(self) -> str:
-        return "<{}('{}')>".format(self.__class__.__name__, self.name())
+        return "<{}('{}')>".format(self.__class__.__name__, self.name)
 
     def run(self, *args: Any, **kwargs: Any) -> None:
         """Not supported method"""
@@ -266,7 +361,7 @@ class IBMRetiredBackend(IBMBackend):
         """
         super().__init__(configuration, api_client)
         self._status = BackendStatus(
-            backend_name=self.name(),
+            backend_name=self.name,
             backend_version=self.configuration().backend_version,
             operational=False,
             pending_jobs=0,

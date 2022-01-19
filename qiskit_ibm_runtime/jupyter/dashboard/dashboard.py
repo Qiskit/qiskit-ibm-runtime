@@ -94,12 +94,12 @@ class IBMDashboard(Subscriber):
             )
             for back in pro.backends():
                 if not back.configuration().simulator:
-                    if back.name() not in ibm_backends.keys():
-                        ibm_backends[back.name()] = BackendWithProviders(
+                    if back.name not in ibm_backends.keys():
+                        ibm_backends[back.name] = BackendWithProviders(
                             backend=back, providers=[pro_name]
                         )
                     else:
-                        ibm_backends[back.name()].providers.append(pro_name)
+                        ibm_backends[back.name].providers.append(pro_name)
 
         self.backend_dict = ibm_backends
 
