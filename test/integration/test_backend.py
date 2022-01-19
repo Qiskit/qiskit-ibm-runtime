@@ -72,6 +72,13 @@ class TestIBMBackend(IBMIntegrationTestCase):
             with self.subTest(backend=backend.name):
                 self.assertIsNotNone(backend.max_circuits)
 
+    def test_backend_simulator(self):
+        """Test if an attribute (ex: simulator) on configuration is available on backend object."""
+        for backend in self.devices:
+            with self.subTest(backend=backend.name):
+                self.assertIsNotNone(backend.simulator)
+                self.assertEquals(backend.simulator, backend.configuration().simulator)
+
     def test_backend_status(self):
         """Check the status of a real chip."""
         backend = self.backend
