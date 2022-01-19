@@ -14,6 +14,7 @@
 
 from unittest import SkipTest
 
+from qiskit.transpiler.target import Target
 from ..ibm_test_case import IBMIntegrationTestCase
 from ..decorators import run_integration_test
 
@@ -37,7 +38,7 @@ class TestIntegrationBackend(IBMIntegrationTestCase):
     def test_get_backend(self, service):
         """Test getting a backend."""
         backends = service.backends()
-        backend = service.backend(backends[0].name())
+        backend = service.backend(backends[0].name)
         self.assertTrue(backend)
 
 
@@ -57,6 +58,19 @@ class TestIBMBackend(IBMIntegrationTestCase):
             cls.backend = cls.dependencies.service.least_busy(
                 simulator=False, min_num_qubits=5, instance=cls.dependencies.instance
             )
+
+    def test_backend_target(self):
+        """Check if the target property is set."""
+        for backend in self.devices:
+            with self.subTest(backend=backend.name):
+                self.assertIsNotNone(backend.target)
+                self.assertIsInstance(backend.target, Target)
+
+    def test_backend_max_circuits(self):
+        """Check if the max_circuits property is set."""
+        for backend in self.devices:
+            with self.subTest(backend=backend.name):
+                self.assertIsNotNone(backend.max_circuits)
 
     def test_backend_status(self):
         """Check the status of a real chip."""

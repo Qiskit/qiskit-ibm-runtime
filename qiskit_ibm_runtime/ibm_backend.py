@@ -85,8 +85,8 @@ class IBMBackend(Backend):
             online_date=configuration.online_date,
             backend_version=configuration.backend_version,
         )
-        self._configuration = configuration
         self._api_client = api_client
+        self._configuration = configuration
         self._properties = None
         self._qubit_properties = None
         self._defaults = None
@@ -162,6 +162,9 @@ class IBMBackend(Backend):
         Returns:
             Target
         """
+        self._get_properties()
+        self._get_defaults()
+        self._convert_to_target()
         return self._target
 
     @property
