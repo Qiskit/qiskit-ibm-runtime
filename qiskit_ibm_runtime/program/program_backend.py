@@ -13,7 +13,7 @@
 """Base class for program backend."""
 
 import logging
-from typing import Union, List, Dict, Optional
+from typing import Union, List, Dict
 from abc import abstractmethod, ABC
 
 from qiskit.pulse import Schedule
