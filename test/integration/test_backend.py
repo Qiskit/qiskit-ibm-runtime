@@ -73,7 +73,7 @@ class TestIBMBackend(IBMIntegrationTestCase):
                 self.assertIsNotNone(backend.max_circuits)
 
     def test_backend_simulator(self):
-        """Test if an attribute (ex: simulator) on configuration is available on backend object."""
+        """Test if a configuration attribute (ex: simulator) is available as backend attribute."""
         for backend in self.devices:
             with self.subTest(backend=backend.name):
                 self.assertIsNotNone(backend.simulator)
@@ -108,6 +108,13 @@ class TestIBMBackend(IBMIntegrationTestCase):
         backend = self.backend
         with self.subTest(backend=backend.name):
             self.assertIsNotNone(backend.configuration())
+
+    def test_backend_invalid_attribute(self):
+        """Check if AttributeError is raised when an invalid backend attribute is accessed."""
+        for backend in self.devices:
+            with self.subTest(backend=backend.name):
+                with self.assertRaises(AttributeError):
+                    backend.foobar
 
     def test_backend_run(self):
         """Check one cannot do backend.run"""
