@@ -68,12 +68,18 @@ extensions = [
     'jupyter_sphinx',
     'sphinx_autodoc_typehints',
     'reno.sphinxext',
+    'nbsphinx',
 ]
 html_static_path = ['_static']
 templates_path = ['_templates']
-html_css_files = [
-    'style.css',
-]
+
+html_css_files = ['style.css', 'gallery.css']
+# html_css_files = [
+#     'style.css',
+# ]
+nbsphinx_timeout = 300
+nbsphinx_execute = "never"
+exclude_patterns = ["_build", "**.ipynb_checkpoints"]
 
 # -----------------------------------------------------------------------------
 # Autosummary
