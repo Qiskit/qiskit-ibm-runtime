@@ -28,7 +28,7 @@ test:
 
 coverage:
 	coverage run -m unittest -v
-	coverage report html
+	coverage html
 
 test1:
 	python -m unittest -v test/test_integration_backend.py test/test_integration_program.py
