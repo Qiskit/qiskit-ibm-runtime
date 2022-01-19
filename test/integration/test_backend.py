@@ -77,7 +77,7 @@ class TestIBMBackend(IBMIntegrationTestCase):
         for backend in self.devices:
             with self.subTest(backend=backend.name):
                 self.assertIsNotNone(backend.simulator)
-                self.assertEquals(backend.simulator, backend.configuration().simulator)
+                self.assertEqual(backend.simulator, backend.configuration().simulator)
 
     def test_backend_status(self):
         """Check the status of a real chip."""
@@ -114,7 +114,7 @@ class TestIBMBackend(IBMIntegrationTestCase):
         for backend in self.devices:
             with self.subTest(backend=backend.name):
                 with self.assertRaises(AttributeError):
-                    backend.foobar
+                    backend.foobar  # pylint: disable=pointless-statement
 
     def test_backend_run(self):
         """Check one cannot do backend.run"""
