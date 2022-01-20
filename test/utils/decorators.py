@@ -63,8 +63,6 @@ def run_integration_test(func):
         with self.subTest(service=self.dependencies.service):
             if self.dependencies.service:
                 kwargs["service"] = self.dependencies.service
-            if self.dependencies.device:
-                kwargs["device"] = self.dependencies.device
             func(self, *args, **kwargs)
 
     return _wrapper
@@ -73,7 +71,6 @@ def run_integration_test(func):
 def integration_test_setup(
     supported_auth: Optional[List[str]] = None,
     init_service: Optional[bool] = True,
-    resolve_least_busy_device: Optional[bool] = False,
 ):
     """Returns a decorator for integration test initialization.
 
@@ -110,24 +107,12 @@ def integration_test_setup(
                 service = IBMRuntimeService(
                     auth=auth, token=token, url=url, instance=instance
                 )
-
-            device = None
-            if service and resolve_least_busy_device:
-                if auth == "cloud":
-                    # TODO use real device when cloud supports it
-                    device = service.least_busy(min_num_qubits=5)
-                if auth == "legacy":
-                    device = service.least_busy(
-                        simulator=False, min_num_qubits=5, instance=instance
-                    )
-
             dependencies = IntegrationTestDependencies(
                 auth=auth,
                 token=token,
                 url=url,
                 instance=instance,
                 service=service,
-                device=device,
             )
             kwargs["dependencies"] = dependencies
             func(self, *args, **kwargs)
@@ -144,4 +129,3 @@ class IntegrationTestDependencies:
     token: str
     auth: str
     url: str
-    device: Any

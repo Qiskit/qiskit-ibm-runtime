@@ -15,16 +15,13 @@
 from unittest import SkipTest
 
 from .ibm_test_case import IBMIntegrationTestCase
-from .utils.decorators import (
-    run_cloud_legacy_real,
-    requires_cloud_legacy_devices,
-)
+from .utils.decorators import run_integration_test
 
 
 class TestIntegrationBackend(IBMIntegrationTestCase):
     """Integration tests for backend functions."""
 
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_backends(self, service):
         """Test getting all backends."""
         backends = service.backends()
@@ -36,7 +33,7 @@ class TestIntegrationBackend(IBMIntegrationTestCase):
             f"backend_names={backend_names}",
         )
 
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_get_backend(self, service):
         """Test getting a backend."""
         backends = service.backends()
@@ -48,13 +45,18 @@ class TestIBMBackend(IBMIntegrationTestCase):
     """Test ibm_backend module."""
 
     @classmethod
-    @requires_cloud_legacy_devices
-    def setUpClass(cls, devices):
+    def setUpClass(cls):
         """Initial class level setup."""
         # pylint: disable=arguments-differ
         # pylint: disable=no-value-for-parameter
         super().setUpClass()
-        cls.devices = devices
+        if cls.dependencies.auth == "cloud":
+            # TODO use real device when cloud supports it
+            cls.device = cls.dependencies.service.least_busy(min_num_qubits=5)
+        if cls.dependencies.auth == "legacy":
+            cls.device = cls.dependencies.service.least_busy(
+                simulator=False, min_num_qubits=5, instance=cls.dependencies.instance
+            )
 
     def test_backend_status(self):
         """Check the status of a real chip."""
