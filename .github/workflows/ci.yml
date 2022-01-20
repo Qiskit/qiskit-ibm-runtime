@@ -99,7 +99,7 @@ jobs:
           name: Unit test coverage report (Python ${{ matrix.python-version }}, ${{ matrix.os }})
           path: htmlcov
   integration-tests:
-    name: Run integration tests (Python ${{ matrix.python-version }}, ${{ matrix.os }})
+    name: Run integration tests against ${{ matrix.environment }} (Python ${{ matrix.python-version }}, ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
