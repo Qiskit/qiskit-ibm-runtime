@@ -60,7 +60,7 @@ def iplot_error_map(
             :hide-code:
             :hide-output:
 
-            from qiskit_ibm_runtime.test.ibm_provider_mock import mock_get_backend
+            from qiskit.test.ibmq_mock import mock_get_backend
             mock_get_backend('FakeVigo')
 
         .. jupyter-execute::
