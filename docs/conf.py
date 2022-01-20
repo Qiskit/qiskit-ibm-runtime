@@ -79,7 +79,19 @@ html_css_files = ['style.css', 'gallery.css']
 # ]
 nbsphinx_timeout = 300
 nbsphinx_execute = "never"
-exclude_patterns = ["_build", "**.ipynb_checkpoints"]
+nbsphinx_widgets_path = ''
+
+nbsphinx_prolog = """
+{% set docname = env.doc2path(env.docname, base=None) %}
+.. only:: html
+
+    .. role:: raw-html(raw)
+        :format: html
+
+    .. note::
+        This page was generated from `docs/{{ docname }}`__.
+
+        __"""
 
 # -----------------------------------------------------------------------------
 # Autosummary
@@ -116,7 +128,7 @@ language = None
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = []
+exclude_patterns = ["_build", "**.ipynb_checkpoints"]
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'colorful'
@@ -141,7 +153,7 @@ modindex_common_prefix = ['qiskit.']
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'sphinx_rtd_theme'  # use the theme in subdir 'theme'
+html_theme = 'qiskit_sphinx_theme'  # use the theme in subdir 'theme'
 
 html_logo = 'images/logo.png'
 #html_sidebars = {'**': ['globaltoc.html']}
@@ -152,7 +164,8 @@ html_theme_options = {
     'display_version': True,
     'prev_next_buttons_location': 'bottom',
     'style_external_links': True,
-    'style_nav_header_background': '#212121',
 }
+
+html_sourcelink_suffix = ''
 
 autoclass_content = 'both'
