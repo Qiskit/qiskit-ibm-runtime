@@ -26,6 +26,10 @@ style:
 test:
 	python -m unittest -v
 
+coverage:
+	coverage run -m unittest -v
+	coverage html
+
 test1:
 	python -m unittest -v test/test_integration_backend.py test/test_integration_program.py
 
