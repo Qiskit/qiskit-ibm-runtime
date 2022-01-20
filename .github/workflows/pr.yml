@@ -43,7 +43,12 @@ jobs:
           pip install -c constraints.txt -e .
           pip install -U -c constraints.txt -r requirements-dev.txt
       - name: Run Tests
-        run: make test
+        run: make coverage
+      - name: Upload test coverage report
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage_report-${{ matrix.python-version }}-${{ matrix.os }}
+          path: htmlcov
   lint:
     name: lint & mypy
     runs-on: ubuntu-latest

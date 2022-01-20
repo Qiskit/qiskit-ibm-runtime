@@ -170,7 +170,11 @@ class RetrySession(Session):
 
     def __del__(self) -> None:
         """RetrySession destructor. Closes the session."""
-        self.close()
+        try:
+            self.close()
+        except Exception:  # pylint: disable=broad-except
+            # ignore errors that may happen during cleanup
+            pass
 
     def _initialize_retry(
         self, retries_total: int, retries_connect: int, backoff_factor: float
