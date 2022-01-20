@@ -72,12 +72,15 @@ def run_integration_test(func):
 
 def integration_test_setup(
     supported_auth: Optional[List[str]] = None,
+    init_service: Optional[bool] = True,
     resolve_least_busy_device: Optional[bool] = False,
 ):
     """Returns a decorator for integration test initialization.
 
     Args:
         supported_auth: a list of supported auth types that this test supports
+        init_service: to initialize the IBMRuntimeService based on the current environment
+            configuration and return it via the test dependencies
         resolve_least_busy_device: to resolve the least busy device and return it via the
             test dependencies
 
@@ -102,12 +105,14 @@ def integration_test_setup(
     def _decorator(func):
         @wraps(func)
         def _wrapper(self, *args, **kwargs):
-            service = IBMRuntimeService(
-                auth=auth, token=token, url=url, instance=instance
-            )
+            service = None
+            if init_service:
+                service = IBMRuntimeService(
+                    auth=auth, token=token, url=url, instance=instance
+                )
 
             device = None
-            if resolve_least_busy_device:
+            if service and resolve_least_busy_device:
                 if auth == "cloud":
                     # TODO use real device when cloud supports it
                     device = service.least_busy(min_num_qubits=5)
@@ -117,11 +122,11 @@ def integration_test_setup(
                     )
 
             dependencies = IntegrationTestDependencies(
-                service=service,
                 auth=auth,
                 token=token,
                 url=url,
                 instance=instance,
+                service=service,
                 device=device,
             )
             kwargs["dependencies"] = dependencies
