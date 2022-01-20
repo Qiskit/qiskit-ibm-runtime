@@ -55,23 +55,6 @@ def iplot_error_map(
         VisualizationValueError: If an invalid input is received.
         VisualizationTypeError: If the specified `backend` is a simulator.
 
-    Example:
-        .. jupyter-execute::
-            :hide-code:
-            :hide-output:
-
-            from qiskit.test.ibmq_mock import mock_get_backend
-            mock_get_backend('FakeVigo')
-
-        .. jupyter-execute::
-
-           from qiskit_ibm_runtime import IBMRuntimeService
-           from qiskit_ibm_runtime.visualization import iplot_error_map
-
-           service = IBMRuntimeService()
-           backend = service.backend('ibmq_vigo')
-
-           iplot_error_map(backend, as_widget=True)
     """
     meas_text_color = "#000000"
     if background_color == "white":
