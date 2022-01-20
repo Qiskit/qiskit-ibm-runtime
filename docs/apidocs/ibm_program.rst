@@ -1,4 +1,4 @@
-.. _qiskit_ibm_runtime-jupyter:
+.. _qiskit_ibm_runtime-program:
 
 .. automodule:: qiskit_ibm_runtime.program
    :no-members:
