@@ -15,7 +15,6 @@ on:
   [ push, pull_request ]
 jobs:
   code-quality:
-    if: ${{ 'skip' == 'me' }}
     name: Run code quality checks
     runs-on: ubuntu-latest
     steps:
@@ -39,7 +38,6 @@ jobs:
         run: make mypy
         if: ${{ !cancelled() }}
   documentation:
-    if: ${{ 'skip' == 'me' }}
     name: Build documentation
     runs-on: ubuntu-latest
     steps:
@@ -64,7 +62,6 @@ jobs:
           name: html_docs
           path: docs/_build/html
   unit-tests:
-    if: ${{ 'skip' == 'me' }}
     # only kick-off test cases when basic code quality checks succeed
     needs: [ "code-quality" , "documentation" ]
     name: Run unit tests (Python ${{ matrix.python-version }}, ${{ matrix.os }})
@@ -99,6 +96,8 @@ jobs:
           name: Unit test coverage report (Python ${{ matrix.python-version }}, ${{ matrix.os }})
           path: htmlcov
   integration-tests:
+    # only kick-off resource intensive integration tests if unit tests and all basic checks succeeded
+    needs: [ "unit-tests"  ]
     name: Run integration tests (${{ matrix.environment }})
     runs-on: ${{ matrix.os }}
     strategy:
