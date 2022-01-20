@@ -99,13 +99,13 @@ jobs:
           name: Unit test coverage report (Python ${{ matrix.python-version }}, ${{ matrix.os }})
           path: htmlcov
   integration-tests:
-    name: Run integration tests against ${{ matrix.environment }} (Python ${{ matrix.python-version }}, ${{ matrix.os }})
+    name: Run integration tests (${{ matrix.environment }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         python-version: [ 3.9 ]
         os: [ "ubuntu-latest" ]
-        environment: [ "legacy-production" ]
+        environment: [ "legacy-production", "cloud-production" ]
     environment: ${{ matrix.environment }}
     env:
       QISKIT_IBM_TOKEN: ${{ secrets.QISKIT_IBM_TOKEN }}
@@ -132,5 +132,5 @@ jobs:
       - name: Upload integration test coverage report
         uses: actions/upload-artifact@v2
         with:
-          name: Integration test coverage report (Python ${{ matrix.environment }}, ${{ matrix.os }})
+          name: Integration test coverage report (${{ matrix.environment }})
           path: htmlcov
