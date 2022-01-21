@@ -82,24 +82,26 @@ def integration_test_setup(
     Returns:
         A decorator that handles initialization of integration test dependencies.
     """
-    if supported_auth is None:
-        supported_auth = ["cloud", "legacy"]
-
-    if get_test_options()["skip_online"]:
-        raise SkipTest("Skipping integration test.")
-
-    auth, token, url, instance = _get_integration_test_config()
-    if not all([auth, token, url]):
-        raise Exception("Configuration Issue")
-
-    if auth not in supported_auth:
-        raise SkipTest(
-            f"Skipping integration test. Test does not support auth type {auth}"
-        )
 
     def _decorator(func):
         @wraps(func)
         def _wrapper(self, *args, **kwargs):
+            _supported_auth = (
+                ["cloud", "legacy"] if supported_auth is None else supported_auth
+            )
+
+            if get_test_options()["skip_online"]:
+                raise SkipTest("Skipping integration test.")
+
+            auth, token, url, instance = _get_integration_test_config()
+            if not all([auth, token, url]):
+                raise Exception("Configuration Issue")
+
+            if auth not in _supported_auth:
+                raise SkipTest(
+                    f"Skipping integration test. Test does not support auth type {auth}"
+                )
+
             service = None
             if init_service:
                 service = IBMRuntimeService(
@@ -122,6 +124,8 @@ def integration_test_setup(
 
 @dataclass
 class IntegrationTestDependencies:
+    """Integration test dependencies."""
+
     service: IBMRuntimeService
     instance: Optional[str]
     token: str
