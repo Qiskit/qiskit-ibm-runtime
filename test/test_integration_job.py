@@ -56,9 +56,13 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         self.assertEqual(JobStatus.DONE, job.status())
         self.assertEqual("foo", result)
 
-    def test_run_program_cloud_no_backend(self):
+    @run_integration_test
+    def test_run_program_cloud_no_backend(self, service):
         """Test running a cloud program with no backend."""
-        service = [serv for serv in self.services if serv.auth == "cloud"][0]
+
+        if self.dependencies.auth == "legacy":
+            self.skipTest("Not supported on legacy")
+
         job = self._run_program(service, backend="")
         self.assertTrue(job.backend, f"Job {job.job_id} has no backend.")
 

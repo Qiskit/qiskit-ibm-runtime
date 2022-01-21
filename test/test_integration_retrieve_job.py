@@ -127,9 +127,12 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         self.assertEqual(program_id, rjobs[0].program_id)
         self.assertEqual(1, len(rjobs), f"Retrieved jobs: {[j.job_id for j in rjobs]}")
 
-    def test_jobs_filter_by_hgp(self):
+    @run_integration_test
+    def test_jobs_filter_by_hgp(self, service):
         """Test retrieving jobs by hgp."""
-        service = [serv for serv in self.services if serv.auth == "legacy"][0]
+        if self.dependencies.auth == "cloud":
+            self.skipTest("Not supported on cloud")
+
         default_hgp = list(service._hgps.keys())[0]
         program_id = self._upload_program(service)
         job = self._run_program(service, program_id=program_id)

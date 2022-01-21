@@ -52,43 +52,43 @@ class TestIBMBackend(IBMIntegrationTestCase):
         super().setUpClass()
         if cls.dependencies.auth == "cloud":
             # TODO use real device when cloud supports it
-            cls.device = cls.dependencies.service.least_busy(min_num_qubits=5)
+            cls.backend = cls.dependencies.service.least_busy(min_num_qubits=5)
         if cls.dependencies.auth == "legacy":
-            cls.device = cls.dependencies.service.least_busy(
+            cls.backend = cls.dependencies.service.least_busy(
                 simulator=False, min_num_qubits=5, instance=cls.dependencies.instance
             )
 
     def test_backend_status(self):
         """Check the status of a real chip."""
-        for backend in self.devices:
-            with self.subTest(backend=backend.name()):
-                self.assertTrue(backend.status().operational)
+        backend = self.backend
+        with self.subTest(backend=backend.name()):
+            self.assertTrue(backend.status().operational)
 
     def test_backend_properties(self):
         """Check the properties of calibration of a real chip."""
-        for backend in self.devices:
-            with self.subTest(backend=backend.name()):
-                if backend.configuration().simulator:
-                    raise SkipTest("Skip since simulator does not have properties.")
-                self.assertIsNotNone(backend.properties())
+        backend = self.backend
+        with self.subTest(backend=backend.name()):
+            if backend.configuration().simulator:
+                raise SkipTest("Skip since simulator does not have properties.")
+            self.assertIsNotNone(backend.properties())
 
     def test_backend_pulse_defaults(self):
         """Check the backend pulse defaults of each backend."""
-        for backend in self.devices:
-            with self.subTest(backend=backend.name()):
-                if backend.configuration().simulator:
-                    raise SkipTest("Skip since simulator does not have defaults.")
-                self.assertIsNotNone(backend.defaults())
+        backend = self.backend
+        with self.subTest(backend=backend.name()):
+            if backend.configuration().simulator:
+                raise SkipTest("Skip since simulator does not have defaults.")
+            self.assertIsNotNone(backend.defaults())
 
     def test_backend_configuration(self):
         """Check the backend configuration of each backend."""
-        for backend in self.devices:
-            with self.subTest(backend=backend.name()):
-                self.assertIsNotNone(backend.configuration())
+        backend = self.backend
+        with self.subTest(backend=backend.name()):
+            self.assertIsNotNone(backend.configuration())
 
     def test_backend_run(self):
         """Check one cannot do backend.run"""
-        for backend in self.devices:
-            with self.subTest(backend=backend.name()):
-                with self.assertRaises(RuntimeError):
-                    backend.run()
+        backend = self.backend
+        with self.subTest(backend=backend.name()):
+            with self.assertRaises(RuntimeError):
+                backend.run()
