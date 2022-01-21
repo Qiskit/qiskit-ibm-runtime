@@ -94,7 +94,6 @@ jobs:
       - name: Run unit tests
         run: make coverage
       - name: Upload unit test coverage report
-        if:
         uses: actions/upload-artifact@v2
         with:
           name: Unit test coverage report - python${{ matrix.python-version }}-${{ matrix.os }}
