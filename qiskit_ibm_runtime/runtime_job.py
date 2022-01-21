@@ -252,17 +252,9 @@ class RuntimeJob:
         if self._status in JOB_FINAL_STATES:
             raise RuntimeInvalidStateError("Job already finished.")
         if self._is_streaming():
-            try:
-                self._executor.submit(
-                    self._stream_results,
-                    result_queue=self._result_queue,
-                    user_callback=callback,
-                    decoder=decoder,
-                )
-            except Exception:
-                raise RuntimeInvalidStateError(
-                    "A callback function is already streaming results."
-                )
+            raise RuntimeInvalidStateError(
+                "A callback function is already streaming results."
+            )
         else:
             self._ws_client_future = self._executor.submit(self._start_websocket_client)
             self._executor.submit(
