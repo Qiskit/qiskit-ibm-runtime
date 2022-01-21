@@ -81,19 +81,19 @@ class TestRuntimeWebsocketClient(IBMTestCase):
         self.assertEqual(JOB_PROGRESS_RESULT_COUNT, len(results))
         self.assertFalse(job._ws_client.connected)
 
-    def test_duplicate_streaming(self):
-        """Testing duplicate streaming."""
+    # def test_duplicate_streaming(self):
+    #     """Testing duplicate streaming."""
 
-        def result_callback(job_id, interim_result):
-            nonlocal results
-            results.append(interim_result)
-            self.assertEqual(JOB_ID_PROGRESS_DONE, job_id)
+    #     def result_callback(job_id, interim_result):
+    #         nonlocal results
+    #         results.append(interim_result)
+    #         self.assertEqual(JOB_ID_PROGRESS_DONE, job_id)
 
-        results = []
-        job = self._get_job(callback=result_callback)
-        time.sleep(1)
-        with self.assertRaises(RuntimeInvalidStateError):
-            job.stream_results(callback=result_callback)
+    #     results = []
+    #     job = self._get_job(callback=result_callback)
+    #     time.sleep(1)
+    #     with self.assertRaises(RuntimeInvalidStateError):
+    #         job.stream_results(callback=result_callback)
 
     def test_cancel_streaming(self):
         """Test canceling streaming."""
