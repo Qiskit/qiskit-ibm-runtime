@@ -53,7 +53,7 @@ class TestRuntimeJob(IBMTestCase):
         self.assertIsInstance(job.status(), JobStatus)
         self.assertEqual(job.inputs, params)
         with mock.patch.object(
-            RuntimeJob, "wait_for_final_state", side_effect=time.sleep(2)
+            RuntimeJob, "wait_for_final_state", side_effect=time.sleep(3)
         ):
             job.wait_for_final_state()
             self.assertEqual(job.status(), JobStatus.DONE)
@@ -149,7 +149,7 @@ class TestRuntimeJob(IBMTestCase):
         self.assertIsInstance(job.status(), JobStatus)
         self.assertEqual(job.inputs, params)
         with mock.patch.object(
-            RuntimeJob, "wait_for_final_state", side_effect=time.sleep(2)
+            RuntimeJob, "wait_for_final_state", side_effect=time.sleep(3)
         ):
             job.wait_for_final_state()
             self.assertTrue(job.result())
@@ -168,7 +168,7 @@ class TestRuntimeJob(IBMTestCase):
         """Test a failed program execution."""
         job = run_program(service=service, job_classes=FailedRuntimeJob)
         with mock.patch.object(
-            RuntimeJob, "wait_for_final_state", side_effect=time.sleep(2)
+            RuntimeJob, "wait_for_final_state", side_effect=time.sleep(3)
         ):
             job.wait_for_final_state()
             job_result_raw = service._api_client.job_results(job.job_id)
@@ -185,7 +185,7 @@ class TestRuntimeJob(IBMTestCase):
         """Test a program that failed since it ran longer than maximum execution time."""
         job = run_program(service=service, job_classes=FailedRanTooLongRuntimeJob)
         with mock.patch.object(
-            RuntimeJob, "wait_for_final_state", side_effect=time.sleep(2)
+            RuntimeJob, "wait_for_final_state", side_effect=time.sleep(3)
         ):
             job.wait_for_final_state()
             job_result_raw = service._api_client.job_results(job.job_id)
@@ -222,7 +222,7 @@ class TestRuntimeJob(IBMTestCase):
         """Test getting final result."""
         job = run_program(service)
         with mock.patch.object(
-            RuntimeJob, "wait_for_final_state", side_effect=time.sleep(2)
+            RuntimeJob, "wait_for_final_state", side_effect=time.sleep(3)
         ):
             result = job.result()
             self.assertTrue(result)
@@ -261,7 +261,7 @@ class TestRuntimeJob(IBMTestCase):
         """Test wait for final state."""
         job = run_program(service)
         with mock.patch.object(
-            RuntimeJob, "wait_for_final_state", side_effect=time.sleep(2)
+            RuntimeJob, "wait_for_final_state", side_effect=time.sleep(3)
         ):
             job.wait_for_final_state()
         self.assertEqual(JobStatus.DONE, job.status())
@@ -275,7 +275,7 @@ class TestRuntimeJob(IBMTestCase):
 
         job = run_program(service=service, job_classes=job_cls)
         with mock.patch.object(
-            RuntimeJob, "wait_for_final_state", side_effect=time.sleep(2)
+            RuntimeJob, "wait_for_final_state", side_effect=time.sleep(3)
         ):
             _ = job.result()
             _ = job.result()
