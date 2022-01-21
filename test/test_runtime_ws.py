@@ -13,10 +13,11 @@
 """Test for the Websocket client."""
 
 import time
-from qiskit_ibm_runtime.exceptions import RuntimeInvalidStateError
+
 from qiskit.test.mock.fake_qasm_simulator import FakeQasmSimulator
 
 from qiskit_ibm_runtime import RuntimeJob
+from qiskit_ibm_runtime.exceptions import RuntimeInvalidStateError
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 
 from .ibm_test_case import IBMTestCase
