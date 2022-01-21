@@ -222,7 +222,7 @@ class TestRuntimeJob(IBMTestCase):
         """Test getting final result."""
         job = run_program(service)
         with mock.patch.object(
-            RuntimeJob, "wait_for_final_state", side_effect=time.sleep(8)
+            RuntimeJob, "wait_for_final_state", side_effect=time.sleep(15)
         ):
             result = job.result()
             self.assertTrue(result)
