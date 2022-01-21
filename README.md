@@ -112,12 +112,13 @@ To list all available programs:
 ```python
 from qiskit_ibm_runtime import IBMRuntimeService
 service = IBMRuntimeService()
-service.pprint_programs(limit=None)
+service.pprint_programs()
 ```
 
-`pprint_programs()` prints the metadata of all programs visible to you. A program's metadata 
+`pprint_programs()` prints the summary metadata of the first 20 programs visible to you. A program's metadata 
 consists of its ID, name, description, input parameters, return values, interim results, and 
-other information that helps you to know more about the program.
+other information that helps you to know more about the program. `pprint_programs(detailed=True, limit=None)`
+will print all metadata for all programs visible to you. 
 
 ### Executing a Program
 
