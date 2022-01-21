@@ -92,6 +92,9 @@ class IBMBackend(Backend):
         self._defaults = None
         self._target = None
         self._max_circuits = configuration.max_experiments
+        if not self._configuration.simulator:
+            self.options.set_validator("noise_model", type(None))
+            self.options.set_validator("seed_simulator", type(None))
 
     def __getattr__(self, name: str) -> Any:
         self._get_properties()
@@ -153,6 +156,9 @@ class IBMBackend(Backend):
             rep_delay=None,
             init_qubits=True,
             use_measure_esp=None,
+            # Simulator only
+            noise_model=None,
+            seed_simulator=None,
         )
 
     @property
@@ -229,12 +235,14 @@ class IBMBackend(Backend):
             NotImplementedError: If `datetime` is specified when cloud rutime is used.
         """
         # pylint: disable=arguments-differ
+        if self._configuration.simulator:
+            # Simulators do not have backend properties.
+            return None
         if not isinstance(refresh, bool):
             raise TypeError(
                 "The 'refresh' argument needs to be a boolean. "
                 "{} is of type {}".format(refresh, type(refresh))
             )
-
         if datetime:
             if not isinstance(datetime, python_datetime):
                 raise TypeError("'{}' is not of type 'datetime'.")
@@ -243,7 +251,6 @@ class IBMBackend(Backend):
                     "'datetime' is not supported by cloud runtime."
                 )
             datetime = local_to_utc(datetime)
-
         if datetime or refresh or self._properties is None:
             api_properties = self._api_client.backend_properties(
                 self.name, datetime=datetime
@@ -329,23 +336,6 @@ class IBMBackend(Backend):
         raise RuntimeError(
             "IBMBackend.run() is not supported in the Qiskit Runtime environment."
         )
-
-
-class IBMSimulator(IBMBackend):
-    """Backend class interfacing with an IBM Quantum simulator."""
-
-    @classmethod
-    def _default_options(cls) -> Options:
-        """Default runtime options."""
-        options = super()._default_options()
-        options.update_options(noise_model=None, seed_simulator=None)
-        return options
-
-    def properties(
-        self, refresh: bool = False, datetime: Optional[python_datetime] = None
-    ) -> None:
-        """Return ``None``, simulators do not have backend properties."""
-        return None
 
 
 class IBMRetiredBackend(IBMBackend):
