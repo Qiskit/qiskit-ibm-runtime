@@ -36,7 +36,6 @@ jobs:
         run: make lint
       - name: Run mypy
         run: make mypy
-        if: ${{ !cancelled() }}
   documentation:
     name: Build documentation
     runs-on: ubuntu-latest
@@ -64,7 +63,7 @@ jobs:
   unit-tests:
     # only kick-off test cases when basic code quality checks succeed
     needs: [ "code-quality" , "documentation" ]
-    name: Run unit tests (Python ${{ matrix.python-version }}, ${{ matrix.os }})
+    name: Run unit tests - python${{ matrix.python-version }}-${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -91,15 +90,16 @@ jobs:
       - name: Run unit tests
         run: make coverage
       - name: Upload unit test coverage report
+        if:
         uses: actions/upload-artifact@v2
         with:
-          name: Unit test coverage report (Python ${{ matrix.python-version }}, ${{ matrix.os }})
+          name: Unit test coverage report - python${{ matrix.python-version }}-${{ matrix.os }}
           path: htmlcov
   integration-tests:
     if: ${{ github.event_name == 'push' }}
     # only kick-off resource intensive integration tests if unit tests and all basic checks succeeded
     needs: [ "unit-tests"  ]
-    name: Run integration tests (${{ matrix.environment }})
+    name: Run integration tests - ${{ matrix.environment }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -132,5 +132,5 @@ jobs:
       - name: Upload integration test coverage report
         uses: actions/upload-artifact@v2
         with:
-          name: Integration test coverage report (${{ matrix.environment }})
+          name: Integration test coverage report - ${{ matrix.environment }}
           path: htmlcov
