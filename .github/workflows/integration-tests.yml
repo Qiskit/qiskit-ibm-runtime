@@ -16,10 +16,6 @@ on:
     - cron: '0 4 * * *'
   # allow everyone with write access to the repository to trigger the workflow run manually
   workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Environment to trigger the test run for.'
-        required: true
 jobs:
   integration-tests:
     name: Run integration tests - ${{ matrix.environment }}
