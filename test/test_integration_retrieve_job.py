@@ -17,14 +17,14 @@ import uuid
 from qiskit.providers.jobstatus import JobStatus
 
 from .ibm_test_case import IBMIntegrationJobTestCase
-from .utils.decorators import run_cloud_legacy_real
+from .utils.decorators import run_integration_test
 from .utils.utils import wait_for_status, get_real_device
 
 
 class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
     """Integration tests for job retrieval functions."""
 
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_retrieve_job_queued(self, service):
         """Test retrieving a queued job."""
         real_device = get_real_device(service)
@@ -35,7 +35,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         self.assertEqual(job.job_id, rjob.job_id)
         self.assertEqual(self.program_ids[service.auth], rjob.program_id)
 
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_retrieve_job_running(self, service):
         """Test retrieving a running job."""
         job = self._run_program(service, iterations=10)
@@ -44,7 +44,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         self.assertEqual(job.job_id, rjob.job_id)
         self.assertEqual(self.program_ids[service.auth], rjob.program_id)
 
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_retrieve_job_done(self, service):
         """Test retrieving a finished job."""
         job = self._run_program(service)
@@ -53,7 +53,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         self.assertEqual(job.job_id, rjob.job_id)
         self.assertEqual(self.program_ids[service.auth], rjob.program_id)
 
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_retrieve_all_jobs(self, service):
         """Test retrieving all jobs."""
         job = self._run_program(service)
@@ -67,7 +67,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
                 break
         self.assertTrue(found, f"Job {job.job_id} not returned.")
 
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_retrieve_jobs_limit(self, service):
         """Test retrieving jobs with limit."""
         jobs = []
@@ -82,7 +82,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
             rjob_ids.issubset(job_ids), f"Submitted: {job_ids}, Retrieved: {rjob_ids}"
         )
 
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_retrieve_pending_jobs(self, service):
         """Test retrieving pending jobs (QUEUED, RUNNING)."""
         job = self._run_program(service, iterations=10)
@@ -102,7 +102,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
             f"Pending job {job.job_id} not retrieved.",
         )
 
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_retrieve_returned_jobs(self, service):
         """Test retrieving returned jobs (COMPLETED, FAILED, CANCELLED)."""
         job = self._run_program(service)
@@ -117,7 +117,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
                 break
         self.assertTrue(found, f"Returned job {job.job_id} not retrieved.")
 
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_retrieve_jobs_by_program_id(self, service):
         """Test retrieving jobs by Program ID."""
         program_id = self._upload_program(service)

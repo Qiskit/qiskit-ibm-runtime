@@ -75,11 +75,9 @@ def integration_test_setup(
     """Returns a decorator for integration test initialization.
 
     Args:
-        supported_auth: a list of supported auth types that this test supports
+        supported_auth: a list of auth types that this test supports
         init_service: to initialize the IBMRuntimeService based on the current environment
             configuration and return it via the test dependencies
-        resolve_least_busy_device: to resolve the least busy device and return it via the
-            test dependencies
 
     Returns:
         A decorator that handles initialization of integration test dependencies.
