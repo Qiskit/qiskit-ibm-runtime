@@ -53,7 +53,7 @@ class TestRuntimeJob(IBMTestCase):
         self.assertIsInstance(job.status(), JobStatus)
         self.assertEqual(job.inputs, params)
         with mock.patch.object(
-            RuntimeJob, "wait_for_final_state", side_effect=time.sleep(3)
+            RuntimeJob, "wait_for_final_state", side_effect=time.sleep(20)
         ):
             job.wait_for_final_state()
             self.assertEqual(job.status(), JobStatus.DONE)
@@ -217,15 +217,15 @@ class TestRuntimeJob(IBMTestCase):
         rjob = service.job(job.job_id)
         self.assertEqual(rjob.status(), JobStatus.CANCELLED)
 
-    # @run_legacy_and_cloud_fake
-    # def test_final_result(self, service):
-    #     """Test getting final result."""
-    #     job = run_program(service)
-    #     with mock.patch.object(
-    #         RuntimeJob, "wait_for_final_state", side_effect=time.sleep(15)
-    #     ):
-    #         result = job.result()
-    #         self.assertTrue(result)
+    @run_legacy_and_cloud_fake
+    def test_final_result(self, service):
+        """Test getting final result."""
+        job = run_program(service)
+        with mock.patch.object(
+            RuntimeJob, "wait_for_final_state", side_effect=time.sleep(20)
+        ):
+            result = job.result()
+            self.assertTrue(result)
 
     @run_legacy_and_cloud_fake
     def test_interim_results(self, service):
@@ -266,19 +266,19 @@ class TestRuntimeJob(IBMTestCase):
             job.wait_for_final_state()
         self.assertEqual(JobStatus.DONE, job.status())
 
-    # @run_legacy_and_cloud_fake
-    # def test_get_result_twice(self, service):
-    #     """Test getting results multiple times."""
-    #     custom_result = get_complex_types()
-    #     job_cls = CustomResultRuntimeJob
-    #     job_cls.custom_result = custom_result
+    @run_legacy_and_cloud_fake
+    def test_get_result_twice(self, service):
+        """Test getting results multiple times."""
+        custom_result = get_complex_types()
+        job_cls = CustomResultRuntimeJob
+        job_cls.custom_result = custom_result
 
-    #     job = run_program(service=service, job_classes=job_cls)
-    #     with mock.patch.object(
-    #         RuntimeJob, "wait_for_final_state", side_effect=time.sleep(3)
-    #     ):
-    #         _ = job.result()
-    #         _ = job.result()
+        job = run_program(service=service, job_classes=job_cls)
+        with mock.patch.object(
+            RuntimeJob, "wait_for_final_state", side_effect=time.sleep(20)
+        ):
+            _ = job.result()
+            _ = job.result()
 
     @run_legacy_and_cloud_fake
     def test_delete_job(self, service):
