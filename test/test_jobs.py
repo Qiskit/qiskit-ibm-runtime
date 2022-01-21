@@ -217,15 +217,15 @@ class TestRuntimeJob(IBMTestCase):
         rjob = service.job(job.job_id)
         self.assertEqual(rjob.status(), JobStatus.CANCELLED)
 
-    @run_legacy_and_cloud_fake
-    def test_final_result(self, service):
-        """Test getting final result."""
-        job = run_program(service)
-        with mock.patch.object(
-            RuntimeJob, "wait_for_final_state", side_effect=time.sleep(15)
-        ):
-            result = job.result()
-            self.assertTrue(result)
+    # @run_legacy_and_cloud_fake
+    # def test_final_result(self, service):
+    #     """Test getting final result."""
+    #     job = run_program(service)
+    #     with mock.patch.object(
+    #         RuntimeJob, "wait_for_final_state", side_effect=time.sleep(15)
+    #     ):
+    #         result = job.result()
+    #         self.assertTrue(result)
 
     @run_legacy_and_cloud_fake
     def test_interim_results(self, service):
