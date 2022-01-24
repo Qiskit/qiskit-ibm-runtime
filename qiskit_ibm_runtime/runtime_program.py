@@ -41,7 +41,7 @@ class RuntimeProgram:
         programs = service.programs()
 
         # To retrieve metadata of a single program.
-        program = service.program(program_id='circuit-runner')
+        program = service.program(program_id='sampler')
         print(f"Program {program.name} takes parameters {program.parameters().metadata}")
     """
 
@@ -202,7 +202,7 @@ class RuntimeProgram:
         """Program parameter namespace.
 
         You can use the returned namespace to assign parameter values and pass
-        the namespace to :meth:`qiskit_ibm_runtime.runtime.IBMRuntimeService.run`.
+        the namespace to :meth:`qiskit_ibm_runtime.IBMRuntimeService.run`.
         The namespace allows you to use auto-completion to find program parameters.
 
         Note that each call to this method returns a new namespace instance and
