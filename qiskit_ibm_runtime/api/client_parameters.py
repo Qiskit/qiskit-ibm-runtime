@@ -14,6 +14,7 @@
 
 from typing import Dict, Optional, Any, Union
 
+from ..utils import get_runtime_api_base_url
 from ..api.auth import LegacyAuth, CloudAuth
 from ..proxies import ProxyConfiguration
 
@@ -54,6 +55,10 @@ class ClientParameters:
             return CloudAuth(api_key=self.token, crn=self.instance)
 
         return LegacyAuth(access_token=self.token)
+
+    def get_runtime_api_base_url(self) -> str:
+        """Returns the Runtime API base url."""
+        return get_runtime_api_base_url(self.url, self.instance)
 
     def connection_parameters(self) -> Dict[str, Any]:
         """Construct connection related parameters.

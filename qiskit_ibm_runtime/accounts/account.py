@@ -25,7 +25,7 @@ from ..api.auth import LegacyAuth, CloudAuth
 AccountType = Optional[Literal["cloud", "legacy"]]
 
 LEGACY_API_URL = "https://auth.quantum-computing.ibm.com/api"
-CLOUD_API_URL = "https://us-east.quantum-computing.cloud.ibm.com"
+CLOUD_API_URL = "https://cloud.ibm.com"
 
 
 class Account:
