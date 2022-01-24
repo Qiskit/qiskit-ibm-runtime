@@ -10,7 +10,9 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""A sample runtime program that submits random circuits for user-specified iterations."""
+"""A sample runtime program called hello-world that submits random circuits
+for user-specified iterations.
+"""
 
 import random
 from typing import Any
@@ -28,7 +30,9 @@ def prepare_circuits(backend):
     Returns:
         qiskit.QuantumCircuit: Generated circuit.
     """
-    circuit = random_circuit(num_qubits=5, depth=4, measure=True, seed=random.randint(0, 1000))
+    circuit = random_circuit(
+        num_qubits=5, depth=4, measure=True, seed=random.randint(0, 1000)
+    )
     return transpile(circuit, backend)
 
 
@@ -44,7 +48,7 @@ def main(backend, user_messenger, **kwargs) -> Any:
     Returns:
         Final result of the program.
     """
-    iterations = kwargs.pop("iterations", 5)
+    iterations = kwargs.pop("iterations", 1)
     for it in range(iterations):
         qc = prepare_circuits(backend)
         result = backend.run(qc).result()

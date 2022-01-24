@@ -59,7 +59,9 @@ class FeatureMap:
 
         self._num_parameters = self._num_qubits
 
-    def construct_circuit(self, x=None, parameters=None, q=None, inverse=False, name=None):
+    def construct_circuit(
+        self, x=None, parameters=None, q=None, inverse=False, name=None
+    ):
         """Construct the feature map circuit.
 
         Args:
@@ -120,7 +122,10 @@ class FeatureMap:
             str: JSON string representing this object.
         """
         return json.dumps(
-            {"feature_dimension": self._feature_dimension, "entangler_map": self._entangler_map}
+            {
+                "feature_dimension": self._feature_dimension,
+                "entangler_map": self._entangler_map,
+            }
         )
 
     @classmethod
@@ -192,7 +197,9 @@ class KernelMatrix:
             for index_1, index_2 in my_product_list:
 
                 circuit_1 = self._feature_map_circuit(
-                    x=x1_vec[index_1], parameters=parameters, name="{}_{}".format(index_1, index_2)
+                    x=x1_vec[index_1],
+                    parameters=parameters,
+                    name="{}_{}".format(index_1, index_2),
                 )
                 circuit_2 = self._feature_map_circuit(
                     x=x1_vec[index_2], parameters=parameters, inverse=True
@@ -219,7 +226,9 @@ class KernelMatrix:
                 mat[index_1][index_2] = (
                     counts.get(measurement_basis, 0) / shots
                 )  # kernel matrix element is the probability of measuring all 0s
-                mat[index_2][index_1] = mat[index_1][index_2]  # kernel matrix is symmetric
+                mat[index_2][index_1] = mat[index_1][
+                    index_2
+                ]  # kernel matrix is symmetric
 
             return mat
 
@@ -229,7 +238,9 @@ class KernelMatrix:
                 for index_2, point_2 in enumerate(x2_vec):
 
                     circuit_1 = self._feature_map_circuit(
-                        x=point_1, parameters=parameters, name="{}_{}".format(index_1, index_2)
+                        x=point_1,
+                        parameters=parameters,
+                        name="{}_{}".format(index_1, index_2),
                     )
                     circuit_2 = self._feature_map_circuit(
                         x=point_2, parameters=parameters, inverse=True
@@ -282,7 +293,9 @@ class QKA:
         self._user_messenger = user_messenger
         self.result = {}
         self.kernel_matrix = KernelMatrix(
-            feature_map=self.feature_map, backend=self.backend, initial_layout=self.initial_layout
+            feature_map=self.feature_map,
+            backend=self.backend,
+            initial_layout=self.initial_layout,
         )
 
     def spsa_parameters(self):
@@ -389,7 +402,9 @@ class QKA:
                            after one SPSA optimization step
         """
 
-        a_spsa = float(spsa_params[0]) / np.power(count + 1 + spsa_params[4], spsa_params[2])
+        a_spsa = float(spsa_params[0]) / np.power(
+            count + 1 + spsa_params[4], spsa_params[2]
+        )
         c_spsa = float(spsa_params[1]) / np.power(count + 1, spsa_params[3])
 
         g_spsa = (cost_plus - cost_minus) * delta / (2.0 * c_spsa)
@@ -401,7 +416,9 @@ class QKA:
 
         return cost_final, lambdas_new
 
-    def align_kernel(self, data, labels, initial_kernel_parameters=None, maxiters=1, C=1):
+    def align_kernel(
+        self, data, labels, initial_kernel_parameters=None, maxiters=1, C=1
+    ):
         """Align the quantum kernel.
 
         Uses SPSA for minimization over kernel parameters (lambdas) and
