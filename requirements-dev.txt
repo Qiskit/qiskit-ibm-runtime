@@ -25,3 +25,6 @@ websockets>=8
 scikit-quant;platform_system != 'Windows'
 black==21.11b1
 coverage>=6.2
+pylatexenc
+mthree
+sklearn

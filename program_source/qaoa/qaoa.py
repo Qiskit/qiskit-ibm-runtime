@@ -137,7 +137,10 @@ class QAOAAnsatz(EvolvedOperatorAnsatz):
                     "The operator representing the cost of the optimization problem is not set"
                 )
 
-        if self.initial_state is not None and self.initial_state.num_qubits != self.num_qubits:
+        if (
+            self.initial_state is not None
+            and self.initial_state.num_qubits != self.num_qubits
+        ):
             valid = False
             if raise_on_failure:
                 raise ValueError(
@@ -147,7 +150,10 @@ class QAOAAnsatz(EvolvedOperatorAnsatz):
                     )
                 )
 
-        if self.mixer_operator is not None and self.mixer_operator.num_qubits != self.num_qubits:
+        if (
+            self.mixer_operator is not None
+            and self.mixer_operator.num_qubits != self.num_qubits
+        ):
             valid = False
             if raise_on_failure:
                 raise ValueError(
@@ -493,7 +499,9 @@ def _get_default_mixer(cost_operator):
     if len(active_indices) == 0:
         return 0 * (I ^ num_qubits)
 
-    mixer_terms = [(I ^ left) ^ X ^ (I ^ (num_qubits - left - 1)) for left in active_indices]
+    mixer_terms = [
+        (I ^ left) ^ X ^ (I ^ (num_qubits - left - 1)) for left in active_indices
+    ]
     return sum(mixer_terms)
 
 
@@ -503,7 +511,9 @@ def _get_default_initial_state(cost_operator):
 
     if len(active_indices) > 0:
         # Opflow indices are reversed with respect to circuit indices
-        active_indices = [cost_operator.num_qubits - 1 - index for index in active_indices]
+        active_indices = [
+            cost_operator.num_qubits - 1 - index for index in active_indices
+        ]
         initial_state.h(active_indices)
 
     return initial_state
@@ -522,7 +532,9 @@ def _active_qubits(operator):
         return list(range(operator.num_qubits))
 
     # for each Pauli string get a list which Pauli is the identity (i.e. not active)
-    is_identity = [list(map(lambda pauli: pauli == "I", pauli_string)) for pauli_string in paulis]
+    is_identity = [
+        list(map(lambda pauli: pauli == "I", pauli_string)) for pauli_string in paulis
+    ]
 
     # use numpy act a logical and on each index across the Pauli strings
     idle_qubits = np.all(np.array(is_identity), axis=0)
@@ -668,7 +680,9 @@ class SwapStrategy:
 
         # Only compute the distance matrix if it has not been computed before
         if self._distance_matrix is None:
-            distance_matrix = [[None] * self.num_vertices for _ in range(self.num_vertices)]
+            distance_matrix = [
+                [None] * self.num_vertices for _ in range(self.num_vertices)
+            ]
 
             for i in range(self.num_vertices):
                 distance_matrix[i][i] = 0
@@ -704,7 +718,9 @@ class SwapStrategy:
         )
         permuted_swap_layers = []
         for swap_layer in self.swap_layers:
-            permuted_swap_layer = [(permutation[i], permutation[j]) for (i, j) in swap_layer]
+            permuted_swap_layer = [
+                (permutation[i], permutation[j]) for (i, j) in swap_layer
+            ]
             permuted_swap_layers.append(permuted_swap_layer)
 
         if inplace:
@@ -774,7 +790,9 @@ class SwapStrategy:
         """
         permutation = self.inverse_composed_permutation(idx)
 
-        edges = [[permutation[i], permutation[j]] for [i, j] in self.coupling_map.get_edges()]
+        edges = [
+            [permutation[i], permutation[j]] for [i, j] in self.coupling_map.get_edges()
+        ]
 
         return CouplingMap(couplinglist=edges)
 
@@ -932,7 +950,9 @@ class SwapStrategy:
 
         swap_layers = []
         for swap_layer in self.swap_layers:
-            swap_layers.append([(vertex_mapping[i], vertex_mapping[j]) for (i, j) in swap_layer])
+            swap_layers.append(
+                [(vertex_mapping[i], vertex_mapping[j]) for (i, j) in swap_layer]
+            )
 
         if retain_edge_coloring and self.edge_coloring is not None:
             edge_coloring = {
@@ -971,7 +991,9 @@ class LineSwapStrategy(SwapStrategy):
             num_swap_layers = len(line) - 2
 
         elif num_swap_layers < 0:
-            raise ValueError(f"Negative number {num_swap_layers} passed for number of swap layers.")
+            raise ValueError(
+                f"Negative number {num_swap_layers} passed for number of swap layers."
+            )
 
         swap_layer0 = [(line[i], line[i + 1]) for i in range(0, len(line) - 1, 2)]
         swap_layer1 = [(line[i], line[i + 1]) for i in range(1, len(line) - 1, 2)]
@@ -1132,12 +1154,14 @@ class DoubleRingSwapStrategy(SwapStrategy):
         # Create the longest line edges for the coupling map.
         # Forward direction
         self._longest_line_map = [
-            [self._lline[idx], self._lline[idx + 1]] for idx in range(len(self._lline) - 1)
+            [self._lline[idx], self._lline[idx + 1]]
+            for idx in range(len(self._lline) - 1)
         ]
 
         # Backward direction
         self._longest_line_map += [
-            [self._lline[idx + 1], self._lline[idx]] for idx in range(len(self._lline) - 1)
+            [self._lline[idx + 1], self._lline[idx]]
+            for idx in range(len(self._lline) - 1)
         ]
 
         # Defines the extra swaps to apply for a number of qubits.
@@ -1220,11 +1244,15 @@ class DoubleRingSwapStrategy(SwapStrategy):
 
         # Swap gates on even edges, e.g. (0, 1), (2, 3)
         layer1 = [
-            (self._lline[idx], self._lline[idx + 1]) for idx in range(0, len(self._lline) - 1, 2)
+            (self._lline[idx], self._lline[idx + 1])
+            for idx in range(0, len(self._lline) - 1, 2)
         ]
 
         # Swap gates on odd edges, e.g. (1, 2)
-        layer2 = [(self._lline[idx], self._lline[idx + 1]) for idx in range(1, len(self._lline), 2)]
+        layer2 = [
+            (self._lline[idx], self._lline[idx + 1])
+            for idx in range(1, len(self._lline), 2)
+        ]
 
         swap_strat = []
         for idx in range(n_line_layers):
@@ -1268,7 +1296,9 @@ class DoubleRingSwapStrategy(SwapStrategy):
         virtual_map = []
         for edge in coupling_map:
             pq0, pq1 = edge[0], edge[1]  # physical qubits
-            virtual_map.extend([(self.qubits_used.index(pq0), self.qubits_used.index(pq1))])
+            virtual_map.extend(
+                [(self.qubits_used.index(pq0), self.qubits_used.index(pq1))]
+            )
 
         return CouplingMap(virtual_map)
 
@@ -1433,7 +1463,9 @@ class HWQAOAAnsatz(QAOAAnsatz):
         self._cost_operator = cost_operator
         self._invalidate()
         self._num_logical_qubits = cost_operator.num_qubits if cost_operator else None
-        self._cost_matrix = self._get_cost_matrix(cost_operator) if cost_operator else None
+        self._cost_matrix = (
+            self._get_cost_matrix(cost_operator) if cost_operator else None
+        )
 
     @property
     def swap_strategy(self) -> Optional[SwapStrategy]:
@@ -1444,7 +1476,9 @@ class HWQAOAAnsatz(QAOAAnsatz):
     def swap_strategy(self, swap_strategy: Optional[SwapStrategy]) -> None:
         """Sets the swap strategy used for mapping the circuit to a coupling map."""
         self._swap_strategy = swap_strategy
-        self._num_physical_qubits = swap_strategy.num_vertices if swap_strategy else None
+        self._num_physical_qubits = (
+            swap_strategy.num_vertices if swap_strategy else None
+        )
         self._invalidate()
 
     @property
@@ -1511,7 +1545,9 @@ class HWQAOAAnsatz(QAOAAnsatz):
         # 1) build all possible connections that the swap strategy builds.
         possible_edges = set()
         for swap_layer_idx in range(len(self._swap_strategy) + 1):
-            for edge in self._swap_strategy.swapped_coupling_map(swap_layer_idx).get_edges():
+            for edge in self._swap_strategy.swapped_coupling_map(
+                swap_layer_idx
+            ).get_edges():
                 possible_edges.add(edge)
 
         # 2) Get a list of Pauli strings in the operator, e.g. ["IIZZ", "ZIIZ"]
@@ -1588,9 +1624,9 @@ class HWQAOAAnsatz(QAOAAnsatz):
                 if np.isclose(rotation_angle, 0):
                     continue
 
-                distance = distance_matrix[self.initial_layout.get_virtual_bits()[self.qubits[i]]][
-                    self.initial_layout.get_virtual_bits()[self.qubits[j]]
-                ]
+                distance = distance_matrix[
+                    self.initial_layout.get_virtual_bits()[self.qubits[i]]
+                ][self.initial_layout.get_virtual_bits()[self.qubits[j]]]
 
                 if distance not in gate_layers.keys():
                     gate_layers[distance] = {(i, j): rotation_angle}
@@ -1750,7 +1786,9 @@ class HWQAOAAnsatz(QAOAAnsatz):
 
             # Apply final sublayer
             for edge, rotation_angle in final_sublayer.items():
-                (j, k) = map(lambda vertex: self.initial_layout.get_physical_bits()[vertex], edge)
+                (j, k) = map(
+                    lambda vertex: self.initial_layout.get_physical_bits()[vertex], edge
+                )
                 qaoa_cost_layer.cx(j, k)
                 qaoa_cost_layer.rz(rotation_angle * cost_parameter, k)
 
@@ -1808,7 +1846,9 @@ class QAOASwapPass(TransformationPass):
 
         swap_strategy = self.property_set.get("qaoa_swap_strategy", None)
         if swap_strategy is None:
-            warn(f"{self.__class__.__name__} did not do anything as no swap strategy was found.")
+            warn(
+                f"{self.__class__.__name__} did not do anything as no swap strategy was found."
+            )
 
             return dag
 
@@ -1817,7 +1857,9 @@ class QAOASwapPass(TransformationPass):
             if isinstance(op, QAOAGate):
                 # Generate initial layout for the qubits the QAOA is run on
                 qaoa_layout = Layout()
-                qaoa_layout.from_dict({qubit: current_layout[qubit] for qubit in node.qargs})
+                qaoa_layout.from_dict(
+                    {qubit: current_layout[qubit] for qubit in node.qargs}
+                )
 
                 # Create and insert the hardware efficient QAOA in the DAG
                 qaoa = HWQAOAAnsatz(
@@ -1836,7 +1878,9 @@ class QAOASwapPass(TransformationPass):
 
         mapping = self.property_set.get("qaoa_swap_layout", None)
         if mapping is not None:
-            self.property_set["layout"] = Layout.from_intlist(mapping, *dag.qregs.values())
+            self.property_set["layout"] = Layout.from_intlist(
+                mapping, *dag.qregs.values()
+            )
 
         return dag
 
@@ -1890,7 +1934,9 @@ class SwapStrategyCreator(AnalysisPass):
 
         props = backend.properties()
         for edge in coupling_map:
-            self._two_qubit_fidelity[tuple(edge)] = 1 - props.gate_error(two_qubit_gate, edge)
+            self._two_qubit_fidelity[tuple(edge)] = 1 - props.gate_error(
+                two_qubit_gate, edge
+            )
 
         if swap_strategy is not None and swap_strategy_qubits is not None:
             self._swap_strategy = swap_strategy
@@ -1995,7 +2041,9 @@ class SwapStrategyCreator(AnalysisPass):
             self._path = self.find_path(problem_size)
 
             if self._path is None:
-                self._swap_strategy, self._path = get_swap_strategy(self._name, problem_size)
+                self._swap_strategy, self._path = get_swap_strategy(
+                    self._name, problem_size
+                )
             else:
                 self._swap_strategy = LineSwapStrategy(list(range(len(self._path))))
 
@@ -2021,7 +2069,9 @@ class InitialQubitMapper(TransformationPass):
     and pauli pre-factors.
     """
 
-    def permute_operator(self, cost_op: PauliSumOp, swap_strategy: SwapStrategy) -> PauliSumOp:
+    def permute_operator(
+        self, cost_op: PauliSumOp, swap_strategy: SwapStrategy
+    ) -> PauliSumOp:
         """Permute the Paulis in cost_op to minimize the number of CNOT gates when swapping.
 
         This is the main method of this class. It permutes the operators in the given
@@ -2196,7 +2246,8 @@ class InitialQubitMapper(TransformationPass):
 
         # Consider the following qubits using the largest som of rotations.
         sum_of_rotations = [
-            self._rotation_sum(qubit, list(mapped.keys()), rotation_angles) for qubit in unmapped
+            self._rotation_sum(qubit, list(mapped.keys()), rotation_angles)
+            for qubit in unmapped
         ]
 
         return max(zip(sum_of_rotations, unmapped), key=lambda x: x[0])[1]
@@ -2233,7 +2284,9 @@ class InitialQubitMapper(TransformationPass):
 
         swap_strategy = self.property_set.get("qaoa_swap_strategy", None)
         if swap_strategy is None:
-            warn(f"{self.__class__.__name__} did not do anything as no swap strategy was found.")
+            warn(
+                f"{self.__class__.__name__} did not do anything as no swap strategy was found."
+            )
 
             return dag
 
@@ -2413,7 +2466,9 @@ def main(backend, user_messenger, **kwargs):
     # Define the transpiler passes to use.
     pass_manager = None
     if use_swap_strategies:
-        pass_manager = swap_pass_manager_creator(backend, use_initial_mapping=use_initial_mapping)
+        pass_manager = swap_pass_manager_creator(
+            backend, use_initial_mapping=use_initial_mapping
+        )
 
     pulse_passes = pulse_pass_creator(backend) if use_pulse_efficient else None
 

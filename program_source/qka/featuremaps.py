@@ -47,14 +47,18 @@ class FeatureMap:
 
         if entangler_map is None:
             self._entangler_map = [
-                [i, j] for i in range(self._num_qubits) for j in range(i + 1, self._num_qubits)
+                [i, j]
+                for i in range(self._num_qubits)
+                for j in range(i + 1, self._num_qubits)
             ]
         else:
             self._entangler_map = entangler_map
 
         self._num_parameters = self._num_qubits
 
-    def construct_circuit(self, x=None, parameters=None, q=None, inverse=False, name=None):
+    def construct_circuit(
+        self, x=None, parameters=None, q=None, inverse=False, name=None
+    ):
         """Construct the feature map circuit.
 
         Args:
@@ -116,7 +120,10 @@ class FeatureMap:
             str: JSON string representing this object.
         """
         return json.dumps(
-            {"feature_dimension": self._feature_dimension, "entangler_map": self._entangler_map}
+            {
+                "feature_dimension": self._feature_dimension,
+                "entangler_map": self._entangler_map,
+            }
         )
 
     @classmethod
