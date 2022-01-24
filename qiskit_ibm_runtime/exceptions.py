@@ -109,9 +109,3 @@ class RuntimeInvalidStateError(IBMRuntimeError):
     """Errors raised when the state is not valid for the operation."""
 
     pass
-
-
-class CannotMapCrnToApiHostError(IBMError):
-    """Error raised when mapping from CRN to API host fails."""
-
-    pass

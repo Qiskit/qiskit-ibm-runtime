@@ -12,15 +12,15 @@
 
 """General utility functions."""
 
+import copy
+import keyword
+import logging
 import os
 import re
-import logging
-import keyword
-import copy
-from typing import List, Optional, Any, Dict, Union, Tuple
-from threading import Condition
 from queue import Queue
-from ..exceptions import CannotMapCrnToApiHostError
+from threading import Condition
+from typing import List, Optional, Any, Dict, Union, Tuple
+from urllib.parse import urlparse
 
 
 def is_crn(locator: str) -> bool:
@@ -35,28 +35,39 @@ def is_crn(locator: str) -> bool:
     return isinstance(locator, str) and locator.startswith("crn:")
 
 
-def crn_to_api_host(crn: str) -> str:
-    """Convert a CRN to an API host.
+def get_runtime_api_base_url(url: str, instance: str) -> str:
+    """Computes the Runtime API base URL based on the provided input parameters.
 
     Args:
-        crn: The CRN.
-
-    Returns:
-        API host.
-
-    Raises:
-        CannotMapCrnToApiHostError: If the corresponding API host cannot be determined.
+        url: The URL.
+        instance: The instance.
     """
-    api_host = None
-    if is_crn(crn):
-        # use a hard-coded list in a first step only, to be replaced with a more generic mapping function
-        if crn.find("bluemix:public:quantum-computing:us-east") >= 0:
-            api_host = "https://us-east.quantum-computing.cloud.ibm.com"
 
-    if api_host is None:
-        raise CannotMapCrnToApiHostError(f"Failed to map crn ({crn}) to API host.")
+    # legacy: no need to resolve runtime API URL
+    api_host = url
+
+    # cloud: compute runtime API URL based on crn and URL
+    if is_crn(instance):
+        parsed_url = urlparse(url)
+        api_host = (
+            f"{parsed_url.scheme}://{_location_from_crn(instance)}"
+            f".quantum-computing.{parsed_url.hostname}"
+        )
 
     return api_host
+
+
+def _location_from_crn(crn: str) -> str:
+    """Computes the location from a given CRN.
+
+    Args:
+        crn: A CRN (format: https://cloud.ibm.com/docs/account?topic=account-crn#format-crn)
+
+    Returns:
+        The location.
+    """
+    pattern = "(.*?):(.*?):(.*?):(.*?):(.*?):(.*?):.*"
+    return re.search(pattern, crn).group(6)
 
 
 def to_python_identifier(name: str) -> str:
