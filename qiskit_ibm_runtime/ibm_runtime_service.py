@@ -810,8 +810,11 @@ class IBMRuntimeService:
             inputs.validate()
             inputs = vars(inputs)
 
+        if options is None:
+            options = RuntimeOptions()
         if isinstance(options, dict):
             options = RuntimeOptions(**options)
+
         options.validate(self.auth)
 
         backend = None
