@@ -836,7 +836,7 @@ class IBMRuntimeService:
                 log_level=options.log_level,
             )
         except RequestsApiError as ex:
-            if ex.status_code == 404:
+            if ex.status_code == 400 and "could not get program" in ex.message:
                 raise RuntimeProgramNotFound(
                     f"Program not found: {ex.message}"
                 ) from None
