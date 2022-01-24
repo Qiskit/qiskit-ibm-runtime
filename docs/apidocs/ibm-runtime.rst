@@ -6,5 +6,6 @@ Qiskit IBM Runtime API Reference
    :maxdepth: 1
 
    ibm_runtime
+   ibm_program
    ibm_visualization
    ibm_jupyter

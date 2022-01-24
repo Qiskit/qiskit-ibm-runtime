@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2022.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -44,9 +44,9 @@ class RuntimeJob:
     """Representation of a runtime program execution.
 
     A new ``RuntimeJob`` instance is returned when you call
-    :meth:`IBMRuntimeService.run<qiskit_ibm_runtime.runtime.IBMRuntimeService.run>`
+    :meth:`IBMRuntimeService.run<qiskit_ibm_runtime.IBMRuntimeService.run>`
     to execute a runtime program, or
-    :meth:`IBMRuntimeService.job<qiskit_ibm_runtime.runtime.IBMRuntimeService.job>`
+    :meth:`IBMRuntimeService.job<qiskit_ibm_runtime.IBMRuntimeService.job>`
     to retrieve a previously executed job.
 
     If the program execution is successful, you can inspect the job's status by
@@ -57,7 +57,7 @@ class RuntimeJob:
     not be returned immediately. :meth:`result()` is an example
     of a blocking method::
 
-        job = service.runtime.run(...)
+        job = service.run(...)
 
         try:
             job_result = job.result()  # It will block until the job finishes.
@@ -67,7 +67,7 @@ class RuntimeJob:
 
     If the program has any interim results, you can use the ``callback``
     parameter of the
-    :meth:`~qiskit_ibm_runtime.runtime.IBMRuntimeService.run`
+    :meth:`~qiskit_ibm_runtime.IBMRuntimeService.run`
     method to stream the interim results.
     Alternatively, you can use the :meth:`stream_results` method to stream
     the results at a later time, but before the job finishes.

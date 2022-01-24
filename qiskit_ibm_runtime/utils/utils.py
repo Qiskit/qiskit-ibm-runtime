@@ -97,11 +97,11 @@ def to_python_identifier(name: str) -> str:
 
 
 def setup_logger(logger: logging.Logger) -> None:
-    """Setup the logger for the provider modules with the appropriate level.
+    """Setup the logger for the runtime modules with the appropriate level.
 
     It involves:
         * Use the `QISKIT_IBM_RUNTIME_LOG_LEVEL` environment variable to
-          determine the log level to use for the provider modules. If an invalid
+          determine the log level to use for the runtime modules. If an invalid
           level is set, the log level defaults to ``WARNING``. The valid log levels
           are ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``
           (case-insensitive). If the environment variable is not set, then the parent
