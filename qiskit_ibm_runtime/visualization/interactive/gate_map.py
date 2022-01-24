@@ -58,24 +58,6 @@ def iplot_gate_map(
     Returns:
         The gate map figure.
 
-    Example:
-
-        .. jupyter-execute::
-            :hide-code:
-            :hide-output:
-
-            from qiskit_ibm_runtime.test.ibm_provider_mock import mock_get_backend
-            mock_get_backend('FakeVigo')
-
-        .. jupyter-execute::
-
-            from qiskit_ibm_runtime import IBMRuntimeService
-            from qiskit_ibm_runtime.visualization import iplot_gate_map
-
-            service = IBMRuntimeService()
-            backend = service.backend('ibmq_vigo')
-
-            iplot_gate_map(backend, as_widget=True)
     """
 
     config = backend.configuration()
