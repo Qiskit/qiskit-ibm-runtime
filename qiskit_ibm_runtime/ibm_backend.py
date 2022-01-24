@@ -97,13 +97,22 @@ class IBMBackend(Backend):
             self.options.set_validator("seed_simulator", type(None))
 
     def __getattr__(self, name: str) -> Any:
+        """Gets attribute from self or configuration
+
+        This magic method executes when user accesses an attribute that
+        does not yet exist on IBMBackend class.
+        """
+        # Lazy load properties and pulse defaults and construct the target object.
         self._get_properties()
         self._get_defaults()
         self._convert_to_target()
+        # Check if the attribute now is available on IBMBackend class due to above steps
         try:
             return super().__getattribute__(name)
         except AttributeError:
             pass
+        # If attribute is still not available on IBMBackend class,
+        # fallback to check if the attribute is available in configuration
         try:
             return self._configuration.__getattribute__(name)
         except AttributeError:
