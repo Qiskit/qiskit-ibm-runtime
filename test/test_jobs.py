@@ -76,7 +76,11 @@ class TestRuntimeJob(IBMTestCase):
 
     def test_run_program_missing_backend_cloud(self):
         """Test running a cloud program with no backend."""
-        service = FakeRuntimeService(auth="cloud", token="my_token", instance="crn:123")
+        service = FakeRuntimeService(
+            auth="cloud",
+            token="my_token",
+            instance="crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
+        )
         job = run_program(service=service, backend_name="")
         self.assertTrue(job.backend)
 

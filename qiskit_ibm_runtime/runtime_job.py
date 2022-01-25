@@ -123,7 +123,9 @@ class RuntimeJob:
         self._ws_client_future = None  # type: Optional[futures.Future]
         self._result_queue = queue.Queue()  # type: queue.Queue
         self._ws_client = RuntimeWebsocketClient(
-            websocket_url=client_params.url.replace("https", "wss"),
+            websocket_url=client_params.get_runtime_api_base_url().replace(
+                "https", "wss"
+            ),
             client_params=client_params,
             job_id=job_id,
             message_queue=self._result_queue,
