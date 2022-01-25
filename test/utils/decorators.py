@@ -33,7 +33,9 @@ def run_legacy_and_cloud_fake(func):
             auth="legacy", token="my_token", instance="h/g/p"
         )
         cloud_service = FakeRuntimeService(
-            auth="cloud", token="my_token", instance="crn:123"
+            auth="cloud",
+            token="my_token",
+            instance="crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
         )
         for service in [legacy_service, cloud_service]:
             with self.subTest(service=service.auth):
