@@ -177,7 +177,28 @@ class IBMBackend(Backend):
         Returns:
             dtm: The output signal timestep in seconds.
         """
-        return self._configuration.get("dtm")
+        return self._configuration.dtm
+
+    @property
+    def max_circuits(self) -> int:
+        """The maximum number of circuits
+
+        The maximum number of circuits (or Pulse schedules) that can be
+        run in a single job. If there is no limit this will return None
+        """
+        return self._max_circuits
+
+    @property
+    def meas_map(self) -> List[List[int]]:
+        """Return the grouping of measurements which are multiplexed
+
+        This is required to be implemented if the backend supports Pulse
+        scheduling.
+
+        Returns:
+            meas_map: The grouping of measurements which are multiplexed
+        """
+        return self._configuration.meas_map
 
     @property
     def target(self) -> Target:
@@ -190,15 +211,6 @@ class IBMBackend(Backend):
         self._get_defaults()
         self._convert_to_target()
         return self._target
-
-    @property
-    def max_circuits(self) -> int:
-        """The maximum number of circuits
-
-        The maximum number of circuits (or Pulse schedules) that can be
-        run in a single job. If there is no limit this will return None
-        """
-        return self._max_circuits
 
     def qubit_properties(
         self, qubit: Union[int, List[int]]
