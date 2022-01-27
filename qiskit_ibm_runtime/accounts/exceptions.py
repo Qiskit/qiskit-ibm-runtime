@@ -17,3 +17,15 @@ from ..exceptions import IBMError
 
 class AccountsError(IBMError):
     """Base class for errors raised during account management."""
+
+
+class InvalidAccountError(AccountsError):
+    """Errors raised when the account is invalid."""
+
+
+class AccountNotFoundError(AccountsError):
+    """Errors raised when the account is not found."""
+
+
+class AccountAlreadyExistsError(AccountsError):
+    """Errors raised when the account already exists."""
