@@ -7,5 +7,3 @@ Qiskit IBM Runtime API Reference
 
    ibm_runtime
    ibm_program
-   ibm_visualization
-   ibm_jupyter
