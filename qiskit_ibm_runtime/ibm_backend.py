@@ -14,7 +14,7 @@
 
 import logging
 
-from typing import Union, Optional, Any, List
+from typing import Iterable, Union, Optional, Any, List
 from datetime import datetime as python_datetime
 
 from qiskit.qobj.utils import MeasLevel, MeasReturnType
@@ -27,6 +27,12 @@ from qiskit.providers.models import (
     GateConfig,
     QasmBackendConfiguration,
     PulseBackendConfiguration,
+)
+from qiskit.pulse.channels import (
+    AcquireChannel,
+    ControlChannel,
+    DriveChannel,
+    MeasureChannel,
 )
 from qiskit.transpiler.target import Target
 
@@ -184,7 +190,7 @@ class IBMBackend(Backend):
         """The maximum number of circuits
 
         The maximum number of circuits (or Pulse schedules) that can be
-        run in a single job. If there is no limit this will return None
+        run in a single job. If there is no limit this will return None.
         """
         return self._max_circuits
 
@@ -356,6 +362,45 @@ class IBMBackend(Backend):
             The configuration for the backend.
         """
         return self._configuration
+
+    def drive_channel(self, qubit: int) -> DriveChannel:
+        """Return the drive channel for the given qubit.
+
+        Returns:
+            DriveChannel: The Qubit drive channel
+        """
+        return self._configuration.drive(qubit=qubit)
+
+    def measure_channel(self, qubit: int) -> MeasureChannel:
+        """Return the measure stimulus channel for the given qubit.
+
+        Returns:
+            MeasureChannel: The Qubit measurement stimulus line
+        """
+        return self._configuration.measure(qubit=qubit)
+
+    def acquire_channel(self, qubit: int) -> AcquireChannel:
+        """Return the acquisition channel for the given qubit.
+
+        Returns:
+            AcquireChannel: The Qubit measurement acquisition line.
+        """
+        return self._configuration.acquire(qubit=qubit)
+
+    def control_channel(self, qubits: Iterable[int]) -> List[ControlChannel]:
+        """Return the secondary drive channel for the given qubit
+
+        This is typically utilized for controlling multiqubit interactions.
+        This channel is derived from other channels.
+
+        Args:
+            qubits: Tuple or list of qubits of the form
+                ``(control_qubit, target_qubit)``.
+
+        Returns:
+            List[ControlChannel]: The Qubit measurement acquisition line.
+        """
+        return self._configuration.control(qubits=qubits)
 
     def __repr__(self) -> str:
         return "<{}('{}')>".format(self.__class__.__name__, self.name)
