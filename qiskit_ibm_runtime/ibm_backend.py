@@ -41,7 +41,7 @@ logger = logging.getLogger(__name__)
 
 
 class IBMBackend(Backend):
-    """Backend class interfacing with an IBM Quantum device.
+    """Backend class interfacing with an IBM Quantum backend.
 
     Note:
 
@@ -49,7 +49,8 @@ class IBMBackend(Backend):
           the methods provided by an :class:`IBMRuntimeService` instance to retrieve and handle
           backends.
 
-    Other methods return information about the backend. For example, the :meth:`status()` method
+    This class represents an IBM Quantum backend. Its attributes and methods provide
+    information about the backend. For example, the :meth:`status()` method
     returns a :class:`BackendStatus<qiskit.providers.models.BackendStatus>` instance.
     The instance contains the ``operational`` and ``pending_jobs`` attributes, which state whether
     the backend is operational and also the number of jobs in the server queue for the backend,

@@ -33,8 +33,8 @@ class ResultDecoder:
                 custom_processing(decoded)  # perform custom processing
 
     Users of your program will need to pass in the subclass when invoking
-    :meth:`qiskit_ibm_runtime.runtime.RuntimeJob.result` or
-    :meth:`qiskit_ibm_runtime.runtime.IBMRuntimeService.run`.
+    :meth:`qiskit_ibm_runtime.RuntimeJob.result` or
+    :meth:`qiskit_ibm_runtime.IBMRuntimeService.run`.
     """
 
     @classmethod

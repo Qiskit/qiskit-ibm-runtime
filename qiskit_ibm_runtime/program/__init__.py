@@ -10,7 +10,25 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Qiskit Runtime program package.
+"""
+====================================================
+Runtime Programs (:mod:`qiskit_ibm_runtime.program`)
+====================================================
+
+.. currentmodule:: qiskit_ibm_runtime.program
 
 This package contains files to help you write Qiskit Runtime programs.
+
+Classes
+==========================
+.. autosummary::
+   :toctree: ../stubs/
+
+   ProgramBackend
+   UserMessenger
+   ResultDecoder
 """
+
+from .program_backend import ProgramBackend
+from .user_messenger import UserMessenger
+from .result_decoder import ResultDecoder
