@@ -14,7 +14,7 @@
 
 import os
 from typing import Optional, Dict
-
+from .exceptions import AccountNotFoundError
 from .account import Account, AccountType
 from ..proxies import ProxyConfiguration
 from .storage import save_config, read_config, delete_config
@@ -42,13 +42,14 @@ class AccountManager:
         name: Optional[str] = _DEFAULT_ACCOUNT_NAME,
         proxies: Optional[ProxyConfiguration] = None,
         verify: Optional[bool] = None,
+        overwrite: Optional[bool] = False,
     ) -> None:
         """Save account on disk."""
-
         config_key = name or cls._get_default_account_name(auth)
         return save_config(
             filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE,
             name=config_key,
+            overwrite=overwrite,
             config=Account(
                 token=token,
                 url=url,
@@ -122,14 +123,14 @@ class AccountManager:
             Account information.
 
         Raises:
-            ValueError: If the input value cannot be found on disk.
+            AccountNotFoundError: If the input value cannot be found on disk.
         """
         if name:
             saved_account = read_config(
                 filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE, name=name
             )
             if not saved_account:
-                raise ValueError(
+                raise AccountNotFoundError(
                     f"Account with the name {name} does not exist on disk."
                 )
             return Account.from_saved_format(saved_account)
@@ -145,7 +146,7 @@ class AccountManager:
                 name=cls._get_default_account_name(auth),
             )
             if saved_account is None:
-                raise ValueError(f"No default {auth} account saved.")
+                raise AccountNotFoundError(f"No default {auth} account saved.")
             return Account.from_saved_format(saved_account)
 
         all_config = read_config(filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE)
@@ -154,7 +155,7 @@ class AccountManager:
             if account_name in all_config:
                 return Account.from_saved_format(all_config[account_name])
 
-        return None
+        raise AccountNotFoundError("Unable to find account.")
 
     @classmethod
     def delete(
