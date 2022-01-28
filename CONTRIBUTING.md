@@ -7,11 +7,11 @@ included in the qiskit documentation:
 https://qiskit.org/documentation/contributing_to_qiskit.html
 
 
-Contributing to Qiskit IBM Provider
+Contributing to Qiskit IBM Runtime
 ---------------------------
 
 In addition to the general guidelines there are specific details for
-contributing to the Qiskit IBM Provider, these are documented below.
+contributing to the Qiskit IBM Runtime, these are documented below.
 
 ### Pull request checklist
 
@@ -199,7 +199,7 @@ section of the Qiskit documentation.
 ### Test
 
 New features often imply changes in the existent tests or new ones are
-needed. Once they\'re updated/added run this be sure they keep passing.
+needed. Once they're updated/added run this be sure they keep passing.
 
 For executing the tests, a `make test` target is available.
 
@@ -209,7 +209,7 @@ command:
 Linux and Mac:
 
 ``` {.bash}
-$ LOG_LEVEL=INFO python -m unittest test/test_something.py
+$ python -m unittest test/test_something.py
 ```
 
 Windows:
@@ -218,43 +218,33 @@ Windows:
 C:\..\> python -m unittest test/test_something.py
 ```
 
-Note many of the tests will not be executed unless you have setup an
-IBM Quantum account. To set this up please go to this
-[page](https://quantum-computing.ibm.com/login) and
-register an account.
+The python tests either run locally ("unit tests") or against a remote API ("integration tests") 
+depending on the environment configuration. Check the [workflow definition](.github/workflows/ci.yml), 
+or the examples below for the set of supported environment variables.
 
-By default, and if there is no user credentials available, the tests
-that require online access are run with recorded (mocked) information.
-This is, the remote requests are replayed from a `test/cassettes` and
-not real HTTP requests is generated. If user credentials are found, in
-that cases it use them to make the network requests.
+Run integration tests against IBM Quantum 
+```bash
+QISKIT_IBM_TOKEN=...                                            # IBM Quantum API token
+QISKIT_IBM_URL=https://auth.quantum-computing.ibm.com/api       # IBM Quantum API URL
+QISKIT_IBM_INSTANCE=ibm-q/open/main                             # IBM Quantum provider to use (hub/group/project)
+```
 
-How and which tests are executed is controlled by a environment variable
-`QISKIT_TESTS`. The options are (where `uc_available = True` if the user
-credentials are available, and `False` otherwise):
+Run integration tests against IBM Cloud
+```bash
+QISKIT_IBM_TOKEN=...                                            # IBM Cloud API key
+QISKIT_IBM_URL=https://us-east.quantum-computing.cloud.ibm.com  # Runtime URL
+QISKIT_IBM_INSTANCE=crn:v1:bluemix:...                          # The CRN value of the Quantum service instance
+```
 
-  ----------------------------------------------------------------------------------------------------
-  Option          Description                             Default              If `True`, forces
-  --------------- --------------------------------------- -------------------- -----------------------
-  `skip_online`   Skips tests that require remote         `False`              `rec = False`
-                  requests (also, no mocked information
-                  is used). Does not require user
-                  credentials.
+Run unit tests
+```bash
+QISKIT_TESTS=skip_online                                        # Option to skip all integration tests
+```
 
-  `mock_online`   It runs the online tests using mocked   `not uc_available`   `skip_online = False`
-                  information. Does not require user
-                  credentials.
-
-  `run_slow`      It runs tests tagged as *slow*.         `False`
-
-  `rec`           It records the remote requests. It      `False`              `skip_online = False`
-                  requires user credentials.                                   `run_slow = False`
-  ----------------------------------------------------------------------------------------------------
-
-It is possible to provide more than one option separated with commas.
-The order of precedence in the options is right to left. For example,
-`QISKIT_TESTS=skip_online,rec` will set the options as
-`skip_online == False` and `rec == True`.
+To enable integration test cases to run in your private fork, make sure to set above values as 
+[encrypted environment secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-an-environment). 
+The names of the environments must match the ones that the [CI workflow](.github/workflows/ci.yml) relies
+upon.
 
 ### Style guide
 
