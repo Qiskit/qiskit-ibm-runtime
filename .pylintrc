@@ -66,13 +66,19 @@ confidence=
 # --enable=similarities". If you want to run only the classes checker, but have
 # no Warning level messages displayed, use "--disable=all --enable=classes
 # --disable=W".
-disable=bad-mcs-classmethod-argument,   # TODO: investigate / re-enable
+disable=arguments-renamed,              # TODO: investigate / re-enable
+        bad-mcs-classmethod-argument,   # TODO: investigate / re-enable
         bad-continuation, bad-whitespace # differences of opinion with black
+        consider-using-dict-items,      # TODO: investigate / re-enable
+        consider-using-f-string,        # TODO: investigate / re-enable
+        consider-using-with,            # TODO: investigate / re-enable
         differing-param-doc,            # TODO: investigate / re-enable
         docstring-first-line-empty,     # TODO: investigate / re-enable
         duplicate-code,                 # too verbose
+        f-string-without-interpolation, # TODO: investigate / re-enable
         fixme,                          # avoid that to do annotations show up as warnings
         invalid-name,                   # TODO: investigate / re-enable
+        missing-param-doc,              # TODO: investigate / re-enable (issues with kwargs docs)
         missing-type-doc,               # TODO: investigate / re-enable
         no-else-return,                 # relax "elif" after a clause with a return
         no-member,                      # TODO: investigate / re-enable
@@ -95,6 +101,7 @@ disable=bad-mcs-classmethod-argument,   # TODO: investigate / re-enable
         unspecified-encoding,           # TODO: investigate / re-enable
         use-dict-literal,               # TODO: investigate / re-enable
         use-list-literal,               # TODO: investigate / re-enable
+        import-error
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
