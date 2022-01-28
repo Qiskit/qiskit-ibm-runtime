@@ -11,7 +11,7 @@
 # that they have been altered from the originals.
 
 """Tests for the account functions."""
-
+import copy
 import json
 import logging
 import os
@@ -62,6 +62,12 @@ class TestAccount(IBMTestCase):
     dummy_token = "123"
     dummy_cloud_url = "https://us-east.quantum-computing.cloud.ibm.com"
     dummy_legacy_url = "https://auth.quantum-computing.ibm.com/api"
+
+    def test_skip_crn_resolution_for_crn(self):
+        """Test that CRN resolution is skipped if the instance value is already a CRN."""
+        account = copy.deepcopy(_TEST_CLOUD_ACCOUNT)
+        account.resolve_cloud_instance_crn()
+        self.assertEqual(account.instance, _TEST_CLOUD_ACCOUNT.instance)
 
     def test_invalid_auth(self):
         """Test invalid values for auth parameter."""

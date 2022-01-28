@@ -259,7 +259,7 @@ class IBMRuntimeService:
 
         # resolve CRN if needed
         if account.auth == "cloud":
-            account.resolve_cloud_instance_crn()
+            self._resolve_crn(account)
 
         # ensure account is valid, fail early if not
         account.validate()
@@ -292,6 +292,9 @@ class IBMRuntimeService:
             )
 
         return ret
+
+    def _resolve_crn(self, account: Account) -> None:
+        account.resolve_cloud_instance_crn()
 
     def _authenticate_legacy_account(
         self, client_params: ClientParameters

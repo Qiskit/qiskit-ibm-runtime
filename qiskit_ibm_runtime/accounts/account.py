@@ -23,7 +23,7 @@ from .exceptions import InvalidAccountError, CustomResourceNameResolutionError
 from ..api.auth import LegacyAuth, CloudAuth
 from ..proxies import ProxyConfiguration
 from ..utils.hgp import from_instance_format
-from ..utils.utils import resolve_crn
+from ..utils import resolve_crn
 
 AccountType = Optional[Literal["cloud", "legacy"]]
 
@@ -91,10 +91,12 @@ class Account:
         No-op if ``instance`` attribute is set to a Cloud Resource Name (CRN).
 
         Raises:
-            CustomResourceNameResolutionFailed
+            CustomResourceNameResolutionFailed: if CRN value cannot be resolved.
         """
         if self.auth == "cloud":
-            crn = resolve_crn(self)
+            crn = resolve_crn(
+                auth=self.auth, url=self.url, token=self.token, instance=self.instance
+            )
             if len(crn) == 0:
                 raise CustomResourceNameResolutionError(
                     f"Failed to resolve CRN value for the provided service name {self.instance}."
@@ -102,8 +104,10 @@ class Account:
             if len(crn) > 1:
                 # handle edge-case where multiple service instances with the same name exist
                 logger.warning(
-                    f"Multiple CRN values found for service name {self.instance}: {crn}. "
-                    f"Using {crn[0]}."
+                    "Multiple CRN values found for service name %: %. Using %.",
+                    self.instance,
+                    crn,
+                    crn[0],
                 )
 
             # overwrite with CRN value

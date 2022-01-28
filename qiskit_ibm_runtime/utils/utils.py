@@ -24,28 +24,26 @@ from urllib.parse import urlparse
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 from ibm_platform_services import ResourceControllerV2
 
-from ..accounts import Account
 
-
-def resolve_crn(account: Account) -> List[str]:
+def resolve_crn(auth: str, url: str, instance: str, token: str) -> List[str]:
     """Resolves the Custom Resource Name (CRN) for the given cloud account."""
-    if account.auth != "cloud":
+    if auth != "cloud":
         raise ValueError("CRN value can only be resolved for cloud accounts.")
 
-    if is_crn(account.instance):
+    if is_crn(instance):
         # no need to resolve CRN value by name
-        return [account.instance]
+        return [instance]
     else:
         # resolve CRN value based on the provided service name
-        parsed_url = urlparse(account.url)
+        parsed_url = urlparse(url)
         iam_url = f"{parsed_url.scheme}://iam.{parsed_url.hostname}"
         resource_controller_url = (
             f"{parsed_url.scheme}://resource-controller.{parsed_url.hostname}"
         )
-        authenticator = IAMAuthenticator(account.token, url=iam_url)
+        authenticator = IAMAuthenticator(token, url=iam_url)
         client = ResourceControllerV2(authenticator=authenticator)
         client.set_service_url(resource_controller_url)
-        list_response = client.list_resource_instances(name=account.instance)
+        list_response = client.list_resource_instances(name=instance)
         result = list_response.get_result()
         row_count = result["rows_count"]
         if row_count == 0:
