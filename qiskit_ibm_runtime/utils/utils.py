@@ -11,7 +11,6 @@
 # that they have been altered from the originals.
 
 """General utility functions."""
-
 import copy
 import keyword
 import logging
@@ -21,6 +20,38 @@ from queue import Queue
 from threading import Condition
 from typing import List, Optional, Any, Dict, Union, Tuple
 from urllib.parse import urlparse
+
+from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
+from ibm_platform_services import ResourceControllerV2
+
+from ..accounts import Account
+
+
+def resolve_crn(account: Account) -> List[str]:
+    """Resolves the Custom Resource Name (CRN) for the given cloud account."""
+    if account.auth != "cloud":
+        raise ValueError("CRN value can only be resolved for cloud accounts.")
+
+    if is_crn(account.instance):
+        # no need to resolve CRN value by name
+        return [account.instance]
+    else:
+        # resolve CRN value based on the provided service name
+        parsed_url = urlparse(account.url)
+        iam_url = f"{parsed_url.scheme}://iam.{parsed_url.hostname}"
+        resource_controller_url = (
+            f"{parsed_url.scheme}://resource-controller.{parsed_url.hostname}"
+        )
+        authenticator = IAMAuthenticator(account.token, url=iam_url)
+        client = ResourceControllerV2(authenticator=authenticator)
+        client.set_service_url(resource_controller_url)
+        list_response = client.list_resource_instances(name=account.instance)
+        result = list_response.get_result()
+        row_count = result["rows_count"]
+        if row_count == 0:
+            return []
+        else:
+            return list(map(lambda resource: resource["crn"], result["resources"]))
 
 
 def is_crn(locator: str) -> bool:

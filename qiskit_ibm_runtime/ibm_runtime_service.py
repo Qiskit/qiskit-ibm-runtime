@@ -257,6 +257,10 @@ class IBMRuntimeService:
         if verify is not None:
             account.verify = verify
 
+        # resolve CRN if needed
+        if account.auth == "cloud":
+            account.resolve_cloud_instance_crn()
+
         # ensure account is valid, fail early if not
         account.validate()
 
