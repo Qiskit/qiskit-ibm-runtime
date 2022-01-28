@@ -26,7 +26,7 @@ from qiskit_ibm_runtime.exceptions import (
 )
 
 from .ibm_test_case import IBMIntegrationJobTestCase
-from .utils.decorators import run_cloud_legacy_real
+from .utils.decorators import run_integration_test
 from .utils.serialization import (
     get_complex_types,
     SerializableClassDecoder,
@@ -38,7 +38,7 @@ from .utils.utils import cancel_job_safe, wait_for_status, get_real_device
 class TestIntegrationJob(IBMIntegrationJobTestCase):
     """Integration tests for job functions."""
 
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_run_program(self, service):
         """Test running a program."""
         job = self._run_program(service, final_result="foo")
@@ -47,7 +47,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         self.assertEqual("foo", result)
 
     @slow_test
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_run_program_real_device(self, service):
         """Test running a program."""
         device = get_real_device(service)
@@ -56,13 +56,17 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         self.assertEqual(JobStatus.DONE, job.status())
         self.assertEqual("foo", result)
 
-    def test_run_program_cloud_no_backend(self):
+    @run_integration_test
+    def test_run_program_cloud_no_backend(self, service):
         """Test running a cloud program with no backend."""
-        service = [serv for serv in self.services if serv.auth == "cloud"][0]
+
+        if self.dependencies.auth == "legacy":
+            self.skipTest("Not supported on legacy")
+
         job = self._run_program(service, backend="")
         self.assertTrue(job.backend, f"Job {job.job_id} has no backend.")
 
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_run_program_log_level(self, service):
         """Test running with a custom log level."""
         levels = ["INFO", "ERROR"]
@@ -77,7 +81,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
                     f"Job log is {job.logs()}",
                 )
 
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_run_program_failed(self, service):
         """Test a failed program execution."""
         job = self._run_program(service, inputs={})
@@ -92,7 +96,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
             job.result()
         self.assertIn("KeyError", str(err_cm.exception))
 
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_run_program_failed_ran_too_long(self, service):
         """Test a program that failed since it ran longer than maximum execution time."""
         max_execution_time = 60
@@ -114,7 +118,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         with self.assertRaises(RuntimeJobFailureError):
             job.result()
 
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_cancel_job_queued(self, service):
         """Test canceling a queued job."""
         real_device = get_real_device(service)
@@ -127,7 +131,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         rjob = service.job(job.job_id)
         self.assertEqual(rjob.status(), JobStatus.CANCELLED)
 
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_cancel_job_running(self, service):
         """Test canceling a running job."""
         job = self._run_program(service, iterations=3)
@@ -138,7 +142,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         rjob = service.job(job.job_id)
         self.assertEqual(rjob.status(), JobStatus.CANCELLED)
 
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_cancel_job_done(self, service):
         """Test canceling a finished job."""
         job = self._run_program(service)
@@ -146,7 +150,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         with self.assertRaises(RuntimeInvalidStateError):
             job.cancel()
 
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_delete_job(self, service):
         """Test deleting a job."""
         sub_tests = [JobStatus.RUNNING, JobStatus.DONE]
@@ -158,7 +162,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
                 with self.assertRaises(RuntimeJobNotFound):
                     service.job(job.job_id)
 
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_delete_job_queued(self, service):
         """Test deleting a queued job."""
         real_device = get_real_device(service)
@@ -169,7 +173,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         with self.assertRaises(RuntimeJobNotFound):
             service.job(job.job_id)
 
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_final_result(self, service):
         """Test getting final result."""
         final_result = get_complex_types()
@@ -180,14 +184,14 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         rresults = service.job(job.job_id).result(decoder=SerializableClassDecoder)
         self.assertEqual(final_result, rresults)
 
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_job_status(self, service):
         """Test job status."""
         job = self._run_program(service, iterations=1)
         time.sleep(random.randint(1, 5))
         self.assertTrue(job.status())
 
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_job_inputs(self, service):
         """Test job inputs."""
         interim_results = get_complex_types()
@@ -198,26 +202,26 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         rinterim_results = rjob.inputs["interim_results"]
         self._assert_complex_types_equal(interim_results, rinterim_results)
 
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_job_backend(self, service):
         """Test job backend."""
         job = self._run_program(service)
         self.assertEqual(self.sim_backends[service.auth], job.backend.name())
 
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_job_program_id(self, service):
         """Test job program ID."""
         job = self._run_program(service)
         self.assertEqual(self.program_ids[service.auth], job.program_id)
 
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_wait_for_final_state(self, service):
         """Test wait for final state."""
         job = self._run_program(service)
         job.wait_for_final_state()
         self.assertEqual(JobStatus.DONE, job.status())
 
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_job_creation_date(self, service):
         """Test job creation date."""
         job = self._run_program(service, iterations=1)
@@ -228,7 +232,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         for rjob in rjobs:
             self.assertTrue(rjob.creation_date)
 
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_job_logs(self, service):
         """Test job logs."""
         job = self._run_program(service, final_result="foo")
