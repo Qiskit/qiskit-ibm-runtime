@@ -25,7 +25,6 @@ from qiskit.providers.providerutils import filter_backends
 
 from qiskit_ibm_runtime import ibm_backend
 from .accounts import AccountManager, Account, AccountType
-from .accounts.exceptions import AccountsError
 from .proxies import ProxyConfiguration
 from .api.clients import AuthClient, VersionClient
 from .api.clients.runtime import RuntimeClient
@@ -250,8 +249,6 @@ class IBMRuntimeService:
 
         if account is None:
             account = AccountManager.get()
-            if account is None:
-                raise AccountsError("Unable to find account.")
 
         if instance:
             account.instance = instance
@@ -548,6 +545,7 @@ class IBMRuntimeService:
         name: Optional[str] = None,
         proxies: Optional[dict] = None,
         verify: Optional[bool] = None,
+        overwrite: Optional[bool] = False,
     ) -> None:
         """Save the account to disk for future use.
 
@@ -565,6 +563,7 @@ class IBMRuntimeService:
                 ``username_ntlm``, ``password_ntlm`` (username and password to enable NTLM user
                 authentication)
             verify: Verify the server's TLS certificate.
+            overwrite: ``True`` if the existing account is to be overwritten.
         """
 
         AccountManager.save(
@@ -575,6 +574,7 @@ class IBMRuntimeService:
             name=name,
             proxies=ProxyConfiguration(**proxies) if proxies else None,
             verify=verify,
+            overwrite=overwrite,
         )
 
     @staticmethod
