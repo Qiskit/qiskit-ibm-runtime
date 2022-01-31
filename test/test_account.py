@@ -19,7 +19,14 @@ import uuid
 from typing import Any
 from unittest import skipIf
 
-from qiskit_ibm_runtime.accounts import AccountManager, Account, management
+from qiskit_ibm_runtime.accounts import (
+    AccountManager,
+    Account,
+    management,
+    AccountAlreadyExistsError,
+    AccountNotFoundError,
+    InvalidAccountError,
+)
 from qiskit_ibm_runtime.proxies import ProxyConfiguration
 from qiskit_ibm_runtime.accounts.account import CLOUD_API_URL, LEGACY_API_URL
 from .ibm_test_case import IBMTestCase
@@ -59,7 +66,7 @@ class TestAccount(IBMTestCase):
     def test_invalid_auth(self):
         """Test invalid values for auth parameter."""
 
-        with self.assertRaises(ValueError) as err:
+        with self.assertRaises(InvalidAccountError) as err:
             invalid_auth: Any = "phantom"
             Account(
                 auth=invalid_auth, token=self.dummy_token, url=self.dummy_cloud_url
@@ -72,7 +79,7 @@ class TestAccount(IBMTestCase):
         invalid_tokens = [1, None, ""]
         for token in invalid_tokens:
             with self.subTest(token=token):
-                with self.assertRaises(ValueError) as err:
+                with self.assertRaises(InvalidAccountError) as err:
                     Account(
                         auth="cloud", token=token, url=self.dummy_cloud_url
                     ).validate()
@@ -86,7 +93,7 @@ class TestAccount(IBMTestCase):
         ]
         for params in subtests:
             with self.subTest(params=params):
-                with self.assertRaises(ValueError) as err:
+                with self.assertRaises(InvalidAccountError) as err:
                     Account(**params, token=self.dummy_token).validate()
                 self.assertIn("Invalid `url` value.", str(err.exception))
 
@@ -100,7 +107,7 @@ class TestAccount(IBMTestCase):
         ]
         for params in subtests:
             with self.subTest(params=params):
-                with self.assertRaises(ValueError) as err:
+                with self.assertRaises(InvalidAccountError) as err:
                     Account(
                         **params, token=self.dummy_token, url=self.dummy_cloud_url
                     ).validate()
@@ -137,6 +144,29 @@ class TestAccount(IBMTestCase):
 class TestAccountManager(IBMTestCase):
     """Tests for AccountManager class."""
 
+    @temporary_account_config_file(
+        contents={"conflict": _TEST_CLOUD_ACCOUNT.to_saved_format()}
+    )
+    def test_save_without_override(self):
+        """Test to override an existing account without setting overwrite=True."""
+        with self.assertRaises(AccountAlreadyExistsError):
+            AccountManager.save(
+                name="conflict",
+                token=_TEST_CLOUD_ACCOUNT.token,
+                url=_TEST_CLOUD_ACCOUNT.url,
+                instance=_TEST_CLOUD_ACCOUNT.instance,
+                auth="cloud",
+                overwrite=False,
+            )
+
+    @temporary_account_config_file(
+        contents={"conflict": _TEST_CLOUD_ACCOUNT.to_saved_format()}
+    )
+    def test_get_none(self):
+        """Test to get an account with an invalid name."""
+        with self.assertRaises(AccountNotFoundError):
+            AccountManager.get(name="bla")
+
     @temporary_account_config_file(contents={})
     @no_envs(["QISKIT_IBM_TOKEN"])
     def test_save_get(self):
@@ -172,6 +202,7 @@ class TestAccountManager(IBMTestCase):
                     proxies=account.proxies,
                     verify=account.verify,
                     name=name_save,
+                    overwrite=True,
                 )
                 self.assertEqual(account, AccountManager.get(name=name_get))
 
@@ -332,7 +363,7 @@ class TestEnableAccount(IBMTestCase):
         for url in urls:
             with self.subTest(url=url), no_envs(["QISKIT_IBM_TOKEN"]):
                 token = uuid.uuid4().hex
-                with self.assertRaises(ValueError) as err:
+                with self.assertRaises(InvalidAccountError) as err:
                     _ = FakeRuntimeService(auth="cloud", token=token, url=url)
                 self.assertIn("instance", str(err.exception))
 
@@ -439,7 +470,9 @@ class TestEnableAccount(IBMTestCase):
     def test_enable_account_bad_name(self):
         """Test initializing account by bad name."""
         name = "phantom"
-        with temporary_account_config_file() as _, self.assertRaises(ValueError) as err:
+        with temporary_account_config_file() as _, self.assertRaises(
+            AccountNotFoundError
+        ) as err:
             _ = FakeRuntimeService(name=name)
         self.assertIn(name, str(err.exception))
 

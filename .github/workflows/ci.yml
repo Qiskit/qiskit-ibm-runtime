@@ -1,0 +1,139 @@
+# This code is part of Qiskit.
+#
+# (C) Copyright IBM 2021.
+#
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE.txt file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
+
+name: CI
+on:
+  [ push, pull_request ]
+# save resources: cancel redundant workflow runs on the same branch when new commits are pushed
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  code-quality:
+    name: Run code quality checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -c constraints.txt -e .
+          pip install -U -c constraints.txt -r requirements-dev.txt
+      - name: Run black
+        run: make style
+      - name: Run lint
+        run: make lint
+      - name: Run mypy
+        run: make mypy
+  documentation:
+    name: Build documentation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -U tox
+          sudo apt install -y graphviz pandoc
+          pip install -c constraints.txt -e .
+      - name: Build documentation
+        run: tox -edocs
+      - name: Upload documentation
+        uses: actions/upload-artifact@v2
+        with:
+          name: html_docs
+          path: docs/_build/html
+  unit-tests:
+    # only kick-off test cases when basic code quality checks succeed
+    needs: [ "code-quality" , "documentation" ]
+    name: Run unit tests - python${{ matrix.python-version }}-${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: [ 3.7, 3.8, 3.9 ]
+        os: [ "macOS-latest", "ubuntu-latest", "windows-latest" ]
+    env:
+      LOG_LEVEL: DEBUG
+      STREAM_LOG: True
+      QISKIT_TESTS: skip_online
+      QISKIT_IN_PARALLEL: True
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -c constraints.txt -e .
+          pip install -U -c constraints.txt -r requirements-dev.txt
+      - name: Run unit tests
+        run: make coverage
+      - name: Upload unit test coverage report
+        uses: actions/upload-artifact@v2
+        with:
+          name: Unit test coverage report - python${{ matrix.python-version }}-${{ matrix.os }}
+          path: htmlcov
+  integration-tests:
+    if: ${{ github.event_name == 'push' }}
+    # only kick-off resource intensive integration tests if unit tests and all basic checks succeeded
+    needs: [ "unit-tests"  ]
+    name: Run integration tests - ${{ matrix.environment }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: [ 3.9 ]
+        os: [ "ubuntu-latest" ]
+        environment: [ "legacy-production", "cloud-production" ]
+    environment: ${{ matrix.environment }}
+    env:
+      QISKIT_IBM_TOKEN: ${{ secrets.QISKIT_IBM_TOKEN }}
+      QISKIT_IBM_URL: ${{ secrets.QISKIT_IBM_URL }}
+      QISKIT_IBM_INSTANCE: ${{ secrets.QISKIT_IBM_INSTANCE }}
+      LOG_LEVEL: DEBUG
+      STREAM_LOG: True
+      QISKIT_IN_PARALLEL: True
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -c constraints.txt -e .
+          pip install -U -c constraints.txt -r requirements-dev.txt
+      - name: Run integration tests
+        run: make coverage
+      - name: Upload integration test coverage report
+        uses: actions/upload-artifact@v2
+        with:
+          name: Integration test coverage report - ${{ matrix.environment }}
+          path: htmlcov

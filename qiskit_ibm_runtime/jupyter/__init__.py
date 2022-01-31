@@ -33,7 +33,7 @@ Detailed information on a single backend
     :hide-code:
     :hide-output:
 
-    from qiskit_ibm_runtime.test.ibm_provider_mock import mock_get_backend
+    from qiskit_ibm_runtime.test.ibm_runtime_service_mock import mock_get_backend
     mock_get_backend('FakeVigo')
 
 .. jupyter-execute::

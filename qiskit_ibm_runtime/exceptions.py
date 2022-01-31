@@ -10,49 +10,25 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Exceptions related to the IBM Quantum provider."""
+"""Exceptions related to the IBM Runtime service."""
 
 from qiskit.exceptions import QiskitError
 
 
 class IBMError(QiskitError):
-    """Base class for errors raised by the provider modules."""
+    """Base class for errors raised by the runtime service modules."""
 
     pass
 
 
-class IBMProviderError(IBMError):
-    """Base class for errors raise by IBMRuntimeService."""
+class IBMAccountError(IBMError):
+    """Account related errors."""
 
     pass
 
 
-class IBMProviderValueError(IBMProviderError):
-    """Value errors raised by IBMRuntimeService."""
-
-    pass
-
-
-class IBMBackendError(IBMError):
-    """Base class for errors raised by the backend modules."""
-
-    pass
-
-
-class IBMBackendApiError(IBMBackendError):
-    """Errors that occur unexpectedly when querying the server."""
-
-    pass
-
-
-class IBMBackendApiProtocolError(IBMBackendApiError):
+class IBMBackendApiProtocolError(IBMError):
     """Errors raised when an unexpected value is received from the server."""
-
-    pass
-
-
-class IBMBackendValueError(IBMBackendError, ValueError):
-    """Value errors raised by the backend modules."""
 
     pass
 
@@ -107,11 +83,5 @@ class RuntimeJobNotFound(IBMRuntimeError):
 
 class RuntimeInvalidStateError(IBMRuntimeError):
     """Errors raised when the state is not valid for the operation."""
-
-    pass
-
-
-class CannotMapCrnToApiHostError(IBMError):
-    """Error raised when mapping from CRN to API host fails."""
 
     pass

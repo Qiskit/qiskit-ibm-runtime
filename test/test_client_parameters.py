@@ -49,6 +49,36 @@ class TestClientParameters(IBMTestCase):
         result = proxies_only_credentials.connection_parameters()
         self.assertDictEqual(proxies_only_expected_result, result)
 
+    def test_get_runtime_api_base_url(self) -> None:
+        """Test resolution of runtime API base URL."""
+        test_specs = [
+            (
+                "cloud",
+                "crn:v1:bluemix:public:quantum-computing:us-east:a/...:...::",
+                "https://cloud.ibm.com",
+                "https://us-east.quantum-computing.cloud.ibm.com",
+            ),
+            (
+                "cloud",
+                "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
+                "https://cloud.ibm.com",
+                "https://my-region.quantum-computing.cloud.ibm.com",
+            ),
+            (
+                "legacy",
+                "h/g/p",
+                "https://auth.quantum-computing.ibm.com/api",
+                "https://auth.quantum-computing.ibm.com/api",
+            ),
+        ]
+        for spec in test_specs:
+            auth, instance, url, expected = spec
+            with self.subTest(instance=instance, url=url):
+                params = self._get_client_params(
+                    auth_type=auth, instance=instance, url=url
+                )
+                self.assertEqual(params.get_runtime_api_base_url(), expected)
+
     def test_proxies_param_with_ntlm(self) -> None:
         """Test proxies with NTLM credentials."""
         urls = {"http": "localhost:8080", "https": "localhost:8080"}
