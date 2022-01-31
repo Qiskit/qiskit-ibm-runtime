@@ -141,8 +141,9 @@ class IBMRuntimeService:
                 Defaults to https://cloud.ibm.com (cloud) or
                 https://auth.quantum-computing.ibm.com/api (legacy).
             name: Name of the account to load.
-            instance: The service instance to use. For cloud runtime, this is the Cloud Resource
-                Name (CRN). For legacy runtime, this is the hub/group/project in that format.
+            instance: The service instance to use.
+                For cloud runtime, this is the Cloud Resource Name (CRN) or the service name.
+                For legacy runtime, this is the hub/group/project in that format.
             proxies: Proxy configuration. Supported optional keys are
                 ``urls`` (a dictionary mapping protocol or protocol and host to the URL of the proxy,
                 documented at https://docs.python-requests.org/en/latest/api/#requests.Session.proxies),
