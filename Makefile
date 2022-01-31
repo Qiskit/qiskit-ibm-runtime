@@ -21,10 +21,14 @@ mypy:
 	mypy --module qiskit_ibm_runtime
 
 style:
-	black --check qiskit_ibm_runtime setup.py test
+	black --check qiskit_ibm_runtime setup.py test docs/tutorials program_source
 
 test:
 	python -m unittest -v
+
+coverage:
+	coverage run -m unittest -v
+	coverage html
 
 test1:
 	python -m unittest -v test/test_integration_backend.py test/test_integration_program.py
@@ -36,4 +40,4 @@ test3:
 	python -m unittest -v test/test_integration_retrieve_job.py	test/test_integration_interim_results.py
 
 black:
-	black qiskit_ibm_runtime setup.py test
+	black qiskit_ibm_runtime setup.py test docs/tutorials program_source

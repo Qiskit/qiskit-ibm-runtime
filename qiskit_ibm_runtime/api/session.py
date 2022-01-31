@@ -26,7 +26,7 @@ from urllib3.util.retry import Retry
 from qiskit_ibm_runtime.utils.utils import filter_data
 
 from .exceptions import RequestsApiError
-from ..version import __version__ as ibm_provider_version
+from ..version import __version__ as ibm_runtime_version
 
 STATUS_FORCELIST = (
     500,  # General server error
@@ -55,7 +55,7 @@ def _get_client_header() -> str:
         pass
 
     qiskit_pkgs = ["qiskit-terra", "qiskit-aer", "qiskit-ignis", "qiskit-aqua"]
-    pkg_versions = {"qiskit-ibm": ibm_provider_version}
+    pkg_versions = {"qiskit-ibm-runtime": ibm_runtime_version}
     for pkg_name in qiskit_pkgs:
         try:
             pkg_versions[pkg_name] = pkg_resources.get_distribution(pkg_name).version
@@ -170,7 +170,11 @@ class RetrySession(Session):
 
     def __del__(self) -> None:
         """RetrySession destructor. Closes the session."""
-        self.close()
+        try:
+            self.close()
+        except Exception:  # pylint: disable=broad-except
+            # ignore errors that may happen during cleanup
+            pass
 
     def _initialize_retry(
         self, retries_total: int, retries_connect: int, backoff_factor: float

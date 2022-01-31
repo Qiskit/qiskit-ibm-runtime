@@ -18,14 +18,16 @@ from urllib.parse import urlparse
 
 from requests.auth import AuthBase
 from typing_extensions import Literal
+
+from .exceptions import InvalidAccountError
+from ..api.auth import LegacyAuth, CloudAuth
 from ..proxies import ProxyConfiguration
 from ..utils.hgp import from_instance_format
-from ..api.auth import LegacyAuth, CloudAuth
 
 AccountType = Optional[Literal["cloud", "legacy"]]
 
 LEGACY_API_URL = "https://auth.quantum-computing.ibm.com/api"
-CLOUD_API_URL = "https://us-east.quantum-computing.cloud.ibm.com"
+CLOUD_API_URL = "https://cloud.ibm.com"
 
 
 class Account:
@@ -104,7 +106,7 @@ class Account:
         """Validates the account instance.
 
         Raises:
-            ValueError: if the account is invalid
+            InvalidAccountError: if the account is invalid
 
         Returns:
             This Account instance.
@@ -121,7 +123,7 @@ class Account:
     def _assert_valid_auth(auth: AccountType) -> None:
         """Assert that the auth parameter is valid."""
         if not (auth in ["cloud", "legacy"]):
-            raise ValueError(
+            raise InvalidAccountError(
                 f"Invalid `auth` value. Expected one of ['cloud', 'legacy'], got '{auth}'."
             )
 
@@ -129,7 +131,7 @@ class Account:
     def _assert_valid_token(token: str) -> None:
         """Assert that the token is valid."""
         if not (isinstance(token, str) and len(token) > 0):
-            raise ValueError(
+            raise InvalidAccountError(
                 f"Invalid `token` value. Expected a non-empty string, got '{token}'."
             )
 
@@ -139,7 +141,9 @@ class Account:
         try:
             urlparse(url)
         except:
-            raise ValueError(f"Invalid `url` value. Failed to parse '{url}' as URL.")
+            raise InvalidAccountError(
+                f"Invalid `url` value. Failed to parse '{url}' as URL."
+            )
 
     @staticmethod
     def _assert_valid_proxies(config: ProxyConfiguration) -> None:
@@ -152,7 +156,7 @@ class Account:
         """Assert that the instance name is valid for the given account type."""
         if auth == "cloud":
             if not (isinstance(instance, str) and len(instance) > 0):
-                raise ValueError(
+                raise InvalidAccountError(
                     f"Invalid `instance` value. Expected a non-empty string, got '{instance}'."
                 )
         if auth == "legacy":
@@ -160,6 +164,6 @@ class Account:
                 try:
                     from_instance_format(instance)
                 except:
-                    raise ValueError(
+                    raise InvalidAccountError(
                         f"Invalid `instance` value. Expected hub/group/project format, got {instance}"
                     )

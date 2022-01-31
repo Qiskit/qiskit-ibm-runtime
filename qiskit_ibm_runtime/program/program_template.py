@@ -21,7 +21,7 @@ send circuits to the backend and messages to the user, respectively.
 
 from typing import Any
 
-from qiskit_ibm_runtime import UserMessenger, ProgramBackend
+from qiskit_ibm_runtime.program import UserMessenger, ProgramBackend
 
 
 def program(backend: ProgramBackend, user_messenger: UserMessenger, **kwargs):
@@ -40,7 +40,7 @@ def main(backend: ProgramBackend, user_messenger: UserMessenger, **kwargs) -> An
     Args:
         backend: Backend for the circuits to run on.
         user_messenger: Used to communicate with the program user.
-        kwargs: User inputs.
+        **kwargs: User inputs.
 
     Returns:
         The final result of the runtime program.

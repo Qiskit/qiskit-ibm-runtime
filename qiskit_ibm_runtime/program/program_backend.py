@@ -13,7 +13,7 @@
 """Base class for program backend."""
 
 import logging
-from typing import Union, List, Dict, Optional
+from typing import Union, List, Dict
 from abc import abstractmethod, ABC
 
 from qiskit.pulse import Schedule
@@ -27,8 +27,9 @@ logger = logging.getLogger(__name__)
 class ProgramBackend(Backend, ABC):
     """Base class for a program backend.
 
-    This is a :class:`~qiskit.providers.Backend` class for runtime programs to
-    submit circuits.
+    The ``main()`` function of your runtime program will receive an instance
+    of this class as the first parameter. You can then use the instance
+    to submit circuits to the target backend.
     """
 
     @abstractmethod
@@ -37,7 +38,6 @@ class ProgramBackend(Backend, ABC):
         circuits: Union[
             QuantumCircuit, Schedule, List[Union[QuantumCircuit, Schedule]]
         ],
-        timeout: Optional[int] = None,
         **run_config: Dict
     ) -> Job:
         """Run on the backend.
@@ -51,18 +51,10 @@ class ProgramBackend(Backend, ABC):
             circuits: An individual or a
                 list of :class:`~qiskit.circuits.QuantumCircuit` or
                 :class:`~qiskit.pulse.Schedule` objects to run on the backend.
-            timeout: Seconds to wait for circuit execution to finish.
             **run_config: Extra arguments used to configure the run.
 
         Returns:
             The job to be executed.
-
-        Raises:
-            IBMBackendApiError: If an unexpected error occurred while submitting
-                the job.
-            IBMBackendApiProtocolError: If an unexpected value received from
-                 the server.
-            IBMBackendValueError: If an input parameter value is not valid.
         """
         # pylint: disable=arguments-differ
         pass

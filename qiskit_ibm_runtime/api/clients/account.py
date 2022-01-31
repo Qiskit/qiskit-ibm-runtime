@@ -48,10 +48,10 @@ class AccountClient(BaseBackendClient):
         )
 
     def list_backends(self) -> List[Dict[str, Any]]:
-        """Return backends available for this provider.
+        """Return backends available.
 
         Returns:
-            Backends available for this provider.
+            Backends available for this hub/group/project.
         """
         return self.account_api.backends()
 

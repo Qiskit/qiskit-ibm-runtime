@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2022.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -25,13 +25,12 @@ from qiskit.providers.providerutils import filter_backends
 
 from qiskit_ibm_runtime import ibm_backend
 from .accounts import AccountManager, Account, AccountType
-from .accounts.exceptions import AccountsError
 from .proxies import ProxyConfiguration
 from .api.clients import AuthClient, VersionClient
 from .api.clients.runtime import RuntimeClient
 from .api.exceptions import RequestsApiError
 from .constants import QISKIT_IBM_RUNTIME_API_URL
-from .exceptions import IBMNotAuthorizedError, IBMInputValueError, IBMProviderError
+from .exceptions import IBMNotAuthorizedError, IBMInputValueError, IBMAccountError
 from .exceptions import (
     IBMRuntimeError,
     RuntimeDuplicateProgramError,
@@ -70,10 +69,10 @@ class IBMRuntimeService:
     A sample workflow of using the runtime service::
 
         from qiskit import QuantumCircuit
-        from qiskit_ibm_runtime import IBMRuntimeService, RunnerResult
+        from qiskit_ibm_runtime import IBMRuntimeService
 
         service = IBMRuntimeService()
-        backend = service.ibmq_qasm_simulator
+        backend = "ibmq_qasm_simulator"
 
         # List all available programs.
         service.pprint_programs()
@@ -84,21 +83,21 @@ class IBMRuntimeService:
         qc.cx(0, 1)
         qc.measure_all()
 
-        # Set the "circuit-runner" program parameters
-        params = service.program(program_id="circuit-runner").parameters()
+        # Set the "sampler" program parameters
+        params = service.program(program_id="sampler").parameters()
         params.circuits = qc
-        params.measurement_error_mitigation = True
+        params.use_measurement_mitigation = True
 
         # Configure backend options
-        options = {'backend_name': backend.name()}
+        options = {'backend_name': backend}
 
-        # Execute the circuit using the "circuit-runner" program.
-        job = service.run(program_id="circuit-runner",
+        # Execute the circuit using the "sampler" program.
+        job = service.run(program_id="sampler",
                           options=options,
                           inputs=params)
 
         # Get runtime job result.
-        result = job.result(decoder=RunnerResult)
+        result = job.result()
 
     If the program has any interim results, you can use the ``callback``
     parameter of the :meth:`run` method to stream the interim results.
@@ -106,7 +105,7 @@ class IBMRuntimeService:
     the results at a later time, but before the job finishes.
 
     The :meth:`run` method returns a
-    :class:`~qiskit_ibm_runtime.RuntimeJob` object. You can use its
+    :class:`RuntimeJob` object. You can use its
     methods to perform tasks like checking job status, getting job result, and
     canceling job.
     """
@@ -250,8 +249,6 @@ class IBMRuntimeService:
 
         if account is None:
             account = AccountManager.get()
-            if account is None:
-                raise AccountsError("Unable to find account.")
 
         if instance:
             account.instance = instance
@@ -335,7 +332,7 @@ class IBMRuntimeService:
 
         Raises:
             IBMInputValueError: If the URL specified is not a valid IBM Quantum authentication URL.
-            IBMProviderError: If no hub/group/project could be found for this account.
+            IBMAccountError: If no hub/group/project could be found for this account.
 
         Returns:
             The hub/group/projects for this account.
@@ -371,7 +368,7 @@ class IBMRuntimeService:
                     traceback.format_exc(),
                 )
         if not hgps:
-            raise IBMProviderError(
+            raise IBMAccountError(
                 "No hub/group/project that supports Qiskit Runtime could "
                 "be found for this account."
             )
@@ -483,10 +480,10 @@ class IBMRuntimeService:
                     IBMRuntimeService.backends(
                         filters=lambda b: b.configuration().quantum_volume > 16)
             kwargs: Simple filters that specify a ``True``/``False`` criteria in the
-                backend configuration, backends status, or provider credentials.
-                An example to get the operational backends with 5 qubits::
+                backend configuration or status.
+                An example to get the operational real backends::
 
-                    IBMRuntimeService.backends(n_qubits=5, operational=True)
+                    IBMRuntimeService.backends(simulator=False, operational=True)
 
         Returns:
             The list of available backends that match the filter.
@@ -548,6 +545,7 @@ class IBMRuntimeService:
         name: Optional[str] = None,
         proxies: Optional[dict] = None,
         verify: Optional[bool] = None,
+        overwrite: Optional[bool] = False,
     ) -> None:
         """Save the account to disk for future use.
 
@@ -565,6 +563,7 @@ class IBMRuntimeService:
                 ``username_ntlm``, ``password_ntlm`` (username and password to enable NTLM user
                 authentication)
             verify: Verify the server's TLS certificate.
+            overwrite: ``True`` if the existing account is to be overwritten.
         """
 
         AccountManager.save(
@@ -575,6 +574,7 @@ class IBMRuntimeService:
             name=name,
             proxies=ProxyConfiguration(**proxies) if proxies else None,
             verify=verify,
+            overwrite=overwrite,
         )
 
     @staticmethod
@@ -840,8 +840,11 @@ class IBMRuntimeService:
             inputs.validate()
             inputs = vars(inputs)
 
+        if options is None:
+            options = RuntimeOptions()
         if isinstance(options, dict):
             options = RuntimeOptions(**options)
+
         options.validate(self.auth)
 
         backend = None
@@ -1256,7 +1259,7 @@ class IBMRuntimeService:
         # Try to find the right backend
         try:
             backend = self.backend(raw_data["backend"], instance=instance)
-        except (IBMProviderError, QiskitBackendNotFoundError):
+        except QiskitBackendNotFoundError:
             backend = ibm_backend.IBMRetiredBackend.from_name(
                 backend_name=raw_data["backend"],
                 api=None,
