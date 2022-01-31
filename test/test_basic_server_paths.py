@@ -13,23 +13,34 @@
 """Tests that hit all the basic server endpoints using both a public and premium h/g/p."""
 
 from .ibm_test_case import IBMTestCase
-from .utils.decorators import requires_multiple_hgps
+from .utils.decorators import integration_test_setup, IntegrationTestDependencies
 
 
 class TestBasicServerPaths(IBMTestCase):
     """Test the basic server endpoints using both a public and premium provider."""
 
     @classmethod
-    @requires_multiple_hgps
-    def setUpClass(cls, service, open_hgp, premium_hgp):
+    @integration_test_setup(supported_auth=["legacy"])
+    def setUpClass(cls, dependencies: IntegrationTestDependencies):
         # pylint: disable=arguments-differ
         super().setUpClass()
-        cls.service = service  # Dict[str, IBMRuntimeService]
-        cls.hgps = [open_hgp, premium_hgp]
+        cls.service = dependencies.service
+        cls.hgps = list(dependencies.service._hgps.keys())
+
+    def _require_2_hgps(self):
+        if len(self.hgps) < 2:
+            self.skipTest("Test require at least 2 hub/group/project.")
+
+    def _get_hgps(self):
+        open_hgp = self.hgps[-1]
+        premium_hgp = self.hgps[0]
+        return [open_hgp, premium_hgp]
 
     def test_device_properties_and_defaults(self):
         """Test device properties and defaults."""
-        for hgp in self.hgps:
+        self._require_2_hgps()
+
+        for hgp in self._get_hgps():
             with self.subTest(hgp=hgp):
                 pulse_backends = self.service.backends(
                     simulator=False, operational=True, instance=hgp
@@ -45,7 +56,9 @@ class TestBasicServerPaths(IBMTestCase):
 
     def test_device_status(self):
         """Test device status."""
-        for hgp in self.hgps:
+        self._require_2_hgps()
+
+        for hgp in self._get_hgps():
             with self.subTest(hgp=hgp):
                 backend = self.service.backends(
                     simulator=False, operational=True, instance=hgp
