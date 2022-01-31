@@ -71,7 +71,6 @@ disable=arguments-renamed,              # TODO: investigate / re-enable
         bad-continuation, bad-whitespace, # differences of opinion with black
         consider-using-f-string,        # TODO: investigate / re-enable
         consider-using-with,            # TODO: investigate / re-enable
-        differing-param-doc,            # TODO: investigate / re-enable
         docstring-first-line-empty,     # TODO: investigate / re-enable
         duplicate-code,                 # too verbose
         fixme,                          # avoid that to do annotations show up as warnings
