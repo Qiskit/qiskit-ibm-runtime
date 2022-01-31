@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2022.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -14,7 +14,6 @@
 
 import json
 import logging
-import re
 import traceback
 import warnings
 from collections import OrderedDict
@@ -24,14 +23,14 @@ from qiskit.providers.backend import BackendV1 as Backend
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.providerutils import filter_backends
 
-from qiskit_ibm_runtime import ibm_backend  # pylint: disable=unused-import
+from qiskit_ibm_runtime import ibm_backend
 from .accounts import AccountManager, Account, AccountType
-from .accounts.exceptions import AccountsError
+from .proxies import ProxyConfiguration
 from .api.clients import AuthClient, VersionClient
 from .api.clients.runtime import RuntimeClient
 from .api.exceptions import RequestsApiError
 from .constants import QISKIT_IBM_RUNTIME_API_URL
-from .exceptions import IBMNotAuthorizedError, IBMInputValueError, IBMProviderError
+from .exceptions import IBMNotAuthorizedError, IBMInputValueError, IBMAccountError
 from .exceptions import (
     IBMRuntimeError,
     RuntimeDuplicateProgramError,
@@ -46,6 +45,7 @@ from .utils import RuntimeDecoder, to_base64_string, to_python_identifier
 from .utils.backend_decoder import configuration_from_server_data
 from .utils.hgp import to_instance_format, from_instance_format
 from .api.client_parameters import ClientParameters
+from .runtime_options import RuntimeOptions
 
 logger = logging.getLogger(__name__)
 
@@ -69,10 +69,10 @@ class IBMRuntimeService:
     A sample workflow of using the runtime service::
 
         from qiskit import QuantumCircuit
-        from qiskit_ibm_runtime import IBMRuntimeService, RunnerResult
+        from qiskit_ibm_runtime import IBMRuntimeService
 
         service = IBMRuntimeService()
-        backend = service.ibmq_qasm_simulator
+        backend = "ibmq_qasm_simulator"
 
         # List all available programs.
         service.pprint_programs()
@@ -83,21 +83,21 @@ class IBMRuntimeService:
         qc.cx(0, 1)
         qc.measure_all()
 
-        # Set the "circuit-runner" program parameters
-        params = service.program(program_id="circuit-runner").parameters()
+        # Set the "sampler" program parameters
+        params = service.program(program_id="sampler").parameters()
         params.circuits = qc
-        params.measurement_error_mitigation = True
+        params.use_measurement_mitigation = True
 
         # Configure backend options
-        options = {'backend_name': backend.name()}
+        options = {'backend_name': backend}
 
-        # Execute the circuit using the "circuit-runner" program.
-        job = service.run(program_id="circuit-runner",
+        # Execute the circuit using the "sampler" program.
+        job = service.run(program_id="sampler",
                           options=options,
                           inputs=params)
 
         # Get runtime job result.
-        result = job.result(decoder=RunnerResult)
+        result = job.result()
 
     If the program has any interim results, you can use the ``callback``
     parameter of the :meth:`run` method to stream the interim results.
@@ -105,7 +105,7 @@ class IBMRuntimeService:
     the results at a later time, but before the job finishes.
 
     The :meth:`run` method returns a
-    :class:`~qiskit_ibm_runtime.RuntimeJob` object. You can use its
+    :class:`RuntimeJob` object. You can use its
     methods to perform tasks like checking job status, getting job result, and
     canceling job.
     """
@@ -143,7 +143,11 @@ class IBMRuntimeService:
             name: Name of the account to load.
             instance: The service instance to use. For cloud runtime, this is the Cloud Resource
                 Name (CRN). For legacy runtime, this is the hub/group/project in that format.
-            proxies: Proxy configuration for the server.
+            proxies: Proxy configuration. Supported optional keys are
+                ``urls`` (a dictionary mapping protocol or protocol and host to the URL of the proxy,
+                documented at https://docs.python-requests.org/en/latest/api/#requests.Session.proxies),
+                ``username_ntlm``, ``password_ntlm`` (username and password to enable NTLM user
+                authentication)
             verify: Whether to verify the server's TLS certificate.
 
         Returns:
@@ -160,13 +164,9 @@ class IBMRuntimeService:
             instance=instance,
             auth=auth,
             name=name,
-            proxies=proxies,
+            proxies=ProxyConfiguration(**proxies) if proxies else None,
             verify=verify,
         )
-        if self._account.auth == "cloud" and not self._account.instance:
-            raise IBMInputValueError(
-                f"Cloud account must have a service instance (CRN)."
-            )
 
         self._client_params = ClientParameters(
             auth_type=self._account.auth,
@@ -211,7 +211,7 @@ class IBMRuntimeService:
         instance: Optional[str] = None,
         auth: Optional[AccountType] = None,
         name: Optional[str] = None,
-        proxies: Optional[dict] = None,
+        proxies: Optional[ProxyConfiguration] = None,
         verify: Optional[bool] = None,
     ) -> Account:
         """Discover account."""
@@ -235,7 +235,7 @@ class IBMRuntimeService:
                     instance=instance,
                     proxies=proxies,
                     verify=verify_,
-                )
+                ).validate()
             if url:
                 logger.warning(
                     "Loading default %s account. Input 'url' is ignored.", auth
@@ -249,8 +249,6 @@ class IBMRuntimeService:
 
         if account is None:
             account = AccountManager.get()
-            if account is None:
-                raise AccountsError("Unable to find account.")
 
         if instance:
             account.instance = instance
@@ -258,6 +256,9 @@ class IBMRuntimeService:
             account.proxies = proxies
         if verify is not None:
             account.verify = verify
+
+        # ensure account is valid, fail early if not
+        account.validate()
 
         return account
 
@@ -331,7 +332,7 @@ class IBMRuntimeService:
 
         Raises:
             IBMInputValueError: If the URL specified is not a valid IBM Quantum authentication URL.
-            IBMProviderError: If no hub/group/project could be found for this account.
+            IBMAccountError: If no hub/group/project could be found for this account.
 
         Returns:
             The hub/group/projects for this account.
@@ -367,7 +368,7 @@ class IBMRuntimeService:
                     traceback.format_exc(),
                 )
         if not hgps:
-            raise IBMProviderError(
+            raise IBMAccountError(
                 "No hub/group/project that supports Qiskit Runtime could "
                 "be found for this account."
             )
@@ -430,7 +431,7 @@ class IBMRuntimeService:
                     f"Hub/group/project {instance} "
                     "could not be found for this account."
                 )
-            if backend_name and not self._hgps[instance].get_backend(backend_name):
+            if backend_name and not self._hgps[instance].backend(backend_name):
                 raise QiskitBackendNotFoundError(
                     f"Backend {backend_name} cannot be found in "
                     f"hub/group/project {instance}"
@@ -441,7 +442,7 @@ class IBMRuntimeService:
             return list(self._hgps.values())[0]
 
         for hgp in self._hgps.values():
-            if hgp.get_backend(backend_name):
+            if hgp.backend(backend_name):
                 return hgp
 
         raise QiskitBackendNotFoundError(
@@ -471,21 +472,24 @@ class IBMRuntimeService:
         Args:
             name: Backend name to filter by.
             min_num_qubits: Minimum number of qubits the backend has to have.
-            instance: The service instance to use. For cloud runtime, this is the Cloud Resource
-                Name (CRN). For legacy runtime, this is the hub/group/project in that format.
+            instance: This is only supported for legacy runtime and is in the
+                hub/group/project format.
             filters: More complex filters, such as lambda functions.
                 For example::
 
                     IBMRuntimeService.backends(
                         filters=lambda b: b.configuration().quantum_volume > 16)
             kwargs: Simple filters that specify a ``True``/``False`` criteria in the
-                backend configuration, backends status, or provider credentials.
-                An example to get the operational backends with 5 qubits::
+                backend configuration or status.
+                An example to get the operational real backends::
 
-                    IBMRuntimeService.backends(n_qubits=5, operational=True)
+                    IBMRuntimeService.backends(simulator=False, operational=True)
 
         Returns:
             The list of available backends that match the filter.
+
+        Raises:
+            IBMInputValueError: If an input is invalid.
         """
         # TODO filter out input_allowed not having runtime
         if self._auth == "legacy":
@@ -494,7 +498,10 @@ class IBMRuntimeService:
             else:
                 backends = list(self._backends.values())
         else:
-            # TODO filtering by instance for cloud
+            if instance:
+                raise IBMInputValueError(
+                    "The 'instance' keyword is only supported for legacy runtime."
+                )
             backends = list(self._backends.values())
 
         if name:
@@ -538,6 +545,7 @@ class IBMRuntimeService:
         name: Optional[str] = None,
         proxies: Optional[dict] = None,
         verify: Optional[bool] = None,
+        overwrite: Optional[bool] = False,
     ) -> None:
         """Save the account to disk for future use.
 
@@ -549,8 +557,13 @@ class IBMRuntimeService:
             instance: The CRN (cloud) or hub/group/project (legacy).
             auth: Authentication type. `cloud` or `legacy`.
             name: Name of the account to save.
-            proxies: Proxy configuration for the server.
+            proxies: Proxy configuration. Supported optional keys are
+                ``urls`` (a dictionary mapping protocol or protocol and host to the URL of the proxy,
+                documented at https://docs.python-requests.org/en/latest/api/#requests.Session.proxies),
+                ``username_ntlm``, ``password_ntlm`` (username and password to enable NTLM user
+                authentication)
             verify: Verify the server's TLS certificate.
+            overwrite: ``True`` if the existing account is to be overwritten.
         """
 
         AccountManager.save(
@@ -559,8 +572,9 @@ class IBMRuntimeService:
             instance=instance,
             auth=auth,
             name=name,
-            proxies=proxies,
+            proxies=ProxyConfiguration(**proxies) if proxies else None,
             verify=verify,
+            overwrite=overwrite,
         )
 
     @staticmethod
@@ -590,7 +604,7 @@ class IBMRuntimeService:
             ),
         )
 
-    def get_backend(
+    def backend(
         self,
         name: str = None,
         instance: Optional[str] = None,
@@ -599,8 +613,8 @@ class IBMRuntimeService:
 
         Args:
             name: Name of the backend.
-            instance: The service instance to use. For cloud runtime, this is the Cloud Resource
-                Name (CRN). For legacy runtime, this is the hub/group/project in that format.
+            instance: This is only supported for legacy runtime and is in the
+                hub/group/project format.
 
         Returns:
             Backend: A backend matching the filtering.
@@ -783,21 +797,20 @@ class IBMRuntimeService:
     def run(
         self,
         program_id: str,
-        options: Dict,
         inputs: Union[Dict, ParameterNamespace],
+        options: Optional[Union[RuntimeOptions, Dict]] = None,
         callback: Optional[Callable] = None,
         result_decoder: Optional[Type[ResultDecoder]] = None,
-        image: str = "",
         instance: Optional[str] = None,
     ) -> RuntimeJob:
         """Execute the runtime program.
 
         Args:
             program_id: Program ID.
-            options: Runtime options that control the execution environment.
-                Currently the only available option is ``backend_name``, which is required.
             inputs: Program input parameters. These input values are passed
                 to the runtime program.
+            options: Runtime options that control the execution environment. See
+                :class:`RuntimeOptions` for all available options.
             callback: Callback function to be invoked for any interim results.
                 The callback function will receive 2 positional parameters:
 
@@ -806,10 +819,8 @@ class IBMRuntimeService:
 
             result_decoder: A :class:`ResultDecoder` subclass used to decode job results.
                 ``ResultDecoder`` is used if not specified.
-            image: The runtime image used to execute the program, specified in the form
-                of image_name:tag. Not all accounts are authorized to select a different image.
-            instance: The service instance to use. For cloud runtime, this is the Cloud Resource
-                Name (CRN). For legacy runtime, this is the hub/group/project in that format.
+            instance: This is only supported for legacy runtime and is in the
+                hub/group/project format.
 
         Returns:
             A ``RuntimeJob`` instance representing the execution.
@@ -819,42 +830,40 @@ class IBMRuntimeService:
             RuntimeProgramNotFound: If the program cannot be found.
             IBMRuntimeError: An error occurred running the program.
         """
+        if instance and self._auth != "legacy":
+            raise IBMInputValueError(
+                "The 'instance' keyword is only supported for legacy runtime. "
+            )
+
         # If using params object, extract as dictionary
         if isinstance(inputs, ParameterNamespace):
             inputs.validate()
             inputs = vars(inputs)
 
-        if image and not re.match(
-            "[a-zA-Z0-9]+([/.\\-_][a-zA-Z0-9]+)*:[a-zA-Z0-9]+([.\\-_][a-zA-Z0-9]+)*$",
-            image,
-        ):
-            raise IBMInputValueError('"image" needs to be in form of image_name:tag')
+        if options is None:
+            options = RuntimeOptions()
+        if isinstance(options, dict):
+            options = RuntimeOptions(**options)
 
-        backend_name = options.get("backend_name", "")
+        options.validate(self.auth)
 
+        backend = None
         hgp_name = None
         if self._auth == "legacy":
-            if not backend_name:
-                raise IBMInputValueError(
-                    '"backend_name" is required field in "options" for legacy runtime.'
-                )
             # Find the right hgp
-            hgp = self._get_hgp(instance=instance, backend_name=backend_name)
-            backend = hgp.get_backend(backend_name)
+            hgp = self._get_hgp(instance=instance, backend_name=options.backend_name)
+            backend = hgp.backend(options.backend_name)
             hgp_name = hgp.name
-        else:
-            # TODO Support instance for cloud
-            # TODO Support optional backend name when fully supported by server
-            backend = self.get_backend(backend_name)
 
         result_decoder = result_decoder or ResultDecoder
         try:
             response = self._api_client.program_run(
                 program_id=program_id,
-                backend_name=backend_name,
+                backend_name=options.backend_name,
                 params=inputs,
-                image=image,
+                image=options.image,
                 hgp=hgp_name,
+                log_level=options.log_level,
             )
         except RequestsApiError as ex:
             if ex.status_code == 404:
@@ -862,6 +871,9 @@ class IBMRuntimeService:
                     f"Program not found: {ex.message}"
                 ) from None
             raise IBMRuntimeError(f"Failed to run program: {ex}") from None
+
+        if not backend:
+            backend = self.backend(name=response["backend"])
 
         job = RuntimeJob(
             backend=backend,
@@ -872,7 +884,7 @@ class IBMRuntimeService:
             params=inputs,
             user_callback=callback,
             result_decoder=result_decoder,
-            image=image,
+            image=options.image,
         )
         return job
 
@@ -1154,8 +1166,8 @@ class IBMRuntimeService:
                 jobs are included. If ``False``, 'DONE', 'CANCELLED' and 'ERROR' jobs
                 are included.
             program_id: Filter by Program ID.
-            instance: The service instance to use. Currently only supported for legacy runtime,
-                and should be in the hub/group/project format.
+            instance: This is only supported for legacy runtime and is in the
+                hub/group/project format.
 
         Returns:
             A list of runtime jobs.
@@ -1167,7 +1179,7 @@ class IBMRuntimeService:
         if instance:
             if self._auth == "cloud":
                 raise IBMInputValueError(
-                    "'instance' is not supported by cloud runtime."
+                    "The 'instance' keyword is only supported for legacy runtime."
                 )
             hub, group, project = from_instance_format(instance)
 
@@ -1246,8 +1258,8 @@ class IBMRuntimeService:
         )
         # Try to find the right backend
         try:
-            backend = self.get_backend(raw_data["backend"], instance=instance)
-        except (IBMProviderError, QiskitBackendNotFoundError):
+            backend = self.backend(raw_data["backend"], instance=instance)
+        except QiskitBackendNotFoundError:
             backend = ibm_backend.IBMRetiredBackend.from_name(
                 backend_name=raw_data["backend"],
                 api=None,
@@ -1273,20 +1285,6 @@ class IBMRuntimeService:
             creation_date=raw_data.get("created", None),
         )
 
-    def logout(self) -> None:
-        """Clears authorization cache on the server.
-
-        For better performance, the runtime server caches each user's
-        authorization information. This method is used to force the server
-        to clear its cache.
-
-        Note:
-            Invoke this method ONLY when your access level to the runtime
-            service has changed - for example, the first time your account is
-            given the authority to upload a program.
-        """
-        self._api_client.logout()
-
     def least_busy(
         self,
         min_num_qubits: Optional[int] = None,
@@ -1298,8 +1296,8 @@ class IBMRuntimeService:
 
         Args:
             min_num_qubits: Minimum number of qubits the backend has to have.
-            instance: The service instance to use. For cloud runtime, this is the Cloud Resource
-                Name (CRN). For legacy runtime, this is the hub/group/project in that format.
+            instance: This is only supported for legacy runtime and is in the
+                hub/group/project format.
             filters: More complex filters, such as lambda functions.
                 For example::
 

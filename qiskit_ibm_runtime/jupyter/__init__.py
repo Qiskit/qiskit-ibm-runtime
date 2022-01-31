@@ -33,7 +33,7 @@ Detailed information on a single backend
     :hide-code:
     :hide-output:
 
-    from qiskit_ibm_runtime.test.ibm_provider_mock import mock_get_backend
+    from qiskit_ibm_runtime.test.ibm_runtime_service_mock import mock_get_backend
     mock_get_backend('FakeVigo')
 
 .. jupyter-execute::
@@ -41,8 +41,8 @@ Detailed information on a single backend
     from qiskit_ibm_runtime import IBMRuntimeService
     import qiskit_ibm_runtime.jupyter
 
-    service = IBMRuntimeService(hub='ibm-q')
-    backend = service.get_backend('ibmq_vigo')
+    service = IBMRuntimeService()
+    backend = service.backend('ibmq_vigo')
 
 .. jupyter-execute::
     :hide-code:
@@ -53,17 +53,6 @@ Detailed information on a single backend
 .. jupyter-execute::
 
     backend
-
-
-IBM Quantum dashboard
-======================================
-
-.. code-block:: python
-
-    from qiskit_ibm_runtime import IBMRuntimeService
-    import qiskit_ibm_runtime.jupyter
-
-    %ibm_quantum_dashboard
 
 """
 import sys

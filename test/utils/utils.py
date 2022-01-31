@@ -14,16 +14,17 @@
 
 import os
 import logging
-from typing import Optional
+import time
+import unittest
 
 from qiskit import QuantumCircuit
-from qiskit.qobj import QasmQobj
-from qiskit.compiler import assemble, transpile
-from qiskit.test.reference_circuits import ReferenceCircuits
-from qiskit.pulse import Schedule
+from qiskit.providers.jobstatus import JOB_FINAL_STATES, JobStatus
+from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit_ibm_runtime.hub_group_project import HubGroupProject
 from qiskit_ibm_runtime import IBMRuntimeService
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
+from qiskit_ibm_runtime.runtime_job import RuntimeJob
+from qiskit_ibm_runtime.exceptions import RuntimeInvalidStateError
 
 
 def setup_test_logging(logger: logging.Logger, filename: str):
@@ -53,36 +54,6 @@ def setup_test_logging(logger: logging.Logger, filename: str):
     logger.setLevel(os.getenv("LOG_LEVEL", "DEBUG"))
 
 
-def most_busy_backend(
-    service: IBMRuntimeService,
-    hub: Optional[str] = None,
-    group: Optional[str] = None,
-    project: Optional[str] = None,
-) -> IBMBackend:
-    """Return the most busy backend for the provider given.
-
-    Return the most busy available backend for those that
-    have a `pending_jobs` in their `status`. Backends such as
-    local backends that do not have this are not considered.
-
-    Args:
-        service: IBM Quantum account provider.
-        hub: Name of the hub.
-        group: Name of the group.
-        project: Name of the project.
-
-    Returns:
-        The most busy backend.
-    """
-    backends = service.backends(
-        simulator=False, operational=True, hub=hub, group=group, project=project
-    )
-    return max(
-        [b for b in backends if b.configuration().n_qubits >= 5],
-        key=lambda b: b.status().pending_jobs,
-    )
-
-
 def get_large_circuit(backend: IBMBackend) -> QuantumCircuit:
     """Return a slightly larger circuit that would run a bit longer.
 
@@ -100,38 +71,6 @@ def get_large_circuit(backend: IBMBackend) -> QuantumCircuit:
     circuit.measure(list(range(n_qubits)), list(range(n_qubits)))
 
     return circuit
-
-
-def bell_in_qobj(backend: IBMBackend, shots: int = 1024) -> QasmQobj:
-    """Return a bell circuit in Qobj format.
-
-    Args:
-        backend: Backend to use for transpiling the circuit.
-        shots: Number of shots.
-
-    Returns:
-        A bell circuit in Qobj format.
-    """
-    return assemble(
-        transpile(ReferenceCircuits.bell(), backend=backend),
-        backend=backend,
-        shots=shots,
-    )
-
-
-def get_pulse_schedule(backend: IBMBackend) -> Schedule:
-    """Return a pulse schedule."""
-    config = backend.configuration()
-    defaults = backend.defaults()
-    inst_map = defaults.instruction_schedule_map
-
-    # Run 2 experiments - 1 with x pulse and 1 without
-    x = inst_map.get("x", 0)
-    measure = inst_map.get("measure", range(config.n_qubits)) << x.duration
-    ground_sched = measure
-    excited_sched = x | measure
-    schedules = [ground_sched, excited_sched]
-    return schedules
 
 
 def get_hgp(qe_token: str, qe_url: str, default: bool = True) -> HubGroupProject:
@@ -159,3 +98,42 @@ def get_hgp(qe_token: str, qe_url: str, default: bool = True) -> HubGroupProject
                 hgp_to_return = hgp
                 break
     return hgp_to_return
+
+
+def cancel_job_safe(job: RuntimeJob, logger: logging.Logger) -> bool:
+    """Cancel a runtime job."""
+    try:
+        job.cancel()
+        status = job.status()
+        assert (
+            status is JobStatus.CANCELLED
+        ), "cancel() was successful for job {} but its " "status is {}.".format(
+            job.job_id, status
+        )
+        return True
+    except RuntimeInvalidStateError:
+        if job.status() in JOB_FINAL_STATES:
+            logger.warning("Unable to cancel job because it's already done.")
+            return False
+        raise
+
+
+def wait_for_status(job, status, poll_time=1, time_out=20):
+    """Wait for job to reach a certain status."""
+    wait_time = 1 if status == JobStatus.QUEUED else poll_time
+    while job.status() not in JOB_FINAL_STATES + (status,) and time_out > 0:
+        time.sleep(wait_time)
+        time_out -= wait_time
+    if job.status() != status:
+        raise unittest.SkipTest(f"Job {job.job_id} unable to reach status {status}.")
+
+
+def get_real_device(service):
+    """Get a real device for the service."""
+    try:
+        # TODO: Remove filters when ibmq_berlin is removed
+        return service.least_busy(
+            simulator=False, filters=lambda b: b.name() != "ibmq_berlin"
+        ).name()
+    except QiskitBackendNotFoundError:
+        raise unittest.SkipTest("No real device")  # cloud has no real device

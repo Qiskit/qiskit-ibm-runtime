@@ -15,7 +15,7 @@
 import uuid
 
 from requests_ntlm import HttpNtlmAuth
-
+from qiskit_ibm_runtime.proxies import ProxyConfiguration
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 from qiskit_ibm_runtime.api.auth import CloudAuth, LegacyAuth
 
@@ -43,9 +43,41 @@ class TestClientParameters(IBMTestCase):
         """Test using only proxy urls (no NTLM credentials)."""
         urls = {"http": "localhost:8080", "https": "localhost:8080"}
         proxies_only_expected_result = {"verify": True, "proxies": urls}
-        proxies_only_credentials = self._get_client_params(proxies={"urls": urls})
+        proxies_only_credentials = self._get_client_params(
+            proxies=ProxyConfiguration(**{"urls": urls})
+        )
         result = proxies_only_credentials.connection_parameters()
         self.assertDictEqual(proxies_only_expected_result, result)
+
+    def test_get_runtime_api_base_url(self) -> None:
+        """Test resolution of runtime API base URL."""
+        test_specs = [
+            (
+                "cloud",
+                "crn:v1:bluemix:public:quantum-computing:us-east:a/...:...::",
+                "https://cloud.ibm.com",
+                "https://us-east.quantum-computing.cloud.ibm.com",
+            ),
+            (
+                "cloud",
+                "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
+                "https://cloud.ibm.com",
+                "https://my-region.quantum-computing.cloud.ibm.com",
+            ),
+            (
+                "legacy",
+                "h/g/p",
+                "https://auth.quantum-computing.ibm.com/api",
+                "https://auth.quantum-computing.ibm.com/api",
+            ),
+        ]
+        for spec in test_specs:
+            auth, instance, url, expected = spec
+            with self.subTest(instance=instance, url=url):
+                params = self._get_client_params(
+                    auth_type=auth, instance=instance, url=url
+                )
+                self.assertEqual(params.get_runtime_api_base_url(), expected)
 
     def test_proxies_param_with_ntlm(self) -> None:
         """Test proxies with NTLM credentials."""
@@ -61,7 +93,7 @@ class TestClientParameters(IBMTestCase):
             "auth": HttpNtlmAuth("domain\\username", "password"),
         }
         proxies_with_ntlm_credentials = self._get_client_params(
-            proxies=proxies_with_ntlm_dict
+            proxies=ProxyConfiguration(**proxies_with_ntlm_dict)
         )
         result = proxies_with_ntlm_credentials.connection_parameters()
 
@@ -73,19 +105,6 @@ class TestClientParameters(IBMTestCase):
         ntlm_expected_result.pop("auth")
         result.pop("auth")
         self.assertDictEqual(ntlm_expected_result, result)
-
-    def test_malformed_proxy_param(self) -> None:
-        """Test input with malformed nesting of the proxies dictionary."""
-        urls = {"http": "localhost:8080", "https": "localhost:8080"}
-        malformed_nested_proxies_dict = {"proxies": urls}
-        malformed_nested_credentials = self._get_client_params(
-            proxies=malformed_nested_proxies_dict
-        )
-
-        # Malformed proxy entries should be ignored.
-        expected_result = {"verify": True}
-        result = malformed_nested_credentials.connection_parameters()
-        self.assertDictEqual(expected_result, result)
 
     def test_malformed_ntlm_params(self) -> None:
         """Test input with malformed NTLM credentials."""

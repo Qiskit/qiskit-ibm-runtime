@@ -12,13 +12,9 @@
 
 """Tests for runtime service."""
 
-import copy
 import unittest
 import os
-import uuid
-from contextlib import suppress
 import tempfile
-from collections import defaultdict
 
 from qiskit_ibm_runtime.exceptions import IBMNotAuthorizedError
 from qiskit_ibm_runtime.runtime_program import RuntimeProgram
@@ -26,37 +22,15 @@ from qiskit_ibm_runtime.exceptions import (
     RuntimeProgramNotFound,
 )
 
-from .ibm_test_case import IBMTestCase
-from .utils.decorators import requires_cloud_legacy_services, run_cloud_legacy_real
-from .utils.templates import RUNTIME_PROGRAM, RUNTIME_PROGRAM_METADATA, PROGRAM_PREFIX
+from .ibm_test_case import IBMIntegrationTestCase
+from .utils.decorators import run_integration_test
+from .utils.templates import RUNTIME_PROGRAM, PROGRAM_PREFIX
 
 
-class TestIntegrationProgram(IBMTestCase):
+class TestIntegrationProgram(IBMIntegrationTestCase):
     """Integration tests for runtime modules."""
 
-    @classmethod
-    @requires_cloud_legacy_services
-    def setUpClass(cls, services):
-        """Initial class level setup."""
-        # pylint: disable=arguments-differ
-        super().setUpClass()
-        cls.services = services
-
-    def setUp(self) -> None:
-        """Test level setup."""
-        super().setUp()
-        self.to_delete = defaultdict(list)
-
-    def tearDown(self) -> None:
-        """Test level teardown."""
-        super().tearDown()
-        # Delete programs
-        for service in self.services:
-            for prog in self.to_delete[service.auth]:
-                with suppress(Exception):
-                    service.delete_program(prog)
-
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_list_programs(self, service):
         """Test listing programs."""
         program_id = self._upload_program(service)
@@ -69,22 +43,22 @@ class TestIntegrationProgram(IBMTestCase):
                 found = True
         self.assertTrue(found, f"Program {program_id} not found!")
 
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_list_programs_with_limit_skip(self, service):
         """Test listing programs with limit and skip."""
         for _ in range(4):
             self._upload_program(service)
         programs = service.programs(limit=3, refresh=True)
         all_ids = [prog.program_id for prog in programs]
-        self.assertEqual(len(all_ids), 3)
+        self.assertEqual(len(all_ids), 3, f"Retrieved programs: {all_ids}")
         programs = service.programs(limit=2, skip=1)
         some_ids = [prog.program_id for prog in programs]
-        self.assertEqual(len(some_ids), 2)
+        self.assertEqual(len(some_ids), 2, f"Retrieved programs: {some_ids}")
         self.assertNotIn(all_ids[0], some_ids)
         self.assertIn(all_ids[1], some_ids)
         self.assertIn(all_ids[2], some_ids)
 
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_filter_programs_with_program_name(self, service):
         """Test filter programs with the program name"""
         program_id = self._upload_program(service, name="qiskit-test-sample")
@@ -95,7 +69,7 @@ class TestIntegrationProgram(IBMTestCase):
         all_ids = [prog.program_id for prog in programs]
         self.assertNotIn(program_id, all_ids)
 
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_list_program(self, service):
         """Test listing a single program."""
         program_id = self._upload_program(service)
@@ -103,7 +77,7 @@ class TestIntegrationProgram(IBMTestCase):
         self.assertEqual(program_id, program.program_id)
         self._validate_program(program)
 
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_retrieve_program_data(self, service):
         """Test retrieving program data"""
         program_id = self._upload_program(service)
@@ -111,15 +85,21 @@ class TestIntegrationProgram(IBMTestCase):
         self.assertEqual(RUNTIME_PROGRAM, program.data)
         self._validate_program(program)
 
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_retrieve_unauthorized_program_data(self, service):
         """Test retrieving program data when user is not the program author"""
-        program = service.program("sample-program")
-        self._validate_program(program)
+        programs = service.programs()
+        not_mine = None
+        for prog in programs:
+            if prog.is_public:
+                not_mine = prog
+                break
+        if not_mine is None:
+            self.skipTest("Cannot find a program that's not mine!")
         with self.assertRaises(IBMNotAuthorizedError):
-            return program.data
+            return not_mine.data
 
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_upload_program(self, service):
         """Test uploading a program."""
         max_execution_time = 3000
@@ -131,7 +111,7 @@ class TestIntegrationProgram(IBMTestCase):
         self.assertTrue(program)
         self.assertEqual(max_execution_time, program.max_execution_time)
 
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_upload_program_file(self, service):
         """Test uploading a program using a file."""
         temp_fp = tempfile.NamedTemporaryFile(mode="w", delete=False)
@@ -149,7 +129,7 @@ class TestIntegrationProgram(IBMTestCase):
         not os.environ.get("QISKIT_IBM_USE_STAGING_CREDENTIALS", ""),
         "Only runs on staging",
     )
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_upload_public_program(self, service):
         """Test uploading a public program."""
         max_execution_time = 3000
@@ -168,7 +148,7 @@ class TestIntegrationProgram(IBMTestCase):
         not os.environ.get("QISKIT_IBM_USE_STAGING_CREDENTIALS", ""),
         "Only runs on staging",
     )
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_set_visibility(self, service):
         """Test setting the visibility of a program."""
         program_id = self._upload_program(service)
@@ -183,7 +163,7 @@ class TestIntegrationProgram(IBMTestCase):
         # Verify changed
         self.assertNotEqual(start_vis, end_vis)
 
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_delete_program(self, service):
         """Test deleting program."""
         program_id = self._upload_program(service)
@@ -191,7 +171,7 @@ class TestIntegrationProgram(IBMTestCase):
         with self.assertRaises(RuntimeProgramNotFound):
             service.program(program_id, refresh=True)
 
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_double_delete_program(self, service):
         """Test deleting a deleted program."""
         program_id = self._upload_program(service)
@@ -199,7 +179,7 @@ class TestIntegrationProgram(IBMTestCase):
         with self.assertRaises(RuntimeProgramNotFound):
             service.delete_program(program_id)
 
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_update_program_data(self, service):
         """Test updating program data."""
         program_v1 = """
@@ -215,13 +195,13 @@ def main(backend, user_messenger, **kwargs):
         service.update_program(program_id=program_id, data=program_v2)
         self.assertEqual(program_v2, service.program(program_id).data)
 
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_update_program_metadata(self, service):
         """Test updating program metadata."""
         program_id = self._upload_program(service)
         original = service.program(program_id)
         new_metadata = {
-            "name": self._get_program_name(),
+            "name": PROGRAM_PREFIX,
             "description": "test_update_program_metadata",
             "max_execution_time": original.max_execution_time + 100,
             "spec": {
@@ -244,27 +224,3 @@ def main(backend, user_messenger, **kwargs):
         self.assertTrue(program.max_execution_time)
         self.assertTrue(program.creation_date)
         self.assertTrue(program.update_date)
-
-    def _upload_program(
-        self,
-        service,
-        name=None,
-        max_execution_time=300,
-        data=None,
-        is_public: bool = False,
-    ):
-        """Upload a new program."""
-        name = name or self._get_program_name()
-        data = data or RUNTIME_PROGRAM
-        metadata = copy.deepcopy(RUNTIME_PROGRAM_METADATA)
-        metadata["name"] = name
-        metadata["max_execution_time"] = max_execution_time
-        metadata["is_public"] = is_public
-        program_id = service.upload_program(data=data, metadata=metadata)
-        self.to_delete[service.auth].append(program_id)
-        return program_id
-
-    @classmethod
-    def _get_program_name(cls):
-        """Return a unique program name."""
-        return PROGRAM_PREFIX + "_" + uuid.uuid4().hex

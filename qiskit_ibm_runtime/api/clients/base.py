@@ -26,7 +26,6 @@ from websocket import WebSocketApp, STATUS_NORMAL, STATUS_ABNORMAL_CLOSED
 
 from ..client_parameters import ClientParameters
 from ..exceptions import WebsocketError, WebsocketTimeoutError
-from .utils import ws_proxy_params
 
 logger = logging.getLogger(__name__)
 
@@ -68,8 +67,10 @@ class BaseWebsocketClient(BaseClient, ABC):
             message_queue: Queue used to hold received messages.
         """
         self._websocket_url = websocket_url.rstrip("/")
-        self._proxy_params = ws_proxy_params(
-            client_params=client_params, ws_url=self._websocket_url
+        self._proxy_params = (
+            client_params.proxies.to_ws_params(self._websocket_url)
+            if client_params.proxies
+            else {}
         )
         self._access_token = client_params.token
         self._job_id = job_id
@@ -222,10 +223,7 @@ class BaseWebsocketClient(BaseClient, ABC):
 
                 self._current_retry += 1
                 if self._current_retry > retries:
-                    error_message = (
-                        "Max retries exceeded: Failed to establish a "
-                        f"websocket connection."
-                    )
+                    error_message = "Max retries exceeded: Failed to establish a websocket connection."
                     if self._error:
                         error_message += f" Error: {self._error}"
 

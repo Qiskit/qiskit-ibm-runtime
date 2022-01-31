@@ -39,7 +39,7 @@ class RuntimeClient(BaseBackendClient):
             params: Connection parameters.
         """
         self._session = RetrySession(
-            base_url=params.url,
+            base_url=params.get_runtime_api_base_url(),
             auth=params.get_auth_handler(),
             **params.connection_parameters()
         )
@@ -118,10 +118,11 @@ class RuntimeClient(BaseBackendClient):
     def program_run(
         self,
         program_id: str,
-        backend_name: str,
+        backend_name: Optional[str],
         params: Dict,
-        image: str,
+        image: Optional[str],
         hgp: Optional[str],
+        log_level: Optional[str],
     ) -> Dict:
         """Run the specified program.
 
@@ -131,6 +132,7 @@ class RuntimeClient(BaseBackendClient):
             params: Parameters to use.
             image: The runtime image to use.
             hgp: Hub/group/project to use.
+            log_level: Log level to use.
 
         Returns:
             JSON response.
@@ -144,6 +146,7 @@ class RuntimeClient(BaseBackendClient):
             backend_name=backend_name,
             params=params,
             image=image,
+            log_level=log_level,
             **hgp_dict
         )
 
@@ -281,10 +284,6 @@ class RuntimeClient(BaseBackendClient):
             Job logs.
         """
         return self._api.program_job(job_id).logs()
-
-    def logout(self) -> None:
-        """Clear authorization cache."""
-        self._api.logout()
 
     # IBM Cloud only functions
 
