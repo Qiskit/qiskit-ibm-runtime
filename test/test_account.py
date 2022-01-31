@@ -19,7 +19,14 @@ import uuid
 from typing import Any
 from unittest import skipIf
 
-from qiskit_ibm_runtime.accounts import AccountManager, Account, management
+from qiskit_ibm_runtime.accounts import (
+    AccountManager,
+    Account,
+    management,
+    AccountAlreadyExistsError,
+    AccountNotFoundError,
+    InvalidAccountError,
+)
 from qiskit_ibm_runtime.proxies import ProxyConfiguration
 from qiskit_ibm_runtime.accounts.account import CLOUD_API_URL, LEGACY_API_URL
 from .ibm_test_case import IBMTestCase
@@ -59,7 +66,7 @@ class TestAccount(IBMTestCase):
     def test_invalid_auth(self):
         """Test invalid values for auth parameter."""
 
-        with self.assertRaises(ValueError) as err:
+        with self.assertRaises(InvalidAccountError) as err:
             invalid_auth: Any = "phantom"
             Account(
                 auth=invalid_auth, token=self.dummy_token, url=self.dummy_cloud_url
@@ -72,7 +79,7 @@ class TestAccount(IBMTestCase):
         invalid_tokens = [1, None, ""]
         for token in invalid_tokens:
             with self.subTest(token=token):
-                with self.assertRaises(ValueError) as err:
+                with self.assertRaises(InvalidAccountError) as err:
                     Account(
                         auth="cloud", token=token, url=self.dummy_cloud_url
                     ).validate()
@@ -86,7 +93,7 @@ class TestAccount(IBMTestCase):
         ]
         for params in subtests:
             with self.subTest(params=params):
-                with self.assertRaises(ValueError) as err:
+                with self.assertRaises(InvalidAccountError) as err:
                     Account(**params, token=self.dummy_token).validate()
                 self.assertIn("Invalid `url` value.", str(err.exception))
 
@@ -100,7 +107,7 @@ class TestAccount(IBMTestCase):
         ]
         for params in subtests:
             with self.subTest(params=params):
-                with self.assertRaises(ValueError) as err:
+                with self.assertRaises(InvalidAccountError) as err:
                     Account(
                         **params, token=self.dummy_token, url=self.dummy_cloud_url
                     ).validate()
@@ -137,8 +144,31 @@ class TestAccount(IBMTestCase):
 class TestAccountManager(IBMTestCase):
     """Tests for AccountManager class."""
 
+    @temporary_account_config_file(
+        contents={"conflict": _TEST_CLOUD_ACCOUNT.to_saved_format()}
+    )
+    def test_save_without_override(self):
+        """Test to override an existing account without setting overwrite=True."""
+        with self.assertRaises(AccountAlreadyExistsError):
+            AccountManager.save(
+                name="conflict",
+                token=_TEST_CLOUD_ACCOUNT.token,
+                url=_TEST_CLOUD_ACCOUNT.url,
+                instance=_TEST_CLOUD_ACCOUNT.instance,
+                auth="cloud",
+                overwrite=False,
+            )
+
+    @temporary_account_config_file(
+        contents={"conflict": _TEST_CLOUD_ACCOUNT.to_saved_format()}
+    )
+    def test_get_none(self):
+        """Test to get an account with an invalid name."""
+        with self.assertRaises(AccountNotFoundError):
+            AccountManager.get(name="bla")
+
     @temporary_account_config_file(contents={})
-    @no_envs(["QISKIT_IBM_API_TOKEN"])
+    @no_envs(["QISKIT_IBM_TOKEN"])
     def test_save_get(self):
         """Test save and get."""
 
@@ -172,6 +202,7 @@ class TestAccountManager(IBMTestCase):
                     proxies=account.proxies,
                     verify=account.verify,
                     name=name_save,
+                    overwrite=True,
                 )
                 self.assertEqual(account, AccountManager.get(name=name_get))
 
@@ -283,7 +314,7 @@ class TestEnableAccount(IBMTestCase):
     def test_enable_account_by_auth(self):
         """Test initializing account by auth."""
         for auth in ["cloud", "legacy"]:
-            with self.subTest(auth=auth), no_envs(["QISKIT_IBM_API_TOKEN"]):
+            with self.subTest(auth=auth), no_envs(["QISKIT_IBM_TOKEN"]):
                 token = uuid.uuid4().hex
                 with temporary_account_config_file(auth=auth, token=token):
                     service = FakeRuntimeService(auth=auth)
@@ -330,9 +361,9 @@ class TestEnableAccount(IBMTestCase):
         # Enable account will fail due to missing CRN.
         urls = [None, "some_url"]
         for url in urls:
-            with self.subTest(url=url), no_envs(["QISKIT_IBM_API_TOKEN"]):
+            with self.subTest(url=url), no_envs(["QISKIT_IBM_TOKEN"]):
                 token = uuid.uuid4().hex
-                with self.assertRaises(ValueError) as err:
+                with self.assertRaises(InvalidAccountError) as err:
                     _ = FakeRuntimeService(auth="cloud", token=token, url=url)
                 self.assertIn("instance", str(err.exception))
 
@@ -340,7 +371,7 @@ class TestEnableAccount(IBMTestCase):
         """Test initializing legacy account by auth, token, url."""
         urls = [(None, LEGACY_API_URL), ("some_url", "some_url")]
         for url, expected in urls:
-            with self.subTest(url=url), no_envs(["QISKIT_IBM_API_TOKEN"]):
+            with self.subTest(url=url), no_envs(["QISKIT_IBM_TOKEN"]):
                 token = uuid.uuid4().hex
                 service = FakeRuntimeService(auth="legacy", token=token, url=url)
                 self.assertTrue(service._account)
@@ -354,7 +385,7 @@ class TestEnableAccount(IBMTestCase):
             with self.subTest(auth=auth):
                 token = uuid.uuid4().hex
                 with temporary_account_config_file(auth=auth, token=token), no_envs(
-                    ["QISKIT_IBM_API_TOKEN"]
+                    ["QISKIT_IBM_TOKEN"]
                 ):
                     with self.assertLogs(
                         "qiskit_ibm_runtime", logging.WARNING
@@ -374,7 +405,7 @@ class TestEnableAccount(IBMTestCase):
             with self.subTest(auth=auth):
                 token = uuid.uuid4().hex
                 with temporary_account_config_file(auth=auth, token=token), no_envs(
-                    ["QISKIT_IBM_API_TOKEN"]
+                    ["QISKIT_IBM_TOKEN"]
                 ):
                     service = FakeRuntimeService()
                 self.assertTrue(service._account)
@@ -391,7 +422,7 @@ class TestEnableAccount(IBMTestCase):
             get_account_config_contents(auth="legacy", token=uuid.uuid4().hex)
         )
         with temporary_account_config_file(contents=contents), no_envs(
-            ["QISKIT_IBM_API_TOKEN"]
+            ["QISKIT_IBM_TOKEN"]
         ):
             service = FakeRuntimeService()
         self.assertTrue(service._account)
@@ -407,8 +438,8 @@ class TestEnableAccount(IBMTestCase):
                 token = uuid.uuid4().hex
                 url = uuid.uuid4().hex
                 envs = {
-                    "QISKIT_IBM_API_TOKEN": token,
-                    "QISKIT_IBM_API_URL": url,
+                    "QISKIT_IBM_TOKEN": token,
+                    "QISKIT_IBM_URL": url,
                     "QISKIT_IBM_INSTANCE": "h/g/p" if auth == "legacy" else "crn:123",
                 }
                 with custom_envs(envs):
@@ -425,8 +456,8 @@ class TestEnableAccount(IBMTestCase):
         token = uuid.uuid4().hex
         url = uuid.uuid4().hex
         envs = {
-            "QISKIT_IBM_API_TOKEN": token,
-            "QISKIT_IBM_API_URL": url,
+            "QISKIT_IBM_TOKEN": token,
+            "QISKIT_IBM_URL": url,
             "QISKIT_IBM_INSTANCE": "my_crn",
         }
         subtests = [{"token": token}, {"url": url}, {"token": token, "url": url}]
@@ -439,7 +470,9 @@ class TestEnableAccount(IBMTestCase):
     def test_enable_account_bad_name(self):
         """Test initializing account by bad name."""
         name = "phantom"
-        with temporary_account_config_file() as _, self.assertRaises(ValueError) as err:
+        with temporary_account_config_file() as _, self.assertRaises(
+            AccountNotFoundError
+        ) as err:
             _ = FakeRuntimeService(name=name)
         self.assertIn(name, str(err.exception))
 
@@ -483,7 +516,7 @@ class TestEnableAccount(IBMTestCase):
                 ), temporary_account_config_file(
                     auth=auth, verify=True, proxies="some proxies"
                 ), no_envs(
-                    ["QISKIT_IBM_API_TOKEN"]
+                    ["QISKIT_IBM_TOKEN"]
                 ):
                     service = FakeRuntimeService(auth=auth, **extra)
                     self.assertTrue(service._account)
@@ -502,8 +535,8 @@ class TestEnableAccount(IBMTestCase):
                 token = uuid.uuid4().hex
                 url = uuid.uuid4().hex
                 envs = {
-                    "QISKIT_IBM_API_TOKEN": token,
-                    "QISKIT_IBM_API_URL": url,
+                    "QISKIT_IBM_TOKEN": token,
+                    "QISKIT_IBM_URL": url,
                     "QISKIT_IBM_INSTANCE": "my_crn",
                 }
                 with custom_envs(envs):
@@ -533,8 +566,8 @@ class TestEnableAccount(IBMTestCase):
         """Test initializing account by env and input instance."""
         instance = uuid.uuid4().hex
         envs = {
-            "QISKIT_IBM_API_TOKEN": "some_token",
-            "QISKIT_IBM_API_URL": "some_url",
+            "QISKIT_IBM_TOKEN": "some_token",
+            "QISKIT_IBM_URL": "some_url",
             "QISKIT_IBM_INSTANCE": "some_instance",
         }
         with custom_envs(envs):

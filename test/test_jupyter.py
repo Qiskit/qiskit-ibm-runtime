@@ -22,7 +22,6 @@ from qiskit_ibm_runtime.jupyter.dashboard.backend_widget import make_backend_wid
 from qiskit_ibm_runtime.jupyter.dashboard.utils import BackendWithProviders
 
 from .ibm_test_case import IBMTestCase
-from .utils.decorators import requires_provider
 
 
 @unittest.skip("Skip until jupyter is done")
@@ -30,7 +29,6 @@ class TestBackendInfo(IBMTestCase):
     """Test backend information Jupyter widget."""
 
     @classmethod
-    @requires_provider
     def setUpClass(cls, service, hub, group, project):
         # pylint: disable=arguments-differ
         super().setUpClass()
@@ -78,7 +76,6 @@ class TestIBMDashboard(IBMTestCase):
     """Test backend information Jupyter widget."""
 
     @classmethod
-    @requires_provider
     def setUpClass(cls, service, hub, group, project):
         # pylint: disable=arguments-differ
         super().setUpClass()

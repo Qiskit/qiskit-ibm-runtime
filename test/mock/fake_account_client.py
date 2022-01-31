@@ -49,6 +49,7 @@ class BaseFakeAccountClient:
         """Initialize a fake account client.
 
         Args:
+            hgp: Hub/group/project to use.
             num_backends: Number of backends. Ignored if ``specs`` is specified.
             specs: Backend specs. This is a dictionary of overwritten backend
                 configuration / status. For example::

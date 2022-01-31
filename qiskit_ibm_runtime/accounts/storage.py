@@ -16,21 +16,24 @@ import json
 import logging
 import os
 from typing import Optional, Dict
+from .exceptions import AccountAlreadyExistsError
 
 logger = logging.getLogger(__name__)
 
 
-def save_config(
-    filename: str,
-    name: str,
-    config: dict,
-) -> None:
+def save_config(filename: str, name: str, config: dict, overwrite: bool) -> None:
     """Save configuration data in a JSON file under the given name."""
     logger.debug("Save configuration data for '%s' in '%s'", name, filename)
     _ensure_file_exists(filename)
 
     with open(filename, mode="r") as json_in:
         data = json.load(json_in)
+
+    if data.get(name) and not overwrite:
+        raise AccountAlreadyExistsError(
+            f"Named account ({name}) already exists. "
+            f"Set overwrite=True to overwrite."
+        )
 
     with open(filename, mode="w") as json_out:
         data[name] = config
