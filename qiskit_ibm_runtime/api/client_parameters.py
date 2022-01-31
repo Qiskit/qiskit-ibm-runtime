@@ -37,8 +37,10 @@ class ClientParameters:
         """ClientParameters constructor.
 
         Args:
+            auth_type: Authentication type. ``cloud`` or ``legacy``.
             token: IBM Quantum API token.
             url: IBM Quantum URL (gets replaced with a new-style URL with hub, group, project).
+            instance: Service instance to use.
             proxies: Proxy configuration.
             verify: If ``False``, ignores SSL certificates errors.
         """
