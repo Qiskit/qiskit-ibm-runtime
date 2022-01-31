@@ -57,7 +57,7 @@ class TestIntegrationProgram(IBMIntegrationTestCase):
         self.assertNotIn(all_ids[0], some_ids)
         self.assertIn(all_ids[1], some_ids)
         self.assertIn(all_ids[2], some_ids)
-        
+
     @run_integration_test
     def test_filter_programs_with_search(self, service):
         """Test filtering programs with the search parameter"""
