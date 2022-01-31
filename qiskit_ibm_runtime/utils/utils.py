@@ -33,7 +33,7 @@ def get_iam_api_url(cloud_url: str) -> str:
 
 
 def get_resource_controller_api_url(cloud_url: str) -> str:
-    """Computes the Resource Controller API URL for the given IBM Cloud URL"""
+    """Computes the Resource Controller API URL for the given IBM Cloud URL."""
     parsed_url = urlparse(cloud_url)
     return f"{parsed_url.scheme}://resource-controller.{parsed_url.hostname}"
 
