@@ -64,11 +64,7 @@ class Program(RestAdapterBase):
         self.session.put(url)
 
     def delete(self) -> None:
-        """Delete this program.
-
-        Returns:
-            JSON response.
-        """
+        """Delete this program."""
         url = self.get_url("self")
         self.session.delete(url)
 
