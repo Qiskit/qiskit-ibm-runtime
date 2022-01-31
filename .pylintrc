@@ -84,6 +84,7 @@ disable=arguments-renamed,              # TODO: investigate / re-enable
         raise-missing-from,             # TODO: investigate / re-enable
         super-with-arguments,           # TODO: investigate / re-enable
         too-few-public-methods,         # too verbose
+        too-many-ancestors,             # too verbose
         too-many-arguments,             # too verbose
         too-many-branches,              # too verbose
         too-many-instance-attributes,   # too verbose
