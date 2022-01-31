@@ -91,7 +91,7 @@ nbsphinx_prolog = """
     .. note::
         This page was generated from `docs/{{ docname }}`__.
 
-        __"""
+    __ https://github.com/Qiskit/qiskit-ibm-runtime/blob/main/docs/{{ docname }}"""
 
 # -----------------------------------------------------------------------------
 # Autosummary
