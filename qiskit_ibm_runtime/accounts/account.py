@@ -91,7 +91,7 @@ class Account:
         No-op if ``instance`` attribute is set to a Cloud Resource Name (CRN).
 
         Raises:
-            CustomResourceNameResolutionFailed: if CRN value cannot be resolved.
+            CustomResourceNameResolutionError: if CRN value cannot be resolved.
         """
         if self.auth == "cloud":
             crn = resolve_crn(
@@ -104,7 +104,7 @@ class Account:
             if len(crn) > 1:
                 # handle edge-case where multiple service instances with the same name exist
                 logger.warning(
-                    "Multiple CRN values found for service name %: %. Using %.",
+                    "Multiple CRN values found for service name %s: %s. Using %s.",
                     self.instance,
                     crn,
                     crn[0],

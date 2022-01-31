@@ -228,19 +228,20 @@ class IBMRuntimeService:
             if auth not in ["legacy", "cloud"]:
                 raise ValueError("'auth' can only be 'cloud' or 'legacy'")
             if token:
-                return Account(
+                account = Account(
                     auth=auth,
                     token=token,
                     url=url,
                     instance=instance,
                     proxies=proxies,
                     verify=verify_,
-                ).validate()
-            if url:
-                logger.warning(
-                    "Loading default %s account. Input 'url' is ignored.", auth
                 )
-            account = AccountManager.get(auth=auth)
+            else:
+                if url:
+                    logger.warning(
+                        "Loading default %s account. Input 'url' is ignored.", auth
+                    )
+                account = AccountManager.get(auth=auth)
         elif any([token, url]):
             # Let's not infer based on these attributes as they may change in the future.
             raise ValueError(
