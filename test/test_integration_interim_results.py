@@ -17,7 +17,7 @@ import time
 from qiskit.providers.jobstatus import JobStatus
 
 from .ibm_test_case import IBMIntegrationJobTestCase
-from .utils.decorators import run_cloud_legacy_real
+from .utils.decorators import run_integration_test
 from .utils.utils import cancel_job_safe, wait_for_status
 from .mock.proxy_server import MockProxyServer, use_proxies
 
@@ -25,7 +25,7 @@ from .mock.proxy_server import MockProxyServer, use_proxies
 class TestIntegrationInterimResults(IBMIntegrationJobTestCase):
     """Integration tests for interim result functions."""
 
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_interim_result_callback(self, service):
         """Test interim result callback."""
 
@@ -53,7 +53,7 @@ class TestIntegrationInterimResults(IBMIntegrationJobTestCase):
         self.assertFalse(callback_err)
         self.assertIsNotNone(job._ws_client._server_close_code)
 
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_stream_results(self, service):
         """Test stream_results method."""
 
@@ -77,7 +77,7 @@ class TestIntegrationInterimResults(IBMIntegrationJobTestCase):
         self.assertFalse(callback_err)
         self.assertIsNotNone(job._ws_client._server_close_code)
 
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_stream_results_done(self, service):
         """Test streaming interim results after job is done."""
 
@@ -95,7 +95,7 @@ class TestIntegrationInterimResults(IBMIntegrationJobTestCase):
         self.assertFalse(called_back)
         self.assertIsNotNone(job._ws_client._server_close_code)
 
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_retrieve_interim_results(self, service):
         """Test retrieving interim results with API endpoint"""
         int_res = "foo"
@@ -104,7 +104,7 @@ class TestIntegrationInterimResults(IBMIntegrationJobTestCase):
         interim_results = job.interim_results()
         self.assertIn(int_res, interim_results[0])
 
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_callback_error(self, service):
         """Test error in callback method."""
 
@@ -130,7 +130,7 @@ class TestIntegrationInterimResults(IBMIntegrationJobTestCase):
         self.assertEqual(iterations - 1, final_it)
         self.assertIsNotNone(job._ws_client._server_close_code)
 
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_callback_cancel_job(self, service):
         """Test canceling a running job while streaming results."""
 
@@ -161,7 +161,7 @@ class TestIntegrationInterimResults(IBMIntegrationJobTestCase):
                 self.assertIsNotNone(job._ws_client._server_close_code)
                 self.assertLess(final_it, iterations)
 
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_websocket_proxy(self, service):
         """Test connecting to websocket via proxy."""
 
@@ -178,7 +178,7 @@ class TestIntegrationInterimResults(IBMIntegrationJobTestCase):
 
         self.assertTrue(callback_called)
 
-    @run_cloud_legacy_real
+    @run_integration_test
     def test_websocket_proxy_invalid_port(self, service):
         """Test connecting to websocket via invalid proxy port."""
 

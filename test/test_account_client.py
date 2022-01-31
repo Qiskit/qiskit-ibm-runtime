@@ -21,7 +21,7 @@ from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 from .ibm_test_case import IBMTestCase
 from .mock.http_server import SimpleServer, ClientErrorHandler
 from .utils.account import custom_envs, no_envs
-from .utils.decorators import requires_qe_access
+from .utils.decorators import integration_test_setup, IntegrationTestDependencies
 
 
 class TestAccountClient(IBMTestCase):
@@ -90,52 +90,52 @@ class TestAccountClient(IBMTestCase):
 class TestAuthClient(IBMTestCase):
     """Tests for the AuthClient."""
 
-    @requires_qe_access
-    def test_valid_login(self, qe_token, qe_url):
+    @integration_test_setup(supported_auth=["legacy"], init_service=False)
+    def test_valid_login(self, dependencies: IntegrationTestDependencies):
         """Test valid authentication."""
-        client = self._init_auth_client(qe_token, qe_url)
+        client = self._init_auth_client(dependencies.token, dependencies.url)
         self.assertTrue(client.access_token)
 
-    @requires_qe_access
-    def test_url_404(self, qe_token, qe_url):
+    @integration_test_setup(supported_auth=["legacy"], init_service=False)
+    def test_url_404(self, dependencies: IntegrationTestDependencies):
         """Test login against a 404 URL"""
-        url_404 = re.sub(r"/api.*$", "/api/TEST_404", qe_url)
+        url_404 = re.sub(r"/api.*$", "/api/TEST_404", dependencies.url)
         with self.assertRaises(ApiError):
-            _ = self._init_auth_client(qe_token, url_404)
+            _ = self._init_auth_client(dependencies.token, url_404)
 
-    @requires_qe_access
-    def test_invalid_token(self, qe_token, qe_url):
+    @integration_test_setup(supported_auth=["legacy"], init_service=False)
+    def test_invalid_token(self, dependencies: IntegrationTestDependencies):
         """Test login using invalid token."""
         qe_token = "INVALID_TOKEN"
         with self.assertRaises(ApiError):
-            _ = self._init_auth_client(qe_token, qe_url)
+            _ = self._init_auth_client(qe_token, dependencies.url)
 
-    @requires_qe_access
-    def test_url_unreachable(self, qe_token, qe_url):
+    @integration_test_setup(supported_auth=["legacy"], init_service=False)
+    def test_url_unreachable(self, dependencies: IntegrationTestDependencies):
         """Test login against an invalid (malformed) URL."""
         qe_url = "INVALID_URL"
         with self.assertRaises(ApiError):
-            _ = self._init_auth_client(qe_token, qe_url)
+            _ = self._init_auth_client(dependencies.token, qe_url)
 
-    @requires_qe_access
-    def test_api_version(self, qe_token, qe_url):
+    @integration_test_setup(supported_auth=["legacy"], init_service=False)
+    def test_api_version(self, dependencies: IntegrationTestDependencies):
         """Check the version of the QX API."""
-        client = self._init_auth_client(qe_token, qe_url)
+        client = self._init_auth_client(dependencies.token, dependencies.url)
         version = client.api_version()
         self.assertIsNotNone(version)
 
-    @requires_qe_access
-    def test_user_urls(self, qe_token, qe_url):
+    @integration_test_setup(supported_auth=["legacy"], init_service=False)
+    def test_user_urls(self, dependencies: IntegrationTestDependencies):
         """Check the user urls of the QX API."""
-        client = self._init_auth_client(qe_token, qe_url)
+        client = self._init_auth_client(dependencies.token, dependencies.url)
         user_urls = client.user_urls()
         self.assertIsNotNone(user_urls)
         self.assertTrue("http" in user_urls and "ws" in user_urls)
 
-    @requires_qe_access
-    def test_user_hubs(self, qe_token, qe_url):
+    @integration_test_setup(supported_auth=["legacy"], init_service=False)
+    def test_user_hubs(self, dependencies: IntegrationTestDependencies):
         """Check the user hubs of the QX API."""
-        client = self._init_auth_client(qe_token, qe_url)
+        client = self._init_auth_client(dependencies.token, dependencies.url)
         user_hubs = client.user_hubs()
         self.assertIsNotNone(user_hubs)
         for user_hub in user_hubs:

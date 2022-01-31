@@ -24,7 +24,7 @@ from qiskit_ibm_runtime import QISKIT_IBM_RUNTIME_LOGGER_NAME
 from qiskit_ibm_runtime.exceptions import IBMNotAuthorizedError
 
 from .utils.utils import setup_test_logging
-from .utils.decorators import requires_cloud_legacy_services
+from .utils.decorators import IntegrationTestDependencies, integration_test_setup
 from .utils.templates import RUNTIME_PROGRAM, RUNTIME_PROGRAM_METADATA, PROGRAM_PREFIX
 
 
@@ -67,12 +67,13 @@ class IBMIntegrationTestCase(IBMTestCase):
     """Custom integration test case for use with the Qiskit IBM Runtime."""
 
     @classmethod
-    @requires_cloud_legacy_services
-    def setUpClass(cls, services):
+    @integration_test_setup()
+    def setUpClass(cls, dependencies: IntegrationTestDependencies):
         """Initial class level setup."""
         # pylint: disable=arguments-differ
         super().setUpClass()
-        cls.services = services
+        cls.dependencies = dependencies
+        cls.service = dependencies.service
 
     def setUp(self) -> None:
         """Test level setup."""
@@ -84,18 +85,17 @@ class IBMIntegrationTestCase(IBMTestCase):
         """Test level teardown."""
         super().tearDown()
         # Delete programs
-        for service in self.services:
-            for prog in self.to_delete[service.auth]:
-                with suppress(Exception):
-                    service.delete_program(prog)
+        service = self.service
+        for prog in self.to_delete[service.auth]:
+            with suppress(Exception):
+                service.delete_program(prog)
 
         # Cancel and delete jobs.
-        for service in self.services:
-            for job in self.to_cancel[service.auth]:
-                with suppress(Exception):
-                    job.cancel()
-                with suppress(Exception):
-                    service.delete_job(job.job_id)
+        for job in self.to_cancel[service.auth]:
+            with suppress(Exception):
+                job.cancel()
+            with suppress(Exception):
+                service.delete_job(job.job_id)
 
     def _upload_program(
         self,
@@ -135,11 +135,11 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
         super().tearDownClass()
         # Delete default program.
         with suppress(Exception):
-            for service in cls.services:
-                service.delete_program(cls.program_ids[service.auth])
-                cls.log.debug(
-                    "Deleted %s program %s", service.auth, cls.program_ids[service.auth]
-                )
+            service = cls.service
+            service.delete_program(cls.program_ids[service.auth])
+            cls.log.debug(
+                "Deleted %s program %s", service.auth, cls.program_ids[service.auth]
+            )
 
     @classmethod
     def _create_default_program(cls):
@@ -148,21 +148,20 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
         metadata["name"] = PROGRAM_PREFIX
         cls.program_ids = {}
         cls.sim_backends = {}
-        for service in cls.services:
-            try:
-                prog_id = service.upload_program(
-                    data=RUNTIME_PROGRAM, metadata=metadata
-                )
-                cls.log.debug("Uploaded %s program %s", service.auth, prog_id)
-                cls.program_ids[service.auth] = prog_id
-            except IBMNotAuthorizedError:
-                raise unittest.SkipTest("No upload access.")
+        service = cls.service
+        try:
+            prog_id = service.upload_program(data=RUNTIME_PROGRAM, metadata=metadata)
+            cls.log.debug("Uploaded %s program %s", service.auth, prog_id)
+            cls.program_ids[service.auth] = prog_id
+        except IBMNotAuthorizedError:
+            raise unittest.SkipTest("No upload access.")
 
     @classmethod
     def _find_sim_backends(cls):
         """Find a simulator backend for each service."""
-        for service in cls.services:
-            cls.sim_backends[service.auth] = service.backends(simulator=True)[0].name()
+        cls.sim_backends[cls.service.auth] = cls.service.backends(simulator=True)[
+            0
+        ].name()
 
     def _run_program(
         self,
