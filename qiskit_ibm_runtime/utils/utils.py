@@ -41,6 +41,9 @@ def get_runtime_api_base_url(url: str, instance: str) -> str:
     Args:
         url: The URL.
         instance: The instance.
+
+    Returns:
+        Runtime API base URL
     """
 
     # legacy: no need to resolve runtime API URL
