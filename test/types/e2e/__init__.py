@@ -10,9 +10,4 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""E2E tests.
-
-Executed against an external system configured via the (token, instance, url) tuple. Basic coverage of
-most important user-facing happy paths. Test suite runs faster than integration but slower than unit
-tests and is stable.
-"""
+"""E2E tests."""

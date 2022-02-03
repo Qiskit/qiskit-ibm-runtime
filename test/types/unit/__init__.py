@@ -10,8 +10,4 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Unit tests.
-
-Run locally without connecting to an external system.  They are short-running, stable and give
-a basic level of confidence during development.
-"""
+"""Unit tests."""

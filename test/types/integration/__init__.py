@@ -10,9 +10,4 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Integration tests.
-
-Executed against an external system configured via the (token, instance, url) tuple.
-Detailed coverage of happy and non-happy paths. They are long-running and unstable at times.
-A successful test run gives a high level of confidence that client and APIs work well together.
-"""
+"""Integration tests."""
