@@ -39,7 +39,7 @@ def get_resource_controller_api_url(cloud_url: str) -> str:
 
 
 def resolve_crn(auth: str, url: str, instance: str, token: str) -> List[str]:
-    """Resolves the Custom Resource Name (CRN) for the given cloud account."""
+    """Resolves the Cloud Resource Name (CRN) for the given cloud account."""
     if auth != "cloud":
         raise ValueError("CRN value can only be resolved for cloud accounts.")
 

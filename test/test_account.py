@@ -66,7 +66,7 @@ class TestAccount(IBMTestCase):
     def test_skip_crn_resolution_for_crn(self):
         """Test that CRN resolution is skipped if the instance value is already a CRN."""
         account = copy.deepcopy(_TEST_CLOUD_ACCOUNT)
-        account.resolve_cloud_instance_crn()
+        account.resolve_crn()
         self.assertEqual(account.instance, _TEST_CLOUD_ACCOUNT.instance)
 
     def test_invalid_auth(self):

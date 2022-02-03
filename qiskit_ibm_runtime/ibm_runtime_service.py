@@ -296,7 +296,7 @@ class IBMRuntimeService:
         return ret
 
     def _resolve_crn(self, account: Account) -> None:
-        account.resolve_cloud_instance_crn()
+        account.resolve_crn()
 
     def _authenticate_legacy_account(
         self, client_params: ClientParameters

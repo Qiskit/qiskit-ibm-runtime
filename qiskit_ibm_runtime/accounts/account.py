@@ -19,7 +19,7 @@ from urllib.parse import urlparse
 from requests.auth import AuthBase
 from typing_extensions import Literal
 
-from .exceptions import InvalidAccountError, CustomResourceNameResolutionError
+from .exceptions import InvalidAccountError, CloudResourceNameResolutionError
 from ..api.auth import LegacyAuth, CloudAuth
 from ..proxies import ProxyConfiguration
 from ..utils.hgp import from_instance_format
@@ -83,7 +83,7 @@ class Account:
             verify=data.get("verify", True),
         )
 
-    def resolve_cloud_instance_crn(self) -> None:
+    def resolve_crn(self) -> None:
         """Resolves the corresponding unique Cloud Resource Name (CRN) for the given non-unique service
         instance name and updates the ``instance`` attribute accordingly.
 
@@ -91,14 +91,14 @@ class Account:
         No-op if ``instance`` attribute is set to a Cloud Resource Name (CRN).
 
         Raises:
-            CustomResourceNameResolutionError: if CRN value cannot be resolved.
+            CloudResourceNameResolutionError: if CRN value cannot be resolved.
         """
         if self.auth == "cloud":
             crn = resolve_crn(
                 auth=self.auth, url=self.url, token=self.token, instance=self.instance
             )
             if len(crn) == 0:
-                raise CustomResourceNameResolutionError(
+                raise CloudResourceNameResolutionError(
                     f"Failed to resolve CRN value for the provided service name {self.instance}."
                 )
             if len(crn) > 1:
