@@ -104,6 +104,8 @@ jobs:
     name: Run integration tests - ${{ matrix.environment }}
     runs-on: ${{ matrix.os }}
     strategy:
+      # avoid cancellation of in-progress jobs if any matrix job fails
+      fail-fast: false
       matrix:
         python-version: [ 3.9 ]
         os: [ "ubuntu-latest" ]
