@@ -173,6 +173,16 @@ class IBMBackend(Backend):
         if not self._configuration.simulator:
             self.options.set_validator("noise_model", type(None))
             self.options.set_validator("seed_simulator", type(None))
+        self.options.set_validator("shots", (1, configuration.max_shots)
+        self.options.set_validator(
+            "rep_delay", (configuration.rep_delay_range[0], configuration.rep_delay_range[1])
+        )
+        self.options.set_validator(
+            "qubit_lo_freq", (configuration.qubit_lo_range[0], configuration.qubit_lo_range[1])
+        )
+        self.options.set_validator(
+            "measure_lo_freq", (configuration.measure_lo_range[0], configuration.measure_lo_range[1])
+        )
 
     def __getattr__(self, name: str) -> Any:
         """Gets attribute from self or configuration
