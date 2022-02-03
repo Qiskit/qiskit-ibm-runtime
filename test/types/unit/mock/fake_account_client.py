@@ -12,8 +12,8 @@
 
 """Fake AccountClient."""
 
-from typing import List, Dict, Any, Optional
 from datetime import datetime as python_datetime
+from typing import List, Dict, Any, Optional
 
 from qiskit.test.mock.backends import FakeLima
 

@@ -12,10 +12,10 @@
 
 """HTTP server for testing purposes."""
 
-import threading
 import json
-from typing import Dict
+import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from typing import Dict
 
 
 class BaseHandler(BaseHTTPRequestHandler):

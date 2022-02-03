@@ -18,10 +18,8 @@ from functools import wraps
 from typing import Optional, List, Any
 from unittest import SkipTest
 
-from qiskit.test.testing_options import get_test_options
-
 from qiskit_ibm_runtime import IBMRuntimeService
-from ..mock.fake_runtime_service import FakeRuntimeService
+from ..types.unit.mock.fake_runtime_service import FakeRuntimeService
 
 
 def run_legacy_and_cloud_fake(func):
@@ -91,9 +89,6 @@ def integration_test_setup(
             _supported_auth = (
                 ["cloud", "legacy"] if supported_auth is None else supported_auth
             )
-
-            if get_test_options()["skip_online"]:
-                raise SkipTest("Skipping integration test.")
 
             auth, token, url, instance = _get_integration_test_config()
             if not all([auth, token, url]):

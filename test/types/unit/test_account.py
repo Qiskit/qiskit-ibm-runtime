@@ -27,11 +27,11 @@ from qiskit_ibm_runtime.accounts import (
     AccountNotFoundError,
     InvalidAccountError,
 )
-from qiskit_ibm_runtime.proxies import ProxyConfiguration
 from qiskit_ibm_runtime.accounts.account import CLOUD_API_URL, LEGACY_API_URL
-from .ibm_test_case import IBMTestCase
+from qiskit_ibm_runtime.proxies import ProxyConfiguration
 from .mock.fake_runtime_service import FakeRuntimeService
-from .utils.account import (
+from ...ibm_test_case import IBMTestCase
+from ...utils.account import (
     get_account_config_contents,
     temporary_account_config_file,
     no_envs,

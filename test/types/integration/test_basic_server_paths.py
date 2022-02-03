@@ -12,8 +12,8 @@
 
 """Tests that hit all the basic server endpoints using both a public and premium h/g/p."""
 
-from .ibm_test_case import IBMTestCase
-from .utils.decorators import integration_test_setup, IntegrationTestDependencies
+from ...ibm_test_case import IBMTestCase
+from ...utils.decorators import integration_test_setup, IntegrationTestDependencies
 
 
 class TestBasicServerPaths(IBMTestCase):

@@ -12,13 +12,13 @@
 
 """Local websocket server for testing."""
 
-import sys
 import asyncio
+import sys
 import threading
+import traceback
 import warnings
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import suppress
-import traceback
 
 import websockets
 

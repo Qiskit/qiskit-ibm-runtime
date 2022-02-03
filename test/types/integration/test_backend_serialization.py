@@ -16,31 +16,19 @@ from typing import Any, Dict, Optional
 
 import dateutil.parser
 
-from .ibm_test_case import IBMTestCase
-from .utils.decorators import (
-    integration_test_setup,
+from ...ibm_test_case import IBMIntegrationTestCase
+from ...utils.decorators import (
     run_integration_test,
-    IntegrationTestDependencies,
 )
 
 
-class TestSerialization(IBMTestCase):
+class TestSerialization(IBMIntegrationTestCase):
     """Test data serialization."""
-
-    @classmethod
-    @integration_test_setup()
-    def setUpClass(cls, dependencies: IntegrationTestDependencies):
-        """Initial class level setup."""
-        # pylint: disable=arguments-differ
-        super().setUpClass()
-        cls.dependencies = dependencies
-        cls.service = dependencies.service
-        cls.instance = dependencies.instance
 
     @run_integration_test
     def test_backend_configuration(self, service):
         """Test deserializing backend configuration."""
-        instance = self.instance if service.auth == "legacy" else None
+        instance = self.dependencies.instance if service.auth == "legacy" else None
         backends = service.backends(
             operational=True, simulator=False, instance=instance
         )
@@ -68,7 +56,7 @@ class TestSerialization(IBMTestCase):
     @run_integration_test
     def test_pulse_defaults(self, service):
         """Test deserializing backend configuration."""
-        instance = self.instance if service.auth == "legacy" else None
+        instance = self.dependencies.instance if service.auth == "legacy" else None
         backends = service.backends(
             operational=True, open_pulse=True, instance=instance
         )
@@ -85,7 +73,7 @@ class TestSerialization(IBMTestCase):
     @run_integration_test
     def test_backend_properties(self, service):
         """Test deserializing backend properties."""
-        instance = self.instance if service.auth == "legacy" else None
+        instance = self.dependencies.instance if service.auth == "legacy" else None
         backends = service.backends(
             operational=True, simulator=False, instance=instance
         )

@@ -15,18 +15,17 @@
 import copy
 import json
 import os
+import tempfile
+import warnings
 from io import StringIO
 from unittest.mock import patch
-import warnings
-import tempfile
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime.exceptions import RuntimeProgramNotFound
 from qiskit_ibm_runtime.runtime_program import ParameterNamespace
-
-from .ibm_test_case import IBMTestCase
-from .utils.program import upload_program, DEFAULT_DATA, DEFAULT_METADATA
-from .utils.decorators import run_legacy_and_cloud_fake
+from ...ibm_test_case import IBMTestCase
+from ...utils.decorators import run_legacy_and_cloud_fake
+from ...utils.program import upload_program, DEFAULT_DATA, DEFAULT_METADATA
 
 
 class TestPrograms(IBMTestCase):

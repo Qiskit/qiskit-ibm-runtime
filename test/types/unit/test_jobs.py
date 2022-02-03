@@ -12,11 +12,11 @@
 
 """Tests for job related runtime functions."""
 
-import time
 import random
+import time
 
-from qiskit.providers.jobstatus import JobStatus
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
+from qiskit.providers.jobstatus import JobStatus
 
 from qiskit_ibm_runtime import RuntimeJob
 from qiskit_ibm_runtime.constants import API_TO_JOB_ERROR_MESSAGE
@@ -26,8 +26,6 @@ from qiskit_ibm_runtime.exceptions import (
     RuntimeProgramNotFound,
     IBMInputValueError,
 )
-
-from .ibm_test_case import IBMTestCase
 from .mock.fake_runtime_client import (
     FailedRuntimeJob,
     FailedRanTooLongRuntimeJob,
@@ -35,9 +33,10 @@ from .mock.fake_runtime_client import (
     CustomResultRuntimeJob,
 )
 from .mock.fake_runtime_service import FakeRuntimeService
-from .utils.program import run_program, upload_program
-from .utils.serialization import get_complex_types
-from .utils.decorators import run_legacy_and_cloud_fake
+from ...ibm_test_case import IBMTestCase
+from ...utils.decorators import run_legacy_and_cloud_fake
+from ...utils.program import run_program, upload_program
+from ...utils.serialization import get_complex_types
 
 
 class TestRuntimeJob(IBMTestCase):

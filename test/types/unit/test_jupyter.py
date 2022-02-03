@@ -14,14 +14,13 @@
 
 import unittest
 
-from qiskit_ibm_runtime.jupyter.qubits_widget import qubits_tab
 from qiskit_ibm_runtime.jupyter.config_widget import config_tab
-from qiskit_ibm_runtime.jupyter.gates_widget import gates_tab
-from qiskit_ibm_runtime.visualization.interactive.error_map import iplot_error_map
 from qiskit_ibm_runtime.jupyter.dashboard.backend_widget import make_backend_widget
 from qiskit_ibm_runtime.jupyter.dashboard.utils import BackendWithProviders
-
-from .ibm_test_case import IBMTestCase
+from qiskit_ibm_runtime.jupyter.gates_widget import gates_tab
+from qiskit_ibm_runtime.jupyter.qubits_widget import qubits_tab
+from qiskit_ibm_runtime.visualization.interactive.error_map import iplot_error_map
+from ...ibm_test_case import IBMTestCase
 
 
 @unittest.skip("Skip until jupyter is done")

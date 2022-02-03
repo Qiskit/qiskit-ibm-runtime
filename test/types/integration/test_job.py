@@ -12,8 +12,8 @@
 
 """Tests for job functions using real runtime service."""
 
-import time
 import random
+import time
 
 from qiskit.providers.jobstatus import JobStatus
 from qiskit.test.decorators import slow_test
@@ -24,15 +24,14 @@ from qiskit_ibm_runtime.exceptions import (
     RuntimeInvalidStateError,
     RuntimeJobNotFound,
 )
-
-from .ibm_test_case import IBMIntegrationJobTestCase
-from .utils.decorators import run_integration_test
-from .utils.serialization import (
+from ...ibm_test_case import IBMIntegrationJobTestCase
+from ...utils.decorators import run_integration_test
+from ...utils.serialization import (
     get_complex_types,
     SerializableClassDecoder,
     SerializableClass,
 )
-from .utils.utils import cancel_job_safe, wait_for_status, get_real_device
+from ...utils.utils import cancel_job_safe, wait_for_status, get_real_device
 
 
 class TestIntegrationJob(IBMIntegrationJobTestCase):

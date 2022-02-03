@@ -23,21 +23,26 @@ mypy:
 style:
 	black --check qiskit_ibm_runtime setup.py test docs/tutorials program_source
 
-test:
-	python -m unittest -v
+unit-test:
+	python -m unittest discover --verbose --top-level-directory . --start-directory test/types/unit
 
-coverage:
-	coverage run -m unittest -v
+integration-test:
+	python -m unittest discover --verbose --top-level-directory . --start-directory test/types/integration
+
+e2e-test:
+	python -m unittest discover --verbose --top-level-directory . --start-directory test/types/e2e
+
+unit-test-coverage:
+	coverage run -m unittest discover --verbose --top-level-directory . --start-directory test/types/unit
 	coverage html
 
-test1:
-	python -m unittest -v test/test_integration_backend.py test/test_integration_program.py
+integration-test-coverage:
+	coverage run -m unittest discover --verbose --top-level-directory . --start-directory test/types/integration
+	coverage html
 
-test2:
-	python -m unittest -v test/test_integration_job.py
-
-test3:
-	python -m unittest -v test/test_integration_retrieve_job.py	test/test_integration_interim_results.py
+e2e-test-coverage:
+	coverage run -m unittest discover --verbose --top-level-directory . --start-directory test/types/e2e
+	coverage html
 
 black:
 	black qiskit_ibm_runtime setup.py test docs/tutorials program_source

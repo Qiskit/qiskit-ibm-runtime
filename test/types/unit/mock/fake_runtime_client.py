@@ -12,18 +12,17 @@
 
 """Fake RuntimeClient."""
 
+import base64
+import json
 import time
 import uuid
-import json
-import base64
-from typing import Optional, Dict
 from concurrent.futures import ThreadPoolExecutor
 from functools import wraps
+from typing import Optional, Dict
 
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
 from qiskit_ibm_runtime.utils import RuntimeEncoder
 from qiskit_ibm_runtime.utils.hgp import from_instance_format
-
 from .fake_account_client import BaseFakeAccountClient
 
 
