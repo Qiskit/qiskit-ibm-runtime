@@ -29,3 +29,7 @@ class AccountNotFoundError(AccountsError):
 
 class AccountAlreadyExistsError(AccountsError):
     """Errors raised when the account already exists."""
+
+
+class CloudResourceNameResolutionError(AccountsError):
+    """Errors raised when the Cloud Resource Name (CRN) cannot be resolved for a given service name."""
