@@ -91,7 +91,7 @@ jobs:
           pip install -c constraints.txt -e .
           pip install -U -c constraints.txt -r requirements-dev.txt
       - name: Run unit tests
-        run: make coverage
+        run: make unit-test-coverage
       - name: Upload unit test coverage report
         uses: actions/upload-artifact@v2
         with:
@@ -130,7 +130,7 @@ jobs:
           pip install -c constraints.txt -e .
           pip install -U -c constraints.txt -r requirements-dev.txt
       - name: Run integration tests
-        run: make coverage
+        run: make integration-test-coverage
       - name: Upload integration test coverage report
         uses: actions/upload-artifact@v2
         with:
