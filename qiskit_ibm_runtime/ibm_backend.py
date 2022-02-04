@@ -173,19 +173,19 @@ class IBMBackend(Backend):
         if not self._configuration.simulator:
             self.options.set_validator("noise_model", type(None))
             self.options.set_validator("seed_simulator", type(None))
-        if configuration.max_shots:
+        if hasattr(configuration, "max_shots"):
             self.options.set_validator("shots", (1, configuration.max_shots))
-        if configuration.rep_delay_range:
+        if hasattr(configuration, "rep_delay_range"):
             self.options.set_validator(
                 "rep_delay",
                 (configuration.rep_delay_range[0], configuration.rep_delay_range[1]),
             )
-        if configuration.qubit_lo_range:
+        if hasattr(configuration, "qubit_lo_range"):
             self.options.set_validator(
                 "qubit_lo_freq",
                 (configuration.qubit_lo_range[0], configuration.qubit_lo_range[1]),
             )
-        if configuration.meas_lo_range:
+        if hasattr(configuration, "meas_lo_range"):
             self.options.set_validator(
                 "meas_lo_freq",
                 (configuration.meas_lo_range[0], configuration.meas_lo_range[1]),
