@@ -70,7 +70,7 @@ disable=arguments-renamed,              # TODO: investigate / re-enable
         bad-mcs-classmethod-argument,   # TODO: investigate / re-enable
         bad-continuation, bad-whitespace, # differences of opinion with black
         consider-using-f-string,        # TODO: investigate / re-enable
-        consider-using-with,            # TODO: investigate / re-enable
+        consider-using-with,            # unnecessary
         docstring-first-line-empty,     # TODO: investigate / re-enable
         duplicate-code,                 # too verbose
         fixme,                          # avoid that to do annotations show up as warnings
@@ -80,7 +80,7 @@ disable=arguments-renamed,              # TODO: investigate / re-enable
         no-member,                      # TODO: investigate / re-enable
         no-self-use,                    # too verbose
         protected-access,               # we don't strictly follow the public vs. private convention
-        raise-missing-from,             # TODO: investigate / re-enable
+        raise-missing-from,             # unnecessary
         super-with-arguments,           # TODO: investigate / re-enable
         too-few-public-methods,         # too verbose
         too-many-ancestors,             # too verbose
