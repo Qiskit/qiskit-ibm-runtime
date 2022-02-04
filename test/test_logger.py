@@ -165,7 +165,7 @@ class TestLogger(IBMTestCase):
                 )
 
                 # Assert the messages were logged.
-                with open(temp_log_file.name) as file_:
+                with open(temp_log_file.name, encoding='utf-8') as file_:
                     content_as_str = file_.read()
 
                     # Check whether the appropriate substrings are in the file.

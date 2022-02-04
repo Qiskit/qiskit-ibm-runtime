@@ -93,7 +93,6 @@ disable=arguments-renamed,              # TODO: investigate / re-enable
         too-many-public-methods,        # too verbose
         too-many-statements,            # too verbose
         unnecessary-pass,               # allow for methods with just "pass", for clarity
-        unspecified-encoding,           # TODO: investigate / re-enable
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
