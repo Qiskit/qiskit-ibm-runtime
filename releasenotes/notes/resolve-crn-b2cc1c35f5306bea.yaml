@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    For convenience, you can now set the ``IBM Cloud service name`` as a value for the account ``instance`` 
+    parameter. If you choose to set the name instead of the ``CRN``, the initialization time of the
+    :class:`qiskit_ibm_runtime.IBMRuntimeService` class is slightly higher because the required ``CRN``
+    value is internally resolved via IBM Cloud APIs.
