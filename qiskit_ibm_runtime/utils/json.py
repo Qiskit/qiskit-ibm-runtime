@@ -212,11 +212,11 @@ class RuntimeEncoder(json.JSONEncoder):
             return {"__type__": "ParameterExpression", "__value__": value}
         if isinstance(obj, Instruction):
             # Append instruction to empty circuit
-            qr = QuantumRegister(obj.num_qubits)
-            qc = QuantumCircuit(qr)
-            qc.append(obj, qr)
+            quantum_register = QuantumRegister(obj.num_qubits)
+            quantum_circuit = QuantumCircuit(quantum_register)
+            quantum_circuit.append(obj, quantum_register)
             value = _serialize_and_encode(
-                data=qc,
+                data=quantum_circuit,
                 serializer=lambda buff, data: qpy_serialization.dump(data, buff),
             )
             return {"__type__": "Instruction", "__value__": value}
