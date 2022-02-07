@@ -20,4 +20,5 @@ from .exceptions import (
     AccountNotFoundError,
     AccountAlreadyExistsError,
     InvalidAccountError,
+    CloudResourceNameResolutionError,
 )

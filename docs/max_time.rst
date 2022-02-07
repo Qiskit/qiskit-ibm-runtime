@@ -30,7 +30,7 @@ The system limit on the job execution time is
 | Real Device      | 8h           | 4h        | 8h           |2h         |
 +------------------+--------------+-----------+--------------+-----------+
 
-Note that a *premium user* here means a user who has access to only a single hub/group/project.
+Note that a *premium user* here means a user who has access to more than one hub/group/project.
 
 
 .. Hiding - Indices and tables
