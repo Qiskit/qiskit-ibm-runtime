@@ -38,7 +38,7 @@ class AccordionWithThread(wid.Accordion):
             **kwargs: Additional keywords to be passed to ``ipywidgets.Accordion``.
         """
         children = children or []
-        super(AccordionWithThread, self).__init__(children=children, **kwargs)
+        super().__init__(children=children, **kwargs)
         self._thread = None
         # Devices VBox.
         self._device_list = None  # type: Optional[wid.VBox]

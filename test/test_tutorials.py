@@ -32,7 +32,7 @@ TUTORIAL_PATH = "docs/tutorials/**/*.ipynb"
 class TutorialsTestCaseMeta(type):
     """Metaclass that dynamically appends a "test_TUTORIAL_NAME" method to the class."""
 
-    def __new__(mcs, name, bases, dict_):
+    def __new__(cls, name, bases, dict_):
         def create_test(filename):
             """Return a new test function."""
 
@@ -48,7 +48,7 @@ class TutorialsTestCaseMeta(type):
             test_name = "test_%s" % to_python_identifier(filename)
             dict_[test_name] = create_test(filename)
             dict_[test_name].__doc__ = 'Test tutorial "%s"' % filename
-        return type.__new__(mcs, name, bases, dict_)
+        return type.__new__(cls, name, bases, dict_)
 
 
 @skipIf(not TEST_OPTIONS["run_slow"], "Skipping slow tests.")
