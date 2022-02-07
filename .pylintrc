@@ -66,16 +66,16 @@ confidence=
 # --enable=similarities". If you want to run only the classes checker, but have
 # no Warning level messages displayed, use "--disable=all --enable=classes
 # --disable=W".
-disable=arguments-renamed,              # unnecessary  
+disable=arguments-renamed,              # more readable and clear 
         bad-continuation, bad-whitespace, # differences of opinion with black
-        consider-using-f-string,        # unnecessary
+        consider-using-f-string,        # unnecesary to convert all str.format() to f strings
         consider-using-with,            # TODO: investigate / re-enable
-        docstring-first-line-empty,     # unnecessary
+        docstring-first-line-empty,     # docstrings are more readable
         duplicate-code,                 # too verbose
         fixme,                          # avoid that to do annotations show up as warnings
-        missing-param-doc,              # unnecessary
+        missing-param-doc,              # false positives when docs contain ":"
         no-else-return,                 # relax "elif" after a clause with a return
-        no-member,                      # unecessary
+        no-member,                      # false positives when variable from external function
         no-self-use,                    # too verbose
         protected-access,               # we don't strictly follow the public vs. private convention
         raise-missing-from,             # TODO: investigate / re-enable
