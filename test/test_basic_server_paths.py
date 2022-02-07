@@ -43,7 +43,7 @@ class TestBasicServerPaths(IBMTestCase):
         for hgp in self._get_hgps():
             with self.subTest(hgp=hgp):
                 pulse_backends = self.service.backends(
-                    simulator=False, operational=True, instance=hgp
+                    simulator=False, operational=True, instance=hgp, open_pulse=True
                 )
                 if not pulse_backends:
                     raise self.skipTest(
