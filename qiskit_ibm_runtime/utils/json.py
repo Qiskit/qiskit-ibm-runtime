@@ -142,10 +142,10 @@ def _set_int_keys_flag(obj: Dict) -> Union[Dict, List]:
         obj with the '__int_keys__' flag set if dictionary uses integer key
     """
     if isinstance(obj, dict):
-        for k, v in list(obj.items()):
+        for k, val in list(obj.items()):
             if isinstance(k, int):
                 obj["__int_keys__"] = True
-            _set_int_keys_flag(v)
+            _set_int_keys_flag(val)
     return obj
 
 
@@ -160,13 +160,13 @@ def _cast_strings_keys_to_int(obj: Dict) -> Dict:
     """
     if isinstance(obj, dict):
         int_keys: List[int] = []
-        for k, v in list(obj.items()):
+        for k, val in list(obj.items()):
             if "__int_keys__" in obj:
                 try:
                     int_keys.append(int(k))
                 except ValueError:
                     pass
-            _cast_strings_keys_to_int(v)
+            _cast_strings_keys_to_int(val)
         while len(int_keys) > 0:
             key = int_keys.pop()
             obj[key] = obj[str(key)]

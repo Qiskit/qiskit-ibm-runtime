@@ -65,9 +65,9 @@ def get_large_circuit(backend: IBMBackend) -> QuantumCircuit:
     """
     n_qubits = min(backend.configuration().n_qubits, 20)
     circuit = QuantumCircuit(n_qubits, n_qubits)
-    for n in range(n_qubits - 1):
-        circuit.h(n)
-        circuit.cx(n, n + 1)
+    for qubit in range(n_qubits - 1):
+        circuit.h(qubit)
+        circuit.cx(qubit, qubit + 1)
     circuit.measure(list(range(n_qubits)), list(range(n_qubits)))
 
     return circuit
