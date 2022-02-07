@@ -219,14 +219,12 @@ class RuntimeJob:
         return self._error_message
 
     def wait_for_final_state(self, timeout: Optional[float] = None) -> None:
-        """Poll the job status until it progresses to a final state such as ``DONE`` or ``ERROR``.
+        """Use the websocket server to wait for the final the state of a job. The server
+            will remain open if the job is still running and the connection will be terminated
+            once the job completes. Then update and return the status of the job. 
 
         Args:
             timeout: Seconds to wait for the job. If ``None``, wait indefinitely.
-
-        Raises:
-            JobTimeoutError: If the job does not reach a final state before the
-                specified timeout.
         """
         if self._status not in JOB_FINAL_STATES:
             self._ws_client_future = self._executor.submit(self._start_websocket_client)
