@@ -127,13 +127,13 @@ class TestDataSerialization(IBMTestCase):
 
     def test_coder_operators(self):
         """Test runtime encoder and decoder for operators."""
-        x = Parameter("x")
-        y = x + 1
-        qc = QuantumCircuit(1)
-        qc.h(0)
+        coeff_x = Parameter("x")
+        coeff_y = coeff_x + 1
+        quantum_circuit = QuantumCircuit(1)
+        quantum_circuit.h(0)
         coeffs = np.array([1, 2, 3, 4, 5, 6])
         table = PauliTable.from_labels(["III", "IXI", "IYY", "YIZ", "XYZ", "III"])
-        op = 2.0 * I ^ I
+        operator = 2.0 * I ^ I
         z2_symmetries = Z2Symmetries(
             [Pauli("IIZI"), Pauli("ZIII")],
             [Pauli("IIXI"), Pauli("XIII")],
@@ -145,19 +145,19 @@ class TestDataSerialization(IBMTestCase):
 
         subtests = (
             PauliSumOp(SparsePauliOp(Pauli("XYZX"), coeffs=[2]), coeff=3),
-            PauliSumOp(SparsePauliOp(Pauli("XYZX"), coeffs=[1]), coeff=y),
+            PauliSumOp(SparsePauliOp(Pauli("XYZX"), coeffs=[1]), coeff=coeff_y),
             PauliSumOp(SparsePauliOp(Pauli("XYZX"), coeffs=[1 + 2j]), coeff=3 - 2j),
             PauliSumOp.from_list(
                 [("II", -1.052373245772859), ("IZ", 0.39793742484318045)]
             ),
             PauliSumOp(SparsePauliOp(table, coeffs), coeff=10),
-            MatrixOp(primitive=np.array([[0, -1j], [1j, 0]]), coeff=x),
-            PauliOp(primitive=Pauli("Y"), coeff=x),
-            CircuitOp(qc, coeff=x),
-            EvolvedOp(op, coeff=x),
+            MatrixOp(primitive=np.array([[0, -1j], [1j, 0]]), coeff=coeff_x),
+            PauliOp(primitive=Pauli("Y"), coeff=coeff_x),
+            CircuitOp(quantum_circuit, coeff=coeff_x),
+            EvolvedOp(operator, coeff=coeff_x),
             TaperedPauliSumOp(SparsePauliOp(Pauli("XYZX"), coeffs=[2]), z2_symmetries),
-            StateFn(qc, coeff=x),
-            CircuitStateFn(qc, is_measurement=True),
+            StateFn(quantum_circuit, coeff=coeff_x),
+            CircuitStateFn(quantum_circuit, is_measurement=True),
             DictStateFn("1" * 3, is_measurement=True),
             VectorStateFn(np.ones(2 ** 3, dtype=complex)),
             OperatorStateFn(CircuitOp(QuantumCircuit(1))),
@@ -169,12 +169,12 @@ class TestDataSerialization(IBMTestCase):
             TensoredOp([(X ^ Y), (Z ^ I)]),
             (Z ^ Z) ^ (I ^ 2),
         )
-        for op in subtests:
-            with self.subTest(op=op):
-                encoded = json.dumps(op, cls=RuntimeEncoder)
+        for operator in subtests:
+            with self.subTest(operator=operator):
+                encoded = json.dumps(operator, cls=RuntimeEncoder)
                 self.assertIsInstance(encoded, str)
                 decoded = json.loads(encoded, cls=RuntimeDecoder)
-                self.assertEqual(op, decoded)
+                self.assertEqual(operator, decoded)
 
     @skipIf(os.name == "nt", "Test not supported on Windows")
     def test_coder_optimizers(self):
@@ -241,9 +241,9 @@ if __name__ == '__main__':
             DictStateFn("1" * 3, is_measurement=True),
             Statevector([1, 0]),
         )
-        for op in subtests:
-            with self.subTest(op=op):
-                encoded = json.dumps(op, cls=RuntimeEncoder)
+        for operator in subtests:
+            with self.subTest(operator=operator):
+                encoded = json.dumps(operator, cls=RuntimeEncoder)
                 self.assertIsInstance(encoded, str)
                 cmd = ["python", temp_fp.name, encoded]
                 proc = subprocess.run(
@@ -253,7 +253,7 @@ if __name__ == '__main__':
                     universal_newlines=True,
                     check=True,
                 )
-                self.assertIn(op.__class__.__name__, proc.stdout)
+                self.assertIn(operator.__class__.__name__, proc.stdout)
 
     def test_result_decoder(self):
         """Test result decoder."""
