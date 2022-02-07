@@ -141,8 +141,9 @@ class IBMRuntimeService:
                 Defaults to https://cloud.ibm.com (cloud) or
                 https://auth.quantum-computing.ibm.com/api (legacy).
             name: Name of the account to load.
-            instance: The service instance to use. For cloud runtime, this is the Cloud Resource
-                Name (CRN). For legacy runtime, this is the hub/group/project in that format.
+            instance: The service instance to use.
+                For cloud runtime, this is the Cloud Resource Name (CRN) or the service name.
+                For legacy runtime, this is the hub/group/project in that format.
             proxies: Proxy configuration. Supported optional keys are
                 ``urls`` (a dictionary mapping protocol or protocol and host to the URL of the proxy,
                 documented at https://docs.python-requests.org/en/latest/api/#requests.Session.proxies),
@@ -228,19 +229,20 @@ class IBMRuntimeService:
             if auth not in ["legacy", "cloud"]:
                 raise ValueError("'auth' can only be 'cloud' or 'legacy'")
             if token:
-                return Account(
+                account = Account(
                     auth=auth,
                     token=token,
                     url=url,
                     instance=instance,
                     proxies=proxies,
                     verify=verify_,
-                ).validate()
-            if url:
-                logger.warning(
-                    "Loading default %s account. Input 'url' is ignored.", auth
                 )
-            account = AccountManager.get(auth=auth)
+            else:
+                if url:
+                    logger.warning(
+                        "Loading default %s account. Input 'url' is ignored.", auth
+                    )
+                account = AccountManager.get(auth=auth)
         elif any([token, url]):
             # Let's not infer based on these attributes as they may change in the future.
             raise ValueError(
@@ -256,6 +258,10 @@ class IBMRuntimeService:
             account.proxies = proxies
         if verify is not None:
             account.verify = verify
+
+        # resolve CRN if needed
+        if account.auth == "cloud":
+            self._resolve_crn(account)
 
         # ensure account is valid, fail early if not
         account.validate()
@@ -288,6 +294,9 @@ class IBMRuntimeService:
             )
 
         return ret
+
+    def _resolve_crn(self, account: Account) -> None:
+        account.resolve_crn()
 
     def _authenticate_legacy_account(
         self, client_params: ClientParameters
