@@ -11,7 +11,6 @@
 # that they have been altered from the originals.
 
 """General utility functions."""
-
 import copy
 import keyword
 import logging
@@ -21,6 +20,46 @@ from queue import Queue
 from threading import Condition
 from typing import List, Optional, Any, Dict, Union, Tuple
 from urllib.parse import urlparse
+
+import requests
+from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
+from ibm_platform_services import ResourceControllerV2
+
+
+def get_iam_api_url(cloud_url: str) -> str:
+    """Computes the IAM API URL for the given IBM Cloud URL."""
+    parsed_url = urlparse(cloud_url)
+    return f"{parsed_url.scheme}://iam.{parsed_url.hostname}"
+
+
+def get_resource_controller_api_url(cloud_url: str) -> str:
+    """Computes the Resource Controller API URL for the given IBM Cloud URL."""
+    parsed_url = urlparse(cloud_url)
+    return f"{parsed_url.scheme}://resource-controller.{parsed_url.hostname}"
+
+
+def resolve_crn(auth: str, url: str, instance: str, token: str) -> List[str]:
+    """Resolves the Cloud Resource Name (CRN) for the given cloud account."""
+    if auth != "cloud":
+        raise ValueError("CRN value can only be resolved for cloud accounts.")
+
+    if is_crn(instance):
+        # no need to resolve CRN value by name
+        return [instance]
+    else:
+        with requests.Session() as session:
+            # resolve CRN value based on the provided service name
+            authenticator = IAMAuthenticator(token, url=get_iam_api_url(url))
+            client = ResourceControllerV2(authenticator=authenticator)
+            client.set_service_url(get_resource_controller_api_url(url))
+            client.set_http_client(session)
+            list_response = client.list_resource_instances(name=instance)
+            result = list_response.get_result()
+            row_count = result["rows_count"]
+            if row_count == 0:
+                return []
+            else:
+                return list(map(lambda resource: resource["crn"], result["resources"]))
 
 
 def is_crn(locator: str) -> bool:
