@@ -28,9 +28,9 @@ def _minimal_ext_cmd(cmd: List[str]) -> bytes:
     # construct minimal environment
     env = {}
     for k in ["SYSTEMROOT", "PATH"]:
-        v = os.environ.get(k)
-        if v is not None:
-            env[k] = v
+        version = os.environ.get(k)
+        if version is not None:
+            env[k] = version
     # LANGUAGE is used on win32
     env["LANGUAGE"] = "C"
     env["LANG"] = "C"
