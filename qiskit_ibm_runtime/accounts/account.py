@@ -12,22 +12,24 @@
 
 """Account related classes and functions."""
 
-
+import logging
 from typing import Optional
 from urllib.parse import urlparse
 
 from requests.auth import AuthBase
 from typing_extensions import Literal
 
-from .exceptions import InvalidAccountError
+from .exceptions import InvalidAccountError, CloudResourceNameResolutionError
 from ..api.auth import LegacyAuth, CloudAuth
 from ..proxies import ProxyConfiguration
 from ..utils.hgp import from_instance_format
+from ..utils import resolve_crn
 
 AccountType = Optional[Literal["cloud", "legacy"]]
 
 LEGACY_API_URL = "https://auth.quantum-computing.ibm.com/api"
 CLOUD_API_URL = "https://cloud.ibm.com"
+logger = logging.getLogger(__name__)
 
 
 class Account:
@@ -80,6 +82,36 @@ class Account:
             proxies=ProxyConfiguration(**proxies) if proxies else None,
             verify=data.get("verify", True),
         )
+
+    def resolve_crn(self) -> None:
+        """Resolves the corresponding unique Cloud Resource Name (CRN) for the given non-unique service
+        instance name and updates the ``instance`` attribute accordingly.
+
+        No-op if ``auth`` attribute is set to legacy.
+        No-op if ``instance`` attribute is set to a Cloud Resource Name (CRN).
+
+        Raises:
+            CloudResourceNameResolutionError: if CRN value cannot be resolved.
+        """
+        if self.auth == "cloud":
+            crn = resolve_crn(
+                auth=self.auth, url=self.url, token=self.token, instance=self.instance
+            )
+            if len(crn) == 0:
+                raise CloudResourceNameResolutionError(
+                    f"Failed to resolve CRN value for the provided service name {self.instance}."
+                )
+            if len(crn) > 1:
+                # handle edge-case where multiple service instances with the same name exist
+                logger.warning(
+                    "Multiple CRN values found for service name %s: %s. Using %s.",
+                    self.instance,
+                    crn,
+                    crn[0],
+                )
+
+            # overwrite with CRN value
+            self.instance = crn[0]
 
     def get_auth_handler(self) -> AuthBase:
         """Returns the respective authentication handler."""

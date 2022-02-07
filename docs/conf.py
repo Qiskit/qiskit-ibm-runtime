@@ -93,6 +93,10 @@ nbsphinx_prolog = """
 
         __"""
 
+vers = release.split(".")
+link_str = f" https://github.com/Qiskit/qiskit-ibm-runtime/blob/{vers[0]}.{vers[1]}/docs/"
+nbsphinx_prolog += link_str + "{{ docname }}"
+
 # -----------------------------------------------------------------------------
 # Autosummary
 # -----------------------------------------------------------------------------
