@@ -771,7 +771,7 @@ class IBMRuntimeService:
 
         Args:
             name: Name of the program.
-            search: Search query for program name and description. 
+            search: Search query for program name and description.
 
         Returns:
             A dict of ``RuntimeProgram`` instances, keyed by program name.
