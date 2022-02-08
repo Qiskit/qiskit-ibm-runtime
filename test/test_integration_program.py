@@ -62,10 +62,36 @@ class TestIntegrationProgram(IBMIntegrationTestCase):
     def test_filter_programs_with_program_name(self, service):
         """Test filter programs with the program name"""
         program_id = self._upload_program(service, name="qiskit-test-sample")
-        programs = service.programs(name="qiskit-test-sample")
+        programs = service.programs(name="qiskit-test-sample", refresh=True)
         all_ids = [prog.program_id for prog in programs]
         self.assertIn(program_id, all_ids)
-        programs = service.programs(name="qiskit-test")
+        programs = service.programs(name="qiskit-test", refresh=True)
+        all_ids = [prog.program_id for prog in programs]
+        self.assertNotIn(program_id, all_ids)
+
+    @run_integration_test
+    def test_filter_programs_with_search(self, service):
+        """Test filtering programs with the search parameter"""
+        program_id = self._upload_program(service)
+        programs = service.programs(search="qiskit-test", refresh=True)
+        all_ids = [prog.program_id for prog in programs]
+        self.assertIn(program_id, all_ids)
+        programs = service.programs(search="qiskit-test-not", refresh=True)
+        all_ids = [prog.program_id for prog in programs]
+        self.assertNotIn(program_id, all_ids)
+
+    @run_integration_test
+    def test_filter_programs_with_name_and_search(self, service):
+        """Test filtering programs with both search and name parameter"""
+        program_id = self._upload_program(service, name="qiskit-test-sample")
+        programs = service.programs(
+            search="qiskit-test", name="qiskit-test-sample", refresh=True
+        )
+        all_ids = [prog.program_id for prog in programs]
+        self.assertIn(program_id, all_ids)
+        programs = service.programs(
+            search="qiskit-test", name="qiskit-test", refresh=True
+        )
         all_ids = [prog.program_id for prog in programs]
         self.assertNotIn(program_id, all_ids)
 

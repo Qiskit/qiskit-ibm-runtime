@@ -271,14 +271,25 @@ class BaseFakeRuntimeClient:
         """Set job status to passed in final status instantly."""
         self._final_status = final_status
 
-    def list_programs(self, name, limit, skip):
+    def list_programs(self, name, search, limit, skip):
         """List all programs."""
         programs = []
         for prog in self._programs.values():
-            if not name:
+            if not name and not search:
                 programs.append(prog.to_dict())
-            if name == prog.to_dict()["name"]:
+            elif name == prog.to_dict()["name"] and (
+                search in prog.to_dict()["name"].lower()
+                or search in prog.to_dict()["description"].lower()
+            ):
                 programs.append(prog.to_dict())
+            elif name == prog.to_dict()["name"]:
+                programs.append(prog.to_dict())
+            elif (
+                search in prog.to_dict()["name"].lower()
+                or search in prog.to_dict()["description"].lower()
+            ):
+                programs.append(prog.to_dict())
+
         return {"programs": programs[skip : limit + skip], "count": len(self._programs)}
 
     def program_create(

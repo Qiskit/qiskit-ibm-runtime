@@ -642,6 +642,7 @@ class IBMRuntimeService:
         refresh: bool = False,
         detailed: bool = False,
         name: Optional[str] = "",
+        search: Optional[str] = "",
         limit: int = 20,
         skip: int = 0,
     ) -> None:
@@ -652,11 +653,12 @@ class IBMRuntimeService:
                 return the cached value.
             detailed: If ``True`` print all details about available runtime programs.
             name: Only retrieve programs with the exact program name given.
+            search: Returns programs containing search word in name or description.
             limit: The number of programs returned at a time. Default and maximum
                 value of 20.
             skip: The number of programs to skip.
         """
-        programs = self.programs(refresh, name, limit, skip)
+        programs = self.programs(refresh, name, search, limit, skip)
         for prog in programs:
             print("=" * 50)
             if detailed:
@@ -672,6 +674,7 @@ class IBMRuntimeService:
         self,
         refresh: bool = False,
         name: Optional[str] = "",
+        search: Optional[str] = "",
         limit: int = 20,
         skip: int = 0,
     ) -> List[RuntimeProgram]:
@@ -683,6 +686,7 @@ class IBMRuntimeService:
             refresh: If ``True``, re-query the server for the programs. Otherwise
                 return the cached value.
             name: Only retrieve programs with the exact program name given.
+            search: Returns programs containing search word in name or description.
             limit: The number of programs returned at a time. ``None`` means no limit.
             skip: The number of programs to skip.
 
@@ -692,12 +696,23 @@ class IBMRuntimeService:
         already_retrieved = False
         if skip is None:
             skip = 0
-        if not self._programs or (refresh and not name):
+        if not self._programs or (refresh and not name and not search):
             self._programs = self._retrieve_programs()
             already_retrieved = True
         if limit is None:
             limit = len(self._programs)
-        if name:
+        if name and search:
+            matched_programs = []
+            if refresh and not already_retrieved:
+                matched_programs = list(self._retrieve_programs(name, search).values())
+            else:
+                for program in list(self._programs.values()):
+                    if program.name == name and (
+                        search in program.name or search in program.description
+                    ):
+                        matched_programs.append(program)
+            return matched_programs[skip : limit + skip]
+        elif name:
             matched_programs = []
             if refresh and not already_retrieved:
                 matched_programs = list(self._retrieve_programs(name).values())
@@ -706,6 +721,16 @@ class IBMRuntimeService:
                     if program.name == name:
                         matched_programs.append(program)
             return matched_programs[skip : limit + skip]
+        elif search:
+            matched_programs = []
+            if refresh and not already_retrieved:
+                matched_programs = list(self._retrieve_programs(search).values())
+            else:
+                for program in list(self._programs.values()):
+                    if search in program.name or search in program.description:
+                        matched_programs.append(program)
+            return matched_programs[skip : limit + skip]
+
         return list(self._programs.values())[skip : limit + skip]
 
     def program(self, program_id: str, refresh: bool = False) -> RuntimeProgram:
@@ -739,7 +764,9 @@ class IBMRuntimeService:
 
         return self._programs[program_id]
 
-    def _retrieve_programs(self, name: str = "") -> Dict[str, RuntimeProgram]:
+    def _retrieve_programs(
+        self, name: str = "", search: str = ""
+    ) -> Dict[str, RuntimeProgram]:
         """Make an API call to fetch programs.
 
         Args:
@@ -753,7 +780,7 @@ class IBMRuntimeService:
         offset = 0
         while True:
             response = self._api_client.list_programs(
-                name=name, limit=current_page_limit, skip=offset
+                name=name, search=search, limit=current_page_limit, skip=offset
             )
             program_page = response.get("programs", [])
             # count is the total number of programs that would be returned if

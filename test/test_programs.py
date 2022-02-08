@@ -67,6 +67,28 @@ class TestPrograms(IBMTestCase):
         self.assertNotIn(program_id, all_ids)
 
     @run_legacy_and_cloud_fake
+    def test_filter_programs_with_search(self, service):
+        """Test filtering programs with the search parameter"""
+        program_id = upload_program(service)
+        programs = service.programs(search="Test program")
+        all_ids = [prog.program_id for prog in programs]
+        self.assertIn(program_id, all_ids)
+        programs = service.programs(search="Test sample")
+        all_ids = [prog.program_id for prog in programs]
+        self.assertNotIn(program_id, all_ids)
+
+    @run_legacy_and_cloud_fake
+    def test_filter_programs_with_name_and_search(self, service):
+        """Test filtering programs with both search and name parameter"""
+        program_id = upload_program(service, name="qiskit-test-sample")
+        programs = service.programs(search="qiskit-test", name="qiskit-test-sample")
+        all_ids = [prog.program_id for prog in programs]
+        self.assertIn(program_id, all_ids)
+        programs = service.programs(search="qiskit-test", name="qiskit-test")
+        all_ids = [prog.program_id for prog in programs]
+        self.assertNotIn(program_id, all_ids)
+
+    @run_legacy_and_cloud_fake
     def test_list_program(self, service):
         """Test listing a single program."""
         program_id = upload_program(service)
