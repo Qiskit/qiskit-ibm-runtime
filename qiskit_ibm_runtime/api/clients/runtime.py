@@ -121,6 +121,7 @@ class RuntimeClient(BaseBackendClient):
         image: Optional[str],
         hgp: Optional[str],
         log_level: Optional[str],
+        session_id: Optional[str],
     ) -> Dict:
         """Run the specified program.
 
@@ -131,6 +132,7 @@ class RuntimeClient(BaseBackendClient):
             image: The runtime image to use.
             hgp: Hub/group/project to use.
             log_level: Log level to use.
+            session_id: Job ID of the first job in a runtime session.
 
         Returns:
             JSON response.
@@ -145,6 +147,7 @@ class RuntimeClient(BaseBackendClient):
             params=params,
             image=image,
             log_level=log_level,
+            session_id=session_id,
             **hgp_dict
         )
 
