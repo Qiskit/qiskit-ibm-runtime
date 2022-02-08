@@ -20,6 +20,7 @@ from typing import Optional, Dict
 from concurrent.futures import ThreadPoolExecutor
 from functools import wraps
 
+from qiskit.providers.exceptions import JobTimeoutError
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
 from qiskit_ibm_runtime.utils import RuntimeEncoder
 from qiskit_ibm_runtime.utils.hgp import from_instance_format
@@ -164,6 +165,10 @@ class BaseFakeRuntimeJob:
     def interim_results(self):
         """Return job interim results."""
         return self._interim_results
+
+    def status(self):
+        """Return job status."""
+        return self._status
 
 
 class FailedRuntimeJob(BaseFakeRuntimeJob):
@@ -451,6 +456,19 @@ class BaseFakeRuntimeClient:
         """Delete the job."""
         self._get_job(job_id)
         del self._jobs[job_id]
+
+    def wait_for_final_state(self, job_id, timeout=5):
+        """Wait for the final state of a program job."""
+        final_states = ["COMPLETED", "FAILED", "CANCELLED", "CANCELLED - RAN TOO LONG"]
+        start_time = time.time()
+        status = self._get_job(job_id).status()
+        while status not in final_states:
+            elapsed_time = time.time() - start_time
+            if timeout is not None and elapsed_time >= timeout:
+                raise JobTimeoutError(
+                    "Timeout while waiting for job {}.".format(self._get_job(job_id))
+                )
+            status = self._get_job(job_id).status()
 
     def _get_program(self, program_id):
         """Get program."""

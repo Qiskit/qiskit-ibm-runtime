@@ -186,7 +186,9 @@ class TestRetrieveJobs(IBMTestCase):
         job = run_program(service=service, program_id=program_id)
         job_1 = run_program(service=service, program_id=program_id_1)
         with mock.patch.object(
-            RuntimeJob, "wait_for_final_state", side_effect=time.sleep(0.5)
+            RuntimeJob,
+            "wait_for_final_state",
+            side_effect=self._fake_wait_for_final_state(service, job),
         ):
             job.wait_for_final_state()
             job_1.wait_for_final_state()
@@ -202,7 +204,9 @@ class TestRetrieveJobs(IBMTestCase):
 
         job = run_program(service=service, program_id=program_id, instance=instance)
         with mock.patch.object(
-            RuntimeJob, "wait_for_final_state", side_effect=time.sleep(0.5)
+            RuntimeJob,
+            "wait_for_final_state",
+            side_effect=self._fake_wait_for_final_state(service, job),
         ):
             job.wait_for_final_state()
         rjobs = service.jobs(program_id=program_id, instance=instance)
@@ -262,3 +266,7 @@ class TestRetrieveJobs(IBMTestCase):
                 else:
                     returned_jobs_count += 1
         return jobs, pending_jobs_count, returned_jobs_count
+
+    def _fake_wait_for_final_state(self, service, job):
+        """Wait for the final state of a program job."""
+        service._api_client.wait_for_final_state(job.job_id)
