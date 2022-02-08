@@ -220,7 +220,7 @@ class TestDataSerialization(IBMTestCase):
             {"instruction": CXGate()},
             {"instruction": PhaseGate(theta=1)},
             {"instruction": U2Gate(phi=1, lam=1)},
-            {"instruction": U2Gate(phi=Parameter('phi'), lam=Parameter('lambda'))},
+            {"instruction": U2Gate(phi=Parameter("phi"), lam=Parameter("lambda"))},
         )
         for obj in subtests:
             encoded = json.dumps(obj, cls=RuntimeEncoder)
