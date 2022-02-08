@@ -1,8 +1,8 @@
 ---
 upgrade:
   - |
-    The ``name`` parameter has been added to 
+    The ``name`` and ``search`` parameters have been added to 
     :meth:`qiskit_ibm_runtime.IBMRuntimeService.programs` and 
-    :meth:`qiskit_ibm_runtime.IBMRuntimeService.pprint_programs`
-    which can be used to filter by a specific program name. The
-    ``name`` given must be an exact match with an actual program name. 
+    :meth:`qiskit_ibm_runtime.IBMRuntimeService.pprint_programs`.
+    ``name`` can be used to filter by program names and ``search`` can be used to 
+    filter by keywords in the program name and description. 
