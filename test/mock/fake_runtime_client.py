@@ -457,7 +457,7 @@ class BaseFakeRuntimeClient:
         self._get_job(job_id)
         del self._jobs[job_id]
 
-    def wait_for_final_state(self, job_id, timeout=5):
+    def wait_for_final_state(self, job_id, timeout=10):
         """Wait for the final state of a program job."""
         final_states = ["COMPLETED", "FAILED", "CANCELLED", "CANCELLED - RAN TOO LONG"]
         start_time = time.time()
