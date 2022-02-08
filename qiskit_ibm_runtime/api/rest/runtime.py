@@ -119,6 +119,7 @@ class Runtime(RestAdapterBase):
         group: Optional[str] = None,
         project: Optional[str] = None,
         log_level: Optional[str] = None,
+        session_id: Optional[str] = None,
     ) -> Dict:
         """Execute the program.
 
@@ -131,6 +132,7 @@ class Runtime(RestAdapterBase):
             group: Group to be used.
             project: Project to be used.
             log_level: Log level to use.
+            session_id: Job ID of the first job in a runtime session.
 
         Returns:
             JSON response.
@@ -146,6 +148,8 @@ class Runtime(RestAdapterBase):
             payload["log_level"] = log_level
         if backend_name:
             payload["backend"] = backend_name
+        if session_id:
+            payload["session_id"] = session_id
         if all([hub, group, project]):
             payload["hub"] = hub
             payload["group"] = group
