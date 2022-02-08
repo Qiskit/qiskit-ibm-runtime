@@ -20,7 +20,6 @@ from typing import Optional, Dict
 from concurrent.futures import ThreadPoolExecutor
 from functools import wraps
 
-from qiskit.providers.exceptions import JobTimeoutError
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
 from qiskit_ibm_runtime.utils import RuntimeEncoder
 from qiskit_ibm_runtime.utils.hgp import from_instance_format
