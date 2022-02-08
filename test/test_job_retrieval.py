@@ -11,7 +11,7 @@
 # that they have been altered from the originals.
 
 """Tests for runtime job retrieval."""
-import time
+
 from unittest import mock
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from qiskit_ibm_runtime import RuntimeJob
