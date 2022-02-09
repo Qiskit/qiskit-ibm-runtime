@@ -198,50 +198,54 @@ section of the Qiskit documentation.
 
 ### Test
 
-New features often imply changes in the existent tests or new ones are
-needed. Once they're updated/added run this be sure they keep passing.
+#### Test Types
+There are three different types of tests in `qiskit-ibm-runtime`. The implementation is based upon the well-documented [unittest](https://docs.python.org/3/library/unittest.html) Unit testing framework.
 
-For executing the tests, a `make test` target is available.
+##### 1. Unit tests
+Run locally without connecting to an external system. They are short-running, stable and give a basic level of confidence during development.
 
-For executing a simple python test manually, you can just run this
-command:
-
-Linux and Mac:
-
+To execute all unit tests, run:
 ``` {.bash}
-$ python -m unittest test/test_something.py
+$ make unit-test
+```
+##### 2. Integration tests
+Executed against an external system configured via a (token, instance, url) tuple. Detailed coverage of happy and non-happy paths. They are long-running and unstable at times. A successful test run gives a high level of confidence that client and APIs work well together.
+
+To execute all integration tests, run
+``` {.bash}
+$ make integration-test
 ```
 
-Windows:
+##### 3. E2E tests
 
+Executed against an external system configured via a (token, instance, url) tuple. Basic coverage of most important user-facing happy paths. Test suite runs faster than integration but slower than unit tests and is stable.
+
+To execute all e2e tests, run
 ``` {.bash}
-C:\..\> python -m unittest test/test_something.py
+$ make e2e-test
 ```
 
-The python tests either run locally ("unit tests") or against a remote API ("integration tests") 
-depending on the environment configuration. Check the [workflow definition](.github/workflows/ci.yml), 
-or the examples below for the set of supported environment variables.
+#### Configuration
 
-Run integration tests against IBM Quantum 
+Integration and E2E tests require an environment configuration and can either be run against IBM Quantum APIs ("Legacy") or IBM Cloud Quantum Service APIs.
+
+
+Sample configuration for IBM Quantum
 ```bash
 QISKIT_IBM_TOKEN=...                                            # IBM Quantum API token
 QISKIT_IBM_URL=https://auth.quantum-computing.ibm.com/api       # IBM Quantum API URL
 QISKIT_IBM_INSTANCE=ibm-q/open/main                             # IBM Quantum provider to use (hub/group/project)
 ```
 
-Run integration tests against IBM Cloud
+Sample configuration for IBM Cloud
 ```bash
 QISKIT_IBM_TOKEN=...                                            # IBM Cloud API key
-QISKIT_IBM_URL=https://us-east.quantum-computing.cloud.ibm.com  # Runtime URL
+QISKIT_IBM_URL=https://cloud.ibm.com                            # Cloud URL
 QISKIT_IBM_INSTANCE=crn:v1:bluemix:...                          # The CRN value of the Quantum service instance
 ```
 
-Run unit tests
-```bash
-QISKIT_TESTS=skip_online                                        # Option to skip all integration tests
-```
 
-To enable integration test cases to run in your private fork, make sure to set above values as 
+To enable test cases against external system in your private fork, make sure to set above values as 
 [encrypted environment secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-an-environment). 
 The names of the environments must match the ones that the [CI workflow](.github/workflows/ci.yml) relies
 upon.
