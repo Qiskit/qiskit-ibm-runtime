@@ -1,6 +1,6 @@
-# This code is part of Qiskit.
+## This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2022.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,15 +10,13 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-name: Integration Tests
+name: E2E Tests
 on:
-  schedule:
-    - cron: '0 4 * * *'
   # allow everyone with write access to the repository to trigger the workflow run manually
   workflow_dispatch:
 jobs:
-  integration-tests:
-    name: Run integration tests - ${{ matrix.environment }}
+  e2e-tests:
+    name: Run e2e tests - ${{ matrix.environment }}
     runs-on: ${{ matrix.os }}
     strategy:
       # avoid cancellation of in-progress jobs if any matrix job fails
@@ -48,10 +46,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install -c constraints.txt -e .
           pip install -U -c constraints.txt -r requirements-dev.txt
-      - name: Run integration tests
-        run: make integration-test-coverage
-      - name: Upload integration test coverage report
+      - name: Run e2e tests
+        run: make e2e-test-coverage
+      - name: Upload e2e test coverage report
         uses: actions/upload-artifact@v2
         with:
-          name: Integration test coverage report - ${{ matrix.environment }}
+          name: E2E test coverage report - ${{ matrix.environment }}
           path: htmlcov
