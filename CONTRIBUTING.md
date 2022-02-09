@@ -206,14 +206,14 @@ Run locally without connecting to an external system. They are short-running, st
 
 To execute all unit tests, run:
 ``` {.bash}
-$ python -m unittest discover --verbose --top-level-directory . --start-directory test/types/unit
+$ make unit-test
 ```
 ##### 2. Integration tests
 Executed against an external system configured via a (token, instance, url) tuple. Detailed coverage of happy and non-happy paths. They are long-running and unstable at times. A successful test run gives a high level of confidence that client and APIs work well together.
 
 To execute all integration tests, run
 ``` {.bash}
-$ python -m unittest discover --verbose --top-level-directory . --start-directory test/types/integration
+$ make integration-test
 ```
 
 ##### 3. E2E tests
@@ -222,7 +222,7 @@ Executed against an external system configured via a (token, instance, url) tupl
 
 To execute all e2e tests, run
 ``` {.bash}
-$ python -m unittest discover --verbose --top-level-directory . --start-directory test/types/e2e
+$ make e2e-test
 ```
 
 #### Configuration
