@@ -222,7 +222,7 @@ Executed against an external system configured via a (token, instance, url) tupl
 
 To execute all e2e tests, run
 ``` {.bash}
-$ python -m unittest discover --verbose --top-level-directory . --start-directory test/types/e2e
+$ make e2e-test
 ```
 
 #### Configuration
