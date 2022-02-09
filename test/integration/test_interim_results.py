@@ -17,9 +17,9 @@ import time
 from qiskit.providers.jobstatus import JobStatus
 
 from ..unit.mock.proxy_server import MockProxyServer, use_proxies
-from ...ibm_test_case import IBMIntegrationJobTestCase
-from ...utils.decorators import run_integration_test
-from ...utils.utils import cancel_job_safe, wait_for_status
+from ..ibm_test_case import IBMIntegrationJobTestCase
+from ..decorators import run_integration_test
+from ..utils import cancel_job_safe, wait_for_status
 
 
 class TestIntegrationInterimResults(IBMIntegrationJobTestCase):

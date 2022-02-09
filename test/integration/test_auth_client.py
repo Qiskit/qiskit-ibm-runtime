@@ -17,8 +17,8 @@ import re
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 from qiskit_ibm_runtime.api.clients import AuthClient
 from qiskit_ibm_runtime.api.exceptions import ApiError
-from ...ibm_test_case import IBMTestCase
-from ...utils.decorators import integration_test_setup, IntegrationTestDependencies
+from ..ibm_test_case import IBMTestCase
+from ..decorators import integration_test_setup, IntegrationTestDependencies
 
 
 class TestAuthClient(IBMTestCase):

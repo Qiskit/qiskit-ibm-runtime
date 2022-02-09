@@ -24,24 +24,24 @@ style:
 	black --check qiskit_ibm_runtime setup.py test docs/tutorials program_source
 
 unit-test:
-	python -m unittest discover --verbose --top-level-directory . --start-directory test/types/unit
+	python -m unittest discover --verbose --top-level-directory . --start-directory test/unit
 
 integration-test:
-	python -m unittest discover --verbose --top-level-directory . --start-directory test/types/integration
+	python -m unittest discover --verbose --top-level-directory . --start-directory test/integration
 
 e2e-test:
-	python -m unittest discover --verbose --top-level-directory . --start-directory test/types/e2e
+	python -m unittest discover --verbose --top-level-directory . --start-directory test/e2e
 
 unit-test-coverage:
-	coverage run -m unittest discover --verbose --top-level-directory . --start-directory test/types/unit
+	coverage run -m unittest discover --verbose --top-level-directory . --start-directory test/unit
 	coverage html
 
 integration-test-coverage:
-	coverage run -m unittest discover --verbose --top-level-directory . --start-directory test/types/integration
+	coverage run -m unittest discover --verbose --top-level-directory . --start-directory test/integration
 	coverage html
 
 e2e-test-coverage:
-	coverage run -m unittest discover --verbose --top-level-directory . --start-directory test/types/e2e
+	coverage run -m unittest discover --verbose --top-level-directory . --start-directory test/e2e
 	coverage html
 
 black:

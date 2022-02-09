@@ -14,9 +14,9 @@
 
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from .mock.fake_runtime_service import FakeRuntimeService
-from ...ibm_test_case import IBMTestCase
-from ...utils.decorators import run_legacy_and_cloud_fake
-from ...utils.program import run_program, upload_program
+from ..ibm_test_case import IBMTestCase
+from ..decorators import run_legacy_and_cloud_fake
+from ..program import run_program, upload_program
 
 
 class TestRetrieveJobs(IBMTestCase):

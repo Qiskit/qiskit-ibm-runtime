@@ -14,8 +14,8 @@
 
 from unittest import SkipTest
 
-from ...ibm_test_case import IBMIntegrationTestCase
-from ...utils.decorators import run_integration_test
+from ..ibm_test_case import IBMIntegrationTestCase
+from ..decorators import run_integration_test
 
 
 class TestIntegrationBackend(IBMIntegrationTestCase):

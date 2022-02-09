@@ -16,8 +16,8 @@ from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 from qiskit_ibm_runtime.api.clients import AccountClient
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
 from .mock.http_server import SimpleServer, ClientErrorHandler
-from ...ibm_test_case import IBMTestCase
-from ...utils.account import custom_envs, no_envs
+from ..ibm_test_case import IBMTestCase
+from ..account import custom_envs, no_envs
 
 
 class TestAccountClient(IBMTestCase):

@@ -29,7 +29,7 @@ from .mock.ws_handler import (
     JOB_PROGRESS_RESULT_COUNT,
 )
 from .mock.ws_server import MockWsServer
-from ...ibm_test_case import IBMTestCase
+from ..ibm_test_case import IBMTestCase
 
 
 class TestRuntimeWebsocketClient(IBMTestCase):

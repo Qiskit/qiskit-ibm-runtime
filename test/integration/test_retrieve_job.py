@@ -16,9 +16,9 @@ import uuid
 
 from qiskit.providers.jobstatus import JobStatus
 
-from ...ibm_test_case import IBMIntegrationJobTestCase
-from ...utils.decorators import run_integration_test
-from ...utils.utils import wait_for_status, get_real_device
+from ..ibm_test_case import IBMIntegrationJobTestCase
+from ..decorators import run_integration_test
+from ..utils import wait_for_status, get_real_device
 
 
 class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):

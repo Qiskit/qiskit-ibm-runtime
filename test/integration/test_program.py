@@ -21,9 +21,9 @@ from qiskit_ibm_runtime.exceptions import (
     RuntimeProgramNotFound,
 )
 from qiskit_ibm_runtime.runtime_program import RuntimeProgram
-from ...ibm_test_case import IBMIntegrationTestCase
-from ...utils.decorators import run_integration_test
-from ...utils.templates import RUNTIME_PROGRAM, PROGRAM_PREFIX
+from ..ibm_test_case import IBMIntegrationTestCase
+from ..decorators import run_integration_test
+from ..templates import RUNTIME_PROGRAM, PROGRAM_PREFIX
 
 
 class TestIntegrationProgram(IBMIntegrationTestCase):

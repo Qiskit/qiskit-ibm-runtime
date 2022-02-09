@@ -19,7 +19,7 @@ from typing import Optional, List, Any
 from unittest import SkipTest
 
 from qiskit_ibm_runtime import IBMRuntimeService
-from ..types.unit.mock.fake_runtime_service import FakeRuntimeService
+from .unit.mock.fake_runtime_service import FakeRuntimeService
 
 
 def run_legacy_and_cloud_fake(func):
