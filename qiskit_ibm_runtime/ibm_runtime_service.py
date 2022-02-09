@@ -983,7 +983,7 @@ class IBMRuntimeService:
 
         if "def main(" not in data:
             # This is the program file
-            with open(data, "r") as file:
+            with open(data, "r", encoding="utf-8") as file:
                 data = file.read()
 
         try:
@@ -1015,7 +1015,7 @@ class IBMRuntimeService:
         upd_metadata: dict = {}
         if metadata is not None:
             if isinstance(metadata, str):
-                with open(metadata, "r") as file:
+                with open(metadata, "r", encoding="utf-8") as file:
                     upd_metadata = json.load(file)
             else:
                 upd_metadata = metadata
@@ -1071,7 +1071,7 @@ class IBMRuntimeService:
         if data:
             if "def main(" not in data:
                 # This is the program file
-                with open(data, "r") as file:
+                with open(data, "r", encoding="utf-8") as file:
                     data = file.read()
             data = to_base64_string(data)
 
