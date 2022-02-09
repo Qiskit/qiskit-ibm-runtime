@@ -213,7 +213,7 @@ Executed against an external system configured via a (token, instance, url) tupl
 
 To execute all integration tests, run
 ``` {.bash}
-$ python -m unittest discover --verbose --top-level-directory . --start-directory test/types/integration
+$ make integration-test
 ```
 
 ##### 3. E2E tests
