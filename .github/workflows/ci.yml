@@ -92,11 +92,13 @@ jobs:
           pip install -U -c constraints.txt -r requirements-dev.txt
       - name: Run unit tests
         run: make unit-test-coverage
-      - name: Upload unit test coverage report
-        uses: actions/upload-artifact@v2
+      - name: Report coverage to coveralls.io
+        uses: coverallsapp/github-action@1.1.3
         with:
-          name: Unit test coverage report - python${{ matrix.python-version }}-${{ matrix.os }}
-          path: htmlcov
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          flag-name: unit-tests_python${{ matrix.python-version }}-${{ matrix.os }}
+          parallel: true
+          path-to-lcov: coverage.lcov
   integration-tests:
     if: ${{ github.event_name == 'push' }}
     # only kick-off resource intensive integration tests if unit tests and all basic checks succeeded
@@ -133,8 +135,20 @@ jobs:
           pip install -U -c constraints.txt -r requirements-dev.txt
       - name: Run integration tests
         run: make integration-test-coverage
-      - name: Upload integration test coverage report
-        uses: actions/upload-artifact@v2
+      - name: Report coverage to coveralls.io
+        uses: coverallsapp/github-action@1.1.3
         with:
-          name: Integration test coverage report - ${{ matrix.environment }}
-          path: htmlcov
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          flag-name: integration-tests_${{ matrix.environment }}
+          parallel: true
+          path-to-lcov: coverage.lcov
+  tests-finished:
+    if: ${{ always() }}
+    needs: [ unit-tests, integration-tests ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify coveralls.io that all parallel tests have finished
+        uses: coverallsapp/github-action@1.1.3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          parallel-finished: true
