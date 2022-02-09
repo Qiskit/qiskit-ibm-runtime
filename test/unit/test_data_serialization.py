@@ -60,7 +60,6 @@ from qiskit.opflow import (
 )
 from qiskit.quantum_info import SparsePauliOp, Pauli, PauliTable, Statevector
 from qiskit.result import Result
-from qiskit.test.reference_circuits import ReferenceCircuits
 
 from qiskit_ibm_runtime.utils import RuntimeEncoder, RuntimeDecoder
 from .mock.fake_runtime_client import CustomResultRuntimeJob
