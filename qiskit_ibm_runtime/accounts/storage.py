@@ -26,7 +26,7 @@ def save_config(filename: str, name: str, config: dict, overwrite: bool) -> None
     logger.debug("Save configuration data for '%s' in '%s'", name, filename)
     _ensure_file_exists(filename)
 
-    with open(filename, mode="r") as json_in:
+    with open(filename, mode="r", encoding="utf-8") as json_in:
         data = json.load(json_in)
 
     if data.get(name) and not overwrite:
@@ -35,7 +35,7 @@ def save_config(filename: str, name: str, config: dict, overwrite: bool) -> None
             f"Set overwrite=True to overwrite."
         )
 
-    with open(filename, mode="w") as json_out:
+    with open(filename, mode="w", encoding="utf-8") as json_out:
         data[name] = config
         json.dump(data, json_out, sort_keys=True, indent=4)
 
@@ -48,7 +48,7 @@ def read_config(
     logger.debug("Read configuration data for '%s' from '%s'", name, filename)
     _ensure_file_exists(filename)
 
-    with open(filename) as json_file:
+    with open(filename, encoding="utf-8") as json_file:
         data = json.load(json_file)
         if name is None:
             return data
@@ -67,11 +67,11 @@ def delete_config(
     logger.debug("Delete configuration data for '%s' from '%s'", name, filename)
 
     _ensure_file_exists(filename)
-    with open(filename, mode="r") as json_in:
+    with open(filename, mode="r", encoding="utf-8") as json_in:
         data = json.load(json_in)
 
     if name in data:
-        with open(filename, mode="w") as json_out:
+        with open(filename, mode="w", encoding="utf-8") as json_out:
             del data[name]
             json.dump(data, json_out, sort_keys=True, indent=4)
             return True
@@ -87,5 +87,5 @@ def _ensure_file_exists(filename: str, initial_content: str = "{}") -> None:
         os.makedirs(os.path.dirname(filename), exist_ok=True)
 
         # initialize file
-        with open(filename, mode="w") as json_file:
+        with open(filename, mode="w", encoding="utf-8") as json_file:
             json_file.write(initial_content)
