@@ -80,7 +80,7 @@ class TestTutorials(IBMIntegrationTestCase, metaclass=TutorialsTestCaseMeta):
 
         # Open the notebook.
         file_path = os.path.dirname(os.path.abspath(filename))
-        with open(filename) as file_:
+        with open(filename, encoding="utf-8") as file_:
             notebook = nbformat.read(file_, as_version=4)
 
         with warnings.catch_warnings():

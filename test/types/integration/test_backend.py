@@ -78,6 +78,8 @@ class TestIBMBackend(IBMIntegrationTestCase):
         with self.subTest(backend=backend.name()):
             if backend.configuration().simulator:
                 raise SkipTest("Skip since simulator does not have defaults.")
+            if not backend.configuration().open_pulse:
+                raise SkipTest("Skip for backends that do not support pulses.")
             self.assertIsNotNone(backend.defaults())
 
     def test_backend_configuration(self):
