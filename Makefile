@@ -18,7 +18,7 @@ lint:
 	tools/verify_headers.py qiskit_ibm_runtime test
 
 mypy:
-	mypy --module qiskit_ibm_runtime
+	mypy --module qiskit_ibm_runtime --package test
 
 style:
 	black --check qiskit_ibm_runtime setup.py test docs/tutorials program_source

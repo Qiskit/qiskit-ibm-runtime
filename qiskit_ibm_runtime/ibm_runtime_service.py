@@ -682,6 +682,8 @@ class IBMRuntimeService:
         Returns:
             A list of runtime programs.
         """
+        if skip is None:
+            skip = 0
         if not self._programs or refresh:
             self._programs = {}
             current_page_limit = 20
@@ -701,6 +703,8 @@ class IBMRuntimeService:
                     # Stop if there are no more programs returned by the server.
                     break
                 offset += len(program_page)
+        if limit is None:
+            limit = len(self._programs)
         return list(self._programs.values())[skip : limit + skip]
 
     def program(self, program_id: str, refresh: bool = False) -> RuntimeProgram:
