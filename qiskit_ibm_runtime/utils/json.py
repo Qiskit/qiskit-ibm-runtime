@@ -41,6 +41,7 @@ from qiskit.circuit import (
     ParameterExpression,
     ParameterVector,
     QuantumCircuit,
+    QuantumRegister,
     qpy_serialization,
 )
 from qiskit.circuit.library import BlueprintCircuit
@@ -185,6 +186,8 @@ class RuntimeEncoder(json.JSONEncoder):
         if isinstance(obj, complex):
             return {"__type__": "complex", "__value__": [obj.real, obj.imag]}
         if isinstance(obj, np.ndarray):
+            if obj.dtype == object:
+                return {"__type__": "ndarray", "__value__": obj.tolist()}
             value = _serialize_and_encode(obj, np.save, allow_pickle=False)
             return {"__type__": "ndarray", "__value__": value}
         if isinstance(obj, set):
@@ -210,10 +213,13 @@ class RuntimeEncoder(json.JSONEncoder):
             )
             return {"__type__": "ParameterExpression", "__value__": value}
         if isinstance(obj, Instruction):
+            # Append instruction to empty circuit
+            quantum_register = QuantumRegister(obj.num_qubits)
+            quantum_circuit = QuantumCircuit(quantum_register)
+            quantum_circuit.append(obj, quantum_register)
             value = _serialize_and_encode(
-                data=obj,
-                serializer=qpy_serialization._write_instruction,
-                compress=False,
+                data=quantum_circuit,
+                serializer=lambda buff, data: qpy_serialization.dump(data, buff),
             )
             return {"__type__": "Instruction", "__value__": value}
         if hasattr(obj, "settings"):
@@ -260,6 +266,8 @@ class RuntimeDecoder(json.JSONDecoder):
             if obj_type == "complex":
                 return obj_val[0] + 1j * obj_val[1]
             if obj_type == "ndarray":
+                if isinstance(obj_val, list):
+                    return np.array(obj_val)
                 return _decode_and_deserialize(obj_val, np.load)
             if obj_type == "set":
                 return set(obj_val)
@@ -270,9 +278,10 @@ class RuntimeDecoder(json.JSONDecoder):
                     obj_val, self.__read_parameter_expression, False
                 )
             if obj_type == "Instruction":
-                return _decode_and_deserialize(
-                    obj_val, qpy_serialization._read_instruction, False
-                )
+                # Standalone instructions are encoded as the sole instruction in a QPY serialized circuit
+                # to deserialize load qpy circuit and return first instruction object in that circuit.
+                circuit = _decode_and_deserialize(obj_val, qpy_serialization.load)[0]
+                return circuit.data[0][0]
             if obj_type == "settings":
                 return _deserialize_from_settings(
                     mod_name=obj["__module__"],

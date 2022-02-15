@@ -33,7 +33,8 @@ from qiskit.algorithms.optimizers import (
     NELDER_MEAD,
 )
 from qiskit.circuit import Parameter, QuantumCircuit
-from qiskit.circuit.library import EfficientSU2
+from qiskit.test.reference_circuits import ReferenceCircuits
+from qiskit.circuit.library import EfficientSU2, CXGate, PhaseGate, U2Gate
 from qiskit.opflow import (
     PauliSumOp,
     MatrixOp,
@@ -59,7 +60,6 @@ from qiskit.opflow import (
 )
 from qiskit.quantum_info import SparsePauliOp, Pauli, PauliTable, Statevector
 from qiskit.result import Result
-from qiskit.test.reference_circuits import ReferenceCircuits
 
 from qiskit_ibm_runtime.utils import RuntimeEncoder, RuntimeDecoder
 from .mock.fake_runtime_client import CustomResultRuntimeJob
@@ -206,6 +206,33 @@ class TestDataSerialization(IBMTestCase):
             {"datetime": datetime.now()},
             {"datetime": datetime(2021, 8, 4)},
             {"datetime": datetime.fromtimestamp(1326244364)},
+        )
+        for obj in subtests:
+            encoded = json.dumps(obj, cls=RuntimeEncoder)
+            self.assertIsInstance(encoded, str)
+            decoded = json.loads(encoded, cls=RuntimeDecoder)
+            self.assertEqual(decoded, obj)
+
+    def test_encoder_ndarray(self):
+        """Test encoding and decoding a numpy ndarray."""
+        subtests = (
+            {"ndarray": np.array([[1, 2, 3], [{"obj": 123}, 5, 6]], dtype=object)},
+            {"ndarray": np.array([[1, 2, 3], [{"obj": 123}, 5, 6]])},
+            {"ndarray": np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]], dtype=int)},
+        )
+        for obj in subtests:
+            encoded = json.dumps(obj, cls=RuntimeEncoder)
+            self.assertIsInstance(encoded, str)
+            decoded = json.loads(encoded, cls=RuntimeDecoder)
+            self.assertTrue(np.array_equal(decoded["ndarray"], obj["ndarray"]))
+
+    def test_encoder_instruction(self):
+        """Test encoding and decoding instructions"""
+        subtests = (
+            {"instruction": CXGate()},
+            {"instruction": PhaseGate(theta=1)},
+            {"instruction": U2Gate(phi=1, lam=1)},
+            {"instruction": U2Gate(phi=Parameter("phi"), lam=Parameter("lambda"))},
         )
         for obj in subtests:
             encoded = json.dumps(obj, cls=RuntimeEncoder)
