@@ -144,6 +144,7 @@ jobs:
           path-to-lcov: coverage.lcov
   tests-finished:
     if: ${{ always() }}
+    name: Submit code coverage metrics
     needs: [ unit-tests, integration-tests ]
     runs-on: ubuntu-latest
     steps:
