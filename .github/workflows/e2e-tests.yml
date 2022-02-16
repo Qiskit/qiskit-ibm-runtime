@@ -47,9 +47,4 @@ jobs:
           pip install -c constraints.txt -e .
           pip install -U -c constraints.txt -r requirements-dev.txt
       - name: Run e2e tests
-        run: make e2e-test-coverage
-      - name: Upload e2e test coverage report
-        uses: actions/upload-artifact@v2
-        with:
-          name: E2E test coverage report - ${{ matrix.environment }}
-          path: htmlcov
+        run: make e2e-test
