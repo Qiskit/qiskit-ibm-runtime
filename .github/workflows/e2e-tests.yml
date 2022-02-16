@@ -12,6 +12,8 @@
 
 name: E2E Tests
 on:
+  schedule:
+    - cron: '0 16 * * *'
   # allow everyone with write access to the repository to trigger the workflow run manually
   workflow_dispatch:
 jobs:
