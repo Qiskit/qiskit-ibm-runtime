@@ -460,7 +460,6 @@ class BaseFakeRuntimeClient:
         final_states = ["COMPLETED", "FAILED", "CANCELLED", "CANCELLED - RAN TOO LONG"]
         status = self._get_job(job_id).status()
         while status not in final_states:
-            time.sleep(1)
             status = self._get_job(job_id).status()
 
     def _get_program(self, program_id):
