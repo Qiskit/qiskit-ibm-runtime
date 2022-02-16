@@ -41,7 +41,7 @@ from .api.clients.backend import BaseBackendClient
 from .exceptions import IBMBackendApiProtocolError
 from .utils.backend_converter import (
     convert_to_target,
-    qubit_properties_dict_from_properties,
+    qubit_props_dict_from_props,
 )
 from .utils.converters import local_to_utc
 from .utils.backend_decoder import (
@@ -228,9 +228,9 @@ class IBMBackend(Backend):
         """Converts backend configuration, properties and defaults to Target object"""
         if not self._target:
             self._target = convert_to_target(
-                configuration=self._configuration.to_dict(),
-                properties=self._properties.to_dict() if self._properties else None,
-                defaults=self._defaults.to_dict() if self._defaults else None,
+                configuration=self._configuration,
+                properties=self._properties,
+                defaults=self._defaults,
             )
 
     @classmethod
@@ -311,9 +311,7 @@ class IBMBackend(Backend):
         """
         self._get_properties()
         if not self._qubit_properties:
-            self._qubit_properties = qubit_properties_dict_from_properties(
-                self._properties.to_dict()
-            )
+            self._qubit_properties = qubit_props_dict_from_props(self._properties)
         if isinstance(qubit, int):  # type: ignore[unreachable]
             return self._qubit_properties.get(qubit)
         if isinstance(qubit, List):
