@@ -248,6 +248,7 @@ class TestDataSerialization(IBMTestCase):
             self.assertIsNone(decoded["fidelity"])
             self.assertEqual(len(warn_cm), 1)
 
+    @skipIf(os.name == "nt", "Test not supported on Windows")
     def test_decoder_import(self):
         """Test runtime decoder importing modules."""
         script = """
