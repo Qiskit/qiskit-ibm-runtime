@@ -17,7 +17,7 @@ from types import TracebackType
 import copy
 from functools import wraps
 
-from .ibm_runtime_service import IBMRuntimeService
+from qiskit_ibm_runtime import ibm_runtime_service  # pylint: disable=unused-import
 from .runtime_job import RuntimeJob
 from .runtime_program import ParameterNamespace
 from .runtime_options import RuntimeOptions
@@ -41,7 +41,7 @@ class RuntimeSession:
 
     def __init__(
         self,
-        runtime: IBMRuntimeService,
+        runtime: "ibm_runtime_service.IBMRuntimeService",
         program_id: str,
         inputs: Union[Dict, ParameterNamespace],
         options: Optional[Union[RuntimeOptions, Dict]] = None,
@@ -58,6 +58,7 @@ class RuntimeSession:
         self._program_id = program_id
         self._options: Optional[Union[RuntimeOptions, Dict]] = options
         self._initial_inputs = inputs
+        self._initial_job: Optional[RuntimeJob] = None
         self._job: Optional[RuntimeJob] = None
         self._session_id: Optional[str] = None
         self._active = True
@@ -65,16 +66,26 @@ class RuntimeSession:
     @_active_session
     def write(self, **kwargs: Dict) -> None:
         """Write to the session."""
-        inputs = copy.copy(self._initial_inputs)
+        if self._session_id is None:
+            inputs = copy.copy(self._initial_inputs)
+        else:
+            inputs = {}
         inputs.update(kwargs)
-        self._job = self._service.run(
+        if self._session_id is None:
+            self._initial_job = self._run(inputs=inputs)
+            self._job = self._initial_job
+            self._session_id = self._job.job_id
+        else:
+            self._job = self._run(inputs=inputs)
+
+    def _run(self, inputs: Union[Dict, ParameterNamespace]) -> RuntimeJob:
+        """Run a program"""
+        return self._service.run(
             program_id=self._program_id,
             options=self._options,
             inputs=inputs,
             session_id=self._session_id,
         )
-        if self._session_id is None:
-            self._session_id = self._job.job_id
 
     @_active_session
     def read(
@@ -107,6 +118,7 @@ class RuntimeSession:
     def close(self) -> None:
         """Close the session."""
         self._active = False
+        self._initial_job.cancel()
 
     def __enter__(self) -> "RuntimeSession":
         return self
