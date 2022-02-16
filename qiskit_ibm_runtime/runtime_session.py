@@ -130,3 +130,4 @@ class RuntimeSession:
         exc_tb: Optional[TracebackType],
     ) -> None:
         self._active = False
+        self._initial_job.cancel()
