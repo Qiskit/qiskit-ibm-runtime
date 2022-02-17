@@ -13,7 +13,6 @@
 """Tests for job related runtime functions."""
 
 import random
-from unittest import mock
 import time
 
 from qiskit.providers.exceptions import QiskitBackendNotFoundError

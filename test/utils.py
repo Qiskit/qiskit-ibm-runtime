@@ -141,6 +141,7 @@ def get_real_device(service):
 
 
 def mock_wait_for_final_state(service, job):
+    """replace `wait_for_final_state` with a mock function"""
     return mock.patch.object(
         RuntimeJob,
         "wait_for_final_state",

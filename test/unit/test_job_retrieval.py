@@ -12,9 +12,7 @@
 
 """Tests for runtime job retrieval."""
 
-from unittest import mock
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
-from qiskit_ibm_runtime import RuntimeJob
 from .mock.fake_runtime_service import FakeRuntimeService
 from ..ibm_test_case import IBMTestCase
 from ..decorators import run_legacy_and_cloud_fake
