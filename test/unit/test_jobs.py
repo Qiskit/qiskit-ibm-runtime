@@ -53,6 +53,7 @@ class TestRuntimeJob(IBMTestCase):
         self.assertIsInstance(job.status(), JobStatus)
         self.assertEqual(job.inputs, params)
         with mock_wait_for_final_state(service, job):
+            job.wait_for_final_state()
             self.assertEqual(job.status(), JobStatus.DONE)
             self.assertTrue(job.result())
 
