@@ -19,7 +19,7 @@ from .mock.fake_runtime_service import FakeRuntimeService
 from ..ibm_test_case import IBMTestCase
 from ..decorators import run_legacy_and_cloud_fake
 from ..program import run_program, upload_program
-from ..utils import fake_wait_for_final_state
+from ..utils import mock_wait_for_final_state
 
 
 class TestRetrieveJobs(IBMTestCase):
@@ -185,11 +185,7 @@ class TestRetrieveJobs(IBMTestCase):
 
         job = run_program(service=service, program_id=program_id)
         job_1 = run_program(service=service, program_id=program_id_1)
-        with mock.patch.object(
-            RuntimeJob,
-            "wait_for_final_state",
-            side_effect=fake_wait_for_final_state(service, job),
-        ):
+        with mock_wait_for_final_state(service, job):
             job.wait_for_final_state()
             job_1.wait_for_final_state()
         rjobs = service.jobs(program_id=program_id)
@@ -203,11 +199,7 @@ class TestRetrieveJobs(IBMTestCase):
         instance = FakeRuntimeService.DEFAULT_HGPS[1]
 
         job = run_program(service=service, program_id=program_id, instance=instance)
-        with mock.patch.object(
-            RuntimeJob,
-            "wait_for_final_state",
-            side_effect=fake_wait_for_final_state(service, job),
-        ):
+        with mock_wait_for_final_state(service, job):
             job.wait_for_final_state()
         rjobs = service.jobs(program_id=program_id, instance=instance)
         self.assertTrue(rjobs)

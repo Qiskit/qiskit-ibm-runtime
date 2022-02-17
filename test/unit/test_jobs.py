@@ -38,7 +38,7 @@ from ..ibm_test_case import IBMTestCase
 from ..decorators import run_legacy_and_cloud_fake
 from ..program import run_program, upload_program
 from ..serialization import get_complex_types
-from ..utils import fake_wait_for_final_state
+from ..utils import mock_wait_for_final_state
 
 
 class TestRuntimeJob(IBMTestCase):
@@ -53,11 +53,7 @@ class TestRuntimeJob(IBMTestCase):
         self.assertIsInstance(job, RuntimeJob)
         self.assertIsInstance(job.status(), JobStatus)
         self.assertEqual(job.inputs, params)
-        with mock.patch.object(
-            RuntimeJob,
-            "wait_for_final_state",
-            side_effect=fake_wait_for_final_state(service, job),
-        ):
+        with mock_wait_for_final_state(service, job):
             self.assertEqual(job.status(), JobStatus.DONE)
             self.assertTrue(job.result())
 
@@ -154,11 +150,7 @@ class TestRuntimeJob(IBMTestCase):
         self.assertIsInstance(job, RuntimeJob)
         self.assertIsInstance(job.status(), JobStatus)
         self.assertEqual(job.inputs, params)
-        with mock.patch.object(
-            RuntimeJob,
-            "wait_for_final_state",
-            side_effect=fake_wait_for_final_state(service, job),
-        ):
+        with mock_wait_for_final_state(service, job):
             job.wait_for_final_state()
             self.assertTrue(job.result())
         self.assertEqual(job.status(), JobStatus.DONE)
@@ -175,11 +167,7 @@ class TestRuntimeJob(IBMTestCase):
     def test_run_program_failed(self, service):
         """Test a failed program execution."""
         job = run_program(service=service, job_classes=FailedRuntimeJob)
-        with mock.patch.object(
-            RuntimeJob,
-            "wait_for_final_state",
-            side_effect=fake_wait_for_final_state(service, job),
-        ):
+        with mock_wait_for_final_state(service, job):
             job.wait_for_final_state()
             job_result_raw = service._api_client.job_results(job.job_id)
             self.assertEqual(JobStatus.ERROR, job.status())
@@ -194,11 +182,7 @@ class TestRuntimeJob(IBMTestCase):
     def test_run_program_failed_ran_too_long(self, service):
         """Test a program that failed since it ran longer than maximum execution time."""
         job = run_program(service=service, job_classes=FailedRanTooLongRuntimeJob)
-        with mock.patch.object(
-            RuntimeJob,
-            "wait_for_final_state",
-            side_effect=fake_wait_for_final_state(service, job),
-        ):
+        with mock_wait_for_final_state(service, job):
             job.wait_for_final_state()
             job_result_raw = service._api_client.job_results(job.job_id)
             self.assertEqual(JobStatus.ERROR, job.status())
@@ -233,11 +217,7 @@ class TestRuntimeJob(IBMTestCase):
     def test_final_result(self, service):
         """Test getting final result."""
         job = run_program(service)
-        with mock.patch.object(
-            RuntimeJob,
-            "wait_for_final_state",
-            side_effect=fake_wait_for_final_state(service, job),
-        ):
+        with mock_wait_for_final_state(service, job):
             result = job.result()
             self.assertTrue(result)
 
@@ -274,11 +254,7 @@ class TestRuntimeJob(IBMTestCase):
     def test_wait_for_final_state(self, service):
         """Test wait for final state."""
         job = run_program(service)
-        with mock.patch.object(
-            RuntimeJob,
-            "wait_for_final_state",
-            side_effect=fake_wait_for_final_state(service, job),
-        ):
+        with mock_wait_for_final_state(service, job):
             job.wait_for_final_state()
         self.assertEqual(JobStatus.DONE, job.status())
 
@@ -290,11 +266,7 @@ class TestRuntimeJob(IBMTestCase):
         job_cls.custom_result = custom_result
 
         job = run_program(service=service, job_classes=job_cls)
-        with mock.patch.object(
-            RuntimeJob,
-            "wait_for_final_state",
-            side_effect=fake_wait_for_final_state(service, job),
-        ):
+        with mock_wait_for_final_state(service, job):
             _ = job.result()
             _ = job.result()
 
