@@ -36,13 +36,5 @@ unit-test-coverage:
 	coverage run -m unittest discover --verbose --top-level-directory . --start-directory test/unit
 	coverage lcov
 
-integration-test-coverage:
-	coverage run -m unittest discover --verbose --top-level-directory . --start-directory test/integration
-	coverage lcov
-
-e2e-test-coverage:
-	coverage run -m unittest discover --verbose --top-level-directory . --start-directory test/e2e
-	coverage lcov
-
 black:
 	black qiskit_ibm_runtime setup.py test docs/tutorials program_source
