@@ -139,8 +139,10 @@ def get_real_device(service):
     except QiskitBackendNotFoundError:
         raise unittest.SkipTest("No real device")  # cloud has no real device
 
+
 def mock_wait_for_final_state(service, job):
     return mock.patch.object(
-            RuntimeJob,
-            "wait_for_final_state",
-            side_effect=service._api_client.wait_for_final_state(job.job_id))
+        RuntimeJob,
+        "wait_for_final_state",
+        side_effect=service._api_client.wait_for_final_state(job.job_id),
+    )
