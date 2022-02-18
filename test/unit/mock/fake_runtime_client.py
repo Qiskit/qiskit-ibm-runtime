@@ -164,6 +164,10 @@ class BaseFakeRuntimeJob:
         """Return job interim results."""
         return self._interim_results
 
+    def status(self):
+        """Return job status."""
+        return self._status
+
 
 class FailedRuntimeJob(BaseFakeRuntimeJob):
     """Class for faking a failed runtime job."""
@@ -450,6 +454,13 @@ class BaseFakeRuntimeClient:
         """Delete the job."""
         self._get_job(job_id)
         del self._jobs[job_id]
+
+    def wait_for_final_state(self, job_id):
+        """Wait for the final state of a program job."""
+        final_states = ["COMPLETED", "FAILED", "CANCELLED", "CANCELLED - RAN TOO LONG"]
+        status = self._get_job(job_id).status()
+        while status not in final_states:
+            status = self._get_job(job_id).status()
 
     def _get_program(self, program_id):
         """Get program."""

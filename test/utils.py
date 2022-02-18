@@ -16,6 +16,7 @@ import os
 import logging
 import time
 import unittest
+from unittest import mock
 
 from qiskit import QuantumCircuit
 from qiskit.providers.jobstatus import JOB_FINAL_STATES, JobStatus
@@ -137,3 +138,12 @@ def get_real_device(service):
         ).name
     except QiskitBackendNotFoundError:
         raise unittest.SkipTest("No real device")  # cloud has no real device
+
+
+def mock_wait_for_final_state(service, job):
+    """replace `wait_for_final_state` with a mock function"""
+    return mock.patch.object(
+        RuntimeJob,
+        "wait_for_final_state",
+        side_effect=service._api_client.wait_for_final_state(job.job_id),
+    )
