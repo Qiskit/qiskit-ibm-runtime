@@ -516,7 +516,7 @@ class IBMRetiredBackend(IBMBackend):
     @classmethod
     def _default_options(cls) -> Options:
         """Default runtime options."""
-        return Options()
+        return Options(shots=4000)
 
     def properties(
         self, refresh: bool = False, datetime: Optional[python_datetime] = None
@@ -542,6 +542,7 @@ class IBMRetiredBackend(IBMBackend):
         configuration = QasmBackendConfiguration(
             backend_name=backend_name,
             backend_version="0.0.0",
+            online_date="2019-10-16T04:00:00Z",
             n_qubits=1,
             basis_gates=[],
             simulator=False,
@@ -552,5 +553,6 @@ class IBMRetiredBackend(IBMBackend):
             max_shots=1,
             gates=[GateConfig(name="TODO", parameters=[], qasm_def="TODO")],
             coupling_map=[[0, 1]],
+            max_experiments=300,
         )
         return cls(configuration, api)
