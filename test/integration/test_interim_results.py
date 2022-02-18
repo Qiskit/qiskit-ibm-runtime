@@ -92,7 +92,8 @@ class TestIntegrationInterimResults(IBMIntegrationJobTestCase):
         job._status = JobStatus.RUNNING  # Allow stream_results()
         job.stream_results(result_callback)
         time.sleep(2)
-        self.assertEqual(1, called_back_count)
+        # Callback is expected twice because both interim and final results are returned
+        self.assertEqual(2, called_back_count)
         self.assertIsNotNone(job._ws_client._server_close_code)
 
     @run_integration_test
