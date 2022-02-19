@@ -61,23 +61,23 @@ class TestIBMBackend(IBMIntegrationTestCase):
 
     def test_backend_target(self):
         """Check if the target property is set."""
-        for backend in self.devices:
-            with self.subTest(backend=backend.name):
-                self.assertIsNotNone(backend.target)
-                self.assertIsInstance(backend.target, Target)
+        backend = self.backend
+        with self.subTest(backend=backend.name):
+            self.assertIsNotNone(backend.target)
+            self.assertIsInstance(backend.target, Target)
 
     def test_backend_max_circuits(self):
         """Check if the max_circuits property is set."""
-        for backend in self.devices:
-            with self.subTest(backend=backend.name):
-                self.assertIsNotNone(backend.max_circuits)
+        backend = self.backend
+        with self.subTest(backend=backend.name):
+            self.assertIsNotNone(backend.max_circuits)
 
     def test_backend_simulator(self):
         """Test if a configuration attribute (ex: simulator) is available as backend attribute."""
-        for backend in self.devices:
-            with self.subTest(backend=backend.name):
-                self.assertIsNotNone(backend.simulator)
-                self.assertEqual(backend.simulator, backend.configuration().simulator)
+        backend = self.backend
+        with self.subTest(backend=backend.name):
+            self.assertIsNotNone(backend.simulator)
+            self.assertEqual(backend.simulator, backend.configuration().simulator)
 
     def test_backend_status(self):
         """Check the status of a real chip."""
@@ -111,10 +111,10 @@ class TestIBMBackend(IBMIntegrationTestCase):
 
     def test_backend_invalid_attribute(self):
         """Check if AttributeError is raised when an invalid backend attribute is accessed."""
-        for backend in self.devices:
-            with self.subTest(backend=backend.name):
-                with self.assertRaises(AttributeError):
-                    backend.foobar  # pylint: disable=pointless-statement
+        backend = self.backend
+        with self.subTest(backend=backend.name):
+            with self.assertRaises(AttributeError):
+                backend.foobar  # pylint: disable=pointless-statement
 
     def test_backend_run(self):
         """Check one cannot do backend.run"""
