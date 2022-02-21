@@ -92,7 +92,7 @@ class TestRuntimeJob(IBMTestCase):
         default_hgp = list(service._hgps.values())[0]
         self.assertIn(backend, default_hgp.backends.keys())
         job = run_program(service=service, backend_name=backend)
-        self.assertEqual(job.backend.name(), backend)
+        self.assertEqual(job.backend.name, backend)
         self.assertEqual(
             job.backend._api_client.hgp, FakeRuntimeService.DEFAULT_HGPS[0]
         )
@@ -104,7 +104,7 @@ class TestRuntimeJob(IBMTestCase):
         default_hgp = list(service._hgps.values())[0]
         self.assertNotIn(backend, default_hgp.backends.keys())
         job = run_program(service=service, backend_name=backend)
-        self.assertEqual(job.backend.name(), backend)
+        self.assertEqual(job.backend.name, backend)
 
     def test_run_program_by_hgp_backend(self):
         """Test running a program with both backend and hgp."""
@@ -114,7 +114,7 @@ class TestRuntimeJob(IBMTestCase):
         job = run_program(
             service=service, backend_name=backend, instance=non_default_hgp
         )
-        self.assertEqual(job.backend.name(), backend)
+        self.assertEqual(job.backend.name, backend)
         self.assertEqual(job.backend._api_client.hgp, non_default_hgp)
 
     def test_run_program_by_hgp_bad_backend(self):

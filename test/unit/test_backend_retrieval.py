@@ -28,7 +28,7 @@ class TestBackendFilters(IBMTestCase):
     def test_no_filter(self, service):
         """Test no filtering."""
         # FakeRuntimeService by default creates 3 backends.
-        backend_name = [back.name() for back in service.backends()]
+        backend_name = [back.name for back in service.backends()]
         self.assertEqual(len(backend_name), 3)
 
     @run_legacy_and_cloud_fake
@@ -39,7 +39,7 @@ class TestBackendFilters(IBMTestCase):
             FakeRuntimeService.DEFAULT_UNIQUE_BACKEND_PREFIX + "0",
         ]:
             with self.subTest(name=name):
-                backend_name = [back.name() for back in service.backends(name=name)]
+                backend_name = [back.name for back in service.backends(name=name)]
                 self.assertEqual(len(backend_name), 1)
 
     def test_filter_by_instance_legacy(self):
@@ -48,7 +48,7 @@ class TestBackendFilters(IBMTestCase):
         for hgp in FakeRuntimeService.DEFAULT_HGPS:
             with self.subTest(hgp=hgp):
                 backends = service.backends(instance=hgp)
-                backend_name = [back.name() for back in backends]
+                backend_name = [back.name for back in backends]
                 self.assertEqual(len(backend_name), 2)
                 for back in backends:
                     self.assertEqual(back._api_client.hgp, hgp)
@@ -128,7 +128,7 @@ class TestBackendFilters(IBMTestCase):
         for service in services:
             with self.subTest(service=service.auth):
                 backend = service.least_busy()
-                self.assertEqual(backend.name(), "bingo")
+                self.assertEqual(backend.name, "bingo")
 
     def test_filter_min_num_qubits(self):
         """Test filtering by minimum number of qubits."""

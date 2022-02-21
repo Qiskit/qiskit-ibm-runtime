@@ -14,6 +14,7 @@
 
 from unittest import SkipTest
 
+from qiskit.transpiler.target import Target
 from ..ibm_test_case import IBMIntegrationTestCase
 from ..decorators import run_integration_test
 
@@ -26,7 +27,7 @@ class TestIntegrationBackend(IBMIntegrationTestCase):
         """Test getting all backends."""
         backends = service.backends()
         self.assertTrue(backends)
-        backend_names = [back.name() for back in backends]
+        backend_names = [back.name for back in backends]
         self.assertEqual(
             len(backend_names),
             len(set(backend_names)),
@@ -37,7 +38,7 @@ class TestIntegrationBackend(IBMIntegrationTestCase):
     def test_get_backend(self, service):
         """Test getting a backend."""
         backends = service.backends()
-        backend = service.backend(backends[0].name())
+        backend = service.backend(backends[0].name)
         self.assertTrue(backend)
 
 
@@ -58,16 +59,36 @@ class TestIBMBackend(IBMIntegrationTestCase):
                 simulator=False, min_num_qubits=5, instance=cls.dependencies.instance
             )
 
+    def test_backend_target(self):
+        """Check if the target property is set."""
+        backend = self.backend
+        with self.subTest(backend=backend.name):
+            self.assertIsNotNone(backend.target)
+            self.assertIsInstance(backend.target, Target)
+
+    def test_backend_max_circuits(self):
+        """Check if the max_circuits property is set."""
+        backend = self.backend
+        with self.subTest(backend=backend.name):
+            self.assertIsNotNone(backend.max_circuits)
+
+    def test_backend_simulator(self):
+        """Test if a configuration attribute (ex: simulator) is available as backend attribute."""
+        backend = self.backend
+        with self.subTest(backend=backend.name):
+            self.assertIsNotNone(backend.simulator)
+            self.assertEqual(backend.simulator, backend.configuration().simulator)
+
     def test_backend_status(self):
         """Check the status of a real chip."""
         backend = self.backend
-        with self.subTest(backend=backend.name()):
+        with self.subTest(backend=backend.name):
             self.assertTrue(backend.status().operational)
 
     def test_backend_properties(self):
         """Check the properties of calibration of a real chip."""
         backend = self.backend
-        with self.subTest(backend=backend.name()):
+        with self.subTest(backend=backend.name):
             if backend.configuration().simulator:
                 raise SkipTest("Skip since simulator does not have properties.")
             self.assertIsNotNone(backend.properties())
@@ -75,7 +96,7 @@ class TestIBMBackend(IBMIntegrationTestCase):
     def test_backend_pulse_defaults(self):
         """Check the backend pulse defaults of each backend."""
         backend = self.backend
-        with self.subTest(backend=backend.name()):
+        with self.subTest(backend=backend.name):
             if backend.configuration().simulator:
                 raise SkipTest("Skip since simulator does not have defaults.")
             if not backend.configuration().open_pulse:
@@ -85,12 +106,19 @@ class TestIBMBackend(IBMIntegrationTestCase):
     def test_backend_configuration(self):
         """Check the backend configuration of each backend."""
         backend = self.backend
-        with self.subTest(backend=backend.name()):
+        with self.subTest(backend=backend.name):
             self.assertIsNotNone(backend.configuration())
+
+    def test_backend_invalid_attribute(self):
+        """Check if AttributeError is raised when an invalid backend attribute is accessed."""
+        backend = self.backend
+        with self.subTest(backend=backend.name):
+            with self.assertRaises(AttributeError):
+                backend.foobar  # pylint: disable=pointless-statement
 
     def test_backend_run(self):
         """Check one cannot do backend.run"""
         backend = self.backend
-        with self.subTest(backend=backend.name()):
+        with self.subTest(backend=backend.name):
             with self.assertRaises(RuntimeError):
                 backend.run()
