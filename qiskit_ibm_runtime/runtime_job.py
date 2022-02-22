@@ -66,7 +66,7 @@ class RuntimeJob:
     If the program has any interim results, you can use the ``callback``
     parameter of the
     :meth:`~qiskit_ibm_runtime.IBMRuntimeService.run`
-    method to stream the interim results.
+    method to stream the interim results along with the final result.
     Alternatively, you can use the :meth:`stream_results` method to stream
     the results at a later time, but before the job finishes.
     """
@@ -237,11 +237,11 @@ class RuntimeJob:
         """Start streaming job results.
 
         Args:
-            callback: Callback function to be invoked for any interim results.
+            callback: Callback function to be invoked for any interim results and final result.
                 The callback function will receive 2 positional parameters:
 
                     1. Job ID
-                    2. Job interim result.
+                    2. Job result.
 
             decoder: A :class:`ResultDecoder` subclass used to decode job results.
 
@@ -360,7 +360,7 @@ class RuntimeJob:
         user_callback: Callable,
         decoder: Optional[Type[ResultDecoder]] = None,
     ) -> None:
-        """Stream interim results.
+        """Stream results.
 
         Args:
             result_queue: Queue used to pass websocket messages.

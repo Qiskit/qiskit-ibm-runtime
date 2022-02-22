@@ -57,14 +57,14 @@ class TestIntegrationInterimResults(IBMIntegrationJobTestCase):
     def test_stream_results(self, service):
         """Test stream_results method."""
 
-        def result_callback(job_id, interim_result):
+        def result_callback(job_id, result):
             nonlocal final_it
-            final_it = interim_result["iteration"]
+            final_it = result["iteration"]
             nonlocal callback_err
             if job_id != job.job_id:
                 callback_err.append(f"Unexpected job ID: {job_id}")
-            if interim_result["interim_results"] != int_res:
-                callback_err.append(f"Unexpected interim result: {interim_result}")
+            if result["interim_results"] != int_res:
+                callback_err.append(f"Unexpected interim result: {result}")
 
         int_res = "bar"
         final_it = 0
@@ -79,7 +79,7 @@ class TestIntegrationInterimResults(IBMIntegrationJobTestCase):
 
     @run_integration_test
     def test_stream_results_done(self, service):
-        """Test streaming interim results after job is done."""
+        """Test streaming results after job is done."""
 
         def result_callback(job_id, interim_result):
             # pylint: disable=unused-argument
