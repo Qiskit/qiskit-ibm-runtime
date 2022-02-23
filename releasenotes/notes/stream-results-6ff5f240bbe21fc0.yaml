@@ -1,0 +1,6 @@
+---
+upgrade:
+  - |
+    Final result is also streamed now after interim results when you specify a ``callback``
+    to :meth:`qiskit_ibm_runtime.IBMRuntimeService.run` or
+    :meth:`qiskit_ibm_runtime.RuntimeJob.stream_results`.

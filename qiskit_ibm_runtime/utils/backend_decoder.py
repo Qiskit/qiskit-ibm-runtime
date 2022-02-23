@@ -20,8 +20,6 @@ import dateutil.parser
 from qiskit.providers.models import (
     BackendProperties,
     PulseDefaults,
-)
-from qiskit.providers.models import (
     PulseBackendConfiguration,
     QasmBackendConfiguration,
 )

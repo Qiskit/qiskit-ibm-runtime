@@ -161,7 +161,7 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
         """Find a simulator backend for each service."""
         cls.sim_backends[cls.service.auth] = cls.service.backends(simulator=True)[
             0
-        ].name()
+        ].name
 
     def _run_program(
         self,
