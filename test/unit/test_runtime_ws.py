@@ -68,9 +68,9 @@ class TestRuntimeWebsocketClient(IBMTestCase):
     def test_stream_results(self):
         """Test streaming results."""
 
-        def result_callback(job_id, interim_result):
+        def result_callback(job_id, result):
             nonlocal results
-            results.append(interim_result)
+            results.append(result)
             self.assertEqual(JOB_ID_PROGRESS_DONE, job_id)
 
         results = []
