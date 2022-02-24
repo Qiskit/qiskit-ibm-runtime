@@ -1,6 +1,6 @@
 ---
 fixes:
   - |
-    :class:`qiskit_ibm_runtime.utils.RuntimeEncoder` and 
-    :class:`qiskit_ibm_runtime.utils.RuntimeDecoder` have been updated to handle
+    :class:`qiskit_ibm_runtime.utils.json.RuntimeEncoder` and
+    :class:`qiskit_ibm_runtime.utils.json.RuntimeDecoder` have been updated to handle
     instances of the `Instruction` class.
