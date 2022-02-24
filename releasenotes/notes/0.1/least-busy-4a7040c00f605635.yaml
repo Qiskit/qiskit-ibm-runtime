@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    :meth:`qiskit_ibm_runtime.IBMRuntimeService.least_busy` will now allow you find
+    the least busy backend.

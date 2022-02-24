@@ -1,0 +1,6 @@
+---
+upgrade:
+  - |
+    It is now optional to specify `backend_name` in `options` when executing
+    :meth:`qiskit_ibm_runtime.IBMRuntimeService.run` method when using `cloud` runtime
+    (IBM Cloud only). The server will automatically pick a backend and return the name.
