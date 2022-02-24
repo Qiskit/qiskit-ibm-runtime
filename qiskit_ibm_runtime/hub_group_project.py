@@ -81,10 +81,7 @@ class HubGroupProject:
             )
             if not config:
                 continue
-            backend_cls = (
-                ibm_backend.IBMSimulator if config.simulator else ibm_backend.IBMBackend
-            )
-            ret[config.backend_name] = backend_cls(
+            ret[config.backend_name] = ibm_backend.IBMBackend(
                 configuration=config,
                 api_client=self._api_client,
             )

@@ -132,17 +132,9 @@ jobs:
           pip install -U tox
       - name: Run integration tests
         run: tox -e py test/integration
-      - name: Report coverage to coveralls.io
-        uses: coverallsapp/github-action@1.1.3
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          flag-name: integration-tests_${{ matrix.environment }}
-          parallel: true
-          path-to-lcov: coverage.lcov
   tests-finished:
-    if: ${{ always() }}
     name: Submit code coverage metrics
-    needs: [ unit-tests, integration-tests ]
+    needs: [ unit-tests ]
     runs-on: ubuntu-latest
     steps:
       - name: Notify coveralls.io that all parallel tests have finished

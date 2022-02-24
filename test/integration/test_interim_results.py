@@ -29,14 +29,15 @@ class TestIntegrationInterimResults(IBMIntegrationJobTestCase):
     def test_interim_result_callback(self, service):
         """Test interim result callback."""
 
-        def result_callback(job_id, interim_result):
+        def result_callback(job_id, result):
             nonlocal final_it
-            final_it = interim_result["iteration"]
+            if "iteration" in result:
+                final_it = result["iteration"]
             nonlocal callback_err
             if job_id != job.job_id:
                 callback_err.append(f"Unexpected job ID: {job_id}")
-            if interim_result["interim_results"] != int_res:
-                callback_err.append(f"Unexpected interim result: {interim_result}")
+            if "interim_results" in result and result["interim_results"] != int_res:
+                callback_err.append(f"Unexpected interim result: {result}")
 
         int_res = "foo"
         final_it = 0
@@ -57,14 +58,15 @@ class TestIntegrationInterimResults(IBMIntegrationJobTestCase):
     def test_stream_results(self, service):
         """Test stream_results method."""
 
-        def result_callback(job_id, interim_result):
+        def result_callback(job_id, result):
             nonlocal final_it
-            final_it = interim_result["iteration"]
+            if "iteration" in result:
+                final_it = result["iteration"]
             nonlocal callback_err
             if job_id != job.job_id:
                 callback_err.append(f"Unexpected job ID: {job_id}")
-            if interim_result["interim_results"] != int_res:
-                callback_err.append(f"Unexpected interim result: {interim_result}")
+            if "interim_results" in result and result["interim_results"] != int_res:
+                callback_err.append(f"Unexpected interim result: {result}")
 
         int_res = "bar"
         final_it = 0
@@ -79,20 +81,21 @@ class TestIntegrationInterimResults(IBMIntegrationJobTestCase):
 
     @run_integration_test
     def test_stream_results_done(self, service):
-        """Test streaming interim results after job is done."""
+        """Test streaming results after job is done."""
 
-        def result_callback(job_id, interim_result):
+        def result_callback(job_id, result):
             # pylint: disable=unused-argument
-            nonlocal called_back
-            called_back = True
+            nonlocal called_back_count
+            called_back_count += 1
 
-        called_back = False
+        called_back_count = 0
         job = self._run_program(service, interim_results="foobar")
         job.wait_for_final_state()
         job._status = JobStatus.RUNNING  # Allow stream_results()
         job.stream_results(result_callback)
         time.sleep(2)
-        self.assertFalse(called_back)
+        # Callback is expected twice because both interim and final results are returned
+        self.assertEqual(2, called_back_count)
         self.assertIsNotNone(job._ws_client._server_close_code)
 
     @run_integration_test
@@ -108,12 +111,13 @@ class TestIntegrationInterimResults(IBMIntegrationJobTestCase):
     def test_callback_error(self, service):
         """Test error in callback method."""
 
-        def result_callback(job_id, interim_result):
+        def result_callback(job_id, result):
             # pylint: disable=unused-argument
-            if interim_result["iteration"] == 0:
+            if "iteration" in result and result["iteration"] == 0:
                 raise ValueError("Kaboom!")
             nonlocal final_it
-            final_it = interim_result["iteration"]
+            if "iteration" in result:
+                final_it = result["iteration"]
 
         final_it = 0
         iterations = 3
@@ -134,10 +138,11 @@ class TestIntegrationInterimResults(IBMIntegrationJobTestCase):
     def test_callback_cancel_job(self, service):
         """Test canceling a running job while streaming results."""
 
-        def result_callback(job_id, interim_result):
+        def result_callback(job_id, result):
             # pylint: disable=unused-argument
             nonlocal final_it
-            final_it = interim_result["iteration"]
+            if "iteration" in result:
+                final_it = result["iteration"]
 
         final_it = 0
         iterations = 5
@@ -165,7 +170,7 @@ class TestIntegrationInterimResults(IBMIntegrationJobTestCase):
     def test_websocket_proxy(self, service):
         """Test connecting to websocket via proxy."""
 
-        def result_callback(job_id, interim_result):  # pylint: disable=unused-argument
+        def result_callback(job_id, result):  # pylint: disable=unused-argument
             nonlocal callback_called
             callback_called = True
 
@@ -182,7 +187,7 @@ class TestIntegrationInterimResults(IBMIntegrationJobTestCase):
     def test_websocket_proxy_invalid_port(self, service):
         """Test connecting to websocket via invalid proxy port."""
 
-        def result_callback(job_id, interim_result):  # pylint: disable=unused-argument
+        def result_callback(job_id, result):  # pylint: disable=unused-argument
             nonlocal callback_called
             callback_called = True
 

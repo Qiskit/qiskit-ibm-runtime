@@ -285,14 +285,10 @@ class IBMRuntimeService:
             )
             if not config:
                 continue
-            backend_cls = (
-                ibm_backend.IBMSimulator if config.simulator else ibm_backend.IBMBackend
-            )
-            ret[config.backend_name] = backend_cls(
+            ret[config.backend_name] = ibm_backend.IBMBackend(
                 configuration=config,
                 api_client=self._api_client,
             )
-
         return ret
 
     def _resolve_crn(self, account: Account) -> None:
@@ -462,7 +458,7 @@ class IBMRuntimeService:
     def _discover_backends(self) -> None:
         """Discovers the remote backends for this account, if not already known."""
         for backend in self._backends.values():
-            backend_name = to_python_identifier(backend.name())
+            backend_name = to_python_identifier(backend.name)
             # Append _ if duplicate
             while backend_name in self.__dict__:
                 backend_name += "_"
@@ -790,11 +786,11 @@ class IBMRuntimeService:
                 to the runtime program.
             options: Runtime options that control the execution environment. See
                 :class:`RuntimeOptions` for all available options.
-            callback: Callback function to be invoked for any interim results.
+            callback: Callback function to be invoked for any interim results and final result.
                 The callback function will receive 2 positional parameters:
 
                     1. Job ID
-                    2. Job interim result.
+                    2. Job result.
 
             result_decoder: A :class:`ResultDecoder` subclass used to decode job results.
                 ``ResultDecoder`` is used if not specified.

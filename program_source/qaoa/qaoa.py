@@ -1929,7 +1929,7 @@ class SwapStrategyCreator(AnalysisPass):
         self._coupling_map = CouplingMap(coupling_map)
         self._two_qubit_fidelity = {}
         self._max_problem_size = backend.configuration().num_qubits
-        self._name = backend.name()
+        self._name = backend.name
         self._use_fidelity = use_fidelity
 
         props = backend.properties()

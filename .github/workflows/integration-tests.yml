@@ -49,8 +49,3 @@ jobs:
           pip install -U tox
       - name: Run integration tests
         run: tox -e test/integration
-      - name: Upload integration test coverage report
-        uses: actions/upload-artifact@v2
-        with:
-          name: Integration test coverage report - ${{ matrix.environment }}
-          path: htmlcov

@@ -113,11 +113,11 @@ program, a
 methods, such as :meth:`RuntimeJob.status`, :meth:`RuntimeJob.result`, and
 :meth:`RuntimeJob.cancel`.
 
-Interim results
----------------
+Interim and final results
+-------------------------
 
 Some runtime programs provide interim results that inform you about program
-progress. You can choose to stream the interim results when you run the
+progress. You can choose to stream the interim results and final result when you run the
 program by passing in the ``callback`` parameter, or at a later time using
 the :meth:`RuntimeJob.stream_results` method. For example::
 
@@ -127,14 +127,14 @@ the :meth:`RuntimeJob.stream_results` method. For example::
     service = IBMRuntimeService()
     backend = "ibmq_qasm_simulator"
 
-    def interim_result_callback(job_id, interim_result):
-        print(interim_result)
+    def result_callback(job_id, result):
+        print(result)
 
-    # Stream interim results as soon as the job starts running.
+    # Stream results as soon as the job starts running.
     job = service.run(program_id="sampler",
                       options=options,
                       inputs=program_inputs,
-                      callback=interim_result_callback)
+                      callback=result_callback)
 
 Backend data
 ------------

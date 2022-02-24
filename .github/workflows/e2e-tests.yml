@@ -12,6 +12,8 @@
 
 name: E2E Tests
 on:
+  schedule:
+    - cron: '0 8 * * *'
   # allow everyone with write access to the repository to trigger the workflow run manually
   workflow_dispatch:
 jobs:
@@ -47,8 +49,3 @@ jobs:
           pip install -U tox
       - name: Run e2e tests
         run: tox -e py test/e2e
-      - name: Upload e2e test coverage report
-        uses: actions/upload-artifact@v2
-        with:
-          name: E2E test coverage report - ${{ matrix.environment }}
-          path: htmlcov
