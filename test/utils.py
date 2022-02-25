@@ -93,7 +93,7 @@ def get_hgp(qe_token: str, qe_url: str, default: bool = True) -> HubGroupProject
     hgp_to_return = open_hgp
     if not default:
         # Get a non default hgp (i.e. not the default open access hgp).
-        hgps = service._get_hgps()
+        hgps = service._get_hgps() # type: ignore
         for hgp in hgps:
             if hgp != open_hgp:
                 hgp_to_return = hgp

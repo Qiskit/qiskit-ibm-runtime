@@ -24,8 +24,8 @@ class TestBasicServerPaths(IBMTestCase):
     def setUpClass(cls, dependencies: IntegrationTestDependencies) -> None:
         # pylint: disable=arguments-differ
         super().setUpClass()
-        cls.service = dependencies.service
-        cls.hgps = list(dependencies.service._hgps.keys())
+        cls.service = dependencies.service # type: ignore
+        cls.hgps = list(dependencies.service._hgps.keys()) # type: ignore
 
     def _require_2_hgps(self):
         if len(self.hgps) < 2:
