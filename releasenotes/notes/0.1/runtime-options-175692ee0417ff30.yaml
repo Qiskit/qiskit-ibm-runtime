@@ -1,0 +1,7 @@
+---
+upgrade:
+  - |
+    :meth:`qiskit_ibm_runtime.IBMRuntimeService.run` method now accepts runtime
+    execution options as :class:`qiskit_ibm_runtime.RuntimeOptions` class in addition to
+    already supported Dict. `backend_name`, `image` and `log_level` are the
+    currently available options.

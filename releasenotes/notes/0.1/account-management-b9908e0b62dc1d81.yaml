@@ -1,0 +1,9 @@
+---
+upgrade:
+  - |
+    `qiskit-ibm-runtime` package no longer uses the `$HOME/.qiskit/qiskitrc` file used by
+    `qiskit-ibmq-provider` to save credentials. Credentials are now stored in a
+    JSON format in `$HOME/.qiskit/qiskit-ibm.json` file when you use
+    :meth:`qiskit_ibm_runtime.IBMRuntimeService.save_account` method.
+
+    You can now save multiple credentials and give an optional `name` for each credential.

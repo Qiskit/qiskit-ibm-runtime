@@ -1,0 +1,13 @@
+---
+prelude: >
+    `qiskit-ibm-runtime` is a new Python API client for accessing the quantum programs,
+    systems and simulators at IBM Quantum via the Qiskit Runtime Service.
+
+
+    This new package is built upon the work already done in `qiskit.providers.ibmq.runtime`
+    module in the `qiskit-ibmq-provider` package and replaces it going forward. The `runtime`
+    module in `qiskit-ibmq-provider` package is now deprecated.
+
+
+    `qiskit-ibm-runtime` is not included as part of `Qiskit` meta package and thereby you have to
+    install it separately using ``pip install qiskit-ibm-runtime``.
