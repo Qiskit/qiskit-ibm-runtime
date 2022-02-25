@@ -1,0 +1,15 @@
+---
+upgrade:
+  - |
+    Qiskit Runtime service is accessible using an IBM Quantum (`legacy`) account
+    or an IBM Cloud (`cloud`) account.
+    `qiskit-ibm-runtime` enables you to connect to either of these accounts::
+
+      # Legacy
+      from qiskit_ibm_runtime import IBMRuntimeService
+      service = IBMRuntimeService(auth="legacy", token="abc")
+
+      # Cloud
+      from qiskit_ibm_runtime import IBMRuntimeService
+      service = IBMRuntimeService(auth="cloud", token="abc", instance="IBM Cloud CRN or Service instance name")
+
