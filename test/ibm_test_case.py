@@ -19,7 +19,7 @@ import inspect
 import unittest
 from contextlib import suppress
 from collections import defaultdict
-from typing import Dict, DefaultDict, Union
+from typing import DefaultDict
 
 from qiskit_ibm_runtime import QISKIT_IBM_RUNTIME_LOGGER_NAME
 from qiskit_ibm_runtime.exceptions import IBMNotAuthorizedError
@@ -140,7 +140,9 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
             service = cls.service  # type: ignore[attr-defined]
             service.delete_program(cls.program_ids[service.auth])  # type: ignore[attr-defined]
             cls.log.debug(  # type: ignore[attr-defined]
-                "Deleted %s program %s", service.auth, cls.program_ids[service.auth]  # type: ignore[attr-defined]
+                "Deleted %s program %s",
+                service.auth,
+                cls.program_ids[service.auth],  # type: ignore[attr-defined]
             )
 
     @classmethod
