@@ -1,0 +1,9 @@
+---
+upgrade:
+  - |
+    If you used `qiskit.providers.ibmq.AccountProvider.get_backend` method (for example,
+    ``provider.get_backend("ibmq_qasm_simulator")``) in the `qiskit-ibmq-provider` package, it's
+    equivalent method in this new package is :meth:`qiskit_ibm_runtime.IBMRuntimeService.backend`::
+
+      service = IBMRuntimeService()
+      backend = service.backend("ibmq_qasm_simulator")

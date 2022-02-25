@@ -1,0 +1,14 @@
+---
+upgrade:
+  - |
+    It is now optional to specify a hub/group/project upfront when connecting to the `legacy` IBM
+    Quantum account. The hub/group/project is selected in the following order.
+
+      - hub/group/project if passed via ``instance`` parameter when initializing
+        :class:`qiskit_ibm_runtime.IBMRuntimeService`
+      - the specific hub/group/project required by the backend specified when
+        calling :meth:`qiskit_ibm_runtime.IBMRuntimeService.run`
+      - the default set previously via :meth:`qiskit_ibm_runtime.IBMRuntimeService.save_account`
+      - a premium hub/group/project in your account
+      - open access hub/group/project
+
