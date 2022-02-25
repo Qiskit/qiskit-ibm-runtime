@@ -1,4 +1,3 @@
-# mypy: ignore-errors
 # This code is part of Qiskit.
 #
 # (C) Copyright IBM 2021.
@@ -51,7 +50,7 @@ class IBMTestCase(unittest.TestCase):
         """
         if logger.level is logging.NOTSET:
             try:
-                logger.setLevel(cls.log.level)
+                logger.setLevel(cls.log.level)  # type: ignore[attr-defined]
             except Exception as ex:  # pylint: disable=broad-except
                 logger.warning(
                     'Error while trying to set the level for the "%s" logger to %s. %s.',
@@ -75,8 +74,8 @@ class IBMIntegrationTestCase(IBMTestCase):
         """Initial class level setup."""
         # pylint: disable=arguments-differ
         super().setUpClass()
-        cls.dependencies = dependencies
-        cls.service = dependencies.service
+        cls.dependencies = dependencies  # type: ignore[attr-defined]
+        cls.service = dependencies.service  # type: ignore[attr-defined]
 
     def setUp(self) -> None:
         """Test level setup."""
@@ -88,7 +87,7 @@ class IBMIntegrationTestCase(IBMTestCase):
         """Test level teardown."""
         super().tearDown()
         # Delete programs
-        service = self.service
+        service = self.service  # type: ignore[attr-defined]
         for prog in self.to_delete[service.auth]:
             with suppress(Exception):
                 service.delete_program(prog)
@@ -105,7 +104,7 @@ class IBMIntegrationTestCase(IBMTestCase):
         service: IBMRuntimeService,
         name: str = None,
         max_execution_time: int = 300,
-        data: Union[Dict, str] = None,
+        data: str = None,
         is_public: bool = False,
     ) -> str:
         """Upload a new program."""
@@ -138,10 +137,10 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
         super().tearDownClass()
         # Delete default program.
         with suppress(Exception):
-            service = cls.service
-            service.delete_program(cls.program_ids[service.auth])
-            cls.log.debug(
-                "Deleted %s program %s", service.auth, cls.program_ids[service.auth]
+            service = cls.service  # type: ignore[attr-defined]
+            service.delete_program(cls.program_ids[service.auth])  # type: ignore[attr-defined]
+            cls.log.debug(  # type: ignore[attr-defined]
+                "Deleted %s program %s", service.auth, cls.program_ids[service.auth]  # type: ignore[attr-defined]
             )
 
     @classmethod
