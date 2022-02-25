@@ -19,7 +19,6 @@ import uuid
 from concurrent.futures import ThreadPoolExecutor
 from functools import wraps
 from typing import Optional, Dict, Any
-from datetime import datetime
 
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
 from qiskit_ibm_runtime.utils import RuntimeEncoder
@@ -497,7 +496,7 @@ class BaseFakeRuntimeClient:
 
     @cloud_only
     def backend_properties(
-        self, backend_name: str, datetime: datetime = None
+        self, backend_name: str, datetime: Any = None
     ) -> Dict[str, Any]:
         """Return the properties of the IBM Cloud backend."""
         if datetime:

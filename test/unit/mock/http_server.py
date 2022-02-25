@@ -90,7 +90,7 @@ class SimpleServer:
     PORT = 8123
     URL = "http://{}:{}".format(IP_ADDRESS, PORT)
 
-    def __init__(self, handler_class: BaseHandler):
+    def __init__(self, handler_class):
         """SimpleServer constructor.
 
         Args:

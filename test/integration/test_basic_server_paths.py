@@ -21,7 +21,7 @@ class TestBasicServerPaths(IBMTestCase):
 
     @classmethod
     @integration_test_setup(supported_auth=["legacy"])
-    def setUpClass(cls, dependencies: IntegrationTestDependencies):
+    def setUpClass(cls, dependencies: IntegrationTestDependencies) -> None:
         # pylint: disable=arguments-differ
         super().setUpClass()
         cls.service = dependencies.service

@@ -56,7 +56,7 @@ class FakeRuntimeService(IBMRuntimeService):
         """Mock authentication."""
         return FakeAuthClient()
 
-    def _resolve_crn(self, account: Account):
+    def _resolve_crn(self, account: Account) -> None:
         pass
 
     def _initialize_hgps(

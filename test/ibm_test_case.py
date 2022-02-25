@@ -19,7 +19,7 @@ import inspect
 import unittest
 from contextlib import suppress
 from collections import defaultdict
-from typing import Dict, Union
+from typing import Dict, DefaultDict, Union
 
 from qiskit_ibm_runtime import QISKIT_IBM_RUNTIME_LOGGER_NAME
 from qiskit_ibm_runtime.exceptions import IBMNotAuthorizedError
@@ -70,7 +70,7 @@ class IBMIntegrationTestCase(IBMTestCase):
 
     @classmethod
     @integration_test_setup()
-    def setUpClass(cls, dependencies: IntegrationTestDependencies):
+    def setUpClass(cls, dependencies: IntegrationTestDependencies) -> None:
         """Initial class level setup."""
         # pylint: disable=arguments-differ
         super().setUpClass()
@@ -80,8 +80,8 @@ class IBMIntegrationTestCase(IBMTestCase):
     def setUp(self) -> None:
         """Test level setup."""
         super().setUp()
-        self.to_delete = defaultdict(list)
-        self.to_cancel = defaultdict(list)
+        self.to_delete: DefaultDict = defaultdict(list)
+        self.to_cancel: DefaultDict = defaultdict(list)
 
     def tearDown(self) -> None:
         """Test level teardown."""
