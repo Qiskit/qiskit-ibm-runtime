@@ -71,7 +71,7 @@ class BaseFakeAccountClient:
                 config["backend_name"] = f"backend{idx}"
             self._backends.append(FakeApiBackend(config, status))
 
-    def list_backends(self, *args, **kwargs) -> List[Dict[str, Any]]:
+    def list_backends(self) -> List[Dict[str, Any]]:
         """Return backends available for this provider."""
         # pylint: disable=unused-argument
         return [back.configuration.copy() for back in self._backends]

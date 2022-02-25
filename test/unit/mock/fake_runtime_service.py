@@ -13,7 +13,7 @@
 """Context managers for using with IBM Provider unit tests."""
 
 from collections import OrderedDict
-from typing import Dict
+from typing import Dict, Any
 from unittest import mock
 
 from qiskit_ibm_runtime.accounts import Account
@@ -52,7 +52,7 @@ class FakeRuntimeService(IBMRuntimeService):
         ):
             super().__init__(*args, **kwargs)
 
-    def _authenticate_legacy_account(self, client_params: ClientParameters):
+    def _authenticate_legacy_account(self, client_params: ClientParameters) -> Any:
         """Mock authentication."""
         return FakeAuthClient()
 

@@ -19,9 +19,11 @@ import inspect
 import unittest
 from contextlib import suppress
 from collections import defaultdict
+from typing import Dict, Union
 
 from qiskit_ibm_runtime import QISKIT_IBM_RUNTIME_LOGGER_NAME
 from qiskit_ibm_runtime.exceptions import IBMNotAuthorizedError
+from qiskit_ibm_runtime import IBMRuntimeService
 
 from .utils import setup_test_logging
 from .decorators import IntegrationTestDependencies, integration_test_setup
@@ -99,12 +101,12 @@ class IBMIntegrationTestCase(IBMTestCase):
 
     def _upload_program(
         self,
-        service,
-        name=None,
-        max_execution_time=300,
-        data=None,
+        service: IBMRuntimeService,
+        name: str = None,
+        max_execution_time: int = 300,
+        data: Union[Dict, str] = None,
         is_public: bool = False,
-    ):
+    ) -> str:
         """Upload a new program."""
         name = name or PROGRAM_PREFIX
         data = data or RUNTIME_PROGRAM

@@ -14,6 +14,7 @@
 
 import uuid
 import copy
+from qiskit_ibm_runtime import IBMRuntimeService
 
 
 DEFAULT_DATA = "def main() {}"
@@ -50,7 +51,12 @@ DEFAULT_METADATA = {
 }
 
 
-def upload_program(service, name=None, max_execution_time=300, is_public: bool = False):
+def upload_program(
+    service: IBMRuntimeService,
+    name: str = None,
+    max_execution_time: int = 300,
+    is_public: bool = False,
+) -> str:
     """Upload a new program."""
     name = name or uuid.uuid4().hex
     data = DEFAULT_DATA
