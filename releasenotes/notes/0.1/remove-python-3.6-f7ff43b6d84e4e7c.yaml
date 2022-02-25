@@ -1,0 +1,5 @@
+---
+upgrade:
+  - |
+    Python 3.6 has reached end of life and will no longer be supported in the new
+    `qiskit-ibm-runtime` package.

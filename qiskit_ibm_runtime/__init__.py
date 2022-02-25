@@ -87,7 +87,6 @@ For example::
     # Set the "sampler" program parameters
     params = service.program(program_id="sampler").parameters()
     params.circuits = qc
-    params.use_measurement_mitigation = True
 
     # Configure backend options
     options = {'backend_name': backend}
@@ -100,9 +99,7 @@ For example::
     # Get runtime job result.
     result = job.result()
 
-The example above invokes the ``sampler`` program,
-which compiles, executes, and optionally applies measurement error mitigation to
-the circuit result.
+The example above invokes the ``sampler`` program.
 
 Runtime Jobs
 ------------

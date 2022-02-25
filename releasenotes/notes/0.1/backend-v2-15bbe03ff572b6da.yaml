@@ -1,0 +1,18 @@
+---
+upgrade:
+  - |
+    :class:`qiskit_ibm_runtime.IBMBackend` class now implements the
+    :class:`qiskit.providers.BackendV2` interface and provides flatter access to the configuration
+    of a backend, for example::
+
+      # BackendV1:
+      backend.configuration().n_qubits
+
+      # BackendV2:
+      backend.num_qubits
+
+    Only breaking change when compared to `BackendV1` is backend.name is now an attribute
+    instead of a method.
+
+    Refer to the :class:`qiskit_ibm_runtime.IBMBackend` class doc string for a list of all
+    available attributes.

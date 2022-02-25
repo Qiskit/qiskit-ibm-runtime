@@ -1,0 +1,5 @@
+---
+upgrade:
+  - |
+    `qiskit.providers.ibmq.runtime.IBMRuntimeService.run_circuits` method in `qiskit-ibmq-provider`
+    has been removed and will be replaced by the ``Sampler`` primitive program.
