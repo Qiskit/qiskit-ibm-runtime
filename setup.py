@@ -46,8 +46,7 @@ with open(README_PATH) as readme_file:
 setuptools.setup(
     name="qiskit-ibm-runtime",
     version=VERSION,
-    description="Qiskit IBM Runtime service for accessing the quantum devices and "
-    "simulators at IBM",
+    description="IBM Quantum client for Qiskit Runtime.",
     long_description=README,
     long_description_content_type="text/markdown",
     url="https://github.com/Qiskit/qiskit-ibm-runtime",

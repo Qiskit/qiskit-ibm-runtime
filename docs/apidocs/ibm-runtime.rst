@@ -1,5 +1,5 @@
 *****************************************
-Qiskit IBM Runtime API Reference
+qiskit-ibm-runtime API Reference
 *****************************************
 
 .. toctree::

@@ -1,5 +1,5 @@
 #########################################
-Qiskit IBM Runtime documentation
+Qiskit Runtime documentation
 #########################################
 
 Qiskit Runtime
@@ -35,8 +35,8 @@ Eventually, you will be able to call primitives from a generic program definitio
 primitive program interface that best suits your output needs to run circuits seamlessly and efficiently
 on IBM quantum systems.
 
-Qiskit IBM Runtime
-==================
+Qiskit Runtime IBM Quantum Client
+=================================
 
 ``qiskit-ibm-runtime`` provides the interface to interact with Qiskit Runtime. You can, for example,
 use it to query and execute runtime programs:
