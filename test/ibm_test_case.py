@@ -29,7 +29,7 @@ from .templates import RUNTIME_PROGRAM, RUNTIME_PROGRAM_METADATA, PROGRAM_PREFIX
 
 
 class IBMTestCase(unittest.TestCase):
-    """Custom TestCase for use with the Qiskit IBM Runtime."""
+    """Custom TestCase for use with qiskit-ibm-runtime."""
 
     @classmethod
     def setUpClass(cls):
@@ -64,7 +64,7 @@ class IBMTestCase(unittest.TestCase):
 
 
 class IBMIntegrationTestCase(IBMTestCase):
-    """Custom integration test case for use with the Qiskit IBM Runtime."""
+    """Custom integration test case for use with qiskit-ibm-runtime."""
 
     @classmethod
     @integration_test_setup()

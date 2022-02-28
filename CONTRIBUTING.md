@@ -7,11 +7,11 @@ included in the qiskit documentation:
 https://qiskit.org/documentation/contributing_to_qiskit.html
 
 
-Contributing to Qiskit IBM Runtime
----------------------------
+Contributing to qiskit-ibm-runtime
+-----------------------------------
 
 In addition to the general guidelines there are specific details for
-contributing to the Qiskit IBM Runtime, these are documented below.
+contributing to qiskit-ibm-runtime, these are documented below.
 
 ### Pull request checklist
 
@@ -245,8 +245,8 @@ QISKIT_IBM_INSTANCE=crn:v1:bluemix:...                          # The CRN value 
 ```
 
 
-To enable test cases against external system in your private fork, make sure to set above values as 
-[encrypted environment secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-an-environment). 
+To enable test cases against external system in your private fork, make sure to set above values as
+[encrypted environment secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets#creating-encrypted-secrets-for-an-environment).
 The names of the environments must match the ones that the [CI workflow](.github/workflows/ci.yml) relies
 upon.
 
