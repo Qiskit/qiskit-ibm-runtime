@@ -52,7 +52,9 @@ class FakeRuntimeService(IBMRuntimeService):
         ):
             super().__init__(*args, **kwargs)
 
-    def _authenticate_legacy_account(self, client_params: ClientParameters) -> Any:
+    def _authenticate_legacy_account(
+        self, client_params: ClientParameters
+    ) -> "FakeAuthClient":
         """Mock authentication."""
         return FakeAuthClient()
 
@@ -117,8 +119,12 @@ class FakeRuntimeService(IBMRuntimeService):
         return super()._discover_cloud_backends()
 
 
-class FakeAuthClient:
+class FakeAuthClient(AuthClient):
     """Fake auth client."""
+
+    def __init__(self):  # pylint: disable=super-init-not-called
+        # Avoid calling parent __init__ method. It has side-effects that are not supported in unit tests.
+        pass
 
     def current_service_urls(self):
         """Return service urls."""

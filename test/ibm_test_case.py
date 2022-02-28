@@ -19,7 +19,7 @@ import inspect
 import unittest
 from contextlib import suppress
 from collections import defaultdict
-from typing import DefaultDict
+from typing import DefaultDict, Dict
 
 from qiskit_ibm_runtime import QISKIT_IBM_RUNTIME_LOGGER_NAME
 from qiskit_ibm_runtime.exceptions import IBMNotAuthorizedError
@@ -32,6 +32,11 @@ from .templates import RUNTIME_PROGRAM, RUNTIME_PROGRAM_METADATA, PROGRAM_PREFIX
 
 class IBMTestCase(unittest.TestCase):
     """Custom TestCase for use with the Qiskit IBM Runtime."""
+
+    log: logging.Logger
+    dependencies: IntegrationTestDependencies
+    service: IBMRuntimeService
+    program_ids: Dict[str, str]
 
     @classmethod
     def setUpClass(cls):
@@ -50,7 +55,7 @@ class IBMTestCase(unittest.TestCase):
         """
         if logger.level is logging.NOTSET:
             try:
-                logger.setLevel(cls.log.level)  # type: ignore[attr-defined]
+                logger.setLevel(cls.log.level)
             except Exception as ex:  # pylint: disable=broad-except
                 logger.warning(
                     'Error while trying to set the level for the "%s" logger to %s. %s.',
@@ -74,8 +79,8 @@ class IBMIntegrationTestCase(IBMTestCase):
         """Initial class level setup."""
         # pylint: disable=arguments-differ
         super().setUpClass()
-        cls.dependencies = dependencies  # type: ignore[attr-defined]
-        cls.service = dependencies.service  # type: ignore[attr-defined]
+        cls.dependencies = dependencies
+        cls.service = dependencies.service
 
     def setUp(self) -> None:
         """Test level setup."""
@@ -87,7 +92,7 @@ class IBMIntegrationTestCase(IBMTestCase):
         """Test level teardown."""
         super().tearDown()
         # Delete programs
-        service = self.service  # type: ignore[attr-defined]
+        service = self.service
         for prog in self.to_delete[service.auth]:
             with suppress(Exception):
                 service.delete_program(prog)
@@ -137,12 +142,12 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
         super().tearDownClass()
         # Delete default program.
         with suppress(Exception):
-            service = cls.service  # type: ignore[attr-defined]
-            service.delete_program(cls.program_ids[service.auth])  # type: ignore[attr-defined]
-            cls.log.debug(  # type: ignore[attr-defined]
+            service = cls.service
+            service.delete_program(cls.program_ids[service.auth])
+            cls.log.debug(
                 "Deleted %s program %s",
                 service.auth,
-                cls.program_ids[service.auth],  # type: ignore[attr-defined]
+                cls.program_ids[service.auth],
             )
 
     @classmethod
