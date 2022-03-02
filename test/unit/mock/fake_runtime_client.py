@@ -117,6 +117,7 @@ class BaseFakeRuntimeJob:
         """Initialize a fake job."""
         self._job_id = job_id
         self._status = final_status or "QUEUED"
+        self._state = {"status": self._status}
         self._program_id = program_id
         self._hub = hub
         self._group = group
@@ -137,9 +138,9 @@ class BaseFakeRuntimeJob:
         """Automatically update job status."""
         for status in self._job_progress:
             time.sleep(0.5)
-            self._status = status
+            self._state["status"] = status
 
-        if self._status == "COMPLETED":
+        if self._state["status"] == "COMPLETED":
             self._result = json.dumps("foo")
 
     def to_dict(self):
@@ -151,6 +152,7 @@ class BaseFakeRuntimeJob:
             "project": self._project,
             "backend": self._backend_name,
             "status": self._status,
+            "state": self._state,
             "params": [self._params],
             "program": {"id": self._program_id},
             "image": self._image,
@@ -166,7 +168,7 @@ class BaseFakeRuntimeJob:
 
     def status(self):
         """Return job status."""
-        return self._status
+        return self._state["status"]
 
 
 class FailedRuntimeJob(BaseFakeRuntimeJob):
@@ -214,7 +216,7 @@ class CancelableRuntimeJob(BaseFakeRuntimeJob):
         """Convert to dictionary format."""
         data = super().to_dict()
         if self._cancelled:
-            data["status"] = "CANCELLED"
+            data["state"]["status"] = "CANCELLED"
         return data
 
 

@@ -307,9 +307,17 @@ class RuntimeJob:
             IBMError: If an unknown status is returned from the server.
         """
         try:
-            self._status = API_TO_JOB_STATUS[job_response["status"].upper()]
+            if "reason" in job_response["state"]:
+                status = (
+                    job_response["state"]["status"]
+                    + " - "
+                    + job_response["state"]["reason"]
+                ).upper()
+            else:
+                status = job_response["state"]["status"].upper()
+            self._status = API_TO_JOB_STATUS[status]
         except KeyError:
-            raise IBMError(f"Unknown status: {job_response['status']}")
+            raise IBMError(f"Unknown status: {status}")
 
     def _set_error_message(self, job_response: Dict) -> None:
         """Set error message if the job failed.
@@ -319,9 +327,17 @@ class RuntimeJob:
         """
         if self._status == JobStatus.ERROR:
             job_result_raw = self._api_client.job_results(job_id=self.job_id)
-            self._error_message = API_TO_JOB_ERROR_MESSAGE[
-                job_response["status"].upper()
-            ].format(self.job_id, job_result_raw)
+            if "reason" in job_response["state"]:
+                error_message = (
+                    job_response["state"]["status"]
+                    + " - "
+                    + job_response["state"]["reason"]
+                ).upper()
+            else:
+                error_message = (job_response["state"]["status"]).upper()
+            self._error_message = API_TO_JOB_ERROR_MESSAGE[error_message].format(
+                self.job_id, job_result_raw
+            )
         else:
             self._error_message = None
 
