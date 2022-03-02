@@ -1,5 +1,0 @@
----
-fixes:
-  - |
-    Fixes the issue wherein a runtime job result cannot be retrieved multiple
-    times if the result contains a numpy array.
