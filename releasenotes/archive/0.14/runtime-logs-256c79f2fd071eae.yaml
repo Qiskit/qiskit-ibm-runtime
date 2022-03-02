@@ -1,6 +1,0 @@
----
-features:
-  - |
-    You can now use the :meth:`qiskit.providers.ibmq.runtime.RuntimeJob.logs`
-    method to retrieve job logs. Note that logs are only available after the
-    job finishes.
