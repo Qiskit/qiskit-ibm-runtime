@@ -312,10 +312,10 @@ class RuntimeJob:
                     job_response["state"]["status"]
                     + " - "
                     + job_response["state"]["reason"]
-                ).upper()
+                )
             else:
-                status = job_response["state"]["status"].upper()
-            self._status = API_TO_JOB_STATUS[status]
+                status = job_response["state"]["status"]
+            self._status = API_TO_JOB_STATUS[status.upper()]
         except KeyError:
             raise IBMError(f"Unknown status: {status}")
 
@@ -332,12 +332,12 @@ class RuntimeJob:
                     job_response["state"]["status"]
                     + " - "
                     + job_response["state"]["reason"]
-                ).upper()
+                )
             else:
-                error_message = (job_response["state"]["status"]).upper()
-            self._error_message = API_TO_JOB_ERROR_MESSAGE[error_message].format(
-                self.job_id, job_result_raw
-            )
+                error_message = job_response["state"]["status"]
+            self._error_message = API_TO_JOB_ERROR_MESSAGE[
+                error_message.upper()
+            ].format(self.job_id, job_result_raw)
         else:
             self._error_message = None
 
