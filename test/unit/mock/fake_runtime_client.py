@@ -116,7 +116,6 @@ class BaseFakeRuntimeJob:
     ):
         """Initialize a fake job."""
         self._job_id = job_id
-        self._status = final_status or "QUEUED"
         self._state = {"status": final_status or "QUEUED"}
         self._program_id = program_id
         self._hub = hub
@@ -151,7 +150,6 @@ class BaseFakeRuntimeJob:
             "group": self._group,
             "project": self._project,
             "backend": self._backend_name,
-            "status": self._status,
             "state": self._state,
             "params": [self._params],
             "program": {"id": self._program_id},
