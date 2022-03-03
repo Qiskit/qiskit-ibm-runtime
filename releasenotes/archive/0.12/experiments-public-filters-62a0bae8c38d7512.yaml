@@ -1,6 +1,0 @@
----
-features:
-  - |
-    The method
-    :meth:`qiskit.providers.ibmq.experimentservice.ExperimentService.experiments`
-    now accepts ``exclude_public`` and ``public_only`` as filtering keywords.
