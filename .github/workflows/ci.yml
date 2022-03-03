@@ -32,7 +32,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -U -r requirements-dev.txt
+          pip install -r requirements-dev.txt
       - name: Run black
         run: make style
       - name: Run lint
@@ -86,7 +86,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -U -r requirements-dev.txt
+          pip install -r requirements-dev.txt
       - name: Run unit tests
         run: make unit-test-coverage
       - name: Report coverage to coveralls.io
@@ -128,7 +128,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -U -r requirements-dev.txt
+          pip install -r requirements-dev.txt
       - name: Run integration tests
         run: make integration-test
   tests-finished:
