@@ -18,10 +18,10 @@ import copy
 from functools import wraps
 
 from qiskit_ibm_runtime import ibm_runtime_service  # pylint: disable=unused-import
-from .runtime_job import RuntimeJob
-from .runtime_program import ParameterNamespace
-from .runtime_options import RuntimeOptions
-from .program.result_decoder import ResultDecoder
+from ..runtime_job import RuntimeJob
+from ..runtime_program import ParameterNamespace
+from ..runtime_options import RuntimeOptions
+from ..program.result_decoder import ResultDecoder
 
 
 def _active_session(func):  # type: ignore
@@ -91,18 +91,16 @@ class RuntimeSession:
     def read(
         self,
         timeout: Optional[float] = None,
-        wait: float = 5,
         decoder: Optional[Type[ResultDecoder]] = None,
     ) -> Any:
         """Read from the session.
         Args:
             timeout: Number of seconds to wait for job.
-            wait: Seconds between queries.
             decoder: A :class:`ResultDecoder` subclass used to decode job results.
         Returns:
             Data returned from the session.
         """
-        return self._job.result(timeout=timeout, wait=wait, decoder=decoder)
+        return self._job.result(timeout=timeout, decoder=decoder)
 
     def info(self) -> Dict:
         """Return session information.
