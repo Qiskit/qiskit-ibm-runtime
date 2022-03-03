@@ -1,6 +1,0 @@
----
-features:
-  - |
-    The method
-    :meth:`qiskit.providers.ibmq.experimentservice.ExperimentService.experiments`
-    now accepts ``hub``, ``group``, and ``project`` as filtering keywords.
