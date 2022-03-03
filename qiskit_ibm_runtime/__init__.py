@@ -239,6 +239,8 @@ from .exceptions import *
 from .utils.utils import setup_logger
 from .version import __version__
 
+from .ibm_estimator import IBMEstimator
+from .ibm_sampler import IBMSampler
 
 # Setup the logger for the IBM Quantum Provider package.
 logger = logging.getLogger(__name__)
