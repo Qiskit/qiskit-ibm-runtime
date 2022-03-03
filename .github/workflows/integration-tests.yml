@@ -46,7 +46,6 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -c constraints.txt -e .
-          pip install -U -c constraints.txt -r requirements-dev.txt
+          pip install -U -r requirements-dev.txt
       - name: Run integration tests
         run: make integration-test
