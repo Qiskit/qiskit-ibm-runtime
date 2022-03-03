@@ -412,7 +412,7 @@ class BaseFakeRuntimeClient:
         count = len(self._jobs)
         if pending is not None:
             job_status_list = pending_statuses if pending else returned_statuses
-            jobs = [job for job in jobs if job._status in job_status_list]
+            jobs = [job for job in jobs if job._state["status"] in job_status_list]
             count = len(jobs)
         if program_id:
             jobs = [job for job in jobs if job._program_id == program_id]
