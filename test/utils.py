@@ -132,10 +132,7 @@ def wait_for_status(job, status, poll_time=1, time_out=20):
 def get_real_device(service):
     """Get a real device for the service."""
     try:
-        # TODO: Remove filters when ibmq_berlin is removed
-        return service.least_busy(
-            simulator=False, filters=lambda b: b.name != "ibmq_berlin"
-        ).name
+        return service.least_busy(simulator=False).name
     except QiskitBackendNotFoundError:
         raise unittest.SkipTest("No real device")  # cloud has no real device
 
