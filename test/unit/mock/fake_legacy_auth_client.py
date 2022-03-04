@@ -22,7 +22,7 @@ class BaseFakeAuthClient:
         """Initialize a auth runtime client."""
         pass
 
-    def user_urls(self) -> Dict[str, str]:
+    def user_urls(self) -> Dict[str, Union[str, Dict]]:
         """Retrieve the API URLs from the authentication service.
 
         Returns:
