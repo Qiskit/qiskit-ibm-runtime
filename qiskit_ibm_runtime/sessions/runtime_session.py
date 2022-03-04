@@ -22,6 +22,7 @@ from ..runtime_job import RuntimeJob
 from ..runtime_program import ParameterNamespace
 from ..runtime_options import RuntimeOptions
 from ..program.result_decoder import ResultDecoder
+from ..exceptions import RuntimeInvalidStateError
 
 
 def _active_session(func):  # type: ignore
@@ -116,7 +117,11 @@ class RuntimeSession:
     def close(self) -> None:
         """Close the session."""
         self._active = False
-        self._initial_job.cancel()
+        # TODO Stop swallowing error when API is fixed
+        try:
+            self._initial_job.cancel()
+        except RuntimeInvalidStateError:
+            pass
 
     def __enter__(self) -> "RuntimeSession":
         return self
@@ -128,4 +133,8 @@ class RuntimeSession:
         exc_tb: Optional[TracebackType],
     ) -> None:
         self._active = False
-        self._initial_job.cancel()
+        # TODO Stop swallowing error when API is fixed
+        try:
+            self._initial_job.cancel()
+        except RuntimeInvalidStateError:
+            pass
