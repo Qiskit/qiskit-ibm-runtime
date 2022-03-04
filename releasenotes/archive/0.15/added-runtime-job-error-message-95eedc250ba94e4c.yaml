@@ -1,5 +1,0 @@
----
-features:
-  - |
-    Add support for new method :meth:`qiskit.providers.ibmq.runtime.RuntimeJob.error_message`
-    which will return a string representing the reason if the job failed.
