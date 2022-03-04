@@ -12,12 +12,48 @@
 
 """Estimator session"""
 
+# TODO remove when importing EstimatorResult from terra
+from __future__ import annotations
+
 from typing import List, Optional, Union, Tuple, Any
 
-from qiskit.primitives import EstimatorResult
-from qiskit.primitives.base_estimator import Group
+# TODO remove when importing EstimatorResult from terra
+from dataclasses import dataclass
+import numpy as np
+
+# TODO uncomment when importing EstimatorResult and Group from terra
+# from qiskit.primitives import EstimatorResult
+# from qiskit.primitives.base_estimator import Group
 
 from .runtime_session import RuntimeSession
+
+# TODO remove and import Group from terra
+@dataclass(frozen=True)
+class Group:
+    """The dataclass represents indices of circuit and observable."""
+
+    circuit_index: int
+    observable_index: int
+
+
+# TODO remove and import from terra
+@dataclass(frozen=True)
+class EstimatorResult:
+    """
+    Result of ExpectationValue
+    #TODO doc
+    """
+
+    values: "np.ndarray[Any, np.dtype[np.float64]]"
+    variances: "np.ndarray[Any, np.dtype[np.float64]]"
+    shots: int
+    # standard_errors: np.ndarray[Any, np.dtype[np.float64]]
+    # metadata: list[dict[str, Any]]
+
+    def __add__(self, other: EstimatorResult) -> EstimatorResult:
+        values = np.concatenate([self.values, other.values])
+        variances = np.concatenate([self.variances, other.variances])
+        return EstimatorResult(values, variances)
 
 
 class EstimatorSession(RuntimeSession):
@@ -31,4 +67,8 @@ class EstimatorSession(RuntimeSession):
     ) -> EstimatorResult:
         self.write(parameters=parameters, grouping=grouping, run_options=run_options)
         raw_result = self.read()
-        return EstimatorResult(raw_result["values"], raw_result["variances"])
+        return EstimatorResult(
+            values=raw_result["values"],
+            variances=raw_result["variances"],
+            shots=raw_result["shots"],
+        )

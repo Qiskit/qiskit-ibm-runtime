@@ -12,11 +12,35 @@
 
 """Sampler session"""
 
+# TODO remove when importing SamplerResult from terra
+from __future__ import annotations
+
 from typing import Optional, Union, List, Any
 
-from qiskit.primitives import SamplerResult
+# TODO remove when importing SamplerResult from terra
+from dataclasses import dataclass
+
+# TODO remove when importing SamplerResult from terra
+from qiskit.result import QuasiDistribution
+
+# TODO uncomment when importing from terra
+# from qiskit.primitives import SamplerResult
 
 from .runtime_session import RuntimeSession
+
+# TODO remove and import SamplerResult from terra
+@dataclass(frozen=True)
+class SamplerResult:
+    """
+    Result of Sampler
+    """
+
+    quasi_dists: list[QuasiDistribution]
+    metadata: list[dict[str, Any]]
+    shots: int
+
+    def __getitem__(self, key: Any) -> SamplerResult:
+        return SamplerResult(self.quasi_dists[key], self.metadata[key], self.shots)
 
 
 class SamplerSession(RuntimeSession):
@@ -31,7 +55,6 @@ class SamplerSession(RuntimeSession):
         raw_result = self.read()
         return SamplerResult(
             quasi_dists=raw_result["quasi_dists"],
-            shots=raw_result["shots"],
-            raw_results=None,
             metadata=None,
+            shots=raw_result["shots"],
         )

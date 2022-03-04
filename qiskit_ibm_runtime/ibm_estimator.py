@@ -15,11 +15,15 @@
 from typing import List, Tuple, Optional, Union, Dict
 
 from qiskit.circuit import QuantumCircuit
-from qiskit.primitives.base_estimator import Group
+
+# TODO uncomment when importing Group from terra
+# from qiskit.primitives.base_estimator import Group
 from qiskit.quantum_info import SparsePauliOp
 
 from .base_primitive import BasePrimitive
-from .sessions.estimator_session import EstimatorSession
+
+# TODO remove Group when importing from terra
+from .sessions.estimator_session import EstimatorSession, Group
 
 
 class IBMEstimator(BasePrimitive):
