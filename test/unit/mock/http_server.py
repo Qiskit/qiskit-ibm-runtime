@@ -15,14 +15,14 @@
 import json
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from typing import Dict
+from typing import Dict, Any
 
 
 class BaseHandler(BaseHTTPRequestHandler):
     """Base request handler for testing."""
 
-    good_response = {}
-    error_response = {}
+    good_response: Dict[str, Any] = {}
+    error_response: Dict[str, Any] = {}
 
     def _get_code(self):
         """Get the status code to be returned."""
@@ -65,7 +65,7 @@ class BaseHandler(BaseHTTPRequestHandler):
 class ServerErrorOnceHandler(BaseHandler):
     """Request handler that returns a server error once then a good response."""
 
-    bad_status_given = {}
+    bad_status_given: Dict[str, Any] = {}
 
     def _get_code(self):
         """Return 200 if the path was seen before, otherwise 504."""
@@ -90,7 +90,7 @@ class SimpleServer:
     PORT = 8123
     URL = "http://{}:{}".format(IP_ADDRESS, PORT)
 
-    def __init__(self, handler_class: BaseHandler):
+    def __init__(self, handler_class):
         """SimpleServer constructor.
 
         Args:
@@ -109,10 +109,10 @@ class SimpleServer:
         self.server.join(3)
         self.httpd.server_close()
 
-    def set_error_response(self, error_response: Dict):
+    def set_error_response(self, error_response: Dict) -> None:
         """Set the error response."""
         setattr(self.httpd.RequestHandlerClass, "error_response", error_response)
 
-    def set_good_response(self, response: Dict):
+    def set_good_response(self, response: Dict) -> None:
         """Set good response."""
         setattr(self.httpd.RequestHandlerClass, "good_response", response)

@@ -19,9 +19,11 @@ import inspect
 import unittest
 from contextlib import suppress
 from collections import defaultdict
+from typing import DefaultDict, Dict
 
 from qiskit_ibm_runtime import QISKIT_IBM_RUNTIME_LOGGER_NAME
 from qiskit_ibm_runtime.exceptions import IBMNotAuthorizedError
+from qiskit_ibm_runtime import IBMRuntimeService
 
 from .utils import setup_test_logging
 from .decorators import IntegrationTestDependencies, integration_test_setup
@@ -30,6 +32,11 @@ from .templates import RUNTIME_PROGRAM, RUNTIME_PROGRAM_METADATA, PROGRAM_PREFIX
 
 class IBMTestCase(unittest.TestCase):
     """Custom TestCase for use with qiskit-ibm-runtime."""
+
+    log: logging.Logger
+    dependencies: IntegrationTestDependencies
+    service: IBMRuntimeService
+    program_ids: Dict[str, str]
 
     @classmethod
     def setUpClass(cls):
@@ -68,7 +75,7 @@ class IBMIntegrationTestCase(IBMTestCase):
 
     @classmethod
     @integration_test_setup()
-    def setUpClass(cls, dependencies: IntegrationTestDependencies):
+    def setUpClass(cls, dependencies: IntegrationTestDependencies) -> None:
         """Initial class level setup."""
         # pylint: disable=arguments-differ
         super().setUpClass()
@@ -78,8 +85,8 @@ class IBMIntegrationTestCase(IBMTestCase):
     def setUp(self) -> None:
         """Test level setup."""
         super().setUp()
-        self.to_delete = defaultdict(list)
-        self.to_cancel = defaultdict(list)
+        self.to_delete: DefaultDict = defaultdict(list)
+        self.to_cancel: DefaultDict = defaultdict(list)
 
     def tearDown(self) -> None:
         """Test level teardown."""
@@ -99,12 +106,12 @@ class IBMIntegrationTestCase(IBMTestCase):
 
     def _upload_program(
         self,
-        service,
-        name=None,
-        max_execution_time=300,
-        data=None,
+        service: IBMRuntimeService,
+        name: str = None,
+        max_execution_time: int = 300,
+        data: str = None,
         is_public: bool = False,
-    ):
+    ) -> str:
         """Upload a new program."""
         name = name or PROGRAM_PREFIX
         data = data or RUNTIME_PROGRAM
@@ -138,7 +145,9 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
             service = cls.service
             service.delete_program(cls.program_ids[service.auth])
             cls.log.debug(
-                "Deleted %s program %s", service.auth, cls.program_ids[service.auth]
+                "Deleted %s program %s",
+                service.auth,
+                cls.program_ids[service.auth],
             )
 
     @classmethod
