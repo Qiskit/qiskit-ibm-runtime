@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    Fixed the typo for :attr:`Target.acquire_alignment` in `.utils.backend_converter.convert_to_target`.
+    This is a follow up fix of a [related PR](https://github.com/Qiskit/qiskit-terra/pull/7734) in
+    qiskit-terra. Previsouly it followed the mispelling `aquire_alignment` in qiskit-terra.
