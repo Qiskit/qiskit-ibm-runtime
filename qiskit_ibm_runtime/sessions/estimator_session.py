@@ -53,7 +53,8 @@ class EstimatorResult:
     def __add__(self, other: EstimatorResult) -> EstimatorResult:
         values = np.concatenate([self.values, other.values])
         variances = np.concatenate([self.variances, other.variances])
-        return EstimatorResult(values, variances)
+        shots = self.shots + other.shots
+        return EstimatorResult(values, variances, shots)
 
 
 class EstimatorSession(RuntimeSession):
