@@ -15,7 +15,7 @@
 import os
 from dataclasses import dataclass
 from functools import wraps
-from typing import Optional, List, Any
+from typing import Callable, Optional, List, Any
 from unittest import SkipTest
 
 from qiskit_ibm_runtime import IBMRuntimeService
@@ -71,7 +71,7 @@ def run_integration_test(func):
 def integration_test_setup(
     supported_auth: Optional[List[str]] = None,
     init_service: Optional[bool] = True,
-):
+) -> Callable:
     """Returns a decorator for integration test initialization.
 
     Args:

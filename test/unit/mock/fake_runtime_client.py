@@ -18,7 +18,7 @@ import time
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 from functools import wraps
-from typing import Optional, Dict
+from typing import Optional, Dict, Any
 
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
 from qiskit_ibm_runtime.utils import RuntimeEncoder
@@ -337,7 +337,7 @@ class BaseFakeRuntimeClient:
                 spec.get("interim_results") or program._interim_results
             )
 
-    def program_get(self, program_id: str):
+    def program_get(self, program_id: str) -> Dict[str, Any]:
         """Return a specific program."""
         if program_id not in self._programs:
             raise RequestsApiError("Program not found", status_code=404)
@@ -351,7 +351,7 @@ class BaseFakeRuntimeClient:
         image: str,
         hgp: Optional[str],
         log_level: Optional[str],
-    ):
+    ) -> Dict[str, Any]:
         """Run the specified program."""
         _ = self._get_program(program_id)
         job_id = uuid.uuid4().hex
@@ -481,7 +481,7 @@ class BaseFakeRuntimeClient:
         return self._backend_client.backend_names
 
     @cloud_only
-    def backend_configuration(self, backend_name: str):
+    def backend_configuration(self, backend_name: str) -> Dict[str, Any]:
         """Return the configuration of the IBM Cloud backend."""
         configs = self._backend_client.list_backends()
         for conf in configs:
@@ -490,19 +490,21 @@ class BaseFakeRuntimeClient:
         raise ValueError(f"Backend {backend_name} not found.")
 
     @cloud_only
-    def backend_status(self, backend_name: str):
+    def backend_status(self, backend_name: str) -> Dict[str, Any]:
         """Return the status of the IBM Cloud backend."""
         return self._backend_client.backend_status(backend_name)
 
     @cloud_only
-    def backend_properties(self, backend_name: str, datetime=None):
+    def backend_properties(
+        self, backend_name: str, datetime: Any = None
+    ) -> Dict[str, Any]:
         """Return the properties of the IBM Cloud backend."""
         if datetime:
             raise NotImplementedError("'datetime' is not supported with cloud runtime.")
         return self._backend_client.backend_properties(backend_name)
 
     @cloud_only
-    def backend_pulse_defaults(self, backend_name: str):
+    def backend_pulse_defaults(self, backend_name: str) -> Dict[str, Any]:
         """Return the pulse defaults of the IBM Cloud backend."""
         return self._backend_client.backend_pulse_defaults(backend_name)
 

@@ -12,7 +12,7 @@
 
 """Test deserializing server data."""
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Set, Optional
 
 import dateutil.parser
 
@@ -88,7 +88,7 @@ class TestSerialization(IBMIntegrationTestCase):
 
     def _verify_data(
         self, data: Dict, good_keys: tuple, good_key_prefixes: Optional[tuple] = None
-    ):
+    ) -> None:
         """Verify that the input data does not contain serialized objects.
 
         Args:
@@ -97,7 +97,7 @@ class TestSerialization(IBMIntegrationTestCase):
             good_key_prefixes: A list of known prefixes for keys that look like
                 serialized objects.
         """
-        suspect_keys = set()
+        suspect_keys: Set[Any] = set()
         _find_potential_encoded(data, "", suspect_keys)
         # Remove known good keys from suspect keys.
         for gkey in good_keys:
