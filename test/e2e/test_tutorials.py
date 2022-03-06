@@ -35,7 +35,7 @@ SUPPORTED_TUTORIALS_LEGACY = [
 ]
 
 
-def _is_supported(auth: str, tutorial_filename: str):
+def _is_supported(auth: str, tutorial_filename: str) -> bool:
     """Not all tutorials work for all auth types. Check if the given tutorial is supported by the
     targeted environment."""
     allowlist = (

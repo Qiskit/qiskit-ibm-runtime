@@ -22,12 +22,12 @@ from ..decorators import run_integration_test
 from ..utils import cancel_job_safe, wait_for_status
 
 
-class TestIntegrationInterimResults(IBMIntegrationJobTestCase):
-    """Integration tests for interim result functions."""
+class TestIntegrationResults(IBMIntegrationJobTestCase):
+    """Integration tests for result callbacks."""
 
     @run_integration_test
-    def test_interim_result_callback(self, service):
-        """Test interim result callback."""
+    def test_result_callback(self, service):
+        """Test result callback."""
 
         def result_callback(job_id, result):
             nonlocal final_it
@@ -51,6 +51,39 @@ class TestIntegrationInterimResults(IBMIntegrationJobTestCase):
         )
         job.wait_for_final_state()
         self.assertEqual(iterations - 1, final_it)
+        self.assertFalse(callback_err)
+        self.assertIsNotNone(job._ws_client._server_close_code)
+
+    @run_integration_test
+    def test_result_callback_with_job_result(self, service):
+        """Test result callback along with job result."""
+
+        def result_callback(job_id, result):
+            nonlocal count
+            count = count + 1
+            nonlocal final_it
+            if "iteration" in result:
+                final_it = result["iteration"]
+            nonlocal callback_err
+            if job_id != job.job_id:
+                callback_err.append(f"Unexpected job ID: {job_id}")
+            if "interim_results" in result and result["interim_results"] != int_res:
+                callback_err.append(f"Unexpected interim result: {result}")
+
+        int_res = "foo"
+        count = 0
+        final_it = 0
+        callback_err = []
+        iterations = 3
+        job = self._run_program(
+            service,
+            iterations=iterations,
+            interim_results=int_res,
+            callback=result_callback,
+        )
+        job.result()
+        self.assertEqual(iterations - 1, final_it)
+        self.assertEqual(iterations + 1, count)
         self.assertFalse(callback_err)
         self.assertIsNotNone(job._ws_client._server_close_code)
 

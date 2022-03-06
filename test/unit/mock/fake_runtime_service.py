@@ -13,7 +13,7 @@
 """Context managers for using with IBM Provider unit tests."""
 
 from collections import OrderedDict
-from typing import Dict
+from typing import Dict, Any
 from unittest import mock
 
 from qiskit_ibm_runtime.accounts import Account
@@ -52,11 +52,13 @@ class FakeRuntimeService(IBMRuntimeService):
         ):
             super().__init__(*args, **kwargs)
 
-    def _authenticate_legacy_account(self, client_params: ClientParameters):
+    def _authenticate_legacy_account(
+        self, client_params: ClientParameters
+    ) -> "FakeAuthClient":
         """Mock authentication."""
         return FakeAuthClient()
 
-    def _resolve_crn(self, account: Account):
+    def _resolve_crn(self, account: Account) -> None:
         pass
 
     def _initialize_hgps(
@@ -117,8 +119,12 @@ class FakeRuntimeService(IBMRuntimeService):
         return super()._discover_cloud_backends()
 
 
-class FakeAuthClient:
+class FakeAuthClient(AuthClient):
     """Fake auth client."""
+
+    def __init__(self):  # pylint: disable=super-init-not-called
+        # Avoid calling parent __init__ method. It has side-effects that are not supported in unit tests.
+        pass
 
     def current_service_urls(self):
         """Return service urls."""

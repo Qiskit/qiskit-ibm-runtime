@@ -58,7 +58,7 @@ class TestProxies(IBMTestCase):
     @integration_test_setup(supported_auth=["cloud"])
     def test_proxies_cloud_runtime_client(
         self, dependencies: IntegrationTestDependencies
-    ):
+    ) -> None:
         """Should reach the proxy using RuntimeClient."""
         # pylint: disable=unused-argument
         params = dependencies.service._client_params
@@ -73,7 +73,7 @@ class TestProxies(IBMTestCase):
     @integration_test_setup(supported_auth=["legacy"], init_service=False)
     def test_proxies_legacy_runtime_client(
         self, dependencies: IntegrationTestDependencies
-    ):
+    ) -> None:
         """Should reach the proxy using RuntimeClient."""
         service = IBMRuntimeService(
             auth="legacy",
@@ -95,7 +95,9 @@ class TestProxies(IBMTestCase):
         self.assertIn(api_line, proxy_output)
 
     @integration_test_setup(supported_auth=["legacy"], init_service=False)
-    def test_proxies_account_client(self, dependencies: IntegrationTestDependencies):
+    def test_proxies_account_client(
+        self, dependencies: IntegrationTestDependencies
+    ) -> None:
         """Should reach the proxy using AccountClient."""
         service = IBMRuntimeService(
             auth="legacy",
@@ -117,7 +119,9 @@ class TestProxies(IBMTestCase):
         self.assertIn(api_line, proxy_output)
 
     @integration_test_setup(supported_auth=["legacy"], init_service=False)
-    def test_proxies_authclient(self, dependencies: IntegrationTestDependencies):
+    def test_proxies_authclient(
+        self, dependencies: IntegrationTestDependencies
+    ) -> None:
         """Should reach the proxy using AuthClient."""
         pproxy_desired_access_log_line_ = pproxy_desired_access_log_line(
             dependencies.url
@@ -138,7 +142,9 @@ class TestProxies(IBMTestCase):
         )
 
     @integration_test_setup(supported_auth=["legacy"], init_service=False)
-    def test_proxies_versionclient(self, dependencies: IntegrationTestDependencies):
+    def test_proxies_versionclient(
+        self, dependencies: IntegrationTestDependencies
+    ) -> None:
         """Should reach the proxy using IBMVersionFinder."""
         pproxy_desired_access_log_line_ = pproxy_desired_access_log_line(
             dependencies.url
@@ -156,7 +162,7 @@ class TestProxies(IBMTestCase):
     @integration_test_setup(supported_auth=["legacy"], init_service=False)
     def test_invalid_proxy_port_runtime_client(
         self, dependencies: IntegrationTestDependencies
-    ):
+    ) -> None:
         """Should raise RequestApiError with ProxyError using RuntimeClient."""
         params = ClientParameters(
             auth_type="legacy",
@@ -172,7 +178,7 @@ class TestProxies(IBMTestCase):
     @integration_test_setup(supported_auth=["legacy"], init_service=False)
     def test_invalid_proxy_port_authclient(
         self, dependencies: IntegrationTestDependencies
-    ):
+    ) -> None:
         """Should raise RequestApiError with ProxyError using AuthClient."""
         params = ClientParameters(
             auth_type="legacy",
@@ -188,7 +194,7 @@ class TestProxies(IBMTestCase):
     @integration_test_setup(supported_auth=["legacy"], init_service=False)
     def test_invalid_proxy_port_versionclient(
         self, dependencies: IntegrationTestDependencies
-    ):
+    ) -> None:
         """Should raise RequestApiError with ProxyError using VersionClient."""
         with self.assertRaises(RequestsApiError) as context_manager:
             version_finder = VersionClient(
@@ -201,7 +207,7 @@ class TestProxies(IBMTestCase):
     @integration_test_setup(supported_auth=["legacy"], init_service=False)
     def test_invalid_proxy_address_runtime_client(
         self, dependencies: IntegrationTestDependencies
-    ):
+    ) -> None:
         """Should raise RequestApiError with ProxyError using RuntimeClient."""
         params = ClientParameters(
             auth_type="legacy",
@@ -218,7 +224,7 @@ class TestProxies(IBMTestCase):
     @integration_test_setup(supported_auth=["legacy"], init_service=False)
     def test_invalid_proxy_address_authclient(
         self, dependencies: IntegrationTestDependencies
-    ):
+    ) -> None:
         """Should raise RequestApiError with ProxyError using AuthClient."""
         params = ClientParameters(
             auth_type="legacy",
@@ -234,7 +240,7 @@ class TestProxies(IBMTestCase):
     @integration_test_setup(supported_auth=["legacy"], init_service=False)
     def test_invalid_proxy_address_versionclient(
         self, dependencies: IntegrationTestDependencies
-    ):
+    ) -> None:
         """Should raise RequestApiError with ProxyError using VersionClient."""
         with self.assertRaises(RequestsApiError) as context_manager:
             version_finder = VersionClient(
@@ -245,7 +251,7 @@ class TestProxies(IBMTestCase):
         self.assertIsInstance(context_manager.exception.__cause__, ProxyError)
 
     @integration_test_setup(supported_auth=["legacy"], init_service=False)
-    def test_proxy_urls(self, dependencies: IntegrationTestDependencies):
+    def test_proxy_urls(self, dependencies: IntegrationTestDependencies) -> None:
         """Test different forms of the proxy urls."""
         test_urls = [
             "http://{}:{}".format(ADDRESS, PORT),
