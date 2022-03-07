@@ -12,18 +12,15 @@
 
 """Qiskit Runtime Estimator primitive service."""
 
-from typing import List, Tuple, Optional, Union, Dict
+from typing import Iterable, Optional, Dict
 
-from qiskit.circuit import QuantumCircuit
+from qiskit.circuit import QuantumCircuit, Parameter
 
-# TODO uncomment when importing Group from terra
-# from qiskit.primitives.base_estimator import Group
 from qiskit.quantum_info import SparsePauliOp
 
 from .base_primitive import BasePrimitive
 
-# TODO remove Group when importing from terra
-from .sessions.estimator_session import EstimatorSession, Group
+from .sessions.estimator_session import EstimatorSession
 
 
 class IBMEstimator(BasePrimitive):
@@ -82,16 +79,16 @@ class IBMEstimator(BasePrimitive):
 
     def __call__(  # type: ignore[override]
         self,
-        circuits: List[QuantumCircuit],
-        observables: List[SparsePauliOp],
-        grouping: Optional[List[Union[Group, Tuple[int, int]]]] = None,
+        circuits: Iterable[QuantumCircuit],
+        observables: Iterable[SparsePauliOp],
+        parameters: Optional[Iterable[Iterable[Parameter]]] = None,
         transpile_options: Optional[Dict] = None,
     ) -> EstimatorSession:
         # pylint: disable=arguments-differ
         inputs = {
             "circuits": circuits,
             "observables": observables,
-            "grouping": grouping,
+            "parameters": parameters,
             "transpile_options": transpile_options,
         }
 
