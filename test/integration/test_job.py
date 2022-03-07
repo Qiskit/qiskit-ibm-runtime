@@ -15,7 +15,7 @@
 import random
 import time
 
-from qiskit.providers.jobstatus import JobStatus
+from qiskit.providers.jobstatus import JOB_FINAL_STATES, JobStatus
 from qiskit.test.decorators import slow_test
 
 from qiskit_ibm_runtime.constants import API_TO_JOB_ERROR_MESSAGE
@@ -217,6 +217,16 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     def test_wait_for_final_state(self, service):
         """Test wait for final state."""
         job = self._run_program(service)
+        job.wait_for_final_state()
+        self.assertEqual(JobStatus.DONE, job.status())
+
+    @run_integration_test
+    def test_wait_for_final_state_after_job_status(self, service):
+        """Test wait for final state on a completed job when the status is updated first."""
+        job = self._run_program(service)
+        status = job.status()
+        while status not in JOB_FINAL_STATES:
+            status = job.status()
         job.wait_for_final_state()
         self.assertEqual(JobStatus.DONE, job.status())
 
