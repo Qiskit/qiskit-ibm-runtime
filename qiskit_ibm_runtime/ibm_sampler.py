@@ -26,6 +26,32 @@ class IBMSampler(BasePrimitive):
     Qiskit Runtime Sampler primitive service calculates probabilities or quasi-probabilities
     of bitstrings from quantum circuits.
 
+    IBMSampler can be initialized with following parameters. It returns a factory.
+
+    * service: Optional instance of :class:`qiskit_ibm_runtime.IBMRuntimeService` class,
+        defaults to `IBMRuntimeService()` which tries to initialize your default saved account
+
+    * backend: Optional instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
+        string name of backend, if not specified a backend will be selected automatically
+        (IBM Cloud only)
+
+    The factory can then be called with the following parameters to initialize the Sampler
+    primitive. It returns a :class:`qiskit_ibm_runtime.sessions.SamplerSession` instance.
+
+    * circuits: list of (parameterized) quantum circuits
+        (a list of :class:`~qiskit.circuit.QuantumCircuit`))
+
+    * parameters: a list of parameters of the quantum circuits.
+        (:class:`~qiskit.circuit.parametertable.ParameterView` or
+        a list of :class:`~qiskit.circuit.Parameter`)
+
+    The :class:`qiskit_ibm_runtime.sessions.SamplerSession` instance can be called repeatedly
+    with the following parameters to calculate probabilites or quasi-probabilities.
+
+    * circuits: A list of circuit indices.
+
+    * parameters: Concrete parameters to be bound.
+
     Example::
 
         from qiskit import QuantumCircuit
@@ -34,7 +60,7 @@ class IBMSampler(BasePrimitive):
         from qiskit_ibm_runtime import IBMRuntimeService, IBMSampler
 
         service = IBMRuntimeService(auth="cloud")
-        sampler = IBMSampler(service=service, backend="ibmq_qasm_simulator")
+        sampler_factory = IBMSampler(service=service, backend="ibmq_qasm_simulator")
 
         bell = QuantumCircuit(2)
         bell.h(0)
@@ -42,13 +68,13 @@ class IBMSampler(BasePrimitive):
         bell.measure_all()
 
         # executes a Bell circuit
-        with sampler(circuits=[bell], parameters=[[]]) as session:
-            result = session(parameters=[[]], circuits=[0])
+        with sampler_factory(circuits=[bell], parameters=[[]]) as sampler:
+            result = sampler(parameters=[[]], circuits=[0])
             print([q.binary_probabilities() for q in result.quasi_dists])
 
         # executes three Bell circuits
-        with sampler([bell]*3, [[]]) as session:
-            result = session([0, 1, 2], [[]]*3)
+        with sampler_factory([bell]*3, [[]]) as sampler:
+            result = sampler([0, 1, 2], [[]]*3)
             print([q.binary_probabilities() for q in result.quasi_dists])
 
         # parametrized circuit
@@ -61,8 +87,9 @@ class IBMSampler(BasePrimitive):
         theta2 = [1, 2, 3, 4, 5, 6]
         theta3 = [0, 1, 2, 3, 4, 5, 6, 7]
 
-        with sampler(circuits=[pqc, pqc2], parameters=[pqc.parameters, pqc2.parameters]) as session:
-            result = session([0, 0, 1], [theta1, theta2, theta3])
+        with sampler_factory(circuits=[pqc, pqc2], parameters=[pqc.parameters, pqc2.parameters])
+            as sampler:
+            result = sampler([0, 0, 1], [theta1, theta2, theta3])
             # result of pqc(theta1)
             print([q.binary_probabilities() for q in result.quasi_dists[0]])
             # result of pqc(theta2)
@@ -78,6 +105,22 @@ class IBMSampler(BasePrimitive):
         transpile_options: Optional[Dict] = None,
         skip_transpilation: bool = False,
     ) -> SamplerSession:
+        """Initializes the Sampler primitive.
+
+        Args:
+            circuits: list of (parameterized) quantum circuits
+                (a list of :class:`~qiskit.circuit.QuantumCircuit`))
+            parameters: a list of parameters of the quantum circuits.
+                (:class:`~qiskit.circuit.parametertable.ParameterView` or
+                a list of :class:`~qiskit.circuit.Parameter`)
+            transpile_options: A collection of kwargs passed to transpile.
+                Ignored if skip_transpilation is set to True.
+            skip_transpilation: Transpilation is skipped if set to True.
+                False by default.
+
+        Returns:
+            An instance of :class:`qiskit_ibm_runtime.sessions.SamplerSession`.
+        """
         # pylint: disable=arguments-differ
         inputs = {
             "circuits": circuits,
