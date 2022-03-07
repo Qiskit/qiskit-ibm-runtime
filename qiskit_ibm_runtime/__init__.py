@@ -217,6 +217,8 @@ Classes
    :toctree: ../stubs/
 
    IBMRuntimeService
+   IBMEstimator
+   IBMSampler
    IBMBackend
    RuntimeJob
    RuntimeProgram
