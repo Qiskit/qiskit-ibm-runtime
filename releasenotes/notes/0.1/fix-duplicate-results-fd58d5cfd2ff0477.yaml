@@ -1,0 +1,5 @@
+---
+fixes:
+  - |
+    Fixes `#182 <https://github.com/Qiskit/qiskit-ibm-runtime/issues/182>`__
+    where duplicate results were streamed for a particular scenario.
