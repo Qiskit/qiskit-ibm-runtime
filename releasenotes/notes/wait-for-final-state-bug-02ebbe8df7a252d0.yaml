@@ -1,0 +1,8 @@
+---
+fixes:
+  - |
+    Fixed a bug where :meth:`qiskit_ibm_runtime.RuntimeJob.wait_for_final_state`
+    would result in a NoneType error if the job already completed and
+    :meth:`qiskit_ibm_runtime.RuntimeJob.status` was called beforehand. 
+    
+
