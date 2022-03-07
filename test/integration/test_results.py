@@ -124,7 +124,7 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
         called_back_count = 0
         job = self._run_program(service, interim_results="foobar")
         job.wait_for_final_state()
-        job._status = JobStatus.RUNNING  # Allow stream_results()
+        job._state["status"] = JobStatus.RUNNING  # Allow stream_results()
         job.stream_results(result_callback)
         time.sleep(2)
         # Callback is expected twice because both interim and final results are returned
