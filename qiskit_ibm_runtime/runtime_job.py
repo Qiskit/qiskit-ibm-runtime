@@ -229,7 +229,8 @@ class RuntimeJob:
         """
         if self._state["status"] not in JOB_FINAL_STATES and not self._is_streaming():
             self._ws_client_future = self._executor.submit(self._start_websocket_client)
-        self._ws_client_future.result(timeout)
+        if self._is_streaming():
+            self._ws_client_future.result(timeout)
         self.status()
 
     def stream_results(
