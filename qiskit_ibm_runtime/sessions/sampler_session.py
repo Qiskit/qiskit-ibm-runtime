@@ -15,7 +15,7 @@
 # TODO remove when importing SamplerResult from terra
 from __future__ import annotations
 
-from typing import Optional, Union, List, Any
+from typing import Optional, List, Any, Sequence
 
 # TODO remove when importing SamplerResult from terra
 from dataclasses import dataclass
@@ -28,19 +28,23 @@ from qiskit.result import QuasiDistribution
 
 from .runtime_session import RuntimeSession
 
-# TODO remove and import SamplerResult from terra
+# TODO use SamplerResult from terra once released
 @dataclass(frozen=True)
 class SamplerResult:
     """
     Result of Sampler
+
+    Example::
+
+        result = session(circuits, parameters)
+
+    where the i-th elements of `result` correspond to the expectation using the circuit
+    given by `circuits[i]` and the parameters bounds by `parameters[i]`.
     """
 
     quasi_dists: list[QuasiDistribution]
     metadata: list[dict[str, Any]]
     shots: int
-
-    def __getitem__(self, key: Any) -> SamplerResult:
-        return SamplerResult(self.quasi_dists[key], self.metadata[key], self.shots)
 
 
 class SamplerSession(RuntimeSession):
@@ -48,13 +52,18 @@ class SamplerSession(RuntimeSession):
 
     def __call__(
         self,
-        parameters: Optional[Union[List[float], List[List[float]]]] = None,
+        circuits: Sequence[int],
+        parameters: Sequence[Sequence[float]],
         **run_options: Any
     ) -> SamplerResult:
-        self.write(parameters=parameters, run_options=run_options)
+        self.write(
+            circuits_indices=circuits,
+            parameters_values=parameters,
+            run_options=run_options,
+        )
         raw_result = self.read()
         return SamplerResult(
             quasi_dists=raw_result["quasi_dists"],
-            metadata=None,
+            metadata=raw_result["metadata"],
             shots=raw_result["shots"],
         )

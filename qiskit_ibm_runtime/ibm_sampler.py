@@ -12,9 +12,9 @@
 
 """Qiskit Runtime Sampler primitive service."""
 
-from typing import Optional, List, Dict
+from typing import Optional, Iterable, Dict
 
-from qiskit.circuit import QuantumCircuit
+from qiskit.circuit import QuantumCircuit, Parameter
 
 from .base_primitive import BasePrimitive
 from .sessions.sampler_session import SamplerSession
@@ -73,13 +73,15 @@ class IBMSampler(BasePrimitive):
 
     def __call__(  # type: ignore[override]
         self,
-        circuits: List[QuantumCircuit],
+        circuits: Iterable[QuantumCircuit],
+        parameters: Optional[Iterable[Iterable[Parameter]]] = None,
         transpile_options: Optional[Dict] = None,
         skip_transpilation: bool = False,
     ) -> SamplerSession:
         # pylint: disable=arguments-differ
         inputs = {
             "circuits": circuits,
+            "parameters": parameters,
             "transpile_options": transpile_options,
             "skip_transpilation": skip_transpilation,
         }
