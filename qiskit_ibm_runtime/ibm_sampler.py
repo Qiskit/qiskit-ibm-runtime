@@ -52,6 +52,8 @@ class IBMSampler(BasePrimitive):
 
     * parameters: Concrete parameters to be bound.
 
+    All the above lists should be of the same length.
+
     Example::
 
         from qiskit import QuantumCircuit

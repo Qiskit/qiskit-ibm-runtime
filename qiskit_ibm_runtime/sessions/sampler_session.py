@@ -44,7 +44,6 @@ class SamplerResult:
 
     quasi_dists: list[QuasiDistribution]
     metadata: list[dict[str, Any]]
-    shots: int
 
 
 class SamplerSession(RuntimeSession):
@@ -56,6 +55,16 @@ class SamplerSession(RuntimeSession):
         parameters: Sequence[Sequence[float]],
         **run_options: Any
     ) -> SamplerResult:
+        """Calulates probabilites or quasi-probabilities for given inputs in a runtime session.
+
+        Args:
+            circuits: A list of circuit indices.
+            parameters: Concrete parameters to be bound.
+            **run_options: A collection of kwargs passed to backend.run().
+
+        Returns:
+            An instance of SamplerResult.
+        """
         self.write(
             circuits_indices=circuits,
             parameters_values=parameters,
@@ -65,5 +74,4 @@ class SamplerSession(RuntimeSession):
         return SamplerResult(
             quasi_dists=raw_result["quasi_dists"],
             metadata=raw_result["metadata"],
-            shots=raw_result["shots"],
         )

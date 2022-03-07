@@ -62,6 +62,17 @@ class EstimatorSession(RuntimeSession):
         parameters: Sequence[Sequence[float]],
         **run_options: Any,
     ) -> EstimatorResult:
+        """Estimates expectation values for given inputs in a runtime session.
+
+        Args:
+            circuits: A list of circuit indices.
+            observables: A list of observable indices.
+            parameters: Concrete parameters to be bound.
+            **run_options: A collection of kwargs passed to backend.run().
+
+        Returns:
+            An instance of EstimatorResult.
+        """
         self.write(
             circuits_indices=circuits,
             observables_indices=observables,
