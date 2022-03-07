@@ -15,46 +15,41 @@
 # TODO remove when importing EstimatorResult from terra
 from __future__ import annotations
 
-from typing import List, Optional, Union, Tuple, Any
+from typing import TYPE_CHECKING, Sequence, List, Optional, Any
 
 # TODO remove when importing EstimatorResult from terra
 from dataclasses import dataclass
-import numpy as np
-
-# TODO uncomment when importing EstimatorResult and Group from terra
-# from qiskit.primitives import EstimatorResult
-# from qiskit.primitives.base_estimator import Group
 
 from .runtime_session import RuntimeSession
 
-# TODO remove and import Group from terra
-@dataclass(frozen=True)
-class Group:
-    """The dataclass represents indices of circuit and observable."""
+# TODO remove when importing EstimatorResult from terra
+if TYPE_CHECKING:
+    import numpy as np
 
-    circuit_index: int
-    observable_index: int
+# TODO uncomment when importing EstimatorResult from terra
+# from qiskit.primitives import EstimatorResult
 
-
-# TODO remove and import from terra
+# TODO use EstimatorResult from terra once released
 @dataclass(frozen=True)
 class EstimatorResult:
     """
     Result of ExpectationValue
-    #TODO doc
+
+    Example::
+
+        result = session(circuits, observables, parameters)
+
+    where the i-th elements of `result` correspond to the expectation using the circuit and
+    observable given by `circuits[i]`, `observables[i]`, and the parameters bounds by `parameters[i]`.
+
+    Args:
+        values (np.ndarray): the array of the expectation values.
+        metadata (list[dict]): list of the metadata.
     """
 
     values: "np.ndarray[Any, np.dtype[np.float64]]"
-    variances: "np.ndarray[Any, np.dtype[np.float64]]"
+    metadata: list[dict[str, Any]]
     shots: int
-    # standard_errors: np.ndarray[Any, np.dtype[np.float64]]
-    # metadata: list[dict[str, Any]]
-
-    def __add__(self, other: EstimatorResult) -> EstimatorResult:
-        values = np.concatenate([self.values, other.values])
-        variances = np.concatenate([self.variances, other.variances])
-        shots = self.shots + other.shots
-        return EstimatorResult(values, variances, shots)
 
 
 class EstimatorSession(RuntimeSession):
@@ -62,14 +57,20 @@ class EstimatorSession(RuntimeSession):
 
     def __call__(
         self,
-        parameters: List[List[float]] = None,
-        grouping: Optional[List[Union[Group, Tuple[int, int]]]] = None,
+        circuits: Sequence[int],
+        observables: Sequence[int],
+        parameters: Sequence[Sequence[float]],
         **run_options: Any,
     ) -> EstimatorResult:
-        self.write(parameters=parameters, grouping=grouping, run_options=run_options)
+        self.write(
+            circuits_indices=circuits,
+            observables_indices=observables,
+            parameters_values=parameters,
+            run_options=run_options,
+        )
         raw_result = self.read()
         return EstimatorResult(
             values=raw_result["values"],
-            variances=raw_result["variances"],
+            metadata=raw_result["metadata"],
             shots=raw_result["shots"],
         )
