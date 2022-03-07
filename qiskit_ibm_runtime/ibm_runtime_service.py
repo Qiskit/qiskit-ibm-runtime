@@ -873,12 +873,14 @@ class IBMRuntimeService:
         options: Optional[Union[RuntimeOptions, Dict]] = None,
     ) -> RuntimeSession:
         """Open a new runtime session.
+
         Args:
             program_id: Program ID.
             inputs: Initial program input parameters. These input values are
                 persistent throughout the session.
             options: Runtime options that control the execution environment. See
                 :class:`RuntimeOptions` for all available options.
+
         Returns:
             Runtime session.
         """
