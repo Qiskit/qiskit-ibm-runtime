@@ -111,7 +111,8 @@ class RuntimeJob:
         self._params = params or {}
         self._creation_date = creation_date
         self._program_id = program_id
-        self._status = JobStatus.INITIALIZING
+        self._state = {"status": JobStatus.INITIALIZING}
+        self._reason: Optional[str] = None
         self._error_message = None  # type: Optional[str]
         self._result_decoder = result_decoder
         self._image = image
@@ -174,7 +175,7 @@ class RuntimeJob:
         _decoder = decoder or self._result_decoder
         if self._results is None or (_decoder != self._result_decoder):
             self.wait_for_final_state(timeout=timeout)
-            if self._status == JobStatus.ERROR:
+            if self._state["status"] == JobStatus.ERROR:
                 raise RuntimeJobFailureError(
                     f"Unable to retrieve job result. " f"{self.error_message()}"
                 )
@@ -198,7 +199,7 @@ class RuntimeJob:
                 ) from None
             raise IBMRuntimeError(f"Failed to cancel job: {ex}") from None
         self.cancel_result_streaming()
-        self._status = JobStatus.CANCELLED
+        self._state["status"] = JobStatus.CANCELLED
 
     def status(self) -> JobStatus:
         """Return the status of the job.
@@ -207,7 +208,7 @@ class RuntimeJob:
             Status of this job.
         """
         self._set_status_and_error_message()
-        return self._status
+        return self._state["status"]
 
     def error_message(self) -> Optional[str]:
         """Returns the reason if the job failed.
@@ -226,7 +227,7 @@ class RuntimeJob:
         Args:
             timeout: Seconds to wait for the job. If ``None``, wait indefinitely.
         """
-        if self._status not in JOB_FINAL_STATES and not self._is_streaming():
+        if self._state["status"] not in JOB_FINAL_STATES and not self._is_streaming():
             self._ws_client_future = self._executor.submit(self._start_websocket_client)
         self._ws_client_future.result(timeout)
         self.status()
@@ -249,7 +250,7 @@ class RuntimeJob:
             RuntimeInvalidStateError: If a callback function is already streaming results or
                 if the job already finished.
         """
-        if self._status in JOB_FINAL_STATES:
+        if self._state["status"] in JOB_FINAL_STATES:
             raise RuntimeInvalidStateError("Job already finished.")
         if self._is_streaming():
             raise RuntimeInvalidStateError(
@@ -292,7 +293,7 @@ class RuntimeJob:
 
     def _set_status_and_error_message(self) -> None:
         """Fetch and set status and error message."""
-        if self._status not in JOB_FINAL_STATES:
+        if self._state["status"] not in JOB_FINAL_STATES:
             response = self._api_client.job_get(job_id=self.job_id)
             self._set_status(response)
             self._set_error_message(response)
@@ -308,14 +309,11 @@ class RuntimeJob:
         """
         try:
             if "reason" in job_response["state"]:
-                status = (
-                    job_response["state"]["status"]
-                    + " - "
-                    + job_response["state"]["reason"]
-                )
-            else:
-                status = job_response["state"]["status"]
-            self._status = API_TO_JOB_STATUS[status.upper()]
+                self._reason = job_response["state"]["reason"]
+            status = job_response["state"]["status"]
+            self._state["status"] = self._get_api_msg(
+                status, API_TO_JOB_STATUS, self._reason
+            )
         except KeyError:
             raise IBMError(f"Unknown status: {status}")
 
@@ -325,21 +323,32 @@ class RuntimeJob:
         Args:
             job_response: Job response from runtime API.
         """
-        if self._status == JobStatus.ERROR:
+        if self._state["status"] == JobStatus.ERROR:
             job_result_raw = self._api_client.job_results(job_id=self.job_id)
-            if "reason" in job_response["state"]:
-                error_message = (
-                    job_response["state"]["status"]
-                    + " - "
-                    + job_response["state"]["reason"]
-                )
-            else:
-                error_message = job_response["state"]["status"]
-            self._error_message = API_TO_JOB_ERROR_MESSAGE[
-                error_message.upper()
-            ].format(self.job_id, job_result_raw)
+            self._error_message = self._get_api_msg(
+                job_response["state"]["status"], API_TO_JOB_ERROR_MESSAGE, self._reason
+            ).format(self.job_id, job_result_raw)
         else:
             self._error_message = None
+
+    def _get_api_msg(
+        self,
+        status: str,
+        msg_type: Dict,
+        reason: str = None,
+    ) -> str:
+        """Return the job status or error message.
+
+        Args:
+            status: Job status returned from the API.
+            msg_type: Dictionary to use to convert API message.
+            reason: Job status reason returned from the API.
+
+        Returns: A job status or errror message.
+        """
+        if reason:
+            status = status + " - " + reason
+        return msg_type[status.upper()]
 
     def _is_streaming(self) -> bool:
         """Return whether job results are being streamed.
