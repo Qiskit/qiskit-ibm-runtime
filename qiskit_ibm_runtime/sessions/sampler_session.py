@@ -55,7 +55,7 @@ class SamplerSession(RuntimeSession):
         parameters: Sequence[Sequence[float]],
         **run_options: Any
     ) -> SamplerResult:
-        """Calulates probabilites or quasi-probabilities for given inputs in a runtime session.
+        """Calculates probabilites or quasi-probabilities for given inputs in a runtime session.
 
         Args:
             circuits: A list of circuit indices.

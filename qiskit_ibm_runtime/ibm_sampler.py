@@ -110,11 +110,11 @@ class IBMSampler(BasePrimitive):
         """Initializes the Sampler primitive.
 
         Args:
-            circuits: list of (parameterized) quantum circuits
-                (a list of :class:`~qiskit.circuit.QuantumCircuit`))
-            parameters: a list of parameters of the quantum circuits.
+            circuits: A list of (parameterized) quantum circuits
+                (a list of :class:`~qiskit.circuit.QuantumCircuit`)).
+            parameters: A list of parameters of the quantum circuits
                 (:class:`~qiskit.circuit.parametertable.ParameterView` or
-                a list of :class:`~qiskit.circuit.Parameter`)
+                a list of :class:`~qiskit.circuit.Parameter`).
             transpile_options: A collection of kwargs passed to transpile.
                 Ignored if skip_transpilation is set to True.
             skip_transpilation: Transpilation is skipped if set to True.

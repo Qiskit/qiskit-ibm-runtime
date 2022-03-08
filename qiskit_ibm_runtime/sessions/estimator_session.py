@@ -43,8 +43,8 @@ class EstimatorResult:
     observable given by `circuits[i]`, `observables[i]`, and the parameters bounds by `parameters[i]`.
 
     Args:
-        values (np.ndarray): the array of the expectation values.
-        metadata (list[dict]): list of the metadata.
+        values (np.ndarray): An array of expectation values.
+        metadata (list[dict]): A list of metadata.
     """
 
     values: "np.ndarray[Any, np.dtype[np.float64]]"
