@@ -361,7 +361,7 @@ class _SPSA(Optimizer):
         avg_magnitudes /= steps
 
         if modelspace:
-            a = target_magnitude / (avg_magnitudes ** 2)
+            a = target_magnitude / (avg_magnitudes**2)
         else:
             a = target_magnitude / avg_magnitudes
 
@@ -513,7 +513,7 @@ class _SPSA(Optimizer):
                 self._nfev += 4
                 diff = results[i, 2] - results[i, 3]
                 diff -= results[i, 4] - results[i, 5]
-                diff /= 2 * eps ** 2
+                diff /= 2 * eps**2
 
                 rank_one = np.outer(deltas1[i], deltas2[i])
                 hessian_estimate += diff * (rank_one + rank_one.T) / 2

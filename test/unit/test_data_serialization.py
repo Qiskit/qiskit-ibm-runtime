@@ -159,7 +159,7 @@ class TestDataSerialization(IBMTestCase):
             StateFn(quantum_circuit, coeff=coeff_x),
             CircuitStateFn(quantum_circuit, is_measurement=True),
             DictStateFn("1" * 3, is_measurement=True),
-            VectorStateFn(np.ones(2 ** 3, dtype=complex)),
+            VectorStateFn(np.ones(2**3, dtype=complex)),
             OperatorStateFn(CircuitOp(QuantumCircuit(1))),
             SparseVectorStateFn(sparse),
             Statevector([1, 0]),
