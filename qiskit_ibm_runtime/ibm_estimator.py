@@ -18,7 +18,7 @@ from qiskit.circuit import QuantumCircuit, Parameter
 from qiskit.quantum_info import SparsePauliOp
 
 from .base_primitive import BasePrimitive
-from .sessions.estimator_session import EstimatorSession
+from .estimator import Estimator
 
 
 class IBMEstimator(BasePrimitive):
@@ -114,7 +114,7 @@ class IBMEstimator(BasePrimitive):
         observables: Iterable[SparsePauliOp],
         parameters: Optional[Iterable[Iterable[Parameter]]] = None,
         transpile_options: Optional[Dict] = None,
-    ) -> EstimatorSession:
+    ) -> Estimator:
         """Initializes the Estimator primitive.
 
         Args:
@@ -125,25 +125,17 @@ class IBMEstimator(BasePrimitive):
                 (:class:`~qiskit.circuit.parametertable.ParameterView` or
                 a list of :class:`~qiskit.circuit.Parameter`) specifying the order
                 in which parameter values will be bound.
+            transpile_options: A collection of kwargs passed to `transpile()`.
 
         Returns:
-            An instance of :class:`qiskit_ibm_runtime.sessions.EstimatorSession`.
+            An instance of :class:`qiskit_ibm_runtime.estimator.Estimator`.
         """
         # pylint: disable=arguments-differ
-        inputs = {
-            "circuits": circuits,
-            "observables": observables,
-            "parameters": parameters,
-            "transpile_options": transpile_options,
-        }
-
-        options = {}
-        if self._backend:
-            options["backend_name"] = self._backend
-
-        return EstimatorSession(
-            runtime=self._service,
-            program_id="estimator",
-            inputs=inputs,
-            options=options,
+        return Estimator(
+            circuits=circuits,
+            observables=observables,
+            parameters=parameters,
+            transpile_options=transpile_options,
+            service=self._service,
+            backend_name=self._backend_name,
         )

@@ -36,10 +36,13 @@ class BasePrimitive(ABC):
                 string name of backend, if not specified a backend will be selected automatically
                 (IBM Cloud only).
         """
+        if not service:
+            # try to initialize service with default saved account
+            service = IBMRuntimeService()
         self._service = service
         if backend and not isinstance(backend, str):
             backend = backend.name
-        self._backend = backend
+        self._backend_name = backend
 
     @abstractmethod
     def __call__(self, *args: Any, **kwargs: Any) -> Any:

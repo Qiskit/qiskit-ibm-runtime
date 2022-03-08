@@ -17,7 +17,7 @@ from typing import Optional, Iterable, Dict
 from qiskit.circuit import QuantumCircuit, Parameter
 
 from .base_primitive import BasePrimitive
-from .sessions.sampler_session import SamplerSession
+from .sampler import Sampler
 
 
 class IBMSampler(BasePrimitive):
@@ -107,7 +107,7 @@ class IBMSampler(BasePrimitive):
         parameters: Optional[Iterable[Iterable[Parameter]]] = None,
         transpile_options: Optional[Dict] = None,
         skip_transpilation: bool = False,
-    ) -> SamplerSession:
+    ) -> Sampler:
         """Initializes the Sampler primitive.
 
         Args:
@@ -122,23 +122,14 @@ class IBMSampler(BasePrimitive):
                 False by default.
 
         Returns:
-            An instance of :class:`qiskit_ibm_runtime.sessions.SamplerSession`.
+            An instance of :class:`qiskit_ibm_runtime.sampler.Sampler`.
         """
         # pylint: disable=arguments-differ
-        inputs = {
-            "circuits": circuits,
-            "parameters": parameters,
-            "transpile_options": transpile_options,
-            "skip_transpilation": skip_transpilation,
-        }
-
-        options = {}
-        if self._backend:
-            options["backend_name"] = self._backend
-
-        return SamplerSession(
-            runtime=self._service,
-            program_id="sampler",
-            inputs=inputs,
-            options=options,
+        return Sampler(
+            circuits=circuits,
+            parameters=parameters,
+            transpile_options=transpile_options,
+            skip_transpilation=skip_transpilation,
+            service=self._service,
+            backend_name=self._backend_name,
         )

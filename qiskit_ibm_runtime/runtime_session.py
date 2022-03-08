@@ -18,11 +18,11 @@ import copy
 from functools import wraps
 
 from qiskit_ibm_runtime import ibm_runtime_service  # pylint: disable=unused-import
-from ..runtime_job import RuntimeJob
-from ..runtime_program import ParameterNamespace
-from ..runtime_options import RuntimeOptions
-from ..program.result_decoder import ResultDecoder
-from ..exceptions import RuntimeInvalidStateError
+from .runtime_job import RuntimeJob
+from .runtime_program import ParameterNamespace
+from .runtime_options import RuntimeOptions
+from .program.result_decoder import ResultDecoder
+from .exceptions import RuntimeInvalidStateError
 
 
 def _active_session(func):  # type: ignore
