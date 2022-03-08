@@ -483,7 +483,7 @@ class IBMRuntimeService:
 
                     IBMRuntimeService.backends(
                         filters=lambda b: b.configuration().quantum_volume > 16)
-            kwargs: Simple filters that specify a ``True``/``False`` criteria in the
+            **kwargs: Simple filters that specify a ``True``/``False`` criteria in the
                 backend configuration or status.
                 An example to get the operational real backends::
 
@@ -1278,7 +1278,7 @@ class IBMRuntimeService:
                     AccountProvider.backends(
                         filters=lambda b: b.configuration().quantum_volume > 16)
 
-            kwargs: Simple filters that specify a ``True``/``False`` criteria in the
+            **kwargs: Simple filters that specify a ``True``/``False`` criteria in the
                 backend configuration, backends status, or provider credentials.
                 An example to get the operational backends with 5 qubits::
 
