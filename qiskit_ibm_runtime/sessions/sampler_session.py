@@ -53,7 +53,7 @@ class SamplerSession(RuntimeSession):
         self,
         circuit_indices: Sequence[int],
         parameter_values: Sequence[Sequence[float]],
-        **run_options: Any
+        **run_options: Any,
     ) -> SamplerResult:
         """Calculates probabilites or quasi-probabilities for given inputs in a runtime session.
 
