@@ -52,11 +52,11 @@ class IBMEstimator(BasePrimitive):
     The :class:`qiskit_ibm_runtime.sessions.EstimatorSession` instance can be called repeatedly
     with the following parameters to estimate expectation values.
 
-    * circuits: A list of circuit indices.
+    * circuit_indices: A list of circuit indices.
 
-    * observables: A list of observable indices.
+    * observable_indices: A list of observable indices.
 
-    * parameters: Concrete parameters to be bound.
+    * parameter_values: Concrete parameters to be bound.
 
     All the above lists should be of the same length.
 

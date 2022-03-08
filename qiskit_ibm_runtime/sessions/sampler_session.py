@@ -36,10 +36,10 @@ class SamplerResult:
 
     Example::
 
-        result = session(circuits, parameters)
+        result = sampler(circuit_indices, parameter_values)
 
     where the i-th elements of `result` correspond to the expectation using the circuit
-    given by `circuits[i]` and the parameters bounds by `parameters[i]`.
+    given by `circuit_indices[i]` and the parameters bounds by `parameter_values[i]`.
     """
 
     quasi_dists: list[QuasiDistribution]
@@ -51,23 +51,23 @@ class SamplerSession(RuntimeSession):
 
     def __call__(
         self,
-        circuits: Sequence[int],
-        parameters: Sequence[Sequence[float]],
+        circuit_indices: Sequence[int],
+        parameter_values: Sequence[Sequence[float]],
         **run_options: Any
     ) -> SamplerResult:
         """Calculates probabilites or quasi-probabilities for given inputs in a runtime session.
 
         Args:
-            circuits: A list of circuit indices.
-            parameters: Concrete parameters to be bound.
+            circuit_indices: A list of circuit indices.
+            parameter_values: Concrete parameters to be bound.
             **run_options: A collection of kwargs passed to backend.run().
 
         Returns:
             An instance of SamplerResult.
         """
         self.write(
-            circuits_indices=circuits,
-            parameters_values=parameters,
+            circuit_indices=circuit_indices,
+            parameter_values=parameter_values,
             run_options=run_options,
         )
         raw_result = self.read()

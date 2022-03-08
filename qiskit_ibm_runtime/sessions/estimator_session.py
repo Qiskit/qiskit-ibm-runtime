@@ -37,10 +37,11 @@ class EstimatorResult:
 
     Example::
 
-        result = session(circuits, observables, parameters)
+        result = estimator(circuit_indices, observable_indices, parameter_values)
 
     where the i-th elements of `result` correspond to the expectation using the circuit and
-    observable given by `circuits[i]`, `observables[i]`, and the parameters bounds by `parameters[i]`.
+    observable given by `circuit_indices[i]`, `observable_indices[i]`, and the parameters
+    bounds by `parameter_values[i]`.
 
     Args:
         values (np.ndarray): An array of expectation values.
@@ -49,7 +50,6 @@ class EstimatorResult:
 
     values: "np.ndarray[Any, np.dtype[np.float64]]"
     metadata: list[dict[str, Any]]
-    shots: int
 
 
 class EstimatorSession(RuntimeSession):
@@ -57,31 +57,30 @@ class EstimatorSession(RuntimeSession):
 
     def __call__(
         self,
-        circuits: Sequence[int],
-        observables: Sequence[int],
-        parameters: Sequence[Sequence[float]],
+        circuit_indices: Sequence[int],
+        observable_indices: Sequence[int],
+        parameter_values: Sequence[Sequence[float]],
         **run_options: Any,
     ) -> EstimatorResult:
         """Estimates expectation values for given inputs in a runtime session.
 
         Args:
-            circuits: A list of circuit indices.
-            observables: A list of observable indices.
-            parameters: Concrete parameters to be bound.
+            circuit_indices: A list of circuit indices.
+            observable_indices: A list of observable indices.
+            parameter_values: Concrete parameters to be bound.
             **run_options: A collection of kwargs passed to backend.run().
 
         Returns:
             An instance of EstimatorResult.
         """
         self.write(
-            circuits_indices=circuits,
-            observables_indices=observables,
-            parameters_values=parameters,
+            circuit_indices=circuit_indices,
+            observable_indices=observable_indices,
+            parameter_values=parameter_values,
             run_options=run_options,
         )
         raw_result = self.read()
         return EstimatorResult(
             values=raw_result["values"],
             metadata=raw_result["metadata"],
-            shots=raw_result["shots"],
         )
