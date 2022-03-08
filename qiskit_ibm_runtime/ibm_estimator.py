@@ -46,7 +46,8 @@ class IBMEstimator(BasePrimitive):
 
     * parameters: a list of parameters of the quantum circuits.
         (:class:`~qiskit.circuit.parametertable.ParameterView` or
-        a list of :class:`~qiskit.circuit.Parameter`)
+        a list of :class:`~qiskit.circuit.Parameter`) specifying the order
+        in which parameter values will be bound.
 
     The :class:`qiskit_ibm_runtime.sessions.EstimatorSession` instance can be called repeatedly
     with the following parameters to estimate expectation values.
@@ -122,7 +123,8 @@ class IBMEstimator(BasePrimitive):
             observables: a list of :class:`~qiskit.quantum_info.SparsePauliOp`
             parameters: a list of parameters of the quantum circuits.
                 (:class:`~qiskit.circuit.parametertable.ParameterView` or
-                a list of :class:`~qiskit.circuit.Parameter`)
+                a list of :class:`~qiskit.circuit.Parameter`) specifying the order
+                in which parameter values will be bound.
 
         Returns:
             An instance of :class:`qiskit_ibm_runtime.sessions.EstimatorSession`.

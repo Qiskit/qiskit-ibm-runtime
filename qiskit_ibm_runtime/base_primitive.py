@@ -27,14 +27,14 @@ class BasePrimitive(ABC):
         service: Optional[IBMRuntimeService],
         backend: Optional[Union[IBMBackend, str]] = None,
     ):
-        """Initializes Base Primitive
+        """Initializes Base Primitive.
 
         Args:
             service: Optional instance of :class:`qiskit_ibm_runtime.IBMRuntimeService` class,
-                defaults to `IBMRuntimeService()` which tries to initialize your default saved account
+                defaults to `IBMRuntimeService()` which tries to initialize your default saved account.
             backend: Optional instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
                 string name of backend, if not specified a backend will be selected automatically
-                (IBM Cloud only)
+                (IBM Cloud only).
         """
         self._service = service
         if backend and not isinstance(backend, str):
