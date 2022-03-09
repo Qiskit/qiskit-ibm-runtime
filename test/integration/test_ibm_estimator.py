@@ -22,6 +22,7 @@ from qiskit_ibm_runtime import BaseEstimator
 from ..decorators import run_integration_test
 from ..ibm_test_case import IBMIntegrationTestCase
 
+
 class TestIntegrationIBMEstimator(IBMIntegrationTestCase):
     """Integration tests for Estimator primitive."""
 
@@ -39,11 +40,14 @@ class TestIntegrationIBMEstimator(IBMIntegrationTestCase):
         psi1 = RealAmplitudes(num_qubits=2, reps=2)
         psi2 = RealAmplitudes(num_qubits=2, reps=3)
 
+        # pylint: disable=invalid-name
         H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
         H2 = SparsePauliOp.from_list([("IZ", 1)])
         H3 = SparsePauliOp.from_list([("ZI", 1), ("ZZ", 1)])
 
-        with estimator_factory(circuits=[psi1, psi2], observables=[H1, H2, H3]) as estimator:
+        with estimator_factory(
+            circuits=[psi1, psi2], observables=[H1, H2, H3]
+        ) as estimator:
             self.assertIsInstance(estimator, BaseEstimator)
 
             theta1 = [0, 1, 1, 2, 3, 5]
@@ -55,7 +59,7 @@ class TestIntegrationIBMEstimator(IBMIntegrationTestCase):
             self.assertIsInstance(result1, EstimatorResult)
 
             # calculate [ <psi1(theta1)|H2|psi1(theta1)>, <psi1(theta1)|H3|psi1(theta1)> ]
-            result2 = estimator([0, 0], [1, 2], [theta1]*2)
+            result2 = estimator([0, 0], [1, 2], [theta1] * 2)
             self.assertIsInstance(result2, EstimatorResult)
 
             # calculate [ <psi2(theta2)|H2|psi2(theta2)> ]
