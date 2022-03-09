@@ -80,7 +80,7 @@ class IBMSampler(BasePrimitive):
             result = sampler(circuit_indices=[0, 1, 2], parameter_values=[[]]*3)
             print([q.binary_probabilities() for q in result.quasi_dists])
 
-        # parametrized circuit
+        # parameterized circuit
         pqc = RealAmplitudes(num_qubits=2, reps=2)
         pqc.measure_all()
         pqc2 = RealAmplitudes(num_qubits=2, reps=3)
