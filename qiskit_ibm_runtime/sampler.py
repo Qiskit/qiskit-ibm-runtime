@@ -12,7 +12,7 @@
 
 """Sampler primitive."""
 
-from typing import Iterable, Optional, Dict, Sequence, Any
+from typing import Iterable, Optional, Sequence, Any
 
 from qiskit.circuit import QuantumCircuit, Parameter
 
