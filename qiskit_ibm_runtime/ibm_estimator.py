@@ -12,7 +12,7 @@
 
 """Qiskit Runtime Estimator primitive service."""
 
-from typing import Iterable, Optional, Dict
+from typing import Iterable, Optional
 
 from qiskit.circuit import QuantumCircuit, Parameter
 from qiskit.quantum_info import SparsePauliOp
@@ -113,7 +113,7 @@ class IBMEstimator(BasePrimitive):
         circuits: Iterable[QuantumCircuit],
         observables: Iterable[SparsePauliOp],
         parameters: Optional[Iterable[Iterable[Parameter]]] = None,
-        transpile_options: Optional[Dict] = None,
+        skip_transpilation: bool = False,
     ) -> Estimator:
         """Initializes the Estimator primitive.
 
@@ -125,7 +125,8 @@ class IBMEstimator(BasePrimitive):
                 (:class:`~qiskit.circuit.parametertable.ParameterView` or
                 a list of :class:`~qiskit.circuit.Parameter`) specifying the order
                 in which parameter values will be bound.
-            transpile_options: A collection of kwargs passed to `transpile()`.
+            skip_transpilation: Transpilation is skipped if set to True.
+                False by default.
 
         Returns:
             An instance of :class:`qiskit_ibm_runtime.estimator.Estimator`.
@@ -135,7 +136,7 @@ class IBMEstimator(BasePrimitive):
             circuits=circuits,
             observables=observables,
             parameters=parameters,
-            transpile_options=transpile_options,
+            skip_transpilation=skip_transpilation,
             service=self._service,
             backend_name=self._backend_name,
         )

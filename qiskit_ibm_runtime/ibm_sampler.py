@@ -105,7 +105,6 @@ class IBMSampler(BasePrimitive):
         self,
         circuits: Iterable[QuantumCircuit],
         parameters: Optional[Iterable[Iterable[Parameter]]] = None,
-        transpile_options: Optional[Dict] = None,
         skip_transpilation: bool = False,
     ) -> Sampler:
         """Initializes the Sampler primitive.
@@ -116,8 +115,6 @@ class IBMSampler(BasePrimitive):
             parameters: A list of parameters of the quantum circuits
                 (:class:`~qiskit.circuit.parametertable.ParameterView` or
                 a list of :class:`~qiskit.circuit.Parameter`).
-            transpile_options: A collection of kwargs passed to transpile.
-                Ignored if skip_transpilation is set to True.
             skip_transpilation: Transpilation is skipped if set to True.
                 False by default.
 
@@ -128,7 +125,6 @@ class IBMSampler(BasePrimitive):
         return Sampler(
             circuits=circuits,
             parameters=parameters,
-            transpile_options=transpile_options,
             skip_transpilation=skip_transpilation,
             service=self._service,
             backend_name=self._backend_name,

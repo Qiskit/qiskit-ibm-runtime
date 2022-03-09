@@ -31,7 +31,7 @@ class Estimator(BaseEstimator):
         circuits: Iterable[QuantumCircuit],
         observables: Iterable[SparsePauliOp],
         parameters: Optional[Iterable[Iterable[Parameter]]] = None,
-        transpile_options: Optional[Dict] = None,
+        skip_transpilation: Optional[bool] = False,
         service: Optional[IBMRuntimeService] = None,
         backend_name: Optional[str] = None,
     ):
@@ -45,7 +45,8 @@ class Estimator(BaseEstimator):
                 (:class:`~qiskit.circuit.parametertable.ParameterView` or
                 a list of :class:`~qiskit.circuit.Parameter`) specifying the order
                 in which parameter values will be bound.
-            transpile_options: A collection of kwargs passed to `transpile()`.
+            skip_transpilation: Transpilation is skipped if set to True.
+                False by default.
             service: Optional instance of :class:`qiskit_ibm_runtime.IBMRuntimeService` class,
                 defaults to `IBMRuntimeService()` which tries to initialize your default saved
                 account.
@@ -57,7 +58,7 @@ class Estimator(BaseEstimator):
             observables=observables,
             parameters=parameters,
         )
-        self._transpile_options = transpile_options
+        self._skip_transpilation = skip_transpilation
         self._service = service
         self._backend_name = backend_name
         options = {}
@@ -67,7 +68,7 @@ class Estimator(BaseEstimator):
             "circuits": self.circuits,
             "observables": self.observables,
             "parameters": self.parameters,
-            "transpile_options": self._transpile_options,
+            "skip_transpilation": self._skip_transpilation,
         }
         self._session = RuntimeSession(
             runtime=self._service,

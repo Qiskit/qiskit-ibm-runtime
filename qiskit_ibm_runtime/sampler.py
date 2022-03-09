@@ -29,7 +29,6 @@ class Sampler(BaseSampler):
         self,
         circuits: Iterable[QuantumCircuit],
         parameters: Optional[Iterable[Iterable[Parameter]]] = None,
-        transpile_options: Optional[Dict] = None,
         skip_transpilation: Optional[bool] = False,
         service: Optional[IBMRuntimeService] = None,
         backend_name: Optional[str] = None,
@@ -42,8 +41,6 @@ class Sampler(BaseSampler):
             parameters: A list of parameters of the quantum circuits
                 (:class:`~qiskit.circuit.parametertable.ParameterView` or
                 a list of :class:`~qiskit.circuit.Parameter`).
-            transpile_options: A collection of kwargs passed to transpile.
-                Ignored if skip_transpilation is set to True.
             skip_transpilation: Transpilation is skipped if set to True.
                 False by default.
             service: Optional instance of :class:`qiskit_ibm_runtime.IBMRuntimeService` class,
@@ -56,7 +53,6 @@ class Sampler(BaseSampler):
             circuits=circuits,
             parameters=parameters,
         )
-        self._transpile_options = transpile_options
         self._skip_transpilation = skip_transpilation
         self._service = service
         self._backend_name = backend_name
@@ -66,7 +62,6 @@ class Sampler(BaseSampler):
         inputs = {
             "circuits": self.circuits,
             "parameters": self.parameters,
-            "transpile_options": self._transpile_options,
             "skip_transpilation": self._skip_transpilation,
         }
         self._session = RuntimeSession(
