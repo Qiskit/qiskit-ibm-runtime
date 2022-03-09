@@ -244,6 +244,9 @@ from .version import __version__
 from .ibm_estimator import IBMEstimator
 from .ibm_sampler import IBMSampler
 
+# TODO remove when terra base classes are released
+from .qiskit.primitives import BaseEstimator, EstimatorResult
+
 # Setup the logger for the IBM Quantum Provider package.
 logger = logging.getLogger(__name__)
 setup_logger(logger)
