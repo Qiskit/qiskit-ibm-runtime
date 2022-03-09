@@ -132,7 +132,7 @@ class Runtime(RestAdapterBase):
             group: Group to be used.
             project: Project to be used.
             log_level: Log level to use.
-            session_id: Job ID of the first job in a runtime session.
+            session_id: ID of the first job in a runtime session.
 
         Returns:
             JSON response.
