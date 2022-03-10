@@ -38,6 +38,7 @@ except ImportError:
 
 from qiskit.circuit import (
     Instruction,
+    Parameter,
     ParameterExpression,
     ParameterVector,
     QuantumCircuit,
@@ -205,6 +206,13 @@ class RuntimeEncoder(json.JSONEncoder):
                 serializer=lambda buff, data: qpy_serialization.dump(data, buff),
             )
             return {"__type__": "QuantumCircuit", "__value__": value}
+        if isinstance(obj, Parameter):
+            value = _serialize_and_encode(
+                data=obj,
+                serializer=qpy_serialization._write_parameter,
+                compress=False,
+            )
+            return {"__type__": "Parameter", "__value__": value}
         if isinstance(obj, ParameterExpression):
             value = _serialize_and_encode(
                 data=obj,
@@ -273,6 +281,10 @@ class RuntimeDecoder(json.JSONDecoder):
                 return set(obj_val)
             if obj_type == "QuantumCircuit":
                 return _decode_and_deserialize(obj_val, qpy_serialization.load)[0]
+            if obj_type == "Parameter":
+                return _decode_and_deserialize(
+                    obj_val, qpy_serialization._read_parameter, False
+                )
             if obj_type == "ParameterExpression":
                 return _decode_and_deserialize(
                     obj_val, self.__read_parameter_expression, False
