@@ -338,12 +338,14 @@ class RuntimeJob:
         else:
             self._error_message = None
 
-    def _status_from_job_response(self, response: Dict):
+    def _status_from_job_response(self, response: Dict) -> str:
         """Returns the job status from an API response
 
         Args:
-            response: Job response from runtime API.
+            response: Job response from the runtime API.
 
+        Returns:
+            Job status.
         """
         mapped_job_status = API_TO_JOB_STATUS[response["state"]["status"].upper()]
         if mapped_job_status == JobStatus.CANCELLED and self._reason == "RAN TOO LONG":
