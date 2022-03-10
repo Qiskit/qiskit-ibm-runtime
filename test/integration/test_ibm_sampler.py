@@ -49,8 +49,8 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
             self.assertIsInstance(result, SamplerResult)
 
         # executes three Bell circuits
-        with sampler_factory([bell] * 3, [[]]) as sampler:
-            self.assertIsInstance(sampler, SamplerResult)
+        with sampler_factory([bell] * 3, [[]] * 3) as sampler:
+            self.assertIsInstance(sampler, BaseSampler)
 
             result1 = sampler(circuit_indices=[0, 1, 2], parameter_values=[[]] * 3)
             self.assertIsInstance(result1, SamplerResult)
