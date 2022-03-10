@@ -54,24 +54,44 @@ class TestIntegrationIBMEstimator(IBMIntegrationTestCase):
             theta2 = [0, 1, 1, 2, 3, 5, 8, 13]
             theta3 = [1, 2, 3, 4, 5, 6]
 
+            circuit_indices1 = [0]
             # calculate [ <psi1(theta1)|H1|psi1(theta1)> ]
-            result1 = estimator([0], [0], [theta1])
+            result1 = estimator(circuit_indices1, [0], [theta1])
             self.assertIsInstance(result1, EstimatorResult)
+            print(result1)
+            self.assertEqual(len(result1.values), len(circuit_indices1))
+            self.assertEqual(len(result1.metadata), len(circuit_indices1))
 
+            circuit_indices2 = [0, 0]
             # calculate [ <psi1(theta1)|H2|psi1(theta1)>, <psi1(theta1)|H3|psi1(theta1)> ]
-            result2 = estimator([0, 0], [1, 2], [theta1] * 2)
+            result2 = estimator(circuit_indices2, [1, 2], [theta1] * 2)
             self.assertIsInstance(result2, EstimatorResult)
+            print(result2)
+            self.assertEqual(len(result2.values), len(circuit_indices2))
+            self.assertEqual(len(result2.metadata), len(circuit_indices2))
 
+            circuit_indices3 = [1]
             # calculate [ <psi2(theta2)|H2|psi2(theta2)> ]
-            result3 = estimator([1], [1], [theta2])
+            result3 = estimator(circuit_indices3, [1], [theta2])
             self.assertIsInstance(result3, EstimatorResult)
+            print(result3)
+            self.assertEqual(len(result3.values), len(circuit_indices3))
+            self.assertEqual(len(result3.metadata), len(circuit_indices3))
 
+            circuit_indices4 = [0, 0]
             # calculate [ <psi1(theta1)|H1|psi1(theta1)>, <psi1(theta3)|H1|psi1(theta3)> ]
-            result4 = estimator([0, 0], [0, 0], [theta1, theta3])
+            result4 = estimator(circuit_indices4, [0, 0], [theta1, theta3])
             self.assertIsInstance(result4, EstimatorResult)
+            print(result4)
+            self.assertEqual(len(result4.values), len(circuit_indices4))
+            self.assertEqual(len(result4.metadata), len(circuit_indices4))
 
+            circuit_indices5 = [0, 1, 0]
             # calculate [ <psi1(theta1)|H1|psi1(theta1)>,
             #             <psi2(theta2)|H2|psi2(theta2)>,
             #             <psi1(theta3)|H3|psi1(theta3)> ]
-            result5 = estimator([0, 1, 0], [0, 1, 2], [theta1, theta2, theta3])
+            result5 = estimator(circuit_indices5, [0, 1, 2], [theta1, theta2, theta3])
             self.assertIsInstance(result5, EstimatorResult)
+            print(result5)
+            self.assertEqual(len(result5.values), len(circuit_indices5))
+            self.assertEqual(len(result5.metadata), len(circuit_indices5))
