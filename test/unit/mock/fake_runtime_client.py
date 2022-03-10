@@ -185,13 +185,14 @@ class FailedRuntimeJob(BaseFakeRuntimeJob):
 class FailedRanTooLongRuntimeJob(BaseFakeRuntimeJob):
     """Class for faking a failed runtime job."""
 
-    _job_progress = ["QUEUED", "RUNNING", "CANCELLED - RAN TOO LONG"]
+    _job_progress = ["QUEUED", "RUNNING", "CANCELLED"]
 
     def _auto_progress(self):
         """Automatically update job status."""
         super()._auto_progress()
 
-        if self._state["status"] == "CANCELLED - RAN TOO LONG":
+        if self._state["status"] == "CANCELLED":
+            self._state["reason"] = "RAN TOO LONG"
             self._result = "Kaboom!"
 
 

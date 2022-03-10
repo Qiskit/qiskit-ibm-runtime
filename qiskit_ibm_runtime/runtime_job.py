@@ -311,8 +311,8 @@ class RuntimeJob:
         try:
             if "reason" in job_response["state"]:
                 self._reason = job_response["state"]["reason"]
-            status = job_response["state"]["status"]
-            self._status = self._get_api_msg(status, API_TO_JOB_STATUS, self._reason)
+            status = self._status_from_job_response(job_response)
+            self._status = status
         except KeyError:
             raise IBMError(f"Unknown status: {status}")
 
@@ -324,30 +324,31 @@ class RuntimeJob:
         """
         if self._status == JobStatus.ERROR:
             job_result_raw = self._api_client.job_results(job_id=self.job_id)
-            self._error_message = self._get_api_msg(
-                job_response["state"]["status"], API_TO_JOB_ERROR_MESSAGE, self._reason
-            ).format(self.job_id, job_result_raw)
+            if "reason" in job_response["state"]:
+                error_msg = (
+                    job_response["state"]["status"]
+                    + " - "
+                    + job_response["state"]["reason"]
+                )
+            else:
+                error_msg = job_response["state"]["status"]
+            self._error_message = API_TO_JOB_ERROR_MESSAGE[error_msg.upper()].format(
+                self.job_id, job_result_raw
+            )
         else:
             self._error_message = None
 
-    def _get_api_msg(
-        self,
-        status: str,
-        msg_type: Dict,
-        reason: str = None,
-    ) -> str:
-        """Return the job status or error message.
+    def _status_from_job_response(self, response: Dict):
+        """Returns the job status from an API response
 
         Args:
-            status: Job status returned from the API.
-            msg_type: Dictionary to use to convert API message.
-            reason: Job status reason returned from the API.
+            response: Job response from runtime API.
 
-        Returns: A job status or errror message.
         """
-        if reason:
-            status = status + " - " + reason
-        return msg_type[status.upper()]
+        mapped_job_status = API_TO_JOB_STATUS[response["state"]["status"].upper()]
+        if mapped_job_status == JobStatus.CANCELLED and self._reason == "RAN TOO LONG":
+            mapped_job_status = JobStatus.ERROR
+        return mapped_job_status
 
     def _is_streaming(self) -> bool:
         """Return whether job results are being streamed.

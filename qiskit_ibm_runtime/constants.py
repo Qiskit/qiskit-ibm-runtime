@@ -23,7 +23,6 @@ API_TO_JOB_STATUS = {
     "COMPLETED": JobStatus.DONE,
     "FAILED": JobStatus.ERROR,
     "CANCELLED": JobStatus.CANCELLED,
-    "CANCELLED - RAN TOO LONG": JobStatus.ERROR,
 }
 
 API_TO_JOB_ERROR_MESSAGE = {
