@@ -311,10 +311,9 @@ class RuntimeJob:
         try:
             if "reason" in job_response["state"]:
                 self._reason = job_response["state"]["reason"]
-            status = self._status_from_job_response(job_response)
-            self._status = status
+            self._status = self._status_from_job_response(job_response)
         except KeyError:
-            raise IBMError(f"Unknown status: {status}")
+            raise IBMError(f"Unknown status: {job_response['state']['status']}")
 
     def _set_error_message(self, job_response: Dict) -> None:
         """Set error message if the job failed.
