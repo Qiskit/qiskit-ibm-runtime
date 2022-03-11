@@ -76,11 +76,11 @@ class IBMSampler(BasePrimitive):
             print([q.binary_probabilities() for q in result.quasi_dists])
 
         # executes three Bell circuits
-        with sampler_factory([bell]*3, [[]]) as sampler:
+        with sampler_factory([bell]*3, [[]]*3) as sampler:
             result = sampler(circuit_indices=[0, 1, 2], parameter_values=[[]]*3)
             print([q.binary_probabilities() for q in result.quasi_dists])
 
-        # parametrized circuit
+        # parameterized circuit
         pqc = RealAmplitudes(num_qubits=2, reps=2)
         pqc.measure_all()
         pqc2 = RealAmplitudes(num_qubits=2, reps=3)
