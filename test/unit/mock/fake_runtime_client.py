@@ -113,6 +113,7 @@ class BaseFakeRuntimeJob:
         params,
         image,
         log_level=None,
+        session_id=None,
     ):
         """Initialize a fake job."""
         self._job_id = job_id
@@ -126,6 +127,7 @@ class BaseFakeRuntimeJob:
         self._image = image
         self._interim_results = json.dumps("foo")
         self.log_level = log_level
+        self._session_id = session_id
         if final_status is None:
             self._future = self._executor.submit(self._auto_progress)
             self._result = None
@@ -352,6 +354,7 @@ class BaseFakeRuntimeClient:
         image: str,
         hgp: Optional[str],
         log_level: Optional[str],
+        session_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Run the specified program."""
         _ = self._get_program(program_id)
@@ -380,6 +383,7 @@ class BaseFakeRuntimeClient:
             final_status=self._final_status,
             image=image,
             log_level=log_level,
+            session_id=session_id,
             **self._job_kwargs,
         )
         self._jobs[job_id] = job
