@@ -104,7 +104,7 @@ class IBMEstimator(BasePrimitive):
             # calculate [ <psi1(theta1)|H1|psi1(theta1)>,
             #             <psi2(theta2)|H2|psi2(theta2)>,
             #             <psi1(theta3)|H3|psi1(theta3)> ]
-            psi12_H23_result = estimator([0, 0, 0], [0, 1, 2], [theta1, theta2, theta3])
+            psi12_H23_result = estimator([0, 1, 0], [0, 1, 2], [theta1, theta2, theta3])
             print(psi12_H23_result)
     """
 

@@ -60,8 +60,8 @@ class Sampler(BaseSampler):
         if self._backend_name:
             options["backend_name"] = self._backend_name
         inputs = {
-            "circuits": self.circuits,
-            "parameters": self.parameters,
+            "circuits": circuits,
+            "parameters": parameters,
             "skip_transpilation": self._skip_transpilation,
         }
         self._session = RuntimeSession(

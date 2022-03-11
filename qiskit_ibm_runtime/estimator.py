@@ -65,9 +65,9 @@ class Estimator(BaseEstimator):
         if self._backend_name:
             options["backend_name"] = self._backend_name
         inputs = {
-            "circuits": self.circuits,
-            "observables": self.observables,
-            "parameters": self.parameters,
+            "circuits": circuits,
+            "observables": observables,
+            "parameters": parameters,
             "skip_transpilation": self._skip_transpilation,
         }
         self._session = RuntimeSession(
