@@ -38,8 +38,8 @@ class IBMSampler(BasePrimitive):
     The factory can then be called with the following parameters to initialize the Sampler
     primitive. It returns a :class:`qiskit_ibm_runtime.sessions.SamplerSession` instance.
 
-    * circuits: :class:`~qiskit.circuit.QuantumCircuit` (parameterized)
-        or a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`s.
+    * circuits: a (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
+        a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
 
     * parameters: a list of parameters of the quantum circuits.
         (:class:`~qiskit.circuit.parametertable.ParameterView` or
@@ -110,8 +110,8 @@ class IBMSampler(BasePrimitive):
         """Initializes the Sampler primitive.
 
         Args:
-            circuits: :class:`~qiskit.circuit.QuantumCircuit` (parameterized)
-                or a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`s.
+            circuits: a (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
+                a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
             parameters: A list of parameters of the quantum circuits
                 (:class:`~qiskit.circuit.parametertable.ParameterView` or
                 a list of :class:`~qiskit.circuit.Parameter`).

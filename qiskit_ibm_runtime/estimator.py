@@ -38,8 +38,8 @@ class Estimator(BaseEstimator):
         """Initializes the Estimator primitive.
 
         Args:
-            circuits: :class:`~qiskit.circuit.QuantumCircuit` (parameterized)
-                or a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`s.
+            circuits: a (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
+                a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
             observables: a list of :class:`~qiskit.quantum_info.SparsePauliOp`
             parameters: a list of parameters of the quantum circuits.
                 (:class:`~qiskit.circuit.parametertable.ParameterView` or
