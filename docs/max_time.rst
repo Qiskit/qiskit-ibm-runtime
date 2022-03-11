@@ -6,7 +6,7 @@ Maximum Execution Time
 
 To ensure fairness, there is a maximum execution time for each Qiskit Runtime job. If
 a job exceeds this time limit, it is forcibly cancelled. This is represented in the job
-status as `Canceled - Ran too long`. The maximum execution time is the
+status as `Cancelled - Ran too long`. The maximum execution time is the
 smaller of 1) the system limit and 2) the ``max_execution_time`` defined by the program.
 The system limit is defined below:
 
