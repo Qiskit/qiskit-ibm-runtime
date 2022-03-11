@@ -31,7 +31,7 @@ The system limit on the job execution time is
 | Real Device      | 8h           | 4h        | 8h           |2h         |
 +------------------+--------------+-----------+--------------+-----------+
 
-Note that a *premium user* here means a user who has access to devices in providers other than ibm-q/open/main.
+Note that a *premium user* here means a user who has access to backends in providers other than ibm-q/open/main.
 
 =================
 Other Limitations
