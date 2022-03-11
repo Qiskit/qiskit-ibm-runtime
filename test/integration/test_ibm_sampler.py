@@ -42,18 +42,17 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
         bell.measure_all()
 
         # executes a Bell circuit
-        with sampler_factory(circuits=[bell], parameters=[[]]) as sampler:
+        with sampler_factory(circuits=[bell]) as sampler:
             self.assertIsInstance(sampler, BaseSampler)
 
             circuit_indices = [0]
             result = sampler(circuit_indices=circuit_indices, parameter_values=[[]])
             self.assertIsInstance(result, SamplerResult)
-            print(result)
             self.assertEqual(len(result.quasi_dists), len(circuit_indices))
             self.assertEqual(len(result.metadata), len(circuit_indices))
 
         # executes three Bell circuits
-        with sampler_factory([bell] * 3, [[]] * 3) as sampler:
+        with sampler_factory([bell] * 3) as sampler:
             self.assertIsInstance(sampler, BaseSampler)
 
             circuit_indices1 = [0, 1, 2]
@@ -61,7 +60,6 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
                 circuit_indices=circuit_indices1, parameter_values=[[]] * 3
             )
             self.assertIsInstance(result1, SamplerResult)
-            print(result1)
             self.assertEqual(len(result1.quasi_dists), len(circuit_indices1))
             self.assertEqual(len(result1.metadata), len(circuit_indices1))
 
@@ -70,7 +68,6 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
                 circuit_indices=circuit_indices2, parameter_values=[[]] * 2
             )
             self.assertIsInstance(result2, SamplerResult)
-            print(result2)
             self.assertEqual(len(result2.quasi_dists), len(circuit_indices2))
             self.assertEqual(len(result2.metadata), len(circuit_indices2))
 
@@ -79,7 +76,6 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
                 circuit_indices=circuit_indices3, parameter_values=[[]] * 2
             )
             self.assertIsInstance(result3, SamplerResult)
-            print(result3)
             self.assertEqual(len(result3.quasi_dists), len(circuit_indices3))
             self.assertEqual(len(result3.metadata), len(circuit_indices3))
 
