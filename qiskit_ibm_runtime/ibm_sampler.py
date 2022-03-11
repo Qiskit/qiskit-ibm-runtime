@@ -49,9 +49,10 @@ class IBMSampler(BasePrimitive):
     The :class:`qiskit_ibm_runtime.sessions.SamplerSession` instance can be called repeatedly
     with the following parameters to calculate probabilites or quasi-probabilities.
 
-    * circuit_indices: A list of circuit indices.
+    * circuit_indices: An optional list of circuit indices.
+        Defaults to using all circuits if not specified.
 
-    * parameter_values: Concrete parameters to be bound.
+    * parameter_values: An optional list of concrete parameters to be bound.
 
     All the above lists should be of the same length.
 
@@ -71,12 +72,12 @@ class IBMSampler(BasePrimitive):
         bell.measure_all()
 
         # executes a Bell circuit
-        with sampler_factory(circuits=[bell], parameters=[[]]) as sampler:
+        with sampler_factory(circuits=[bell]) as sampler:
             result = sampler(circuit_indices=[0], parameter_values=[[]])
             print([q.binary_probabilities() for q in result.quasi_dists])
 
         # executes three Bell circuits
-        with sampler_factory([bell]*3, [[]]*3) as sampler:
+        with sampler_factory([bell]*3) as sampler:
             result = sampler(circuit_indices=[0, 1, 2], parameter_values=[[]]*3)
             print([q.binary_probabilities() for q in result.quasi_dists])
 
@@ -90,7 +91,7 @@ class IBMSampler(BasePrimitive):
         theta2 = [1, 2, 3, 4, 5, 6]
         theta3 = [0, 1, 2, 3, 4, 5, 6, 7]
 
-        with sampler_factory(circuits=[pqc, pqc2], parameters=[pqc.parameters, pqc2.parameters])
+        with sampler_factory(circuits=[pqc, pqc2])
             as sampler:
             result = sampler(circuit_indices=[0, 0, 1], parameter_values=[theta1, theta2, theta3])
             # result of pqc(theta1)

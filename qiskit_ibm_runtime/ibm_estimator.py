@@ -52,11 +52,13 @@ class IBMEstimator(BasePrimitive):
     The :class:`qiskit_ibm_runtime.sessions.EstimatorSession` instance can be called repeatedly
     with the following parameters to estimate expectation values.
 
-    * circuit_indices: A list of circuit indices.
+    * circuit_indices: An optional list of circuit indices.
+        Defaults to using all circuits if not specified.
 
-    * observable_indices: A list of observable indices.
+    * observable_indices: An optional list of observable indices.
+        Defaults to using all observables if not specified.
 
-    * parameter_values: Concrete parameters to be bound.
+    * parameter_values: An optional list of concrete parameters to be bound.
 
     All the above lists should be of the same length.
 
@@ -73,14 +75,11 @@ class IBMEstimator(BasePrimitive):
         psi1 = RealAmplitudes(num_qubits=2, reps=2)
         psi2 = RealAmplitudes(num_qubits=2, reps=3)
 
-        params1 = psi1.parameters
-        params2 = psi2.parameters
-
         H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
         H2 = SparsePauliOp.from_list([("IZ", 1)])
         H3 = SparsePauliOp.from_list([("ZI", 1), ("ZZ", 1)])
 
-        with estimator_factory([psi1, psi2], [H1, H2, H3], [params1, params2]) as estimator:
+        with estimator_factory([psi1, psi2], [H1, H2, H3]) as estimator:
             theta1 = [0, 1, 1, 2, 3, 5]
             theta2 = [0, 1, 1, 2, 3, 5, 8, 13]
             theta3 = [1, 2, 3, 4, 5, 6]

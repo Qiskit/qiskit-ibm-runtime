@@ -12,7 +12,7 @@
 
 """Sampler primitive."""
 
-from typing import Iterable, Optional, Sequence, Any
+from typing import Iterable, Optional, Sequence, Any, Union
 
 from qiskit.circuit import QuantumCircuit, Parameter
 
@@ -73,15 +73,18 @@ class Sampler(BaseSampler):
 
     def __call__(
         self,
-        circuit_indices: Sequence[int],
-        parameter_values: Sequence[Sequence[float]],
+        circuit_indices: Optional[Sequence[int]] = None,
+        parameter_values: Optional[
+            Union[Sequence[float], Sequence[Sequence[float]]]
+        ] = None,
         **run_options: Any,
     ) -> SamplerResult:
         """Calculates probabilites or quasi-probabilities for given inputs in a runtime session.
 
         Args:
-            circuit_indices: A list of circuit indices.
-            parameter_values: Concrete parameters to be bound.
+            circuit_indices: An optional list of circuit indices.
+                Defaults to using all circuits if not specified.
+            parameter_values: An optional list of concrete parameters to be bound.
             **run_options: A collection of kwargs passed to `backend.run()`.
 
         Returns:
