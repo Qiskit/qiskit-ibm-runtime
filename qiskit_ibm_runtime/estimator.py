@@ -79,8 +79,8 @@ class Estimator(BaseEstimator):
 
     def __call__(
         self,
-        circuit_indices: Optional[Sequence[int]] = None,
-        observable_indices: Optional[Sequence[int]] = None,
+        circuit_indices: Sequence[int],
+        observable_indices: Sequence[int],
         parameter_values: Optional[
             Union[Sequence[float], Sequence[Sequence[float]]]
         ] = None,
@@ -89,10 +89,8 @@ class Estimator(BaseEstimator):
         """Estimates expectation values for given inputs in a runtime session.
 
         Args:
-            circuit_indices: An optional list of circuit indices.
-                Defaults to using all circuits if not specified.
-            observable_indices: An optional list of observable indices.
-                Defaults to using all observables if not specified.
+            circuit_indices: A list of circuit indices.
+            observable_indices: A list of observable indices.
             parameter_values: An optional list of concrete parameters to be bound.
             **run_options: A collection of kwargs passed to `backend.run()`.
 

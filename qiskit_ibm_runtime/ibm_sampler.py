@@ -49,8 +49,7 @@ class IBMSampler(BasePrimitive):
     The :class:`qiskit_ibm_runtime.sessions.SamplerSession` instance can be called repeatedly
     with the following parameters to calculate probabilites or quasi-probabilities.
 
-    * circuit_indices: An optional list of circuit indices.
-        Defaults to using all circuits if not specified.
+    * circuit_indices: A list of circuit indices.
 
     * parameter_values: An optional list of concrete parameters to be bound.
 

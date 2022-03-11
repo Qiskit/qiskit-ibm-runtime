@@ -73,7 +73,7 @@ class Sampler(BaseSampler):
 
     def __call__(
         self,
-        circuit_indices: Optional[Sequence[int]] = None,
+        circuit_indices: Sequence[int],
         parameter_values: Optional[
             Union[Sequence[float], Sequence[Sequence[float]]]
         ] = None,
@@ -82,8 +82,7 @@ class Sampler(BaseSampler):
         """Calculates probabilites or quasi-probabilities for given inputs in a runtime session.
 
         Args:
-            circuit_indices: An optional list of circuit indices.
-                Defaults to using all circuits if not specified.
+            circuit_indices: A list of circuit indices.
             parameter_values: An optional list of concrete parameters to be bound.
             **run_options: A collection of kwargs passed to `backend.run()`.
 
