@@ -348,7 +348,7 @@ class RuntimeJob:
             Job status.
         """
         mapped_job_status = API_TO_JOB_STATUS[response["state"]["status"].upper()]
-        if mapped_job_status == JobStatus.CANCELLED and self._reason == "RAN TOO LONG":
+        if mapped_job_status == JobStatus.CANCELLED and self._reason == "Ran too long":
             mapped_job_status = JobStatus.ERROR
         return mapped_job_status
 
