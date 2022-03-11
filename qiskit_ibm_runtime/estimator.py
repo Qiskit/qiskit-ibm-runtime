@@ -28,7 +28,7 @@ class Estimator(BaseEstimator):
 
     def __init__(
         self,
-        circuits: Iterable[QuantumCircuit],
+        circuits: Union[QuantumCircuit, Iterable[QuantumCircuit]],
         observables: Iterable[SparsePauliOp],
         parameters: Optional[Iterable[Iterable[Parameter]]] = None,
         skip_transpilation: Optional[bool] = False,
@@ -38,8 +38,8 @@ class Estimator(BaseEstimator):
         """Initializes the Estimator primitive.
 
         Args:
-            circuits: list of (parameterized) quantum circuits
-                (a list of :class:`~qiskit.circuit.QuantumCircuit`))
+            circuits: :class:`~qiskit.circuit.QuantumCircuit` (parameterized)
+                or a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`s.
             observables: a list of :class:`~qiskit.quantum_info.SparsePauliOp`
             parameters: a list of parameters of the quantum circuits.
                 (:class:`~qiskit.circuit.parametertable.ParameterView` or

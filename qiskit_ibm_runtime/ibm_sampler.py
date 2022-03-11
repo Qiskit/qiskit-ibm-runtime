@@ -12,7 +12,7 @@
 
 """Qiskit Runtime Sampler primitive service."""
 
-from typing import Optional, Iterable, Dict
+from typing import Optional, Iterable, Dict, Union
 
 from qiskit.circuit import QuantumCircuit, Parameter
 
@@ -38,8 +38,8 @@ class IBMSampler(BasePrimitive):
     The factory can then be called with the following parameters to initialize the Sampler
     primitive. It returns a :class:`qiskit_ibm_runtime.sessions.SamplerSession` instance.
 
-    * circuits: list of (parameterized) quantum circuits
-        (a list of :class:`~qiskit.circuit.QuantumCircuit`))
+    * circuits: :class:`~qiskit.circuit.QuantumCircuit` (parameterized)
+        or a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`s.
 
     * parameters: a list of parameters of the quantum circuits.
         (:class:`~qiskit.circuit.parametertable.ParameterView` or
@@ -104,15 +104,15 @@ class IBMSampler(BasePrimitive):
 
     def __call__(  # type: ignore[override]
         self,
-        circuits: Iterable[QuantumCircuit],
+        circuits: Union[QuantumCircuit, Iterable[QuantumCircuit]],
         parameters: Optional[Iterable[Iterable[Parameter]]] = None,
         skip_transpilation: bool = False,
     ) -> Sampler:
         """Initializes the Sampler primitive.
 
         Args:
-            circuits: A list of (parameterized) quantum circuits
-                (a list of :class:`~qiskit.circuit.QuantumCircuit`)).
+            circuits: :class:`~qiskit.circuit.QuantumCircuit` (parameterized)
+                or a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`s.
             parameters: A list of parameters of the quantum circuits
                 (:class:`~qiskit.circuit.parametertable.ParameterView` or
                 a list of :class:`~qiskit.circuit.Parameter`).

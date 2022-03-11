@@ -27,7 +27,7 @@ class Sampler(BaseSampler):
 
     def __init__(
         self,
-        circuits: Iterable[QuantumCircuit],
+        circuits: Union[QuantumCircuit, Iterable[QuantumCircuit]],
         parameters: Optional[Iterable[Iterable[Parameter]]] = None,
         skip_transpilation: Optional[bool] = False,
         service: Optional[IBMRuntimeService] = None,
@@ -36,8 +36,8 @@ class Sampler(BaseSampler):
         """Initializes the Sampler primitive.
 
         Args:
-            circuits: A list of (parameterized) quantum circuits
-                (a list of :class:`~qiskit.circuit.QuantumCircuit`)).
+            circuits: :class:`~qiskit.circuit.QuantumCircuit` (parameterized)
+                or a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`s.
             parameters: A list of parameters of the quantum circuits
                 (:class:`~qiskit.circuit.parametertable.ParameterView` or
                 a list of :class:`~qiskit.circuit.Parameter`).

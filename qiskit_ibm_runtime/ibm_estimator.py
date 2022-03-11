@@ -12,7 +12,7 @@
 
 """Qiskit Runtime Estimator primitive service."""
 
-from typing import Iterable, Optional
+from typing import Iterable, Optional, Union
 
 from qiskit.circuit import QuantumCircuit, Parameter
 from qiskit.quantum_info import SparsePauliOp
@@ -39,8 +39,8 @@ class IBMEstimator(BasePrimitive):
     The factory can then be called with the following parameters to initialize the Estimator
     primitive. It returns an :class:`qiskit_ibm_runtime.sessions.EstimatorSession` instance.
 
-    * circuits: list of (parameterized) quantum circuits
-        (a list of :class:`~qiskit.circuit.QuantumCircuit`))
+    * circuits: :class:`~qiskit.circuit.QuantumCircuit` (parameterized)
+        or a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`s.
 
     * observables: a list of :class:`~qiskit.quantum_info.SparsePauliOp`
 
@@ -109,7 +109,7 @@ class IBMEstimator(BasePrimitive):
 
     def __call__(  # type: ignore[override]
         self,
-        circuits: Iterable[QuantumCircuit],
+        circuits: Union[QuantumCircuit, Iterable[QuantumCircuit]],
         observables: Iterable[SparsePauliOp],
         parameters: Optional[Iterable[Iterable[Parameter]]] = None,
         skip_transpilation: bool = False,
@@ -117,8 +117,8 @@ class IBMEstimator(BasePrimitive):
         """Initializes the Estimator primitive.
 
         Args:
-            circuits: list of (parameterized) quantum circuits
-                (a list of :class:`~qiskit.circuit.QuantumCircuit`))
+            circuits: :class:`~qiskit.circuit.QuantumCircuit` (parameterized)
+                or a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`s.
             observables: a list of :class:`~qiskit.quantum_info.SparsePauliOp`
             parameters: a list of parameters of the quantum circuits.
                 (:class:`~qiskit.circuit.parametertable.ParameterView` or
