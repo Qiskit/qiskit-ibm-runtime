@@ -22,7 +22,7 @@ from datetime import datetime
 from qiskit.providers.backend import Backend
 from qiskit.providers.jobstatus import JobStatus, JOB_FINAL_STATES
 
-from .constants import API_TO_JOB_ERROR_MESSAGE, API_TO_JOB_STATUS
+from .constants import API_TO_JOB_STATUS
 from .exceptions import (
     RuntimeJobFailureError,
     RuntimeInvalidStateError,
