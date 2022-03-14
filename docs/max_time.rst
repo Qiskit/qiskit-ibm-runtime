@@ -5,7 +5,8 @@ Maximum Execution Time
 ======================
 
 To ensure fairness, there is a maximum execution time for each Qiskit Runtime job. If
-a job exceeds this time limit, it is forcibly terminated. The maximum execution time is the
+a job exceeds this time limit, it is forcibly cancelled. This is represented in the job
+status as `Cancelled - Ran too long`. The maximum execution time is the
 smaller of 1) the system limit and 2) the ``max_execution_time`` defined by the program.
 The system limit is defined below:
 
@@ -30,8 +31,14 @@ The system limit on the job execution time is
 | Real Device      | 8h           | 4h        | 8h           |2h         |
 +------------------+--------------+-----------+--------------+-----------+
 
-Note that a *premium user* here means a user who has access to more than one hub/group/project.
+Note that a *premium user* here means a user who has access to backends in providers other than ibm-q/open/main.
 
+=================
+Other Limitations
+=================
+
+- Programs cannot exceed 750KB in size.
+- Inputs to jobs cannot exceed 64MB in size.
 
 .. Hiding - Indices and tables
    :ref:`genindex`

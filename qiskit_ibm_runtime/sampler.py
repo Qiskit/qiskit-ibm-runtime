@@ -12,7 +12,7 @@
 
 """Sampler primitive."""
 
-from typing import Iterable, Optional, Sequence, Any
+from typing import Iterable, Optional, Sequence, Any, Union
 
 from qiskit.circuit import QuantumCircuit, Parameter
 
@@ -27,7 +27,7 @@ class Sampler(BaseSampler):
 
     def __init__(
         self,
-        circuits: Iterable[QuantumCircuit],
+        circuits: Union[QuantumCircuit, Iterable[QuantumCircuit]],
         parameters: Optional[Iterable[Iterable[Parameter]]] = None,
         skip_transpilation: Optional[bool] = False,
         service: Optional[IBMRuntimeService] = None,
@@ -36,8 +36,8 @@ class Sampler(BaseSampler):
         """Initializes the Sampler primitive.
 
         Args:
-            circuits: A list of (parameterized) quantum circuits
-                (a list of :class:`~qiskit.circuit.QuantumCircuit`)).
+            circuits: a (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
+                a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
             parameters: A list of parameters of the quantum circuits
                 (:class:`~qiskit.circuit.parametertable.ParameterView` or
                 a list of :class:`~qiskit.circuit.Parameter`).
@@ -60,8 +60,8 @@ class Sampler(BaseSampler):
         if self._backend_name:
             options["backend_name"] = self._backend_name
         inputs = {
-            "circuits": self.circuits,
-            "parameters": self.parameters,
+            "circuits": circuits,
+            "parameters": parameters,
             "skip_transpilation": self._skip_transpilation,
         }
         self._session = RuntimeSession(
@@ -74,14 +74,16 @@ class Sampler(BaseSampler):
     def __call__(
         self,
         circuit_indices: Sequence[int],
-        parameter_values: Sequence[Sequence[float]],
+        parameter_values: Optional[
+            Union[Sequence[float], Sequence[Sequence[float]]]
+        ] = None,
         **run_options: Any,
     ) -> SamplerResult:
         """Calculates probabilites or quasi-probabilities for given inputs in a runtime session.
 
         Args:
             circuit_indices: A list of circuit indices.
-            parameter_values: Concrete parameters to be bound.
+            parameter_values: An optional list of concrete parameters to be bound.
             **run_options: A collection of kwargs passed to `backend.run()`.
 
         Returns:

@@ -12,7 +12,7 @@
 
 """Qiskit Runtime Sampler primitive service."""
 
-from typing import Optional, Iterable, Dict
+from typing import Optional, Iterable, Dict, Union
 
 from qiskit.circuit import QuantumCircuit, Parameter
 
@@ -38,8 +38,8 @@ class IBMSampler(BasePrimitive):
     The factory can then be called with the following parameters to initialize the Sampler
     primitive. It returns a :class:`qiskit_ibm_runtime.sessions.SamplerSession` instance.
 
-    * circuits: list of (parameterized) quantum circuits
-        (a list of :class:`~qiskit.circuit.QuantumCircuit`))
+    * circuits: a (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
+        a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
 
     * parameters: a list of parameters of the quantum circuits.
         (:class:`~qiskit.circuit.parametertable.ParameterView` or
@@ -51,7 +51,7 @@ class IBMSampler(BasePrimitive):
 
     * circuit_indices: A list of circuit indices.
 
-    * parameter_values: Concrete parameters to be bound.
+    * parameter_values: An optional list of concrete parameters to be bound.
 
     All the above lists should be of the same length.
 
@@ -71,16 +71,16 @@ class IBMSampler(BasePrimitive):
         bell.measure_all()
 
         # executes a Bell circuit
-        with sampler_factory(circuits=[bell], parameters=[[]]) as sampler:
+        with sampler_factory(circuits=[bell]) as sampler:
             result = sampler(circuit_indices=[0], parameter_values=[[]])
-            print([q.binary_probabilities() for q in result.quasi_dists])
+            print(result)
 
         # executes three Bell circuits
-        with sampler_factory([bell]*3, [[]]) as sampler:
+        with sampler_factory([bell]*3) as sampler:
             result = sampler(circuit_indices=[0, 1, 2], parameter_values=[[]]*3)
-            print([q.binary_probabilities() for q in result.quasi_dists])
+            print(result)
 
-        # parametrized circuit
+        # parameterized circuit
         pqc = RealAmplitudes(num_qubits=2, reps=2)
         pqc.measure_all()
         pqc2 = RealAmplitudes(num_qubits=2, reps=3)
@@ -90,28 +90,22 @@ class IBMSampler(BasePrimitive):
         theta2 = [1, 2, 3, 4, 5, 6]
         theta3 = [0, 1, 2, 3, 4, 5, 6, 7]
 
-        with sampler_factory(circuits=[pqc, pqc2], parameters=[pqc.parameters, pqc2.parameters])
-            as sampler:
+        with sampler_factory(circuits=[pqc, pqc2]) as sampler:
             result = sampler(circuit_indices=[0, 0, 1], parameter_values=[theta1, theta2, theta3])
-            # result of pqc(theta1)
-            print([q.binary_probabilities() for q in result.quasi_dists[0]])
-            # result of pqc(theta2)
-            print([q.binary_probabilities() for q in result.quasi_dists[1]])
-            # result of pqc2(theta3)
-            print([q.binary_probabilities() for q in result.quasi_dists[2]])
+            print(result)
     """
 
     def __call__(  # type: ignore[override]
         self,
-        circuits: Iterable[QuantumCircuit],
+        circuits: Union[QuantumCircuit, Iterable[QuantumCircuit]],
         parameters: Optional[Iterable[Iterable[Parameter]]] = None,
         skip_transpilation: bool = False,
     ) -> Sampler:
         """Initializes the Sampler primitive.
 
         Args:
-            circuits: A list of (parameterized) quantum circuits
-                (a list of :class:`~qiskit.circuit.QuantumCircuit`)).
+            circuits: a (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
+                a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
             parameters: A list of parameters of the quantum circuits
                 (:class:`~qiskit.circuit.parametertable.ParameterView` or
                 a list of :class:`~qiskit.circuit.Parameter`).
