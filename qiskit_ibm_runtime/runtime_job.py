@@ -323,19 +323,28 @@ class RuntimeJob:
         """
         if self._status == JobStatus.ERROR:
             job_result_raw = self._api_client.job_results(job_id=self.job_id)
-            if "reason" in job_response["state"]:
-                error_msg = (
-                    job_response["state"]["status"]
-                    + " - "
-                    + job_response["state"]["reason"]
-                )
-            else:
-                error_msg = job_response["state"]["status"]
-            self._error_message = API_TO_JOB_ERROR_MESSAGE[error_msg.upper()].format(
-                self.job_id, job_result_raw
-            )
+            self._error_message = self._error_msg_from_job_response(
+                job_response
+            ).format(self.job_id, job_result_raw)
         else:
             self._error_message = None
+
+    def _error_msg_from_job_response(self, response: Dict) -> str:
+        """Returns the error message from an API response
+
+        Args:
+            response: Job response from the runtime API.
+
+        Returns:
+            Error message.
+        """
+        status = response["state"]["status"].upper()
+        if status == "FAILED":
+            return "Job {} has failed:\n{}"
+        elif status == "CANCELLED" and self._reason == "Ran too long":
+            return (
+                "Job {} ran longer than maximum execution time. Job was cancelled:\n{}"
+            )
 
     def _status_from_job_response(self, response: Dict) -> str:
         """Returns the job status from an API response

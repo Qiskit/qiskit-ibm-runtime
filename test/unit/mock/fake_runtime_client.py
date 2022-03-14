@@ -117,7 +117,8 @@ class BaseFakeRuntimeJob:
     ):
         """Initialize a fake job."""
         self._job_id = job_id
-        self._state = {"status": final_status or "QUEUED"}
+        self._status = final_status or "QUEUED"
+        self._reason: Optional[str] = None
         self._program_id = program_id
         self._hub = hub
         self._group = group
@@ -139,9 +140,9 @@ class BaseFakeRuntimeJob:
         """Automatically update job status."""
         for status in self._job_progress:
             time.sleep(0.5)
-            self._state["status"] = status
+            self._status = status
 
-        if self._state["status"] == "COMPLETED":
+        if self._status == "COMPLETED":
             self._result = json.dumps("foo")
 
     def to_dict(self):
@@ -152,7 +153,7 @@ class BaseFakeRuntimeJob:
             "group": self._group,
             "project": self._project,
             "backend": self._backend_name,
-            "state": self._state,
+            "state": {"status": self._status, "reason": self._reason},
             "params": [self._params],
             "program": {"id": self._program_id},
             "image": self._image,
@@ -168,7 +169,7 @@ class BaseFakeRuntimeJob:
 
     def status(self):
         """Return job status."""
-        return self._state["status"]
+        return self._status
 
 
 class FailedRuntimeJob(BaseFakeRuntimeJob):
@@ -180,7 +181,7 @@ class FailedRuntimeJob(BaseFakeRuntimeJob):
         """Automatically update job status."""
         super()._auto_progress()
 
-        if self._state["status"] == "FAILED":
+        if self._status == "FAILED":
             self._result = "Kaboom!"
 
 
@@ -193,8 +194,8 @@ class FailedRanTooLongRuntimeJob(BaseFakeRuntimeJob):
         """Automatically update job status."""
         super()._auto_progress()
 
-        if self._state["status"] == "CANCELLED":
-            self._state["reason"] = "Ran too long"
+        if self._status == "CANCELLED":
+            self._reason = "Ran too long"
             self._result = "Kaboom!"
 
 
@@ -230,7 +231,7 @@ class CustomResultRuntimeJob(BaseFakeRuntimeJob):
         """Automatically update job status."""
         super()._auto_progress()
 
-        if self._state["status"] == "COMPLETED":
+        if self._status == "COMPLETED":
             self._result = json.dumps(self.custom_result, cls=RuntimeEncoder)
 
 
@@ -242,11 +243,11 @@ class TimedRuntimeJob(BaseFakeRuntimeJob):
         super().__init__(**kwargs)
 
     def _auto_progress(self):
-        self._state["status"] = "RUNNING"
+        self._status = "RUNNING"
         time.sleep(self._runtime)
-        self._state["status"] = "COMPLETED"
+        self._status = "COMPLETED"
 
-        if self._state["status"] == "COMPLETED":
+        if self._status == "COMPLETED":
             self._result = json.dumps("foo")
 
 
@@ -417,7 +418,7 @@ class BaseFakeRuntimeClient:
         count = len(self._jobs)
         if pending is not None:
             job_status_list = pending_statuses if pending else returned_statuses
-            jobs = [job for job in jobs if job._state["status"] in job_status_list]
+            jobs = [job for job in jobs if job._status in job_status_list]
             count = len(jobs)
         if program_id:
             jobs = [job for job in jobs if job._program_id == program_id]
