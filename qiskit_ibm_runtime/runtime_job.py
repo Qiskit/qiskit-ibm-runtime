@@ -22,7 +22,7 @@ from datetime import datetime
 from qiskit.providers.backend import Backend
 from qiskit.providers.jobstatus import JobStatus, JOB_FINAL_STATES
 
-from .constants import API_TO_JOB_STATUS
+from .constants import API_TO_JOB_ERROR_MESSAGE, API_TO_JOB_STATUS
 from .exceptions import (
     RuntimeJobFailureError,
     RuntimeInvalidStateError,
@@ -309,8 +309,9 @@ class RuntimeJob:
             IBMError: If an unknown status is returned from the server.
         """
         try:
-            if "reason" in job_response["state"]:
-                self._reason = job_response["state"]["reason"]
+            reason = job_response["state"].get("reason")
+            if reason:
+                self._reason = job_response["state"]["reason"].upper()
             self._status = self._status_from_job_response(job_response)
         except KeyError:
             raise IBMError(f"Unknown status: {job_response['state']['status']}")
@@ -322,10 +323,7 @@ class RuntimeJob:
             job_response: Job response from runtime API.
         """
         if self._status == JobStatus.ERROR:
-            job_result_raw = self._api_client.job_results(job_id=self.job_id)
-            self._error_message = self._error_msg_from_job_response(
-                job_response
-            ).format(self.job_id, job_result_raw)
+            self._error_message = self._error_msg_from_job_response(job_response)
         else:
             self._error_message = None
 
@@ -339,11 +337,11 @@ class RuntimeJob:
             Error message.
         """
         status = response["state"]["status"].upper()
-        if status == "CANCELLED" and self._reason == "Ran too long":
-            return (
-                "Job {} ran longer than maximum execution time. Job was cancelled:\n{}"
-            )
-        return "Job {} has failed:\n{}"
+        job_result_raw = self._api_client.job_results(job_id=self.job_id)
+        error_msg = API_TO_JOB_ERROR_MESSAGE["FAILED"]
+        if status == "CANCELLED" and self._reason == "RAN TOO LONG":
+            error_msg = API_TO_JOB_ERROR_MESSAGE["CANCELLED - RAN TOO LONG"]
+        return error_msg.format(self.job_id, job_result_raw)
 
     def _status_from_job_response(self, response: Dict) -> str:
         """Returns the job status from an API response
@@ -355,7 +353,7 @@ class RuntimeJob:
             Job status.
         """
         mapped_job_status = API_TO_JOB_STATUS[response["state"]["status"].upper()]
-        if mapped_job_status == JobStatus.CANCELLED and self._reason == "Ran too long":
+        if mapped_job_status == JobStatus.CANCELLED and self._reason == "RAN TOO LONG":
             mapped_job_status = JobStatus.ERROR
         return mapped_job_status
 

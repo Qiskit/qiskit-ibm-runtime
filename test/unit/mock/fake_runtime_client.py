@@ -195,7 +195,7 @@ class FailedRanTooLongRuntimeJob(BaseFakeRuntimeJob):
         super()._auto_progress()
 
         if self._status == "CANCELLED":
-            self._reason = "Ran too long"
+            self._reason = "RAN TOO LONG"
             self._result = "Kaboom!"
 
 
