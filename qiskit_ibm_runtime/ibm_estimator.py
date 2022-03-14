@@ -12,7 +12,7 @@
 
 """Qiskit Runtime Estimator primitive service."""
 
-from typing import Iterable, Optional
+from typing import Iterable, Optional, Union
 
 from qiskit.circuit import QuantumCircuit, Parameter
 from qiskit.quantum_info import SparsePauliOp
@@ -39,10 +39,10 @@ class IBMEstimator(BasePrimitive):
     The factory can then be called with the following parameters to initialize the Estimator
     primitive. It returns an :class:`qiskit_ibm_runtime.sessions.EstimatorSession` instance.
 
-    * circuits: list of (parameterized) quantum circuits
-        (a list of :class:`~qiskit.circuit.QuantumCircuit`))
+    * circuits: a (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
+        a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
 
-    * observables: a list of :class:`~qiskit.quantum_info.SparsePauliOp`
+    * observables: a list of :class:`~qiskit.quantum_info.SparsePauliOp`.
 
     * parameters: a list of parameters of the quantum circuits.
         (:class:`~qiskit.circuit.parametertable.ParameterView` or
@@ -56,7 +56,7 @@ class IBMEstimator(BasePrimitive):
 
     * observable_indices: A list of observable indices.
 
-    * parameter_values: Concrete parameters to be bound.
+    * parameter_values: An optional list of concrete parameters to be bound.
 
     All the above lists should be of the same length.
 
@@ -73,14 +73,11 @@ class IBMEstimator(BasePrimitive):
         psi1 = RealAmplitudes(num_qubits=2, reps=2)
         psi2 = RealAmplitudes(num_qubits=2, reps=3)
 
-        params1 = psi1.parameters
-        params2 = psi2.parameters
-
         H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
         H2 = SparsePauliOp.from_list([("IZ", 1)])
         H3 = SparsePauliOp.from_list([("ZI", 1), ("ZZ", 1)])
 
-        with estimator_factory([psi1, psi2], [H1, H2, H3], [params1, params2]) as estimator:
+        with estimator_factory([psi1, psi2], [H1, H2, H3]) as estimator:
             theta1 = [0, 1, 1, 2, 3, 5]
             theta2 = [0, 1, 1, 2, 3, 5, 8, 13]
             theta3 = [1, 2, 3, 4, 5, 6]
@@ -110,7 +107,7 @@ class IBMEstimator(BasePrimitive):
 
     def __call__(  # type: ignore[override]
         self,
-        circuits: Iterable[QuantumCircuit],
+        circuits: Union[QuantumCircuit, Iterable[QuantumCircuit]],
         observables: Iterable[SparsePauliOp],
         parameters: Optional[Iterable[Iterable[Parameter]]] = None,
         skip_transpilation: bool = False,
@@ -118,8 +115,8 @@ class IBMEstimator(BasePrimitive):
         """Initializes the Estimator primitive.
 
         Args:
-            circuits: list of (parameterized) quantum circuits
-                (a list of :class:`~qiskit.circuit.QuantumCircuit`))
+            circuits: a (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
+                a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
             observables: a list of :class:`~qiskit.quantum_info.SparsePauliOp`
             parameters: a list of parameters of the quantum circuits.
                 (:class:`~qiskit.circuit.parametertable.ParameterView` or

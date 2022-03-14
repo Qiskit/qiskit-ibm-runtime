@@ -12,7 +12,7 @@
 
 """Estimator primitive."""
 
-from typing import Iterable, Optional, Dict, Sequence, Any
+from typing import Iterable, Optional, Dict, Sequence, Any, Union
 
 from qiskit.circuit import QuantumCircuit, Parameter
 from qiskit.quantum_info import SparsePauliOp
@@ -28,7 +28,7 @@ class Estimator(BaseEstimator):
 
     def __init__(
         self,
-        circuits: Iterable[QuantumCircuit],
+        circuits: Union[QuantumCircuit, Iterable[QuantumCircuit]],
         observables: Iterable[SparsePauliOp],
         parameters: Optional[Iterable[Iterable[Parameter]]] = None,
         skip_transpilation: Optional[bool] = False,
@@ -38,8 +38,8 @@ class Estimator(BaseEstimator):
         """Initializes the Estimator primitive.
 
         Args:
-            circuits: list of (parameterized) quantum circuits
-                (a list of :class:`~qiskit.circuit.QuantumCircuit`))
+            circuits: a (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
+                a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
             observables: a list of :class:`~qiskit.quantum_info.SparsePauliOp`
             parameters: a list of parameters of the quantum circuits.
                 (:class:`~qiskit.circuit.parametertable.ParameterView` or
@@ -81,7 +81,9 @@ class Estimator(BaseEstimator):
         self,
         circuit_indices: Sequence[int],
         observable_indices: Sequence[int],
-        parameter_values: Sequence[Sequence[float]],
+        parameter_values: Optional[
+            Union[Sequence[float], Sequence[Sequence[float]]]
+        ] = None,
         **run_options: Any,
     ) -> EstimatorResult:
         """Estimates expectation values for given inputs in a runtime session.
@@ -89,7 +91,7 @@ class Estimator(BaseEstimator):
         Args:
             circuit_indices: A list of circuit indices.
             observable_indices: A list of observable indices.
-            parameter_values: Concrete parameters to be bound.
+            parameter_values: An optional list of concrete parameters to be bound.
             **run_options: A collection of kwargs passed to `backend.run()`.
 
         Returns:
