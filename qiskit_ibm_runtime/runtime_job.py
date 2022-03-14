@@ -339,12 +339,11 @@ class RuntimeJob:
             Error message.
         """
         status = response["state"]["status"].upper()
-        if status == "FAILED":
-            return "Job {} has failed:\n{}"
-        elif status == "CANCELLED" and self._reason == "Ran too long":
+        if status == "CANCELLED" and self._reason == "Ran too long":
             return (
                 "Job {} ran longer than maximum execution time. Job was cancelled:\n{}"
             )
+        return "Job {} has failed:\n{}"
 
     def _status_from_job_response(self, response: Dict) -> str:
         """Returns the job status from an API response
