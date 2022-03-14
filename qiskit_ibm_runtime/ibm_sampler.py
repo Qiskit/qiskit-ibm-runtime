@@ -73,12 +73,12 @@ class IBMSampler(BasePrimitive):
         # executes a Bell circuit
         with sampler_factory(circuits=[bell]) as sampler:
             result = sampler(circuit_indices=[0], parameter_values=[[]])
-            print([q.binary_probabilities() for q in result.quasi_dists])
+            print(result)
 
         # executes three Bell circuits
         with sampler_factory([bell]*3) as sampler:
             result = sampler(circuit_indices=[0, 1, 2], parameter_values=[[]]*3)
-            print([q.binary_probabilities() for q in result.quasi_dists])
+            print(result)
 
         # parameterized circuit
         pqc = RealAmplitudes(num_qubits=2, reps=2)
@@ -90,15 +90,9 @@ class IBMSampler(BasePrimitive):
         theta2 = [1, 2, 3, 4, 5, 6]
         theta3 = [0, 1, 2, 3, 4, 5, 6, 7]
 
-        with sampler_factory(circuits=[pqc, pqc2])
-            as sampler:
+        with sampler_factory(circuits=[pqc, pqc2]) as sampler:
             result = sampler(circuit_indices=[0, 0, 1], parameter_values=[theta1, theta2, theta3])
-            # result of pqc(theta1)
-            print([q.binary_probabilities() for q in result.quasi_dists[0]])
-            # result of pqc(theta2)
-            print([q.binary_probabilities() for q in result.quasi_dists[1]])
-            # result of pqc2(theta3)
-            print([q.binary_probabilities() for q in result.quasi_dists[2]])
+            print(result)
     """
 
     def __call__(  # type: ignore[override]
