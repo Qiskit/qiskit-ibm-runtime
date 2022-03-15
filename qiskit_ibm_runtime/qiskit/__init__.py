@@ -10,6 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Qiskit"""
+"""Qiskit (temporary)"""
 
+# TODO remove this file when importing primitive base classes from terra
 from .primitives import *
