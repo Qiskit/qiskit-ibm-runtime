@@ -25,14 +25,9 @@ from ..ibm_test_case import IBMIntegrationTestCase
 class TestIntegrationIBMSampler(IBMIntegrationTestCase):
     """Integration tests for Sampler primitive."""
 
-    def _skip_on_legacy(self):
-        if self.dependencies.auth == "legacy":
-            self.skipTest("Not supported on legacy")
-
     @run_integration_test
     def test_sampler_primitive_non_parameterized_circuits(self, service):
         """Verify if sampler primitive returns expected results for non-parameterized circuits."""
-        self._skip_on_legacy()
 
         sampler_factory = IBMSampler(service=service)
 
@@ -82,7 +77,6 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
     @run_integration_test
     def test_sampler_primitive_parameterized_circuits(self, service):
         """Verify if sampler primitive returns expected results for parameterized circuits."""
-        self._skip_on_legacy()
 
         sampler_factory = IBMSampler(service=service)
 
