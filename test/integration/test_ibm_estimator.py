@@ -30,7 +30,7 @@ class TestIntegrationIBMEstimator(IBMIntegrationTestCase):
     def test_estimator_primitive(self, service):
         """Verify if estimator primitive returns expected results"""
 
-        estimator_factory = IBMEstimator(service=service)
+        estimator_factory = IBMEstimator(service=service, backend="ibmq_qasm_simulator")
 
         psi1 = RealAmplitudes(num_qubits=2, reps=2)
         psi2 = RealAmplitudes(num_qubits=2, reps=3)
