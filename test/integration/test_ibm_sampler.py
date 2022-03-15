@@ -29,7 +29,7 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
     def test_sampler_primitive_non_parameterized_circuits(self, service):
         """Verify if sampler primitive returns expected results for non-parameterized circuits."""
 
-        sampler_factory = IBMSampler(service=service)
+        sampler_factory = IBMSampler(service=service, backend="ibmq_qasm_simulator")
 
         bell = QuantumCircuit(2)
         bell.h(0)
@@ -78,7 +78,7 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
     def test_sampler_primitive_parameterized_circuits(self, service):
         """Verify if sampler primitive returns expected results for parameterized circuits."""
 
-        sampler_factory = IBMSampler(service=service)
+        sampler_factory = IBMSampler(service=service, backend="ibmq_qasm_simulator")
 
         # parameterized circuit
         pqc = RealAmplitudes(num_qubits=2, reps=2)
