@@ -14,6 +14,15 @@ Basic
    tutorials/0*
 
 
+Primitives
+==========
+
+.. nbgallery::
+   :glob:
+
+   tutorials/estimator*
+   tutorials/sampler*
+
 
 In-depth
 ========
