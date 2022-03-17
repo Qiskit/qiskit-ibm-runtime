@@ -50,7 +50,7 @@ class Sampler(BaseSampler):
                 selected automatically on IBM Cloud only).
         """
         super().__init__(
-            circuits=circuits,
+            circuits=circuits if isinstance(circuits, Iterable) else [circuits],
             parameters=parameters,
         )
         self._skip_transpilation = skip_transpilation

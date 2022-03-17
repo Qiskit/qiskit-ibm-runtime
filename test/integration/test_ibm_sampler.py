@@ -37,7 +37,7 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
         bell.measure_all()
 
         # executes a Bell circuit
-        with sampler_factory(circuits=[bell]) as sampler:
+        with sampler_factory(circuits=bell) as sampler:
             self.assertIsInstance(sampler, BaseSampler)
 
             circuit_indices = [0]
