@@ -21,18 +21,21 @@ from functools import wraps
 from typing import Optional, Dict, Any
 
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
+from qiskit_ibm_runtime.channel import Channel
 from qiskit_ibm_runtime.utils import RuntimeEncoder
 from qiskit_ibm_runtime.utils.hgp import from_instance_format
 from .fake_account_client import BaseFakeAccountClient
 
 
 def cloud_only(func):
-    """Decorator that runs a test using both legacy and cloud services."""
+    """Decorator that runs a test using only ibm_cloud services."""
 
     @wraps(func)
     def _wrapper(self, *args, **kwargs):
-        if self._auth_type != "cloud":
-            raise ValueError(f"Method {func} called by a legacy client!")
+        if self._channel != Channel.IBM_CLOUD:
+            raise ValueError(
+                f"Method {func} called by an {Channel.IBM_QUANTUM} client!"
+            )
         return func(self, *args, **kwargs)
 
     return _wrapper
@@ -264,7 +267,7 @@ class BaseFakeRuntimeClient:
         self._backend_client = test_options.get(
             "backend_client", BaseFakeAccountClient()
         )
-        self._auth_type = test_options.get("auth_type", "legacy")
+        self._channel = test_options.get("channel", Channel.IBM_QUANTUM)
 
     def set_job_classes(self, classes):
         """Set job classes to use."""
@@ -514,5 +517,5 @@ class BaseFakeRuntimeClient:
 
     @cloud_only
     def _check_cloud_only(self):
-        if self._auth_type != "cloud":
-            raise ValueError("A backend method is called by a legacy client!")
+        if self._channel != Channel.IBM_CLOUD:
+            raise ValueError("A backend method is called by an ibm_quantum client!")

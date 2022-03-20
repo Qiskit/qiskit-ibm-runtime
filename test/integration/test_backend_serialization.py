@@ -16,6 +16,7 @@ from typing import Any, Dict, Set, Optional
 
 import dateutil.parser
 
+from qiskit_ibm_runtime.channel import Channel
 from ..ibm_test_case import IBMIntegrationTestCase
 from ..decorators import (
     run_integration_test,
@@ -28,7 +29,11 @@ class TestSerialization(IBMIntegrationTestCase):
     @run_integration_test
     def test_backend_configuration(self, service):
         """Test deserializing backend configuration."""
-        instance = self.dependencies.instance if service.auth == "legacy" else None
+        instance = (
+            self.dependencies.instance
+            if service.channel == Channel.IBM_QUANTUM
+            else None
+        )
         backends = service.backends(
             operational=True, simulator=False, instance=instance
         )
@@ -56,7 +61,11 @@ class TestSerialization(IBMIntegrationTestCase):
     @run_integration_test
     def test_pulse_defaults(self, service):
         """Test deserializing backend configuration."""
-        instance = self.dependencies.instance if service.auth == "legacy" else None
+        instance = (
+            self.dependencies.instance
+            if service.channel == Channel.IBM_QUANTUM
+            else None
+        )
         backends = service.backends(
             operational=True, open_pulse=True, instance=instance
         )
@@ -73,7 +82,11 @@ class TestSerialization(IBMIntegrationTestCase):
     @run_integration_test
     def test_backend_properties(self, service):
         """Test deserializing backend properties."""
-        instance = self.dependencies.instance if service.auth == "legacy" else None
+        instance = (
+            self.dependencies.instance
+            if service.channel == Channel.IBM_QUANTUM
+            else None
+        )
         backends = service.backends(
             operational=True, simulator=False, instance=instance
         )

@@ -18,6 +18,7 @@ from ibm_platform_services import ResourceControllerV2
 
 from qiskit_ibm_runtime import IBMRuntimeService
 from qiskit_ibm_runtime.accounts import CloudResourceNameResolutionError
+from qiskit_ibm_runtime.channel import Channel
 from qiskit_ibm_runtime.utils.utils import (
     get_resource_controller_api_url,
     get_iam_api_url,
@@ -49,18 +50,18 @@ def _get_service_instance_name_for_crn(
 class TestIntegrationAccount(IBMIntegrationTestCase):
     """Integration tests for account management."""
 
-    def _skip_on_legacy(self):
-        if self.dependencies.auth == "legacy":
-            self.skipTest("Not supported on legacy")
+    def _skip_on_ibm_quantum(self):
+        if self.dependencies.channel == Channel.IBM_QUANTUM:
+            self.skipTest(f"Not supported on {Channel.IBM_QUANTUM}")
 
     def test_resolve_crn_for_valid_service_instance_name(self):
         """Verify if CRN is transparently resolved based for an existing service instance name."""
-        self._skip_on_legacy()
+        self._skip_on_ibm_quantum()
 
         service_instance_name = _get_service_instance_name_for_crn(self.dependencies)
         with self.subTest(instance=service_instance_name):
             service = IBMRuntimeService(
-                auth="cloud",
+                channel=Channel.IBM_CLOUD,
                 url=self.dependencies.url,
                 token=self.dependencies.token,
                 instance=service_instance_name,
@@ -72,14 +73,14 @@ class TestIntegrationAccount(IBMIntegrationTestCase):
 
     def test_resolve_crn_for_invalid_service_instance_name(self):
         """Verify if CRN resolution fails for non-existing service instance name."""
-        self._skip_on_legacy()
+        self._skip_on_ibm_quantum()
 
         service_instance_name = "-non-existing-service-name-"
         with self.subTest(instance="-non-existing-service-name-"), self.assertRaises(
             CloudResourceNameResolutionError
         ):
             IBMRuntimeService(
-                auth="cloud",
+                channel=Channel.IBM_CLOUD,
                 url=self.dependencies.url,
                 token=self.dependencies.token,
                 instance=service_instance_name,

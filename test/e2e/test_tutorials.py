@@ -20,26 +20,29 @@ import nbformat
 from nbconvert.preprocessors import ExecutePreprocessor
 
 from qiskit_ibm_runtime.utils.utils import to_python_identifier
+from qiskit_ibm_runtime.channel import Channel
 from ..ibm_test_case import IBMIntegrationTestCase
 
 TUTORIAL_PATH = "docs/tutorials/**/*.ipynb"
 
 SUPPORTED_TUTORIALS = ["04_account_management"]
-SUPPORTED_TUTORIALS_CLOUD = [
-    "01_introduction_cloud_runtime.ipynb",
+SUPPORTED_TUTORIALS_IBM_CLOUD = [
+    "01_introduction_ibm_cloud_runtime.ipynb",
     *SUPPORTED_TUTORIALS,
 ]
-SUPPORTED_TUTORIALS_LEGACY = [
-    "02_introduction_legacy_runtime.ipynb",
+SUPPORTED_TUTORIALS_IBM_QUANTUM = [
+    "02_introduction_ibm_quantum_runtime.ipynb",
     *SUPPORTED_TUTORIALS,
 ]
 
 
-def _is_supported(auth: str, tutorial_filename: str) -> bool:
-    """Not all tutorials work for all auth types. Check if the given tutorial is supported by the
+def _is_supported(channel: str, tutorial_filename: str) -> bool:
+    """Not all tutorials work for all channel types. Check if the given tutorial is supported by the
     targeted environment."""
     allowlist = (
-        SUPPORTED_TUTORIALS_LEGACY if auth == "legacy" else SUPPORTED_TUTORIALS_CLOUD
+        SUPPORTED_TUTORIALS_IBM_QUANTUM
+        if channel == Channel.IBM_QUANTUM
+        else SUPPORTED_TUTORIALS_IBM_CLOUD
     )
     return any(tutorial_filename.endswith(filename) for filename in allowlist)
 
@@ -70,9 +73,9 @@ class TestTutorials(IBMIntegrationTestCase, metaclass=TutorialsTestCaseMeta):
     """Tests for tutorials."""
 
     def _run_notebook(self, filename):
-        if not _is_supported(self.dependencies.auth, filename):
+        if not _is_supported(self.dependencies.channel, filename):
             self.skipTest(
-                f"Tutorial {filename} not supported on {self.dependencies.auth}"
+                f"Tutorial {filename} not supported on {self.dependencies.channel}"
             )
 
         # Create the preprocessor.

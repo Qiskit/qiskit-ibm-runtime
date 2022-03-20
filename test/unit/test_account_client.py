@@ -15,6 +15,7 @@
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 from qiskit_ibm_runtime.api.clients import AccountClient
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
+from qiskit_ibm_runtime.channel import Channel
 from .mock.http_server import SimpleServer, ClientErrorHandler
 from ..ibm_test_case import IBMTestCase
 from ..account import custom_envs, no_envs
@@ -38,7 +39,10 @@ class TestAccountClient(IBMTestCase):
         """Helper for instantiating an AccountClient."""
         # pylint: disable=no-value-for-parameter
         params = ClientParameters(
-            auth_type="legacy", url=SimpleServer.URL, token="foo", instance="h/g/p"
+            channel=Channel.IBM_QUANTUM,
+            url=SimpleServer.URL,
+            token="foo",
+            instance="h/g/p",
         )
         return AccountClient(params)
 

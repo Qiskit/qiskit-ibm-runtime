@@ -15,9 +15,10 @@
 import uuid
 
 from requests_ntlm import HttpNtlmAuth
+from qiskit_ibm_runtime.channel import Channel
 from qiskit_ibm_runtime.proxies import ProxyConfiguration
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
-from qiskit_ibm_runtime.api.auth import CloudAuth, LegacyAuth
+from qiskit_ibm_runtime.api.auth import CloudAuth, QuantumAuth
 
 from ..ibm_test_case import IBMTestCase
 
@@ -65,17 +66,17 @@ class TestClientParameters(IBMTestCase):
                 "https://my-region.quantum-computing.cloud.ibm.com",
             ),
             (
-                "legacy",
+                Channel.IBM_QUANTUM,
                 "h/g/p",
                 "https://auth.quantum-computing.ibm.com/api",
                 "https://auth.quantum-computing.ibm.com/api",
             ),
         ]
         for spec in test_specs:
-            auth, instance, url, expected = spec
+            channel, instance, url, expected = spec
             with self.subTest(instance=instance, url=url):
                 params = self._get_client_params(
-                    auth_type=auth, instance=instance, url=url
+                    channel=channel, instance=instance, url=url
                 )
                 self.assertEqual(params.get_runtime_api_base_url(), expected)
 
@@ -122,12 +123,12 @@ class TestClientParameters(IBMTestCase):
         with self.assertRaises(AttributeError):
             _ = malformed_ntlm_credentials.connection_parameters()
 
-    def test_auth_handler_legacy(self):
-        """Test getting legacy auth handler."""
+    def test_auth_handler_quantum(self):
+        """Test getting quantum auth handler."""
         token = uuid.uuid4().hex
-        params = self._get_client_params(auth_type="legacy", token=token)
+        params = self._get_client_params(channel=Channel.IBM_QUANTUM, token=token)
         handler = params.get_auth_handler()
-        self.assertIsInstance(handler, LegacyAuth)
+        self.assertIsInstance(handler, QuantumAuth)
         self.assertIn(token, handler.get_headers().values())
 
     def test_auth_handler_cloud(self):
@@ -135,7 +136,7 @@ class TestClientParameters(IBMTestCase):
         token = uuid.uuid4().hex
         instance = uuid.uuid4().hex
         params = self._get_client_params(
-            auth_type="cloud", token=token, instance=instance
+            channel=Channel.IBM_CLOUD, token=token, instance=instance
         )
         handler = params.get_auth_handler()
         self.assertIsInstance(handler, CloudAuth)
@@ -144,7 +145,7 @@ class TestClientParameters(IBMTestCase):
 
     def _get_client_params(
         self,
-        auth_type="legacy",
+        channel=Channel.IBM_QUANTUM,
         token="dummy_token",
         url="https://dummy_url",
         instance=None,
@@ -155,7 +156,7 @@ class TestClientParameters(IBMTestCase):
         if verify is None:
             verify = True
         return ClientParameters(
-            auth_type=auth_type,
+            channel=channel,
             token=token,
             url=url,
             instance=instance,

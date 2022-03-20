@@ -337,7 +337,7 @@ class IBMBackend(Backend):
             datetime: By specifying `datetime`, this function returns an instance
                 of the :class:`BackendProperties<qiskit.providers.models.BackendProperties>`
                 whose timestamp is closest to, but older than, the specified `datetime`.
-                Note that this is only supported using legacy runtime.
+                Note that this is only supported using ``ibm_quantum`` runtime.
 
         Returns:
             The backend properties or ``None`` if the backend properties are not

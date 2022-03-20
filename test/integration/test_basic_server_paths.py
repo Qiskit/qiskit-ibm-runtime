@@ -12,6 +12,7 @@
 
 """Tests that hit all the basic server endpoints using both a public and premium h/g/p."""
 
+from qiskit_ibm_runtime.channel import Channel
 from ..ibm_test_case import IBMTestCase
 from ..decorators import integration_test_setup, IntegrationTestDependencies
 
@@ -20,7 +21,7 @@ class TestBasicServerPaths(IBMTestCase):
     """Test the basic server endpoints using both a public and premium provider."""
 
     @classmethod
-    @integration_test_setup(supported_auth=["legacy"])
+    @integration_test_setup(supported_channel=[Channel.IBM_QUANTUM])
     def setUpClass(cls, dependencies: IntegrationTestDependencies) -> None:
         # pylint: disable=arguments-differ
         super().setUpClass()

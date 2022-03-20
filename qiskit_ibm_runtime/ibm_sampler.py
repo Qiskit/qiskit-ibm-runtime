@@ -62,7 +62,7 @@ class IBMSampler(BasePrimitive):
 
         from qiskit_ibm_runtime import IBMRuntimeService, IBMSampler
 
-        service = IBMRuntimeService(auth="cloud")
+        service = IBMRuntimeService(channel="ibm_cloud")
         sampler_factory = IBMSampler(service=service, backend="ibmq_qasm_simulator")
 
         bell = QuantumCircuit(2)

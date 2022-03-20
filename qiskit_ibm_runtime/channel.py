@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2022.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -10,15 +10,13 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""
-Account management functionality related to the IBM Runtime Services.
-"""
+"""Channel types."""
 
-from .account import Account, AccountType, ChannelType
-from .management import AccountManager
-from .exceptions import (
-    AccountNotFoundError,
-    AccountAlreadyExistsError,
-    InvalidAccountError,
-    CloudResourceNameResolutionError,
-)
+from enum import Enum
+
+
+class Channel(str, Enum):
+    """Channel types"""
+
+    IBM_QUANTUM = "ibm_quantum"
+    IBM_CLOUD = "ibm_cloud"

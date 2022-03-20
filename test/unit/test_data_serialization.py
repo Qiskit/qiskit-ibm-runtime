@@ -61,6 +61,7 @@ from qiskit.opflow import (
 from qiskit.quantum_info import SparsePauliOp, Pauli, PauliTable, Statevector
 from qiskit.result import Result
 
+from qiskit_ibm_runtime.channel import Channel
 from qiskit_ibm_runtime.utils import RuntimeEncoder, RuntimeDecoder
 from .mock.fake_runtime_client import CustomResultRuntimeJob
 from .mock.fake_runtime_service import FakeRuntimeService
@@ -287,13 +288,17 @@ if __name__ == '__main__':
         custom_result = get_complex_types()
         job_cls = CustomResultRuntimeJob
         job_cls.custom_result = custom_result
-        legacy_service = FakeRuntimeService(auth="legacy", token="some_token")
+        ibm_quantum_service = FakeRuntimeService(
+            channel=Channel.IBM_QUANTUM, token="some_token"
+        )
 
         sub_tests = [(SerializableClassDecoder, None), (None, SerializableClassDecoder)]
         for result_decoder, decoder in sub_tests:
             with self.subTest(decoder=decoder):
                 job = run_program(
-                    service=legacy_service, job_classes=job_cls, decoder=result_decoder
+                    service=ibm_quantum_service,
+                    job_classes=job_cls,
+                    decoder=result_decoder,
                 )
                 result = job.result(decoder=decoder)
                 self.assertIsInstance(result["serializable_class"], SerializableClass)

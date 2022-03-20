@@ -44,7 +44,7 @@ IBM Cloud API key and Cloud Resource Name (CRN), which you will need for authent
 ### Qiskit Runtime on IBM Quantum
 
 Prior to becoming an IBM Cloud service, Qiskit Runtime was offered on IBM Quantum. If you have an
-existing IBM Quantum account, you can continue using Qiskit Runtime on IBM Quantum, which is referred to as legacy runtime.
+existing IBM Quantum account, you can continue using Qiskit Runtime on IBM Quantum.
 
 You will need your IBM Quantum API token to authenticate with the Qiskit Runtime service:
 
@@ -65,10 +65,10 @@ them each time. The credentials are saved in the `$HOME/.qiskit/qiskit-ibm.json`
 from qiskit_ibm_runtime import IBMRuntimeService
 
 # Save an IBM Cloud account.
-IBMRuntimeService.save_account(auth="cloud", token="MY_IBM_CLOUD_API_KEY", instance="MY_IBM_CLOUD_CRN")
+IBMRuntimeService.save_account(channel="ibm_cloud", token="MY_IBM_CLOUD_API_KEY", instance="MY_IBM_CLOUD_CRN")
 
 # Save an IBM Quantum account.
-IBMRuntimeService.save_account(auth="legacy", token="MY_IBM_QUANTUM_TOKEN")
+IBMRuntimeService.save_account(channel="ibm_quantum", token="MY_IBM_QUANTUM_TOKEN")
 ```
 
 Once the account is saved on disk, you can instantiate the service without any arguments:
@@ -101,10 +101,10 @@ service with your credentials.
 from qiskit_ibm_runtime import IBMRuntimeService
 
 # For an IBM Cloud account.
-cloud_service = IBMRuntimeService(auth="cloud", token="MY_IBM_CLOUD_API_KEY", instance="MY_IBM_CLOUD_CRN")
+ibm_cloud_service = IBMRuntimeService(channel="ibm_cloud", token="MY_IBM_CLOUD_API_KEY", instance="MY_IBM_CLOUD_CRN")
 
 # For an IBM Quantum account.
-legacy_service = IBMRuntimeService(auth="legacy", token="MY_IBM_QUANTUM_TOKEN")
+ibm_quantum_service = IBMRuntimeService(channel="ibm_quantum", token="MY_IBM_QUANTUM_TOKEN")
 ```
 
 ## Accessing Qiskit Runtime Programs

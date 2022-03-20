@@ -10,14 +10,14 @@ status as `Cancelled - Ran too long`. The maximum execution time is the
 smaller of 1) the system limit and 2) the ``max_execution_time`` defined by the program.
 The system limit is defined below:
 
-Qiskit Runtime on IBM Cloud
----------------------------
+Qiskit Runtime on IBM Cloud (ibm_cloud)
+---------------------------------------
 
 The system limit on the job execution time is 3 hours for a job running on a simulator
 and 8 hours for a job running on a physical system.
 
-Qiskit Runtime on IBM Quantum (legacy)
---------------------------------------
+Qiskit Runtime on IBM Quantum (ibm_quantum)
+-------------------------------------------
 
 The system limit on the job execution time is
 

@@ -24,12 +24,13 @@ from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.providerutils import filter_backends
 
 from qiskit_ibm_runtime import ibm_backend
-from .accounts import AccountManager, Account, AccountType
+from .accounts import AccountManager, Account, AccountType, ChannelType
 from .proxies import ProxyConfiguration
 from .api.clients import AuthClient, VersionClient
 from .api.clients.runtime import RuntimeClient
 from .api.exceptions import RequestsApiError
 from .constants import QISKIT_IBM_RUNTIME_API_URL
+from .channel import Channel
 from .exceptions import IBMNotAuthorizedError, IBMInputValueError, IBMAccountError
 from .exceptions import (
     IBMRuntimeError,
@@ -112,6 +113,7 @@ class IBMRuntimeService:
 
     def __init__(
         self,
+        channel: Optional[ChannelType] = None,
         auth: Optional[AccountType] = None,
         token: Optional[str] = None,
         url: Optional[str] = None,
@@ -125,25 +127,26 @@ class IBMRuntimeService:
         An account is selected in the following order:
 
             - Account with the input `name`, if specified.
-            - Default account for the `auth` type, if `auth` is specified but `token` is not.
-            - Account defined by the input `auth` and `token`, if specified.
+            - Default account for the `channel` type, if `channel` is specified but `token` is not.
+            - Account defined by the input `channel` and `token`, if specified.
             - Account defined by the environment variables, if defined.
-            - Default account for the cloud account, if one is available.
-            - Default account for the legacy account, if one is available.
+            - Default account for the ``ibm_cloud`` account, if one is available.
+            - Default account for the ``ibm_quantum`` account, if one is available.
 
         `instance`, `proxies`, and `verify` can be used to overwrite corresponding
         values in the loaded account.
 
         Args:
-            auth: Authentication type. ``cloud`` or ``legacy``.
+            channel: Channel type. ``ibm_cloud`` or ``ibm_quantum``.
+            auth: (DEPRECATED, use `channel` instead) Authentication type. ``cloud`` or ``legacy``.
             token: IBM Cloud API key or IBM Quantum API token.
             url: The API URL.
-                Defaults to https://cloud.ibm.com (cloud) or
-                https://auth.quantum-computing.ibm.com/api (legacy).
+                Defaults to https://cloud.ibm.com (ibm_cloud) or
+                https://auth.quantum-computing.ibm.com/api (ibm_quantum).
             name: Name of the account to load.
             instance: The service instance to use.
-                For cloud runtime, this is the Cloud Resource Name (CRN) or the service name.
-                For legacy runtime, this is the hub/group/project in that format.
+                For ``ibm_cloud`` runtime, this is the Cloud Resource Name (CRN) or the service name.
+                For ``ibm_quantum`` runtime, this is the hub/group/project in that format.
             proxies: Proxy configuration. Supported optional keys are
                 ``urls`` (a dictionary mapping protocol or protocol and host to the URL of the proxy,
                 documented at https://docs.python-requests.org/en/latest/api/#requests.Session.proxies),
@@ -159,10 +162,21 @@ class IBMRuntimeService:
         """
         super().__init__()
 
+        if auth:
+            warnings.warn(
+                f"Use of `auth` parameter is deprecated and will "
+                f"be removed in a future release."
+                f"You can now use channel='{Channel.IBM_CLOUD}' or "
+                f"channel='{Channel.IBM_QUANTUM}' instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
         self._account = self._discover_account(
             token=token,
             url=url,
             instance=instance,
+            channel=channel,
             auth=auth,
             name=name,
             proxies=ProxyConfiguration(**proxies) if proxies else None,
@@ -170,7 +184,7 @@ class IBMRuntimeService:
         )
 
         self._client_params = ClientParameters(
-            auth_type=self._account.auth,
+            channel=self._account.channel,
             token=self._account.token,
             url=self._account.url,
             instance=self._account.instance,
@@ -178,17 +192,17 @@ class IBMRuntimeService:
             verify=self._account.verify,
         )
 
-        self._auth = self._account.auth
+        self._channel = self._account.channel
         self._programs: Dict[str, RuntimeProgram] = {}
         self._backends: Dict[str, "ibm_backend.IBMBackend"] = {}
 
-        if self._auth == "cloud":
+        if self._channel == Channel.IBM_CLOUD:
             self._api_client = RuntimeClient(self._client_params)
             # TODO: We can make the backend discovery lazy
             self._backends = self._discover_cloud_backends()
             return
         else:
-            auth_client = self._authenticate_legacy_account(self._client_params)
+            auth_client = self._authenticate_ibm_quantum_account(self._client_params)
             # Update client parameters to use authenticated values.
             self._client_params.url = auth_client.current_service_urls()["services"][
                 "runtime"
@@ -210,6 +224,7 @@ class IBMRuntimeService:
         token: Optional[str] = None,
         url: Optional[str] = None,
         instance: Optional[str] = None,
+        channel: Optional[ChannelType] = None,
         auth: Optional[AccountType] = None,
         name: Optional[str] = None,
         proxies: Optional[ProxyConfiguration] = None,
@@ -219,18 +234,23 @@ class IBMRuntimeService:
         account = None
         verify_ = verify or True
         if name:
-            if any([auth, token, url]):
+            if any([auth, channel, token, url]):
                 logger.warning(
-                    "Loading account with name %s. Any input 'auth', 'token', 'url' are ignored.",
+                    "Loading account with name %s. Any input 'auth', "
+                    "'channel', 'token' or 'url' are ignored.",
                     name,
                 )
             account = AccountManager.get(name=name)
         elif auth:
             if auth not in ["legacy", "cloud"]:
                 raise ValueError("'auth' can only be 'cloud' or 'legacy'")
+            if auth == "cloud":
+                channel = Channel.IBM_CLOUD
+            elif auth == "legacy":
+                channel = Channel.IBM_QUANTUM
             if token:
                 account = Account(
-                    auth=auth,
+                    channel=channel,
                     token=token,
                     url=url,
                     instance=instance,
@@ -240,13 +260,13 @@ class IBMRuntimeService:
             else:
                 if url:
                     logger.warning(
-                        "Loading default %s account. Input 'url' is ignored.", auth
+                        "Loading default %s account. Input 'url' is ignored.", channel
                     )
-                account = AccountManager.get(auth=auth)
+                account = AccountManager.get(channel=channel)
         elif any([token, url]):
             # Let's not infer based on these attributes as they may change in the future.
             raise ValueError(
-                "'auth' is required if 'token', or 'url' is specified but 'name' is not."
+                "'channel' or 'auth' is required if 'token', or 'url' is specified but 'name' is not."
             )
 
         if account is None:
@@ -260,7 +280,7 @@ class IBMRuntimeService:
             account.verify = verify
 
         # resolve CRN if needed
-        if account.auth == "cloud":
+        if account.channel == Channel.IBM_CLOUD:
             self._resolve_crn(account)
 
         # ensure account is valid, fail early if not
@@ -294,7 +314,7 @@ class IBMRuntimeService:
     def _resolve_crn(self, account: Account) -> None:
         account.resolve_crn()
 
-    def _authenticate_legacy_account(
+    def _authenticate_ibm_quantum_account(
         self, client_params: ClientParameters
     ) -> AuthClient:
         """Authenticate against IBM Quantum and populate the hub/group/projects.
@@ -322,7 +342,7 @@ class IBMRuntimeService:
         service_urls = auth_client.current_service_urls()
         if not service_urls.get("services", {}).get(SERVICE_NAME):
             raise IBMNotAuthorizedError(
-                "This account is not authorized to use legacy runtime service."
+                "This account is not authorized to use ``ibm_quantum`` runtime service."
             )
         return auth_client
 
@@ -349,7 +369,7 @@ class IBMRuntimeService:
         for hub_info in user_hubs:
             # Build credentials.
             hgp_params = ClientParameters(
-                auth_type=self._account.auth,
+                channel=self._account.channel,
                 token=auth_client.current_access_token(),
                 url=service_urls["http"],
                 instance=to_instance_format(
@@ -477,7 +497,7 @@ class IBMRuntimeService:
         Args:
             name: Backend name to filter by.
             min_num_qubits: Minimum number of qubits the backend has to have.
-            instance: This is only supported for legacy runtime and is in the
+            instance: This is only supported for ``ibm_quantum`` runtime and is in the
                 hub/group/project format.
             filters: More complex filters, such as lambda functions.
                 For example::
@@ -497,7 +517,7 @@ class IBMRuntimeService:
             IBMInputValueError: If an input is invalid.
         """
         # TODO filter out input_allowed not having runtime
-        if self._auth == "legacy":
+        if self._channel == Channel.IBM_QUANTUM:
             if instance:
                 backends = list(self._get_hgp(instance=instance).backends.values())
             else:
@@ -505,7 +525,7 @@ class IBMRuntimeService:
         else:
             if instance:
                 raise IBMInputValueError(
-                    "The 'instance' keyword is only supported for legacy runtime."
+                    "The 'instance' keyword is only supported for ``ibm_quantum`` runtime."
                 )
             backends = list(self._backends.values())
 
@@ -526,26 +546,41 @@ class IBMRuntimeService:
         return self._account.to_saved_format()
 
     @staticmethod
-    def delete_account(name: Optional[str] = None, auth: Optional[str] = None) -> bool:
+    def delete_account(
+        name: Optional[str] = None,
+        auth: Optional[str] = None,
+        channel: Optional[ChannelType] = None,
+    ) -> bool:
         """Delete a saved account from disk.
 
         Args:
             name: Name of the saved account to delete.
-            auth: Authentication type of the default account to delete.
+            auth: (DEPRECATED, use `channel` instead) Authentication type of the default
+                account to delete. Ignored if account name is provided.
+            channel: Channel type of the default account to delete.
                 Ignored if account name is provided.
 
         Returns:
             True if the account was deleted.
             False if no account was found.
         """
-
-        return AccountManager.delete(name=name, auth=auth)
+        if auth:
+            warnings.warn(
+                f"Use of `auth` parameter is deprecated and will "
+                f"be removed in a future release."
+                f"You can now use channel='{Channel.IBM_CLOUD}' or "
+                f"channel='{Channel.IBM_QUANTUM}' instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        return AccountManager.delete(name=name, auth=auth, channel=channel)
 
     @staticmethod
     def save_account(
         token: Optional[str] = None,
         url: Optional[str] = None,
         instance: Optional[str] = None,
+        channel: Optional[ChannelType] = None,
         auth: Optional[AccountType] = None,
         name: Optional[str] = None,
         proxies: Optional[dict] = None,
@@ -557,10 +592,11 @@ class IBMRuntimeService:
         Args:
             token: IBM Cloud API key or IBM Quantum API token.
             url: The API URL.
-                Defaults to https://cloud.ibm.com (cloud) or
-                https://auth.quantum-computing.ibm.com/api (legacy).
-            instance: The CRN (cloud) or hub/group/project (legacy).
-            auth: Authentication type. `cloud` or `legacy`.
+                Defaults to https://cloud.ibm.com (ibm_cloud) or
+                https://auth.quantum-computing.ibm.com/api (ibm_quantum).
+            instance: The CRN (ibm_cloud) or hub/group/project (ibm_quantum).
+            channel: Channel type. `ibm_cloud` or `ibm_quantum`.
+            auth: (DEPRECATED, use `channel` instead) Authentication type. `cloud` or `legacy`.
             name: Name of the account to save.
             proxies: Proxy configuration. Supported optional keys are
                 ``urls`` (a dictionary mapping protocol or protocol and host to the URL of the proxy,
@@ -570,12 +606,25 @@ class IBMRuntimeService:
             verify: Verify the server's TLS certificate.
             overwrite: ``True`` if the existing account is to be overwritten.
         """
+        if auth:
+            warnings.warn(
+                f"Use of `auth` parameter is deprecated and will "
+                f"be removed in a future release."
+                f"You can now use channel='{Channel.IBM_CLOUD}' "
+                f"or channel={Channel.IBM_QUANTUM} instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            if auth == "cloud":
+                channel = Channel.IBM_CLOUD
+            elif auth == "legacy":
+                channel = Channel.IBM_QUANTUM
 
         AccountManager.save(
             token=token,
             url=url,
             instance=instance,
-            auth=auth,
+            channel=channel,
             name=name,
             proxies=ProxyConfiguration(**proxies) if proxies else None,
             verify=verify,
@@ -586,13 +635,16 @@ class IBMRuntimeService:
     def saved_accounts(
         default: Optional[bool] = None,
         auth: Optional[str] = None,
+        channel: Optional[ChannelType] = None,
         name: Optional[str] = None,
     ) -> dict:
         """List the accounts saved on disk.
 
         Args:
             default: If set to True, only default accounts are returned.
-            auth: If set, only accounts with the given authentication type are returned.
+            auth: (DEPRECATED, use `channel` instead) If set, only accounts with the given
+                authentication type are returned.
+            channel: Channel type. `ibm_cloud` or `ibm_quantum`.
             name: If set, only accounts with the given name are returned.
 
         Returns:
@@ -601,11 +653,21 @@ class IBMRuntimeService:
         Raises:
             ValueError: If an invalid account is found on disk.
         """
-
+        if auth:
+            warnings.warn(
+                f"Use of `auth` parameter is deprecated and will "
+                f"be removed in a future release."
+                f"You can now use channel='{Channel.IBM_CLOUD}' "
+                f"or channel={Channel.IBM_QUANTUM} instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         return dict(
             map(
                 lambda kv: (kv[0], Account.to_saved_format(kv[1])),
-                AccountManager.list(default=default, auth=auth, name=name).items(),
+                AccountManager.list(
+                    default=default, auth=auth, channel=channel, name=name
+                ).items(),
             ),
         )
 
@@ -618,7 +680,7 @@ class IBMRuntimeService:
 
         Args:
             name: Name of the backend.
-            instance: This is only supported for legacy runtime and is in the
+            instance: This is only supported for ``ibm_quantum`` runtime and is in the
                 hub/group/project format.
 
         Returns:
@@ -795,7 +857,7 @@ class IBMRuntimeService:
 
             result_decoder: A :class:`ResultDecoder` subclass used to decode job results.
                 ``ResultDecoder`` is used if not specified.
-            instance: This is only supported for legacy runtime and is in the
+            instance: This is only supported for ``ibm_quantum`` runtime and is in the
                 hub/group/project format.
             session_id: Job ID of the first job in a runtime session.
 
@@ -807,9 +869,9 @@ class IBMRuntimeService:
             RuntimeProgramNotFound: If the program cannot be found.
             IBMRuntimeError: An error occurred running the program.
         """
-        if instance and self._auth != "legacy":
+        if instance and self._channel != Channel.IBM_QUANTUM:
             raise IBMInputValueError(
-                "The 'instance' keyword is only supported for legacy runtime. "
+                "The 'instance' keyword is only supported for ``ibm_quantum`` runtime. "
             )
 
         # If using params object, extract as dictionary
@@ -822,11 +884,11 @@ class IBMRuntimeService:
         if isinstance(options, dict):
             options = RuntimeOptions(**options)
 
-        options.validate(self.auth)
+        options.validate(channel=self.channel)
 
         backend = None
         hgp_name = None
-        if self._auth == "legacy":
+        if self._channel == Channel.IBM_QUANTUM:
             # Find the right hgp
             hgp = self._get_hgp(instance=instance, backend_name=options.backend_name)
             backend = hgp.backend(options.backend_name)
@@ -1166,7 +1228,7 @@ class IBMRuntimeService:
                 jobs are included. If ``False``, 'DONE', 'CANCELLED' and 'ERROR' jobs
                 are included.
             program_id: Filter by Program ID.
-            instance: This is only supported for legacy runtime and is in the
+            instance: This is only supported for ``ibm_quantum`` runtime and is in the
                 hub/group/project format.
 
         Returns:
@@ -1177,9 +1239,9 @@ class IBMRuntimeService:
         """
         hub = group = project = None
         if instance:
-            if self._auth == "cloud":
+            if self._channel == Channel.IBM_CLOUD:
                 raise IBMInputValueError(
-                    "The 'instance' keyword is only supported for legacy runtime."
+                    "The 'instance' keyword is only supported for ``ibm_quantum`` runtime."
                 )
             hub, group, project = from_instance_format(instance)
 
@@ -1296,7 +1358,7 @@ class IBMRuntimeService:
 
         Args:
             min_num_qubits: Minimum number of qubits the backend has to have.
-            instance: This is only supported for legacy runtime and is in the
+            instance: This is only supported for ``ibm_quantum`` runtime and is in the
                 hub/group/project format.
             filters: More complex filters, such as lambda functions.
                 For example::
@@ -1336,7 +1398,24 @@ class IBMRuntimeService:
         Returns:
             The authentication type used.
         """
-        return self._auth
+        warnings.warn(
+            f"Use of `auth` parameter is deprecated and will "
+            f"be removed in a future release."
+            f"You can now use channel='{Channel.IBM_CLOUD}' "
+            f"or channel={Channel.IBM_QUANTUM} instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return "cloud" if self._channel == Channel.IBM_CLOUD else "legacy"
+
+    @property
+    def channel(self) -> str:
+        """Return the channel type used.
+
+        Returns:
+            The channel type used.
+        """
+        return self._channel
 
     def __repr__(self) -> str:
         return "<{}>".format(self.__class__.__name__)

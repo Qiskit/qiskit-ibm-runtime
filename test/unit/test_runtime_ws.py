@@ -18,6 +18,7 @@ from qiskit.test.mock.fake_qasm_simulator import FakeQasmSimulator
 
 from qiskit_ibm_runtime import RuntimeJob
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
+from qiskit_ibm_runtime.channel import Channel
 from qiskit_ibm_runtime.exceptions import RuntimeInvalidStateError
 from .mock.fake_runtime_client import BaseFakeRuntimeClient
 from .mock.ws_handler import (
@@ -187,7 +188,7 @@ class TestRuntimeWebsocketClient(IBMTestCase):
     def _get_job(self, callback=None, job_id=JOB_ID_PROGRESS_DONE):
         """Get a runtime job."""
         params = ClientParameters(
-            auth_type="legacy", token="my_token", url=MockWsServer.VALID_WS_URL
+            channel=Channel.IBM_QUANTUM, token="my_token", url=MockWsServer.VALID_WS_URL
         )
         job = RuntimeJob(
             backend=FakeQasmSimulator(),

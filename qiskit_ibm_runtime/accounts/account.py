@@ -20,15 +20,17 @@ from requests.auth import AuthBase
 from typing_extensions import Literal
 
 from .exceptions import InvalidAccountError, CloudResourceNameResolutionError
-from ..api.auth import LegacyAuth, CloudAuth
+from ..api.auth import QuantumAuth, CloudAuth
+from ..channel import Channel
 from ..proxies import ProxyConfiguration
 from ..utils.hgp import from_instance_format
 from ..utils import resolve_crn
 
 AccountType = Optional[Literal["cloud", "legacy"]]
+ChannelType = Optional[Literal[Channel.IBM_CLOUD, Channel.IBM_QUANTUM]]
 
-LEGACY_API_URL = "https://auth.quantum-computing.ibm.com/api"
-CLOUD_API_URL = "https://cloud.ibm.com"
+IBM_QUANTUM_API_URL = "https://auth.quantum-computing.ibm.com/api"
+IBM_CLOUD_API_URL = "https://cloud.ibm.com"
 logger = logging.getLogger(__name__)
 
 
@@ -37,7 +39,7 @@ class Account:
 
     def __init__(
         self,
-        auth: AccountType,
+        channel: ChannelType,
         token: str,
         url: Optional[str] = None,
         instance: Optional[str] = None,
@@ -47,16 +49,18 @@ class Account:
         """Account constructor.
 
         Args:
-            auth: Authentication type, ``cloud`` or ``legacy``.
+            channel: Channel type, ``ibm_cloud`` or ``ibm_quantum``.
             token: Account token to use.
             url: Authentication URL.
             instance: Service instance to use.
             proxies: Proxy configuration.
             verify: Whether to verify server's TLS certificate.
         """
-        resolved_url = url or (LEGACY_API_URL if auth == "legacy" else CLOUD_API_URL)
+        resolved_url = url or (
+            IBM_QUANTUM_API_URL if channel == Channel.IBM_QUANTUM else IBM_CLOUD_API_URL
+        )
 
-        self.auth = auth
+        self.channel = channel
         self.token = token
         self.url = resolved_url
         self.instance = instance
@@ -74,8 +78,10 @@ class Account:
     def from_saved_format(cls, data: dict) -> "Account":
         """Creates an account instance from data saved on disk."""
         proxies = data.get("proxies")
+        auth = data.get("auth")
+        channel = Channel.IBM_QUANTUM if auth == "legacy" else Channel.IBM_CLOUD
         return cls(
-            auth=data.get("auth"),
+            channel=data.get("channel", channel),
             url=data.get("url"),
             token=data.get("token"),
             instance=data.get("instance"),
@@ -87,15 +93,18 @@ class Account:
         """Resolves the corresponding unique Cloud Resource Name (CRN) for the given non-unique service
         instance name and updates the ``instance`` attribute accordingly.
 
-        No-op if ``auth`` attribute is set to legacy.
+        No-op if ``channel`` attribute is set to ``ibm_quantum``.
         No-op if ``instance`` attribute is set to a Cloud Resource Name (CRN).
 
         Raises:
             CloudResourceNameResolutionError: if CRN value cannot be resolved.
         """
-        if self.auth == "cloud":
+        if self.channel == Channel.IBM_CLOUD:
             crn = resolve_crn(
-                auth=self.auth, url=self.url, token=self.token, instance=self.instance
+                channel=self.channel,
+                url=self.url,
+                token=self.token,
+                instance=self.instance,
             )
             if len(crn) == 0:
                 raise CloudResourceNameResolutionError(
@@ -115,17 +124,17 @@ class Account:
 
     def get_auth_handler(self) -> AuthBase:
         """Returns the respective authentication handler."""
-        if self.auth == "cloud":
+        if self.channel == Channel.IBM_CLOUD:
             return CloudAuth(api_key=self.token, crn=self.instance)
 
-        return LegacyAuth(access_token=self.token)
+        return QuantumAuth(access_token=self.token)
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Account):
             return False
         return all(
             [
-                self.auth == other.auth,
+                self.channel == other.channel,
                 self.token == other.token,
                 self.url == other.url,
                 self.instance == other.instance,
@@ -144,19 +153,20 @@ class Account:
             This Account instance.
         """
 
-        self._assert_valid_auth(self.auth)
+        self._assert_valid_channel(self.channel)
         self._assert_valid_token(self.token)
         self._assert_valid_url(self.url)
-        self._assert_valid_instance(self.auth, self.instance)
+        self._assert_valid_instance(self.channel, self.instance)
         self._assert_valid_proxies(self.proxies)
         return self
 
     @staticmethod
-    def _assert_valid_auth(auth: AccountType) -> None:
-        """Assert that the auth parameter is valid."""
-        if not (auth in ["cloud", "legacy"]):
+    def _assert_valid_channel(channel: ChannelType) -> None:
+        """Assert that the channel parameter is valid."""
+        if not (channel in [channel.value for channel in Channel]):
             raise InvalidAccountError(
-                f"Invalid `auth` value. Expected one of ['cloud', 'legacy'], got '{auth}'."
+                f"Invalid `channel` value. Expected one of "
+                f"{[channel.value for channel in Channel]}, got '{channel}'."
             )
 
     @staticmethod
@@ -184,14 +194,14 @@ class Account:
             config.validate()
 
     @staticmethod
-    def _assert_valid_instance(auth: AccountType, instance: str) -> None:
+    def _assert_valid_instance(channel: ChannelType, instance: str) -> None:
         """Assert that the instance name is valid for the given account type."""
-        if auth == "cloud":
+        if channel == Channel.IBM_CLOUD:
             if not (isinstance(instance, str) and len(instance) > 0):
                 raise InvalidAccountError(
                     f"Invalid `instance` value. Expected a non-empty string, got '{instance}'."
                 )
-        if auth == "legacy":
+        if channel == Channel.IBM_QUANTUM:
             if instance is not None:
                 try:
                     from_instance_format(instance)

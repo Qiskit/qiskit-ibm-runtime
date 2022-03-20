@@ -15,7 +15,7 @@
 from typing import Dict, List, Optional, Any, Union
 from requests.exceptions import RequestException
 
-from ..auth import LegacyAuth
+from ..auth import QuantumAuth
 from ..exceptions import AuthenticationLicenseError, RequestsApiError
 from ..rest import Api
 from ..session import RetrySession
@@ -55,14 +55,14 @@ class AuthClient(BaseClient):
         """
         # Request an access token.
         self.access_token = self._request_access_token()
-        self.auth_api.session.auth = LegacyAuth(access_token=self.access_token)
+        self.auth_api.session.channel = QuantumAuth(access_token=self.access_token)
         self._service_urls = self.user_urls()
 
         # Create the api server client, using the access token.
         base_api = Api(
             RetrySession(
                 self._service_urls["http"],
-                auth=LegacyAuth(access_token=self.access_token),
+                auth=QuantumAuth(access_token=self.access_token),
                 **request_kwargs,
             )
         )

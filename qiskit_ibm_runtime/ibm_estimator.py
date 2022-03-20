@@ -67,7 +67,7 @@ class IBMEstimator(BasePrimitive):
 
         from qiskit_ibm_runtime import IBMRuntimeService, IBMEstimator
 
-        service = IBMRuntimeService(auth="cloud")
+        service = IBMRuntimeService(channel="ibm_cloud")
         estimator_factory = IBMEstimator(service=service, backend="ibmq_qasm_simulator")
 
         psi1 = RealAmplitudes(num_qubits=2, reps=2)
