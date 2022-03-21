@@ -425,7 +425,7 @@ class TestEnableAccount(IBMTestCase):
                 self.assertEqual(service._account.url, expected)
                 self.assertIn("url", logged.output[0])
 
-    def test_enable_account_by_only_auth(self):
+    def test_enable_account_by_only_channel(self):
         """Test initializing account with single saved account."""
         subtests = [channel.value for channel in Channel]
         for channel in subtests:
@@ -445,7 +445,7 @@ class TestEnableAccount(IBMTestCase):
                 self.assertEqual(service._account.url, expected)
                 self.assertEqual(service._account.channel, channel)
 
-    def test_enable_account_both_auth(self):
+    def test_enable_account_both_channel(self):
         """Test initializing account with both saved types."""
         token = uuid.uuid4().hex
         contents = get_account_config_contents(channel=Channel.IBM_CLOUD, token=token)
@@ -475,7 +475,7 @@ class TestEnableAccount(IBMTestCase):
                     "QISKIT_IBM_URL": url,
                     "QISKIT_IBM_INSTANCE": "h/g/p"
                     if channel == Channel.IBM_QUANTUM
-                    else "crn:123",
+                    else "crn:12",
                 }
                 with custom_envs(envs):
                     service = FakeRuntimeService(channel=channel)

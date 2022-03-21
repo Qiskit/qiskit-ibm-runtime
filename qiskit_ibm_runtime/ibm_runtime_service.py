@@ -241,9 +241,14 @@ class IBMRuntimeService:
                     name,
                 )
             account = AccountManager.get(name=name)
-        elif auth:
-            if auth not in ["legacy", "cloud"]:
+        elif auth or channel:
+            if auth and auth not in ["legacy", "cloud"]:
                 raise ValueError("'auth' can only be 'cloud' or 'legacy'")
+            if channel and channel not in [channel.value for channel in Channel]:
+                raise ValueError(
+                    f"'channel' can only be '{Channel.IBM_CLOUD}' "
+                    f"or '{Channel.IBM_QUANTUM}'"
+                )
             if auth == "cloud":
                 channel = Channel.IBM_CLOUD
             elif auth == "legacy":

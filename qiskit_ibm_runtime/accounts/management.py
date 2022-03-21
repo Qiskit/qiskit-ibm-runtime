@@ -108,7 +108,7 @@ class AccountManager:
         filtered_accounts = dict(
             list(
                 filter(
-                    lambda kv: (_matching_auth(kv[1]) or _matching_channel(kv[1]))
+                    lambda kv: _matching_channel(kv[1])
                     and _matching_default(kv[0])
                     and _matching_name(kv[0]),
                     all_accounts,
@@ -159,8 +159,8 @@ class AccountManager:
             return Account.from_saved_format(saved_account)
 
         all_config = read_config(filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE)
-        for account_type in _ACCOUNT_TYPES:
-            account_name = cls._get_default_account_name(account_type)
+        for channel_type in _CHANNEL_TYPES:
+            account_name = cls._get_default_account_name(channel_type)
             if account_name in all_config:
                 return Account.from_saved_format(all_config[account_name])
 
