@@ -21,7 +21,9 @@ from .exceptions import AccountAlreadyExistsError
 logger = logging.getLogger(__name__)
 
 
-def save_config(filename: str, name: str, config: dict, overwrite: bool) -> None:
+def save_config(
+    filename: str, name: str, old_name: str, config: dict, overwrite: bool
+) -> None:
     """Save configuration data in a JSON file under the given name."""
     logger.debug("Save configuration data for '%s' in '%s'", name, filename)
     _ensure_file_exists(filename)
@@ -29,7 +31,7 @@ def save_config(filename: str, name: str, config: dict, overwrite: bool) -> None
     with open(filename, mode="r", encoding="utf-8") as json_in:
         data = json.load(json_in)
 
-    if data.get(name) and not overwrite:
+    if (data.get(name) or data.get(old_name)) and not overwrite:
         raise AccountAlreadyExistsError(
             f"Named account ({name}) already exists. "
             f"Set overwrite=True to overwrite."
@@ -37,6 +39,8 @@ def save_config(filename: str, name: str, config: dict, overwrite: bool) -> None
 
     with open(filename, mode="w", encoding="utf-8") as json_out:
         data[name] = config
+        if old_name in data:
+            del data[old_name]
         json.dump(data, json_out, sort_keys=True, indent=4)
 
 

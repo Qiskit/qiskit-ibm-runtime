@@ -50,10 +50,12 @@ class AccountManager:
         overwrite: Optional[bool] = False,
     ) -> None:
         """Save account on disk."""
-        config_key = name or cls._get_default_account_name(channel)
+        name = name or cls._get_default_account_name(channel)
+        old_name = cls._get_old_default_account_name(channel)
         return save_config(
             filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE,
-            name=config_key,
+            name=name,
+            old_name=old_name,
             overwrite=overwrite,
             config=Account(
                 token=token,
@@ -200,4 +202,12 @@ class AccountManager:
             _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM
             if channel == Channel.IBM_QUANTUM
             else _DEFAULT_ACCOUNT_NAME_IBM_CLOUD
+        )
+
+    @classmethod
+    def _get_old_default_account_name(cls, channel: ChannelType) -> str:
+        return (
+            _DEFAULT_ACCOUNT_NAME_LEGACY
+            if channel == Channel.IBM_QUANTUM
+            else _DEFAULT_ACCOUNT_NAME_CLOUD
         )
