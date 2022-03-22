@@ -165,7 +165,7 @@ class IBMRuntimeService:
         if auth:
             warnings.warn(
                 f"Use of `auth` parameter is deprecated and will "
-                f"be removed in a future release."
+                f"be removed in a future release. "
                 f"You can now use channel='{Channel.IBM_CLOUD}' or "
                 f"channel='{Channel.IBM_QUANTUM}' instead.",
                 DeprecationWarning,
@@ -572,7 +572,7 @@ class IBMRuntimeService:
         if auth:
             warnings.warn(
                 f"Use of `auth` parameter is deprecated and will "
-                f"be removed in a future release."
+                f"be removed in a future release. "
                 f"You can now use channel='{Channel.IBM_CLOUD}' or "
                 f"channel='{Channel.IBM_QUANTUM}' instead.",
                 DeprecationWarning,
@@ -614,7 +614,7 @@ class IBMRuntimeService:
         if auth:
             warnings.warn(
                 f"Use of `auth` parameter is deprecated and will "
-                f"be removed in a future release."
+                f"be removed in a future release. "
                 f"You can now use channel='{Channel.IBM_CLOUD}' "
                 f"or channel={Channel.IBM_QUANTUM} instead.",
                 DeprecationWarning,
@@ -661,7 +661,7 @@ class IBMRuntimeService:
         if auth:
             warnings.warn(
                 f"Use of `auth` parameter is deprecated and will "
-                f"be removed in a future release."
+                f"be removed in a future release. "
                 f"You can now use channel='{Channel.IBM_CLOUD}' "
                 f"or channel={Channel.IBM_QUANTUM} instead.",
                 DeprecationWarning,
@@ -1405,7 +1405,7 @@ class IBMRuntimeService:
         """
         warnings.warn(
             f"Use of `auth` parameter is deprecated and will "
-            f"be removed in a future release."
+            f"be removed in a future release. "
             f"You can now use channel='{Channel.IBM_CLOUD}' "
             f"or channel={Channel.IBM_QUANTUM} instead.",
             DeprecationWarning,
