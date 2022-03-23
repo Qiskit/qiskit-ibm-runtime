@@ -47,6 +47,7 @@ def save_config(
 def read_config(
     filename: str,
     name: Optional[str] = None,
+    old_name: Optional[str] = None,
 ) -> Optional[Dict]:
     """Read configuration data from a JSON file."""
     logger.debug("Read configuration data for '%s' from '%s'", name, filename)
@@ -58,6 +59,8 @@ def read_config(
             return data
         if name in data:
             return data[name]
+        if old_name in data:
+            return data[old_name]
 
         return None
 

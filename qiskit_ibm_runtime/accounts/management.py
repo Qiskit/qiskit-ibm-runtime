@@ -15,7 +15,7 @@
 import os
 from typing import Optional, Dict
 from .exceptions import AccountNotFoundError
-from .account import Account, AccountType, ChannelType
+from .account import Account, ChannelType
 from ..channel import Channel
 from ..proxies import ProxyConfiguration
 from .storage import save_config, read_config, delete_config
@@ -28,9 +28,7 @@ _DEFAULT_ACCOUNT_NAME_LEGACY = "default-legacy"
 _DEFAULT_ACCOUNT_NAME_CLOUD = "default-cloud"
 _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM = "default-ibm-quantum"
 _DEFAULT_ACCOUNT_NAME_IBM_CLOUD = "default-ibm-cloud"
-_DEFAULT_ACCOUNT_TYPE: AccountType = "cloud"
 _DEFAULT_CHANNEL_TYPE: ChannelType = Channel.IBM_CLOUD
-_ACCOUNT_TYPES = [_DEFAULT_ACCOUNT_TYPE, "legacy"]
 _CHANNEL_TYPES = [_DEFAULT_CHANNEL_TYPE, Channel.IBM_QUANTUM]
 
 
@@ -160,7 +158,8 @@ class AccountManager:
         if channel:
             saved_account = read_config(
                 filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE,
-                name=cls._get_default_account_name(channel),
+                name=cls._get_default_account_name(channel=channel),
+                old_name=cls._get_old_default_account_name(channel=channel),
             )
             if saved_account is None:
                 raise AccountNotFoundError(f"No default {channel} account saved.")
@@ -168,9 +167,12 @@ class AccountManager:
 
         all_config = read_config(filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE)
         for channel_type in _CHANNEL_TYPES:
-            account_name = cls._get_default_account_name(channel_type)
+            account_name = cls._get_default_account_name(channel=channel_type)
+            old_account_name = cls._get_old_default_account_name(channel=channel_type)
             if account_name in all_config:
                 return Account.from_saved_format(all_config[account_name])
+            if old_account_name in all_config:
+                return Account.from_saved_format(all_config[old_account_name])
 
         raise AccountNotFoundError("Unable to find account.")
 
