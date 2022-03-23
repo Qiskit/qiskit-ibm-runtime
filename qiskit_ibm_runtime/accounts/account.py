@@ -79,7 +79,9 @@ class Account:
         """Creates an account instance from data saved on disk."""
         proxies = data.get("proxies")
         auth = data.get("auth")
-        channel = Channel.IBM_QUANTUM if auth == "legacy" else Channel.IBM_CLOUD
+        channel = (
+            Channel.IBM_QUANTUM.value if auth == "legacy" else Channel.IBM_CLOUD.value
+        )
         return cls(
             channel=data.get("channel", channel),
             url=data.get("url"),

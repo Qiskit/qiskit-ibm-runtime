@@ -72,7 +72,6 @@ class AccountManager:
     @staticmethod
     def list(
         default: Optional[bool] = None,
-        auth: Optional[str] = None,
         channel: Optional[ChannelType] = None,
         name: Optional[str] = None,
     ) -> Dict[str, Account]:
@@ -80,9 +79,6 @@ class AccountManager:
 
         def _matching_name(account_name: str) -> bool:
             return name is None or name == account_name
-
-        def _matching_auth(account: Account) -> bool:
-            return auth is None or account.channel == auth
 
         def _matching_channel(account: Account) -> bool:
             return channel is None or account.channel == channel
@@ -102,7 +98,17 @@ class AccountManager:
 
         # load all accounts
         all_accounts = map(
-            lambda kv: (kv[0], Account.from_saved_format(kv[1])),
+            lambda kv: (
+                kv[0]
+                if kv[0]
+                not in [_DEFAULT_ACCOUNT_NAME_CLOUD, _DEFAULT_ACCOUNT_NAME_LEGACY]
+                else (
+                    _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM
+                    if kv[0] == _DEFAULT_ACCOUNT_NAME_LEGACY
+                    else _DEFAULT_ACCOUNT_NAME_IBM_CLOUD
+                ),
+                Account.from_saved_format(kv[1]),
+            ),
             read_config(filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE).items(),
         )
 

@@ -671,11 +671,15 @@ class IBMRuntimeService:
                 DeprecationWarning,
                 stacklevel=2,
             )
+            if auth == "cloud":
+                channel = Channel.IBM_CLOUD
+            elif auth == "legacy":
+                channel = Channel.IBM_QUANTUM
         return dict(
             map(
                 lambda kv: (kv[0], Account.to_saved_format(kv[1])),
                 AccountManager.list(
-                    default=default, auth=auth, channel=channel, name=name
+                    default=default, channel=channel, name=name
                 ).items(),
             ),
         )
