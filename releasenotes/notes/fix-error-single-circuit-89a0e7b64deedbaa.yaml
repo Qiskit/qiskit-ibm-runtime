@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    Fixed `#291 <https://github.com/Qiskit/qiskit-ibm-runtime/issues/219>`__
+    where passing a single ``QuantumCircuit`` to sampler or estimator primitives
+    was throwing an error.
