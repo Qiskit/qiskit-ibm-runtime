@@ -26,6 +26,16 @@ In-depth
 
 
 
+Primitives
+==========
+
+.. nbgallery::
+   :glob:
+
+   tutorials/user-transpiled-circuits*
+
+
+
 Qiskit Runtime Programs
 =======================
 
