@@ -172,14 +172,14 @@ class AccountManager:
     def delete(
         cls,
         name: Optional[str] = None,
-        auth: Optional[str] = None,  # pylint: disable=unused-argument
         channel: Optional[ChannelType] = None,
     ) -> bool:
         """Delete account from disk."""
 
-        config_key = name or cls._get_default_account_name(channel)
+        name = name or cls._get_default_account_name(channel)
+        old_name = cls._get_old_default_account_name(channel)
         return delete_config(
-            name=config_key, filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE
+            filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE, name=name, old_name=old_name,
         )
 
     @classmethod

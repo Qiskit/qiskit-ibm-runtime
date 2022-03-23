@@ -65,6 +65,7 @@ def read_config(
 def delete_config(
     filename: str,
     name: str,
+    old_name: str,
 ) -> bool:
     """Delete configuration data from a JSON file."""
 
@@ -74,9 +75,12 @@ def delete_config(
     with open(filename, mode="r", encoding="utf-8") as json_in:
         data = json.load(json_in)
 
-    if name in data:
+    if name in data or old_name in data:
         with open(filename, mode="w", encoding="utf-8") as json_out:
-            del data[name]
+            if name in data:
+                del data[name]
+            if old_name in data:
+                del data[old_name]
             json.dump(data, json_out, sort_keys=True, indent=4)
             return True
 

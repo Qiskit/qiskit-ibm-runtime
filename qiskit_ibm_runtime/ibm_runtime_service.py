@@ -578,7 +578,11 @@ class IBMRuntimeService:
                 DeprecationWarning,
                 stacklevel=2,
             )
-        return AccountManager.delete(name=name, auth=auth, channel=channel)
+            if auth == "cloud":
+                channel = Channel.IBM_CLOUD
+            elif auth == "legacy":
+                channel = Channel.IBM_QUANTUM
+        return AccountManager.delete(name=name, channel=channel)
 
     @staticmethod
     def save_account(
@@ -616,7 +620,7 @@ class IBMRuntimeService:
                 f"Use of `auth` parameter is deprecated and will "
                 f"be removed in a future release. "
                 f"You can now use channel='{Channel.IBM_CLOUD}' "
-                f"or channel={Channel.IBM_QUANTUM} instead.",
+                f"or channel='{Channel.IBM_QUANTUM}' instead.",
                 DeprecationWarning,
                 stacklevel=2,
             )
@@ -663,7 +667,7 @@ class IBMRuntimeService:
                 f"Use of `auth` parameter is deprecated and will "
                 f"be removed in a future release. "
                 f"You can now use channel='{Channel.IBM_CLOUD}' "
-                f"or channel={Channel.IBM_QUANTUM} instead.",
+                f"or channel='{Channel.IBM_QUANTUM}' instead.",
                 DeprecationWarning,
                 stacklevel=2,
             )
@@ -1407,7 +1411,7 @@ class IBMRuntimeService:
             f"Use of `auth` parameter is deprecated and will "
             f"be removed in a future release. "
             f"You can now use channel='{Channel.IBM_CLOUD}' "
-            f"or channel={Channel.IBM_QUANTUM} instead.",
+            f"or channel='{Channel.IBM_QUANTUM}' instead.",
             DeprecationWarning,
             stacklevel=2,
         )
