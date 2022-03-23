@@ -119,7 +119,8 @@ class RuntimeSession:
         self._active = False
         # TODO Stop swallowing error when API is fixed
         try:
-            self._initial_job.cancel()
+            if self._initial_job is not None:
+                self._initial_job.cancel()
         except RuntimeInvalidStateError:
             pass
 
@@ -132,9 +133,4 @@ class RuntimeSession:
         exc_val: Optional[BaseException],
         exc_tb: Optional[TracebackType],
     ) -> None:
-        self._active = False
-        # TODO Stop swallowing error when API is fixed
-        try:
-            self._initial_job.cancel()
-        except RuntimeInvalidStateError:
-            pass
+        self.close()
