@@ -179,7 +179,9 @@ class AccountManager:
         name = name or cls._get_default_account_name(channel)
         old_name = cls._get_old_default_account_name(channel)
         return delete_config(
-            filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE, name=name, old_name=old_name,
+            filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE,
+            name=name,
+            old_name=old_name,
         )
 
     @classmethod
