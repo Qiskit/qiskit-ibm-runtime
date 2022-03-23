@@ -20,5 +20,5 @@ scikit-quant;platform_system != 'Windows'
 black==22.1.0
 coverage>=6.3
 pylatexenc
-mthree
+mthree<0.21.0
 sklearn
