@@ -1,7 +1,7 @@
-mypy==0.812
-pylint==2.12.1
+mypy==0.931
+pylint==2.12.2
 vcrpy
-pproxy==2.1.8
+pproxy==2.7.8
 Sphinx>=1.8.3
 sphinx-rtd-theme>=0.4.0
 sphinx-tabs>=1.1.11
@@ -9,12 +9,6 @@ sphinx-automodapi
 sphinx-autodoc-typehints
 matplotlib>=2.1
 jupyter
-plotly>=4.4
-ipyvuetify>=1.1
-ipyvue>=1.4.1
-ipython>=5.0.0
-seaborn>=0.9.0
-pyperclip>=1.7
 jupyter-sphinx
 reno>=2.11.0
 scipy>=1.0
@@ -23,7 +17,7 @@ nbconvert>=5.3.1
 qiskit-aer
 websockets>=8
 scikit-quant;platform_system != 'Windows'
-black==21.11b1
+black==22.1.0
 coverage>=6.3
 pylatexenc
 mthree

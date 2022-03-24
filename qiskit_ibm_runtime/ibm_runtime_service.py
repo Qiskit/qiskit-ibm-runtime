@@ -41,6 +41,7 @@ from .hub_group_project import HubGroupProject  # pylint: disable=cyclic-import
 from .program.result_decoder import ResultDecoder
 from .runtime_job import RuntimeJob
 from .runtime_program import RuntimeProgram, ParameterNamespace
+from .runtime_session import RuntimeSession  # pylint: disable=cyclic-import
 from .utils import RuntimeDecoder, to_base64_string, to_python_identifier
 from .utils.backend_decoder import configuration_from_server_data
 from .utils.hgp import to_instance_format, from_instance_format
@@ -483,7 +484,7 @@ class IBMRuntimeService:
 
                     IBMRuntimeService.backends(
                         filters=lambda b: b.configuration().quantum_volume > 16)
-            kwargs: Simple filters that specify a ``True``/``False`` criteria in the
+            **kwargs: Simple filters that specify a ``True``/``False`` criteria in the
                 backend configuration or status.
                 An example to get the operational real backends::
 
@@ -776,6 +777,7 @@ class IBMRuntimeService:
         callback: Optional[Callable] = None,
         result_decoder: Optional[Type[ResultDecoder]] = None,
         instance: Optional[str] = None,
+        session_id: Optional[str] = None,
     ) -> RuntimeJob:
         """Execute the runtime program.
 
@@ -795,6 +797,7 @@ class IBMRuntimeService:
                 ``ResultDecoder`` is used if not specified.
             instance: This is only supported for legacy runtime and is in the
                 hub/group/project format.
+            session_id: Job ID of the first job in a runtime session.
 
         Returns:
             A ``RuntimeJob`` instance representing the execution.
@@ -838,6 +841,7 @@ class IBMRuntimeService:
                 image=options.image,
                 hgp=hgp_name,
                 log_level=options.log_level,
+                session_id=session_id,
             )
         except RequestsApiError as ex:
             if ex.status_code == 404:
@@ -861,6 +865,28 @@ class IBMRuntimeService:
             image=options.image,
         )
         return job
+
+    def open(
+        self,
+        program_id: str,
+        inputs: Union[Dict, ParameterNamespace],
+        options: Optional[Union[RuntimeOptions, Dict]] = None,
+    ) -> RuntimeSession:
+        """Open a new runtime session.
+
+        Args:
+            program_id: Program ID.
+            inputs: Initial program input parameters. These input values are
+                persistent throughout the session.
+            options: Runtime options that control the execution environment. See
+                :class:`RuntimeOptions` for all available options.
+
+        Returns:
+            Runtime session.
+        """
+        return RuntimeSession(
+            runtime=self, program_id=program_id, inputs=inputs, options=options
+        )
 
     def upload_program(
         self, data: str, metadata: Optional[Union[Dict, str]] = None
@@ -1278,7 +1304,7 @@ class IBMRuntimeService:
                     AccountProvider.backends(
                         filters=lambda b: b.configuration().quantum_volume > 16)
 
-            kwargs: Simple filters that specify a ``True``/``False`` criteria in the
+            **kwargs: Simple filters that specify a ``True``/``False`` criteria in the
                 backend configuration, backends status, or provider credentials.
                 An example to get the operational backends with 5 qubits::
 

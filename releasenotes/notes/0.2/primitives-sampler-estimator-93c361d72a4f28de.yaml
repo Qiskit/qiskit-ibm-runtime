@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    :class:`qiskit_ibm_runtime.IBMEstimator` and :class:`qiskit_ibm_runtime.IBMSampler`
+    classes now allow you to easily interact with the ``estimator`` and ``sampler``
+    primitive programs. Refer to the examples in the respective class doc strings to learn
+    more about how to use them.
