@@ -29,6 +29,10 @@ from qiskit_ibm_runtime.accounts import (
 )
 from qiskit_ibm_runtime.channel import Channel
 from qiskit_ibm_runtime.accounts.account import IBM_CLOUD_API_URL, IBM_QUANTUM_API_URL
+from qiskit_ibm_runtime.accounts.management import (
+    _DEFAULT_ACCOUNT_NAME_LEGACY,
+    _DEFAULT_ACCOUNT_NAME_CLOUD,
+)
 from qiskit_ibm_runtime.proxies import ProxyConfiguration
 from .mock.fake_runtime_service import FakeRuntimeService
 from ..ibm_test_case import IBMTestCase
@@ -55,6 +59,20 @@ _TEST_IBM_CLOUD_ACCOUNT = Account(
         username_ntlm="bla", password_ntlm="blub", urls={"https": "127.0.0.1"}
     ),
 )
+
+_TEST_LEGACY_ACCOUNT = {
+    "auth": "legacy",
+    "token": "token-x",
+    "url": "https://auth.quantum-computing.ibm.com/api",
+    "instance": "ibm-q/open/main",
+}
+
+_TEST_CLOUD_ACCOUNT = {
+    "auth": "cloud",
+    "token": "token-y",
+    "url": "https://cloud.ibm.com",
+    "instance": "crn:v1:bluemix:public:quantum-computing:us-east:a/...::",
+}
 
 
 class TestAccount(IBMTestCase):
@@ -158,8 +176,8 @@ class TestAccountManager(IBMTestCase):
     @temporary_account_config_file(
         contents={"conflict": _TEST_IBM_CLOUD_ACCOUNT.to_saved_format()}
     )
-    def test_save_without_override(self):
-        """Test to override an existing account without setting overwrite=True."""
+    def test_save_without_overwrite(self):
+        """Test to overwrite an existing account without setting overwrite=True."""
         with self.assertRaises(AccountAlreadyExistsError):
             AccountManager.save(
                 name="conflict",
@@ -169,6 +187,77 @@ class TestAccountManager(IBMTestCase):
                 channel=Channel.IBM_CLOUD,
                 overwrite=False,
             )
+
+    # TODO remove test when removing auth parameter
+    @temporary_account_config_file(
+        contents={_DEFAULT_ACCOUNT_NAME_CLOUD: _TEST_CLOUD_ACCOUNT}
+    )
+    def test_save_channel_ibm_cloud_over_auth_cloud_without_overwrite(self):
+        """Test to overwrite an existing auth "cloud" account with channel "ibm_cloud"
+        and without setting overwrite=True."""
+        with self.assertRaises(AccountAlreadyExistsError):
+            AccountManager.save(
+                token=_TEST_IBM_CLOUD_ACCOUNT.token,
+                url=_TEST_IBM_CLOUD_ACCOUNT.url,
+                instance=_TEST_IBM_CLOUD_ACCOUNT.instance,
+                channel=Channel.IBM_CLOUD,
+                overwrite=False,
+            )
+
+    # TODO remove test when removing auth parameter
+    @temporary_account_config_file(
+        contents={_DEFAULT_ACCOUNT_NAME_LEGACY: _TEST_LEGACY_ACCOUNT}
+    )
+    def test_save_channel_ibm_quantum_over_auth_legacy_without_overwrite(self):
+        """Test to overwrite an existing auth "legacy" account with channel "ibm_quantum"
+        and without setting overwrite=True."""
+        with self.assertRaises(AccountAlreadyExistsError):
+            AccountManager.save(
+                token=_TEST_IBM_QUANTUM_ACCOUNT.token,
+                url=_TEST_IBM_QUANTUM_ACCOUNT.url,
+                instance=_TEST_IBM_QUANTUM_ACCOUNT.instance,
+                channel=Channel.IBM_QUANTUM,
+                overwrite=False,
+            )
+
+    # TODO remove test when removing auth parameter
+    @temporary_account_config_file(
+        contents={_DEFAULT_ACCOUNT_NAME_LEGACY: _TEST_LEGACY_ACCOUNT}
+    )
+    def test_save_channel_ibm_quantum_over_auth_legacy_with_overwrite(self):
+        """Test to overwrite an existing auth "legacy" account with channel "ibm_quantum"
+        and with setting overwrite=True."""
+        AccountManager.save(
+            token=_TEST_IBM_QUANTUM_ACCOUNT.token,
+            url=_TEST_IBM_QUANTUM_ACCOUNT.url,
+            instance=_TEST_IBM_QUANTUM_ACCOUNT.instance,
+            channel=Channel.IBM_QUANTUM.value,
+            name=None,
+            overwrite=True,
+        )
+        self.assertEqual(
+            _TEST_IBM_QUANTUM_ACCOUNT, AccountManager.get(channel=Channel.IBM_QUANTUM)
+        )
+
+    # TODO remove test when removing auth parameter
+    @temporary_account_config_file(
+        contents={_DEFAULT_ACCOUNT_NAME_CLOUD: _TEST_CLOUD_ACCOUNT}
+    )
+    def test_save_channel_ibm_cloud_over_auth_cloud_with_overwrite(self):
+        """Test to overwrite an existing auth "cloud" account with channel "ibm_cloud"
+        and with setting overwrite=True."""
+        AccountManager.save(
+            token=_TEST_IBM_CLOUD_ACCOUNT.token,
+            url=_TEST_IBM_CLOUD_ACCOUNT.url,
+            instance=_TEST_IBM_CLOUD_ACCOUNT.instance,
+            channel=Channel.IBM_CLOUD.value,
+            proxies=_TEST_IBM_CLOUD_ACCOUNT.proxies,
+            name=None,
+            overwrite=True,
+        )
+        self.assertEqual(
+            _TEST_IBM_CLOUD_ACCOUNT, AccountManager.get(channel=Channel.IBM_CLOUD)
+        )
 
     @temporary_account_config_file(
         contents={"conflict": _TEST_IBM_CLOUD_ACCOUNT.to_saved_format()}
