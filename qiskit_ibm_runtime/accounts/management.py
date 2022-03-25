@@ -49,7 +49,9 @@ class AccountManager:
     ) -> None:
         """Save account on disk."""
         name = name or cls._get_default_account_name(channel)
-        old_name = cls._get_old_default_account_name(channel)
+        old_name = None
+        if name in [_DEFAULT_ACCOUNT_NAME_IBM_CLOUD, _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM]:
+            old_name = cls._get_old_default_account_name(channel)
         return save_config(
             filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE,
             name=name,
@@ -185,7 +187,9 @@ class AccountManager:
         """Delete account from disk."""
 
         name = name or cls._get_default_account_name(channel)
-        old_name = cls._get_old_default_account_name(channel)
+        old_name = None
+        if name in [_DEFAULT_ACCOUNT_NAME_IBM_CLOUD, _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM]:
+            old_name = cls._get_old_default_account_name(channel)
         return delete_config(
             filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE,
             name=name,

@@ -31,7 +31,7 @@ def save_config(
     with open(filename, mode="r", encoding="utf-8") as json_in:
         data = json.load(json_in)
 
-    if (data.get(name) or data.get(old_name)) and not overwrite:
+    if (data.get(name) or (old_name and data.get(old_name))) and not overwrite:
         raise AccountAlreadyExistsError(
             f"Named account ({name}) already exists. "
             f"Set overwrite=True to overwrite."
@@ -39,7 +39,7 @@ def save_config(
 
     with open(filename, mode="w", encoding="utf-8") as json_out:
         data[name] = config
-        if old_name in data:
+        if old_name and old_name in data:
             del data[old_name]
         json.dump(data, json_out, sort_keys=True, indent=4)
 
@@ -82,7 +82,7 @@ def delete_config(
         with open(filename, mode="w", encoding="utf-8") as json_out:
             if name in data:
                 del data[name]
-            if old_name in data:
+            elif old_name in data:
                 del data[old_name]
             json.dump(data, json_out, sort_keys=True, indent=4)
             return True

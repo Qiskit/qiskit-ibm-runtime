@@ -198,6 +198,7 @@ class TestAccountManager(IBMTestCase):
     @temporary_account_config_file(
         contents={_DEFAULT_ACCOUNT_NAME_CLOUD: _TEST_CLOUD_ACCOUNT}
     )
+    @no_envs(["QISKIT_IBM_TOKEN"])
     def test_save_channel_ibm_cloud_over_auth_cloud_without_overwrite(self):
         """Test to overwrite an existing auth "cloud" account with channel "ibm_cloud"
         and without setting overwrite=True."""
@@ -207,6 +208,7 @@ class TestAccountManager(IBMTestCase):
                 url=_TEST_IBM_CLOUD_ACCOUNT.url,
                 instance=_TEST_IBM_CLOUD_ACCOUNT.instance,
                 channel=Channel.IBM_CLOUD,
+                name=None,
                 overwrite=False,
             )
 
@@ -214,6 +216,7 @@ class TestAccountManager(IBMTestCase):
     @temporary_account_config_file(
         contents={_DEFAULT_ACCOUNT_NAME_LEGACY: _TEST_LEGACY_ACCOUNT}
     )
+    @no_envs(["QISKIT_IBM_TOKEN"])
     def test_save_channel_ibm_quantum_over_auth_legacy_without_overwrite(self):
         """Test to overwrite an existing auth "legacy" account with channel "ibm_quantum"
         and without setting overwrite=True."""
@@ -223,6 +226,7 @@ class TestAccountManager(IBMTestCase):
                 url=_TEST_IBM_QUANTUM_ACCOUNT.url,
                 instance=_TEST_IBM_QUANTUM_ACCOUNT.instance,
                 channel=Channel.IBM_QUANTUM,
+                name=None,
                 overwrite=False,
             )
 
@@ -230,6 +234,7 @@ class TestAccountManager(IBMTestCase):
     @temporary_account_config_file(
         contents={_DEFAULT_ACCOUNT_NAME_LEGACY: _TEST_LEGACY_ACCOUNT}
     )
+    @no_envs(["QISKIT_IBM_TOKEN"])
     def test_save_channel_ibm_quantum_over_auth_legacy_with_overwrite(self):
         """Test to overwrite an existing auth "legacy" account with channel "ibm_quantum"
         and with setting overwrite=True."""
@@ -249,6 +254,7 @@ class TestAccountManager(IBMTestCase):
     @temporary_account_config_file(
         contents={_DEFAULT_ACCOUNT_NAME_CLOUD: _TEST_CLOUD_ACCOUNT}
     )
+    @no_envs(["QISKIT_IBM_TOKEN"])
     def test_save_channel_ibm_cloud_over_auth_cloud_with_overwrite(self):
         """Test to overwrite an existing auth "cloud" account with channel "ibm_cloud"
         and with setting overwrite=True."""
@@ -517,6 +523,28 @@ class TestAccountManager(IBMTestCase):
             self.assertTrue(AccountManager.delete(channel=Channel.IBM_QUANTUM))
 
         with self.subTest("delete default ibm_cloud account"):
+            self.assertTrue(AccountManager.delete())
+
+        self.assertTrue(len(AccountManager.list()) == 0)
+
+    @temporary_account_config_file(
+        contents={
+            "key1": _TEST_CLOUD_ACCOUNT,
+            _DEFAULT_ACCOUNT_NAME_LEGACY: _TEST_LEGACY_ACCOUNT,
+            _DEFAULT_ACCOUNT_NAME_CLOUD: _TEST_CLOUD_ACCOUNT,
+        }
+    )
+    def test_delete_auth(self):
+        """Test delete accounts already saved using auth."""
+
+        with self.subTest("delete named account"):
+            self.assertTrue(AccountManager.delete(name="key1"))
+            self.assertFalse(AccountManager.delete(name="key1"))
+
+        with self.subTest("delete default auth='legacy' account using channel"):
+            self.assertTrue(AccountManager.delete(channel=Channel.IBM_QUANTUM))
+
+        with self.subTest("delete default auth='cloud' account using channel"):
             self.assertTrue(AccountManager.delete())
 
         self.assertTrue(len(AccountManager.list()) == 0)
