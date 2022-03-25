@@ -32,6 +32,8 @@ from qiskit_ibm_runtime.accounts.account import IBM_CLOUD_API_URL, IBM_QUANTUM_A
 from qiskit_ibm_runtime.accounts.management import (
     _DEFAULT_ACCOUNT_NAME_LEGACY,
     _DEFAULT_ACCOUNT_NAME_CLOUD,
+    _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM,
+    _DEFAULT_ACCOUNT_NAME_IBM_CLOUD,
 )
 from qiskit_ibm_runtime.proxies import ProxyConfiguration
 from .mock.fake_runtime_service import FakeRuntimeService
@@ -72,6 +74,9 @@ _TEST_CLOUD_ACCOUNT = {
     "token": "token-y",
     "url": "https://cloud.ibm.com",
     "instance": "crn:v1:bluemix:public:quantum-computing:us-east:a/...::",
+    "proxies": {
+        "username_ntlm": "bla", "password_ntlm": "blub", "urls":{"https": "127.0.0.1"}
+    },
 }
 
 
@@ -402,6 +407,18 @@ class TestAccountManager(IBMTestCase):
             self.assertEqual(len(accounts), 2)
             self.assertEqual(accounts["key1"], _TEST_IBM_CLOUD_ACCOUNT)
             self.assertTrue(accounts["key2"], _TEST_IBM_QUANTUM_ACCOUNT)
+
+        with temporary_account_config_file(
+            contents={
+                _DEFAULT_ACCOUNT_NAME_CLOUD: _TEST_CLOUD_ACCOUNT,
+                _DEFAULT_ACCOUNT_NAME_LEGACY: _TEST_CLOUD_ACCOUNT,
+            }
+        ), self.subTest("non-empty list of auth accounts"):
+            accounts = AccountManager.list()
+
+            self.assertEqual(len(accounts), 2)
+            self.assertEqual(accounts[_DEFAULT_ACCOUNT_NAME_IBM_CLOUD], _TEST_IBM_CLOUD_ACCOUNT)
+            self.assertTrue(accounts[_DEFAULT_ACCOUNT_NAME_IBM_QUANTUM], _TEST_IBM_QUANTUM_ACCOUNT)
 
         with temporary_account_config_file(contents={}), self.subTest(
             "empty list of accounts"
