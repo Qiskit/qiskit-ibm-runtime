@@ -444,15 +444,11 @@ class TestAccountManager(IBMTestCase):
         ), self.subTest("filtered list of accounts"):
             accounts = list(AccountManager.list(channel=Channel.IBM_CLOUD).keys())
             self.assertEqual(len(accounts), 2)
-            self.assertListEqual(
-                accounts, ["key1", _DEFAULT_ACCOUNT_NAME_IBM_CLOUD]
-            )
+            self.assertListEqual(accounts, ["key1", _DEFAULT_ACCOUNT_NAME_IBM_CLOUD])
 
             accounts = list(AccountManager.list(channel=Channel.IBM_QUANTUM).keys())
             self.assertEqual(len(accounts), 2)
-            self.assertListEqual(
-                accounts, ["key2", _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM]
-            )
+            self.assertListEqual(accounts, ["key2", _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM])
 
             accounts = list(
                 AccountManager.list(channel=Channel.IBM_CLOUD, default=True).keys()
@@ -481,15 +477,11 @@ class TestAccountManager(IBMTestCase):
         ), self.subTest("filtered list of auth accounts"):
             accounts = list(AccountManager.list(channel=Channel.IBM_CLOUD).keys())
             self.assertEqual(len(accounts), 2)
-            self.assertListEqual(
-                accounts, ["key1", _DEFAULT_ACCOUNT_NAME_IBM_CLOUD]
-            )
+            self.assertListEqual(accounts, ["key1", _DEFAULT_ACCOUNT_NAME_IBM_CLOUD])
 
             accounts = list(AccountManager.list(channel=Channel.IBM_QUANTUM).keys())
             self.assertEqual(len(accounts), 2)
-            self.assertListEqual(
-                accounts, ["key2", _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM]
-            )
+            self.assertListEqual(accounts, ["key2", _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM])
 
             accounts = list(
                 AccountManager.list(channel=Channel.IBM_CLOUD, default=True).keys()
