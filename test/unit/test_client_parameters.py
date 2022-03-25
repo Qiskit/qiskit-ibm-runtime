@@ -54,19 +54,19 @@ class TestClientParameters(IBMTestCase):
         """Test resolution of runtime API base URL."""
         test_specs = [
             (
-                "cloud",
+                Channel.IBM_CLOUD.value,
                 "crn:v1:bluemix:public:quantum-computing:us-east:a/...:...::",
                 "https://cloud.ibm.com",
                 "https://us-east.quantum-computing.cloud.ibm.com",
             ),
             (
-                "cloud",
+                Channel.IBM_CLOUD.value,
                 "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
                 "https://cloud.ibm.com",
                 "https://my-region.quantum-computing.cloud.ibm.com",
             ),
             (
-                Channel.IBM_QUANTUM,
+                Channel.IBM_QUANTUM.value,
                 "h/g/p",
                 "https://auth.quantum-computing.ibm.com/api",
                 "https://auth.quantum-computing.ibm.com/api",

@@ -56,7 +56,7 @@ class TestProxies(IBMTestCase):
             # wait for the process to terminate
             self.proxy_process.wait()
 
-    @integration_test_setup(supported_channel=["cloud"])
+    @integration_test_setup(supported_channel=[Channel.IBM_CLOUD])
     def test_proxies_cloud_runtime_client(
         self, dependencies: IntegrationTestDependencies
     ) -> None:

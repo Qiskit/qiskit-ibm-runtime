@@ -29,10 +29,10 @@ def run_quantum_and_cloud_fake(func):
     @wraps(func)
     def _wrapper(self, *args, **kwargs):
         ibm_quantum_service = FakeRuntimeService(
-            channel=Channel.IBM_QUANTUM, token="my_token", instance="h/g/p"
+            channel=Channel.IBM_QUANTUM.value, token="my_token", instance="h/g/p"
         )
         cloud_service = FakeRuntimeService(
-            channel=Channel.IBM_CLOUD,
+            channel=Channel.IBM_CLOUD.value,
             token="my_token",
             instance="crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
         )
@@ -51,9 +51,9 @@ def _get_integration_test_config():
         os.getenv("QISKIT_IBM_INSTANCE"),
     )
     channel: Any = (
-        Channel.IBM_QUANTUM
+        Channel.IBM_QUANTUM.value
         if url.find("quantum-computing.ibm.com") >= 0
-        else Channel.IBM_CLOUD
+        else Channel.IBM_CLOUD.value
     )
     return channel, token, url, instance
 

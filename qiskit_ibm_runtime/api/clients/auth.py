@@ -55,7 +55,7 @@ class AuthClient(BaseClient):
         """
         # Request an access token.
         self.access_token = self._request_access_token()
-        self.auth_api.session.channel = QuantumAuth(access_token=self.access_token)
+        self.auth_api.session.auth = QuantumAuth(access_token=self.access_token)
         self._service_urls = self.user_urls()
 
         # Create the api server client, using the access token.
