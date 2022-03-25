@@ -259,10 +259,8 @@ class TestAccountManager(IBMTestCase):
             _TEST_IBM_CLOUD_ACCOUNT, AccountManager.get(channel=Channel.IBM_CLOUD)
         )
 
-     # TODO remove test when removing auth parameter
-    @temporary_account_config_file(
-        contents={"personal-account": _TEST_CLOUD_ACCOUNT}
-    )
+    # TODO remove test when removing auth parameter
+    @temporary_account_config_file(contents={"personal-account": _TEST_CLOUD_ACCOUNT})
     def test_save_channel_ibm_cloud_with_name_over_auth_cloud_with_overwrite(self):
         """Test to overwrite an existing named auth "cloud" account with channel "ibm_cloud"
         and with setting overwrite=True."""
@@ -280,9 +278,7 @@ class TestAccountManager(IBMTestCase):
         )
 
     # TODO remove test when removing auth parameter
-    @temporary_account_config_file(
-        contents={"personal-account": _TEST_CLOUD_ACCOUNT}
-    )
+    @temporary_account_config_file(contents={"personal-account": _TEST_CLOUD_ACCOUNT})
     def test_save_channel_ibm_cloud_with_name_over_auth_cloud_without_overwrite(self):
         """Test to overwrite an existing named auth "cloud" account with channel "ibm_cloud"
         and without setting overwrite=True."""
@@ -293,6 +289,42 @@ class TestAccountManager(IBMTestCase):
                 instance=_TEST_IBM_CLOUD_ACCOUNT.instance,
                 channel=Channel.IBM_CLOUD.value,
                 proxies=_TEST_IBM_CLOUD_ACCOUNT.proxies,
+                name="personal-account",
+                overwrite=False,
+            )
+
+    # TODO remove test when removing auth parameter
+    @temporary_account_config_file(contents={"personal-account": _TEST_LEGACY_ACCOUNT})
+    def test_save_channel_ibm_quantum_with_name_over_auth_legacy_with_overwrite(self):
+        """Test to overwrite an existing named auth "legacy" account with channel "ibm_quantum"
+        and with setting overwrite=True."""
+        AccountManager.save(
+            token=_TEST_IBM_QUANTUM_ACCOUNT.token,
+            url=_TEST_IBM_QUANTUM_ACCOUNT.url,
+            instance=_TEST_IBM_QUANTUM_ACCOUNT.instance,
+            channel=Channel.IBM_QUANTUM.value,
+            proxies=_TEST_IBM_QUANTUM_ACCOUNT.proxies,
+            name="personal-account",
+            overwrite=True,
+        )
+        self.assertEqual(
+            _TEST_IBM_QUANTUM_ACCOUNT, AccountManager.get(name="personal-account")
+        )
+
+    # TODO remove test when removing auth parameter
+    @temporary_account_config_file(contents={"personal-account": _TEST_LEGACY_ACCOUNT})
+    def test_save_channel_ibm_quantum_with_name_over_auth_legacy_without_overwrite(
+        self,
+    ):
+        """Test to overwrite an existing named auth "legacy" account with channel "ibm_quantum"
+        and without setting overwrite=True."""
+        with self.assertRaises(AccountAlreadyExistsError):
+            AccountManager.save(
+                token=_TEST_IBM_QUANTUM_ACCOUNT.token,
+                url=_TEST_IBM_QUANTUM_ACCOUNT.url,
+                instance=_TEST_IBM_QUANTUM_ACCOUNT.instance,
+                channel=Channel.IBM_QUANTUM.value,
+                proxies=_TEST_IBM_QUANTUM_ACCOUNT.proxies,
                 name="personal-account",
                 overwrite=False,
             )
