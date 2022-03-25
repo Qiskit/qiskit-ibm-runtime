@@ -75,7 +75,9 @@ _TEST_CLOUD_ACCOUNT = {
     "url": "https://cloud.ibm.com",
     "instance": "crn:v1:bluemix:public:quantum-computing:us-east:a/...::",
     "proxies": {
-        "username_ntlm": "bla", "password_ntlm": "blub", "urls":{"https": "127.0.0.1"}
+        "username_ntlm": "bla",
+        "password_ntlm": "blub",
+        "urls": {"https": "127.0.0.1"},
     },
 }
 
@@ -417,8 +419,12 @@ class TestAccountManager(IBMTestCase):
             accounts = AccountManager.list()
 
             self.assertEqual(len(accounts), 2)
-            self.assertEqual(accounts[_DEFAULT_ACCOUNT_NAME_IBM_CLOUD], _TEST_IBM_CLOUD_ACCOUNT)
-            self.assertTrue(accounts[_DEFAULT_ACCOUNT_NAME_IBM_QUANTUM], _TEST_IBM_QUANTUM_ACCOUNT)
+            self.assertEqual(
+                accounts[_DEFAULT_ACCOUNT_NAME_IBM_CLOUD], _TEST_IBM_CLOUD_ACCOUNT
+            )
+            self.assertTrue(
+                accounts[_DEFAULT_ACCOUNT_NAME_IBM_QUANTUM], _TEST_IBM_QUANTUM_ACCOUNT
+            )
 
         with temporary_account_config_file(contents={}), self.subTest(
             "empty list of accounts"
