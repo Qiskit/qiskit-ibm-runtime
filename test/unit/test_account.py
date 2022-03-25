@@ -22,7 +22,6 @@ from unittest import skipIf
 from qiskit_ibm_runtime.accounts import (
     AccountManager,
     Account,
-    management,
     AccountAlreadyExistsError,
     AccountNotFoundError,
     InvalidAccountError,
@@ -358,13 +357,13 @@ class TestAccountManager(IBMTestCase):
             (_TEST_IBM_QUANTUM_ACCOUNT, "acct-1", "acct-1"),
             (_TEST_IBM_CLOUD_ACCOUNT, "acct-2", "acct-2"),
             # verify default account name handling for ibm_cloud accounts
-            (_TEST_IBM_CLOUD_ACCOUNT, None, management._DEFAULT_ACCOUNT_NAME_IBM_CLOUD),
+            (_TEST_IBM_CLOUD_ACCOUNT, None, _DEFAULT_ACCOUNT_NAME_IBM_CLOUD),
             (_TEST_IBM_CLOUD_ACCOUNT, None, None),
             # verify default account name handling for ibm_quantum accounts
             (
                 _TEST_IBM_QUANTUM_ACCOUNT,
                 None,
-                management._DEFAULT_ACCOUNT_NAME_IBM_QUANTUM,
+                _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM,
             ),
             # verify account override
             (_TEST_IBM_QUANTUM_ACCOUNT, "acct", "acct"),
@@ -435,10 +434,10 @@ class TestAccountManager(IBMTestCase):
             contents={
                 "key1": _TEST_IBM_CLOUD_ACCOUNT.to_saved_format(),
                 "key2": _TEST_IBM_QUANTUM_ACCOUNT.to_saved_format(),
-                management._DEFAULT_ACCOUNT_NAME_IBM_CLOUD: Account(
+                _DEFAULT_ACCOUNT_NAME_IBM_CLOUD: Account(
                     Channel.IBM_CLOUD, "token-ibm-cloud", instance="crn:123"
                 ).to_saved_format(),
-                management._DEFAULT_ACCOUNT_NAME_IBM_QUANTUM: Account(
+                _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM: Account(
                     Channel.IBM_QUANTUM, "token-ibm-quantum"
                 ).to_saved_format(),
             }
@@ -446,20 +445,57 @@ class TestAccountManager(IBMTestCase):
             accounts = list(AccountManager.list(channel=Channel.IBM_CLOUD).keys())
             self.assertEqual(len(accounts), 2)
             self.assertListEqual(
-                accounts, ["key1", management._DEFAULT_ACCOUNT_NAME_IBM_CLOUD]
+                accounts, ["key1", _DEFAULT_ACCOUNT_NAME_IBM_CLOUD]
             )
 
             accounts = list(AccountManager.list(channel=Channel.IBM_QUANTUM).keys())
             self.assertEqual(len(accounts), 2)
             self.assertListEqual(
-                accounts, ["key2", management._DEFAULT_ACCOUNT_NAME_IBM_QUANTUM]
+                accounts, ["key2", _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM]
             )
 
             accounts = list(
                 AccountManager.list(channel=Channel.IBM_CLOUD, default=True).keys()
             )
             self.assertEqual(len(accounts), 1)
-            self.assertListEqual(accounts, [management._DEFAULT_ACCOUNT_NAME_IBM_CLOUD])
+            self.assertListEqual(accounts, [_DEFAULT_ACCOUNT_NAME_IBM_CLOUD])
+
+            accounts = list(
+                AccountManager.list(channel=Channel.IBM_CLOUD, default=False).keys()
+            )
+            self.assertEqual(len(accounts), 1)
+            self.assertListEqual(accounts, ["key1"])
+
+            accounts = list(AccountManager.list(name="key1").keys())
+            self.assertEqual(len(accounts), 1)
+            self.assertListEqual(accounts, ["key1"])
+
+        # TODO remove test when removing auth parameter
+        with temporary_account_config_file(
+            contents={
+                "key1": _TEST_CLOUD_ACCOUNT,
+                "key2": _TEST_LEGACY_ACCOUNT,
+                _DEFAULT_ACCOUNT_NAME_CLOUD: _TEST_CLOUD_ACCOUNT,
+                _DEFAULT_ACCOUNT_NAME_LEGACY: _TEST_LEGACY_ACCOUNT,
+            }
+        ), self.subTest("filtered list of auth accounts"):
+            accounts = list(AccountManager.list(channel=Channel.IBM_CLOUD).keys())
+            self.assertEqual(len(accounts), 2)
+            self.assertListEqual(
+                accounts, ["key1", _DEFAULT_ACCOUNT_NAME_IBM_CLOUD]
+            )
+
+            accounts = list(AccountManager.list(channel=Channel.IBM_QUANTUM).keys())
+            self.assertEqual(len(accounts), 2)
+            self.assertListEqual(
+                accounts, ["key2", _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM]
+            )
+
+            accounts = list(
+                AccountManager.list(channel=Channel.IBM_CLOUD, default=True).keys()
+            )
+            self.assertEqual(len(accounts), 1)
+            self.assertListEqual(accounts, [_DEFAULT_ACCOUNT_NAME_IBM_CLOUD])
 
             accounts = list(
                 AccountManager.list(channel=Channel.IBM_CLOUD, default=False).keys()
@@ -474,8 +510,8 @@ class TestAccountManager(IBMTestCase):
     @temporary_account_config_file(
         contents={
             "key1": _TEST_IBM_CLOUD_ACCOUNT.to_saved_format(),
-            management._DEFAULT_ACCOUNT_NAME_IBM_QUANTUM: _TEST_IBM_QUANTUM_ACCOUNT.to_saved_format(),
-            management._DEFAULT_ACCOUNT_NAME_IBM_CLOUD: _TEST_IBM_CLOUD_ACCOUNT.to_saved_format(),
+            _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM: _TEST_IBM_QUANTUM_ACCOUNT.to_saved_format(),
+            _DEFAULT_ACCOUNT_NAME_IBM_CLOUD: _TEST_IBM_CLOUD_ACCOUNT.to_saved_format(),
         }
     )
     def test_delete(self):
