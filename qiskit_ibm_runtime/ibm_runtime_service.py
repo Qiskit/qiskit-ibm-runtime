@@ -163,14 +163,7 @@ class IBMRuntimeService:
         super().__init__()
 
         if auth:
-            warnings.warn(
-                f"Use of `auth` parameter is deprecated and will "
-                f"be removed in a future release. "
-                f"You can now use channel='{Channel.IBM_CLOUD}' or "
-                f"channel='{Channel.IBM_QUANTUM}' instead.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
+            self._auth_warning()
 
         self._account = self._discover_account(
             token=token,
@@ -218,6 +211,17 @@ class IBMRuntimeService:
         # TODO - it'd be nice to allow some kind of autocomplete, but `service.ibmq_foo`
         # just seems wrong since backends are not runtime service instances.
         # self._discover_backends()
+
+    @staticmethod
+    def _auth_warning() -> None:
+        warnings.warn(
+            f"Use of `auth` parameter is deprecated and will "
+            f"be removed in a future release. "
+            f"You can now use channel='{Channel.IBM_CLOUD}' or "
+            f"channel='{Channel.IBM_QUANTUM}' instead.",
+            DeprecationWarning,
+            stacklevel=3,
+        )
 
     def _discover_account(
         self,
@@ -570,19 +574,17 @@ class IBMRuntimeService:
             False if no account was found.
         """
         if auth:
-            warnings.warn(
-                f"Use of `auth` parameter is deprecated and will "
-                f"be removed in a future release. "
-                f"You can now use channel='{Channel.IBM_CLOUD}' or "
-                f"channel='{Channel.IBM_QUANTUM}' instead.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            if auth == "cloud":
-                channel = Channel.IBM_CLOUD
-            elif auth == "legacy":
-                channel = Channel.IBM_QUANTUM
+            IBMRuntimeService._auth_warning()
+            channel = channel or IBMRuntimeService._get_channel_for_auth(auth)
+
         return AccountManager.delete(name=name, channel=channel)
+
+    @staticmethod
+    def _get_channel_for_auth(auth: str) -> str:
+        """Returns channel type based on auth"""
+        if auth == "legacy":
+            return Channel.IBM_QUANTUM
+        return Channel.IBM_CLOUD
 
     @staticmethod
     def save_account(
@@ -616,18 +618,8 @@ class IBMRuntimeService:
             overwrite: ``True`` if the existing account is to be overwritten.
         """
         if auth:
-            warnings.warn(
-                f"Use of `auth` parameter is deprecated and will "
-                f"be removed in a future release. "
-                f"You can now use channel='{Channel.IBM_CLOUD}' "
-                f"or channel='{Channel.IBM_QUANTUM}' instead.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            if auth == "cloud":
-                channel = Channel.IBM_CLOUD
-            elif auth == "legacy":
-                channel = Channel.IBM_QUANTUM
+            IBMRuntimeService._auth_warning()
+            channel = channel or IBMRuntimeService._get_channel_for_auth(auth)
 
         AccountManager.save(
             token=token,
@@ -663,18 +655,8 @@ class IBMRuntimeService:
             ValueError: If an invalid account is found on disk.
         """
         if auth:
-            warnings.warn(
-                f"Use of `auth` parameter is deprecated and will "
-                f"be removed in a future release. "
-                f"You can now use channel='{Channel.IBM_CLOUD}' "
-                f"or channel='{Channel.IBM_QUANTUM}' instead.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            if auth == "cloud":
-                channel = Channel.IBM_CLOUD
-            elif auth == "legacy":
-                channel = Channel.IBM_QUANTUM
+            IBMRuntimeService._auth_warning()
+            channel = channel or IBMRuntimeService._get_channel_for_auth(auth)
         return dict(
             map(
                 lambda kv: (kv[0], Account.to_saved_format(kv[1])),
@@ -1411,14 +1393,7 @@ class IBMRuntimeService:
         Returns:
             The authentication type used.
         """
-        warnings.warn(
-            f"Use of `auth` parameter is deprecated and will "
-            f"be removed in a future release. "
-            f"You can now use channel='{Channel.IBM_CLOUD}' "
-            f"or channel='{Channel.IBM_QUANTUM}' instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
+        self._auth_warning()
         return "cloud" if self._channel == Channel.IBM_CLOUD else "legacy"
 
     @property
