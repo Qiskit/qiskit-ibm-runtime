@@ -24,7 +24,6 @@ from urllib.parse import urlparse
 import requests
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 from ibm_platform_services import ResourceControllerV2
-from ..channel import Channel
 
 
 def get_iam_api_url(cloud_url: str) -> str:
@@ -41,7 +40,7 @@ def get_resource_controller_api_url(cloud_url: str) -> str:
 
 def resolve_crn(channel: str, url: str, instance: str, token: str) -> List[str]:
     """Resolves the Cloud Resource Name (CRN) for the given cloud account."""
-    if channel != Channel.IBM_CLOUD:
+    if channel != "ibm_cloud":
         raise ValueError("CRN value can only be resolved for cloud accounts.")
 
     if is_crn(instance):

@@ -21,7 +21,6 @@ from unittest.mock import patch
 
 from qiskit_ibm_runtime.accounts import management
 from qiskit_ibm_runtime.accounts.account import IBM_CLOUD_API_URL, IBM_QUANTUM_API_URL
-from qiskit_ibm_runtime.channel import Channel
 
 
 class custom_envs(ContextDecorator):
@@ -128,7 +127,7 @@ class temporary_account_config_file(ContextDecorator):
 
 def get_account_config_contents(
     name=None,
-    channel=Channel.IBM_CLOUD,
+    channel="ibm_cloud",
     token=None,
     url=None,
     instance=None,
@@ -137,18 +136,16 @@ def get_account_config_contents(
 ):
     """Generate qiskitrc content"""
     if instance is None:
-        instance = (
-            "some_instance" if channel == Channel.IBM_CLOUD else "hub/group/project"
-        )
+        instance = "some_instance" if channel == "ibm_cloud" else "hub/group/project"
     token = token or uuid.uuid4().hex
     if name is None:
         name = (
             management._DEFAULT_ACCOUNT_NAME_IBM_CLOUD
-            if channel == Channel.IBM_CLOUD
+            if channel == "ibm_cloud"
             else management._DEFAULT_ACCOUNT_NAME_IBM_QUANTUM
         )
     if url is None:
-        url = IBM_CLOUD_API_URL if channel == Channel.IBM_CLOUD else IBM_QUANTUM_API_URL
+        url = IBM_CLOUD_API_URL if channel == "ibm_cloud" else IBM_QUANTUM_API_URL
     out = {
         name: {
             "channel": channel,

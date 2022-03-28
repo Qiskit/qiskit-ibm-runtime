@@ -17,7 +17,6 @@ from typing import Dict, Any
 from unittest import mock
 
 from qiskit_ibm_runtime.accounts import Account
-from qiskit_ibm_runtime.channel import Channel
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 from qiskit_ibm_runtime.api.clients import AuthClient
 from qiskit_ibm_runtime.hub_group_project import HubGroupProject
@@ -74,7 +73,7 @@ class FakeRuntimeService(IBMRuntimeService):
             hgp_name = self.DEFAULT_HGPS[idx]
 
             hgp_params = ClientParameters(
-                channel=Channel.IBM_QUANTUM,
+                channel="ibm_quantum",
                 token="some_token",
                 url="some_url",
                 instance=hgp_name,
@@ -114,7 +113,7 @@ class FakeRuntimeService(IBMRuntimeService):
 
         test_options = {
             "backend_client": self._fake_account_client,
-            "channel": Channel.IBM_CLOUD,
+            "channel": "ibm_cloud",
         }
         self._api_client = BaseFakeRuntimeClient(test_options=test_options)
         return super()._discover_cloud_backends()

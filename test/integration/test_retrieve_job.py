@@ -16,7 +16,6 @@ import uuid
 
 from qiskit.providers.jobstatus import JobStatus
 
-from qiskit_ibm_runtime.channel import Channel
 from ..ibm_test_case import IBMIntegrationJobTestCase
 from ..decorators import run_integration_test
 from ..utils import wait_for_status, get_real_device
@@ -131,8 +130,8 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
     @run_integration_test
     def test_jobs_filter_by_hgp(self, service):
         """Test retrieving jobs by hgp."""
-        if self.dependencies.channel == Channel.IBM_CLOUD:
-            self.skipTest(f"Not supported on {Channel.IBM_CLOUD}")
+        if self.dependencies.channel == "ibm_cloud":
+            self.skipTest("Not supported on ibm_cloud")
 
         default_hgp = list(service._hgps.keys())[0]
         program_id = self._upload_program(service)

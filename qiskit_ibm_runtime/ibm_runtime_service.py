@@ -30,7 +30,6 @@ from .api.clients import AuthClient, VersionClient
 from .api.clients.runtime import RuntimeClient
 from .api.exceptions import RequestsApiError
 from .constants import QISKIT_IBM_RUNTIME_API_URL
-from .channel import Channel
 from .exceptions import IBMNotAuthorizedError, IBMInputValueError, IBMAccountError
 from .exceptions import (
     IBMRuntimeError,
@@ -189,7 +188,7 @@ class IBMRuntimeService:
         self._programs: Dict[str, RuntimeProgram] = {}
         self._backends: Dict[str, "ibm_backend.IBMBackend"] = {}
 
-        if self._channel == Channel.IBM_CLOUD:
+        if self._channel == "ibm_cloud":
             self._api_client = RuntimeClient(self._client_params)
             # TODO: We can make the backend discovery lazy
             self._backends = self._discover_cloud_backends()
@@ -215,10 +214,10 @@ class IBMRuntimeService:
     @staticmethod
     def _auth_warning() -> None:
         warnings.warn(
-            f"Use of `auth` parameter is deprecated and will "
-            f"be removed in a future release. "
-            f"You can now use channel='{Channel.IBM_CLOUD}' or "
-            f"channel='{Channel.IBM_QUANTUM}' instead.",
+            "Use of `auth` parameter is deprecated and will "
+            "be removed in a future release. "
+            "You can now use channel='ibm_cloud' or "
+            "channel='ibm_quantum' instead.",
             DeprecationWarning,
             stacklevel=3,
         )
@@ -248,15 +247,9 @@ class IBMRuntimeService:
         elif auth or channel:
             if auth and auth not in ["legacy", "cloud"]:
                 raise ValueError("'auth' can only be 'cloud' or 'legacy'")
-            if channel and channel not in [channel.value for channel in Channel]:
-                raise ValueError(
-                    f"'channel' can only be '{Channel.IBM_CLOUD}' "
-                    f"or '{Channel.IBM_QUANTUM}'"
-                )
-            if auth == "cloud":
-                channel = Channel.IBM_CLOUD
-            elif auth == "legacy":
-                channel = Channel.IBM_QUANTUM
+            if channel and channel not in ["ibm_cloud", "ibm_quantum"]:
+                raise ValueError("'channel' can only be 'ibm_cloud' or 'ibm_quantum'")
+            self._get_channel_for_auth(auth=auth)
             if token:
                 account = Account(
                     channel=channel,
@@ -289,7 +282,7 @@ class IBMRuntimeService:
             account.verify = verify
 
         # resolve CRN if needed
-        if account.channel == Channel.IBM_CLOUD:
+        if account.channel == "ibm_cloud":
             self._resolve_crn(account)
 
         # ensure account is valid, fail early if not
@@ -526,7 +519,7 @@ class IBMRuntimeService:
             IBMInputValueError: If an input is invalid.
         """
         # TODO filter out input_allowed not having runtime
-        if self._channel == Channel.IBM_QUANTUM:
+        if self._channel == "ibm_quantum":
             if instance:
                 backends = list(self._get_hgp(instance=instance).backends.values())
             else:
@@ -575,7 +568,7 @@ class IBMRuntimeService:
         """
         if auth:
             IBMRuntimeService._auth_warning()
-            channel = channel or IBMRuntimeService._get_channel_for_auth(auth)
+            channel = channel or IBMRuntimeService._get_channel_for_auth(auth=auth)
 
         return AccountManager.delete(name=name, channel=channel)
 
@@ -583,8 +576,8 @@ class IBMRuntimeService:
     def _get_channel_for_auth(auth: str) -> str:
         """Returns channel type based on auth"""
         if auth == "legacy":
-            return Channel.IBM_QUANTUM
-        return Channel.IBM_CLOUD
+            return "ibm_quantum"
+        return "ibm_cloud"
 
     @staticmethod
     def save_account(
@@ -864,7 +857,7 @@ class IBMRuntimeService:
             RuntimeProgramNotFound: If the program cannot be found.
             IBMRuntimeError: An error occurred running the program.
         """
-        if instance and self._channel != Channel.IBM_QUANTUM:
+        if instance and self._channel != "ibm_quantum":
             raise IBMInputValueError(
                 "The 'instance' keyword is only supported for ``ibm_quantum`` runtime. "
             )
@@ -883,7 +876,7 @@ class IBMRuntimeService:
 
         backend = None
         hgp_name = None
-        if self._channel == Channel.IBM_QUANTUM:
+        if self._channel == "ibm_quantum":
             # Find the right hgp
             hgp = self._get_hgp(instance=instance, backend_name=options.backend_name)
             backend = hgp.backend(options.backend_name)
@@ -1234,7 +1227,7 @@ class IBMRuntimeService:
         """
         hub = group = project = None
         if instance:
-            if self._channel == Channel.IBM_CLOUD:
+            if self._channel == "ibm_cloud":
                 raise IBMInputValueError(
                     "The 'instance' keyword is only supported for ``ibm_quantum`` runtime."
                 )
@@ -1394,7 +1387,7 @@ class IBMRuntimeService:
             The authentication type used.
         """
         self._auth_warning()
-        return "cloud" if self._channel == Channel.IBM_CLOUD else "legacy"
+        return "cloud" if self._channel == "ibm_cloud" else "legacy"
 
     @property
     def channel(self) -> str:

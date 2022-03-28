@@ -20,7 +20,7 @@ import nbformat
 from nbconvert.preprocessors import ExecutePreprocessor
 
 from qiskit_ibm_runtime.utils.utils import to_python_identifier
-from qiskit_ibm_runtime.channel import Channel
+
 from ..ibm_test_case import IBMIntegrationTestCase
 
 TUTORIAL_PATH = "docs/tutorials/**/*.ipynb"
@@ -41,7 +41,7 @@ def _is_supported(channel: str, tutorial_filename: str) -> bool:
     targeted environment."""
     allowlist = (
         SUPPORTED_TUTORIALS_IBM_QUANTUM
-        if channel == Channel.IBM_QUANTUM
+        if channel == "ibm_quantum"
         else SUPPORTED_TUTORIALS_IBM_CLOUD
     )
     return any(tutorial_filename.endswith(filename) for filename in allowlist)

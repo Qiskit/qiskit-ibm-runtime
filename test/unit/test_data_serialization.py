@@ -61,7 +61,6 @@ from qiskit.opflow import (
 from qiskit.quantum_info import SparsePauliOp, Pauli, PauliTable, Statevector
 from qiskit.result import Result
 
-from qiskit_ibm_runtime.channel import Channel
 from qiskit_ibm_runtime.utils import RuntimeEncoder, RuntimeDecoder
 from .mock.fake_runtime_client import CustomResultRuntimeJob
 from .mock.fake_runtime_service import FakeRuntimeService
@@ -289,7 +288,7 @@ if __name__ == '__main__':
         job_cls = CustomResultRuntimeJob
         job_cls.custom_result = custom_result
         ibm_quantum_service = FakeRuntimeService(
-            channel=Channel.IBM_QUANTUM, token="some_token"
+            channel="ibm_quantum", token="some_token"
         )
 
         sub_tests = [(SerializableClassDecoder, None), (None, SerializableClassDecoder)]

@@ -21,7 +21,6 @@ from functools import wraps
 from typing import Optional, Dict, Any
 
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
-from qiskit_ibm_runtime.channel import Channel
 from qiskit_ibm_runtime.utils import RuntimeEncoder
 from qiskit_ibm_runtime.utils.hgp import from_instance_format
 from .fake_account_client import BaseFakeAccountClient
@@ -32,10 +31,8 @@ def cloud_only(func):
 
     @wraps(func)
     def _wrapper(self, *args, **kwargs):
-        if self._channel != Channel.IBM_CLOUD:
-            raise ValueError(
-                f"Method {func} called by an {Channel.IBM_QUANTUM} client!"
-            )
+        if self._channel != "ibm_cloud":
+            raise ValueError(f"Method {func} called by an ibm_quantum client!")
         return func(self, *args, **kwargs)
 
     return _wrapper
@@ -267,7 +264,7 @@ class BaseFakeRuntimeClient:
         self._backend_client = test_options.get(
             "backend_client", BaseFakeAccountClient()
         )
-        self._channel = test_options.get("channel", Channel.IBM_QUANTUM)
+        self._channel = test_options.get("channel", "ibm_quantum")
 
     def set_job_classes(self, classes):
         """Set job classes to use."""
@@ -517,5 +514,5 @@ class BaseFakeRuntimeClient:
 
     @cloud_only
     def _check_cloud_only(self):
-        if self._channel != Channel.IBM_CLOUD:
+        if self._channel != "ibm_cloud":
             raise ValueError("A backend method is called by an ibm_quantum client!")

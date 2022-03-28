@@ -19,7 +19,7 @@ from typing import Callable, Optional, List, Any
 from unittest import SkipTest
 
 from qiskit_ibm_runtime import IBMRuntimeService
-from qiskit_ibm_runtime.channel import Channel
+
 from .unit.mock.fake_runtime_service import FakeRuntimeService
 
 
@@ -29,10 +29,10 @@ def run_quantum_and_cloud_fake(func):
     @wraps(func)
     def _wrapper(self, *args, **kwargs):
         ibm_quantum_service = FakeRuntimeService(
-            channel=Channel.IBM_QUANTUM.value, token="my_token", instance="h/g/p"
+            channel="ibm_quantum", token="my_token", instance="h/g/p"
         )
         cloud_service = FakeRuntimeService(
-            channel=Channel.IBM_CLOUD.value,
+            channel="ibm_cloud",
             token="my_token",
             instance="crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
         )
@@ -51,9 +51,7 @@ def _get_integration_test_config():
         os.getenv("QISKIT_IBM_INSTANCE"),
     )
     channel: Any = (
-        Channel.IBM_QUANTUM.value
-        if url.find("quantum-computing.ibm.com") >= 0
-        else Channel.IBM_CLOUD.value
+        "ibm_quantum" if url.find("quantum-computing.ibm.com") >= 0 else "ibm_cloud"
     )
     return channel, token, url, instance
 
@@ -92,7 +90,7 @@ def integration_test_setup(
         @wraps(func)
         def _wrapper(self, *args, **kwargs):
             _supported_channel = (
-                [channel.value for channel in Channel]
+                ["ibm_cloud", "ibm_quantum"]
                 if supported_channel is None
                 else supported_channel
             )

@@ -17,7 +17,6 @@ import logging
 from dataclasses import dataclass
 from typing import Optional
 
-from .channel import Channel
 from .exceptions import IBMInputValueError
 
 
@@ -54,7 +53,7 @@ class RuntimeOptions:
         ):
             raise IBMInputValueError('"image" needs to be in form of image_name:tag')
 
-        if channel == Channel.IBM_QUANTUM and not self.backend_name:
+        if channel == "ibm_quantum" and not self.backend_name:
             raise IBMInputValueError(
                 '"backend_name" is required field in "options" for ``ibm_quantum`` runtime.'
             )

@@ -16,7 +16,6 @@ from typing import Any, Dict, Set, Optional
 
 import dateutil.parser
 
-from qiskit_ibm_runtime.channel import Channel
 from ..ibm_test_case import IBMIntegrationTestCase
 from ..decorators import (
     run_integration_test,
@@ -30,9 +29,7 @@ class TestSerialization(IBMIntegrationTestCase):
     def test_backend_configuration(self, service):
         """Test deserializing backend configuration."""
         instance = (
-            self.dependencies.instance
-            if service.channel == Channel.IBM_QUANTUM
-            else None
+            self.dependencies.instance if service.channel == "ibm_quantum" else None
         )
         backends = service.backends(
             operational=True, simulator=False, instance=instance
@@ -62,9 +59,7 @@ class TestSerialization(IBMIntegrationTestCase):
     def test_pulse_defaults(self, service):
         """Test deserializing backend configuration."""
         instance = (
-            self.dependencies.instance
-            if service.channel == Channel.IBM_QUANTUM
-            else None
+            self.dependencies.instance if service.channel == "ibm_quantum" else None
         )
         backends = service.backends(
             operational=True, open_pulse=True, instance=instance
@@ -83,9 +78,7 @@ class TestSerialization(IBMIntegrationTestCase):
     def test_backend_properties(self, service):
         """Test deserializing backend properties."""
         instance = (
-            self.dependencies.instance
-            if service.channel == Channel.IBM_QUANTUM
-            else None
+            self.dependencies.instance if service.channel == "ibm_quantum" else None
         )
         backends = service.backends(
             operational=True, simulator=False, instance=instance

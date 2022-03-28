@@ -15,7 +15,7 @@
 import uuid
 
 from requests_ntlm import HttpNtlmAuth
-from qiskit_ibm_runtime.channel import Channel
+
 from qiskit_ibm_runtime.proxies import ProxyConfiguration
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 from qiskit_ibm_runtime.api.auth import CloudAuth, QuantumAuth
@@ -54,19 +54,19 @@ class TestClientParameters(IBMTestCase):
         """Test resolution of runtime API base URL."""
         test_specs = [
             (
-                Channel.IBM_CLOUD.value,
+                "ibm_cloud",
                 "crn:v1:bluemix:public:quantum-computing:us-east:a/...:...::",
                 "https://cloud.ibm.com",
                 "https://us-east.quantum-computing.cloud.ibm.com",
             ),
             (
-                Channel.IBM_CLOUD.value,
+                "ibm_cloud",
                 "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
                 "https://cloud.ibm.com",
                 "https://my-region.quantum-computing.cloud.ibm.com",
             ),
             (
-                Channel.IBM_QUANTUM.value,
+                "ibm_quantum",
                 "h/g/p",
                 "https://auth.quantum-computing.ibm.com/api",
                 "https://auth.quantum-computing.ibm.com/api",
@@ -126,7 +126,7 @@ class TestClientParameters(IBMTestCase):
     def test_auth_handler_quantum(self):
         """Test getting quantum auth handler."""
         token = uuid.uuid4().hex
-        params = self._get_client_params(channel=Channel.IBM_QUANTUM, token=token)
+        params = self._get_client_params(channel="ibm_quantum", token=token)
         handler = params.get_auth_handler()
         self.assertIsInstance(handler, QuantumAuth)
         self.assertIn(token, handler.get_headers().values())
@@ -136,7 +136,7 @@ class TestClientParameters(IBMTestCase):
         token = uuid.uuid4().hex
         instance = uuid.uuid4().hex
         params = self._get_client_params(
-            channel=Channel.IBM_CLOUD, token=token, instance=instance
+            channel="ibm_cloud", token=token, instance=instance
         )
         handler = params.get_auth_handler()
         self.assertIsInstance(handler, CloudAuth)
@@ -145,7 +145,7 @@ class TestClientParameters(IBMTestCase):
 
     def _get_client_params(
         self,
-        channel=Channel.IBM_QUANTUM,
+        channel="ibm_quantum",
         token="dummy_token",
         url="https://dummy_url",
         instance=None,

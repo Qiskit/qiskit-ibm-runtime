@@ -21,7 +21,6 @@ from qiskit_ibm_runtime import IBMRuntimeService
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 from qiskit_ibm_runtime.api.clients import AuthClient, VersionClient
 from qiskit_ibm_runtime.api.clients.runtime import RuntimeClient
-from qiskit_ibm_runtime.channel import Channel
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
 from qiskit_ibm_runtime.proxies import ProxyConfiguration
 from ..ibm_test_case import IBMTestCase
@@ -56,7 +55,7 @@ class TestProxies(IBMTestCase):
             # wait for the process to terminate
             self.proxy_process.wait()
 
-    @integration_test_setup(supported_channel=[Channel.IBM_CLOUD])
+    @integration_test_setup(supported_channel=["ibm_cloud"])
     def test_proxies_cloud_runtime_client(
         self, dependencies: IntegrationTestDependencies
     ) -> None:
@@ -71,13 +70,13 @@ class TestProxies(IBMTestCase):
         proxy_output = self.proxy_process.stdout.read().decode("utf-8")
         self.assertIn(api_line, proxy_output)
 
-    @integration_test_setup(supported_channel=[Channel.IBM_QUANTUM], init_service=False)
+    @integration_test_setup(supported_channel=["ibm_quantum"], init_service=False)
     def test_proxies_ibm_quantum_runtime_client(
         self, dependencies: IntegrationTestDependencies
     ) -> None:
         """Should reach the proxy using RuntimeClient."""
         service = IBMRuntimeService(
-            channel=Channel.IBM_QUANTUM,
+            channel="ibm_quantum",
             token=dependencies.token,
             url=dependencies.url,
             proxies={"urls": VALID_PROXIES},
@@ -95,13 +94,13 @@ class TestProxies(IBMTestCase):
         # Check if the API call (querying providers list) went through proxy.
         self.assertIn(api_line, proxy_output)
 
-    @integration_test_setup(supported_channel=[Channel.IBM_QUANTUM], init_service=False)
+    @integration_test_setup(supported_channel=["ibm_quantum"], init_service=False)
     def test_proxies_account_client(
         self, dependencies: IntegrationTestDependencies
     ) -> None:
         """Should reach the proxy using AccountClient."""
         service = IBMRuntimeService(
-            channel=Channel.IBM_QUANTUM,
+            channel="ibm_quantum",
             token=dependencies.token,
             url=dependencies.url,
             proxies={"urls": VALID_PROXIES},
@@ -119,7 +118,7 @@ class TestProxies(IBMTestCase):
         # Check if the API call (querying providers list) went through proxy.
         self.assertIn(api_line, proxy_output)
 
-    @integration_test_setup(supported_channel=[Channel.IBM_QUANTUM], init_service=False)
+    @integration_test_setup(supported_channel=["ibm_quantum"], init_service=False)
     def test_proxies_authclient(
         self, dependencies: IntegrationTestDependencies
     ) -> None:
@@ -128,7 +127,7 @@ class TestProxies(IBMTestCase):
             dependencies.url
         )
         params = ClientParameters(
-            channel=Channel.IBM_QUANTUM,
+            channel="ibm_quantum",
             token=dependencies.token,
             url=dependencies.url,
             proxies=ProxyConfiguration(urls=VALID_PROXIES),
@@ -142,7 +141,7 @@ class TestProxies(IBMTestCase):
             self.proxy_process.stdout.read().decode("utf-8"),
         )
 
-    @integration_test_setup(supported_channel=[Channel.IBM_QUANTUM], init_service=False)
+    @integration_test_setup(supported_channel=["ibm_quantum"], init_service=False)
     def test_proxies_versionclient(
         self, dependencies: IntegrationTestDependencies
     ) -> None:
@@ -160,13 +159,13 @@ class TestProxies(IBMTestCase):
             self.proxy_process.stdout.read().decode("utf-8"),
         )
 
-    @integration_test_setup(supported_channel=[Channel.IBM_QUANTUM], init_service=False)
+    @integration_test_setup(supported_channel=["ibm_quantum"], init_service=False)
     def test_invalid_proxy_port_runtime_client(
         self, dependencies: IntegrationTestDependencies
     ) -> None:
         """Should raise RequestApiError with ProxyError using RuntimeClient."""
         params = ClientParameters(
-            channel=Channel.IBM_QUANTUM,
+            channel="ibm_quantum",
             token=dependencies.token,
             url=dependencies.url,
             proxies=ProxyConfiguration(urls=INVALID_PORT_PROXIES),
@@ -176,13 +175,13 @@ class TestProxies(IBMTestCase):
             client.list_programs(limit=1)
         self.assertIsInstance(context_manager.exception.__cause__, ProxyError)
 
-    @integration_test_setup(supported_channel=[Channel.IBM_QUANTUM], init_service=False)
+    @integration_test_setup(supported_channel=["ibm_quantum"], init_service=False)
     def test_invalid_proxy_port_authclient(
         self, dependencies: IntegrationTestDependencies
     ) -> None:
         """Should raise RequestApiError with ProxyError using AuthClient."""
         params = ClientParameters(
-            channel=Channel.IBM_QUANTUM,
+            channel="ibm_quantum",
             token=dependencies.token,
             url=dependencies.url,
             proxies=ProxyConfiguration(urls=INVALID_PORT_PROXIES),
@@ -192,7 +191,7 @@ class TestProxies(IBMTestCase):
 
         self.assertIsInstance(context_manager.exception.__cause__, ProxyError)
 
-    @integration_test_setup(supported_channel=[Channel.IBM_QUANTUM], init_service=False)
+    @integration_test_setup(supported_channel=["ibm_quantum"], init_service=False)
     def test_invalid_proxy_port_versionclient(
         self, dependencies: IntegrationTestDependencies
     ) -> None:
@@ -205,13 +204,13 @@ class TestProxies(IBMTestCase):
 
         self.assertIsInstance(context_manager.exception.__cause__, ProxyError)
 
-    @integration_test_setup(supported_channel=[Channel.IBM_QUANTUM], init_service=False)
+    @integration_test_setup(supported_channel=["ibm_quantum"], init_service=False)
     def test_invalid_proxy_address_runtime_client(
         self, dependencies: IntegrationTestDependencies
     ) -> None:
         """Should raise RequestApiError with ProxyError using RuntimeClient."""
         params = ClientParameters(
-            channel=Channel.IBM_QUANTUM,
+            channel="ibm_quantum",
             token=dependencies.token,
             url=dependencies.url,
             proxies=ProxyConfiguration(urls=INVALID_ADDRESS_PROXIES),
@@ -222,13 +221,13 @@ class TestProxies(IBMTestCase):
 
         self.assertIsInstance(context_manager.exception.__cause__, ProxyError)
 
-    @integration_test_setup(supported_channel=[Channel.IBM_QUANTUM], init_service=False)
+    @integration_test_setup(supported_channel=["ibm_quantum"], init_service=False)
     def test_invalid_proxy_address_authclient(
         self, dependencies: IntegrationTestDependencies
     ) -> None:
         """Should raise RequestApiError with ProxyError using AuthClient."""
         params = ClientParameters(
-            channel=Channel.IBM_QUANTUM,
+            channel="ibm_quantum",
             token=dependencies.token,
             url=dependencies.url,
             proxies=ProxyConfiguration(urls=INVALID_ADDRESS_PROXIES),
@@ -238,7 +237,7 @@ class TestProxies(IBMTestCase):
 
         self.assertIsInstance(context_manager.exception.__cause__, ProxyError)
 
-    @integration_test_setup(supported_channel=[Channel.IBM_QUANTUM], init_service=False)
+    @integration_test_setup(supported_channel=["ibm_quantum"], init_service=False)
     def test_invalid_proxy_address_versionclient(
         self, dependencies: IntegrationTestDependencies
     ) -> None:
@@ -251,7 +250,7 @@ class TestProxies(IBMTestCase):
 
         self.assertIsInstance(context_manager.exception.__cause__, ProxyError)
 
-    @integration_test_setup(supported_channel=[Channel.IBM_QUANTUM], init_service=False)
+    @integration_test_setup(supported_channel=["ibm_quantum"], init_service=False)
     def test_proxy_urls(self, dependencies: IntegrationTestDependencies) -> None:
         """Test different forms of the proxy urls."""
         test_urls = [
@@ -262,7 +261,7 @@ class TestProxies(IBMTestCase):
         for proxy_url in test_urls:
             with self.subTest(proxy_url=proxy_url):
                 params = ClientParameters(
-                    channel=Channel.IBM_QUANTUM,
+                    channel="ibm_quantum",
                     token=dependencies.token,
                     url=dependencies.url,
                     proxies=ProxyConfiguration(urls={"https": proxy_url}),

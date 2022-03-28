@@ -12,7 +12,6 @@
 
 """Tests for runtime job retrieval."""
 
-from qiskit_ibm_runtime.channel import Channel
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from .mock.fake_runtime_service import FakeRuntimeService
 from ..ibm_test_case import IBMTestCase
@@ -28,7 +27,7 @@ class TestRetrieveJobs(IBMTestCase):
         """Initial test setup."""
         super().setUp()
         self._ibm_quantum_service = FakeRuntimeService(
-            channel=Channel.IBM_QUANTUM, token="my_token"
+            channel="ibm_quantum", token="my_token"
         )
 
     @run_quantum_and_cloud_fake
@@ -221,7 +220,7 @@ class TestRetrieveJobs(IBMTestCase):
         """Test retrieving job submitted with different hgp."""
         # Initialize with hgp0
         service = FakeRuntimeService(
-            channel=Channel.IBM_QUANTUM,
+            channel="ibm_quantum",
             token="some_token",
             instance=FakeRuntimeService.DEFAULT_HGPS[0],
         )

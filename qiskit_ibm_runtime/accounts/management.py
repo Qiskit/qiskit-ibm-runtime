@@ -16,7 +16,6 @@ import os
 from typing import Optional, Dict
 from .exceptions import AccountNotFoundError
 from .account import Account, ChannelType
-from ..channel import Channel
 from ..proxies import ProxyConfiguration
 from .storage import save_config, read_config, delete_config
 
@@ -28,8 +27,8 @@ _DEFAULT_ACCOUNT_NAME_LEGACY = "default-legacy"
 _DEFAULT_ACCOUNT_NAME_CLOUD = "default-cloud"
 _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM = "default-ibm-quantum"
 _DEFAULT_ACCOUNT_NAME_IBM_CLOUD = "default-ibm-cloud"
-_DEFAULT_CHANNEL_TYPE: ChannelType = Channel.IBM_CLOUD
-_CHANNEL_TYPES = [_DEFAULT_CHANNEL_TYPE, Channel.IBM_QUANTUM]
+_DEFAULT_CHANNEL_TYPE: ChannelType = "ibm_cloud"
+_CHANNEL_TYPES = [_DEFAULT_CHANNEL_TYPE, "ibm_quantum"]
 
 
 class AccountManager:
@@ -214,7 +213,7 @@ class AccountManager:
     def _get_default_account_name(cls, channel: ChannelType) -> str:
         return (
             _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM
-            if channel == Channel.IBM_QUANTUM
+            if channel == "ibm_quantum"
             else _DEFAULT_ACCOUNT_NAME_IBM_CLOUD
         )
 
@@ -222,6 +221,6 @@ class AccountManager:
     def _get_old_default_account_name(cls, channel: ChannelType) -> str:
         return (
             _DEFAULT_ACCOUNT_NAME_LEGACY
-            if channel == Channel.IBM_QUANTUM
+            if channel == "ibm_quantum"
             else _DEFAULT_ACCOUNT_NAME_CLOUD
         )

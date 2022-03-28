@@ -19,7 +19,6 @@ from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.jobstatus import JobStatus
 
 from qiskit_ibm_runtime import RuntimeJob
-from qiskit_ibm_runtime.channel import Channel
 from qiskit_ibm_runtime.constants import API_TO_JOB_ERROR_MESSAGE
 from qiskit_ibm_runtime.exceptions import (
     RuntimeJobFailureError,
@@ -72,14 +71,14 @@ class TestRuntimeJob(IBMTestCase):
 
     def test_run_program_missing_backend_ibm_quantum(self):
         """Test running an ibm_quantum program with no backend."""
-        service = FakeRuntimeService(channel=Channel.IBM_QUANTUM, token="my_token")
+        service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
         with self.assertRaises(IBMInputValueError):
             _ = run_program(service=service, backend_name="")
 
     def test_run_program_missing_backend_ibm_cloud(self):
         """Test running an ibm_cloud program with no backend."""
         service = FakeRuntimeService(
-            channel=Channel.IBM_CLOUD,
+            channel="ibm_cloud",
             token="my_token",
             instance="crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
         )
@@ -88,7 +87,7 @@ class TestRuntimeJob(IBMTestCase):
 
     def test_run_program_default_hgp_backend(self):
         """Test running a program with a backend in default hgp."""
-        service = FakeRuntimeService(channel=Channel.IBM_QUANTUM, token="my_token")
+        service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
         backend = FakeRuntimeService.DEFAULT_COMMON_BACKEND
         default_hgp = list(service._hgps.values())[0]
         self.assertIn(backend, default_hgp.backends.keys())
@@ -100,7 +99,7 @@ class TestRuntimeJob(IBMTestCase):
 
     def test_run_program_non_default_hgp_backend(self):
         """Test running a program with a backend in non-default hgp."""
-        service = FakeRuntimeService(channel=Channel.IBM_QUANTUM, token="my_token")
+        service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
         backend = FakeRuntimeService.DEFAULT_UNIQUE_BACKEND_PREFIX + "1"
         default_hgp = list(service._hgps.values())[0]
         self.assertNotIn(backend, default_hgp.backends.keys())
@@ -109,7 +108,7 @@ class TestRuntimeJob(IBMTestCase):
 
     def test_run_program_by_hgp_backend(self):
         """Test running a program with both backend and hgp."""
-        service = FakeRuntimeService(channel=Channel.IBM_QUANTUM, token="my_token")
+        service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
         backend = FakeRuntimeService.DEFAULT_COMMON_BACKEND
         non_default_hgp = list(service._hgps.keys())[1]
         job = run_program(
@@ -120,7 +119,7 @@ class TestRuntimeJob(IBMTestCase):
 
     def test_run_program_by_hgp_bad_backend(self):
         """Test running a program with backend not in hgp."""
-        service = FakeRuntimeService(channel=Channel.IBM_QUANTUM, token="my_token")
+        service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
         backend = FakeRuntimeService.DEFAULT_UNIQUE_BACKEND_PREFIX + "1"
         default_hgp = list(service._hgps.values())[0]
         self.assertNotIn(backend, default_hgp.backends.keys())
@@ -131,13 +130,13 @@ class TestRuntimeJob(IBMTestCase):
 
     def test_run_program_by_phantom_hgp(self):
         """Test running a program with a phantom hgp."""
-        service = FakeRuntimeService(channel=Channel.IBM_QUANTUM, token="my_token")
+        service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
         with self.assertRaises(IBMInputValueError):
             _ = run_program(service=service, instance="h/g/p")
 
     def test_run_program_by_bad_hgp(self):
         """Test running a program with a bad hgp."""
-        service = FakeRuntimeService(channel=Channel.IBM_QUANTUM, token="my_token")
+        service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
         with self.assertRaises(IBMInputValueError):
             _ = run_program(service=service, instance="foo")
 

@@ -26,7 +26,6 @@ from qiskit_ibm_runtime import IBMRuntimeService
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.runtime_job import RuntimeJob
 from qiskit_ibm_runtime.exceptions import RuntimeInvalidStateError
-from qiskit_ibm_runtime.channel import Channel
 
 
 def setup_test_logging(logger: logging.Logger, filename: str) -> None:
@@ -88,7 +87,7 @@ def get_hgp(qe_token: str, qe_url: str, default: bool = True) -> HubGroupProject
         A HubGroupProject, as specified by `default`.
     """
     service = IBMRuntimeService(
-        channel=Channel.IBM_QUANTUM, token=qe_token, url=qe_url
+        channel="ibm_quantum", token=qe_token, url=qe_url
     )  # Default hub/group/project.
     open_hgp = service._get_hgp()  # Open access hgp
     hgp_to_return = open_hgp

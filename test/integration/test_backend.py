@@ -15,7 +15,7 @@
 from unittest import SkipTest
 
 from qiskit.transpiler.target import Target
-from qiskit_ibm_runtime.channel import Channel
+
 from ..ibm_test_case import IBMIntegrationTestCase
 from ..decorators import run_integration_test
 
@@ -52,10 +52,10 @@ class TestIBMBackend(IBMIntegrationTestCase):
         # pylint: disable=arguments-differ
         # pylint: disable=no-value-for-parameter
         super().setUpClass()
-        if cls.dependencies.channel == Channel.IBM_CLOUD:
+        if cls.dependencies.channel == "ibm_cloud":
             # TODO use real device when cloud supports it
             cls.backend = cls.dependencies.service.least_busy(min_num_qubits=5)
-        if cls.dependencies.channel == Channel.IBM_QUANTUM:
+        if cls.dependencies.channel == "ibm_quantum":
             cls.backend = cls.dependencies.service.least_busy(
                 simulator=False, min_num_qubits=5, instance=cls.dependencies.instance
             )
