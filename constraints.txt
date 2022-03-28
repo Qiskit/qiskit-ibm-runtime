@@ -1,2 +1,2 @@
-# 3.1.0 is buggy
-Jinja2!=3.1.0
+# 8.1.0 is buggy
+click!=8.1.0
