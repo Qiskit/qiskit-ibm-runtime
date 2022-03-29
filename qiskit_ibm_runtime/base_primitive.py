@@ -24,7 +24,7 @@ class BasePrimitive(ABC):
 
     def __init__(
         self,
-        service: Optional[IBMRuntimeService],
+        service: Optional[IBMRuntimeService] = None,
         backend: Optional[Union[IBMBackend, str]] = None,
     ):
         """Initializes Base Primitive.
