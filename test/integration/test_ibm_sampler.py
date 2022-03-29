@@ -25,16 +25,11 @@ from ..ibm_test_case import IBMIntegrationTestCase
 class TestIntegrationIBMSampler(IBMIntegrationTestCase):
     """Integration tests for Sampler primitive."""
 
-    def _skip_on_legacy(self):
-        if self.dependencies.auth == "legacy":
-            self.skipTest("Not supported on legacy")
-
     @run_integration_test
     def test_sampler_primitive_non_parameterized_circuits(self, service):
         """Verify if sampler primitive returns expected results for non-parameterized circuits."""
-        self._skip_on_legacy()
 
-        sampler_factory = IBMSampler(service=service)
+        sampler_factory = IBMSampler(service=service, backend="ibmq_qasm_simulator")
 
         bell = QuantumCircuit(2)
         bell.h(0)
@@ -42,7 +37,7 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
         bell.measure_all()
 
         # executes a Bell circuit
-        with sampler_factory(circuits=[bell]) as sampler:
+        with sampler_factory(circuits=bell) as sampler:
             self.assertIsInstance(sampler, BaseSampler)
 
             circuit_indices = [0]
@@ -82,9 +77,8 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
     @run_integration_test
     def test_sampler_primitive_parameterized_circuits(self, service):
         """Verify if sampler primitive returns expected results for parameterized circuits."""
-        self._skip_on_legacy()
 
-        sampler_factory = IBMSampler(service=service)
+        sampler_factory = IBMSampler(service=service, backend="ibmq_qasm_simulator")
 
         # parameterized circuit
         pqc = RealAmplitudes(num_qubits=2, reps=2)

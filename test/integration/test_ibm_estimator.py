@@ -26,16 +26,11 @@ from ..ibm_test_case import IBMIntegrationTestCase
 class TestIntegrationIBMEstimator(IBMIntegrationTestCase):
     """Integration tests for Estimator primitive."""
 
-    def _skip_on_legacy(self):
-        if self.dependencies.auth == "legacy":
-            self.skipTest("Not supported on legacy")
-
     @run_integration_test
     def test_estimator_primitive(self, service):
         """Verify if estimator primitive returns expected results"""
-        self._skip_on_legacy()
 
-        estimator_factory = IBMEstimator(service=service)
+        estimator_factory = IBMEstimator(service=service, backend="ibmq_qasm_simulator")
 
         psi1 = RealAmplitudes(num_qubits=2, reps=2)
         psi2 = RealAmplitudes(num_qubits=2, reps=3)

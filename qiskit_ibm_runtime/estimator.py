@@ -54,7 +54,7 @@ class Estimator(BaseEstimator):
                 selected automatically on IBM Cloud only).
         """
         super().__init__(
-            circuits=circuits,
+            circuits=circuits if isinstance(circuits, Iterable) else [circuits],
             observables=observables,
             parameters=parameters,
         )
