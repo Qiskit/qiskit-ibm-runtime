@@ -17,7 +17,7 @@ nbconvert>=5.3.1
 qiskit-aer
 websockets>=8
 scikit-quant;platform_system != 'Windows'
-black==22.1.0
+black==22.3.0
 coverage>=6.3
 pylatexenc
 mthree
