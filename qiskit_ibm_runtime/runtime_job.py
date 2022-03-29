@@ -328,7 +328,7 @@ class RuntimeJob:
             self._error_message = None
 
     def _error_msg_from_job_response(self, response: Dict) -> str:
-        """Returns the error message from an API response
+        """Returns the error message from an API response.
 
         Args:
             response: Job response from the runtime API.
@@ -344,7 +344,7 @@ class RuntimeJob:
         return error_msg.format(self.job_id, job_result_raw)
 
     def _status_from_job_response(self, response: Dict) -> str:
-        """Returns the job status from an API response
+        """Returns the job status from an API response.
 
         Args:
             response: Job response from the runtime API.
