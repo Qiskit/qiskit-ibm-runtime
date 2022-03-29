@@ -227,7 +227,7 @@ $ make e2e-test
 
 #### Configuration
 
-Integration and E2E tests require an environment configuration and can either be run against IBM Quantum APIs ("Legacy") or IBM Cloud Quantum Service APIs.
+Integration and E2E tests require an environment configuration and can either be run against IBM Quantum APIs ("ibm_quantum") or IBM Cloud ("ibm_cloud") Quantum Service APIs.
 
 
 Sample configuration for IBM Quantum

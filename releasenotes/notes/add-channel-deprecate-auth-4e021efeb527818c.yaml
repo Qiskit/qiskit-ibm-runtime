@@ -1,0 +1,17 @@
+---
+upgrade:
+  - |
+    A new parameter ``channel`` has now been added to :class:`qiskit_ibm_runtime.IBMRuntimeService`
+    class and also to methods like :meth:`~qiskit_ibm_runtime.IBMRuntimeService.save_account`,
+    :meth:`~qiskit_ibm_runtime.IBMRuntimeService.saved_accounts` and
+    :meth:`~qiskit_ibm_runtime.IBMRuntimeService.delete_account`. It can be set to ``ibm_quantum``
+    or ``ibm_cloud`` to authenticate to either of the two different channels through which
+    Qiskit Runtime service is currently offered. ``channel`` replaces the ``auth`` parameter which
+    has now been deprecated.
+deprecations:
+  - |
+    The ``auth`` parameter to :class:`qiskit_ibm_runtime.IBMRuntimeService` class
+    and also to methods like :meth:`~qiskit_ibm_runtime.IBMRuntimeService.save_account`,
+    :meth:`~qiskit_ibm_runtime.IBMRuntimeService.saved_accounts` and
+    :meth:`~qiskit_ibm_runtime.IBMRuntimeService.delete_account` has now been deprecated
+    and will be removed in a future release. Please use the new ``channel`` parameter instead.
