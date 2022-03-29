@@ -626,15 +626,6 @@ class IBMRuntimeService:
         )
 
     @staticmethod
-    def update_account() -> dict:
-        """Updates all stored credentials with `channel` parameter and removes `auth` parameter.
-
-        Returns:
-            The credentials in new format if updating is successful or ``None`` otherwise.
-        """
-        return AccountManager.update()
-
-    @staticmethod
     def saved_accounts(
         default: Optional[bool] = None,
         auth: Optional[str] = None,

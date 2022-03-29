@@ -482,11 +482,11 @@ class TestAccountManager(IBMTestCase):
         ), self.subTest("filtered list of auth accounts"):
             accounts = list(AccountManager.list(channel="ibm_cloud").keys())
             self.assertEqual(len(accounts), 2)
-            self.assertListEqual(accounts, ["key1", _DEFAULT_ACCOUNT_NAME_IBM_CLOUD])
+            self.assertListEqual(accounts, [_DEFAULT_ACCOUNT_NAME_IBM_CLOUD, "key1"])
 
             accounts = list(AccountManager.list(channel="ibm_quantum").keys())
             self.assertEqual(len(accounts), 2)
-            self.assertListEqual(accounts, ["key2", _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM])
+            self.assertListEqual(accounts, [_DEFAULT_ACCOUNT_NAME_IBM_QUANTUM, "key2"])
 
             accounts = list(
                 AccountManager.list(channel="ibm_cloud", default=True).keys()

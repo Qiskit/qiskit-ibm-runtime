@@ -47,6 +47,7 @@ class AccountManager:
         overwrite: Optional[bool] = False,
     ) -> None:
         """Save account on disk."""
+        cls.migrate()
         name = name or cls._get_default_account_name(channel)
         return save_config(
             filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE,
@@ -71,6 +72,7 @@ class AccountManager:
         name: Optional[str] = None,
     ) -> Dict[str, Account]:
         """List all accounts saved on disk."""
+        AccountManager.migrate()
 
         def _matching_name(account_name: str) -> bool:
             return name is None or name == account_name
@@ -130,6 +132,7 @@ class AccountManager:
         Raises:
             AccountNotFoundError: If the input value cannot be found on disk.
         """
+        cls.migrate()
         if name:
             saved_account = read_config(
                 filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE, name=name
@@ -169,7 +172,7 @@ class AccountManager:
         channel: Optional[ChannelType] = None,
     ) -> bool:
         """Delete account from disk."""
-
+        cls.migrate()
         name = name or cls._get_default_account_name(channel)
         return delete_config(
             filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE,
@@ -177,8 +180,8 @@ class AccountManager:
         )
 
     @classmethod
-    def update(cls) -> dict:
-        """Update accounts on disk by removing `auth` and adding `channel`."""
+    def migrate(cls) -> None:
+        """Migrate accounts on disk by removing `auth` and adding `channel`."""
         data = read_config(filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE)
         for key, value in data.items():
             if key == _DEFAULT_ACCOUNT_NAME_CLOUD:
@@ -202,7 +205,7 @@ class AccountManager:
                     overwrite=False,
                 )
             else:
-                if "auth" in value:
+                if hasattr(value, "auth"):
                     if value["auth"] == "cloud":
                         value.update(channel="ibm_cloud")
                     elif value["auth"] == "legacy":
@@ -214,8 +217,6 @@ class AccountManager:
                         config=value,
                         overwrite=True,
                     )
-        data = read_config(filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE)
-        return data
 
     @classmethod
     def _from_env_variables(cls, channel: Optional[ChannelType]) -> Optional[Account]:
