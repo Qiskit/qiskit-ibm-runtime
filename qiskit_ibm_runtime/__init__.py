@@ -39,7 +39,7 @@ can use the :meth:`IBMRuntimeService.save_account` method to save the credential
 on disk.
 
 Qiskit Runtime is available on both IBM Cloud and IBM Quantum, and you can specify
-``auth="cloud"`` for IBM Cloud and ``auth="legacy"`` for IBM Quantum. The default
+``channel="ibm_cloud"`` for IBM Cloud and ``channel="ibm_quantum"`` for IBM Quantum. The default
 is IBM Cloud.
 
 Listing runtime programs

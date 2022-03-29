@@ -19,24 +19,25 @@ from typing import Callable, Optional, List, Any
 from unittest import SkipTest
 
 from qiskit_ibm_runtime import IBMRuntimeService
+
 from .unit.mock.fake_runtime_service import FakeRuntimeService
 
 
-def run_legacy_and_cloud_fake(func):
-    """Decorator that runs a test using both legacy and cloud fake services."""
+def run_quantum_and_cloud_fake(func):
+    """Decorator that runs a test using both quantum and cloud fake services."""
 
     @wraps(func)
     def _wrapper(self, *args, **kwargs):
-        legacy_service = FakeRuntimeService(
-            auth="legacy", token="my_token", instance="h/g/p"
+        ibm_quantum_service = FakeRuntimeService(
+            channel="ibm_quantum", token="my_token", instance="h/g/p"
         )
         cloud_service = FakeRuntimeService(
-            auth="cloud",
+            channel="ibm_cloud",
             token="my_token",
             instance="crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
         )
-        for service in [legacy_service, cloud_service]:
-            with self.subTest(service=service.auth):
+        for service in [ibm_quantum_service, cloud_service]:
+            with self.subTest(service=service.channel):
                 kwargs["service"] = service
                 func(self, *args, **kwargs)
 
@@ -49,14 +50,16 @@ def _get_integration_test_config():
         os.getenv("QISKIT_IBM_URL"),
         os.getenv("QISKIT_IBM_INSTANCE"),
     )
-    auth: Any = "legacy" if url.find("quantum-computing.ibm.com") >= 0 else "cloud"
-    return auth, token, url, instance
+    channel: Any = (
+        "ibm_quantum" if url.find("quantum-computing.ibm.com") >= 0 else "ibm_cloud"
+    )
+    return channel, token, url, instance
 
 
 def run_integration_test(func):
     """Decorator that injects preinitialized service and device parameters.
 
-    To be used in combinatino with the integration_test_setup decorator function."""
+    To be used in combination with the integration_test_setup decorator function."""
 
     @wraps(func)
     def _wrapper(self, *args, **kwargs):
@@ -69,13 +72,13 @@ def run_integration_test(func):
 
 
 def integration_test_setup(
-    supported_auth: Optional[List[str]] = None,
+    supported_channel: Optional[List[str]] = None,
     init_service: Optional[bool] = True,
 ) -> Callable:
     """Returns a decorator for integration test initialization.
 
     Args:
-        supported_auth: a list of auth types that this test supports
+        supported_channel: a list of channel types that this test supports
         init_service: to initialize the IBMRuntimeService based on the current environment
             configuration and return it via the test dependencies
 
@@ -86,26 +89,28 @@ def integration_test_setup(
     def _decorator(func):
         @wraps(func)
         def _wrapper(self, *args, **kwargs):
-            _supported_auth = (
-                ["cloud", "legacy"] if supported_auth is None else supported_auth
+            _supported_channel = (
+                ["ibm_cloud", "ibm_quantum"]
+                if supported_channel is None
+                else supported_channel
             )
 
-            auth, token, url, instance = _get_integration_test_config()
-            if not all([auth, token, url]):
+            channel, token, url, instance = _get_integration_test_config()
+            if not all([channel, token, url]):
                 raise Exception("Configuration Issue")
 
-            if auth not in _supported_auth:
+            if channel not in _supported_channel:
                 raise SkipTest(
-                    f"Skipping integration test. Test does not support auth type {auth}"
+                    f"Skipping integration test. Test does not support channel type {channel}"
                 )
 
             service = None
             if init_service:
                 service = IBMRuntimeService(
-                    auth=auth, token=token, url=url, instance=instance
+                    channel=channel, token=token, url=url, instance=instance
                 )
             dependencies = IntegrationTestDependencies(
-                auth=auth,
+                channel=channel,
                 token=token,
                 url=url,
                 instance=instance,
@@ -126,5 +131,5 @@ class IntegrationTestDependencies:
     service: IBMRuntimeService
     instance: Optional[str]
     token: str
-    auth: str
+    channel: str
     url: str

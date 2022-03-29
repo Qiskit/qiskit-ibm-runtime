@@ -25,7 +25,7 @@ class RuntimeOptions:
     """Class for representing runtime execution options.
 
     Args:
-        backend_name: target backend to run on. This is required for legacy runtime.
+        backend_name: target backend to run on. This is required for ``ibm_quantum`` runtime.
         image: the runtime image used to execute the program, specified in
             the form of ``image_name:tag``. Not all accounts are
             authorized to select a different image.
@@ -38,11 +38,11 @@ class RuntimeOptions:
     image: Optional[str] = None
     log_level: Optional[str] = None
 
-    def validate(self, auth: str) -> None:
+    def validate(self, channel: str) -> None:
         """Validate options.
 
         Args:
-            auth: authentication type.
+            channel: channel type.
 
         Raises:
             IBMInputValueError: If one or more option is invalid.
@@ -53,9 +53,9 @@ class RuntimeOptions:
         ):
             raise IBMInputValueError('"image" needs to be in form of image_name:tag')
 
-        if auth == "legacy" and not self.backend_name:
+        if channel == "ibm_quantum" and not self.backend_name:
             raise IBMInputValueError(
-                '"backend_name" is required field in "options" for legacy runtime.'
+                '"backend_name" is required field in "options" for ``ibm_quantum`` runtime.'
             )
 
         if self.log_level and not isinstance(

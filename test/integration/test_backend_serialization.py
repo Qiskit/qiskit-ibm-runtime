@@ -28,7 +28,9 @@ class TestSerialization(IBMIntegrationTestCase):
     @run_integration_test
     def test_backend_configuration(self, service):
         """Test deserializing backend configuration."""
-        instance = self.dependencies.instance if service.auth == "legacy" else None
+        instance = (
+            self.dependencies.instance if service.channel == "ibm_quantum" else None
+        )
         backends = service.backends(
             operational=True, simulator=False, instance=instance
         )
@@ -56,7 +58,9 @@ class TestSerialization(IBMIntegrationTestCase):
     @run_integration_test
     def test_pulse_defaults(self, service):
         """Test deserializing backend configuration."""
-        instance = self.dependencies.instance if service.auth == "legacy" else None
+        instance = (
+            self.dependencies.instance if service.channel == "ibm_quantum" else None
+        )
         backends = service.backends(
             operational=True, open_pulse=True, instance=instance
         )
@@ -73,7 +77,9 @@ class TestSerialization(IBMIntegrationTestCase):
     @run_integration_test
     def test_backend_properties(self, service):
         """Test deserializing backend properties."""
-        instance = self.dependencies.instance if service.auth == "legacy" else None
+        instance = (
+            self.dependencies.instance if service.channel == "ibm_quantum" else None
+        )
         backends = service.backends(
             operational=True, simulator=False, instance=instance
         )

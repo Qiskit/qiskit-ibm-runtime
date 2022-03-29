@@ -93,12 +93,12 @@ class IBMIntegrationTestCase(IBMTestCase):
         super().tearDown()
         # Delete programs
         service = self.service
-        for prog in self.to_delete[service.auth]:
+        for prog in self.to_delete[service.channel]:
             with suppress(Exception):
                 service.delete_program(prog)
 
         # Cancel and delete jobs.
-        for job in self.to_cancel[service.auth]:
+        for job in self.to_cancel[service.channel]:
             with suppress(Exception):
                 job.cancel()
             with suppress(Exception):
@@ -120,7 +120,7 @@ class IBMIntegrationTestCase(IBMTestCase):
         metadata["max_execution_time"] = max_execution_time
         metadata["is_public"] = is_public
         program_id = service.upload_program(data=data, metadata=metadata)
-        self.to_delete[service.auth].append(program_id)
+        self.to_delete[service.channel].append(program_id)
         return program_id
 
 
@@ -143,11 +143,11 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
         # Delete default program.
         with suppress(Exception):
             service = cls.service
-            service.delete_program(cls.program_ids[service.auth])
+            service.delete_program(cls.program_ids[service.channel])
             cls.log.debug(
                 "Deleted %s program %s",
-                service.auth,
-                cls.program_ids[service.auth],
+                service.channel,
+                cls.program_ids[service.channel],
             )
 
     @classmethod
@@ -160,15 +160,15 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
         service = cls.service
         try:
             prog_id = service.upload_program(data=RUNTIME_PROGRAM, metadata=metadata)
-            cls.log.debug("Uploaded %s program %s", service.auth, prog_id)
-            cls.program_ids[service.auth] = prog_id
+            cls.log.debug("Uploaded %s program %s", service.channel, prog_id)
+            cls.program_ids[service.channel] = prog_id
         except IBMNotAuthorizedError:
             raise unittest.SkipTest("No upload access.")
 
     @classmethod
     def _find_sim_backends(cls):
         """Find a simulator backend for each service."""
-        cls.sim_backends[cls.service.auth] = cls.service.backends(simulator=True)[
+        cls.sim_backends[cls.service.channel] = cls.service.backends(simulator=True)[
             0
         ].name
 
@@ -185,7 +185,7 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
         log_level=None,
     ):
         """Run a program."""
-        self.log.debug("Running program on %s", service.auth)
+        self.log.debug("Running program on %s", service.channel)
         inputs = (
             inputs
             if inputs is not None
@@ -195,14 +195,14 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
                 "final_result": final_result or {},
             }
         )
-        pid = program_id or self.program_ids[service.auth]
+        pid = program_id or self.program_ids[service.channel]
         backend_name = (
-            backend if backend is not None else self.sim_backends[service.auth]
+            backend if backend is not None else self.sim_backends[service.channel]
         )
         options = {"backend_name": backend_name, "log_level": log_level}
         job = service.run(
             program_id=pid, inputs=inputs, options=options, callback=callback
         )
         self.log.info("Runtime job %s submitted.", job.job_id)
-        self.to_cancel[service.auth].append(job)
+        self.to_cancel[service.channel].append(job)
         return job
