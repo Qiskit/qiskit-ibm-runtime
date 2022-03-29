@@ -249,7 +249,7 @@ class IBMRuntimeService:
                 raise ValueError("'auth' can only be 'cloud' or 'legacy'")
             if channel and channel not in ["ibm_cloud", "ibm_quantum"]:
                 raise ValueError("'channel' can only be 'ibm_cloud' or 'ibm_quantum'")
-            self._get_channel_for_auth(auth=auth)
+            channel = channel or self._get_channel_for_auth(auth=auth)
             if token:
                 account = Account(
                     channel=channel,
@@ -624,6 +624,16 @@ class IBMRuntimeService:
             verify=verify,
             overwrite=overwrite,
         )
+
+    @staticmethod
+    def update_account() -> dict:
+        """Updates all stored credentials with `channel` parameter
+        and removes `auth` parameter.
+        Returns:
+            The credentials in new format if updating is successful
+            or ``None`` otherwise.
+        """
+        return AccountManager.update()
 
     @staticmethod
     def saved_accounts(

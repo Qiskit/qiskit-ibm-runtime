@@ -48,13 +48,9 @@ class AccountManager:
     ) -> None:
         """Save account on disk."""
         name = name or cls._get_default_account_name(channel)
-        old_name = None
-        if name in [_DEFAULT_ACCOUNT_NAME_IBM_CLOUD, _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM]:
-            old_name = cls._get_old_default_account_name(channel)
         return save_config(
             filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE,
             name=name,
-            old_name=old_name,
             overwrite=overwrite,
             config=Account(
                 token=token,
@@ -98,14 +94,7 @@ class AccountManager:
         # load all accounts
         all_accounts = map(
             lambda kv: (
-                kv[0]
-                if kv[0]
-                not in [_DEFAULT_ACCOUNT_NAME_CLOUD, _DEFAULT_ACCOUNT_NAME_LEGACY]
-                else (
-                    _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM
-                    if kv[0] == _DEFAULT_ACCOUNT_NAME_LEGACY
-                    else _DEFAULT_ACCOUNT_NAME_IBM_CLOUD
-                ),
+                kv[0],
                 Account.from_saved_format(kv[1]),
             ),
             read_config(filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE).items(),
@@ -160,7 +149,6 @@ class AccountManager:
             saved_account = read_config(
                 filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE,
                 name=cls._get_default_account_name(channel=channel),
-                old_name=cls._get_old_default_account_name(channel=channel),
             )
             if saved_account is None:
                 raise AccountNotFoundError(f"No default {channel} account saved.")
@@ -169,11 +157,8 @@ class AccountManager:
         all_config = read_config(filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE)
         for channel_type in _CHANNEL_TYPES:
             account_name = cls._get_default_account_name(channel=channel_type)
-            old_account_name = cls._get_old_default_account_name(channel=channel_type)
             if account_name in all_config:
                 return Account.from_saved_format(all_config[account_name])
-            if old_account_name in all_config:
-                return Account.from_saved_format(all_config[old_account_name])
 
         raise AccountNotFoundError("Unable to find account.")
 
@@ -186,14 +171,51 @@ class AccountManager:
         """Delete account from disk."""
 
         name = name or cls._get_default_account_name(channel)
-        old_name = None
-        if name in [_DEFAULT_ACCOUNT_NAME_IBM_CLOUD, _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM]:
-            old_name = cls._get_old_default_account_name(channel)
         return delete_config(
             filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE,
             name=name,
-            old_name=old_name,
         )
+
+    @classmethod
+    def update(cls) -> dict:
+        """Update accounts on disk by removing `auth` and adding `channel`."""
+        data = read_config(filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE)
+        for key, value in data.items():
+            if key == _DEFAULT_ACCOUNT_NAME_CLOUD:
+                value.pop("auth", None)
+                value.update(channel="ibm_cloud")
+                delete_config(filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE, name=key)
+                save_config(
+                    filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE,
+                    name=_DEFAULT_ACCOUNT_NAME_IBM_CLOUD,
+                    config=value,
+                    overwrite=False,
+                )
+            elif key == _DEFAULT_ACCOUNT_NAME_LEGACY:
+                value.pop("auth", None)
+                value.update(channel="ibm_quantum")
+                delete_config(filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE, name=key)
+                save_config(
+                    filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE,
+                    name=_DEFAULT_ACCOUNT_NAME_IBM_QUANTUM,
+                    config=value,
+                    overwrite=False,
+                )
+            else:
+                if "auth" in value:
+                    if value["auth"] == "cloud":
+                        value.update(channel="ibm_cloud")
+                    elif value["auth"] == "legacy":
+                        value.update(channel="ibm_quantum")
+                    value.pop("auth", None)
+                    save_config(
+                        filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE,
+                        name=key,
+                        config=value,
+                        overwrite=True,
+                    )
+        data = read_config(filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE)
+        return data
 
     @classmethod
     def _from_env_variables(cls, channel: Optional[ChannelType]) -> Optional[Account]:
@@ -215,12 +237,4 @@ class AccountManager:
             _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM
             if channel == "ibm_quantum"
             else _DEFAULT_ACCOUNT_NAME_IBM_CLOUD
-        )
-
-    @classmethod
-    def _get_old_default_account_name(cls, channel: ChannelType) -> str:
-        return (
-            _DEFAULT_ACCOUNT_NAME_LEGACY
-            if channel == "ibm_quantum"
-            else _DEFAULT_ACCOUNT_NAME_CLOUD
         )

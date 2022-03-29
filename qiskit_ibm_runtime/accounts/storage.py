@@ -21,9 +21,7 @@ from .exceptions import AccountAlreadyExistsError
 logger = logging.getLogger(__name__)
 
 
-def save_config(
-    filename: str, name: str, old_name: str, config: dict, overwrite: bool
-) -> None:
+def save_config(filename: str, name: str, config: dict, overwrite: bool) -> None:
     """Save configuration data in a JSON file under the given name."""
     logger.debug("Save configuration data for '%s' in '%s'", name, filename)
     _ensure_file_exists(filename)
@@ -31,7 +29,7 @@ def save_config(
     with open(filename, mode="r", encoding="utf-8") as json_in:
         data = json.load(json_in)
 
-    if (data.get(name) or (old_name and data.get(old_name))) and not overwrite:
+    if data.get(name) and not overwrite:
         raise AccountAlreadyExistsError(
             f"Named account ({name}) already exists. "
             f"Set overwrite=True to overwrite."
@@ -39,15 +37,12 @@ def save_config(
 
     with open(filename, mode="w", encoding="utf-8") as json_out:
         data[name] = config
-        if old_name and old_name in data:
-            del data[old_name]
         json.dump(data, json_out, sort_keys=True, indent=4)
 
 
 def read_config(
     filename: str,
     name: Optional[str] = None,
-    old_name: Optional[str] = None,
 ) -> Optional[Dict]:
     """Read configuration data from a JSON file."""
     logger.debug("Read configuration data for '%s' from '%s'", name, filename)
@@ -59,16 +54,12 @@ def read_config(
             return data
         if name in data:
             return data[name]
-        if old_name in data:
-            return data[old_name]
-
         return None
 
 
 def delete_config(
     filename: str,
     name: str,
-    old_name: str,
 ) -> bool:
     """Delete configuration data from a JSON file."""
 
@@ -78,12 +69,9 @@ def delete_config(
     with open(filename, mode="r", encoding="utf-8") as json_in:
         data = json.load(json_in)
 
-    if name in data or old_name in data:
+    if name in data:
         with open(filename, mode="w", encoding="utf-8") as json_out:
-            if name in data:
-                del data[name]
-            elif old_name in data:
-                del data[old_name]
+            del data[name]
             json.dump(data, json_out, sort_keys=True, indent=4)
             return True
 
