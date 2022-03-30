@@ -155,7 +155,7 @@ def get_account_config_contents(
         }
     }
     if verify is not None:
-        out["verify"] = verify
+        out[name]["verify"] = verify
     if proxies is not None:
-        out["proxies"] = proxies
+        out[name]["proxies"] = proxies
     return out

@@ -758,9 +758,7 @@ class TestEnableAccount(IBMTestCase):
         ]
         for extra in subtests:
             with self.subTest(extra=extra):
-                with temporary_account_config_file(
-                    name=name, verify=True, proxies="some proxies"
-                ):
+                with temporary_account_config_file(name=name, verify=True, proxies={}):
                     service = FakeRuntimeService(name=name, **extra)
                 self.assertTrue(service._account)
                 self._verify_prefs(extra, service._account)
@@ -778,7 +776,7 @@ class TestEnableAccount(IBMTestCase):
                 with self.subTest(
                     channel=channel, extra=extra
                 ), temporary_account_config_file(
-                    channel=channel, verify=True, proxies="some proxies"
+                    channel=channel, verify=True, proxies={}
                 ), no_envs(
                     ["QISKIT_IBM_TOKEN"]
                 ):

@@ -77,10 +77,8 @@ class Account:
     def from_saved_format(cls, data: dict) -> "Account":
         """Creates an account instance from data saved on disk."""
         proxies = data.get("proxies")
-        auth = data.get("auth")
-        channel = "ibm_quantum" if auth == "legacy" else "ibm_cloud"
         return cls(
-            channel=data.get("channel", channel),
+            channel=data.get("channel"),
             url=data.get("url"),
             token=data.get("token"),
             instance=data.get("instance"),
