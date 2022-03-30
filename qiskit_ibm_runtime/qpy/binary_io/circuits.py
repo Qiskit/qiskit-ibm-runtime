@@ -31,13 +31,15 @@ from qiskit.circuit.instruction import Instruction
 from qiskit.circuit.quantumcircuit import QuantumCircuit
 from qiskit.circuit.quantumregister import QuantumRegister, Qubit
 from qiskit.extensions import quantum_initializer
-from qiskit.qpy import common, formats, exceptions
-from qiskit.qpy.binary_io import value
 from qiskit.quantum_info.operators import SparsePauliOp
 from qiskit.synthesis import evolution as evo_synth
+from .. import common, formats, exceptions
+from ..binary_io import value
 
 
-def _read_header_v2(file_obj, version, vectors, metadata_deserializer=None):
+def _read_header_v2(  # type: ignore[no-untyped-def]
+    file_obj, version, vectors, metadata_deserializer=None
+):
     data = formats.CIRCUIT_HEADER_V2._make(
         struct.unpack(
             formats.CIRCUIT_HEADER_V2_PACK,
@@ -63,9 +65,11 @@ def _read_header_v2(file_obj, version, vectors, metadata_deserializer=None):
     return header, name, metadata
 
 
-def _read_header(file_obj, metadata_deserializer=None):
+def _read_header(file_obj, metadata_deserializer=None):  # type: ignore[no-untyped-def]
     data = formats.CIRCUIT_HEADER._make(
-        struct.unpack(formats.CIRCUIT_HEADER_PACK, file_obj.read(formats.CIRCUIT_HEADER_SIZE))
+        struct.unpack(
+            formats.CIRCUIT_HEADER_PACK, file_obj.read(formats.CIRCUIT_HEADER_SIZE)
+        )
     )
     name = file_obj.read(data.name_size).decode(common.ENCODE)
     header = {
@@ -80,7 +84,7 @@ def _read_header(file_obj, metadata_deserializer=None):
     return header, name, metadata
 
 
-def _read_registers_v4(file_obj, num_registers):
+def _read_registers_v4(file_obj, num_registers):  # type: ignore[no-untyped-def]
     registers = {"q": {}, "c": {}}
     for _reg in range(num_registers):
         data = formats.REGISTER_V4._make(
@@ -100,7 +104,7 @@ def _read_registers_v4(file_obj, num_registers):
     return registers
 
 
-def _read_registers(file_obj, num_registers):
+def _read_registers(file_obj, num_registers):  # type: ignore[no-untyped-def]
     registers = {"q": {}, "c": {}}
     for _reg in range(num_registers):
         data = formats.REGISTER._make(
@@ -120,7 +124,7 @@ def _read_registers(file_obj, num_registers):
     return registers
 
 
-def _read_instruction_parameter(file_obj, version, vectors):
+def _read_instruction_parameter(file_obj, version, vectors):  # type: ignore[no-untyped-def]
     type_key, bin_data = common.read_instruction_param(file_obj)
 
     if type_key == common.ProgramTypeKey.CIRCUIT:
@@ -149,7 +153,9 @@ def _read_instruction_parameter(file_obj, version, vectors):
     return param
 
 
-def _read_instruction(file_obj, circuit, registers, custom_instructions, version, vectors):
+def _read_instruction(  # type: ignore[no-untyped-def]
+    file_obj, circuit, registers, custom_instructions, version, vectors
+):
     instruction = formats.CIRCUIT_INSTRUCTION._make(
         struct.unpack(
             formats.CIRCUIT_INSTRUCTION_PACK,
@@ -158,7 +164,9 @@ def _read_instruction(file_obj, circuit, registers, custom_instructions, version
     )
     gate_name = file_obj.read(instruction.name_size).decode(common.ENCODE)
     label = file_obj.read(instruction.label_size).decode(common.ENCODE)
-    condition_register = file_obj.read(instruction.condition_register_size).decode(common.ENCODE)
+    condition_register = file_obj.read(instruction.condition_register_size).decode(
+        common.ENCODE
+    )
     qargs = []
     cargs = []
     params = []
@@ -171,14 +179,20 @@ def _read_instruction(file_obj, circuit, registers, custom_instructions, version
             # index for single bit condition
             if condition_register[0] == "\x00":
                 conditional_bit = int(condition_register[1:])
-                condition_tuple = (circuit.clbits[conditional_bit], instruction.condition_value)
+                condition_tuple = (
+                    circuit.clbits[conditional_bit],
+                    instruction.condition_value,
+                )
             else:
                 raise ValueError(
                     f"Invalid register name: {condition_register} for condition register of "
                     f"instruction: {gate_name}"
                 )
         else:
-            condition_tuple = (registers["c"][condition_register], instruction.condition_value)
+            condition_tuple = (
+                registers["c"][condition_register],
+                instruction.condition_value,
+            )
     qubit_indices = dict(enumerate(circuit.qubits))
     clbit_indices = dict(enumerate(circuit.clbits))
 
@@ -257,7 +271,9 @@ def _read_instruction(file_obj, circuit, registers, custom_instructions, version
         circuit._append(gate, qargs, cargs)
 
 
-def _parse_custom_instruction(custom_instructions, gate_name, params):
+def _parse_custom_instruction(  # type: ignore[no-untyped-def]
+    custom_instructions, gate_name, params
+):
     type_str, num_qubits, num_clbits, definition = custom_instructions[gate_name]
     type_key = common.CircuitInstructionTypeKey(type_str)
 
@@ -278,10 +294,11 @@ def _parse_custom_instruction(custom_instructions, gate_name, params):
     raise ValueError("Invalid custom instruction type '%s'" % type_str)
 
 
-def _read_pauli_evolution_gate(file_obj, version, vectors):
+def _read_pauli_evolution_gate(file_obj, version, vectors):  # type: ignore[no-untyped-def]
     pauli_evolution_def = formats.PAULI_EVOLUTION_DEF._make(
         struct.unpack(
-            formats.PAULI_EVOLUTION_DEF_PACK, file_obj.read(formats.PAULI_EVOLUTION_DEF_SIZE)
+            formats.PAULI_EVOLUTION_DEF_PACK,
+            file_obj.read(formats.PAULI_EVOLUTION_DEF_SIZE),
         )
     )
     if pauli_evolution_def.operator_size != 1 and pauli_evolution_def.standalone_op:
@@ -317,7 +334,7 @@ def _read_pauli_evolution_gate(file_obj, version, vectors):
     return return_gate
 
 
-def _read_custom_instructions(file_obj, version, vectors):
+def _read_custom_instructions(file_obj, version, vectors):  # type: ignore[no-untyped-def]
     custom_instructions = {}
     custom_definition_header = formats.CUSTOM_CIRCUIT_DEF_HEADER._make(
         struct.unpack(
@@ -344,7 +361,10 @@ def _read_custom_instructions(file_obj, version, vectors):
                     )
                 elif name.startswith(r"###PauliEvolutionGate_"):
                     definition_circuit = common.data_from_binary(
-                        def_binary, _read_pauli_evolution_gate, version=version, vectors=vectors
+                        def_binary,
+                        _read_pauli_evolution_gate,
+                        version=version,
+                        vectors=vectors,
                     )
             custom_instructions[name] = (
                 type_str,
@@ -355,7 +375,7 @@ def _read_custom_instructions(file_obj, version, vectors):
     return custom_instructions
 
 
-def _write_instruction_parameter(file_obj, param):
+def _write_instruction_parameter(file_obj, param):  # type: ignore[no-untyped-def]
     if isinstance(param, QuantumCircuit):
         type_key = common.ProgramTypeKey.CIRCUIT
         data = common.data_to_binary(param, write_circuit)
@@ -379,7 +399,9 @@ def _write_instruction_parameter(file_obj, param):
 
 
 # pylint: disable=too-many-boolean-expressions
-def _write_instruction(file_obj, instruction_tuple, custom_instructions, index_map):
+def _write_instruction(  # type: ignore[no-untyped-def]
+    file_obj, instruction_tuple, custom_instructions, index_map
+):
     gate_class_name = instruction_tuple[0].__class__.__name__
     if (
         (
@@ -411,7 +433,9 @@ def _write_instruction(file_obj, instruction_tuple, custom_instructions, index_m
             condition_register = b"\x00" + str(bit_index).encode(common.ENCODE)
             condition_value = int(instruction_tuple[0].condition[1])
         else:
-            condition_register = instruction_tuple[0].condition[0].name.encode(common.ENCODE)
+            condition_register = (
+                instruction_tuple[0].condition[0].name.encode(common.ENCODE)
+            )
             condition_value = instruction_tuple[0].condition[1]
 
     gate_class_name = gate_class_name.encode(common.ENCODE)
@@ -451,7 +475,7 @@ def _write_instruction(file_obj, instruction_tuple, custom_instructions, index_m
         _write_instruction_parameter(file_obj, param)
 
 
-def _write_pauli_evolution_gate(file_obj, evolution_gate):
+def _write_pauli_evolution_gate(file_obj, evolution_gate):  # type: ignore[no-untyped-def]
     operator_list = evolution_gate.operator
     standalone = False
     if not isinstance(operator_list, list):
@@ -459,9 +483,11 @@ def _write_pauli_evolution_gate(file_obj, evolution_gate):
         standalone = True
     num_operators = len(operator_list)
 
-    def _write_elem(buffer, op):
+    def _write_elem(buffer, op):  # type: ignore[no-untyped-def]
         elem_data = common.data_to_binary(op.to_list(array=True), np.save)
-        elem_metadata = struct.pack(formats.SPARSE_PAULI_OP_LIST_ELEM_PACK, len(elem_data))
+        elem_metadata = struct.pack(
+            formats.SPARSE_PAULI_OP_LIST_ELEM_PACK, len(elem_data)
+        )
         buffer.write(elem_metadata)
         buffer.write(elem_data)
 
@@ -474,7 +500,9 @@ def _write_pauli_evolution_gate(file_obj, evolution_gate):
     time_size = len(time_data)
     synth_class = str(type(evolution_gate.synthesis).__name__)
     settings_dict = evolution_gate.synthesis.settings
-    synth_data = json.dumps({"class": synth_class, "settings": settings_dict}).encode(common.ENCODE)
+    synth_data = json.dumps({"class": synth_class, "settings": settings_dict}).encode(
+        common.ENCODE
+    )
     synth_size = len(synth_data)
     pauli_evolution_raw = struct.pack(
         formats.PAULI_EVOLUTION_DEF_PACK,
@@ -491,7 +519,7 @@ def _write_pauli_evolution_gate(file_obj, evolution_gate):
     file_obj.write(synth_data)
 
 
-def _write_custom_instruction(file_obj, name, instruction):
+def _write_custom_instruction(file_obj, name, instruction):  # type: ignore[no-untyped-def]
     type_key = common.CircuitInstructionTypeKey.assign(instruction)
     has_definition = False
     size = 0
@@ -523,7 +551,7 @@ def _write_custom_instruction(file_obj, name, instruction):
         file_obj.write(data)
 
 
-def _write_registers(file_obj, in_circ_regs, full_bits):
+def _write_registers(file_obj, in_circ_regs, full_bits):  # type: ignore[no-untyped-def]
     bitmap = {bit: index for index, bit in enumerate(full_bits)}
     processed_indices = set()
 
@@ -562,7 +590,7 @@ def _write_registers(file_obj, in_circ_regs, full_bits):
     return len(in_circ_regs) + len(out_circ_regs)
 
 
-def write_circuit(file_obj, circuit, metadata_serializer=None):
+def write_circuit(file_obj, circuit, metadata_serializer=None):  # type: ignore[no-untyped-def]
     """Write a single QuantumCircuit object in the file like object.
 
     Args:
@@ -611,8 +639,12 @@ def write_circuit(file_obj, circuit, metadata_serializer=None):
     index_map["q"] = {bit: index for index, bit in enumerate(circuit.qubits)}
     index_map["c"] = {bit: index for index, bit in enumerate(circuit.clbits)}
     for instruction in circuit.data:
-        _write_instruction(instruction_buffer, instruction, custom_instructions, index_map)
-    file_obj.write(struct.pack(formats.CUSTOM_CIRCUIT_DEF_HEADER_PACK, len(custom_instructions)))
+        _write_instruction(
+            instruction_buffer, instruction, custom_instructions, index_map
+        )
+    file_obj.write(
+        struct.pack(formats.CUSTOM_CIRCUIT_DEF_HEADER_PACK, len(custom_instructions))
+    )
 
     for name, instruction in custom_instructions.items():
         _write_custom_instruction(file_obj, name, instruction)
@@ -622,7 +654,7 @@ def write_circuit(file_obj, circuit, metadata_serializer=None):
     instruction_buffer.close()
 
 
-def read_circuit(file_obj, version, metadata_deserializer=None):
+def read_circuit(file_obj, version, metadata_deserializer=None):  # type: ignore[no-untyped-def]
     """Read a single QuantumCircuit object from the file like object.
 
     Args:
@@ -644,7 +676,9 @@ def read_circuit(file_obj, version, metadata_deserializer=None):
     """
     vectors = {}
     if version < 2:
-        header, name, metadata = _read_header(file_obj, metadata_deserializer=metadata_deserializer)
+        header, name, metadata = _read_header(
+            file_obj, metadata_deserializer=metadata_deserializer
+        )
     else:
         header, name, metadata = _read_header_v2(
             file_obj, version, vectors, metadata_deserializer=metadata_deserializer
@@ -670,7 +704,9 @@ def read_circuit(file_obj, version, metadata_deserializer=None):
             register_bits = set()
             # Add quantum registers and bits
             for register_name in registers[bit_type_label]:
-                standalone, indices, in_circuit = registers[bit_type_label][register_name]
+                standalone, indices, in_circuit = registers[bit_type_label][
+                    register_name
+                ]
                 indices_defined = [x for x in indices if x >= 0]
                 # If a register has no bits in the circuit skip it
                 if not indices_defined:
@@ -716,7 +752,9 @@ def read_circuit(file_obj, version, metadata_deserializer=None):
                                 # otherwise it's invalid qpy
                                 if not in_circuit:
                                     continue
-                                raise exceptions.QpyError("Duplicate register bits found")
+                                raise exceptions.QpyError(
+                                    "Duplicate register bits found"
+                                )
                             # Fill any holes between the current register bit and the
                             # next one
                             if pos > bit_len:
@@ -776,7 +814,9 @@ def read_circuit(file_obj, version, metadata_deserializer=None):
         )
     custom_instructions = _read_custom_instructions(file_obj, version, vectors)
     for _instruction in range(num_instructions):
-        _read_instruction(file_obj, circ, out_registers, custom_instructions, version, vectors)
+        _read_instruction(
+            file_obj, circ, out_registers, custom_instructions, version, vectors
+        )
     for vec_name, (vector, initialized_params) in vectors.items():
         if len(initialized_params) != len(vector):
             warnings.warn(

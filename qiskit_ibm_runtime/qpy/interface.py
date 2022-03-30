@@ -17,11 +17,12 @@ import warnings
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.exceptions import QiskitError
-from qiskit.qpy import formats, common, binary_io
 from qiskit.version import __version__
 
+from . import formats, common, binary_io
 
-def dump(circuits, file_obj, metadata_serializer=None):
+
+def dump(circuits, file_obj, metadata_serializer=None):  # type: ignore[no-untyped-def]
     """Write QPY binary data to a file
 
     This function is used to save a circuit to a file for later use or transfer
@@ -82,10 +83,12 @@ def dump(circuits, file_obj, metadata_serializer=None):
     )
     file_obj.write(header)
     for circuit in circuits:
-        binary_io.write_circuit(file_obj, circuit, metadata_serializer=metadata_serializer)
+        binary_io.write_circuit(
+            file_obj, circuit, metadata_serializer=metadata_serializer
+        )
 
 
-def load(file_obj, metadata_deserializer=None):
+def load(file_obj, metadata_deserializer=None):  # type: ignore[no-untyped-def]
     """Load a QPY binary file
 
     This function is used to load a serialized QPY circuit file and create

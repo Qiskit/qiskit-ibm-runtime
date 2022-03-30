@@ -13,6 +13,7 @@
 """Binary IO for any value objects, such as numbers, string, parameters."""
 
 import struct
+from typing import Any
 import uuid
 
 import numpy as np
@@ -20,18 +21,21 @@ import numpy as np
 from qiskit.circuit.parameter import Parameter
 from qiskit.circuit.parameterexpression import ParameterExpression
 from qiskit.circuit.parametervector import ParameterVector, ParameterVectorElement
-from qiskit.qpy import common, formats, exceptions
-from qiskit.qpy.common import ValueTypeKey as TypeKey, ENCODE
 from qiskit.utils import optionals as _optional
 
+from .. import common, formats, exceptions
+from ..common import ValueTypeKey as TypeKey, ENCODE
 
-def _write_parameter(file_obj, obj):
+
+def _write_parameter(file_obj, obj):  # type: ignore[no-untyped-def]
     name_bytes = obj._name.encode("utf8")
-    file_obj.write(struct.pack(formats.PARAMETER_PACK, len(name_bytes), obj._uuid.bytes))
+    file_obj.write(
+        struct.pack(formats.PARAMETER_PACK, len(name_bytes), obj._uuid.bytes)
+    )
     file_obj.write(name_bytes)
 
 
-def _write_parameter_vec(file_obj, obj):
+def _write_parameter_vec(file_obj, obj):  # type: ignore[no-untyped-def]
     name_bytes = obj._vector._name.encode(ENCODE)
     file_obj.write(
         struct.pack(
@@ -45,8 +49,8 @@ def _write_parameter_vec(file_obj, obj):
     file_obj.write(name_bytes)
 
 
-def _write_parameter_expression(file_obj, obj):
-    from sympy import srepr, sympify
+def _write_parameter_expression(file_obj, obj):  # type: ignore[no-untyped-def]
+    from sympy import srepr, sympify  # pylint: disable=import-outside-toplevel
 
     expr_bytes = srepr(sympify(obj._symbol_expr)).encode(ENCODE)
     param_expr_header_raw = struct.pack(
@@ -82,7 +86,7 @@ def _write_parameter_expression(file_obj, obj):
         file_obj.write(value_data)
 
 
-def _read_parameter(file_obj):
+def _read_parameter(file_obj):  # type: ignore[no-untyped-def]
     data = formats.PARAMETER(
         *struct.unpack(formats.PARAMETER_PACK, file_obj.read(formats.PARAMETER_SIZE))
     )
@@ -93,7 +97,7 @@ def _read_parameter(file_obj):
     return param
 
 
-def _read_parameter_vec(file_obj, vectors):
+def _read_parameter_vec(file_obj, vectors):  # type: ignore[no-untyped-def]
     data = formats.PARAMETER_VECTOR_ELEMENT(
         *struct.unpack(
             formats.PARAMETER_VECTOR_ELEMENT_PACK,
@@ -114,16 +118,23 @@ def _read_parameter_vec(file_obj, vectors):
     return vector[data.index]
 
 
-def _read_parameter_expression(file_obj):
+def _read_parameter_expression(file_obj):  # type: ignore[no-untyped-def]
     data = formats.PARAMETER_EXPR(
-        *struct.unpack(formats.PARAMETER_EXPR_PACK, file_obj.read(formats.PARAMETER_EXPR_SIZE))
+        *struct.unpack(
+            formats.PARAMETER_EXPR_PACK, file_obj.read(formats.PARAMETER_EXPR_SIZE)
+        )
     )
-    from sympy.parsing.sympy_parser import parse_expr
+    # pylint: disable=import-outside-toplevel
+    from sympy.parsing.sympy_parser import (
+        parse_expr,
+    )
 
     if _optional.HAS_SYMENGINE:
-        import symengine
+        import symengine  # pylint: disable=import-outside-toplevel
 
-        expr = symengine.sympify(parse_expr(file_obj.read(data.expr_size).decode(ENCODE)))
+        expr = symengine.sympify(
+            parse_expr(file_obj.read(data.expr_size).decode(ENCODE))
+        )
     else:
         expr = parse_expr(file_obj.read(data.expr_size).decode(ENCODE))
     symbol_map = {}
@@ -149,22 +160,31 @@ def _read_parameter_expression(file_obj):
         elif elem_key == TypeKey.PARAMETER_EXPRESSION:
             value = common.data_from_binary(binary_data, _read_parameter_expression)
         else:
-            raise exceptions.QpyError("Invalid parameter expression map type: %s" % elem_key)
+            raise exceptions.QpyError(
+                "Invalid parameter expression map type: %s" % elem_key
+            )
         symbol_map[symbol] = value
 
     return ParameterExpression(symbol_map, expr)
 
 
-def _read_parameter_expression_v3(file_obj, vectors):
+def _read_parameter_expression_v3(file_obj, vectors):  # type: ignore[no-untyped-def]
     data = formats.PARAMETER_EXPR(
-        *struct.unpack(formats.PARAMETER_EXPR_PACK, file_obj.read(formats.PARAMETER_EXPR_SIZE))
+        *struct.unpack(
+            formats.PARAMETER_EXPR_PACK, file_obj.read(formats.PARAMETER_EXPR_SIZE)
+        )
     )
-    from sympy.parsing.sympy_parser import parse_expr
+    # pylint: disable=import-outside-toplevel
+    from sympy.parsing.sympy_parser import (
+        parse_expr,
+    )
 
     if _optional.HAS_SYMENGINE:
-        import symengine
+        import symengine  # pylint: disable=import-outside-toplevel
 
-        expr = symengine.sympify(parse_expr(file_obj.read(data.expr_size).decode(ENCODE)))
+        expr = symengine.sympify(
+            parse_expr(file_obj.read(data.expr_size).decode(ENCODE))
+        )
     else:
         expr = parse_expr(file_obj.read(data.expr_size).decode(ENCODE))
     symbol_map = {}
@@ -182,7 +202,9 @@ def _read_parameter_expression_v3(file_obj, vectors):
         elif symbol_key == TypeKey.PARAMETER_VECTOR:
             symbol = _read_parameter_vec(file_obj, vectors)
         else:
-            raise exceptions.QpyError("Invalid parameter expression map type: %s" % symbol_key)
+            raise exceptions.QpyError(
+                "Invalid parameter expression map type: %s" % symbol_key
+            )
 
         elem_key = TypeKey(elem_data.type)
         binary_data = file_obj.read(elem_data.size)
@@ -199,13 +221,15 @@ def _read_parameter_expression_v3(file_obj, vectors):
                 binary_data, _read_parameter_expression_v3, vectors=vectors
             )
         else:
-            raise exceptions.QpyError("Invalid parameter expression map type: %s" % elem_key)
+            raise exceptions.QpyError(
+                "Invalid parameter expression map type: %s" % elem_key
+            )
         symbol_map[symbol] = value
 
     return ParameterExpression(symbol_map, expr)
 
 
-def dumps_value(obj):
+def dumps_value(obj: Any):  # type: ignore[no-untyped-def]
     """Serialize input value object.
 
     Args:
@@ -224,26 +248,30 @@ def dumps_value(obj):
     elif type_key == TypeKey.FLOAT:
         binary_data = struct.pack("!d", obj)
     elif type_key == TypeKey.COMPLEX:
-        binary_data = struct.pack(formats.COMPLEX_PACK, obj.real, obj.imag)
+        binary_data = struct.pack(formats.COMPLEX_PACK, obj.real, obj.imag)  # type: ignore[attr-defined]
     elif type_key == TypeKey.NUMPY_OBJ:
-        binary_data = common.data_to_binary(obj, np.save)
+        binary_data = common.data_to_binary(obj, np.save)  # type: ignore[no-untyped-call]
     elif type_key == TypeKey.STRING:
         binary_data = obj.encode(ENCODE)
     elif type_key == TypeKey.NULL:
         binary_data = b""
     elif type_key == TypeKey.PARAMETER_VECTOR:
-        binary_data = common.data_to_binary(obj, _write_parameter_vec)
+        binary_data = common.data_to_binary(obj, _write_parameter_vec)  # type: ignore[no-untyped-call]
     elif type_key == TypeKey.PARAMETER:
-        binary_data = common.data_to_binary(obj, _write_parameter)
+        binary_data = common.data_to_binary(obj, _write_parameter)  # type: ignore[no-untyped-call]
     elif type_key == TypeKey.PARAMETER_EXPRESSION:
-        binary_data = common.data_to_binary(obj, _write_parameter_expression)
+        binary_data = common.data_to_binary(
+            obj, _write_parameter_expression
+        )  # type: ignore[no-untyped-call]
     else:
-        raise exceptions.QpyError(f"Serialization for {type_key} is not implemented in value I/O.")
+        raise exceptions.QpyError(
+            f"Serialization for {type_key} is not implemented in value I/O."
+        )
 
     return type_key, binary_data
 
 
-def loads_value(type_key, binary_data, version, vectors):
+def loads_value(type_key, binary_data, version, vectors):  # type: ignore[no-untyped-def]
     """Deserialize input binary data to value object.
 
     Args:
@@ -285,6 +313,8 @@ def loads_value(type_key, binary_data, version, vectors):
                 binary_data, _read_parameter_expression_v3, vectors=vectors
             )
     else:
-        raise exceptions.QpyError(f"Serialization for {type_key} is not implemented in value I/O.")
+        raise exceptions.QpyError(
+            f"Serialization for {type_key} is not implemented in value I/O."
+        )
 
     return obj

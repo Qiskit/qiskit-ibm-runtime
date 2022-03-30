@@ -16,9 +16,11 @@ from .value import (
     dumps_value,
     loads_value,
     # for backward compatibility; provider, runtime, experiment call this private methods.
+    _write_parameter,
     _write_parameter_expression,
     _read_parameter_expression,
     _read_parameter_expression_v3,
+    _read_parameter,
 )
 
 from .circuits import (

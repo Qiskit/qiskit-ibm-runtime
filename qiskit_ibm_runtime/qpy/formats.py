@@ -11,6 +11,7 @@
 # that they have been altered from the originals.
 
 # pylint: disable=invalid-name
+# type: ignore[name-match]
 
 """Binary format definition."""
 
@@ -21,7 +22,14 @@ from collections import namedtuple
 # FILE_HEADER
 FILE_HEADER = namedtuple(
     "FILE_HEADER",
-    ["preface", "qpy_version", "major_version", "minor_version", "patch_version", "num_circuits"],
+    [
+        "preface",
+        "qpy_version",
+        "major_version",
+        "minor_version",
+        "patch_version",
+        "num_circuits",
+    ],
 )
 FILE_HEADER_PACK = "!6sBBBBQ"
 FILE_HEADER_SIZE = struct.calcsize(FILE_HEADER_PACK)
@@ -60,7 +68,9 @@ CIRCUIT_HEADER_PACK = "!HdIIQIQ"
 CIRCUIT_HEADER_SIZE = struct.calcsize(CIRCUIT_HEADER_PACK)
 
 # REGISTER
-REGISTER_V4 = namedtuple("REGISTER", ["type", "standalone", "size", "name_size", "in_circuit"])
+REGISTER_V4 = namedtuple(
+    "REGISTER", ["type", "standalone", "size", "name_size", "in_circuit"]
+)
 REGISTER_V4_PACK = "!1c?IH?"
 REGISTER_V4_SIZE = struct.calcsize(REGISTER_V4_PACK)
 
@@ -144,7 +154,9 @@ PARAMETER_EXPR_PACK = "!QQ"
 PARAMETER_EXPR_SIZE = struct.calcsize(PARAMETER_EXPR_PACK)
 
 # PARAMETER_EXPR_MAP_ELEM_V3
-PARAM_EXPR_MAP_ELEM_V3 = namedtuple("PARAMETER_EXPR_MAP_ELEM", ["symbol_type", "type", "size"])
+PARAM_EXPR_MAP_ELEM_V3 = namedtuple(
+    "PARAMETER_EXPR_MAP_ELEM", ["symbol_type", "type", "size"]
+)
 PARAM_EXPR_MAP_ELEM_V3_PACK = "!ccQ"
 PARAM_EXPR_MAP_ELEM_V3_SIZE = struct.calcsize(PARAM_EXPR_MAP_ELEM_V3_PACK)
 

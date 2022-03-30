@@ -19,6 +19,7 @@ Common functions across several serialization and deserialization modules.
 import io
 import struct
 from enum import Enum
+from typing import Any
 
 import numpy as np
 
@@ -27,7 +28,7 @@ from qiskit.circuit.parameterexpression import ParameterExpression
 from qiskit.circuit.parametervector import ParameterVectorElement
 from qiskit.circuit.library import PauliEvolutionGate
 from qiskit.circuit import Gate, Instruction as CircuitInstruction, QuantumCircuit
-from qiskit.qpy import formats, exceptions
+from . import formats, exceptions
 
 QPY_VERSION = 4
 ENCODE = "utf8"
@@ -41,7 +42,7 @@ class CircuitInstructionTypeKey(bytes, Enum):
     PAULI_EVOL_GATE = b"p"
 
     @classmethod
-    def assign(cls, obj):
+    def assign(cls, obj: Any) -> "CircuitInstructionTypeKey":
         """Assign type key to given object.
 
         Args:
@@ -79,7 +80,7 @@ class ValueTypeKey(bytes, Enum):
     NULL = b"z"
 
     @classmethod
-    def assign(cls, obj):
+    def assign(cls, obj: Any) -> "ValueTypeKey":
         """Assign type key to given object.
 
         Args:
@@ -122,7 +123,7 @@ class ContainerTypeKey(bytes, Enum):
     TUPLE = b"t"
 
     @classmethod
-    def assign(cls, obj):
+    def assign(cls, obj: Any) -> "ContainerTypeKey":
         """Assign type key to given object.
 
         Args:
@@ -150,14 +151,14 @@ class ProgramTypeKey(bytes, Enum):
     CIRCUIT = b"q"
 
     @classmethod
-    def assign(cls, obj):
+    def assign(cls, obj: Any) -> "ProgramTypeKey":
         """Assign type key to given object.
 
         Args:
             obj (any): Arbitrary object to evaluate.
 
         Returns:
-            ContainerTypeKey: Corresponding key object.
+            ProgramTypeKey: Corresponding key object.
 
         Raises:
             QpyError: if object type is not defined in QPY. Likely not supported.
@@ -170,7 +171,7 @@ class ProgramTypeKey(bytes, Enum):
         )
 
 
-def read_instruction_param(file_obj):
+def read_instruction_param(file_obj):  # type: ignore[no-untyped-def]
     """Read a single data chunk from the file like object.
 
     Args:
@@ -189,7 +190,7 @@ def read_instruction_param(file_obj):
     return data.type, file_obj.read(data.size)
 
 
-def write_instruction_param(file_obj, type_key, data_binary):
+def write_instruction_param(file_obj, type_key, data_binary):  # type: ignore[no-untyped-def]
     """Write statically typed binary data to the file like object.
 
     Args:
@@ -197,18 +198,20 @@ def write_instruction_param(file_obj, type_key, data_binary):
         type_key (Enum): Object type of the data.
         data_binary (bytes): Binary data to write.
     """
-    data_header = struct.pack(formats.INSTRUCTION_PARAM_PACK, type_key, len(data_binary))
+    data_header = struct.pack(
+        formats.INSTRUCTION_PARAM_PACK, type_key, len(data_binary)
+    )
     file_obj.write(data_header)
     file_obj.write(data_binary)
 
 
-def data_to_binary(obj, serializer, **kwargs):
+def data_to_binary(obj, serializer, **kwargs):  # type: ignore[no-untyped-def]
     """Convert object into binary data with specified serializer.
 
     Args:
         obj (any): Object to serialize.
         serializer (Callable): Serializer callback that can handle input object type.
-        kwargs: Options set to the serializer.
+        **kwargs: Options set to the serializer.
 
     Returns:
         bytes: Binary data.
@@ -220,13 +223,13 @@ def data_to_binary(obj, serializer, **kwargs):
     return binary_data
 
 
-def sequence_to_binary(sequence, serializer, **kwargs):
+def sequence_to_binary(sequence, serializer, **kwargs):  # type: ignore[no-untyped-def]
     """Convert sequence into binary data with specified serializer.
 
     Args:
         sequence (Sequence): Object to serialize.
         serializer (Callable): Serializer callback that can handle input object type.
-        kwargs: Options set to the serializer.
+        **kwargs: Options set to the serializer.
 
     Returns:
         bytes: Binary data.
@@ -242,13 +245,13 @@ def sequence_to_binary(sequence, serializer, **kwargs):
     return binary_data
 
 
-def data_from_binary(binary_data, deserializer, **kwargs):
+def data_from_binary(binary_data, deserializer, **kwargs):  # type: ignore[no-untyped-def]
     """Load object from binary data with specified deserializer.
 
     Args:
         binary_data (bytes): Binary data to deserialize.
         deserializer (Callable): Deserializer callback that can handle input object type.
-        kwargs: Options set to the deserializer.
+        **kwargs: Options set to the deserializer.
 
     Returns:
         any: Deserialized object.
@@ -258,13 +261,13 @@ def data_from_binary(binary_data, deserializer, **kwargs):
     return obj
 
 
-def sequence_from_binary(binary_data, deserializer, **kwargs):
+def sequence_from_binary(binary_data, deserializer, **kwargs):  # type: ignore[no-untyped-def]
     """Load object from binary sequence with specified deserializer.
 
     Args:
         binary_data (bytes): Binary data to deserialize.
         deserializer (Callable): Deserializer callback that can handle input object type.
-        kwargs: Options set to the deserializer.
+        **kwargs: Options set to the deserializer.
 
     Returns:
         any: Deserialized sequence.
