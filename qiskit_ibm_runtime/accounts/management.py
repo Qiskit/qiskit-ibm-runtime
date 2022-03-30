@@ -205,7 +205,7 @@ class AccountManager:
                     overwrite=False,
                 )
             else:
-                if hasattr(value, "auth"):
+                if "auth" in value:
                     if value["auth"] == "cloud":
                         value.update(channel="ibm_cloud")
                     elif value["auth"] == "legacy":
