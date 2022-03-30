@@ -758,9 +758,7 @@ class TestEnableAccount(IBMTestCase):
         ]
         for extra in subtests:
             with self.subTest(extra=extra):
-                with temporary_account_config_file(
-                    name=name, verify=True, proxies={}
-                ):
+                with temporary_account_config_file(name=name, verify=True, proxies={}):
                     service = FakeRuntimeService(name=name, **extra)
                 self.assertTrue(service._account)
                 self._verify_prefs(extra, service._account)
