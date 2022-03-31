@@ -12,7 +12,7 @@
 
 """Qiskit Runtime Sampler primitive service."""
 
-from typing import Optional, Iterable, Dict, Union
+from typing import Optional, Iterable, Union
 
 from qiskit.circuit import QuantumCircuit, Parameter
 

@@ -112,6 +112,7 @@ class RuntimeJob:
         self._creation_date = creation_date
         self._program_id = program_id
         self._status = JobStatus.INITIALIZING
+        self._reason: Optional[str] = None
         self._error_message = None  # type: Optional[str]
         self._result_decoder = result_decoder
         self._image = image
@@ -308,9 +309,12 @@ class RuntimeJob:
             IBMError: If an unknown status is returned from the server.
         """
         try:
-            self._status = API_TO_JOB_STATUS[job_response["status"].upper()]
+            reason = job_response["state"].get("reason")
+            if reason:
+                self._reason = job_response["state"]["reason"].upper()
+            self._status = self._status_from_job_response(job_response)
         except KeyError:
-            raise IBMError(f"Unknown status: {job_response['status']}")
+            raise IBMError(f"Unknown status: {job_response['state']['status']}")
 
     def _set_error_message(self, job_response: Dict) -> None:
         """Set error message if the job failed.
@@ -319,12 +323,39 @@ class RuntimeJob:
             job_response: Job response from runtime API.
         """
         if self._status == JobStatus.ERROR:
-            job_result_raw = self._api_client.job_results(job_id=self.job_id)
-            self._error_message = API_TO_JOB_ERROR_MESSAGE[
-                job_response["status"].upper()
-            ].format(self.job_id, job_result_raw)
+            self._error_message = self._error_msg_from_job_response(job_response)
         else:
             self._error_message = None
+
+    def _error_msg_from_job_response(self, response: Dict) -> str:
+        """Returns the error message from an API response.
+
+        Args:
+            response: Job response from the runtime API.
+
+        Returns:
+            Error message.
+        """
+        status = response["state"]["status"].upper()
+        job_result_raw = self._api_client.job_results(job_id=self.job_id)
+        error_msg = API_TO_JOB_ERROR_MESSAGE["FAILED"]
+        if status == "CANCELLED" and self._reason == "RAN TOO LONG":
+            error_msg = API_TO_JOB_ERROR_MESSAGE["CANCELLED - RAN TOO LONG"]
+        return error_msg.format(self.job_id, job_result_raw)
+
+    def _status_from_job_response(self, response: Dict) -> str:
+        """Returns the job status from an API response.
+
+        Args:
+            response: Job response from the runtime API.
+
+        Returns:
+            Job status.
+        """
+        mapped_job_status = API_TO_JOB_STATUS[response["state"]["status"].upper()]
+        if mapped_job_status == JobStatus.CANCELLED and self._reason == "RAN TOO LONG":
+            mapped_job_status = JobStatus.ERROR
+        return mapped_job_status
 
     def _is_streaming(self) -> bool:
         """Return whether job results are being streamed.
