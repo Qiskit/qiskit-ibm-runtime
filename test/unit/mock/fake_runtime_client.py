@@ -118,6 +118,7 @@ class BaseFakeRuntimeJob:
         """Initialize a fake job."""
         self._job_id = job_id
         self._status = final_status or "QUEUED"
+        self._reason: Optional[str] = None
         self._program_id = program_id
         self._hub = hub
         self._group = group
@@ -152,7 +153,7 @@ class BaseFakeRuntimeJob:
             "group": self._group,
             "project": self._project,
             "backend": self._backend_name,
-            "status": self._status,
+            "state": {"status": self._status, "reason": self._reason},
             "params": [self._params],
             "program": {"id": self._program_id},
             "image": self._image,
@@ -187,13 +188,14 @@ class FailedRuntimeJob(BaseFakeRuntimeJob):
 class FailedRanTooLongRuntimeJob(BaseFakeRuntimeJob):
     """Class for faking a failed runtime job."""
 
-    _job_progress = ["QUEUED", "RUNNING", "CANCELLED - RAN TOO LONG"]
+    _job_progress = ["QUEUED", "RUNNING", "CANCELLED"]
 
     def _auto_progress(self):
         """Automatically update job status."""
         super()._auto_progress()
 
-        if self._status == "CANCELLED - RAN TOO LONG":
+        if self._status == "CANCELLED":
+            self._reason = "RAN TOO LONG"
             self._result = "Kaboom!"
 
 
@@ -216,7 +218,7 @@ class CancelableRuntimeJob(BaseFakeRuntimeJob):
         """Convert to dictionary format."""
         data = super().to_dict()
         if self._cancelled:
-            data["status"] = "CANCELLED"
+            data["state"]["status"] = "CANCELLED"
         return data
 
 
