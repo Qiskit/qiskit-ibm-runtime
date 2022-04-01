@@ -12,7 +12,7 @@
 
 """Integration tests for Sampler primitive."""
 
-from qiskit import QuantumCircuit
+from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.library import RealAmplitudes
 
 from qiskit_ibm_runtime import IBMSampler
