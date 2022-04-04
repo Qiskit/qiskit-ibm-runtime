@@ -17,7 +17,7 @@ import urllib
 
 from requests.exceptions import ProxyError
 
-from qiskit_ibm_runtime import IBMRuntimeService
+from qiskit_ibm_runtime import QiskitRuntimeService
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 from qiskit_ibm_runtime.api.clients import AuthClient, VersionClient
 from qiskit_ibm_runtime.api.clients.runtime import RuntimeClient
@@ -75,7 +75,7 @@ class TestProxies(IBMTestCase):
         self, dependencies: IntegrationTestDependencies
     ) -> None:
         """Should reach the proxy using RuntimeClient."""
-        service = IBMRuntimeService(
+        service = QiskitRuntimeService(
             channel="ibm_quantum",
             token=dependencies.token,
             url=dependencies.url,
@@ -99,7 +99,7 @@ class TestProxies(IBMTestCase):
         self, dependencies: IntegrationTestDependencies
     ) -> None:
         """Should reach the proxy using AccountClient."""
-        service = IBMRuntimeService(
+        service = QiskitRuntimeService(
             channel="ibm_quantum",
             token=dependencies.token,
             url=dependencies.url,

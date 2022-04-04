@@ -29,8 +29,8 @@ class IBMEstimator(BasePrimitive):
 
     IBMEstimator can be initialized with the following parameters. It returns a factory.
 
-    * service: Optional instance of :class:`qiskit_ibm_runtime.IBMRuntimeService` class,
-        defaults to `IBMRuntimeService()` which tries to initialize your default saved account.
+    * service: Optional instance of :class:`qiskit_ibm_runtime.QiskitRuntimeService` class,
+        defaults to `QiskitRuntimeService()` which tries to initialize your default saved account.
 
     * backend: Optional instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
         string name of backend, if not specified a backend will be selected automatically
@@ -65,9 +65,9 @@ class IBMEstimator(BasePrimitive):
         from qiskit.circuit.library import RealAmplitudes
         from qiskit.quantum_info import SparsePauliOp
 
-        from qiskit_ibm_runtime import IBMRuntimeService, IBMEstimator
+        from qiskit_ibm_runtime import QiskitRuntimeService, IBMEstimator
 
-        service = IBMRuntimeService(channel="ibm_cloud")
+        service = QiskitRuntimeService(channel="ibm_cloud")
         estimator_factory = IBMEstimator(service=service, backend="ibmq_qasm_simulator")
 
         psi1 = RealAmplitudes(num_qubits=2, reps=2)

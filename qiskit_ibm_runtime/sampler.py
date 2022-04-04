@@ -18,7 +18,7 @@ from qiskit.circuit import QuantumCircuit, Parameter
 
 # TODO import BaseSampler and SamplerResult from terra once released
 from .qiskit.primitives import BaseSampler, SamplerResult
-from .ibm_runtime_service import IBMRuntimeService
+from .ibm_runtime_service import QiskitRuntimeService
 from .runtime_session import RuntimeSession
 
 
@@ -30,7 +30,7 @@ class Sampler(BaseSampler):
         circuits: Union[QuantumCircuit, Iterable[QuantumCircuit]],
         parameters: Optional[Iterable[Iterable[Parameter]]] = None,
         skip_transpilation: Optional[bool] = False,
-        service: Optional[IBMRuntimeService] = None,
+        service: Optional[QiskitRuntimeService] = None,
         backend_name: Optional[str] = None,
     ):
         """Initializes the Sampler primitive.
@@ -43,8 +43,8 @@ class Sampler(BaseSampler):
                 a list of :class:`~qiskit.circuit.Parameter`).
             skip_transpilation: Transpilation is skipped if set to True.
                 False by default.
-            service: Optional instance of :class:`qiskit_ibm_runtime.IBMRuntimeService` class,
-                defaults to `IBMRuntimeService()` which tries to initialize your default saved
+            service: Optional instance of :class:`qiskit_ibm_runtime.QiskitRuntimeService` class,
+                defaults to `QiskitRuntimeService()` which tries to initialize your default saved
                 account.
             backend_name: Optional string name of backend (if not specified a backend will be
                 selected automatically on IBM Cloud only).

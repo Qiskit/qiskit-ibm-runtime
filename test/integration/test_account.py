@@ -16,7 +16,7 @@ import requests
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 from ibm_platform_services import ResourceControllerV2
 
-from qiskit_ibm_runtime import IBMRuntimeService
+from qiskit_ibm_runtime import QiskitRuntimeService
 from qiskit_ibm_runtime.accounts import CloudResourceNameResolutionError
 from qiskit_ibm_runtime.utils.utils import (
     get_resource_controller_api_url,
@@ -59,7 +59,7 @@ class TestIntegrationAccount(IBMIntegrationTestCase):
 
         service_instance_name = _get_service_instance_name_for_crn(self.dependencies)
         with self.subTest(instance=service_instance_name):
-            service = IBMRuntimeService(
+            service = QiskitRuntimeService(
                 channel="ibm_cloud",
                 url=self.dependencies.url,
                 token=self.dependencies.token,
@@ -78,7 +78,7 @@ class TestIntegrationAccount(IBMIntegrationTestCase):
         with self.subTest(instance="-non-existing-service-name-"), self.assertRaises(
             CloudResourceNameResolutionError
         ):
-            IBMRuntimeService(
+            QiskitRuntimeService(
                 channel="ibm_cloud",
                 url=self.dependencies.url,
                 token=self.dependencies.token,

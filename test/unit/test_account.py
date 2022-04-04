@@ -555,7 +555,7 @@ MOCK_PROXY_CONFIG_DICT = {
 # NamedTemporaryFiles not supported in Windows
 @skipIf(os.name == "nt", "Test not supported in Windows")
 class TestEnableAccount(IBMTestCase):
-    """Tests for IBMRuntimeService enable account."""
+    """Tests for QiskitRuntimeService enable account."""
 
     def test_enable_account_by_name(self):
         """Test initializing account by name."""

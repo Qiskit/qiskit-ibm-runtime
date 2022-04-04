@@ -58,7 +58,7 @@ class IBMBackend(Backend):
     Note:
 
         * You should not instantiate the ``IBMBackend`` class directly. Instead, use
-          the methods provided by an :class:`IBMRuntimeService` instance to retrieve and handle
+          the methods provided by an :class:`QiskitRuntimeService` instance to retrieve and handle
           backends.
 
     This class represents an IBM Quantum backend. Its attributes and methods provide

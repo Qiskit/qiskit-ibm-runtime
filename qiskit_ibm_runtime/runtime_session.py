@@ -42,7 +42,7 @@ class RuntimeSession:
 
     def __init__(
         self,
-        runtime: "ibm_runtime_service.IBMRuntimeService",
+        runtime: "ibm_runtime_service.QiskitRuntimeService",
         program_id: str,
         inputs: Union[Dict, ParameterNamespace],
         options: Optional[Union[RuntimeOptions, Dict]] = None,

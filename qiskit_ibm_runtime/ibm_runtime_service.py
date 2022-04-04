@@ -53,7 +53,7 @@ logger = logging.getLogger(__name__)
 SERVICE_NAME = "runtime"
 
 
-class IBMRuntimeService:
+class QiskitRuntimeService:
     """Class for interacting with the Qiskit Runtime service.
 
     Qiskit Runtime is a new architecture offered by IBM Quantum that
@@ -70,9 +70,9 @@ class IBMRuntimeService:
     A sample workflow of using the runtime service::
 
         from qiskit import QuantumCircuit
-        from qiskit_ibm_runtime import IBMRuntimeService
+        from qiskit_ibm_runtime import QiskitRuntimeService
 
-        service = IBMRuntimeService()
+        service = QiskitRuntimeService()
         backend = "ibmq_qasm_simulator"
 
         # List all available programs.
@@ -121,7 +121,7 @@ class IBMRuntimeService:
         proxies: Optional[dict] = None,
         verify: Optional[bool] = None,
     ) -> None:
-        """IBMRuntimeService constructor
+        """QiskitRuntimeService constructor
 
         An account is selected in the following order:
 
@@ -154,7 +154,7 @@ class IBMRuntimeService:
             verify: Whether to verify the server's TLS certificate.
 
         Returns:
-            An instance of IBMRuntimeService.
+            An instance of QiskitRuntimeService.
 
         Raises:
             IBMInputValueError: If an input is invalid.
@@ -504,13 +504,13 @@ class IBMRuntimeService:
             filters: More complex filters, such as lambda functions.
                 For example::
 
-                    IBMRuntimeService.backends(
+                    QiskitRuntimeService.backends(
                         filters=lambda b: b.configuration().quantum_volume > 16)
             **kwargs: Simple filters that specify a ``True``/``False`` criteria in the
                 backend configuration or status.
                 An example to get the operational real backends::
 
-                    IBMRuntimeService.backends(simulator=False, operational=True)
+                    QiskitRuntimeService.backends(simulator=False, operational=True)
 
         Returns:
             The list of available backends that match the filter.
@@ -567,8 +567,8 @@ class IBMRuntimeService:
             False if no account was found.
         """
         if auth:
-            IBMRuntimeService._auth_warning()
-            channel = channel or IBMRuntimeService._get_channel_for_auth(auth=auth)
+            QiskitRuntimeService._auth_warning()
+            channel = channel or QiskitRuntimeService._get_channel_for_auth(auth=auth)
 
         return AccountManager.delete(name=name, channel=channel)
 
@@ -611,8 +611,8 @@ class IBMRuntimeService:
             overwrite: ``True`` if the existing account is to be overwritten.
         """
         if auth:
-            IBMRuntimeService._auth_warning()
-            channel = channel or IBMRuntimeService._get_channel_for_auth(auth)
+            QiskitRuntimeService._auth_warning()
+            channel = channel or QiskitRuntimeService._get_channel_for_auth(auth)
 
         AccountManager.save(
             token=token,
@@ -648,8 +648,8 @@ class IBMRuntimeService:
             ValueError: If an invalid account is found on disk.
         """
         if auth:
-            IBMRuntimeService._auth_warning()
-            channel = channel or IBMRuntimeService._get_channel_for_auth(auth)
+            QiskitRuntimeService._auth_warning()
+            channel = channel or QiskitRuntimeService._get_channel_for_auth(auth)
         return dict(
             map(
                 lambda kv: (kv[0], Account.to_saved_format(kv[1])),
@@ -1358,7 +1358,7 @@ class IBMRuntimeService:
                 backend configuration, backends status, or provider credentials.
                 An example to get the operational backends with 5 qubits::
 
-                    IBMRuntimeService.least_busy(n_qubits=5, operational=True)
+                    QiskitRuntimeService.least_busy(n_qubits=5, operational=True)
 
         Returns:
             The backend with the fewest number of pending jobs.
