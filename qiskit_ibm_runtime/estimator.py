@@ -19,12 +19,108 @@ from qiskit.quantum_info import SparsePauliOp
 
 # TODO import BaseEstimator and EstimatorResult from terra once released
 from .qiskit.primitives import BaseEstimator, EstimatorResult
+from .exceptions import IBMInputValueError
+from .ibm_backend import IBMBackend
 from .ibm_runtime_service import QiskitRuntimeService
 from .runtime_session import RuntimeSession
 
 
 class Estimator(BaseEstimator):
-    """Estimator primitive."""
+    """Class for interacting with Qiskit Runtime Estimator primitive service.
+
+    Qiskit Runtime Estimator primitive service estimates expectation values of quantum circuits and
+    observables.
+
+    Estimator can be initialized with the following parameters.
+
+    * circuits: a (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
+        a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
+
+    * observables: a list of :class:`~qiskit.quantum_info.SparsePauliOp`.
+
+    * parameters: a list of parameters of the quantum circuits.
+        (:class:`~qiskit.circuit.parametertable.ParameterView` or
+        a list of :class:`~qiskit.circuit.Parameter`) specifying the order
+        in which parameter values will be bound.
+
+    * skip_transpilation: Transpilation is skipped if set to True.
+        False by default.
+
+    * service: Optional instance of :class:`qiskit_ibm_runtime.QiskitRuntimeService` class,
+        defaults to `QiskitRuntimeService()` which tries to initialize your default saved account.
+
+    * options: Runtime options dictionary that control the execution environment.
+
+        * backend: Optional instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
+            string name of backend, if not specified a backend will be selected
+            automatically (IBM Cloud only).
+        * image: the runtime image used to execute the program, specified in
+            the form of ``image_name:tag``. Not all accounts are
+            authorized to select a different image.
+        * log_level: logging level to set in the execution environment. The valid
+            log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
+            The default level is ``WARNING``.
+
+    The returned instance can be called repeatedly with the following parameters to
+    estimate expectation values.
+
+    * circuit_indices: A list of circuit indices.
+
+    * observable_indices: A list of observable indices.
+
+    * parameter_values: An optional list of concrete parameters to be bound.
+
+    All the above lists should be of the same length.
+
+    Example::
+
+        from qiskit.circuit.library import RealAmplitudes
+        from qiskit.quantum_info import SparsePauliOp
+
+        from qiskit_ibm_runtime import QiskitRuntimeService, Estimator
+
+        service = QiskitRuntimeService(channel="ibm_cloud")
+        options = { "backend": "ibmq_qasm_simulator" }
+
+        psi1 = RealAmplitudes(num_qubits=2, reps=2)
+        psi2 = RealAmplitudes(num_qubits=2, reps=3)
+
+        H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
+        H2 = SparsePauliOp.from_list([("IZ", 1)])
+        H3 = SparsePauliOp.from_list([("ZI", 1), ("ZZ", 1)])
+
+        with Estimator(
+            circuits=[psi1, psi2],
+            observables=[H1, H2, H3],
+            service=service,
+            options=options
+        ) as estimator:
+            theta1 = [0, 1, 1, 2, 3, 5]
+            theta2 = [0, 1, 1, 2, 3, 5, 8, 13]
+            theta3 = [1, 2, 3, 4, 5, 6]
+
+            # calculate [ <psi1(theta1)|H1|psi1(theta1)> ]
+            psi1_H1_result = estimator([0], [0], [theta1])
+            print(psi1_H1_result)
+
+            # calculate [ <psi1(theta1)|H2|psi1(theta1)>, <psi1(theta1)|H3|psi1(theta1)> ]
+            psi1_H23_result = estimator([0, 0], [1, 2], [theta1]*2)
+            print(psi1_H23_result)
+
+            # calculate [ <psi2(theta2)|H2|psi2(theta2)> ]
+            psi2_H2_result = estimator([1], [1], [theta2])
+            print(psi2_H2_result)
+
+            # calculate [ <psi1(theta1)|H1|psi1(theta1)>, <psi1(theta3)|H1|psi1(theta3)> ]
+            psi1_H1_result2 = estimator([0, 0], [0, 0], [theta1, theta3])
+            print(psi1_H1_result2)
+
+            # calculate [ <psi1(theta1)|H1|psi1(theta1)>,
+            #             <psi2(theta2)|H2|psi2(theta2)>,
+            #             <psi1(theta3)|H3|psi1(theta3)> ]
+            psi12_H23_result = estimator([0, 1, 0], [0, 1, 2], [theta1, theta2, theta3])
+            print(psi12_H23_result)
+    """
 
     def __init__(
         self,
@@ -33,7 +129,7 @@ class Estimator(BaseEstimator):
         parameters: Optional[Iterable[Iterable[Parameter]]] = None,
         skip_transpilation: Optional[bool] = False,
         service: Optional[QiskitRuntimeService] = None,
-        backend_name: Optional[str] = None,
+        options: Optional[Dict] = None,
     ):
         """Initializes the Estimator primitive.
 
@@ -48,10 +144,22 @@ class Estimator(BaseEstimator):
             skip_transpilation: Transpilation is skipped if set to True.
                 False by default.
             service: Optional instance of :class:`qiskit_ibm_runtime.QiskitRuntimeService` class,
-                defaults to `QiskitRuntimeService()` which tries to initialize your default saved
-                account.
-            backend_name: Optional string name of backend (if not specified a backend will be
-                selected automatically on IBM Cloud only).
+                defaults to `QiskitRuntimeService()` which tries to initialize your default
+                saved account.
+            options: Runtime options dictionary that control the execution environment.
+
+                * backend: Optional instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
+                    string name of backend, if not specified a backend will be selected
+                    automatically (IBM Cloud only).
+                * image: the runtime image used to execute the program, specified in
+                    the form of ``image_name:tag``. Not all accounts are
+                    authorized to select a different image.
+                * log_level: logging level to set in the execution environment. The valid
+                    log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
+                    The default level is ``WARNING``.
+
+        Raises:
+            IBMInputValueError: If an input value is invalid.
         """
         super().__init__(
             circuits=circuits if isinstance(circuits, Iterable) else [circuits],
@@ -59,11 +167,23 @@ class Estimator(BaseEstimator):
             parameters=parameters,
         )
         self._skip_transpilation = skip_transpilation
+        if not service:
+            # try to initialize service with default saved account
+            service = QiskitRuntimeService()
         self._service = service
-        self._backend_name = backend_name
-        options = {}
-        if self._backend_name:
-            options["backend_name"] = self._backend_name
+        if isinstance(options, dict) and "backend" in options:
+            backend = options.get("backend")
+            if isinstance(backend, IBMBackend):
+                del options["backend"]
+                options["backend_name"] = backend.name
+            elif isinstance(backend, str):
+                del options["backend"]
+                options["backend_name"] = backend
+            else:
+                raise IBMInputValueError(
+                    "'backend' property in 'options' should be either the string name of the "
+                    "backend or an instance of 'IBMBackend' class"
+                )
         inputs = {
             "circuits": circuits,
             "observables": observables,
@@ -71,7 +191,7 @@ class Estimator(BaseEstimator):
             "skip_transpilation": self._skip_transpilation,
         }
         self._session = RuntimeSession(
-            runtime=self._service,
+            service=self._service,
             program_id="estimator",
             inputs=inputs,
             options=options,

@@ -217,6 +217,8 @@ Classes
    :toctree: ../stubs/
 
    QiskitRuntimeService
+   Estimator
+   Sampler
    IBMEstimator
    IBMSampler
    IBMBackend
@@ -243,6 +245,8 @@ from .version import __version__
 
 from .ibm_estimator import IBMEstimator
 from .ibm_sampler import IBMSampler
+from .estimator import Estimator
+from .sampler import Sampler
 
 # TODO remove when terra code is released
 from .qiskit.primitives import (

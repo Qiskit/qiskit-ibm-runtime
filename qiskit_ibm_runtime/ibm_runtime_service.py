@@ -935,7 +935,7 @@ class QiskitRuntimeService:
             Runtime session.
         """
         return RuntimeSession(
-            runtime=self, program_id=program_id, inputs=inputs, options=options
+            service=self, program_id=program_id, inputs=inputs, options=options
         )
 
     def upload_program(

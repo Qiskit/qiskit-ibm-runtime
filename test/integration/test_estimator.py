@@ -15,22 +15,20 @@
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.quantum_info import SparsePauliOp
 
-from qiskit_ibm_runtime import IBMEstimator, EstimatorResult, BaseEstimator
+from qiskit_ibm_runtime import Estimator, EstimatorResult, BaseEstimator
 
 from ..decorators import run_integration_test
 from ..ibm_test_case import IBMIntegrationTestCase
 
-# TODO IBMEstimator class had been deprecated, remove this file when removing IBMEstimator
 
-
-class TestIntegrationIBMEstimator(IBMIntegrationTestCase):
-    """Integration tests for IBMEstimator primitive."""
+class TestIntegrationEstimator(IBMIntegrationTestCase):
+    """Integration tests for Estimator primitive."""
 
     @run_integration_test
-    def test_ibm_estimator_primitive(self, service):
+    def test_estimator_primitive(self, service):
         """Verify if estimator primitive returns expected results"""
 
-        estimator_factory = IBMEstimator(service=service, backend="ibmq_qasm_simulator")
+        options = {"backend": "ibmq_qasm_simulator"}
 
         psi1 = RealAmplitudes(num_qubits=2, reps=2)
         psi2 = RealAmplitudes(num_qubits=2, reps=3)
@@ -40,8 +38,11 @@ class TestIntegrationIBMEstimator(IBMIntegrationTestCase):
         H2 = SparsePauliOp.from_list([("IZ", 1)])
         H3 = SparsePauliOp.from_list([("ZI", 1), ("ZZ", 1)])
 
-        with estimator_factory(
-            circuits=[psi1, psi2], observables=[H1, H2, H3]
+        with Estimator(
+            circuits=[psi1, psi2],
+            observables=[H1, H2, H3],
+            service=service,
+            options=options,
         ) as estimator:
             self.assertIsInstance(estimator, BaseEstimator)
 

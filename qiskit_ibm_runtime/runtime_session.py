@@ -42,20 +42,19 @@ class RuntimeSession:
 
     def __init__(
         self,
-        runtime: "ibm_runtime_service.QiskitRuntimeService",
+        service: "ibm_runtime_service.QiskitRuntimeService",
         program_id: str,
         inputs: Union[Dict, ParameterNamespace],
         options: Optional[Union[RuntimeOptions, Dict]] = None,
     ):
         """RuntimeSession constructor.
         Args:
-            runtime: Runtime service.
+            service: Runtime service.
             program_id: Program ID.
-            options: Runtime options.
             inputs: Initial program inputs.
-            image: The runtime image to use, specified in the form of image_name:tag.
+            options: Runtime options.
         """
-        self._service = runtime
+        self._service = service
         self._program_id = program_id
         self._options: Optional[Union[RuntimeOptions, Dict]] = options
         self._initial_inputs = inputs
