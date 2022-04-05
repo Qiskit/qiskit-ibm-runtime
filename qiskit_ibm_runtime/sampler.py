@@ -20,7 +20,7 @@ from qiskit.circuit import QuantumCircuit, Parameter
 from .qiskit.primitives import BaseSampler, SamplerResult
 from .exceptions import IBMInputValueError
 from .ibm_backend import IBMBackend
-from .ibm_runtime_service import QiskitRuntimeService
+from .qiskit_runtime_service import QiskitRuntimeService
 from .runtime_session import RuntimeSession
 
 

@@ -1400,3 +1400,17 @@ class QiskitRuntimeService:
 
     def __repr__(self) -> str:
         return "<{}>".format(self.__class__.__name__)
+
+
+class IBMRuntimeService(QiskitRuntimeService):
+    """Deprecated, use :class:`qiskit_ibm_runtime.QiskitRuntimeService` instead."""
+
+    def __new__(cls, *args: Any, **kwargs: Any) -> Any:
+        warnings.warn(
+            "IBMRuntimeService class is deprecated and will "
+            "be removed in a future release. "
+            "You can now use QiskitRuntimeService class instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return QiskitRuntimeService(*args, **kwargs)

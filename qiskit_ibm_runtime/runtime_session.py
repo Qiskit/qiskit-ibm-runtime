@@ -17,7 +17,7 @@ from types import TracebackType
 import copy
 from functools import wraps
 
-from qiskit_ibm_runtime import ibm_runtime_service  # pylint: disable=unused-import
+from qiskit_ibm_runtime import qiskit_runtime_service  # pylint: disable=unused-import
 from .runtime_job import RuntimeJob
 from .runtime_program import ParameterNamespace
 from .runtime_options import RuntimeOptions
@@ -42,7 +42,7 @@ class RuntimeSession:
 
     def __init__(
         self,
-        service: "ibm_runtime_service.QiskitRuntimeService",
+        service: "qiskit_runtime_service.QiskitRuntimeService",
         program_id: str,
         inputs: Union[Dict, ParameterNamespace],
         options: Optional[Union[RuntimeOptions, Dict]] = None,

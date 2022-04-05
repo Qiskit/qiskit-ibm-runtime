@@ -12,7 +12,9 @@
 
 """Qiskit Runtime Sampler primitive service."""
 
-from typing import Optional, Iterable, Union
+import warnings
+
+from typing import Any, Optional, Iterable, Union
 
 from qiskit.circuit import QuantumCircuit, Parameter
 
@@ -22,6 +24,17 @@ from .sampler import Sampler
 
 class IBMSampler(BasePrimitive):
     """Deprecated, use :class:`~qiskit_ibm_runtime.Sampler` instead."""
+
+    def __init__(self, *args: Any, **kwargs: Any):
+        """Initalizes IBMSampler."""
+        super().__init__(*args, **kwargs)
+        warnings.warn(
+            "IBMSampler class is deprecated and will "
+            "be removed in a future release. "
+            "You can now use qiskit_ibm_runtime.Sampler class instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
 
     def __call__(  # type: ignore[override]
         self,

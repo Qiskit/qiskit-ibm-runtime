@@ -219,8 +219,6 @@ Classes
    QiskitRuntimeService
    Estimator
    Sampler
-   IBMEstimator
-   IBMSampler
    IBMBackend
    RuntimeJob
    RuntimeProgram
@@ -228,11 +226,14 @@ Classes
    RuntimeOptions
    RuntimeEncoder
    RuntimeDecoder
+   IBMRuntimeService
+   IBMEstimator
+   IBMSampler
 """
 
 import logging
 
-from .ibm_runtime_service import QiskitRuntimeService
+from .qiskit_runtime_service import QiskitRuntimeService, IBMRuntimeService
 from .ibm_backend import IBMBackend
 from .runtime_job import RuntimeJob
 from .runtime_program import RuntimeProgram, ParameterNamespace

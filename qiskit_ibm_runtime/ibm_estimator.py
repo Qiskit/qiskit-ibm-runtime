@@ -12,7 +12,9 @@
 
 """Qiskit Runtime Estimator primitive service."""
 
-from typing import Iterable, Optional, Union
+import warnings
+
+from typing import Any, Iterable, Optional, Union
 
 from qiskit.circuit import QuantumCircuit, Parameter
 from qiskit.quantum_info import SparsePauliOp
@@ -23,6 +25,17 @@ from .estimator import Estimator
 
 class IBMEstimator(BasePrimitive):
     """Deprecated, use :class:`~qiskit_ibm_runtime.Estimator` instead."""
+
+    def __init__(self, *args: Any, **kwargs: Any):
+        """Initalizes IBMEstimator."""
+        super().__init__(*args, **kwargs)
+        warnings.warn(
+            "IBMEstimator class is deprecated and will "
+            "be removed in a future release. "
+            "You can now use qiskit_ibm_runtime.Estimator class instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
 
     def __call__(  # type: ignore[override]
         self,

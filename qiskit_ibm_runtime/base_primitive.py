@@ -16,7 +16,7 @@ from abc import ABC, abstractmethod
 from typing import Optional, Union, Any
 
 from .ibm_backend import IBMBackend
-from .ibm_runtime_service import QiskitRuntimeService
+from .qiskit_runtime_service import QiskitRuntimeService
 
 
 class BasePrimitive(ABC):

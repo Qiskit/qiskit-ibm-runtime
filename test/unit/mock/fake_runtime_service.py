@@ -20,7 +20,7 @@ from qiskit_ibm_runtime.accounts import Account
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 from qiskit_ibm_runtime.api.clients import AuthClient
 from qiskit_ibm_runtime.hub_group_project import HubGroupProject
-from qiskit_ibm_runtime.ibm_runtime_service import QiskitRuntimeService
+from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 from .fake_account_client import BaseFakeAccountClient
 from .fake_runtime_client import BaseFakeRuntimeClient
 
@@ -47,7 +47,7 @@ class FakeRuntimeService(QiskitRuntimeService):
         self._fake_account_client = test_options.get("account_client")
 
         with mock.patch(
-            "qiskit_ibm_runtime.ibm_runtime_service.RuntimeClient",
+            "qiskit_ibm_runtime.qiskit_runtime_service.RuntimeClient",
             new=BaseFakeRuntimeClient,
         ):
             super().__init__(*args, **kwargs)

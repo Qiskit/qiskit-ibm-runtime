@@ -21,7 +21,7 @@ from qiskit.quantum_info import SparsePauliOp
 from .qiskit.primitives import BaseEstimator, EstimatorResult
 from .exceptions import IBMInputValueError
 from .ibm_backend import IBMBackend
-from .ibm_runtime_service import QiskitRuntimeService
+from .qiskit_runtime_service import QiskitRuntimeService
 from .runtime_session import RuntimeSession
 
 
