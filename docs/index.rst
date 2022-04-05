@@ -71,10 +71,15 @@ For additional information and usage examples see the :ref:`tutorials` page.
 .. toctree::
     :hidden:
 
-    API References <apidocs/ibm-runtime>
+    Overview <self>
+    Getting Started <getting_started>
+    How to <how_tos>
+    Explanation <explanations>
+    Tutorials <tutorials>
+    API Reference <apidocs/ibm-runtime>
+    FAQs <faqs>
     Release Notes <release_notes>
-    Maximum Execution Time <max_time.rst>
-    Tutorials <tutorials.rst>
+
 
 
 .. Hiding - Indices and tables
