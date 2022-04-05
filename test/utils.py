@@ -22,7 +22,7 @@ from qiskit.circuit import QuantumCircuit
 from qiskit.providers.jobstatus import JOB_FINAL_STATES, JobStatus
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit_ibm_runtime.hub_group_project import HubGroupProject
-from qiskit_ibm_runtime import IBMRuntimeService
+from qiskit_ibm_runtime import QiskitRuntimeService
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.runtime_job import RuntimeJob
 from qiskit_ibm_runtime.exceptions import RuntimeInvalidStateError
@@ -86,7 +86,7 @@ def get_hgp(qe_token: str, qe_url: str, default: bool = True) -> HubGroupProject
     Returns:
         A HubGroupProject, as specified by `default`.
     """
-    service = IBMRuntimeService(
+    service = QiskitRuntimeService(
         channel="ibm_quantum", token=qe_token, url=qe_url
     )  # Default hub/group/project.
     open_hgp = service._get_hgp()  # Open access hgp

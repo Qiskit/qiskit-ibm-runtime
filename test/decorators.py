@@ -18,7 +18,7 @@ from functools import wraps
 from typing import Callable, Optional, List, Any
 from unittest import SkipTest
 
-from qiskit_ibm_runtime import IBMRuntimeService
+from qiskit_ibm_runtime import QiskitRuntimeService
 
 from .unit.mock.fake_runtime_service import FakeRuntimeService
 
@@ -79,7 +79,7 @@ def integration_test_setup(
 
     Args:
         supported_channel: a list of channel types that this test supports
-        init_service: to initialize the IBMRuntimeService based on the current environment
+        init_service: to initialize the QiskitRuntimeService based on the current environment
             configuration and return it via the test dependencies
 
     Returns:
@@ -106,7 +106,7 @@ def integration_test_setup(
 
             service = None
             if init_service:
-                service = IBMRuntimeService(
+                service = QiskitRuntimeService(
                     channel=channel, token=token, url=url, instance=instance
                 )
             dependencies = IntegrationTestDependencies(
@@ -128,7 +128,7 @@ def integration_test_setup(
 class IntegrationTestDependencies:
     """Integration test dependencies."""
 
-    service: IBMRuntimeService
+    service: QiskitRuntimeService
     instance: Optional[str]
     token: str
     channel: str

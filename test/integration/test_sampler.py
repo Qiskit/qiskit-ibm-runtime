@@ -15,22 +15,20 @@
 from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.library import RealAmplitudes
 
-from qiskit_ibm_runtime import IBMSampler, BaseSampler, SamplerResult
+from qiskit_ibm_runtime import Sampler, BaseSampler, SamplerResult
 
 from ..decorators import run_integration_test
 from ..ibm_test_case import IBMIntegrationTestCase
 
-# TODO IBMSampler class had been deprecated, remove this file when removing IBMSampler
-
 
 class TestIntegrationIBMSampler(IBMIntegrationTestCase):
-    """Integration tests for IBMSampler primitive."""
+    """Integration tests for Sampler primitive."""
 
     @run_integration_test
-    def test_ibm_sampler_primitive_non_parameterized_circuits(self, service):
+    def test_sampler_primitive_non_parameterized_circuits(self, service):
         """Verify if sampler primitive returns expected results for non-parameterized circuits."""
 
-        sampler_factory = IBMSampler(service=service, backend="ibmq_qasm_simulator")
+        options = {"backend": "ibmq_qasm_simulator"}
 
         bell = QuantumCircuit(2)
         bell.h(0)
@@ -38,7 +36,7 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
         bell.measure_all()
 
         # executes a Bell circuit
-        with sampler_factory(circuits=bell) as sampler:
+        with Sampler(circuits=bell, service=service, options=options) as sampler:
             self.assertIsInstance(sampler, BaseSampler)
 
             circuit_indices = [0]
@@ -48,7 +46,7 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
             self.assertEqual(len(result.metadata), len(circuit_indices))
 
         # executes three Bell circuits
-        with sampler_factory([bell] * 3) as sampler:
+        with Sampler(circuits=[bell] * 3, service=service, options=options) as sampler:
             self.assertIsInstance(sampler, BaseSampler)
 
             circuit_indices1 = [0, 1, 2]
@@ -76,10 +74,10 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
             self.assertEqual(len(result3.metadata), len(circuit_indices3))
 
     @run_integration_test
-    def test_ibm_sampler_primitive_parameterized_circuits(self, service):
+    def test_sampler_primitive_parameterized_circuits(self, service):
         """Verify if sampler primitive returns expected results for parameterized circuits."""
 
-        sampler_factory = IBMSampler(service=service, backend="ibmq_qasm_simulator")
+        options = {"backend": "ibmq_qasm_simulator"}
 
         # parameterized circuit
         pqc = RealAmplitudes(num_qubits=2, reps=2)
@@ -91,7 +89,7 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
         theta2 = [1, 2, 3, 4, 5, 6]
         theta3 = [0, 1, 2, 3, 4, 5, 6, 7]
 
-        with sampler_factory(circuits=[pqc, pqc2]) as sampler:
+        with Sampler(circuits=[pqc, pqc2], service=service, options=options) as sampler:
             self.assertIsInstance(sampler, BaseSampler)
 
             circuit_indices = [0, 0, 1]

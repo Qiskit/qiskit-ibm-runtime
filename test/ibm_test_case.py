@@ -23,7 +23,7 @@ from typing import DefaultDict, Dict
 
 from qiskit_ibm_runtime import QISKIT_IBM_RUNTIME_LOGGER_NAME
 from qiskit_ibm_runtime.exceptions import IBMNotAuthorizedError
-from qiskit_ibm_runtime import IBMRuntimeService
+from qiskit_ibm_runtime import QiskitRuntimeService
 
 from .utils import setup_test_logging
 from .decorators import IntegrationTestDependencies, integration_test_setup
@@ -35,7 +35,7 @@ class IBMTestCase(unittest.TestCase):
 
     log: logging.Logger
     dependencies: IntegrationTestDependencies
-    service: IBMRuntimeService
+    service: QiskitRuntimeService
     program_ids: Dict[str, str]
 
     @classmethod
@@ -106,7 +106,7 @@ class IBMIntegrationTestCase(IBMTestCase):
 
     def _upload_program(
         self,
-        service: IBMRuntimeService,
+        service: QiskitRuntimeService,
         name: str = None,
         max_execution_time: int = 300,
         data: str = None,

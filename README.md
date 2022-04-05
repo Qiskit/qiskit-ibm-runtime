@@ -62,20 +62,20 @@ them each time. The credentials are saved in the `$HOME/.qiskit/qiskit-ibm.json`
 |:---------------------------|
 
  ```python
-from qiskit_ibm_runtime import IBMRuntimeService
+from qiskit_ibm_runtime import QiskitRuntimeService
 
 # Save an IBM Cloud account.
-IBMRuntimeService.save_account(channel="ibm_cloud", token="MY_IBM_CLOUD_API_KEY", instance="MY_IBM_CLOUD_CRN")
+QiskitRuntimeService.save_account(channel="ibm_cloud", token="MY_IBM_CLOUD_API_KEY", instance="MY_IBM_CLOUD_CRN")
 
 # Save an IBM Quantum account.
-IBMRuntimeService.save_account(channel="ibm_quantum", token="MY_IBM_QUANTUM_TOKEN")
+QiskitRuntimeService.save_account(channel="ibm_quantum", token="MY_IBM_QUANTUM_TOKEN")
 ```
 
 Once the account is saved on disk, you can instantiate the service without any arguments:
 
 ```python
-from qiskit_ibm_runtime import IBMRuntimeService
-service = IBMRuntimeService()
+from qiskit_ibm_runtime import QiskitRuntimeService
+service = QiskitRuntimeService()
 ```
 
 ### Loading Account from Environment Variables
@@ -88,8 +88,8 @@ export QISKIT_IBM_INSTANCE="MY_IBM_CLOUD_CRN"
 
 Then instantiate the service without any arguments:
 ```python
-from qiskit_ibm_runtime import IBMRuntimeService
-service = IBMRuntimeService()
+from qiskit_ibm_runtime import QiskitRuntimeService
+service = QiskitRuntimeService()
 ```
 
 ### Enabling Account for Current Session
@@ -98,13 +98,13 @@ As another alternative, you can also enable an account just for the current sess
 service with your credentials.
 
 ```python
-from qiskit_ibm_runtime import IBMRuntimeService
+from qiskit_ibm_runtime import QiskitRuntimeService
 
 # For an IBM Cloud account.
-ibm_cloud_service = IBMRuntimeService(channel="ibm_cloud", token="MY_IBM_CLOUD_API_KEY", instance="MY_IBM_CLOUD_CRN")
+ibm_cloud_service = QiskitRuntimeService(channel="ibm_cloud", token="MY_IBM_CLOUD_API_KEY", instance="MY_IBM_CLOUD_CRN")
 
 # For an IBM Quantum account.
-ibm_quantum_service = IBMRuntimeService(channel="ibm_quantum", token="MY_IBM_QUANTUM_TOKEN")
+ibm_quantum_service = QiskitRuntimeService(channel="ibm_quantum", token="MY_IBM_QUANTUM_TOKEN")
 ```
 
 ## Accessing Qiskit Runtime Programs
@@ -114,8 +114,8 @@ ibm_quantum_service = IBMRuntimeService(channel="ibm_quantum", token="MY_IBM_QUA
 To list all available programs:
 
 ```python
-from qiskit_ibm_runtime import IBMRuntimeService
-service = IBMRuntimeService()
+from qiskit_ibm_runtime import QiskitRuntimeService
+service = QiskitRuntimeService()
 service.pprint_programs()
 ```
 
@@ -130,9 +130,9 @@ To run a program, specify the program ID, input parameters, as well as any execu
 
 ```python
 from qiskit.test.reference_circuits import ReferenceCircuits
-from qiskit_ibm_runtime import IBMRuntimeService
+from qiskit_ibm_runtime import QiskitRuntimeService
 
-service = IBMRuntimeService()
+service = QiskitRuntimeService()
 program_inputs = {
     'circuits': ReferenceCircuits.bell()
 }
@@ -153,8 +153,8 @@ You can query for the backends you have access to. Attributes and methods of the
 provide information, such as qubit counts, error rates, and statuses, of the backends.
 
 ```python
-from qiskit_ibm_runtime import IBMRuntimeService
-service = IBMRuntimeService()
+from qiskit_ibm_runtime import QiskitRuntimeService
+service = QiskitRuntimeService()
 
 # Display all backends you have access.
 print(service.backends())

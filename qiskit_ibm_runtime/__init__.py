@@ -33,9 +33,9 @@ Account initialization
 ----------------------
 
 You need to initialize your account before you can start using the Qiskit Runtime service.
-This is done by initializing an :class:`IBMRuntimeService` instance with your
+This is done by initializing an :class:`QiskitRuntimeService` instance with your
 account credentials. If you don't want to pass in the credentials each time, you
-can use the :meth:`IBMRuntimeService.save_account` method to save the credentials
+can use the :meth:`QiskitRuntimeService.save_account` method to save the credentials
 on disk.
 
 Qiskit Runtime is available on both IBM Cloud and IBM Quantum, and you can specify
@@ -47,9 +47,9 @@ Listing runtime programs
 
 To list all available runtime programs::
 
-    from qiskit_ibm_runtime import IBMRuntimeService
+    from qiskit_ibm_runtime import QiskitRuntimeService
 
-    service = IBMRuntimeService()
+    service = QiskitRuntimeService()
 
     # List all available programs.
     service.pprint_programs()
@@ -69,13 +69,13 @@ more about the program.
 Invoking a runtime program
 --------------------------
 
-You can use the :meth:`IBMRuntimeService.run` method to invoke a runtime program.
+You can use the :meth:`QiskitRuntimeService.run` method to invoke a runtime program.
 For example::
 
     from qiskit import QuantumCircuit
-    from qiskit_ibm_runtime import IBMRuntimeService
+    from qiskit_ibm_runtime import QiskitRuntimeService
 
-    service = IBMRuntimeService()
+    service = QiskitRuntimeService()
     backend = "ibmq_qasm_simulator"
 
     # Create a circuit.
@@ -104,7 +104,7 @@ The example above invokes the ``sampler`` program.
 Runtime Jobs
 ------------
 
-When you use the :meth:`IBMRuntimeService.run` method to invoke a runtime
+When you use the :meth:`QiskitRuntimeService.run` method to invoke a runtime
 program, a
 :class:`RuntimeJob` instance is returned. This class has all the basic job
 methods, such as :meth:`RuntimeJob.status`, :meth:`RuntimeJob.result`, and
@@ -119,9 +119,9 @@ program by passing in the ``callback`` parameter, or at a later time using
 the :meth:`RuntimeJob.stream_results` method. For example::
 
     from qiskit import QuantumCircuit
-    from qiskit_ibm_runtime import IBMRuntimeService
+    from qiskit_ibm_runtime import QiskitRuntimeService
 
-    service = IBMRuntimeService()
+    service = QiskitRuntimeService()
     backend = "ibmq_qasm_simulator"
 
     def result_callback(job_id, result):
@@ -136,7 +136,7 @@ the :meth:`RuntimeJob.stream_results` method. For example::
 Backend data
 ------------
 
-:class:`IBMRuntimeService` also has methods, such as :meth:`backend`,
+:class:`QiskitRuntimeService` also has methods, such as :meth:`backend`,
 :meth:`backends`, and :meth:`least_busy`, that allows you to query for a target
 backend to use. These methods return one or more :class:`IBMBackend` instances
 that contains methods and attributes describing the backend.
@@ -162,18 +162,18 @@ template file.
 
 Each program metadata must include at least the program name, description, and
 maximum execution time. You can find description of each metadata field in
-the :meth:`IBMRuntimeService.upload_program` method. Instead of passing in
+the :meth:`QiskitRuntimeService.upload_program` method. Instead of passing in
 the metadata fields individually, you can pass in a JSON file or a dictionary
-to :meth:`IBMRuntimeService.upload_program` via the ``metadata`` parameter.
+to :meth:`QiskitRuntimeService.upload_program` via the ``metadata`` parameter.
 `qiskit_ibm_runtime/program/program_metadata_sample.json`
 is a sample file of program metadata.
 
-You can use the :meth:`IBMRuntimeService.upload_program` to upload a program.
+You can use the :meth:`QiskitRuntimeService.upload_program` to upload a program.
 For example::
 
-    from qiskit_ibm_runtime import IBMRuntimeService
+    from qiskit_ibm_runtime import QiskitRuntimeService
 
-    service = IBMRuntimeService()
+    service = QiskitRuntimeService()
     program_id = service.upload_program(
                     data="my_vqe.py",
                     metadata="my_vqe_metadata.json"
@@ -182,7 +182,7 @@ For example::
 In the example above, the file ``my_vqe.py`` contains the program data, and
 ``my_vqe_metadata.json`` contains the program metadata.
 
-Method :meth:`IBMRuntimeService.delete_program` allows you to delete a
+Method :meth:`QiskitRuntimeService.delete_program` allows you to delete a
 program.
 
 Files related to writing a runtime program are in the
@@ -216,9 +216,9 @@ Classes
 .. autosummary::
    :toctree: ../stubs/
 
-   IBMRuntimeService
-   IBMEstimator
-   IBMSampler
+   QiskitRuntimeService
+   Estimator
+   Sampler
    IBMBackend
    RuntimeJob
    RuntimeProgram
@@ -226,11 +226,14 @@ Classes
    RuntimeOptions
    RuntimeEncoder
    RuntimeDecoder
+   IBMRuntimeService
+   IBMEstimator
+   IBMSampler
 """
 
 import logging
 
-from .ibm_runtime_service import IBMRuntimeService
+from .qiskit_runtime_service import QiskitRuntimeService, IBMRuntimeService
 from .ibm_backend import IBMBackend
 from .runtime_job import RuntimeJob
 from .runtime_program import RuntimeProgram, ParameterNamespace
@@ -243,6 +246,8 @@ from .version import __version__
 
 from .ibm_estimator import IBMEstimator
 from .ibm_sampler import IBMSampler
+from .estimator import Estimator
+from .sampler import Sampler
 
 # TODO remove when terra code is released
 from .qiskit.primitives import (
