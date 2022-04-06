@@ -20,13 +20,13 @@ from qiskit_ibm_runtime.accounts import Account
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 from qiskit_ibm_runtime.api.clients import AuthClient
 from qiskit_ibm_runtime.hub_group_project import HubGroupProject
-from qiskit_ibm_runtime.ibm_runtime_service import IBMRuntimeService
+from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 from .fake_account_client import BaseFakeAccountClient
 from .fake_runtime_client import BaseFakeRuntimeClient
 
 
-class FakeRuntimeService(IBMRuntimeService):
-    """Creates an IBMRuntimeService instance with mocked hub/group/project.
+class FakeRuntimeService(QiskitRuntimeService):
+    """Creates an QiskitRuntimeService instance with mocked hub/group/project.
 
     By default there are 2 h/g/p - `hub0/group0/project0` and `hub1/group1/project1`.
     Each h/g/p has 2 backends - `common_backend` and `unique_backend_<idx>`.
@@ -47,12 +47,12 @@ class FakeRuntimeService(IBMRuntimeService):
         self._fake_account_client = test_options.get("account_client")
 
         with mock.patch(
-            "qiskit_ibm_runtime.ibm_runtime_service.RuntimeClient",
+            "qiskit_ibm_runtime.qiskit_runtime_service.RuntimeClient",
             new=BaseFakeRuntimeClient,
         ):
             super().__init__(*args, **kwargs)
 
-    def _authenticate_legacy_account(
+    def _authenticate_ibm_quantum_account(
         self, client_params: ClientParameters
     ) -> "FakeAuthClient":
         """Mock authentication."""
@@ -73,7 +73,7 @@ class FakeRuntimeService(IBMRuntimeService):
             hgp_name = self.DEFAULT_HGPS[idx]
 
             hgp_params = ClientParameters(
-                auth_type="legacy",
+                channel="ibm_quantum",
                 token="some_token",
                 url="some_url",
                 instance=hgp_name,
@@ -113,7 +113,7 @@ class FakeRuntimeService(IBMRuntimeService):
 
         test_options = {
             "backend_client": self._fake_account_client,
-            "auth_type": "cloud",
+            "channel": "ibm_cloud",
         }
         self._api_client = BaseFakeRuntimeClient(test_options=test_options)
         return super()._discover_cloud_backends()
@@ -128,7 +128,10 @@ class FakeAuthClient(AuthClient):
 
     def current_service_urls(self):
         """Return service urls."""
-        return {"http": "legacy_api_url", "services": {"runtime": "legacy_runtime_url"}}
+        return {
+            "http": "IBM_QUANTUM_API_URL",
+            "services": {"runtime": "ibm_quantum_runtime_url"},
+        }
 
     def current_access_token(self):
         """Return access token."""

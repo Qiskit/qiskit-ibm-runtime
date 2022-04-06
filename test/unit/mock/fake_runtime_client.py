@@ -27,12 +27,12 @@ from .fake_account_client import BaseFakeAccountClient
 
 
 def cloud_only(func):
-    """Decorator that runs a test using both legacy and cloud services."""
+    """Decorator that runs a test using only ibm_cloud services."""
 
     @wraps(func)
     def _wrapper(self, *args, **kwargs):
-        if self._auth_type != "cloud":
-            raise ValueError(f"Method {func} called by a legacy client!")
+        if self._channel != "ibm_cloud":
+            raise ValueError(f"Method {func} called by an ibm_quantum client!")
         return func(self, *args, **kwargs)
 
     return _wrapper
@@ -118,6 +118,7 @@ class BaseFakeRuntimeJob:
         """Initialize a fake job."""
         self._job_id = job_id
         self._status = final_status or "QUEUED"
+        self._reason: Optional[str] = None
         self._program_id = program_id
         self._hub = hub
         self._group = group
@@ -152,7 +153,7 @@ class BaseFakeRuntimeJob:
             "group": self._group,
             "project": self._project,
             "backend": self._backend_name,
-            "status": self._status,
+            "state": {"status": self._status, "reason": self._reason},
             "params": [self._params],
             "program": {"id": self._program_id},
             "image": self._image,
@@ -187,13 +188,14 @@ class FailedRuntimeJob(BaseFakeRuntimeJob):
 class FailedRanTooLongRuntimeJob(BaseFakeRuntimeJob):
     """Class for faking a failed runtime job."""
 
-    _job_progress = ["QUEUED", "RUNNING", "CANCELLED - RAN TOO LONG"]
+    _job_progress = ["QUEUED", "RUNNING", "CANCELLED"]
 
     def _auto_progress(self):
         """Automatically update job status."""
         super()._auto_progress()
 
-        if self._status == "CANCELLED - RAN TOO LONG":
+        if self._status == "CANCELLED":
+            self._reason = "RAN TOO LONG"
             self._result = "Kaboom!"
 
 
@@ -216,7 +218,7 @@ class CancelableRuntimeJob(BaseFakeRuntimeJob):
         """Convert to dictionary format."""
         data = super().to_dict()
         if self._cancelled:
-            data["status"] = "CANCELLED"
+            data["state"]["status"] = "CANCELLED"
         return data
 
 
@@ -264,7 +266,7 @@ class BaseFakeRuntimeClient:
         self._backend_client = test_options.get(
             "backend_client", BaseFakeAccountClient()
         )
-        self._auth_type = test_options.get("auth_type", "legacy")
+        self._channel = test_options.get("channel", "ibm_quantum")
 
     def set_job_classes(self, classes):
         """Set job classes to use."""
@@ -514,5 +516,5 @@ class BaseFakeRuntimeClient:
 
     @cloud_only
     def _check_cloud_only(self):
-        if self._auth_type != "cloud":
-            raise ValueError("A backend method is called by a legacy client!")
+        if self._channel != "ibm_cloud":
+            raise ValueError("A backend method is called by an ibm_quantum client!")

@@ -34,7 +34,7 @@ class ResultDecoder:
 
     Users of your program will need to pass in the subclass when invoking
     :meth:`qiskit_ibm_runtime.RuntimeJob.result` or
-    :meth:`qiskit_ibm_runtime.IBMRuntimeService.run`.
+    :meth:`qiskit_ibm_runtime.QiskitRuntimeService.run`.
     """
 
     @classmethod
