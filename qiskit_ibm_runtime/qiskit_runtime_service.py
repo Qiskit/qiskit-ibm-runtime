@@ -1298,14 +1298,16 @@ class QiskitRuntimeService:
         Returns:
             Decoded job data.
         """
-        hub = raw_data.get("hub")
-        group = raw_data.get("group")
-        project = raw_data.get("project")
-        instance = (
-            to_instance_format(hub, group, project)
-            if all([hub, group, project])
-            else None
-        )
+        instance = None
+        if self._channel == "ibm_quantum":
+            hub = raw_data.get("hub")
+            group = raw_data.get("group")
+            project = raw_data.get("project")
+            instance = (
+                to_instance_format(hub, group, project)
+                if all([hub, group, project])
+                else None
+            )
         # Try to find the right backend
         try:
             backend = self.backend(raw_data["backend"], instance=instance)
