@@ -19,26 +19,26 @@ Find your access credentials
 
 You can access Qiskit Runtime from either IBM Quantum or IBM Cloud.
 
-IBM Quantum
-------------------
+**IBM Quantum**
 
 .. code-block:: python
 
     from qiskit_ibm_runtime import IBMRuntimeService
-    # Save your credentials on disk.# IBMRuntimeService.save_account(auth="legacy", token=<IBM Quantum API key>)
-    service = IBMRuntimeService()
+
+    # Save an IBM Quantum account.
+    IBMRuntimeService.save_account(channel="ibm_quantum", token="MY_IBM_QUANTUM_TOKEN")
 
 `Retrieve token </>`_
 
 
-IBM Cloud
-------------------
+**IBM Cloud**
 
 .. code-block:: python
 
-    from qiskit_ibm_runtime import IBMRuntimeService 
-    # Save account to disk. IBMRuntimeService.save_account(auth="cloud", token=<IBM Cloud API key>, instance=<IBM Cloud CRN or Service instance name>) service = IBMRuntimeService()
-    Authenticate to the service
+    from qiskit_ibm_runtime import IBMRuntimeService
+
+    # Save an IBM Cloud account.
+    IBMRuntimeService.save_account(channel="ibm_cloud", token="MY_IBM_CLOUD_API_KEY", instance="MY_IBM_CLOUD_CRN")
 
 `Retrieve token </>`_
 
