@@ -15,7 +15,7 @@
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from .mock.fake_runtime_service import FakeRuntimeService
 from ..ibm_test_case import IBMTestCase
-from ..decorators import run_legacy_and_cloud_fake
+from ..decorators import run_quantum_and_cloud_fake
 from ..program import run_program, upload_program
 from ..utils import mock_wait_for_final_state
 
@@ -26,9 +26,11 @@ class TestRetrieveJobs(IBMTestCase):
     def setUp(self):
         """Initial test setup."""
         super().setUp()
-        self._legacy_service = FakeRuntimeService(auth="legacy", token="my_token")
+        self._ibm_quantum_service = FakeRuntimeService(
+            channel="ibm_quantum", token="my_token"
+        )
 
-    @run_legacy_and_cloud_fake
+    @run_quantum_and_cloud_fake
     def test_retrieve_job(self, service):
         """Test retrieving a job."""
         program_id = upload_program(service)
@@ -38,7 +40,7 @@ class TestRetrieveJobs(IBMTestCase):
         self.assertEqual(job.job_id, rjob.job_id)
         self.assertEqual(program_id, rjob.program_id)
 
-    @run_legacy_and_cloud_fake
+    @run_quantum_and_cloud_fake
     def test_jobs_no_limit(self, service):
         """Test retrieving jobs without limit."""
         program_id = upload_program(service)
@@ -49,7 +51,7 @@ class TestRetrieveJobs(IBMTestCase):
         rjobs = service.jobs(limit=None)
         self.assertEqual(25, len(rjobs))
 
-    @run_legacy_and_cloud_fake
+    @run_quantum_and_cloud_fake
     def test_jobs_limit(self, service):
         """Test retrieving jobs with limit."""
         program_id = upload_program(service)
@@ -65,7 +67,7 @@ class TestRetrieveJobs(IBMTestCase):
                 rjobs = service.jobs(limit=limit)
                 self.assertEqual(min(limit, job_count), len(rjobs))
 
-    @run_legacy_and_cloud_fake
+    @run_quantum_and_cloud_fake
     def test_jobs_skip(self, service):
         """Test retrieving jobs with skip."""
         program_id = upload_program(service)
@@ -78,7 +80,7 @@ class TestRetrieveJobs(IBMTestCase):
 
     def test_jobs_skip_limit(self):
         """Test retrieving jobs with skip and limit."""
-        service = self._legacy_service
+        service = self._ibm_quantum_service
         program_id = upload_program(service)
 
         jobs = []
@@ -87,7 +89,7 @@ class TestRetrieveJobs(IBMTestCase):
         rjobs = service.jobs(skip=4, limit=2)
         self.assertEqual(2, len(rjobs))
 
-    @run_legacy_and_cloud_fake
+    @run_quantum_and_cloud_fake
     def test_jobs_pending(self, service):
         """Test retrieving pending jobs (QUEUED, RUNNING)."""
         program_id = upload_program(service)
@@ -100,7 +102,7 @@ class TestRetrieveJobs(IBMTestCase):
 
     def test_jobs_limit_pending(self):
         """Test retrieving pending jobs (QUEUED, RUNNING) with limit."""
-        service = self._legacy_service
+        service = self._ibm_quantum_service
         program_id = upload_program(service)
 
         self._populate_jobs_with_all_statuses(service, program_id=program_id)
@@ -110,7 +112,7 @@ class TestRetrieveJobs(IBMTestCase):
 
     def test_jobs_skip_pending(self):
         """Test retrieving pending jobs (QUEUED, RUNNING) with skip."""
-        service = self._legacy_service
+        service = self._ibm_quantum_service
         program_id = upload_program(service)
 
         _, pending_jobs_count, _ = self._populate_jobs_with_all_statuses(
@@ -122,7 +124,7 @@ class TestRetrieveJobs(IBMTestCase):
 
     def test_jobs_limit_skip_pending(self):
         """Test retrieving pending jobs (QUEUED, RUNNING) with limit and skip."""
-        service = self._legacy_service
+        service = self._ibm_quantum_service
         program_id = upload_program(service)
 
         self._populate_jobs_with_all_statuses(service, program_id=program_id)
@@ -133,7 +135,7 @@ class TestRetrieveJobs(IBMTestCase):
 
     def test_jobs_returned(self):
         """Test retrieving returned jobs (COMPLETED, FAILED, CANCELLED)."""
-        service = self._legacy_service
+        service = self._ibm_quantum_service
         program_id = upload_program(service)
 
         _, _, returned_jobs_count = self._populate_jobs_with_all_statuses(
@@ -144,7 +146,7 @@ class TestRetrieveJobs(IBMTestCase):
 
     def test_jobs_limit_returned(self):
         """Test retrieving returned jobs (COMPLETED, FAILED, CANCELLED) with limit."""
-        service = self._legacy_service
+        service = self._ibm_quantum_service
         program_id = upload_program(service)
 
         self._populate_jobs_with_all_statuses(service, program_id=program_id)
@@ -154,7 +156,7 @@ class TestRetrieveJobs(IBMTestCase):
 
     def test_jobs_skip_returned(self):
         """Test retrieving returned jobs (COMPLETED, FAILED, CANCELLED) with skip."""
-        service = self._legacy_service
+        service = self._ibm_quantum_service
         program_id = upload_program(service)
 
         _, _, returned_jobs_count = self._populate_jobs_with_all_statuses(
@@ -166,7 +168,7 @@ class TestRetrieveJobs(IBMTestCase):
 
     def test_jobs_limit_skip_returned(self):
         """Test retrieving returned jobs (COMPLETED, FAILED, CANCELLED) with limit and skip."""
-        service = self._legacy_service
+        service = self._ibm_quantum_service
         program_id = upload_program(service)
 
         self._populate_jobs_with_all_statuses(service, program_id=program_id)
@@ -175,7 +177,7 @@ class TestRetrieveJobs(IBMTestCase):
         rjobs = service.jobs(limit=limit, skip=skip, pending=False)
         self.assertEqual(limit, len(rjobs))
 
-    @run_legacy_and_cloud_fake
+    @run_quantum_and_cloud_fake
     def test_jobs_filter_by_program_id(self, service):
         """Test retrieving jobs by Program ID."""
         program_id = upload_program(service)
@@ -192,7 +194,7 @@ class TestRetrieveJobs(IBMTestCase):
 
     def test_jobs_filter_by_instance(self):
         """Test retrieving jobs by instance."""
-        service = self._legacy_service
+        service = self._ibm_quantum_service
         program_id = upload_program(service)
         instance = FakeRuntimeService.DEFAULT_HGPS[1]
 
@@ -210,7 +212,7 @@ class TestRetrieveJobs(IBMTestCase):
 
     def test_jobs_bad_instance(self):
         """Test retrieving jobs with bad instance values."""
-        service = self._legacy_service
+        service = self._ibm_quantum_service
         with self.assertRaises(IBMInputValueError):
             _ = service.jobs(instance="foo")
 
@@ -218,7 +220,7 @@ class TestRetrieveJobs(IBMTestCase):
         """Test retrieving job submitted with different hgp."""
         # Initialize with hgp0
         service = FakeRuntimeService(
-            auth="legacy",
+            channel="ibm_quantum",
             token="some_token",
             instance=FakeRuntimeService.DEFAULT_HGPS[0],
         )

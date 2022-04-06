@@ -20,7 +20,7 @@ class TestBasicServerPaths(IBMTestCase):
     """Test the basic server endpoints using both a public and premium provider."""
 
     @classmethod
-    @integration_test_setup(supported_auth=["legacy"])
+    @integration_test_setup(supported_channel=["ibm_quantum"])
     def setUpClass(cls, dependencies: IntegrationTestDependencies) -> None:
         # pylint: disable=arguments-differ
         super().setUpClass()

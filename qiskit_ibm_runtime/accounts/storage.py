@@ -54,7 +54,6 @@ def read_config(
             return data
         if name in data:
             return data[name]
-
         return None
 
 

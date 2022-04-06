@@ -59,8 +59,8 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     def test_run_program_cloud_no_backend(self, service):
         """Test running a cloud program with no backend."""
 
-        if self.dependencies.auth == "legacy":
-            self.skipTest("Not supported on legacy")
+        if self.dependencies.channel == "ibm_quantum":
+            self.skipTest("Not supported on ibm_quantum")
 
         job = self._run_program(service, backend="")
         self.assertTrue(job.backend, f"Job {job.job_id} has no backend.")
@@ -205,13 +205,13 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     def test_job_backend(self, service):
         """Test job backend."""
         job = self._run_program(service)
-        self.assertEqual(self.sim_backends[service.auth], job.backend.name)
+        self.assertEqual(self.sim_backends[service.channel], job.backend.name)
 
     @run_integration_test
     def test_job_program_id(self, service):
         """Test job program ID."""
         job = self._run_program(service)
-        self.assertEqual(self.program_ids[service.auth], job.program_id)
+        self.assertEqual(self.program_ids[service.channel], job.program_id)
 
     @run_integration_test
     def test_wait_for_final_state(self, service):

@@ -15,19 +15,19 @@
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.quantum_info import SparsePauliOp
 
-from qiskit_ibm_runtime import IBMEstimator
-from qiskit_ibm_runtime import EstimatorResult
-from qiskit_ibm_runtime import BaseEstimator
+from qiskit_ibm_runtime import IBMEstimator, EstimatorResult, BaseEstimator
 
 from ..decorators import run_integration_test
 from ..ibm_test_case import IBMIntegrationTestCase
 
+# TODO IBMEstimator class had been deprecated, remove this file when removing IBMEstimator
+
 
 class TestIntegrationIBMEstimator(IBMIntegrationTestCase):
-    """Integration tests for Estimator primitive."""
+    """Integration tests for IBMEstimator primitive."""
 
     @run_integration_test
-    def test_estimator_primitive(self, service):
+    def test_ibm_estimator_primitive(self, service):
         """Verify if estimator primitive returns expected results"""
 
         estimator_factory = IBMEstimator(service=service, backend="ibmq_qasm_simulator")

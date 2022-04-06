@@ -16,14 +16,12 @@ from qiskit.providers.jobstatus import JobStatus
 
 QISKIT_IBM_RUNTIME_API_URL = "https://auth.quantum-computing.ibm.com/api"
 
-
 API_TO_JOB_STATUS = {
     "QUEUED": JobStatus.QUEUED,
     "RUNNING": JobStatus.RUNNING,
     "COMPLETED": JobStatus.DONE,
     "FAILED": JobStatus.ERROR,
     "CANCELLED": JobStatus.CANCELLED,
-    "CANCELLED - RAN TOO LONG": JobStatus.ERROR,
 }
 
 API_TO_JOB_ERROR_MESSAGE = {
