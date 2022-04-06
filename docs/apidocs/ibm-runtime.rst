@@ -2,8 +2,7 @@
 qiskit-ibm-runtime API Reference
 *****************************************
 
-.. toctree::
-   :maxdepth: 1
-
-   ibm_runtime
-   ibm_program
+.. automodule:: qiskit_ibm_runtime
+   :no-members:
+   :no-inherited-members:
+   :no-special-members:
