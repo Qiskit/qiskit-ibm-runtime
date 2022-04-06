@@ -47,15 +47,12 @@ Next Steps
 
 `Getting started <getting_started.html>`_
 
-`How to guides <how_tos.html>`_
 
 .. toctree::
     :hidden:
 
     Overview <self>
     Getting Started <getting_started>
-    How to <how_tos>
-    Explanation <explanations>
     Tutorials <tutorials>
     API Reference <apidocs/ibm-runtime>
     FAQs <faqs>

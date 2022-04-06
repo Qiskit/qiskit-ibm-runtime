@@ -68,6 +68,6 @@ Run the Hello World program to ensure that your environment is set up properly:
 Getting started with Primitives
 =================================
 
-`How to get started with Sampler </>`_
+`Getting started with Sampler </>`_
 
-`How to get started with Estimator </>`_
+`Getting started with Estimator </>`_
