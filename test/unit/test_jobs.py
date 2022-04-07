@@ -34,7 +34,7 @@ from .mock.fake_runtime_client import (
 )
 from .mock.fake_runtime_service import FakeRuntimeService
 from ..ibm_test_case import IBMTestCase
-from ..decorators import run_legacy_and_cloud_fake
+from ..decorators import run_quantum_and_cloud_fake
 from ..program import run_program, upload_program
 from ..serialization import get_complex_types
 from ..utils import mock_wait_for_final_state
@@ -43,7 +43,7 @@ from ..utils import mock_wait_for_final_state
 class TestRuntimeJob(IBMTestCase):
     """Class for testing runtime jobs."""
 
-    @run_legacy_and_cloud_fake
+    @run_quantum_and_cloud_fake
     def test_run_program(self, service):
         """Test running program."""
         params = {"param1": "foo"}
@@ -57,28 +57,28 @@ class TestRuntimeJob(IBMTestCase):
             self.assertEqual(job.status(), JobStatus.DONE)
             self.assertTrue(job.result())
 
-    @run_legacy_and_cloud_fake
+    @run_quantum_and_cloud_fake
     def test_run_phantom_program(self, service):
         """Test running a phantom program."""
         with self.assertRaises(RuntimeProgramNotFound):
             _ = run_program(service=service, program_id="phantom_program")
 
-    @run_legacy_and_cloud_fake
+    @run_quantum_and_cloud_fake
     def test_run_program_phantom_backend(self, service):
         """Test running on a phantom backend."""
         with self.assertRaises(QiskitBackendNotFoundError):
             _ = run_program(service=service, backend_name="phantom_backend")
 
-    def test_run_program_missing_backend_legacy(self):
-        """Test running a legacy program with no backend."""
-        service = FakeRuntimeService(auth="legacy", token="my_token")
+    def test_run_program_missing_backend_ibm_quantum(self):
+        """Test running an ibm_quantum program with no backend."""
+        service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
         with self.assertRaises(IBMInputValueError):
             _ = run_program(service=service, backend_name="")
 
-    def test_run_program_missing_backend_cloud(self):
-        """Test running a cloud program with no backend."""
+    def test_run_program_missing_backend_ibm_cloud(self):
+        """Test running an ibm_cloud program with no backend."""
         service = FakeRuntimeService(
-            auth="cloud",
+            channel="ibm_cloud",
             token="my_token",
             instance="crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
         )
@@ -87,7 +87,7 @@ class TestRuntimeJob(IBMTestCase):
 
     def test_run_program_default_hgp_backend(self):
         """Test running a program with a backend in default hgp."""
-        service = FakeRuntimeService(auth="legacy", token="my_token")
+        service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
         backend = FakeRuntimeService.DEFAULT_COMMON_BACKEND
         default_hgp = list(service._hgps.values())[0]
         self.assertIn(backend, default_hgp.backends.keys())
@@ -99,7 +99,7 @@ class TestRuntimeJob(IBMTestCase):
 
     def test_run_program_non_default_hgp_backend(self):
         """Test running a program with a backend in non-default hgp."""
-        service = FakeRuntimeService(auth="legacy", token="my_token")
+        service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
         backend = FakeRuntimeService.DEFAULT_UNIQUE_BACKEND_PREFIX + "1"
         default_hgp = list(service._hgps.values())[0]
         self.assertNotIn(backend, default_hgp.backends.keys())
@@ -108,7 +108,7 @@ class TestRuntimeJob(IBMTestCase):
 
     def test_run_program_by_hgp_backend(self):
         """Test running a program with both backend and hgp."""
-        service = FakeRuntimeService(auth="legacy", token="my_token")
+        service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
         backend = FakeRuntimeService.DEFAULT_COMMON_BACKEND
         non_default_hgp = list(service._hgps.keys())[1]
         job = run_program(
@@ -119,7 +119,7 @@ class TestRuntimeJob(IBMTestCase):
 
     def test_run_program_by_hgp_bad_backend(self):
         """Test running a program with backend not in hgp."""
-        service = FakeRuntimeService(auth="legacy", token="my_token")
+        service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
         backend = FakeRuntimeService.DEFAULT_UNIQUE_BACKEND_PREFIX + "1"
         default_hgp = list(service._hgps.values())[0]
         self.assertNotIn(backend, default_hgp.backends.keys())
@@ -130,17 +130,17 @@ class TestRuntimeJob(IBMTestCase):
 
     def test_run_program_by_phantom_hgp(self):
         """Test running a program with a phantom hgp."""
-        service = FakeRuntimeService(auth="legacy", token="my_token")
+        service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
         with self.assertRaises(IBMInputValueError):
             _ = run_program(service=service, instance="h/g/p")
 
     def test_run_program_by_bad_hgp(self):
         """Test running a program with a bad hgp."""
-        service = FakeRuntimeService(auth="legacy", token="my_token")
+        service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
         with self.assertRaises(IBMInputValueError):
             _ = run_program(service=service, instance="foo")
 
-    @run_legacy_and_cloud_fake
+    @run_quantum_and_cloud_fake
     def test_run_program_with_custom_runtime_image(self, service):
         """Test running program with a custom image."""
         params = {"param1": "foo"}
@@ -156,14 +156,14 @@ class TestRuntimeJob(IBMTestCase):
         self.assertEqual(job.status(), JobStatus.DONE)
         self.assertEqual(job.image, image)
 
-    @run_legacy_and_cloud_fake
+    @run_quantum_and_cloud_fake
     def test_run_program_with_custom_log_level(self, service):
         """Test running program with a custom image."""
         job = run_program(service=service, log_level="DEBUG")
         job_raw = service._api_client._get_job(job.job_id)
         self.assertEqual(job_raw.log_level, "DEBUG")
 
-    @run_legacy_and_cloud_fake
+    @run_quantum_and_cloud_fake
     def test_run_program_failed(self, service):
         """Test a failed program execution."""
         job = run_program(service=service, job_classes=FailedRuntimeJob)
@@ -178,7 +178,7 @@ class TestRuntimeJob(IBMTestCase):
             with self.assertRaises(RuntimeJobFailureError):
                 job.result()
 
-    @run_legacy_and_cloud_fake
+    @run_quantum_and_cloud_fake
     def test_run_program_failed_ran_too_long(self, service):
         """Test a program that failed since it ran longer than maximum execution time."""
         job = run_program(service=service, job_classes=FailedRanTooLongRuntimeJob)
@@ -195,7 +195,7 @@ class TestRuntimeJob(IBMTestCase):
             with self.assertRaises(RuntimeJobFailureError):
                 job.result()
 
-    @run_legacy_and_cloud_fake
+    @run_quantum_and_cloud_fake
     def test_program_params_namespace(self, service):
         """Test running a program using parameter namespace."""
         program_id = upload_program(service)
@@ -203,7 +203,7 @@ class TestRuntimeJob(IBMTestCase):
         params.param1 = "Hello World"
         run_program(service, program_id, inputs=params)
 
-    @run_legacy_and_cloud_fake
+    @run_quantum_and_cloud_fake
     def test_cancel_job(self, service):
         """Test canceling a job."""
         job = run_program(service, job_classes=CancelableRuntimeJob)
@@ -213,7 +213,7 @@ class TestRuntimeJob(IBMTestCase):
         rjob = service.job(job.job_id)
         self.assertEqual(rjob.status(), JobStatus.CANCELLED)
 
-    @run_legacy_and_cloud_fake
+    @run_quantum_and_cloud_fake
     def test_final_result(self, service):
         """Test getting final result."""
         job = run_program(service)
@@ -221,7 +221,7 @@ class TestRuntimeJob(IBMTestCase):
             result = job.result()
             self.assertTrue(result)
 
-    @run_legacy_and_cloud_fake
+    @run_quantum_and_cloud_fake
     def test_interim_results(self, service):
         """Test getting interim results."""
         job = run_program(service)
@@ -229,28 +229,28 @@ class TestRuntimeJob(IBMTestCase):
         interim_results = job.interim_results()
         self.assertTrue(interim_results)
 
-    @run_legacy_and_cloud_fake
+    @run_quantum_and_cloud_fake
     def test_job_status(self, service):
         """Test job status."""
         job = run_program(service)
         time.sleep(random.randint(1, 5))
         self.assertTrue(job.status())
 
-    @run_legacy_and_cloud_fake
+    @run_quantum_and_cloud_fake
     def test_job_inputs(self, service):
         """Test job inputs."""
         inputs = {"param1": "foo", "param2": "bar"}
         job = run_program(service, inputs=inputs)
         self.assertEqual(inputs, job.inputs)
 
-    @run_legacy_and_cloud_fake
+    @run_quantum_and_cloud_fake
     def test_job_program_id(self, service):
         """Test job program ID."""
         program_id = upload_program(service)
         job = run_program(service, program_id=program_id)
         self.assertEqual(program_id, job.program_id)
 
-    @run_legacy_and_cloud_fake
+    @run_quantum_and_cloud_fake
     def test_wait_for_final_state(self, service):
         """Test wait for final state."""
         job = run_program(service)
@@ -258,7 +258,7 @@ class TestRuntimeJob(IBMTestCase):
             job.wait_for_final_state()
         self.assertEqual(JobStatus.DONE, job.status())
 
-    @run_legacy_and_cloud_fake
+    @run_quantum_and_cloud_fake
     def test_get_result_twice(self, service):
         """Test getting results multiple times."""
         custom_result = get_complex_types()
@@ -270,7 +270,7 @@ class TestRuntimeJob(IBMTestCase):
             _ = job.result()
             _ = job.result()
 
-    @run_legacy_and_cloud_fake
+    @run_quantum_and_cloud_fake
     def test_delete_job(self, service):
         """Test deleting a job."""
         params = {"param1": "foo"}

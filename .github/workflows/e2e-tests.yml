@@ -26,7 +26,7 @@ jobs:
       matrix:
         python-version: [ 3.9 ]
         os: [ "ubuntu-latest" ]
-        environment: [ "legacy-production", "legacy-staging", "cloud-production", "cloud-staging" ]
+        environment: [ "ibm-quantum-production", "ibm-quantum-staging", "ibm-cloud-production", "ibm-cloud-staging" ]
     environment: ${{ matrix.environment }}
     env:
       QISKIT_IBM_TOKEN: ${{ secrets.QISKIT_IBM_TOKEN }}

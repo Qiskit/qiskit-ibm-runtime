@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Fake legacy AuthClient."""
+"""Fake ibm_quantum AuthClient."""
 
 from typing import Dict, List, Union, Optional
 

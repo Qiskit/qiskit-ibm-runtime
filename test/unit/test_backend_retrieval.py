@@ -18,20 +18,20 @@ from qiskit.test.mock.backends import FakeLima
 from .mock.fake_account_client import BaseFakeAccountClient
 from .mock.fake_runtime_service import FakeRuntimeService
 from ..ibm_test_case import IBMTestCase
-from ..decorators import run_legacy_and_cloud_fake
+from ..decorators import run_quantum_and_cloud_fake
 
 
 class TestBackendFilters(IBMTestCase):
     """Qiskit Backend Filtering Tests."""
 
-    @run_legacy_and_cloud_fake
+    @run_quantum_and_cloud_fake
     def test_no_filter(self, service):
         """Test no filtering."""
         # FakeRuntimeService by default creates 3 backends.
         backend_name = [back.name for back in service.backends()]
         self.assertEqual(len(backend_name), 3)
 
-    @run_legacy_and_cloud_fake
+    @run_quantum_and_cloud_fake
     def test_filter_by_name(self, service):
         """Test filtering by name."""
         for name in [
@@ -42,9 +42,9 @@ class TestBackendFilters(IBMTestCase):
                 backend_name = [back.name for back in service.backends(name=name)]
                 self.assertEqual(len(backend_name), 1)
 
-    def test_filter_by_instance_legacy(self):
-        """Test filtering by instance."""
-        service = FakeRuntimeService(auth="legacy", token="my_token")
+    def test_filter_by_instance_ibm_quantum(self):
+        """Test filtering by instance (works only on ibm_quantum)."""
+        service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
         for hgp in FakeRuntimeService.DEFAULT_HGPS:
             with self.subTest(hgp=hgp):
                 backends = service.backends(instance=hgp)
@@ -64,7 +64,7 @@ class TestBackendFilters(IBMTestCase):
 
         services = self._get_services(fake_backends)
         for service in services:
-            with self.subTest(service=service.auth):
+            with self.subTest(service=service.channel):
                 filtered_backends = service.backends(n_qubits=n_qubits, local=False)
                 self.assertTrue(len(filtered_backends), 1)
                 self.assertEqual(
@@ -83,7 +83,7 @@ class TestBackendFilters(IBMTestCase):
 
         services = self._get_services(fake_backends)
         for service in services:
-            with self.subTest(service=service.auth):
+            with self.subTest(service=service.channel):
                 filtered_backends = service.backends(
                     operational=True,  # from status
                     simulator=True,  # from configuration
@@ -104,7 +104,7 @@ class TestBackendFilters(IBMTestCase):
 
         services = self._get_services(fake_backends)
         for service in services:
-            with self.subTest(service=service.auth):
+            with self.subTest(service=service.channel):
                 filtered_backends = service.backends(
                     filters=lambda x: (x.configuration().n_qubits >= 5)
                 )
@@ -126,7 +126,7 @@ class TestBackendFilters(IBMTestCase):
 
         services = self._get_services(fake_backends)
         for service in services:
-            with self.subTest(service=service.auth):
+            with self.subTest(service=service.channel):
                 backend = service.least_busy()
                 self.assertEqual(backend.name, "bingo")
 
@@ -141,7 +141,7 @@ class TestBackendFilters(IBMTestCase):
 
         services = self._get_services(fake_backends)
         for service in services:
-            with self.subTest(service=service.auth):
+            with self.subTest(service=service.channel):
                 filtered_backends = service.backends(min_num_qubits=n_qubits)
                 self.assertTrue(len(filtered_backends), 2)
                 for backend in filtered_backends:
@@ -154,13 +154,13 @@ class TestBackendFilters(IBMTestCase):
             "account_client": BaseFakeAccountClient(num_backends=num_backends),
             "num_hgps": 2,
         }
-        legacy_service = FakeRuntimeService(
-            auth="legacy",
+        ibm_quantum_service = FakeRuntimeService(
+            channel="ibm_quantum",
             token="my_token",
             instance="h/g/p",
             test_options=test_options,
         )
-        backends = legacy_service.backends(instance="hub0/group0/project0")
+        backends = ibm_quantum_service.backends(instance="hub0/group0/project0")
         self.assertEqual(len(backends), num_backends)
 
     def _get_specs(self, **kwargs):
@@ -177,49 +177,49 @@ class TestBackendFilters(IBMTestCase):
         return specs
 
     def _get_services(self, fake_backends):
-        """Get both cloud and legacy services initialized with fake backends."""
+        """Get both ibm_cloud and ibm_quantum services initialized with fake backends."""
         test_options = {"account_client": BaseFakeAccountClient(specs=fake_backends)}
-        legacy_service = FakeRuntimeService(
-            auth="legacy",
+        ibm_quantum_service = FakeRuntimeService(
+            channel="ibm_quantum",
             token="my_token",
             instance="h/g/p",
             test_options=test_options,
         )
         cloud_service = FakeRuntimeService(
-            auth="cloud",
+            channel="ibm_cloud",
             token="my_token",
             instance="my_instance",
             test_options=test_options,
         )
-        return [legacy_service, cloud_service]
+        return [ibm_quantum_service, cloud_service]
 
 
 class TestGetBackend(IBMTestCase):
-    """Test getting a backend via legacy api."""
+    """Test getting a backend via ibm_quantum api."""
 
     def test_get_common_backend(self):
         """Test getting a backend that is in default and non-default hgp."""
-        service = FakeRuntimeService(auth="legacy", token="my_token")
+        service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
         backend = service.backend(FakeRuntimeService.DEFAULT_COMMON_BACKEND)
         self.assertEqual(backend._api_client.hgp, list(service._hgps.keys())[0])
 
     def test_get_unique_backend_default_hgp(self):
         """Test getting a backend in the default hgp."""
-        service = FakeRuntimeService(auth="legacy", token="my_token")
+        service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
         backend_name = FakeRuntimeService.DEFAULT_UNIQUE_BACKEND_PREFIX + "0"
         backend = service.backend(backend_name)
         self.assertEqual(backend._api_client.hgp, list(service._hgps.keys())[0])
 
     def test_get_unique_backend_non_default_hgp(self):
         """Test getting a backend in the non default hgp."""
-        service = FakeRuntimeService(auth="legacy", token="my_token")
+        service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
         backend_name = FakeRuntimeService.DEFAULT_UNIQUE_BACKEND_PREFIX + "1"
         backend = service.backend(backend_name)
         self.assertEqual(backend._api_client.hgp, list(service._hgps.keys())[1])
 
     def test_get_phantom_backend(self):
         """Test getting a phantom backend."""
-        service = FakeRuntimeService(auth="legacy", token="my_token")
+        service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
         with self.assertRaises(QiskitBackendNotFoundError):
             service.backend("phantom")
 
@@ -227,7 +227,7 @@ class TestGetBackend(IBMTestCase):
         """Test getting a backend by hgp."""
         hgp = FakeRuntimeService.DEFAULT_HGPS[1]
         backend_name = FakeRuntimeService.DEFAULT_COMMON_BACKEND
-        service = FakeRuntimeService(auth="legacy", token="my_token")
+        service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
         backend = service.backend(backend_name, instance=hgp)
         self.assertEqual(backend._api_client.hgp, hgp)
 
@@ -235,6 +235,6 @@ class TestGetBackend(IBMTestCase):
         """Test getting a backend not in hgp."""
         hgp = FakeRuntimeService.DEFAULT_HGPS[1]
         backend_name = FakeRuntimeService.DEFAULT_UNIQUE_BACKEND_PREFIX + "0"
-        service = FakeRuntimeService(auth="legacy", token="my_token")
+        service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
         with self.assertRaises(QiskitBackendNotFoundError):
             _ = service.backend(backend_name, instance=hgp)
