@@ -12,21 +12,22 @@
 
 """Integration tests for Sampler primitive."""
 
-from qiskit import QuantumCircuit
+from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.library import RealAmplitudes
 
-from qiskit_ibm_runtime import IBMSampler
-from qiskit_ibm_runtime import BaseSampler, SamplerResult
+from qiskit_ibm_runtime import IBMSampler, BaseSampler, SamplerResult
 
 from ..decorators import run_integration_test
 from ..ibm_test_case import IBMIntegrationTestCase
 
+# TODO IBMSampler class had been deprecated, remove this file when removing IBMSampler
+
 
 class TestIntegrationIBMSampler(IBMIntegrationTestCase):
-    """Integration tests for Sampler primitive."""
+    """Integration tests for IBMSampler primitive."""
 
     @run_integration_test
-    def test_sampler_primitive_non_parameterized_circuits(self, service):
+    def test_ibm_sampler_primitive_non_parameterized_circuits(self, service):
         """Verify if sampler primitive returns expected results for non-parameterized circuits."""
 
         sampler_factory = IBMSampler(service=service, backend="ibmq_qasm_simulator")
@@ -75,7 +76,7 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
             self.assertEqual(len(result3.metadata), len(circuit_indices3))
 
     @run_integration_test
-    def test_sampler_primitive_parameterized_circuits(self, service):
+    def test_ibm_sampler_primitive_parameterized_circuits(self, service):
         """Verify if sampler primitive returns expected results for parameterized circuits."""
 
         sampler_factory = IBMSampler(service=service, backend="ibmq_qasm_simulator")

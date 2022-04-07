@@ -43,12 +43,21 @@ from qiskit.circuit import (
     ParameterVector,
     QuantumCircuit,
     QuantumRegister,
-    qpy_serialization,
 )
 from qiskit.circuit.library import BlueprintCircuit
 from qiskit.result import Result
-
 from qiskit.version import __version__ as _terra_version_string
+
+from ..qpy import (
+    _write_parameter,
+    _write_parameter_expression,
+    _read_parameter_expression,
+    _read_parameter_expression_v3,
+    _read_parameter,
+    dump,
+    load,
+)
+
 
 _TERRA_VERSION = tuple(int(x) for x in _terra_version_string.split(".")[:3])
 
@@ -203,20 +212,20 @@ class RuntimeEncoder(json.JSONEncoder):
                 obj = obj.decompose()
             value = _serialize_and_encode(
                 data=obj,
-                serializer=lambda buff, data: qpy_serialization.dump(data, buff),
+                serializer=lambda buff, data: dump(data, buff),  # type: ignore[no-untyped-call]
             )
             return {"__type__": "QuantumCircuit", "__value__": value}
         if isinstance(obj, Parameter):
             value = _serialize_and_encode(
                 data=obj,
-                serializer=qpy_serialization._write_parameter,
+                serializer=_write_parameter,
                 compress=False,
             )
             return {"__type__": "Parameter", "__value__": value}
         if isinstance(obj, ParameterExpression):
             value = _serialize_and_encode(
                 data=obj,
-                serializer=qpy_serialization._write_parameter_expression,
+                serializer=_write_parameter_expression,
                 compress=False,
             )
             return {"__type__": "ParameterExpression", "__value__": value}
@@ -227,7 +236,7 @@ class RuntimeEncoder(json.JSONEncoder):
             quantum_circuit.append(obj, quantum_register)
             value = _serialize_and_encode(
                 data=quantum_circuit,
-                serializer=lambda buff, data: qpy_serialization.dump(data, buff),
+                serializer=lambda buff, data: dump(data, buff),  # type: ignore[no-untyped-call]
             )
             return {"__type__": "Instruction", "__value__": value}
         if hasattr(obj, "settings"):
@@ -256,11 +265,11 @@ class RuntimeDecoder(json.JSONDecoder):
         self.__parameter_vectors: Dict[str, Tuple[ParameterVector, set]] = {}
         self.__read_parameter_expression = (
             functools.partial(
-                qpy_serialization._read_parameter_expression_v3,
+                _read_parameter_expression_v3,
                 vectors=self.__parameter_vectors,
             )
             if _TERRA_VERSION >= (0, 19, 1)
-            else qpy_serialization._read_parameter_expression
+            else _read_parameter_expression
         )
 
     def object_hook(self, obj: Any) -> Any:
@@ -280,19 +289,17 @@ class RuntimeDecoder(json.JSONDecoder):
             if obj_type == "set":
                 return set(obj_val)
             if obj_type == "QuantumCircuit":
-                return _decode_and_deserialize(obj_val, qpy_serialization.load)[0]
+                return _decode_and_deserialize(obj_val, load)[0]
             if obj_type == "Parameter":
-                return _decode_and_deserialize(
-                    obj_val, qpy_serialization._read_parameter, False
-                )
+                return _decode_and_deserialize(obj_val, _read_parameter, False)
             if obj_type == "ParameterExpression":
                 return _decode_and_deserialize(
-                    obj_val, self.__read_parameter_expression, False
+                    obj_val, self.__read_parameter_expression, False  # type: ignore[arg-type]
                 )
             if obj_type == "Instruction":
                 # Standalone instructions are encoded as the sole instruction in a QPY serialized circuit
                 # to deserialize load qpy circuit and return first instruction object in that circuit.
-                circuit = _decode_and_deserialize(obj_val, qpy_serialization.load)[0]
+                circuit = _decode_and_deserialize(obj_val, load)[0]
                 return circuit.data[0][0]
             if obj_type == "settings":
                 return _deserialize_from_settings(

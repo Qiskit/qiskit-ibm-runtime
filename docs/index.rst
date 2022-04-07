@@ -46,10 +46,10 @@ and specified using a program name and a small number of input arguments, e.g.:
 
 .. code-block:: python
 
-    from qiskit_ibm_runtime import IBMRuntimeService
+    from qiskit_ibm_runtime import QiskitRuntimeService
 
     # Authenticate with the service.
-    service = IBMRuntimeService()
+    service = QiskitRuntimeService()
 
     # Print all available programs.
     service.pprint_programs()

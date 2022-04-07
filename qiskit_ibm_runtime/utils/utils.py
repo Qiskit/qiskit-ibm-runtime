@@ -38,9 +38,9 @@ def get_resource_controller_api_url(cloud_url: str) -> str:
     return f"{parsed_url.scheme}://resource-controller.{parsed_url.hostname}"
 
 
-def resolve_crn(auth: str, url: str, instance: str, token: str) -> List[str]:
+def resolve_crn(channel: str, url: str, instance: str, token: str) -> List[str]:
     """Resolves the Cloud Resource Name (CRN) for the given cloud account."""
-    if auth != "cloud":
+    if channel != "ibm_cloud":
         raise ValueError("CRN value can only be resolved for cloud accounts.")
 
     if is_crn(instance):
@@ -85,7 +85,7 @@ def get_runtime_api_base_url(url: str, instance: str) -> str:
         Runtime API base URL
     """
 
-    # legacy: no need to resolve runtime API URL
+    # ibm_quantum: no need to resolve runtime API URL
     api_host = url
 
     # cloud: compute runtime API URL based on crn and URL
