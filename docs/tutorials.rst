@@ -26,6 +26,16 @@ In-depth
 
 
 
+Primitives
+==========
+
+.. nbgallery::
+   :glob:
+
+   tutorials/grover_with_sampler*
+
+
+
 Qiskit Runtime Programs
 =======================
 
