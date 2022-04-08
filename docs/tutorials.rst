@@ -32,6 +32,7 @@ Primitives
 .. nbgallery::
    :glob:
 
+   tutorials/user-transpiled-circuits*
    tutorials/grover_with_sampler*
 
 
