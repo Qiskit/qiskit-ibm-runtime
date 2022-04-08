@@ -26,6 +26,18 @@ In-depth
 
 
 
+Primitives
+==========
+
+.. nbgallery::
+   :glob:
+
+   tutorials/user-transpiled-circuits*
+   tutorials/vqe_with_estimator*
+   tutorials/grover_with_sampler*
+
+
+
 Qiskit Runtime Programs
 =======================
 
