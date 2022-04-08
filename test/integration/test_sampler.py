@@ -12,8 +12,8 @@
 
 """Integration tests for Sampler primitive."""
 
-from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.library import RealAmplitudes
+from qiskit.test.reference_circuits import ReferenceCircuits
 
 from qiskit_ibm_runtime import Sampler, BaseSampler, SamplerResult
 
@@ -30,10 +30,7 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
 
         options = {"backend": "ibmq_qasm_simulator"}
 
-        bell = QuantumCircuit(2)
-        bell.h(0)
-        bell.cx(0, 1)
-        bell.measure_all()
+        bell = ReferenceCircuits.bell()
 
         # executes a Bell circuit
         with Sampler(circuits=bell, service=service, options=options) as sampler:
@@ -44,6 +41,8 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
             self.assertIsInstance(result, SamplerResult)
             self.assertEqual(len(result.quasi_dists), len(circuit_indices))
             self.assertEqual(len(result.metadata), len(circuit_indices))
+            self.assertAlmostEqual(result.quasi_dists[0]["11"], 0.5, delta=0.05)
+            self.assertAlmostEqual(result.quasi_dists[0]["00"], 0.5, delta=0.05)
 
         # executes three Bell circuits
         with Sampler(circuits=[bell] * 3, service=service, options=options) as sampler:
@@ -56,6 +55,9 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
             self.assertIsInstance(result1, SamplerResult)
             self.assertEqual(len(result1.quasi_dists), len(circuit_indices1))
             self.assertEqual(len(result1.metadata), len(circuit_indices1))
+            for i in range(len(circuit_indices1)):
+                self.assertAlmostEqual(result1.quasi_dists[i]["11"], 0.5, delta=0.05)
+                self.assertAlmostEqual(result1.quasi_dists[i]["00"], 0.5, delta=0.05)
 
             circuit_indices2 = [0, 2]
             result2 = sampler(
@@ -64,6 +66,9 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
             self.assertIsInstance(result2, SamplerResult)
             self.assertEqual(len(result2.quasi_dists), len(circuit_indices2))
             self.assertEqual(len(result2.metadata), len(circuit_indices2))
+            for i in range(len(circuit_indices2)):
+                self.assertAlmostEqual(result2.quasi_dists[i]["11"], 0.5, delta=0.05)
+                self.assertAlmostEqual(result2.quasi_dists[i]["00"], 0.5, delta=0.05)
 
             circuit_indices3 = [1, 2]
             result3 = sampler(
@@ -72,6 +77,9 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
             self.assertIsInstance(result3, SamplerResult)
             self.assertEqual(len(result3.quasi_dists), len(circuit_indices3))
             self.assertEqual(len(result3.metadata), len(circuit_indices3))
+            for i in range(len(circuit_indices3)):
+                self.assertAlmostEqual(result3.quasi_dists[i]["11"], 0.5, delta=0.05)
+                self.assertAlmostEqual(result3.quasi_dists[i]["00"], 0.5, delta=0.05)
 
     @run_integration_test
     def test_sampler_primitive_parameterized_circuits(self, service):
