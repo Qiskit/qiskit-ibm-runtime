@@ -33,6 +33,7 @@ Primitives
    :glob:
 
    tutorials/user-transpiled-circuits*
+   tutorials/vqe_with_estimator*
    tutorials/grover_with_sampler*
 
 
