@@ -107,10 +107,13 @@ class RuntimeSession:
         Returns:
             Session information.
         """
-        out = {"backend": self._options.backend_name or "unknown"}  # type: ignore
+        out = {}
+        if self._options:
+            out["backend"] = self._options["backend_name"] or "unknown"  # type: ignore
         if self._job:
-            out["job id"] = self._job.job_id
-            out["job status"] = self._job.status()
+            out["job_id"] = self._job.job_id
+            out["job_status"] = self._job.status()
+            out["backend"] = self._job.backend
         return out
 
     def close(self) -> None:
