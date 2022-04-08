@@ -26,6 +26,16 @@ In-depth
 
 
 
+Primitives
+==========
+
+.. nbgallery::
+   :glob:
+
+   tutorials/vqe_with_estimator*
+
+
+
 Qiskit Runtime Programs
 =======================
 
