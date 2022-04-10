@@ -5,41 +5,41 @@ Qiskit Runtime overview
 Overview
 ==============
 
-Qiskit Runtime is a quantum computing service and programming model that allows users to optimize 
-workloads and efficiently execute them on quantum systems at scale. The programming model introduces 
-a set of interfaces, in the form of primitive programs.
+Qiskit Runtime is a quantum computing service and programming model that allows users to 
+optimize workloads and efficiently execute them on quantum systems at scale. The 
+programming model extends the existing interface in Qiskit with a set of new primitive 
+programs.
 
-.. figure:: images/runtime_arch.png
+.. figure:: images/runtime-architecture.png
     :align: center
 
 
 Key Concepts
 ==============
 
-Runtimes
-------------------
+**Primitives**
 
-Primitives are predefined programs that provide a simplified interface for building and customization 
-applications. The initial release of Qiskit Runtime includes two primitives: Estimator and Sampler. 
-They perform foundational quantum computing tasks and act as an entry point to the Qiskit Runtime service.
+Primitives are predefined programs that provide a simplified interface for defining 
+near-time quantum-classical workloads required to efficiently build and customize 
+applications. The initial release of Qiskit Runtime includes two primitives: Estimator 
+and Sampler. They perform foundational quantum computing tasks and act as an entry point 
+to the Qiskit Runtime service.
 
 
-Primitives
-------------------
+**Sampler**
 
-The estimator primitive allows users to efficiently calculate and interpret expectation values of 
-quantum operators required for many algorithms. Users specify a list of circuits and observables, 
-then tell the program how to selectively group between the lists to efficiently evaluate expectation 
-values and variances for a given parameter input.
+This is a program that takes a user circuit as an input and generates an error-mitigated 
+readout of quasiprobabilities. This provides users a way to better evaluate shot results 
+using error mitigation and enables them to more efficiently evaluate the possibility of 
+multiple relevant data points in the context of destructive interference.
 
-Sampler
-------------------
-The sampler primitive allows users to more accurately contextualize counts. It takes a user circuit 
-as an input and generates an error-mitigated readout of quasiprobabilities. This enables users to 
-more efficiently evaluate the possibility of multiple relevant data points in the context of 
-destructive interference.
 
-`Learn more <https://cloud.ibm.com/docs/quantum-computing?topic=quantum-computing-overview>`_
+**Estimator**
+
+The estimator primitive allows users to efficiently calculate and interpret expectation 
+values of quantum operators required for many algorithms. Users specify a list of circuits 
+and observables, then tell the program how to selectively group between the lists to 
+efficiently evaluate expectation values and variances for a given parameter input.
 
 
 Next Steps
@@ -47,6 +47,7 @@ Next Steps
 
 `Getting started <getting_started.html>`_
 
+`Tutorials <tutorials.html>`_
 
 .. toctree::
     :hidden:
