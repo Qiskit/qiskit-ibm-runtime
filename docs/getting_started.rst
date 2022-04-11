@@ -70,8 +70,8 @@ Getting started with Primitives
 
 .. nbgallery::
 
-   tutorials/how-to-getting-started-with-estimator
    tutorials/how-to-getting-started-with-sampler
+   tutorials/how-to-getting-started-with-estimator
 
 
 `See more tutorials <tutorials.html>`_
