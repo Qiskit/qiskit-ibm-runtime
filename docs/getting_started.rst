@@ -23,10 +23,10 @@ You can access Qiskit Runtime from either IBM Quantum or IBM Cloud.
 
 .. code-block:: python
 
-    from qiskit_ibm_runtime import IBMRuntimeService
+    from qiskit_ibm_runtime import QiskitRuntimeService
 
     # Save an IBM Quantum account.
-    IBMRuntimeService.save_account(channel="ibm_quantum", token="MY_IBM_QUANTUM_TOKEN")
+    QiskitRuntimeService.save_account(channel="ibm_quantum", token="MY_IBM_QUANTUM_TOKEN")
 
 `Retrieve IBM Quantum token <https://quantum-computing.ibm.com/account>`_
 
@@ -35,10 +35,10 @@ You can access Qiskit Runtime from either IBM Quantum or IBM Cloud.
 
 .. code-block:: python
 
-    from qiskit_ibm_runtime import IBMRuntimeService
+    from qiskit_ibm_runtime import QiskitRuntimeService
 
     # Save an IBM Cloud account.
-    IBMRuntimeService.save_account(channel="ibm_cloud", token="MY_IBM_CLOUD_API_KEY", instance="MY_IBM_CLOUD_CRN")
+    QiskitRuntimeService.save_account(channel="ibm_cloud", token="MY_IBM_CLOUD_API_KEY", instance="MY_IBM_CLOUD_CRN")
 
 `Retrieve IBM Cloud token <https://cloud.ibm.com/docs/quantum-computing?topic=quantum-computing-quickstart>`_
 
@@ -51,9 +51,9 @@ Run the Hello World program to ensure that your environment is set up properly:
 .. code-block:: python
 
     from qiskit.test.reference_circuits import ReferenceCircuits
-    from qiskit_ibm_runtime import IBMRuntimeService
+    from qiskit_ibm_runtime import QiskitRuntimeService
 
-    service = IBMRuntimeService()
+    service = QiskitRuntimeService()
     program_inputs = {'iterations': 1}
     options = {"backend_name": "ibmq_qasm_simulator"}
     job = service.run(program_id="hello-world",
