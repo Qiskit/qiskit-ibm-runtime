@@ -42,14 +42,6 @@ In-depth
    tutorials/sample_vqe_program/*
    tutorials/sample_expval_program/*
 
-How-to Guides
-=============
-
-.. nbgallery::
-   :glob:
-
-   tutorials/how-to-sampler*
-   tutorials/how-to-estimator*
 
 Qiskit Runtime Programs
 =======================
