@@ -18,10 +18,10 @@ Primitives
 
 .. nbgallery::
 
-   tutorials/vqe_with_estimator
    tutorials/grover_with_sampler
    tutorials/user-transpiled-circuits
    tutorials/sea_with_sampler
+   tutorials/vqe_with_estimator
 
 
 Basic
