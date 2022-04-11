@@ -28,7 +28,7 @@ You can access Qiskit Runtime from either IBM Quantum or IBM Cloud.
     # Save an IBM Quantum account.
     IBMRuntimeService.save_account(channel="ibm_quantum", token="MY_IBM_QUANTUM_TOKEN")
 
-`Retrieve token </>`_
+`Retrieve IBM Quantum token <https://quantum-computing.ibm.com/account>`_
 
 
 **IBM Cloud**
@@ -40,7 +40,7 @@ You can access Qiskit Runtime from either IBM Quantum or IBM Cloud.
     # Save an IBM Cloud account.
     IBMRuntimeService.save_account(channel="ibm_cloud", token="MY_IBM_CLOUD_API_KEY", instance="MY_IBM_CLOUD_CRN")
 
-`Retrieve token </>`_
+`Retrieve IBM Cloud token <https://cloud.ibm.com/docs/quantum-computing?topic=quantum-computing-quickstart>`_
 
 
 Test your setup
@@ -68,6 +68,10 @@ Run the Hello World program to ensure that your environment is set up properly:
 Getting started with Primitives
 =================================
 
-`Getting started with Sampler </>`_
+.. nbgallery::
 
-`Getting started with Estimator </>`_
+   tutorials/how-to-getting-started-with-estimator
+   tutorials/how-to-getting-started-with-sampler
+
+
+`See more tutorials <tutorials.html>`_
