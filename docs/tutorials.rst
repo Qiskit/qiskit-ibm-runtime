@@ -4,6 +4,24 @@
 Tutorials
 =========
 
+How-to guides
+=================================
+
+.. nbgallery::
+
+   tutorials/how-to-getting-started-with-sampler
+   tutorials/how-to-getting-started-with-estimator
+
+
+Primitives
+=================================
+
+.. nbgallery::
+
+   tutorials/vqe_with_estimator
+   tutorials/grover_with_sampler
+   tutorials/user-transpiled-circuits
+
 
 Basic
 =====
@@ -14,7 +32,6 @@ Basic
    tutorials/0*
 
 
-
 In-depth
 ========
 
@@ -23,19 +40,6 @@ In-depth
 
    tutorials/sample_vqe_program/*
    tutorials/sample_expval_program/*
-
-
-
-Primitives
-==========
-
-.. nbgallery::
-   :glob:
-
-   tutorials/user-transpiled-circuits*
-   tutorials/vqe_with_estimator*
-   tutorials/grover_with_sampler*
-
 
 
 Qiskit Runtime Programs
