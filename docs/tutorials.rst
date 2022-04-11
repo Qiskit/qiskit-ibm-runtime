@@ -51,6 +51,8 @@ Qiskit Runtime Programs
    tutorials/qka*
    tutorials/vqe*
 
+`See API reference <apidocs/ibm-runtime.html>`_
+
 
 .. Hiding - Indices and tables
    :ref:`genindex`
