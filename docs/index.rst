@@ -1,80 +1,65 @@
 #########################################
-Qiskit Runtime documentation
+Qiskit Runtime overview
 #########################################
 
-Qiskit Runtime
+Overview
 ==============
 
-Qiskit Runtime is a new architecture offered by IBM Quantum that streamlines computations requiring
-many iterations. These experiments will execute significantly faster within this improved hybrid quantum/classical process.
+Qiskit Runtime is a quantum computing service and programming model that allows users to 
+optimize workloads and efficiently execute them on quantum systems at scale. The 
+programming model extends the existing interface in Qiskit with a set of new primitive 
+programs.
 
-Using Qiskit Runtime, for example, a research team at IBM Quantum was able to achieve
-`120x speedup <https://research.ibm.com/blog/120x-quantum-speedup>`_ in their lithium hydride simulation.
-
-.. figure:: images/runtime_arch.png
+.. figure:: images/runtime-architecture.png
     :align: center
 
-Qiskit Runtime allows authorized users to upload their Qiskit quantum programs for themselves or
-others to use. A Qiskit quantum program, also called a Qiskit runtime program, is a piece of Python code
-that takes certain inputs, performs
-quantum and maybe classical computation, and returns the processing results. The same or other
-authorized users can then invoke these quantum programs by simply passing in the required input parameters.
+
+Key Concepts
+==============
+
+**Primitives**
+
+Primitives are predefined programs that provide a simplified interface for defining 
+near-time quantum-classical workloads required to efficiently build and customize 
+applications. The initial release of Qiskit Runtime includes two primitives: Estimator 
+and Sampler. They perform foundational quantum computing tasks and act as an entry point 
+to the Qiskit Runtime service.
 
 
-Primitive programs
-------------------
+**Sampler**
 
-Primitive programs are predefined Qiskit Runtime programs that provide a simplified interface
-for building and customizing applications. The
-existing Qiskit interface to backends (currently ``backend.run()``) was originally designed in
-a way that accepts a list of circuits and returns shot counts. Over time, it became clear that
-users want other pieces of information too, whether that be memory to get pre-shot readouts to
-more prominently observable expectation values coupled with all the possible ways to mitigate their error.
+This is a program that takes a user circuit as an input and generates an error-mitigated 
+readout of quasiprobabilities. This provides users a way to better evaluate shot results 
+using error mitigation and enables them to more efficiently evaluate the possibility of 
+multiple relevant data points in the context of destructive interference.
 
-Eventually, you will be able to call primitives from a generic program definitions, and use the
-primitive program interface that best suits your output needs to run circuits seamlessly and efficiently
-on IBM quantum systems.
 
-Qiskit Runtime IBM Quantum Client
+**Estimator**
+
+The estimator primitive allows users to efficiently calculate and interpret expectation 
+values of quantum operators required for many algorithms. Users specify a list of circuits 
+and observables, then tell the program how to selectively group between the lists to 
+efficiently evaluate expectation values and variances for a given parameter input.
+
+
+Next Steps
 =================================
 
-``qiskit-ibm-runtime`` provides the interface to interact with Qiskit Runtime. You can, for example,
-use it to query and execute runtime programs:
+`Getting started <getting_started.html>`_
 
-In general, most users of the Qiskit Runtime execute programs that are predefined
-and specified using a program name and a small number of input arguments, e.g.:
-
-.. code-block:: python
-
-    from qiskit_ibm_runtime import QiskitRuntimeService
-
-    # Authenticate with the service.
-    service = QiskitRuntimeService()
-
-    # Print all available programs.
-    service.pprint_programs()
-
-    # Run the estimator program.
-    program_inputs = {
-      "circuit": ansatz,
-      "observable": observable,
-      "parameters": parameters
-    }
-    options = {"backend_name": "ibmq_bogota"}
-    job = provider.runtime.run(program_id="estimator",
-                               options=options,
-                               inputs=program_inputs,
-                              )
-
-For additional information and usage examples see the :ref:`tutorials` page.
+`Tutorials <tutorials.html>`_
 
 .. toctree::
     :hidden:
 
-    API References <apidocs/ibm-runtime>
+    Overview <self>
+    Getting Started <getting_started>
+    Tutorials <tutorials>
+    API Reference <apidocs/ibm-runtime>
+    FAQs <faqs>
     Release Notes <release_notes>
-    Maximum Execution Time <max_time.rst>
-    Tutorials <tutorials.rst>
+    GitHub <https://github.com/Qiskit/qiskit-ibm-runtime>
+
 
 
 .. Hiding - Indices and tables
