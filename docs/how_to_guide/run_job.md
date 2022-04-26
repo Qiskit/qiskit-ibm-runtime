@@ -1,6 +1,6 @@
-# Run a job
+# Run a program
 
-This guide shows you how to submit a job to a Qiskit Runtime service instance.
+This guide shows you how to run a runtime program.
 
 You can use the [QiskitRuntimeService.run()](https://qiskit.org/documentation/partners/qiskit_ibm_runtime/stubs/qiskit_ibm_runtime.QiskitRuntimeService.run.html#qiskit_ibm_runtime.QiskitRuntimeService.run) method to invoke a runtime program. This method takes the following parameters:
 
@@ -9,6 +9,8 @@ You can use the [QiskitRuntimeService.run()](https://qiskit.org/documentation/pa
 - `options`: Runtime options. These options control the execution environment. Currently the only available option is `backend_name`, which is required.
 - `callback`: Callback function to be invoked for any interim results and final result. The callback function will receive two positional parameters: job ID and result.
 - `result_decoder`: Optional class used to decode the job result.
+
+Here is an example of running the `hello-world` program.
 
 ```python
 # Specify the program inputs here.
@@ -19,9 +21,8 @@ options = {"backend_name": "ibmq_qasm_simulator"}
 
 job = service.run(
     program_id="hello-world",
-    options=options,
     inputs=program_inputs,
-    callback=result_callback,
+    options=options
 )
 
 # Printing the job ID in case we need to retrieve it later.
