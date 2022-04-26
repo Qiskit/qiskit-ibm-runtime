@@ -1,6 +1,25 @@
 # Choose a backend
 
-This guide shows you how to see the list of available backends (physical quantum systems or simulators) and apply filters to choose a backend to run your jobs.
+This guide shows you how to specify the backend and how to see the list of available backends (physical quantum systems or simulators) and apply filters to choose a backend to run a runtime programs.
+
+## Specify the backend
+
+You can specify the backend to run a runtime program by specifying the `backend_name` option and pass to the program.
+
+```python
+options = {"backend_name": "ibmq_qasm_simulator"}
+job = service.run(
+    program_id="hello-world",
+    options=options
+)
+```
+
+For IBM Quantum, specifying the backend is required.
+
+For IBM Cloud, specifying the backend is optional. If you do not specify one, the job is sent to the least busy device that you have access to.
+
+Below you can find instructions on how to see the list of available backends and apply filters to choose a backend.
+
 
 ## See the list of available backends
 
@@ -58,5 +77,3 @@ service.backends(
     simulator=False,
     filters=lambda b: b.configuration().quantum_volume > 16)
 ```
-
-##
