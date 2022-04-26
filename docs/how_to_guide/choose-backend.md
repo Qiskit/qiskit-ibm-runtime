@@ -1,5 +1,59 @@
 # Choose a backend
 
-Before running a job, you can optionally choose a backend (a physical quantum system or a simulator) to run on.  If you do not specify one, the job is sent to the least busy device that you have access to.
+This guide shows you how to see the list of available backends (physical quantum systems or simulators) and apply filters to choose a backend to run your jobs.
 
-To find your available backends, run `service.backends()` in Qiskit and note the name of the backend you want to use.  For full details, including available options, see the [Qiskit Runtime API documentation](https://qiskit.org/documentation/partners/qiskit_ibm_runtime/stubs/qiskit_ibm_runtime.QiskitRuntimeService.backends.html#qiskit_ibm_runtime.QiskitRuntimeService.backends).
+## See the list of available backends
+
+You can see the list of available backends by calling `QiskitRuntimeService.backends()`.
+
+```python
+from qiskit_ibm_runtime import QiskitRuntimeService
+
+service = QiskitRuntimeService()
+service.backends()
+```
+
+## Apply filters for choosing backends
+
+You can apply filters for choosing backends including the following options. See [the API reference](https://qiskit.org/documentation/partners/qiskit_ibm_runtime/stubs/qiskit_ibm_runtime.QiskitRuntimeService.backends.html#qiskit_ibm_runtime.QiskitRuntimeService.backends) for more details.
+
+### Filter by backend name
+
+You can choose a backend by specifying the backend name. Here is an example to get the `ibmq_qasm_simulator` backend.
+
+```python
+service.backends(name='ibmq_qasm_simulator')
+```
+
+### Filter by minimum number of qubits
+
+You can filter backends by specifying the minimum number of qubits. Here is an example to get backends that has at least 20 qubits.
+
+```python
+service.backends(min_num_qubits=20)
+```
+
+### Filter by IBM Quantum provider hub/group/project
+
+If you are accessing Qiskit Runtime service from IBM Quantum platform, you can filter backends using the `hub/group/project` format of IBM Quantum provider. See [IBM Quantum account page](https://quantum-computing.ibm.com/account) for the list of providers you have access to. Here is an example to get backends that are availabe to the default IBM Quantum open provider.
+
+```python
+service.backends(instance='ibm-q/open/main')
+```
+
+### Filter by complex filters
+
+You can also apply more complex filters such as lambda functions. Here is an example to get backends that has quantum volume larger than 16.
+
+```python
+service.backends(
+    filters=lambda b: b.configuration().quantum_volume > 16)
+```
+
+### Filter by backend configuration or status
+
+You can specify ``True``/``False`` criteria in the backend configuration or status using optional keyword arguments `**kwargs`. Here is an example to get the operational real backends.
+
+```python
+service.backends(simulator=False, operational=True)
+```
