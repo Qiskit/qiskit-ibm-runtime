@@ -41,15 +41,6 @@ If you are accessing Qiskit Runtime service from IBM Quantum platform, you can f
 service.backends(instance='ibm-q/open/main')
 ```
 
-### Filter by complex filters
-
-You can also apply more complex filters such as lambda functions. Here is an example to get backends that has quantum volume larger than 16.
-
-```python
-service.backends(
-    filters=lambda b: b.configuration().quantum_volume > 16)
-```
-
 ### Filter by backend configuration or status
 
 You can specify ``True``/``False`` criteria in the backend configuration or status using optional keyword arguments `**kwargs`. Here is an example to get the operational real backends.
@@ -57,3 +48,15 @@ You can specify ``True``/``False`` criteria in the backend configuration or stat
 ```python
 service.backends(simulator=False, operational=True)
 ```
+
+### Filter by complex filters
+
+You can also apply more complex filters such as lambda functions. Here is an example to get backends that has quantum volume larger than 16.
+
+```python
+service.backends(
+    simulator=False,
+    filters=lambda b: b.configuration().quantum_volume > 16)
+```
+
+##
