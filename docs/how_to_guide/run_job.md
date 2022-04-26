@@ -1,31 +1,33 @@
 # Run a job
 
-This tutorial walks you through the steps to use a program to run a job on an IBM Quantum computer, and return the job status.
+This guide shows you how to submit a job to a Qiskit Runtime service instance.
 
+You can use the [QiskitRuntimeService.run()](https://qiskit.org/documentation/partners/qiskit_ibm_runtime/stubs/qiskit_ibm_runtime.QiskitRuntimeService.run.html#qiskit_ibm_runtime.QiskitRuntimeService.run) method to invoke a runtime program. This method takes the following parameters:
 
-## Before you begin
+- `program_id`: ID of the program to run.
+- `inputs`: Program input parameters. These input values are passed to the runtime program.
+- `options`: Runtime options. These options control the execution environment. Currently the only available option is `backend_name`, which is required.
+- `callback`: Callback function to be invoked for any interim results and final result. The callback function will receive two positional parameters: job ID and result.
+- `result_decoder`: Optional class used to decode the job result.
 
-You'll need a circuit to submit to the program. To learn how to create circuits by using Qiskit, see the [Circuit basics tutorial](https://qiskit.org/documentation/tutorials/circuits/01_circuit_basics.html).
+```python
+# Specify the program inputs here.
+program_inputs = {"iterations": 3}
 
+# Specify the backend name.
+options = {"backend_name": "ibmq_qasm_simulator"}
 
-## Run the job
+job = service.run(
+    program_id="hello-world",
+    options=options,
+    inputs=program_inputs,
+    callback=result_callback,
+)
 
+# Printing the job ID in case we need to retrieve it later.
+print(f"job id: {job.job_id}")
 
-You will use the Qiskit Runtime QiskitRuntimeService.run() method, which takes the following parameters:
-
-- program_id: ID of the program to run.
-- inputs: Program input parameters. These input values are passed to the runtime program and are dependent on the parameters defined for the program.
-- options: Runtime options. These options control the execution environment. Currently, the only available option is backend_name, which is optional. If you do not specify a backend, the job is sent to the least busy device that you have access to.
-- result_decoder: Optional class used to decode the job result.
-
-In the following example, we will submit a circuit to the Sampler program.
-
-If you do not specify the device, the job is sent to the least busy device that you have access to.
-
-To ensure fairness, there is a maximum execution time for each Qiskit Runtime job. If a job exceeds this time limit, it is forcibly terminated. The maximum execution time is the smaller of 1) the system limit and 2) the `max_execution_time` defined by the program. The system limit is 3 hours for jobs running on a simulator and 8 hours for jobs running on a physical system.
-
-## (Optional) Return the job status
-
-Follow up the Qiskit Runtime QiskitRuntimeService.run() method by running a RuntimeJob method. The run() method returns a RuntimeJob instance, which represents the asynchronous execution instance of the program.
-
-There are several RuntimeJob methods to choose from, including job.status():
+# Get the job result - this is blocking and control may not return immediately.
+result = job.result()
+print(result)
+```
