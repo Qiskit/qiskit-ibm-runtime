@@ -1,25 +1,24 @@
-# View final job results
+# Retrieve job results
 
-This tutorial describes how to review final results after running a job. For an example of running a job, see [Get started with the Estimator primitive](/docs/quantum-computing?topic=quantum-computing-example-estimator) or [Get started with the Sampler primitive](/docs/quantum-computing?topic=quantum-computing-example-sampler).
+This guide shows you how to view final job results after running a job.
 
 ## Before you begin
 
-Run your job and note the job ID.
+1. Run your job and note the job ID. (TODO: add link to how to run a job)
+2. Or retrieve a job that has been ran before with its job ID (TODO: link to retrieve jobs)
 
-## Check the status
+## Check job status
 
-After the job completes, you can view the results.
+You can view job results afer the job has been completed. To check the job status, you can run:
 
-Immediately after running the job, follow up the QiskitRuntimeService.run() method by running `job.status()`.
+```python
+job.status()
+```
 
-If you ran other jobs since running the job you want to investigate, run `job = service.job(job_id)` then run `job.status()`.
+## Retrieve job results
 
-Jobs are also listed on the Jobs page for your quantum service instance.  From the console quantum [Instances page](https://cloud.ibm.com/quantum/instances), click the name of your instance, then click the Jobs tab.  To see the current status of your job, click the refresh arrow in the upper right corner.
+You can retrieve job results using:
 
-
-## View the results
-
-
-Follow up the QiskitRuntimeService.run() method by running `job.result()`.
-
-After the job has completed, you can click the job on the Jobs page to view the result.
+```python
+job.result()
+```
