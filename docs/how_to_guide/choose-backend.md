@@ -2,6 +2,14 @@
 
 This guide shows you how to specify the backend and how to see the list of available backends (physical quantum systems or simulators) and apply filters to choose a backend to run a runtime programs.
 
+Throughout this guide, we will assume that you have [setup the Qiskit Runtime service instance](https://qiskit.org/documentation/partners/qiskit_ibm_runtime/getting_started.html) and initialize it as `service`.
+
+```python
+from qiskit_ibm_runtime import QiskitRuntimeService
+
+service = QiskitRuntimeService()
+```
+
 ## Specify the backend
 
 You can specify the backend to run a runtime program by specifying the `backend_name` option and pass to the program.
@@ -26,9 +34,6 @@ Below you can find instructions on how to see the list of available backends and
 You can see the list of available backends by calling `QiskitRuntimeService.backends()`.
 
 ```python
-from qiskit_ibm_runtime import QiskitRuntimeService
-
-service = QiskitRuntimeService()
 service.backends()
 ```
 
