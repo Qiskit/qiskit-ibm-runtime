@@ -6,7 +6,7 @@ You can use the [QiskitRuntimeService.run()](https://qiskit.org/documentation/pa
 
 - `program_id`: ID of the program to run.
 - `inputs`: Program input parameters. These input values are passed to the runtime program.
-- `options`: Runtime options. These options control the execution environment. Currently the only available option is `backend_name`, which is required.
+- `options`: Runtime options. These options control the execution environment. Currently the only available option is `backend_name`, which is required for IBM Quantum but it's optional for IBM Cloud. If you do not specify one, the job is sent to the least busy device that you have access to.
 - `callback`: Callback function to be invoked for any interim results and final result. The callback function will receive two positional parameters: job ID and result.
 - `result_decoder`: Optional class used to decode the job result.
 
