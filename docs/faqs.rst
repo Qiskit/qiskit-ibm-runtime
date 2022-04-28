@@ -10,9 +10,9 @@ The open source primitive contains the base classes (to define interfaces) and a
 The Qiskit Runtime primitive is planned to provide more sophisticated implementation (such as with error
 mitigation) as runtime service.
 
-======================
-Maximum Execution Time
-======================
+============================================================
+What is the maximum execution time for a Qiskit Runtime job?
+============================================================
 
 To ensure fairness, there is a maximum execution time for each Qiskit Runtime job. If
 a job exceeds this time limit, it is forcibly cancelled. This is represented in the job
