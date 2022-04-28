@@ -1,6 +1,18 @@
-# Run a program
+# Run a job
 
-This guide shows you how to run a runtime program.
+This guide shows you how to run a job using a Qiskit Runtime program.
+
+## Before you begin
+
+Throughout this guide, we will assume that you have [setup the Qiskit Runtime service instance](https://qiskit.org/documentation/partners/qiskit_ibm_runtime/getting_started.html) and initialize it as `service`.
+
+```python
+from qiskit_ibm_runtime import QiskitRuntimeService
+
+service = QiskitRuntimeService()
+```
+
+## Run a job
 
 You can use the [QiskitRuntimeService.run()](https://qiskit.org/documentation/partners/qiskit_ibm_runtime/stubs/qiskit_ibm_runtime.QiskitRuntimeService.run.html#qiskit_ibm_runtime.QiskitRuntimeService.run) method to invoke a runtime program. This method takes the following parameters:
 
