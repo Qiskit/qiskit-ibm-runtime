@@ -3,7 +3,7 @@ Frequently Asked Questions
 #########################################
 
 ================================================================================================
-What's the difference between the open source primitives and primitives available via IBM Cloud?
+What is the difference between the open source primitives and primitives available via IBM Cloud?
 ================================================================================================
 
 The open source primitive contains the base classes (to define interfaces) and a reference implementation.
