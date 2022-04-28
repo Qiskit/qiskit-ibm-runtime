@@ -4,7 +4,7 @@ This guide shows you how to run a job using a Qiskit Runtime program.
 
 ## Before you begin
 
-Throughout this guide, we will assume that you have [setup the Qiskit Runtime service instance](https://qiskit.org/documentation/partners/qiskit_ibm_runtime/getting_started.html) and initialize it as `service`.
+Throughout this guide, we will assume that you have [setup the Qiskit Runtime service instance](https://qiskit.org/documentation/partners/qiskit_ibm_runtime/getting_started.html) and initialize it as `service`:
 
 ```python
 from qiskit_ibm_runtime import QiskitRuntimeService
@@ -22,7 +22,7 @@ You can use the [QiskitRuntimeService.run()](https://qiskit.org/documentation/pa
 - `callback`: Callback function to be invoked for any interim results and final result. The callback function will receive two positional parameters: job ID and result.
 - `result_decoder`: Optional class used to decode the job result.
 
-Here is an example of running the `hello-world` program.
+Here is an example of running the `hello-world` program:
 
 ```python
 # Specify the program inputs here.
