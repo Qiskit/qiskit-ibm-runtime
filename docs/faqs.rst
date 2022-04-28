@@ -2,14 +2,13 @@
 Frequently Asked Questions
 #########################################
 
-**What's the difference between the open source primitives and primitives available via IBM Cloud?**
+================================================================================================
+What's the difference between the open source primitives and primitives available via IBM Cloud?
+================================================================================================
 
 The open source primitive contains the base classes (to define interfaces) and a reference implementation.
 The Qiskit Runtime primitive is planned to provide more sophisticated implementation (such as with error
 mitigation) as runtime service.
-
-
-.. _max_execution_time:
 
 ======================
 Maximum Execution Time
@@ -44,9 +43,9 @@ The system limit on the job execution time is
 
 Note that a *premium user* here means a user who has access to backends in providers other than ibm-q/open/main.
 
-=================
+
 Other Limitations
-=================
+-----------------
 
 - Programs cannot exceed 750KB in size.
 - Inputs to jobs cannot exceed 64MB in size.
