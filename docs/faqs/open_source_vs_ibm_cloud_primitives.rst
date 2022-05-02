@@ -1,3 +1,5 @@
+.. _faqs/open_source_vs_ibm_cloud_primitives:
+
 =================================================================================================
 What is the difference between the open source primitives and primitives available via IBM Cloud?
 =================================================================================================
