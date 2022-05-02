@@ -134,7 +134,8 @@ from qiskit_ibm_runtime import QiskitRuntimeService
 
 service = QiskitRuntimeService()
 program_inputs = {
-    'circuits': ReferenceCircuits.bell()
+    'circuits': ReferenceCircuits.bell(),
+    'circuit_indices': [0]
 }
 options = {'backend_name': 'ibmq_qasm_simulator'}
 job = service.run(
