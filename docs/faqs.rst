@@ -1,9 +1,15 @@
+.. _faqs:
+
 #########################################
 Frequently Asked Questions
 #########################################
 
-**What's the difference between the open source primitives and primitives available via IBM Cloud?**
+.. toctree::
+    faqs/open_source_vs_ibm_cloud_primitives
+    faqs/max_execution_time
 
-The open source primitive contains the base classes (to define interfaces) and a reference implementation. 
-The Qiskit Runtime primitive is planned to provide more sophisticated implementation (such as with error 
-mitigation) as runtime service.
+
+.. Hiding - Indices and tables
+   :ref:`genindex`
+   :ref:`modindex`
+   :ref:`search`
