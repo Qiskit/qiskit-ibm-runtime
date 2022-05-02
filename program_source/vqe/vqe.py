@@ -1189,6 +1189,7 @@ def main(backend, user_messenger, **kwargs):
     else:
         vqe = VQE(
             ansatz=ansatz,
+            optimizer=optimizer,
             initial_point=initial_point,
             expectation=PauliExpectation(),
             callback=publisher.callback,
