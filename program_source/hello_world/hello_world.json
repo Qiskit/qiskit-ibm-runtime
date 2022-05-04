@@ -21,7 +21,7 @@
     },
     "return_values": {
       "$schema": "https://json-schema.org/draft/2019-09/schema",
-      "description": "A string that says 'All done!'.",
+      "description": "A string that says 'Hello, World!'.",
       "type": "string"
     },
     "interim_results": {
