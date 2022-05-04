@@ -12,10 +12,10 @@
 
 """Exceptions for the ``Accounts`` module."""
 
-from ..exceptions import IBMError
+from ..exceptions import IBMAccountError
 
 
-class AccountsError(IBMError):
+class AccountsError(IBMAccountError):
     """Base class for errors raised during account management."""
 
 
