@@ -17,7 +17,7 @@ from types import TracebackType
 import copy
 from functools import wraps
 
-from qiskit_ibm_runtime import ibm_runtime_service  # pylint: disable=unused-import
+from qiskit_ibm_runtime import qiskit_runtime_service  # pylint: disable=unused-import
 from .runtime_job import RuntimeJob
 from .runtime_program import ParameterNamespace
 from .runtime_options import RuntimeOptions
@@ -42,20 +42,19 @@ class RuntimeSession:
 
     def __init__(
         self,
-        runtime: "ibm_runtime_service.IBMRuntimeService",
+        service: "qiskit_runtime_service.QiskitRuntimeService",
         program_id: str,
         inputs: Union[Dict, ParameterNamespace],
         options: Optional[Union[RuntimeOptions, Dict]] = None,
     ):
         """RuntimeSession constructor.
         Args:
-            runtime: Runtime service.
+            service: Runtime service.
             program_id: Program ID.
-            options: Runtime options.
             inputs: Initial program inputs.
-            image: The runtime image to use, specified in the form of image_name:tag.
+            options: Runtime options.
         """
-        self._service = runtime
+        self._service = service
         self._program_id = program_id
         self._options: Optional[Union[RuntimeOptions, Dict]] = options
         self._initial_inputs = inputs
@@ -108,10 +107,13 @@ class RuntimeSession:
         Returns:
             Session information.
         """
-        out = {"backend": self._options.backend_name or "unknown"}  # type: ignore
+        out = {}
+        if self._options:
+            out["backend"] = self._options["backend_name"] or "unknown"  # type: ignore
         if self._job:
-            out["job id"] = self._job.job_id
-            out["job status"] = self._job.status()
+            out["job_id"] = self._job.job_id
+            out["job_status"] = self._job.status()
+            out["backend"] = self._job.backend
         return out
 
     def close(self) -> None:
@@ -119,7 +121,8 @@ class RuntimeSession:
         self._active = False
         # TODO Stop swallowing error when API is fixed
         try:
-            self._initial_job.cancel()
+            if self._initial_job is not None:
+                self._initial_job.cancel()
         except RuntimeInvalidStateError:
             pass
 
@@ -132,9 +135,4 @@ class RuntimeSession:
         exc_val: Optional[BaseException],
         exc_tb: Optional[TracebackType],
     ) -> None:
-        self._active = False
-        # TODO Stop swallowing error when API is fixed
-        try:
-            self._initial_job.cancel()
-        except RuntimeInvalidStateError:
-            pass
+        self.close()

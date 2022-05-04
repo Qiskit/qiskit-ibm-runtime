@@ -26,7 +26,7 @@ jobs:
       matrix:
         python-version: [ 3.9 ]
         os: [ "ubuntu-latest" ]
-        environment: [ "legacy-production", "legacy-staging", "cloud-production", "cloud-staging" ]
+        environment: [ "ibm-quantum-production", "ibm-quantum-staging", "ibm-cloud-production", "ibm-cloud-staging" ]
     environment: ${{ matrix.environment }}
     env:
       QISKIT_IBM_TOKEN: ${{ secrets.QISKIT_IBM_TOKEN }}
@@ -47,6 +47,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -e .
-          pip install -r requirements-dev.txt
+          pip install -c constraints.txt -r requirements-dev.txt
       - name: Run e2e tests
         run: make e2e-test

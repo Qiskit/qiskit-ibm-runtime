@@ -16,7 +16,7 @@ from abc import ABC, abstractmethod
 from typing import Optional, Union, Any
 
 from .ibm_backend import IBMBackend
-from .ibm_runtime_service import IBMRuntimeService
+from .qiskit_runtime_service import QiskitRuntimeService
 
 
 class BasePrimitive(ABC):
@@ -24,25 +24,21 @@ class BasePrimitive(ABC):
 
     def __init__(
         self,
-        service: Optional[IBMRuntimeService],
+        service: Optional[QiskitRuntimeService] = None,
         backend: Optional[Union[IBMBackend, str]] = None,
     ):
         """Initializes Base Primitive.
 
         Args:
-            service: Optional instance of :class:`qiskit_ibm_runtime.IBMRuntimeService` class,
-                defaults to `IBMRuntimeService()` which tries to initialize your default saved account.
+            service: Optional instance of :class:`qiskit_ibm_runtime.QiskitRuntimeService` class,
+                defaults to `QiskitRuntimeService()` which tries to initialize your default
+                saved account.
             backend: Optional instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
                 string name of backend, if not specified a backend will be selected automatically
                 (IBM Cloud only).
         """
-        if not service:
-            # try to initialize service with default saved account
-            service = IBMRuntimeService()
         self._service = service
-        if backend and not isinstance(backend, str):
-            backend = backend.name
-        self._backend_name = backend
+        self._backend = backend
 
     @abstractmethod
     def __call__(self, *args: Any, **kwargs: Any) -> Any:

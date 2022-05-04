@@ -1,8 +1,8 @@
-.. _max_execution_time:
+.. _faqs/max_execution_time:
 
-======================
-Maximum Execution Time
-======================
+============================================================
+What is the maximum execution time for a Qiskit Runtime job?
+============================================================
 
 To ensure fairness, there is a maximum execution time for each Qiskit Runtime job. If
 a job exceeds this time limit, it is forcibly cancelled. This is represented in the job
@@ -16,8 +16,8 @@ Qiskit Runtime on IBM Cloud
 The system limit on the job execution time is 3 hours for a job running on a simulator
 and 8 hours for a job running on a physical system.
 
-Qiskit Runtime on IBM Quantum (legacy)
---------------------------------------
+Qiskit Runtime on IBM Quantum
+-----------------------------
 
 The system limit on the job execution time is
 
@@ -33,14 +33,9 @@ The system limit on the job execution time is
 
 Note that a *premium user* here means a user who has access to backends in providers other than ibm-q/open/main.
 
-=================
+
 Other Limitations
-=================
+-----------------
 
 - Programs cannot exceed 750KB in size.
 - Inputs to jobs cannot exceed 64MB in size.
-
-.. Hiding - Indices and tables
-   :ref:`genindex`
-   :ref:`modindex`
-   :ref:`search`

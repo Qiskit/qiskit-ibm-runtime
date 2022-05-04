@@ -1,0 +1,85 @@
+---
+upgrade:
+  - |
+    :class:`~qiskit_ibm_runtime.IBMRuntimeService` has been renamed to
+    :class:`~qiskit_ibm_runtime.QiskitRuntimeSerice`.
+    :class:`~qiskit_ibm_runtime.IBMRuntimeService` class is now deprecated
+    and will be removed in a future release.
+
+    Example:
+
+    Before::
+
+      from qiskit_ibm_runtime import IBMRuntimeService
+      service = IBMRuntimeService(channel="ibm_cloud", token="...", instance="...")
+
+    After::
+
+      from qiskit_ibm_runtime import QiskitRuntimeService
+      service = QiskitRuntimeService(channel="ibm_cloud", token="...", instance="...")
+  - |
+    :class:`~qiskit_ibm_runtime.IBMEstimator` class is now deprecated and will
+    be removed in a future release. Use
+    :class:`~qiskit_ibm_runtime.Estimator` class going forward.
+
+    Example:
+
+    Before::
+
+      from qiskit_ibm_runtime import IBMRuntimeService, IBMEstimator
+      service = IBMRuntimeService(channel="ibm_cloud", token="...", instance="...")
+
+      estimator_factory = IBMEstimator(service=service, backend="ibmq_qasm_simulator")
+
+      with estimator_factory(circuits=[qc], observables="...", parameters="...") as estimator:
+          result = estimator(circuit_indices=[0], ...)
+
+    After::
+
+      from qiskit_ibm_runtime import QiskitRuntimeService, Estimator
+      service = QiskitRuntimeService(channel="ibm_cloud", token="...", instance="...")
+
+      with Estimator(
+        circuits=[qc],
+        observables="...",
+        parameters="...",
+        service=service,
+        options={ "backend": "ibmq_qasm_simulator" },  # or IBMBackend<"ibmq_qasm_simulator">
+      ) as estimator:
+          result = estimator(circuit_indices=[0], ...)
+  - |
+    :class:`~qiskit_ibm_runtime.IBMSampler` class is now deprecated and will
+    be removed in a future release. Use
+    :class:`~qiskit_ibm_runtime.Sampler` class going forward.
+
+    Example:
+
+    Before::
+
+      from qiskit_ibm_runtime import IBMRuntimeService, IBMSampler
+      service = IBMRuntimeService(channel="ibm_cloud", token="...", instance="...")
+
+      sampler_factory = IBMSampler(service=service, backend="ibmq_qasm_simulator")
+
+      with sampler_factory(circuits=[qc], parameters="...") as sampler:
+          result = sampler(circuit_indices=[0], ...)
+
+    After::
+
+      from qiskit_ibm_runtime import QiskitRuntimeService, Sampler
+      service = QiskitRuntimeService(channel="ibm_cloud", token="...", instance="...")
+
+      with Sampler(
+        circuits=[qc],
+        parameters="...",
+        service=service,
+        options={ "backend": "ibmq_qasm_simulator" },  # or IBMBackend<"ibmq_qasm_simulator">
+      ) as sampler:
+          result = sampler(circuit_indices=[0], ...)
+deprecations:
+  - |
+    :class:`~qiskit_ibm_runtime.IBMRuntimeService`, :class:`~qiskit_ibm_runtime.IBMEstimator`
+    and :class:`~qiskit_ibm_runtime.IBMSampler` classes have been deprecated and will be removed
+    in a future release. Use :class:`~qiskit_ibm_runtime.QiskitRuntimeService`,
+    :class:`~qiskit_ibm_runtime.Estimator` and :class:`~qiskit_ibm_runtime.Sampler` classes
+    instead. See upgrade notes section for a detailed explanation with examples.

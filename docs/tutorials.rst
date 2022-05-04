@@ -4,6 +4,25 @@
 Tutorials
 =========
 
+How-to guides
+=================================
+
+.. nbgallery::
+
+   tutorials/how-to-getting-started-with-sampler
+   tutorials/how-to-getting-started-with-estimator
+
+
+Primitives
+=================================
+
+.. nbgallery::
+
+   tutorials/grover_with_sampler
+   tutorials/user-transpiled-circuits
+   tutorials/sea_with_sampler
+   tutorials/vqe_with_estimator
+
 
 Basic
 =====
@@ -12,7 +31,6 @@ Basic
    :glob:
 
    tutorials/0*
-
 
 
 In-depth
@@ -25,7 +43,6 @@ In-depth
    tutorials/sample_expval_program/*
 
 
-
 Qiskit Runtime Programs
 =======================
 
@@ -34,6 +51,8 @@ Qiskit Runtime Programs
 
    tutorials/qka*
    tutorials/vqe*
+
+`See API reference <apidocs/ibm-runtime.html>`_
 
 
 .. Hiding - Indices and tables

@@ -45,14 +45,14 @@ class CloudAuth(AuthBase):
         return {"Service-CRN": self.crn, "Authorization": f"apikey {self.api_key}"}
 
 
-class LegacyAuth(AuthBase):
-    """Attaches Legacy Authentication to the given Request object."""
+class QuantumAuth(AuthBase):
+    """Attaches IBM Quantum Authentication to the given Request object."""
 
     def __init__(self, access_token: str):
         self.access_token = access_token
 
     def __eq__(self, other: object) -> bool:
-        if isinstance(other, LegacyAuth):
+        if isinstance(other, QuantumAuth):
             return self.access_token == other.access_token
 
         return False
