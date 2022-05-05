@@ -1,8 +1,8 @@
-.. _how_to/choose_a_backend:
+.. _how_to/filter_backends:
 
-================
-Choose a backend
-================
+===============
+Filter backends
+===============
 
 This guide shows you how to specify the backend and how to see the list of available backends (physical quantum systems or simulators) and apply filters to choose a backend to run a runtime programs.
 
@@ -17,36 +17,8 @@ Throughout this guide, we will assume that you have `setup the Qiskit Runtime se
 
     service = QiskitRuntimeService()
 
-Specify the backend
--------------------
-
-You can specify the backend to run a runtime program by specifying the ``backend_name`` option and pass to the program:
-
-.. code-block::
-
-    options = {"backend_name": "ibmq_qasm_simulator"}
-    job = service.run(
-        program_id="hello-world",
-        options=options
-    )
-
-For IBM Quantum, specifying the backend is required.
-
-For IBM Cloud, specifying the backend is optional. If you do not specify one, the job is sent to the least busy device that you have access to.
-
-Below you can find instructions on how to see the list of available backends and apply filters to choose a backend.
-
-See the list of available backends
-----------------------------------
-
-You can see the list of available backends by calling ``QiskitRuntimeService.backends()`` :
-
-.. code-block::
-
-    service.backends()
-
-Apply filters for choosing backends
------------------------------------
+Filte backends
+--------------
 
 You can apply filters for choosing backends including the following options. See `the API reference <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/stubs/qiskit_ibm_runtime.QiskitRuntimeService.backends.html#qiskit_ibm_runtime.QiskitRuntimeService.backends>`_ for more details.
 
