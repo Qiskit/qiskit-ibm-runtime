@@ -9,7 +9,7 @@ This guide shows you how to run a job using a Qiskit Runtime program.
 Before you begin
 ----------------
 
-Throughout this guide, we will assume that you have `setup the Qiskit Runtime service instance <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/getting_started.html>`_ and initialize it as ``service``:
+Throughout this guide, we will assume that you have setup the Qiskit Runtime service instance (see :doc:`../getting_started`) and initialize it as ``service``:
 
 .. code-block::
 
