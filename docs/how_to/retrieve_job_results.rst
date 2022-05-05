@@ -6,13 +6,13 @@ Retrieve job results
 
 This guide shows you how to view final job results after running a job.
 
-Before you begin
-----------------
+.. dropdown :: Before you begin
 
-Throughout this guide we will assume that you have set the job you want to retrieve results as variable ``job`` by any of the following methods:
+    Throughout this guide we will assume that you have set the job you want to retrieve results as variable ``job`` by any of the following methods:
 
-1. run a job using ``QiskitRuntimeService.run()``. (see :doc:`run_a_job`)
-2. retrieve a job that has been ran before. (TODO: link to how to retrieve job)
+    1. run a job using ``QiskitRuntimeService.run()``. (see :doc:`run_a_job`)
+    2. retrieve a job that has been ran before. (TODO: link to how to retrieve job)
+
 
 Check job status
 ----------------

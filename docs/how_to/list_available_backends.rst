@@ -16,8 +16,6 @@ This guide shows you how to list all the backends available to you.
 
         service = QiskitRuntimeService()
 
-List available backends
------------------------
 
 You can see the list of available backends by calling ``QiskitRuntimeService.backends()`` :
 
