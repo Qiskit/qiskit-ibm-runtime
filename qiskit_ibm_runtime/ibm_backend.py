@@ -18,7 +18,7 @@ from typing import Iterable, Union, Optional, Any, List
 from datetime import datetime as python_datetime
 
 from qiskit.qobj.utils import MeasLevel, MeasReturnType
-from qiskit.providers.backend import BackendV2 as Backend, QubitProperties
+from qiskit.providers.backend import BackendV2 as Backend
 from qiskit.providers.options import Options
 from qiskit.providers.models import (
     BackendStatus,
@@ -41,7 +41,6 @@ from .api.clients.backend import BaseBackendClient
 from .exceptions import IBMBackendApiProtocolError
 from .utils.backend_converter import (
     convert_to_target,
-    qubit_props_dict_from_props,
 )
 from .utils.converters import local_to_utc
 from .utils.backend_decoder import (
@@ -166,7 +165,6 @@ class IBMBackend(Backend):
         self._api_client = api_client
         self._configuration = configuration
         self._properties = None
-        self._qubit_properties = None
         self._defaults = None
         self._target = None
         self._max_circuits = configuration.max_experiments
@@ -296,27 +294,6 @@ class IBMBackend(Backend):
         self._get_defaults()
         self._convert_to_target()
         return self._target
-
-    def qubit_properties(
-        self, qubit: Union[int, List[int]]
-    ) -> Union[QubitProperties, List[QubitProperties]]:
-        """Return QubitProperties for a given qubit.
-
-        Args:
-            qubit: The qubit to get the
-                :class:`~qiskit.provider.QubitProperties` object for. This can
-                be a single integer for 1 qubit or a list of qubits and a list
-                of :class:`~qiskit.provider.QubitProperties` objects will be
-                returned in the same order
-        """
-        self._get_properties()
-        if not self._qubit_properties:
-            self._qubit_properties = qubit_props_dict_from_props(self._properties)
-        if isinstance(qubit, int):  # type: ignore[unreachable]
-            return self._qubit_properties.get(qubit)
-        if isinstance(qubit, List):
-            return [self._qubit_properties.get(q) for q in qubit]
-        return None
 
     def properties(
         self, refresh: bool = False, datetime: Optional[python_datetime] = None
