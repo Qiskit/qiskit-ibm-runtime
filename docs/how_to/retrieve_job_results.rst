@@ -11,7 +11,7 @@ Before you begin
 
 Throughout this guide we will assume that you have set the job you want to retrieve results as variable ``job`` by any of the following methods:
 
-1. run a job using ``QiskitRuntimeService.run()``. (TODO: link to how to run a job)
+1. run a job using ``QiskitRuntimeService.run()``. (see :doc:`run_a_job`)
 2. retrieve a job that has been ran before. (TODO: link to how to retrieve job)
 
 Check job status
