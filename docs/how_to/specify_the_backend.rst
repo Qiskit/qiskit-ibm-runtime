@@ -30,6 +30,8 @@ You can specify the backend to run a runtime program by specifying the ``backend
         options=options
     )
 
-For IBM Quantum, specifying the backend is required.
+.. note ::
 
-For IBM Cloud, specifying the backend is optional. If you do not specify one, the job is sent to the least busy device that you have access to.
+    For IBM Quantum, specifying the backend is required.
+
+    For IBM Cloud, specifying the backend is optional. If you do not specify one, the job is sent to the least busy device that you have access to.
