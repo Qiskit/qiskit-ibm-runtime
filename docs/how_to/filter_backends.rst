@@ -6,17 +6,15 @@ Filter backends
 
 This guide shows you how to apply filters for selecting backends.
 
-Before you begin
-----------------
+.. dropdown :: Before you begin
 
-Throughout this guide, we will assume that you have setup the Qiskit Runtime service instance (see :doc:`../getting_started`) and initialize it as ``service``:
+    Throughout this guide, we will assume that you have setup the Qiskit Runtime service instance (see :doc:`../getting_started`) and initialize it as ``service``:
 
-.. code-block::
+    .. code-block::
 
-    from qiskit_ibm_runtime import QiskitRuntimeService
+        from qiskit_ibm_runtime import QiskitRuntimeService
 
-    service = QiskitRuntimeService()
-
+        service = QiskitRuntimeService()
 
 You can apply filters for choosing backends including the following options. See `the API reference <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/stubs/qiskit_ibm_runtime.QiskitRuntimeService.backends.html#qiskit_ibm_runtime.QiskitRuntimeService.backends>`_ for more details.
 
