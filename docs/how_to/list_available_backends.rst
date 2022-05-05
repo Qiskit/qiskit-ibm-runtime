@@ -4,7 +4,7 @@
 List available backends
 =======================
 
-This guide shows you how to specify the backend and how to see the list of available backends (physical quantum systems or simulators) and apply filters to choose a backend to run a runtime programs.
+This guide shows you how to list all the backends available to you.
 
 Before you begin
 ----------------
