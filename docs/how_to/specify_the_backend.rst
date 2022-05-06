@@ -6,11 +6,11 @@ Specify the backend
 
 This guide shows you how to specify the backend to run a runtime programs.
 
-.. dropdown :: Before you begin
+.. dropdown:: Before you begin
 
     Throughout this guide, we will assume that you have setup the Qiskit Runtime service instance (see :doc:`../getting_started`) and initialize it as ``service``:
 
-    .. code-block::
+    .. jupyter-execute::
 
         from qiskit_ibm_runtime import QiskitRuntimeService
 
@@ -18,15 +18,17 @@ This guide shows you how to specify the backend to run a runtime programs.
 
 You can specify the backend to run a runtime program by specifying the ``backend_name`` option and pass to the program:
 
-.. code-block::
+.. jupyter-execute::
 
+    program_inputs = {'iterations': 1}
     options = {"backend_name": "ibmq_qasm_simulator"}
     job = service.run(
         program_id="hello-world",
+        inputs=program_inputs,
         options=options
     )
 
-.. note ::
+.. note::
 
     For IBM Quantum, specifying the backend is required.
 

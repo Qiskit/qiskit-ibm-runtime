@@ -10,7 +10,7 @@ This guide shows you how to run a job using a Qiskit Runtime program.
 
     Throughout this guide, we will assume that you have setup the Qiskit Runtime service instance (see :doc:`../getting_started`) and initialize it as ``service``:
 
-    .. code-block::
+    .. jupyter-execute::
 
         from qiskit_ibm_runtime import QiskitRuntimeService
 
@@ -33,7 +33,7 @@ Example: ``hello-world`` program
 
 Here is an example of running the ``hello-world`` program:
 
-.. code-block::
+.. jupyter-execute::
 
     # Specify the program inputs here.
     program_inputs = {"iterations": 3}

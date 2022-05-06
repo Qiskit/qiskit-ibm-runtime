@@ -6,7 +6,7 @@ Retrieve job results
 
 This guide shows you how to view final job results after running a job.
 
-.. dropdown :: Before you begin
+.. dropdown:: Before you begin
 
     Throughout this guide we will assume that you have set the job you want to retrieve results as variable ``job`` by any of the following methods:
 
