@@ -73,31 +73,30 @@ class QiskitRuntimeService:
         from qiskit_ibm_runtime import QiskitRuntimeService
 
         service = QiskitRuntimeService()
-        backend = "ibmq_qasm_simulator"
-
-        # List all available programs.
-        service.pprint_programs()
 
         # Create a circuit.
-        qc = QuantumCircuit(2, 2)
+        qc = QuantumCircuit(2)
         qc.h(0)
         qc.cx(0, 1)
         qc.measure_all()
 
-        # Set the "sampler" program parameters
-        params = service.program(program_id="sampler").parameters()
-        params.circuits = qc
+        # Set the "sampler" program inputs
+        inputs = {
+            'circuits': qc,
+            'circuit_indices': [0]
+        }
 
         # Configure backend options
-        options = {'backend_name': backend}
+        options = {'backend_name': "ibmq_qasm_simulator"}
 
         # Execute the circuit using the "sampler" program.
         job = service.run(program_id="sampler",
                           options=options,
-                          inputs=params)
-
+                          inputs=inputs)
+        print(f"Job ID: {job.job_id}")
         # Get runtime job result.
         result = job.result()
+        print(result)
 
     If the program has any interim results, you can use the ``callback``
     parameter of the :meth:`run` method to stream the interim results.
