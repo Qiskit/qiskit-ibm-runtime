@@ -26,68 +26,42 @@ Manage backends
    how_to/rst/list_available_backends
    how_to/rst/filter_backends
 
-.. Hiding from Sphinx
-   reStructuredText
-   ================
+Markdown
+===========
 
-   Manage jobs
-   -----------
+Manage jobs
+-----------
 
-   .. toctree::
-      :maxdepth: 1
+.. toctree::
+   :maxdepth: 1
 
-      how_to/rst/run_a_job
-      how_to/rst/retrieve_job_results
+   how_to/md/run_a_job
+   how_to/md/retrieve_job_results
 
-   Manage backends
-   ---------------
+Manage backends
+---------------
 
-   .. toctree::
-      :maxdepth: 1
+.. toctree::
+   :maxdepth: 1
 
-      how_to/rst/specify_the_backend
-      how_to/rst/list_available_backends
-      how_to/rst/filter_backends
+   how_to/md/choose_a_backend
 
-   Markdown
-   ===========
+Jupyter notebook
+================
 
-   Manage jobs
-   -----------
+Manage jobs
+-----------
 
-   .. toctree::
-      :maxdepth: 1
+.. toctree::
+   :maxdepth: 1
 
-      how_to/md/run_a_job
-      how_to/md/retrieve_job_results
+   how_to/ipynb/run_a_job
+   how_to/ipynb/retrieve_job_results
 
-   Manage backends
-   ---------------
+Manage backends
+---------------
 
-   .. toctree::
-      :maxdepth: 1
+.. toctree::
+   :maxdepth: 1
 
-      how_to/md/choose_a_backend
-
-   Jupyter notebook
-   ================
-
-   Manage jobs
-   -----------
-
-   .. toctree::
-      :maxdepth: 1
-
-      how_to/ipynb/run_a_job
-      how_to/ipynb/retrieve_job_results
-
-   Manage backends
-   ---------------
-
-   .. toctree::
-      :maxdepth: 1
-
-      how_to/ipynb/choose_a_backend
-      how_to/ipynb/specify_the_backend
-      how_to/ipynb/list_available_backends
-      how_to/ipynb/filter_backends
+   how_to/ipynb/choose_a_backend

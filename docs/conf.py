@@ -70,6 +70,7 @@ extensions = [
     'reno.sphinxext',
     'nbsphinx',
     'sphinx_design',
+    'myst_parser',
 ]
 html_static_path = ['_static']
 templates_path = ['_templates']
