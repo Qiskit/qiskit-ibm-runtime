@@ -55,8 +55,9 @@ Next Steps
     Overview <self>
     Getting Started <getting_started>
     Tutorials <tutorials>
-    How to (rst) <how_to_rst>
-    How to (md) <how_to_md>
+    ..
+        How to (rst) <how_to_rst>
+        How to (md) <how_to_md>
     How to (ipynb) <how_to_ipynb>
     API Reference <apidocs/ibm-runtime>
     FAQs <faqs>
