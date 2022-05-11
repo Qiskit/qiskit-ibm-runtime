@@ -20,3 +20,6 @@ Manage backends
    :maxdepth: 1
 
    how_to_ipynb/choose_a_backend
+   how_to_ipynb/specify_the_backend
+   how_to_ipynb/list_available_backends
+   how_to_ipynb/filter_backends
