@@ -69,8 +69,6 @@ extensions = [
     'sphinx_autodoc_typehints',
     'reno.sphinxext',
     'nbsphinx',
-    'sphinx_design',
-    'myst_parser',
 ]
 html_static_path = ['_static']
 templates_path = ['_templates']
@@ -134,11 +132,7 @@ language = None
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ["_build", "**.ipynb_checkpoints",
-                    "jupyter_execute",
-                    "how_to_rst", "how_to_rst.rst",
-                    "how_to_md", "how_to_md.rst"
-                    ]
+exclude_patterns = ["_build", "**.ipynb_checkpoints"]
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'colorful'
