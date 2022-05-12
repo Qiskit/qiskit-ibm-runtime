@@ -106,6 +106,3 @@ Qconfig.py
 .DS_Store
 
 /docs/stubs/
-
-# jupyter sphinx generated files
-/docs/jupyter_execute
