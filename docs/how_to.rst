@@ -1,4 +1,4 @@
-.. _how_to_ipynb:
+.. _how_to:
 
 ======
 How to
