@@ -156,7 +156,7 @@ class IBMBackend(Backend):
 
         Args:
             configuration: Backend configuration.
-            api_client: IBM Quantum client used to communicate with the server.
+            api_client: IBM client used to communicate with the server.
         """
         super().__init__(
             name=configuration.backend_name,
