@@ -17,13 +17,13 @@ Qiskit Runtime (:mod:`qiskit_ibm_runtime`)
 
 .. currentmodule:: qiskit_ibm_runtime
 
-Modules related to Qiskit Runtime IBM Quantum Client.
+Modules related to Qiskit Runtime IBM Client.
 
 Qiskit Runtime is a new architecture that
 streamlines computations requiring many iterations. These experiments will
 execute significantly faster within its improved hybrid quantum/classical process.
 
-Qiskit Runtime IBM Quantum Client allows authorized users to upload their Qiskit quantum programs.
+Qiskit Runtime IBM Client allows authorized users to upload their Qiskit quantum programs.
 A Qiskit quantum program, also called a runtime program, is a piece of Python
 code and its metadata that takes certain inputs, performs
 quantum and maybe classical processing, and returns the results. The same or other
