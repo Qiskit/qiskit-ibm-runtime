@@ -39,7 +39,7 @@ import os
 os.environ['QISKIT_DOCS'] = 'TRUE'
 
 # -- Project information -----------------------------------------------------
-project = 'Qiskit Runtime IBM Quantum Client'
+project = 'Qiskit Runtime IBM Client'
 copyright = '2022, Qiskit Development Team'  # pylint: disable=redefined-builtin
 author = 'Qiskit Development Team'
 

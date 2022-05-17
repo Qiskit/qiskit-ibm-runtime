@@ -59,7 +59,7 @@ class Sampler(BaseSampler):
             The default level is ``WARNING``.
 
     The returned instance can be called repeatedly with the following parameters to
-    calculate probabilites or quasi-probabilities.
+    calculate probabilities or quasi-probabilities.
 
     * circuit_indices: A list of circuit indices.
 
@@ -185,7 +185,7 @@ class Sampler(BaseSampler):
         ] = None,
         **run_options: Any,
     ) -> SamplerResult:
-        """Calculates probabilites or quasi-probabilities for given inputs in a runtime session.
+        """Calculates probabilities or quasi-probabilities for given inputs in a runtime session.
 
         Args:
             circuit_indices: A list of circuit indices.
