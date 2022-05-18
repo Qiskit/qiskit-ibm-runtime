@@ -161,7 +161,7 @@ def main(
     # x0 and calls 'vqe_func' everytime the optimizer needs to evaluate the cost
     # function.  The result is returned as a SciPy OptimizerResult object.
     # Additionally, after every iteration, we use the 'callback' function to
-    # publish the interm results back to the user. This is important to do
+    # publish the interim results back to the user. This is important to do
     # so that if the Program terminates unexpectedly, the user can start where they
     # left off.
 
