@@ -52,25 +52,19 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
             self.assertIsInstance(sampler, BaseSampler)
 
             circuits1 = [0, 1, 2]
-            result1 = sampler(
-                circuits=circuits1, parameter_values=[[]] * 3
-            )
+            result1 = sampler(circuits=circuits1, parameter_values=[[]] * 3)
             self.assertIsInstance(result1, SamplerResult)
             self.assertEqual(len(result1.quasi_dists), len(circuits1))
             self.assertEqual(len(result1.metadata), len(circuits1))
 
             circuits2 = [0, 2]
-            result2 = sampler(
-                circuits=circuits2, parameter_values=[[]] * 2
-            )
+            result2 = sampler(circuits=circuits2, parameter_values=[[]] * 2)
             self.assertIsInstance(result2, SamplerResult)
             self.assertEqual(len(result2.quasi_dists), len(circuits2))
             self.assertEqual(len(result2.metadata), len(circuits2))
 
             circuits3 = [1, 2]
-            result3 = sampler(
-                circuits=circuits3, parameter_values=[[]] * 2
-            )
+            result3 = sampler(circuits=circuits3, parameter_values=[[]] * 2)
             self.assertIsInstance(result3, SamplerResult)
             self.assertEqual(len(result3.quasi_dists), len(circuits3))
             self.assertEqual(len(result3.metadata), len(circuits3))

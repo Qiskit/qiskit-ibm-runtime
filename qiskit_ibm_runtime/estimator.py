@@ -12,8 +12,6 @@
 
 """Estimator primitive."""
 
-import warnings
-
 from typing import Iterable, Optional, Dict, Sequence, Any, Union
 
 from qiskit.circuit import QuantumCircuit, Parameter
@@ -206,25 +204,20 @@ class Estimator(BaseEstimator):
             options=options,
         )
 
-    def __call__(
+    def _call(
         self,
-        circuits: Union[QuantumCircuit, Iterable[QuantumCircuit], Sequence[int]],
-        observables: Union[Iterable[SparsePauliOp], Sequence[int]],
+        circuits: Sequence[int],
+        observables: Sequence[int],
         parameter_values: Optional[
             Union[Sequence[float], Sequence[Sequence[float]]]
         ] = None,
-        circuit_indices: Optional[Sequence[int]] = None,
-        observable_indices: Optional[Sequence[int]] = None,
         **run_options: Any,
     ) -> EstimatorResult:
         """Estimates expectation values for given inputs in a runtime session.
 
         Args:
-            circuits: a (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
-                a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
-                a list of circuit indices.
-            observables: a list of :class:`~qiskit.quantum_info.SparsePauliOp` or
-                a list of observable indices.
+            circuits: A list of circuit indices.
+            observables: A list of observable indices.
             parameter_values: An optional list of concrete parameters to be bound.
             circuit_indices: (DEPRECATED) A list of circuit indices.
             observable_indices: (DEPRECATED) A list of observable indices.
@@ -233,29 +226,9 @@ class Estimator(BaseEstimator):
         Returns:
             An instance of :class:`qiskit.primitives.EstimatorResult`.
         """
-        if circuit_indices:
-            warnings.warn(
-                "Use of `circuit_indices` parameter is deprecated and will "
-                "be removed in a future release. "
-                "You can now use `circuits` parameter instead.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            if not circuits:
-                circuits = circuit_indices
-        if observable_indices:
-            warnings.warn(
-                "Use of `observable_indices` parameter is deprecated and will "
-                "be removed in a future release. "
-                "You can now use `observables` parameter instead.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            if not observables:
-                observables = observable_indices
         self._session.write(
-            circuits=circuits,
-            observables=observables,
+            circuit_indices=circuits,
+            observable_indices=observables,
             parameter_values=parameter_values,
             run_options=run_options,
         )
