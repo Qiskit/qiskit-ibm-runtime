@@ -12,6 +12,8 @@
 
 """Estimator primitive."""
 
+import warnings
+
 from typing import Iterable, Optional, Dict, Sequence, Any, Union
 
 from qiskit.circuit import QuantumCircuit, Parameter
@@ -64,11 +66,18 @@ class Estimator(BaseEstimator):
     The returned instance can be called repeatedly with the following parameters to
     estimate expectation values.
 
-    * circuit_indices: A list of circuit indices.
+    * circuits: a (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
+        a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
+        a list of circuit indices.
 
-    * observable_indices: A list of observable indices.
+    * observables: a list of :class:`~qiskit.quantum_info.SparsePauliOp` or
+        a list of observable indices.
 
     * parameter_values: An optional list of concrete parameters to be bound.
+
+    * circuit_indices: (DEPRECATED) A list of circuit indices.
+
+    * observable_indices: (DEPRECATED) A list of observable indices.
 
     All the above lists should be of the same length.
 
@@ -199,27 +208,54 @@ class Estimator(BaseEstimator):
 
     def __call__(
         self,
-        circuit_indices: Sequence[int],
-        observable_indices: Sequence[int],
+        circuits: Union[QuantumCircuit, Iterable[QuantumCircuit], Sequence[int]],
+        observables: Union[Iterable[SparsePauliOp], Sequence[int]],
         parameter_values: Optional[
             Union[Sequence[float], Sequence[Sequence[float]]]
         ] = None,
+        circuit_indices: Optional[Sequence[int]] = None,
+        observable_indices: Optional[Sequence[int]] = None,
         **run_options: Any,
     ) -> EstimatorResult:
         """Estimates expectation values for given inputs in a runtime session.
 
         Args:
-            circuit_indices: A list of circuit indices.
-            observable_indices: A list of observable indices.
+            circuits: a (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
+                a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
+                a list of circuit indices.
+            observables: a list of :class:`~qiskit.quantum_info.SparsePauliOp` or
+                a list of observable indices.
             parameter_values: An optional list of concrete parameters to be bound.
+            circuit_indices: (DEPRECATED) A list of circuit indices.
+            observable_indices: (DEPRECATED) A list of observable indices.
             **run_options: A collection of kwargs passed to `backend.run()`.
 
         Returns:
             An instance of :class:`qiskit.primitives.EstimatorResult`.
         """
+        if circuit_indices:
+            warnings.warn(
+                "Use of `circuit_indices` parameter is deprecated and will "
+                "be removed in a future release. "
+                "You can now use `circuits` parameter instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            if not circuits:
+                circuits = circuit_indices
+        if observable_indices:
+            warnings.warn(
+                "Use of `observable_indices` parameter is deprecated and will "
+                "be removed in a future release. "
+                "You can now use `observables` parameter instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            if not observables:
+                observables = observable_indices
         self._session.write(
-            circuit_indices=circuit_indices,
-            observable_indices=observable_indices,
+            circuits=circuits,
+            observables=observables,
             parameter_values=parameter_values,
             run_options=run_options,
         )
