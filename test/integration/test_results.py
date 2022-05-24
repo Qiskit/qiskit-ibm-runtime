@@ -16,6 +16,8 @@ import time
 
 from qiskit.providers.jobstatus import JobStatus
 
+from qiskit_ibm_runtime.exceptions import RuntimeJobTimeoutError
+
 from ..unit.mock.proxy_server import MockProxyServer, use_proxies
 from ..ibm_test_case import IBMIntegrationJobTestCase
 from ..decorators import run_integration_test
@@ -139,6 +141,20 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
         job.wait_for_final_state()
         interim_results = job.interim_results()
         self.assertIn(int_res, interim_results[0])
+
+    @run_integration_test
+    def test_result_timeout(self, service):
+        """Test job result timeout"""
+        job = self._run_program(service)
+        with self.assertRaises(RuntimeJobTimeoutError):
+            job.result(0.1)
+
+    @run_integration_test
+    def test_wait_for_final_state_timeout(self, service):
+        """Test job wait_for_final_state timeout"""
+        job = self._run_program(service)
+        with self.assertRaises(RuntimeJobTimeoutError):
+            job.wait_for_final_state(0.1)
 
     @run_integration_test
     def test_callback_error(self, service):
