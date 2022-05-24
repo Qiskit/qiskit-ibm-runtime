@@ -1,0 +1,6 @@
+---
+upgrade:
+  - |
+    ``RuntimeJobTimeoutError`` is now raised when the ``timeout`` set in
+    :meth:`~qiskit_ibm_runtime.RuntimeJob.result` or
+    :meth:`~qiskit_ibm_runtime.RuntimeJob.wait_for_final_state` expires.

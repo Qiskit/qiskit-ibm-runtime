@@ -85,3 +85,9 @@ class RuntimeInvalidStateError(IBMRuntimeError):
     """Errors raised when the state is not valid for the operation."""
 
     pass
+
+
+class RuntimeJobTimeoutError(IBMRuntimeError):
+    """Error raised when waiting for job times out."""
+
+    pass

@@ -27,6 +27,7 @@ from .exceptions import (
     RuntimeJobFailureError,
     RuntimeInvalidStateError,
     IBMRuntimeError,
+    RuntimeJobTimeoutError,
 )
 from .program.result_decoder import ResultDecoder
 from .api.clients import RuntimeClient, RuntimeWebsocketClient, WebsocketClientCloseCode
@@ -226,12 +227,22 @@ class RuntimeJob:
 
         Args:
             timeout: Seconds to wait for the job. If ``None``, wait indefinitely.
+
+        Raises:
+            RuntimeJobTimeoutError: If the job does not complete within given timeout.
         """
-        if self._status not in JOB_FINAL_STATES and not self._is_streaming():
-            self._ws_client_future = self._executor.submit(self._start_websocket_client)
-        if self._is_streaming():
-            self._ws_client_future.result(timeout)
-        self.status()
+        try:
+            if self._status not in JOB_FINAL_STATES and not self._is_streaming():
+                self._ws_client_future = self._executor.submit(
+                    self._start_websocket_client
+                )
+            if self._is_streaming():
+                self._ws_client_future.result(timeout)
+            self.status()
+        except futures.TimeoutError:
+            raise RuntimeJobTimeoutError(
+                f"Timed out waiting for job to complete after {timeout} secs."
+            )
 
     def stream_results(
         self, callback: Callable, decoder: Optional[Type[ResultDecoder]] = None
