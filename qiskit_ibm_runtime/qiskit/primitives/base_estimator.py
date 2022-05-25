@@ -10,9 +10,12 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 r"""
-=========
-Estimator
-=========
+
+.. estimator-desc:
+
+=====================
+Overview of Estimator
+=====================
 
 Estimator class estimates expectation values of quantum circuits and observables.
 
@@ -41,15 +44,15 @@ The estimator is called with the following inputs.
   to be bound to the parameters of the quantum circuits.
   (list of list of float)
 
-The output is an EstimatorResult which contains a list of expectation values plus
-optional metadata like confidence intervals for the estimation.
+The output is an :class:`~qiskit.primitives.EstimatorResult` which contains a list of
+expectation values plus optional metadata like confidence intervals for the estimation.
 
 .. math::
 
     \langle\psi_i(\theta_k)|H_j|\psi_i(\theta_k)\rangle
 
 
-The estimator object is expected to be `close()` d after use or
+The estimator object is expected to be ``close()`` d after use or
 accessed inside "with" context
 and the objects are called with parameter values and run options
 (e.g., ``shots`` or number of shots).
@@ -77,38 +80,43 @@ Here is an example of how estimator is used.
         theta3 = [1, 2, 3, 4, 5, 6]
 
         # calculate [ <psi1(theta1)|H1|psi1(theta1)> ]
-        psi1_H1_result = e([0], [0], [theta1])
-        print(psi1_H1_result)
+        result = e([0], [0], [theta1])
+        print(result)
 
         # calculate [ <psi1(theta1)|H2|psi1(theta1)>, <psi1(theta1)|H3|psi1(theta1)> ]
-        psi1_H23_result = e([0, 0], [1, 2], [theta1]*2)
-        print(psi1_H23_result)
+        result2 = e([0, 0], [1, 2], [theta1]*2)
+        print(result2)
 
         # calculate [ <psi2(theta2)|H2|psi2(theta2)> ]
-        psi2_H2_result = e([1], [1], [theta2])
-        print(psi2_H2_result)
+        result3 = e([1], [1], [theta2])
+        print(result3)
 
         # calculate [ <psi1(theta1)|H1|psi1(theta1)>, <psi1(theta3)|H1|psi1(theta3)> ]
-        psi1_H1_result2 = e([0, 0], [0, 0], [theta1, theta3])
-        print(psi1_H1_result2)
+        result4 = e([0, 0], [0, 0], [theta1, theta3])
+        print(result4)
 
         # calculate [ <psi1(theta1)|H1|psi1(theta1)>,
         #             <psi2(theta2)|H2|psi2(theta2)>,
         #             <psi1(theta3)|H3|psi1(theta3)> ]
-        psi12_H123_result = e([0, 0, 0], [0, 1, 2], [theta1, theta2, theta3])
-        print(psi12_H23_result)
+        result5 = e([0, 1, 0], [0, 1, 2], [theta1, theta2, theta3])
+        print(result5)
 """
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Iterable, Optional, Sequence, Any
+from collections.abc import Iterable, Sequence
+from copy import copy
+
+import numpy as np
 
 from qiskit.circuit import Parameter, QuantumCircuit
 from qiskit.circuit.parametertable import ParameterView
 from qiskit.exceptions import QiskitError
-from qiskit.quantum_info import SparsePauliOp
+from qiskit.quantum_info.operators import SparsePauliOp
+from qiskit.utils.deprecation import deprecate_arguments
 
 from .estimator_result import EstimatorResult
+from .utils import _finditer
 
 
 class BaseEstimator(ABC):
@@ -119,46 +127,80 @@ class BaseEstimator(ABC):
 
     def __init__(
         self,
-        circuits: Iterable[QuantumCircuit],
-        observables: Iterable[SparsePauliOp],
-        parameters: Optional[Iterable[Iterable[Parameter]]] = None,
+        circuits: Iterable[QuantumCircuit] | QuantumCircuit,
+        observables: Iterable[SparsePauliOp] | SparsePauliOp,
+        parameters: Iterable[Iterable[Parameter]] | None = None,
     ):
         """
         Creating an instance of an Estimator, or using one in a ``with`` context opens a session that
         holds resources until the instance is ``close()`` ed or the context is exited.
 
         Args:
-            circuits: quantum circuits that represent quantum states
-            observables: observables
-            parameters: parameters of quantum circuits, specifying the order in which values
-            will be bound.
-                Defaults to ``[circ.parameters for circ in circuits]``
+            circuits: Quantum circuits that represent quantum states.
+            observables: Observables.
+            parameters: Parameters of quantum circuits, specifying the order in which values
+                will be bound. Defaults to ``[circ.parameters for circ in circuits]``
                 The indexing is such that ``parameters[i, j]`` is the j-th formal parameter of
                 ``circuits[i]``.
 
         Raises:
-            QiskitError: for mismatch of circuits and parameters list.
+            QiskitError: For mismatch of circuits and parameters list.
         """
-        self._circuits = tuple(circuits)
-        self._observables = tuple(observables)
+        self._circuits = circuits
+        self._observables = observables
+
+        # To guarantee that they exist as instance variable.
+        # With only dynamic set, the python will not know if the attribute exists or not.
+        self._circuit_names = self._circuit_names
+        self._observable_ids = self._observable_ids
+
         if parameters is None:
             self._parameters = tuple(circ.parameters for circ in self._circuits)
         else:
             self._parameters = tuple(ParameterView(par) for par in parameters)
             if len(self._parameters) != len(self._circuits):
                 raise QiskitError(
-                    f"Different number of parameters ({len(self._parameters)} and "
-                    f"circuits ({len(self._circuits)}"
+                    f"Different number of parameters ({len(self._parameters)}) and "
+                    f"circuits ({len(self._circuits)})"
                 )
+            for i, (circ, params) in enumerate(zip(self._circuits, self._parameters)):
+                if circ.num_parameters != len(params):
+                    raise QiskitError(
+                        f"Different numbers of parameters of {i}-th circuit: "
+                        f"expected {circ.num_parameters}, actual {len(params)}."
+                    )
 
-    def __enter__(self) -> None:
-        return self  # type: ignore
+    def __new__(
+        cls,
+        circuits: Iterable[QuantumCircuit] | QuantumCircuit,
+        observables: Iterable[SparsePauliOp] | SparsePauliOp,
+        *args,  # pylint: disable=unused-argument
+        parameters: Iterable[Iterable[Parameter]]
+        | None = None,  # pylint: disable=unused-argument
+        **kwargs,  # pylint: disable=unused-argument
+    ):
 
-    def __exit__(self, *exc_info: Any) -> None:
+        self = super().__new__(cls)
+        if isinstance(circuits, Iterable):
+            circuits = copy(circuits)
+            self._circuit_names = [circuit.name for circuit in circuits]
+        else:
+            self._circuit_names = [circuits.name]
+        if isinstance(observables, Iterable):
+            observables = copy(observables)
+            self._observable_ids = [id(observable) for observable in observables]
+        else:
+            self._observable_ids = [id(observables)]
+        return self
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc_info):
         self.close()
 
     @abstractmethod
-    def close(self) -> None:
+    def close(self):
         """Close the session and free resources"""
         ...
 
@@ -167,50 +209,52 @@ class BaseEstimator(ABC):
         """Quantum circuits that represents quantum states.
 
         Returns:
-            quantum circuits
+            The quantum circuits.
         """
         return self._circuits
 
     @property
     def observables(self) -> tuple[SparsePauliOp, ...]:
-        """Observables to be estimated
+        """Observables to be estimated.
 
         Returns:
-            observables
+            The observables.
         """
         return self._observables
 
     @property
     def parameters(self) -> tuple[ParameterView, ...]:
-        """Parameters of quantum circuits
+        """Parameters of the quantum circuits.
 
         Returns:
-            parameters, where ``parameters[i][j]`` is the j-th parameter of the i-th circuit.
+            Parameters, where ``parameters[i][j]`` is the j-th parameter of the i-th circuit.
         """
         return self._parameters
 
-    @abstractmethod
+    @deprecate_arguments(
+        {"circuit_indices": "circuits", "observable_indices": "observables"}
+    )
     def __call__(
         self,
-        circuit_indices: Sequence[int],
-        observable_indices: Sequence[int],
-        parameter_values: Sequence[Sequence[float]],
-        **run_options: Any,
+        circuits: Sequence[int | QuantumCircuit],
+        observables: Sequence[int | SparsePauliOp],
+        parameter_values: Sequence[Sequence[float]] | None = None,
+        **run_options,
     ) -> EstimatorResult:
         """Run the estimation of expectation value(s).
 
-        ``circuit_indices``, ``observable_indices``, and ``parameter_values`` should have the
-        same length. The i-th element of the result is the expectation of observable.
+        ``circuits``, ``observables``, and ``parameter_values`` should have the same
+        length. The i-th element of the result is the expectation of observable
 
         .. code-block:: python
 
-            obs = self.observables[observable_indices[i]]
+            obs = self.observables[observables[i]]
 
         for the state prepared by
 
         .. code-block:: python
 
-            circ = self.circuits[circuit_indices[i]]
+            circ = self.circuits[circuits[i]]
 
         with bound parameters
 
@@ -219,12 +263,105 @@ class BaseEstimator(ABC):
             values = parameter_values[i].
 
         Args:
-            circuit_indices: the list of circuit indices.
-            observable_indices: the list of observable indices.
+            circuits: the list of circuit indices.
+            observables: the list of observable indices.
             parameter_values: concrete parameters to be bound.
             run_options: runtime options used for circuit execution.
 
         Returns:
-            EstimatorResult: the result of Estimator.
+            EstimatorResult: The result of the estimator.
+
+        Raises:
+            QiskitError: For mismatch of object id.
+            QiskitError: For mismatch of length of Sequence.
         """
+
+        # Support ndarray
+        if isinstance(parameter_values, np.ndarray):
+            parameter_values = parameter_values.tolist()
+
+        # Allow optional
+        if parameter_values is None:
+            for i in circuits:
+                if len(self._circuits[i].parameters) != 0:
+                    raise QiskitError(
+                        f"The {i}-th circuit is parameterised,"
+                        "but parameter values are not given."
+                    )
+            parameter_values = [[]] * len(circuits)
+
+        # Allow objects
+        try:
+            circuits = [
+                next(_finditer(circuit.name, self._circuit_names))
+                if not isinstance(circuit, (int, np.integer))
+                else circuit
+                for circuit in circuits
+            ]
+        except StopIteration as err:
+            raise QiskitError(
+                "The circuits passed when calling estimator is not one of the circuits used to "
+                "initialize the session."
+            ) from err
+        try:
+            observables = [
+                next(_finditer(id(observable), self._observable_ids))
+                if not isinstance(observable, (int, np.integer))
+                else observable
+                for observable in observables
+            ]
+        except StopIteration as err:
+            raise QiskitError(
+                "The observables passed when calling estimator is not one of the circuits used to "
+                "initialize the session."
+            ) from err
+
+        # Validation
+        if len(circuits) != len(observables):
+            raise QiskitError(
+                f"The number of circuits ({len(circuits)}) does not match "
+                f"the number of observables ({len(observables)})."
+            )
+        if len(circuits) != len(parameter_values):
+            raise QiskitError(
+                f"The number of circuits ({len(circuits)}) does not match "
+                f"the number of parameter value sets ({len(parameter_values)})."
+            )
+
+        for circ_i, obs_i in zip(circuits, observables):
+            circuit_num_qubits = self.circuits[circ_i].num_qubits
+            observable_num_qubits = self.observables[obs_i].num_qubits
+            if circuit_num_qubits != observable_num_qubits:
+                raise QiskitError(
+                    f"The number of qubits of the {circ_i}-th circuit ({circuit_num_qubits}) does "
+                    f"not match the number of qubits of the {obs_i}-th observable "
+                    f"({observable_num_qubits})."
+                )
+
+        if max(circuits) >= len(self.circuits):
+            raise QiskitError(
+                f"The number of circuits is {len(self.circuits)}, "
+                f"but the index {max(circuits)} is given."
+            )
+        if max(observables) >= len(self.observables):
+            raise QiskitError(
+                f"The number of circuits is {len(self.observables)}, "
+                f"but the index {max(observables)} is given."
+            )
+
+        return self._call(
+            circuits=circuits,
+            observables=observables,
+            parameter_values=parameter_values,
+            **run_options,
+        )
+
+    @abstractmethod
+    def _call(
+        self,
+        circuits: Sequence[int],
+        observables: Sequence[int],
+        parameter_values: Sequence[Sequence[float]],
+        **run_options,
+    ) -> EstimatorResult:
         ...
