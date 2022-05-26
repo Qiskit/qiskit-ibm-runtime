@@ -141,13 +141,12 @@ class BaseSampler(ABC):
                     f"and circuits ({len(self._circuits)})"
                 )
 
-    def __new__(
+    def __new__(  # pylint: disable=unused-argument
         cls,
         circuits: Iterable[QuantumCircuit] | QuantumCircuit,
-        *args: Any,  # pylint: disable=unused-argument
-        parameters: Iterable[Iterable[Parameter]]
-        | None = None,  # pylint: disable=unused-argument
-        **kwargs: Any,  # pylint: disable=unused-argument
+        *args: Any,
+        parameters: Iterable[Iterable[Parameter]] | None = None,
+        **kwargs: Any,
     ) -> BaseSampler:
 
         self = super().__new__(cls)
