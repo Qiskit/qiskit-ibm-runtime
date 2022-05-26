@@ -41,33 +41,39 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
         with sampler_factory(circuits=bell) as sampler:
             self.assertIsInstance(sampler, BaseSampler)
 
-            circuits0 = [0]
-            result = sampler(circuits=circuits0, parameter_values=[[]])
+            circuit_indices = [0]
+            result = sampler(circuit_indices=circuit_indices, parameter_values=[[]])
             self.assertIsInstance(result, SamplerResult)
-            self.assertEqual(len(result.quasi_dists), len(circuits0))
-            self.assertEqual(len(result.metadata), len(circuits0))
+            self.assertEqual(len(result.quasi_dists), len(circuit_indices))
+            self.assertEqual(len(result.metadata), len(circuit_indices))
 
         # executes three Bell circuits
         with sampler_factory([bell] * 3) as sampler:
             self.assertIsInstance(sampler, BaseSampler)
 
-            circuits1 = [0, 1, 2]
-            result1 = sampler(circuits=circuits1, parameter_values=[[]] * 3)
+            circuit_indices1 = [0, 1, 2]
+            result1 = sampler(
+                circuit_indices=circuit_indices1, parameter_values=[[]] * 3
+            )
             self.assertIsInstance(result1, SamplerResult)
-            self.assertEqual(len(result1.quasi_dists), len(circuits1))
-            self.assertEqual(len(result1.metadata), len(circuits1))
+            self.assertEqual(len(result1.quasi_dists), len(circuit_indices1))
+            self.assertEqual(len(result1.metadata), len(circuit_indices1))
 
-            circuits2 = [bell, bell]
-            result2 = sampler(circuits=circuits2, parameter_values=[[]] * 2)
+            circuit_indices2 = [0, 2]
+            result2 = sampler(
+                circuit_indices=circuit_indices2, parameter_values=[[]] * 2
+            )
             self.assertIsInstance(result2, SamplerResult)
-            self.assertEqual(len(result2.quasi_dists), len(circuits2))
-            self.assertEqual(len(result2.metadata), len(circuits2))
+            self.assertEqual(len(result2.quasi_dists), len(circuit_indices2))
+            self.assertEqual(len(result2.metadata), len(circuit_indices2))
 
-            circuits3 = [1, 2]
-            result3 = sampler(circuits=circuits3, parameter_values=[[]] * 2)
+            circuit_indices3 = [1, 2]
+            result3 = sampler(
+                circuit_indices=circuit_indices3, parameter_values=[[]] * 2
+            )
             self.assertIsInstance(result3, SamplerResult)
-            self.assertEqual(len(result3.quasi_dists), len(circuits3))
-            self.assertEqual(len(result3.metadata), len(circuits3))
+            self.assertEqual(len(result3.quasi_dists), len(circuit_indices3))
+            self.assertEqual(len(result3.metadata), len(circuit_indices3))
 
     @run_integration_test
     def test_ibm_sampler_primitive_parameterized_circuits(self, service):
@@ -88,11 +94,11 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
         with sampler_factory(circuits=[pqc, pqc2]) as sampler:
             self.assertIsInstance(sampler, BaseSampler)
 
-            circuits0 = [pqc, pqc, pqc2]
+            circuit_indices = [0, 0, 1]
             result = sampler(
-                circuits=circuits0,
+                circuit_indices=circuit_indices,
                 parameter_values=[theta1, theta2, theta3],
             )
             self.assertIsInstance(result, SamplerResult)
-            self.assertEqual(len(result.quasi_dists), len(circuits0))
-            self.assertEqual(len(result.metadata), len(circuits0))
+            self.assertEqual(len(result.quasi_dists), len(circuit_indices))
+            self.assertEqual(len(result.metadata), len(circuit_indices))

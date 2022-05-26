@@ -94,7 +94,7 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
         with Sampler(circuits=[pqc, pqc2], service=service, options=options) as sampler:
             self.assertIsInstance(sampler, BaseSampler)
 
-            circuits0 = [0, 0, 1]
+            circuits0 = [pqc, pqc, pqc2]
             result = sampler(
                 circuits=circuits0,
                 parameter_values=[theta1, theta2, theta3],
