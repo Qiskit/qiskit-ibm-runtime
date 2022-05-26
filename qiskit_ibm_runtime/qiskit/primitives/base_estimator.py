@@ -106,6 +106,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Sequence
 from copy import copy
+from typing import Any
 
 import numpy as np
 
@@ -151,17 +152,17 @@ class BaseEstimator(ABC):
 
         # To guarantee that they exist as instance variable.
         # With only dynamic set, the python will not know if the attribute exists or not.
-        self._circuit_names = self._circuit_names
-        self._observable_ids = self._observable_ids
+        self._circuit_names = self._circuit_names  # type: ignore
+        self._observable_ids = self._observable_ids  # type: ignore
 
         if parameters is None:
             self._parameters = tuple(circ.parameters for circ in self._circuits)
         else:
             self._parameters = tuple(ParameterView(par) for par in parameters)
-            if len(self._parameters) != len(self._circuits):
+            if len(self._parameters) != len(self._circuits):  # type: ignore
                 raise QiskitError(
                     f"Different number of parameters ({len(self._parameters)}) and "
-                    f"circuits ({len(self._circuits)})"
+                    f"circuits ({len(self._circuits)})"  # type: ignore
                 )
             for i, (circ, params) in enumerate(zip(self._circuits, self._parameters)):
                 if circ.num_parameters != len(params):
@@ -174,11 +175,11 @@ class BaseEstimator(ABC):
         cls,
         circuits: Iterable[QuantumCircuit] | QuantumCircuit,
         observables: Iterable[SparsePauliOp] | SparsePauliOp,
-        *args,  # pylint: disable=unused-argument
+        *args: Any,  # pylint: disable=unused-argument
         parameters: Iterable[Iterable[Parameter]]
         | None = None,  # pylint: disable=unused-argument
-        **kwargs,  # pylint: disable=unused-argument
-    ):
+        **kwargs: Any,  # pylint: disable=unused-argument
+    ) -> BaseEstimator:
 
         self = super().__new__(cls)
         if isinstance(circuits, Iterable):
@@ -193,14 +194,14 @@ class BaseEstimator(ABC):
             self._observable_ids = [id(observables)]
         return self
 
-    def __enter__(self):
+    def __enter__(self) -> BaseEstimator:
         return self
 
-    def __exit__(self, *exc_info):
+    def __exit__(self, *exc_info: Any) -> None:
         self.close()
 
     @abstractmethod
-    def close(self):
+    def close(self) -> None:
         """Close the session and free resources"""
         ...
 
@@ -211,7 +212,7 @@ class BaseEstimator(ABC):
         Returns:
             The quantum circuits.
         """
-        return self._circuits
+        return self._circuits  # type: ignore
 
     @property
     def observables(self) -> tuple[SparsePauliOp, ...]:
@@ -220,7 +221,7 @@ class BaseEstimator(ABC):
         Returns:
             The observables.
         """
-        return self._observables
+        return self._observables  # type: ignore
 
     @property
     def parameters(self) -> tuple[ParameterView, ...]:
@@ -239,7 +240,7 @@ class BaseEstimator(ABC):
         circuits: Sequence[int | QuantumCircuit],
         observables: Sequence[int | SparsePauliOp],
         parameter_values: Sequence[Sequence[float]] | None = None,
-        **run_options,
+        **run_options: Any,
     ) -> EstimatorResult:
         """Run the estimation of expectation value(s).
 
@@ -283,7 +284,7 @@ class BaseEstimator(ABC):
         # Allow optional
         if parameter_values is None:
             for i in circuits:
-                if len(self._circuits[i].parameters) != 0:
+                if len(self._circuits[i].parameters) != 0:  # type: ignore
                     raise QiskitError(
                         f"The {i}-th circuit is parameterised,"
                         "but parameter values are not given."
@@ -293,7 +294,7 @@ class BaseEstimator(ABC):
         # Allow objects
         try:
             circuits = [
-                next(_finditer(circuit.name, self._circuit_names))
+                next(_finditer(circuit.name, self._circuit_names))  # type: ignore
                 if not isinstance(circuit, (int, np.integer))
                 else circuit
                 for circuit in circuits
@@ -362,6 +363,6 @@ class BaseEstimator(ABC):
         circuits: Sequence[int],
         observables: Sequence[int],
         parameter_values: Sequence[Sequence[float]],
-        **run_options,
+        **run_options: Any,
     ) -> EstimatorResult:
         ...

@@ -92,6 +92,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Sequence
 from copy import copy
+from typing import Any
 
 import numpy as np
 
@@ -128,7 +129,7 @@ class BaseSampler(ABC):
 
         # To guarantee that they exist as instance variable.
         # With only dynamic set, the python will not know if the attribute exists or not.
-        self._circuit_names = self._circuit_names
+        self._circuit_names = self._circuit_names  # type: ignore
 
         if parameters is None:
             self._parameters = tuple(circ.parameters for circ in self._circuits)
@@ -143,11 +144,11 @@ class BaseSampler(ABC):
     def __new__(
         cls,
         circuits: Iterable[QuantumCircuit] | QuantumCircuit,
-        *args,  # pylint: disable=unused-argument
+        *args: Any,  # pylint: disable=unused-argument
         parameters: Iterable[Iterable[Parameter]]
         | None = None,  # pylint: disable=unused-argument
-        **kwargs,  # pylint: disable=unused-argument
-    ):
+        **kwargs: Any,  # pylint: disable=unused-argument
+    ) -> BaseSampler:
 
         self = super().__new__(cls)
         if isinstance(circuits, Iterable):
@@ -157,14 +158,14 @@ class BaseSampler(ABC):
             self._circuit_names = [circuits.name]
         return self
 
-    def __enter__(self):
+    def __enter__(self) -> BaseSampler:
         return self
 
-    def __exit__(self, *exc_info):
+    def __exit__(self, *exc_info: Any) -> None:
         self.close()
 
     @abstractmethod
-    def close(self):
+    def close(self) -> None:
         """Close the session and free resources"""
         ...
 
@@ -191,7 +192,7 @@ class BaseSampler(ABC):
         self,
         circuits: Sequence[int | QuantumCircuit],
         parameter_values: Sequence[Sequence[float]] | None = None,
-        **run_options,
+        **run_options: Any,
     ) -> SamplerResult:
         """Run the sampling of bitstrings.
 
@@ -226,7 +227,7 @@ class BaseSampler(ABC):
         # Allow objects
         try:
             circuits = [
-                next(_finditer(circuit.name, self._circuit_names))
+                next(_finditer(circuit.name, self._circuit_names))  # type: ignore
                 if not isinstance(circuit, (int, np.integer))
                 else circuit
                 for circuit in circuits
@@ -268,6 +269,6 @@ class BaseSampler(ABC):
         self,
         circuits: Sequence[int],
         parameter_values: Sequence[Sequence[float]],
-        **run_options,
+        **run_options: Any,
     ) -> SamplerResult:
         ...
