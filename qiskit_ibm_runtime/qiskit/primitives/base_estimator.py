@@ -100,6 +100,11 @@ Here is an example of how estimator is used.
         #             <psi1(theta3)|H3|psi1(theta3)> ]
         result5 = e([0, 1, 0], [0, 1, 2], [theta1, theta2, theta3])
         print(result5)
+
+        # It is possible to pass objects.
+        # calculate [ <psi2(theta2)|H2|psi2(theta2)> ]
+        result6 = e([psi2], [H2], [theta2])
+        print(result6)
 """
 from __future__ import annotations
 
@@ -147,12 +152,17 @@ class BaseEstimator(ABC):
         Raises:
             QiskitError: For mismatch of circuits and parameters list.
         """
-        self._circuits = circuits
-        self._observables = observables
+        if isinstance(circuits, QuantumCircuit):
+            circuits = (circuits,)
+        self._circuits = tuple(circuits)
+
+        if isinstance(observables, SparsePauliOp):
+            observables = (observables,)
+        self._observables = tuple(observables)
 
         # To guarantee that they exist as instance variable.
         # With only dynamic set, the python will not know if the attribute exists or not.
-        self._circuit_names = self._circuit_names  # type: ignore
+        self._circuit_ids = self._circuit_ids  # type: ignore
         self._observable_ids = self._observable_ids  # type: ignore
 
         if parameters is None:
@@ -183,9 +193,9 @@ class BaseEstimator(ABC):
         self = super().__new__(cls)
         if isinstance(circuits, Iterable):
             circuits = copy(circuits)
-            self._circuit_names = [circuit.name for circuit in circuits]
+            self._circuit_ids = [id(circuit) for circuit in circuits]
         else:
-            self._circuit_names = [circuits.name]
+            self._circuit_ids = [id(circuits)]
         if isinstance(observables, Iterable):
             observables = copy(observables)
             self._observable_ids = [id(observable) for observable in observables]
@@ -280,20 +290,10 @@ class BaseEstimator(ABC):
         if isinstance(parameter_values, np.ndarray):
             parameter_values = parameter_values.tolist()
 
-        # Allow optional
-        if parameter_values is None:
-            for i in circuits:
-                if len(self._circuits[i].parameters) != 0:  # type: ignore
-                    raise QiskitError(
-                        f"The {i}-th circuit is parameterised,"
-                        "but parameter values are not given."
-                    )
-            parameter_values = [[]] * len(circuits)
-
         # Allow objects
         try:
             circuits = [
-                next(_finditer(circuit.name, self._circuit_names))  # type: ignore
+                next(_finditer(id(circuit), self._circuit_ids))  # type: ignore
                 if not isinstance(circuit, (int, np.integer))
                 else circuit
                 for circuit in circuits
@@ -315,6 +315,16 @@ class BaseEstimator(ABC):
                 "The observables passed when calling estimator is not one of the circuits used to "
                 "initialize the session."
             ) from err
+
+        # Allow optional
+        if parameter_values is None:
+            for i in circuits:
+                if len(self._circuits[i].parameters) != 0:  # type: ignore
+                    raise QiskitError(
+                        f"The {i}-th circuit is parameterised,"
+                        "but parameter values are not given."
+                    )
+            parameter_values = [[]] * len(circuits)
 
         # Validation
         if len(circuits) != len(observables):

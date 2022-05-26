@@ -64,6 +64,12 @@ Here is an example of how sampler is used.
         result = sampler([0, 1, 2], [[]]*3)
         print([q.binary_probabilities() for q in result.quasi_dists])
 
+    # executes three Bell circuits with objects.
+    # Objects can be passed instead of indices.
+    with Sampler([bell]) as sampler:
+        result = sampler([bell, bell, bell])
+        print([q.binary_probabilities() for q in result.quasi_dists])
+
     # parameterized circuit
     pqc = RealAmplitudes(num_qubits=2, reps=2)
     pqc.measure_all()
@@ -125,11 +131,13 @@ class BaseSampler(ABC):
         Raises:
             QiskitError: For mismatch of circuits and parameters list.
         """
+        if isinstance(circuits, QuantumCircuit):
+            circuits = (circuits,)
         self._circuits = tuple(circuits)
 
         # To guarantee that they exist as instance variable.
         # With only dynamic set, the python will not know if the attribute exists or not.
-        self._circuit_names = self._circuit_names  # type: ignore
+        self._circuit_ids = self._circuit_ids  # type: ignore
 
         if parameters is None:
             self._parameters = tuple(circ.parameters for circ in self._circuits)
@@ -152,9 +160,9 @@ class BaseSampler(ABC):
         self = super().__new__(cls)
         if isinstance(circuits, Iterable):
             circuits = copy(circuits)
-            self._circuit_names = [circuit.name for circuit in circuits]
+            self._circuit_ids = [id(circuit) for circuit in circuits]
         else:
-            self._circuit_names = [circuits.name]
+            self._circuit_ids = [id(circuits)]
         return self
 
     def __enter__(self) -> BaseSampler:
@@ -213,20 +221,10 @@ class BaseSampler(ABC):
         if isinstance(parameter_values, np.ndarray):
             parameter_values = parameter_values.tolist()
 
-        # Allow optional
-        if parameter_values is None:
-            for i in circuits:
-                if len(self._circuits[i].parameters) != 0:
-                    raise QiskitError(
-                        f"The {i}-th circuit ({len(circuits)}) is parameterised,"
-                        "but parameter values are not given."
-                    )
-            parameter_values = [[]] * len(circuits)
-
         # Allow objects
         try:
             circuits = [
-                next(_finditer(circuit.name, self._circuit_names))  # type: ignore
+                next(_finditer(id(circuit), self._circuit_ids))  # type: ignore
                 if not isinstance(circuit, (int, np.integer))
                 else circuit
                 for circuit in circuits
@@ -236,6 +234,16 @@ class BaseSampler(ABC):
                 "The circuits passed when calling sampler is not one of the circuits used to "
                 "initialize the session."
             ) from err
+
+        # Allow optional
+        if parameter_values is None:
+            for i in circuits:
+                if len(self._circuits[i].parameters) != 0:
+                    raise QiskitError(
+                        f"The {i}-th circuit is parameterised,"
+                        "but parameter values are not given."
+                    )
+            parameter_values = [[]] * len(circuits)
 
         # Validation
         if len(circuits) != len(parameter_values):
