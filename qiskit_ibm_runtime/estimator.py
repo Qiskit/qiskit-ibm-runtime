@@ -219,8 +219,6 @@ class Estimator(BaseEstimator):
             circuits: A list of circuit indices.
             observables: A list of observable indices.
             parameter_values: An optional list of concrete parameters to be bound.
-            circuit_indices: (DEPRECATED) A list of circuit indices.
-            observable_indices: (DEPRECATED) A list of observable indices.
             **run_options: A collection of kwargs passed to `backend.run()`.
 
         Returns:
