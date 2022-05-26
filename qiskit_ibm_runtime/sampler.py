@@ -200,7 +200,7 @@ class Sampler(BaseSampler):
             An instance of :class:`qiskit.primitives.SamplerResult`.
         """
         self._session.write(
-            circuits=circuits,
+            circuit_indices=circuits,
             parameter_values=parameter_values,
             run_options=run_options,
         )
