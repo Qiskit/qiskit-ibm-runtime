@@ -57,7 +57,7 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
             self.assertEqual(len(result1.quasi_dists), len(circuits1))
             self.assertEqual(len(result1.metadata), len(circuits1))
 
-            circuits2 = [0, 2]
+            circuits2 = [bell, bell]
             result2 = sampler(circuits=circuits2, parameter_values=[[]] * 2)
             self.assertIsInstance(result2, SamplerResult)
             self.assertEqual(len(result2.quasi_dists), len(circuits2))
@@ -88,7 +88,7 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
         with sampler_factory(circuits=[pqc, pqc2]) as sampler:
             self.assertIsInstance(sampler, BaseSampler)
 
-            circuits0 = [0, 0, 1]
+            circuits0 = [pqc, pqc, pqc2]
             result = sampler(
                 circuits=circuits0,
                 parameter_values=[theta1, theta2, theta3],
