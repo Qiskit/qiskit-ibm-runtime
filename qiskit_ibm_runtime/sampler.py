@@ -24,7 +24,7 @@ from .qiskit_runtime_service import QiskitRuntimeService
 from .runtime_session import RuntimeSession
 
 class Sampler(BaseSampler):
-    """Class for interacting with Qiskit Runtime Sampler primitive service. Additionally, the successor of deprecated ``IBMSampler`` class.
+    """Class for interacting with Qiskit Runtime Sampler primitive service.
 
     Qiskit Runtime Sampler primitive service calculates probabilities or quasi-probabilities
     of bitstrings from quantum circuits.
