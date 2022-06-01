@@ -1,35 +1,6 @@
 ---
 upgrade:
   - |
-    :class:`~qiskit_ibm_runtime.IBMSampler` class is now deprecated and removed
-    with this `remove-ibm-sampler` release. Use
+    ``IBMSampler`` class which was deprecated earlier is now removed. Use
     :class:`~qiskit_ibm_runtime.Sampler` class going forward.
 
-    Example:
-
-    Before::
-
-      from qiskit_ibm_runtime import IBMRuntimeService, IBMSampler
-      service = IBMRuntimeService(channel="ibm_cloud", token="...", instance="...")
-
-      sampler_factory = IBMSampler(service=service, backend="ibmq_qasm_simulator")
-
-      with sampler_factory(circuits=[qc], parameters="...") as sampler:
-          result = sampler(circuit_indices=[0], ...)
-
-    After::
-
-      from qiskit_ibm_runtime import QiskitRuntimeService, Sampler
-      service = QiskitRuntimeService(channel="ibm_cloud", token="...", instance="...")
-
-      with Sampler(
-        circuits=[qc],
-        parameters="...",
-        service=service,
-        options={ "backend": "ibmq_qasm_simulator" },  # or IBMBackend<"ibmq_qasm_simulator">
-      ) as sampler:
-          result = sampler(circuit_indices=[0], ...)
-deprecations:
-  - |
-    Deprecated :class:`~qiskit_ibm_runtime.IBMSampler` class has been removed with its dependencies.
-    Use :class:`~qiskit_ibm_runtime.Sampler` class instead. See upgrade notes section for a detailed explanation with examples.
