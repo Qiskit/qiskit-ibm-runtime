@@ -23,6 +23,7 @@ from .ibm_backend import IBMBackend
 from .qiskit_runtime_service import QiskitRuntimeService
 from .runtime_session import RuntimeSession
 
+
 class Sampler(BaseSampler):
     """Class for interacting with Qiskit Runtime Sampler primitive service.
 
