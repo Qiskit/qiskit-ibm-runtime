@@ -36,9 +36,9 @@ from qiskit.pulse.channels import (
 )
 from qiskit.transpiler.target import Target
 
-from qiskit_ibm_runtime import (
+from qiskit_ibm_runtime import (  # pylint: disable=unused-import,cyclic-import
     qiskit_runtime_service,
-)  # pylint: disable=unused-import,cyclic-import
+)
 
 from .api.clients import AccountClient, RuntimeClient
 from .api.clients.backend import BaseBackendClient
