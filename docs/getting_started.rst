@@ -5,7 +5,7 @@ Getting started
 Install Qiskit packages
 ========================
 
-Install these packages. They let you create circuits and work with primitive programs 
+Install these packages. They let you create circuits and work with primitive programs
 via Qiskit Runtime.
 
 .. code-block:: bash
@@ -50,7 +50,6 @@ Run the Hello World program to ensure that your environment is set up properly:
 
 .. code-block:: python
 
-    from qiskit.test.reference_circuits import ReferenceCircuits
     from qiskit_ibm_runtime import QiskitRuntimeService
 
     service = QiskitRuntimeService()
