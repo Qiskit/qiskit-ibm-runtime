@@ -312,7 +312,7 @@ class BaseEstimator(ABC):
             ]
         except StopIteration as err:
             raise QiskitError(
-                "The observables passed when calling estimator is not one of the circuits used to "
+                "The observables passed when calling estimator is not one of the observables used to "
                 "initialize the session."
             ) from err
 
