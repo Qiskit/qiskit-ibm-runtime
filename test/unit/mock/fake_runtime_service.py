@@ -78,7 +78,9 @@ class FakeRuntimeService(QiskitRuntimeService):
                 url="some_url",
                 instance=hgp_name,
             )
-            hgp = HubGroupProject(client_params=hgp_params, instance=hgp_name)
+            hgp = HubGroupProject(
+                client_params=hgp_params, instance=hgp_name, service=self
+            )
             fake_account_client = self._fake_account_client
             if not fake_account_client:
                 specs = [
