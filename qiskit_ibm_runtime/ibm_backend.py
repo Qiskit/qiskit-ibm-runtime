@@ -36,6 +36,10 @@ from qiskit.pulse.channels import (
 )
 from qiskit.transpiler.target import Target
 
+from qiskit_ibm_runtime import (  # pylint: disable=unused-import,cyclic-import
+    qiskit_runtime_service,
+)
+
 from .api.clients import AccountClient, RuntimeClient
 from .api.clients.backend import BaseBackendClient
 from .exceptions import IBMBackendApiProtocolError
@@ -150,12 +154,14 @@ class IBMBackend(Backend):
     def __init__(
         self,
         configuration: Union[QasmBackendConfiguration, PulseBackendConfiguration],
+        service: "qiskit_runtime_service.QiskitRuntimeService",
         api_client: BaseBackendClient,
     ) -> None:
         """IBMBackend constructor.
 
         Args:
             configuration: Backend configuration.
+            service: Instance of QiskitRuntimeService.
             api_client: IBM client used to communicate with the server.
         """
         super().__init__(
@@ -163,6 +169,7 @@ class IBMBackend(Backend):
             online_date=configuration.online_date,
             backend_version=configuration.backend_version,
         )
+        self._service = service
         self._api_client = api_client
         self._configuration = configuration
         self._properties = None
@@ -254,6 +261,15 @@ class IBMBackend(Backend):
             noise_model=None,
             seed_simulator=None,
         )
+
+    @property
+    def service(self) -> "qiskit_runtime_service.QiskitRuntimeService":
+        """Return the ``service`` object
+
+        Returns:
+            service: instance of QiskitRuntimeService
+        """
+        return self._service
 
     @property
     def dtm(self) -> float:
@@ -496,15 +512,17 @@ class IBMRetiredBackend(IBMBackend):
     def __init__(
         self,
         configuration: Union[QasmBackendConfiguration, PulseBackendConfiguration],
+        service: "qiskit_runtime_service.QiskitRuntimeService",
         api_client: Optional[AccountClient] = None,
     ) -> None:
         """IBMRetiredBackend constructor.
 
         Args:
             configuration: Backend configuration.
+            service: Instance of QiskitRuntimeService.
             api_client: IBM Quantum client used to communicate with the server.
         """
-        super().__init__(configuration, api_client)
+        super().__init__(configuration, service, api_client)
         self._status = BackendStatus(
             backend_name=self.name,
             backend_version=self.configuration().backend_version,
