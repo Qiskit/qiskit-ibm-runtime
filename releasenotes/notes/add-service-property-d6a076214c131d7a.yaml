@@ -1,0 +1,11 @@
+---
+features:
+  - |
+    The ``service`` object which is an instance of :class:`~qiskit_ibm_runtime.QiskitRuntimeService`
+    class can now be accessed from :class:`~qiskit_ibm_runtime.IBMBackend` class using the ``service``
+    property.
+
+    Ex::
+
+      backend = service.get_backend("ibmq_qasm_simulator")
+      backend.service  # QiskitRuntimeService instance used to instantiate the backend
