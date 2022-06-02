@@ -107,11 +107,13 @@ class Estimator(BaseEstimator):
             theta3 = [1, 2, 3, 4, 5, 6]
 
             # calculate [ <psi1(theta1)|H1|psi1(theta1)> ]
+            # pass circuits and observables as indices
             psi1_H1_result = estimator([0], [0], [theta1])
             print(psi1_H1_result)
 
             # calculate [ <psi1(theta1)|H2|psi1(theta1)>, <psi1(theta1)|H3|psi1(theta1)> ]
-            psi1_H23_result = estimator([0, 0], [1, 2], [theta1]*2)
+            # alternatively you can also pass circuits and observables as objects
+            psi1_H23_result = estimator([psi1, psi1], [H2, H3], [theta1]*2)
             print(psi1_H23_result)
 
             # calculate [ <psi2(theta2)|H2|psi2(theta2)> ]

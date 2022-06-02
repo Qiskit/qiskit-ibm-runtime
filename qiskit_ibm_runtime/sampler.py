@@ -88,12 +88,14 @@ class Sampler(BaseSampler):
 
         # executes a Bell circuit
         with Sampler(circuits=[bell], service=service, options=options) as sampler:
+            # pass circuits as indices
             result = sampler(circuits=[0], parameter_values=[[]])
             print(result)
 
         # executes three Bell circuits
         with Sampler(circuits=[bell]*3, service=service, options=options) as sampler:
-            result = sampler(circuits=[0, 1, 2], parameter_values=[[]]*3)
+            # alternatively you can also pass circuits as objects
+            result = sampler(circuits=[bell]*3, parameter_values=[[]]*3)
             print(result)
 
         # parameterized circuit
