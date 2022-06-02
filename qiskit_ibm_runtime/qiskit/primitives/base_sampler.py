@@ -66,6 +66,8 @@ Here is an example of how sampler is used.
 
     # executes three Bell circuits with objects.
     # Objects can be passed instead of indices.
+    # Note that passing objects has an overhead
+    # since the corresponding indices need to be searched.
     with Sampler([bell]) as sampler:
         result = sampler([bell, bell, bell])
         print([q.binary_probabilities() for q in result.quasi_dists])
@@ -204,7 +206,7 @@ class BaseSampler(ABC):
         """Run the sampling of bitstrings.
 
         Args:
-            circuits: Indices of the circuits to evaluate.
+            circuits: the list of circuit indices or circuit objects.
             parameter_values: Parameters to be bound to the circuit.
             run_options: Backend runtime options used for circuit execution.
 

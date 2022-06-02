@@ -101,8 +101,10 @@ Here is an example of how estimator is used.
         result5 = e([0, 1, 0], [0, 1, 2], [theta1, theta2, theta3])
         print(result5)
 
-        # It is possible to pass objects.
+        # Objects can be passed instead of indices.
         # calculate [ <psi2(theta2)|H2|psi2(theta2)> ]
+        # Note that passing objects has an overhead
+        # since the corresponding indices need to be searched.
         result6 = e([psi2], [H2], [theta2])
         print(result6)
 """
@@ -273,8 +275,8 @@ class BaseEstimator(ABC):
             values = parameter_values[i].
 
         Args:
-            circuits: the list of circuit indices.
-            observables: the list of observable indices.
+            circuits: the list of circuit indices or circuit objects.
+            observables: the list of observable indices or observable objects.
             parameter_values: concrete parameters to be bound.
             run_options: runtime options used for circuit execution.
 
@@ -337,6 +339,13 @@ class BaseEstimator(ABC):
                 f"The number of circuits ({len(circuits)}) does not match "
                 f"the number of parameter value sets ({len(parameter_values)})."
             )
+
+        for i, value in zip(circuits, parameter_values):
+            if len(value) != len(self._parameters[i]):
+                raise QiskitError(
+                    f"The number of values ({len(value)}) does not match "
+                    f"the number of parameters ({len(self._parameters[i])}) for the {i}-th circuit."
+                )
 
         for circ_i, obs_i in zip(circuits, observables):
             circuit_num_qubits = self.circuits[circ_i].num_qubits
