@@ -24,14 +24,14 @@ from qiskit_ibm_runtime.exceptions import (
     RuntimeInvalidStateError,
     RuntimeJobNotFound,
 )
-from ..ibm_test_case import IBMIntegrationJobTestCase
-from ..decorators import run_integration_test
-from ..serialization import (
+from test.ibm_test_case import IBMIntegrationJobTestCase
+from test.decorators import run_integration_test
+from test.serialization import (
     get_complex_types,
     SerializableClassDecoder,
     SerializableClass,
 )
-from ..utils import cancel_job_safe, wait_for_status, get_real_device
+from test.utils import cancel_job_safe, wait_for_status, get_real_device
 
 
 class TestIntegrationJob(IBMIntegrationJobTestCase):

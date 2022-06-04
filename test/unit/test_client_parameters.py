@@ -20,7 +20,7 @@ from qiskit_ibm_runtime.proxies import ProxyConfiguration
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 from qiskit_ibm_runtime.api.auth import CloudAuth, QuantumAuth
 
-from ..ibm_test_case import IBMTestCase
+from test.ibm_test_case import IBMTestCase
 
 
 class TestClientParameters(IBMTestCase):

@@ -23,8 +23,8 @@ from qiskit_ibm_runtime.api.clients import AuthClient, VersionClient
 from qiskit_ibm_runtime.api.clients.runtime import RuntimeClient
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
 from qiskit_ibm_runtime.proxies import ProxyConfiguration
-from ..ibm_test_case import IBMTestCase
-from ..decorators import IntegrationTestDependencies, integration_test_setup
+from test.ibm_test_case import IBMTestCase
+from test.decorators import IntegrationTestDependencies, integration_test_setup
 
 ADDRESS = "127.0.0.1"
 PORT = 8085

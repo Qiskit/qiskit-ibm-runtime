@@ -17,8 +17,8 @@ from qiskit.quantum_info import SparsePauliOp
 
 from qiskit_ibm_runtime import Estimator, EstimatorResult, BaseEstimator
 
-from ..decorators import run_integration_test
-from ..ibm_test_case import IBMIntegrationTestCase
+from test.decorators import run_integration_test
+from test.ibm_test_case import IBMIntegrationTestCase
 
 
 class TestIntegrationEstimator(IBMIntegrationTestCase):

@@ -20,7 +20,7 @@ from unittest import SkipTest
 
 from qiskit_ibm_runtime import QiskitRuntimeService
 
-from .unit.mock.fake_runtime_service import FakeRuntimeService
+from test.unit.mock.fake_runtime_service import FakeRuntimeService
 
 
 def run_quantum_and_cloud_fake(func):

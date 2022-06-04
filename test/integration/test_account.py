@@ -22,8 +22,8 @@ from qiskit_ibm_runtime.utils.utils import (
     get_resource_controller_api_url,
     get_iam_api_url,
 )
-from ..ibm_test_case import IBMIntegrationTestCase
-from ..decorators import IntegrationTestDependencies
+from test.ibm_test_case import IBMIntegrationTestCase
+from test.decorators import IntegrationTestDependencies
 
 
 def _get_service_instance_name_for_crn(

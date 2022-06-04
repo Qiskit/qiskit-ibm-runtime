@@ -33,11 +33,11 @@ from .mock.fake_runtime_client import (
     CustomResultRuntimeJob,
 )
 from .mock.fake_runtime_service import FakeRuntimeService
-from ..ibm_test_case import IBMTestCase
-from ..decorators import run_quantum_and_cloud_fake
-from ..program import run_program, upload_program
-from ..serialization import get_complex_types
-from ..utils import mock_wait_for_final_state
+from test.ibm_test_case import IBMTestCase
+from test.decorators import run_quantum_and_cloud_fake
+from test.program import run_program, upload_program
+from test.serialization import get_complex_types
+from test.utils import mock_wait_for_final_state
 
 
 class TestRuntimeJob(IBMTestCase):

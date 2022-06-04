@@ -21,7 +21,7 @@ from nbconvert.preprocessors import ExecutePreprocessor
 
 from qiskit_ibm_runtime.utils.utils import to_python_identifier
 
-from ..ibm_test_case import IBMIntegrationTestCase
+from test.ibm_test_case import IBMIntegrationTestCase
 
 TUTORIAL_PATH = "docs/tutorials/**/*.ipynb"
 

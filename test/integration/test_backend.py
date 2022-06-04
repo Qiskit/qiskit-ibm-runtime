@@ -18,8 +18,8 @@ from qiskit.transpiler.target import Target
 
 from qiskit_ibm_runtime import QiskitRuntimeService
 
-from ..ibm_test_case import IBMIntegrationTestCase
-from ..decorators import run_integration_test
+from test.ibm_test_case import IBMIntegrationTestCase
+from test.decorators import run_integration_test
 
 
 class TestIntegrationBackend(IBMIntegrationTestCase):

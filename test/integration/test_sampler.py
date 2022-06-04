@@ -17,8 +17,8 @@ from qiskit.test.reference_circuits import ReferenceCircuits
 
 from qiskit_ibm_runtime import Sampler, BaseSampler, SamplerResult
 
-from ..decorators import run_integration_test
-from ..ibm_test_case import IBMIntegrationTestCase
+from test.decorators import run_integration_test
+from test.ibm_test_case import IBMIntegrationTestCase
 
 
 class TestIntegrationIBMSampler(IBMIntegrationTestCase):

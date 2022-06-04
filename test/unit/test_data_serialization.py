@@ -64,9 +64,9 @@ from qiskit.result import Result
 from qiskit_ibm_runtime.utils import RuntimeEncoder, RuntimeDecoder
 from .mock.fake_runtime_client import CustomResultRuntimeJob
 from .mock.fake_runtime_service import FakeRuntimeService
-from ..ibm_test_case import IBMTestCase
-from ..program import run_program
-from ..serialization import (
+from test.ibm_test_case import IBMTestCase
+from test.program import run_program
+from test.serialization import (
     SerializableClass,
     SerializableClassDecoder,
     get_complex_types,

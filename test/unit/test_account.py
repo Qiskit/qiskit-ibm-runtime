@@ -35,8 +35,8 @@ from qiskit_ibm_runtime.accounts.management import (
 )
 from qiskit_ibm_runtime.proxies import ProxyConfiguration
 from .mock.fake_runtime_service import FakeRuntimeService
-from ..ibm_test_case import IBMTestCase
-from ..account import (
+from test.ibm_test_case import IBMTestCase
+from test.account import (
     get_account_config_contents,
     temporary_account_config_file,
     no_envs,

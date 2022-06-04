@@ -16,8 +16,8 @@ from typing import Any, Dict, Set, Optional
 
 import dateutil.parser
 
-from ..ibm_test_case import IBMIntegrationTestCase
-from ..decorators import (
+from test.ibm_test_case import IBMIntegrationTestCase
+from test.decorators import (
     run_integration_test,
 )
 

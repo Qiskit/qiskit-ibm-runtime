@@ -25,9 +25,9 @@ from qiskit_ibm_runtime import QISKIT_IBM_RUNTIME_LOGGER_NAME
 from qiskit_ibm_runtime.exceptions import IBMNotAuthorizedError
 from qiskit_ibm_runtime import QiskitRuntimeService
 
-from .utils import setup_test_logging
-from .decorators import IntegrationTestDependencies, integration_test_setup
-from .templates import RUNTIME_PROGRAM, RUNTIME_PROGRAM_METADATA, PROGRAM_PREFIX
+from test.utils import setup_test_logging
+from test.decorators import IntegrationTestDependencies, integration_test_setup
+from test.templates import RUNTIME_PROGRAM, RUNTIME_PROGRAM_METADATA, PROGRAM_PREFIX
 
 
 class IBMTestCase(unittest.TestCase):
