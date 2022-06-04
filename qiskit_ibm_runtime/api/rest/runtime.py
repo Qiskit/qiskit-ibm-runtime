@@ -189,7 +189,7 @@ class Runtime(RestAdapterBase):
             JSON response.
         """
         url = self.get_url("jobs")
-        payload: Dict[str, Union[int, str]] = {}
+        payload: Dict[str, Union[int, str, List[str]]] = {}
         if limit:
             payload["limit"] = limit
         if skip:
