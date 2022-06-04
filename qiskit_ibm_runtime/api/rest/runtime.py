@@ -120,6 +120,7 @@ class Runtime(RestAdapterBase):
         project: Optional[str] = None,
         log_level: Optional[str] = None,
         session_id: Optional[str] = None,
+        job_tags: Optional[List[str]] = None,
     ) -> Dict:
         """Execute the program.
 
@@ -133,6 +134,7 @@ class Runtime(RestAdapterBase):
             project: Project to be used.
             log_level: Log level to use.
             session_id: ID of the first job in a runtime session.
+            job_tags: Tags to be assigned to the job.
 
         Returns:
             JSON response.
@@ -150,6 +152,8 @@ class Runtime(RestAdapterBase):
             payload["backend"] = backend_name
         if session_id:
             payload["session_id"] = session_id
+        if job_tags:
+            payload["tags"] = job_tags
         if all([hub, group, project]):
             payload["hub"] = hub
             payload["group"] = group

@@ -45,6 +45,7 @@ from .runtime_session import RuntimeSession  # pylint: disable=cyclic-import
 from .utils import RuntimeDecoder, to_base64_string, to_python_identifier
 from .utils.backend_decoder import configuration_from_server_data
 from .utils.hgp import to_instance_format, from_instance_format
+from .utils.utils import validate_job_tags
 from .api.client_parameters import ClientParameters
 from .runtime_options import RuntimeOptions
 
@@ -827,6 +828,7 @@ class QiskitRuntimeService:
         result_decoder: Optional[Type[ResultDecoder]] = None,
         instance: Optional[str] = None,
         session_id: Optional[str] = None,
+        job_tags: Optional[List[str]] = None,
     ) -> RuntimeJob:
         """Execute the runtime program.
 
@@ -847,6 +849,8 @@ class QiskitRuntimeService:
             instance: This is only supported for ``ibm_quantum`` runtime and is in the
                 hub/group/project format.
             session_id: Job ID of the first job in a runtime session.
+            job_tags: Tags to be assigned to the job. The tags can subsequently be used
+                as a filter in the :meth:`jobs()` function call.
 
         Returns:
             A ``RuntimeJob`` instance representing the execution.
@@ -856,6 +860,8 @@ class QiskitRuntimeService:
             RuntimeProgramNotFound: If the program cannot be found.
             IBMRuntimeError: An error occurred running the program.
         """
+        validate_job_tags(job_tags, IBMInputValueError)
+
         if instance and self._channel != "ibm_quantum":
             raise IBMInputValueError(
                 "The 'instance' keyword is only supported for ``ibm_quantum`` runtime. "
@@ -891,6 +897,7 @@ class QiskitRuntimeService:
                 hgp=hgp_name,
                 log_level=options.log_level,
                 session_id=session_id,
+                job_tags=job_tags,
             )
         except RequestsApiError as ex:
             if ex.status_code == 404:
