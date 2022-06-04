@@ -18,7 +18,7 @@ import time
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 from functools import wraps
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
 from qiskit_ibm_runtime.utils import RuntimeEncoder
@@ -356,6 +356,7 @@ class BaseFakeRuntimeClient:
         hgp: Optional[str],
         log_level: Optional[str],
         session_id: Optional[str] = None,
+        job_tags: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
         """Run the specified program."""
         _ = self._get_program(program_id)
@@ -385,7 +386,7 @@ class BaseFakeRuntimeClient:
             image=image,
             log_level=log_level,
             session_id=session_id,
-            **self._job_kwargs,
+            job_tags=job_tags**self._job_kwargs,
         )
         self._jobs[job_id] = job
         return {"id": job_id, "backend": backend_name}
