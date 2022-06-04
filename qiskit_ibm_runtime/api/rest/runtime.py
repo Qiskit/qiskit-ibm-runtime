@@ -170,6 +170,7 @@ class Runtime(RestAdapterBase):
         hub: str = None,
         group: str = None,
         project: str = None,
+        job_tags: Optional[List[str]] = None,
     ) -> Dict:
         """Get a list of job data.
 
@@ -182,6 +183,7 @@ class Runtime(RestAdapterBase):
             hub: Filter by hub - hub, group, and project must all be specified.
             group: Filter by group - hub, group, and project must all be specified.
             project: Filter by project - hub, group, and project must all be specified.
+            job_tags: Filter by tags assigned to jobs. Matched jobs are associated with all tags.
 
         Returns:
             JSON response.
@@ -196,6 +198,8 @@ class Runtime(RestAdapterBase):
             payload["pending"] = "true" if pending else "false"
         if program_id:
             payload["program"] = program_id
+        if job_tags:
+            payload["tags"] = job_tags
         if all([hub, group, project]):
             payload["provider"] = f"{hub}/{group}/{project}"
         return self.session.get(url, params=payload).json()

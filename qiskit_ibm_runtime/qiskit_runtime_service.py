@@ -1212,6 +1212,7 @@ class QiskitRuntimeService:
         pending: bool = None,
         program_id: str = None,
         instance: Optional[str] = None,
+        job_tags: Optional[List[str]] = None,
     ) -> List[RuntimeJob]:
         """Retrieve all runtime jobs, subject to optional filtering.
 
@@ -1224,6 +1225,7 @@ class QiskitRuntimeService:
             program_id: Filter by Program ID.
             instance: This is only supported for ``ibm_quantum`` runtime and is in the
                 hub/group/project format.
+            job_tags: Filter by tags assigned to jobs. Matched jobs are associated with all tags.
 
         Returns:
             A list of runtime jobs.
@@ -1252,6 +1254,7 @@ class QiskitRuntimeService:
                 hub=hub,
                 group=group,
                 project=project,
+                job_tags=job_tags,
             )
             job_page = jobs_response["jobs"]
             # count is the total number of jobs that would be returned if
