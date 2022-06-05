@@ -64,11 +64,18 @@ class Estimator(BaseEstimator):
     The returned instance can be called repeatedly with the following parameters to
     estimate expectation values.
 
-    * circuit_indices: A list of circuit indices.
+    * circuits: a (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
+        a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
+        a list of circuit indices.
 
-    * observable_indices: A list of observable indices.
+    * observables: a list of :class:`~qiskit.quantum_info.SparsePauliOp` or
+        a list of observable indices.
 
     * parameter_values: An optional list of concrete parameters to be bound.
+
+    * circuit_indices: (DEPRECATED) A list of circuit indices.
+
+    * observable_indices: (DEPRECATED) A list of observable indices.
 
     All the above lists should be of the same length.
 
@@ -100,11 +107,13 @@ class Estimator(BaseEstimator):
             theta3 = [1, 2, 3, 4, 5, 6]
 
             # calculate [ <psi1(theta1)|H1|psi1(theta1)> ]
+            # pass circuits and observables as indices
             psi1_H1_result = estimator([0], [0], [theta1])
             print(psi1_H1_result)
 
             # calculate [ <psi1(theta1)|H2|psi1(theta1)>, <psi1(theta1)|H3|psi1(theta1)> ]
-            psi1_H23_result = estimator([0, 0], [1, 2], [theta1]*2)
+            # alternatively you can also pass circuits and observables as objects
+            psi1_H23_result = estimator([psi1, psi1], [H2, H3], [theta1]*2)
             print(psi1_H23_result)
 
             # calculate [ <psi2(theta2)|H2|psi2(theta2)> ]
@@ -197,10 +206,10 @@ class Estimator(BaseEstimator):
             options=options,
         )
 
-    def __call__(
+    def _call(
         self,
-        circuit_indices: Sequence[int],
-        observable_indices: Sequence[int],
+        circuits: Sequence[int],
+        observables: Sequence[int],
         parameter_values: Optional[
             Union[Sequence[float], Sequence[Sequence[float]]]
         ] = None,
@@ -209,8 +218,8 @@ class Estimator(BaseEstimator):
         """Estimates expectation values for given inputs in a runtime session.
 
         Args:
-            circuit_indices: A list of circuit indices.
-            observable_indices: A list of observable indices.
+            circuits: A list of circuit indices.
+            observables: A list of observable indices.
             parameter_values: An optional list of concrete parameters to be bound.
             **run_options: A collection of kwargs passed to `backend.run()`.
 
@@ -218,8 +227,8 @@ class Estimator(BaseEstimator):
             An instance of :class:`qiskit.primitives.EstimatorResult`.
         """
         self._session.write(
-            circuit_indices=circuit_indices,
-            observable_indices=observable_indices,
+            circuit_indices=circuits,
+            observable_indices=observables,
             parameter_values=parameter_values,
             run_options=run_options,
         )

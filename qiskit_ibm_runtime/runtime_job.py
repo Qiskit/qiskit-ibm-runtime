@@ -13,6 +13,7 @@
 """Qiskit runtime job."""
 
 from typing import Any, Optional, Callable, Dict, Type
+import time
 import logging
 from concurrent import futures
 import traceback
@@ -232,13 +233,24 @@ class RuntimeJob:
             RuntimeJobTimeoutError: If the job does not complete within given timeout.
         """
         try:
+            start_time = time.time()
             if self._status not in JOB_FINAL_STATES and not self._is_streaming():
                 self._ws_client_future = self._executor.submit(
                     self._start_websocket_client
                 )
             if self._is_streaming():
                 self._ws_client_future.result(timeout)
-            self.status()
+            # poll for status after stream has closed until status is final
+            # because status doesn't become final as soon as stream closes
+            status = self.status()
+            while status not in JOB_FINAL_STATES:
+                elapsed_time = time.time() - start_time
+                if timeout is not None and elapsed_time >= timeout:
+                    raise RuntimeJobTimeoutError(
+                        f"Timed out waiting for job to complete after {timeout} secs."
+                    )
+                time.sleep(3)
+                status = self.status()
         except futures.TimeoutError:
             raise RuntimeJobTimeoutError(
                 f"Timed out waiting for job to complete after {timeout} secs."

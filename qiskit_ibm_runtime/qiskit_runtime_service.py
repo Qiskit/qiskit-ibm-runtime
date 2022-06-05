@@ -309,6 +309,7 @@ class QiskitRuntimeService:
                 continue
             ret[config.backend_name] = ibm_backend.IBMBackend(
                 configuration=config,
+                service=self,
                 api_client=self._api_client,
             )
         return ret
@@ -384,7 +385,7 @@ class QiskitRuntimeService:
             # Build the hgp.
             try:
                 hgp = HubGroupProject(
-                    client_params=hgp_params, instance=hgp_params.instance
+                    client_params=hgp_params, instance=hgp_params.instance, service=self
                 )
                 hgps[hgp.name] = hgp
             except Exception:  # pylint: disable=broad-except

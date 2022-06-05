@@ -1,0 +1,20 @@
+---
+upgrade:
+  - |
+    The parameters ``circuit_indices`` and ``observable_indices`` when calling ``estimator``
+    are now deprecated and will be removed in a future release.
+    You can now pass either indices or objects using the ``circuits`` and ``observables`` parameters.
+
+    Ex::
+    
+        with Estimator(
+          circuits=[qc1, qc2],
+          observables=[H1, H2, H3],
+          service=service,
+          options=options
+        ) as estimator:
+          # pass circuits and observables as indices
+          result = estimator(circuits=[0, 1], observables=[0, 1], parameter_values=[theta1, theta2])
+
+          # pass circuits and observables as objects
+          result = estimator(circuits=[qc1, qc2], observables=[H1, H3], parameter_values=[theta1, theta3])
