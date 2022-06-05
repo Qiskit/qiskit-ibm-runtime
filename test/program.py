@@ -79,6 +79,7 @@ def run_program(
     instance=None,
     backend_name=None,
     log_level=None,
+    job_tags=None,
 ):
     """Run a program."""
     backend_name = backend_name if backend_name is not None else "common_backend"
@@ -95,5 +96,6 @@ def run_program(
         inputs=inputs,
         result_decoder=decoder,
         instance=instance,
+        job_tags=job_tags,
     )
     return job

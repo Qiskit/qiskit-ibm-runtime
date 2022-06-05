@@ -112,6 +112,7 @@ class BaseFakeRuntimeJob:
         final_status,
         params,
         image,
+        job_tags=None,
         log_level=None,
         session_id=None,
     ):
@@ -127,6 +128,7 @@ class BaseFakeRuntimeJob:
         self._params = params
         self._image = image
         self._interim_results = json.dumps("foo")
+        self._job_tags = job_tags
         self.log_level = log_level
         self._session_id = session_id
         if final_status is None:
@@ -386,7 +388,8 @@ class BaseFakeRuntimeClient:
             image=image,
             log_level=log_level,
             session_id=session_id,
-            job_tags=job_tags**self._job_kwargs,
+            job_tags=job_tags,
+            **self._job_kwargs,
         )
         self._jobs[job_id] = job
         return {"id": job_id, "backend": backend_name}
@@ -409,6 +412,7 @@ class BaseFakeRuntimeClient:
         hub=None,
         group=None,
         project=None,
+        job_tags=None,
     ):
         """Get all jobs."""
         pending_statuses = ["QUEUED", "RUNNING"]
@@ -430,6 +434,9 @@ class BaseFakeRuntimeClient:
                 for job in jobs
                 if job._hub == hub and job._group == group and job._project == project
             ]
+            count = len(jobs)
+        if job_tags:
+            jobs = [job for job in jobs if job._job_tags == job_tags]
             count = len(jobs)
         jobs = jobs[skip : limit + skip]
         return {"jobs": [job.to_dict() for job in jobs], "count": count}
