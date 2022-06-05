@@ -134,7 +134,7 @@ class RuntimeClient(BaseBackendClient):
             hgp: Hub/group/project to use.
             log_level: Log level to use.
             session_id: Job ID of the first job in a runtime session.
-            job-tags: Tags to be assigned to the job.
+            job_tags: Tags to be assigned to the job.
 
         Returns:
             JSON response.
