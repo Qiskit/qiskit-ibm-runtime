@@ -128,6 +128,17 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         self.assertEqual(1, len(rjobs), f"Retrieved jobs: {[j.job_id for j in rjobs]}")
 
     @run_integration_test
+    def test_retrieve_jobs_by_job_tags(self, service):
+        """Test retrieving jobs by job_tags."""
+        job_tags = ["test_tag"]
+        job = self._run_program(service, job_tags=job_tags)
+        job.wait_for_final_state()
+        rjobs = service.jobs(job_tags=job_tags)
+        self.assertEqual(1, len(rjobs), f"Retrieved jobs: {[j.job_id for j in rjobs]}")
+        rjobs = service.jobs(job_tags=["no_test_tag"])
+        self.assertFalse(rjobs)
+
+    @run_integration_test
     def test_jobs_filter_by_hgp(self, service):
         """Test retrieving jobs by hgp."""
         if self.dependencies.channel == "ibm_cloud":

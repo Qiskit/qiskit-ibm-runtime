@@ -183,6 +183,7 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
         callback=None,
         backend=None,
         log_level=None,
+        job_tags=None,
     ):
         """Run a program."""
         self.log.debug("Running program on %s", service.channel)
@@ -201,7 +202,11 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
         )
         options = {"backend_name": backend_name, "log_level": log_level}
         job = service.run(
-            program_id=pid, inputs=inputs, options=options, callback=callback
+            program_id=pid,
+            inputs=inputs,
+            options=options,
+            job_tags=job_tags,
+            callback=callback,
         )
         self.log.info("Runtime job %s submitted.", job.job_id)
         self.to_cancel[service.channel].append(job)
