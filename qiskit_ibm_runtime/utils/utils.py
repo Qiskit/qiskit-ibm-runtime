@@ -42,7 +42,7 @@ def validate_job_tags(
         not isinstance(job_tags, list)
         or not all(isinstance(tag, str) for tag in job_tags)
     ):
-        raise exception("job_tags needs to be a list or strings.")
+        raise exception("job_tags needs to be a list of strings.")
 
 
 def get_iam_api_url(cloud_url: str) -> str:
