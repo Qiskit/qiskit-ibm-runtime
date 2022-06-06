@@ -1,0 +1,7 @@
+---
+upgrade:
+  - |
+    :meth:`~qiskit_ibm_runtime.IBMRuntimeService.run` now supports a new parameter,
+    ``max_execution_time``, which can be used to override the default 
+    program maximum execution time.
+
