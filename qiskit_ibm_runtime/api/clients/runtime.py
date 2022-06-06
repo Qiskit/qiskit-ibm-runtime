@@ -123,7 +123,7 @@ class RuntimeClient(BaseBackendClient):
         log_level: Optional[str],
         session_id: Optional[str],
         job_tags: Optional[List[str]] = None,
-        max_execution_time: Optional[int] = None
+        max_execution_time: Optional[int] = None,
     ) -> Dict:
         """Run the specified program.
 
@@ -136,7 +136,7 @@ class RuntimeClient(BaseBackendClient):
             log_level: Log level to use.
             session_id: Job ID of the first job in a runtime session.
             job_tags: Tags to be assigned to the job.
-            max_execution_time: Maximum execution time in seconds. 
+            max_execution_time: Maximum execution time in seconds.
 
         Returns:
             JSON response.

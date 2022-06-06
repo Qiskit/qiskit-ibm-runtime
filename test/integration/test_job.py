@@ -20,6 +20,7 @@ from qiskit.test.decorators import slow_test
 
 from qiskit_ibm_runtime.constants import API_TO_JOB_ERROR_MESSAGE
 from qiskit_ibm_runtime.exceptions import (
+    IBMRuntimeError,
     RuntimeJobFailureError,
     RuntimeInvalidStateError,
     RuntimeJobNotFound,
@@ -116,6 +117,30 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         )
         with self.assertRaises(RuntimeJobFailureError):
             job.result()
+
+    @run_integration_test
+    def test_run_program_failed_custom_max_execution_time(self, service):
+        """Test a program that failed with a custom max_execution_time."""
+        program_id = self._upload_program(service)
+        job = self._run_program(service, program_id=program_id, max_execution_time=1)
+        job.wait_for_final_state()
+        job_result_raw = service._api_client.job_results(job.job_id)
+        self.assertEqual(JobStatus.ERROR, job.status())
+        self.assertIn(
+            API_TO_JOB_ERROR_MESSAGE["CANCELLED - RAN TOO LONG"].format(
+                job.job_id, job_result_raw
+            ),
+            job.error_message(),
+        )
+        with self.assertRaises(RuntimeJobFailureError):
+            job.result()
+
+    @run_integration_test
+    def test_run_program_failed_invalid_execution_time(self, service):
+        """Test a program that failed with an invalid execution time."""
+        program_id = self._upload_program(service)
+        with self.assertRaises(IBMRuntimeError):
+            self._run_program(service, program_id=program_id, max_execution_time=5000)
 
     @run_integration_test
     def test_cancel_job_queued(self, service):

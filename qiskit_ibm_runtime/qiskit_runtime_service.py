@@ -853,7 +853,7 @@ class QiskitRuntimeService:
             session_id: Job ID of the first job in a runtime session.
             job_tags: Tags to be assigned to the job. The tags can subsequently be used
                 as a filter in the :meth:`jobs()` function call.
-            max_execution_time: Maximum execution time in seconds. 
+            max_execution_time: Maximum execution time in seconds.
 
         Returns:
             A ``RuntimeJob`` instance representing the execution.
@@ -901,7 +901,7 @@ class QiskitRuntimeService:
                 log_level=options.log_level,
                 session_id=session_id,
                 job_tags=job_tags,
-                max_execution_time=max_execution_time
+                max_execution_time=max_execution_time,
             )
         except RequestsApiError as ex:
             if ex.status_code == 404:

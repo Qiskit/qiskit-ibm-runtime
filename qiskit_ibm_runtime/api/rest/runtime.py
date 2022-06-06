@@ -121,7 +121,7 @@ class Runtime(RestAdapterBase):
         log_level: Optional[str] = None,
         session_id: Optional[str] = None,
         job_tags: Optional[List[str]] = None,
-        max_execution_time: Optional[int] = None
+        max_execution_time: Optional[int] = None,
     ) -> Dict:
         """Execute the program.
 
@@ -136,13 +136,13 @@ class Runtime(RestAdapterBase):
             log_level: Log level to use.
             session_id: ID of the first job in a runtime session.
             job_tags: Tags to be assigned to the job.
-            max_execution_time: Maximum execution time in seconds. 
+            max_execution_time: Maximum execution time in seconds.
 
         Returns:
             JSON response.
         """
         url = self.get_url("jobs")
-        payload = {
+        payload: Dict[str, Any] = {
             "program_id": program_id,
             "params": params,
         }
@@ -157,7 +157,7 @@ class Runtime(RestAdapterBase):
         if job_tags:
             payload["tags"] = job_tags
         if max_execution_time:
-            payload['cost'] = max_execution_time
+            payload["cost"] = max_execution_time
         if all([hub, group, project]):
             payload["hub"] = hub
             payload["group"] = group
