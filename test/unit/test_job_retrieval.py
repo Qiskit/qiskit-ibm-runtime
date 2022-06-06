@@ -221,7 +221,6 @@ class TestRetrieveJobs(IBMTestCase):
             job.wait_for_final_state()
         rjobs = service.jobs(program_id=program_id, job_tags=job_tags)
         self.assertTrue(rjobs)
-        self.assertEqual(program_id, rjobs[0].program_id)
         self.assertEqual(1, len(rjobs))
         rjobs = service.jobs(program_id=program_id, job_tags=["no_test_tag"])
         self.assertFalse(rjobs)
