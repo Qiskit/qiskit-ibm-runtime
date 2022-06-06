@@ -120,6 +120,7 @@ class Runtime(RestAdapterBase):
         project: Optional[str] = None,
         log_level: Optional[str] = None,
         session_id: Optional[str] = None,
+        job_tags: Optional[List[str]] = None,
     ) -> Dict:
         """Execute the program.
 
@@ -133,6 +134,7 @@ class Runtime(RestAdapterBase):
             project: Project to be used.
             log_level: Log level to use.
             session_id: ID of the first job in a runtime session.
+            job_tags: Tags to be assigned to the job.
 
         Returns:
             JSON response.
@@ -150,6 +152,8 @@ class Runtime(RestAdapterBase):
             payload["backend"] = backend_name
         if session_id:
             payload["session_id"] = session_id
+        if job_tags:
+            payload["tags"] = job_tags
         if all([hub, group, project]):
             payload["hub"] = hub
             payload["group"] = group
@@ -166,6 +170,7 @@ class Runtime(RestAdapterBase):
         hub: str = None,
         group: str = None,
         project: str = None,
+        job_tags: Optional[List[str]] = None,
     ) -> Dict:
         """Get a list of job data.
 
@@ -178,12 +183,13 @@ class Runtime(RestAdapterBase):
             hub: Filter by hub - hub, group, and project must all be specified.
             group: Filter by group - hub, group, and project must all be specified.
             project: Filter by project - hub, group, and project must all be specified.
+            job_tags: Filter by tags assigned to jobs. Matched jobs are associated with all tags.
 
         Returns:
             JSON response.
         """
         url = self.get_url("jobs")
-        payload: Dict[str, Union[int, str]] = {}
+        payload: Dict[str, Union[int, str, List[str]]] = {}
         if limit:
             payload["limit"] = limit
         if skip:
@@ -192,6 +198,8 @@ class Runtime(RestAdapterBase):
             payload["pending"] = "true" if pending else "false"
         if program_id:
             payload["program"] = program_id
+        if job_tags:
+            payload["tags"] = job_tags
         if all([hub, group, project]):
             payload["provider"] = f"{hub}/{group}/{project}"
         return self.session.get(url, params=payload).json()

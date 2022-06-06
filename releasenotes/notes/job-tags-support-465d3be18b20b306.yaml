@@ -1,0 +1,6 @@
+---
+upgrade:
+  - |
+    :meth:`~qiskit_ibm_runtime.IBMRuntimeService.run` now supports a new parameter,
+    ``job_tags``. These tags can be used when filtering jobs with 
+    :meth:`~qiskit_ibm_runtime.IBMRuntimeService.jobs`.
