@@ -115,6 +115,7 @@ class BaseFakeRuntimeJob:
         job_tags=None,
         log_level=None,
         session_id=None,
+        max_execution_time=None,
     ):
         """Initialize a fake job."""
         self._job_id = job_id
@@ -131,6 +132,7 @@ class BaseFakeRuntimeJob:
         self._job_tags = job_tags
         self.log_level = log_level
         self._session_id = session_id
+        self._max_execution_time = max_execution_time
         if final_status is None:
             self._future = self._executor.submit(self._auto_progress)
             self._result = None
@@ -359,6 +361,7 @@ class BaseFakeRuntimeClient:
         log_level: Optional[str],
         session_id: Optional[str] = None,
         job_tags: Optional[List[str]] = None,
+        max_execution_time: Optional[int] = None,
     ) -> Dict[str, Any]:
         """Run the specified program."""
         _ = self._get_program(program_id)
@@ -389,6 +392,7 @@ class BaseFakeRuntimeClient:
             log_level=log_level,
             session_id=session_id,
             job_tags=job_tags,
+            max_execution_time=max_execution_time,
             **self._job_kwargs,
         )
         self._jobs[job_id] = job
