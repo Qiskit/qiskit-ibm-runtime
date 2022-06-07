@@ -121,8 +121,15 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     @run_integration_test
     def test_run_program_failed_custom_max_execution_time(self, service):
         """Test a program that failed with a custom max_execution_time."""
-        program_id = self._upload_program(service)
-        job = self._run_program(service, program_id=program_id, max_execution_time=1)
+        # check that program max execution time is overridden
+        max_execution_time = 300
+        program_id = self._upload_program(
+            service, max_execution_time=max_execution_time
+        )
+        inputs = {"iterations": 1, "sleep_per_iteration": 60}
+        job = self._run_program(
+            service, program_id=program_id, inputs=inputs, max_execution_time=1
+        )
         job.wait_for_final_state()
         job_result_raw = service._api_client.job_results(job.job_id)
         self.assertEqual(JobStatus.ERROR, job.status())
