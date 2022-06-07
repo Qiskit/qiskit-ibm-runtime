@@ -853,7 +853,8 @@ class QiskitRuntimeService:
             session_id: Job ID of the first job in a runtime session.
             job_tags: Tags to be assigned to the job. The tags can subsequently be used
                 as a filter in the :meth:`jobs()` function call.
-            max_execution_time: Maximum execution time in seconds.
+            max_execution_time: Maximum execution time in seconds. This overrides
+                the max_execution_time of the program and cannot exceed it.
 
         Returns:
             A ``RuntimeJob`` instance representing the execution.
