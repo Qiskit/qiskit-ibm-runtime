@@ -379,6 +379,9 @@ class BaseFakeRuntimeClient:
         if backend_name is None:
             backend_name = self.list_backends()[0]
 
+        if session_id is None:
+            session_id = job_id
+
         job = job_cls(
             job_id=job_id,
             program_id=program_id,

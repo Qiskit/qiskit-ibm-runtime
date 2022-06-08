@@ -143,8 +143,10 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         """Test retrieving jobs by session_id."""
         job = self._run_program(service)
         job.wait_for_final_state()
+        job_2 = self._run_program(service, session_id=job.job_id)
+        job_2.wait_for_final_state()
         rjobs = service.jobs(session_id=job.job_id)
-        self.assertEqual(1, len(rjobs), f"Retrieved jobs: {[j.job_id for j in rjobs]}")
+        self.assertEqual(2, len(rjobs), f"Retrieved jobs: {[j.job_id for j in rjobs]}")
         rjobs = service.jobs(session_id="test")
         self.assertFalse(rjobs)
 

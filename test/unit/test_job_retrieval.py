@@ -229,14 +229,17 @@ class TestRetrieveJobs(IBMTestCase):
         """Test retrieving jobs by session id."""
         service = self._ibm_quantum_service
         program_id = upload_program(service)
-        session_id = "test_session_id"
 
-        job = run_program(service=service, program_id=program_id, session_id=session_id)
+        job = run_program(service=service, program_id=program_id)
+        job_2 = run_program(
+            service=service, program_id=program_id, session_id=job.job_id
+        )
         with mock_wait_for_final_state(service, job):
             job.wait_for_final_state()
-        rjobs = service.jobs(program_id=program_id, session_id=session_id)
+            job_2.wait_for_final_state()
+        rjobs = service.jobs(program_id=program_id, session_id=job.job_id)
         self.assertTrue(rjobs)
-        self.assertEqual(1, len(rjobs))
+        self.assertEqual(2, len(rjobs))
         rjobs = service.jobs(program_id=program_id, session_id="no_test_session_id")
         self.assertFalse(rjobs)
 
