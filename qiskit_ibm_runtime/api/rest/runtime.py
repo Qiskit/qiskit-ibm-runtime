@@ -175,6 +175,7 @@ class Runtime(RestAdapterBase):
         group: str = None,
         project: str = None,
         job_tags: Optional[List[str]] = None,
+        session_id: Optional[str] = None,
     ) -> Dict:
         """Get a list of job data.
 
@@ -188,6 +189,7 @@ class Runtime(RestAdapterBase):
             group: Filter by group - hub, group, and project must all be specified.
             project: Filter by project - hub, group, and project must all be specified.
             job_tags: Filter by tags assigned to jobs. Matched jobs are associated with all tags.
+            session_id: Job ID of the first job in a runtime session.
 
         Returns:
             JSON response.
@@ -204,6 +206,8 @@ class Runtime(RestAdapterBase):
             payload["program"] = program_id
         if job_tags:
             payload["tags"] = job_tags
+        if session_id:
+            payload["session_id"] = session_id
         if all([hub, group, project]):
             payload["provider"] = f"{hub}/{group}/{project}"
         return self.session.get(url, params=payload).json()

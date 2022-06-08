@@ -379,6 +379,9 @@ class BaseFakeRuntimeClient:
         if backend_name is None:
             backend_name = self.list_backends()[0]
 
+        if session_id is None:
+            session_id = job_id
+
         job = job_cls(
             job_id=job_id,
             program_id=program_id,
@@ -417,6 +420,7 @@ class BaseFakeRuntimeClient:
         group=None,
         project=None,
         job_tags=None,
+        session_id=None,
     ):
         """Get all jobs."""
         pending_statuses = ["QUEUED", "RUNNING"]
@@ -441,6 +445,9 @@ class BaseFakeRuntimeClient:
             count = len(jobs)
         if job_tags:
             jobs = [job for job in jobs if job._job_tags == job_tags]
+            count = len(jobs)
+        if session_id:
+            jobs = [job for job in jobs if job._session_id == session_id]
             count = len(jobs)
         jobs = jobs[skip : limit + skip]
         return {"jobs": [job.to_dict() for job in jobs], "count": count}
