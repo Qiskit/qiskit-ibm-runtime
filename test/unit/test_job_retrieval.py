@@ -225,6 +225,21 @@ class TestRetrieveJobs(IBMTestCase):
         rjobs = service.jobs(program_id=program_id, job_tags=["no_test_tag"])
         self.assertFalse(rjobs)
 
+    def test_jobs_filter_by_session_id(self):
+        """Test retrieving jobs by session id."""
+        service = self._ibm_quantum_service
+        program_id = upload_program(service)
+        session_id = "test_session_id"
+
+        job = run_program(service=service, program_id=program_id, session_id=session_id)
+        with mock_wait_for_final_state(service, job):
+            job.wait_for_final_state()
+        rjobs = service.jobs(program_id=program_id, session_id=session_id)
+        self.assertTrue(rjobs)
+        self.assertEqual(1, len(rjobs))
+        rjobs = service.jobs(program_id=program_id, session_id="no_test_session_id")
+        self.assertFalse(rjobs)
+
     def test_jobs_bad_instance(self):
         """Test retrieving jobs with bad instance values."""
         service = self._ibm_quantum_service
