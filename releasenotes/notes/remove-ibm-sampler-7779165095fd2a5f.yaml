@@ -1,6 +1,0 @@
----
-upgrade:
-  - |
-    ``IBMSampler`` class which was deprecated earlier is now removed. Use
-    :class:`~qiskit_ibm_runtime.Sampler` class going forward.
-
