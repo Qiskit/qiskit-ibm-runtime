@@ -114,7 +114,9 @@ class Sampler(BaseSampler):
             print(result)
     """
 
-    @deprecate_arguments({"skip_transpilation": "transpilation_settings.skip_transpilation"})
+    @deprecate_arguments(
+        {"skip_transpilation": "transpilation_settings.skip_transpilation"}
+    )
     def __init__(
         self,
         circuits: Union[QuantumCircuit, Iterable[QuantumCircuit]],

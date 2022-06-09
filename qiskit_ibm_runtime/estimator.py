@@ -132,7 +132,9 @@ class Estimator(BaseEstimator):
             print(psi12_H23_result)
     """
 
-    @deprecate_arguments({"skip_transpilation": "transpilation_settings.skip_transpilation"})
+    @deprecate_arguments(
+        {"skip_transpilation": "transpilation_settings.skip_transpilation"}
+    )
     def __init__(
         self,
         circuits: Union[QuantumCircuit, Iterable[QuantumCircuit]],
@@ -206,7 +208,7 @@ class Estimator(BaseEstimator):
                     * 2: heavy resilience
                     * 3: even heavier resilience
                     If ``None``, level 1 will be chosen as default.
-                    
+
         Raises:
             IBMInputValueError: If an input value is invalid.
         """
