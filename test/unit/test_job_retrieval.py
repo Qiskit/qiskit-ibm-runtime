@@ -12,6 +12,7 @@
 
 """Tests for runtime job retrieval."""
 
+from datetime import datetime
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from .mock.fake_runtime_service import FakeRuntimeService
 from ..ibm_test_case import IBMTestCase
@@ -241,6 +242,24 @@ class TestRetrieveJobs(IBMTestCase):
         self.assertTrue(rjobs)
         self.assertEqual(2, len(rjobs))
         rjobs = service.jobs(program_id=program_id, session_id="no_test_session_id")
+        self.assertFalse(rjobs)
+
+    def test_jobs_filter_by_date(self):
+        """Test retrieving jobs by date."""
+        service = self._ibm_quantum_service
+        program_id = upload_program(service)
+        current_date = datetime.now()
+
+        job = run_program(service=service, program_id=program_id)
+        with mock_wait_for_final_state(service, job):
+            job.wait_for_final_state()
+        rjobs = service.jobs(
+            program_id=program_id,
+            created_before=datetime.now(),
+            created_after=current_date,
+        )
+        self.assertTrue(rjobs)
+        rjobs = service.jobs(program_id=program_id, created_after=datetime.now())
         self.assertFalse(rjobs)
 
     def test_jobs_bad_instance(self):
