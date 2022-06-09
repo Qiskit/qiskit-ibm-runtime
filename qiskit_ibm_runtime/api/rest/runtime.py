@@ -211,7 +211,8 @@ class Runtime(RestAdapterBase):
             payload["tags"] = job_tags
         if session_id:
             payload["session_id"] = session_id
-        payload["sort"] = "DESC" if descending else "ASC"
+        if descending is False:
+            payload["sort"] = "ASC"
         if all([hub, group, project]):
             payload["provider"] = f"{hub}/{group}/{project}"
         return self.session.get(url, params=payload).json()

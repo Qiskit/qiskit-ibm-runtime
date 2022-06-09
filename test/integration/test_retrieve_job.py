@@ -168,3 +168,15 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         fake_hgp = f"{uuid_}/{uuid_}/{uuid_}"
         rjobs = service.jobs(program_id=program_id, instance=fake_hgp)
         self.assertFalse(rjobs)
+
+    @run_integration_test
+    def test_retrieve_jobs_by_date(self, service):
+        """Test retrieving jobs with date filter."""
+        job = self._run_program(service)
+        job.wait_for_final_state()
+        job_2 = self._run_program(service)
+        job_2.wait_for_final_state()
+        rjobs = service.jobs()
+        rjobs_asc = service.jobs(descending=False)
+        self.assertTrue(rjobs[0], rjobs_asc[1])
+        self.assertTrue(rjobs[1], rjobs_asc[0])
