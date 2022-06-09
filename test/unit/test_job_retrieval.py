@@ -12,6 +12,7 @@
 
 """Tests for runtime job retrieval."""
 
+import time
 from datetime import datetime
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from .mock.fake_runtime_service import FakeRuntimeService
@@ -249,7 +250,7 @@ class TestRetrieveJobs(IBMTestCase):
         service = self._ibm_quantum_service
         program_id = upload_program(service)
         current_date = datetime.now()
-
+        time.sleep(1)
         job = run_program(service=service, program_id=program_id)
         with mock_wait_for_final_state(service, job):
             job.wait_for_final_state()
