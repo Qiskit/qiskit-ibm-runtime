@@ -180,6 +180,7 @@ class Runtime(RestAdapterBase):
         session_id: Optional[str] = None,
         created_after: Optional[datetime] = None,
         created_before: Optional[datetime] = None,
+        descending: bool = True,
     ) -> Dict:
         """Get a list of job data.
 
@@ -200,6 +201,8 @@ class Runtime(RestAdapterBase):
             created_before: Filter by the given end date, in local time. This is used to
                 find jobs whose creation dates are before (less than or equal to) this
                 local date/time.
+            descending: If ``True``, return the jobs in descending order of the job
+                creation date (i.e. newest first) until the limit is reached.
 
         Returns:
             JSON response.
@@ -222,6 +225,8 @@ class Runtime(RestAdapterBase):
             payload["created_after"] = local_to_utc(created_after).isoformat()
         if created_before:
             payload["created_before"] = local_to_utc(created_before).isoformat()
+        if descending is False:
+            payload["sort"] = "ASC"
         if all([hub, group, project]):
             payload["provider"] = f"{hub}/{group}/{project}"
         return self.session.get(url, params=payload).json()

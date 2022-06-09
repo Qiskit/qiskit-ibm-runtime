@@ -221,6 +221,7 @@ class RuntimeClient(BaseBackendClient):
         session_id: Optional[str] = None,
         created_after: Optional[python_datetime] = None,
         created_before: Optional[python_datetime] = None,
+        descending: bool = True,
     ) -> Dict:
         """Get job data for all jobs.
 
@@ -241,6 +242,8 @@ class RuntimeClient(BaseBackendClient):
             created_before: Filter by the given end date, in local time. This is used to
                 find jobs whose creation dates are before (less than or equal to) this
                 local date/time.
+            descending: If ``True``, return the jobs in descending order of the job
+                creation date (i.e. newest first) until the limit is reached.
 
         Returns:
             JSON response.
@@ -257,6 +260,7 @@ class RuntimeClient(BaseBackendClient):
             session_id=session_id,
             created_after=created_after,
             created_before=created_before,
+            descending=descending,
         )
 
     def job_results(self, job_id: str) -> str:

@@ -1222,6 +1222,7 @@ class QiskitRuntimeService:
         session_id: Optional[str] = None,
         created_after: Optional[datetime] = None,
         created_before: Optional[datetime] = None,
+        descending: bool = True,
     ) -> List[RuntimeJob]:
         """Retrieve all runtime jobs, subject to optional filtering.
 
@@ -1242,6 +1243,8 @@ class QiskitRuntimeService:
             created_before: Filter by the given end date, in local time. This is used to
                 find jobs whose creation dates are before (less than or equal to) this
                 local date/time.
+            descending: If ``True``, return the jobs in descending order of the job
+                creation date (i.e. newest first) until the limit is reached.
 
         Returns:
             A list of runtime jobs.
@@ -1274,6 +1277,7 @@ class QiskitRuntimeService:
                 session_id=session_id,
                 created_after=created_after,
                 created_before=created_before,
+                descending=descending,
             )
             job_page = jobs_response["jobs"]
             # count is the total number of jobs that would be returned if
