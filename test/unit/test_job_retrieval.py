@@ -258,7 +258,7 @@ class TestRetrieveJobs(IBMTestCase):
             created_before=datetime.now(),
             created_after=current_date,
         )
-        self.assertTrue(rjobs)
+        self.assertEqual(1, len(rjobs))
         rjobs = service.jobs(program_id=program_id, created_after=datetime.now())
         self.assertFalse(rjobs)
 
