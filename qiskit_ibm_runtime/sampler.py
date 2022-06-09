@@ -15,6 +15,7 @@
 from typing import Dict, Iterable, Optional, Sequence, Any, Union
 
 from qiskit.circuit import QuantumCircuit, Parameter
+from qiskit.utils.deprecation import deprecate_arguments
 
 # TODO import BaseSampler and SamplerResult from terra once released
 from .qiskit.primitives import BaseSampler, SamplerResult
@@ -113,27 +114,31 @@ class Sampler(BaseSampler):
             print(result)
     """
 
+    @deprecate_arguments({"skip_transpilation": "transpilation_settings.skip_transpilation"})
     def __init__(
         self,
         circuits: Union[QuantumCircuit, Iterable[QuantumCircuit]],
         parameters: Optional[Iterable[Iterable[Parameter]]] = None,
-        skip_transpilation: Optional[bool] = False,
         service: Optional[QiskitRuntimeService] = None,
         options: Optional[Dict] = None,
+        skip_transpilation: Optional[bool] = False,
+        transpilation_settings: Optional[Dict] = None,
+        resilience_settings: Optional[Dict] = None,
     ):
         """Initializes the Sampler primitive.
 
         Args:
             circuits: a (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
                 a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
+
             parameters: A list of parameters of the quantum circuits
                 (:class:`~qiskit.circuit.parametertable.ParameterView` or
-                a list of :class:`~qiskit.circuit.Parameter`).
-            skip_transpilation: Transpilation is skipped if set to True.
-                False by default.
+                a list of :class:`~qiskit.circuit.Parameter`)
+
             service: Optional instance of :class:`qiskit_ibm_runtime.QiskitRuntimeService` class,
                 defaults to `QiskitRuntimeService()` which tries to initialize your default
                 saved account.
+
             options: Runtime options dictionary that control the execution environment.
 
                 * backend: Optional instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
@@ -145,6 +150,40 @@ class Sampler(BaseSampler):
                 * log_level: logging level to set in the execution environment. The valid
                     log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
                     The default level is ``WARNING``.
+
+            skip_transpilation: (DEPRECATED, use transpilation_settings.skip_transpilation instead)
+                Transpilation is skipped if set to True. False by default.
+
+            transpilation_settings: Qiskit transpiler settings. The transpilation process converts
+                operations in the circuit to those supported by the backend, swaps qubits with the
+                circuit to overcome limited qubit connectivity and some optimizations to reduce the
+                circuit's gate count where it can.
+
+                * skip_transpilation: Transpilation is skipped if set to True.
+                    False by default.
+
+                * optimization_settings:
+
+                    * level: How much optimization to perform on the circuits.
+                        Higher levels generate more optimized circuits,
+                        at the expense of longer transpilation times.
+                        * 0: no optimization
+                        * 1: light optimization
+                        * 2: heavy optimization
+                        * 3: even heavier optimization
+                        If ``None``, level 1 will be chosen as default.
+
+            resilience_settings: Using these settings allows you to build resilient algorithms by
+                leveraging the state of the art error suppression, mitigation and correction techniques.
+
+                * level: How much resilience to build against errors.
+                    Higher levels generate more accurate results,
+                    at the expense of longer processing times.
+                    * 0: no resilience
+                    * 1: light resilience
+                    * 2: heavy resilience
+                    * 3: even heavier resilience
+                    If ``None``, level 1 will be chosen as default.
 
         Raises:
             IBMInputValueError: If an input value is invalid.
@@ -175,6 +214,8 @@ class Sampler(BaseSampler):
             "circuits": circuits,
             "parameters": parameters,
             "skip_transpilation": self._skip_transpilation,
+            "transpilation_settings": transpilation_settings,
+            "resilience_settings": resilience_settings,
         }
         self._session = RuntimeSession(
             service=self._service,
