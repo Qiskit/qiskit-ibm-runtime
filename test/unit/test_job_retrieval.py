@@ -244,7 +244,7 @@ class TestRetrieveJobs(IBMTestCase):
         self.assertFalse(rjobs)
 
     def test_jobs_sort_by_date(self):
-        """Test retrieving jobs with date filter."""
+        """Test retrieving jobs sorted by the date."""
         service = self._ibm_quantum_service
         program_id = upload_program(service)
 
@@ -254,9 +254,13 @@ class TestRetrieveJobs(IBMTestCase):
             job.wait_for_final_state()
             job_2.wait_for_final_state()
         rjobs = service.jobs(program_id=program_id)
+        rjobs_desc = service.jobs(program_id=program_id, descending=True)
         rjobs_asc = service.jobs(program_id=program_id, descending=False)
         self.assertTrue(rjobs[0], rjobs_asc[1])
         self.assertTrue(rjobs[1], rjobs_asc[0])
+        self.assertEqual(
+            [job.job_id for job in rjobs], [job.job_id for job in rjobs_desc]
+        )
 
     def test_jobs_bad_instance(self):
         """Test retrieving jobs with bad instance values."""

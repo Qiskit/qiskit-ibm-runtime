@@ -170,13 +170,17 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         self.assertFalse(rjobs)
 
     @run_integration_test
-    def test_retrieve_jobs_by_date(self, service):
-        """Test retrieving jobs with date filter."""
+    def test_retrieve_jobs_sorted_by_date(self, service):
+        """Test retrieving jobs sorted by the date."""
         job = self._run_program(service)
         job.wait_for_final_state()
         job_2 = self._run_program(service)
         job_2.wait_for_final_state()
         rjobs = service.jobs()
+        rjobs_desc = service.jobs(descending=True)
         rjobs_asc = service.jobs(descending=False)
         self.assertTrue(rjobs[0], rjobs_asc[1])
         self.assertTrue(rjobs[1], rjobs_asc[0])
+        self.assertEqual(
+            [job.job_id for job in rjobs], [job.job_id for job in rjobs_desc]
+        )
