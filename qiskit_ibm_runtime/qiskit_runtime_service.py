@@ -1218,6 +1218,8 @@ class QiskitRuntimeService:
         program_id: str = None,
         instance: Optional[str] = None,
         job_tags: Optional[List[str]] = None,
+        session_id: Optional[str] = None,
+        descending: bool = True,
     ) -> List[RuntimeJob]:
         """Retrieve all runtime jobs, subject to optional filtering.
 
@@ -1231,6 +1233,9 @@ class QiskitRuntimeService:
             instance: This is only supported for ``ibm_quantum`` runtime and is in the
                 hub/group/project format.
             job_tags: Filter by tags assigned to jobs. Matched jobs are associated with all tags.
+            session_id: Job ID of the first job in a runtime session.
+            descending: If ``True``, return the jobs in descending order of the job
+                creation date (i.e. newest first) until the limit is reached.
 
         Returns:
             A list of runtime jobs.
@@ -1260,6 +1265,8 @@ class QiskitRuntimeService:
                 group=group,
                 project=project,
                 job_tags=job_tags,
+                session_id=session_id,
+                descending=descending,
             )
             job_page = jobs_response["jobs"]
             # count is the total number of jobs that would be returned if

@@ -218,6 +218,8 @@ class RuntimeClient(BaseBackendClient):
         group: str = None,
         project: str = None,
         job_tags: Optional[List[str]] = None,
+        session_id: Optional[str] = None,
+        descending: bool = True,
     ) -> Dict:
         """Get job data for all jobs.
 
@@ -231,6 +233,9 @@ class RuntimeClient(BaseBackendClient):
             group: Filter by group - hub, group, and project must all be specified.
             project: Filter by project - hub, group, and project must all be specified.
             job_tags: Filter by tags assigned to jobs. Matched jobs are associated with all tags.
+            session_id: Job ID of the first job in a runtime session.
+            descending: If ``True``, return the jobs in descending order of the job
+                creation date (i.e. newest first) until the limit is reached.
 
         Returns:
             JSON response.
@@ -244,6 +249,8 @@ class RuntimeClient(BaseBackendClient):
             group=group,
             project=project,
             job_tags=job_tags,
+            session_id=session_id,
+            descending=descending,
         )
 
     def job_results(self, job_id: str) -> str:
