@@ -421,6 +421,7 @@ class BaseFakeRuntimeClient:
         project=None,
         job_tags=None,
         session_id=None,
+        descending=True,
     ):
         """Get all jobs."""
         pending_statuses = ["QUEUED", "RUNNING"]
@@ -450,6 +451,8 @@ class BaseFakeRuntimeClient:
             jobs = [job for job in jobs if job._session_id == session_id]
             count = len(jobs)
         jobs = jobs[skip : limit + skip]
+        if descending is False:
+            jobs.reverse()
         return {"jobs": [job.to_dict() for job in jobs], "count": count}
 
     def set_program_visibility(self, program_id: str, public: bool) -> None:

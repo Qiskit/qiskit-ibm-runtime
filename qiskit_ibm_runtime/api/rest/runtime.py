@@ -176,6 +176,7 @@ class Runtime(RestAdapterBase):
         project: str = None,
         job_tags: Optional[List[str]] = None,
         session_id: Optional[str] = None,
+        descending: bool = True,
     ) -> Dict:
         """Get a list of job data.
 
@@ -190,6 +191,8 @@ class Runtime(RestAdapterBase):
             project: Filter by project - hub, group, and project must all be specified.
             job_tags: Filter by tags assigned to jobs. Matched jobs are associated with all tags.
             session_id: Job ID of the first job in a runtime session.
+            descending: If ``True``, return the jobs in descending order of the job
+                creation date (i.e. newest first) until the limit is reached.
 
         Returns:
             JSON response.
@@ -208,6 +211,8 @@ class Runtime(RestAdapterBase):
             payload["tags"] = job_tags
         if session_id:
             payload["session_id"] = session_id
+        if descending is False:
+            payload["sort"] = "ASC"
         if all([hub, group, project]):
             payload["provider"] = f"{hub}/{group}/{project}"
         return self.session.get(url, params=payload).json()
