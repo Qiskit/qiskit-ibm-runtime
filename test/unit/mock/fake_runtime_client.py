@@ -16,7 +16,7 @@ import base64
 import json
 import time
 import uuid
-from datetime import datetime as python_datetime
+from datetime import timezone, datetime as python_datetime
 from concurrent.futures import ThreadPoolExecutor
 from functools import wraps
 from typing import Optional, Dict, Any, List
@@ -134,7 +134,7 @@ class BaseFakeRuntimeJob:
         self.log_level = log_level
         self._session_id = session_id
         self._max_execution_time = max_execution_time
-        self._creation_date = python_datetime.now()
+        self._creation_date = python_datetime.now(timezone.utc)
         if final_status is None:
             self._future = self._executor.submit(self._auto_progress)
             self._result = None
