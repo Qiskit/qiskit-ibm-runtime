@@ -17,11 +17,12 @@ from typing import Optional, Dict
 from .exceptions import AccountNotFoundError
 from .account import Account, ChannelType
 from ..proxies import ProxyConfiguration
-from .storage import save_config, read_config, delete_config
+from .storage import save_config, read_config, delete_config, read_qiskitrc
 
 _DEFAULT_ACCOUNT_CONFIG_JSON_FILE = os.path.join(
     os.path.expanduser("~"), ".qiskit", "qiskit-ibm.json"
 )
+_QISKITRC_CONFIG_FILE = os.path.join(os.path.expanduser("~"), ".qiskit", "qiskitrc")
 _DEFAULT_ACCOUNT_NAME = "default"
 _DEFAULT_ACCOUNT_NAME_LEGACY = "default-legacy"
 _DEFAULT_ACCOUNT_NAME_CLOUD = "default-cloud"
@@ -162,6 +163,13 @@ class AccountManager:
             account_name = cls._get_default_account_name(channel=channel_type)
             if account_name in all_config:
                 return Account.from_saved_format(all_config[account_name])
+
+        if os.path.isfile(_QISKITRC_CONFIG_FILE):
+            read_qiskitrc(_QISKITRC_CONFIG_FILE, _DEFAULT_ACCOUNT_CONFIG_JSON_FILE)
+            all_config = read_config(filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE)
+            return Account.from_saved_format(
+                all_config[_DEFAULT_ACCOUNT_NAME_IBM_QUANTUM]
+            )
 
         raise AccountNotFoundError("Unable to find account.")
 
