@@ -455,10 +455,10 @@ class BaseFakeRuntimeClient:
             jobs = [job for job in jobs if job._session_id == session_id]
             count = len(jobs)
         if created_after:
-            jobs = [job for job in jobs if job._creation_date > created_after]
+            jobs = [job for job in jobs if job._creation_date >= created_after]
             count = len(jobs)
         if created_before:
-            jobs = [job for job in jobs if job._creation_date < created_before]
+            jobs = [job for job in jobs if job._creation_date <= created_before]
             count = len(jobs)
         jobs = jobs[skip : limit + skip]
         if descending is False:

@@ -158,12 +158,10 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         job.wait_for_final_state()
         time_after_job = datetime.now(timezone.utc)
         rjobs = service.jobs(created_before=time_after_job, created_after=current_time)
-        self.assertEqual(1, len(rjobs), f"Retrieved jobs: {[j.job_id for j in rjobs]}")
-        job_creation_date = rjobs[0].creation_date
-        self.assertTrue(job_creation_date < time_after_job)
-        self.assertTrue(job_creation_date > current_time)
-        rjobs = service.jobs(created_after=datetime.now())
-        self.assertFalse(rjobs)
+        self.assertTrue(job.job_id in [j.job_id for j in rjobs])
+        for job in rjobs:
+            self.assertTrue(job.creation_date < time_after_job)
+            self.assertTrue(job.creation_date > current_time)
 
     @run_integration_test
     def test_jobs_filter_by_hgp(self, service):
