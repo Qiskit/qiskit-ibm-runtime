@@ -33,7 +33,7 @@ class Runtime(RestAdapterBase):
     URL_MAP = {
         "programs": "/programs",
         "jobs": "/jobs",
-        "backends": "/devices",
+        "backends": "/backends",
     }
 
     def program(self, program_id: str) -> "Program":

@@ -39,7 +39,7 @@ class CloudBackend(RestAdapterBase):
             url_prefix: Base URL.
         """
         self.backend_name = backend_name
-        super().__init__(session, "{}/devices/{}".format(url_prefix, backend_name))
+        super().__init__(session, "{}/backends/{}".format(url_prefix, backend_name))
 
     def configuration(self) -> Dict[str, Any]:
         """Return backend configuration.
