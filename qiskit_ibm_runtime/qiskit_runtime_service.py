@@ -45,6 +45,7 @@ from .runtime_session import RuntimeSession  # pylint: disable=cyclic-import
 from .utils import RuntimeDecoder, to_base64_string, to_python_identifier
 from .utils.backend_decoder import configuration_from_server_data
 from .utils.hgp import to_instance_format, from_instance_format
+from .utils.utils import validate_job_tags
 from .api.client_parameters import ClientParameters
 from .runtime_options import RuntimeOptions
 
@@ -828,6 +829,8 @@ class QiskitRuntimeService:
         result_decoder: Optional[Type[ResultDecoder]] = None,
         instance: Optional[str] = None,
         session_id: Optional[str] = None,
+        job_tags: Optional[List[str]] = None,
+        max_execution_time: Optional[int] = None,
     ) -> RuntimeJob:
         """Execute the runtime program.
 
@@ -848,6 +851,10 @@ class QiskitRuntimeService:
             instance: This is only supported for ``ibm_quantum`` runtime and is in the
                 hub/group/project format.
             session_id: Job ID of the first job in a runtime session.
+            job_tags: Tags to be assigned to the job. The tags can subsequently be used
+                as a filter in the :meth:`jobs()` function call.
+            max_execution_time: Maximum execution time in seconds. This overrides
+                the max_execution_time of the program and cannot exceed it.
 
         Returns:
             A ``RuntimeJob`` instance representing the execution.
@@ -857,6 +864,8 @@ class QiskitRuntimeService:
             RuntimeProgramNotFound: If the program cannot be found.
             IBMRuntimeError: An error occurred running the program.
         """
+        validate_job_tags(job_tags, IBMInputValueError)
+
         if instance and self._channel != "ibm_quantum":
             raise IBMInputValueError(
                 "The 'instance' keyword is only supported for ``ibm_quantum`` runtime. "
@@ -892,6 +901,8 @@ class QiskitRuntimeService:
                 hgp=hgp_name,
                 log_level=options.log_level,
                 session_id=session_id,
+                job_tags=job_tags,
+                max_execution_time=max_execution_time,
             )
         except RequestsApiError as ex:
             if ex.status_code == 404:
@@ -1206,6 +1217,9 @@ class QiskitRuntimeService:
         pending: bool = None,
         program_id: str = None,
         instance: Optional[str] = None,
+        job_tags: Optional[List[str]] = None,
+        session_id: Optional[str] = None,
+        descending: bool = True,
     ) -> List[RuntimeJob]:
         """Retrieve all runtime jobs, subject to optional filtering.
 
@@ -1218,6 +1232,10 @@ class QiskitRuntimeService:
             program_id: Filter by Program ID.
             instance: This is only supported for ``ibm_quantum`` runtime and is in the
                 hub/group/project format.
+            job_tags: Filter by tags assigned to jobs. Matched jobs are associated with all tags.
+            session_id: Job ID of the first job in a runtime session.
+            descending: If ``True``, return the jobs in descending order of the job
+                creation date (i.e. newest first) until the limit is reached.
 
         Returns:
             A list of runtime jobs.
@@ -1246,6 +1264,9 @@ class QiskitRuntimeService:
                 hub=hub,
                 group=group,
                 project=project,
+                job_tags=job_tags,
+                session_id=session_id,
+                descending=descending,
             )
             job_page = jobs_response["jobs"]
             # count is the total number of jobs that would be returned if

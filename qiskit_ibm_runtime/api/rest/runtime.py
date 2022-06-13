@@ -31,7 +31,7 @@ class Runtime(RestAdapterBase):
     URL_MAP = {
         "programs": "/programs",
         "jobs": "/jobs",
-        "backends": "/devices",
+        "backends": "/backends",
     }
 
     def program(self, program_id: str) -> "Program":
@@ -120,6 +120,8 @@ class Runtime(RestAdapterBase):
         project: Optional[str] = None,
         log_level: Optional[str] = None,
         session_id: Optional[str] = None,
+        job_tags: Optional[List[str]] = None,
+        max_execution_time: Optional[int] = None,
     ) -> Dict:
         """Execute the program.
 
@@ -133,12 +135,14 @@ class Runtime(RestAdapterBase):
             project: Project to be used.
             log_level: Log level to use.
             session_id: ID of the first job in a runtime session.
+            job_tags: Tags to be assigned to the job.
+            max_execution_time: Maximum execution time in seconds.
 
         Returns:
             JSON response.
         """
         url = self.get_url("jobs")
-        payload = {
+        payload: Dict[str, Any] = {
             "program_id": program_id,
             "params": params,
         }
@@ -150,6 +154,10 @@ class Runtime(RestAdapterBase):
             payload["backend"] = backend_name
         if session_id:
             payload["session_id"] = session_id
+        if job_tags:
+            payload["tags"] = job_tags
+        if max_execution_time:
+            payload["cost"] = max_execution_time
         if all([hub, group, project]):
             payload["hub"] = hub
             payload["group"] = group
@@ -166,6 +174,9 @@ class Runtime(RestAdapterBase):
         hub: str = None,
         group: str = None,
         project: str = None,
+        job_tags: Optional[List[str]] = None,
+        session_id: Optional[str] = None,
+        descending: bool = True,
     ) -> Dict:
         """Get a list of job data.
 
@@ -178,12 +189,16 @@ class Runtime(RestAdapterBase):
             hub: Filter by hub - hub, group, and project must all be specified.
             group: Filter by group - hub, group, and project must all be specified.
             project: Filter by project - hub, group, and project must all be specified.
+            job_tags: Filter by tags assigned to jobs. Matched jobs are associated with all tags.
+            session_id: Job ID of the first job in a runtime session.
+            descending: If ``True``, return the jobs in descending order of the job
+                creation date (i.e. newest first) until the limit is reached.
 
         Returns:
             JSON response.
         """
         url = self.get_url("jobs")
-        payload: Dict[str, Union[int, str]] = {}
+        payload: Dict[str, Union[int, str, List[str]]] = {}
         if limit:
             payload["limit"] = limit
         if skip:
@@ -192,6 +207,12 @@ class Runtime(RestAdapterBase):
             payload["pending"] = "true" if pending else "false"
         if program_id:
             payload["program"] = program_id
+        if job_tags:
+            payload["tags"] = job_tags
+        if session_id:
+            payload["session_id"] = session_id
+        if descending is False:
+            payload["sort"] = "ASC"
         if all([hub, group, project]):
             payload["provider"] = f"{hub}/{group}/{project}"
         return self.session.get(url, params=payload).json()

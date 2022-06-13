@@ -122,6 +122,8 @@ class RuntimeClient(BaseBackendClient):
         hgp: Optional[str],
         log_level: Optional[str],
         session_id: Optional[str],
+        job_tags: Optional[List[str]] = None,
+        max_execution_time: Optional[int] = None,
     ) -> Dict:
         """Run the specified program.
 
@@ -133,6 +135,8 @@ class RuntimeClient(BaseBackendClient):
             hgp: Hub/group/project to use.
             log_level: Log level to use.
             session_id: Job ID of the first job in a runtime session.
+            job_tags: Tags to be assigned to the job.
+            max_execution_time: Maximum execution time in seconds.
 
         Returns:
             JSON response.
@@ -148,6 +152,8 @@ class RuntimeClient(BaseBackendClient):
             image=image,
             log_level=log_level,
             session_id=session_id,
+            job_tags=job_tags,
+            max_execution_time=max_execution_time,
             **hgp_dict
         )
 
@@ -211,6 +217,9 @@ class RuntimeClient(BaseBackendClient):
         hub: str = None,
         group: str = None,
         project: str = None,
+        job_tags: Optional[List[str]] = None,
+        session_id: Optional[str] = None,
+        descending: bool = True,
     ) -> Dict:
         """Get job data for all jobs.
 
@@ -223,6 +232,10 @@ class RuntimeClient(BaseBackendClient):
             hub: Filter by hub - hub, group, and project must all be specified.
             group: Filter by group - hub, group, and project must all be specified.
             project: Filter by project - hub, group, and project must all be specified.
+            job_tags: Filter by tags assigned to jobs. Matched jobs are associated with all tags.
+            session_id: Job ID of the first job in a runtime session.
+            descending: If ``True``, return the jobs in descending order of the job
+                creation date (i.e. newest first) until the limit is reached.
 
         Returns:
             JSON response.
@@ -235,6 +248,9 @@ class RuntimeClient(BaseBackendClient):
             hub=hub,
             group=group,
             project=project,
+            job_tags=job_tags,
+            session_id=session_id,
+            descending=descending,
         )
 
     def job_results(self, job_id: str) -> str:
