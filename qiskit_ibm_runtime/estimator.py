@@ -191,7 +191,7 @@ class Estimator(BaseEstimator):
                         * 1: light optimization
                         * 2: heavy optimization
                         * 3: even heavier optimization
-                        If ``None``, level 1 will be chosen as default.
+                        If ``None``, level 3 will be chosen as default.
 
             resilience_settings: (EXPERIMENTAL setting, can break between releases without warning)
                 Using these settings allows you to build resilient algorithms by
