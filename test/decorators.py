@@ -15,12 +15,11 @@
 import os
 from dataclasses import dataclass
 from functools import wraps
-from typing import Callable, Optional, List, Any
+from test.unit.mock.fake_runtime_service import FakeRuntimeService
+from typing import Any, Callable, List, Optional
 from unittest import SkipTest
 
 from qiskit_ibm_runtime import QiskitRuntimeService
-
-from test.unit.mock.fake_runtime_service import FakeRuntimeService
 
 
 def run_quantum_and_cloud_fake(func):

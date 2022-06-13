@@ -12,12 +12,14 @@
 
 """Tests for runtime job retrieval."""
 
-from qiskit_ibm_runtime.exceptions import IBMInputValueError
-from .mock.fake_runtime_service import FakeRuntimeService
-from test.ibm_test_case import IBMTestCase
 from test.decorators import run_quantum_and_cloud_fake
+from test.ibm_test_case import IBMTestCase
 from test.program import run_program, upload_program
 from test.utils import mock_wait_for_final_state
+
+from qiskit_ibm_runtime.exceptions import IBMInputValueError
+
+from .mock.fake_runtime_service import FakeRuntimeService
 
 
 class TestRetrieveJobs(IBMTestCase):

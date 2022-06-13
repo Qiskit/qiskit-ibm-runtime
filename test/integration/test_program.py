@@ -15,15 +15,12 @@
 import os
 import tempfile
 import unittest
-
-from qiskit_ibm_runtime.exceptions import IBMNotAuthorizedError
-from qiskit_ibm_runtime.exceptions import (
-    RuntimeProgramNotFound,
-)
-from qiskit_ibm_runtime.runtime_program import RuntimeProgram
-from test.ibm_test_case import IBMIntegrationTestCase
 from test.decorators import run_integration_test
-from test.templates import RUNTIME_PROGRAM, PROGRAM_PREFIX
+from test.ibm_test_case import IBMIntegrationTestCase
+from test.templates import PROGRAM_PREFIX, RUNTIME_PROGRAM
+
+from qiskit_ibm_runtime.exceptions import IBMNotAuthorizedError, RuntimeProgramNotFound
+from qiskit_ibm_runtime.runtime_program import RuntimeProgram
 
 
 class TestIntegrationProgram(IBMIntegrationTestCase):

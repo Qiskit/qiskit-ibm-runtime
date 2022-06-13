@@ -13,12 +13,12 @@
 """Tests for the AccountClient class."""
 
 import re
+from test.decorators import IntegrationTestDependencies, integration_test_setup
+from test.ibm_test_case import IBMTestCase
 
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 from qiskit_ibm_runtime.api.clients import AuthClient
 from qiskit_ibm_runtime.api.exceptions import ApiError
-from test.ibm_test_case import IBMTestCase
-from test.decorators import integration_test_setup, IntegrationTestDependencies
 
 
 class TestAuthClient(IBMTestCase):

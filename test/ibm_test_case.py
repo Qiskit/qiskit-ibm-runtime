@@ -12,22 +12,20 @@
 
 """Custom TestCase for IBM Provider."""
 
-import os
 import copy
-import logging
 import inspect
+import logging
+import os
 import unittest
-from contextlib import suppress
 from collections import defaultdict
+from contextlib import suppress
+from test.decorators import IntegrationTestDependencies, integration_test_setup
+from test.templates import PROGRAM_PREFIX, RUNTIME_PROGRAM, RUNTIME_PROGRAM_METADATA
+from test.utils import setup_test_logging
 from typing import DefaultDict, Dict
 
-from qiskit_ibm_runtime import QISKIT_IBM_RUNTIME_LOGGER_NAME
+from qiskit_ibm_runtime import QISKIT_IBM_RUNTIME_LOGGER_NAME, QiskitRuntimeService
 from qiskit_ibm_runtime.exceptions import IBMNotAuthorizedError
-from qiskit_ibm_runtime import QiskitRuntimeService
-
-from test.utils import setup_test_logging
-from test.decorators import IntegrationTestDependencies, integration_test_setup
-from test.templates import RUNTIME_PROGRAM, RUNTIME_PROGRAM_METADATA, PROGRAM_PREFIX
 
 
 class IBMTestCase(unittest.TestCase):
