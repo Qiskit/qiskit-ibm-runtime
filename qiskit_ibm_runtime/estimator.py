@@ -16,7 +16,6 @@ from typing import Iterable, Optional, Dict, Sequence, Any, Union
 
 from qiskit.circuit import QuantumCircuit, Parameter
 from qiskit.quantum_info import SparsePauliOp
-from qiskit.utils.deprecation import deprecate_arguments
 
 # TODO import BaseEstimator and EstimatorResult from terra once released
 from .qiskit.primitives import BaseEstimator, EstimatorResult
@@ -132,9 +131,6 @@ class Estimator(BaseEstimator):
             print(psi12_H23_result)
     """
 
-    @deprecate_arguments(
-        {"skip_transpilation": "transpilation_settings.skip_transpilation"}
-    )
     def __init__(
         self,
         circuits: Union[QuantumCircuit, Iterable[QuantumCircuit]],
@@ -175,10 +171,10 @@ class Estimator(BaseEstimator):
                     log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
                     The default level is ``WARNING``.
 
-            skip_transpilation: (DEPRECATED, use transpilation_settings.skip_transpilation instead)
-                Transpilation is skipped if set to True. False by default.
+            skip_transpilation: Transpilation is skipped if set to True. False by default.
 
-            transpilation_settings: Qiskit transpiler settings. The transpilation process converts
+            transpilation_settings: (EXPERIMENTAL setting, can break between releases without warning)
+                Qiskit transpiler settings. The transpilation process converts
                 operations in the circuit to those supported by the backend, swaps qubits with the
                 circuit to overcome limited qubit connectivity and some optimizations to reduce the
                 circuit's gate count where it can.
@@ -197,7 +193,8 @@ class Estimator(BaseEstimator):
                         * 3: even heavier optimization
                         If ``None``, level 1 will be chosen as default.
 
-            resilience_settings: Using these settings allows you to build resilient algorithms by
+            resilience_settings: (EXPERIMENTAL setting, can break between releases without warning)
+                Using these settings allows you to build resilient algorithms by
                 leveraging the state of the art error suppression, mitigation and correction techniques.
 
                 * level: How much resilience to build against errors.
