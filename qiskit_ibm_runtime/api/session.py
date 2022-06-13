@@ -40,11 +40,11 @@ STATUS_FORCELIST = (
 )
 CUSTOM_HEADER_ENV_VAR = "QISKIT_IBM_RUNTIME_CUSTOM_CLIENT_APP_HEADER"
 logger = logging.getLogger(__name__)
-# Regex used to match the `/devices` endpoint, capturing the device name as group(2).
+# Regex used to match the `/backends` endpoint, capturing the device name as group(2).
 # The number of letters for group(2) must be greater than 1, so it does not match
 # the `/devices/v/1` endpoint.
-# Capture groups: (/devices/)(<device_name>)(</optional rest of the url>)
-RE_DEVICES_ENDPOINT = re.compile(r"^(.*/devices/)([^/}]{2,})(.*)$", re.IGNORECASE)
+# Capture groups: (/backends/)(<device_name>)(</optional rest of the url>)
+RE_BACKENDS_ENDPOINT = re.compile(r"^(.*/backends/)([^/}]{2,})(.*)$", re.IGNORECASE)
 
 
 def _get_client_header() -> str:
@@ -300,7 +300,7 @@ class RetrySession(Session):
 
             The request data is only logged for the following URLs, since they contain useful
             information: ``/Jobs`` (POST), ``/Jobs/status`` (GET),
-            and ``/devices/<device_name>/properties`` (GET).
+            and ``/backends/<device_name>/properties`` (GET).
 
         Args:
             url: URL for the new request.
@@ -311,7 +311,7 @@ class RetrySession(Session):
             Exception: If there was an error logging the request information.
         """
         # Replace the device name in the URL with `...` if it matches, otherwise leave it as is.
-        filtered_url = re.sub(RE_DEVICES_ENDPOINT, "\\1...\\3", url)
+        filtered_url = re.sub(RE_BACKENDS_ENDPOINT, "\\1...\\3", url)
 
         if self._is_worth_logging(filtered_url):
             try:
