@@ -13,6 +13,7 @@
 """Runtime REST adapter."""
 
 import logging
+from datetime import datetime
 from typing import Dict, Any, List, Union, Optional
 import json
 
@@ -20,6 +21,7 @@ from .base import RestAdapterBase
 from .program import Program
 from .program_job import ProgramJob
 from ...utils import RuntimeEncoder
+from ...utils.converters import local_to_utc
 from .cloud_backend import CloudBackend
 
 logger = logging.getLogger(__name__)
@@ -176,6 +178,8 @@ class Runtime(RestAdapterBase):
         project: str = None,
         job_tags: Optional[List[str]] = None,
         session_id: Optional[str] = None,
+        created_after: Optional[datetime] = None,
+        created_before: Optional[datetime] = None,
         descending: bool = True,
     ) -> Dict:
         """Get a list of job data.
@@ -191,6 +195,12 @@ class Runtime(RestAdapterBase):
             project: Filter by project - hub, group, and project must all be specified.
             job_tags: Filter by tags assigned to jobs. Matched jobs are associated with all tags.
             session_id: Job ID of the first job in a runtime session.
+            created_after: Filter by the given start date, in local time. This is used to
+                find jobs whose creation dates are after (greater than or equal to) this
+                local date/time.
+            created_before: Filter by the given end date, in local time. This is used to
+                find jobs whose creation dates are before (less than or equal to) this
+                local date/time.
             descending: If ``True``, return the jobs in descending order of the job
                 creation date (i.e. newest first) until the limit is reached.
 
@@ -211,6 +221,10 @@ class Runtime(RestAdapterBase):
             payload["tags"] = job_tags
         if session_id:
             payload["session_id"] = session_id
+        if created_after:
+            payload["created_after"] = local_to_utc(created_after).isoformat()
+        if created_before:
+            payload["created_before"] = local_to_utc(created_before).isoformat()
         if descending is False:
             payload["sort"] = "ASC"
         if all([hub, group, project]):
