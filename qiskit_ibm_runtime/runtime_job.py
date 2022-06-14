@@ -182,7 +182,7 @@ class RuntimeJob:
                     f"Unable to retrieve job result. " f"{self.error_message()}"
                 )
             result_raw = self._api_client.job_results(job_id=self.job_id)
-            self._results = _decoder.decode(result_raw)
+            self._results = _decoder.decode(result_raw) if result_raw else None
         return self._results
 
     def cancel(self) -> None:
