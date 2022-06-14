@@ -315,6 +315,14 @@ class RuntimeClient(BaseBackendClient):
         """
         return self._api.program_job(job_id).logs()
 
+    def close_session(self, session_id: str) -> None:
+        """Close the runtime session.
+
+        Args:
+            session_id: Session ID.
+        """
+        self._api.runtime_session(session_id=session_id).close()
+
     # IBM Cloud only functions
 
     def list_backends(self) -> List[str]:
