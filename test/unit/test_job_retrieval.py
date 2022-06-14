@@ -257,8 +257,8 @@ class TestRetrieveJobs(IBMTestCase):
             created_after=current_time,
         )
         self.assertTrue(job.job_id in [j.job_id for j in rjobs])
-        self.assertTrue(job._creation_date < time_after_job)
-        self.assertTrue(job._creation_date > current_time)
+        self.assertTrue(job._creation_date <= time_after_job)
+        self.assertTrue(job._creation_date >= current_time)
 
     def test_jobs_sort_by_date(self):
         """Test retrieving jobs sorted by the date."""
