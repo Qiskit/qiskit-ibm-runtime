@@ -85,6 +85,7 @@ class RuntimeSession:
             options=self._options,
             inputs=inputs,
             session_id=self._session_id,
+            start_session=True,
         )
 
     @_active_session
