@@ -13,23 +13,23 @@
 """Test for the Websocket client."""
 
 import time
+from test.ibm_test_case import IBMTestCase
 
 from qiskit.test.mock.fake_qasm_simulator import FakeQasmSimulator
-
 from qiskit_ibm_runtime import RuntimeJob
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 from qiskit_ibm_runtime.exceptions import RuntimeInvalidStateError
+
 from .mock.fake_runtime_client import BaseFakeRuntimeClient
 from .mock.ws_handler import (
-    websocket_handler,
-    JOB_ID_PROGRESS_DONE,
     JOB_ID_ALREADY_DONE,
-    JOB_ID_RETRY_SUCCESS,
+    JOB_ID_PROGRESS_DONE,
     JOB_ID_RETRY_FAILURE,
+    JOB_ID_RETRY_SUCCESS,
     JOB_PROGRESS_RESULT_COUNT,
+    websocket_handler,
 )
 from .mock.ws_server import MockWsServer
-from ..ibm_test_case import IBMTestCase
 
 
 class TestRuntimeWebsocketClient(IBMTestCase):

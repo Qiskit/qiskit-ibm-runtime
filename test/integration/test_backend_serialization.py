@@ -12,14 +12,11 @@
 
 """Test deserializing server data."""
 
-from typing import Any, Dict, Set, Optional
+from test.decorators import run_integration_test
+from test.ibm_test_case import IBMIntegrationTestCase
+from typing import Any, Dict, Optional, Set
 
 import dateutil.parser
-
-from ..ibm_test_case import IBMIntegrationTestCase
-from ..decorators import (
-    run_integration_test,
-)
 
 
 class TestSerialization(IBMIntegrationTestCase):

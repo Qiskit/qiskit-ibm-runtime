@@ -13,14 +13,13 @@
 """Tests for ClientParameters."""
 
 import uuid
+from test.ibm_test_case import IBMTestCase
 
 from requests_ntlm import HttpNtlmAuth
 
-from qiskit_ibm_runtime.proxies import ProxyConfiguration
-from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 from qiskit_ibm_runtime.api.auth import CloudAuth, QuantumAuth
-
-from ..ibm_test_case import IBMTestCase
+from qiskit_ibm_runtime.api.client_parameters import ClientParameters
+from qiskit_ibm_runtime.proxies import ProxyConfiguration
 
 
 class TestClientParameters(IBMTestCase):

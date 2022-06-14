@@ -14,25 +14,25 @@
 
 import random
 import time
+from test.decorators import run_integration_test
+from test.ibm_test_case import IBMIntegrationJobTestCase
+from test.serialization import (
+    SerializableClass,
+    SerializableClassDecoder,
+    get_complex_types,
+)
+from test.utils import cancel_job_safe, get_real_device, wait_for_status
 
 from qiskit.providers.jobstatus import JOB_FINAL_STATES, JobStatus
 from qiskit.test.decorators import slow_test
-
 from qiskit_ibm_runtime.constants import API_TO_JOB_ERROR_MESSAGE
 from qiskit_ibm_runtime.exceptions import (
     IBMRuntimeError,
     RuntimeJobFailureError,
     RuntimeInvalidStateError,
+    RuntimeJobFailureError,
     RuntimeJobNotFound,
 )
-from ..ibm_test_case import IBMIntegrationJobTestCase
-from ..decorators import run_integration_test
-from ..serialization import (
-    get_complex_types,
-    SerializableClassDecoder,
-    SerializableClass,
-)
-from ..utils import cancel_job_safe, wait_for_status, get_real_device
 
 
 class TestIntegrationJob(IBMIntegrationJobTestCase):

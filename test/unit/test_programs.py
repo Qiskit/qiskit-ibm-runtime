@@ -18,14 +18,13 @@ import os
 import tempfile
 import warnings
 from io import StringIO
+from test.decorators import run_quantum_and_cloud_fake
+from test.ibm_test_case import IBMTestCase
+from test.program import DEFAULT_DATA, DEFAULT_METADATA, upload_program
 from unittest.mock import patch
 
-from qiskit_ibm_runtime.exceptions import IBMInputValueError
-from qiskit_ibm_runtime.exceptions import RuntimeProgramNotFound
+from qiskit_ibm_runtime.exceptions import IBMInputValueError, RuntimeProgramNotFound
 from qiskit_ibm_runtime.runtime_program import ParameterNamespace
-from ..ibm_test_case import IBMTestCase
-from ..decorators import run_quantum_and_cloud_fake
-from ..program import upload_program, DEFAULT_DATA, DEFAULT_METADATA
 
 
 class TestPrograms(IBMTestCase):

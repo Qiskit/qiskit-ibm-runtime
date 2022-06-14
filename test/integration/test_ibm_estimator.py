@@ -12,13 +12,12 @@
 
 """Integration tests for Estimator primitive."""
 
+from test.decorators import run_integration_test
+from test.ibm_test_case import IBMIntegrationTestCase
+
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.quantum_info import SparsePauliOp
-
-from qiskit_ibm_runtime import IBMEstimator, EstimatorResult, BaseEstimator
-
-from ..decorators import run_integration_test
-from ..ibm_test_case import IBMIntegrationTestCase
+from qiskit_ibm_runtime import BaseEstimator, EstimatorResult, IBMEstimator
 
 # TODO IBMEstimator class had been deprecated, remove this file when removing IBMEstimator
 

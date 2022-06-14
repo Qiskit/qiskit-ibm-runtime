@@ -12,14 +12,12 @@
 
 """Tests for backend functions using real runtime service."""
 
+from test.decorators import run_integration_test
+from test.ibm_test_case import IBMIntegrationTestCase
 from unittest import SkipTest
 
 from qiskit.transpiler.target import Target
-
 from qiskit_ibm_runtime import QiskitRuntimeService
-
-from ..ibm_test_case import IBMIntegrationTestCase
-from ..decorators import run_integration_test
 
 
 class TestIntegrationBackend(IBMIntegrationTestCase):
