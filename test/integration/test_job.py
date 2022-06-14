@@ -30,6 +30,7 @@ from qiskit_ibm_runtime.exceptions import (
     IBMRuntimeError,
     RuntimeJobFailureError,
     RuntimeInvalidStateError,
+    RuntimeJobFailureError,
     RuntimeJobNotFound,
 )
 
