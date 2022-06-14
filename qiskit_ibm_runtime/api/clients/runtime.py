@@ -124,6 +124,7 @@ class RuntimeClient(BaseBackendClient):
         session_id: Optional[str],
         job_tags: Optional[List[str]] = None,
         max_execution_time: Optional[int] = None,
+        start_session: Optional[bool] = False,
     ) -> Dict:
         """Run the specified program.
 
@@ -137,6 +138,7 @@ class RuntimeClient(BaseBackendClient):
             session_id: Job ID of the first job in a runtime session.
             job_tags: Tags to be assigned to the job.
             max_execution_time: Maximum execution time in seconds.
+            start_session: Set to True to explicitly start a runtime session. Defaults to False.
 
         Returns:
             JSON response.
@@ -154,6 +156,7 @@ class RuntimeClient(BaseBackendClient):
             session_id=session_id,
             job_tags=job_tags,
             max_execution_time=max_execution_time,
+            start_session=start_session,
             **hgp_dict
         )
 

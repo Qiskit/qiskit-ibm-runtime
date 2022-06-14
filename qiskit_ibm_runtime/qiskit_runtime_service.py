@@ -832,6 +832,7 @@ class QiskitRuntimeService:
         session_id: Optional[str] = None,
         job_tags: Optional[List[str]] = None,
         max_execution_time: Optional[int] = None,
+        start_session: Optional[bool] = False,
     ) -> RuntimeJob:
         """Execute the runtime program.
 
@@ -856,6 +857,7 @@ class QiskitRuntimeService:
                 as a filter in the :meth:`jobs()` function call.
             max_execution_time: Maximum execution time in seconds. This overrides
                 the max_execution_time of the program and cannot exceed it.
+            start_session: Set to True to explicitly start a runtime session. Defaults to False.
 
         Returns:
             A ``RuntimeJob`` instance representing the execution.
@@ -904,6 +906,7 @@ class QiskitRuntimeService:
                 session_id=session_id,
                 job_tags=job_tags,
                 max_execution_time=max_execution_time,
+                start_session=start_session,
             )
         except RequestsApiError as ex:
             if ex.status_code == 404:
