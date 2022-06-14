@@ -166,9 +166,9 @@ class AccountManager:
 
         if os.path.isfile(_QISKITRC_CONFIG_FILE):
             read_qiskitrc(_QISKITRC_CONFIG_FILE, _DEFAULT_ACCOUNT_CONFIG_JSON_FILE)
-            all_config = read_config(filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE)
+            default_config = read_config(filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE)
             return Account.from_saved_format(
-                all_config[_DEFAULT_ACCOUNT_NAME_IBM_QUANTUM]
+                default_config[_DEFAULT_ACCOUNT_NAME_IBM_QUANTUM]
             )
 
         raise AccountNotFoundError("Unable to find account.")
