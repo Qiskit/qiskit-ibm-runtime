@@ -26,6 +26,7 @@ from urllib3.util.retry import Retry
 from qiskit_ibm_runtime.utils.utils import filter_data
 
 from .exceptions import RequestsApiError
+from ..exceptions import IBMNotAuthorizedError
 from ..version import __version__ as ibm_runtime_version
 
 STATUS_FORCELIST = (
@@ -282,7 +283,8 @@ class RetrySession(Session):
                 except Exception:  # pylint: disable=broad-except
                     # the response did not contain the expected json.
                     message += f". {ex.response.text}"
-
+            if status_code == 401:
+                raise IBMNotAuthorizedError(message) from ex
             raise RequestsApiError(message, status_code) from ex
 
         return response
