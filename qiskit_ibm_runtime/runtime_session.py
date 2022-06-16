@@ -71,10 +71,12 @@ class RuntimeSession:
             inputs = {}
         inputs.update(kwargs)
         if self._session_id is None:
+            self._start_session = True
             self._initial_job = self._run(inputs=inputs)
             self._job = self._initial_job
             self._session_id = self._job.job_id
         else:
+            self._start_session = False
             self._job = self._run(inputs=inputs)
 
     def _run(self, inputs: Union[Dict, ParameterNamespace]) -> RuntimeJob:
@@ -84,7 +86,7 @@ class RuntimeSession:
             options=self._options,
             inputs=inputs,
             session_id=self._session_id,
-            start_session=True,
+            start_session=self._start_session,
         )
 
     @_active_session
