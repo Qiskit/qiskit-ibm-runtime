@@ -165,7 +165,19 @@ class AccountManager:
                 return Account.from_saved_format(all_config[account_name])
 
         if os.path.isfile(_QISKITRC_CONFIG_FILE):
-            read_qiskitrc(_QISKITRC_CONFIG_FILE, _DEFAULT_ACCOUNT_CONFIG_JSON_FILE)
+            qiskitrc_data = read_qiskitrc(_QISKITRC_CONFIG_FILE)
+            save_config(
+                filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE,
+                name="default-ibm-quantum",
+                overwrite=True,
+                config=Account(
+                    token=qiskitrc_data["token"],
+                    url=qiskitrc_data["url"],
+                    channel="ibm_quantum",
+                )
+                .validate()
+                .to_saved_format(),
+            )
             default_config = read_config(filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE)
             return Account.from_saved_format(
                 default_config[_DEFAULT_ACCOUNT_NAME_IBM_QUANTUM]

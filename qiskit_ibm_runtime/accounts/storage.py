@@ -18,7 +18,6 @@ import os
 from typing import Optional, Dict
 from configparser import ConfigParser
 from .exceptions import AccountAlreadyExistsError
-from .account import Account
 
 logger = logging.getLogger(__name__)
 
@@ -42,24 +41,14 @@ def save_config(filename: str, name: str, config: dict, overwrite: bool) -> None
         json.dump(data, json_out, sort_keys=True, indent=4)
 
 
-def read_qiskitrc(qiskitrc_config_file: str, default_config_file: str) -> None:
+def read_qiskitrc(qiskitrc_config_file: str) -> Dict[str, str]:
     """Save qiskitrc credentials into qiskit-ibm.json config file."""
     config_parser = ConfigParser()
     config_parser.read(qiskitrc_config_file)
+    account_data = {}
     for name in config_parser.sections():
         account_data = dict(config_parser.items(name))
-    save_config(
-        filename=default_config_file,
-        name="default-ibm-quantum",
-        overwrite=True,
-        config=Account(
-            token=account_data["token"],
-            url=account_data["url"],
-            channel="ibm_quantum",
-        )
-        .validate()
-        .to_saved_format(),
-    )
+    return account_data
 
 
 def read_config(
