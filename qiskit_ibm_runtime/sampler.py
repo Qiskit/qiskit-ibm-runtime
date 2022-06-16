@@ -120,6 +120,7 @@ class Sampler(BaseSampler):
         skip_transpilation: Optional[bool] = False,
         service: Optional[QiskitRuntimeService] = None,
         options: Optional[Dict] = None,
+        max_time: Optional[int] = None,
     ):
         """Initializes the Sampler primitive.
 
@@ -145,6 +146,8 @@ class Sampler(BaseSampler):
                 * log_level: logging level to set in the execution environment. The valid
                     log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
                     The default level is ``WARNING``.
+            max_time: Maximum amount of time, in seconds, a runtime session can be open before being
+                forcibly closed.
 
         Raises:
             IBMInputValueError: If an input value is invalid.
@@ -181,6 +184,7 @@ class Sampler(BaseSampler):
             program_id="sampler",
             inputs=inputs,
             options=options,
+            max_time=max_time,
         )
 
     def _call(
