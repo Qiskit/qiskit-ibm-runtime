@@ -61,6 +61,7 @@ class RuntimeSession:
         self._job: Optional[RuntimeJob] = None
         self._session_id: Optional[str] = None
         self._active = True
+        self._start_session = True
 
     @_active_session
     def write(self, **kwargs: Dict) -> None:
