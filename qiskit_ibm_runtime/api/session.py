@@ -242,6 +242,7 @@ class RetrySession(Session):
 
         Raises:
             RequestsApiError: If the request failed.
+            IBMNotAuthorizedError: If the auth token is invalid.
         """
         # pylint: disable=arguments-differ
         if bare:
