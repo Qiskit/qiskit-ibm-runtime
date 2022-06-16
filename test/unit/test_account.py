@@ -39,6 +39,7 @@ from ..ibm_test_case import IBMTestCase
 from ..account import (
     get_account_config_contents,
     temporary_account_config_file,
+    custom_qiskitrc,
     no_envs,
     custom_envs,
 )
@@ -815,6 +816,21 @@ class TestEnableAccount(IBMTestCase):
             service = FakeRuntimeService(name=name, instance=instance)
         self.assertTrue(service._account)
         self.assertEqual(service._account.instance, instance)
+
+    def test_enable_account_by_qiskitrc(self):
+        """Test initializing account by a qiskitrc file."""
+        token = "token-x"
+        str_contents = f"""
+        [ibmq] 
+        token = {token}
+        url = https://auth.quantum-computing.ibm.com/api 
+        verify = True
+        """
+        with custom_qiskitrc(contents=str.encode(str_contents)):
+            with temporary_account_config_file(contents={}):
+                service = FakeRuntimeService()
+        self.assertTrue(service._account)
+        self.assertEqual(service._account.token, token)
 
     def test_enable_account_by_channel_input_instance(self):
         """Test initializing account by channel and input instance."""
