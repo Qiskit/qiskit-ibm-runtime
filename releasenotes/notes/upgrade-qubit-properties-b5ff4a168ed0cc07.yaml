@@ -1,0 +1,8 @@
+---
+upgrade:
+  - |
+    :meth:`~qiskit_ibm_runtime.IBMBackend.qubit_properties` will now return a sub class
+    of :class:`~qiskit.providers.backend.QubitProperties` called
+    :class:`~qiskit_ibm_runtime.ibm_qubit_properties.IBMQubitProperties` and
+    will expose `anharmonicity` in addition to the `t1`, `t2` and `frequency` already exposed
+    by the :class:`~qiskit.providers.backend.QubitProperties` class.

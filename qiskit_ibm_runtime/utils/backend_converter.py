@@ -12,10 +12,9 @@
 
 """Converters for migration from IBM Quantum BackendV1 to BackendV2."""
 
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from qiskit.transpiler.target import Target, InstructionProperties
-from qiskit.providers.backend import QubitProperties
 from qiskit.utils.units import apply_prefix
 from qiskit.circuit.library.standard_gates import IGate, SXGate, XGate, CXGate, RZGate
 from qiskit.circuit.parameter import Parameter
@@ -27,6 +26,8 @@ from qiskit.providers.models import (
     BackendProperties,
     PulseDefaults,
 )
+
+from ..ibm_qubit_properties import IBMQubitProperties
 
 
 def convert_to_target(
@@ -46,9 +47,13 @@ def convert_to_target(
         "reset": Reset(),
     }
     custom_gates = {}
-    target = Target(num_qubits=configuration.n_qubits)
-    # Parse from properties if it exsits
+    target = None
+    # Parse from properties if it exists
     if properties is not None:
+        qubit_properties = qubit_props_list_from_props(properties=properties)
+        target = Target(
+            num_qubits=configuration.n_qubits, qubit_properties=qubit_properties
+        )
         # Parse instructions
         gates: Dict[str, Any] = {}
         for gate in properties.gates:
@@ -85,6 +90,7 @@ def convert_to_target(
         target.add_instruction(Measure(), measure_props)
     # Parse from configuration because properties doesn't exist
     else:
+        target = Target(num_qubits=configuration.n_qubits)
         for gate in configuration.gates:
             name = gate.name
             gate_props = (
@@ -128,15 +134,29 @@ def convert_to_target(
     return target
 
 
-def qubit_props_dict_from_props(properties: BackendProperties) -> QubitProperties:
+def qubit_props_list_from_props(
+    properties: BackendProperties,
+) -> List[IBMQubitProperties]:
     """Uses BackendProperties to construct
-    and return QubitProperties class.
+    and return a list of IBMQubitProperties.
     """
-    qubit_props = {}
+    qubit_props: List[IBMQubitProperties] = []
     for qubit, _ in enumerate(properties.qubits):
-        qubit_props[qubit] = QubitProperties(
-            t1=properties.t1(qubit),
-            t2=properties.t2(qubit),
-            frequency=properties.frequency(qubit),
+        t_1 = properties.t1(qubit) * 1e-6  # microseconds to seconds
+        t_2 = properties.t2(qubit) * 1e-6  # microseconds to seconds
+        frequency = properties.frequency(qubit) * 1e9  # GHz to Hz
+        try:
+            anharmonicity = (
+                properties.qubit_property(qubit, "anharmonicity")[0] * 1e9
+            )  # GHz to Hz
+        except Exception:  # pylint: disable=broad-except
+            anharmonicity = None
+        qubit_props.append(
+            IBMQubitProperties(  # type: ignore[no-untyped-call]
+                t1=t_1,
+                t2=t_2,
+                frequency=frequency,
+                anharmonicity=anharmonicity,
+            )
         )
     return qubit_props
