@@ -141,7 +141,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
     @run_integration_test
     def test_retrieve_jobs_by_session_id(self, service):
         """Test retrieving jobs by session_id."""
-        job = self._run_program(service)
+        job = self._run_program(service, start_session=True)
         job.wait_for_final_state()
         job_2 = self._run_program(service, session_id=job.job_id)
         job_2.wait_for_final_state()
