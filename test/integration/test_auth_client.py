@@ -17,6 +17,7 @@ import re
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 from qiskit_ibm_runtime.api.clients import AuthClient
 from qiskit_ibm_runtime.api.exceptions import ApiError
+from qiskit_ibm_runtime.exceptions import IBMNotAuthorizedError
 from ..ibm_test_case import IBMTestCase
 from ..decorators import integration_test_setup, IntegrationTestDependencies
 
@@ -41,7 +42,7 @@ class TestAuthClient(IBMTestCase):
     def test_invalid_token(self, dependencies: IntegrationTestDependencies) -> None:
         """Test login using invalid token."""
         qe_token = "INVALID_TOKEN"
-        with self.assertRaises(ApiError):
+        with self.assertRaises(IBMNotAuthorizedError):
             _ = self._init_auth_client(qe_token, dependencies.url)
 
     @integration_test_setup(supported_channel=["ibm_quantum"], init_service=False)
