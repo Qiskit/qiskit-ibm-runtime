@@ -2,7 +2,7 @@
 
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2022.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -127,6 +127,10 @@ numfig_format = {
 # Usually you set "language" from the command line for these cases.
 language = None
 
+# For Adding Locale
+locale_dirs = ['locale/']   # path is example but recommended.
+gettext_compact = False     # optional.
+
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
@@ -171,3 +175,8 @@ html_theme_options = {
 html_sourcelink_suffix = ''
 
 autoclass_content = 'both'
+
+# -- Extension configuration -------------------------------------------------
+
+def setup(app):
+    app.setup_extension('versionutils')

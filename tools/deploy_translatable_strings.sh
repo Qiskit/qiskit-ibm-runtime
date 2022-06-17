@@ -55,12 +55,12 @@ git config user.email "qiskit@qiskit.org"
 
 echo "git rm -rf for the translation po files"
 git rm -rf --ignore-unmatch ibm-runtime/$DOC_DIR_PO/$SOURCE_LANG/LC_MESSAGES/*.po \
-    ibm-runtime/$DOC_DIR_PO/$SOURCE_LANG/LC_MESSAGES/api \
-    ibm-runtime/$DOC_DIR_PO/$SOURCE_LANG/LC_MESSAGES/apidocs \
-    ibm-runtime/$DOC_DIR_PO/$SOURCE_LANG/LC_MESSAGES/stubs \
-    ibm-runtime/$DOC_DIR_PO/$SOURCE_LANG/LC_MESSAGES/release_notes.po \
-    ibm-runtime/$DOC_DIR_PO/$SOURCE_LANG/LC_MESSAGES/theme \
-    ibm-runtime/$DOC_DIR_PO/$SOURCE_LANG/LC_MESSAGES/_*
+    qiskit-ibm-runtime/$DOC_DIR_PO/$SOURCE_LANG/LC_MESSAGES/api \
+    qiskit-ibm-runtime/$DOC_DIR_PO/$SOURCE_LANG/LC_MESSAGES/apidocs \
+    qiskit-ibm-runtime/$DOC_DIR_PO/$SOURCE_LANG/LC_MESSAGES/stubs \
+    qiskit-ibm-runtime/$DOC_DIR_PO/$SOURCE_LANG/LC_MESSAGES/release_notes.po \
+    qiskit-ibm-runtime/$DOC_DIR_PO/$SOURCE_LANG/LC_MESSAGES/theme \
+    qiskit-ibm-runtime/$DOC_DIR_PO/$SOURCE_LANG/LC_MESSAGES/_*
 
 # Remove api/ and apidoc/ to avoid confusion while translating
 rm -rf $SOURCE_DIR/$DOC_DIR_PO/$SOURCE_LANG/LC_MESSAGES/api/ \
@@ -71,15 +71,15 @@ rm -rf $SOURCE_DIR/$DOC_DIR_PO/$SOURCE_LANG/LC_MESSAGES/api/ \
 
 # Copy the new rendered files and add them to the commit.
 echo "copy directory"
-cp -r $SOURCE_DIR/$DOC_DIR_PO/ ibm-runtime/docs
-cp $SOURCE_DIR/setup.py ibm-runtime/.
-cp $SOURCE_DIR/requirements-dev.txt ibm-runtime/.
-cp $SOURCE_DIR/requirements.txt ibm-runtime/.
-cp $SOURCE_DIR/qiskit_machine_learning/VERSION.txt ibm-runtime/qiskit_machine_learning/.
+cp -r $SOURCE_DIR/$DOC_DIR_PO/ qiskit-ibm-runtime/docs
+cp $SOURCE_DIR/setup.py qiskit-ibm-runtime/.
+cp $SOURCE_DIR/requirements-dev.txt qiskit-ibm-runtime/.
+cp $SOURCE_DIR/requirements.txt qiskit-ibm-runtime/.
+cp $SOURCE_DIR/qiskit_ibm_runtime/VERSION.txt qiskit-ibm-runtime/qiskit_ibm_runtime/.
 
 # git checkout translationDocs
 echo "add to po files to target dir"
-git add ibm-runtime/
+git add qiskit-ibm-runtime/
 
 # Commit and push the changes.
 git commit -m "[Qiskit IBM Runtime] Automated documentation update to add .po files" -m "skip ci" -m "Commit: $GITHUB_SHA" -m "Github Actions Run: https://github.com/Qiskit/qiskit/runs/$GITHUB_RUN_NUMBER"
