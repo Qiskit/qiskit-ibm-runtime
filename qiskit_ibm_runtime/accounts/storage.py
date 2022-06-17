@@ -42,7 +42,7 @@ def save_config(filename: str, name: str, config: dict, overwrite: bool) -> None
 
 
 def read_qiskitrc(qiskitrc_config_file: str) -> Dict[str, str]:
-    """Save qiskitrc credentials into qiskit-ibm.json config file."""
+    """Read credentials from a qiskitrc config and return as a dictionary."""
     config_parser = ConfigParser()
     config_parser.read(qiskitrc_config_file)
     account_data = {}
