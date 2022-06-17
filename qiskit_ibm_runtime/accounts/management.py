@@ -168,11 +168,12 @@ class AccountManager:
             qiskitrc_data = read_qiskitrc(_QISKITRC_CONFIG_FILE)
             save_config(
                 filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE,
-                name="default-ibm-quantum",
+                name=_DEFAULT_ACCOUNT_NAME_IBM_QUANTUM,
                 overwrite=True,
                 config=Account(
-                    token=qiskitrc_data["token"],
-                    url=qiskitrc_data["url"],
+                    token=qiskitrc_data.get("token", None),
+                    url=qiskitrc_data.get("url", None),
+                    instance=qiskitrc_data.get("default_provider", None),
                     channel="ibm_quantum",
                 )
                 .validate()

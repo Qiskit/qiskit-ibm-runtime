@@ -825,6 +825,7 @@ class TestEnableAccount(IBMTestCase):
         token = {token}
         url = https://auth.quantum-computing.ibm.com/api 
         verify = True
+        default_provider = ibm-q/open/main
         """
         with custom_qiskitrc(contents=str.encode(str_contents)):
             with temporary_account_config_file(contents={}):
