@@ -20,6 +20,7 @@ import json
 from .base import RestAdapterBase
 from .program import Program
 from .program_job import ProgramJob
+from .runtime_session import RuntimeSession
 from ...utils import RuntimeEncoder
 from ...utils.converters import local_to_utc
 from .cloud_backend import CloudBackend
@@ -57,6 +58,17 @@ class Runtime(RestAdapterBase):
             The program job adapter.
         """
         return ProgramJob(self.session, job_id)
+
+    def runtime_session(self, session_id: str) -> "RuntimeSession":
+        """Return an adapter for the session.
+
+        Args:
+            session_id: Job ID of the first job in a session.
+
+        Returns:
+            The session adapter.
+        """
+        return RuntimeSession(self.session, session_id)
 
     def list_programs(self, limit: int = None, skip: int = None) -> Dict[str, Any]:
         """Return a list of runtime programs.
@@ -124,6 +136,7 @@ class Runtime(RestAdapterBase):
         session_id: Optional[str] = None,
         job_tags: Optional[List[str]] = None,
         max_execution_time: Optional[int] = None,
+        start_session: Optional[bool] = False,
     ) -> Dict:
         """Execute the program.
 
@@ -139,6 +152,7 @@ class Runtime(RestAdapterBase):
             session_id: ID of the first job in a runtime session.
             job_tags: Tags to be assigned to the job.
             max_execution_time: Maximum execution time in seconds.
+            start_session: Set to True to explicitly start a runtime session. Defaults to False.
 
         Returns:
             JSON response.
@@ -160,6 +174,8 @@ class Runtime(RestAdapterBase):
             payload["tags"] = job_tags
         if max_execution_time:
             payload["cost"] = max_execution_time
+        if start_session:
+            payload["start_session"] = start_session
         if all([hub, group, project]):
             payload["hub"] = hub
             payload["group"] = group

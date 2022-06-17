@@ -186,6 +186,7 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
         job_tags=None,
         max_execution_time=None,
         session_id=None,
+        start_session=False,
     ):
         """Run a program."""
         self.log.debug("Running program on %s", service.channel)
@@ -211,6 +212,7 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
             max_execution_time=max_execution_time,
             session_id=session_id,
             callback=callback,
+            start_session=start_session,
         )
         self.log.info("Runtime job %s submitted.", job.job_id)
         self.to_cancel[service.channel].append(job)

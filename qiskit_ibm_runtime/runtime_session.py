@@ -22,7 +22,6 @@ from .runtime_job import RuntimeJob
 from .runtime_program import ParameterNamespace
 from .runtime_options import RuntimeOptions
 from .program.result_decoder import ResultDecoder
-from .exceptions import RuntimeInvalidStateError
 
 
 def _active_session(func):  # type: ignore
@@ -62,6 +61,7 @@ class RuntimeSession:
         self._job: Optional[RuntimeJob] = None
         self._session_id: Optional[str] = None
         self._active = True
+        self._start_session = True
 
     @_active_session
     def write(self, **kwargs: Dict) -> None:
@@ -72,10 +72,12 @@ class RuntimeSession:
             inputs = {}
         inputs.update(kwargs)
         if self._session_id is None:
+            self._start_session = True
             self._initial_job = self._run(inputs=inputs)
             self._job = self._initial_job
             self._session_id = self._job.job_id
         else:
+            self._start_session = False
             self._job = self._run(inputs=inputs)
 
     def _run(self, inputs: Union[Dict, ParameterNamespace]) -> RuntimeJob:
@@ -85,6 +87,7 @@ class RuntimeSession:
             options=self._options,
             inputs=inputs,
             session_id=self._session_id,
+            start_session=self._start_session,
         )
 
     @_active_session
@@ -119,12 +122,8 @@ class RuntimeSession:
     def close(self) -> None:
         """Close the session."""
         self._active = False
-        # TODO Stop swallowing error when API is fixed
-        try:
-            if self._initial_job is not None:
-                self._initial_job.cancel()
-        except RuntimeInvalidStateError:
-            pass
+        if self._session_id:
+            self._service._api_client.close_session(self._session_id)
 
     def __enter__(self) -> "RuntimeSession":
         return self
