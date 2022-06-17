@@ -14,6 +14,7 @@
 
 import uuid
 import copy
+from datetime import datetime, timezone
 from qiskit_ibm_runtime import QiskitRuntimeService
 
 
@@ -79,6 +80,9 @@ def run_program(
     instance=None,
     backend_name=None,
     log_level=None,
+    job_tags=None,
+    max_execution_time=None,
+    session_id=None,
 ):
     """Run a program."""
     backend_name = backend_name if backend_name is not None else "common_backend"
@@ -95,5 +99,9 @@ def run_program(
         inputs=inputs,
         result_decoder=decoder,
         instance=instance,
+        job_tags=job_tags,
+        max_execution_time=max_execution_time,
+        session_id=session_id,
     )
+    job._creation_date = datetime.now(timezone.utc)
     return job

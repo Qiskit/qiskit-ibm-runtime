@@ -18,7 +18,7 @@
     },
     "return_values": {
       "type": "string",
-      "description": "A string that says 'All done!'."
+      "description": "A string that says 'Hello, World!'."
     },
     "interim_results": {
       "type": "object",

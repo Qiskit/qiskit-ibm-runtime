@@ -39,7 +39,7 @@ import os
 os.environ['QISKIT_DOCS'] = 'TRUE'
 
 # -- Project information -----------------------------------------------------
-project = 'Qiskit Runtime IBM Quantum Client'
+project = 'Qiskit Runtime IBM Client'
 copyright = '2022, Qiskit Development Team'  # pylint: disable=redefined-builtin
 author = 'Qiskit Development Team'
 
@@ -74,9 +74,7 @@ html_static_path = ['_static']
 templates_path = ['_templates']
 
 html_css_files = ['style.css', 'gallery.css']
-# html_css_files = [
-#     'style.css',
-# ]
+
 nbsphinx_timeout = 300
 nbsphinx_execute = "never"
 nbsphinx_widgets_path = ''

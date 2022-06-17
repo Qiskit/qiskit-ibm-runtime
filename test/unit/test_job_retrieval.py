@@ -12,6 +12,7 @@
 
 """Tests for runtime job retrieval."""
 
+from datetime import datetime, timedelta, timezone
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from .mock.fake_runtime_service import FakeRuntimeService
 from ..ibm_test_case import IBMTestCase
@@ -209,6 +210,74 @@ class TestRetrieveJobs(IBMTestCase):
             program_id=program_id, instance="nohub1/nogroup1/noproject1"
         )
         self.assertFalse(rjobs)
+
+    def test_jobs_filter_by_job_tags(self):
+        """Test retrieving jobs by job tags."""
+        service = self._ibm_quantum_service
+        program_id = upload_program(service)
+        job_tags = ["test_tag"]
+
+        job = run_program(service=service, program_id=program_id, job_tags=job_tags)
+        with mock_wait_for_final_state(service, job):
+            job.wait_for_final_state()
+        rjobs = service.jobs(program_id=program_id, job_tags=job_tags)
+        self.assertTrue(rjobs)
+        self.assertEqual(1, len(rjobs))
+        rjobs = service.jobs(program_id=program_id, job_tags=["no_test_tag"])
+        self.assertFalse(rjobs)
+
+    def test_jobs_filter_by_session_id(self):
+        """Test retrieving jobs by session id."""
+        service = self._ibm_quantum_service
+        program_id = upload_program(service)
+
+        job = run_program(service=service, program_id=program_id)
+        job_2 = run_program(
+            service=service, program_id=program_id, session_id=job.job_id
+        )
+        with mock_wait_for_final_state(service, job):
+            job.wait_for_final_state()
+            job_2.wait_for_final_state()
+        rjobs = service.jobs(program_id=program_id, session_id=job.job_id)
+        self.assertTrue(rjobs)
+        self.assertEqual(2, len(rjobs))
+        rjobs = service.jobs(program_id=program_id, session_id="no_test_session_id")
+        self.assertFalse(rjobs)
+
+    def test_jobs_filter_by_date(self):
+        """Test retrieving jobs filtered by date."""
+        service = self._ibm_quantum_service
+        current_time = datetime.now(timezone.utc) - timedelta(seconds=5)
+        job = run_program(service=service)
+        with mock_wait_for_final_state(service, job):
+            job.wait_for_final_state()
+        time_after_job = datetime.now(timezone.utc)
+        rjobs = service.jobs(
+            created_before=time_after_job,
+            created_after=current_time,
+        )
+        self.assertTrue(job.job_id in [j.job_id for j in rjobs])
+        self.assertTrue(job._creation_date <= time_after_job)
+        self.assertTrue(job._creation_date >= current_time)
+
+    def test_jobs_sort_by_date(self):
+        """Test retrieving jobs sorted by the date."""
+        service = self._ibm_quantum_service
+        program_id = upload_program(service)
+
+        job = run_program(service=service, program_id=program_id)
+        job_2 = run_program(service=service, program_id=program_id)
+        with mock_wait_for_final_state(service, job):
+            job.wait_for_final_state()
+            job_2.wait_for_final_state()
+        rjobs = service.jobs(program_id=program_id)
+        rjobs_desc = service.jobs(program_id=program_id, descending=True)
+        rjobs_asc = service.jobs(program_id=program_id, descending=False)
+        self.assertTrue(rjobs[0], rjobs_asc[1])
+        self.assertTrue(rjobs[1], rjobs_asc[0])
+        self.assertEqual(
+            [job.job_id for job in rjobs], [job.job_id for job in rjobs_desc]
+        )
 
     def test_jobs_bad_instance(self):
         """Test retrieving jobs with bad instance values."""

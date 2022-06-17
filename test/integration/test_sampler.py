@@ -36,11 +36,11 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
         with Sampler(circuits=bell, service=service, options=options) as sampler:
             self.assertIsInstance(sampler, BaseSampler)
 
-            circuit_indices = [0]
-            result = sampler(circuit_indices=circuit_indices, parameter_values=[[]])
+            circuits0 = [0]
+            result = sampler(circuits=circuits0, parameter_values=[[]])
             self.assertIsInstance(result, SamplerResult)
-            self.assertEqual(len(result.quasi_dists), len(circuit_indices))
-            self.assertEqual(len(result.metadata), len(circuit_indices))
+            self.assertEqual(len(result.quasi_dists), len(circuits0))
+            self.assertEqual(len(result.metadata), len(circuits0))
             self.assertAlmostEqual(result.quasi_dists[0]["11"], 0.5, delta=0.05)
             self.assertAlmostEqual(result.quasi_dists[0]["00"], 0.5, delta=0.05)
 
@@ -48,36 +48,30 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
         with Sampler(circuits=[bell] * 3, service=service, options=options) as sampler:
             self.assertIsInstance(sampler, BaseSampler)
 
-            circuit_indices1 = [0, 1, 2]
-            result1 = sampler(
-                circuit_indices=circuit_indices1, parameter_values=[[]] * 3
-            )
+            circuits1 = [0, 1, 2]
+            result1 = sampler(circuits=circuits1, parameter_values=[[]] * 3)
             self.assertIsInstance(result1, SamplerResult)
-            self.assertEqual(len(result1.quasi_dists), len(circuit_indices1))
-            self.assertEqual(len(result1.metadata), len(circuit_indices1))
-            for i in range(len(circuit_indices1)):
+            self.assertEqual(len(result1.quasi_dists), len(circuits1))
+            self.assertEqual(len(result1.metadata), len(circuits1))
+            for i in range(len(circuits1)):
                 self.assertAlmostEqual(result1.quasi_dists[i]["11"], 0.5, delta=0.05)
                 self.assertAlmostEqual(result1.quasi_dists[i]["00"], 0.5, delta=0.05)
 
-            circuit_indices2 = [0, 2]
-            result2 = sampler(
-                circuit_indices=circuit_indices2, parameter_values=[[]] * 2
-            )
+            circuits2 = [0, 2]
+            result2 = sampler(circuits=circuits2, parameter_values=[[]] * 2)
             self.assertIsInstance(result2, SamplerResult)
-            self.assertEqual(len(result2.quasi_dists), len(circuit_indices2))
-            self.assertEqual(len(result2.metadata), len(circuit_indices2))
-            for i in range(len(circuit_indices2)):
+            self.assertEqual(len(result2.quasi_dists), len(circuits2))
+            self.assertEqual(len(result2.metadata), len(circuits2))
+            for i in range(len(circuits2)):
                 self.assertAlmostEqual(result2.quasi_dists[i]["11"], 0.5, delta=0.05)
                 self.assertAlmostEqual(result2.quasi_dists[i]["00"], 0.5, delta=0.05)
 
-            circuit_indices3 = [1, 2]
-            result3 = sampler(
-                circuit_indices=circuit_indices3, parameter_values=[[]] * 2
-            )
+            circuits3 = [1, 2]
+            result3 = sampler(circuits=circuits3, parameter_values=[[]] * 2)
             self.assertIsInstance(result3, SamplerResult)
-            self.assertEqual(len(result3.quasi_dists), len(circuit_indices3))
-            self.assertEqual(len(result3.metadata), len(circuit_indices3))
-            for i in range(len(circuit_indices3)):
+            self.assertEqual(len(result3.quasi_dists), len(circuits3))
+            self.assertEqual(len(result3.metadata), len(circuits3))
+            for i in range(len(circuits3)):
                 self.assertAlmostEqual(result3.quasi_dists[i]["11"], 0.5, delta=0.05)
                 self.assertAlmostEqual(result3.quasi_dists[i]["00"], 0.5, delta=0.05)
 
@@ -100,11 +94,11 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
         with Sampler(circuits=[pqc, pqc2], service=service, options=options) as sampler:
             self.assertIsInstance(sampler, BaseSampler)
 
-            circuit_indices = [0, 0, 1]
+            circuits0 = [pqc, pqc, pqc2]
             result = sampler(
-                circuit_indices=circuit_indices,
+                circuits=circuits0,
                 parameter_values=[theta1, theta2, theta3],
             )
             self.assertIsInstance(result, SamplerResult)
-            self.assertEqual(len(result.quasi_dists), len(circuit_indices))
-            self.assertEqual(len(result.metadata), len(circuit_indices))
+            self.assertEqual(len(result.quasi_dists), len(circuits0))
+            self.assertEqual(len(result.metadata), len(circuits0))

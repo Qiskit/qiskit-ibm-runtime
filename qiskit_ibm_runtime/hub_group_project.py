@@ -18,6 +18,7 @@ from typing import Any, Dict, Optional
 
 from qiskit_ibm_runtime import (  # pylint: disable=unused-import
     ibm_backend,
+    qiskit_runtime_service,
 )
 
 from .api.clients import AccountClient
@@ -35,6 +36,7 @@ class HubGroupProject:
         self,
         client_params: ClientParameters,
         instance: str,
+        service: "qiskit_runtime_service.QiskitRuntimeService",
     ) -> None:
         """HubGroupProject constructor
 
@@ -42,6 +44,7 @@ class HubGroupProject:
             client_params: Parameters used for server connection.
             instance: Hub/group/project.
         """
+        self._service = service
         self._api_client = AccountClient(client_params)
         # Initialize the internal list of backends.
         self._backends: Dict[str, "ibm_backend.IBMBackend"] = {}
@@ -83,6 +86,7 @@ class HubGroupProject:
                 continue
             ret[config.backend_name] = ibm_backend.IBMBackend(
                 configuration=config,
+                service=self._service,
                 api_client=self._api_client,
             )
         return ret

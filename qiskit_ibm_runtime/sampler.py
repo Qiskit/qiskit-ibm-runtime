@@ -59,11 +59,15 @@ class Sampler(BaseSampler):
             The default level is ``WARNING``.
 
     The returned instance can be called repeatedly with the following parameters to
-    calculate probabilites or quasi-probabilities.
+    calculate probabilities or quasi-probabilities.
 
-    * circuit_indices: A list of circuit indices.
+    * circuits: a (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
+        a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or a list of
+        circuit indices.
 
     * parameter_values: An optional list of concrete parameters to be bound.
+
+    * circuit_indices: (DEPRECATED) A list of circuit indices.
 
     All the above lists should be of the same length.
 
@@ -84,12 +88,14 @@ class Sampler(BaseSampler):
 
         # executes a Bell circuit
         with Sampler(circuits=[bell], service=service, options=options) as sampler:
-            result = sampler(circuit_indices=[0], parameter_values=[[]])
+            # pass circuits as indices
+            result = sampler(circuits=[0], parameter_values=[[]])
             print(result)
 
         # executes three Bell circuits
         with Sampler(circuits=[bell]*3, service=service, options=options) as sampler:
-            result = sampler(circuit_indices=[0, 1, 2], parameter_values=[[]]*3)
+            # alternatively you can also pass circuits as objects
+            result = sampler(circuits=[bell]*3, parameter_values=[[]]*3)
             print(result)
 
         # parameterized circuit
@@ -103,7 +109,7 @@ class Sampler(BaseSampler):
         theta3 = [0, 1, 2, 3, 4, 5, 6, 7]
 
         with Sampler(circuits=[pqc, pqc2], service=service, options=options) as sampler:
-            result = sampler(circuit_indices=[0, 0, 1], parameter_values=[theta1, theta2, theta3])
+            result = sampler(circuits=[0, 0, 1], parameter_values=[theta1, theta2, theta3])
             print(result)
     """
 
@@ -177,18 +183,18 @@ class Sampler(BaseSampler):
             options=options,
         )
 
-    def __call__(
+    def _call(
         self,
-        circuit_indices: Sequence[int],
+        circuits: Sequence[int],
         parameter_values: Optional[
             Union[Sequence[float], Sequence[Sequence[float]]]
         ] = None,
         **run_options: Any,
     ) -> SamplerResult:
-        """Calculates probabilites or quasi-probabilities for given inputs in a runtime session.
+        """Calculates probabilities or quasi-probabilities for given inputs in a runtime session.
 
         Args:
-            circuit_indices: A list of circuit indices.
+            circuits: A list of circuit indices.
             parameter_values: An optional list of concrete parameters to be bound.
             **run_options: A collection of kwargs passed to `backend.run()`.
 
@@ -196,7 +202,7 @@ class Sampler(BaseSampler):
             An instance of :class:`qiskit.primitives.SamplerResult`.
         """
         self._session.write(
-            circuit_indices=circuit_indices,
+            circuit_indices=circuits,
             parameter_values=parameter_values,
             run_options=run_options,
         )

@@ -16,6 +16,8 @@ from unittest import SkipTest
 
 from qiskit.transpiler.target import Target
 
+from qiskit_ibm_runtime import QiskitRuntimeService
+
 from ..ibm_test_case import IBMIntegrationTestCase
 from ..decorators import run_integration_test
 
@@ -59,6 +61,11 @@ class TestIBMBackend(IBMIntegrationTestCase):
             cls.backend = cls.dependencies.service.least_busy(
                 simulator=False, min_num_qubits=5, instance=cls.dependencies.instance
             )
+
+    def test_backend_service(self):
+        """Check if the service property is set."""
+        backend = self.backend
+        self.assertIsInstance(backend.service, QiskitRuntimeService)
 
     def test_backend_target(self):
         """Check if the target property is set."""

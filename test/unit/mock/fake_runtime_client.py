@@ -16,9 +16,10 @@ import base64
 import json
 import time
 import uuid
+from datetime import timezone, datetime as python_datetime
 from concurrent.futures import ThreadPoolExecutor
 from functools import wraps
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
 from qiskit_ibm_runtime.utils import RuntimeEncoder
@@ -112,8 +113,11 @@ class BaseFakeRuntimeJob:
         final_status,
         params,
         image,
+        job_tags=None,
         log_level=None,
         session_id=None,
+        max_execution_time=None,
+        start_session=None,
     ):
         """Initialize a fake job."""
         self._job_id = job_id
@@ -127,8 +131,12 @@ class BaseFakeRuntimeJob:
         self._params = params
         self._image = image
         self._interim_results = json.dumps("foo")
+        self._job_tags = job_tags
         self.log_level = log_level
         self._session_id = session_id
+        self._max_execution_time = max_execution_time
+        self._start_session = start_session
+        self._creation_date = python_datetime.now(timezone.utc)
         if final_status is None:
             self._future = self._executor.submit(self._auto_progress)
             self._result = None
@@ -356,6 +364,9 @@ class BaseFakeRuntimeClient:
         hgp: Optional[str],
         log_level: Optional[str],
         session_id: Optional[str] = None,
+        job_tags: Optional[List[str]] = None,
+        max_execution_time: Optional[int] = None,
+        start_session: Optional[bool] = None,
     ) -> Dict[str, Any]:
         """Run the specified program."""
         _ = self._get_program(program_id)
@@ -373,6 +384,9 @@ class BaseFakeRuntimeClient:
         if backend_name is None:
             backend_name = self.list_backends()[0]
 
+        if session_id is None:
+            session_id = job_id
+
         job = job_cls(
             job_id=job_id,
             program_id=program_id,
@@ -385,6 +399,9 @@ class BaseFakeRuntimeClient:
             image=image,
             log_level=log_level,
             session_id=session_id,
+            job_tags=job_tags,
+            max_execution_time=max_execution_time,
+            start_session=start_session,
             **self._job_kwargs,
         )
         self._jobs[job_id] = job
@@ -408,6 +425,11 @@ class BaseFakeRuntimeClient:
         hub=None,
         group=None,
         project=None,
+        job_tags=None,
+        session_id=None,
+        created_after=None,
+        created_before=None,
+        descending=True,
     ):
         """Get all jobs."""
         pending_statuses = ["QUEUED", "RUNNING"]
@@ -430,7 +452,21 @@ class BaseFakeRuntimeClient:
                 if job._hub == hub and job._group == group and job._project == project
             ]
             count = len(jobs)
+        if job_tags:
+            jobs = [job for job in jobs if job._job_tags == job_tags]
+            count = len(jobs)
+        if session_id:
+            jobs = [job for job in jobs if job._session_id == session_id]
+            count = len(jobs)
+        if created_after:
+            jobs = [job for job in jobs if job._creation_date >= created_after]
+            count = len(jobs)
+        if created_before:
+            jobs = [job for job in jobs if job._creation_date <= created_before]
+            count = len(jobs)
         jobs = jobs[skip : limit + skip]
+        if descending is False:
+            jobs.reverse()
         return {"jobs": [job.to_dict() for job in jobs], "count": count}
 
     def set_program_visibility(self, program_id: str, public: bool) -> None:

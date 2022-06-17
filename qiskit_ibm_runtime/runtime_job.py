@@ -13,6 +13,7 @@
 """Qiskit runtime job."""
 
 from typing import Any, Optional, Callable, Dict, Type
+import time
 import logging
 from concurrent import futures
 import traceback
@@ -27,6 +28,7 @@ from .exceptions import (
     RuntimeJobFailureError,
     RuntimeInvalidStateError,
     IBMRuntimeError,
+    RuntimeJobTimeoutError,
 )
 from .program.result_decoder import ResultDecoder
 from .api.clients import RuntimeClient, RuntimeWebsocketClient, WebsocketClientCloseCode
@@ -180,7 +182,7 @@ class RuntimeJob:
                     f"Unable to retrieve job result. " f"{self.error_message()}"
                 )
             result_raw = self._api_client.job_results(job_id=self.job_id)
-            self._results = _decoder.decode(result_raw)
+            self._results = _decoder.decode(result_raw) if result_raw else None
         return self._results
 
     def cancel(self) -> None:
@@ -226,12 +228,33 @@ class RuntimeJob:
 
         Args:
             timeout: Seconds to wait for the job. If ``None``, wait indefinitely.
+
+        Raises:
+            RuntimeJobTimeoutError: If the job does not complete within given timeout.
         """
-        if self._status not in JOB_FINAL_STATES and not self._is_streaming():
-            self._ws_client_future = self._executor.submit(self._start_websocket_client)
-        if self._is_streaming():
-            self._ws_client_future.result(timeout)
-        self.status()
+        try:
+            start_time = time.time()
+            if self._status not in JOB_FINAL_STATES and not self._is_streaming():
+                self._ws_client_future = self._executor.submit(
+                    self._start_websocket_client
+                )
+            if self._is_streaming():
+                self._ws_client_future.result(timeout)
+            # poll for status after stream has closed until status is final
+            # because status doesn't become final as soon as stream closes
+            status = self.status()
+            while status not in JOB_FINAL_STATES:
+                elapsed_time = time.time() - start_time
+                if timeout is not None and elapsed_time >= timeout:
+                    raise RuntimeJobTimeoutError(
+                        f"Timed out waiting for job to complete after {timeout} secs."
+                    )
+                time.sleep(3)
+                status = self.status()
+        except futures.TimeoutError:
+            raise RuntimeJobTimeoutError(
+                f"Timed out waiting for job to complete after {timeout} secs."
+            )
 
     def stream_results(
         self, callback: Callable, decoder: Optional[Type[ResultDecoder]] = None
