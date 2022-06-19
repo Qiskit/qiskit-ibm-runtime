@@ -13,6 +13,7 @@
 """Account management related classes and functions."""
 
 import os
+import ast
 from typing import Optional, Dict
 from .exceptions import AccountNotFoundError
 from .account import Account, ChannelType
@@ -166,6 +167,11 @@ class AccountManager:
 
         if os.path.isfile(_QISKITRC_CONFIG_FILE):
             qiskitrc_data = read_qiskitrc(_QISKITRC_CONFIG_FILE)
+            proxies = (
+                ProxyConfiguration(ast.literal_eval(qiskitrc_data["proxies"]))
+                if "proxies" in qiskitrc_data
+                else None
+            )
             save_config(
                 filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE,
                 name=_DEFAULT_ACCOUNT_NAME_IBM_QUANTUM,
@@ -174,6 +180,8 @@ class AccountManager:
                     token=qiskitrc_data.get("token", None),
                     url=qiskitrc_data.get("url", None),
                     instance=qiskitrc_data.get("default_provider", None),
+                    verify=bool(qiskitrc_data.get("verify", None)),
+                    proxies=proxies,
                     channel="ibm_quantum",
                 )
                 .validate()
