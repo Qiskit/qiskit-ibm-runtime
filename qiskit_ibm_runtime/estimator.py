@@ -223,6 +223,21 @@ class Estimator(BaseEstimator):
             parameter_values: An optional list of concrete parameters to be bound.
             **run_options: A collection of kwargs passed to `backend.run()`.
 
+                shots: Number of repetitions of each circuit, for sampling.
+                qubit_lo_freq: List of default qubit LO frequencies in Hz.
+                meas_lo_freq: List of default measurement LO frequencies in Hz.
+                schedule_los: Experiment LO configurations, frequencies are given in Hz.
+                rep_time: Time per program execution in seconds. Must be from the list provided
+                    by the backend (``backend.configuration().rep_times``).
+                rep_delay: Delay between programs in seconds. Only supported on certain
+                    backends (if ``backend.configuration().dynamic_reprate_enabled=True``).
+                init_qubits: Whether to reset the qubits to the ground state for each shot.
+                header: User input that will be attached to the job and will be
+                    copied to the corresponding result header. Headers do not affect the run.
+                use_measure_esp: Whether to use excited state promoted (ESP) readout for measurements
+                    which are the terminal instruction to a qubit. ESP readout can offer higher fidelity
+                    than standard measurement sequences.
+
         Returns:
             An instance of :class:`qiskit.primitives.EstimatorResult`.
         """
