@@ -1,0 +1,6 @@
+---
+upgrade:
+  - |
+    ``IBMEstimator`` class which was deprecated earlier is now removed. Use
+    :class:`~qiskit_ibm_runtime.Estimator` class going forward.
+
