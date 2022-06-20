@@ -1,0 +1,6 @@
+---
+upgrade:
+  - |
+    The ``session_id``, which is the Job ID of the first job in a runtime session can now be used 
+    as a filter in :meth:`~qiskit_ibm_runtime.QiskitRuntimeService.jobs` with the parameter
+    ``session_id``.
