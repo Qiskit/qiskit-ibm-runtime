@@ -173,6 +173,7 @@ class RuntimeJob:
 
         Raises:
             RuntimeJobFailureError: If the job failed.
+            RuntimeJobTimeoutError: If the job does not complete within given timeout.
         """
         _decoder = decoder or self._result_decoder
         if self._results is None or (_decoder != self._result_decoder):
