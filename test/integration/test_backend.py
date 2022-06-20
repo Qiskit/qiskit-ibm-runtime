@@ -65,7 +65,8 @@ class TestIBMBackend(IBMIntegrationTestCase):
     def test_backend_service(self):
         """Check if the service property is set."""
         backend = self.backend
-        self.assertIsInstance(backend.service, QiskitRuntimeService)
+        with self.subTest(backend=backend.name):
+            self.assertIsInstance(backend.service, QiskitRuntimeService)
 
     def test_backend_target(self):
         """Check if the target property is set."""
@@ -79,6 +80,14 @@ class TestIBMBackend(IBMIntegrationTestCase):
         backend = self.backend
         with self.subTest(backend=backend.name):
             self.assertIsNotNone(backend.max_circuits)
+
+    def test_backend_qubit_properties(self):
+        """Check if the qubit properties are set."""
+        backend = self.backend
+        with self.subTest(backend=backend.name):
+            if backend.simulator:
+                raise SkipTest("Skip since simulator does not have qubit properties.")
+            self.assertIsNotNone(backend.qubit_properties(0))
 
     def test_backend_simulator(self):
         """Test if a configuration attribute (ex: simulator) is available as backend attribute."""
@@ -97,7 +106,7 @@ class TestIBMBackend(IBMIntegrationTestCase):
         """Check the properties of calibration of a real chip."""
         backend = self.backend
         with self.subTest(backend=backend.name):
-            if backend.configuration().simulator:
+            if backend.simulator:
                 raise SkipTest("Skip since simulator does not have properties.")
             self.assertIsNotNone(backend.properties())
 
@@ -105,9 +114,9 @@ class TestIBMBackend(IBMIntegrationTestCase):
         """Check the backend pulse defaults of each backend."""
         backend = self.backend
         with self.subTest(backend=backend.name):
-            if backend.configuration().simulator:
+            if backend.simulator:
                 raise SkipTest("Skip since simulator does not have defaults.")
-            if not backend.configuration().open_pulse:
+            if not backend.open_pulse:
                 raise SkipTest("Skip for backends that do not support pulses.")
             self.assertIsNotNone(backend.defaults())
 

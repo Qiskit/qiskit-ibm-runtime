@@ -1,0 +1,7 @@
+---
+upgrade:
+  - |
+    :meth:`~qiskit_ibm_runtime.QiskitRuntimeService.jobs` has a new parameter, ``descending``.
+    This parameter defaults to ``True``, where jobs will be returned in descending order based on 
+    creation date. 
+
