@@ -820,13 +820,14 @@ class TestEnableAccount(IBMTestCase):
     def test_enable_account_by_qiskitrc(self):
         """Test initializing account by a qiskitrc file."""
         token = "token-x"
+        proxies = {"urls": {"https": "localhost:8080"}}
         str_contents = f"""
         [ibmq] 
         token = {token}
         url = https://auth.quantum-computing.ibm.com/api 
         verify = True
         default_provider = ibm-q/open/main
-        proxies = {{'https': 'localhost:8080'}}
+        proxies = {proxies}
         """
         with custom_qiskitrc(contents=str.encode(str_contents)):
             with temporary_account_config_file(contents={}):
