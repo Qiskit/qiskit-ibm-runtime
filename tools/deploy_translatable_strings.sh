@@ -71,7 +71,7 @@ rm -rf $SOURCE_DIR/$DOC_DIR_PO/$SOURCE_LANG/LC_MESSAGES/api/ \
 
 # Copy the new rendered files and add them to the commit.
 echo "copy directory"
-cp -r $SOURCE_DIR/$DOC_DIR_PO/ qiskit-ibm-runtime/docs
+cp -r $SOURCE_DIR/$DOC_DIR_PO qiskit-ibm-runtime/docs
 cp $SOURCE_DIR/setup.py qiskit-ibm-runtime/.
 cp $SOURCE_DIR/requirements-dev.txt qiskit-ibm-runtime/.
 cp $SOURCE_DIR/requirements.txt qiskit-ibm-runtime/.
