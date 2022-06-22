@@ -21,6 +21,7 @@ import importlib
 import inspect
 import io
 import json
+import re
 import warnings
 import zlib
 from datetime import date
@@ -59,7 +60,7 @@ from ..qpy import (
 )
 
 
-_TERRA_VERSION = tuple(int(x) for x in _terra_version_string.split(".")[:3])
+_TERRA_VERSION = tuple(int(x) for x in re.match(r"\d+\.\d+\.\d", _terra_version_string).group(0).split(".")[:3])
 
 
 def to_base64_string(data: str) -> str:
