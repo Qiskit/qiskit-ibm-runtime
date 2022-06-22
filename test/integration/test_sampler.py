@@ -16,6 +16,7 @@ from qiskit.circuit.library import RealAmplitudes
 from qiskit.test.reference_circuits import ReferenceCircuits
 
 from qiskit_ibm_runtime import Sampler, BaseSampler, SamplerResult
+from qiskit_ibm_runtime.exceptions import RuntimeJobFailureError
 
 from ..decorators import run_integration_test
 from ..ibm_test_case import IBMIntegrationTestCase
@@ -102,3 +103,18 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
             self.assertIsInstance(result, SamplerResult)
             self.assertEqual(len(result.quasi_dists), len(circuits0))
             self.assertEqual(len(result.metadata), len(circuits0))
+
+
+    @run_integration_test
+    def test_sampler_session_max_time(self, service):
+        """Verify if sampler primitive times out when it runs longer than max_time."""
+
+        options = {"backend": "ibmq_qasm_simulator"}
+
+        bell = ReferenceCircuits.bell()
+
+        # executes three Bell circuits
+        with Sampler(circuits=[bell] * 3, service=service, options=options, max_time=1) as sampler:
+            with self.assertRaisesRegex(RuntimeJobFailureError, "ran longer than maximum execution time"):
+                circuits1 = [0, 1, 2]
+                result1 = sampler(circuits=circuits1, parameter_values=[[]] * 3)
