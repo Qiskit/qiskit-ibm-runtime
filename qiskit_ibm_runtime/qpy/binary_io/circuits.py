@@ -254,7 +254,7 @@ def _read_instruction(  # type: ignore[no-untyped-def]
     if gate_name in {"IfElseOp", "WhileLoopOp"}:
         gate = gate_class(condition_tuple, *params)
     else:
-        if gate_name == "Initialize":
+        if gate_name in {"Initialize", "UCRXGate", "UCRYGate", "UCRZGate"}:
             gate = gate_class(params)
         else:
             if gate_name == "Barrier":

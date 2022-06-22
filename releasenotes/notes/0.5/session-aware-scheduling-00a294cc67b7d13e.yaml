@@ -1,0 +1,6 @@
+---
+prelude: >
+    This release leverages the API and Queue enhancements to become
+    more runtime session aware. As a result when using the primitives (sampler and estimator),
+    runtime jobs in the same session will skip to the front of the queue,
+    thereby speeding up the runtime session, once it has started.

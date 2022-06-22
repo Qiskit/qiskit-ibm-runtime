@@ -1,0 +1,6 @@
+---
+upgrade:
+  - |
+    :meth:`~qiskit_ibm_runtime.QiskitRuntimeService.jobs` has two new parameters, ``created_after``
+    and ``created_before``. These can be used to filter jobs by creation date in local time.
+

@@ -16,6 +16,7 @@ import json
 import logging
 import traceback
 import warnings
+from datetime import datetime
 from collections import OrderedDict
 from typing import Dict, Callable, Optional, Union, List, Any, Type
 
@@ -830,6 +831,8 @@ class QiskitRuntimeService:
         instance: Optional[str] = None,
         session_id: Optional[str] = None,
         job_tags: Optional[List[str]] = None,
+        max_execution_time: Optional[int] = None,
+        start_session: Optional[bool] = False,
     ) -> RuntimeJob:
         """Execute the runtime program.
 
@@ -852,6 +855,9 @@ class QiskitRuntimeService:
             session_id: Job ID of the first job in a runtime session.
             job_tags: Tags to be assigned to the job. The tags can subsequently be used
                 as a filter in the :meth:`jobs()` function call.
+            max_execution_time: Maximum execution time in seconds. This overrides
+                the max_execution_time of the program and cannot exceed it.
+            start_session: Set to True to explicitly start a runtime session. Defaults to False.
 
         Returns:
             A ``RuntimeJob`` instance representing the execution.
@@ -899,6 +905,8 @@ class QiskitRuntimeService:
                 log_level=options.log_level,
                 session_id=session_id,
                 job_tags=job_tags,
+                max_execution_time=max_execution_time,
+                start_session=start_session,
             )
         except RequestsApiError as ex:
             if ex.status_code == 404:
@@ -1214,6 +1222,10 @@ class QiskitRuntimeService:
         program_id: str = None,
         instance: Optional[str] = None,
         job_tags: Optional[List[str]] = None,
+        session_id: Optional[str] = None,
+        created_after: Optional[datetime] = None,
+        created_before: Optional[datetime] = None,
+        descending: bool = True,
     ) -> List[RuntimeJob]:
         """Retrieve all runtime jobs, subject to optional filtering.
 
@@ -1227,6 +1239,15 @@ class QiskitRuntimeService:
             instance: This is only supported for ``ibm_quantum`` runtime and is in the
                 hub/group/project format.
             job_tags: Filter by tags assigned to jobs. Matched jobs are associated with all tags.
+            session_id: Job ID of the first job in a runtime session.
+            created_after: Filter by the given start date, in local time. This is used to
+                find jobs whose creation dates are after (greater than or equal to) this
+                local date/time.
+            created_before: Filter by the given end date, in local time. This is used to
+                find jobs whose creation dates are before (less than or equal to) this
+                local date/time.
+            descending: If ``True``, return the jobs in descending order of the job
+                creation date (i.e. newest first) until the limit is reached.
 
         Returns:
             A list of runtime jobs.
@@ -1256,6 +1277,10 @@ class QiskitRuntimeService:
                 group=group,
                 project=project,
                 job_tags=job_tags,
+                session_id=session_id,
+                created_after=created_after,
+                created_before=created_before,
+                descending=descending,
             )
             job_page = jobs_response["jobs"]
             # count is the total number of jobs that would be returned if
