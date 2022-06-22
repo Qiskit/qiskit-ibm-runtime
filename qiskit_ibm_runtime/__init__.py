@@ -227,8 +227,6 @@ Classes
    RuntimeEncoder
    RuntimeDecoder
    IBMRuntimeService
-   IBMEstimator
-   IBMSampler
 """
 
 import logging
@@ -244,8 +242,6 @@ from .exceptions import *
 from .utils.utils import setup_logger
 from .version import __version__
 
-from .ibm_estimator import IBMEstimator
-from .ibm_sampler import IBMSampler
 from .estimator import Estimator
 from .sampler import Sampler
 
