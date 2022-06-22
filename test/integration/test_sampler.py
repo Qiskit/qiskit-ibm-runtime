@@ -104,7 +104,6 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
             self.assertEqual(len(result.quasi_dists), len(circuits0))
             self.assertEqual(len(result.metadata), len(circuits0))
 
-
     @run_integration_test
     def test_sampler_session_max_time(self, service):
         """Verify if sampler primitive times out when it runs longer than max_time."""
@@ -114,7 +113,11 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
         bell = ReferenceCircuits.bell()
 
         # executes three Bell circuits
-        with Sampler(circuits=[bell] * 3, service=service, options=options, max_time=1) as sampler:
-            with self.assertRaisesRegex(RuntimeJobFailureError, "ran longer than maximum execution time"):
+        with Sampler(
+            circuits=[bell] * 3, service=service, options=options, max_time=1
+        ) as sampler:
+            with self.assertRaisesRegex(
+                RuntimeJobFailureError, "ran longer than maximum execution time"
+            ):
                 circuits1 = [0, 1, 2]
-                result1 = sampler(circuits=circuits1, parameter_values=[[]] * 3)
+                sampler(circuits=circuits1, parameter_values=[[]] * 3)

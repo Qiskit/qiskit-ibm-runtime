@@ -96,13 +96,22 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
 
         psi1 = RealAmplitudes(num_qubits=2, reps=2)
 
+        # pylint: disable=invalid-name
         H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
 
         theta1 = [0, 1, 1, 2, 3, 5]
 
         # executes three Bell circuits
-        with Estimator(circuits=[psi1], observables=[H1], service=service, options=options, max_time=1) as estimator:
-            with self.assertRaisesRegex(RuntimeJobFailureError, "ran longer than maximum execution time"):
+        with Estimator(
+            circuits=[psi1],
+            observables=[H1],
+            service=service,
+            options=options,
+            max_time=1,
+        ) as estimator:
+            with self.assertRaisesRegex(
+                RuntimeJobFailureError, "ran longer than maximum execution time"
+            ):
                 circuits1 = [0]
                 # calculate [ <psi1(theta1)|H1|psi1(theta1)> ]
-                result1 = estimator(circuits1, [0], [theta1])
+                estimator(circuits1, [0], [theta1])
