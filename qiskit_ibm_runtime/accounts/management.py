@@ -175,7 +175,7 @@ class AccountManager:
             save_config(
                 filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE,
                 name=_DEFAULT_ACCOUNT_NAME_IBM_QUANTUM,
-                overwrite=True,
+                overwrite=False,
                 config=Account(
                     token=qiskitrc_data.get("token", None),
                     url=qiskitrc_data.get("url", None),
