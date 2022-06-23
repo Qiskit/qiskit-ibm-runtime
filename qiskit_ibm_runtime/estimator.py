@@ -208,10 +208,17 @@ class Estimator(BaseEstimator):
             program_id="estimator",
             inputs=inputs,
             options=options,
-            max_time=hms_to_seconds(max_time)
-            if isinstance(max_time, str)
-            else max_time,
+            max_time=self.calculate_max_time(max_time=max_time),
         )
+
+    def calculate_max_time(self, max_time: Optional[Union[int, str]] = None) -> int:
+        """Calculate max_time in seconds from hour minute seconds string. Ex: 2h 30m 40s"""
+        try:
+            return hms_to_seconds(max_time) if isinstance(max_time, str) else max_time
+        except IBMInputValueError as input_value_error:
+            raise IBMInputValueError(
+                "Invalid value given for max_time.", input_value_error.message
+            )
 
     def _call(
         self,

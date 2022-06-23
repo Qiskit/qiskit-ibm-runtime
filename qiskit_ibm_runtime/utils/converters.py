@@ -17,6 +17,8 @@ from datetime import datetime, timedelta, timezone
 from math import ceil
 from dateutil import tz, parser
 
+from ..exceptions import IBMInputValueError
+
 
 def utc_to_local(utc_dt: Union[datetime, str]) -> datetime:
     """Convert a UTC ``datetime`` object or string to a local timezone ``datetime``.
@@ -143,9 +145,17 @@ def hms_to_seconds(hms: str) -> int:
 
     Returns:
         Total seconds (int) in the duration.
+
+    Raises:
+        IBMInputValueError: when the given hms string is in an invalid format
     """
-    date_time = parser.parse(hms)
-    hours = date_time.hour
-    minutes = date_time.minute
-    seconds = date_time.second
-    return int(timedelta(hours=hours, minutes=minutes, seconds=seconds).total_seconds())
+    try:
+        date_time = parser.parse(hms)
+        hours = date_time.hour
+        minutes = date_time.minute
+        seconds = date_time.second
+        return int(
+            timedelta(hours=hours, minutes=minutes, seconds=seconds).total_seconds()
+        )
+    except parser.ParserError as parser_error:
+        raise IBMInputValueError(str(parser_error))
