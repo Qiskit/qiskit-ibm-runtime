@@ -101,13 +101,28 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
 
         theta1 = [0, 1, 1, 2, 3, 5]
 
-        # executes three Bell circuits
+        # Specify max_time as int (seconds)
         with Estimator(
             circuits=[psi1],
             observables=[H1],
             service=service,
             options=options,
             max_time=1,
+        ) as estimator:
+            with self.assertRaisesRegex(
+                RuntimeJobFailureError, "ran longer than maximum execution time"
+            ):
+                circuits1 = [0]
+                # calculate [ <psi1(theta1)|H1|psi1(theta1)> ]
+                estimator(circuits1, [0], [theta1])
+
+        # Specify max_time as string (hours minutes seconds)
+        with Estimator(
+            circuits=[psi1],
+            observables=[H1],
+            service=service,
+            options=options,
+            max_time="1s",
         ) as estimator:
             with self.assertRaisesRegex(
                 RuntimeJobFailureError, "ran longer than maximum execution time"

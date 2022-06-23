@@ -112,9 +112,19 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
 
         bell = ReferenceCircuits.bell()
 
-        # executes three Bell circuits
+        # Specify max_time as int (seconds)
         with Sampler(
             circuits=[bell] * 3, service=service, options=options, max_time=1
+        ) as sampler:
+            with self.assertRaisesRegex(
+                RuntimeJobFailureError, "ran longer than maximum execution time"
+            ):
+                circuits1 = [0, 1, 2]
+                sampler(circuits=circuits1, parameter_values=[[]] * 3)
+
+        # Specify max_time as string (hours minutes seconds)
+        with Sampler(
+            circuits=[bell] * 3, service=service, options=options, max_time="1s"
         ) as sampler:
             with self.assertRaisesRegex(
                 RuntimeJobFailureError, "ran longer than maximum execution time"

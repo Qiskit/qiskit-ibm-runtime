@@ -23,6 +23,7 @@ from .exceptions import IBMInputValueError
 from .ibm_backend import IBMBackend
 from .qiskit_runtime_service import QiskitRuntimeService
 from .runtime_session import RuntimeSession
+from .utils.converters import hms_to_seconds
 
 
 class Estimator(BaseEstimator):
@@ -139,7 +140,7 @@ class Estimator(BaseEstimator):
         skip_transpilation: Optional[bool] = False,
         service: Optional[QiskitRuntimeService] = None,
         options: Optional[Dict] = None,
-        max_time: Optional[int] = None,
+        max_time: Optional[Union[int, str]] = None,
     ):
         """Initializes the Estimator primitive.
 
@@ -167,8 +168,8 @@ class Estimator(BaseEstimator):
                 * log_level: logging level to set in the execution environment. The valid
                     log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
                     The default level is ``WARNING``.
-            max_time: Maximum amount of time, in seconds, a runtime session can be open before being
-                forcibly closed.
+            max_time: Maximum amount of time, a runtime session can be open before being
+                forcibly closed. Can be specified as seconds (int) or a string like "2h 30m 40s".
 
         Raises:
             IBMInputValueError: If an input value is invalid.
@@ -207,7 +208,9 @@ class Estimator(BaseEstimator):
             program_id="estimator",
             inputs=inputs,
             options=options,
-            max_time=max_time,
+            max_time=hms_to_seconds(max_time)
+            if isinstance(max_time, str)
+            else max_time,
         )
 
     def _call(
