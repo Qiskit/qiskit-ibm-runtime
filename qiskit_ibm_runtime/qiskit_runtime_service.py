@@ -16,6 +16,10 @@ import json
 import logging
 import traceback
 import warnings
+import importlib.util
+import inspect
+import sys
+import typing
 from datetime import datetime
 from collections import OrderedDict
 from typing import Dict, Callable, Optional, Union, List, Any, Type
@@ -954,7 +958,11 @@ class QiskitRuntimeService:
         )
 
     def upload_program(
-        self, data: str, metadata: Optional[Union[Dict, str]] = None
+        self,
+        data: str,
+        metadata: Optional[Union[Dict, str]] = None,
+        name: str = None,
+        max_execution_time: int = 600,
     ) -> str:
         """Upload a runtime program.
 
@@ -1003,6 +1011,8 @@ class QiskitRuntimeService:
             IBMNotAuthorizedError: If you are not authorized to upload programs.
             IBMRuntimeError: If the upload failed.
         """
+        if not metadata:
+            metadata = self.build_json_metadata(data, name, max_execution_time)
         program_metadata = self._read_metadata(metadata=metadata)
 
         for req in ["name", "max_execution_time"]:
@@ -1056,6 +1066,95 @@ class QiskitRuntimeService:
             "is_public",
         ]
         return {key: val for key, val in upd_metadata.items() if key in metadata_keys}
+
+    def build_json_metadata(
+        self,
+        file_path: str,
+        name: str = None,
+        max_execution_time: int = 600,
+        min_num_qubits: int = 5,
+        return_as_json: bool = False,
+    ) -> Union[str, Dict[str, Any]]:
+        """Builds a JSON spec for the given runtime program.
+
+        Args:
+            file_path: The file path of the runtime program.
+            name: The name of the program.
+            max_execution_time: The max time in seconds the program is
+                allowed to run before being cancelled.
+            min_num_qubits: Number of qubits needed by the program.
+            return_as_json: Boolean for returning as a Dict or a JSON string.
+
+        Returns:
+            String or Dict containing the JSON spec.
+
+        Raises:
+            IBMInputValueError: If the file path input is invalid.
+        """
+        spec = importlib.util.spec_from_file_location("user_module", file_path)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules["user_module"] = module
+        try:
+            spec.loader.exec_module(module)
+        except (ValueError, AttributeError) as ex:
+            raise IBMInputValueError(f"Failed to load module: {ex}")
+
+        user_main = module.main
+        docstring = user_main.__doc__
+        sig = inspect.signature(user_main)
+
+        program_name = (
+            name
+            if name
+            else file_path[file_path.rfind("/") + 1 : file_path.rfind("py") - 1]
+        )
+
+        json_spec = {
+            "name": program_name,
+            "description": docstring.splitlines()[0],
+            "max_execution_time": max_execution_time,
+            "spec": {
+                "backend_requirements": {"min_num_qubits": min_num_qubits},
+                "parameters": {"type": "object", "properties": {}, "required": []},
+                "return_values": {},
+            },
+        }
+
+        type_strings = {
+            int: "integer",
+            float: "float",
+            list: "list",
+            typing.List: "list",
+            tuple: "tuple",
+            typing.Tuple: "tuple",
+        }
+
+        required_params = []
+
+        for param in sig.parameters.values():
+            # skip **kwargs
+            if param.kind == inspect.Parameter.VAR_KEYWORD:
+                continue
+            # skip required arguments
+            if param.name in ["backend", "user_messenger"]:
+                continue
+            json_spec["spec"]["parameters"]["properties"][param.name] = {
+                # if we could assume a particular doc standard, we could scrape this
+                "description": "",
+                "type": type_strings.get(param.annotation, param.annotation),
+            }
+            if param.default == inspect.Parameter.empty:
+                required_params.append(param.name)
+
+        json_spec["spec"]["parameters"]["required"] = required_params
+
+        if sig.return_annotation is not inspect.Signature.empty:
+            json_spec["spec"]["return_values"] = {
+                # if we could assume a particular doc standard, we could scrape this
+                "description": "",
+                "type": type_strings.get(sig.return_annotation),
+            }
+        return json.dumps(json_spec, indent=2) if return_as_json else json_spec
 
     def update_program(
         self,
