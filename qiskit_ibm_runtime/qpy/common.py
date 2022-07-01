@@ -27,10 +27,15 @@ from qiskit.circuit.parameter import Parameter
 from qiskit.circuit.parameterexpression import ParameterExpression
 from qiskit.circuit.parametervector import ParameterVectorElement
 from qiskit.circuit.library import PauliEvolutionGate
-from qiskit.circuit import Gate, Instruction as CircuitInstruction, QuantumCircuit
+from qiskit.circuit import (
+    Gate,
+    Instruction as CircuitInstruction,
+    QuantumCircuit,
+    ControlledGate,
+)
 from . import formats, exceptions
 
-QPY_VERSION = 4
+QPY_VERSION = 5
 ENCODE = "utf8"
 
 
@@ -40,6 +45,7 @@ class CircuitInstructionTypeKey(bytes, Enum):
     INSTRUCTION = b"i"
     GATE = b"g"
     PAULI_EVOL_GATE = b"p"
+    CONTROLLED_GATE = b"c"
 
     @classmethod
     def assign(cls, obj: Any) -> "CircuitInstructionTypeKey":
@@ -56,6 +62,8 @@ class CircuitInstructionTypeKey(bytes, Enum):
         """
         if isinstance(obj, PauliEvolutionGate):
             return cls.PAULI_EVOL_GATE
+        if isinstance(obj, ControlledGate):
+            return cls.CONTROLLED_GATE
         if isinstance(obj, Gate):
             return cls.GATE
         if isinstance(obj, CircuitInstruction):
