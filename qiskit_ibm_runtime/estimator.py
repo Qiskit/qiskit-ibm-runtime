@@ -137,9 +137,11 @@ class Estimator(BaseEstimator):
         circuits: Union[QuantumCircuit, Iterable[QuantumCircuit]],
         observables: Iterable[SparsePauliOp],
         parameters: Optional[Iterable[Iterable[Parameter]]] = None,
-        skip_transpilation: Optional[bool] = False,
         service: Optional[QiskitRuntimeService] = None,
         options: Optional[Dict] = None,
+        skip_transpilation: Optional[bool] = False,
+        transpilation_settings: Optional[Dict] = None,
+        resilience_settings: Optional[Dict] = None,
         max_time: Optional[Union[int, str]] = None,
     ):
         """Initializes the Estimator primitive.
@@ -147,16 +149,18 @@ class Estimator(BaseEstimator):
         Args:
             circuits: a (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
                 a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
+
             observables: a list of :class:`~qiskit.quantum_info.SparsePauliOp`
+
             parameters: a list of parameters of the quantum circuits.
                 (:class:`~qiskit.circuit.parametertable.ParameterView` or
                 a list of :class:`~qiskit.circuit.Parameter`) specifying the order
                 in which parameter values will be bound.
-            skip_transpilation: Transpilation is skipped if set to True.
-                False by default.
+
             service: Optional instance of :class:`qiskit_ibm_runtime.QiskitRuntimeService` class,
                 defaults to `QiskitRuntimeService()` which tries to initialize your default
                 saved account.
+
             options: Runtime options dictionary that control the execution environment.
 
                 * backend: Optional instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
@@ -168,6 +172,42 @@ class Estimator(BaseEstimator):
                 * log_level: logging level to set in the execution environment. The valid
                     log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
                     The default level is ``WARNING``.
+
+            skip_transpilation: Transpilation is skipped if set to True. False by default.
+
+            transpilation_settings: (EXPERIMENTAL setting, can break between releases without warning)
+                Qiskit transpiler settings. The transpilation process converts
+                operations in the circuit to those supported by the backend, swaps qubits with the
+                circuit to overcome limited qubit connectivity and some optimizations to reduce the
+                circuit's gate count where it can.
+
+                * skip_transpilation: Transpilation is skipped if set to True.
+                    False by default.
+
+                * optimization_settings:
+
+                    * level: How much optimization to perform on the circuits.
+                        Higher levels generate more optimized circuits,
+                        at the expense of longer transpilation times.
+                        * 0: no optimization
+                        * 1: light optimization
+                        * 2: heavy optimization
+                        * 3: even heavier optimization
+                        If ``None``, level 3 will be chosen as default.
+
+            resilience_settings: (EXPERIMENTAL setting, can break between releases without warning)
+                Using these settings allows you to build resilient algorithms by
+                leveraging the state of the art error suppression, mitigation and correction techniques.
+
+                * level: How much resilience to build against errors.
+                    Higher levels generate more accurate results,
+                    at the expense of longer processing times.
+                    * 0: no resilience
+                    * 1: light resilience
+                    * 2: heavy resilience
+                    * 3: even heavier resilience
+                    If ``None``, level 0 will be chosen as default.
+
             max_time: (EXPERIMENTAL setting, can break between releases without warning)
                 Maximum amount of time, a runtime session can be open before being
                 forcibly closed. Can be specified as seconds (int) or a string like "2h 30m 40s".
@@ -204,6 +244,10 @@ class Estimator(BaseEstimator):
             "parameters": parameters,
             "skip_transpilation": self._skip_transpilation,
         }
+        if transpilation_settings:
+            inputs.update({"transpilation_settings": transpilation_settings})
+        if resilience_settings:
+            inputs.update({"resilience_settings": resilience_settings})
         self._session = RuntimeSession(
             service=self._service,
             program_id="estimator",
