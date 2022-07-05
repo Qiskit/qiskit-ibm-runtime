@@ -1,8 +1,0 @@
----
-upgrade:
-  - |
-    When initializing :class:`~qiskit_ibm_runtime.QiskitRuntimeService`, and there are no
-    accounts found, if a qiskitrc file exists, credentials from this file will be saved 
-    as the ``default-ibm-quantum`` account. 
-
-
