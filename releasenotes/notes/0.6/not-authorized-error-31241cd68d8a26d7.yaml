@@ -1,0 +1,5 @@
+---
+upgrade:
+  - |
+    When initializing :class:`~qiskit_ibm_runtime.QiskitRuntimeService` and an invalid
+    token is used, ``IBMNotAuthorizedError`` will be raised instead of ``RequestsApiError``.
