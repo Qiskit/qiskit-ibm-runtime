@@ -215,9 +215,9 @@ class Sampler(BaseSampler):
             "skip_transpilation": self._skip_transpilation,
         }
         if transpilation_settings:
-            inputs.update({ "transpilation_settings": transpilation_settings })
+            inputs.update({"transpilation_settings": transpilation_settings})
         if resilience_settings:
-            inputs.update({ "resilience_settings": resilience_settings })
+            inputs.update({"resilience_settings": resilience_settings})
         self._session = RuntimeSession(
             service=self._service,
             program_id="sampler",
