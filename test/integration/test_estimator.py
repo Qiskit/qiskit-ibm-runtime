@@ -16,7 +16,6 @@ from qiskit.circuit.library import RealAmplitudes
 from qiskit.quantum_info import SparsePauliOp
 
 from qiskit_ibm_runtime import Estimator, EstimatorResult, BaseEstimator
-from qiskit_ibm_runtime.exceptions import RuntimeJobFailureError
 
 from ..decorators import run_integration_test
 from ..ibm_test_case import IBMIntegrationTestCase
@@ -87,46 +86,3 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
             self.assertIsInstance(result5, EstimatorResult)
             self.assertEqual(len(result5.values), len(circuits5))
             self.assertEqual(len(result5.metadata), len(circuits5))
-
-    @run_integration_test
-    def test_estimator_session_max_time(self, service):
-        """Verify if estimator primitive times out when it runs longer than max_time."""
-
-        options = {"backend": "ibmq_qasm_simulator"}
-
-        psi1 = RealAmplitudes(num_qubits=2, reps=2)
-
-        # pylint: disable=invalid-name
-        H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
-
-        theta1 = [0, 1, 1, 2, 3, 5]
-
-        # Specify max_time as int (seconds)
-        with Estimator(
-            circuits=[psi1],
-            observables=[H1],
-            service=service,
-            options=options,
-            max_time=1,
-        ) as estimator:
-            with self.assertRaisesRegex(
-                RuntimeJobFailureError, "ran longer than maximum execution time"
-            ):
-                circuits1 = [0]
-                # calculate [ <psi1(theta1)|H1|psi1(theta1)> ]
-                estimator(circuits1, [0], [theta1])
-
-        # Specify max_time as string (hours minutes seconds)
-        with Estimator(
-            circuits=[psi1],
-            observables=[H1],
-            service=service,
-            options=options,
-            max_time="1s",
-        ) as estimator:
-            with self.assertRaisesRegex(
-                RuntimeJobFailureError, "ran longer than maximum execution time"
-            ):
-                circuits1 = [0]
-                # calculate [ <psi1(theta1)|H1|psi1(theta1)> ]
-                estimator(circuits1, [0], [theta1])
