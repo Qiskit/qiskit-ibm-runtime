@@ -34,8 +34,8 @@ from qiskit.circuit.quantumregister import QuantumRegister, Qubit
 from qiskit.extensions import quantum_initializer
 from qiskit.quantum_info.operators import SparsePauliOp
 from qiskit.synthesis import evolution as evo_synth
-from .. import common, formats, exceptions
-from ..binary_io import value
+from .. import common, formats, exceptions, type_keys
+from ..binary_io import value, schedules
 
 
 def _read_header_v2(  # type: ignore[no-untyped-def]
@@ -125,31 +125,29 @@ def _read_registers(file_obj, num_registers):  # type: ignore[no-untyped-def]
     return registers
 
 
-def _read_instruction_parameter(file_obj, version, vectors):  # type: ignore[no-untyped-def]
-    type_key, bin_data = common.read_instruction_param(file_obj)
-
-    if type_key == common.ProgramTypeKey.CIRCUIT:
-        param = common.data_from_binary(bin_data, read_circuit, version=version)
-    elif type_key == common.ContainerTypeKey.RANGE:
-        data = formats.RANGE._make(struct.unpack(formats.RANGE_PACK, bin_data))
+def _loads_instruction_parameter(type_key, data_bytes, version, vectors):  # type: ignore[no-untyped-def]
+    if type_key == type_keys.Program.CIRCUIT:
+        param = common.data_from_binary(data_bytes, read_circuit, version=version)
+    elif type_key == type_keys.Container.RANGE:
+        data = formats.RANGE._make(struct.unpack(formats.RANGE_PACK, data_bytes))
         param = range(data.start, data.stop, data.step)
-    elif type_key == common.ContainerTypeKey.TUPLE:
+    elif type_key == type_keys.Container.TUPLE:
         param = tuple(
             common.sequence_from_binary(
-                bin_data,
-                _read_instruction_parameter,
+                data_bytes,
+                _loads_instruction_parameter,
                 version=version,
                 vectors=vectors,
             )
         )
-    elif type_key == common.ValueTypeKey.INTEGER:
+    elif type_key == type_keys.Value.INTEGER:
         # TODO This uses little endian. Should be fixed in the next QPY version.
-        param = struct.unpack("<q", bin_data)[0]
-    elif type_key == common.ValueTypeKey.FLOAT:
+        param = struct.unpack("<q", data_bytes)[0]
+    elif type_key == type_keys.Value.FLOAT:
         # TODO This uses little endian. Should be fixed in the next QPY version.
-        param = struct.unpack("<d", bin_data)[0]
+        param = struct.unpack("<d", data_bytes)[0]
     else:
-        param = value.loads_value(type_key, bin_data, version, vectors)
+        param = value.loads_value(type_key, data_bytes, version, vectors)
 
     return param
 
@@ -234,7 +232,8 @@ def _read_instruction(  # type: ignore[no-untyped-def]
 
     # Load Parameters
     for _param in range(instruction.num_parameters):
-        param = _read_instruction_parameter(file_obj, version, vectors)
+        type_key, data_bytes = common.read_generic_typed_data(file_obj)
+        param = _loads_instruction_parameter(type_key, data_bytes, version, vectors)
         params.append(param)
 
     # Load Gate object
@@ -319,20 +318,20 @@ def _parse_custom_operation(  # type: ignore[no-untyped-def]
         ) = custom_operations[gate_name]
     else:
         type_str, num_qubits, num_clbits, definition = custom_operations[gate_name]
-    type_key = common.CircuitInstructionTypeKey(type_str)
+    type_key = type_keys.CircuitInstruction(type_str)
 
-    if type_key == common.CircuitInstructionTypeKey.INSTRUCTION:
+    if type_key == type_keys.CircuitInstruction.INSTRUCTION:
         inst_obj = Instruction(gate_name, num_qubits, num_clbits, params)
         if definition is not None:
             inst_obj.definition = definition
         return inst_obj
 
-    if type_key == common.CircuitInstructionTypeKey.GATE:
+    if type_key == type_keys.CircuitInstruction.GATE:
         inst_obj = Gate(gate_name, num_qubits, params)
         inst_obj.definition = definition
         return inst_obj
 
-    if version >= 5 and type_key == common.CircuitInstructionTypeKey.CONTROLLED_GATE:
+    if version >= 5 and type_key == type_keys.CircuitInstruction.CONTROLLED_GATE:
         with io.BytesIO(base_gate_raw) as base_gate_obj:
             base_gate = _read_instruction(
                 base_gate_obj, None, registers, custom_operations, version, vectors
@@ -348,7 +347,7 @@ def _parse_custom_operation(  # type: ignore[no-untyped-def]
         inst_obj.definition = definition
         return inst_obj
 
-    if type_key == common.CircuitInstructionTypeKey.PAULI_EVOL_GATE:
+    if type_key == type_keys.CircuitInstruction.PAULI_EVOL_GATE:
         return definition
 
     raise ValueError("Invalid custom instruction type '%s'" % type_str)
@@ -383,7 +382,7 @@ def _read_pauli_evolution_gate(file_obj, version, vectors):  # type: ignore[no-u
         pauli_op = operator_list
 
     time = value.loads_value(
-        common.ValueTypeKey(pauli_evolution_def.time_type),
+        pauli_evolution_def.time_type,
         file_obj.read(pauli_evolution_def.time_size),
         version=version,
         vectors=vectors,
@@ -456,27 +455,66 @@ def _read_custom_operations(file_obj, version, vectors):  # type: ignore[no-unty
     return custom_operations
 
 
-def _write_instruction_parameter(file_obj, param):  # type: ignore[no-untyped-def]
+def _read_calibrations(  # type: ignore[no-untyped-def]
+    file_obj, version, vectors, metadata_deserializer
+):
+    calibrations = {}
+
+    header = formats.CALIBRATION._make(
+        struct.unpack(formats.CALIBRATION_PACK, file_obj.read(formats.CALIBRATION_SIZE))
+    )
+    for _ in range(header.num_cals):
+        defheader = formats.CALIBRATION_DEF._make(
+            struct.unpack(
+                formats.CALIBRATION_DEF_PACK,
+                file_obj.read(formats.CALIBRATION_DEF_SIZE),
+            )
+        )
+        name = file_obj.read(defheader.name_size).decode(common.ENCODE)
+        qubits = tuple(
+            struct.unpack("!q", file_obj.read(struct.calcsize("!q")))[0]
+            for _ in range(defheader.num_qubits)
+        )
+        params = tuple(
+            value.read_value(file_obj, version, vectors)
+            for _ in range(defheader.num_params)
+        )
+        schedule = schedules.read_schedule_block(
+            file_obj, version, metadata_deserializer
+        )
+
+        if name not in calibrations:
+            calibrations[name] = {(qubits, params): schedule}
+        else:
+            calibrations[name][(qubits, params)] = schedule
+
+    return calibrations
+
+
+def _dumps_instruction_parameter(param):  # type: ignore[no-untyped-def]
     if isinstance(param, QuantumCircuit):
-        type_key = common.ProgramTypeKey.CIRCUIT
-        data = common.data_to_binary(param, write_circuit)
+        type_key = type_keys.Program.CIRCUIT
+        data_bytes = common.data_to_binary(param, write_circuit)
     elif isinstance(param, range):
-        type_key = common.ContainerTypeKey.RANGE
-        data = struct.pack(formats.RANGE_PACK, param.start, param.stop, param.step)
+        type_key = type_keys.Container.RANGE
+        data_bytes = struct.pack(
+            formats.RANGE_PACK, param.start, param.stop, param.step
+        )
     elif isinstance(param, tuple):
-        type_key = common.ContainerTypeKey.TUPLE
-        data = common.sequence_to_binary(param, _write_instruction_parameter)
+        type_key = type_keys.Container.TUPLE
+        data_bytes = common.sequence_to_binary(param, _dumps_instruction_parameter)
     elif isinstance(param, int):
         # TODO This uses little endian. This should be fixed in next QPY version.
-        type_key = common.ValueTypeKey.INTEGER
-        data = struct.pack("<q", param)
+        type_key = type_keys.Value.INTEGER
+        data_bytes = struct.pack("<q", param)
     elif isinstance(param, float):
         # TODO This uses little endian. This should be fixed in next QPY version.
-        type_key = common.ValueTypeKey.FLOAT
-        data = struct.pack("<d", param)
+        type_key = type_keys.Value.FLOAT
+        data_bytes = struct.pack("<d", param)
     else:
-        type_key, data = value.dumps_value(param)
-    common.write_instruction_param(file_obj, type_key, data)
+        type_key, data_bytes = value.dumps_value(param)
+
+    return type_key, data_bytes
 
 
 # pylint: disable=too-many-boolean-expressions
@@ -562,7 +600,8 @@ def _write_instruction(  # type: ignore[no-untyped-def]
         file_obj.write(instruction_arg_raw)
     # Encode instruction params
     for param in instruction.operation.params:
-        _write_instruction_parameter(file_obj, param)
+        type_key, data_bytes = _dumps_instruction_parameter(param)
+        common.write_generic_typed_data(file_obj, type_key, data_bytes)
     return custom_operations_list
 
 
@@ -613,7 +652,7 @@ def _write_pauli_evolution_gate(file_obj, evolution_gate):  # type: ignore[no-un
 def _write_custom_operation(  # type: ignore[no-untyped-def]
     file_obj, name, operation, custom_operations
 ):
-    type_key = common.CircuitInstructionTypeKey.assign(operation)
+    type_key = type_keys.CircuitInstruction.assign(operation)
     has_definition = False
     size = 0
     data = None
@@ -624,7 +663,7 @@ def _write_custom_operation(  # type: ignore[no-untyped-def]
     base_gate = None
     new_custom_instruction = []
 
-    if type_key == common.CircuitInstructionTypeKey.PAULI_EVOL_GATE:
+    if type_key == type_keys.CircuitInstruction.PAULI_EVOL_GATE:
         has_definition = True
         data = common.data_to_binary(operation, _write_pauli_evolution_gate)
         size = len(data)
@@ -632,7 +671,7 @@ def _write_custom_operation(  # type: ignore[no-untyped-def]
         has_definition = True
         data = common.data_to_binary(operation.definition, write_circuit)
         size = len(data)
-    if type_key == common.CircuitInstructionTypeKey.CONTROLLED_GATE:
+    if type_key == type_keys.CircuitInstruction.CONTROLLED_GATE:
         num_ctrl_qubits = operation.num_ctrl_qubits
         ctrl_state = operation.ctrl_state
         base_gate = operation.base_gate
@@ -666,6 +705,34 @@ def _write_custom_operation(  # type: ignore[no-untyped-def]
         file_obj.write(data)
     file_obj.write(base_gate_raw)
     return new_custom_instruction
+
+
+def _write_calibrations(file_obj, calibrations, metadata_serializer):  # type: ignore[no-untyped-def]
+    flatten_dict = {}
+    for gate, caldef in calibrations.items():
+        for (qubits, params), schedule in caldef.items():
+            key = (gate, qubits, params)
+            flatten_dict[key] = schedule
+    header = struct.pack(formats.CALIBRATION_PACK, len(flatten_dict))
+    file_obj.write(header)
+    for (name, qubits, params), schedule in flatten_dict.items():
+        # In principle ScheduleBlock and Schedule can be supported.
+        # As of version 5 only ScheduleBlock is supported.
+        name_bytes = name.encode(common.ENCODE)
+        defheader = struct.pack(
+            formats.CALIBRATION_DEF_PACK,
+            len(name_bytes),
+            len(qubits),
+            len(params),
+            type_keys.Program.assign(schedule),
+        )
+        file_obj.write(defheader)
+        file_obj.write(name_bytes)
+        for qubit in qubits:
+            file_obj.write(struct.pack("!q", qubit))
+        for param in params:
+            value.write_value(file_obj, param)
+        schedules.write_schedule_block(file_obj, schedule, metadata_serializer)
 
 
 def _write_registers(file_obj, in_circ_regs, full_bits):  # type: ignore[no-untyped-def]
@@ -715,7 +782,7 @@ def write_circuit(file_obj, circuit, metadata_serializer=None):  # type: ignore[
         circuit (QuantumCircuit): The circuit data to write.
         metadata_serializer (JSONEncoder): An optional JSONEncoder class that
             will be passed the :attr:`.QuantumCircuit.metadata` dictionary for
-            each circuit in ``circuits`` and will be used as the ``cls`` kwarg
+            ``circuit`` and will be used as the ``cls`` kwarg
             on the ``json.dump()`` call to JSON serialize that dictionary.
     """
     metadata_raw = json.dumps(
@@ -778,6 +845,9 @@ def write_circuit(file_obj, circuit, metadata_serializer=None):  # type: ignore[
     file_obj.write(instruction_buffer.getvalue())
     instruction_buffer.close()
 
+    # Write calibrations
+    _write_calibrations(file_obj, circuit.calibrations, metadata_serializer)
+
 
 def read_circuit(file_obj, version, metadata_deserializer=None):  # type: ignore[no-untyped-def]
     """Read a single QuantumCircuit object from the file like object.
@@ -788,8 +858,8 @@ def read_circuit(file_obj, version, metadata_deserializer=None):  # type: ignore
         metadata_deserializer (JSONDecoder): An optional JSONDecoder class
             that will be used for the ``cls`` kwarg on the internal
             ``json.load`` call used to deserialize the JSON payload used for
-            the :attr:`.QuantumCircuit.metadata` attribute for any circuits
-            in the QPY file. If this is not specified the circuit metadata will
+            the :attr:`.QuantumCircuit.metadata` attribute for a circuit
+            in the file-like object. If this is not specified the circuit metadata will
             be parsed as JSON with the stdlib ``json.load()`` function using
             the default ``JSONDecoder`` class.
 
@@ -942,6 +1012,13 @@ def read_circuit(file_obj, version, metadata_deserializer=None):  # type: ignore
         _read_instruction(
             file_obj, circ, out_registers, custom_operations, version, vectors
         )
+
+    # Read calibrations
+    if version >= 5:
+        circ.calibrations = _read_calibrations(
+            file_obj, version, vectors, metadata_deserializer
+        )
+
     for vec_name, (vector, initialized_params) in vectors.items():
         if len(initialized_params) != len(vector):
             warnings.warn(
