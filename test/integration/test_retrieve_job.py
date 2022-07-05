@@ -13,7 +13,7 @@
 """Tests for job functions using real runtime service."""
 
 import uuid
-
+from datetime import datetime, timezone
 from qiskit.providers.jobstatus import JobStatus
 
 from ..ibm_test_case import IBMIntegrationJobTestCase
@@ -141,7 +141,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
     @run_integration_test
     def test_retrieve_jobs_by_session_id(self, service):
         """Test retrieving jobs by session_id."""
-        job = self._run_program(service)
+        job = self._run_program(service, start_session=True)
         job.wait_for_final_state()
         job_2 = self._run_program(service, session_id=job.job_id)
         job_2.wait_for_final_state()
@@ -149,6 +149,19 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         self.assertEqual(2, len(rjobs), f"Retrieved jobs: {[j.job_id for j in rjobs]}")
         rjobs = service.jobs(session_id="test")
         self.assertFalse(rjobs)
+
+    @run_integration_test
+    def test_jobs_filter_by_date(self, service):
+        """Test retrieving jobs by creation date."""
+        current_time = datetime.now(timezone.utc)
+        job = self._run_program(service)
+        job.wait_for_final_state()
+        time_after_job = datetime.now(timezone.utc)
+        rjobs = service.jobs(created_before=time_after_job, created_after=current_time)
+        self.assertTrue(job.job_id in [j.job_id for j in rjobs])
+        for job in rjobs:
+            self.assertTrue(job.creation_date <= time_after_job)
+            self.assertTrue(job.creation_date >= current_time)
 
     @run_integration_test
     def test_jobs_filter_by_hgp(self, service):

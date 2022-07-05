@@ -14,6 +14,7 @@
 
 import uuid
 import copy
+from datetime import datetime, timezone
 from qiskit_ibm_runtime import QiskitRuntimeService
 
 
@@ -102,4 +103,5 @@ def run_program(
         max_execution_time=max_execution_time,
         session_id=session_id,
     )
+    job._creation_date = datetime.now(timezone.utc)
     return job

@@ -16,6 +16,7 @@ import json
 import logging
 import os
 from typing import Optional, Dict
+from configparser import ConfigParser
 from .exceptions import AccountAlreadyExistsError
 
 logger = logging.getLogger(__name__)
@@ -38,6 +39,16 @@ def save_config(filename: str, name: str, config: dict, overwrite: bool) -> None
     with open(filename, mode="w", encoding="utf-8") as json_out:
         data[name] = config
         json.dump(data, json_out, sort_keys=True, indent=4)
+
+
+def read_qiskitrc(qiskitrc_config_file: str) -> Dict[str, str]:
+    """Read credentials from a qiskitrc config and return as a dictionary."""
+    config_parser = ConfigParser()
+    config_parser.read(qiskitrc_config_file)
+    account_data = {}
+    for name in config_parser.sections():
+        account_data = dict(config_parser.items(name))
+    return account_data
 
 
 def read_config(

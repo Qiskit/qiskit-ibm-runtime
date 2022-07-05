@@ -16,6 +16,7 @@ import base64
 import json
 import time
 import uuid
+from datetime import timezone, datetime as python_datetime
 from concurrent.futures import ThreadPoolExecutor
 from functools import wraps
 from typing import Optional, Dict, Any, List
@@ -116,6 +117,7 @@ class BaseFakeRuntimeJob:
         log_level=None,
         session_id=None,
         max_execution_time=None,
+        start_session=None,
     ):
         """Initialize a fake job."""
         self._job_id = job_id
@@ -133,6 +135,8 @@ class BaseFakeRuntimeJob:
         self.log_level = log_level
         self._session_id = session_id
         self._max_execution_time = max_execution_time
+        self._start_session = start_session
+        self._creation_date = python_datetime.now(timezone.utc)
         if final_status is None:
             self._future = self._executor.submit(self._auto_progress)
             self._result = None
@@ -362,6 +366,7 @@ class BaseFakeRuntimeClient:
         session_id: Optional[str] = None,
         job_tags: Optional[List[str]] = None,
         max_execution_time: Optional[int] = None,
+        start_session: Optional[bool] = None,
     ) -> Dict[str, Any]:
         """Run the specified program."""
         _ = self._get_program(program_id)
@@ -396,6 +401,7 @@ class BaseFakeRuntimeClient:
             session_id=session_id,
             job_tags=job_tags,
             max_execution_time=max_execution_time,
+            start_session=start_session,
             **self._job_kwargs,
         )
         self._jobs[job_id] = job
@@ -421,6 +427,8 @@ class BaseFakeRuntimeClient:
         project=None,
         job_tags=None,
         session_id=None,
+        created_after=None,
+        created_before=None,
         descending=True,
     ):
         """Get all jobs."""
@@ -449,6 +457,12 @@ class BaseFakeRuntimeClient:
             count = len(jobs)
         if session_id:
             jobs = [job for job in jobs if job._session_id == session_id]
+            count = len(jobs)
+        if created_after:
+            jobs = [job for job in jobs if job._creation_date >= created_after]
+            count = len(jobs)
+        if created_before:
+            jobs = [job for job in jobs if job._creation_date <= created_before]
             count = len(jobs)
         jobs = jobs[skip : limit + skip]
         if descending is False:

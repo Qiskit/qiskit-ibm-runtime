@@ -2,7 +2,7 @@
 
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021.
+# (C) Copyright IBM 2022.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -25,15 +25,15 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
+import os
+import sys
+
+sys.path.insert(0, os.path.abspath('.'))
 
 """
 Sphinx documentation builder
 """
 
-import os
 # Set env flag so that we can doc functions that may otherwise not be loaded
 # see for example interactive visualizations in qiskit.visualization.
 os.environ['QISKIT_DOCS'] = 'TRUE'
@@ -46,7 +46,7 @@ author = 'Qiskit Development Team'
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = '0.4.0'
+release = '0.5.0'
 
 # -- General configuration ---------------------------------------------------
 
@@ -125,7 +125,11 @@ numfig_format = {
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = 'en'
+
+# For Adding Locale
+locale_dirs = ['locale/']   # path is example but recommended.
+gettext_compact = False     # optional.
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -171,3 +175,8 @@ html_theme_options = {
 html_sourcelink_suffix = ''
 
 autoclass_content = 'both'
+
+# -- Extension configuration -------------------------------------------------
+
+def setup(app):
+    app.setup_extension("versionutils")

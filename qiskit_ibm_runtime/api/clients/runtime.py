@@ -124,6 +124,7 @@ class RuntimeClient(BaseBackendClient):
         session_id: Optional[str],
         job_tags: Optional[List[str]] = None,
         max_execution_time: Optional[int] = None,
+        start_session: Optional[bool] = False,
     ) -> Dict:
         """Run the specified program.
 
@@ -137,6 +138,7 @@ class RuntimeClient(BaseBackendClient):
             session_id: Job ID of the first job in a runtime session.
             job_tags: Tags to be assigned to the job.
             max_execution_time: Maximum execution time in seconds.
+            start_session: Set to True to explicitly start a runtime session. Defaults to False.
 
         Returns:
             JSON response.
@@ -154,6 +156,7 @@ class RuntimeClient(BaseBackendClient):
             session_id=session_id,
             job_tags=job_tags,
             max_execution_time=max_execution_time,
+            start_session=start_session,
             **hgp_dict
         )
 
@@ -219,6 +222,8 @@ class RuntimeClient(BaseBackendClient):
         project: str = None,
         job_tags: Optional[List[str]] = None,
         session_id: Optional[str] = None,
+        created_after: Optional[python_datetime] = None,
+        created_before: Optional[python_datetime] = None,
         descending: bool = True,
     ) -> Dict:
         """Get job data for all jobs.
@@ -234,6 +239,12 @@ class RuntimeClient(BaseBackendClient):
             project: Filter by project - hub, group, and project must all be specified.
             job_tags: Filter by tags assigned to jobs. Matched jobs are associated with all tags.
             session_id: Job ID of the first job in a runtime session.
+            created_after: Filter by the given start date, in local time. This is used to
+                find jobs whose creation dates are after (greater than or equal to) this
+                local date/time.
+            created_before: Filter by the given end date, in local time. This is used to
+                find jobs whose creation dates are before (less than or equal to) this
+                local date/time.
             descending: If ``True``, return the jobs in descending order of the job
                 creation date (i.e. newest first) until the limit is reached.
 
@@ -250,6 +261,8 @@ class RuntimeClient(BaseBackendClient):
             project=project,
             job_tags=job_tags,
             session_id=session_id,
+            created_after=created_after,
+            created_before=created_before,
             descending=descending,
         )
 
@@ -301,6 +314,14 @@ class RuntimeClient(BaseBackendClient):
             Job logs.
         """
         return self._api.program_job(job_id).logs()
+
+    def close_session(self, session_id: str) -> None:
+        """Close the runtime session.
+
+        Args:
+            session_id: Session ID.
+        """
+        self._api.runtime_session(session_id=session_id).close()
 
     # IBM Cloud only functions
 
