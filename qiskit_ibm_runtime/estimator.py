@@ -168,7 +168,8 @@ class Estimator(BaseEstimator):
                 * log_level: logging level to set in the execution environment. The valid
                     log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
                     The default level is ``WARNING``.
-            max_time: Maximum amount of time, a runtime session can be open before being
+            max_time: (EXPERIMENTAL setting, can break between releases without warning)
+                Maximum amount of time, a runtime session can be open before being
                 forcibly closed. Can be specified as seconds (int) or a string like "2h 30m 40s".
 
         Raises:
