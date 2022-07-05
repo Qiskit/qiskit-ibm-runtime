@@ -22,6 +22,7 @@ from .exceptions import IBMInputValueError
 from .ibm_backend import IBMBackend
 from .qiskit_runtime_service import QiskitRuntimeService
 from .runtime_session import RuntimeSession
+from .utils.converters import hms_to_seconds
 
 
 class Sampler(BaseSampler):
@@ -122,6 +123,7 @@ class Sampler(BaseSampler):
         skip_transpilation: Optional[bool] = False,
         transpilation_settings: Optional[Dict] = None,
         resilience_settings: Optional[Dict] = None,
+        max_time: Optional[Union[int, str]] = None,
     ):
         """Initializes the Sampler primitive.
 
@@ -184,6 +186,10 @@ class Sampler(BaseSampler):
                     * 3: even heavier resilience
                     If ``None``, level 0 will be chosen as default.
 
+            max_time: (EXPERIMENTAL setting, can break between releases without warning)
+                Maximum amount of time, a runtime session can be open before being
+                forcibly closed. Can be specified as seconds (int) or a string like "2h 30m 40s".
+
         Raises:
             IBMInputValueError: If an input value is invalid.
         """
@@ -223,7 +229,17 @@ class Sampler(BaseSampler):
             program_id="sampler",
             inputs=inputs,
             options=options,
+            max_time=self.calculate_max_time(max_time=max_time),
         )
+
+    def calculate_max_time(self, max_time: Optional[Union[int, str]] = None) -> int:
+        """Calculate max_time in seconds from hour minute seconds string. Ex: 2h 30m 40s"""
+        try:
+            return hms_to_seconds(max_time) if isinstance(max_time, str) else max_time
+        except IBMInputValueError as input_value_error:
+            raise IBMInputValueError(
+                "Invalid value given for max_time.", input_value_error.message
+            )
 
     def _call(
         self,
