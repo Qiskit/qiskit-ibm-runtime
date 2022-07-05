@@ -204,7 +204,7 @@ class Estimator(BaseEstimator):
                     * 1: light resilience
                     * 2: heavy resilience
                     * 3: even heavier resilience
-                    If ``None``, level 1 will be chosen as default.
+                    If ``None``, level 0 will be chosen as default.
 
         Raises:
             IBMInputValueError: If an input value is invalid.
@@ -237,9 +237,11 @@ class Estimator(BaseEstimator):
             "observables": observables,
             "parameters": parameters,
             "skip_transpilation": self._skip_transpilation,
-            "transpilation_settings": transpilation_settings,
-            "resilience_settings": resilience_settings,
         }
+        if transpilation_settings:
+            inputs.update({ "transpilation_settings": transpilation_settings })
+        if resilience_settings:
+            inputs.update({ "resilience_settings": resilience_settings })
         self._session = RuntimeSession(
             service=self._service,
             program_id="estimator",
