@@ -1,0 +1,6 @@
+---
+upgrade:
+  - |
+    ``IBMRuntimeService`` class which was deprecated earlier is now removed. Use
+    :class:`~qiskit_ibm_runtime.QiskitRuntimeService` class going forward.
+

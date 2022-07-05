@@ -31,7 +31,7 @@ to a file object and load circuits from QPY data in a file object respectively.
 For example::
 
     from qiskit.circuit import QuantumCircuit
-    from qiskit.circuit import qpy_serialization
+    from qiskit import qpy
 
     qc = QuantumCircuit(2, name='Bell', metadata={'test': True})
     qc.h(0)
@@ -39,10 +39,10 @@ For example::
     qc.measure_all()
 
     with open('bell.qpy', 'wb') as fd:
-        qpy_serialization.dump(qc, fd)
+        qpy.dump(qc, fd)
 
     with open('bell.qpy', 'rb') as fd:
-        new_qc = qpy_serialization.load(fd)[0]
+        new_qc = qpy.load(fd)[0]
 
 API documentation
 =================
