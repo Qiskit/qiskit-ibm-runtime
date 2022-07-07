@@ -1,0 +1,4 @@
+---
+fixes:
+  - |
+    Fixes the issue where ``QpyError`` was getting imported from an incorrect exceptions file.
