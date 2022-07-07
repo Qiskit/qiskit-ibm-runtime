@@ -25,7 +25,7 @@ from qiskit.pulse.schedule import ScheduleBlock
 from qiskit.utils import optionals as _optional
 
 from .. import formats, common, type_keys
-from ..binary_io import value
+from . import value
 
 
 def _read_channel(file_obj, version):  # type: ignore[no-untyped-def]
