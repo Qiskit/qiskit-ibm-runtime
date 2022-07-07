@@ -53,7 +53,7 @@ from qiskit.pulse.transforms.alignments import (
     AlignSequential,
     AlignEquispaced,
 )
-from .. import exceptions
+from . import exceptions
 
 
 class TypeKeyBase(bytes, Enum):

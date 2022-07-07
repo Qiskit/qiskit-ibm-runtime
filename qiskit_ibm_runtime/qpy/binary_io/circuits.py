@@ -35,7 +35,7 @@ from qiskit.extensions import quantum_initializer
 from qiskit.quantum_info.operators import SparsePauliOp
 from qiskit.synthesis import evolution as evo_synth
 from .. import common, formats, exceptions, type_keys
-from ..binary_io import value, schedules
+from . import value, schedules
 
 
 def _read_header_v2(  # type: ignore[no-untyped-def]
