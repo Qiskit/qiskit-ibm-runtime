@@ -45,6 +45,7 @@ class RuntimeSession:
         program_id: str,
         inputs: Union[Dict, ParameterNamespace],
         options: Optional[Union[RuntimeOptions, Dict]] = None,
+        max_time: Optional[int] = None,
     ):
         """RuntimeSession constructor.
         Args:
@@ -62,6 +63,7 @@ class RuntimeSession:
         self._session_id: Optional[str] = None
         self._active = True
         self._start_session = True
+        self._max_time = max_time
 
     @_active_session
     def write(self, **kwargs: Dict) -> None:
@@ -78,6 +80,7 @@ class RuntimeSession:
             self._session_id = self._job.job_id
         else:
             self._start_session = False
+            self._max_time = None
             self._job = self._run(inputs=inputs)
 
     def _run(self, inputs: Union[Dict, ParameterNamespace]) -> RuntimeJob:
@@ -88,6 +91,7 @@ class RuntimeSession:
             inputs=inputs,
             session_id=self._session_id,
             start_session=self._start_session,
+            max_execution_time=self._max_time,
         )
 
     @_active_session
