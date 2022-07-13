@@ -226,12 +226,11 @@ Classes
    RuntimeOptions
    RuntimeEncoder
    RuntimeDecoder
-   IBMRuntimeService
 """
 
 import logging
 
-from .qiskit_runtime_service import QiskitRuntimeService, IBMRuntimeService
+from .qiskit_runtime_service import QiskitRuntimeService
 from .ibm_backend import IBMBackend
 from .runtime_job import RuntimeJob
 from .runtime_program import RuntimeProgram, ParameterNamespace
