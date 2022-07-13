@@ -489,6 +489,7 @@ class QiskitRuntimeService(Provider):
                 backend_name += "_"
             setattr(self, backend_name, backend)
 
+    # pylint: disable=arguments-differ
     def backends(
         self,
         name: Optional[str] = None,
@@ -686,7 +687,7 @@ class QiskitRuntimeService(Provider):
             raise QiskitBackendNotFoundError("No backend matches the criteria")
         return backends[0]
 
-    def get_backend(self, name: str = None, **kwargs):
+    def get_backend(self, name: str = None, **kwargs: Any) -> Backend:
         return self.backend(name, **kwargs)
 
     def pprint_programs(
@@ -1437,7 +1438,7 @@ class QiskitRuntimeService(Provider):
         return self._channel
 
     @property
-    def runtime(self) -> QiskitRuntimeService:
+    def runtime(self):  # type:ignore
         """Return self for compatibility with IBMQ provider.
 
         Returns:
