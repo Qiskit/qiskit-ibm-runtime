@@ -21,7 +21,7 @@ from collections import OrderedDict
 from typing import Dict, Callable, Optional, Union, List, Any, Type
 
 from qiskit.providers.backend import BackendV1 as Backend
-from qiskit.providers.providers import ProviderV1 as Provider
+from qiskit.providers.provider import ProviderV1 as Provider
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.providerutils import filter_backends
 
