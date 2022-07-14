@@ -27,6 +27,7 @@ class ProgramJob(RestAdapterBase):
         "cancel": "/cancel",
         "logs": "/logs",
         "interim_results": "/interim_results",
+        "metrics": "/metrics",
     }
 
     def __init__(
@@ -82,3 +83,11 @@ class ProgramJob(RestAdapterBase):
             Job logs.
         """
         return self.session.get(self.get_url("logs")).text
+
+    def metadata(self) -> str:
+        """Retrieve job metadata.
+
+        Returns:
+            Job Metadata.
+        """
+        return self.session.get(self.get_url("metrics")).text
