@@ -1,0 +1,6 @@
+---
+upgrade:
+  - |
+    :class:`qiskit_ibm_runtime.RuntimeJob` has a new method 
+    :meth:`~qiskit_ibm_runtime.RuntimeJob.metadata`. This method returns 
+    the metadata of a job, which includes timestamp information.
