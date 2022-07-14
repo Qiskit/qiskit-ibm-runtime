@@ -119,28 +119,26 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
             job.result()
 
     @run_integration_test
-    def test_run_program_failed_custom_max_execution_time(self, service):
-        """Test a program that failed with a custom max_execution_time."""
-        # check that program max execution time is overridden
-        max_execution_time = 300
+    def test_run_program_override_max_execution_time(self, service):
+        """Test that the program max execution time is overridden."""
+        program_max_execution_time = 400
+        job_max_execution_time = 350
         program_id = self._upload_program(
-            service, max_execution_time=max_execution_time
+            service, max_execution_time=program_max_execution_time
         )
-        inputs = {"iterations": 1, "sleep_per_iteration": 60}
         job = self._run_program(
-            service, program_id=program_id, inputs=inputs, max_execution_time=1
+            service, program_id=program_id, max_execution_time=job_max_execution_time
         )
         job.wait_for_final_state()
-        job_result_raw = service._api_client.job_results(job.job_id)
-        self.assertEqual(JobStatus.ERROR, job.status())
-        self.assertIn(
-            API_TO_JOB_ERROR_MESSAGE["CANCELLED - RAN TOO LONG"].format(
-                job.job_id, job_result_raw
-            ),
-            job.error_message(),
+        self.assertEqual(
+            job._api_client.job_get(job.job_id)["cost"], job_max_execution_time
         )
-        with self.assertRaises(RuntimeJobFailureError):
-            job.result()
+
+    @run_integration_test
+    def test_invalid_max_execution_time_fails(self, service):
+        """Test that program fails when max_execution_time is less than 300."""
+        with self.assertRaises(IBMRuntimeError):
+            self._run_program(service, max_execution_time=299)
 
     @run_integration_test
     def test_run_program_failed_invalid_execution_time(self, service):

@@ -13,7 +13,7 @@
 """Backends Filtering Test."""
 
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
-from qiskit.test.mock.backends import FakeLima
+from qiskit.providers.fake_provider import FakeLima
 
 from .mock.fake_account_client import BaseFakeAccountClient
 from .mock.fake_runtime_service import FakeRuntimeService

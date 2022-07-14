@@ -108,7 +108,7 @@ def get_runtime_api_base_url(url: str, instance: str) -> str:
     api_host = url
 
     # cloud: compute runtime API URL based on crn and URL
-    if is_crn(instance):
+    if is_crn(instance) and not _is_experimental_runtime_url(url):
         parsed_url = urlparse(url)
         api_host = (
             f"{parsed_url.scheme}://{_location_from_crn(instance)}"
@@ -116,6 +116,16 @@ def get_runtime_api_base_url(url: str, instance: str) -> str:
         )
 
     return api_host
+
+
+def _is_experimental_runtime_url(url: str) -> bool:
+    """Checks if the provided url points to an experimental runtime cluster.
+    This type of URLs is used for internal development purposes only.
+
+    Args:
+        url: The URL.
+    """
+    return isinstance(url, str) and "experimental" in url and url.endswith(".cloud")
 
 
 def _location_from_crn(crn: str) -> str:
