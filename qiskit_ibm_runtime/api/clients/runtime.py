@@ -315,6 +315,17 @@ class RuntimeClient(BaseBackendClient):
         """
         return self._api.program_job(job_id).logs()
 
+    def job_metadata(self, job_id: str) -> str:
+        """Get job metadata.
+
+        Args:
+            job_id: Program job ID.
+
+        Returns:
+            Job metadata.
+        """
+        return self._api.program_job(job_id).metadata()
+
     def close_session(self, session_id: str) -> None:
         """Close the runtime session.
 
