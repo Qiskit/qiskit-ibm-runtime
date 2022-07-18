@@ -182,8 +182,6 @@ class Sampler(BaseSampler):
                     at the expense of longer processing times.
                     * 0: no resilience
                     * 1: light resilience
-                    * 2: heavy resilience
-                    * 3: even heavier resilience
                     If ``None``, level 0 will be chosen as default.
 
             max_time: (EXPERIMENTAL setting, can break between releases without warning)
