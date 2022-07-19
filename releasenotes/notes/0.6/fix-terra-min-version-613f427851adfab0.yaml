@@ -1,6 +1,6 @@
 ---
 fixes:
   - |
-    Fixes issue `#428 <https://github.com/Qiskit/qiskit-ibm-runtime/issues/428>__`
+    Fixes issue `#428 <https://github.com/Qiskit/qiskit-ibm-runtime/issues/428>`__
     by raising the minimum required ``qiskit-terra`` version to ``0.21.0``, since latest version
     of ``qiskit-ibm-runtime`` is not compatible with ``0.20.0`` or earlier of ``qiskit-terra``.
