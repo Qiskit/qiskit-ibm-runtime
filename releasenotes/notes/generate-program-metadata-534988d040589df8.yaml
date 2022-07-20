@@ -1,0 +1,11 @@
+---
+upgrade:
+  - |
+    :meth:`~qiskit_ibm_runtime.QiskitRuntimeService.upload_program` will now
+    automatically generate the metadata schema if one is not given. 
+    :meth:`~qiskit_ibm_runtime.QiskitRuntimeService.build_json_metadata` can also be 
+    called individually to return a dictionary based on ``file_path``, ``name``, 
+    ``max_execution_time`` and ``min_num_qubits``. The ``description`` of the program metadata
+    is derived from the docstrings in the given file, and the ``name`` is derived 
+    from the file path if one is not given. 
+
