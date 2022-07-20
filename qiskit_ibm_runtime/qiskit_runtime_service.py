@@ -17,9 +17,7 @@ import logging
 import traceback
 import warnings
 import importlib.util
-import inspect
 import sys
-import typing
 from datetime import datetime
 from collections import OrderedDict
 from typing import Dict, Callable, Optional, Union, List, Any, Type
@@ -1098,10 +1096,8 @@ class QiskitRuntimeService:
             spec.loader.exec_module(module)
         except (ValueError, AttributeError) as ex:
             raise IBMInputValueError(f"Failed to load module: {ex}")
-
         user_main = module.main
         docstring = user_main.__doc__
-        sig = inspect.signature(user_main)
 
         program_name = (
             name
@@ -1120,40 +1116,6 @@ class QiskitRuntimeService:
             },
         }
 
-        type_strings = {
-            int: "integer",
-            float: "float",
-            list: "list",
-            typing.List: "list",
-            tuple: "tuple",
-            typing.Tuple: "tuple",
-        }
-
-        required_params = []
-
-        for param in sig.parameters.values():
-            # skip **kwargs
-            if param.kind == inspect.Parameter.VAR_KEYWORD:
-                continue
-            # skip required arguments
-            if param.name in ["backend", "user_messenger"]:
-                continue
-            json_spec["spec"]["parameters"]["properties"][param.name] = {
-                # if we could assume a particular doc standard, we could scrape this
-                "description": "",
-                "type": type_strings.get(param.annotation, param.annotation),
-            }
-            if param.default == inspect.Parameter.empty:
-                required_params.append(param.name)
-
-        json_spec["spec"]["parameters"]["required"] = required_params
-
-        if sig.return_annotation is not inspect.Signature.empty:
-            json_spec["spec"]["return_values"] = {
-                # if we could assume a particular doc standard, we could scrape this
-                "description": "",
-                "type": type_strings.get(sig.return_annotation),
-            }
         return json.dumps(json_spec, indent=2) if return_as_json else json_spec
 
     def update_program(
