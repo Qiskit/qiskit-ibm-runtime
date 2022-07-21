@@ -23,7 +23,7 @@ from qiskit_ibm_runtime.constants import API_TO_JOB_ERROR_MESSAGE
 from qiskit_ibm_runtime.exceptions import (
     RuntimeJobFailureError,
     RuntimeJobNotFound,
-    RuntimeJobTimeoutError,
+    RuntimeJobMaxTimeoutError,
     RuntimeProgramNotFound,
     IBMInputValueError,
 )
@@ -193,7 +193,7 @@ class TestRuntimeJob(IBMTestCase):
                 ),
                 job.error_message(),
             )
-            with self.assertRaises(RuntimeJobTimeoutError):
+            with self.assertRaises(RuntimeJobMaxTimeoutError):
                 job.result()
 
     @run_quantum_and_cloud_fake
