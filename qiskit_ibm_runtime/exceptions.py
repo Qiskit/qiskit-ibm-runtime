@@ -91,3 +91,9 @@ class RuntimeJobTimeoutError(IBMRuntimeError):
     """Error raised when waiting for job times out."""
 
     pass
+
+
+class RuntimePrimitiveInputInvalidError(IBMRuntimeError):
+    """Error raised when the input circuits to primitives are invalid."""
+
+    pass

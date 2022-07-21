@@ -21,6 +21,8 @@ from threading import Condition
 from typing import List, Optional, Any, Dict, Union, Tuple, Type
 from urllib.parse import urlparse
 
+from qiskit.circuit import QuantumCircuit
+
 import requests
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 from ibm_platform_services import ResourceControllerV2
@@ -320,3 +322,21 @@ class RefreshQueue(Queue):
         """Wake up all threads waiting for items on the queued."""
         with self.condition:
             self.condition.notifyAll()
+
+
+def validate_circuit(circuit: QuantumCircuit, exception: Type[Exception]) -> None:
+    """Validates that a circuit has a measurement.
+
+    Args:
+        circuit: QuantumCircuit to be validated
+        exception: Exception to raise if the circuit is invalid.
+
+    Raises:
+        Exception: If the circuit is invalid.
+    """
+    if (
+        not circuit.get_instructions("measure")
+        and not circuit.get_instructions("measure_all")
+        and not circuit.get_instructions("measure_active")
+    ):
+        raise exception("circuit without measurements found")

@@ -18,11 +18,12 @@ from qiskit.circuit import QuantumCircuit, Parameter
 
 # TODO import BaseSampler and SamplerResult from terra once released
 from .qiskit.primitives import BaseSampler, SamplerResult
-from .exceptions import IBMInputValueError
+from .exceptions import IBMInputValueError, RuntimePrimitiveInputInvalidError
 from .ibm_backend import IBMBackend
 from .qiskit_runtime_service import QiskitRuntimeService
 from .runtime_session import RuntimeSession
 from .utils.converters import hms_to_seconds
+from .utils.utils import validate_circuit
 
 
 class Sampler(BaseSampler):
@@ -192,7 +193,13 @@ class Sampler(BaseSampler):
 
         Raises:
             IBMInputValueError: If an input value is invalid.
+            RuntimePrimitiveInputInvalidError: If a circuit is invalid.
         """
+        if isinstance(circuits, Iterable):
+            for circuit in circuits:
+                validate_circuit(circuit, RuntimePrimitiveInputInvalidError)
+        else:
+            validate_circuit(circuits, RuntimePrimitiveInputInvalidError)
         super().__init__(
             circuits=circuits if isinstance(circuits, Iterable) else [circuits],
             parameters=parameters,
