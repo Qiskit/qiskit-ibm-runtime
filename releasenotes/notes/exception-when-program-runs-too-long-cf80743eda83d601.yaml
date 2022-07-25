@@ -1,4 +1,4 @@
 ---
 upgrade:
   - |
-    Raise an exception when a job runs for too long so that it can be handled appropriately by programs.
+    Raise ``RuntimeJobMaxTimeoutError`` when a job runs for too long so that it can be handled appropriately by programs.
