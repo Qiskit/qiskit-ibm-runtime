@@ -209,8 +209,6 @@ class BaseSampler(ABC):
             circuits: the list of circuit indices or circuit objects.
             parameter_values: Parameters to be bound to the circuit.
             run_options: Backend runtime options used for circuit execution.
-                These include shots, qubit_lo_freq, meas_lo_freq, schedule_los,
-                rep_delay, init_qubits, and use_measure_esp.
 
         Returns:
             The result of the sampler. The i-th result corresponds to

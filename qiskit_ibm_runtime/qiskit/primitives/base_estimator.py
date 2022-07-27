@@ -278,9 +278,7 @@ class BaseEstimator(ABC):
             circuits: the list of circuit indices or circuit objects.
             observables: the list of observable indices or observable objects.
             parameter_values: concrete parameters to be bound.
-            run_options: runtime options used for circuit execution. These include shots,
-                qubit_lo_freq, meas_lo_freq, schedule_los, rep_delay, init_qubits,
-                and use_measure_esp.
+            run_options: runtime options used for circuit execution.
 
         Returns:
             EstimatorResult: The result of the estimator.
