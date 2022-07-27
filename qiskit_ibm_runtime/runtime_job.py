@@ -14,6 +14,7 @@
 
 from typing import Any, Optional, Callable, Dict, Type
 import time
+import json
 import logging
 from concurrent import futures
 import traceback
@@ -315,6 +316,21 @@ class RuntimeJob:
             if err.status_code == 404:
                 return ""
             raise IBMRuntimeError(f"Failed to get job logs: {err}") from None
+
+    def metadata(self) -> Dict[str, Any]:
+        """Return job metadata.
+
+        Returns:
+            Job metadata, which includes timestamp information.
+
+        Raises:
+            IBMRuntimeError: If a network error occurred.
+        """
+        try:
+            metadata_str = self._api_client.job_metadata(self.job_id)
+            return json.loads(metadata_str)
+        except RequestsApiError as err:
+            raise IBMRuntimeError(f"Failed to get job metadata: {err}") from None
 
     def _set_status_and_error_message(self) -> None:
         """Fetch and set status and error message."""
