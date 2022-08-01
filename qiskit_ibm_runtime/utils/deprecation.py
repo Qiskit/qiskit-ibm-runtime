@@ -32,7 +32,11 @@ def deprecate_function(deprecated: str, version: str, remedy: str, stacklevel: i
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             issue_deprecation_msg(
-                f"The {deprecated} method is deprecated", version, remedy, stacklevel+1)
+                f"The {deprecated} method is deprecated",
+                version,
+                remedy,
+                stacklevel + 1,
+            )
             return func(*args, **kwargs)
 
         return wrapper
@@ -40,7 +44,9 @@ def deprecate_function(deprecated: str, version: str, remedy: str, stacklevel: i
     return decorator
 
 
-def deprecate_arguments(deprecated: str, version: str, remedy: str, stacklevel: int = 2) -> None:
+def deprecate_arguments(
+    deprecated: str, version: str, remedy: str, stacklevel: int = 2
+) -> None:
     """Emit a warning about deprecated keyword arguments.
 
     Args:
@@ -49,8 +55,12 @@ def deprecate_arguments(deprecated: str, version: str, remedy: str, stacklevel: 
         remedy: User action to take.
         stacklevel: The warning stackevel to use.
     """
-    issue_deprecation_msg(f"The {deprecated} keyword arguments are deprecated",
-        version, remedy, stacklevel+1)
+    issue_deprecation_msg(
+        f"The {deprecated} keyword arguments are deprecated",
+        version,
+        remedy,
+        stacklevel + 1,
+    )
 
 
 def issue_deprecation_msg(msg: str, version: str, remedy: str, stacklevel: int = 2):
@@ -66,5 +76,5 @@ def issue_deprecation_msg(msg: str, version: str, remedy: str, stacklevel: int =
         f"{msg} as of qiskit-ibm-runtime {version} "
         f"and will be removed no sooner than 3 months after the release date. {remedy}",
         DeprecationWarning,
-        stacklevel=stacklevel+1  # Increment to account for this function.
+        stacklevel=stacklevel + 1,  # Increment to account for this function.
     )

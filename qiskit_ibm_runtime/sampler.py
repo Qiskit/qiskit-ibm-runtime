@@ -91,7 +91,7 @@ class Sampler(BaseSampler):
         skip_transpilation: Optional[bool] = False,
         transpilation_settings: Optional[Union[Dict, Transpilation]] = None,
         resilience_settings: Optional[Union[Dict, Resilience]] = None,
-        session: Optional["session.Session"] = None
+        session: Optional["session.Session"] = None,
     ):
         """Initializes the Sampler primitive.
 
@@ -162,23 +162,30 @@ class Sampler(BaseSampler):
 
         # TODO: Remove deprecation warnings if done in base class
         if circuits or parameters:
-            deprecate_arguments("circuits and parameters", "0.7",
-                f"You can instead specify these inputs using the {self.__class__.__name__}.run method."
+            deprecate_arguments(
+                "circuits and parameters",
+                "0.7",
+                f"You can instead specify these inputs using the {self.__class__.__name__}.run method.",
             )
         if skip_transpilation:
-            deprecate_arguments("skip_transpilation", "0.7",
-                f"Instead, use the skip_transpilation keyward argument in transpilation_settings.")
+            deprecate_arguments(
+                "skip_transpilation",
+                "0.7",
+                f"Instead, use the skip_transpilation keyward argument in transpilation_settings.",
+            )
 
         transpilation_settings = transpilation_settings or {}
-        skip_transp = transpilation_settings.pop("skip_transpilation", skip_transpilation)
+        skip_transp = transpilation_settings.pop(
+            "skip_transpilation", skip_transpilation
+        )
         transpilation_settings = Transpilation(
-            skip_transpilation=skip_transp, **transpilation_settings)
+            skip_transpilation=skip_transp, **transpilation_settings
+        )
         resilience_settings = resilience_settings or {}
         resilience_settings = Resilience(**resilience_settings)
 
         self.settings = SamplerSettings(
-            transpilation=transpilation_settings,
-            resilience=resilience_settings
+            transpilation=transpilation_settings, resilience=resilience_settings
         )
         options = options or {}
         # TODO: Having options and run_options is very confusing. Can we combine the two?
@@ -203,7 +210,7 @@ class Sampler(BaseSampler):
                 service=service,
                 program_id=self._PROGRAM_ID,
                 inputs=inputs,
-                options=asdict(self.options)
+                options=asdict(self.options),
             )
 
     def run(
@@ -246,17 +253,23 @@ class Sampler(BaseSampler):
         """
 
         if isinstance(self._session, RuntimeSession):
-            raise ValueError("The run method is not supported when "
+            raise ValueError(
+                "The run method is not supported when "
                 "qiskit_ibm_runtime.RuntimeSession is used ",
                 "(e.g. when Sampler is used as a context manager). Please use "
-                "qiskit_ibm_runtime.Session as a context manager instead."
-                )
+                "qiskit_ibm_runtime.Session as a context manager instead.",
+            )
 
-        if isinstance(circuits, Iterable) and \
-            not all(isinstance(inst, QuantumCircuit) for inst in circuits):
-            raise ValueError("The circuits parameter has to be instances of QuantumCircuit.")
+        if isinstance(circuits, Iterable) and not all(
+            isinstance(inst, QuantumCircuit) for inst in circuits
+        ):
+            raise ValueError(
+                "The circuits parameter has to be instances of QuantumCircuit."
+            )
 
-        circuit_indices = list(range(len(circuits))) if isinstance(circuits, Iterable) else [0]
+        circuit_indices = (
+            list(range(len(circuits))) if isinstance(circuits, Iterable) else [0]
+        )
 
         inputs = {
             "circuits": circuits,
@@ -269,37 +282,41 @@ class Sampler(BaseSampler):
 
         return self._session.run(
             program_id=self._PROGRAM_ID,
-            inputs = inputs,
+            inputs=inputs,
             options=self.options,
-            result_decoder=SamplerResultDecoder
+            result_decoder=SamplerResultDecoder,
         )
 
     def _to_program_settings(self):
         """Convert SamplerSettings to primitive program format."""
         # TODO: Remove this once primitive program is updated to use optimization_level.
         transpilation_settings = asdict(self.settings.transpilation)
-        transpilation_settings["optimization_settings"] = \
-            {"level": transpilation_settings["optimization_level"]}
+        transpilation_settings["optimization_settings"] = {
+            "level": transpilation_settings["optimization_level"]
+        }
         return {
             "resilience_settings": asdict(self.settings.resilience),
-            "transpilation_settings": transpilation_settings}
+            "transpilation_settings": transpilation_settings,
+        }
 
     def __call__(
         self,
         circuits: Sequence[int | QuantumCircuit],
         parameter_values: Sequence[Sequence[float]] | None = None,
-        **run_options: Any
+        **run_options: Any,
     ) -> SamplerResult:
         issue_deprecation_msg(
             msg="Calling a Sampler instance directly has been deprecated ",
             version="0.7",
-            remedy="Please use qiskit_ibm_runtime.Session and Sampler.run() instead.")
+            remedy="Please use qiskit_ibm_runtime.Session and Sampler.run() instead.",
+        )
 
         if not isinstance(self._session, RuntimeSession):
-            raise ValueError("The run method is only supported when "
+            raise ValueError(
+                "The run method is only supported when "
                 "qiskit_ibm_runtime.RuntimeSession is used ",
-                "(e.g. when Sampler is used as a context manager)."
-                )
+                "(e.g. when Sampler is used as a context manager).",
+            )
         return super().__call__(circuits, parameter_values, **run_options)
 
     def _call(
@@ -351,6 +368,7 @@ class Sampler(BaseSampler):
     def default_settings(cls):
         return SamplerSettings()
 
+
 @dataclass
 class SamplerSettings:
     """Sampler settings."""
@@ -360,7 +378,6 @@ class SamplerSettings:
 
 
 class SamplerResultDecoder(ResultDecoder):
-
     @classmethod
     def decode(cls, raw_result: str):
         """Convert the result to SamplerResult."""

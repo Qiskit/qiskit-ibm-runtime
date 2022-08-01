@@ -75,8 +75,11 @@ class Session:
         self._session_id: Optional[str] = None
         self._active = True
 
-        self._max_time = max_time if max_time is None or isinstance(max_time, int) \
+        self._max_time = (
+            max_time
+            if max_time is None or isinstance(max_time, int)
             else hms_to_seconds(max_time, "Invalid max_time value: ")
+        )
 
     @_active_session
     def run(
@@ -111,7 +114,7 @@ class Session:
             session_id=self._session_id,
             start_session=self._session_id is None,
             max_execution_time=max_time,
-            result_decoder=result_decoder
+            result_decoder=result_decoder,
         )
 
         if self._session_id is None:
@@ -170,8 +173,8 @@ class Session:
             options=options,
             transpilation_settings=transpilation_settings,
             resilience_settings=resilience_settings,
-            session=self
-            )
+            session=self,
+        )
 
     def estimator() -> Estimator:
         raise NotImplementedError("Under construction")

@@ -43,7 +43,11 @@ class RuntimeOptions:
 
     def __post_init__(self):
         if self.backend_name:
-            deprecate_arguments(deprecated="backend_name", version="0.7", remedy="Please use \"backend\" instead.")
+            deprecate_arguments(
+                deprecated="backend_name",
+                version="0.7",
+                remedy='Please use "backend" instead.',
+            )
         self.backend = self.backend or self.backend_name
         if self.backend is not None:
             if isinstance(self.backend, IBMBackend):
@@ -98,5 +102,9 @@ class RuntimeOptions:
         Args:
             backend: Backend to use.
         """
-        deprecate_arguments(deprecated="backend_name", version="0.7", remedy="Please use backend instead.")
+        deprecate_arguments(
+            deprecated="backend_name",
+            version="0.7",
+            remedy="Please use backend instead.",
+        )
         self.backend = backend

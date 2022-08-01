@@ -932,8 +932,11 @@ class QiskitRuntimeService:
         )
         return job
 
-    @deprecate_function("QiskitRuntimeService.open", "0.7",
-        "Instead, use the qiskit_ibm_runtime.Session class to create a runtime session.")
+    @deprecate_function(
+        "QiskitRuntimeService.open",
+        "0.7",
+        "Instead, use the qiskit_ibm_runtime.Session class to create a runtime session.",
+    )
     def open(
         self,
         program_id: str,

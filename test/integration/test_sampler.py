@@ -55,7 +55,7 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
         with Session(service=service) as session:
             sampler = session.sampler(options=self.options)
             self.assertIsInstance(sampler, BaseSampler)
-            circuits = [self.bell]*3
+            circuits = [self.bell] * 3
 
             circuits1 = circuits
             result1 = sampler.run(circuits=circuits1).result()
@@ -115,12 +115,15 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
     def test_sampler_skip_transpile(self, service):
         """Test skip transpilation option."""
         circ = QuantumCircuit(1, 1)
-        custom_gate = Gate('my_custom_gate', 1, [3.14, 1])
+        custom_gate = Gate("my_custom_gate", 1, [3.14, 1])
         circ.append(custom_gate, [0])
         circ.measure(0, 0)
 
         with Session(service=service) as session:
-            sampler = session.sampler(options=self.options, transpilation_settings={"skip_transpilation": True})
+            sampler = session.sampler(
+                options=self.options,
+                transpilation_settings={"skip_transpilation": True},
+            )
             with self.assertRaises(RuntimeJobFailureError) as err:
                 sampler.run(circuits=circ).result()
                 # If transpilation not skipped the error would be something about cannot expand.
@@ -150,7 +153,9 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
         theta2 = [1, 2, 3, 4, 5, 6]
         theta3 = [0, 1, 2, 3, 4, 5, 6, 7]
 
-        with Sampler(circuits=[pqc, pqc2], service=service, options=self.options) as sampler:
+        with Sampler(
+            circuits=[pqc, pqc2], service=service, options=self.options
+        ) as sampler:
             self.assertIsInstance(sampler, BaseSampler)
 
             circuits0 = [pqc, pqc, pqc2]

@@ -14,6 +14,7 @@
 
 from dataclasses import dataclass
 
+
 @dataclass
 class Transpilation:
     """Transpilation settings.
@@ -110,6 +111,7 @@ class Transpilation:
     optimization_level: int = 1
     skip_transpilation: bool = False
 
+
 @dataclass
 class Resilience:
     """Resilience settings.
@@ -121,4 +123,5 @@ class Resilience:
             * 0: no resilience
             * 1: light resilience
     """
+
     level: int = 0
