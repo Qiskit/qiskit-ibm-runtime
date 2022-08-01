@@ -49,6 +49,7 @@ from .utils.hgp import to_instance_format, from_instance_format
 from .utils.utils import validate_job_tags
 from .api.client_parameters import ClientParameters
 from .runtime_options import RuntimeOptions
+from .utils.deprecation import deprecate_function
 
 logger = logging.getLogger(__name__)
 
@@ -931,6 +932,8 @@ class QiskitRuntimeService:
         )
         return job
 
+    @deprecate_function("QiskitRuntimeService.open", "0.7",
+        "Instead, use the qiskit_ibm_runtime.Session class to create a runtime session.")
     def open(
         self,
         program_id: str,

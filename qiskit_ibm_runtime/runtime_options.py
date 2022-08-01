@@ -15,12 +15,14 @@
 import re
 import logging
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Union
 
 from .exceptions import IBMInputValueError
+from .ibm_backend import IBMBackend
+from .utils.deprecation import deprecate_arguments
 
 
-@dataclass
+@dataclass(init=False, repr=True)
 class RuntimeOptions:
     """Class for representing runtime execution options.
 
@@ -34,9 +36,27 @@ class RuntimeOptions:
             The default level is ``WARNING``.
     """
 
-    backend_name: Optional[str] = None
-    image: Optional[str] = None
-    log_level: Optional[str] = None
+    def __init__(
+        self,
+        backend_name: Optional[str] = None,
+        backend: Optional[str] = None,
+        image: Optional[str] = None,
+        log_level: Optional[str] = None
+    ) -> None:
+        if backend_name:
+            deprecate_arguments(deprecated="backend_name", version="0.7", remedy="Please use \"backend\" instead.")
+
+        self.backend = backend or backend_name
+        if isinstance(self.backend, IBMBackend):
+            self.backend = self.backend.name
+        elif not isinstance(self.backend, str):
+            raise IBMInputValueError(
+                f"Invalid backend type {type(self.backend)} specified. It should be either the string name of the "
+                "backend or an instance of 'IBMBackend' class"
+            )
+
+        self.image = image
+        self.log_level = log_level
 
     def validate(self, channel: str) -> None:
         """Validate options.
@@ -65,3 +85,22 @@ class RuntimeOptions:
                 f"{self.log_level} is not a valid log level. The valid log levels are: `DEBUG`, "
                 f"`INFO`, `WARNING`, `ERROR`, and `CRITICAL`."
             )
+
+    @property
+    def backend_name(self) -> str:
+        """Return the backend option.
+
+        Returns:
+            Name of the backend to use.
+        """
+        return self.backend
+
+    @backend_name.setter
+    def backend_name(self, backend: Optional[Union[str, IBMBackend]]) -> None:
+        """Set the backend to use.
+
+        Args:
+            backend: Backend to use.
+        """
+        deprecate_arguments(deprecated="backend_name", version="0.7", remedy="Please use backend instead.")
+        self.backend = backend

@@ -236,6 +236,7 @@ from .runtime_job import RuntimeJob
 from .runtime_program import RuntimeProgram, ParameterNamespace
 from .runtime_options import RuntimeOptions
 from .utils.json import RuntimeEncoder, RuntimeDecoder
+from .session import Session
 
 from .exceptions import *
 from .utils.utils import setup_logger

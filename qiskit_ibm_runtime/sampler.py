@@ -13,16 +13,21 @@
 """Sampler primitive."""
 
 from typing import Dict, Iterable, Optional, Sequence, Any, Union
+from dataclasses import dataclass, asdict
 
 from qiskit.circuit import QuantumCircuit, Parameter
 
 # TODO import BaseSampler and SamplerResult from terra once released
 from .qiskit.primitives import BaseSampler, SamplerResult
-from .exceptions import IBMInputValueError
-from .ibm_backend import IBMBackend
 from .qiskit_runtime_service import QiskitRuntimeService
+from .settings import Transpilation, Resilience
+from .runtime_options import RuntimeOptions
+from .program.result_decoder import ResultDecoder
 from .runtime_session import RuntimeSession
 from .utils.converters import hms_to_seconds
+from .runtime_job import RuntimeJob
+from .utils.deprecation import deprecate_arguments, issue_deprecation_msg
+from qiskit_ibm_runtime import session
 
 
 class Sampler(BaseSampler):
@@ -47,7 +52,7 @@ class Sampler(BaseSampler):
     * service: Optional instance of :class:`qiskit_ibm_runtime.QiskitRuntimeService` class,
         defaults to `QiskitRuntimeService()` which tries to initialize your default saved account.
 
-    * options: Runtime options dictionary that control the execution environment.
+    * options: Runtime options that control the execution environment.
 
         * backend: Optional instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
             string name of backend, if not specified a backend will be selected
@@ -114,24 +119,26 @@ class Sampler(BaseSampler):
             print(result)
     """
 
+    _PROGRAM_ID = "sampler"
+
     def __init__(
         self,
-        circuits: Union[QuantumCircuit, Iterable[QuantumCircuit]],
+        circuits: Optional[Union[QuantumCircuit, Iterable[QuantumCircuit]]] = None,
         parameters: Optional[Iterable[Iterable[Parameter]]] = None,
         service: Optional[QiskitRuntimeService] = None,
-        options: Optional[Dict] = None,
+        options: Optional[Union[Dict, RuntimeOptions]] = None,
         skip_transpilation: Optional[bool] = False,
-        transpilation_settings: Optional[Dict] = None,
-        resilience_settings: Optional[Dict] = None,
-        max_time: Optional[Union[int, str]] = None,
+        transpilation_settings: Optional[Union[Dict, Transpilation]] = None,
+        resilience_settings: Optional[Union[Dict, Resilience]] = None,
+        session: Optional["session.Session"] = None
     ):
         """Initializes the Sampler primitive.
 
         Args:
-            circuits: a (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
+            circuits: (DEPRECATED) A (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
                 a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
 
-            parameters: A list of parameters of the quantum circuits
+            parameters: (DEPRECATED) A list of parameters of the quantum circuits
                 (:class:`~qiskit.circuit.parametertable.ParameterView` or
                 a list of :class:`~qiskit.circuit.Parameter`)
 
@@ -151,7 +158,8 @@ class Sampler(BaseSampler):
                     log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
                     The default level is ``WARNING``.
 
-            skip_transpilation: Transpilation is skipped if set to True. False by default.
+            skip_transpilation (DEPRECATED): Transpilation is skipped if set to True. False by default.
+                Ignored if ``skip_transpilation`` is also specified in ``transpilation_settings``.
 
             transpilation_settings: (EXPERIMENTAL setting, can break between releases without warning)
                 Qiskit transpiler settings. The transpilation process converts
@@ -162,16 +170,14 @@ class Sampler(BaseSampler):
                 * skip_transpilation: Transpilation is skipped if set to True.
                     False by default.
 
-                * optimization_settings:
+                * optimization_level: How much optimization to perform on the circuits.
+                    Higher levels generate more optimized circuits,
+                    at the expense of longer transpilation times.
 
-                    * level: How much optimization to perform on the circuits.
-                        Higher levels generate more optimized circuits,
-                        at the expense of longer transpilation times.
-                        * 0: no optimization
-                        * 1: light optimization
-                        * 2: heavy optimization
-                        * 3: even heavier optimization
-                        If ``None``, level 1 will be chosen as default.
+                    * 0: no optimization
+                    * 1: light optimization (default)
+                    * 2: heavy optimization
+                    * 3: even heavier optimization
 
             resilience_settings: (EXPERIMENTAL setting, can break between releases without warning)
                 Using these settings allows you to build resilient algorithms by
@@ -184,60 +190,138 @@ class Sampler(BaseSampler):
                     * 1: light resilience
                     If ``None``, level 0 will be chosen as default.
 
-            max_time: (EXPERIMENTAL setting, can break between releases without warning)
-                Maximum amount of time, a runtime session can be open before being
-                forcibly closed. Can be specified as seconds (int) or a string like "2h 30m 40s".
-
         Raises:
             IBMInputValueError: If an input value is invalid.
         """
+        # TODO: Fix base classes once done
         super().__init__(
-            circuits=circuits if isinstance(circuits, Iterable) else [circuits],
+            circuits=circuits,
             parameters=parameters,
         )
-        self._skip_transpilation = skip_transpilation
-        if not service:
-            # try to initialize service with default saved account
-            service = QiskitRuntimeService()
-        self._service = service
-        if isinstance(options, dict) and "backend" in options:
-            backend = options.get("backend")
-            if isinstance(backend, IBMBackend):
-                del options["backend"]
-                options["backend_name"] = backend.name
-            elif isinstance(backend, str):
-                del options["backend"]
-                options["backend_name"] = backend
-            else:
-                raise IBMInputValueError(
-                    "'backend' property in 'options' should be either the string name of the "
-                    "backend or an instance of 'IBMBackend' class"
+
+        # TODO: Remove deprecation warnings if done in base class
+        if circuits or parameters:
+            deprecate_arguments("circuits and parameters", "0.7",
+                f"You can instead specify these inputs using the {self.__class__.__name__}.run method."
+            )
+        if skip_transpilation:
+            deprecate_arguments("skip_transpilation", "0.7",
+                f"Instead, use the skip_transpilation keyward argument in transpilation_settings.")
+
+        transpilation_settings = transpilation_settings or {}
+        skip_transp = transpilation_settings.pop("skip_transpilation", skip_transpilation)
+        transpilation_settings = Transpilation(
+            skip_transpilation=skip_transp, **transpilation_settings)
+        resilience_settings = resilience_settings or {}
+        resilience_settings = Resilience(**resilience_settings)
+
+        self.settings = SamplerSettings(
+            transpilation=transpilation_settings,
+            resilience=resilience_settings
+        )
+        options = options or {}
+        # TODO: Having options and run_options is very confusing. Can we combine the two?
+        self.options = RuntimeOptions(**options)
+
+        if session:
+            self._session = session
+        else:
+            # Backward compatibility mode
+            if not service:
+                # try to initialize service with default saved account
+                service = QiskitRuntimeService()
+
+            inputs = {
+                "circuits": circuits,
+                "parameters": parameters,
+            }
+            inputs.update(self._to_program_settings())
+
+            # Cannot use the new Session or will get circuilar import.
+            self._session = RuntimeSession(
+                service=service,
+                program_id=self._PROGRAM_ID,
+                inputs=inputs,
+                options=asdict(self.options)
+            )
+
+    def run(
+        self,
+        circuits: Union[QuantumCircuit, Iterable[QuantumCircuit]],
+        parameters: Optional[Iterable[Iterable[Parameter]]] = None,
+        parameter_values: Optional[
+            Union[Sequence[float], Sequence[Sequence[float]]]
+        ] = None,
+        **run_options: Any,
+    ) -> RuntimeJob:
+        """Submit a request to the sampler primitive program.
+
+        Args:
+            circuits: a (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
+                a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
+
+            parameters: A list of parameters of the quantum circuits
+                (:class:`~qiskit.circuit.parametertable.ParameterView` or
+                a list of :class:`~qiskit.circuit.Parameter`).
+                Defaults to ``[circ.parameters for circ in circuits]``.
+
+            parameter_values: An optional list of concrete parameters to be bound.
+
+            **run_options: A collection of kwargs passed to `backend.run()`.
+
+                shots: Number of repetitions of each circuit, for sampling.
+                qubit_lo_freq: List of default qubit LO frequencies in Hz.
+                meas_lo_freq: List of default measurement LO frequencies in Hz.
+                schedule_los: Experiment LO configurations, frequencies are given in Hz.
+                rep_delay: Delay between programs in seconds. Only supported on certain
+                    backends (if ``backend.configuration().dynamic_reprate_enabled=True``).
+                init_qubits: Whether to reset the qubits to the ground state for each shot.
+                use_measure_esp: Whether to use excited state promoted (ESP) readout for measurements
+                    which are the terminal instruction to a qubit. ESP readout can offer higher fidelity
+                    than standard measurement sequences.
+
+        Returns:
+            Submitted job.
+        """
+
+        if isinstance(self._session, RuntimeSession):
+            raise ValueError("The run method is not supported when "
+                "qiskit_ibm_runtime.RuntimeSession is used ",
+                "(e.g. when Sampler is used as a context manager). Please use "
+                "qiskit_ibm_runtime.Session as a context manager instead."
                 )
+
+        if isinstance(circuits, Iterable) and \
+            not all(isinstance(inst, QuantumCircuit) for inst in circuits):
+            raise ValueError("The circuits parameter has to be instances of QuantumCircuit.")
+
+        circuit_indices = list(range(len(circuits))) if isinstance(circuits, Iterable) else [0]
+
         inputs = {
             "circuits": circuits,
             "parameters": parameters,
-            "skip_transpilation": self._skip_transpilation,
+            "circuit_indices": circuit_indices,
+            "parameter_values": parameter_values,
+            "run_options": run_options,
         }
-        if transpilation_settings:
-            inputs.update({"transpilation_settings": transpilation_settings})
-        if resilience_settings:
-            inputs.update({"resilience_settings": resilience_settings})
-        self._session = RuntimeSession(
-            service=self._service,
-            program_id="sampler",
-            inputs=inputs,
-            options=options,
-            max_time=self.calculate_max_time(max_time=max_time),
+        inputs.update(self._to_program_settings())
+
+        return self._session.run(
+            program_id=self._PROGRAM_ID,
+            inputs = inputs,
+            options=self.options,
+            result_decoder=SamplerResultDecoder
         )
 
-    def calculate_max_time(self, max_time: Optional[Union[int, str]] = None) -> int:
-        """Calculate max_time in seconds from hour minute seconds string. Ex: 2h 30m 40s"""
-        try:
-            return hms_to_seconds(max_time) if isinstance(max_time, str) else max_time
-        except IBMInputValueError as input_value_error:
-            raise IBMInputValueError(
-                "Invalid value given for max_time.", input_value_error.message
-            )
+    def _to_program_settings(self):
+        """Convert SamplerSettings to primitive program format."""
+        # TODO: Remove this once primitive program is updated to use optimization_level.
+        transpilation_settings = asdict(self.settings.transpilation)
+        transpilation_settings["optimization_settings"] = \
+            {"level": transpilation_settings["optimization_level"]}
+        return {
+            "resilience_settings": asdict(self.settings.resilience),
+            "transpilation_settings": transpilation_settings}
 
     def _call(
         self,
@@ -268,6 +352,17 @@ class Sampler(BaseSampler):
         Returns:
             An instance of :class:`qiskit.primitives.SamplerResult`.
         """
+        issue_deprecation_msg(
+            msg="Calling a Sampler instance directly has been deprecated ",
+            version="0.7",
+            remedy="Please use qiskit_ibm_runtime.Session and Sampler.run() instead.")
+
+        if not isinstance(self._session, RuntimeSession):
+            raise ValueError("The run method is only supported when "
+                "qiskit_ibm_runtime.RuntimeSession is used ",
+                "(e.g. when Sampler is used as a context manager)."
+                )
+
         self._session.write(
             circuit_indices=circuits,
             parameter_values=parameter_values,
@@ -282,3 +377,22 @@ class Sampler(BaseSampler):
     def close(self) -> None:
         """Close the session and free resources"""
         self._session.close()
+
+@dataclass
+class SamplerSettings:
+    """Sampler settings."""
+
+    transpilation: Transpilation = Transpilation()
+    resilience: Resilience = Resilience()
+
+
+class SamplerResultDecoder(ResultDecoder):
+
+    @classmethod
+    def decode(cls, raw_result: str):
+        """Convert the result to SamplerResult."""
+        raw_result = super().decode(raw_result)
+        return SamplerResult(
+            quasi_dists=raw_result["quasi_dists"],
+            metadata=raw_result["metadata"],
+        )
