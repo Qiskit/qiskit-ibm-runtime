@@ -65,7 +65,8 @@ class Session:
         """Session constructor.
         Args:
             service: Optional instance of :class:`qiskit_ibm_runtime.QiskitRuntimeService` class,
-                defaults to `QiskitRuntimeService()` which tries to initialize your default saved account.
+                defaults to `QiskitRuntimeService()` which tries to initialize
+                your default saved account.
             max_time: (EXPERIMENTAL setting, can break between releases without warning)
                 Maximum amount of time, a runtime session can be open before being
                 forcibly closed. Can be specified as seconds (int) or a string like "2h 30m 40s".
@@ -176,7 +177,15 @@ class Session:
             session=self,
         )
 
-    def estimator() -> Estimator:
+    def estimator(self) -> Estimator:
+        """Return an instance of the Estimator primitive.
+
+        Raises:
+            NotImplementedError: TBD.
+
+        Returns:
+            Estimator: TBD.
+        """
         raise NotImplementedError("Under construction")
 
     def close(self) -> None:

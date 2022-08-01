@@ -158,8 +158,8 @@ class BaseSampler(ABC):
     def __new__(  # pylint: disable=unused-argument
         cls,
         circuits: Iterable[QuantumCircuit] | QuantumCircuit | None = None,
-        *args: Any,
         parameters: Iterable[Iterable[Parameter]] | None = None,
+        *args: Any,
         **kwargs: Any,
     ) -> BaseSampler:
 

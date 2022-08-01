@@ -18,6 +18,7 @@ from dataclasses import dataclass, asdict
 
 from qiskit.circuit import QuantumCircuit, Parameter
 
+from qiskit_ibm_runtime import session as new_session  # pylint: disable=unused-import
 # TODO import BaseSampler and SamplerResult from terra once released
 from .qiskit.primitives import BaseSampler, SamplerResult
 from .qiskit_runtime_service import QiskitRuntimeService
@@ -27,7 +28,6 @@ from .program.result_decoder import ResultDecoder
 from .runtime_session import RuntimeSession
 from .runtime_job import RuntimeJob
 from .utils.deprecation import deprecate_arguments, issue_deprecation_msg
-from qiskit_ibm_runtime import session
 
 
 class Sampler(BaseSampler):
@@ -91,7 +91,7 @@ class Sampler(BaseSampler):
         skip_transpilation: Optional[bool] = False,
         transpilation_settings: Optional[Union[Dict, Transpilation]] = None,
         resilience_settings: Optional[Union[Dict, Resilience]] = None,
-        session: Optional["session.Session"] = None,
+        session: Optional["new_session.Session"] = None,
     ):
         """Initializes the Sampler primitive.
 
@@ -171,7 +171,7 @@ class Sampler(BaseSampler):
             deprecate_arguments(
                 "skip_transpilation",
                 "0.7",
-                f"Instead, use the skip_transpilation keyward argument in transpilation_settings.",
+                "Instead, use the skip_transpilation keyward argument in transpilation_settings.",
             )
 
         transpilation_settings = transpilation_settings or {}
@@ -225,7 +225,7 @@ class Sampler(BaseSampler):
         """Submit a request to the sampler primitive program.
 
         Args:
-            circuits: a (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
+            circuits: A (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
                 a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
 
             parameters: A list of parameters of the quantum circuits
@@ -237,19 +237,22 @@ class Sampler(BaseSampler):
 
             **run_options: A collection of kwargs passed to `backend.run()`.
 
-                shots: Number of repetitions of each circuit, for sampling.
-                qubit_lo_freq: List of default qubit LO frequencies in Hz.
-                meas_lo_freq: List of default measurement LO frequencies in Hz.
-                schedule_los: Experiment LO configurations, frequencies are given in Hz.
-                rep_delay: Delay between programs in seconds. Only supported on certain
+                * shots: Number of repetitions of each circuit, for sampling.
+                * qubit_lo_freq: List of default qubit LO frequencies in Hz.
+                * meas_lo_freq: List of default measurement LO frequencies in Hz.
+                * schedule_los: Experiment LO configurations, frequencies are given in Hz.
+                * rep_delay: Delay between programs in seconds. Only supported on certain
                     backends (if ``backend.configuration().dynamic_reprate_enabled=True``).
-                init_qubits: Whether to reset the qubits to the ground state for each shot.
-                use_measure_esp: Whether to use excited state promoted (ESP) readout for measurements
+                * init_qubits: Whether to reset the qubits to the ground state for each shot.
+                * use_measure_esp: Whether to use excited state promoted (ESP) readout for measurements
                     which are the terminal instruction to a qubit. ESP readout can offer higher fidelity
                     than standard measurement sequences.
 
         Returns:
             Submitted job.
+
+        Raises:
+            ValueError: If the input values are invalid.
         """
 
         if isinstance(self._session, RuntimeSession):
@@ -365,7 +368,12 @@ class Sampler(BaseSampler):
         self._session.close()
 
     @classmethod
-    def default_settings(cls):
+    def default_settings(cls) -> SamplerSettings:
+        """Return the default settings.
+
+        Returns:
+            Default Sampler settings.
+        """
         return SamplerSettings()
 
 

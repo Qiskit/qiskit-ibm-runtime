@@ -54,7 +54,8 @@ class RuntimeOptions:
                 self.backend = self.backend.name
             elif not isinstance(self.backend, str):
                 raise IBMInputValueError(
-                    f"Invalid backend type {type(self.backend)} specified. It should be either the string name of the "
+                    f"Invalid backend type {type(self.backend)} specified. "
+                    "It should be either the string name of the "
                     "backend or an instance of 'IBMBackend' class"
                 )
 
