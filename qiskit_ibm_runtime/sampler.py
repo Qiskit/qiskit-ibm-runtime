@@ -387,6 +387,8 @@ class SamplerSettings:
 
 
 class SamplerResultDecoder(ResultDecoder):
+    """Class used to decode sampler results."""
+
     @classmethod
     def decode(cls, raw_result: str):
         """Convert the result to SamplerResult."""

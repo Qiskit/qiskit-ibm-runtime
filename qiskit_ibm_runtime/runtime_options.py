@@ -36,19 +36,22 @@ class RuntimeOptions:
             The default level is ``WARNING``.
     """
 
-    backend_name: field(repr=False, default=None)
-    backend: Optional[str] = None
-    image: Optional[str] = None
-    log_level: Optional[str] = None
-
-    def __post_init__(self):
-        if self.backend_name:
+    def __init__(
+        self,
+        backend_name: Optional[str] = None,
+        backend: Optional[str] = None,
+        image: Optional[str] = None,
+        log_level: Optional[str] = None,
+    ) -> None:
+        # TODO: We can go back to a proper dataclass once backend_name is removed.
+        if backend_name:
             deprecate_arguments(
                 deprecated="backend_name",
                 version="0.7",
                 remedy='Please use "backend" instead.',
             )
-        self.backend = self.backend or self.backend_name
+
+        self.backend = backend or backend_name
         if self.backend is not None:
             if isinstance(self.backend, IBMBackend):
                 self.backend = self.backend.name
@@ -58,6 +61,8 @@ class RuntimeOptions:
                     "It should be either the string name of the "
                     "backend or an instance of 'IBMBackend' class"
                 )
+        self.image = image
+        self.log_level = log_level
 
     def validate(self, channel: str) -> None:
         """Validate options.
@@ -74,9 +79,9 @@ class RuntimeOptions:
         ):
             raise IBMInputValueError('"image" needs to be in form of image_name:tag')
 
-        if channel == "ibm_quantum" and not self.backend_name:
+        if channel == "ibm_quantum" and not self.backend:
             raise IBMInputValueError(
-                '"backend_name" is required field in "options" for ``ibm_quantum`` runtime.'
+                '"backend" is required field in "options" for ``ibm_quantum`` runtime.'
             )
 
         if self.log_level and not isinstance(
@@ -109,3 +114,9 @@ class RuntimeOptions:
             remedy="Please use backend instead.",
         )
         self.backend = backend
+
+    def __repr__(self):
+        return (
+            f"{self.__class__.__name__}"
+            f"(backend={self.backend}, image={self.image}, log_level={self.log_level})"
+        )
