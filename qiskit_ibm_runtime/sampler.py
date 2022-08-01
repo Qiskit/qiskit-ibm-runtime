@@ -18,7 +18,8 @@ from dataclasses import dataclass, asdict
 
 from qiskit.circuit import QuantumCircuit, Parameter
 
-from qiskit_ibm_runtime import session as new_session  # pylint: disable=unused-import
+# pylint: disable=unused-import,cyclic-import
+from qiskit_ibm_runtime import session as new_session
 
 # TODO import BaseSampler and SamplerResult from terra once released
 from .qiskit.primitives import BaseSampler, SamplerResult
@@ -151,6 +152,8 @@ class Sampler(BaseSampler):
                     * 0: no resilience
                     * 1: light resilience
                     If ``None``, level 0 will be chosen as default.
+
+            session: Session in which to call the sampler primitive.
 
         Raises:
             IBMInputValueError: If an input value is invalid.
