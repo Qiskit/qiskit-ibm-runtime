@@ -12,6 +12,7 @@
 
 """Sampler primitive."""
 
+from __future__ import annotations
 from typing import Dict, Iterable, Optional, Sequence, Any, Union
 from dataclasses import dataclass, asdict
 
@@ -24,7 +25,6 @@ from .settings import Transpilation, Resilience
 from .runtime_options import RuntimeOptions
 from .program.result_decoder import ResultDecoder
 from .runtime_session import RuntimeSession
-from .utils.converters import hms_to_seconds
 from .runtime_job import RuntimeJob
 from .utils.deprecation import deprecate_arguments, issue_deprecation_msg
 from qiskit_ibm_runtime import session
@@ -36,73 +36,26 @@ class Sampler(BaseSampler):
     Qiskit Runtime Sampler primitive service calculates probabilities or quasi-probabilities
     of bitstrings from quantum circuits.
 
-    Sampler can be initialized with following parameters.
+    The :meth:`run` method can be used to submit circuits and parameters to the Sampler primitive.
 
-    * circuits: a (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
-        a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
-
-    * parameters: a list of parameters of the quantum circuits.
-        (:class:`~qiskit.circuit.parametertable.ParameterView` or
-        a list of :class:`~qiskit.circuit.Parameter`) specifying the order
-        in which parameter values will be bound.
-
-    * skip_transpilation: Transpilation is skipped if set to True.
-        False by default.
-
-    * service: Optional instance of :class:`qiskit_ibm_runtime.QiskitRuntimeService` class,
-        defaults to `QiskitRuntimeService()` which tries to initialize your default saved account.
-
-    * options: Runtime options that control the execution environment.
-
-        * backend: Optional instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
-            string name of backend, if not specified a backend will be selected
-            automatically (IBM Cloud only).
-        * image: the runtime image used to execute the program, specified in
-            the form of ``image_name:tag``. Not all accounts are
-            authorized to select a different image.
-        * log_level: logging level to set in the execution environment. The valid
-            log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
-            The default level is ``WARNING``.
-
-    The returned instance can be called repeatedly with the following parameters to
-    calculate probabilities or quasi-probabilities.
-
-    * circuits: a (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
-        a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or a list of
-        circuit indices.
-
-    * parameter_values: An optional list of concrete parameters to be bound.
-
-    * circuit_indices: (DEPRECATED) A list of circuit indices.
-
-    All the above lists should be of the same length.
+    You are encourage to use :class:`~qiskit_ibm_runtime.Session` to open a session,
+    during which you can invoke one or more primitive programs. Jobs sumitted within a session
+    are prioritized by the scheduler, and data is cached for efficiency.
 
     Example::
 
         from qiskit import QuantumCircuit
         from qiskit.circuit.library import RealAmplitudes
 
-        from qiskit_ibm_runtime import QiskitRuntimeService, Sampler
+        from qiskit_ibm_runtime import QiskitRuntimeService, Session
 
         service = QiskitRuntimeService(channel="ibm_cloud")
-        options = { "backend": "ibmq_qasm_simulator" }
 
+        # Bell circuit
         bell = QuantumCircuit(2)
         bell.h(0)
         bell.cx(0, 1)
         bell.measure_all()
-
-        # executes a Bell circuit
-        with Sampler(circuits=[bell], service=service, options=options) as sampler:
-            # pass circuits as indices
-            result = sampler(circuits=[0], parameter_values=[[]])
-            print(result)
-
-        # executes three Bell circuits
-        with Sampler(circuits=[bell]*3, service=service, options=options) as sampler:
-            # alternatively you can also pass circuits as objects
-            result = sampler(circuits=[bell]*3, parameter_values=[[]]*3)
-            print(result)
 
         # parameterized circuit
         pqc = RealAmplitudes(num_qubits=2, reps=2)
@@ -114,9 +67,17 @@ class Sampler(BaseSampler):
         theta2 = [1, 2, 3, 4, 5, 6]
         theta3 = [0, 1, 2, 3, 4, 5, 6, 7]
 
-        with Sampler(circuits=[pqc, pqc2], service=service, options=options) as sampler:
-            result = sampler(circuits=[0, 0, 1], parameter_values=[theta1, theta2, theta3])
-            print(result)
+        with Session(service) as session:
+            sampler = session.sampler()
+            sampler.options.backend = "ibmq_qasm_simulator"
+            sampler.settings.transpilation.optimization_level = 1
+            job1 = sampler.run(bell)
+            print(f"Bell job ID: {job1.job_id}")
+            print(f"Bell result:" {job1.result()})
+
+            job2 = sampler.run(circuits=[pqc, pqc2], parameter_values=[theta1, theta2, theta3])
+            print(f"RealAmplitudes job ID: {job2.job_id}")
+            print(f"RealAmplitudes result:" {job2.result()})
     """
 
     _PROGRAM_ID = "sampler"
@@ -323,6 +284,24 @@ class Sampler(BaseSampler):
             "resilience_settings": asdict(self.settings.resilience),
             "transpilation_settings": transpilation_settings}
 
+    def __call__(
+        self,
+        circuits: Sequence[int | QuantumCircuit],
+        parameter_values: Sequence[Sequence[float]] | None = None,
+        **run_options: Any
+    ) -> SamplerResult:
+        issue_deprecation_msg(
+            msg="Calling a Sampler instance directly has been deprecated ",
+            version="0.7",
+            remedy="Please use qiskit_ibm_runtime.Session and Sampler.run() instead.")
+
+        if not isinstance(self._session, RuntimeSession):
+            raise ValueError("The run method is only supported when "
+                "qiskit_ibm_runtime.RuntimeSession is used ",
+                "(e.g. when Sampler is used as a context manager)."
+                )
+        return super().__call__(circuits, parameter_values, **run_options)
+
     def _call(
         self,
         circuits: Sequence[int],
@@ -352,16 +331,6 @@ class Sampler(BaseSampler):
         Returns:
             An instance of :class:`qiskit.primitives.SamplerResult`.
         """
-        issue_deprecation_msg(
-            msg="Calling a Sampler instance directly has been deprecated ",
-            version="0.7",
-            remedy="Please use qiskit_ibm_runtime.Session and Sampler.run() instead.")
-
-        if not isinstance(self._session, RuntimeSession):
-            raise ValueError("The run method is only supported when "
-                "qiskit_ibm_runtime.RuntimeSession is used ",
-                "(e.g. when Sampler is used as a context manager)."
-                )
 
         self._session.write(
             circuit_indices=circuits,
@@ -377,6 +346,10 @@ class Sampler(BaseSampler):
     def close(self) -> None:
         """Close the session and free resources"""
         self._session.close()
+
+    @classmethod
+    def default_settings(cls):
+        return SamplerSettings()
 
 @dataclass
 class SamplerSettings:

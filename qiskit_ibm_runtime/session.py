@@ -53,8 +53,8 @@ class Session:
             sampler.options.backend = "ibmq_qasm_simulator"
             sampler.settings.transpilation.optimization_level = 1
             job = sampler.run(circ)
-            print(f"Job ID: {job.job_id}")
-            print(job.result())
+            print(f"Sampler job ID: {job.job_id}")
+            print(f"Sampler job result:" {job.result()})
     """
 
     def __init__(

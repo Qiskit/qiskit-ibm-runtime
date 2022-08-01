@@ -14,7 +14,7 @@
 
 import re
 import logging
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional, Union
 
 from .exceptions import IBMInputValueError
@@ -22,12 +22,12 @@ from .ibm_backend import IBMBackend
 from .utils.deprecation import deprecate_arguments
 
 
-@dataclass(init=False, repr=True)
+@dataclass
 class RuntimeOptions:
     """Class for representing runtime execution options.
 
     Args:
-        backend_name: target backend to run on. This is required for ``ibm_quantum`` runtime.
+        backend: target backend to run on. This is required for ``ibm_quantum`` runtime.
         image: the runtime image used to execute the program, specified in
             the form of ``image_name:tag``. Not all accounts are
             authorized to select a different image.
@@ -36,27 +36,23 @@ class RuntimeOptions:
             The default level is ``WARNING``.
     """
 
-    def __init__(
-        self,
-        backend_name: Optional[str] = None,
-        backend: Optional[str] = None,
-        image: Optional[str] = None,
-        log_level: Optional[str] = None
-    ) -> None:
-        if backend_name:
+    backend_name: field(repr=False, default=None)
+    backend: Optional[str] = None
+    image: Optional[str] = None
+    log_level: Optional[str] = None
+
+    def __post_init__(self):
+        if self.backend_name:
             deprecate_arguments(deprecated="backend_name", version="0.7", remedy="Please use \"backend\" instead.")
-
-        self.backend = backend or backend_name
-        if isinstance(self.backend, IBMBackend):
-            self.backend = self.backend.name
-        elif not isinstance(self.backend, str):
-            raise IBMInputValueError(
-                f"Invalid backend type {type(self.backend)} specified. It should be either the string name of the "
-                "backend or an instance of 'IBMBackend' class"
-            )
-
-        self.image = image
-        self.log_level = log_level
+        self.backend = self.backend or self.backend_name
+        if self.backend is not None:
+            if isinstance(self.backend, IBMBackend):
+                self.backend = self.backend.name
+            elif not isinstance(self.backend, str):
+                raise IBMInputValueError(
+                    f"Invalid backend type {type(self.backend)} specified. It should be either the string name of the "
+                    "backend or an instance of 'IBMBackend' class"
+                )
 
     def validate(self, channel: str) -> None:
         """Validate options.
