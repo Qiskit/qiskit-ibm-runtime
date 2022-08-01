@@ -19,6 +19,7 @@ from dataclasses import dataclass, asdict
 from qiskit.circuit import QuantumCircuit, Parameter
 
 from qiskit_ibm_runtime import session as new_session  # pylint: disable=unused-import
+
 # TODO import BaseSampler and SamplerResult from terra once released
 from .qiskit.primitives import BaseSampler, SamplerResult
 from .qiskit_runtime_service import QiskitRuntimeService
