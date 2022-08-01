@@ -179,22 +179,27 @@ class Sampler(BaseSampler):
             )
 
         transpilation_settings = transpilation_settings or {}
-        skip_transp = transpilation_settings.pop(
-            "skip_transpilation", skip_transpilation
-        )
-        transpilation_settings = Transpilation(
-            skip_transpilation=skip_transp, **transpilation_settings
-        )
+        if isinstance(transpilation_settings, Dict):
+            skip_transp = transpilation_settings.pop(
+                "skip_transpilation", skip_transpilation
+            )
+            transpilation_settings = Transpilation(
+                skip_transpilation=skip_transp, **transpilation_settings
+            )
         resilience_settings = resilience_settings or {}
-        resilience_settings = Resilience(**resilience_settings)
+        if isinstance(resilience_settings, Dict):
+            resilience_settings = Resilience(**resilience_settings)
 
         self.settings = SamplerSettings(
             transpilation=transpilation_settings, resilience=resilience_settings
         )
         options = options or {}
         # TODO: Having options and run_options is very confusing. Can we combine the two?
-        self.options = RuntimeOptions(**options)
+        if not isinstance(options, RuntimeOptions):
+            options = RuntimeOptions(**options)
+        self.options = options
 
+        self._session: Union[new_session.Session, RuntimeSession] = None
         if session:
             self._session = session
         else:
@@ -274,9 +279,13 @@ class Sampler(BaseSampler):
                 "The circuits parameter has to be instances of QuantumCircuit."
             )
 
-        circuit_indices = (
-            list(range(len(circuits))) if isinstance(circuits, Iterable) else [0]
-        )
+        if not isinstance(circuits, Iterable):
+            circ_count = 1
+        elif hasattr(circuits, "__len__"):
+            circ_count = len(circuits)  # type: ignore[arg-type]
+        else:
+            circ_count = sum(1 for _ in circuits)
+        circuit_indices = list(range(circ_count))
 
         inputs = {
             "circuits": circuits,
@@ -294,8 +303,12 @@ class Sampler(BaseSampler):
             result_decoder=SamplerResultDecoder,
         )
 
-    def _to_program_settings(self):
-        """Convert SamplerSettings to primitive program format."""
+    def _to_program_settings(self) -> Dict:
+        """Convert SamplerSettings to primitive program format.
+
+        Returns:
+            Settings in the format expected by the primitive program.
+        """
         # TODO: Remove this once primitive program is updated to use optimization_level.
         transpilation_settings = asdict(self.settings.transpilation)
         transpilation_settings["optimization_settings"] = {
@@ -356,12 +369,12 @@ class Sampler(BaseSampler):
             An instance of :class:`qiskit.primitives.SamplerResult`.
         """
 
-        self._session.write(
+        self._session.write(  # type: ignore[union-attr]
             circuit_indices=circuits,
             parameter_values=parameter_values,
             run_options=run_options,
         )
-        raw_result = self._session.read()
+        raw_result = self._session.read()  # type: ignore[union-attr]
         return SamplerResult(
             quasi_dists=raw_result["quasi_dists"],
             metadata=raw_result["metadata"],
@@ -393,10 +406,10 @@ class SamplerResultDecoder(ResultDecoder):
     """Class used to decode sampler results."""
 
     @classmethod
-    def decode(cls, raw_result: str):
+    def decode(cls, raw_result: str) -> SamplerResult:
         """Convert the result to SamplerResult."""
-        raw_result = super().decode(raw_result)
+        decoded: Dict = super().decode(raw_result)
         return SamplerResult(
-            quasi_dists=raw_result["quasi_dists"],
-            metadata=raw_result["metadata"],
+            quasi_dists=decoded["quasi_dists"],
+            metadata=decoded["metadata"],
         )

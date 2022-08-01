@@ -134,7 +134,7 @@ class BaseSampler(ABC):
             QiskitError: For mismatch of circuits and parameters list.
         """
         if circuits is None:
-            self._circuits = tuple()
+            self._circuits: tuple = tuple()
             return
 
         if isinstance(circuits, QuantumCircuit):

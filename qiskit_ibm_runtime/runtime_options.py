@@ -115,7 +115,7 @@ class RuntimeOptions:
         )
         self.backend = backend
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (
             f"{self.__class__.__name__}"
             f"(backend={self.backend}, image={self.image}, log_level={self.log_level})"

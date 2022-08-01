@@ -12,11 +12,14 @@
 
 """Deprecation utilities"""
 
+from typing import Callable, Any
 import functools
 import warnings
 
 
-def deprecate_function(deprecated: str, version: str, remedy: str, stacklevel: int = 2):
+def deprecate_function(
+    deprecated: str, version: str, remedy: str, stacklevel: int = 2
+) -> Callable:
     """Emit a warning prior to calling decorated function.
     Args:
         deprecated: Function being deprecated.
@@ -25,12 +28,12 @@ def deprecate_function(deprecated: str, version: str, remedy: str, stacklevel: i
         stacklevel: The warning stackevel to use.
 
     Returns:
-        Callable: The decorated, deprecated callable.
+        The decorated, deprecated callable.
     """
 
-    def decorator(func):
+    def decorator(func: Callable) -> Callable:
         @functools.wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: Any, **kwargs: Any) -> Callable:
             issue_deprecation_msg(
                 f"The {deprecated} method is deprecated",
                 version,
@@ -63,7 +66,9 @@ def deprecate_arguments(
     )
 
 
-def issue_deprecation_msg(msg: str, version: str, remedy: str, stacklevel: int = 2):
+def issue_deprecation_msg(
+    msg: str, version: str, remedy: str, stacklevel: int = 2
+) -> None:
     """Emit a deprecation warning.
 
     Args:
