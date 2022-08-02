@@ -15,6 +15,7 @@
 from typing import Dict, Iterable, Optional, Sequence, Any, Union
 
 from qiskit.circuit import QuantumCircuit, Parameter
+from qiskit.result import QuasiDistribution
 
 # TODO import BaseSampler and SamplerResult from terra once released
 from .qiskit.primitives import BaseSampler, SamplerResult
@@ -274,8 +275,9 @@ class Sampler(BaseSampler):
             run_options=run_options,
         )
         raw_result = self._session.read()
+        quasi_dists = [QuasiDistribution(datum) for datum in raw_result["quasi_dists"]]
         return SamplerResult(
-            quasi_dists=raw_result["quasi_dists"],
+            quasi_dists=quasi_dists,
             metadata=raw_result["metadata"],
         )
 
