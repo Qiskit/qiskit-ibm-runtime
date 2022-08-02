@@ -186,7 +186,7 @@ def _write_waveform(file_obj, data):  # type: ignore[no-untyped-def]
         formats.WAVEFORM_PACK,
         data.epsilon,
         len(samples_bytes),
-        data.limit_amplitude,
+        data._limit_amplitude,
     )
     file_obj.write(header)
     file_obj.write(samples_bytes)
@@ -215,7 +215,7 @@ def _write_symbolic_pulse(file_obj, data):  # type: ignore[no-untyped-def]
         len(envelope_bytes),
         len(constraints_bytes),
         len(valid_amp_conditions_bytes),
-        data.limit_amplitude,
+        data._limit_amplitude,
     )
     file_obj.write(header_bytes)
     file_obj.write(pulse_type_bytes)
