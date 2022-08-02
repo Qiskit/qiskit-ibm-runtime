@@ -214,7 +214,7 @@ class Sampler(BaseSampler):
             }
             inputs.update(self._to_program_settings())
 
-            # Cannot use the new Session or will get circuilar import.
+            # Cannot use the new Session or will get circular import.
             self._session = RuntimeSession(
                 service=service,
                 program_id=self._PROGRAM_ID,
