@@ -14,6 +14,7 @@
 
 from typing import Iterable, Optional, Dict, Sequence, Any, Union
 
+import numpy as np
 from qiskit.circuit import QuantumCircuit, Parameter
 from qiskit.quantum_info import SparsePauliOp
 
@@ -302,7 +303,7 @@ class Estimator(BaseEstimator):
         )
         raw_result = self._session.read()
         return EstimatorResult(
-            values=raw_result["values"],
+            values=np.asarray(raw_result["values"]),
             metadata=raw_result["metadata"],
         )
 
