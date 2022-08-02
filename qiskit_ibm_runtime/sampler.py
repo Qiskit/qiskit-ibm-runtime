@@ -154,9 +154,6 @@ class Sampler(BaseSampler):
                     If ``None``, level 0 will be chosen as default.
 
             session: Session in which to call the sampler primitive.
-
-        Raises:
-            IBMInputValueError: If an input value is invalid.
         """
         # TODO: Fix base classes once done
         super().__init__(
@@ -175,7 +172,7 @@ class Sampler(BaseSampler):
             deprecate_arguments(
                 "skip_transpilation",
                 "0.7",
-                "Instead, use the skip_transpilation keyward argument in transpilation_settings.",
+                "Instead, use the skip_transpilation keyword argument in transpilation_settings.",
             )
 
         transpilation_settings = transpilation_settings or {}
