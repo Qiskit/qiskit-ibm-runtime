@@ -757,6 +757,8 @@ class QiskitRuntimeService:
                     # if the number of cached programs is greater than the sum of limit and skip
                     break
                 offset += len(program_page)
+        if limit is None:
+            limit = len(self._programs)
         return list(self._programs.values())[skip : limit + skip]
 
     def program(self, program_id: str, refresh: bool = False) -> RuntimeProgram:
