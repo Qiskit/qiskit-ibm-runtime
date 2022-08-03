@@ -437,3 +437,7 @@ class ParameterNamespace(SimpleNamespace):
             "-" * len(header),
             params_str,
         )
+
+    def to_dict(self) -> Dict:
+        """Convert to dictionary."""
+        return self.__program_params

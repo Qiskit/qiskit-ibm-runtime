@@ -121,7 +121,7 @@ class BaseSampler(ABC):
 
     def __init__(
         self,
-        circuits: Iterable[QuantumCircuit] | QuantumCircuit,
+        circuits: Iterable[QuantumCircuit] | QuantumCircuit | None,
         parameters: Iterable[Iterable[Parameter]] | None = None,
     ):
         """
@@ -133,6 +133,10 @@ class BaseSampler(ABC):
         Raises:
             QiskitError: For mismatch of circuits and parameters list.
         """
+        if circuits is None:
+            self._circuits: tuple = tuple()
+            return
+
         if isinstance(circuits, QuantumCircuit):
             circuits = (circuits,)
         self._circuits = tuple(circuits)
@@ -153,13 +157,17 @@ class BaseSampler(ABC):
 
     def __new__(  # pylint: disable=unused-argument
         cls,
-        circuits: Iterable[QuantumCircuit] | QuantumCircuit,
         *args: Any,
+        circuits: Iterable[QuantumCircuit] | QuantumCircuit | None = None,
         parameters: Iterable[Iterable[Parameter]] | None = None,
         **kwargs: Any,
     ) -> BaseSampler:
 
         self = super().__new__(cls)
+        if circuits is None:
+            self._circuit_ids = []
+            return self
+
         if isinstance(circuits, Iterable):
             circuits = copy(circuits)
             self._circuit_ids = [id(circuit) for circuit in circuits]

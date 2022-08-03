@@ -49,6 +49,7 @@ from .utils.hgp import to_instance_format, from_instance_format
 from .utils.utils import validate_job_tags
 from .api.client_parameters import ClientParameters
 from .runtime_options import RuntimeOptions
+from .utils.deprecation import deprecate_function
 
 logger = logging.getLogger(__name__)
 
@@ -89,7 +90,7 @@ class QiskitRuntimeService:
         }
 
         # Configure backend options
-        options = {'backend_name': "ibmq_qasm_simulator"}
+        options = {'backend': "ibmq_qasm_simulator"}
 
         # Execute the circuit using the "sampler" program.
         job = service.run(program_id="sampler",
@@ -890,15 +891,15 @@ class QiskitRuntimeService:
         hgp_name = None
         if self._channel == "ibm_quantum":
             # Find the right hgp
-            hgp = self._get_hgp(instance=instance, backend_name=options.backend_name)
-            backend = hgp.backend(options.backend_name)
+            hgp = self._get_hgp(instance=instance, backend_name=options.backend)
+            backend = hgp.backend(options.backend)
             hgp_name = hgp.name
 
         result_decoder = result_decoder or ResultDecoder
         try:
             response = self._api_client.program_run(
                 program_id=program_id,
-                backend_name=options.backend_name,
+                backend_name=options.backend,
                 params=inputs,
                 image=options.image,
                 hgp=hgp_name,
@@ -931,6 +932,11 @@ class QiskitRuntimeService:
         )
         return job
 
+    @deprecate_function(
+        "QiskitRuntimeService.open",
+        "0.7",
+        "Instead, use the qiskit_ibm_runtime.Session class to create a runtime session.",
+    )
     def open(
         self,
         program_id: str,

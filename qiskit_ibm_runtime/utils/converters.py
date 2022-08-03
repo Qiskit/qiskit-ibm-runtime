@@ -137,11 +137,12 @@ def duration_difference(date_time: datetime) -> str:
     return time_str
 
 
-def hms_to_seconds(hms: str) -> int:
+def hms_to_seconds(hms: str, msg_prefix: str = "") -> int:
     """Convert duration specified as hours minutes seconds to seconds.
 
     Args:
         hms: The string input duration (in hours minutes seconds). Ex: 2h 10m 20s
+        msg_prefix: Additional message to prefix the error.
 
     Returns:
         Total seconds (int) in the duration.
@@ -158,4 +159,4 @@ def hms_to_seconds(hms: str) -> int:
             timedelta(hours=hours, minutes=minutes, seconds=seconds).total_seconds()
         )
     except parser.ParserError as parser_error:
-        raise IBMInputValueError(str(parser_error))
+        raise IBMInputValueError(msg_prefix + str(parser_error))
