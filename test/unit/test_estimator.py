@@ -30,6 +30,6 @@ class TestEstimator(IBMTestCase):
 
     def test_estimator_old_session_new_call(self):
         """Test old session with new run method."""
-        with Estimator(circuits=MagicMock(), observables=MagicMock()) as estimator:
+        with Estimator(service=MagicMock()) as estimator:
             with self.assertRaises(ValueError):
                 estimator.run(circuits=MagicMock(), observables=MagicMock())
