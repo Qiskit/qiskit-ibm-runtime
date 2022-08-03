@@ -177,16 +177,62 @@ class Session:
             session=self,
         )
 
-    def estimator(self) -> Estimator:
+    def estimator(
+        self,
+        options: Optional[Union[Dict, RuntimeOptions]] = None,
+        transpilation_settings: Optional[Union[Dict, Transpilation]] = None,
+        resilience_settings: Optional[Union[Dict, Resilience]] = None,
+    ) -> Estimator:
         """Return an instance of the Estimator primitive.
 
-        Raises:
-            NotImplementedError: TBD.
+        Args:
+
+            options: Runtime options dictionary that control the execution environment:
+
+                * backend: Optional instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
+                    string name of backend, if not specified a backend will be selected
+                    automatically (IBM Cloud only).
+                * image: the runtime image used to execute the program, specified in
+                    the form of ``image_name:tag``. Not all accounts are
+                    authorized to select a different image.
+                * log_level: logging level to set in the execution environment. The valid
+                    log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
+                    The default level is ``WARNING``.
+
+            transpilation_settings: (EXPERIMENTAL setting, can break between releases without warning)
+                Qiskit transpiler settings. The transpilation process converts
+                operations in the circuit to those supported by the backend, swaps qubits with the
+                circuit to overcome limited qubit connectivity and some optimizations to reduce the
+                circuit's gate count where it can.
+
+                * optimization_level: How much optimization to perform on the circuits.
+                    Higher levels generate more optimized circuits,
+                    at the expense of longer transpilation times.
+                    * 0: no optimization
+                    * 1: light optimization (default)
+                    * 2: heavy optimization
+                    * 3: even heavier optimization
+
+            resilience_settings: (EXPERIMENTAL setting, can break between releases without warning)
+                Using these settings allows you to build resilient algorithms by
+                leveraging the state of the art error suppression, mitigation and correction techniques.
+
+                * level: How much resilience to build against errors.
+                    Higher levels generate more accurate results,
+                    at the expense of longer processing times.
+                    * 0: no resilience (default)
+                    * 1: light resilience
 
         Returns:
-            Estimator: TBD.
+            Estimator: an instance of the Estimator primitive.
         """
-        raise NotImplementedError("Under construction")
+        return Estimator(
+            service=self.service,
+            options=options,
+            transpilation_settings=transpilation_settings,
+            resilience_settings=resilience_settings,
+            session=self,
+        )
 
     def close(self) -> None:
         """Close the session."""

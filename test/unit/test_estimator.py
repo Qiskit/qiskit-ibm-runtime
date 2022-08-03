@@ -10,26 +10,26 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Tests for Sampler class."""
+"""Tests for Estimator class."""
 
 from unittest.mock import MagicMock
 
-from qiskit_ibm_runtime import Session, Sampler
+from qiskit_ibm_runtime import Session, Estimator
 from ..ibm_test_case import IBMTestCase
 
 
-class TestSampler(IBMTestCase):
-    """Class for testing the Sampler class."""
+class TestEstimator(IBMTestCase):
+    """Class for testing the Estimator class."""
 
-    def test_sampler_new_session_old_call(self):
-        """Test calling sampler with new session."""
+    def test_estimator_new_session_old_call(self):
+        """Test calling estimator with new session."""
         with Session(service=MagicMock()) as session:
-            sampler = session.sampler()
+            estimator = session.estimator()
             with self.assertRaises(ValueError):
-                sampler(circuits=MagicMock())
+                estimator(circuits=MagicMock(), observables=MagicMock())
 
-    def test_sampler_old_session_new_call(self):
+    def test_estimator_old_session_new_call(self):
         """Test old session with new run method."""
-        with Sampler(service=MagicMock()) as sampler:
+        with Estimator(circuits=MagicMock(), observables=MagicMock()) as estimator:
             with self.assertRaises(ValueError):
-                sampler.run(circuits=MagicMock())
+                estimator.run(circuits=MagicMock(), observables=MagicMock())
