@@ -30,6 +30,7 @@ from .exceptions import (
     RuntimeInvalidStateError,
     IBMRuntimeError,
     RuntimeJobTimeoutError,
+    RuntimeJobMaxTimeoutError,
 )
 from .program.result_decoder import ResultDecoder
 from .api.clients import RuntimeClient, RuntimeWebsocketClient, WebsocketClientCloseCode
@@ -174,14 +175,17 @@ class RuntimeJob:
 
         Raises:
             RuntimeJobFailureError: If the job failed.
-            RuntimeJobTimeoutError: If the job does not complete within given timeout.
+            RuntimeJobMaxTimeoutError: If the job does not complete within given timeout.
         """
         _decoder = decoder or self._result_decoder
         if self._results is None or (_decoder != self._result_decoder):
             self.wait_for_final_state(timeout=timeout)
             if self._status == JobStatus.ERROR:
+                error_message = self.error_message()
+                if self._reason == "RAN TOO LONG":
+                    raise RuntimeJobMaxTimeoutError(error_message)
                 raise RuntimeJobFailureError(
-                    f"Unable to retrieve job result. " f"{self.error_message()}"
+                    f"Unable to retrieve job result. " f"{error_message}"
                 )
             result_raw = self._api_client.job_results(job_id=self.job_id)
             self._results = _decoder.decode(result_raw) if result_raw else None
