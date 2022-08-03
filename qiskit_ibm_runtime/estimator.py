@@ -254,11 +254,6 @@ class Estimator(BaseEstimator):
 
             observables: a list of :class:`~qiskit.quantum_info.SparsePauliOp`
 
-            parameters: a list of parameters of the quantum circuits.
-                (:class:`~qiskit.circuit.parametertable.ParameterView` or
-                a list of :class:`~qiskit.circuit.Parameter`) specifying the order
-                in which parameter values will be bound.
-
             parameter_values: An optional list of concrete parameters to be bound.
 
             **run_options: A collection of kwargs passed to `backend.run()`.
