@@ -75,11 +75,11 @@ class Sampler(BaseSampler):
             sampler.settings.transpilation.optimization_level = 1
             job1 = sampler.run(bell)
             print(f"Bell job ID: {job1.job_id}")
-            print(f"Bell result:" {job1.result()})
+            print(f"Bell result: {job1.result()}")
 
-            job2 = sampler.run(circuits=[pqc, pqc2], parameter_values=[theta1, theta2, theta3])
+            job2 = sampler.run(circuits=[pqc, pqc, pqc2], parameter_values=[theta1, theta2, theta3])
             print(f"RealAmplitudes job ID: {job2.job_id}")
-            print(f"RealAmplitudes result:" {job2.result()})
+            print(f"RealAmplitudes result: {job2.result()}")
     """
 
     _PROGRAM_ID = "sampler"

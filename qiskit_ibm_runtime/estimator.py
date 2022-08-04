@@ -12,7 +12,7 @@
 
 """Estimator primitive."""
 
-from dataclasses import asdict
+from dataclasses import dataclass, asdict
 from typing import Iterable, Optional, Dict, Sequence, Any, Union
 
 from qiskit.circuit import QuantumCircuit, Parameter
@@ -74,27 +74,25 @@ class Estimator(BaseEstimator):
             theta3 = [1, 2, 3, 4, 5, 6]
 
             # calculate [ <psi1(theta1)|H1|psi1(theta1)> ]
-            # pass circuits and observables as indices
-            psi1_H1 = estimator.run(psi1, H1, theta1)
+            psi1_H1 = estimator.run(circuits=[psi1], observables=[H1], parameter_values=[theta1])
             print(psi1_H1.result())
 
             # calculate [ <psi1(theta1)|H2|psi1(theta1)>, <psi1(theta1)|H3|psi1(theta1)> ]
-            # alternatively you can also pass circuits and observables as objects
-            psi1_H23 = estimator.run([psi1, psi1], [H2, H3], [theta1]*2)
+            psi1_H23 = estimator.run(circuits=[psi1, psi1], observables=[H2, H3], parameter_values=[theta1]*2)
             print(psi1_H23.result())
 
             # calculate [ <psi2(theta2)|H2|psi2(theta2)> ]
-            psi2_H2 = estimator.run([psi2], [H2], [theta2])
+            psi2_H2 = estimator.run(circuits=[psi2], observables=[H2], parameter_values=[theta2])
             print(psi2_H2.result())
 
             # calculate [ <psi1(theta1)|H1|psi1(theta1)>, <psi1(theta3)|H1|psi1(theta3)> ]
-            psi1_H1_job = estimator.run([psi1, psi1], [H1, H1], [theta1, theta3])
+            psi1_H1_job = estimator.run(circuits=[psi1, psi1], observables=[H1, H1], parameter_values=[theta1, theta3])
             print(psi1_H1_job.result())
 
             # calculate [ <psi1(theta1)|H1|psi1(theta1)>,
             #             <psi2(theta2)|H2|psi2(theta2)>,
             #             <psi1(theta3)|H3|psi1(theta3)> ]
-            psi12_H23 = estimator.run([psi1, psi2, psi1], [H1, H2, H3], [theta1, theta2, theta3])
+            psi12_H23 = estimator.run(circuits=[psi1, psi2, psi1], observables=[H1, H2, H3], parameter_values=[theta1, theta2, theta3])
             print(psi12_H23.result())
     """
 
@@ -201,17 +199,20 @@ class Estimator(BaseEstimator):
             skip_transp = transpilation_settings.pop(
                 "skip_transpilation", skip_transpilation
             )
-            self._transpilation_settings = Transpilation(
+            transpilation_settings = Transpilation(
                 skip_transpilation=skip_transp, **transpilation_settings
             )
         resilience_settings = resilience_settings or {}
         if isinstance(resilience_settings, Dict):
-            self._resilience_settings = Resilience(**resilience_settings)
+            resilience_settings = Resilience(**resilience_settings)
+        self.settings = EstimatorSettings(
+            transpilation=transpilation_settings, resilience=resilience_settings
+        )
 
         options = options or {}
         if not isinstance(options, RuntimeOptions):
             options = RuntimeOptions(**options)
-        self._options = options
+        self.options = options
 
         self._session: Union[new_session.Session, RuntimeSession] = None
         if session:
@@ -227,14 +228,14 @@ class Estimator(BaseEstimator):
                 "observables": observables,
                 "parameters": parameters,
             }
-            inputs.update(self._get_settings())
+            inputs.update(self._to_program_settings())
 
             # Cannot use the new Session or will get circular import.
             self._session = RuntimeSession(
                 service=service,
                 program_id=self._PROGRAM_ID,
                 inputs=inputs,
-                options=self._options,
+                options=self.options,
             )
 
     def run(
@@ -310,7 +311,7 @@ class Estimator(BaseEstimator):
         return self._session.run(
             program_id=self._PROGRAM_ID,
             inputs=inputs,
-            options=self._options,
+            options=self.options,
             result_decoder=EstimatorResultDecoder,
         )
 
@@ -380,24 +381,32 @@ class Estimator(BaseEstimator):
             metadata=raw_result["metadata"],
         )
 
-    def _get_settings(self) -> Dict:
-        """Convert transpilation and resilience settings to a dictionary.
+    def _to_program_settings(self) -> Dict:
+        """Convert EstimatorSettings to primitive program format.
 
         Returns:
             Settings in the format expected by the primitive program.
         """
-        transpilation_settings = asdict(self._transpilation_settings)
+        transpilation_settings = asdict(self.settings.transpilation)
         transpilation_settings["optimization_settings"] = {
             "level": transpilation_settings["optimization_level"]
         }
         return {
-            "resilience_settings": asdict(self._resilience_settings),
+            "resilience_settings": asdict(self.settings.resilience),
             "transpilation_settings": transpilation_settings,
         }
 
     def close(self) -> None:
         """Close the session and free resources"""
         self._session.close()
+
+
+@dataclass
+class EstimatorSettings:
+    """Estimator settings."""
+
+    transpilation: Transpilation = Transpilation()
+    resilience: Resilience = Resilience()
 
 
 class EstimatorResultDecoder(ResultDecoder):
