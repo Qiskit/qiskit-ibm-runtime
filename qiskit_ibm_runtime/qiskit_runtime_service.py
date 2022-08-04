@@ -744,11 +744,17 @@ class QiskitRuntimeService:
                 # count is the total number of programs that would be returned if
                 # there was no limit or skip
                 count = response.get("count", 0)
+                if limit is None:
+                    limit = count
                 for prog_dict in program_page:
                     program = self._to_program(prog_dict)
                     self._programs[program.program_id] = program
-                if len(self._programs) == count:
-                    # Stop if there are no more programs returned by the server.
+                num_cached_programs = len(self._programs)
+                if num_cached_programs == count or num_cached_programs >= (
+                    limit + skip
+                ):
+                    # Stop if there are no more programs returned by the server or
+                    # if the number of cached programs is greater than the sum of limit and skip
                     break
                 offset += len(program_page)
         if limit is None:
