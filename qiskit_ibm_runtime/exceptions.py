@@ -91,3 +91,9 @@ class RuntimeJobTimeoutError(IBMRuntimeError):
     """Error raised when waiting for job times out."""
 
     pass
+
+
+class RuntimeJobMaxTimeoutError(IBMRuntimeError):
+    """Error raised when a job times out."""
+
+    pass
