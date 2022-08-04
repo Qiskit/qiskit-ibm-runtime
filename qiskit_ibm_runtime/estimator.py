@@ -78,21 +78,37 @@ class Estimator(BaseEstimator):
             print(psi1_H1.result())
 
             # calculate [ <psi1(theta1)|H2|psi1(theta1)>, <psi1(theta1)|H3|psi1(theta1)> ]
-            psi1_H23 = estimator.run(circuits=[psi1, psi1], observables=[H2, H3], parameter_values=[theta1]*2)
+            psi1_H23 = estimator.run(
+                circuits=[psi1, psi1],
+                observables=[H2, H3],
+                parameter_values=[theta1]*2
+            )
             print(psi1_H23.result())
 
             # calculate [ <psi2(theta2)|H2|psi2(theta2)> ]
-            psi2_H2 = estimator.run(circuits=[psi2], observables=[H2], parameter_values=[theta2])
+            psi2_H2 = estimator.run(
+                circuits=[psi2],
+                observables=[H2],
+                parameter_values=[theta2]
+            )
             print(psi2_H2.result())
 
             # calculate [ <psi1(theta1)|H1|psi1(theta1)>, <psi1(theta3)|H1|psi1(theta3)> ]
-            psi1_H1_job = estimator.run(circuits=[psi1, psi1], observables=[H1, H1], parameter_values=[theta1, theta3])
+            psi1_H1_job = estimator.run(
+                circuits=[psi1, psi1],
+                observables=[H1, H1],
+                parameter_values=[theta1, theta3]
+            )
             print(psi1_H1_job.result())
 
             # calculate [ <psi1(theta1)|H1|psi1(theta1)>,
             #             <psi2(theta2)|H2|psi2(theta2)>,
             #             <psi1(theta3)|H3|psi1(theta3)> ]
-            psi12_H23 = estimator.run(circuits=[psi1, psi2, psi1], observables=[H1, H2, H3], parameter_values=[theta1, theta2, theta3])
+            psi12_H23 = estimator.run(
+                circuits=[psi1, psi2, psi1],
+                observables=[H1, H2, H3],
+                parameter_values=[theta1, theta2, theta3]
+            )
             print(psi12_H23.result())
     """
 
@@ -106,8 +122,8 @@ class Estimator(BaseEstimator):
         service: Optional[QiskitRuntimeService] = None,
         options: Optional[Union[Dict, RuntimeOptions]] = None,
         skip_transpilation: Optional[bool] = False,
-        transpilation_settings: Optional[Dict] = None,
-        resilience_settings: Optional[Dict] = None,
+        transpilation_settings: Optional[Union[Dict, Transpilation]] = None,
+        resilience_settings: Optional[Union[Dict, Resilience]] = None,
         session: Optional["new_session.Session"] = None,
     ):
         """Initializes the Estimator primitive.

@@ -48,7 +48,9 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
 
             circuits1 = [psi1]
             # calculate [ <psi1(theta1)|H1|psi1(theta1)> ]
-            job = estimator.run(circuits=circuits1, observables=[H1], parameter_values=[theta1])
+            job = estimator.run(
+                circuits=circuits1, observables=[H1], parameter_values=[theta1]
+            )
             result1 = job.result()
             self.assertIsInstance(result1, EstimatorResult)
             self.assertEqual(len(result1.values), len(circuits1))
@@ -56,7 +58,9 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
 
             circuits2 = circuits1 * 2
             # calculate [ <psi1(theta1)|H2|psi1(theta1)>, <psi1(theta1)|H3|psi1(theta1)> ]
-            job = estimator.run(circuits=circuits2, observables=[H2, H3], parameter_values=[theta1] * 2)
+            job = estimator.run(
+                circuits=circuits2, observables=[H2, H3], parameter_values=[theta1] * 2
+            )
             result2 = job.result()
             self.assertIsInstance(result2, EstimatorResult)
             self.assertEqual(len(result2.values), len(circuits2))
@@ -64,14 +68,20 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
 
             circuits3 = [psi2]
             # calculate [ <psi2(theta2)|H2|psi2(theta2)> ]
-            job = estimator.run(circuits=circuits3, observables=[H2], parameter_values=[theta2])
+            job = estimator.run(
+                circuits=circuits3, observables=[H2], parameter_values=[theta2]
+            )
             result3 = job.result()
             self.assertIsInstance(result3, EstimatorResult)
             self.assertEqual(len(result3.values), len(circuits3))
             self.assertEqual(len(result3.metadata), len(circuits3))
 
             # calculate [ <psi1(theta1)|H1|psi1(theta1)>, <psi1(theta3)|H1|psi1(theta3)> ]
-            job = estimator.run(circuits=circuits2, observables=[H1, H1], parameter_values=[theta1, theta3])
+            job = estimator.run(
+                circuits=circuits2,
+                observables=[H1, H1],
+                parameter_values=[theta1, theta3],
+            )
             result4 = job.result()
             self.assertIsInstance(result4, EstimatorResult)
             self.assertEqual(len(result4.values), len(circuits2))
@@ -81,7 +91,11 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
             # calculate [ <psi1(theta1)|H1|psi1(theta1)>,
             #             <psi2(theta2)|H2|psi2(theta2)>,
             #             <psi1(theta3)|H3|psi1(theta3)> ]
-            job = estimator.run(circuits=circuits5, observables=[H1, H2, H3], parameter_values=[theta1, theta2, theta3])
+            job = estimator.run(
+                circuits=circuits5,
+                observables=[H1, H2, H3],
+                parameter_values=[theta1, theta2, theta3],
+            )
             result5 = job.result()
             self.assertIsInstance(result5, EstimatorResult)
             self.assertEqual(len(result5.values), len(circuits5))
