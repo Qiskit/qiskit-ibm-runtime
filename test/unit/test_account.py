@@ -716,6 +716,25 @@ class TestEnableAccount(IBMTestCase):
                 channel = channel or "ibm_cloud"
                 self.assertEqual(service._account.channel, channel)
 
+    def test_enable_account_only_env_variables(self):
+        """Test initializing account with only environment variables."""
+        subtests = ["ibm_quantum", "ibm_cloud"]
+        token = uuid.uuid4().hex
+        url = uuid.uuid4().hex
+        for channel in subtests:
+            envs = {
+                "QISKIT_IBM_TOKEN": token,
+                "QISKIT_IBM_URL": url,
+                "QISKIT_IBM_CHANNEL": channel,
+                "QISKIT_IBM_INSTANCE": "h/g/p"
+                if channel == "ibm_quantum"
+                else "crn:12",
+            }
+            with custom_envs(envs):
+                service = FakeRuntimeService()
+            self.assertEqual(service._account.channel, channel)
+            self.assertEqual(service._account.url, url)
+
     def test_enable_account_by_env_token_url(self):
         """Test initializing account by environment variable and extra."""
         token = uuid.uuid4().hex
@@ -822,9 +841,9 @@ class TestEnableAccount(IBMTestCase):
         token = "token-x"
         proxies = {"urls": {"https": "localhost:8080"}}
         str_contents = f"""
-        [ibmq] 
+        [ibmq]
         token = {token}
-        url = https://auth.quantum-computing.ibm.com/api 
+        url = https://auth.quantum-computing.ibm.com/api
         verify = True
         default_provider = ibm-q/open/main
         proxies = {proxies}
