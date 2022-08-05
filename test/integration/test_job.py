@@ -24,6 +24,7 @@ from qiskit_ibm_runtime.exceptions import (
     RuntimeJobFailureError,
     RuntimeInvalidStateError,
     RuntimeJobNotFound,
+    RuntimeJobMaxTimeoutError,
 )
 from ..ibm_test_case import IBMIntegrationJobTestCase
 from ..decorators import run_integration_test
@@ -115,7 +116,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
             ),
             job.error_message(),
         )
-        with self.assertRaises(RuntimeJobFailureError):
+        with self.assertRaises(RuntimeJobMaxTimeoutError):
             job.result()
 
     @run_integration_test
