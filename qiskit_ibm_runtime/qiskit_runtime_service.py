@@ -21,6 +21,7 @@ from collections import OrderedDict
 from typing import Dict, Callable, Optional, Union, List, Any, Type
 
 from qiskit.providers.backend import BackendV1 as Backend
+from qiskit.providers.provider import ProviderV1 as Provider
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.providerutils import filter_backends
 
@@ -55,7 +56,7 @@ logger = logging.getLogger(__name__)
 SERVICE_NAME = "runtime"
 
 
-class QiskitRuntimeService:
+class QiskitRuntimeService(Provider):
     """Class for interacting with the Qiskit Runtime service.
 
     Qiskit Runtime is a new architecture offered by IBM Quantum that
@@ -488,6 +489,7 @@ class QiskitRuntimeService:
                 backend_name += "_"
             setattr(self, backend_name, backend)
 
+    # pylint: disable=arguments-differ
     def backends(
         self,
         name: Optional[str] = None,
@@ -684,6 +686,9 @@ class QiskitRuntimeService:
         if not backends:
             raise QiskitBackendNotFoundError("No backend matches the criteria")
         return backends[0]
+
+    def get_backend(self, name: str = None, **kwargs: Any) -> Backend:
+        return self.backend(name, **kwargs)
 
     def pprint_programs(
         self,
@@ -1437,6 +1442,15 @@ class QiskitRuntimeService:
             The channel type used.
         """
         return self._channel
+
+    @property
+    def runtime(self):  # type:ignore
+        """Return self for compatibility with IBMQ provider.
+
+        Returns:
+            self
+        """
+        return self
 
     def __repr__(self) -> str:
         return "<{}>".format(self.__class__.__name__)
