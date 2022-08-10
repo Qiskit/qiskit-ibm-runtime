@@ -348,7 +348,7 @@ class Estimator(BaseEstimator):
 
         if not isinstance(self._session, RuntimeSession):
             raise ValueError(
-                "The run method is only supported when "
+                "Calling an Estimator instance directly is only supported when "
                 "qiskit_ibm_runtime.RuntimeSession is used ",
                 "(e.g. when Estimator is used as a context manager).",
             )
