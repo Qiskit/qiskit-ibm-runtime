@@ -330,7 +330,7 @@ class Sampler(BaseSampler):
 
         if not isinstance(self._session, RuntimeSession):
             raise ValueError(
-                "The run method is only supported when "
+                "Calling a Sampler instance directly is only supported when "
                 "qiskit_ibm_runtime.RuntimeSession is used ",
                 "(e.g. when Sampler is used as a context manager).",
             )
