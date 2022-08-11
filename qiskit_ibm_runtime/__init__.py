@@ -244,6 +244,7 @@ from .version import __version__
 
 from .estimator import Estimator
 from .sampler import Sampler
+from .settings import Settings
 
 # TODO remove when terra code is released
 from .qiskit.primitives import (

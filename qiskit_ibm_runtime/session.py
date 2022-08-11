@@ -20,7 +20,7 @@ from qiskit_ibm_runtime import QiskitRuntimeService
 from .runtime_job import RuntimeJob
 from .runtime_program import ParameterNamespace
 from .runtime_options import RuntimeOptions
-from .settings import Transpilation, Resilience
+from .settings import Transpilation, Resilience, Settings
 from .program.result_decoder import ResultDecoder
 from .sampler import Sampler
 from .estimator import Estimator
@@ -128,6 +128,7 @@ class Session:
         options: Optional[Union[Dict, RuntimeOptions]] = None,
         transpilation_settings: Optional[Union[Dict, Transpilation]] = None,
         resilience_settings: Optional[Union[Dict, Resilience]] = None,
+        settings: Optional[Union[Dict, Settings]] = None,
     ) -> Sampler:
         """Return an instance of the Sampler primitive.
 
@@ -145,6 +146,8 @@ class Session:
                     log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
                     The default level is ``WARNING``.
 
+                Ignored if the ``settings`` parameter is specified.
+
             transpilation_settings: (EXPERIMENTAL setting, can break between releases without warning)
                 Qiskit transpiler settings. The transpilation process converts
                 operations in the circuit to those supported by the backend, swaps qubits with the
@@ -159,6 +162,8 @@ class Session:
                     * 2: heavy optimization
                     * 3: even heavier optimization
 
+                Ignored if the ``settings`` parameter is specified.
+
             resilience_settings: (EXPERIMENTAL setting, can break between releases without warning)
                 Using these settings allows you to build resilient algorithms by
                 leveraging the state of the art error suppression, mitigation and correction techniques.
@@ -168,12 +173,17 @@ class Session:
                     at the expense of longer processing times.
                     * 0: no resilience (default)
                     * 1: light resilience
+
+                Ignored if the ``settings`` parameter is specified.
+
+            settings: Settings to use.
         """
         return Sampler(
             service=self._service,
             options=options,
             transpilation_settings=transpilation_settings,
             resilience_settings=resilience_settings,
+            settings=settings,
             session=self,
         )
 
@@ -182,6 +192,7 @@ class Session:
         options: Optional[Union[Dict, RuntimeOptions]] = None,
         transpilation_settings: Optional[Union[Dict, Transpilation]] = None,
         resilience_settings: Optional[Union[Dict, Resilience]] = None,
+        settings: Optional[Union[Dict, Settings]] = None,
     ) -> Estimator:
         """Return an instance of the Estimator primitive.
 
@@ -199,6 +210,8 @@ class Session:
                     log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
                     The default level is ``WARNING``.
 
+                Ignored if the ``settings`` parameter is specified.
+
             transpilation_settings: (EXPERIMENTAL setting, can break between releases without warning)
                 Qiskit transpiler settings. The transpilation process converts
                 operations in the circuit to those supported by the backend, swaps qubits with the
@@ -213,6 +226,8 @@ class Session:
                     * 2: heavy optimization
                     * 3: even heavier optimization
 
+                Ignored if the ``settings`` parameter is specified.
+
             resilience_settings: (EXPERIMENTAL setting, can break between releases without warning)
                 Using these settings allows you to build resilient algorithms by
                 leveraging the state of the art error suppression, mitigation and correction techniques.
@@ -223,6 +238,10 @@ class Session:
                     * 0: no resilience (default)
                     * 1: light resilience
 
+                Ignored if the ``settings`` parameter is specified.
+
+            settings: Settings to use.
+
         Returns:
             Estimator: an instance of the Estimator primitive.
         """
@@ -231,6 +250,7 @@ class Session:
             options=options,
             transpilation_settings=transpilation_settings,
             resilience_settings=resilience_settings,
+            settings=settings,
             session=self,
         )
 

@@ -12,7 +12,10 @@
 
 """Primitive settings."""
 
-from dataclasses import dataclass
+from typing import Optional, List, Dict, Union
+from dataclasses import dataclass, asdict
+
+from .runtime_options import RuntimeOptions
 
 
 @dataclass
@@ -31,13 +34,6 @@ class Transpilation:
 
         skip_transpilation: Whether to skip transpilation.
 
-        inst_map: Mapping of unrolled gates to pulse schedules. If this is not provided,
-            transpiler tries to get from the backend. If any user defined calibration
-            is found in the map and this is used in a circuit, transpiler attaches
-            the custom gate definition to the circuit. This enables one to flexibly
-            override the low-level instruction implementation. This feature is available
-            iff the backend supports the pulse gate experiment.
-
         initial_layout: Initial position of virtual qubits on physical qubits.
             See :function:`qiskit.compiler.transpile` for more information.
 
@@ -46,25 +42,6 @@ class Transpilation:
         routing_method: Name of routing pass ('basic', 'lookahead', 'stochastic', 'sabre', 'none')
 
         translation_method: Name of translation pass ('unroller', 'translator', 'synthesis')
-
-        scheduling_method: Name of scheduling pass.
-            * ``'as_soon_as_possible'``: Schedule instructions greedily, as early as possible
-            on a qubit resource. (alias: ``'asap'``)
-            * ``'as_late_as_possible'``: Schedule instructions late, i.e. keeping qubits
-            in the ground state when possible. (alias: ``'alap'``)
-            If ``None``, no scheduling will be done.
-
-        instruction_durations: Durations of instructions.
-            Applicable only if scheduling_method is specified.
-            The gate lengths defined in ``backend.properties`` are used as default.
-            They are overwritten if this ``instruction_durations`` is specified.
-            The format of ``instruction_durations`` must be as follows.
-            The `instruction_durations` must be given as a list of tuples
-            [(instruction_name, qubits, duration, unit), ...].
-            | [('cx', [0, 1], 12.3, 'ns'), ('u3', [0], 4.56, 'ns')]
-            | [('cx', [0, 1], 1000), ('u3', [0], 300)]
-            If unit is omitted, the default is 'dt', which is a sample time depending on backend.
-            If the time unit is 'dt', the duration must be an integer.
 
         approximation_degree (float): heuristic dial used for circuit approximation
             (1.0=no approximation, 0.0=maximal approximation)
@@ -90,27 +67,19 @@ class Transpilation:
             then ``timing_constraints`` is None and no adjustment will be performed.
 
         seed_transpiler: Sets random seed for the stochastic parts of the transpiler
-
-        unitary_synthesis_method (str): The name of the unitary synthesis
-            method to use. By default 'default' is used, which is the only
-            method included with qiskit. If you have installed any unitary
-            synthesis plugins you can use the name exported by the plugin.
-
-        unitary_synthesis_plugin_config: An optional configuration dictionary
-            that will be passed directly to the unitary synthesis plugin. By
-            default this setting will have no effect as the default unitary
-            synthesis method does not take custom configuration. This should
-            only be necessary when a unitary synthesis plugin is specified with
-            the ``unitary_synthesis`` argument. As this is custom for each
-            unitary synthesis plugin refer to the plugin documentation for how
-            to use this option.
     """
 
-    # TODO: Add the other transpilation settings.
+    # TODO: Double check transpilation settings.
 
     optimization_level: int = 1
     skip_transpilation: bool = False
-
+    initial_layout: Optional[Union[Dict, List]] = None  # TODO: Support Layout
+    layout_method: Optional[str] = None
+    routing_method: Optional[str] = None
+    translation_method: Optional[str] = None
+    approximation_degree: Optional[float] = None
+    timing_constraints: Optional[Dict[str, int]] = None
+    seed_transpiler: Optional[int] = None
 
 @dataclass
 class Resilience:
@@ -125,3 +94,22 @@ class Resilience:
     """
 
     level: int = 0
+
+
+@dataclass
+class Settings:
+
+    transpilation: Transpilation = Transpilation()
+    resilience: Resilience = Resilience()
+    service_options: RuntimeOptions = RuntimeOptions()
+
+    def _to_program_inputs(self) -> Dict:
+        # TODO: Remove this once primitive program is updated to use optimization_level.
+        transpilation_settings = asdict(self.transpilation)
+        transpilation_settings["optimization_settings"] = {
+            "level": transpilation_settings["optimization_level"]
+        }
+        return {
+            "resilience_settings": asdict(self.resilience),
+            "transpilation_settings": transpilation_settings,
+        }

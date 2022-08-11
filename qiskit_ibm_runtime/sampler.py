@@ -14,7 +14,8 @@
 
 from __future__ import annotations
 from typing import Dict, Iterable, Optional, Sequence, Any, Union
-from dataclasses import dataclass, asdict
+from dataclasses import asdict
+import copy
 
 from qiskit.circuit import QuantumCircuit, Parameter
 
@@ -24,7 +25,7 @@ from qiskit_ibm_runtime import session as new_session
 # TODO import BaseSampler and SamplerResult from terra once released
 from .qiskit.primitives import BaseSampler, SamplerResult
 from .qiskit_runtime_service import QiskitRuntimeService
-from .settings import Transpilation, Resilience
+from .settings import Transpilation, Resilience, Settings
 from .runtime_options import RuntimeOptions
 from .program.result_decoder import ResultDecoder
 from .runtime_session import RuntimeSession
@@ -70,14 +71,20 @@ class Sampler(BaseSampler):
         theta3 = [0, 1, 2, 3, 4, 5, 6, 7]
 
         with Session(service) as session:
-            sampler = session.sampler()
-            sampler.options.backend = "ibmq_qasm_simulator"
-            sampler.settings.transpilation.optimization_level = 1
+            settings = Sampler.default_settings()
+            settings.service_options.backend = "ibmq_qasm_simulator"
+            settings.transpilation.optimization_level = 1
+
+            sampler = session.sampler(settings)
             job1 = sampler.run(bell)
             print(f"Bell job ID: {job1.job_id}")
             print(f"Bell result: {job1.result()}")
 
-            job2 = sampler.run(circuits=[pqc, pqc, pqc2], parameter_values=[theta1, theta2, theta3])
+            settings.transpilation.optimization_level = 3
+            job2 = sampler.run(
+                circuits=[pqc, pqc, pqc2],
+                parameter_values=[theta1, theta2, theta3],
+                settings=settings)
             print(f"RealAmplitudes job ID: {job2.job_id}")
             print(f"RealAmplitudes result: {job2.result()}")
     """
@@ -93,6 +100,7 @@ class Sampler(BaseSampler):
         skip_transpilation: Optional[bool] = False,
         transpilation_settings: Optional[Union[Dict, Transpilation]] = None,
         resilience_settings: Optional[Union[Dict, Resilience]] = None,
+        settings: Optional[Union[Dict, Settings]] = None,
         session: Optional["new_session.Session"] = None,
     ):
         """Initializes the Sampler primitive.
@@ -121,6 +129,8 @@ class Sampler(BaseSampler):
                     log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
                     The default level is ``WARNING``.
 
+                Ignored if the ``settings`` parameter is specified.
+
             skip_transpilation (DEPRECATED): Transpilation is skipped if set to True. False by default.
                 Ignored if ``skip_transpilation`` is also specified in ``transpilation_settings``.
 
@@ -142,6 +152,8 @@ class Sampler(BaseSampler):
                     * 2: heavy optimization
                     * 3: even heavier optimization
 
+                Ignored if the ``settings`` parameter is specified.
+
             resilience_settings: (EXPERIMENTAL setting, can break between releases without warning)
                 Using these settings allows you to build resilient algorithms by
                 leveraging the state of the art error suppression, mitigation and correction techniques.
@@ -152,6 +164,10 @@ class Sampler(BaseSampler):
                     * 0: no resilience
                     * 1: light resilience
                     If ``None``, level 0 will be chosen as default.
+
+                Ignored if the ``settings`` parameter is specified.
+
+            settings: Settings to use.
 
             session: Session in which to call the sampler primitive.
         """
@@ -175,26 +191,31 @@ class Sampler(BaseSampler):
                 "Instead, use the skip_transpilation keyword argument in transpilation_settings.",
             )
 
-        transpilation_settings = transpilation_settings or {}
-        if isinstance(transpilation_settings, Dict):
-            skip_transp = transpilation_settings.pop(
-                "skip_transpilation", skip_transpilation
-            )
-            transpilation_settings = Transpilation(
-                skip_transpilation=skip_transp, **transpilation_settings
-            )
-        resilience_settings = resilience_settings or {}
-        if isinstance(resilience_settings, Dict):
-            resilience_settings = Resilience(**resilience_settings)
+        if settings is not None:
+            self._settings = settings if isinstance(settings, Settings) else Settings(**settings)
+        else:
+            transpilation_settings = transpilation_settings or {}
+            if isinstance(transpilation_settings, Dict):
+                skip_transp = transpilation_settings.pop(
+                    "skip_transpilation", skip_transpilation
+                )
+                transpilation_settings = Transpilation(
+                    skip_transpilation=skip_transp, **transpilation_settings
+                )
+            resilience_settings = resilience_settings or {}
+            if isinstance(resilience_settings, Dict):
+                resilience_settings = Resilience(**resilience_settings)
 
-        self.settings = SamplerSettings(
-            transpilation=transpilation_settings, resilience=resilience_settings
-        )
-        options = options or {}
-        # TODO: Having options and run_options is very confusing. Can we combine the two?
-        if not isinstance(options, RuntimeOptions):
-            options = RuntimeOptions(**options)
-        self.options = options
+            options = options or {}
+            # TODO: Having options and run_options is very confusing. Can we combine the two?
+            if not isinstance(options, RuntimeOptions):
+                options = RuntimeOptions(**options)
+
+            self._settings = Settings(
+                transpilation=transpilation_settings,
+                resilience=resilience_settings,
+                service_options=options
+            )
 
         self._session: Union[new_session.Session, RuntimeSession] = None
         if session:
@@ -209,14 +230,14 @@ class Sampler(BaseSampler):
                 "circuits": circuits,
                 "parameters": parameters,
             }
-            inputs.update(self._to_program_settings())
+            inputs.update(self._settings._to_program_inputs())
 
             # Cannot use the new Session or will get circular import.
             self._session = RuntimeSession(
                 service=service,
                 program_id=self._PROGRAM_ID,
                 inputs=inputs,
-                options=asdict(self.options),
+                options=asdict(self._settings.service_options),
             )
 
     def run(
@@ -226,6 +247,7 @@ class Sampler(BaseSampler):
         parameter_values: Optional[
             Union[Sequence[float], Sequence[Sequence[float]]]
         ] = None,
+        settings: Optional[Dict | Settings] = None,
         **run_options: Any,
     ) -> RuntimeJob:
         """Submit a request to the sampler primitive program.
@@ -240,6 +262,9 @@ class Sampler(BaseSampler):
                 Defaults to ``[circ.parameters for circ in circuits]``.
 
             parameter_values: An optional list of concrete parameters to be bound.
+
+            settings: Settings used for this execution only. It doesn't change the settings
+                for this primitive.
 
             **run_options: A collection of kwargs passed to `backend.run()`.
 
@@ -291,30 +316,15 @@ class Sampler(BaseSampler):
             "parameter_values": parameter_values,
             "run_options": run_options,
         }
-        inputs.update(self._to_program_settings())
+        settings = settings or self._settings
+        inputs.update(settings._to_program_inputs())
 
         return self._session.run(
             program_id=self._PROGRAM_ID,
             inputs=inputs,
-            options=self.options,
+            options=settings.service_options,
             result_decoder=SamplerResultDecoder,
         )
-
-    def _to_program_settings(self) -> Dict:
-        """Convert SamplerSettings to primitive program format.
-
-        Returns:
-            Settings in the format expected by the primitive program.
-        """
-        # TODO: Remove this once primitive program is updated to use optimization_level.
-        transpilation_settings = asdict(self.settings.transpilation)
-        transpilation_settings["optimization_settings"] = {
-            "level": transpilation_settings["optimization_level"]
-        }
-        return {
-            "resilience_settings": asdict(self.settings.resilience),
-            "transpilation_settings": transpilation_settings,
-        }
 
     def __call__(
         self,
@@ -381,22 +391,22 @@ class Sampler(BaseSampler):
         """Close the session and free resources"""
         self._session.close()
 
+    def settings(self) -> Settings:
+        """Current settings.
+
+        Returns:
+            Settings: Current settings.
+        """
+        return copy.deepcopy(self._settings)
+
     @classmethod
-    def default_settings(cls) -> SamplerSettings:
+    def default_settings(cls) -> Settings:
         """Return the default settings.
 
         Returns:
-            Default Sampler settings.
+            Default settings.
         """
-        return SamplerSettings()
-
-
-@dataclass
-class SamplerSettings:
-    """Sampler settings."""
-
-    transpilation: Transpilation = Transpilation()
-    resilience: Resilience = Resilience()
+        return Settings()
 
 
 class SamplerResultDecoder(ResultDecoder):

@@ -12,9 +12,12 @@
 
 """Estimator primitive."""
 
-from dataclasses import dataclass, asdict
+from __future__ import annotations
+import copy
+from dataclasses import asdict
 from typing import Iterable, Optional, Dict, Sequence, Any, Union
 
+import numpy as np
 from qiskit.circuit import QuantumCircuit, Parameter
 from qiskit.quantum_info import SparsePauliOp
 
@@ -31,7 +34,7 @@ from .program.result_decoder import ResultDecoder
 from .runtime_job import RuntimeJob
 from .utils.deprecation import deprecate_arguments, issue_deprecation_msg
 from .runtime_options import RuntimeOptions
-from .settings import Transpilation, Resilience
+from .settings import Transpilation, Resilience, Settings
 
 
 class Estimator(BaseEstimator):
@@ -124,6 +127,7 @@ class Estimator(BaseEstimator):
         skip_transpilation: Optional[bool] = False,
         transpilation_settings: Optional[Union[Dict, Transpilation]] = None,
         resilience_settings: Optional[Union[Dict, Resilience]] = None,
+        settings: Optional[Union[Dict, Settings]] = None,
         session: Optional["new_session.Session"] = None,
     ):
         """Initializes the Estimator primitive.
@@ -155,6 +159,8 @@ class Estimator(BaseEstimator):
                     log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
                     The default level is ``WARNING``.
 
+                Ignored if the ``settings`` parameter is specified.
+
             skip_transpilation: (DEPRECATED) Transpilation is skipped if set to True. False by default.
 
             transpilation_settings: (EXPERIMENTAL setting, can break between releases without warning)
@@ -177,6 +183,8 @@ class Estimator(BaseEstimator):
                         * 3: even heavier optimization
                         If ``None``, level 1 will be chosen as default.
 
+                Ignored if the ``settings`` parameter is specified.
+
             resilience_settings: (EXPERIMENTAL setting, can break between releases without warning)
                 Using these settings allows you to build resilient algorithms by
                 leveraging the state of the art error suppression, mitigation and correction techniques.
@@ -187,6 +195,8 @@ class Estimator(BaseEstimator):
                     * 0: no resilience
                     * 1: light resilience
                     If ``None``, level 0 will be chosen as default.
+
+                Ignored if the ``settings`` parameter is specified.
 
             session: Session in which to call the estimator primitive.
         """
@@ -210,25 +220,31 @@ class Estimator(BaseEstimator):
                 "Instead, use the skip_transpilation keyword argument in transpilation_settings.",
             )
 
-        transpilation_settings = transpilation_settings or {}
-        if isinstance(transpilation_settings, Dict):
-            skip_transp = transpilation_settings.pop(
-                "skip_transpilation", skip_transpilation
-            )
-            transpilation_settings = Transpilation(
-                skip_transpilation=skip_transp, **transpilation_settings
-            )
-        resilience_settings = resilience_settings or {}
-        if isinstance(resilience_settings, Dict):
-            resilience_settings = Resilience(**resilience_settings)
-        self.settings = EstimatorSettings(
-            transpilation=transpilation_settings, resilience=resilience_settings
-        )
+        if settings is not None:
+            self._settings = settings if isinstance(settings, Settings) else Settings(**settings)
+        else:
+            transpilation_settings = transpilation_settings or {}
+            if isinstance(transpilation_settings, Dict):
+                skip_transp = transpilation_settings.pop(
+                    "skip_transpilation", skip_transpilation
+                )
+                transpilation_settings = Transpilation(
+                    skip_transpilation=skip_transp, **transpilation_settings
+                )
+            resilience_settings = resilience_settings or {}
+            if isinstance(resilience_settings, Dict):
+                resilience_settings = Resilience(**resilience_settings)
 
-        options = options or {}
-        if not isinstance(options, RuntimeOptions):
-            options = RuntimeOptions(**options)
-        self.options = options
+            options = options or {}
+            # TODO: Having options and run_options is very confusing. Can we combine the two?
+            if not isinstance(options, RuntimeOptions):
+                options = RuntimeOptions(**options)
+
+            self._settings = Settings(
+                transpilation=transpilation_settings,
+                resilience=resilience_settings,
+                service_options=options
+            )
 
         self._session: Union[new_session.Session, RuntimeSession] = None
         if session:
@@ -244,14 +260,14 @@ class Estimator(BaseEstimator):
                 "observables": observables,
                 "parameters": parameters,
             }
-            inputs.update(self._to_program_settings())
+            inputs.update(self._settings._to_program_inputs())
 
             # Cannot use the new Session or will get circular import.
             self._session = RuntimeSession(
                 service=service,
                 program_id=self._PROGRAM_ID,
                 inputs=inputs,
-                options=self.options,
+                options=asdict(self._settings.service_options),
             )
 
     def run(
@@ -261,6 +277,7 @@ class Estimator(BaseEstimator):
         parameter_values: Optional[
             Union[Sequence[float], Sequence[Sequence[float]]]
         ] = None,
+        settings: Optional[Dict | Settings] = None,
         **run_options: Any,
     ) -> RuntimeJob:
         """Submit a request to the estimator primitive program.
@@ -272,6 +289,9 @@ class Estimator(BaseEstimator):
             observables: a list of :class:`~qiskit.quantum_info.SparsePauliOp`
 
             parameter_values: An optional list of concrete parameters to be bound.
+
+            settings: Settings used for this execution only. It doesn't change the settings
+                for this primitive.
 
             **run_options: A collection of kwargs passed to `backend.run()`.
 
@@ -323,11 +343,13 @@ class Estimator(BaseEstimator):
             "parameter_values": parameter_values,
             "run_options": run_options,
         }
+        settings = settings or self._settings
+        inputs.update(settings._to_program_inputs())
 
         return self._session.run(
             program_id=self._PROGRAM_ID,
             inputs=inputs,
-            options=self.options,
+            options=settings.service_options,
             result_decoder=EstimatorResultDecoder,
         )
 
@@ -397,32 +419,26 @@ class Estimator(BaseEstimator):
             metadata=raw_result["metadata"],
         )
 
-    def _to_program_settings(self) -> Dict:
-        """Convert EstimatorSettings to primitive program format.
-
-        Returns:
-            Settings in the format expected by the primitive program.
-        """
-        transpilation_settings = asdict(self.settings.transpilation)
-        transpilation_settings["optimization_settings"] = {
-            "level": transpilation_settings["optimization_level"]
-        }
-        return {
-            "resilience_settings": asdict(self.settings.resilience),
-            "transpilation_settings": transpilation_settings,
-        }
-
     def close(self) -> None:
         """Close the session and free resources"""
         self._session.close()
 
+    def settings(self) -> Settings:
+        """Current settings.
 
-@dataclass
-class EstimatorSettings:
-    """Estimator settings."""
+        Returns:
+            Settings: Current settings.
+        """
+        return copy.deepcopy(self._settings)
 
-    transpilation: Transpilation = Transpilation()
-    resilience: Resilience = Resilience()
+    @classmethod
+    def default_settings(cls) -> Settings:
+        """Return the default settings.
+
+        Returns:
+            Default settings.
+        """
+        return Settings()
 
 
 class EstimatorResultDecoder(ResultDecoder):
@@ -433,6 +449,6 @@ class EstimatorResultDecoder(ResultDecoder):
         """Convert the result to EstimatorResult."""
         decoded: Dict = super().decode(raw_result)
         return EstimatorResult(
-            values=decoded["values"],
+            values=np.asarray(decoded["values"]),
             metadata=decoded["metadata"],
         )
