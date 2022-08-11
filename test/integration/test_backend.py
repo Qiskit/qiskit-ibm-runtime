@@ -137,6 +137,10 @@ class TestIBMBackend(IBMIntegrationTestCase):
 
     def test_backend_run(self):
         """Test running a job from a backend."""
+        if self.dependencies.channel == "ibm_cloud":
+            raise SkipTest(
+                "Skip since cloud account does not have circuit-runner program."
+            )
         job = self.backend.run(ReferenceCircuits.bell())
         job.wait_for_final_state()
         self.assertTrue(job.result)

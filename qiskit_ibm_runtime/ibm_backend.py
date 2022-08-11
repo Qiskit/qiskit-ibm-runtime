@@ -507,7 +507,36 @@ class IBMBackend(Backend):
         max_execution_time: Optional[int] = None,
         start_session: Optional[bool] = None,
     ) -> RuntimeJob:
-        """Run on the backend by calling the ciruict-runner program."""
+        """Run on the backend by calling the ciruict-runner program.
+
+        Args:
+            circuits: An individual or a
+                list of :class:`~qiskit.circuits.QuantumCircuit` or
+                :class:`~qiskit.pulse.Schedule` objects to run on the backend.
+            program_id: Program ID which defaults to ``circuit-runner``.
+            shots: Number of repetitions of each circuit, for sampling. Default: 4000
+                or ``max_shots`` from the backend configuration, whichever is smaller.
+            qubit_lo_freq: List of default qubit LO frequencies in Hz. Will be overridden by
+                ``schedule_los`` if set.
+            meas_lo_freq: List of default measurement LO frequencies in Hz. Will be overridden
+                by ``schedule_los`` if set.
+            schedule_los: schedule_los: Experiment LO configurations, frequencies are given in Hz.
+            rep_delay: Delay between programs in seconds.
+            init_qubits: Whether to reset the qubits to the ground state for each shot.
+            use_measure_esp: Whether to use excited state promoted (ESP) readout for measurements
+                which are the terminal instruction to a qubit.
+            callback: Callback function to be invoked for any interim results and final result.
+            result_decoder: A :class:`ResultDecoder` subclass used to decode job results.
+            instance: This is only supported for ``ibm_quantum`` runtime and is in the
+                hub/group/project format.
+            session_id: Job ID of the first job in a runtime session.
+            job_tags: Tags to be assigned to the job.
+            max_execution_time: Maximum execution time in seconds.
+            start_session: Set to True to explicitly start a runtime session. Defaults to False.
+
+        Returns:
+             A ``RuntimeJob`` instance representing the execution.
+        """
         # pylint: disable=arguments-differ
         options = {"backend_name": self.name}
         inputs = {
