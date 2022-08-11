@@ -258,6 +258,7 @@ class Estimator(BaseEstimator):
         self,
         circuits: Union[QuantumCircuit, Iterable[QuantumCircuit]],
         observables: Iterable[Iterable[Parameter]],
+        parameters: Optional[Iterable[Iterable[Parameter]]] = None,
         parameter_values: Optional[
             Union[Sequence[float], Sequence[Sequence[float]]]
         ] = None,
@@ -270,6 +271,11 @@ class Estimator(BaseEstimator):
                 a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
 
             observables: a list of :class:`~qiskit.quantum_info.SparsePauliOp`
+
+            parameters: A list of parameters of the quantum circuits
+                (:class:`~qiskit.circuit.parametertable.ParameterView` or
+                a list of :class:`~qiskit.circuit.Parameter`).
+                Defaults to ``[circ.parameters for circ in circuits]``.
 
             parameter_values: An optional list of concrete parameters to be bound.
 
@@ -320,6 +326,7 @@ class Estimator(BaseEstimator):
             "circuit_indices": circuit_indices,
             "observables": observables,
             "observable_indices": list(range(obs_count)),
+            "parameters": parameters,
             "parameter_values": parameter_values,
             "run_options": run_options,
         }
