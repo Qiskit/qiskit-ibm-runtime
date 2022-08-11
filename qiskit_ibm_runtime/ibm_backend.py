@@ -539,16 +539,22 @@ class IBMBackend(Backend):
         """
         # pylint: disable=arguments-differ
         options = {"backend_name": self.name}
-        inputs = {
-            "circuits": circuits,
-            "shots": shots,
-            "qubit_lo_freq": qubit_lo_freq,
-            "meas_lo_freq": meas_lo_freq,
-            "schedule_los": schedule_los,
-            "rep_delay": rep_delay,
-            "init_qubits": init_qubits,
-            "use_measure_esp": use_measure_esp,
-        }
+        inputs = {"circuits": circuits}
+        if shots:
+            inputs["shots"] = shots
+        if qubit_lo_freq:
+            inputs["qubit_lo_freq"] = qubit_lo_freq
+        if meas_lo_freq:
+            inputs["meas_lo_freq"] = meas_lo_freq
+        if schedule_los:
+            inputs["schedule_los"] = schedule_los
+        if rep_delay:
+            inputs["rep_delay"] = rep_delay
+        if init_qubits is not None:
+            inputs["init_qubits"] = init_qubits
+        if use_measure_esp is not None:
+            inputs["use_measure_esp"] = use_measure_esp
+
         return qiskit_runtime_service.QiskitRuntimeService.run(
             self.service,
             program_id=program_id,
