@@ -244,7 +244,7 @@ from .version import __version__
 
 from .estimator import Estimator
 from .sampler import Sampler
-from .settings import Settings
+from .options import Options
 
 # TODO remove when terra code is released
 from .qiskit.primitives import (
@@ -265,3 +265,6 @@ QISKIT_IBM_RUNTIME_LOG_LEVEL = "QISKIT_IBM_RUNTIME_LOG_LEVEL"
 """The environment variable name that is used to set the level for the IBM Quantum logger."""
 QISKIT_IBM_RUNTIME_LOG_FILE = "QISKIT_IBM_RUNTIME_LOG_FILE"
 """The environment variable name that is used to set the file for the IBM Quantum logger."""
+
+# Default session
+_default_session = None
