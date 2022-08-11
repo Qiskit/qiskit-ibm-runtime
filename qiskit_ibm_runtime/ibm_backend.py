@@ -14,9 +14,12 @@
 
 import logging
 
-from typing import Iterable, Union, Optional, Any, List
+from typing import Iterable, Union, Optional, Any, List, Callable, Type, Dict
 from datetime import datetime as python_datetime
 
+
+from qiskit.circuit import QuantumCircuit
+from qiskit.pulse import Schedule, LoConfig
 from qiskit.qobj.utils import MeasLevel, MeasReturnType
 from qiskit.providers.backend import BackendV2 as Backend
 from qiskit.providers.options import Options
@@ -29,6 +32,7 @@ from qiskit.providers.models import (
     PulseBackendConfiguration,
 )
 from qiskit.pulse.channels import (
+    PulseChannel,
     AcquireChannel,
     ControlChannel,
     DriveChannel,
@@ -39,6 +43,8 @@ from qiskit.transpiler.target import Target
 from qiskit_ibm_runtime import (  # pylint: disable=unused-import,cyclic-import
     qiskit_runtime_service,
 )
+from qiskit_ibm_runtime.program.result_decoder import ResultDecoder
+from qiskit_ibm_runtime.runtime_job import RuntimeJob
 
 from .api.clients import AccountClient, RuntimeClient
 from .api.clients.backend import BaseBackendClient
@@ -475,11 +481,56 @@ class IBMBackend(Backend):
     def __repr__(self) -> str:
         return "<{}('{}')>".format(self.__class__.__name__, self.name)
 
-    def run(self, *args: Any, **kwargs: Any) -> None:
-        """Not supported method"""
-        # pylint: disable=arguments-differ
-        raise RuntimeError(
-            "IBMBackend.run() is not supported in the Qiskit Runtime environment."
+    def run(
+        self,
+        circuits: Union[
+            QuantumCircuit, Schedule, List[Union[QuantumCircuit, Schedule]]
+        ],
+        program_id: str = "circuit-runner",
+        shots: Optional[Union[int, float]] = None,
+        qubit_lo_freq: Optional[List[int]] = None,
+        meas_lo_freq: Optional[List[int]] = None,
+        schedule_los: Optional[
+            Union[
+                List[Union[Dict[PulseChannel, float], LoConfig]],
+                Union[Dict[PulseChannel, float], LoConfig],
+            ]
+        ] = None,
+        rep_delay: Optional[float] = None,
+        init_qubits: Optional[bool] = None,
+        use_measure_esp: Optional[bool] = None,
+        callback: Optional[Callable] = None,
+        result_decoder: Optional[Type[ResultDecoder]] = None,
+        instance: Optional[str] = None,
+        session_id: Optional[str] = None,
+        job_tags: Optional[List[str]] = None,
+        max_execution_time: Optional[int] = None,
+        start_session: Optional[bool] = None,
+    ) -> RuntimeJob:
+        """Run on the backend by calling the ciruict-runner program."""
+        options = {"backend_name": self.name}
+        inputs = {
+            "circuits": circuits,
+            "shots": shots,
+            "qubit_lo_freq": qubit_lo_freq,
+            "meas_lo_freq": meas_lo_freq,
+            "schedule_los": schedule_los,
+            "rep_delay": rep_delay,
+            "init_qubits": init_qubits,
+            "use_measure_esp": use_measure_esp,
+        }
+        return qiskit_runtime_service.QiskitRuntimeService.run(
+            self.service,
+            program_id=program_id,
+            inputs=inputs,
+            options=options,
+            callback=callback,
+            result_decoder=result_decoder,
+            instance=instance,
+            session_id=session_id,
+            job_tags=job_tags,
+            max_execution_time=max_execution_time,
+            start_session=start_session,
         )
 
 
