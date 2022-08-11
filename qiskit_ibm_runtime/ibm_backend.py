@@ -508,6 +508,7 @@ class IBMBackend(Backend):
         start_session: Optional[bool] = None,
     ) -> RuntimeJob:
         """Run on the backend by calling the ciruict-runner program."""
+        # pylint: disable=arguments-differ
         options = {"backend_name": self.name}
         inputs = {
             "circuits": circuits,
