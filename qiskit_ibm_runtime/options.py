@@ -190,6 +190,7 @@ class Options:
         Returns:
             Merged dictionary.
         """
+
         def _update_options(old: Dict, new: Dict) -> None:
             if not new:
                 return
