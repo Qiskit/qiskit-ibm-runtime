@@ -17,10 +17,7 @@ from typing import Dict, Iterable, Optional, Sequence, Any, Union
 import copy
 
 from qiskit.circuit import QuantumCircuit, Parameter
-
-# pylint: disable=unused-import,cyclic-import
-# from qiskit_ibm_runtime import session as new_session
-from qiskit_ibm_runtime import Session
+import qiskit_ibm_runtime.session as session_pkg
 
 # TODO import BaseSampler and SamplerResult from terra once released
 from .qiskit.primitives import BaseSampler, SamplerResult
@@ -28,10 +25,10 @@ from .qiskit_runtime_service import QiskitRuntimeService
 from .options import Options
 from .runtime_options import RuntimeOptions
 from .program.result_decoder import ResultDecoder
-from .runtime_session import RuntimeSession
 from .runtime_job import RuntimeJob
 from .utils.deprecation import deprecate_arguments, issue_deprecation_msg
-from qiskit_ibm_runtime import _default_session
+# pylint: disable=unused-import,cyclic-import
+from .session import Session
 
 
 class Sampler(BaseSampler):
@@ -48,46 +45,19 @@ class Sampler(BaseSampler):
 
     Example::
 
-        from qiskit import QuantumCircuit
-        from qiskit.circuit.library import RealAmplitudes
-
-        from qiskit_ibm_runtime import QiskitRuntimeService, Session
+        from qiskit.test.reference_circuits import ReferenceCircuits
+        from qiskit_ibm_runtime import QiskitRuntimeService, Session, Sampler
 
         service = QiskitRuntimeService(channel="ibm_cloud")
-
-        # Bell circuit
-        bell = QuantumCircuit(2)
-        bell.h(0)
-        bell.cx(0, 1)
-        bell.measure_all()
-
-        # parameterized circuit
-        pqc = RealAmplitudes(num_qubits=2, reps=2)
-        pqc.measure_all()
-        pqc2 = RealAmplitudes(num_qubits=2, reps=3)
-        pqc2.measure_all()
-
-        theta1 = [0, 1, 1, 2, 3, 5]
-        theta2 = [1, 2, 3, 4, 5, 6]
-        theta3 = [0, 1, 2, 3, 4, 5, 6, 7]
+        bell = ReferenceCircuits.bell()
 
         with Session(service) as session:
-            settings = Sampler.default_settings()
-            settings.service_options.backend = "ibmq_qasm_simulator"
-            settings.transpilation.optimization_level = 1
+            sampler = Sampler(session=session)
+            sampler.options.resilience_level = 1
 
-            sampler = session.sampler(settings)
-            job1 = sampler.run(bell)
-            print(f"Bell job ID: {job1.job_id}")
-            print(f"Bell result: {job1.result()}")
-
-            settings.transpilation.optimization_level = 3
-            job2 = sampler.run(
-                circuits=[pqc, pqc, pqc2],
-                parameter_values=[theta1, theta2, theta3],
-                settings=settings)
-            print(f"RealAmplitudes job ID: {job2.job_id}")
-            print(f"RealAmplitudes result: {job2.result()}")
+            job = sampler.run(bell)
+            print(f"Job ID: {job.job_id}")
+            print(f"Job result: {job.result()}")
     """
 
     _PROGRAM_ID = "sampler"
@@ -145,9 +115,7 @@ class Sampler(BaseSampler):
             )
         if service:
             deprecate_arguments(
-                "service",
-                "0.7",
-                "Please use the session parameter instead."
+                "service", "0.7", "Please use the session parameter instead."
             )
 
         if options is None:
@@ -159,30 +127,25 @@ class Sampler(BaseSampler):
             self.options = options._to_new_options()
         else:
             self.options = Options._from_dict(options)
-            skip_transpilation = options.get("transpilation", {}).get("skip_transpilation", False)
-
+            skip_transpilation = options.get("transpilation", {}).get(
+                "skip_transpilation", False
+            )
         self.options.transpilation.skip_transpilation = skip_transpilation
 
-        self._session: Union[Session, RuntimeSession] = None
-        self._initial_inputs = {
-            "circuits": circuits,
-            "parameters": parameters
-        }
+        self._initial_inputs = {"circuits": circuits, "parameters": parameters}
         if session:
             self._session = session
         else:
-            if _default_session is None:
-                _default_session = Session(service=service)
-            self._session = Session(service=service)
-
+            if session_pkg._DEFAULT_SESSION is None:
+                session_pkg._DEFAULT_SESSION = Session(service=service)
+            self._session = session_pkg._DEFAULT_SESSION
 
     def run(
         self,
         circuits: Union[QuantumCircuit, Sequence[QuantumCircuit]],
         parameter_values: Sequence[Sequence[float]] | None = None,
         parameters: Sequence[Sequence[Parameter]] | None = None,
-        options: Optional[Dict | Options] = None,
-        **run_options,
+        **kwargs: Any,
     ) -> RuntimeJob:
         """Submit a request to the sampler primitive program.
 
@@ -197,11 +160,7 @@ class Sampler(BaseSampler):
                 a list of :class:`~qiskit.circuit.Parameter`).
                 Defaults to ``[circ.parameters for circ in circuits]``.
 
-            options: Options used for this execution only. It doesn't change the options
-                for this primitive.
-
-            run_options: Individual options to overwrite the default primitive options or
-                values specified in ``options``.
+            **kwargs: Individual options to overwrite the default primitive options.
 
         Returns:
             Submitted job.
@@ -209,8 +168,6 @@ class Sampler(BaseSampler):
         Raises:
             ValueError: If the input values are invalid.
         """
-        # TODO: Something about run_options
-        
         if isinstance(circuits, Iterable) and not all(
             isinstance(inst, QuantumCircuit) for inst in circuits
         ):
@@ -226,13 +183,13 @@ class Sampler(BaseSampler):
             "circuit_indices": list(range(circ_count)),
             "parameter_values": parameter_values,
         }
-        options = options or self.options
-        inputs.update(options._to_program_inputs())
+        combined = self.options._merge_options(kwargs)
+        inputs.update(Options._get_program_inputs(combined))
 
         return self._session.run(
             program_id=self._PROGRAM_ID,
             inputs=inputs,
-            options=options._to_runtime_options(),
+            options=Options._get_runtime_options(combined),
             result_decoder=SamplerResultDecoder,
         )
 
@@ -285,18 +242,29 @@ class Sampler(BaseSampler):
             "circuit_indices": circuits,
             "parameter_values": parameter_values,
         }
-        inputs.update(self.options._to_program_inputs(run_options=run_options))
+        combined = self.options._merge_options(run_options)
+        inputs.update(Options._get_program_inputs(combined))
 
         return self._session.run(
             program_id=self._PROGRAM_ID,
             inputs=inputs,
-            options=self.options._to_runtime_options(),
+            options=Options._get_runtime_options(combined),
             result_decoder=SamplerResultDecoder,
-        )
+        ).result()
 
     def close(self) -> None:
         """Close the session and free resources"""
         self._session.close()
+
+    @property
+    def session(self) -> Session:
+        """Return session used by this primitive.
+
+        Returns:
+            Session used by this primitive.
+        """
+        return self._session
+
 
 class SamplerResultDecoder(ResultDecoder):
     """Class used to decode sampler results."""

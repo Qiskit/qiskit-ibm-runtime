@@ -15,7 +15,7 @@
 import re
 import logging
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Any
 
 from .exceptions import IBMInputValueError
 from .utils.deprecation import issue_deprecation_msg
@@ -36,11 +36,12 @@ class RuntimeOptions:
             The default level is ``WARNING``.
     """
 
-    def __new__(cls, *args, **kwargs):
+    # pylint: disable=unused-argument
+    def __new__(cls, *args: Any, **kwargs: Any) -> "RuntimeOptions":
         issue_deprecation_msg(
             msg="The RuntimeOptions class has been deprecated",
             version="0.7",
-            remedy="Please use qiskit_ibm_runtime.Options class instead."
+            remedy="Please use qiskit_ibm_runtime.Options class instead.",
         )
         return super().__new__(cls)
 
@@ -78,7 +79,7 @@ class RuntimeOptions:
 
     def _to_new_options(self) -> Options:
         return Options(
-            backend=self.backend,
+            backend=self.backend_name,
             log_level=self.log_level,
-            experimental={"image": self.image}
+            experimental={"image": self.image},
         )

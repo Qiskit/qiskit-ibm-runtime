@@ -911,9 +911,9 @@ class QiskitRuntimeService:
                 program_id=program_id,
                 backend_name=options["backend"],
                 params=inputs,
-                image=options["image"],
+                image=options.get("image"),
                 hgp=hgp_name,
-                log_level=options["log_level"],
+                log_level=options.get("log_level"),
                 session_id=session_id,
                 job_tags=job_tags,
                 max_execution_time=max_execution_time,
@@ -938,7 +938,7 @@ class QiskitRuntimeService:
             params=inputs,
             user_callback=callback,
             result_decoder=result_decoder,
-            image=options.image,
+            image=options.get("image"),
         )
         return job
 

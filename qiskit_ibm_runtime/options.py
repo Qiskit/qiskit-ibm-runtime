@@ -13,10 +13,9 @@
 """Primitive settings."""
 
 from typing import Optional, List, Dict, Union, Any
-from dataclasses import dataclass, asdict
-import logging
+from dataclasses import dataclass, asdict, field
+import copy
 
-from .exceptions import IBMInputValueError
 from .utils.deprecation import issue_deprecation_msg
 
 
@@ -91,33 +90,46 @@ class SimulatorOptions:
     """
 
     def __init__(
-        self,
-        noise_model: Any = None,
-        seed_simulator: Optional[int] = None
-        ) -> None:
+        self, noise_model: Any = None, seed_simulator: Optional[int] = None
+    ) -> None:
         self.noise_model = noise_model
         self.seed_simulator = seed_simulator
 
     @property
     def noise_model(self) -> Dict:
+        """Return the noise model.
+
+        Returns:
+            The noise model.
+        """
         return self._noise_model
 
     @noise_model.setter
     def noise_model(self, noise_model: Any) -> None:
+        """Set the noise model.
+
+        Args:
+            noise_model: Noise model to use.
+
+        Raises:
+            ValueError: If the noise model doesn't have a ``to_dict()`` method.
+        """
         if isinstance(noise_model, Dict):
             self._noise_model = noise_model
         else:
             try:
                 self._noise_model = noise_model.to_dict()
             except AttributeError:
-                raise ValueError("Only noise models that have a to_dict() method are supported")
+                raise ValueError(
+                    "Only noise models that have a to_dict() method are supported"
+                )
 
 
 @dataclass
 class Execution:
     """Execution options."""
 
-    shots: int = 1024
+    shots: int = 4000
     qubit_lo_freq: Optional[List[float]] = None
     meas_lo_freq: Optional[List[float]] = None
     # TODO: need to be able to serialize schedule_los before we can support it
@@ -158,70 +170,95 @@ class Options:
 
         transpilation: Transpilation options. See :class:`Transpilation`.
 
-
+        execution: Execution time options. See :class: `Execution`.
     """
 
     optimization_level: int = 1
     resilience_level: int = 0
     backend: str = None
     log_level: str = "WARNING"
-    transpilation: Transpilation = Transpilation()
-    execution: Execution = Execution()
+    transpilation: Transpilation = field(default_factory=Transpilation)
+    execution: Execution = field(default_factory=Execution)
     experimental: dict = None
 
-    def _to_program_inputs(self, run_options: Dict = None) -> Dict:
-        # TODO: Remove this once primitive program is updated to use optimization_level.
-        transpilation_settings = asdict(self.transpilation)
-        transpilation_settings["optimization_settings"] = {
-            "level": self.optimization_level
-        }
-        combined_run_options = asdict(self.execution)
-        if run_options:
-            combined_run_options.update(run_options)
-        return {
-            "resilience_settings": {"level": self.resilience_level},
-            "transpilation_settings": transpilation_settings,
-            "run_options": combined_run_options
-        }
-
-    def _to_runtime_options(self) -> Dict:
-        runtime_options =  {
-            "backend_name": self.backend,
-            "log_level": self.log_level,
-        }
-        if self.experimental:
-            runtime_options["image"] = self.experimental.get("image", None)
-
-    def _validate(self, channel: str) -> None:
-        """Validate options.
+    def _merge_options(self, new_options: Optional[Dict] = None) -> Dict:
+        """Merge current options with the new ones.
 
         Args:
-            channel: channel type.
+            new_options: New options to merge.
 
-        Raises:
-            IBMInputValueError: If one or more option is invalid.
+        Returns:
+            Merged dictionary.
         """
-        if channel == "ibm_quantum" and not self.backend:
-            raise IBMInputValueError(
-                '"backend" is required field in "options" for ``ibm_quantum`` runtime.'
-            )
+        print(f">>>>>> merging... self is {self}, \nnew is {new_options}")
 
-        if self.log_level and not isinstance(
-            logging.getLevelName(self.log_level.upper()), int
-        ):
-            raise IBMInputValueError(
-                f"{self.log_level} is not a valid log level. The valid log levels are: `DEBUG`, "
-                f"`INFO`, `WARNING`, `ERROR`, and `CRITICAL`."
-            )
+        def _update_options(old: Dict, new: Dict) -> None:
+            if not new:
+                return
+            for key, val in old.items():
+                if key in new.keys():
+                    old[key] = new.pop(key)
+                if isinstance(val, Dict):
+                    _update_options(val, new)
+
+        # First combine options.
+        combined = copy.deepcopy(asdict(self))
+        _update_options(combined, new_options)
+        return combined
 
     @classmethod
-    def _from_dict(cls, data: Dict):
+    def _from_dict(cls, data: Dict) -> "Options":
+        data = copy.copy(data)
         experimental = None
         if "image" in data.keys():
             issue_deprecation_msg(
                 msg="The 'image' option has been moved to the 'experimental' category",
                 version="0.7",
-                remedy="Please specify 'experimental':{'image': image} instead."
+                remedy="Please specify 'experimental':{'image': image} instead.",
             )
             experimental = {"image": data.pop("image")}
-        return cls(**data, experimental=experimental)
+        if "backend_name" in data.keys():
+            issue_deprecation_msg(
+                msg="The keyword 'backend_name' has been deprecated",
+                version="0.7",
+                remedy="Please use 'backend' instead.",
+            )
+            data["backend"] = data.pop("backend_name")
+        transp = Transpilation(**data.pop("transpilation", {}))
+        execution = Execution(**data.pop("execution", {}))
+        return cls(
+            experimental=experimental,
+            transpilation=transp,
+            execution=execution,
+            **data,
+        )
+
+    @staticmethod
+    def _get_program_inputs(options: Dict) -> Dict:
+        """Convert the input options to program compatible inputs.
+
+        Returns:
+            Inputs acceptable by primitive programs.
+        """
+        inputs = {}
+        inputs["transpilation_settings"] = options.get("transpilation", {})
+        inputs["transpilation_settings"].update(
+            {"optimization_settings": {"level": options.get("optimization_level")}}
+        )
+        inputs["resilience_settings"] = {"level": options.get("resilience_level")}
+        inputs["run_options"] = options.get("execution")
+        return inputs
+
+    @staticmethod
+    def _get_runtime_options(options: Dict) -> Dict:
+        """Extract runtime options.
+
+        Returns:
+            Runtime options.
+        """
+        experimental = options.get("experimental") or {}
+        return {
+            "backend_name": options.get("backend"),
+            "log_level": options.get("log_level"),
+            "image": experimental.get("image", None),
+        }

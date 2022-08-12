@@ -160,3 +160,7 @@ class Session:
         exc_tb: Optional[TracebackType],
     ) -> None:
         self.close()
+
+
+# Default session
+_DEFAULT_SESSION: Optional[Session] = None

@@ -52,6 +52,9 @@ def validate_runtime_options(options: Dict, channel: str) -> None:
 
     Args:
         options: Runtime options to validate.
+
+    Raises:
+        IBMInputValueError: If input values are invalid.
     """
     if options.get("image") and not re.match(
         "[a-zA-Z0-9]+([/.\\-_][a-zA-Z0-9]+)*:[a-zA-Z0-9]+([.\\-_][a-zA-Z0-9]+)*$",
@@ -60,9 +63,7 @@ def validate_runtime_options(options: Dict, channel: str) -> None:
         raise IBMInputValueError('"image" needs to be in form of image_name:tag')
 
     if channel == "ibm_quantum" and not options.get("backend"):
-        raise IBMInputValueError(
-            '"backend" is required for ``ibm_quantum`` runtime.'
-        )
+        raise IBMInputValueError('"backend" is required for ``ibm_quantum`` runtime.')
 
     if options.get("log_level") and not isinstance(
         logging.getLevelName(options["log_level"].upper()), int
