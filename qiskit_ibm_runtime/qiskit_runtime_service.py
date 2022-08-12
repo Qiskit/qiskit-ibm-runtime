@@ -22,6 +22,7 @@ from typing import Dict, Callable, Optional, Union, List, Any, Type
 from dataclasses import asdict
 
 from qiskit.providers.backend import BackendV1 as Backend
+from qiskit.providers.provider import ProviderV1 as Provider
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.providerutils import filter_backends
 
@@ -57,7 +58,7 @@ logger = logging.getLogger(__name__)
 SERVICE_NAME = "runtime"
 
 
-class QiskitRuntimeService:
+class QiskitRuntimeService(Provider):
     """Class for interacting with the Qiskit Runtime service.
 
     Qiskit Runtime is a new architecture offered by IBM Quantum that
@@ -490,6 +491,7 @@ class QiskitRuntimeService:
                 backend_name += "_"
             setattr(self, backend_name, backend)
 
+    # pylint: disable=arguments-differ
     def backends(
         self,
         name: Optional[str] = None,
@@ -687,6 +689,9 @@ class QiskitRuntimeService:
             raise QiskitBackendNotFoundError("No backend matches the criteria")
         return backends[0]
 
+    def get_backend(self, name: str = None, **kwargs: Any) -> Backend:
+        return self.backend(name, **kwargs)
+
     def pprint_programs(
         self,
         refresh: bool = False,
@@ -746,11 +751,17 @@ class QiskitRuntimeService:
                 # count is the total number of programs that would be returned if
                 # there was no limit or skip
                 count = response.get("count", 0)
+                if limit is None:
+                    limit = count
                 for prog_dict in program_page:
                     program = self._to_program(prog_dict)
                     self._programs[program.program_id] = program
-                if len(self._programs) == count:
-                    # Stop if there are no more programs returned by the server.
+                num_cached_programs = len(self._programs)
+                if num_cached_programs == count or num_cached_programs >= (
+                    limit + skip
+                ):
+                    # Stop if there are no more programs returned by the server or
+                    # if the number of cached programs is greater than the sum of limit and skip
                     break
                 offset += len(program_page)
         if limit is None:
@@ -1447,6 +1458,15 @@ class QiskitRuntimeService:
             The channel type used.
         """
         return self._channel
+
+    @property
+    def runtime(self):  # type:ignore
+        """Return self for compatibility with IBMQ provider.
+
+        Returns:
+            self
+        """
+        return self
 
     def __repr__(self) -> str:
         return "<{}>".format(self.__class__.__name__)
