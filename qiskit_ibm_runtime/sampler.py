@@ -27,6 +27,7 @@ from .runtime_options import RuntimeOptions
 from .program.result_decoder import ResultDecoder
 from .runtime_job import RuntimeJob
 from .utils.deprecation import deprecate_arguments, issue_deprecation_msg
+
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
 
