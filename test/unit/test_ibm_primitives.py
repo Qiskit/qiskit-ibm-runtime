@@ -12,6 +12,7 @@
 
 """Tests for primitive classes."""
 
+import sys
 from unittest.mock import MagicMock, patch
 from dataclasses import asdict
 
@@ -112,7 +113,12 @@ class TestPrimitives(IBMTestCase):
                 with self.subTest(primitive=cls, options=options):
                     inst = cls(session=session, options=options)
                     inst.run(MagicMock(), MagicMock())
-                    inputs = session.run.call_args.kwargs["inputs"]
+                    if sys.version_info >= (3, 8):
+                        inputs = session.run.call_args.kwargs["inputs"]
+                    else:
+                        _, kwargs = session.run.call_args
+                        inputs = kwargs["inputs"]
+
                     self._assert_dict_paritally_equal(inputs, expected)
 
     def test_run_inputs_updated_default(self):
@@ -126,7 +132,11 @@ class TestPrimitives(IBMTestCase):
                 inst.options.optimization_level = 2
                 inst.options.execution.shots = 3
                 inst.run(MagicMock(), MagicMock())
-                inputs = session.run.call_args.kwargs["inputs"]
+                if sys.version_info >= (3, 8):
+                    inputs = session.run.call_args.kwargs["inputs"]
+                else:
+                    _, kwargs = session.run.call_args
+                    inputs = kwargs["inputs"]
                 self._assert_dict_paritally_equal(
                     inputs,
                     {
@@ -164,7 +174,11 @@ class TestPrimitives(IBMTestCase):
                 with self.subTest(primitive=cls, options=options):
                     inst = cls(session=session)
                     inst.run(MagicMock(), MagicMock(), **options)
-                    inputs = session.run.call_args.kwargs["inputs"]
+                    if sys.version_info >= (3, 8):
+                        inputs = session.run.call_args.kwargs["inputs"]
+                    else:
+                        _, kwargs = session.run.call_args
+                        inputs = kwargs["inputs"]
                     self._assert_dict_paritally_equal(inputs, expected)
                     self.assertDictEqual(asdict(inst.options), asdict(Options()))
 

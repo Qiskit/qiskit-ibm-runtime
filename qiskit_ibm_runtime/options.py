@@ -190,8 +190,6 @@ class Options:
         Returns:
             Merged dictionary.
         """
-        print(f">>>>>> merging... self is {self}, \nnew is {new_options}")
-
         def _update_options(old: Dict, new: Dict) -> None:
             if not new:
                 return
