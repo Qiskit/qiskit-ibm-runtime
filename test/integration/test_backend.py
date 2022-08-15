@@ -141,7 +141,9 @@ class TestIBMBackend(IBMIntegrationTestCase):
             raise SkipTest(
                 "Skip since cloud account does not have circuit-runner program."
             )
-        job = self.backend.run(ReferenceCircuits.bell())
+        job = self.backend.run(ReferenceCircuits.bell(), shots=10)
         job.wait_for_final_state()
-        self.assertTrue(job.result)
+        result = job.result()
+        self.assertTrue(result)
+        self.assertEqual(result["results"][0]["shots"], 10)
         self.assertEqual(JobStatus.DONE, job.status())
