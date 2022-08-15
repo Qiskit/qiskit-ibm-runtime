@@ -19,6 +19,7 @@ import warnings
 from datetime import datetime
 from collections import OrderedDict
 from typing import Dict, Callable, Optional, Union, List, Any, Type
+from dataclasses import asdict
 
 from qiskit.providers.backend import BackendV1 as Backend
 from qiskit.providers.provider import ProviderV1 as Provider
@@ -47,9 +48,10 @@ from .runtime_session import RuntimeSession  # pylint: disable=cyclic-import
 from .utils import RuntimeDecoder, to_base64_string, to_python_identifier
 from .utils.backend_decoder import configuration_from_server_data
 from .utils.hgp import to_instance_format, from_instance_format
-from .utils.utils import validate_job_tags
+from .utils.utils import validate_job_tags, validate_runtime_options
 from .api.client_parameters import ClientParameters
 from .runtime_options import RuntimeOptions
+from .utils.deprecation import deprecate_function
 
 logger = logging.getLogger(__name__)
 
@@ -90,7 +92,7 @@ class QiskitRuntimeService(Provider):
         }
 
         # Configure backend options
-        options = {'backend_name': "ibmq_qasm_simulator"}
+        options = {'backend': "ibmq_qasm_simulator"}
 
         # Execute the circuit using the "sampler" program.
         job = service.run(program_id="sampler",
@@ -851,8 +853,17 @@ class QiskitRuntimeService(Provider):
             program_id: Program ID.
             inputs: Program input parameters. These input values are passed
                 to the runtime program.
-            options: Runtime options that control the execution environment. See
-                :class:`RuntimeOptions` for all available options.
+            options: Runtime options that control the execution environment.
+                The use of :class:`RuntimeOptions` has been deprecated.
+
+                * backend: target backend to run on. This is required for ``ibm_quantum`` runtime.
+                * image: the runtime image used to execute the program, specified in
+                    the form of ``image_name:tag``. Not all accounts are
+                    authorized to select a different image.
+                * log_level: logging level to set in the execution environment. The valid
+                    log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
+                    The default level is ``WARNING``.
+
             callback: Callback function to be invoked for any interim results and final result.
                 The callback function will receive 2 positional parameters:
 
@@ -891,29 +902,29 @@ class QiskitRuntimeService(Provider):
             inputs = vars(inputs)
 
         if options is None:
-            options = RuntimeOptions()
-        if isinstance(options, dict):
-            options = RuntimeOptions(**options)
-
-        options.validate(channel=self.channel)
+            options = {}
+        elif isinstance(options, RuntimeOptions):
+            options = asdict(options)
+        options["backend"] = options.get("backend", options.get("backend_name", None))
+        validate_runtime_options(options=options, channel=self.channel)
 
         backend = None
         hgp_name = None
         if self._channel == "ibm_quantum":
             # Find the right hgp
-            hgp = self._get_hgp(instance=instance, backend_name=options.backend_name)
-            backend = hgp.backend(options.backend_name)
+            hgp = self._get_hgp(instance=instance, backend_name=options["backend"])
+            backend = hgp.backend(options["backend"])
             hgp_name = hgp.name
 
         result_decoder = result_decoder or ResultDecoder
         try:
             response = self._api_client.program_run(
                 program_id=program_id,
-                backend_name=options.backend_name,
+                backend_name=options["backend"],
                 params=inputs,
-                image=options.image,
+                image=options.get("image"),
                 hgp=hgp_name,
-                log_level=options.log_level,
+                log_level=options.get("log_level"),
                 session_id=session_id,
                 job_tags=job_tags,
                 max_execution_time=max_execution_time,
@@ -938,10 +949,15 @@ class QiskitRuntimeService(Provider):
             params=inputs,
             user_callback=callback,
             result_decoder=result_decoder,
-            image=options.image,
+            image=options.get("image"),
         )
         return job
 
+    @deprecate_function(
+        "QiskitRuntimeService.open",
+        "0.7",
+        "Instead, use the qiskit_ibm_runtime.Session class to create a runtime session.",
+    )
     def open(
         self,
         program_id: str,

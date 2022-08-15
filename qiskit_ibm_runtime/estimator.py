@@ -12,19 +12,30 @@
 
 """Estimator primitive."""
 
+from __future__ import annotations
+import copy
 from typing import Iterable, Optional, Dict, Sequence, Any, Union
 
 import numpy as np
 from qiskit.circuit import QuantumCircuit, Parameter
 from qiskit.quantum_info import SparsePauliOp
+from qiskit.opflow import PauliSumOp
+from qiskit.quantum_info.operators.base_operator import BaseOperator
+
+# pylint: disable=unused-import,cyclic-import
+import qiskit_ibm_runtime.session as session_pkg
 
 # TODO import BaseEstimator and EstimatorResult from terra once released
 from .qiskit.primitives import BaseEstimator, EstimatorResult
-from .exceptions import IBMInputValueError
-from .ibm_backend import IBMBackend
 from .qiskit_runtime_service import QiskitRuntimeService
-from .runtime_session import RuntimeSession
-from .utils.converters import hms_to_seconds
+from .program.result_decoder import ResultDecoder
+from .runtime_job import RuntimeJob
+from .utils.deprecation import deprecate_arguments, issue_deprecation_msg
+from .runtime_options import RuntimeOptions
+from .options import Options
+
+# pylint: disable=unused-import,cyclic-import
+from .session import Session
 
 
 class Estimator(BaseEstimator):
@@ -33,53 +44,12 @@ class Estimator(BaseEstimator):
     Qiskit Runtime Estimator primitive service estimates expectation values of quantum circuits and
     observables.
 
-    Estimator can be initialized with the following parameters.
+    The :meth: `run` can be used to submit circuits, observables, and parameters
+    to the Estimator primitive.
 
-    * circuits: a (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
-        a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
-
-    * observables: a list of :class:`~qiskit.quantum_info.SparsePauliOp`.
-
-    * parameters: a list of parameters of the quantum circuits.
-        (:class:`~qiskit.circuit.parametertable.ParameterView` or
-        a list of :class:`~qiskit.circuit.Parameter`) specifying the order
-        in which parameter values will be bound.
-
-    * skip_transpilation: Transpilation is skipped if set to True.
-        False by default.
-
-    * service: Optional instance of :class:`qiskit_ibm_runtime.QiskitRuntimeService` class,
-        defaults to `QiskitRuntimeService()` which tries to initialize your default saved account.
-
-    * options: Runtime options dictionary that control the execution environment.
-
-        * backend: Optional instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
-            string name of backend, if not specified a backend will be selected
-            automatically (IBM Cloud only).
-        * image: the runtime image used to execute the program, specified in
-            the form of ``image_name:tag``. Not all accounts are
-            authorized to select a different image.
-        * log_level: logging level to set in the execution environment. The valid
-            log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
-            The default level is ``WARNING``.
-
-    The returned instance can be called repeatedly with the following parameters to
-    estimate expectation values.
-
-    * circuits: a (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
-        a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
-        a list of circuit indices.
-
-    * observables: a list of :class:`~qiskit.quantum_info.SparsePauliOp` or
-        a list of observable indices.
-
-    * parameter_values: An optional list of concrete parameters to be bound.
-
-    * circuit_indices: (DEPRECATED) A list of circuit indices.
-
-    * observable_indices: (DEPRECATED) A list of observable indices.
-
-    All the above lists should be of the same length.
+    You are encouraged to use :class:`~qiskit_ibm_runtime.Session` to open a session,
+    during which you can invoke one or more primitive programs. Jobs submitted within a session
+    are prioritized by the scheduler, and data is cached for efficiency.
 
     Example::
 
@@ -89,180 +59,202 @@ class Estimator(BaseEstimator):
         from qiskit_ibm_runtime import QiskitRuntimeService, Estimator
 
         service = QiskitRuntimeService(channel="ibm_cloud")
-        options = { "backend": "ibmq_qasm_simulator" }
 
         psi1 = RealAmplitudes(num_qubits=2, reps=2)
-        psi2 = RealAmplitudes(num_qubits=2, reps=3)
 
         H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
         H2 = SparsePauliOp.from_list([("IZ", 1)])
         H3 = SparsePauliOp.from_list([("ZI", 1), ("ZZ", 1)])
 
-        with Estimator(
-            circuits=[psi1, psi2],
-            observables=[H1, H2, H3],
-            service=service,
-            options=options
-        ) as estimator:
+        with Session(service) as session:
+            estimator = Estimator(session=session)
+            estimator.options.backend = 'ibmq_qasm_simulator'
+
             theta1 = [0, 1, 1, 2, 3, 5]
-            theta2 = [0, 1, 1, 2, 3, 5, 8, 13]
-            theta3 = [1, 2, 3, 4, 5, 6]
 
             # calculate [ <psi1(theta1)|H1|psi1(theta1)> ]
-            # pass circuits and observables as indices
-            psi1_H1_result = estimator([0], [0], [theta1])
-            print(psi1_H1_result)
+            psi1_H1 = estimator.run(circuits=[psi1], observables=[H1], parameter_values=[theta1])
+            print(psi1_H1.result())
 
             # calculate [ <psi1(theta1)|H2|psi1(theta1)>, <psi1(theta1)|H3|psi1(theta1)> ]
-            # alternatively you can also pass circuits and observables as objects
-            psi1_H23_result = estimator([psi1, psi1], [H2, H3], [theta1]*2)
-            print(psi1_H23_result)
-
-            # calculate [ <psi2(theta2)|H2|psi2(theta2)> ]
-            psi2_H2_result = estimator([1], [1], [theta2])
-            print(psi2_H2_result)
-
-            # calculate [ <psi1(theta1)|H1|psi1(theta1)>, <psi1(theta3)|H1|psi1(theta3)> ]
-            psi1_H1_result2 = estimator([0, 0], [0, 0], [theta1, theta3])
-            print(psi1_H1_result2)
-
-            # calculate [ <psi1(theta1)|H1|psi1(theta1)>,
-            #             <psi2(theta2)|H2|psi2(theta2)>,
-            #             <psi1(theta3)|H3|psi1(theta3)> ]
-            psi12_H23_result = estimator([0, 1, 0], [0, 1, 2], [theta1, theta2, theta3])
-            print(psi12_H23_result)
+            psi1_H23 = estimator.run(
+                circuits=[psi1, psi1],
+                observables=[H2, H3],
+                parameter_values=[theta1]*2
+            )
+            print(psi1_H23.result())
     """
+
+    _PROGRAM_ID = "estimator"
 
     def __init__(
         self,
-        circuits: Union[QuantumCircuit, Iterable[QuantumCircuit]],
-        observables: Iterable[SparsePauliOp],
+        circuits: Optional[Union[QuantumCircuit, Iterable[QuantumCircuit]]] = None,
+        observables: Optional[Iterable[SparsePauliOp]] = None,
         parameters: Optional[Iterable[Iterable[Parameter]]] = None,
         service: Optional[QiskitRuntimeService] = None,
-        options: Optional[Dict] = None,
+        session: Optional[Session] = None,
+        options: Optional[Union[Dict, RuntimeOptions, Options]] = None,
         skip_transpilation: Optional[bool] = False,
-        transpilation_settings: Optional[Dict] = None,
-        resilience_settings: Optional[Dict] = None,
-        max_time: Optional[Union[int, str]] = None,
     ):
         """Initializes the Estimator primitive.
+
+        Args:
+            circuits: (DEPRECATED) A (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
+                a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
+
+            observables: (DEPRECATED) A list of :class:`~qiskit.quantum_info.SparsePauliOp`
+
+            parameters: (DEPRECATED) A list of parameters of the quantum circuits.
+                (:class:`~qiskit.circuit.parametertable.ParameterView` or
+                a list of :class:`~qiskit.circuit.Parameter`) specifying the order
+                in which parameter values will be bound.
+
+            service: (DEPRECATED) Optional instance of
+                :class:`qiskit_ibm_runtime.QiskitRuntimeService` class,
+                defaults to `QiskitRuntimeService()` which tries to initialize your default
+                saved account.
+
+            session: Session in which to call the sampler primitive. If ``None``, a new session
+                is created using the default saved account.
+
+            options: Primitive options, see :class:`Options` for detailed description.
+
+            skip_transpilation: (DEPRECATED) Transpilation is skipped if set to True. False by default.
+                Ignored ``skip_transpilation`` is also specified in ``options``.
+        """
+        super().__init__(
+            circuits=circuits,
+            observables=observables,
+            parameters=parameters,
+        )
+
+        # TODO: Remove deprecation warnings if done in base class
+        if circuits or parameters or observables:
+            deprecate_arguments(
+                "circuits, parameters, and observables",
+                "0.7",
+                f"You can instead specify these inputs using the {self.__class__.__name__}.run method.",
+            )
+        if skip_transpilation:
+            deprecate_arguments(
+                "skip_transpilation",
+                "0.7",
+                "Instead, use the skip_transpilation keyword argument in transpilation_settings.",
+            )
+        if service:
+            deprecate_arguments(
+                "service", "0.7", "Please use the session parameter instead."
+            )
+
+        if options is None:
+            self.options = Options()
+        elif isinstance(options, Options):
+            self.options = copy.deepcopy(options)
+            skip_transpilation = self.options.transpilation.skip_transpilation
+        elif isinstance(options, RuntimeOptions):
+            self.options = options._to_new_options()
+        else:
+            self.options = Options._from_dict(options)
+            skip_transpilation = options.get("transpilation", {}).get(
+                "skip_transpilation", False
+            )
+        self.options.transpilation.skip_transpilation = skip_transpilation
+
+        self._initial_inputs = {
+            "circuits": circuits,
+            "observables": observables,
+            "parameters": parameters,
+        }
+
+        if session:
+            self._session = session
+        else:
+            if session_pkg._DEFAULT_SESSION is None:
+                session_pkg._DEFAULT_SESSION = Session(service=service)
+            self._session = session_pkg._DEFAULT_SESSION
+
+    def run(
+        self,
+        circuits: Union[QuantumCircuit, Sequence[QuantumCircuit]],
+        observables: Sequence[BaseOperator | PauliSumOp],
+        parameter_values: Optional[
+            Union[Sequence[float], Sequence[Sequence[float]]]
+        ] = None,
+        parameters: Sequence[Sequence[Parameter]] | None = None,
+        **kwargs: Any,
+    ) -> RuntimeJob:
+        """Submit a request to the estimator primitive program.
 
         Args:
             circuits: a (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
                 a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
 
-            observables: a list of :class:`~qiskit.quantum_info.SparsePauliOp`
+            observables: A list of observable objects.
 
-            parameters: a list of parameters of the quantum circuits.
+            parameter_values: An optional list of concrete parameters to be bound.
+
+            parameters: A list of parameters of the quantum circuits
                 (:class:`~qiskit.circuit.parametertable.ParameterView` or
-                a list of :class:`~qiskit.circuit.Parameter`) specifying the order
-                in which parameter values will be bound.
+                a list of :class:`~qiskit.circuit.Parameter`).
+                Defaults to ``[circ.parameters for circ in circuits]``.
 
-            service: Optional instance of :class:`qiskit_ibm_runtime.QiskitRuntimeService` class,
-                defaults to `QiskitRuntimeService()` which tries to initialize your default
-                saved account.
+            **kwargs: Individual options to overwrite the default primitive options.
 
-            options: Runtime options dictionary that control the execution environment.
-
-                * backend: Optional instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
-                    string name of backend, if not specified a backend will be selected
-                    automatically (IBM Cloud only).
-                * image: the runtime image used to execute the program, specified in
-                    the form of ``image_name:tag``. Not all accounts are
-                    authorized to select a different image.
-                * log_level: logging level to set in the execution environment. The valid
-                    log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
-                    The default level is ``WARNING``.
-
-            skip_transpilation: Transpilation is skipped if set to True. False by default.
-
-            transpilation_settings: (EXPERIMENTAL setting, can break between releases without warning)
-                Qiskit transpiler settings. The transpilation process converts
-                operations in the circuit to those supported by the backend, swaps qubits with the
-                circuit to overcome limited qubit connectivity and some optimizations to reduce the
-                circuit's gate count where it can.
-
-                * skip_transpilation: Transpilation is skipped if set to True.
-                    False by default.
-
-                * optimization_settings:
-
-                    * level: How much optimization to perform on the circuits.
-                        Higher levels generate more optimized circuits,
-                        at the expense of longer transpilation times.
-                        * 0: no optimization
-                        * 1: light optimization
-                        * 2: heavy optimization
-                        * 3: even heavier optimization
-                        If ``None``, level 1 will be chosen as default.
-
-            resilience_settings: (EXPERIMENTAL setting, can break between releases without warning)
-                Using these settings allows you to build resilient algorithms by
-                leveraging the state of the art error suppression, mitigation and correction techniques.
-
-                * level: How much resilience to build against errors.
-                    Higher levels generate more accurate results,
-                    at the expense of longer processing times.
-                    * 0: no resilience
-                    * 1: light resilience
-                    If ``None``, level 0 will be chosen as default.
-
-            max_time: (EXPERIMENTAL setting, can break between releases without warning)
-                Maximum amount of time, a runtime session can be open before being
-                forcibly closed. Can be specified as seconds (int) or a string like "2h 30m 40s".
+        Returns:
+            Submitted job.
 
         Raises:
-            IBMInputValueError: If an input value is invalid.
+            ValueError: If the input values are invalid.
         """
-        super().__init__(
-            circuits=circuits if isinstance(circuits, Iterable) else [circuits],
-            observables=observables,
-            parameters=parameters,
-        )
-        self._skip_transpilation = skip_transpilation
-        if not service:
-            # try to initialize service with default saved account
-            service = QiskitRuntimeService()
-        self._service = service
-        if isinstance(options, dict) and "backend" in options:
-            backend = options.get("backend")
-            if isinstance(backend, IBMBackend):
-                del options["backend"]
-                options["backend_name"] = backend.name
-            elif isinstance(backend, str):
-                del options["backend"]
-                options["backend_name"] = backend
-            else:
-                raise IBMInputValueError(
-                    "'backend' property in 'options' should be either the string name of the "
-                    "backend or an instance of 'IBMBackend' class"
-                )
-        inputs = {
-            "circuits": circuits,
-            "observables": observables,
-            "parameters": parameters,
-            "skip_transpilation": self._skip_transpilation,
-        }
-        if transpilation_settings:
-            inputs.update({"transpilation_settings": transpilation_settings})
-        if resilience_settings:
-            inputs.update({"resilience_settings": resilience_settings})
-        self._session = RuntimeSession(
-            service=self._service,
-            program_id="estimator",
-            inputs=inputs,
-            options=options,
-            max_time=self.calculate_max_time(max_time=max_time),
+        if isinstance(circuits, Iterable) and not all(
+            isinstance(inst, QuantumCircuit) for inst in circuits
+        ):
+            raise ValueError(
+                "The circuits parameter has to be instances of QuantumCircuit."
+            )
+
+        circ_count = 1 if isinstance(circuits, QuantumCircuit) else len(circuits)
+        obs_count = (
+            1
+            if isinstance(observables, (BaseOperator, PauliSumOp))
+            else len(observables)
         )
 
-    def calculate_max_time(self, max_time: Optional[Union[int, str]] = None) -> int:
-        """Calculate max_time in seconds from hour minute seconds string. Ex: 2h 30m 40s"""
-        try:
-            return hms_to_seconds(max_time) if isinstance(max_time, str) else max_time
-        except IBMInputValueError as input_value_error:
-            raise IBMInputValueError(
-                "Invalid value given for max_time.", input_value_error.message
-            )
+        inputs = {
+            "circuits": circuits,
+            "circuit_indices": list(range(circ_count)),
+            "observables": observables,
+            "observable_indices": list(range(obs_count)),
+            "parameters": parameters,
+            "parameter_values": parameter_values,
+        }
+
+        combined = self.options._merge_options(kwargs)
+        inputs.update(Options._get_program_inputs(combined))
+
+        return self._session.run(
+            program_id=self._PROGRAM_ID,
+            inputs=inputs,
+            options=Options._get_runtime_options(combined),
+            result_decoder=EstimatorResultDecoder,
+        )
+
+    def __call__(
+        self,
+        circuits: Sequence[int],
+        observables: Sequence[int],
+        parameter_values: Optional[
+            Union[Sequence[float], Sequence[Sequence[float]]]
+        ] = None,
+        **run_options: Any,
+    ) -> EstimatorResult:
+        issue_deprecation_msg(
+            msg="Calling an Estimator instance directly has been deprecated ",
+            version="0.7",
+            remedy="Please use qiskit_ibm_runtime.Session and Estimator.run() instead.",
+        )
+        return super().__call__(circuits, observables, parameter_values, **run_options)
 
     def _call(
         self,
@@ -295,18 +287,46 @@ class Estimator(BaseEstimator):
         Returns:
             An instance of :class:`qiskit.primitives.EstimatorResult`.
         """
-        self._session.write(
-            circuit_indices=circuits,
-            observable_indices=observables,
-            parameter_values=parameter_values,
-            run_options=run_options,
-        )
-        raw_result = self._session.read()
-        return EstimatorResult(
-            values=np.asarray(raw_result["values"]),
-            metadata=raw_result["metadata"],
-        )
+        inputs = {
+            "circuits": self._initial_inputs["circuits"],
+            "parameters": self._initial_inputs["parameters"],
+            "observables": self._initial_inputs["observables"],
+            "circuit_indices": circuits,
+            "parameter_values": parameter_values,
+            "observable_indices": observables,
+        }
+        combined = self.options._merge_options(run_options)
+        inputs.update(Options._get_program_inputs(combined))
+
+        return self._session.run(
+            program_id=self._PROGRAM_ID,
+            inputs=inputs,
+            options=Options._get_runtime_options(combined),
+            result_decoder=EstimatorResult,
+        ).result()
 
     def close(self) -> None:
         """Close the session and free resources"""
         self._session.close()
+
+    @property
+    def session(self) -> Session:
+        """Return session used by this primitive.
+
+        Returns:
+            Session used by this primitive.
+        """
+        return self._session
+
+
+class EstimatorResultDecoder(ResultDecoder):
+    """Class used to decode estimator results"""
+
+    @classmethod
+    def decode(cls, raw_result: str) -> EstimatorResult:
+        """Convert the result to EstimatorResult."""
+        decoded: Dict = super().decode(raw_result)
+        return EstimatorResult(
+            values=np.asarray(decoded["values"]),
+            metadata=decoded["metadata"],
+        )
