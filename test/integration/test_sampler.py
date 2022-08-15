@@ -36,8 +36,8 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
         """Verify if sampler primitive returns expected results for non-parameterized circuits."""
 
         # Execute a Bell circuit
-        with Session(service=service) as session:
-            sampler = session.sampler(options=self.options)
+        with Session(service) as session:
+            sampler = Sampler(session=session, options=self.options)
             self.assertIsInstance(sampler, BaseSampler)
             job = sampler.run(circuits=self.bell)
             result = job.result()
@@ -52,8 +52,8 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
     def test_sampler_non_parameterized_circuits(self, service):
         """Test sampler with multiple non-parameterized circuits."""
         # Execute three Bell circuits
-        with Session(service=service) as session:
-            sampler = session.sampler(options=self.options)
+        with Session(service) as session:
+            sampler = Sampler(session=session, options=self.options)
             self.assertIsInstance(sampler, BaseSampler)
             circuits = [self.bell] * 3
 
@@ -98,8 +98,8 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
         theta2 = [1, 2, 3, 4, 5, 6]
         theta3 = [0, 1, 2, 3, 4, 5, 6, 7]
 
-        with Session(service=service) as session:
-            sampler = session.sampler(options=self.options)
+        with Session(service) as session:
+            sampler = Sampler(session=session, options=self.options)
             self.assertIsInstance(sampler, BaseSampler)
 
             circuits0 = [pqc, pqc, pqc2]
@@ -119,10 +119,11 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
         circ.append(custom_gate, [0])
         circ.measure(0, 0)
 
-        with Session(service=service) as session:
-            sampler = session.sampler(
+        with Session(service) as session:
+            sampler = Sampler(
+                session=session,
                 options=self.options,
-                transpilation_settings={"skip_transpilation": True},
+                skip_transpilation=True,
             )
             with self.assertRaises(RuntimeJobFailureError) as err:
                 sampler.run(circuits=circ).result()
@@ -132,9 +133,9 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
     @run_integration_test
     def test_sampler_optimization_level(self, service):
         """Test transpiler optimization level is properly mapped."""
-        with Session(service=service) as session:
-            sampler = session.sampler(options=self.options)
-            sampler.settings.transpilation.optimization_level = 3
+        with Session(service) as session:
+            self.options["optimization_level"] = 3
+            sampler = Sampler(session=session, options=self.options)
             result = sampler.run(self.bell).result()
             self.assertAlmostEqual(result.quasi_dists[0]["11"], 0.5, delta=0.05)
             self.assertAlmostEqual(result.quasi_dists[0]["00"], 0.5, delta=0.05)

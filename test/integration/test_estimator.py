@@ -38,8 +38,8 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
         H2 = SparsePauliOp.from_list([("IZ", 1)])
         H3 = SparsePauliOp.from_list([("ZI", 1), ("ZZ", 1)])
 
-        with Session(service=service) as session:
-            estimator = session.estimator(options=options)
+        with Session(service) as session:
+            estimator = Estimator(session=session, options=options)
             self.assertIsInstance(estimator, BaseEstimator)
 
             theta1 = [0, 1, 1, 2, 3, 5]
