@@ -120,11 +120,8 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
         circ.measure(0, 0)
 
         with Session(service) as session:
-            sampler = Sampler(
-                session=session,
-                options=self.options,
-                skip_transpilation=True,
-            )
+            sampler = Sampler(session=session, options=self.options)
+            sampler.options.transpilation.skip_transpilation = True
             with self.assertRaises(RuntimeJobFailureError) as err:
                 sampler.run(circuits=circ).result()
                 # If transpilation not skipped the error would be something about cannot expand.
@@ -134,8 +131,8 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
     def test_sampler_optimization_level(self, service):
         """Test transpiler optimization level is properly mapped."""
         with Session(service) as session:
-            self.options["optimization_level"] = 3
             sampler = Sampler(session=session, options=self.options)
+            sampler.options.optimization_level = 3
             result = sampler.run(self.bell).result()
             self.assertAlmostEqual(result.quasi_dists[0]["11"], 0.5, delta=0.05)
             self.assertAlmostEqual(result.quasi_dists[0]["00"], 0.5, delta=0.05)
