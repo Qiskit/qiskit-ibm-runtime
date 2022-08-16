@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Primitive settings."""
+"""Primitive options."""
 
 from typing import Optional, List, Dict, Union, Any
 from dataclasses import dataclass, asdict, field
@@ -21,45 +21,7 @@ from .utils.deprecation import issue_deprecation_msg
 
 @dataclass
 class Transpilation:
-    """Transpilation settings.
-
-    Args:
-        skip_transpilation: Whether to skip transpilation.
-
-        initial_layout: Initial position of virtual qubits on physical qubits.
-            See :function:`qiskit.compiler.transpile` for more information.
-
-        layout_method: Name of layout selection pass ('trivial', 'dense', 'noise_adaptive', 'sabre')
-
-        routing_method: Name of routing pass ('basic', 'lookahead', 'stochastic', 'sabre', 'none')
-
-        translation_method: Name of translation pass ('unroller', 'translator', 'synthesis')
-
-        approximation_degree (float): heuristic dial used for circuit approximation
-            (1.0=no approximation, 0.0=maximal approximation)
-
-        timing_constraints: An optional control hardware restriction on instruction time resolution.
-            A quantum computer backend may report a set of restrictions, namely:
-
-            - granularity: An integer value representing minimum pulse gate
-              resolution in units of ``dt``. A user-defined pulse gate should have
-              duration of a multiple of this granularity value.
-            - min_length: An integer value representing minimum pulse gate
-              length in units of ``dt``. A user-defined pulse gate should be longer
-              than this length.
-            - pulse_alignment: An integer value representing a time resolution of gate
-              instruction starting time. Gate instruction should start at time which
-              is a multiple of the alignment value.
-            - acquire_alignment: An integer value representing a time resolution of measure
-              instruction starting time. Measure instruction should start at time which
-              is a multiple of the alignment value.
-
-            This information will be provided by the backend configuration.
-            If the backend doesn't have any restriction on the instruction time allocation,
-            then ``timing_constraints`` is None and no adjustment will be performed.
-
-        seed_transpiler: Sets random seed for the stochastic parts of the transpiler
-    """
+    """Transpilation options."""
 
     # TODO: Double check transpilation settings.
 
@@ -139,7 +101,7 @@ class Execution:
 
 @dataclass
 class Options:
-    """Primitive options.
+    """Options for the primitive programs.
 
     Args:
         optimization_level: How much optimization to perform on the circuits.
@@ -162,15 +124,75 @@ class Options:
             log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
             The default level is ``WARNING``.
 
-        backend: target backend to run on. This is required for ``ibm_quantum`` runtime.
+        backend: target backend to run on. This is required for ``ibm_quantum`` channel.
 
         log_level: logging level to set in the execution environment. The valid
             log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
             The default level is ``WARNING``.
 
-        transpilation: Transpilation options. See :class:`Transpilation`.
+        transpilation: Transpilation options.
 
-        execution: Execution time options. See :class: `Execution`.
+            * skip_transpilation: Whether to skip transpilation.
+
+            * initial_layout: Initial position of virtual qubits on physical qubits.
+              See ``qiskit.compiler.transpile`` for more information.
+
+            * layout_method: Name of layout selection pass ('trivial', 'dense', 'noise_adaptive', 'sabre')
+
+            * routing_method: Name of routing pass ('basic', 'lookahead', 'stochastic', 'sabre', 'none')
+
+            * translation_method: Name of translation pass ('unroller', 'translator', 'synthesis')
+
+            * approximation_degree: heuristic dial used for circuit approximation
+              (1.0=no approximation, 0.0=maximal approximation)
+
+            * timing_constraints: An optional control hardware restriction on instruction time resolution.
+              A quantum computer backend may report a set of restrictions, namely:
+
+                * granularity: An integer value representing minimum pulse gate
+                  resolution in units of ``dt``. A user-defined pulse gate should have
+                  duration of a multiple of this granularity value.
+
+                * min_length: An integer value representing minimum pulse gate
+                  length in units of ``dt``. A user-defined pulse gate should be longer
+                  than this length.
+
+                * pulse_alignment: An integer value representing a time resolution of gate
+                  instruction starting time. Gate instruction should start at time which
+                  is a multiple of the alignment value.
+
+                * acquire_alignment: An integer value representing a time resolution of measure
+                  instruction starting time. Measure instruction should start at time which
+                  is a multiple of the alignment value.
+
+                  This information will be provided by the backend configuration.
+                  If the backend doesn't have any restriction on the instruction time allocation,
+                  then ``timing_constraints`` is None and no adjustment will be performed.
+
+            * seed_transpiler: Sets random seed for the stochastic parts of the transpiler.
+
+        execution: Execution time options.
+
+            * shots: Number of repetitions of each circuit, for sampling. Default: 4000.
+
+            * qubit_lo_freq: List of job level qubit drive LO frequencies in Hz. Overridden by
+              ``schedule_los`` if specified. Must have length ``n_qubits.``
+
+            * meas_lo_freq: List of measurement LO frequencies in Hz. Overridden by ``schedule_los`` if
+              specified. Must have length ``n_qubits.``
+
+            * schedule_los: Experiment level (ie circuit or schedule) LO frequency configurations for
+              qubit drive and measurement channels. These values override the job level values from
+              ``default_qubit_los`` and ``default_meas_los``. Frequencies are in Hz. Settable for qasm
+              and pulse jobs.
+
+            * rep_delay: Delay between programs in seconds. Only supported on certain
+              backends (if ``backend.configuration().dynamic_reprate_enabled=True``). If supported,
+              it must be from the range supplied by the backend (``backend.configuration().rep_delay_range``).
+              Default is given by ``backend.configuration().default_rep_delay``.
+
+            * init_qubits: Whether to reset the qubits to the ground state for each shot.
+              Default: ``True``.
     """
 
     optimization_level: int = 1

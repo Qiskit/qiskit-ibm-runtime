@@ -23,115 +23,49 @@ Qiskit Runtime is a new architecture that
 streamlines computations requiring many iterations. These experiments will
 execute significantly faster within its improved hybrid quantum/classical process.
 
-Qiskit Runtime IBM Client allows authorized users to upload their Qiskit quantum programs.
-A Qiskit quantum program, also called a runtime program, is a piece of Python
-code and its metadata that takes certain inputs, performs
-quantum and maybe classical processing, and returns the results. The same or other
-authorized users can invoke these quantum programs by simply passing in parameters.
+Primitives and sessions
+-----------------------
 
-Account initialization
-----------------------
+Qiskit Runtime has two predefined primitive programs: ``Sampler`` and ``Estimator``.
+These primitives provide a simplified interface for performing foundational quantum
+computing tasks while also accounting for the latest developments in
+quantum hardware and software.
 
-You need to initialize your account before you can start using the Qiskit Runtime service.
-This is done by initializing an :class:`QiskitRuntimeService` instance with your
-account credentials. If you don't want to pass in the credentials each time, you
-can use the :meth:`QiskitRuntimeService.save_account` method to save the credentials
-on disk.
+Qiskit Runtime also has the concept of a session. Jobs submitted within a session are
+prioritized by the scheduler, and parameter data is cached for reuse. A session
+allows you to make iterative calls to the quantum computer more efficiently.
 
-Qiskit Runtime is available on both IBM Cloud and IBM Quantum, and you can specify
-``channel="ibm_cloud"`` for IBM Cloud and ``channel="ibm_quantum"`` for IBM Quantum. The default
-is IBM Cloud.
+Below is an example of using primitives within a session::
 
-Listing runtime programs
-------------------------
+    from qiskit_ibm_runtime import QiskitRuntimeService, Session, Sampler, Estimator, Options
+    from qiskit.test.reference_circuits import ReferenceCircuits
+    from qiskit.circuit.library import RealAmplitudes
+    from qiskit.quantum_info import SparsePauliOp
 
-To list all available runtime programs::
-
-    from qiskit_ibm_runtime import QiskitRuntimeService
-
+    # Initialize account.
     service = QiskitRuntimeService()
 
-    # List all available programs.
-    service.pprint_programs()
+    # Set options, which can be overwritten at job level.
+    options = Options(backend="ibmq_qasm_simulator")
 
-    # Get a single program.
-    program = service.program('sampler')
+    # Prepare inputs.
+    bell = ReferenceCircuits.bell()
+    psi = RealAmplitudes(num_qubits=2, reps=2)
+    H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
+    theta = [0, 1, 1, 2, 3, 5]
 
-    # Print program metadata.
-    print(program)
+    with Session(service) as session:
+        # Submit a request to the Sampler primitive within the session.
+        sampler = Sampler(session=session, options=options)
+        job = sampler.run(circuits=bell)
+        print(f"Sampler results: {job.result()}")
 
-The example above prints the program metadata of all
-available runtime programs and of just the ``sampler`` program. A program
-metadata consists of the program's ID, name, description, input parameters,
-return values, interim results, and other information that helps you to know
-more about the program.
-
-Invoking a runtime program
---------------------------
-
-You can use the :meth:`QiskitRuntimeService.run` method to invoke a runtime program.
-For example::
-
-    from qiskit import QuantumCircuit
-    from qiskit_ibm_runtime import QiskitRuntimeService
-
-    service = QiskitRuntimeService()
-    backend = "ibmq_qasm_simulator"
-
-    # Create a circuit.
-    qc = QuantumCircuit(2, 2)
-    qc.h(0)
-    qc.cx(0, 1)
-    qc.measure_all()
-
-    # Set the "sampler" program parameters
-    params = service.program(program_id="sampler").parameters()
-    params.circuits = qc
-
-    # Configure backend options
-    options = {'backend_name': backend}
-
-    # Execute the circuit using the "sampler" program.
-    job = service.run(program_id="sampler",
-                      options=options,
-                      inputs=params)
-
-    # Get runtime job result.
-    result = job.result()
-
-The example above invokes the ``sampler`` program.
-
-Runtime Jobs
-------------
-
-When you use the :meth:`QiskitRuntimeService.run` method to invoke a runtime
-program, a
-:class:`RuntimeJob` instance is returned. This class has all the basic job
-methods, such as :meth:`RuntimeJob.status`, :meth:`RuntimeJob.result`, and
-:meth:`RuntimeJob.cancel`.
-
-Interim and final results
--------------------------
-
-Some runtime programs provide interim results that inform you about program
-progress. You can choose to stream the interim results and final result when you run the
-program by passing in the ``callback`` parameter, or at a later time using
-the :meth:`RuntimeJob.stream_results` method. For example::
-
-    from qiskit import QuantumCircuit
-    from qiskit_ibm_runtime import QiskitRuntimeService
-
-    service = QiskitRuntimeService()
-    backend = "ibmq_qasm_simulator"
-
-    def result_callback(job_id, result):
-        print(result)
-
-    # Stream results as soon as the job starts running.
-    job = service.run(program_id="sampler",
-                      options=options,
-                      inputs=program_inputs,
-                      callback=result_callback)
+        # Submit a request to the Estimator primitive within the session.
+        estimator = Estimator(session=session, options=options)
+        job = estimator.run(
+            circuits=[psi], observables=[H1], parameter_values=[theta]
+        )
+        print(f"Estimator results: {job.result()}")
 
 Backend data
 ------------
@@ -141,75 +75,112 @@ Backend data
 backend to use. These methods return one or more :class:`IBMBackend` instances
 that contains methods and attributes describing the backend.
 
+Supplementary Information
+-------------------------
 
-Uploading a program
--------------------
+.. dropdown:: Account initialization
+   :animate: fade-in-slide-down
 
-Each runtime program has both ``data`` and ``metadata``. Program data is
-the Python code to be executed. Program metadata provides usage information,
-such as program description, its inputs and outputs, and backend requirements.
-A detailed program metadata helps the consumers of the program to know what is
-needed to run the program.
+    You need to initialize your account before you can start using the Qiskit Runtime service.
+    This is done by initializing a :class:`QiskitRuntimeService` instance with your
+    account credentials. If you don't want to pass in the credentials each time, you
+    can use the :meth:`QiskitRuntimeService.save_account` method to save the credentials
+    on disk.
 
-Each program data needs to have a ``main(backend, user_messenger, **kwargs)``
-method, which serves as the entry point to the program. The ``backend`` parameter
-is a :class:`ProgramBackend` instance whose :meth:`ProgramBackend.run` method
-can be used to submit circuits. The ``user_messenger`` is a :class:`UserMessenger`
-instance whose :meth:`UserMessenger.publish` method can be used to publish interim and
-final results.
-See `qiskit_ibm_runtime/program/program_template.py` for a program data
-template file.
+    Qiskit Runtime is available on both IBM Cloud and IBM Quantum, and you can specify
+    ``channel="ibm_cloud"`` for IBM Cloud and ``channel="ibm_quantum"`` for IBM Quantum. The default
+    is IBM Cloud.
 
-Each program metadata must include at least the program name, description, and
-maximum execution time. You can find description of each metadata field in
-the :meth:`QiskitRuntimeService.upload_program` method. Instead of passing in
-the metadata fields individually, you can pass in a JSON file or a dictionary
-to :meth:`QiskitRuntimeService.upload_program` via the ``metadata`` parameter.
-`qiskit_ibm_runtime/program/program_metadata_sample.json`
-is a sample file of program metadata.
+.. dropdown:: Runtime Jobs
+   :animate: fade-in-slide-down
 
-You can use the :meth:`QiskitRuntimeService.upload_program` to upload a program.
-For example::
+    When you use the ``run()`` method of the :class:`Sampler` or :class:`Estimator`
+    to invoke the primitive program, a
+    :class:`RuntimeJob` instance is returned. This class has all the basic job
+    methods, such as :meth:`RuntimeJob.status`, :meth:`RuntimeJob.result`, and
+    :meth:`RuntimeJob.cancel`.
 
-    from qiskit_ibm_runtime import QiskitRuntimeService
+.. dropdown:: Logging
+   :animate: fade-in-slide-down
 
-    service = QiskitRuntimeService()
-    program_id = service.upload_program(
-                    data="my_vqe.py",
-                    metadata="my_vqe_metadata.json"
-                )
+    ``qiskit-ibm-runtime`` uses the ``qiskit_ibm_runtime`` logger.
 
-In the example above, the file ``my_vqe.py`` contains the program data, and
-``my_vqe_metadata.json`` contains the program metadata.
+    Two environment variables can be used to control the logging:
 
-Method :meth:`QiskitRuntimeService.delete_program` allows you to delete a
-program.
+        * ``QISKIT_IBM_RUNTIME_LOG_LEVEL``: Specifies the log level to use.
+          If an invalid level is set, the log level defaults to ``WARNING``.
+          The valid log levels are ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``
+          (case-insensitive). If the environment variable is not set, then the parent logger's level
+          is used, which also defaults to ``WARNING``.
+        * ``QISKIT_IBM_RUNTIME_LOG_FILE``: Specifies the name of the log file to use. If specified,
+          messages will be logged to the file only. Otherwise messages will be logged to the standard
+          error (usually the screen).
 
-Files related to writing a runtime program are in the
-``qiskit_ibm_runtime/program`` directory.
+    For more advanced use, you can modify the logger itself. For example, to manually set the level
+    to ``WARNING``::
 
+        import logging
+        logging.getLogger('qiskit_ibm_runtime').setLevel(logging.WARNING)
 
-Logging
--------
+.. dropdown:: Invoking a non-primitive program
+   :animate: fade-in-slide-down
 
-`qiskit-ibm-runtime` uses the ``qiskit_ibm_runtime`` logger.
+    Qiskit Runtime has a handful of predefined programs in addition to the primitives.
+    Unlike the primitives, these programs don't have special classes defined and
+    can be invoked in a generic way. For example::
 
-Two environment variables can be used to control the logging:
+        from qiskit_ibm_runtime import QiskitRuntimeService
 
-    * ``QISKIT_IBM_RUNTIME_LOG_LEVEL``: Specifies the log level to use.
-      If an invalid level is set, the log level defaults to ``WARNING``.
-      The valid log levels are ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``
-      (case-insensitive). If the environment variable is not set, then the parent logger's level
-      is used, which also defaults to ``WARNING``.
-    * ``QISKIT_IBM_RUNTIME_LOG_FILE``: Specifies the name of the log file to use. If specified,
-      messages will be logged to the file only. Otherwise messages will be logged to the standard
-      error (usually the screen).
+        # Initialize account.
+        service = QiskitRuntimeService()
 
-For more advanced use, you can modify the logger itself. For example, to manually set the level
-to ``WARNING``::
+        # Configure backend options.
+        options = {"backend": "ibmq_qasm_simulator"}
 
-    import logging
-    logging.getLogger('qiskit_ibm_runtime').setLevel(logging.WARNING)
+        # Prepare inputs.
+        runtime_inputs = {"iterations": 1}
+
+        # Invoke the "hello-world" program.
+        job = service.run(program_id="hello-world",
+                          options=options,
+                          inputs=runtime_inputs)
+        # Get runtime job result.
+        print(job.result())
+
+.. dropdown:: Interim and final results
+   :animate: fade-in-slide-down
+
+    Some runtime programs provide interim results that inform you about program
+    progress. You can choose to stream the interim results and final result when you run the
+    program by passing in the ``callback`` parameter, or at a later time using
+    the :meth:`RuntimeJob.stream_results` method. For example::
+
+        from qiskit_ibm_runtime import QiskitRuntimeService
+
+        service = QiskitRuntimeService()
+        options = {"backend": "ibmq_qasm_simulator"}
+        runtime_inputs = {"iterations": 2}
+
+        def result_callback(job_id, result):
+            print(result)
+
+        # Stream results as soon as the job starts running.
+        job = service.run(program_id="hello-world",
+                          options=options,
+                          inputs=runtime_inputs,
+                          callback=result_callback)
+        print(job.result())
+
+.. dropdown:: Uploading a program
+   :animate: fade-in-slide-down
+
+    Authorized users can upload their custom Qiskit Runtime programs.
+    A Qiskit Runtime program is a piece of Python
+    code and its metadata that takes certain inputs, performs
+    quantum and maybe classical processing, and returns the results.
+
+    Files related to writing a runtime program are in the
+    ``qiskit_ibm_runtime/program`` directory.
 
 Classes
 ==========================
@@ -219,6 +190,8 @@ Classes
    QiskitRuntimeService
    Estimator
    Sampler
+   Session
+   Options
    IBMBackend
    RuntimeJob
    RuntimeProgram

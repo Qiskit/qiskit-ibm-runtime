@@ -22,3 +22,4 @@ coverage>=6.3
 pylatexenc
 mthree
 sklearn
+sphinx-design>=0.2.0
