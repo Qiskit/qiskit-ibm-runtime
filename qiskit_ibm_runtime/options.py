@@ -137,7 +137,8 @@ class Options:
             * initial_layout: Initial position of virtual qubits on physical qubits.
               See ``qiskit.compiler.transpile`` for more information.
 
-            * layout_method: Name of layout selection pass ('trivial', 'dense', 'noise_adaptive', 'sabre')
+            * layout_method: Name of layout selection pass
+              ('trivial', 'dense', 'noise_adaptive', 'sabre').
 
             * routing_method: Name of routing pass ('basic', 'lookahead', 'stochastic', 'sabre', 'none')
 
@@ -146,8 +147,8 @@ class Options:
             * approximation_degree: heuristic dial used for circuit approximation
               (1.0=no approximation, 0.0=maximal approximation)
 
-            * timing_constraints: An optional control hardware restriction on instruction time resolution.
-              A quantum computer backend may report a set of restrictions, namely:
+            * timing_constraints: An optional control hardware restriction on instruction time
+              resolution. A quantum computer backend may report a set of restrictions, namely:
 
                 * granularity: An integer value representing minimum pulse gate
                   resolution in units of ``dt``. A user-defined pulse gate should have
@@ -187,8 +188,9 @@ class Options:
               and pulse jobs.
 
             * rep_delay: Delay between programs in seconds. Only supported on certain
-              backends (if ``backend.configuration().dynamic_reprate_enabled=True``). If supported,
-              it must be from the range supplied by the backend (``backend.configuration().rep_delay_range``).
+              backends (if ``backend.configuration().dynamic_reprate_enabled=True``).
+              If supported, it must be from the range supplied by the backend
+              (``backend.configuration().rep_delay_range``).
               Default is given by ``backend.configuration().default_rep_delay``.
 
             * init_qubits: Whether to reset the qubits to the ground state for each shot.
