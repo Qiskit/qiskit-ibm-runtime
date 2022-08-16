@@ -14,9 +14,12 @@
 
 import logging
 
-from typing import Iterable, Union, Optional, Any, List
+from typing import Iterable, Union, Optional, Any, List, Callable, Type, Dict
 from datetime import datetime as python_datetime
 
+
+from qiskit.circuit import QuantumCircuit
+from qiskit.pulse import Schedule, LoConfig
 from qiskit.qobj.utils import MeasLevel, MeasReturnType
 from qiskit.providers.backend import BackendV2 as Backend
 from qiskit.providers.options import Options
@@ -29,6 +32,7 @@ from qiskit.providers.models import (
     PulseBackendConfiguration,
 )
 from qiskit.pulse.channels import (
+    PulseChannel,
     AcquireChannel,
     ControlChannel,
     DriveChannel,
@@ -39,6 +43,8 @@ from qiskit.transpiler.target import Target
 from qiskit_ibm_runtime import (  # pylint: disable=unused-import,cyclic-import
     qiskit_runtime_service,
 )
+from qiskit_ibm_runtime.program.result_decoder import ResultDecoder
+from qiskit_ibm_runtime.runtime_job import RuntimeJob
 
 from .api.clients import AccountClient, RuntimeClient
 from .api.clients.backend import BaseBackendClient
@@ -475,11 +481,92 @@ class IBMBackend(Backend):
     def __repr__(self) -> str:
         return "<{}('{}')>".format(self.__class__.__name__, self.name)
 
-    def run(self, *args: Any, **kwargs: Any) -> None:
-        """Not supported method"""
+    def run(
+        self,
+        circuits: Union[
+            QuantumCircuit, Schedule, List[Union[QuantumCircuit, Schedule]]
+        ],
+        program_id: str = "circuit-runner",
+        shots: Optional[Union[int, float]] = None,
+        qubit_lo_freq: Optional[List[int]] = None,
+        meas_lo_freq: Optional[List[int]] = None,
+        schedule_los: Optional[
+            Union[
+                List[Union[Dict[PulseChannel, float], LoConfig]],
+                Union[Dict[PulseChannel, float], LoConfig],
+            ]
+        ] = None,
+        rep_delay: Optional[float] = None,
+        init_qubits: Optional[bool] = None,
+        use_measure_esp: Optional[bool] = None,
+        callback: Optional[Callable] = None,
+        result_decoder: Optional[Type[ResultDecoder]] = None,
+        instance: Optional[str] = None,
+        session_id: Optional[str] = None,
+        job_tags: Optional[List[str]] = None,
+        max_execution_time: Optional[int] = None,
+        start_session: Optional[bool] = None,
+    ) -> RuntimeJob:
+        """Run on the backend by calling the ciruict-runner program.
+
+        Args:
+            circuits: An individual or a
+                list of :class:`~qiskit.circuits.QuantumCircuit` or
+                :class:`~qiskit.pulse.Schedule` objects to run on the backend.
+            program_id: Program ID which defaults to ``circuit-runner``.
+            shots: Number of repetitions of each circuit, for sampling. Default: 4000
+                or ``max_shots`` from the backend configuration, whichever is smaller.
+            qubit_lo_freq: List of default qubit LO frequencies in Hz. Will be overridden by
+                ``schedule_los`` if set.
+            meas_lo_freq: List of default measurement LO frequencies in Hz. Will be overridden
+                by ``schedule_los`` if set.
+            schedule_los: schedule_los: Experiment LO configurations, frequencies are given in Hz.
+            rep_delay: Delay between programs in seconds.
+            init_qubits: Whether to reset the qubits to the ground state for each shot.
+            use_measure_esp: Whether to use excited state promoted (ESP) readout for measurements
+                which are the terminal instruction to a qubit.
+            callback: Callback function to be invoked for any interim results and final result.
+            result_decoder: A :class:`ResultDecoder` subclass used to decode job results.
+            instance: This is only supported for ``ibm_quantum`` runtime and is in the
+                hub/group/project format.
+            session_id: Job ID of the first job in a runtime session.
+            job_tags: Tags to be assigned to the job.
+            max_execution_time: Maximum execution time in seconds.
+            start_session: Set to True to explicitly start a runtime session. Defaults to False.
+
+        Returns:
+             A ``RuntimeJob`` instance representing the execution.
+        """
         # pylint: disable=arguments-differ
-        raise RuntimeError(
-            "IBMBackend.run() is not supported in the Qiskit Runtime environment."
+        options = {"backend_name": self.name}
+        inputs = {"circuits": circuits}
+        if shots:
+            inputs["shots"] = shots
+        if qubit_lo_freq:
+            inputs["qubit_lo_freq"] = qubit_lo_freq
+        if meas_lo_freq:
+            inputs["meas_lo_freq"] = meas_lo_freq
+        if schedule_los:
+            inputs["schedule_los"] = schedule_los
+        if rep_delay:
+            inputs["rep_delay"] = rep_delay
+        if init_qubits is not None:
+            inputs["init_qubits"] = init_qubits
+        if use_measure_esp is not None:
+            inputs["use_measure_esp"] = use_measure_esp
+
+        return qiskit_runtime_service.QiskitRuntimeService.run(
+            self.service,
+            program_id=program_id,
+            inputs=inputs,
+            options=options,
+            callback=callback,
+            result_decoder=result_decoder,
+            instance=instance,
+            session_id=session_id,
+            job_tags=job_tags,
+            max_execution_time=max_execution_time,
+            start_session=start_session,
         )
 
 
