@@ -302,7 +302,7 @@ class Estimator(BaseEstimator):
             program_id=self._PROGRAM_ID,
             inputs=inputs,
             options=Options._get_runtime_options(combined),
-            result_decoder=EstimatorResult,
+            result_decoder=EstimatorResultDecoder,
         ).result()
 
     def close(self) -> None:
