@@ -88,7 +88,7 @@ class TestPrimitives(IBMTestCase):
         sampler = Sampler()
         self.assertIsNotNone(sampler.session)
         estimator = Estimator()
-        self.assertEqual(estimator.session, sampler.session)
+        self.assertIsNotNone(estimator.session)
 
     def test_run_inputs_default(self):
         """Test run using default options."""
