@@ -8,35 +8,35 @@ features:
     You can now invoke the same or different primitive programs multiple times
     within a session. For example::
 
-    from qiskit_ibm_runtime import QiskitRuntimeService, Session, Sampler, Estimator, Options
-    from qiskit.test.reference_circuits import ReferenceCircuits
-    from qiskit.circuit.library import RealAmplitudes
-    from qiskit.quantum_info import SparsePauliOp
+      from qiskit_ibm_runtime import QiskitRuntimeService, Session, Sampler, Estimator, Options
+      from qiskit.test.reference_circuits import ReferenceCircuits
+      from qiskit.circuit.library import RealAmplitudes
+      from qiskit.quantum_info import SparsePauliOp
 
-    # Initialize account.
-    service = QiskitRuntimeService()
+      # Initialize account.
+      service = QiskitRuntimeService()
 
-    # Set options, which can be overwritten at job level.
-    options = Options(backend="ibmq_qasm_simulator")
+      # Set options, which can be overwritten at job level.
+      options = Options(backend="ibmq_qasm_simulator")
 
-    # Prepare inputs.
-    bell = ReferenceCircuits.bell()
-    psi = RealAmplitudes(num_qubits=2, reps=2)
-    H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
-    theta = [0, 1, 1, 2, 3, 5]
+      # Prepare inputs.
+      bell = ReferenceCircuits.bell()
+      psi = RealAmplitudes(num_qubits=2, reps=2)
+      H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
+      theta = [0, 1, 1, 2, 3, 5]
 
-    with Session(service) as session:
-        # Submit a request to the Sampler primitive within the session.
-        sampler = Sampler(session=session, options=options)
-        job = sampler.run(circuits=bell)
-        print(f"Sampler results: {job.result()}")
+      with Session(service) as session:
+          # Submit a request to the Sampler primitive within the session.
+          sampler = Sampler(session=session, options=options)
+          job = sampler.run(circuits=bell)
+          print(f"Sampler results: {job.result()}")
 
-        # Submit a request to the Estimator primitive within the session.
-        estimator = Estimator(session=session, options=options)
-        job = estimator.run(
-            circuits=[psi], observables=[H1], parameter_values=[theta]
-        )
-        print(f"Estimator results: {job.result()}")
+          # Submit a request to the Estimator primitive within the session.
+          estimator = Estimator(session=session, options=options)
+          job = estimator.run(
+              circuits=[psi], observables=[H1], parameter_values=[theta]
+          )
+          print(f"Estimator results: {job.result()}")
   - |
     A new :class:`qiskit_ibm_runtime.Options` class is introduced. This class
     allows you to auto-complete options related to primitive programs. For example::
