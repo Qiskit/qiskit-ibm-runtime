@@ -66,42 +66,41 @@ class QiskitRuntimeService(Provider):
     execute significantly faster within its improved hybrid quantum/classical
     process.
 
-    The Qiskit Runtime Service allows authorized users to upload their Qiskit
-    quantum programs. A Qiskit quantum program, also called a runtime program,
-    is a piece of Python code and its metadata that takes certain inputs, performs
-    quantum and maybe classical processing, and returns the results. The same or other
-    authorized users can invoke these quantum programs by simply passing in parameters.
-
     A sample workflow of using the runtime service::
 
-        from qiskit import QuantumCircuit
-        from qiskit_ibm_runtime import QiskitRuntimeService
+        from qiskit_ibm_runtime import QiskitRuntimeService, Session, Sampler, Estimator, Options
+        from qiskit.test.reference_circuits import ReferenceCircuits
+        from qiskit.circuit.library import RealAmplitudes
+        from qiskit.quantum_info import SparsePauliOp
 
+        # Initialize account.
         service = QiskitRuntimeService()
 
-        # Create a circuit.
-        qc = QuantumCircuit(2)
-        qc.h(0)
-        qc.cx(0, 1)
-        qc.measure_all()
+        # Set options, which can be overwritten at job level.
+        options = Options(backend="ibmq_qasm_simulator")
 
-        # Set the "sampler" program inputs
-        inputs = {
-            'circuits': qc,
-            'circuit_indices': [0]
-        }
+        # Prepare inputs.
+        bell = ReferenceCircuits.bell()
+        psi = RealAmplitudes(num_qubits=2, reps=2)
+        H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
+        theta = [0, 1, 1, 2, 3, 5]
 
-        # Configure backend options
-        options = {'backend': "ibmq_qasm_simulator"}
+        with Session(service) as session:
+            # Submit a request to the Sampler primitive within the session.
+            sampler = Sampler(session=session, options=options)
+            job = sampler.run(circuits=bell)
+            print(f"Sampler results: {job.result()}")
 
-        # Execute the circuit using the "sampler" program.
-        job = service.run(program_id="sampler",
-                          options=options,
-                          inputs=inputs)
-        print(f"Job ID: {job.job_id}")
-        # Get runtime job result.
-        result = job.result()
-        print(result)
+            # Submit a request to the Estimator primitive within the session.
+            estimator = Estimator(session=session, options=options)
+            job = estimator.run(
+                circuits=[psi], observables=[H1], parameter_values=[theta]
+            )
+            print(f"Estimator results: {job.result()}")
+
+    The example above uses the dedicated :class:`~qiskit_ibm_runtime.Sampler`
+    and :class:`~qiskit_ibm_runtime.Estimator` classes. You can also
+    use the :meth:`run` method directly to invoke a Qiskit Runtime program.
 
     If the program has any interim results, you can use the ``callback``
     parameter of the :meth:`run` method to stream the interim results.

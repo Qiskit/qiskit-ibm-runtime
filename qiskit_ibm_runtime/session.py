@@ -40,14 +40,17 @@ class Session:
 
     The ``Session`` class allows you to open a "session" with the Qiskit Runtime service.
     Jobs submitted during a session get prioritized scheduling. This class allows
-    you to submit jobs to one or more of the primitives. For example::
+    you to submit jobs to one or more of the primitives.
+
+    For example::
 
         from qiskit.test.reference_circuits import ReferenceCircuits
+        from qiskit_ibm_runtime import Sampler, Session, Options
+
+        options = Options(backend="ibmq_qasm_simulator", optimization_level=3)
 
         with Session() as session:
-            sampler = session.sampler()
-            sampler.options.backend = "ibmq_qasm_simulator"
-            sampler.settings.transpilation.optimization_level = 1
+            sampler = Sampler(session=session, options=options)
             job = sampler.run(circ)
             print(f"Sampler job ID: {job.job_id}")
             print(f"Sampler job result:" {job.result()})
@@ -59,9 +62,10 @@ class Session:
         max_time: Optional[Union[int, str]] = None,
     ):
         """Session constructor.
+
         Args:
-            service: Optional instance of :class:`qiskit_ibm_runtime.QiskitRuntimeService` class,
-                defaults to `QiskitRuntimeService()` which tries to initialize
+            service: Optional instance of the ``QiskitRuntimeService`` class,
+                defaults to ``QiskitRuntimeService()`` which tries to initialize
                 your default saved account.
             max_time: (EXPERIMENTAL setting, can break between releases without warning)
                 Maximum amount of time, a runtime session can be open before being
@@ -96,11 +100,11 @@ class Session:
 
                 * backend: target backend to run on. This is required for ``ibm_quantum`` runtime.
                 * image: the runtime image used to execute the program, specified in
-                    the form of ``image_name:tag``. Not all accounts are
-                    authorized to select a different image.
+                  the form of ``image_name:tag``. Not all accounts are
+                  authorized to select a different image.
                 * log_level: logging level to set in the execution environment. The valid
-                    log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
-                    The default level is ``WARNING``.
+                  log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
+                  The default level is ``WARNING``.
 
         Returns:
             Submitted job.

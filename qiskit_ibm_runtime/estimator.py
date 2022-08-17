@@ -44,7 +44,7 @@ class Estimator(BaseEstimator):
     Qiskit Runtime Estimator primitive service estimates expectation values of quantum circuits and
     observables.
 
-    The :meth: `run` can be used to submit circuits, observables, and parameters
+    The :meth:`run` can be used to submit circuits, observables, and parameters
     to the Estimator primitive.
 
     You are encouraged to use :class:`~qiskit_ibm_runtime.Session` to open a session,
@@ -170,7 +170,10 @@ class Estimator(BaseEstimator):
         if session:
             self._session = session
         else:
-            if session_pkg._DEFAULT_SESSION is None:
+            if (
+                session_pkg._DEFAULT_SESSION is None
+                or not session_pkg._DEFAULT_SESSION._active
+            ):
                 session_pkg._DEFAULT_SESSION = Session(service=service)
             self._session = session_pkg._DEFAULT_SESSION
 
