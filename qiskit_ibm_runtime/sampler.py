@@ -137,7 +137,11 @@ class Sampler(BaseSampler):
         if session:
             self._session = session
         else:
-            session_pkg._DEFAULT_SESSION = Session(service=service)
+            if (
+                session_pkg._DEFAULT_SESSION is None
+                or not session_pkg._DEFAULT_SESSION._active
+            ):
+                session_pkg._DEFAULT_SESSION = Session(service=service)
             self._session = session_pkg._DEFAULT_SESSION
 
     def run(
