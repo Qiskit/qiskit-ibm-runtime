@@ -69,6 +69,7 @@ extensions = [
     'sphinx_autodoc_typehints',
     'reno.sphinxext',
     'nbsphinx',
+    'sphinx_design'
 ]
 html_static_path = ['_static']
 templates_path = ['_templates']
