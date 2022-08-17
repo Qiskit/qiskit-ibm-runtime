@@ -46,7 +46,7 @@ author = 'Qiskit Development Team'
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = '0.6.0'
+release = '0.7.0'
 
 # -- General configuration ---------------------------------------------------
 
@@ -69,6 +69,7 @@ extensions = [
     'sphinx_autodoc_typehints',
     'reno.sphinxext',
     'nbsphinx',
+    'sphinx_design'
 ]
 html_static_path = ['_static']
 templates_path = ['_templates']
