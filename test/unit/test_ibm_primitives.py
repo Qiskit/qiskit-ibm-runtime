@@ -17,6 +17,7 @@ from unittest.mock import MagicMock, patch
 from dataclasses import asdict
 
 from qiskit_ibm_runtime import Sampler, Estimator, Options, RuntimeOptions
+import qiskit_ibm_runtime.session as session_pkg
 from ..ibm_test_case import IBMTestCase
 from ..utils import dict_paritally_equal
 
@@ -97,10 +98,14 @@ class TestPrimitives(IBMTestCase):
     @patch("qiskit_ibm_runtime.sampler.Session")
     def test_default_session(self, *_):
         """Test a session is created if not passed in."""
-        sampler = Sampler()
-        self.assertIsNotNone(sampler.session)
-        estimator = Estimator()
-        self.assertEqual(estimator.session, sampler.session)
+        try:
+            sampler = Sampler()
+            self.assertIsNotNone(sampler.session)
+            estimator = Estimator()
+            self.assertEqual(estimator.session, sampler.session)
+        finally:
+            # Ensure it's cleaned up or next test will fail.
+            session_pkg._DEFAULT_SESSION = None
 
     def test_default_session_after_close(self):
         """Test a new default session is open after previous is closed."""
