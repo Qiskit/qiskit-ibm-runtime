@@ -18,6 +18,7 @@ from dataclasses import asdict
 
 from qiskit_ibm_runtime import Sampler, Estimator, Options, RuntimeOptions
 from ..ibm_test_case import IBMTestCase
+from ..utils import dict_paritally_equal
 
 
 class TestPrimitives(IBMTestCase):
@@ -81,6 +82,17 @@ class TestPrimitives(IBMTestCase):
                         options["image"], inst.options.experimental["image"]
                     )
 
+    def test_options_copied(self):
+        """Test modifying original options does not affect primitives."""
+        options = Options()
+        primitives = [Sampler, Estimator]
+        for cls in primitives:
+            with self.subTest(primitive=cls):
+                options.transpilation.skip_transpilation = True
+                inst = cls(session=MagicMock(), options=options)
+                options.transpilation.skip_transpilation = False
+                self.assertTrue(inst.options.transpilation.skip_transpilation)
+
     @patch("qiskit_ibm_runtime.estimator.Session")
     @patch("qiskit_ibm_runtime.sampler.Session")
     def test_default_session(self, *_):
@@ -90,7 +102,17 @@ class TestPrimitives(IBMTestCase):
         estimator = Estimator()
         self.assertEqual(estimator.session, sampler.session)
 
-    def test_run_inputs_default(self):
+    def test_default_session_after_close(self):
+        """Test a new default session is open after previous is closed."""
+        service = MagicMock()
+        sampler = Sampler(service=service)
+        sampler.session.close()
+        estimator = Estimator(service=service)
+        self.assertIsNotNone(estimator.session)
+        self.assertTrue(estimator.session._active)
+        self.assertNotEqual(estimator.session, sampler.session)
+
+    def test_run_default_options(self):
         """Test run using default options."""
         session = MagicMock()
         options_vars = [
@@ -121,7 +143,7 @@ class TestPrimitives(IBMTestCase):
 
                     self._assert_dict_paritally_equal(inputs, expected)
 
-    def test_run_inputs_updated_default(self):
+    def test_run_updated_default_options(self):
         """Test run using updated default options."""
         session = MagicMock()
         primitives = [Sampler, Estimator]
@@ -148,7 +170,7 @@ class TestPrimitives(IBMTestCase):
                     },
                 )
 
-    def test_run_inputs_overwrite(self):
+    def test_run_overwrite_options(self):
         """Test run using overwritten options."""
         session = MagicMock()
         options_vars = [
@@ -182,6 +204,33 @@ class TestPrimitives(IBMTestCase):
                     self._assert_dict_paritally_equal(inputs, expected)
                     self.assertDictEqual(asdict(inst.options), asdict(Options()))
 
+    def test_run_multiple_different_options(self):
+        """Test multiple runs with different options."""
+        session = MagicMock()
+        primitives = [Sampler, Estimator]
+        for cls in primitives:
+            with self.subTest(primitive=cls):
+                inst = cls(session=session)
+                inst.run(MagicMock(), MagicMock(), shots=100)
+                inst.run(MagicMock(), MagicMock(), shots=200)
+                kwargs_list = session.run.call_args_list
+                for idx, shots in zip([0, 1], [100, 200]):
+                    self.assertEqual(
+                        kwargs_list[idx][1]["inputs"]["run_options"]["shots"], shots
+                    )
+                self.assertDictEqual(asdict(inst.options), asdict(Options()))
+
+    def test_run_same_session(self):
+        """Test multiple runs within a session."""
+        num_runs = 5
+        primitives = [Sampler, Estimator]
+        session = MagicMock()
+        for idx in range(num_runs):
+            cls = primitives[idx % 2]
+            inst = cls(session=session)
+            inst.run(MagicMock(), MagicMock())
+        self.assertEqual(session.run.call_count, num_runs)
+
     def _update_dict(self, dict1, dict2):
         for key, val in dict1.items():
             if isinstance(val, dict):
@@ -190,8 +239,7 @@ class TestPrimitives(IBMTestCase):
                 dict1[key] = dict2.pop(key)
 
     def _assert_dict_paritally_equal(self, dict1, dict2):
-        for key, val in dict2.items():
-            if isinstance(val, dict):
-                self._assert_dict_paritally_equal(dict1.get(key), val)
-            elif key in dict1:
-                self.assertEqual(val, dict1[key])
+        self.assertTrue(
+            dict_paritally_equal(dict1, dict2),
+            f"{dict1} and {dict2} not partially equal.",
+        )
