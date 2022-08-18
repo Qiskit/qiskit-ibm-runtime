@@ -45,6 +45,15 @@ class Backend(RestAdapterBase):
         self.backend_name = backend_name
         super().__init__(session, "{}/devices/{}".format(url_prefix, backend_name))
 
+    def cost_parameters(self) -> Dict[str, Any]:
+        """Return backend cost parameters.
+
+        Returns:
+            JSON response of cost parameters.
+        """
+        response = self.session.get(f"/backends/{self.backend_name}").json()
+        return response.get("costParameters")
+
     def properties(self, datetime: Optional[datetime] = None) -> Dict[str, Any]:
         """Return backend properties.
 

@@ -28,6 +28,26 @@ from ibm_platform_services import ResourceControllerV2
 from ..exceptions import IBMInputValueError
 
 
+def calculate_cost(
+    cost_parameters: Dict, num_circuits: int, shots: Union[float, int]
+) -> float:
+    """Calculate the cost of a runtime job.
+
+    Args:
+        cost_parameters: The cost parameters of the backend.
+        num_circuits: The number of circuits run.
+        shots: The number of shots used.
+
+    Returns:
+        The calculated runtime cost.
+    """
+    fixed_overhead = cost_parameters["fixedOverhead"]
+    cal_circuits = cost_parameters["calCircuits"]
+    rep_rate = cost_parameters["repRate"]
+
+    return fixed_overhead + ((num_circuits + cal_circuits) * shots) / rep_rate
+
+
 def validate_job_tags(
     job_tags: Optional[List[str]], exception: Type[Exception]
 ) -> None:

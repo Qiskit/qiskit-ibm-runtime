@@ -395,3 +395,14 @@ class RuntimeClient(BaseBackendClient):
             Backend pulse defaults.
         """
         return self._api.backend(backend_name).pulse_defaults()
+
+    def backend_cost_parameters(self, backend_name: str) -> Dict:
+        """Return the cost parameters of the IBM Cloud backend.
+
+        Args:
+            backend_name: The name of the IBM Cloud backend.
+
+        Returns:
+            Backend cost parameters.
+        """
+        return self._api.backend(backend_name).cost_parameters()

@@ -72,6 +72,15 @@ class CloudBackend(RestAdapterBase):
         url = self.get_url("pulse_defaults")
         return self.session.get(url).json()
 
+    def cost_parameters(self) -> Dict[str, Any]:
+        """Return backend cost parameters.
+
+        Returns:
+            JSON response of cost parameters.
+        """
+        response = self.session.get(f"/backends/{self.backend_name}").json()
+        return response.get("costParameters")
+
     def status(self) -> Dict[str, Any]:
         """Return backend status.
 

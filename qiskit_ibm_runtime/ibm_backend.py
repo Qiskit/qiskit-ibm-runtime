@@ -52,6 +52,8 @@ from .exceptions import IBMBackendApiProtocolError
 from .utils.backend_converter import (
     convert_to_target,
 )
+
+from .utils.utils import calculate_cost
 from .utils.converters import local_to_utc
 from .utils.backend_decoder import (
     defaults_from_server_data,
@@ -317,6 +319,15 @@ class IBMBackend(Backend):
         self._convert_to_target()
         return self._target
 
+    @property
+    def cost_parameters(self) -> Dict[str, Any]:
+        """Return backend cost parameters.
+
+        Returns:
+            The backend cost parameters or ``None`` if they do not exist.
+        """
+        return self._api_client.backend_cost_parameters(self.name)
+
     def properties(
         self, refresh: bool = False, datetime: Optional[python_datetime] = None
     ) -> Optional[BackendProperties]:
@@ -538,6 +549,12 @@ class IBMBackend(Backend):
              A ``RuntimeJob`` instance representing the execution.
         """
         # pylint: disable=arguments-differ
+        if self.cost_parameters:
+            cost = calculate_cost(
+                self.cost_parameters,
+                len(circuits),
+                shots or min(4000, self._configuration.max_shots),
+            )
         options = {"backend_name": self.name}
         inputs = {"circuits": circuits}
         if shots:
@@ -565,7 +582,7 @@ class IBMBackend(Backend):
             instance=instance,
             session_id=session_id,
             job_tags=job_tags,
-            max_execution_time=max_execution_time,
+            max_execution_time=max_execution_time or cost,
             start_session=start_session,
         )
 

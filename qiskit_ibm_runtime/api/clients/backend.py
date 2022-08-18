@@ -63,3 +63,15 @@ class BaseBackendClient(BaseClient, ABC):
             Backend pulse defaults.
         """
         pass
+
+    @abstractmethod
+    def backend_cost_parameters(self, backend_name: str) -> Dict:
+        """Return the cost parameters of the backend.
+
+        Args:
+            backend_name: The name of the backend.
+
+        Returns:
+            Backend cost parameters.
+        """
+        pass
