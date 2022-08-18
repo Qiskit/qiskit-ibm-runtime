@@ -147,3 +147,13 @@ class TestIBMBackend(IBMIntegrationTestCase):
         self.assertTrue(result)
         self.assertEqual(result["results"][0]["shots"], 10)
         self.assertEqual(JobStatus.DONE, job.status())
+
+    def test_calculate_backend_run_cost(self):
+        """Test backend.run job cost is set to default value."""
+        if self.dependencies.channel == "ibm_cloud":
+            raise SkipTest(
+                "Skip since cloud account does not have circuit-runner program."
+            )
+        job = self.backend.run(ReferenceCircuits.bell())
+        cost = job._api_client.job_get(job.job_id)["cost"]
+        self.assertEqual(cost, 300)

@@ -1,0 +1,6 @@
+---
+upgrade:
+  - |
+    When using :meth:`~qiskit_ibm_runtime.IBMBackend.run` to run circuit jobs 
+    on a real device, the cost of the job will be calculated by the backend parameters,
+    number of circuits, and number of shots. 
