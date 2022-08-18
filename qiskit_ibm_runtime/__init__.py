@@ -71,7 +71,7 @@ Backend data
 ------------
 
 :class:`QiskitRuntimeService` also has methods, such as :meth:`backend`,
-:meth:`backends`, and :meth:`least_busy`, that allows you to query for a target
+:meth:`backends`, and :meth:`least_busy`, that allow you to query for a target
 backend to use. These methods return one or more :class:`IBMBackend` instances
 that contains methods and attributes describing the backend.
 
