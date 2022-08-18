@@ -45,7 +45,7 @@ def calculate_cost(
     cal_circuits = cost_parameters["calCircuits"]
     rep_rate = cost_parameters["repRate"]
 
-    return fixed_overhead + ((num_circuits + cal_circuits) * shots) / rep_rate
+    return int(fixed_overhead + ((num_circuits + cal_circuits) * shots) / rep_rate)
 
 
 def validate_job_tags(

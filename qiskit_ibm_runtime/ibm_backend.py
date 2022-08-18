@@ -549,11 +549,15 @@ class IBMBackend(Backend):
              A ``RuntimeJob`` instance representing the execution.
         """
         # pylint: disable=arguments-differ
+        cost = None
         if self.cost_parameters:
-            cost = calculate_cost(
-                self.cost_parameters,
-                len(circuits),
-                shots or min(4000, self._configuration.max_shots),
+            cost = max(
+                300,
+                calculate_cost(
+                    self.cost_parameters,
+                    len(circuits),
+                    shots or min(4000, self._configuration.max_shots),
+                ),
             )
         options = {"backend_name": self.name}
         inputs = {"circuits": circuits}
