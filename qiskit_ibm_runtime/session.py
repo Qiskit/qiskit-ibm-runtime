@@ -60,6 +60,7 @@ class Session:
         self,
         service: Optional[QiskitRuntimeService] = None,
         max_time: Optional[Union[int, str]] = None,
+        backend: Optional[str] = None,
     ):
         """Session constructor.
 
@@ -75,6 +76,7 @@ class Session:
         self._service = service or QiskitRuntimeService()
         self._session_id: Optional[str] = None
         self._active = True
+        self._backend = backend or self._service.backend().name
 
         self._max_time = (
             max_time
@@ -116,6 +118,7 @@ class Session:
         max_time = self._max_time if not self._session_id else None
 
         job = self._service.run(
+            backend=self._backend,
             program_id=program_id,
             options=options,
             inputs=inputs,

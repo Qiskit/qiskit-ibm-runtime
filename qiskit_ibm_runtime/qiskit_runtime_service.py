@@ -836,6 +836,7 @@ class QiskitRuntimeService(Provider):
     def run(
         self,
         program_id: str,
+        backend: str,
         inputs: Union[Dict, ParameterNamespace],
         options: Optional[Union[RuntimeOptions, Dict]] = None,
         callback: Optional[Callable] = None,
@@ -904,22 +905,20 @@ class QiskitRuntimeService(Provider):
             options = {}
         elif isinstance(options, RuntimeOptions):
             options = asdict(options)
-        options["backend"] = options.get("backend", options.get("backend_name", None))
         validate_runtime_options(options=options, channel=self.channel)
 
-        backend = None
+        hgp_backend = None
         hgp_name = None
         if self._channel == "ibm_quantum":
             # Find the right hgp
-            hgp = self._get_hgp(instance=instance, backend_name=options["backend"])
-            backend = hgp.backend(options["backend"])
+            hgp = self._get_hgp(instance=instance, backend_name=backend)
+            hgp_backend = hgp.backend(backend)
             hgp_name = hgp.name
-
         result_decoder = result_decoder or ResultDecoder
         try:
             response = self._api_client.program_run(
                 program_id=program_id,
-                backend_name=options["backend"],
+                backend_name=backend,
                 params=inputs,
                 image=options.get("image"),
                 hgp=hgp_name,
@@ -936,11 +935,11 @@ class QiskitRuntimeService(Provider):
                 ) from None
             raise IBMRuntimeError(f"Failed to run program: {ex}") from None
 
-        if not backend:
-            backend = self.backend(name=response["backend"])
+        if not hgp_backend:
+            hgp_backend = self.backend(name=response["backend"])
 
         job = RuntimeJob(
-            backend=backend,
+            backend=hgp_backend,
             api_client=self._api_client,
             client_params=self._client_params,
             job_id=response["id"],
