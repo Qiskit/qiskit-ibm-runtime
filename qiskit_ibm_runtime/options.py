@@ -233,13 +233,13 @@ class Options:
                 remedy="Please specify 'experimental':{'image': image} instead.",
             )
             experimental = {"image": data.pop("image")}
-            if "backend_name" in data.keys():
-                issue_deprecation_msg(
-                    msg="The keyword 'backend_name' has been deprecated",
-                    version="0.7",
-                    remedy="Please use 'backend' instead.",
-                )
-                data["backend"] = data.pop("backend_name")
+        if "backend_name" in data.keys():
+            issue_deprecation_msg(
+                msg="The keyword 'backend_name' has been deprecated",
+                version="0.7",
+                remedy="Please use 'backend' instead.",
+            )
+            data["backend"] = data.pop("backend_name")
         transp = Transpilation(**data.pop("transpilation", {}))
         execution = Execution(**data.pop("execution", {}))
         return cls(
