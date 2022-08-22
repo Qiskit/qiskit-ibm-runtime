@@ -558,6 +558,7 @@ class IBMBackend(Backend):
         return qiskit_runtime_service.QiskitRuntimeService.run(
             self.service,
             program_id=program_id,
+            backend=self.name,
             inputs=inputs,
             options=options,
             callback=callback,

@@ -905,7 +905,7 @@ class QiskitRuntimeService(Provider):
             options = {}
         elif isinstance(options, RuntimeOptions):
             options = asdict(options)
-        validate_runtime_options(options=options, channel=self.channel)
+        validate_runtime_options(options=options)
 
         hgp_backend = None
         hgp_name = None
@@ -959,6 +959,7 @@ class QiskitRuntimeService(Provider):
     def open(
         self,
         program_id: str,
+        backend: str,
         inputs: Union[Dict, ParameterNamespace],
         options: Optional[Union[RuntimeOptions, Dict]] = None,
     ) -> RuntimeSession:
@@ -975,7 +976,11 @@ class QiskitRuntimeService(Provider):
             Runtime session.
         """
         return RuntimeSession(
-            service=self, program_id=program_id, inputs=inputs, options=options
+            service=self,
+            program_id=program_id,
+            backend=backend,
+            inputs=inputs,
+            options=options,
         )
 
     def upload_program(

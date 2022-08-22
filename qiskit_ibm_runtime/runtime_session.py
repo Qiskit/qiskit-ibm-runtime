@@ -43,6 +43,7 @@ class RuntimeSession:
         self,
         service: "qiskit_runtime_service.QiskitRuntimeService",
         program_id: str,
+        backend: str,
         inputs: Union[Dict, ParameterNamespace],
         options: Optional[Union[RuntimeOptions, Dict]] = None,
         max_time: Optional[int] = None,
@@ -56,6 +57,7 @@ class RuntimeSession:
         """
         self._service = service
         self._program_id = program_id
+        self._backend = backend
         self._options: Optional[Union[RuntimeOptions, Dict]] = options
         self._initial_inputs = inputs
         self._initial_job: Optional[RuntimeJob] = None
@@ -86,6 +88,7 @@ class RuntimeSession:
     def _run(self, inputs: Union[Dict, ParameterNamespace]) -> RuntimeJob:
         """Run a program"""
         return self._service.run(
+            backend=self._backend,
             program_id=self._program_id,
             options=self._options,
             inputs=inputs,

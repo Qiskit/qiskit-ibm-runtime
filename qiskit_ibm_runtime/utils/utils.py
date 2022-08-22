@@ -47,7 +47,7 @@ def validate_job_tags(
         raise exception("job_tags needs to be a list of strings.")
 
 
-def validate_runtime_options(options: Dict, channel: str) -> None:
+def validate_runtime_options(options: Dict) -> None:
     """Validate runtime options.
 
     Args:
