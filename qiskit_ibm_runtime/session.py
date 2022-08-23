@@ -20,6 +20,7 @@ from qiskit_ibm_runtime import QiskitRuntimeService
 from .runtime_job import RuntimeJob
 from .runtime_program import ParameterNamespace
 from .program.result_decoder import ResultDecoder
+from .ibm_backend import IBMBackend
 from .utils.converters import hms_to_seconds
 
 
@@ -47,9 +48,9 @@ class Session:
         from qiskit.test.reference_circuits import ReferenceCircuits
         from qiskit_ibm_runtime import Sampler, Session, Options
 
-        options = Options(backend="ibmq_qasm_simulator", optimization_level=3)
+        options = Options(optimization_level=3)
 
-        with Session() as session:
+        with Session(backend="ibmq_qasm_simulator") as session:
             sampler = Sampler(session=session, options=options)
             job = sampler.run(circ)
             print(f"Sampler job ID: {job.job_id}")
@@ -59,6 +60,7 @@ class Session:
     def __init__(
         self,
         service: Optional[QiskitRuntimeService] = None,
+        backend: Optional[Union[str, IBMBackend]] = None,
         max_time: Optional[Union[int, str]] = None,
     ):
         """Session constructor.
@@ -67,12 +69,24 @@ class Session:
             service: Optional instance of the ``QiskitRuntimeService`` class,
                 defaults to ``QiskitRuntimeService()`` which tries to initialize
                 your default saved account.
+            backend: Optional instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
+                string name of backend. If not specified, a backend will be selected
+                automatically (IBM Cloud channel only).
             max_time: (EXPERIMENTAL setting, can break between releases without warning)
                 Maximum amount of time, a runtime session can be open before being
                 forcibly closed. Can be specified as seconds (int) or a string like "2h 30m 40s".
         """
 
         self._service = service or QiskitRuntimeService()
+
+        if self._service.channel == "ibm_quantum" and not backend:
+            raise ValueError(
+                '"backend" is required for ``ibm_quantum`` channel.'
+            )
+        if isinstance(backend, IBMBackend):
+            backend = backend.name
+        self._backend = backend
+
         self._session_id: Optional[str] = None
         self._active = True
 
@@ -98,7 +112,6 @@ class Session:
                 to the runtime program.
             options: Runtime options that control the execution environment.
 
-                * backend: target backend to run on. This is required for ``ibm_quantum`` runtime.
                 * image: the runtime image used to execute the program, specified in
                   the form of ``image_name:tag``. Not all accounts are
                   authorized to select a different image.
@@ -114,6 +127,7 @@ class Session:
 
         # TODO: Do we really need to specify a None max time if session has started?
         max_time = self._max_time if not self._session_id else None
+        options["backend"] = self._backend
 
         job = self._service.run(
             program_id=program_id,
@@ -168,3 +182,21 @@ class Session:
 
 # Default session
 _DEFAULT_SESSION: Optional[Session] = None
+
+def get_default_session(service, backend: str) -> Session:
+    """Return the default session.
+
+    Args:
+        service: Service to use to create a default session.
+        backend: Backend for the default session.
+    """
+    global _DEFAULT_SESSION
+    if (
+        _DEFAULT_SESSION is None
+        or not _DEFAULT_SESSION._active
+        or _DEFAULT_SESSION._backend != backend
+    ):
+        if _DEFAULT_SESSION and _DEFAULT_SESSION._active:
+            _DEFAULT_SESSION.close()
+        _DEFAULT_SESSION = Session(service=service, backend=backend)
+    return _DEFAULT_SESSION

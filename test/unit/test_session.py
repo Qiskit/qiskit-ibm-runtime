@@ -10,18 +10,98 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Tests for primitive classes."""
+"""Tests for Session class."""
 
 import sys
 from unittest.mock import MagicMock, patch
 from dataclasses import asdict
 
-from qiskit_ibm_runtime import Sampler, Estimator, Options, RuntimeOptions
+from qiskit_ibm_runtime import Sampler, Estimator, Options, RuntimeOptions, Session
+from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from ..ibm_test_case import IBMTestCase
 
 
-class TestPrimitives(IBMTestCase):
-    """Class for testing the Sampler class."""
+class TestSession(IBMTestCase):
+    """Class for testing the Session class."""
+
+    def test_run_after_close(self):
+        """Test running after session is closed."""
+        s = Session(service=MagicMock(), backend="ibm_gotham")
+        s.close()
+        with self.assertRaises(RuntimeError):
+            s.run(program_id="program_id", inputs={})
+
+    def test_missing_backend(self):
+        """Test missing backend."""
+        service = MagicMock()
+        service.channel = "ibm_quantum"
+        with self.assertRaises(ValueError):
+            Session(service=service)
+
+    def test_passing_ibm_backend(self):
+        """Test passing in IBMBackend instance."""
+        backend = IBMBackend(MagicMock(), MagicMock(), MagicMock())
+        backend.name = "ibm_gotham"
+        s = Session(service=MagicMock(), backend=backend)
+        self.assertEqual(s._backend, "ibm_gotham")
+
+    def test_run(self):
+        """Test the run method."""
+        job = MagicMock()
+        job.job_id = "12345"
+        service = MagicMock()
+        service.run.return_value = job
+        backend = "ibm_gotham"
+        inputs = {"name": "bruce wayne"}
+        options = {"log_level": "INFO"}
+        program_id = "batman_begins"
+        decoder = MagicMock()
+        max_time = 42
+        s = Session(service=service, backend=backend, max_time=max_time)
+        session_ids = [None, job.job_id]
+        start_sessions = [True, False]
+
+        for idx in range(2):
+            s.run(
+                program_id=program_id,
+                inputs=inputs,
+                options=options,
+                result_decoder=decoder
+            )
+            _, kwargs = service.run.call_args
+            self.assertEqual(kwargs["program_id"], program_id)
+            self.assertDictEqual(kwargs["options"], {"backend": backend, **options})
+            self.assertDictEqual(kwargs["inputs"], inputs)
+            self.assertEqual(kwargs["session_id"], session_ids[idx])
+            self.assertEqual(kwargs["start_session"], start_sessions[idx])
+            self.assertEqual(kwargs["result_decoder"], decoder)
+
+    def test_context_manager(self):
+        """Test session as a context manager."""
+        pass
+
+    def test_no_default_session(self):
+        """Test no default session."""
+        pass
+
+    def test_closed_default_session(self):
+        """Test default session closed."""
+        pass
+
+    def test_default_session_different_backend(self):
+        """Test default session backend change."""
+        pass
+
+
+
+
+
+
+
+
+
+
+
 
     def test_skip_transpilation(self):
         """Test skip_transpilation is hornored."""

@@ -79,7 +79,6 @@ class RuntimeOptions:
 
     def _to_new_options(self) -> Options:
         return Options(
-            backend=self.backend_name,
             log_level=self.log_level,
             experimental={"image": self.image},
         )

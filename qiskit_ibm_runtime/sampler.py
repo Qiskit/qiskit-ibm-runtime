@@ -17,15 +17,15 @@ from typing import Dict, Iterable, Optional, Sequence, Any, Union
 import copy
 
 from qiskit.circuit import QuantumCircuit, Parameter
-import qiskit_ibm_runtime.session as session_pkg
 
 # TODO import BaseSampler and SamplerResult from terra once released
 from .qiskit.primitives import BaseSampler, SamplerResult
 from .qiskit_runtime_service import QiskitRuntimeService
 from .options import Options
-from .runtime_options import RuntimeOptions
 from .program.result_decoder import ResultDecoder
 from .runtime_job import RuntimeJob
+from .ibm_backend import IBMBackend
+from .session import get_default_session
 from .utils.deprecation import deprecate_arguments, issue_deprecation_msg
 
 # pylint: disable=unused-import,cyclic-import
@@ -69,7 +69,7 @@ class Sampler(BaseSampler):
         parameters: Optional[Iterable[Iterable[Parameter]]] = None,
         service: Optional[QiskitRuntimeService] = None,
         session: Optional[Session] = None,
-        options: Optional[Union[Dict, RuntimeOptions, Options]] = None,
+        options: Optional[Union[Dict, Options]] = None,
         skip_transpilation: Optional[bool] = False,
     ):
         """Initializes the Sampler primitive.
@@ -91,6 +91,7 @@ class Sampler(BaseSampler):
                 is created using the default saved account.
 
             options: Primitive options, see :class:`Options` for detailed description.
+                The ``backend`` keyword is still supported but is deprecated.
 
             skip_transpilation (DEPRECATED): Transpilation is skipped if set to True. False by default.
                 Ignored ``skip_transpilation`` is also specified in ``options``.
@@ -119,14 +120,23 @@ class Sampler(BaseSampler):
                 "service", "0.7", "Please use the session parameter instead."
             )
 
+        self._backend = None
+
         if options is None:
             self.options = Options()
         elif isinstance(options, Options):
             self.options = copy.deepcopy(options)
             skip_transpilation = self.options.transpilation.skip_transpilation
-        elif isinstance(options, RuntimeOptions):
-            self.options = options._to_new_options()
         else:
+            self._backend = options.pop("backend", None)
+            if self._backend is not None:
+                issue_deprecation_msg(
+                    msg="The 'backend' key in 'options' has been deprecated",
+                    version="0.7",
+                    remedy="Please pass the backend when opening a session."
+                )
+            if isinstance(self._backend, IBMBackend):
+                self._backend = self._backend.name
             self.options = Options._from_dict(options)
             skip_transpilation = options.get("transpilation", {}).get(
                 "skip_transpilation", False
@@ -134,15 +144,7 @@ class Sampler(BaseSampler):
         self.options.transpilation.skip_transpilation = skip_transpilation
 
         self._initial_inputs = {"circuits": circuits, "parameters": parameters}
-        if session:
-            self._session = session
-        else:
-            if (
-                session_pkg._DEFAULT_SESSION is None
-                or not session_pkg._DEFAULT_SESSION._active
-            ):
-                session_pkg._DEFAULT_SESSION = Session(service=service)
-            self._session = session_pkg._DEFAULT_SESSION
+        self._session = session or get_default_session(service, self._backend)
 
     def run(
         self,
