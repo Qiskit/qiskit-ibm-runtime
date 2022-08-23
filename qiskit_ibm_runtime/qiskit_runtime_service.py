@@ -57,6 +57,13 @@ logger = logging.getLogger(__name__)
 
 SERVICE_NAME = "runtime"
 
+DEPRECATED_PROGRAMS = [
+    "torch-train",
+    "torch-infer",
+    "sample-expval",
+    "quantum_kernal_alignment",
+]
+
 
 class QiskitRuntimeService(Provider):
     """Class for interacting with the Qiskit Runtime service.
@@ -888,6 +895,12 @@ class QiskitRuntimeService(Provider):
             RuntimeProgramNotFound: If the program cannot be found.
             IBMRuntimeError: An error occurred running the program.
         """
+        if program_id in DEPRECATED_PROGRAMS:
+            warnings.warn(
+                f"The {program_id} program will be deprecated on August 29th.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         validate_job_tags(job_tags, IBMInputValueError)
 
         if instance and self._channel != "ibm_quantum":
