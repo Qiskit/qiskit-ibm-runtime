@@ -40,6 +40,7 @@ STATUS_FORCELIST = (
     524,  # Cloudflare Timeout
 )
 CUSTOM_HEADER_ENV_VAR = "QISKIT_IBM_RUNTIME_CUSTOM_CLIENT_APP_HEADER"
+QE_PROVIDER_HEADER_ENV_VAR = "QE_CUSTOM_CLIENT_APP_HEADER"
 logger = logging.getLogger(__name__)
 # Regex used to match the `/backends` endpoint, capturing the device name as group(2).
 # The number of letters for group(2) must be greater than 1, so it does not match
@@ -212,7 +213,9 @@ class RetrySession(Session):
         client_app_header = CLIENT_APPLICATION
 
         # Append custom header to the end if specified
-        custom_header = os.getenv(CUSTOM_HEADER_ENV_VAR)
+        custom_header = os.getenv(CUSTOM_HEADER_ENV_VAR) or os.getenv(
+            QE_PROVIDER_HEADER_ENV_VAR
+        )
         if custom_header:
             client_app_header += "/" + custom_header
 

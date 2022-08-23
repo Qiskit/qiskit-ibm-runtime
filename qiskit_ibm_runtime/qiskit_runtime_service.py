@@ -19,8 +19,10 @@ import warnings
 from datetime import datetime
 from collections import OrderedDict
 from typing import Dict, Callable, Optional, Union, List, Any, Type
+from dataclasses import asdict
 
 from qiskit.providers.backend import BackendV1 as Backend
+from qiskit.providers.provider import ProviderV1 as Provider
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.providerutils import filter_backends
 
@@ -46,16 +48,17 @@ from .runtime_session import RuntimeSession  # pylint: disable=cyclic-import
 from .utils import RuntimeDecoder, to_base64_string, to_python_identifier
 from .utils.backend_decoder import configuration_from_server_data
 from .utils.hgp import to_instance_format, from_instance_format
-from .utils.utils import validate_job_tags
+from .utils.utils import validate_job_tags, validate_runtime_options
 from .api.client_parameters import ClientParameters
 from .runtime_options import RuntimeOptions
+from .utils.deprecation import deprecate_function
 
 logger = logging.getLogger(__name__)
 
 SERVICE_NAME = "runtime"
 
 
-class QiskitRuntimeService:
+class QiskitRuntimeService(Provider):
     """Class for interacting with the Qiskit Runtime service.
 
     Qiskit Runtime is a new architecture offered by IBM Quantum that
@@ -63,42 +66,41 @@ class QiskitRuntimeService:
     execute significantly faster within its improved hybrid quantum/classical
     process.
 
-    The Qiskit Runtime Service allows authorized users to upload their Qiskit
-    quantum programs. A Qiskit quantum program, also called a runtime program,
-    is a piece of Python code and its metadata that takes certain inputs, performs
-    quantum and maybe classical processing, and returns the results. The same or other
-    authorized users can invoke these quantum programs by simply passing in parameters.
-
     A sample workflow of using the runtime service::
 
-        from qiskit import QuantumCircuit
-        from qiskit_ibm_runtime import QiskitRuntimeService
+        from qiskit_ibm_runtime import QiskitRuntimeService, Session, Sampler, Estimator, Options
+        from qiskit.test.reference_circuits import ReferenceCircuits
+        from qiskit.circuit.library import RealAmplitudes
+        from qiskit.quantum_info import SparsePauliOp
 
+        # Initialize account.
         service = QiskitRuntimeService()
 
-        # Create a circuit.
-        qc = QuantumCircuit(2)
-        qc.h(0)
-        qc.cx(0, 1)
-        qc.measure_all()
+        # Set options, which can be overwritten at job level.
+        options = Options(backend="ibmq_qasm_simulator")
 
-        # Set the "sampler" program inputs
-        inputs = {
-            'circuits': qc,
-            'circuit_indices': [0]
-        }
+        # Prepare inputs.
+        bell = ReferenceCircuits.bell()
+        psi = RealAmplitudes(num_qubits=2, reps=2)
+        H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
+        theta = [0, 1, 1, 2, 3, 5]
 
-        # Configure backend options
-        options = {'backend_name': "ibmq_qasm_simulator"}
+        with Session(service) as session:
+            # Submit a request to the Sampler primitive within the session.
+            sampler = Sampler(session=session, options=options)
+            job = sampler.run(circuits=bell)
+            print(f"Sampler results: {job.result()}")
 
-        # Execute the circuit using the "sampler" program.
-        job = service.run(program_id="sampler",
-                          options=options,
-                          inputs=inputs)
-        print(f"Job ID: {job.job_id}")
-        # Get runtime job result.
-        result = job.result()
-        print(result)
+            # Submit a request to the Estimator primitive within the session.
+            estimator = Estimator(session=session, options=options)
+            job = estimator.run(
+                circuits=[psi], observables=[H1], parameter_values=[theta]
+            )
+            print(f"Estimator results: {job.result()}")
+
+    The example above uses the dedicated :class:`~qiskit_ibm_runtime.Sampler`
+    and :class:`~qiskit_ibm_runtime.Estimator` classes. You can also
+    use the :meth:`run` method directly to invoke a Qiskit Runtime program.
 
     If the program has any interim results, you can use the ``callback``
     parameter of the :meth:`run` method to stream the interim results.
@@ -488,6 +490,7 @@ class QiskitRuntimeService:
                 backend_name += "_"
             setattr(self, backend_name, backend)
 
+    # pylint: disable=arguments-differ
     def backends(
         self,
         name: Optional[str] = None,
@@ -685,6 +688,9 @@ class QiskitRuntimeService:
             raise QiskitBackendNotFoundError("No backend matches the criteria")
         return backends[0]
 
+    def get_backend(self, name: str = None, **kwargs: Any) -> Backend:
+        return self.backend(name, **kwargs)
+
     def pprint_programs(
         self,
         refresh: bool = False,
@@ -846,8 +852,17 @@ class QiskitRuntimeService:
             program_id: Program ID.
             inputs: Program input parameters. These input values are passed
                 to the runtime program.
-            options: Runtime options that control the execution environment. See
-                :class:`RuntimeOptions` for all available options.
+            options: Runtime options that control the execution environment.
+                The use of :class:`RuntimeOptions` has been deprecated.
+
+                * backend: target backend to run on. This is required for ``ibm_quantum`` runtime.
+                * image: the runtime image used to execute the program, specified in
+                    the form of ``image_name:tag``. Not all accounts are
+                    authorized to select a different image.
+                * log_level: logging level to set in the execution environment. The valid
+                    log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
+                    The default level is ``WARNING``.
+
             callback: Callback function to be invoked for any interim results and final result.
                 The callback function will receive 2 positional parameters:
 
@@ -886,29 +901,29 @@ class QiskitRuntimeService:
             inputs = vars(inputs)
 
         if options is None:
-            options = RuntimeOptions()
-        if isinstance(options, dict):
-            options = RuntimeOptions(**options)
-
-        options.validate(channel=self.channel)
+            options = {}
+        elif isinstance(options, RuntimeOptions):
+            options = asdict(options)
+        options["backend"] = options.get("backend", options.get("backend_name", None))
+        validate_runtime_options(options=options, channel=self.channel)
 
         backend = None
         hgp_name = None
         if self._channel == "ibm_quantum":
             # Find the right hgp
-            hgp = self._get_hgp(instance=instance, backend_name=options.backend_name)
-            backend = hgp.backend(options.backend_name)
+            hgp = self._get_hgp(instance=instance, backend_name=options["backend"])
+            backend = hgp.backend(options["backend"])
             hgp_name = hgp.name
 
         result_decoder = result_decoder or ResultDecoder
         try:
             response = self._api_client.program_run(
                 program_id=program_id,
-                backend_name=options.backend_name,
+                backend_name=options["backend"],
                 params=inputs,
-                image=options.image,
+                image=options.get("image"),
                 hgp=hgp_name,
-                log_level=options.log_level,
+                log_level=options.get("log_level"),
                 session_id=session_id,
                 job_tags=job_tags,
                 max_execution_time=max_execution_time,
@@ -933,10 +948,15 @@ class QiskitRuntimeService:
             params=inputs,
             user_callback=callback,
             result_decoder=result_decoder,
-            image=options.image,
+            image=options.get("image"),
         )
         return job
 
+    @deprecate_function(
+        "QiskitRuntimeService.open",
+        "0.7",
+        "Instead, use the qiskit_ibm_runtime.Session class to create a runtime session.",
+    )
     def open(
         self,
         program_id: str,
@@ -1437,6 +1457,15 @@ class QiskitRuntimeService:
             The channel type used.
         """
         return self._channel
+
+    @property
+    def runtime(self):  # type:ignore
+        """Return self for compatibility with IBMQ provider.
+
+        Returns:
+            self
+        """
+        return self
 
     def __repr__(self) -> str:
         return "<{}>".format(self.__class__.__name__)

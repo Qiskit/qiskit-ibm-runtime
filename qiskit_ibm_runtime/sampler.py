@@ -12,17 +12,24 @@
 
 """Sampler primitive."""
 
+from __future__ import annotations
 from typing import Dict, Iterable, Optional, Sequence, Any, Union
+import copy
 
 from qiskit.circuit import QuantumCircuit, Parameter
+import qiskit_ibm_runtime.session as session_pkg
 
 # TODO import BaseSampler and SamplerResult from terra once released
 from .qiskit.primitives import BaseSampler, SamplerResult
-from .exceptions import IBMInputValueError
-from .ibm_backend import IBMBackend
 from .qiskit_runtime_service import QiskitRuntimeService
-from .runtime_session import RuntimeSession
-from .utils.converters import hms_to_seconds
+from .options import Options
+from .runtime_options import RuntimeOptions
+from .program.result_decoder import ResultDecoder
+from .runtime_job import RuntimeJob
+from .utils.deprecation import deprecate_arguments, issue_deprecation_msg
+
+# pylint: disable=unused-import,cyclic-import
+from .session import Session
 
 
 class Sampler(BaseSampler):
@@ -31,213 +38,177 @@ class Sampler(BaseSampler):
     Qiskit Runtime Sampler primitive service calculates probabilities or quasi-probabilities
     of bitstrings from quantum circuits.
 
-    Sampler can be initialized with following parameters.
+    The :meth:`run` method can be used to submit circuits and parameters to the Sampler primitive.
 
-    * circuits: a (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
-        a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
-
-    * parameters: a list of parameters of the quantum circuits.
-        (:class:`~qiskit.circuit.parametertable.ParameterView` or
-        a list of :class:`~qiskit.circuit.Parameter`) specifying the order
-        in which parameter values will be bound.
-
-    * skip_transpilation: Transpilation is skipped if set to True.
-        False by default.
-
-    * service: Optional instance of :class:`qiskit_ibm_runtime.QiskitRuntimeService` class,
-        defaults to `QiskitRuntimeService()` which tries to initialize your default saved account.
-
-    * options: Runtime options dictionary that control the execution environment.
-
-        * backend: Optional instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
-            string name of backend, if not specified a backend will be selected
-            automatically (IBM Cloud only).
-        * image: the runtime image used to execute the program, specified in
-            the form of ``image_name:tag``. Not all accounts are
-            authorized to select a different image.
-        * log_level: logging level to set in the execution environment. The valid
-            log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
-            The default level is ``WARNING``.
-
-    The returned instance can be called repeatedly with the following parameters to
-    calculate probabilities or quasi-probabilities.
-
-    * circuits: a (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
-        a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or a list of
-        circuit indices.
-
-    * parameter_values: An optional list of concrete parameters to be bound.
-
-    * circuit_indices: (DEPRECATED) A list of circuit indices.
-
-    All the above lists should be of the same length.
+    You are encourage to use :class:`~qiskit_ibm_runtime.Session` to open a session,
+    during which you can invoke one or more primitive programs. Jobs sumitted within a session
+    are prioritized by the scheduler, and data is cached for efficiency.
 
     Example::
 
-        from qiskit import QuantumCircuit
-        from qiskit.circuit.library import RealAmplitudes
-
-        from qiskit_ibm_runtime import QiskitRuntimeService, Sampler
+        from qiskit.test.reference_circuits import ReferenceCircuits
+        from qiskit_ibm_runtime import QiskitRuntimeService, Session, Sampler
 
         service = QiskitRuntimeService(channel="ibm_cloud")
-        options = { "backend": "ibmq_qasm_simulator" }
+        bell = ReferenceCircuits.bell()
 
-        bell = QuantumCircuit(2)
-        bell.h(0)
-        bell.cx(0, 1)
-        bell.measure_all()
+        with Session(service) as session:
+            sampler = Sampler(session=session)
+            sampler.options.resilience_level = 1
 
-        # executes a Bell circuit
-        with Sampler(circuits=[bell], service=service, options=options) as sampler:
-            # pass circuits as indices
-            result = sampler(circuits=[0], parameter_values=[[]])
-            print(result)
-
-        # executes three Bell circuits
-        with Sampler(circuits=[bell]*3, service=service, options=options) as sampler:
-            # alternatively you can also pass circuits as objects
-            result = sampler(circuits=[bell]*3, parameter_values=[[]]*3)
-            print(result)
-
-        # parameterized circuit
-        pqc = RealAmplitudes(num_qubits=2, reps=2)
-        pqc.measure_all()
-        pqc2 = RealAmplitudes(num_qubits=2, reps=3)
-        pqc2.measure_all()
-
-        theta1 = [0, 1, 1, 2, 3, 5]
-        theta2 = [1, 2, 3, 4, 5, 6]
-        theta3 = [0, 1, 2, 3, 4, 5, 6, 7]
-
-        with Sampler(circuits=[pqc, pqc2], service=service, options=options) as sampler:
-            result = sampler(circuits=[0, 0, 1], parameter_values=[theta1, theta2, theta3])
-            print(result)
+            job = sampler.run(bell)
+            print(f"Job ID: {job.job_id}")
+            print(f"Job result: {job.result()}")
     """
+
+    _PROGRAM_ID = "sampler"
 
     def __init__(
         self,
-        circuits: Union[QuantumCircuit, Iterable[QuantumCircuit]],
+        circuits: Optional[Union[QuantumCircuit, Iterable[QuantumCircuit]]] = None,
         parameters: Optional[Iterable[Iterable[Parameter]]] = None,
         service: Optional[QiskitRuntimeService] = None,
-        options: Optional[Dict] = None,
+        session: Optional[Session] = None,
+        options: Optional[Union[Dict, RuntimeOptions, Options]] = None,
         skip_transpilation: Optional[bool] = False,
-        transpilation_settings: Optional[Dict] = None,
-        resilience_settings: Optional[Dict] = None,
-        max_time: Optional[Union[int, str]] = None,
     ):
         """Initializes the Sampler primitive.
 
         Args:
-            circuits: a (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
+            circuits: (DEPRECATED) A (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
                 a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
 
-            parameters: A list of parameters of the quantum circuits
+            parameters: (DEPRECATED) A list of parameters of the quantum circuits
                 (:class:`~qiskit.circuit.parametertable.ParameterView` or
                 a list of :class:`~qiskit.circuit.Parameter`)
 
-            service: Optional instance of :class:`qiskit_ibm_runtime.QiskitRuntimeService` class,
+            service: (DEPRECATED) Optional instance of
+                :class:`qiskit_ibm_runtime.QiskitRuntimeService` class,
                 defaults to `QiskitRuntimeService()` which tries to initialize your default
                 saved account.
 
-            options: Runtime options dictionary that control the execution environment.
+            session: Session in which to call the sampler primitive. If ``None``, a new session
+                is created using the default saved account.
 
-                * backend: Optional instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
-                    string name of backend, if not specified a backend will be selected
-                    automatically (IBM Cloud only).
-                * image: the runtime image used to execute the program, specified in
-                    the form of ``image_name:tag``. Not all accounts are
-                    authorized to select a different image.
-                * log_level: logging level to set in the execution environment. The valid
-                    log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
-                    The default level is ``WARNING``.
+            options: Primitive options, see :class:`Options` for detailed description.
 
-            skip_transpilation: Transpilation is skipped if set to True. False by default.
-
-            transpilation_settings: (EXPERIMENTAL setting, can break between releases without warning)
-                Qiskit transpiler settings. The transpilation process converts
-                operations in the circuit to those supported by the backend, swaps qubits with the
-                circuit to overcome limited qubit connectivity and some optimizations to reduce the
-                circuit's gate count where it can.
-
-                * skip_transpilation: Transpilation is skipped if set to True.
-                    False by default.
-
-                * optimization_settings:
-
-                    * level: How much optimization to perform on the circuits.
-                        Higher levels generate more optimized circuits,
-                        at the expense of longer transpilation times.
-                        * 0: no optimization
-                        * 1: light optimization
-                        * 2: heavy optimization
-                        * 3: even heavier optimization
-                        If ``None``, level 1 will be chosen as default.
-
-            resilience_settings: (EXPERIMENTAL setting, can break between releases without warning)
-                Using these settings allows you to build resilient algorithms by
-                leveraging the state of the art error suppression, mitigation and correction techniques.
-
-                * level: How much resilience to build against errors.
-                    Higher levels generate more accurate results,
-                    at the expense of longer processing times.
-                    * 0: no resilience
-                    * 1: light resilience
-                    If ``None``, level 0 will be chosen as default.
-
-            max_time: (EXPERIMENTAL setting, can break between releases without warning)
-                Maximum amount of time, a runtime session can be open before being
-                forcibly closed. Can be specified as seconds (int) or a string like "2h 30m 40s".
-
-        Raises:
-            IBMInputValueError: If an input value is invalid.
+            skip_transpilation (DEPRECATED): Transpilation is skipped if set to True. False by default.
+                Ignored ``skip_transpilation`` is also specified in ``options``.
         """
+        # TODO: Fix base classes once done
         super().__init__(
-            circuits=circuits if isinstance(circuits, Iterable) else [circuits],
+            circuits=circuits,
             parameters=parameters,
         )
-        self._skip_transpilation = skip_transpilation
-        if not service:
-            # try to initialize service with default saved account
-            service = QiskitRuntimeService()
-        self._service = service
-        if isinstance(options, dict) and "backend" in options:
-            backend = options.get("backend")
-            if isinstance(backend, IBMBackend):
-                del options["backend"]
-                options["backend_name"] = backend.name
-            elif isinstance(backend, str):
-                del options["backend"]
-                options["backend_name"] = backend
-            else:
-                raise IBMInputValueError(
-                    "'backend' property in 'options' should be either the string name of the "
-                    "backend or an instance of 'IBMBackend' class"
-                )
+
+        # TODO: Remove deprecation warnings if done in base class
+        if circuits or parameters:
+            deprecate_arguments(
+                "circuits and parameters",
+                "0.7",
+                f"You can instead specify these inputs using the {self.__class__.__name__}.run method.",
+            )
+        if skip_transpilation:
+            deprecate_arguments(
+                "skip_transpilation",
+                "0.7",
+                "Instead, use the skip_transpilation keyword argument in transpilation_settings.",
+            )
+        if service:
+            deprecate_arguments(
+                "service", "0.7", "Please use the session parameter instead."
+            )
+
+        if options is None:
+            self.options = Options()
+        elif isinstance(options, Options):
+            self.options = copy.deepcopy(options)
+            skip_transpilation = self.options.transpilation.skip_transpilation
+        elif isinstance(options, RuntimeOptions):
+            self.options = options._to_new_options()
+        else:
+            self.options = Options._from_dict(options)
+            skip_transpilation = options.get("transpilation", {}).get(
+                "skip_transpilation", False
+            )
+        self.options.transpilation.skip_transpilation = skip_transpilation
+
+        self._initial_inputs = {"circuits": circuits, "parameters": parameters}
+        if session:
+            self._session = session
+        else:
+            if (
+                session_pkg._DEFAULT_SESSION is None
+                or not session_pkg._DEFAULT_SESSION._active
+            ):
+                session_pkg._DEFAULT_SESSION = Session(service=service)
+            self._session = session_pkg._DEFAULT_SESSION
+
+    def run(
+        self,
+        circuits: Union[QuantumCircuit, Sequence[QuantumCircuit]],
+        parameter_values: Sequence[Sequence[float]] | None = None,
+        parameters: Sequence[Sequence[Parameter]] | None = None,
+        **kwargs: Any,
+    ) -> RuntimeJob:
+        """Submit a request to the sampler primitive program.
+
+        Args:
+            circuits: A (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
+                a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
+
+            parameter_values: An optional list of concrete parameters to be bound.
+
+            parameters: A list of parameters of the quantum circuits
+                (:class:`~qiskit.circuit.parametertable.ParameterView` or
+                a list of :class:`~qiskit.circuit.Parameter`).
+                Defaults to ``[circ.parameters for circ in circuits]``.
+
+            **kwargs: Individual options to overwrite the default primitive options.
+
+        Returns:
+            Submitted job.
+
+        Raises:
+            ValueError: If the input values are invalid.
+        """
+        if isinstance(circuits, Iterable) and not all(
+            isinstance(inst, QuantumCircuit) for inst in circuits
+        ):
+            raise ValueError(
+                "The circuits parameter has to be instances of QuantumCircuit."
+            )
+
+        circ_count = 1 if isinstance(circuits, QuantumCircuit) else len(circuits)
+
         inputs = {
             "circuits": circuits,
             "parameters": parameters,
-            "skip_transpilation": self._skip_transpilation,
+            "circuit_indices": list(range(circ_count)),
+            "parameter_values": parameter_values,
         }
-        if transpilation_settings:
-            inputs.update({"transpilation_settings": transpilation_settings})
-        if resilience_settings:
-            inputs.update({"resilience_settings": resilience_settings})
-        self._session = RuntimeSession(
-            service=self._service,
-            program_id="sampler",
+        combined = self.options._merge_options(kwargs)
+        inputs.update(Options._get_program_inputs(combined))
+
+        return self._session.run(
+            program_id=self._PROGRAM_ID,
             inputs=inputs,
-            options=options,
-            max_time=self.calculate_max_time(max_time=max_time),
+            options=Options._get_runtime_options(combined),
+            result_decoder=SamplerResultDecoder,
         )
 
-    def calculate_max_time(self, max_time: Optional[Union[int, str]] = None) -> int:
-        """Calculate max_time in seconds from hour minute seconds string. Ex: 2h 30m 40s"""
-        try:
-            return hms_to_seconds(max_time) if isinstance(max_time, str) else max_time
-        except IBMInputValueError as input_value_error:
-            raise IBMInputValueError(
-                "Invalid value given for max_time.", input_value_error.message
-            )
+    def __call__(
+        self,
+        circuits: Sequence[int | QuantumCircuit],
+        parameter_values: Sequence[Sequence[float]] | None = None,
+        **run_options: Any,
+    ) -> SamplerResult:
+        issue_deprecation_msg(
+            msg="Calling a Sampler instance directly has been deprecated ",
+            version="0.7",
+            remedy="Please use qiskit_ibm_runtime.Session and Sampler.run() instead.",
+        )
+        return super().__call__(circuits, parameter_values, **run_options)
 
     def _call(
         self,
@@ -268,17 +239,45 @@ class Sampler(BaseSampler):
         Returns:
             An instance of :class:`qiskit.primitives.SamplerResult`.
         """
-        self._session.write(
-            circuit_indices=circuits,
-            parameter_values=parameter_values,
-            run_options=run_options,
-        )
-        raw_result = self._session.read()
-        return SamplerResult(
-            quasi_dists=raw_result["quasi_dists"],
-            metadata=raw_result["metadata"],
-        )
+
+        inputs = {
+            "circuits": self._initial_inputs["circuits"],
+            "parameters": self._initial_inputs["parameters"],
+            "circuit_indices": circuits,
+            "parameter_values": parameter_values,
+        }
+        combined = self.options._merge_options(run_options)
+        inputs.update(Options._get_program_inputs(combined))
+
+        return self._session.run(
+            program_id=self._PROGRAM_ID,
+            inputs=inputs,
+            options=Options._get_runtime_options(combined),
+            result_decoder=SamplerResultDecoder,
+        ).result()
 
     def close(self) -> None:
         """Close the session and free resources"""
         self._session.close()
+
+    @property
+    def session(self) -> Session:
+        """Return session used by this primitive.
+
+        Returns:
+            Session used by this primitive.
+        """
+        return self._session
+
+
+class SamplerResultDecoder(ResultDecoder):
+    """Class used to decode sampler results."""
+
+    @classmethod
+    def decode(cls, raw_result: str) -> SamplerResult:
+        """Convert the result to SamplerResult."""
+        decoded: Dict = super().decode(raw_result)
+        return SamplerResult(
+            quasi_dists=decoded["quasi_dists"],
+            metadata=decoded["metadata"],
+        )
