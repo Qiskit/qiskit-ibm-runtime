@@ -22,8 +22,8 @@ Primitives
    tutorials/user-transpiled-circuits
    tutorials/sea_with_sampler
    tutorials/vqe_with_estimator
+   tutorials/chsh_with_estimator
    tutorials/qpe_with_sampler
-
 
 Basic
 =====
