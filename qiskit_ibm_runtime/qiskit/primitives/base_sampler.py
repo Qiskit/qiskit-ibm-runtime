@@ -135,9 +135,6 @@ class BaseSampler(ABC):
                 DeprecationWarning,
                 2,
             )
-        if circuits is None:
-            self._circuits: tuple = tuple()
-            return
 
         if isinstance(circuits, QuantumCircuit):
             circuits = (circuits,)
@@ -260,7 +257,7 @@ class BaseSampler(ABC):
             raise QiskitError(
                 "The circuits passed when calling sampler is not one of the circuits used to "
                 "initialize the session."
-            ) 
+            )
 
         circuits = cast("list[int]", circuits)
 
@@ -305,7 +302,7 @@ class BaseSampler(ABC):
         circuits: Sequence[QuantumCircuit],
         parameter_values: Sequence[Sequence[float]] | None = None,
         parameters: Sequence[Sequence[Parameter]] | None = None,
-        **run_options,
+        **run_options: Any,
     ) -> Job:
         """Run the job of the sampling of bitstrings.
         Args:
@@ -313,7 +310,7 @@ class BaseSampler(ABC):
             parameter_values: Parameters to be bound to the circuit.
             parameters: Parameters of each of the quantum circuits.
                 Defaults to ``[circ.parameters for circ in circuits]``.
-            run_options: Backend runtime options used for circuit execution.
+            **run_options: Backend runtime options used for circuit execution.
         Returns:
             The job object of the result of the sampler. The i-th result corresponds to
             ``circuits[i]`` evaluated with parameters bound as ``parameter_values[i]``.
@@ -366,7 +363,6 @@ class BaseSampler(ABC):
 
         return self._run(circuits, parameter_values, parameter_views, **run_options)
 
-
     @abstractmethod
     def _call(
         self,
@@ -383,7 +379,7 @@ class BaseSampler(ABC):
         circuits: Sequence[QuantumCircuit],
         parameter_values: Sequence[Sequence[float]],
         parameters: Sequence[ParameterView],
-        **run_options,
+        **run_options: Any,
     ) -> Job:
         raise NotImplementedError(
             "_run method is not implemented. This method will be @abstractmethod after 0.22."

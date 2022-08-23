@@ -96,7 +96,7 @@ Here is an example of how estimator is used.
     #             <psi2(theta2)|H2|psi2(theta2)>,
     #             <psi1(theta3)|H3|psi1(theta3)> ]
     result4 = estimator.run([psi1, psi2, psi1], [H1, H2, H3], [theta1, theta2, theta3]).result()
-    print(result4)    
+    print(result4)
 """
 from __future__ import annotations
 
@@ -157,10 +157,6 @@ class BaseEstimator(ABC):
                 DeprecationWarning,
                 2,
             )
-        if circuits is None and observables is None:
-            self._circuits: tuple = tuple()
-            self._observables: tuple = tuple()
-            return
 
         if isinstance(circuits, QuantumCircuit):
             circuits = (circuits,)
@@ -172,8 +168,8 @@ class BaseEstimator(ABC):
 
         # To guarantee that they exist as instance variable.
         # With only dynamic set, the python will not know if the attribute exists or not.
-        self._circuit_ids:  dict[int, int] = self._circuit_ids  # type: ignore
-        self._observable_ids:  dict[int, int] = self._observable_ids  # type: ignore
+        self._circuit_ids: dict[int, int] = self._circuit_ids  # type: ignore
+        self._observable_ids: dict[int, int] = self._observable_ids  # type: ignore
 
         if parameters is None:
             self._parameters = [circ.parameters for circ in self._circuits]
@@ -212,7 +208,9 @@ class BaseEstimator(ABC):
             self._observable_ids = {}
         elif isinstance(observables, Iterable):
             observables = copy(observables)
-            self._observable_ids = {id(observable): i for i, observable in enumerate(observables)}
+            self._observable_ids = {
+                id(observable): i for i, observable in enumerate(observables)
+            }
         else:
             self._observable_ids = {id(observables): 0}
         return self
@@ -253,7 +251,7 @@ class BaseEstimator(ABC):
         Returns:
             The observables.
         """
-        return tuple(self._observables)  
+        return tuple(self._observables)
 
     @property
     def parameters(self) -> tuple[ParameterView, ...]:
@@ -262,7 +260,7 @@ class BaseEstimator(ABC):
         Returns:
             Parameters, where ``parameters[i][j]`` is the j-th parameter of the i-th circuit.
         """
-        return self._parameters
+        return tuple(self._parameters)
 
     @deprecate_function(
         "The BaseSampler.__call__ method is deprecated as of Qiskit Terra 0.21.0 "
@@ -329,7 +327,7 @@ class BaseEstimator(ABC):
             raise QiskitError(
                 "The circuits passed when calling estimator is not one of the circuits used to "
                 "initialize the session."
-            ) 
+            )
         observables = [
             self._observable_ids.get(id(observable))  # type: ignore
             if not isinstance(observable, (int, np.integer))
@@ -401,14 +399,14 @@ class BaseEstimator(ABC):
             parameter_values=parameter_values,
             **run_options,
         )
-    
+
     def run(
         self,
         circuits: Sequence[QuantumCircuit],
         observables: Sequence[BaseOperator | PauliSumOp],
         parameter_values: Sequence[Sequence[float]] | None = None,
         parameters: Sequence[Sequence[Parameter]] | None = None,
-        **run_options,
+        **run_options: Any,
     ) -> Job:
         """Run the job of the estimation of expectation value(s).
         ``circuits``, ``observables``, and ``parameter_values`` should have the same
@@ -429,7 +427,7 @@ class BaseEstimator(ABC):
                 will be bound. Defaults to ``[circ.parameters for circ in circuits]``
                 The indexing is such that ``parameters[i, j]`` is the j-th formal parameter of
                 ``circuits[i]``.
-            run_options: runtime options used for circuit execution.
+            **run_options: runtime options used for circuit execution.
         Returns:
             The job object of EstimatorResult.
         Raises:
@@ -492,8 +490,9 @@ class BaseEstimator(ABC):
                     f"({observable.num_qubits})."
                 )
 
-        return self._run(circuits, observables, parameter_values, parameter_views, **run_options)
-
+        return self._run(
+            circuits, observables, parameter_values, parameter_views, **run_options
+        )
 
     @abstractmethod
     def _call(
@@ -513,7 +512,7 @@ class BaseEstimator(ABC):
         observables: Sequence[BaseOperator | PauliSumOp],
         parameter_values: Sequence[Sequence[float]],
         parameters: list[ParameterView],
-        **run_options,
+        **run_options: Any,
     ) -> Job:
         raise NotImplementedError(
             "_run method is not implemented. This method will be @abstractmethod after 0.22."
