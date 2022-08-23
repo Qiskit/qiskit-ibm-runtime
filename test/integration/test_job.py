@@ -24,6 +24,7 @@ from qiskit_ibm_runtime.exceptions import (
     RuntimeJobFailureError,
     RuntimeInvalidStateError,
     RuntimeJobNotFound,
+    RuntimeJobMaxTimeoutError,
 )
 from ..ibm_test_case import IBMIntegrationJobTestCase
 from ..decorators import run_integration_test
@@ -115,7 +116,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
             ),
             job.error_message(),
         )
-        with self.assertRaises(RuntimeJobFailureError):
+        with self.assertRaises(RuntimeJobMaxTimeoutError):
             job.result()
 
     @run_integration_test
@@ -281,6 +282,16 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         job_logs = job.logs()
         self.assertIn("this is a stdout message", job_logs)
         self.assertIn("this is a stderr message", job_logs)
+
+    @run_integration_test
+    def test_job_metadata(self, service):
+        """Test job metadata."""
+        job = self._run_program(service)
+        job.wait_for_final_state()
+        metadata = job.metadata()
+        self.assertTrue(metadata)
+        self.assertIn("timestamps", metadata)
+        self.assertIn("qiskit_version", metadata)
 
     def _assert_complex_types_equal(self, expected, received):
         """Verify the received data in complex types is expected."""
