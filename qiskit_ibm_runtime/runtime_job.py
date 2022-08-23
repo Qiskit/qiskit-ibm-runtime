@@ -117,7 +117,7 @@ class RuntimeJob:
         self._program_id = program_id
         self._status = JobStatus.INITIALIZING
         self._reason: Optional[str] = None
-        self._error_message = None  # type: Optional[str]
+        self._error_message: Optional[str] = None
         self._result_decoder = result_decoder
         self._image = image
         self._final_interim_results = False
