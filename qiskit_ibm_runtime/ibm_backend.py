@@ -506,6 +506,7 @@ class IBMBackend(Backend):
         job_tags: Optional[List[str]] = None,
         max_execution_time: Optional[int] = None,
         start_session: Optional[bool] = None,
+        **kwargs: Any
     ) -> RuntimeJob:
         """Run on the backend by calling the ciruict-runner program.
 
@@ -533,6 +534,7 @@ class IBMBackend(Backend):
             job_tags: Tags to be assigned to the job.
             max_execution_time: Maximum execution time in seconds.
             start_session: Set to True to explicitly start a runtime session. Defaults to False.
+            **kwargs: Additional arguments for inputs.
 
         Returns:
              A ``RuntimeJob`` instance representing the execution.
@@ -554,6 +556,9 @@ class IBMBackend(Backend):
             inputs["init_qubits"] = init_qubits
         if use_measure_esp is not None:
             inputs["use_measure_esp"] = use_measure_esp
+        if kwargs:
+            for key, value in kwargs.items():
+                inputs[key] = value
 
         return qiskit_runtime_service.QiskitRuntimeService.run(
             self.service,
