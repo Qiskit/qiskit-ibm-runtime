@@ -938,8 +938,9 @@ class QiskitRuntimeService(Provider):
                 hgp=hgp_name,
                 log_level=options.get("log_level"),
                 session_id=session_id,
-                job_tags=job_tags,
-                max_execution_time=max_execution_time,
+                job_tags=job_tags or options.get("job_tags"),
+                max_execution_time=max_execution_time
+                or options.get("max_execution_time"),
                 start_session=start_session,
             )
         except RequestsApiError as ex:

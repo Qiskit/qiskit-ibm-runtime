@@ -197,6 +197,8 @@ class Options:
               Default: ``True``.
     """
 
+    max_execution_time: int = None
+    job_tags: List[str] = None
     optimization_level: int = 1
     resilience_level: int = 0
     backend: str = None
@@ -284,4 +286,6 @@ class Options:
             "backend_name": options.get("backend"),
             "log_level": options.get("log_level"),
             "image": experimental.get("image", None),
+            "job_tags": options.get("job_tags"),
+            "max_execution_time": options.get("max_execution_time"),
         }
