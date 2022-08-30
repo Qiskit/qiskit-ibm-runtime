@@ -135,8 +135,8 @@ class BaseEstimator(ABC):
 
     def __init__(
         self,
-        circuits: Iterable[QuantumCircuit] | QuantumCircuit,
-        observables: Iterable[SparsePauliOp] | SparsePauliOp,
+        circuits: Iterable[QuantumCircuit] | QuantumCircuit | None,
+        observables: Iterable[SparsePauliOp] | SparsePauliOp | None,
         parameters: Iterable[Iterable[Parameter]] | None = None,
     ):
         """
@@ -154,6 +154,11 @@ class BaseEstimator(ABC):
         Raises:
             QiskitError: For mismatch of circuits and parameters list.
         """
+        if circuits is None and observables is None:
+            self._circuits: tuple = tuple()
+            self._observables: tuple = tuple()
+            return
+
         if isinstance(circuits, QuantumCircuit):
             circuits = (circuits,)
         self._circuits = tuple(circuits)
@@ -185,9 +190,9 @@ class BaseEstimator(ABC):
 
     def __new__(  # pylint: disable=unused-argument
         cls,
-        circuits: Iterable[QuantumCircuit] | QuantumCircuit,
-        observables: Iterable[SparsePauliOp] | SparsePauliOp,
         *args: Any,
+        circuits: Iterable[QuantumCircuit] | QuantumCircuit | None = None,
+        observables: Iterable[SparsePauliOp] | SparsePauliOp | None = None,
         parameters: Iterable[Iterable[Parameter]] | None = None,
         **kwargs: Any,
     ) -> BaseEstimator:
