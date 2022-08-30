@@ -1,0 +1,31 @@
+# This code is part of Qiskit.
+#
+# (C) Copyright IBM 2022.
+#
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE.txt file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
+
+"""Sampler result decoder."""
+
+from typing import Dict
+
+from .program.result_decoder import ResultDecoder
+from .qiskit.primitives import SamplerResult
+
+
+class SamplerResultDecoder(ResultDecoder):
+    """Class used to decode sampler results."""
+
+    @classmethod
+    def decode(cls, raw_result: str) -> SamplerResult:
+        """Convert the result to SamplerResult."""
+        decoded: Dict = super().decode(raw_result)
+        return SamplerResult(
+            quasi_dists=decoded["quasi_dists"],
+            metadata=decoded["metadata"],
+        )

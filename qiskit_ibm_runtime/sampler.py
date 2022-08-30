@@ -24,8 +24,8 @@ from .qiskit.primitives import BaseSampler, SamplerResult
 from .qiskit_runtime_service import QiskitRuntimeService
 from .options import Options
 from .runtime_options import RuntimeOptions
-from .program.result_decoder import ResultDecoder
 from .runtime_job import RuntimeJob
+from .sampler_result_decoder import SamplerResultDecoder
 from .utils.deprecation import deprecate_arguments, issue_deprecation_msg
 
 # pylint: disable=unused-import,cyclic-import
@@ -268,16 +268,3 @@ class Sampler(BaseSampler):
             Session used by this primitive.
         """
         return self._session
-
-
-class SamplerResultDecoder(ResultDecoder):
-    """Class used to decode sampler results."""
-
-    @classmethod
-    def decode(cls, raw_result: str) -> SamplerResult:
-        """Convert the result to SamplerResult."""
-        decoded: Dict = super().decode(raw_result)
-        return SamplerResult(
-            quasi_dists=decoded["quasi_dists"],
-            metadata=decoded["metadata"],
-        )
