@@ -142,13 +142,6 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
             self._run_program(service, max_execution_time=299)
 
     @run_integration_test
-    def test_run_program_failed_invalid_execution_time(self, service):
-        """Test a program that failed with an invalid execution time."""
-        program_id = self._upload_program(service)
-        with self.assertRaises(IBMRuntimeError):
-            self._run_program(service, program_id=program_id, max_execution_time=5000)
-
-    @run_integration_test
     def test_cancel_job_queued(self, service):
         """Test canceling a queued job."""
         real_device = get_real_device(service)
