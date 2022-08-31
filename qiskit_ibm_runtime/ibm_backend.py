@@ -558,7 +558,8 @@ class IBMBackend(Backend):
             inputs["use_measure_esp"] = use_measure_esp
         if kwargs:
             for key, value in kwargs.items():
-                inputs[key] = value
+                if value is not None:
+                    inputs[key] = value
 
         return qiskit_runtime_service.QiskitRuntimeService.run(
             self.service,
