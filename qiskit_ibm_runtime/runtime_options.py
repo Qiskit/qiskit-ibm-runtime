@@ -103,6 +103,6 @@ class RuntimeOptions:
         issue_deprecation_msg(
             msg="The 'backend_name' attribute is deprecated",
             version="0.7",
-            remedy="Please use 'backend' instead."
+            remedy="Please use 'backend' instead.",
         )
         self._backend = name
