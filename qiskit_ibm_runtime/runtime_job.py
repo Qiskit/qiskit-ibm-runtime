@@ -181,7 +181,7 @@ class RuntimeJob:
         """
         if self.program_id == "sampler":
             self._result_decoder = SamplerResultDecoder
-        if self.program_id == "estimator":
+        elif self.program_id == "estimator":
             self._result_decoder = EstimatorResultDecoder
         _decoder = decoder or self._result_decoder
         if self._results is None or (_decoder != self._result_decoder):
