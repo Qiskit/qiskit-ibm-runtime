@@ -21,21 +21,12 @@ from qiskit.utils.deprecation import deprecate_arguments
 
 from .exceptions import IBMInputValueError
 from .options import Options
+from .utils.deprecation import issue_deprecation_msg
 
 
 @dataclass
 class RuntimeOptions:
-    """Class for representing generic runtime execution options.
-
-    Args:
-        backend: target backend to run on. This is required for ``ibm_quantum`` channel.
-        image: the runtime image used to execute the program, specified in
-            the form of ``image_name:tag``. Not all accounts are
-            authorized to select a different image.
-        log_level: logging level to set in the execution environment. The valid
-            log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
-            The default level is ``WARNING``.
-    """
+    """Class for representing generic runtime execution options."""
 
     @deprecate_arguments({"backend_name": "backend"})
     def __init__(
@@ -44,10 +35,20 @@ class RuntimeOptions:
         image: Optional[str] = None,
         log_level: Optional[str] = None,
     ) -> None:
+        """RuntimeOptions constructor.
+
+        Args:
+            backend: target backend to run on. This is required for ``ibm_quantum`` channel.
+            image: the runtime image used to execute the program, specified in
+                the form of ``image_name:tag``. Not all accounts are
+                authorized to select a different image.
+            log_level: logging level to set in the execution environment. The valid
+                log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
+                The default level is ``WARNING``.
+        """
         self.backend = backend
         self.image = image
         self.log_level = log_level
-        pass
 
     def validate(self, channel: str) -> None:
         """Validate options.
@@ -82,3 +83,26 @@ class RuntimeOptions:
             log_level=self.log_level,
             experimental={"image": self.image},
         )
+
+    @property
+    def backend_name(self) -> str:
+        """Return backend.
+
+        Returns:
+            Backend name.
+        """
+        return self.backend
+
+    @backend_name.setter
+    def backend_name(self, name: str) -> None:
+        """Set backend name.
+
+        Args:
+            name: Backend to use.
+        """
+        issue_deprecation_msg(
+            msg="The 'backend_name' attribute is deprecated",
+            version="0.7",
+            remedy="Please use 'backend' instead."
+        )
+        self._backend = name

@@ -1,0 +1,5 @@
+---
+deprecations:
+  - |
+    The ``backend_name`` attribute in :class:`qiskit_ibm_runtime.RuntimeOptions`
+    is deprecated and replaced by ``backend``.
