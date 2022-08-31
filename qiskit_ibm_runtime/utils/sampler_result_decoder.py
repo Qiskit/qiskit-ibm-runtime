@@ -14,8 +14,8 @@
 
 from typing import Dict
 from qiskit.result import QuasiDistribution
-from .program.result_decoder import ResultDecoder
-from .qiskit.primitives import SamplerResult
+from ..program.result_decoder import ResultDecoder
+from ..qiskit.primitives import SamplerResult
 
 
 class SamplerResultDecoder(ResultDecoder):

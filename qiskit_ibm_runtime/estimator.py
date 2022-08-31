@@ -27,7 +27,7 @@ import qiskit_ibm_runtime.session as session_pkg
 # TODO import BaseEstimator and EstimatorResult from terra once released
 from .qiskit.primitives import BaseEstimator, EstimatorResult
 from .qiskit_runtime_service import QiskitRuntimeService
-from .estimator_result_decoder import EstimatorResultDecoder
+from .utils.estimator_result_decoder import EstimatorResultDecoder
 from .runtime_job import RuntimeJob
 from .utils.deprecation import deprecate_arguments, issue_deprecation_msg
 from .runtime_options import RuntimeOptions

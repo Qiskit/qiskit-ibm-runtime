@@ -23,8 +23,8 @@ from datetime import datetime
 
 from qiskit.providers.backend import Backend
 from qiskit.providers.jobstatus import JobStatus, JOB_FINAL_STATES
-from .estimator_result_decoder import EstimatorResultDecoder
-from .sampler_result_decoder import SamplerResultDecoder
+from .utils.estimator_result_decoder import EstimatorResultDecoder
+from .utils.sampler_result_decoder import SamplerResultDecoder
 
 from .constants import API_TO_JOB_ERROR_MESSAGE, API_TO_JOB_STATUS
 from .exceptions import (

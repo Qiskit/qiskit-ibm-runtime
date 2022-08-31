@@ -25,7 +25,7 @@ from .qiskit_runtime_service import QiskitRuntimeService
 from .options import Options
 from .runtime_options import RuntimeOptions
 from .runtime_job import RuntimeJob
-from .sampler_result_decoder import SamplerResultDecoder
+from .utils.sampler_result_decoder import SamplerResultDecoder
 from .utils.deprecation import deprecate_arguments, issue_deprecation_msg
 
 # pylint: disable=unused-import,cyclic-import
