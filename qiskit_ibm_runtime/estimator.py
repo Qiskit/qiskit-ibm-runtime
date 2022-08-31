@@ -151,6 +151,7 @@ class Estimator(BaseEstimator):
             )
 
         backend = None
+        self._session: Session = None
 
         if options is None:
             self.options = Options()
@@ -163,7 +164,7 @@ class Estimator(BaseEstimator):
                 issue_deprecation_msg(
                     msg="The 'backend' key in 'options' has been deprecated",
                     version="0.7",
-                    remedy="Please pass the backend when opening a session."
+                    remedy="Please pass the backend when opening a session.",
                 )
             self.options = Options._from_dict(options)
             skip_transpilation = options.get("transpilation", {}).get(

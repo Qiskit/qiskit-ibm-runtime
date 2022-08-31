@@ -152,7 +152,9 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
         theta3 = [0, 1, 2, 3, 4, 5, 6, 7]
 
         with Sampler(
-            circuits=[pqc, pqc2], service=service, options={"backend": "ibmq_qasm_simulator"}
+            circuits=[pqc, pqc2],
+            service=service,
+            options={"backend": "ibmq_qasm_simulator"},
         ) as sampler:
             self.assertIsInstance(sampler, BaseSampler)
 

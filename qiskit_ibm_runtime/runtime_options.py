@@ -15,7 +15,7 @@
 import re
 import logging
 from dataclasses import dataclass
-from typing import Optional, Any
+from typing import Optional
 
 from qiskit.utils.deprecation import deprecate_arguments
 
@@ -25,7 +25,7 @@ from .options import Options
 
 @dataclass
 class RuntimeOptions:
-    """Class for representing runtime execution options.
+    """Class for representing generic runtime execution options.
 
     Args:
         backend: target backend to run on. This is required for ``ibm_quantum`` channel.
@@ -42,7 +42,7 @@ class RuntimeOptions:
         self,
         backend: Optional[str] = None,
         image: Optional[str] = None,
-        log_level: Optional[str] = None
+        log_level: Optional[str] = None,
     ) -> None:
         self.backend = backend
         self.image = image

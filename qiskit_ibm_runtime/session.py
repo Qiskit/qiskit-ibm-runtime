@@ -75,14 +75,15 @@ class Session:
             max_time: (EXPERIMENTAL setting, can break between releases without warning)
                 Maximum amount of time, a runtime session can be open before being
                 forcibly closed. Can be specified as seconds (int) or a string like "2h 30m 40s".
+
+        Raises:
+            ValueError: If an input value is invalid.
         """
 
         self._service = service or QiskitRuntimeService()
 
         if self._service.channel == "ibm_quantum" and not backend:
-            raise ValueError(
-                '"backend" is required for ``ibm_quantum`` channel.'
-            )
+            raise ValueError('"backend" is required for ``ibm_quantum`` channel.')
         if isinstance(backend, IBMBackend):
             backend = backend.name
         self._backend = backend
@@ -196,9 +197,11 @@ class Session:
 # Default session
 _DEFAULT_SESSION: Optional[Session] = None
 
+
 def get_default_session(
     service: Optional[QiskitRuntimeService] = None,
-    backend: Optional[Union[str, IBMBackend]] = None) -> Session:
+    backend: Optional[Union[str, IBMBackend]] = None,
+) -> Session:
     """Return the default session.
 
     Args:
@@ -206,11 +209,15 @@ def get_default_session(
         backend: Backend for the default session.
     """
     if service is None:
-        service = backend.service if isinstance(backend, IBMBackend) else QiskitRuntimeService()
+        service = (
+            backend.service
+            if isinstance(backend, IBMBackend)
+            else QiskitRuntimeService()
+        )
     if isinstance(backend, IBMBackend):
         backend = backend.name
 
-    global _DEFAULT_SESSION
+    global _DEFAULT_SESSION  # pylint: disable=global-statement
     if (
         _DEFAULT_SESSION is None
         or not _DEFAULT_SESSION._active

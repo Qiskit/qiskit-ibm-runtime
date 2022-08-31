@@ -45,7 +45,9 @@ class TestPrimitives(IBMTestCase):
         for cls in primitives:
             with self.subTest(primitive=cls):
                 inst = cls(
-                    session=MagicMock(spec=Session), options=options, skip_transpilation=True
+                    session=MagicMock(spec=Session),
+                    options=options,
+                    skip_transpilation=True,
                 )
                 self.assertFalse(inst.options.transpilation.skip_transpilation)
 
@@ -76,9 +78,7 @@ class TestPrimitives(IBMTestCase):
         backend_name = "ibm_gotham"
         backend = MagicMock(spec=IBMBackend)
         backend.name = backend_name
-        backends = [
-            backend_name, backend
-        ]
+        backends = [backend_name, backend]
         for cls in primitives:
             for backend in backends:
                 with self.subTest(primitive=cls, backend=backend):

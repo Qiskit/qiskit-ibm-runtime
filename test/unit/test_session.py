@@ -8,9 +8,9 @@
 #
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
-# that they have been altered from the originals.
+# that they have been altered from the originalsession.
 
-"""Tests for Session class."""
+"""Tests for Session classession."""
 
 from unittest.mock import MagicMock, patch
 
@@ -22,7 +22,7 @@ from ..ibm_test_case import IBMTestCase
 
 
 class TestSession(IBMTestCase):
-    """Class for testing the Session class."""
+    """Class for testing the Session classession."""
 
     def tearDown(self) -> None:
         super().tearDown()
@@ -31,8 +31,8 @@ class TestSession(IBMTestCase):
     @patch("qiskit_ibm_runtime.session.QiskitRuntimeService", autospec=True)
     def test_default_service(self, mock_service):
         """Test using default service."""
-        s = Session(backend="ibm_gotham")
-        self.assertIsNotNone(s.service)
+        session = Session(backend="ibm_gotham")
+        self.assertIsNotNone(session.service)
         mock_service.assert_called_once()
 
     def test_missing_backend(self):
@@ -46,28 +46,30 @@ class TestSession(IBMTestCase):
         """Test passing in IBMBackend instance."""
         backend = MagicMock(spec=IBMBackend)
         backend.name = "ibm_gotham"
-        s = Session(service=MagicMock(), backend=backend)
-        self.assertEqual(s._backend, "ibm_gotham")
+        session = Session(service=MagicMock(), backend=backend)
+        self.assertEqual(session.backend, "ibm_gotham")
 
     def test_max_time(self):
         """Test max time."""
         max_times = [
             (42, 42),
-            ("1h", 1*60*60),
-            ("2h 30m 40s", 2*60*60+30*60+40),
-            ("40s 1h", 40+1*60*60)
+            ("1h", 1 * 60 * 60),
+            ("2h 30m 40s", 2 * 60 * 60 + 30 * 60 + 40),
+            ("40s 1h", 40 + 1 * 60 * 60),
         ]
         for max_t, expected in max_times:
             with self.subTest(max_time=max_t):
-                s = Session(service=MagicMock(), backend="ibm_gotham", max_time=max_t)
-                self.assertEqual(s._max_time, expected)
+                session = Session(
+                    service=MagicMock(), backend="ibm_gotham", max_time=max_t
+                )
+                self.assertEqual(session._max_time, expected)
 
     def test_run_after_close(self):
         """Test running after session is closed."""
-        s = Session(service=MagicMock(), backend="ibm_gotham")
-        s.close()
+        session = Session(service=MagicMock(), backend="ibm_gotham")
+        session.close()
         with self.assertRaises(RuntimeError):
-            s.run(program_id="program_id", inputs={})
+            session.run(program_id="program_id", inputs={})
 
     def test_run(self):
         """Test the run method."""
@@ -81,16 +83,16 @@ class TestSession(IBMTestCase):
         program_id = "batman_begins"
         decoder = MagicMock()
         max_time = 42
-        s = Session(service=service, backend=backend, max_time=max_time)
+        session = Session(service=service, backend=backend, max_time=max_time)
         session_ids = [None, job.job_id]
         start_sessions = [True, False]
 
         for idx in range(2):
-            s.run(
+            session.run(
                 program_id=program_id,
                 inputs=inputs,
                 options=options,
-                result_decoder=decoder
+                result_decoder=decoder,
             )
             _, kwargs = service.run.call_args
             self.assertEqual(kwargs["program_id"], program_id)
@@ -99,16 +101,16 @@ class TestSession(IBMTestCase):
             self.assertEqual(kwargs["session_id"], session_ids[idx])
             self.assertEqual(kwargs["start_session"], start_sessions[idx])
             self.assertEqual(kwargs["result_decoder"], decoder)
-            self.assertEqual(s.session_id, job.job_id)
-            self.assertEqual(s.backend, backend)
+            self.assertEqual(session.session_id, job.job_id)
+            self.assertEqual(session.backend, backend)
 
     def test_close_without_run(self):
         """Test closing without run."""
         service = MagicMock()
         api = MagicMock()
         service._api_client = api
-        s = Session(service=service, backend="ibm_gotham")
-        s.close()
+        session = Session(service=service, backend="ibm_gotham")
+        session.close()
         api.close_session.assert_not_called()
 
     def test_context_manager(self):
@@ -125,61 +127,61 @@ class TestSession(IBMTestCase):
         service.run.return_value = job
         service.channel = "ibm_cloud"
 
-        s = Session(service=service)
-        s.run(program_id="foo", inputs={})
-        self.assertEqual(s.backend, "ibm_gotham")
+        session = Session(service=service)
+        session.run(program_id="foo", inputs={})
+        self.assertEqual(session.backend, "ibm_gotham")
 
     def test_opening_default_session(self):
         """Test opening default session."""
         backend = "ibm_gotham"
         service = MagicMock()
-        s = get_default_session(service=service, backend=backend)
-        self.assertIsInstance(s, Session)
-        self.assertEqual(s.service, service)
-        self.assertEqual(s._backend, backend)
+        session = get_default_session(service=service, backend=backend)
+        self.assertIsInstance(session, Session)
+        self.assertEqual(session.service, service)
+        self.assertEqual(session.backend, backend)
 
-        s2 = get_default_session(service=service, backend=backend)
-        self.assertEqual(s, s2)
+        session2 = get_default_session(service=service, backend=backend)
+        self.assertEqual(session, session2)
 
     def test_closed_default_session(self):
         """Test default session closed."""
         backend = "ibm_gotham"
         service = MagicMock()
-        s = get_default_session(service=service, backend=backend)
-        s.close()
+        session = get_default_session(service=service, backend=backend)
+        session.close()
 
-        s2 = get_default_session(service=service, backend=backend)
-        self.assertNotEqual(s, s2)
-        self.assertEqual(s2.service, service)
-        self.assertEqual(s2._backend, backend)
+        session2 = get_default_session(service=service, backend=backend)
+        self.assertNotEqual(session, session2)
+        self.assertEqual(session2.service, service)
+        self.assertEqual(session2.backend, backend)
 
     def test_default_session_different_backend(self):
         """Test default session backend change."""
         service = MagicMock()
-        s = get_default_session(service=service, backend="ibm_gotham")
-        s2 = get_default_session(service=service, backend="ibm_metropolis")
-        self.assertNotEqual(s, s2)
-        self.assertFalse(s._active)
-        self.assertEqual(s2._backend, "ibm_metropolis")
-        self.assertTrue(s2._active)
+        session = get_default_session(service=service, backend="ibm_gotham")
+        session2 = get_default_session(service=service, backend="ibm_metropolis")
+        self.assertNotEqual(session, session2)
+        self.assertFalse(session._active)
+        self.assertEqual(session2.backend, "ibm_metropolis")
+        self.assertTrue(session2._active)
 
     def test_default_session_different_service(self):
         """Test default session service change."""
         service2 = MagicMock()
         backend = "ibm_gotham"
-        s = get_default_session(service=MagicMock(), backend=backend)
-        s2 = get_default_session(service=service2, backend=backend)
-        self.assertNotEqual(s, s2)
-        self.assertFalse(s._active)
-        self.assertTrue(s2._active)
+        session = get_default_session(service=MagicMock(), backend=backend)
+        session2 = get_default_session(service=service2, backend=backend)
+        self.assertNotEqual(session, session2)
+        self.assertFalse(session._active)
+        self.assertTrue(session2._active)
 
     @patch("qiskit_ibm_runtime.session.QiskitRuntimeService", autospec=True)
     def test_default_session_no_service(self, mock_service):
         """Test getting default session with no service."""
         backend = "ibm_gotham"
-        s = get_default_session(backend=backend)
-        self.assertIsInstance(s, Session)
-        self.assertEqual(s._backend, backend)
+        session = get_default_session(backend=backend)
+        self.assertIsInstance(session, Session)
+        self.assertEqual(session.backend, backend)
         mock_service.assert_called_once()
 
     def test_default_session_backend_service(self):
@@ -188,9 +190,9 @@ class TestSession(IBMTestCase):
         service = MagicMock()
         backend.service = service
         backend.name = "ibm_gotham"
-        s = get_default_session(backend=backend)
-        self.assertIsInstance(s, Session)
-        self.assertEqual(s.service, backend.service)
+        session = get_default_session(backend=backend)
+        self.assertIsInstance(session, Session)
+        self.assertEqual(session.service, backend.service)
 
     def test_default_session_no_backend_quantum(self):
         """Test getting default session with no backend."""
@@ -204,5 +206,5 @@ class TestSession(IBMTestCase):
         """Test getting default session without service and backend."""
         mock_inst = mock_service.return_value
         mock_inst.channel = "ibm_cloud"
-        s = get_default_session()
-        self.assertIsInstance(s, Session)
+        session = get_default_session()
+        self.assertIsInstance(session, Session)
