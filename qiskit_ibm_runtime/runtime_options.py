@@ -17,8 +17,9 @@ import logging
 from dataclasses import dataclass
 from typing import Optional, Any
 
+from qiskit.utils.deprecation import deprecate_arguments
+
 from .exceptions import IBMInputValueError
-from .utils.deprecation import issue_deprecation_msg
 from .options import Options
 
 
@@ -27,7 +28,7 @@ class RuntimeOptions:
     """Class for representing runtime execution options.
 
     Args:
-        backend_name: target backend to run on. This is required for ``ibm_quantum`` runtime.
+        backend: target backend to run on. This is required for ``ibm_quantum`` channel.
         image: the runtime image used to execute the program, specified in
             the form of ``image_name:tag``. Not all accounts are
             authorized to select a different image.
@@ -36,18 +37,17 @@ class RuntimeOptions:
             The default level is ``WARNING``.
     """
 
-    # pylint: disable=unused-argument
-    def __new__(cls, *args: Any, **kwargs: Any) -> "RuntimeOptions":
-        issue_deprecation_msg(
-            msg="The RuntimeOptions class has been deprecated",
-            version="0.7",
-            remedy="Please use qiskit_ibm_runtime.Options class instead.",
-        )
-        return super().__new__(cls)
-
-    backend_name: Optional[str] = None
-    image: Optional[str] = None
-    log_level: Optional[str] = None
+    @deprecate_arguments({"backend_name": "backend"})
+    def __init__(
+        self,
+        backend: Optional[str] = None,
+        image: Optional[str] = None,
+        log_level: Optional[str] = None
+    ) -> None:
+        self.backend = backend
+        self.image = image
+        self.log_level = log_level
+        pass
 
     def validate(self, channel: str) -> None:
         """Validate options.
@@ -64,9 +64,9 @@ class RuntimeOptions:
         ):
             raise IBMInputValueError('"image" needs to be in form of image_name:tag')
 
-        if channel == "ibm_quantum" and not self.backend_name:
+        if channel == "ibm_quantum" and not self.backend:
             raise IBMInputValueError(
-                '"backend_name" is required field in "options" for ``ibm_quantum`` runtime.'
+                '"backend" is required field in "options" for ``ibm_quantum`` runtime.'
             )
 
         if self.log_level and not isinstance(

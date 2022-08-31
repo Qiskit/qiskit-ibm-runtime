@@ -97,6 +97,3 @@ deprecations:
       options = Options()
       # This can be done using auto-complete.
       options.transpilation.skip_transpilation = True
-  - |
-    The `qiskit_ibm_runtime.RuntimeOptions` class has been deprecated and
-    replaced by `qiskit_ibm_runtime.Options`.

@@ -30,7 +30,6 @@ from .qiskit_runtime_service import QiskitRuntimeService
 from .program.result_decoder import ResultDecoder
 from .runtime_job import RuntimeJob
 from .utils.deprecation import deprecate_arguments, issue_deprecation_msg
-from .runtime_options import RuntimeOptions
 from .ibm_backend import IBMBackend
 from .session import get_default_session
 from .options import Options
