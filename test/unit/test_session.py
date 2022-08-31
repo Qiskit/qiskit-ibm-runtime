@@ -12,24 +12,28 @@
 
 """Tests for Session class."""
 
-import sys
 from unittest.mock import MagicMock, patch
-from dataclasses import asdict
 
-from qiskit_ibm_runtime import Sampler, Estimator, Options, RuntimeOptions, Session
+from qiskit_ibm_runtime import Session
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
+from qiskit_ibm_runtime.session import get_default_session
+import qiskit_ibm_runtime.session as session_pkg
 from ..ibm_test_case import IBMTestCase
 
 
 class TestSession(IBMTestCase):
     """Class for testing the Session class."""
 
-    def test_run_after_close(self):
-        """Test running after session is closed."""
-        s = Session(service=MagicMock(), backend="ibm_gotham")
-        s.close()
-        with self.assertRaises(RuntimeError):
-            s.run(program_id="program_id", inputs={})
+    def tearDown(self) -> None:
+        super().tearDown()
+        session_pkg._DEFAULT_SESSION = None
+
+    @patch("qiskit_ibm_runtime.session.QiskitRuntimeService", autospec=True)
+    def test_default_service(self, mock_service):
+        """Test using default service."""
+        s = Session(backend="ibm_gotham")
+        self.assertIsNotNone(s.service)
+        mock_service.assert_called_once()
 
     def test_missing_backend(self):
         """Test missing backend."""
@@ -40,10 +44,30 @@ class TestSession(IBMTestCase):
 
     def test_passing_ibm_backend(self):
         """Test passing in IBMBackend instance."""
-        backend = IBMBackend(MagicMock(), MagicMock(), MagicMock())
+        backend = MagicMock(spec=IBMBackend)
         backend.name = "ibm_gotham"
         s = Session(service=MagicMock(), backend=backend)
         self.assertEqual(s._backend, "ibm_gotham")
+
+    def test_max_time(self):
+        """Test max time."""
+        max_times = [
+            (42, 42),
+            ("1h", 1*60*60),
+            ("2h 30m 40s", 2*60*60+30*60+40),
+            ("40s 1h", 40+1*60*60)
+        ]
+        for max_t, expected in max_times:
+            with self.subTest(max_time=max_t):
+                s = Session(service=MagicMock(), backend="ibm_gotham", max_time=max_t)
+                self.assertEqual(s._max_time, expected)
+
+    def test_run_after_close(self):
+        """Test running after session is closed."""
+        s = Session(service=MagicMock(), backend="ibm_gotham")
+        s.close()
+        with self.assertRaises(RuntimeError):
+            s.run(program_id="program_id", inputs={})
 
     def test_run(self):
         """Test the run method."""
@@ -75,197 +99,110 @@ class TestSession(IBMTestCase):
             self.assertEqual(kwargs["session_id"], session_ids[idx])
             self.assertEqual(kwargs["start_session"], start_sessions[idx])
             self.assertEqual(kwargs["result_decoder"], decoder)
+            self.assertEqual(s.session_id, job.job_id)
+            self.assertEqual(s.backend, backend)
+
+    def test_close_without_run(self):
+        """Test closing without run."""
+        service = MagicMock()
+        api = MagicMock()
+        service._api_client = api
+        s = Session(service=service, backend="ibm_gotham")
+        s.close()
+        api.close_session.assert_not_called()
 
     def test_context_manager(self):
         """Test session as a context manager."""
-        pass
+        with Session(service=MagicMock(), backend="ibm_gotham") as session:
+            session.run(program_id="foo", inputs={})
+        self.assertFalse(session._active)
 
-    def test_no_default_session(self):
-        """Test no default session."""
-        pass
+    def test_default_backend(self):
+        """Test default backend set."""
+        job = MagicMock()
+        job.backend.name = "ibm_gotham"
+        service = MagicMock()
+        service.run.return_value = job
+        service.channel = "ibm_cloud"
+
+        s = Session(service=service)
+        s.run(program_id="foo", inputs={})
+        self.assertEqual(s.backend, "ibm_gotham")
+
+    def test_opening_default_session(self):
+        """Test opening default session."""
+        backend = "ibm_gotham"
+        service = MagicMock()
+        s = get_default_session(service=service, backend=backend)
+        self.assertIsInstance(s, Session)
+        self.assertEqual(s.service, service)
+        self.assertEqual(s._backend, backend)
+
+        s2 = get_default_session(service=service, backend=backend)
+        self.assertEqual(s, s2)
 
     def test_closed_default_session(self):
         """Test default session closed."""
-        pass
+        backend = "ibm_gotham"
+        service = MagicMock()
+        s = get_default_session(service=service, backend=backend)
+        s.close()
+
+        s2 = get_default_session(service=service, backend=backend)
+        self.assertNotEqual(s, s2)
+        self.assertEqual(s2.service, service)
+        self.assertEqual(s2._backend, backend)
 
     def test_default_session_different_backend(self):
         """Test default session backend change."""
-        pass
+        service = MagicMock()
+        s = get_default_session(service=service, backend="ibm_gotham")
+        s2 = get_default_session(service=service, backend="ibm_metropolis")
+        self.assertNotEqual(s, s2)
+        self.assertFalse(s._active)
+        self.assertEqual(s2._backend, "ibm_metropolis")
+        self.assertTrue(s2._active)
 
+    def test_default_session_different_service(self):
+        """Test default session service change."""
+        service2 = MagicMock()
+        backend = "ibm_gotham"
+        s = get_default_session(service=MagicMock(), backend=backend)
+        s2 = get_default_session(service=service2, backend=backend)
+        self.assertNotEqual(s, s2)
+        self.assertFalse(s._active)
+        self.assertTrue(s2._active)
 
+    @patch("qiskit_ibm_runtime.session.QiskitRuntimeService", autospec=True)
+    def test_default_session_no_service(self, mock_service):
+        """Test getting default session with no service."""
+        backend = "ibm_gotham"
+        s = get_default_session(backend=backend)
+        self.assertIsInstance(s, Session)
+        self.assertEqual(s._backend, backend)
+        mock_service.assert_called_once()
 
+    def test_default_session_backend_service(self):
+        """Test getting default session using service from backend."""
+        backend = MagicMock(spec=IBMBackend)
+        service = MagicMock()
+        backend.service = service
+        backend.name = "ibm_gotham"
+        s = get_default_session(backend=backend)
+        self.assertIsInstance(s, Session)
+        self.assertEqual(s.service, backend.service)
 
+    def test_default_session_no_backend_quantum(self):
+        """Test getting default session with no backend."""
+        service = MagicMock()
+        service.channel = "ibm_quantum"
+        with self.assertRaises(ValueError):
+            _ = get_default_session(service=service)
 
-
-
-
-
-
-
-
-    def test_skip_transpilation(self):
-        """Test skip_transpilation is hornored."""
-        primitives = [Sampler, Estimator]
-        for cls in primitives:
-            with self.subTest(primitive=cls):
-                inst = cls(session=MagicMock(), skip_transpilation=True)
-                self.assertTrue(inst.options.transpilation.skip_transpilation)
-
-    def test_skip_transpilation_overwrite(self):
-        """Test overwriting skip_transpilation."""
-        options = Options()
-        options.transpilation.skip_transpilation = False
-        primitives = [Sampler, Estimator]
-        for cls in primitives:
-            with self.subTest(primitive=cls):
-                inst = cls(
-                    session=MagicMock(), options=options, skip_transpilation=True
-                )
-                self.assertFalse(inst.options.transpilation.skip_transpilation)
-
-    def test_dict_options(self):
-        """Test passing a dictionary as options."""
-        options_vars = [
-            {},
-            {
-                "resilience_level": 1,
-                "transpilation": {"seed_transpiler": 24},
-                "execution": {"shots": 100, "init_qubits": True},
-            },
-            {"transpilation": {}},
-        ]
-        primitives = [Sampler, Estimator]
-        for cls in primitives:
-            for options in options_vars:
-                with self.subTest(primitive=cls, options=options):
-                    inst = cls(session=MagicMock(), options=options)
-                    expected = asdict(Options())
-                    self._update_dict(expected, options)
-                    self.assertDictEqual(expected, asdict(inst.options))
-
-    def test_runtime_options(self):
-        """Test passing in runtime options."""
-        primitives = [Sampler, Estimator]
-        for cls in primitives:
-            with self.subTest(primitive=cls):
-                options = {"backend": "foo", "image": "foo:bar"}
-                inst = cls(session=MagicMock(), options=options)
-                if not isinstance(options, dict):
-                    options = asdict(options)
-                self.assertEqual(
-                    options["image"], inst.options.experimental["image"]
-                )
-
-    @patch("qiskit_ibm_runtime.session.Session")
-    def test_default_session(self, _):
-        """Test a session is created if not passed in."""
-        sampler = Sampler()
-        self.assertIsNotNone(sampler.session)
-        estimator = Estimator()
-        self.assertEqual(estimator.session, sampler.session)
-
-    def test_run_inputs_default(self):
-        """Test run using default options."""
-        session = MagicMock()
-        options_vars = [
-            (Options(resilience_level=9), {"resilience_settings": {"level": 9}}),
-            (
-                Options(optimization_level=8),
-                {"transpilation_settings": {"optimization_settings": {"level": 8}}},
-            ),
-            (
-                {"transpilation": {"seed_transpiler": 24}, "execution": {"shots": 100}},
-                {
-                    "transpilation_settings": {"seed_transpiler": 24},
-                    "run_options": {"shots": 100},
-                },
-            ),
-        ]
-        primitives = [Sampler, Estimator]
-        for cls in primitives:
-            for options, expected in options_vars:
-                with self.subTest(primitive=cls, options=options):
-                    inst = cls(session=session, options=options)
-                    inst.run(MagicMock(), MagicMock())
-                    if sys.version_info >= (3, 8):
-                        inputs = session.run.call_args.kwargs["inputs"]
-                    else:
-                        _, kwargs = session.run.call_args
-                        inputs = kwargs["inputs"]
-
-                    self._assert_dict_paritally_equal(inputs, expected)
-
-    def test_run_inputs_updated_default(self):
-        """Test run using updated default options."""
-        session = MagicMock()
-        primitives = [Sampler, Estimator]
-        for cls in primitives:
-            with self.subTest(primitive=cls):
-                inst = cls(session=session)
-                inst.options.resilience_level = 1
-                inst.options.optimization_level = 2
-                inst.options.execution.shots = 3
-                inst.run(MagicMock(), MagicMock())
-                if sys.version_info >= (3, 8):
-                    inputs = session.run.call_args.kwargs["inputs"]
-                else:
-                    _, kwargs = session.run.call_args
-                    inputs = kwargs["inputs"]
-                self._assert_dict_paritally_equal(
-                    inputs,
-                    {
-                        "resilience_settings": {"level": 1},
-                        "transpilation_settings": {
-                            "optimization_settings": {"level": 2}
-                        },
-                        "run_options": {"shots": 3},
-                    },
-                )
-
-    def test_run_inputs_overwrite(self):
-        """Test run using overwritten options."""
-        session = MagicMock()
-        options_vars = [
-            ({"resilience_level": 9}, {"resilience_settings": {"level": 9}}),
-            ({"shots": 200}, {"run_options": {"shots": 200}}),
-            (
-                {"optimization_level": 8},
-                {"transpilation_settings": {"optimization_settings": {"level": 8}}},
-            ),
-            (
-                {"seed_transpiler": 24, "optimization_level": 8},
-                {
-                    "transpilation_settings": {
-                        "optimization_settings": {"level": 8},
-                        "seed_transpiler": 24,
-                    }
-                },
-            ),
-        ]
-        primitives = [Sampler, Estimator]
-        for cls in primitives:
-            for options, expected in options_vars:
-                with self.subTest(primitive=cls, options=options):
-                    inst = cls(session=session)
-                    inst.run(MagicMock(), MagicMock(), **options)
-                    if sys.version_info >= (3, 8):
-                        inputs = session.run.call_args.kwargs["inputs"]
-                    else:
-                        _, kwargs = session.run.call_args
-                        inputs = kwargs["inputs"]
-                    self._assert_dict_paritally_equal(inputs, expected)
-                    self.assertDictEqual(asdict(inst.options), asdict(Options()))
-
-    def _update_dict(self, dict1, dict2):
-        for key, val in dict1.items():
-            if isinstance(val, dict):
-                self._update_dict(val, dict2.pop(key, {}))
-            elif key in dict2.keys():
-                dict1[key] = dict2.pop(key)
-
-    def _assert_dict_paritally_equal(self, dict1, dict2):
-        for key, val in dict2.items():
-            if isinstance(val, dict):
-                self._assert_dict_paritally_equal(dict1.get(key), val)
-            elif key in dict1:
-                self.assertEqual(val, dict1[key])
+    @patch("qiskit_ibm_runtime.session.QiskitRuntimeService", autospec=True)
+    def test_default_session_no_service_backend(self, mock_service):
+        """Test getting default session without service and backend."""
+        mock_inst = mock_service.return_value
+        mock_inst.channel = "ibm_cloud"
+        s = get_default_session()
+        self.assertIsInstance(s, Session)

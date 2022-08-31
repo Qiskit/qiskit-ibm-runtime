@@ -13,22 +13,28 @@
 """Tests for primitive classes."""
 
 import sys
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, ANY
 from dataclasses import asdict
 
-from qiskit_ibm_runtime import Sampler, Estimator, Options, RuntimeOptions
+from qiskit_ibm_runtime import Sampler, Estimator, Options, Session
+from qiskit_ibm_runtime.ibm_backend import IBMBackend
+import qiskit_ibm_runtime.session as session_pkg
 from ..ibm_test_case import IBMTestCase
 
 
 class TestPrimitives(IBMTestCase):
     """Class for testing the Sampler class."""
 
+    def tearDown(self) -> None:
+        super().tearDown()
+        session_pkg._DEFAULT_SESSION = None
+
     def test_skip_transpilation(self):
         """Test skip_transpilation is hornored."""
         primitives = [Sampler, Estimator]
         for cls in primitives:
             with self.subTest(primitive=cls):
-                inst = cls(session=MagicMock(), skip_transpilation=True)
+                inst = cls(session=MagicMock(spec=Session), skip_transpilation=True)
                 self.assertTrue(inst.options.transpilation.skip_transpilation)
 
     def test_skip_transpilation_overwrite(self):
@@ -39,7 +45,7 @@ class TestPrimitives(IBMTestCase):
         for cls in primitives:
             with self.subTest(primitive=cls):
                 inst = cls(
-                    session=MagicMock(), options=options, skip_transpilation=True
+                    session=MagicMock(spec=Session), options=options, skip_transpilation=True
                 )
                 self.assertFalse(inst.options.transpilation.skip_transpilation)
 
@@ -51,6 +57,7 @@ class TestPrimitives(IBMTestCase):
                 "resilience_level": 1,
                 "transpilation": {"seed_transpiler": 24},
                 "execution": {"shots": 100, "init_qubits": True},
+                "log_level": "INFO",
             },
             {"transpilation": {}},
         ]
@@ -58,26 +65,54 @@ class TestPrimitives(IBMTestCase):
         for cls in primitives:
             for options in options_vars:
                 with self.subTest(primitive=cls, options=options):
-                    inst = cls(session=MagicMock(), options=options)
+                    inst = cls(session=MagicMock(spec=Session), options=options)
                     expected = asdict(Options())
                     self._update_dict(expected, options)
                     self.assertDictEqual(expected, asdict(inst.options))
 
-    def test_runtime_options(self):
-        """Test passing in runtime options."""
+    def test_backend_in_options(self):
+        """Test specifying backend in options."""
         primitives = [Sampler, Estimator]
+        backend_name = "ibm_gotham"
+        backend = MagicMock(spec=IBMBackend)
+        backend.name = backend_name
+        backends = [
+            backend_name, backend
+        ]
         for cls in primitives:
-            with self.subTest(primitive=cls):
-                options = {"backend": "foo", "image": "foo:bar"}
-                inst = cls(session=MagicMock(), options=options)
-                if not isinstance(options, dict):
-                    options = asdict(options)
-                self.assertEqual(
-                    options["image"], inst.options.experimental["image"]
-                )
+            for backend in backends:
+                with self.subTest(primitive=cls, backend=backend):
+                    options = {"backend": backend}
+                    inst = cls(service=MagicMock(), options=options)
+                    self.assertEqual(inst.session.backend, backend_name)
 
     @patch("qiskit_ibm_runtime.session.Session")
-    def test_default_session(self, _):
+    @patch("qiskit_ibm_runtime.session.QiskitRuntimeService")
+    def test_backend_str_as_session(self, _, mock_session):
+        """Test specifying a backend name as session."""
+        primitives = [Sampler, Estimator]
+        backend_name = "ibm_gotham"
+
+        for cls in primitives:
+            with self.subTest(primitive=cls):
+                _ = cls(session=backend_name)
+                mock_session.assert_called_with(service=ANY, backend=backend_name)
+
+    def test_backend_as_session(self):
+        """Test specifying a backend as session."""
+        primitives = [Sampler, Estimator]
+        backend = MagicMock(spec=IBMBackend)
+        backend.name = "ibm_gotham"
+        backend.service = MagicMock()
+
+        for cls in primitives:
+            with self.subTest(primitive=cls):
+                inst = cls(session=backend)
+                self.assertEqual(inst.session.backend, backend.name)
+
+    @patch("qiskit_ibm_runtime.session.Session")
+    @patch("qiskit_ibm_runtime.session.QiskitRuntimeService")
+    def test_default_session(self, *_):
         """Test a session is created if not passed in."""
         sampler = Sampler()
         self.assertIsNotNone(sampler.session)
@@ -86,7 +121,7 @@ class TestPrimitives(IBMTestCase):
 
     def test_run_inputs_default(self):
         """Test run using default options."""
-        session = MagicMock()
+        session = MagicMock(spec=Session)
         options_vars = [
             (Options(resilience_level=9), {"resilience_settings": {"level": 9}}),
             (
@@ -117,7 +152,7 @@ class TestPrimitives(IBMTestCase):
 
     def test_run_inputs_updated_default(self):
         """Test run using updated default options."""
-        session = MagicMock()
+        session = MagicMock(spec=Session)
         primitives = [Sampler, Estimator]
         for cls in primitives:
             with self.subTest(primitive=cls):
@@ -144,7 +179,7 @@ class TestPrimitives(IBMTestCase):
 
     def test_run_inputs_overwrite(self):
         """Test run using overwritten options."""
-        session = MagicMock()
+        session = MagicMock(spec=Session)
         options_vars = [
             ({"resilience_level": 9}, {"resilience_settings": {"level": 9}}),
             ({"shots": 200}, {"run_options": {"shots": 200}}),

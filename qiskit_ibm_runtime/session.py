@@ -127,6 +127,7 @@ class Session:
 
         # TODO: Do we really need to specify a None max time if session has started?
         max_time = self._max_time if not self._session_id else None
+        options = options or {}
         options["backend"] = self._backend
 
         job = self._service.run(
@@ -141,6 +142,9 @@ class Session:
 
         if self._session_id is None:
             self._session_id = job.job_id
+
+        if self._backend is None:
+            self._backend = job.backend.name
 
         return job
 
@@ -168,6 +172,15 @@ class Session:
         """
         return self._service
 
+    @property
+    def backend(self) -> Optional[str]:
+        """Return backend for this session.
+
+        Returns:
+            Backend for this session. None if unknown.
+        """
+        return self._backend
+
     def __enter__(self) -> "Session":
         return self
 
@@ -183,18 +196,26 @@ class Session:
 # Default session
 _DEFAULT_SESSION: Optional[Session] = None
 
-def get_default_session(service, backend: str) -> Session:
+def get_default_session(
+    service: Optional[QiskitRuntimeService] = None,
+    backend: Optional[Union[str, IBMBackend]] = None) -> Session:
     """Return the default session.
 
     Args:
         service: Service to use to create a default session.
         backend: Backend for the default session.
     """
+    if service is None:
+        service = backend.service if isinstance(backend, IBMBackend) else QiskitRuntimeService()
+    if isinstance(backend, IBMBackend):
+        backend = backend.name
+
     global _DEFAULT_SESSION
     if (
         _DEFAULT_SESSION is None
         or not _DEFAULT_SESSION._active
         or _DEFAULT_SESSION._backend != backend
+        or (service is not None and _DEFAULT_SESSION.service.channel != service.channel)
     ):
         if _DEFAULT_SESSION and _DEFAULT_SESSION._active:
             _DEFAULT_SESSION.close()

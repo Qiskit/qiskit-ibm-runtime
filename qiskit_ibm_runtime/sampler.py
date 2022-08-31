@@ -68,7 +68,7 @@ class Sampler(BaseSampler):
         circuits: Optional[Union[QuantumCircuit, Iterable[QuantumCircuit]]] = None,
         parameters: Optional[Iterable[Iterable[Parameter]]] = None,
         service: Optional[QiskitRuntimeService] = None,
-        session: Optional[Session] = None,
+        session: Optional[Union[Session, str, IBMBackend]] = None,
         options: Optional[Union[Dict, Options]] = None,
         skip_transpilation: Optional[bool] = False,
     ):
@@ -87,8 +87,11 @@ class Sampler(BaseSampler):
                 defaults to `QiskitRuntimeService()` which tries to initialize your default
                 saved account.
 
-            session: Session in which to call the sampler primitive. If ``None``, a new session
-                is created using the default saved account.
+            session: Session in which to call the primitive. If an instance of
+                :class:`qiskit_ibm_runtime.IBMBackend` class or
+                string name of a backend is specified, a new session is created for
+                that backend. If ``None``, a new session is created using the default
+                saved account and a default backend (IBM Cloud channel only).
 
             options: Primitive options, see :class:`Options` for detailed description.
                 The ``backend`` keyword is still supported but is deprecated.
@@ -120,7 +123,7 @@ class Sampler(BaseSampler):
                 "service", "0.7", "Please use the session parameter instead."
             )
 
-        self._backend = None
+        backend = None
 
         if options is None:
             self.options = Options()
@@ -128,15 +131,13 @@ class Sampler(BaseSampler):
             self.options = copy.deepcopy(options)
             skip_transpilation = self.options.transpilation.skip_transpilation
         else:
-            self._backend = options.pop("backend", None)
-            if self._backend is not None:
+            backend = options.pop("backend", None)
+            if backend is not None:
                 issue_deprecation_msg(
                     msg="The 'backend' key in 'options' has been deprecated",
                     version="0.7",
                     remedy="Please pass the backend when opening a session."
                 )
-            if isinstance(self._backend, IBMBackend):
-                self._backend = self._backend.name
             self.options = Options._from_dict(options)
             skip_transpilation = options.get("transpilation", {}).get(
                 "skip_transpilation", False
@@ -144,7 +145,11 @@ class Sampler(BaseSampler):
         self.options.transpilation.skip_transpilation = skip_transpilation
 
         self._initial_inputs = {"circuits": circuits, "parameters": parameters}
-        self._session = session or get_default_session(service, self._backend)
+        if isinstance(session, Session):
+            self._session = session
+        else:
+            backend = session or backend
+            self._session = get_default_session(service, backend)
 
     def run(
         self,

@@ -77,7 +77,7 @@ class QiskitRuntimeService(Provider):
         service = QiskitRuntimeService()
 
         # Set options, which can be overwritten at job level.
-        options = Options(backend="ibmq_qasm_simulator")
+        options = Options(optimization_level=1)
 
         # Prepare inputs.
         bell = ReferenceCircuits.bell()
@@ -85,7 +85,7 @@ class QiskitRuntimeService(Provider):
         H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
         theta = [0, 1, 1, 2, 3, 5]
 
-        with Session(service) as session:
+        with Session(service=service, backend="ibmq_qasm_simulator") as session:
             # Submit a request to the Sampler primitive within the session.
             sampler = Sampler(session=session, options=options)
             job = sampler.run(circuits=bell)

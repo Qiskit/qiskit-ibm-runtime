@@ -17,7 +17,7 @@ features:
       service = QiskitRuntimeService()
 
       # Set options, which can be overwritten at job level.
-      options = Options(backend="ibmq_qasm_simulator")
+      options = Options(optimization_level=1)
 
       # Prepare inputs.
       bell = ReferenceCircuits.bell()
@@ -25,7 +25,7 @@ features:
       H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
       theta = [0, 1, 1, 2, 3, 5]
 
-      with Session(service) as session:
+      with Session(service=service, backend="ibmq_qasm_simulator") as session:
           # Submit a request to the Sampler primitive within the session.
           sampler = Sampler(session=session, options=options)
           job = sampler.run(circuits=bell)
@@ -44,10 +44,10 @@ features:
       from qiskit_ibm_runtime import Session, Sampler, Options
       from qiskit.test.reference_circuits import ReferenceCircuits
 
-      options = Options(backend="ibmq_qasm_simulator")
+      options = Options()
       options.optimization_level = 3  # This can be done using auto-complete.
 
-      with Session() as session:
+      with Session(backend="ibmq_qasm_simulator") as session:
         # Pass the options to Sampler.
         sampler = Sampler(session=session, options=options)
 

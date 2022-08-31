@@ -271,7 +271,6 @@ class Options:
         """
         experimental = options.get("experimental") or {}
         return {
-            "backend_name": options.get("backend"),
             "log_level": options.get("log_level"),
             "image": experimental.get("image", None),
         }
