@@ -104,6 +104,12 @@ class Options:
     """Options for the primitive programs.
 
     Args:
+        max_execution_time: Maximum execution time in seconds. This overrides
+            the max_execution_time of the program and cannot exceed it.
+
+        job_tags: Tags to be assigned to the job. The tags can subsequently be used
+                as a filter in the :meth:`jobs()` function call.
+
         optimization_level: How much optimization to perform on the circuits.
             Higher levels generate more optimized circuits,
             at the expense of longer transpilation times.

@@ -15,7 +15,7 @@
 import re
 import logging
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, List
 
 from qiskit.utils.deprecation import deprecate_arguments
 
@@ -34,6 +34,8 @@ class RuntimeOptions:
         backend: Optional[str] = None,
         image: Optional[str] = None,
         log_level: Optional[str] = None,
+        job_tags: Optional[List[str]] = None,
+        max_execution_time: Optional[int] = None
     ) -> None:
         """RuntimeOptions constructor.
 
@@ -45,10 +47,16 @@ class RuntimeOptions:
             log_level: logging level to set in the execution environment. The valid
                 log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
                 The default level is ``WARNING``.
+            job_tags: Tags to be assigned to the job. The tags can subsequently be used
+                as a filter in the :meth:`jobs()` function call.
+            max_execution_time: Maximum execution time in seconds. This overrides
+                the max_execution_time of the program and cannot exceed it.
         """
         self.backend = backend
         self.image = image
         self.log_level = log_level
+        self.job_tags = job_tags
+        self.max_execution_time = max_execution_time
 
     def validate(self, channel: str) -> None:
         """Validate options.
