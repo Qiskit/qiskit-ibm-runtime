@@ -23,6 +23,7 @@ from datetime import datetime
 
 from qiskit.providers.backend import Backend
 from qiskit.providers.jobstatus import JobStatus, JOB_FINAL_STATES
+from qiskit.providers.job import JobV1 as Job
 
 from .constants import API_TO_JOB_ERROR_MESSAGE, API_TO_JOB_STATUS
 from .exceptions import (
@@ -38,11 +39,12 @@ from .exceptions import IBMError
 from .api.exceptions import RequestsApiError
 from .utils.converters import utc_to_local
 from .api.client_parameters import ClientParameters
+from .utils.utils import CallableStr
 
 logger = logging.getLogger(__name__)
 
 
-class RuntimeJob:
+class RuntimeJob(Job):
     """Representation of a runtime program execution.
 
     A new ``RuntimeJob`` instance is returned when you call
@@ -136,6 +138,9 @@ class RuntimeJob:
 
         if user_callback is not None:
             self.stream_results(user_callback)
+
+        # For backward compatibility.
+        self.job_id = CallableStr(job_id, name="job_id")
 
     def interim_results(self, decoder: Optional[Type[ResultDecoder]] = None) -> Any:
         """Return the interim results of the job.

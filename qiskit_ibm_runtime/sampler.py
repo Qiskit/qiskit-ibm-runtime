@@ -17,6 +17,7 @@ from typing import Dict, Iterable, Optional, Sequence, Any, Union
 import copy
 
 from qiskit.circuit import QuantumCircuit, Parameter
+from qiskit.circuit.parametertable import ParameterView
 
 # TODO import BaseSampler and SamplerResult from terra once released
 from .qiskit.primitives import BaseSampler, SamplerResult
@@ -99,19 +100,11 @@ class Sampler(BaseSampler):
             skip_transpilation (DEPRECATED): Transpilation is skipped if set to True. False by default.
                 Ignored ``skip_transpilation`` is also specified in ``options``.
         """
-        # TODO: Fix base classes once done
         super().__init__(
             circuits=circuits,
             parameters=parameters,
         )
 
-        # TODO: Remove deprecation warnings if done in base class
-        if circuits or parameters:
-            deprecate_arguments(
-                "circuits and parameters",
-                "0.7",
-                f"You can instead specify these inputs using the {self.__class__.__name__}.run method.",
-            )
         if skip_transpilation:
             deprecate_arguments(
                 "skip_transpilation",
@@ -154,9 +147,42 @@ class Sampler(BaseSampler):
 
     def run(
         self,
-        circuits: Union[QuantumCircuit, Sequence[QuantumCircuit]],
-        parameter_values: Sequence[Sequence[float]] | None = None,
-        parameters: Sequence[Sequence[Parameter]] | None = None,
+        circuits: QuantumCircuit | Sequence[QuantumCircuit],
+        parameter_values: Sequence[float] | Sequence[Sequence[float]] | None = None,
+        parameters: Sequence[Parameter] | Sequence[Sequence[Parameter]] | None = None,
+        **kwargs: Any,
+    ) -> RuntimeJob:
+        """Submit a request to the sampler primitive program.
+
+        Args:
+            circuits: A (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
+                a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
+            parameter_values: Concrete parameters to be bound.
+            parameters: Parameters of each of the quantum circuits.
+                Defaults to ``[circ.parameters for circ in circuits]``.
+            **kwargs: Individual options to overwrite the default primitive options.
+
+        Returns:
+            Submitted job.
+
+        Raises:
+            QiskitError: Invalid arguments are given.
+        """
+        if isinstance(circuits, QuantumCircuit):
+            circuits = [circuits]
+        if parameter_values is not None and isinstance(parameter_values[0], float):
+            parameter_values = [parameter_values]
+        if parameters is not None and isinstance(parameters[0], Parameter):
+            parameters = [parameters]
+
+        return super().run(circuits=circuits,
+            parameter_values=parameter_values, parameters=parameters, **kwargs)
+
+    def _run(
+        self,
+        circuits: Sequence[QuantumCircuit],
+        parameter_values: Sequence[Sequence[float]],
+        parameters: Sequence[ParameterView],
         **kwargs: Any,
     ) -> RuntimeJob:
         """Submit a request to the sampler primitive program.
@@ -176,23 +202,11 @@ class Sampler(BaseSampler):
 
         Returns:
             Submitted job.
-
-        Raises:
-            ValueError: If the input values are invalid.
         """
-        if isinstance(circuits, Iterable) and not all(
-            isinstance(inst, QuantumCircuit) for inst in circuits
-        ):
-            raise ValueError(
-                "The circuits parameter has to be instances of QuantumCircuit."
-            )
-
-        circ_count = 1 if isinstance(circuits, QuantumCircuit) else len(circuits)
-
         inputs = {
             "circuits": circuits,
             "parameters": parameters,
-            "circuit_indices": list(range(circ_count)),
+            "circuit_indices": list(range(len(circuits))),
             "parameter_values": parameter_values,
         }
         combined = self.options._merge_options(kwargs)

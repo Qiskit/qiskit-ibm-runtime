@@ -20,11 +20,13 @@ from queue import Queue
 from threading import Condition
 from typing import List, Optional, Any, Dict, Union, Tuple, Type
 from urllib.parse import urlparse
+import warnings
 
 import requests
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 from ibm_platform_services import ResourceControllerV2
 
+from .deprecation import issue_deprecation_msg
 from ..exceptions import IBMInputValueError
 
 
@@ -349,3 +351,21 @@ class RefreshQueue(Queue):
         """Wake up all threads waiting for items on the queued."""
         with self.condition:
             self.condition.notifyAll()
+
+
+class CallableStr(str):
+
+    def __init__(self, name) -> None:
+        self._name = name
+        super().__init__()
+
+    def __call__(self) -> str:
+        return self
+
+    def __str__(self) -> str:
+        issue_deprecation_msg(
+            msg=f"Using {self._name} as an attribute has been deprecated",
+            version="0.7",
+            remedy=f"Please use {self._name}() instead."
+        )
+        return super().__str__()
