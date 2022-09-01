@@ -35,7 +35,7 @@ class RuntimeOptions:
         image: Optional[str] = None,
         log_level: Optional[str] = None,
         job_tags: Optional[List[str]] = None,
-        max_execution_time: Optional[int] = None
+        max_execution_time: Optional[int] = None,
     ) -> None:
         """RuntimeOptions constructor.
 
