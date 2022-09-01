@@ -124,8 +124,6 @@ class Options:
             log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
             The default level is ``WARNING``.
 
-        backend: target backend to run on. This is required for ``ibm_quantum`` channel.
-
         log_level: logging level to set in the execution environment. The valid
             log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
             The default level is ``WARNING``.
@@ -201,7 +199,6 @@ class Options:
     job_tags: List[str] = None
     optimization_level: int = 1
     resilience_level: int = 0
-    backend: str = None
     log_level: str = "WARNING"
     transpilation: Transpilation = field(default_factory=Transpilation)
     execution: Execution = field(default_factory=Execution)
@@ -242,13 +239,6 @@ class Options:
                 remedy="Please specify 'experimental':{'image': image} instead.",
             )
             experimental = {"image": data.pop("image")}
-        if "backend_name" in data.keys():
-            issue_deprecation_msg(
-                msg="The keyword 'backend_name' has been deprecated",
-                version="0.7",
-                remedy="Please use 'backend' instead.",
-            )
-            data["backend"] = data.pop("backend_name")
         transp = Transpilation(**data.pop("transpilation", {}))
         execution = Execution(**data.pop("execution", {}))
         return cls(
@@ -283,7 +273,6 @@ class Options:
         """
         experimental = options.get("experimental") or {}
         return {
-            "backend_name": options.get("backend"),
             "log_level": options.get("log_level"),
             "image": experimental.get("image", None),
             "job_tags": options.get("job_tags"),
