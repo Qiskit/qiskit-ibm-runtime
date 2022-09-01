@@ -207,13 +207,13 @@ class Estimator(BaseEstimator):
         Raises:
             QiskitError: Invalid arguments are given.
         """
-        if isinstance(circuits, QuantumCircuit):
+        if not isinstance(circuits, Sequence):
             circuits = [circuits]
         if not isinstance(observables, Sequence):
             observables = [observables]
-        if parameter_values is not None and isinstance(parameter_values[0], float):
+        if parameter_values is not None and len(parameter_values) > 1 and not isinstance(parameter_values[0], Sequence):
             parameter_values = [parameter_values]
-        if parameters is not None and isinstance(parameters[0], Parameter):
+        if parameters is not None and len(parameters) > 1 and not isinstance(parameters[0], Sequence):
             parameters = [parameters]
 
         return super().run(circuits=circuits, observables=observables,

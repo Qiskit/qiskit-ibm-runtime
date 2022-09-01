@@ -1,0 +1,6 @@
+---
+deprecations:
+  - |
+    ``job_id`` and ``backend`` attributes of :class:`qiskit_ibm_runtime.RuntimeJob`
+    have been deprecated. Please use :meth:`qiskit_ibm_runtime.RuntimeJob.job_id`
+    and :meth:`qiskit_ibm_runtime.RuntimeJob.backend` instead.

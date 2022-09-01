@@ -51,7 +51,7 @@ from .utils.hgp import to_instance_format, from_instance_format
 from .utils.utils import validate_job_tags, validate_runtime_options
 from .api.client_parameters import ClientParameters
 from .runtime_options import RuntimeOptions
-from .utils.deprecation import deprecate_function
+from .utils.deprecation import deprecate_function, issue_deprecation_msg
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +63,8 @@ DEPRECATED_PROGRAMS = [
     "sample-expval",
     "quantum_kernal_alignment",
 ]
+
+_job_deprecation_issued = False
 
 
 class QiskitRuntimeService(Provider):
@@ -950,6 +952,18 @@ class QiskitRuntimeService(Provider):
 
         if not backend:
             backend = self.backend(name=response["backend"])
+
+        global _job_deprecation_issued
+        if not (start_session or session_id) and not _job_deprecation_issued:
+            # No need to issue warning if session is used since the old style session
+            # didn't return a job, and new style returns new job.
+            _job_deprecation_issued = True
+            issue_deprecation_msg(
+                msg="Note that the 'job_id' and 'backend' attributes of "
+                    "a runtime job have been deprecated",
+                version="0.7",
+                remedy="Please use the job_id() and backend() methods instead."
+            )
 
         job = RuntimeJob(
             backend=backend,

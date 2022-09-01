@@ -37,8 +37,8 @@ class TestRetrieveJobs(IBMTestCase):
         program_id = upload_program(service)
         params = {"param1": "foo"}
         job = run_program(service=service, program_id=program_id, inputs=params)
-        rjob = service.job(job.job_id)
-        self.assertEqual(job.job_id, rjob.job_id)
+        rjob = service.job(job.job_id())
+        self.assertEqual(job.job_id(), rjob.job_id())
         self.assertEqual(program_id, rjob.program_id)
 
     @run_quantum_and_cloud_fake
@@ -233,12 +233,12 @@ class TestRetrieveJobs(IBMTestCase):
 
         job = run_program(service=service, program_id=program_id)
         job_2 = run_program(
-            service=service, program_id=program_id, session_id=job.job_id
+            service=service, program_id=program_id, session_id=job.job_id()
         )
         with mock_wait_for_final_state(service, job):
             job.wait_for_final_state()
             job_2.wait_for_final_state()
-        rjobs = service.jobs(program_id=program_id, session_id=job.job_id)
+        rjobs = service.jobs(program_id=program_id, session_id=job.job_id())
         self.assertTrue(rjobs)
         self.assertEqual(2, len(rjobs))
         rjobs = service.jobs(program_id=program_id, session_id="no_test_session_id")
@@ -256,7 +256,7 @@ class TestRetrieveJobs(IBMTestCase):
             created_before=time_after_job,
             created_after=current_time,
         )
-        self.assertTrue(job.job_id in [j.job_id for j in rjobs])
+        self.assertTrue(job.job_id() in [j.job_id() for j in rjobs])
         self.assertTrue(job._creation_date <= time_after_job)
         self.assertTrue(job._creation_date >= current_time)
 
@@ -276,7 +276,7 @@ class TestRetrieveJobs(IBMTestCase):
         self.assertTrue(rjobs[0], rjobs_asc[1])
         self.assertTrue(rjobs[1], rjobs_asc[0])
         self.assertEqual(
-            [job.job_id for job in rjobs], [job.job_id for job in rjobs_desc]
+            [job.job_id() for job in rjobs], [job.job_id() for job in rjobs_desc]
         )
 
     def test_jobs_bad_instance(self):
@@ -299,8 +299,8 @@ class TestRetrieveJobs(IBMTestCase):
         backend_name = FakeRuntimeService.DEFAULT_UNIQUE_BACKEND_PREFIX + "1"
         job = run_program(service, program_id=program_id, backend_name=backend_name)
 
-        rjob = service.job(job.job_id)
-        self.assertIsNotNone(rjob.backend)
+        rjob = service.job(job.job_id())
+        self.assertIsNotNone(rjob.backend())
 
     def _populate_jobs_with_all_statuses(self, service, program_id):
         """Populate the database with jobs of all statuses."""

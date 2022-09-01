@@ -58,7 +58,7 @@ class Sampler(BaseSampler):
             sampler.options.resilience_level = 1
 
             job = sampler.run(bell)
-            print(f"Job ID: {job.job_id}")
+            print(f"Job ID: {job.job_id()}")
             print(f"Job result: {job.result()}")
     """
 
@@ -168,11 +168,11 @@ class Sampler(BaseSampler):
         Raises:
             QiskitError: Invalid arguments are given.
         """
-        if isinstance(circuits, QuantumCircuit):
+        if not isinstance(circuits, Sequence):
             circuits = [circuits]
-        if parameter_values is not None and isinstance(parameter_values[0], float):
+        if parameter_values is not None and len(parameter_values) > 1 and not isinstance(parameter_values[0], Sequence):
             parameter_values = [parameter_values]
-        if parameters is not None and isinstance(parameters[0], Parameter):
+        if parameters is not None and len(parameters) > 1 and not isinstance(parameters[0], Sequence):
             parameters = [parameters]
 
         return super().run(circuits=circuits,

@@ -355,17 +355,5 @@ class RefreshQueue(Queue):
 
 class CallableStr(str):
 
-    def __init__(self, name) -> None:
-        self._name = name
-        super().__init__()
-
     def __call__(self) -> str:
         return self
-
-    def __str__(self) -> str:
-        issue_deprecation_msg(
-            msg=f"Using {self._name} as an attribute has been deprecated",
-            version="0.7",
-            remedy=f"Please use {self._name}() instead."
-        )
-        return super().__str__()
