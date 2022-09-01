@@ -92,7 +92,4 @@ class CloudBackend(RestAdapterBase):
             ret["pending_jobs"] = max(response["length_queue"], 0)
         else:
             ret["pending_jobs"] = 0
-        # Not part of the schema.
-        if "busy" in response:
-            ret["dedicated"] = response["busy"]
         return ret

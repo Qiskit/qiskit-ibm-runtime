@@ -14,7 +14,7 @@
 
 import time
 
-from qiskit.test.mock.fake_qasm_simulator import FakeQasmSimulator
+from qiskit.providers.fake_provider import FakeQasmSimulator
 
 from qiskit_ibm_runtime import RuntimeJob
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters

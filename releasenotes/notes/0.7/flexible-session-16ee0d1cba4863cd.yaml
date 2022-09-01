@@ -1,0 +1,99 @@
+---
+prelude: >
+    There are significant changes to how primitives are invoked within a
+    session, and the options available to the primitives. Please review the
+    rest of the release note and the tutorials for full information.
+features:
+  - |
+    You can now invoke the same or different primitive programs multiple times
+    within a session. For example::
+
+      from qiskit_ibm_runtime import QiskitRuntimeService, Session, Sampler, Estimator, Options
+      from qiskit.test.reference_circuits import ReferenceCircuits
+      from qiskit.circuit.library import RealAmplitudes
+      from qiskit.quantum_info import SparsePauliOp
+
+      # Initialize account.
+      service = QiskitRuntimeService()
+
+      # Set options, which can be overwritten at job level.
+      options = Options(optimization_level=1)
+
+      # Prepare inputs.
+      bell = ReferenceCircuits.bell()
+      psi = RealAmplitudes(num_qubits=2, reps=2)
+      H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
+      theta = [0, 1, 1, 2, 3, 5]
+
+      with Session(service=service, backend="ibmq_qasm_simulator") as session:
+          # Submit a request to the Sampler primitive within the session.
+          sampler = Sampler(session=session, options=options)
+          job = sampler.run(circuits=bell)
+          print(f"Sampler results: {job.result()}")
+
+          # Submit a request to the Estimator primitive within the session.
+          estimator = Estimator(session=session, options=options)
+          job = estimator.run(
+              circuits=[psi], observables=[H1], parameter_values=[theta]
+          )
+          print(f"Estimator results: {job.result()}")
+  - |
+    A new :class:`qiskit_ibm_runtime.Options` class is introduced. This class
+    allows you to auto-complete options related to primitive programs. For example::
+
+      from qiskit_ibm_runtime import Session, Sampler, Options
+      from qiskit.test.reference_circuits import ReferenceCircuits
+
+      options = Options()
+      options.optimization_level = 3  # This can be done using auto-complete.
+
+      with Session(backend="ibmq_qasm_simulator") as session:
+        # Pass the options to Sampler.
+        sampler = Sampler(session=session, options=options)
+
+        # You can also configure options after initialization.
+        sampler.options.execution.shots = 1024
+
+        # Or at job level.
+        job = sampler.run(circuits=ReferenceCircuits.bell(), shots=4000)
+upgrade:
+  - |
+    The experimental parameters `transpilation_settings`, `resilience_settings`,
+    and `max_time` to the `Sampler` and `Estimator` constructors have been removed.
+    You can instead use the `qiskit_ibm_runtime.Options` class to specify
+    the settings, and `max_time` can be specified when starting a new session.
+    For example::
+
+      from qiskit_ibm_runtime import Session, Sampler, Options
+
+      options = Options()
+      # This can be done using auto-complete.
+      option.optimization_level = 3
+      options.resilience_level = 1
+
+      with Session(max_time="2h") as session:
+        # Pass the options to Sampler.
+        sampler = Sampler(session=session, options=options)
+deprecations:
+  - |
+    Invoking :class:`qiskit_ibm_runtime.Sampler` and
+    :class:`qiskit_ibm_runtime.Estimator` as context managers has been deprecated.
+    You can instead use the `qiskit_ibm_runtime.Session` class to create a new
+    session and invoke one or more primitives within the session.
+
+    As a result, passing input parameters, such as `circuits`, `observables`,
+    `parameters`, and `parameter_values`, as well as `service`
+    to the constructors of `Sampler` and
+    `Estimator` has also been deprecated. The inputs can now be passed to the
+    `run()` method of the primitive classes, and `service` can be passed
+    to `qiskit_ibm_runtime.Session` when starting a new session.
+  - |
+    Passing `skip_transpilation` to the `Sampler` and `Estimator` constructors
+    has been deprecated. You can instead use the `qiskit_ibm_runtime.Options`
+    class to specify this option. For example::
+
+      from qiskit_ibm_runtime import Options
+
+      options = Options()
+      # This can be done using auto-complete.
+      options.transpilation.skip_transpilation = True

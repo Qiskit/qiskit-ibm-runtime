@@ -1,0 +1,13 @@
+---
+upgrade:
+  - |
+    When migrating from ``qiskit-ibmq-provider`` your ``ibm_quantum`` channel credentials
+    will get automatically copied over from the qiskitrc file
+    and a qiskit-ibm.json file will get created if one doesn't exist.
+    You have to just initialize :class:`~qiskit_ibm_runtime.QiskitRuntimeService` class without
+    passing any parameters to use this copied over default ``ibm_quantum`` account.
+
+    Ex::
+
+      from qiskit_ibm_runtime import QiskitRuntimeService
+      service = QiskitRuntimeService()

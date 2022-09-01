@@ -25,6 +25,8 @@ import requests
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 from ibm_platform_services import ResourceControllerV2
 
+from ..exceptions import IBMInputValueError
+
 
 def validate_job_tags(
     job_tags: Optional[List[str]], exception: Type[Exception]
@@ -43,6 +45,33 @@ def validate_job_tags(
         or not all(isinstance(tag, str) for tag in job_tags)
     ):
         raise exception("job_tags needs to be a list of strings.")
+
+
+def validate_runtime_options(options: Dict, channel: str) -> None:
+    """Validate runtime options.
+
+    Args:
+        options: Runtime options to validate.
+
+    Raises:
+        IBMInputValueError: If input values are invalid.
+    """
+    if options.get("image") and not re.match(
+        "[a-zA-Z0-9]+([/.\\-_][a-zA-Z0-9]+)*:[a-zA-Z0-9]+([.\\-_][a-zA-Z0-9]+)*$",
+        options["image"],
+    ):
+        raise IBMInputValueError('"image" needs to be in form of image_name:tag')
+
+    if channel == "ibm_quantum" and not options.get("backend"):
+        raise IBMInputValueError('"backend" is required for ``ibm_quantum`` runtime.')
+
+    if options.get("log_level") and not isinstance(
+        logging.getLevelName(options["log_level"].upper()), int
+    ):
+        raise IBMInputValueError(
+            f"{options['log_level']} is not a valid log level. The valid log levels are: "
+            "`DEBUG`, `INFO`, `WARNING`, `ERROR`, and `CRITICAL`."
+        )
 
 
 def get_iam_api_url(cloud_url: str) -> str:
@@ -108,7 +137,7 @@ def get_runtime_api_base_url(url: str, instance: str) -> str:
     api_host = url
 
     # cloud: compute runtime API URL based on crn and URL
-    if is_crn(instance):
+    if is_crn(instance) and not _is_experimental_runtime_url(url):
         parsed_url = urlparse(url)
         api_host = (
             f"{parsed_url.scheme}://{_location_from_crn(instance)}"
@@ -116,6 +145,16 @@ def get_runtime_api_base_url(url: str, instance: str) -> str:
         )
 
     return api_host
+
+
+def _is_experimental_runtime_url(url: str) -> bool:
+    """Checks if the provided url points to an experimental runtime cluster.
+    This type of URLs is used for internal development purposes only.
+
+    Args:
+        url: The URL.
+    """
+    return isinstance(url, str) and "experimental" in url and url.endswith(".cloud")
 
 
 def _location_from_crn(crn: str) -> str:

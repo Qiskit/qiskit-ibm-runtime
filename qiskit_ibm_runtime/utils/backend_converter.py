@@ -142,13 +142,20 @@ def qubit_props_list_from_props(
     """
     qubit_props: List[IBMQubitProperties] = []
     for qubit, _ in enumerate(properties.qubits):
-        t_1 = properties.t1(qubit) * 1e-6  # microseconds to seconds
-        t_2 = properties.t2(qubit) * 1e-6  # microseconds to seconds
-        frequency = properties.frequency(qubit) * 1e9  # GHz to Hz
         try:
-            anharmonicity = (
-                properties.qubit_property(qubit, "anharmonicity")[0] * 1e9
-            )  # GHz to Hz
+            t_1 = properties.t1(qubit)
+        except Exception:  # pylint: disable=broad-except
+            t_1 = None
+        try:
+            t_2 = properties.t2(qubit)
+        except Exception:  # pylint: disable=broad-except
+            t_2 = None
+        try:
+            frequency = properties.frequency(qubit)
+        except Exception:  # pylint: disable=broad-except
+            t_2 = None
+        try:
+            anharmonicity = properties.qubit_property(qubit, "anharmonicity")[0]
         except Exception:  # pylint: disable=broad-except
             anharmonicity = None
         qubit_props.append(

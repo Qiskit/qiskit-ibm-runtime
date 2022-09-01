@@ -66,6 +66,12 @@ class TestClientParameters(IBMTestCase):
                 "https://my-region.quantum-computing.cloud.ibm.com",
             ),
             (
+                "ibm_cloud",
+                "crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
+                "https://api-ntc-name.experimental-us-someid.us-east.containers.appdomain.cloud",
+                "https://api-ntc-name.experimental-us-someid.us-east.containers.appdomain.cloud",
+            ),
+            (
                 "ibm_quantum",
                 "h/g/p",
                 "https://auth.quantum-computing.ibm.com/api",
