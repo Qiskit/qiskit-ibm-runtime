@@ -191,7 +191,7 @@ class Sampler(BaseSampler):
                 )
             if circ.num_clbits == 0:
                 raise ValueError("The circuits should have at least one classical bit.")
-            if self.options.resilience_level >= 1 and circ.num_clbits > len(
+            if self.options.resilience_level >= 1 and circ.num_clbits != len(
                 final_measurement_mapping(circ)
             ):
                 raise ValueError(
