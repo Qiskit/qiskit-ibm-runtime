@@ -20,13 +20,11 @@ from queue import Queue
 from threading import Condition
 from typing import List, Optional, Any, Dict, Union, Tuple, Type
 from urllib.parse import urlparse
-import warnings
 
 import requests
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 from ibm_platform_services import ResourceControllerV2
 
-from .deprecation import issue_deprecation_msg
 from ..exceptions import IBMInputValueError
 
 
@@ -354,6 +352,6 @@ class RefreshQueue(Queue):
 
 
 class CallableStr(str):
-
+    """A callable string."""
     def __call__(self) -> str:
         return self

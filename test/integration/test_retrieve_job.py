@@ -75,7 +75,9 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
             jobs.append(self._run_program(service))
 
         rjobs = service.jobs(limit=2, program_id=self.program_ids[service.channel])
-        self.assertEqual(len(rjobs), 2, f"Retrieved jobs: {[j.job_id() for j in rjobs]}")
+        self.assertEqual(
+            len(rjobs), 2, f"Retrieved jobs: {[j.job_id() for j in rjobs]}"
+        )
         job_ids = {job.job_id() for job in jobs}
         rjob_ids = {rjob.job_id() for rjob in rjobs}
         self.assertTrue(
@@ -125,7 +127,9 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         job.wait_for_final_state()
         rjobs = service.jobs(program_id=program_id)
         self.assertEqual(program_id, rjobs[0].program_id)
-        self.assertEqual(1, len(rjobs), f"Retrieved jobs: {[j.job_id() for j in rjobs]}")
+        self.assertEqual(
+            1, len(rjobs), f"Retrieved jobs: {[j.job_id() for j in rjobs]}"
+        )
 
     @run_integration_test
     def test_retrieve_jobs_by_job_tags(self, service):
@@ -134,7 +138,9 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         job = self._run_program(service, job_tags=job_tags)
         job.wait_for_final_state()
         rjobs = service.jobs(job_tags=job_tags)
-        self.assertEqual(1, len(rjobs), f"Retrieved jobs: {[j.job_id() for j in rjobs]}")
+        self.assertEqual(
+            1, len(rjobs), f"Retrieved jobs: {[j.job_id() for j in rjobs]}"
+        )
         rjobs = service.jobs(job_tags=["no_test_tag"])
         self.assertFalse(rjobs)
 
@@ -146,7 +152,9 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         job_2 = self._run_program(service, session_id=job.job_id())
         job_2.wait_for_final_state()
         rjobs = service.jobs(session_id=job.job_id())
-        self.assertEqual(2, len(rjobs), f"Retrieved jobs: {[j.job_id() for j in rjobs]}")
+        self.assertEqual(
+            2, len(rjobs), f"Retrieved jobs: {[j.job_id() for j in rjobs]}"
+        )
         rjobs = service.jobs(session_id="test")
         self.assertFalse(rjobs)
 
@@ -175,7 +183,9 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         job.wait_for_final_state()
         rjobs = service.jobs(program_id=program_id, instance=default_hgp)
         self.assertEqual(program_id, rjobs[0].program_id)
-        self.assertEqual(1, len(rjobs), f"Retrieved jobs: {[j.job_id() for j in rjobs]}")
+        self.assertEqual(
+            1, len(rjobs), f"Retrieved jobs: {[j.job_id() for j in rjobs]}"
+        )
 
         uuid_ = uuid.uuid4().hex
         fake_hgp = f"{uuid_}/{uuid_}/{uuid_}"

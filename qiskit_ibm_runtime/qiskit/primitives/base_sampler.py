@@ -92,7 +92,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Sequence
 from copy import copy
-from typing import cast
+from typing import cast, Any
 from warnings import warn
 
 import numpy as np
@@ -118,7 +118,7 @@ class BaseSampler(ABC):
         self,
         circuits: Iterable[QuantumCircuit] | QuantumCircuit | None = None,
         parameters: Iterable[Iterable[Parameter]] | None = None,
-    ):
+    ) -> None:
         """
         Args:
             circuits: Quantum circuits to be executed.
@@ -157,9 +157,10 @@ class BaseSampler(ABC):
     def __new__(
         cls,
         circuits: Iterable[QuantumCircuit] | QuantumCircuit | None = None,
-        parameters: Iterable[Iterable[Parameter]] | None = None,  # pylint: disable=unused-argument
-        **kwargs,  # pylint: disable=unused-argument
-    ):
+        parameters: Iterable[Iterable[Parameter]]
+        | None = None,  # pylint: disable=unused-argument
+        **kwargs: Any,  # pylint: disable=unused-argument
+    ) -> BaseSampler:
 
         self = super().__new__(cls)
         if circuits is None:
@@ -176,7 +177,7 @@ class BaseSampler(ABC):
         "and will be removed no sooner than 3 months after the releasedate. "
         "BaseSampler should be initialized directly.",
     )
-    def __enter__(self):
+    def __enter__(self) -> BaseSampler:
         return self
 
     @deprecate_function(
@@ -184,10 +185,10 @@ class BaseSampler(ABC):
         "and will be removed no sooner than 3 months after the releasedate. "
         "BaseSampler should be initialized directly.",
     )
-    def __exit__(self, *exc_info):
+    def __exit__(self, *exc_info: Any) -> None:
         self.close()
 
-    def close(self):
+    def close(self) -> None:
         """Close the session and free resources"""
         ...
 
@@ -219,7 +220,7 @@ class BaseSampler(ABC):
         self,
         circuits: Sequence[int | QuantumCircuit],
         parameter_values: Sequence[Sequence[float]] | None = None,
-        **run_options,
+        **run_options: Any,
     ) -> SamplerResult:
         """Run the sampling of bitstrings.
 
@@ -297,7 +298,7 @@ class BaseSampler(ABC):
         circuits: Sequence[QuantumCircuit],
         parameter_values: Sequence[Sequence[float]] | None = None,
         parameters: Sequence[Sequence[Parameter]] | None = None,
-        **run_options,
+        **run_options: Any,
     ) -> Job:
         """Run the job of the sampling of bitstrings.
 
@@ -366,7 +367,7 @@ class BaseSampler(ABC):
         self,
         circuits: Sequence[int],
         parameter_values: Sequence[Sequence[float]],
-        **run_options,
+        **run_options: Any,
     ) -> SamplerResult:
         ...
 
@@ -377,7 +378,7 @@ class BaseSampler(ABC):
         circuits: Sequence[QuantumCircuit],
         parameter_values: Sequence[Sequence[float]],
         parameters: Sequence[ParameterView],
-        **run_options,
+        **run_options: Any,
     ) -> Job:
         raise NotImplementedError(
             "_run method is not implemented. This method will be @abstractmethod after 0.22."

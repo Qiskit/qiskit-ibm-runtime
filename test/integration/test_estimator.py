@@ -24,8 +24,8 @@ from ..ibm_test_case import IBMIntegrationTestCase
 class TestIntegrationEstimator(IBMIntegrationTestCase):
     """Integration tests for Estimator primitive."""
 
-    # @run_integration_test
-    def test_estimator_session(self):
+    @run_integration_test
+    def test_estimator_session(self, service):
         """Verify if estimator primitive returns expected results"""
 
         backend = "ibmq_qasm_simulator"

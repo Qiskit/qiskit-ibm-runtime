@@ -290,8 +290,8 @@ class TestRuntimeJob(IBMTestCase):
             api_client=MagicMock(),
             client_params=MagicMock(),
             job_id="12345",
-            program_id="foo"
-            )
+            program_id="foo",
+        )
         self.assertIsInstance(job.job_id, str)
         self.assertEqual(job.job_id, "12345")
 
@@ -303,7 +303,7 @@ class TestRuntimeJob(IBMTestCase):
             api_client=MagicMock(),
             client_params=MagicMock(),
             job_id="12345",
-            program_id="foo"
-            )
+            program_id="foo",
+        )
         self.assertIsInstance(job.backend, IBMBackend)
         self.assertEqual(job.backend, backend)

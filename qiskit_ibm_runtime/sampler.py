@@ -170,13 +170,25 @@ class Sampler(BaseSampler):
         """
         if not isinstance(circuits, Sequence):
             circuits = [circuits]
-        if parameter_values is not None and len(parameter_values) > 1 and not isinstance(parameter_values[0], Sequence):
-            parameter_values = [parameter_values]
-        if parameters is not None and len(parameters) > 1 and not isinstance(parameters[0], Sequence):
+        if (
+            parameter_values is not None
+            and len(parameter_values) > 1
+            and not isinstance(parameter_values[0], Sequence)
+        ):
+            parameter_values = [parameter_values]  # type: ignore[assignment]
+        if (
+            parameters is not None
+            and len(parameters) > 1
+            and not isinstance(parameters[0], Sequence)
+        ):
             parameters = [parameters]
 
-        return super().run(circuits=circuits,
-            parameter_values=parameter_values, parameters=parameters, **kwargs)
+        return super().run(
+            circuits=circuits,
+            parameter_values=parameter_values,
+            parameters=parameters,
+            **kwargs,
+        )
 
     def _run(
         self,

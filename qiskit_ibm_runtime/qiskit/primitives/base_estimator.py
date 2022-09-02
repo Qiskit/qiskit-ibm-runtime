@@ -103,7 +103,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Sequence
 from copy import copy
-from typing import cast
+from typing import cast, Any
 from warnings import warn
 
 import numpy as np
@@ -190,9 +190,10 @@ class BaseEstimator(ABC):
         cls,
         circuits: Iterable[QuantumCircuit] | QuantumCircuit | None = None,
         observables: Iterable[SparsePauliOp] | SparsePauliOp | None = None,
-        parameters: Iterable[Iterable[Parameter]] | None = None,  # pylint: disable=unused-argument
-        **kwargs,  # pylint: disable=unused-argument
-    ):
+        parameters: Iterable[Iterable[Parameter]]
+        | None = None,  # pylint: disable=unused-argument
+        **kwargs: Any,  # pylint: disable=unused-argument
+    ) -> BaseEstimator:
 
         self = super().__new__(cls)
         if circuits is None:
@@ -206,7 +207,9 @@ class BaseEstimator(ABC):
             self._observable_ids = {}
         elif isinstance(observables, Iterable):
             observables = copy(observables)
-            self._observable_ids = {id(observable): i for i, observable in enumerate(observables)}
+            self._observable_ids = {
+                id(observable): i for i, observable in enumerate(observables)
+            }
         else:
             self._observable_ids = {id(observables): 0}
         return self
@@ -216,7 +219,7 @@ class BaseEstimator(ABC):
         "and will be removed no sooner than 3 months after the releasedate. "
         "BaseEstimator should be initialized directly.",
     )
-    def __enter__(self):
+    def __enter__(self) -> BaseEstimator:
         return self
 
     @deprecate_function(
@@ -224,10 +227,10 @@ class BaseEstimator(ABC):
         "and will be removed no sooner than 3 months after the releasedate. "
         "BaseEstimator should be initialized directly.",
     )
-    def __exit__(self, *exc_info):
+    def __exit__(self, *exc_info: Any) -> None:
         self.close()
 
-    def close(self):
+    def close(self) -> None:
         """Close the session and free resources"""
         ...
 
@@ -263,13 +266,15 @@ class BaseEstimator(ABC):
         "and will be removed no sooner than 3 months after the releasedate. "
         "Use run method instead.",
     )
-    @deprecate_arguments({"circuit_indices": "circuits", "observable_indices": "observables"})
+    @deprecate_arguments(
+        {"circuit_indices": "circuits", "observable_indices": "observables"}
+    )
     def __call__(
         self,
         circuits: Sequence[int | QuantumCircuit],
         observables: Sequence[int | SparsePauliOp],
         parameter_values: Sequence[Sequence[float]] | None = None,
-        **run_options,
+        **run_options: Any,
     ) -> EstimatorResult:
         """Run the estimation of expectation value(s).
 
@@ -400,7 +405,7 @@ class BaseEstimator(ABC):
         observables: Sequence[BaseOperator | PauliSumOp],
         parameter_values: Sequence[Sequence[float]] | None = None,
         parameters: Sequence[Sequence[Parameter]] | None = None,
-        **run_options,
+        **run_options: Any,
     ) -> Job:
         """Run the job of the estimation of expectation value(s).
 
@@ -496,7 +501,9 @@ class BaseEstimator(ABC):
                     f"({observable.num_qubits})."
                 )
 
-        return self._run(circuits, observables, parameter_values, parameter_views, **run_options)
+        return self._run(
+            circuits, observables, parameter_values, parameter_views, **run_options
+        )
 
     @abstractmethod
     def _call(
@@ -504,7 +511,7 @@ class BaseEstimator(ABC):
         circuits: Sequence[int],
         observables: Sequence[int],
         parameter_values: Sequence[Sequence[float]],
-        **run_options,
+        **run_options: Any,
     ) -> EstimatorResult:
         ...
 
@@ -516,7 +523,7 @@ class BaseEstimator(ABC):
         observables: Sequence[BaseOperator | PauliSumOp],
         parameter_values: Sequence[Sequence[float]],
         parameters: list[ParameterView],
-        **run_options,
+        **run_options: Any,
     ) -> Job:
         raise NotImplementedError(
             "_run method is not implemented. This method will be @abstractmethod after 0.22."
