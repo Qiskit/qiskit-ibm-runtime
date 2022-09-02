@@ -84,7 +84,7 @@ class QiskitRuntimeService(Provider):
         service = QiskitRuntimeService()
 
         # Set options, which can be overwritten at job level.
-        options = Options(backend="ibmq_qasm_simulator")
+        options = Options(optimization_level=1)
 
         # Prepare inputs.
         bell = ReferenceCircuits.bell()
@@ -92,7 +92,7 @@ class QiskitRuntimeService(Provider):
         H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
         theta = [0, 1, 1, 2, 3, 5]
 
-        with Session(service) as session:
+        with Session(service=service, backend="ibmq_qasm_simulator") as session:
             # Submit a request to the Sampler primitive within the session.
             sampler = Sampler(session=session, options=options)
             job = sampler.run(circuits=bell)
@@ -860,7 +860,6 @@ class QiskitRuntimeService(Provider):
             inputs: Program input parameters. These input values are passed
                 to the runtime program.
             options: Runtime options that control the execution environment.
-                The use of :class:`RuntimeOptions` has been deprecated.
 
                 * backend: target backend to run on. This is required for ``ibm_quantum`` runtime.
                 * image: the runtime image used to execute the program, specified in

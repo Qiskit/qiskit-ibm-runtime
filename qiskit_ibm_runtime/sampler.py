@@ -19,15 +19,15 @@ import copy
 
 from qiskit.circuit import QuantumCircuit, Parameter
 from qiskit.result import QuasiDistribution
-import qiskit_ibm_runtime.session as session_pkg
 
 # TODO import BaseSampler and SamplerResult from terra once released
 from .qiskit.primitives import BaseSampler, SamplerResult
 from .qiskit_runtime_service import QiskitRuntimeService
 from .options import Options
-from .runtime_options import RuntimeOptions
 from .program.result_decoder import ResultDecoder
 from .runtime_job import RuntimeJob
+from .ibm_backend import IBMBackend
+from .session import get_default_session
 from .utils.deprecation import deprecate_arguments, issue_deprecation_msg
 
 # pylint: disable=unused-import,cyclic-import
@@ -70,8 +70,8 @@ class Sampler(BaseSampler):
         circuits: Optional[Union[QuantumCircuit, Iterable[QuantumCircuit]]] = None,
         parameters: Optional[Iterable[Iterable[Parameter]]] = None,
         service: Optional[QiskitRuntimeService] = None,
-        session: Optional[Session] = None,
-        options: Optional[Union[Dict, RuntimeOptions, Options]] = None,
+        session: Optional[Union[Session, str, IBMBackend]] = None,
+        options: Optional[Union[Dict, Options]] = None,
         skip_transpilation: Optional[bool] = False,
     ):
         """Initializes the Sampler primitive.
@@ -89,10 +89,14 @@ class Sampler(BaseSampler):
                 defaults to `QiskitRuntimeService()` which tries to initialize your default
                 saved account.
 
-            session: Session in which to call the sampler primitive. If ``None``, a new session
-                is created using the default saved account.
+            session: Session in which to call the primitive. If an instance of
+                :class:`qiskit_ibm_runtime.IBMBackend` class or
+                string name of a backend is specified, a new session is created for
+                that backend. If ``None``, a new session is created using the default
+                saved account and a default backend (IBM Cloud channel only).
 
             options: Primitive options, see :class:`Options` for detailed description.
+                The ``backend`` keyword is still supported but is deprecated.
 
             skip_transpilation (DEPRECATED): Transpilation is skipped if set to True. False by default.
                 Ignored ``skip_transpilation`` is also specified in ``options``.
@@ -121,14 +125,22 @@ class Sampler(BaseSampler):
                 "service", "0.7", "Please use the session parameter instead."
             )
 
+        backend = None
+        self._session: Session = None
+
         if options is None:
             self.options = Options()
         elif isinstance(options, Options):
             self.options = copy.deepcopy(options)
             skip_transpilation = self.options.transpilation.skip_transpilation
-        elif isinstance(options, RuntimeOptions):
-            self.options = options._to_new_options()
         else:
+            backend = options.pop("backend", None)
+            if backend is not None:
+                issue_deprecation_msg(
+                    msg="The 'backend' key in 'options' has been deprecated",
+                    version="0.7",
+                    remedy="Please pass the backend when opening a session.",
+                )
             self.options = Options._from_dict(options)
             skip_transpilation = options.get("transpilation", {}).get(
                 "skip_transpilation", False
@@ -136,15 +148,11 @@ class Sampler(BaseSampler):
         self.options.transpilation.skip_transpilation = skip_transpilation
 
         self._initial_inputs = {"circuits": circuits, "parameters": parameters}
-        if session:
+        if isinstance(session, Session):
             self._session = session
         else:
-            if (
-                session_pkg._DEFAULT_SESSION is None
-                or not session_pkg._DEFAULT_SESSION._active
-            ):
-                session_pkg._DEFAULT_SESSION = Session(service=service)
-            self._session = session_pkg._DEFAULT_SESSION
+            backend = session or backend
+            self._session = get_default_session(service, backend)
 
     def run(
         self,
