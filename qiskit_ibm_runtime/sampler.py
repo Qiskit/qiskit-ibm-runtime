@@ -17,6 +17,7 @@ from typing import Dict, Iterable, Optional, Sequence, Any, Union
 import copy
 
 from qiskit.circuit import QuantumCircuit, Parameter
+from qiskit.primitives.utils import final_measurement_mapping
 
 # TODO import BaseSampler and SamplerResult from terra once released
 from .qiskit.primitives import BaseSampler, SamplerResult
@@ -180,14 +181,25 @@ class Sampler(BaseSampler):
         Raises:
             ValueError: If the input values are invalid.
         """
-        if isinstance(circuits, Iterable) and not all(
-            isinstance(inst, QuantumCircuit) for inst in circuits
-        ):
-            raise ValueError(
-                "The circuits parameter has to be instances of QuantumCircuit."
-            )
+        if isinstance(circuits, QuantumCircuit):
+            circuits = [circuits]
 
-        circ_count = 1 if isinstance(circuits, QuantumCircuit) else len(circuits)
+        for circ in circuits:
+            if not isinstance(circ, QuantumCircuit):
+                raise ValueError(
+                    "The circuits parameter has to be instances of QuantumCircuit."
+                )
+            if circ.num_clbits == 0:
+                raise ValueError("The circuits should have at least one classical bit.")
+            if self.options.resilience_level >= 1 and circ.num_clbits > len(
+                final_measurement_mapping(circ)
+            ):
+                raise ValueError(
+                    "All classical bits should be mapped to qubits "
+                    "in the final measurement to apply readout error mitigation."
+                )
+
+        circ_count = len(circuits)
 
         inputs = {
             "circuits": circuits,

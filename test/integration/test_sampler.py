@@ -166,3 +166,24 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
             self.assertIsInstance(result, SamplerResult)
             self.assertEqual(len(result.quasi_dists), len(circuits0))
             self.assertEqual(len(result.metadata), len(circuits0))
+
+    @run_integration_test
+    def test_sampler_raise_error(self, service):
+        """Test error check properly works."""
+        with Session(service, self.backend) as session:
+            sampler = Sampler(session=session)
+
+            with self.assertRaises(ValueError):
+                _ = sampler.run(123)
+            with self.assertRaises(ValueError):
+                _ = sampler.run([123])
+
+            circuit = QuantumCircuit(2)
+            with self.assertRaises(ValueError):
+                _ = sampler.run(circuit)
+
+            sampler.options.resilience_level = 1
+            circuit = QuantumCircuit(1, 2)
+            circuit.measure(0, 0)
+            with self.assertRaises(ValueError):
+                _ = sampler.run(circuit)
