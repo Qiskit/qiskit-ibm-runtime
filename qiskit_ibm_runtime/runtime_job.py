@@ -40,7 +40,6 @@ from .api.exceptions import RequestsApiError
 from .utils.converters import utc_to_local
 from .api.client_parameters import ClientParameters
 from .utils.utils import CallableStr
-from .utils.deprecation import deprecate_arguments
 
 logger = logging.getLogger(__name__)
 
@@ -234,28 +233,20 @@ class RuntimeJob(Job):
         self._set_status_and_error_message()
         return self._error_message
 
-    def wait_for_final_state(
+    def wait_for_final_state(  # pylint: disable=arguments-differ
         self,
         timeout: Optional[float] = None,
-        wait: Optional[float] = None,
-        ) -> None:
+    ) -> None:
         """Use the websocket server to wait for the final the state of a job. The server
             will remain open if the job is still running and the connection will be terminated
             once the job completes. Then update and return the status of the job.
 
         Args:
             timeout: Seconds to wait for the job. If ``None``, wait indefinitely.
-            wait: Seconds between queries.
 
         Raises:
             RuntimeJobTimeoutError: If the job does not complete within given timeout.
         """
-        if wait is not None:
-            deprecate_arguments(
-                deprecated="wait",
-                version="0.7",
-                remedy="There is no need to specify a wait time between queries "
-                    "as this method does not poll.")
         try:
             start_time = time.time()
             if self._status not in JOB_FINAL_STATES and not self._is_streaming():

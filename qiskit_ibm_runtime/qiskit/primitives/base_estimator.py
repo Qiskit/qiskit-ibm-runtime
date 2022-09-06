@@ -186,13 +186,12 @@ class BaseEstimator(ABC):
                         f"expected {circ.num_parameters}, actual {len(params)}."
                     )
 
-    def __new__(
+    def __new__(  # pylint: disable=unused-argument
         cls,
         circuits: Iterable[QuantumCircuit] | QuantumCircuit | None = None,
         observables: Iterable[SparsePauliOp] | SparsePauliOp | None = None,
-        parameters: Iterable[Iterable[Parameter]]
-        | None = None,  # pylint: disable=unused-argument
-        **kwargs: Any,  # pylint: disable=unused-argument
+        parameters: Iterable[Iterable[Parameter]] | None = None,
+        **kwargs: Any,
     ) -> BaseEstimator:
 
         self = super().__new__(cls)

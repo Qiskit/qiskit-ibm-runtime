@@ -353,5 +353,6 @@ class RefreshQueue(Queue):
 
 class CallableStr(str):
     """A callable string."""
+
     def __call__(self) -> str:
         return self
