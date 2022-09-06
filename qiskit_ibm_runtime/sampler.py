@@ -13,19 +13,23 @@
 """Sampler primitive."""
 
 from __future__ import annotations
+from math import sqrt
 from typing import Dict, Iterable, Optional, Sequence, Any, Union
 import copy
 
 from qiskit.circuit import QuantumCircuit, Parameter
-import qiskit_ibm_runtime.session as session_pkg
+from qiskit.result import QuasiDistribution
 
 # TODO import BaseSampler and SamplerResult from terra once released
 from .qiskit.primitives import BaseSampler, SamplerResult
 from .qiskit_runtime_service import QiskitRuntimeService
 from .options import Options
-from .runtime_options import RuntimeOptions
-from .runtime_job import RuntimeJob
+
 from .utils.sampler_result_decoder import SamplerResultDecoder
+
+from .runtime_job import RuntimeJob
+from .ibm_backend import IBMBackend
+from .session import get_default_session
 from .utils.deprecation import deprecate_arguments, issue_deprecation_msg
 
 # pylint: disable=unused-import,cyclic-import
@@ -68,8 +72,8 @@ class Sampler(BaseSampler):
         circuits: Optional[Union[QuantumCircuit, Iterable[QuantumCircuit]]] = None,
         parameters: Optional[Iterable[Iterable[Parameter]]] = None,
         service: Optional[QiskitRuntimeService] = None,
-        session: Optional[Session] = None,
-        options: Optional[Union[Dict, RuntimeOptions, Options]] = None,
+        session: Optional[Union[Session, str, IBMBackend]] = None,
+        options: Optional[Union[Dict, Options]] = None,
         skip_transpilation: Optional[bool] = False,
     ):
         """Initializes the Sampler primitive.
@@ -87,10 +91,14 @@ class Sampler(BaseSampler):
                 defaults to `QiskitRuntimeService()` which tries to initialize your default
                 saved account.
 
-            session: Session in which to call the sampler primitive. If ``None``, a new session
-                is created using the default saved account.
+            session: Session in which to call the primitive. If an instance of
+                :class:`qiskit_ibm_runtime.IBMBackend` class or
+                string name of a backend is specified, a new session is created for
+                that backend. If ``None``, a new session is created using the default
+                saved account and a default backend (IBM Cloud channel only).
 
             options: Primitive options, see :class:`Options` for detailed description.
+                The ``backend`` keyword is still supported but is deprecated.
 
             skip_transpilation (DEPRECATED): Transpilation is skipped if set to True. False by default.
                 Ignored ``skip_transpilation`` is also specified in ``options``.
@@ -119,14 +127,22 @@ class Sampler(BaseSampler):
                 "service", "0.7", "Please use the session parameter instead."
             )
 
+        backend = None
+        self._session: Session = None
+
         if options is None:
             self.options = Options()
         elif isinstance(options, Options):
             self.options = copy.deepcopy(options)
             skip_transpilation = self.options.transpilation.skip_transpilation
-        elif isinstance(options, RuntimeOptions):
-            self.options = options._to_new_options()
         else:
+            backend = options.pop("backend", None)
+            if backend is not None:
+                issue_deprecation_msg(
+                    msg="The 'backend' key in 'options' has been deprecated",
+                    version="0.7",
+                    remedy="Please pass the backend when opening a session.",
+                )
             self.options = Options._from_dict(options)
             skip_transpilation = options.get("transpilation", {}).get(
                 "skip_transpilation", False
@@ -134,15 +150,11 @@ class Sampler(BaseSampler):
         self.options.transpilation.skip_transpilation = skip_transpilation
 
         self._initial_inputs = {"circuits": circuits, "parameters": parameters}
-        if session:
+        if isinstance(session, Session):
             self._session = session
         else:
-            if (
-                session_pkg._DEFAULT_SESSION is None
-                or not session_pkg._DEFAULT_SESSION._active
-            ):
-                session_pkg._DEFAULT_SESSION = Session(service=service)
-            self._session = session_pkg._DEFAULT_SESSION
+            backend = session or backend
+            self._session = get_default_session(service, backend)
 
     def run(
         self,
@@ -249,12 +261,30 @@ class Sampler(BaseSampler):
         combined = self.options._merge_options(run_options)
         inputs.update(Options._get_program_inputs(combined))
 
-        return self._session.run(
+        raw_result = self._session.run(
             program_id=self._PROGRAM_ID,
             inputs=inputs,
             options=Options._get_runtime_options(combined),
             result_decoder=SamplerResultDecoder,
         ).result()
+        quasi_dists = []
+        for quasi, meta in zip(raw_result["quasi_dists"], raw_result["metadata"]):
+            shots = meta.get("shots", float("inf"))
+            overhead = meta.get("readout_mitigation_overhead", 1.0)
+
+            # M3 mitigation overhead is gamma^2
+            # https://github.com/Qiskit-Partners/mthree/blob/423d7e83a12491c59c9f58af46b75891bc622949/mthree/mitigation.py#L457
+            #
+            # QuasiDistribution stddev_upper_bound is gamma / sqrt(shots)
+            # https://github.com/Qiskit/qiskit-terra/blob/ff267b5de8b83aef86e2c9ac6c7f918f58500505/qiskit/result/mitigation/local_readout_mitigator.py#L288
+            stddev = sqrt(overhead / shots)
+            quasi_dists.append(
+                QuasiDistribution(quasi, shots=shots, stddev_upper_bound=stddev)
+            )
+        return SamplerResult(
+            quasi_dists=quasi_dists,
+            metadata=raw_result["metadata"],
+        )
 
     def close(self) -> None:
         """Close the session and free resources"""
