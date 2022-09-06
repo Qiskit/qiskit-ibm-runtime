@@ -13,24 +13,21 @@
 """Sampler primitive."""
 
 from __future__ import annotations
-from math import sqrt
 from typing import Dict, Iterable, Optional, Sequence, Any, Union
 import copy
 
 from qiskit.circuit import QuantumCircuit, Parameter
-from qiskit.result import QuasiDistribution
 
 # TODO import BaseSampler and SamplerResult from terra once released
 from .qiskit.primitives import BaseSampler, SamplerResult
 from .qiskit_runtime_service import QiskitRuntimeService
 from .options import Options
-
 from .utils.sampler_result_decoder import SamplerResultDecoder
-
 from .runtime_job import RuntimeJob
 from .ibm_backend import IBMBackend
 from .session import get_default_session
 from .utils.deprecation import deprecate_arguments, issue_deprecation_msg
+from .utils.utils import convert_quasi_dists
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
@@ -267,23 +264,10 @@ class Sampler(BaseSampler):
             options=Options._get_runtime_options(combined),
             result_decoder=SamplerResultDecoder,
         ).result()
-        quasi_dists = []
-        for quasi, meta in zip(raw_result["quasi_dists"], raw_result["metadata"]):
-            shots = meta.get("shots", float("inf"))
-            overhead = meta.get("readout_mitigation_overhead", 1.0)
-
-            # M3 mitigation overhead is gamma^2
-            # https://github.com/Qiskit-Partners/mthree/blob/423d7e83a12491c59c9f58af46b75891bc622949/mthree/mitigation.py#L457
-            #
-            # QuasiDistribution stddev_upper_bound is gamma / sqrt(shots)
-            # https://github.com/Qiskit/qiskit-terra/blob/ff267b5de8b83aef86e2c9ac6c7f918f58500505/qiskit/result/mitigation/local_readout_mitigator.py#L288
-            stddev = sqrt(overhead / shots)
-            quasi_dists.append(
-                QuasiDistribution(quasi, shots=shots, stddev_upper_bound=stddev)
-            )
+        quasi_dists = convert_quasi_dists(raw_result)
         return SamplerResult(
             quasi_dists=quasi_dists,
-            metadata=raw_result["metadata"],
+            metadata=raw_result.metadata,
         )
 
     def close(self) -> None:

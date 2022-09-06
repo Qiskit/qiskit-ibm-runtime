@@ -13,9 +13,9 @@
 """Sampler result decoder."""
 
 from typing import Dict
-from qiskit.result import QuasiDistribution
 from ..program.result_decoder import ResultDecoder
 from ..qiskit.primitives import SamplerResult
+from ..utils.utils import convert_quasi_dists
 
 
 class SamplerResultDecoder(ResultDecoder):
@@ -26,8 +26,6 @@ class SamplerResultDecoder(ResultDecoder):
         """Convert the result to SamplerResult."""
         decoded: Dict = super().decode(raw_result)
         return SamplerResult(
-            quasi_dists=[
-                QuasiDistribution(quasi_dist) for quasi_dist in decoded["quasi_dists"]
-            ],
+            quasi_dists=convert_quasi_dists(decoded),
             metadata=decoded["metadata"],
         )
