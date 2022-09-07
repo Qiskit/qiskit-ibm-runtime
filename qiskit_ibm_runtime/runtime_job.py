@@ -165,7 +165,7 @@ class RuntimeJob(Job):
                 self._final_interim_results = True
         return self._interim_results
 
-    def result(
+    def result(  # pylint: disable=arguments-differ
         self,
         timeout: Optional[float] = None,
         decoder: Optional[Type[ResultDecoder]] = None,

@@ -435,7 +435,7 @@ class BaseEstimator(ABC):
                 will be bound. Defaults to ``[circ.parameters for circ in circuits]``
                 The indexing is such that ``parameters[i, j]`` is the j-th formal parameter of
                 ``circuits[i]``.
-            run_options: runtime options used for circuit execution.
+            **run_options: runtime options used for circuit execution.
 
         Returns:
             The job object of EstimatorResult.
