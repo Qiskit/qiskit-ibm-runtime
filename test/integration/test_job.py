@@ -277,8 +277,8 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         self.assertIn("this is a stderr message", job_logs)
 
     @run_integration_test
-    def test_job_metadata(self, service):
-        """Test job metadata."""
+    def test_job_metrics(self, service):
+        """Test job metrics."""
         job = self._run_program(service)
         job.wait_for_final_state()
         metrics = job.metrics()
