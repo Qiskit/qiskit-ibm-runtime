@@ -104,11 +104,12 @@ class Options:
     """Options for the primitive programs.
 
     Args:
-        max_execution_time: Maximum execution time in seconds. This overrides
-            the max_execution_time of the program and cannot exceed it.
+        max_execution_time: Maximum execution time in seconds. If
+            a job exceeds this time limit, it is forcibly cancelled.
 
         job_tags: Tags to be assigned to the job. The tags can subsequently be used
-                as a filter in the :meth:`jobs()` function call.
+            as a filter in the :meth:`qiskit_ibm_runtime.qiskit_runtime_service.jobs()`
+            function call.
 
         optimization_level: How much optimization to perform on the circuits.
             Higher levels generate more optimized circuits,

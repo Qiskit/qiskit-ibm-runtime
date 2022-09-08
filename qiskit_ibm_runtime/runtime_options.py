@@ -49,8 +49,8 @@ class RuntimeOptions:
                 The default level is ``WARNING``.
             job_tags: Tags to be assigned to the job. The tags can subsequently be used
                 as a filter in the :meth:`jobs()` function call.
-            max_execution_time: Maximum execution time in seconds. This overrides
-                the max_execution_time of the program and cannot exceed it.
+            max_execution_time: Maximum execution time in seconds. If
+                a job exceeds this time limit, it is forcibly cancelled.
         """
         self.backend = backend
         self.image = image
