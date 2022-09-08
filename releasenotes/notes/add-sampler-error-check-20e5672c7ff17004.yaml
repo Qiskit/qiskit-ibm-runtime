@@ -2,7 +2,6 @@
 ---
 upgrade:
   - |
-    Added some error checks to :meth:`~qiskit_ibm_runtime.Sampler.run`.
-    It raises an error if there is no classical bit or some classical bits
-    are not used for measurements.
+    Added a validation check to :meth:`~qiskit_ibm_runtime.Sampler.run`.
+    It raises an error if there is no classical bit.
 

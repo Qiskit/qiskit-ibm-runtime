@@ -19,7 +19,6 @@ import copy
 
 from qiskit.circuit import QuantumCircuit, Parameter
 from qiskit.result import QuasiDistribution
-from qiskit.primitives.utils import final_measurement_mapping
 
 # TODO import BaseSampler and SamplerResult from terra once released
 from .qiskit.primitives import BaseSampler, SamplerResult
@@ -197,14 +196,6 @@ class Sampler(BaseSampler):
                     f"The {i}-th circuit does not have any classical bit. "
                     "Sampler requires classical bits, plus measurements "
                     "on the desired qubits."
-                )
-
-            mapping = final_measurement_mapping(circuit)
-            if set(range(circuit.num_clbits)) != set(mapping.values()):
-                raise ValueError(
-                    "Some classical bits are not used for measurements."
-                    f" the number of classical bits ({circuit.num_clbits}),"
-                    f" the used classical bits ({set(mapping.values())})."
                 )
 
         circ_count = len(circuits)

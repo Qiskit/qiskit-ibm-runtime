@@ -173,17 +173,14 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
         with Session(service, self.backend) as session:
             sampler = Sampler(session=session)
 
-            with self.assertRaises(ValueError):
-                _ = sampler.run(123)
-            with self.assertRaises(ValueError):
-                _ = sampler.run([123])
+            with self.subTest("invalid input: int"):
+                with self.assertRaises(ValueError):
+                    _ = sampler.run(123)
+            with self.subTest("invalid input: list[int]"):
+                with self.assertRaises(ValueError):
+                    _ = sampler.run([123])
 
-            circuit = QuantumCircuit(2)
-            with self.assertRaises(ValueError):
-                _ = sampler.run(circuit)
-
-            sampler.options.resilience_level = 1
-            circuit = QuantumCircuit(1, 2)
-            circuit.measure(0, 0)
-            with self.assertRaises(ValueError):
-                _ = sampler.run(circuit)
+            with self.subTest("no classical bits"):
+                circuit = QuantumCircuit(2)
+                with self.assertRaises(ValueError):
+                    _ = sampler.run(circuit)
