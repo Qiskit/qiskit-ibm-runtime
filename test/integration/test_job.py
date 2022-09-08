@@ -281,10 +281,10 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         """Test job metadata."""
         job = self._run_program(service)
         job.wait_for_final_state()
-        metadata = job.metadata()
-        self.assertTrue(metadata)
-        self.assertIn("timestamps", metadata)
-        self.assertIn("qiskit_version", metadata)
+        metrics = job.metrics()
+        self.assertTrue(metrics)
+        self.assertIn("timestamps", metrics)
+        self.assertIn("qiskit_version", metrics)
 
     def _assert_complex_types_equal(self, expected, received):
         """Verify the received data in complex types is expected."""
