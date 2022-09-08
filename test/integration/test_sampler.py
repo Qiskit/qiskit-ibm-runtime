@@ -44,8 +44,8 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
             self.assertIsInstance(result, SamplerResult)
             self.assertEqual(len(result.quasi_dists), 1)
             self.assertEqual(len(result.metadata), 1)
-            self.assertAlmostEqual(result.quasi_dists[0]["11"], 0.5, delta=0.05)
-            self.assertAlmostEqual(result.quasi_dists[0]["00"], 0.5, delta=0.05)
+            self.assertAlmostEqual(result.quasi_dists[0][3], 0.5, delta=0.05)
+            self.assertAlmostEqual(result.quasi_dists[0][0], 0.5, delta=0.05)
             self.assertTrue(session.session_id)
 
     @run_integration_test
@@ -63,8 +63,8 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
             self.assertEqual(len(result1.quasi_dists), len(circuits1))
             self.assertEqual(len(result1.metadata), len(circuits1))
             for i in range(len(circuits1)):
-                self.assertAlmostEqual(result1.quasi_dists[i]["11"], 0.5, delta=0.05)
-                self.assertAlmostEqual(result1.quasi_dists[i]["00"], 0.5, delta=0.05)
+                self.assertAlmostEqual(result1.quasi_dists[i][3], 0.5, delta=0.05)
+                self.assertAlmostEqual(result1.quasi_dists[i][0], 0.5, delta=0.05)
 
             circuits2 = [circuits[0], circuits[2]]
             result2 = sampler.run(circuits=circuits2).result()
@@ -72,8 +72,8 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
             self.assertEqual(len(result2.quasi_dists), len(circuits2))
             self.assertEqual(len(result2.metadata), len(circuits2))
             for i in range(len(circuits2)):
-                self.assertAlmostEqual(result2.quasi_dists[i]["11"], 0.5, delta=0.05)
-                self.assertAlmostEqual(result2.quasi_dists[i]["00"], 0.5, delta=0.05)
+                self.assertAlmostEqual(result2.quasi_dists[i][3], 0.5, delta=0.05)
+                self.assertAlmostEqual(result2.quasi_dists[i][0], 0.5, delta=0.05)
 
             circuits3 = [circuits[1], circuits[2]]
             result3 = sampler.run(circuits=circuits3).result()
@@ -81,8 +81,8 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
             self.assertEqual(len(result3.quasi_dists), len(circuits3))
             self.assertEqual(len(result3.metadata), len(circuits3))
             for i in range(len(circuits3)):
-                self.assertAlmostEqual(result3.quasi_dists[i]["11"], 0.5, delta=0.05)
-                self.assertAlmostEqual(result3.quasi_dists[i]["00"], 0.5, delta=0.05)
+                self.assertAlmostEqual(result3.quasi_dists[i][3], 0.5, delta=0.05)
+                self.assertAlmostEqual(result3.quasi_dists[i][0], 0.5, delta=0.05)
 
     @run_integration_test
     def test_sampler_primitive_parameterized_circuits(self, service):

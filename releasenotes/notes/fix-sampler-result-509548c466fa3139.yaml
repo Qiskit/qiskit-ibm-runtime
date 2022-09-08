@@ -1,0 +1,7 @@
+---
+upgrade:
+  - |
+    :class:`~qiskit_ibm_runtime.Sampler` is updated to return ``SamplerResult``
+    with ``SamplerResult.quasi_dists`` as a list of ``QuasiDistrbution``.
+    It used to set a list of ``dict`` as ``SamplerResult.quasi_dists``,
+    but it did not follow the design of ``SamplerResult``.
