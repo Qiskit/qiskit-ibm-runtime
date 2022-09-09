@@ -77,7 +77,7 @@ class RuntimeSession:
             self._start_session = True
             self._initial_job = self._run(inputs=inputs)
             self._job = self._initial_job
-            self._session_id = self._job.job_id
+            self._session_id = self._job.job_id()
         else:
             self._start_session = False
             self._max_time = None
@@ -118,7 +118,7 @@ class RuntimeSession:
         if self._options:
             out["backend"] = self._options["backend_name"] or "unknown"  # type: ignore
         if self._job:
-            out["job_id"] = self._job.job_id
+            out["job_id"] = self._job.job_id()
             out["job_status"] = self._job.status()
             out["backend"] = self._job.backend
         return out

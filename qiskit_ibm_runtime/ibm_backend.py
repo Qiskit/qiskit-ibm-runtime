@@ -481,6 +481,10 @@ class IBMBackend(Backend):
     def __repr__(self) -> str:
         return "<{}('{}')>".format(self.__class__.__name__, self.name)
 
+    def __call__(self) -> "IBMBackend":
+        # For backward compatibility only, can be removed later.
+        return self
+
     def run(
         self,
         circuits: Union[
