@@ -17,47 +17,16 @@ import logging
 import os
 import re
 from queue import Queue
-from math import sqrt
 
 from threading import Condition
 from typing import List, Optional, Any, Dict, Union, Tuple, Type
 from urllib.parse import urlparse
-from qiskit.result import QuasiDistribution
 
 import requests
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 from ibm_platform_services import ResourceControllerV2
 
-from ..qiskit.primitives import SamplerResult
 from ..exceptions import IBMInputValueError
-
-
-def convert_quasi_dists(
-    raw_result: Union[SamplerResult, Dict]
-) -> List[QuasiDistribution]:
-    """Convert `SamplerResult.quasi_dists` to a list with correct types."""
-    quasi_dists_list = []
-    if isinstance(raw_result, SamplerResult):
-        quasi_dists = raw_result.quasi_dists
-        metadata = raw_result.metadata
-    else:
-        quasi_dists = raw_result["quasi_dists"]
-        metadata = raw_result["metadata"]
-
-    for quasi, meta in zip(quasi_dists, metadata):
-        shots = meta.get("shots", float("inf"))
-        overhead = meta.get("readout_mitigation_overhead", 1.0)
-
-        # M3 mitigation overhead is gamma^2
-        # https://github.com/Qiskit-Partners/mthree/blob/423d7e83a12491c59c9f58af46b75891bc622949/mthree/mitigation.py#L457
-        #
-        # QuasiDistribution stddev_upper_bound is gamma / sqrt(shots)
-        # https://github.com/Qiskit/qiskit-terra/blob/ff267b5de8b83aef86e2c9ac6c7f918f58500505/qiskit/result/mitigation/local_readout_mitigator.py#L288
-        stddev = sqrt(overhead / shots)
-        quasi_dists_list.append(
-            QuasiDistribution(quasi, shots=shots, stddev_upper_bound=stddev)
-        )
-    return quasi_dists_list
 
 
 def validate_job_tags(
