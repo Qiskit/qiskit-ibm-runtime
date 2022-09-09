@@ -17,7 +17,6 @@ import logging
 import os
 import re
 from queue import Queue
-
 from threading import Condition
 from typing import List, Optional, Any, Dict, Union, Tuple, Type
 from urllib.parse import urlparse
