@@ -289,24 +289,10 @@ class Sampler(BaseSampler):
             program_id=self._PROGRAM_ID,
             inputs=inputs,
             options=Options._get_runtime_options(combined),
-            result_decoder=SamplerResultDecoder,
         ).result()
-        quasi_dists = []
-        for quasi, meta in zip(raw_result["quasi_dists"], raw_result["metadata"]):
-            shots = meta.get("shots", float("inf"))
-            overhead = meta.get("readout_mitigation_overhead", 1.0)
 
-            # M3 mitigation overhead is gamma^2
-            # https://github.com/Qiskit-Partners/mthree/blob/423d7e83a12491c59c9f58af46b75891bc622949/mthree/mitigation.py#L457
-            #
-            # QuasiDistribution stddev_upper_bound is gamma / sqrt(shots)
-            # https://github.com/Qiskit/qiskit-terra/blob/ff267b5de8b83aef86e2c9ac6c7f918f58500505/qiskit/result/mitigation/local_readout_mitigator.py#L288
-            stddev = sqrt(overhead / shots)
-            quasi_dists.append(
-                QuasiDistribution(quasi, shots=shots, stddev_upper_bound=stddev)
-            )
         return SamplerResult(
-            quasi_dists=quasi_dists,
+            quasi_dists=raw_result["quasi_dists"],
             metadata=raw_result["metadata"],
         )
 
@@ -331,7 +317,21 @@ class SamplerResultDecoder(ResultDecoder):
     def decode(cls, raw_result: str) -> SamplerResult:
         """Convert the result to SamplerResult."""
         decoded: Dict = super().decode(raw_result)
+        quasi_dists = []
+        for quasi, meta in zip(decoded["quasi_dists"], decoded["metadata"]):
+            shots = meta.get("shots", float("inf"))
+            overhead = meta.get("readout_mitigation_overhead", 1.0)
+
+            # M3 mitigation overhead is gamma^2
+            # https://github.com/Qiskit-Partners/mthree/blob/423d7e83a12491c59c9f58af46b75891bc622949/mthree/mitigation.py#L457
+            #
+            # QuasiDistribution stddev_upper_bound is gamma / sqrt(shots)
+            # https://github.com/Qiskit/qiskit-terra/blob/ff267b5de8b83aef86e2c9ac6c7f918f58500505/qiskit/result/mitigation/local_readout_mitigator.py#L288
+            stddev = sqrt(overhead / shots)
+            quasi_dists.append(
+                QuasiDistribution(quasi, shots=shots, stddev_upper_bound=stddev)
+            )
         return SamplerResult(
-            quasi_dists=decoded["quasi_dists"],
+            quasi_dists=quasi_dists,
             metadata=decoded["metadata"],
         )
