@@ -109,7 +109,7 @@ def cancel_job_safe(job: RuntimeJob, logger: logging.Logger) -> bool:
         assert (
             status is JobStatus.CANCELLED
         ), "cancel() was successful for job {} but its " "status is {}.".format(
-            job.job_id, status
+            job.job_id(), status
         )
         return True
     except RuntimeInvalidStateError:
@@ -126,7 +126,7 @@ def wait_for_status(job, status, poll_time=1, time_out=20):
         time.sleep(wait_time)
         time_out -= wait_time
     if job.status() != status:
-        raise unittest.SkipTest(f"Job {job.job_id} unable to reach status {status}.")
+        raise unittest.SkipTest(f"Job {job.job_id()} unable to reach status {status}.")
 
 
 def get_real_device(service):
@@ -145,5 +145,5 @@ def mock_wait_for_final_state(service, job):
     return mock.patch.object(
         RuntimeJob,
         "wait_for_final_state",
-        side_effect=service._api_client.wait_for_final_state(job.job_id),
+        side_effect=service._api_client.wait_for_final_state(job.job_id()),
     )

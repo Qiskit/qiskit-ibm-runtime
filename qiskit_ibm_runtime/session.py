@@ -53,7 +53,7 @@ class Session:
         with Session(backend="ibmq_qasm_simulator") as session:
             sampler = Sampler(session=session, options=options)
             job = sampler.run(circ)
-            print(f"Sampler job ID: {job.job_id}")
+            print(f"Sampler job ID: {job.job_id()}")
             print(f"Sampler job result:" {job.result()})
     """
 
@@ -142,10 +142,10 @@ class Session:
         )
 
         if self._session_id is None:
-            self._session_id = job.job_id
+            self._session_id = job.job_id()
 
         if self._backend is None:
-            self._backend = job.backend.name
+            self._backend = job.backend().name
 
         return job
 
@@ -154,6 +154,14 @@ class Session:
         self._active = False
         if self._session_id:
             self._service._api_client.close_session(self._session_id)
+
+    def backend(self) -> Optional[str]:
+        """Return backend for this session.
+
+        Returns:
+            Backend for this session. None if unknown.
+        """
+        return self._backend
 
     @property
     def session_id(self) -> str:
@@ -172,15 +180,6 @@ class Session:
             :class:`qiskit_ibm_runtime.QiskitRuntimeService` associated with this session.
         """
         return self._service
-
-    @property
-    def backend(self) -> Optional[str]:
-        """Return backend for this session.
-
-        Returns:
-            Backend for this session. None if unknown.
-        """
-        return self._backend
 
     def __enter__(self) -> "Session":
         return self

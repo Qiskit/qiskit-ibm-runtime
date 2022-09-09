@@ -16,6 +16,8 @@ import sys
 from unittest.mock import MagicMock, patch, ANY
 from dataclasses import asdict
 
+from qiskit.test.reference_circuits import ReferenceCircuits
+from qiskit.quantum_info import SparsePauliOp
 from qiskit_ibm_runtime import Sampler, Estimator, Options, Session
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 import qiskit_ibm_runtime.session as session_pkg
@@ -24,6 +26,12 @@ from ..ibm_test_case import IBMTestCase
 
 class TestPrimitives(IBMTestCase):
     """Class for testing the Sampler class."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.qx = ReferenceCircuits.bell()
+        cls.obs = SparsePauliOp.from_list([("IZ", 1)])
+        return super().setUpClass()
 
     def tearDown(self) -> None:
         super().tearDown()
@@ -84,7 +92,7 @@ class TestPrimitives(IBMTestCase):
                 with self.subTest(primitive=cls, backend=backend):
                     options = {"backend": backend}
                     inst = cls(service=MagicMock(), options=options)
-                    self.assertEqual(inst.session.backend, backend_name)
+                    self.assertEqual(inst.session.backend(), backend_name)
 
     @patch("qiskit_ibm_runtime.session.Session")
     @patch("qiskit_ibm_runtime.session.QiskitRuntimeService")
@@ -108,7 +116,7 @@ class TestPrimitives(IBMTestCase):
         for cls in primitives:
             with self.subTest(primitive=cls):
                 inst = cls(session=backend)
-                self.assertEqual(inst.session.backend, backend.name)
+                self.assertEqual(inst.session.backend(), backend.name)
 
     @patch("qiskit_ibm_runtime.session.Session")
     @patch("qiskit_ibm_runtime.session.QiskitRuntimeService")
@@ -141,7 +149,7 @@ class TestPrimitives(IBMTestCase):
             for options, expected in options_vars:
                 with self.subTest(primitive=cls, options=options):
                     inst = cls(session=session, options=options)
-                    inst.run(MagicMock(), MagicMock())
+                    inst.run(self.qx, observables=self.obs)
                     if sys.version_info >= (3, 8):
                         inputs = session.run.call_args.kwargs["inputs"]
                     else:
@@ -160,7 +168,7 @@ class TestPrimitives(IBMTestCase):
                 inst.options.resilience_level = 1
                 inst.options.optimization_level = 2
                 inst.options.execution.shots = 3
-                inst.run(MagicMock(), MagicMock())
+                inst.run(self.qx, observables=self.obs)
                 if sys.version_info >= (3, 8):
                     inputs = session.run.call_args.kwargs["inputs"]
                 else:
@@ -202,7 +210,7 @@ class TestPrimitives(IBMTestCase):
             for options, expected in options_vars:
                 with self.subTest(primitive=cls, options=options):
                     inst = cls(session=session)
-                    inst.run(MagicMock(), MagicMock(), **options)
+                    inst.run(self.qx, observables=self.obs, **options)
                     if sys.version_info >= (3, 8):
                         inputs = session.run.call_args.kwargs["inputs"]
                     else:
