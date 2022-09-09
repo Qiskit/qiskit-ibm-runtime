@@ -28,7 +28,6 @@ from .runtime_job import RuntimeJob
 from .ibm_backend import IBMBackend
 from .session import get_default_session
 from .utils.deprecation import deprecate_arguments, issue_deprecation_msg
-from .utils.utils import convert_quasi_dists
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
