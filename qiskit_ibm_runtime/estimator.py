@@ -17,6 +17,7 @@ import copy
 from typing import Iterable, Optional, Dict, Sequence, Any, Union
 
 from qiskit.circuit import QuantumCircuit, Parameter
+from qiskit.circuit.parametertable import ParameterView
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.opflow import PauliSumOp
 from qiskit.quantum_info.operators.base_operator import BaseOperator
@@ -131,13 +132,6 @@ class Estimator(BaseEstimator):
             parameters=parameters,
         )
 
-        # TODO: Remove deprecation warnings if done in base class
-        if circuits or parameters or observables:
-            deprecate_arguments(
-                "circuits, parameters, and observables",
-                "0.7",
-                f"You can instead specify these inputs using the {self.__class__.__name__}.run method.",
-            )
         if skip_transpilation:
             deprecate_arguments(
                 "skip_transpilation",
@@ -185,12 +179,64 @@ class Estimator(BaseEstimator):
 
     def run(
         self,
-        circuits: Union[QuantumCircuit, Sequence[QuantumCircuit]],
+        circuits: QuantumCircuit | Sequence[QuantumCircuit],
+        observables: BaseOperator | PauliSumOp | Sequence[BaseOperator | PauliSumOp],
+        parameter_values: Sequence[float] | Sequence[Sequence[float]] | None = None,
+        parameters: Sequence[Parameter] | Sequence[Sequence[Parameter]] | None = None,
+        **kwargs: Any,
+    ) -> RuntimeJob:
+        """Submit a request to the estimator primitive program.
+
+        Args:
+            circuits: a (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
+                a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
+
+            observables: Observable objects.
+
+            parameter_values: Concrete parameters to be bound.
+
+            parameters: Parameters of quantum circuits, specifying the order in which values
+                will be bound. Defaults to ``[circ.parameters for circ in circuits]``
+
+            **kwargs: Individual options to overwrite the default primitive options.
+
+        Returns:
+            Submitted job.
+
+        Raises:
+            QiskitError: Invalid arguments are given.
+        """
+        if not isinstance(circuits, Sequence):
+            circuits = [circuits]
+        if not isinstance(observables, Sequence):
+            observables = [observables]
+        if (
+            parameter_values is not None
+            and len(parameter_values) > 1
+            and not isinstance(parameter_values[0], Sequence)
+        ):
+            parameter_values = [parameter_values]  # type: ignore[assignment]
+        if (
+            parameters is not None
+            and len(parameters) > 1
+            and not isinstance(parameters[0], Sequence)
+        ):
+            parameters = [parameters]
+
+        return super().run(
+            circuits=circuits,
+            observables=observables,
+            parameter_values=parameter_values,
+            parameters=parameters,
+            **kwargs,
+        )
+
+    def _run(
+        self,
+        circuits: Sequence[QuantumCircuit],
         observables: Sequence[BaseOperator | PauliSumOp],
-        parameter_values: Optional[
-            Union[Sequence[float], Sequence[Sequence[float]]]
-        ] = None,
-        parameters: Sequence[Sequence[Parameter]] | None = None,
+        parameter_values: Sequence[Sequence[float]],
+        parameters: list[ParameterView],
         **kwargs: Any,
     ) -> RuntimeJob:
         """Submit a request to the estimator primitive program.
@@ -212,29 +258,12 @@ class Estimator(BaseEstimator):
 
         Returns:
             Submitted job.
-
-        Raises:
-            ValueError: If the input values are invalid.
         """
-        if isinstance(circuits, Iterable) and not all(
-            isinstance(inst, QuantumCircuit) for inst in circuits
-        ):
-            raise ValueError(
-                "The circuits parameter has to be instances of QuantumCircuit."
-            )
-
-        circ_count = 1 if isinstance(circuits, QuantumCircuit) else len(circuits)
-        obs_count = (
-            1
-            if isinstance(observables, (BaseOperator, PauliSumOp))
-            else len(observables)
-        )
-
         inputs = {
             "circuits": circuits,
-            "circuit_indices": list(range(circ_count)),
+            "circuit_indices": list(range(len(circuits))),
             "observables": observables,
-            "observable_indices": list(range(obs_count)),
+            "observable_indices": list(range(len(observables))),
             "parameters": parameters,
             "parameter_values": parameter_values,
         }

@@ -23,8 +23,10 @@ from datetime import datetime
 
 from qiskit.providers.backend import Backend
 from qiskit.providers.jobstatus import JobStatus, JOB_FINAL_STATES
+from qiskit.providers.job import JobV1 as Job
 from .utils.estimator_result_decoder import EstimatorResultDecoder
 from .utils.sampler_result_decoder import SamplerResultDecoder
+
 
 from .constants import API_TO_JOB_ERROR_MESSAGE, API_TO_JOB_STATUS
 from .exceptions import (
@@ -40,11 +42,12 @@ from .exceptions import IBMError
 from .api.exceptions import RequestsApiError
 from .utils.converters import utc_to_local
 from .api.client_parameters import ClientParameters
+from .utils.utils import CallableStr
 
 logger = logging.getLogger(__name__)
 
 
-class RuntimeJob:
+class RuntimeJob(Job):
     """Representation of a runtime program execution.
 
     A new ``RuntimeJob`` instance is returned when you call
@@ -109,8 +112,7 @@ class RuntimeJob:
             result_decoder: A :class:`ResultDecoder` subclass used to decode job results.
             image: Runtime image used for this job: image_name:tag.
         """
-        self._job_id = job_id
-        self._backend = backend
+        super().__init__(backend=backend, job_id=job_id)
         self._api_client = api_client
         self._results: Optional[Any] = None
         self._interim_results: Optional[Any] = None
@@ -139,6 +141,11 @@ class RuntimeJob:
         if user_callback is not None:
             self.stream_results(user_callback)
 
+        # For backward compatibility. These can be removed once 'job_id' and 'backend'
+        # as attributes are no longer supported.
+        self.job_id = CallableStr(job_id)
+        self.backend = self._backend
+
     def interim_results(self, decoder: Optional[Type[ResultDecoder]] = None) -> Any:
         """Return the interim results of the job.
 
@@ -154,14 +161,14 @@ class RuntimeJob:
         if not self._final_interim_results:
             _decoder = decoder or self._result_decoder
             interim_results_raw = self._api_client.job_interim_results(
-                job_id=self.job_id
+                job_id=self.job_id()
             )
             self._interim_results = _decoder.decode(interim_results_raw)
             if self.status() in JOB_FINAL_STATES:
                 self._final_interim_results = True
         return self._interim_results
 
-    def result(
+    def result(  # pylint: disable=arguments-differ
         self,
         timeout: Optional[float] = None,
         decoder: Optional[Type[ResultDecoder]] = None,
@@ -193,7 +200,7 @@ class RuntimeJob:
                 raise RuntimeJobFailureError(
                     f"Unable to retrieve job result. " f"{error_message}"
                 )
-            result_raw = self._api_client.job_results(job_id=self.job_id)
+            result_raw = self._api_client.job_results(job_id=self.job_id())
             self._results = _decoder.decode(result_raw) if result_raw else None
         return self._results
 
@@ -205,7 +212,7 @@ class RuntimeJob:
             IBMRuntimeError: If unable to cancel job.
         """
         try:
-            self._api_client.job_cancel(self.job_id)
+            self._api_client.job_cancel(self.job_id())
         except RequestsApiError as ex:
             if ex.status_code == 409:
                 raise RuntimeInvalidStateError(
@@ -233,7 +240,10 @@ class RuntimeJob:
         self._set_status_and_error_message()
         return self._error_message
 
-    def wait_for_final_state(self, timeout: Optional[float] = None) -> None:
+    def wait_for_final_state(  # pylint: disable=arguments-differ
+        self,
+        timeout: Optional[float] = None,
+    ) -> None:
         """Use the websocket server to wait for the final the state of a job. The server
             will remain open if the job is still running and the connection will be terminated
             once the job completes. Then update and return the status of the job.
@@ -321,31 +331,45 @@ class RuntimeJob:
         if self.status() not in JOB_FINAL_STATES:
             logger.warning("Job logs are only available after the job finishes.")
         try:
-            return self._api_client.job_logs(self.job_id)
+            return self._api_client.job_logs(self.job_id())
         except RequestsApiError as err:
             if err.status_code == 404:
                 return ""
             raise IBMRuntimeError(f"Failed to get job logs: {err}") from None
 
-    def metadata(self) -> Dict[str, Any]:
-        """Return job metadata.
+    def metrics(self) -> Dict[str, Any]:
+        """Return job metrics.
 
         Returns:
-            Job metadata, which includes timestamp information.
+            Job metrics, which includes timestamp information.
 
         Raises:
             IBMRuntimeError: If a network error occurred.
         """
         try:
-            metadata_str = self._api_client.job_metadata(self.job_id)
+            metadata_str = self._api_client.job_metadata(self.job_id())
             return json.loads(metadata_str)
         except RequestsApiError as err:
             raise IBMRuntimeError(f"Failed to get job metadata: {err}") from None
 
+    def submit(self) -> None:
+        """Unsupported method.
+        Note:
+            This method is not supported, please use
+            :meth:`~qiskit_ibm_runtime.QiskitRuntimeService.run`
+            to submit a job.
+        Raises:
+            NotImplementedError: Upon invocation.
+        """
+        raise NotImplementedError(
+            "job.submit() is not supported. Please use "
+            "QiskitRuntimeService.run() to submit a job."
+        )
+
     def _set_status_and_error_message(self) -> None:
         """Fetch and set status and error message."""
         if self._status not in JOB_FINAL_STATES:
-            response = self._api_client.job_get(job_id=self.job_id)
+            response = self._api_client.job_get(job_id=self.job_id())
             self._set_status(response)
             self._set_error_message(response)
 
@@ -387,11 +411,11 @@ class RuntimeJob:
             Error message.
         """
         status = response["state"]["status"].upper()
-        job_result_raw = self._api_client.job_results(job_id=self.job_id)
+        job_result_raw = self._api_client.job_results(job_id=self.job_id())
         error_msg = API_TO_JOB_ERROR_MESSAGE["FAILED"]
         if status == "CANCELLED" and self._reason == "RAN TOO LONG":
             error_msg = API_TO_JOB_ERROR_MESSAGE["CANCELLED - RAN TOO LONG"]
-        return error_msg.format(self.job_id, job_result_raw)
+        return error_msg.format(self.job_id(), job_result_raw)
 
     def _status_from_job_response(self, response: Dict) -> str:
         """Returns the job status from an API response.
@@ -424,13 +448,13 @@ class RuntimeJob:
     def _start_websocket_client(self) -> None:
         """Start websocket client to stream results."""
         try:
-            logger.debug("Start websocket client for job %s", self.job_id)
+            logger.debug("Start websocket client for job %s", self.job_id())
             self._ws_client.job_results()
         except Exception:  # pylint: disable=broad-except
             logger.warning(
                 "An error occurred while streaming results "
                 "from the server for job %s:\n%s",
-                self.job_id,
+                self.job_id(),
                 traceback.format_exc(),
             )
         finally:
@@ -449,7 +473,7 @@ class RuntimeJob:
             user_callback: User callback function.
             decoder: A :class:`ResultDecoder` (sub)class used to decode job results.
         """
-        logger.debug("Start result streaming for job %s", self.job_id)
+        logger.debug("Start result streaming for job %s", self.job_id())
         _decoder = decoder or self._result_decoder
         while True:
             try:
@@ -457,11 +481,11 @@ class RuntimeJob:
                 if response == self._POISON_PILL:
                     self._empty_result_queue(result_queue)
                     return
-                user_callback(self.job_id, _decoder.decode(response))
+                user_callback(self.job_id(), _decoder.decode(response))
             except Exception:  # pylint: disable=broad-except
                 logger.warning(
                     "An error occurred while streaming results " "for job %s:\n%s",
-                    self.job_id,
+                    self.job_id(),
                     traceback.format_exc(),
                 )
 
@@ -479,24 +503,6 @@ class RuntimeJob:
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__}('{self._job_id}', '{self._program_id}')>"
-
-    @property
-    def job_id(self) -> str:
-        """Return a unique ID identifying the job.
-
-        Returns:
-            Job ID.
-        """
-        return self._job_id
-
-    @property
-    def backend(self) -> Backend:
-        """Return the backend where this job was executed.
-
-        Returns:
-            Backend used for the job.
-        """
-        return self._backend
 
     @property
     def image(self) -> str:
@@ -535,7 +541,7 @@ class RuntimeJob:
             ``None`` if creation date is not available.
         """
         if not self._creation_date:
-            response = self._api_client.job_get(job_id=self.job_id)
+            response = self._api_client.job_get(job_id=self.job_id())
             self._creation_date = response.get("created", None)
 
         if not self._creation_date:

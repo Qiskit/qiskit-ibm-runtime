@@ -14,11 +14,13 @@
 
 import random
 import time
+from unittest.mock import MagicMock
 
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.jobstatus import JobStatus
 
 from qiskit_ibm_runtime import RuntimeJob
+from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.constants import API_TO_JOB_ERROR_MESSAGE
 from qiskit_ibm_runtime.exceptions import (
     RuntimeJobFailureError,
@@ -49,7 +51,7 @@ class TestRuntimeJob(IBMTestCase):
         """Test running program."""
         params = {"param1": "foo"}
         job = run_program(service=service, inputs=params)
-        self.assertTrue(job.job_id)
+        self.assertTrue(job.job_id())
         self.assertIsInstance(job, RuntimeJob)
         self.assertIsInstance(job.status(), JobStatus)
         self.assertEqual(job.inputs, params)
@@ -84,7 +86,7 @@ class TestRuntimeJob(IBMTestCase):
             instance="crn:v1:bluemix:public:quantum-computing:my-region:a/...:...::",
         )
         job = run_program(service=service, backend_name="")
-        self.assertTrue(job.backend)
+        self.assertTrue(job.backend())
 
     def test_run_program_default_hgp_backend(self):
         """Test running a program with a backend in default hgp."""
@@ -93,9 +95,9 @@ class TestRuntimeJob(IBMTestCase):
         default_hgp = list(service._hgps.values())[0]
         self.assertIn(backend, default_hgp.backends.keys())
         job = run_program(service=service, backend_name=backend)
-        self.assertEqual(job.backend.name, backend)
+        self.assertEqual(job.backend().name, backend)
         self.assertEqual(
-            job.backend._api_client.hgp, FakeRuntimeService.DEFAULT_HGPS[0]
+            job.backend()._api_client.hgp, FakeRuntimeService.DEFAULT_HGPS[0]
         )
 
     def test_run_program_non_default_hgp_backend(self):
@@ -105,7 +107,7 @@ class TestRuntimeJob(IBMTestCase):
         default_hgp = list(service._hgps.values())[0]
         self.assertNotIn(backend, default_hgp.backends.keys())
         job = run_program(service=service, backend_name=backend)
-        self.assertEqual(job.backend.name, backend)
+        self.assertEqual(job.backend().name, backend)
 
     def test_run_program_by_hgp_backend(self):
         """Test running a program with both backend and hgp."""
@@ -115,8 +117,8 @@ class TestRuntimeJob(IBMTestCase):
         job = run_program(
             service=service, backend_name=backend, instance=non_default_hgp
         )
-        self.assertEqual(job.backend.name, backend)
-        self.assertEqual(job.backend._api_client.hgp, non_default_hgp)
+        self.assertEqual(job.backend().name, backend)
+        self.assertEqual(job.backend()._api_client.hgp, non_default_hgp)
 
     def test_run_program_by_hgp_bad_backend(self):
         """Test running a program with backend not in hgp."""
@@ -147,7 +149,7 @@ class TestRuntimeJob(IBMTestCase):
         params = {"param1": "foo"}
         image = "name:tag"
         job = run_program(service=service, inputs=params, image=image)
-        self.assertTrue(job.job_id)
+        self.assertTrue(job.job_id())
         self.assertIsInstance(job, RuntimeJob)
         self.assertIsInstance(job.status(), JobStatus)
         self.assertEqual(job.inputs, params)
@@ -161,7 +163,7 @@ class TestRuntimeJob(IBMTestCase):
     def test_run_program_with_custom_log_level(self, service):
         """Test running program with a custom image."""
         job = run_program(service=service, log_level="DEBUG")
-        job_raw = service._api_client._get_job(job.job_id)
+        job_raw = service._api_client._get_job(job.job_id())
         self.assertEqual(job_raw.log_level, "DEBUG")
 
     @run_quantum_and_cloud_fake
@@ -170,10 +172,10 @@ class TestRuntimeJob(IBMTestCase):
         job = run_program(service=service, job_classes=FailedRuntimeJob)
         with mock_wait_for_final_state(service, job):
             job.wait_for_final_state()
-            job_result_raw = service._api_client.job_results(job.job_id)
+            job_result_raw = service._api_client.job_results(job.job_id())
             self.assertEqual(JobStatus.ERROR, job.status())
             self.assertEqual(
-                API_TO_JOB_ERROR_MESSAGE["FAILED"].format(job.job_id, job_result_raw),
+                API_TO_JOB_ERROR_MESSAGE["FAILED"].format(job.job_id(), job_result_raw),
                 job.error_message(),
             )
             with self.assertRaises(RuntimeJobFailureError):
@@ -185,11 +187,11 @@ class TestRuntimeJob(IBMTestCase):
         job = run_program(service=service, job_classes=FailedRanTooLongRuntimeJob)
         with mock_wait_for_final_state(service, job):
             job.wait_for_final_state()
-            job_result_raw = service._api_client.job_results(job.job_id)
+            job_result_raw = service._api_client.job_results(job.job_id())
             self.assertEqual(JobStatus.ERROR, job.status())
             self.assertEqual(
                 API_TO_JOB_ERROR_MESSAGE["CANCELLED - RAN TOO LONG"].format(
-                    job.job_id, job_result_raw
+                    job.job_id(), job_result_raw
                 ),
                 job.error_message(),
             )
@@ -211,7 +213,7 @@ class TestRuntimeJob(IBMTestCase):
         time.sleep(1)
         job.cancel()
         self.assertEqual(job.status(), JobStatus.CANCELLED)
-        rjob = service.job(job.job_id)
+        rjob = service.job(job.job_id())
         self.assertEqual(rjob.status(), JobStatus.CANCELLED)
 
     @run_quantum_and_cloud_fake
@@ -276,7 +278,32 @@ class TestRuntimeJob(IBMTestCase):
         """Test deleting a job."""
         params = {"param1": "foo"}
         job = run_program(service=service, inputs=params)
-        self.assertTrue(job.job_id)
-        service.delete_job(job.job_id)
+        self.assertTrue(job.job_id())
+        service.delete_job(job.job_id())
         with self.assertRaises(RuntimeJobNotFound):
-            service.job(job.job_id)
+            service.job(job.job_id())
+
+    def test_job_id_attribute(self):
+        """Test using job_id as an attribute still works."""
+        job = RuntimeJob(
+            backend=MagicMock(),
+            api_client=MagicMock(),
+            client_params=MagicMock(),
+            job_id="12345",
+            program_id="foo",
+        )
+        self.assertIsInstance(job.job_id, str)
+        self.assertEqual(job.job_id, "12345")
+
+    def test_job_backend_attribute(self):
+        """Test using backend as an attribute still works."""
+        backend = MagicMock(spec=IBMBackend)
+        job = RuntimeJob(
+            backend=backend,
+            api_client=MagicMock(),
+            client_params=MagicMock(),
+            job_id="12345",
+            program_id="foo",
+        )
+        self.assertIsInstance(job.backend, IBMBackend)
+        self.assertEqual(job.backend, backend)
