@@ -29,7 +29,11 @@ from .program.result_decoder import ResultDecoder
 from .runtime_job import RuntimeJob
 from .ibm_backend import IBMBackend
 from .session import get_default_session
-from .utils.deprecation import deprecate_arguments, issue_deprecation_msg, deprecate_function
+from .utils.deprecation import (
+    deprecate_arguments,
+    issue_deprecation_msg,
+    deprecate_function,
+)
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
@@ -284,8 +288,11 @@ class Sampler(BaseSampler):
             metadata=raw_result["metadata"],
         )
 
-    @deprecate_function(deprecated="close", version="0.7",
-    remedy="Use qiskit_ibm_runtime.Session.close() instead")
+    @deprecate_function(
+        deprecated="close",
+        version="0.7",
+        remedy="Use qiskit_ibm_runtime.Session.close() instead",
+    )
     def close(self) -> None:
         """Close the session and free resources"""
         self._session.close()

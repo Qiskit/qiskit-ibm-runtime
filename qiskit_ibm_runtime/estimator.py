@@ -30,7 +30,11 @@ from .qiskit.primitives import BaseEstimator, EstimatorResult
 from .qiskit_runtime_service import QiskitRuntimeService
 from .program.result_decoder import ResultDecoder
 from .runtime_job import RuntimeJob
-from .utils.deprecation import deprecate_arguments, issue_deprecation_msg
+from .utils.deprecation import (
+    deprecate_arguments,
+    issue_deprecation_msg,
+    deprecate_function,
+)
 from .ibm_backend import IBMBackend
 from .session import get_default_session
 from .options import Options
@@ -329,6 +333,11 @@ class Estimator(BaseEstimator):
             result_decoder=EstimatorResultDecoder,
         ).result()
 
+    @deprecate_function(
+        deprecated="close",
+        version="0.7",
+        remedy="Use qiskit_ibm_runtime.Session.close() instead",
+    )
     def close(self) -> None:
         """Close the session and free resources"""
         self._session.close()
