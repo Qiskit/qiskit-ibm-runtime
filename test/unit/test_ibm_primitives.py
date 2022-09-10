@@ -127,6 +127,39 @@ class TestPrimitives(IBMTestCase):
         estimator = Estimator()
         self.assertEqual(estimator.session, sampler.session)
 
+    def test_default_session_context_manager(self):
+        """Test getting default session within context manager."""
+        service = MagicMock()
+        backend = "ibm_gotham"
+        primitives = [Sampler, Estimator]
+
+        for cls in primitives:
+            with self.subTest(primitive=cls):
+                with Session(service=service, backend=backend) as session:
+                    inst = cls()
+                    self.assertEqual(inst.session, session)
+
+    def test_default_session_cm_new_backend(self):
+        """Test using a different backend within context manager."""
+        service = MagicMock()
+        backend = MagicMock(spec=IBMBackend)
+        backend.name = "ibm_gotham"
+        backend.service = service
+        cm_backend = "ibm_metropolis"
+        primitives = [Sampler, Estimator]
+
+        for cls in primitives:
+            with self.subTest(primitive=cls):
+                with Session(service=service, backend=cm_backend) as session:
+                    inst = cls(session=backend)
+                    self.assertNotEqual(inst.session, session)
+                    self.assertEqual(inst.session.backend(), backend.name)
+                    self.assertEqual(session.backend(), cm_backend)
+                    self.assertTrue(session._active)
+                    inst2 = cls()
+                    self.assertEqual(inst2.session, session)
+                self.assertFalse(session._active)
+
     def test_run_inputs_default(self):
         """Test run using default options."""
         session = MagicMock(spec=Session)

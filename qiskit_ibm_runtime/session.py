@@ -182,6 +182,7 @@ class Session:
         return self._service
 
     def __enter__(self) -> "Session":
+        set_cm_session(self)
         return self
 
     def __exit__(
@@ -190,11 +191,21 @@ class Session:
         exc_val: Optional[BaseException],
         exc_tb: Optional[TracebackType],
     ) -> None:
+        set_cm_session(None)
         self.close()
 
 
 # Default session
 _DEFAULT_SESSION: Optional[Session] = None
+_IN_SESSION_CM = False
+
+
+def set_cm_session(session: Optional[Session]) -> None:
+    """Set the context manager session."""
+    global _DEFAULT_SESSION  # pylint: disable=global-statement
+    global _IN_SESSION_CM  # pylint: disable=global-statement
+    _DEFAULT_SESSION = session
+    _IN_SESSION_CM = session is not None
 
 
 def get_default_session(
@@ -207,23 +218,26 @@ def get_default_session(
         service: Service to use to create a default session.
         backend: Backend for the default session.
     """
-    if service is None:
-        service = (
-            backend.service
-            if isinstance(backend, IBMBackend)
-            else QiskitRuntimeService()
-        )
-    if isinstance(backend, IBMBackend):
-        backend = backend.name
+    backend_name = backend.name if isinstance(backend, IBMBackend) else backend
 
     global _DEFAULT_SESSION  # pylint: disable=global-statement
-    if (
+    session = _DEFAULT_SESSION
+    if (  # pylint: disable=too-many-boolean-expressions
         _DEFAULT_SESSION is None
         or not _DEFAULT_SESSION._active
-        or _DEFAULT_SESSION._backend != backend
+        or (backend_name is not None and _DEFAULT_SESSION._backend != backend_name)
         or (service is not None and _DEFAULT_SESSION.service.channel != service.channel)
     ):
-        if _DEFAULT_SESSION and _DEFAULT_SESSION._active:
+        # Create a new session if one doesn't exist, or if the user wants to switch backend/channel.
+        if _DEFAULT_SESSION and not _IN_SESSION_CM and _DEFAULT_SESSION._active:
             _DEFAULT_SESSION.close()
-        _DEFAULT_SESSION = Session(service=service, backend=backend)
-    return _DEFAULT_SESSION
+        if service is None:
+            service = (
+                backend.service
+                if isinstance(backend, IBMBackend)
+                else QiskitRuntimeService()
+            )
+        session = Session(service=service, backend=backend)
+        if not _IN_SESSION_CM:
+            _DEFAULT_SESSION = session
+    return session
