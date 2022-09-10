@@ -51,11 +51,20 @@ from .utils.hgp import to_instance_format, from_instance_format
 from .utils.utils import validate_job_tags, validate_runtime_options
 from .api.client_parameters import ClientParameters
 from .runtime_options import RuntimeOptions
-from .utils.deprecation import deprecate_function
+from .utils.deprecation import deprecate_function, issue_deprecation_msg
 
 logger = logging.getLogger(__name__)
 
 SERVICE_NAME = "runtime"
+
+DEPRECATED_PROGRAMS = [
+    "torch-train",
+    "torch-infer",
+    "sample-expval",
+    "quantum_kernal_alignment",
+]
+
+_JOB_DEPRECATION_ISSUED = False
 
 
 class QiskitRuntimeService(Provider):
@@ -77,7 +86,7 @@ class QiskitRuntimeService(Provider):
         service = QiskitRuntimeService()
 
         # Set options, which can be overwritten at job level.
-        options = Options(backend="ibmq_qasm_simulator")
+        options = Options(optimization_level=1)
 
         # Prepare inputs.
         bell = ReferenceCircuits.bell()
@@ -85,7 +94,7 @@ class QiskitRuntimeService(Provider):
         H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
         theta = [0, 1, 1, 2, 3, 5]
 
-        with Session(service) as session:
+        with Session(service=service, backend="ibmq_qasm_simulator") as session:
             # Submit a request to the Sampler primitive within the session.
             sampler = Sampler(session=session, options=options)
             job = sampler.run(circuits=bell)
@@ -853,7 +862,6 @@ class QiskitRuntimeService(Provider):
             inputs: Program input parameters. These input values are passed
                 to the runtime program.
             options: Runtime options that control the execution environment.
-                The use of :class:`RuntimeOptions` has been deprecated.
 
                 * backend: target backend to run on. This is required for ``ibm_quantum`` runtime.
                 * image: the runtime image used to execute the program, specified in
@@ -888,6 +896,12 @@ class QiskitRuntimeService(Provider):
             RuntimeProgramNotFound: If the program cannot be found.
             IBMRuntimeError: An error occurred running the program.
         """
+        if program_id in DEPRECATED_PROGRAMS:
+            warnings.warn(
+                f"The {program_id} program will be deprecated on August 29th.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
         validate_job_tags(job_tags, IBMInputValueError)
 
         if instance and self._channel != "ibm_quantum":
@@ -938,6 +952,18 @@ class QiskitRuntimeService(Provider):
 
         if not backend:
             backend = self.backend(name=response["backend"])
+
+        global _JOB_DEPRECATION_ISSUED  # pylint: disable=global-statement
+        if not (start_session or session_id) and not _JOB_DEPRECATION_ISSUED:
+            # No need to issue warning if session is used since the old style session
+            # didn't return a job, and new style returns new job.
+            _JOB_DEPRECATION_ISSUED = True
+            issue_deprecation_msg(
+                msg="Note that the 'job_id' and 'backend' attributes of "
+                "a runtime job have been deprecated",
+                version="0.7",
+                remedy="Please use the job_id() and backend() methods instead.",
+            )
 
         job = RuntimeJob(
             backend=backend,

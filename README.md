@@ -142,7 +142,7 @@ job = service.run(
     program_id="sampler",
     options=options,
     inputs=program_inputs)
-print(f"job ID: {job.job_id}")
+print(f"job ID: {job.job_id()}")
 result = job.result()
 ```
 
