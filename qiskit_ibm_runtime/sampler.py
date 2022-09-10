@@ -29,7 +29,7 @@ from .program.result_decoder import ResultDecoder
 from .runtime_job import RuntimeJob
 from .ibm_backend import IBMBackend
 from .session import get_default_session
-from .utils.deprecation import deprecate_arguments, issue_deprecation_msg
+from .utils.deprecation import deprecate_arguments, issue_deprecation_msg, deprecate_function
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
@@ -166,6 +166,7 @@ class Sampler(BaseSampler):
 
         Returns:
             Submitted job.
+            The result of the job is an instance of :class:`qiskit.primitives.SamplerResult`.
 
         Raises:
             QiskitError: Invalid arguments are given.
@@ -175,7 +176,7 @@ class Sampler(BaseSampler):
         if (
             parameter_values is not None
             and len(parameter_values) > 1
-            and not isinstance(parameter_values[0], Sequence)
+            and not isinstance(parameter_values[0], (Sequence, Iterable))
         ):
             parameter_values = [parameter_values]  # type: ignore[assignment]
         if (
@@ -233,19 +234,6 @@ class Sampler(BaseSampler):
             result_decoder=SamplerResultDecoder,
         )
 
-    def __call__(
-        self,
-        circuits: Sequence[int | QuantumCircuit],
-        parameter_values: Sequence[Sequence[float]] | None = None,
-        **run_options: Any,
-    ) -> SamplerResult:
-        issue_deprecation_msg(
-            msg="Calling a Sampler instance directly has been deprecated ",
-            version="0.7",
-            remedy="Please use qiskit_ibm_runtime.Session and Sampler.run() instead.",
-        )
-        return super().__call__(circuits, parameter_values, **run_options)
-
     def _call(
         self,
         circuits: Sequence[int],
@@ -296,6 +284,8 @@ class Sampler(BaseSampler):
             metadata=raw_result["metadata"],
         )
 
+    @deprecate_function(deprecated="close", version="0.7",
+    remedy="Use qiskit_ibm_runtime.Session.close() instead")
     def close(self) -> None:
         """Close the session and free resources"""
         self._session.close()

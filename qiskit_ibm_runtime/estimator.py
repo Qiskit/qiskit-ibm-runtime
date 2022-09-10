@@ -203,6 +203,7 @@ class Estimator(BaseEstimator):
 
         Returns:
             Submitted job.
+            The result of the job is an instance of :class:`qiskit.primitives.EstimatorResult`.
 
         Raises:
             QiskitError: Invalid arguments are given.
@@ -214,7 +215,7 @@ class Estimator(BaseEstimator):
         if (
             parameter_values is not None
             and len(parameter_values) > 1
-            and not isinstance(parameter_values[0], Sequence)
+            and not isinstance(parameter_values[0], (Sequence, Iterable))
         ):
             parameter_values = [parameter_values]  # type: ignore[assignment]
         if (
@@ -278,22 +279,6 @@ class Estimator(BaseEstimator):
             options=Options._get_runtime_options(combined),
             result_decoder=EstimatorResultDecoder,
         )
-
-    def __call__(
-        self,
-        circuits: Sequence[int],
-        observables: Sequence[int],
-        parameter_values: Optional[
-            Union[Sequence[float], Sequence[Sequence[float]]]
-        ] = None,
-        **run_options: Any,
-    ) -> EstimatorResult:
-        issue_deprecation_msg(
-            msg="Calling an Estimator instance directly has been deprecated ",
-            version="0.7",
-            remedy="Please use qiskit_ibm_runtime.Session and Estimator.run() instead.",
-        )
-        return super().__call__(circuits, observables, parameter_values, **run_options)
 
     def _call(
         self,
