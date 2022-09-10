@@ -288,10 +288,9 @@ class Sampler(BaseSampler):
             inputs=inputs,
             options=Options._get_runtime_options(combined),
         ).result()
-
         return SamplerResult(
-            quasi_dists=raw_result["quasi_dists"],
-            metadata=raw_result["metadata"],
+            quasi_dists=raw_result.quasi_dists,
+            metadata=raw_result.metadata,
         )
 
     def close(self) -> None:
