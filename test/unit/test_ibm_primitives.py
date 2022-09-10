@@ -138,6 +138,7 @@ class TestPrimitives(IBMTestCase):
                 with Session(service=service, backend=backend) as session:
                     inst = cls()
                     self.assertEqual(inst.session, session)
+                    self.assertEqual(inst.session.backend(), backend)
 
     def test_default_session_cm_new_backend(self):
         """Test using a different backend within context manager."""
