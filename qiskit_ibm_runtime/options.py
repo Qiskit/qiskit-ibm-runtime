@@ -13,37 +13,62 @@
 """Primitive options."""
 
 from typing import Optional, List, Dict, Union, Any
-from dataclasses import dataclass, asdict, field
+from types import SimpleNamespace
 import copy
 
 from .utils.deprecation import issue_deprecation_msg
 
 
-@dataclass
-class Transpilation:
+class OptionsNamespace(SimpleNamespace):
+
+    def to_dict(self) -> Dict:
+        """Convert the class to a dictionary.
+
+        Returns:
+            Dictionary representation of the options.
+        """
+        out = copy.deepcopy(self.__dict__)
+        for key, val in out.items():
+            if isinstance(val, OptionsNamespace):
+                out[key] = val.to_dict()
+        return out
+
+
+class Transpilation(OptionsNamespace):
     """Transpilation options."""
 
-    # TODO: Double check transpilation settings.
+    def __init__(
+        self,
+        skip_transpilation: bool = False,
+        initial_layout: Optional[Union[Dict, List]] = None,  # TODO: Support Layout
+        layout_method: Optional[str] = None,
+        routing_method: Optional[str] = None,
+        translation_method: Optional[str] = None,
+        approximation_degree: Optional[float] = None,
+        timing_constraints: Optional[Dict[str, int]] = None,
+        seed_transpiler: Optional[int] = None,
+        **kwargs: Any
+    ) -> None:
+        # TODO: Double check transpilation settings.
+        super().__init__(
+            skip_transpilation=skip_transpilation,
+            initial_layout=initial_layout,
+            layout_method=layout_method,
+            routing_method=routing_method,
+            translation_method=translation_method,
+            approximation_degree=approximation_degree,
+            timing_constraints=timing_constraints,
+            seed_transpiler=seed_transpiler,
+            **kwargs)
 
-    skip_transpilation: bool = False
-    initial_layout: Optional[Union[Dict, List]] = None  # TODO: Support Layout
-    layout_method: Optional[str] = None
-    routing_method: Optional[str] = None
-    translation_method: Optional[str] = None
-    approximation_degree: Optional[float] = None
-    timing_constraints: Optional[Dict[str, int]] = None
-    seed_transpiler: Optional[int] = None
 
-
-@dataclass
-class Resilience:
+class Resilience(OptionsNamespace):
     """Resilience settings."""
 
     pass
 
 
-@dataclass
-class SimulatorOptions:
+class SimulatorOptions(OptionsNamespace):
     """Simulator options.
 
     Args:
@@ -52,10 +77,14 @@ class SimulatorOptions:
     """
 
     def __init__(
-        self, noise_model: Any = None, seed_simulator: Optional[int] = None
+        self,
+        noise_model: Any = None,
+        seed_simulator: Optional[int] = None,
+        **kwargs: Any
     ) -> None:
         self.noise_model = noise_model
         self.seed_simulator = seed_simulator
+        super().__init__(**kwargs)
 
     @property
     def noise_model(self) -> Dict:
@@ -87,20 +116,42 @@ class SimulatorOptions:
                 )
 
 
-@dataclass
-class Execution:
+class Execution(OptionsNamespace):
     """Execution options."""
 
-    shots: int = 4000
-    qubit_lo_freq: Optional[List[float]] = None
-    meas_lo_freq: Optional[List[float]] = None
-    # TODO: need to be able to serialize schedule_los before we can support it
-    rep_delay: Optional[float] = None
-    init_qubits: bool = True
+    def __init__(
+        self,
+        shots: int = 4000,
+        qubit_lo_freq: Optional[List[float]] = None,
+        meas_lo_freq: Optional[List[float]] = None,
+        # TODO: need to be able to serialize schedule_los before we can support it
+        rep_delay: Optional[float] = None,
+        init_qubits: bool = True,
+        **kwargs: Any
+    ) -> None:
+        super().__init__(
+            shots=shots,
+            qubit_lo_freq=qubit_lo_freq,
+            meas_lo_freq=meas_lo_freq,
+            rep_delay=rep_delay,
+            init_qubits=init_qubits,
+            **kwargs)
 
+class Environment(OptionsNamespace):
+    """Environmental options."""
 
-@dataclass
-class Options:
+    def __init__(
+        self,
+        log_level: str = "WARNING",
+        image: Optional[str] = None,
+        **kwargs: Any
+    ) -> None:
+        super().__init__(
+            log_level=log_level,
+            image=image,
+            **kwargs)
+
+class Options(OptionsNamespace):
     """Options for the primitive programs.
 
     Args:
@@ -119,10 +170,6 @@ class Options:
 
             * 0: no resilience
             * 1: light resilience
-
-        log_level: logging level to set in the execution environment. The valid
-            log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
-            The default level is ``WARNING``.
 
         transpilation: Transpilation options.
 
@@ -189,14 +236,34 @@ class Options:
 
             * init_qubits: Whether to reset the qubits to the ground state for each shot.
               Default: ``True``.
+
+        environment: Environmental options.
+
+            * log_level: logging level to set in the execution environment. The valid
+              log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
+              The default level is ``WARNING``.
+
+            * image: The runtime image used to execute the program, specified in
+              the form of ``image_name:tag``. Not all accounts are
+              authorized to select a different image.
     """
 
-    optimization_level: int = 1
-    resilience_level: int = 0
-    log_level: str = "WARNING"
-    transpilation: Transpilation = field(default_factory=Transpilation)
-    execution: Execution = field(default_factory=Execution)
-    experimental: dict = None
+    def __init__(
+        self,
+        optimization_level: int = 1,
+        resilience_level: int = 0,
+        transpilation: Optional[Transpilation] = None,
+        execution: Optional[Execution] = None,
+        environment: Optional[Environment] = None,
+        **kwargs: Any
+    ) -> None:
+        super().__init__(
+            optimization_level=optimization_level,
+            resilience_level=resilience_level,
+            transpilation=transpilation or Transpilation(),
+            execution=execution or Execution(),
+            environment=environment or Environment(),
+            **kwargs)
 
     def _merge_options(self, new_options: Optional[Dict] = None) -> Dict:
         """Merge current options with the new ones.
@@ -218,25 +285,25 @@ class Options:
                     _update_options(val, new)
 
         # First combine options.
-        combined = copy.deepcopy(asdict(self))
+        combined = copy.deepcopy(self.to_dict())
         _update_options(combined, new_options)
         return combined
 
     @classmethod
     def _from_dict(cls, data: Dict) -> "Options":
         data = copy.copy(data)
-        experimental = None
+        environment = Environment()
         if "image" in data.keys():
             issue_deprecation_msg(
-                msg="The 'image' option has been moved to the 'experimental' category",
+                msg="The 'image' option has been moved to the 'environment' category",
                 version="0.7",
-                remedy="Please specify 'experimental':{'image': image} instead.",
+                remedy="Please specify 'environment':{'image': image} instead.",
             )
-            experimental = {"image": data.pop("image")}
+            environment.image = data.pop("image")
         transp = Transpilation(**data.pop("transpilation", {}))
         execution = Execution(**data.pop("execution", {}))
         return cls(
-            experimental=experimental,
+            environment=environment,
             transpilation=transp,
             execution=execution,
             **data,
@@ -265,8 +332,8 @@ class Options:
         Returns:
             Runtime options.
         """
-        experimental = options.get("experimental") or {}
+        environment = options.get("environment") or {}
         return {
             "log_level": options.get("log_level"),
-            "image": experimental.get("image", None),
+            "image": environment.get("image", None),
         }

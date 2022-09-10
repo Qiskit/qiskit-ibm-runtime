@@ -13,8 +13,8 @@
 """Tests for primitive classes."""
 
 import sys
+import copy
 from unittest.mock import MagicMock, patch, ANY
-from dataclasses import asdict
 
 from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit.quantum_info import SparsePauliOp
@@ -67,7 +67,6 @@ class TestPrimitives(IBMTestCase):
                 "resilience_level": 1,
                 "transpilation": {"seed_transpiler": 24},
                 "execution": {"shots": 100, "init_qubits": True},
-                "log_level": "INFO",
             },
             {"transpilation": {}},
         ]
@@ -76,9 +75,9 @@ class TestPrimitives(IBMTestCase):
             for options in options_vars:
                 with self.subTest(primitive=cls, options=options):
                     inst = cls(session=MagicMock(spec=Session), options=options)
-                    expected = asdict(Options())
-                    self._update_dict(expected, options)
-                    self.assertDictEqual(expected, asdict(inst.options))
+                    expected = Options().to_dict()
+                    self._update_dict(expected, copy.deepcopy(options))
+                    self.assertDictEqual(expected, inst.options.to_dict())
 
     def test_backend_in_options(self):
         """Test specifying backend in options."""
@@ -217,7 +216,11 @@ class TestPrimitives(IBMTestCase):
                         _, kwargs = session.run.call_args
                         inputs = kwargs["inputs"]
                     self._assert_dict_paritally_equal(inputs, expected)
-                    self.assertDictEqual(asdict(inst.options), asdict(Options()))
+                    self.assertDictEqual(inst.options.to_dict(), Options().to_dict())
+
+    def test_kwarg_options(self):
+        """Test specifying arbitrary options."""
+        pass
 
     def _update_dict(self, dict1, dict2):
         for key, val in dict1.items():
