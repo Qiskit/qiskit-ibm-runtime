@@ -97,9 +97,9 @@ class Sampler(BaseSampler):
                   that backend, unless a default session for the same backend
                   and channel already exists.
 
-                * If ``None``, and a default session exits, then the default session is used.
-                  Otherwise a session is created using the default saved
-                  account and a default backend (IBM Cloud channel only).
+                * If ``None``, a new session is created using the default saved
+                  account and a default backend (IBM Cloud channel only), unless
+                  a default session already exists.
 
             options: Primitive options, see :class:`Options` for detailed description.
                 The ``backend`` keyword is still supported but is deprecated.
