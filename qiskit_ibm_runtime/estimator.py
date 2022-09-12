@@ -119,11 +119,16 @@ class Estimator(BaseEstimator):
                 defaults to `QiskitRuntimeService()` which tries to initialize your default
                 saved account.
 
-            session: Session in which to call the primitive. If an instance of
-                :class:`qiskit_ibm_runtime.IBMBackend` class or
-                string name of a backend is specified, a new session is created for
-                that backend. If ``None``, a new session is created using the default
-                saved account and a default backend (IBM Cloud channel only).
+            session: Session in which to call the primitive.
+
+                * If an instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
+                  string name of a backend is specified, a new session is created for
+                  that backend, unless a default session for the same backend
+                  and channel already exists.
+
+                * If ``None``, a new session is created using the default saved
+                  account and a default backend (IBM Cloud channel only), unless
+                  a default session already exists.
 
             options: Primitive options, see :class:`Options` for detailed description.
                 The ``backend`` keyword is still supported but is deprecated.
