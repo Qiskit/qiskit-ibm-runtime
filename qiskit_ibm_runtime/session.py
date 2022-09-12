@@ -39,9 +39,14 @@ def _active_session(func):  # type: ignore
 class Session:
     """Class for creating a flexible Qiskit Runtime session.
 
-    The ``Session`` class allows you to open a "session" with the Qiskit Runtime service.
-    Jobs submitted during a session get prioritized scheduling. This class allows
-    you to submit jobs to one or more of the primitives.
+    A Qiskit Runtime ``session`` allows you to group a collection of iterative calls to
+    the quantum computer. A session is started when the first job within the session
+    is started. Subsequent jobs within the session are prioritized by the scheduler.
+    Data used within a session, such as transpiled circuits, is also cached to avoid
+    unnecessary overhead.
+
+    You can open a Qiskit Runtime session using this ``Session`` class and submit jobs
+    to one or more primitives.
 
     For example::
 
