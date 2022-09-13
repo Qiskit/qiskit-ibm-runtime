@@ -27,7 +27,11 @@ from .utils.sampler_result_decoder import SamplerResultDecoder
 from .runtime_job import RuntimeJob
 from .ibm_backend import IBMBackend
 from .session import get_default_session
-from .utils.deprecation import deprecate_arguments, issue_deprecation_msg
+from .utils.deprecation import (
+    deprecate_arguments,
+    issue_deprecation_msg,
+    deprecate_function,
+)
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
@@ -88,11 +92,16 @@ class Sampler(BaseSampler):
                 defaults to `QiskitRuntimeService()` which tries to initialize your default
                 saved account.
 
-            session: Session in which to call the primitive. If an instance of
-                :class:`qiskit_ibm_runtime.IBMBackend` class or
-                string name of a backend is specified, a new session is created for
-                that backend. If ``None``, a new session is created using the default
-                saved account and a default backend (IBM Cloud channel only).
+            session: Session in which to call the primitive.
+
+                * If an instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
+                  string name of a backend is specified, a new session is created for
+                  that backend, unless a default session for the same backend
+                  and channel already exists.
+
+                * If ``None``, a new session is created using the default saved
+                  account and a default backend (IBM Cloud channel only), unless
+                  a default session already exists.
 
             options: Primitive options, see :class:`Options` for detailed description.
                 The ``backend`` keyword is still supported but is deprecated.
@@ -164,6 +173,7 @@ class Sampler(BaseSampler):
 
         Returns:
             Submitted job.
+            The result of the job is an instance of :class:`qiskit.primitives.SamplerResult`.
 
         Raises:
             QiskitError: Invalid arguments are given.
@@ -173,7 +183,7 @@ class Sampler(BaseSampler):
         if (
             parameter_values is not None
             and len(parameter_values) > 1
-            and not isinstance(parameter_values[0], Sequence)
+            and not isinstance(parameter_values[0], (Sequence, Iterable))
         ):
             parameter_values = [parameter_values]  # type: ignore[assignment]
         if (
@@ -231,19 +241,6 @@ class Sampler(BaseSampler):
             result_decoder=SamplerResultDecoder,
         )
 
-    def __call__(
-        self,
-        circuits: Sequence[int | QuantumCircuit],
-        parameter_values: Sequence[Sequence[float]] | None = None,
-        **run_options: Any,
-    ) -> SamplerResult:
-        issue_deprecation_msg(
-            msg="Calling a Sampler instance directly has been deprecated ",
-            version="0.7",
-            remedy="Please use qiskit_ibm_runtime.Session and Sampler.run() instead.",
-        )
-        return super().__call__(circuits, parameter_values, **run_options)
-
     def _call(
         self,
         circuits: Sequence[int],
@@ -293,6 +290,11 @@ class Sampler(BaseSampler):
             metadata=raw_result.metadata,
         )
 
+    @deprecate_function(
+        deprecated="close",
+        version="0.7",
+        remedy="Use qiskit_ibm_runtime.Session.close() instead",
+    )
     def close(self) -> None:
         """Close the session and free resources"""
         self._session.close()
