@@ -102,7 +102,7 @@ class TestPrimitives(IBMTestCase):
         for cls in primitives:
             with self.subTest(primitive=cls):
                 options.transpilation.skip_transpilation = True
-                inst = cls(session=MagicMock(), options=options)
+                inst = cls(session=MagicMock(spec=Session), options=options)
                 options.transpilation.skip_transpilation = False
                 self.assertTrue(inst.options.transpilation.skip_transpilation)
 
