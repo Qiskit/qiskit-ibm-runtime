@@ -106,8 +106,8 @@ class TestPrimitives(IBMTestCase):
                 options.transpilation.skip_transpilation = False
                 self.assertTrue(inst.options.transpilation.skip_transpilation)
 
-    @patch("qiskit_ibm_runtime.estimator.Session")
-    @patch("qiskit_ibm_runtime.sampler.Session")
+    @patch("qiskit_ibm_runtime.session.Session")
+    @patch("qiskit_ibm_runtime.session.QiskitRuntimeService")
     def test_default_session(self, *_):
         """Test a session is created if not passed in."""
         try:
@@ -128,7 +128,6 @@ class TestPrimitives(IBMTestCase):
         self.assertIsNotNone(estimator.session)
         self.assertTrue(estimator.session._active)
         self.assertNotEqual(estimator.session, sampler.session)
-            
 
     @patch("qiskit_ibm_runtime.session.Session")
     @patch("qiskit_ibm_runtime.session.QiskitRuntimeService")
@@ -153,15 +152,6 @@ class TestPrimitives(IBMTestCase):
             with self.subTest(primitive=cls):
                 inst = cls(session=backend)
                 self.assertEqual(inst.session.backend(), backend.name)
-
-    @patch("qiskit_ibm_runtime.session.Session")
-    @patch("qiskit_ibm_runtime.session.QiskitRuntimeService")
-    def test_default_session(self, *_):
-        """Test a session is created if not passed in."""
-        sampler = Sampler()
-        self.assertIsNotNone(sampler.session)
-        estimator = Estimator()
-        self.assertEqual(estimator.session, sampler.session)
 
     def test_default_session_context_manager(self):
         """Test getting default session within context manager."""

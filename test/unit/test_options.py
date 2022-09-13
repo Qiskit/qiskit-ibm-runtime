@@ -55,7 +55,7 @@ class TestOptions(IBMTestCase):
 
     def test_runtime_options(self):
         """Test converting runtime options."""
-        rt_options = RuntimeOptions(backend_name="foo", log_level="DEBUG")
+        rt_options = RuntimeOptions(backend="foo", log_level="DEBUG")
         options = Options._from_dict(asdict(rt_options))
 
         self.assertDictEqual(
