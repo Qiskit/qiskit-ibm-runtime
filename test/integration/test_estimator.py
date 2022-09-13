@@ -28,7 +28,7 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
     def test_estimator_session(self, service):
         """Verify if estimator primitive returns expected results"""
 
-        options = {"backend": "ibmq_qasm_simulator"}
+        backend = "ibmq_qasm_simulator"
 
         psi1 = RealAmplitudes(num_qubits=2, reps=2)
         psi2 = RealAmplitudes(num_qubits=2, reps=3)
@@ -38,8 +38,8 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
         H2 = SparsePauliOp.from_list([("IZ", 1)])
         H3 = SparsePauliOp.from_list([("ZI", 1), ("ZZ", 1)])
 
-        with Session(service) as session:
-            estimator = Estimator(session=session, options=options)
+        with Session(service, backend) as session:
+            estimator = Estimator(session=session)
             self.assertIsInstance(estimator, BaseEstimator)
 
             theta1 = [0, 1, 1, 2, 3, 5]

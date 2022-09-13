@@ -102,7 +102,7 @@ class IBMIntegrationTestCase(IBMTestCase):
             with suppress(Exception):
                 job.cancel()
             with suppress(Exception):
-                service.delete_job(job.job_id)
+                service.delete_job(job.job_id())
 
     def _upload_program(
         self,
@@ -214,6 +214,6 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
             callback=callback,
             start_session=start_session,
         )
-        self.log.info("Runtime job %s submitted.", job.job_id)
+        self.log.info("Runtime job %s submitted.", job.job_id())
         self.to_cancel[service.channel].append(job)
         return job

@@ -349,3 +349,10 @@ class RefreshQueue(Queue):
         """Wake up all threads waiting for items on the queued."""
         with self.condition:
             self.condition.notifyAll()
+
+
+class CallableStr(str):
+    """A callable string."""
+
+    def __call__(self) -> str:
+        return self

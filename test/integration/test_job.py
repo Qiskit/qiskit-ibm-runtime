@@ -65,7 +65,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
             self.skipTest("Not supported on ibm_quantum")
 
         job = self._run_program(service, backend="")
-        self.assertTrue(job.backend, f"Job {job.job_id} has no backend.")
+        self.assertTrue(job.backend(), f"Job {job.job_id()} has no backend.")
 
     @run_integration_test
     def test_run_program_log_level(self, service):
@@ -87,10 +87,10 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         """Test a failed program execution."""
         job = self._run_program(service, inputs={})
         job.wait_for_final_state()
-        job_result_raw = service._api_client.job_results(job.job_id)
+        job_result_raw = service._api_client.job_results(job.job_id())
         self.assertEqual(JobStatus.ERROR, job.status())
         self.assertIn(
-            API_TO_JOB_ERROR_MESSAGE["FAILED"].format(job.job_id, job_result_raw),
+            API_TO_JOB_ERROR_MESSAGE["FAILED"].format(job.job_id(), job_result_raw),
             job.error_message(),
         )
         with self.assertRaises(RuntimeJobFailureError) as err_cm:
@@ -108,11 +108,11 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         job = self._run_program(service, program_id=program_id, inputs=inputs)
 
         job.wait_for_final_state()
-        job_result_raw = service._api_client.job_results(job.job_id)
+        job_result_raw = service._api_client.job_results(job.job_id())
         self.assertEqual(JobStatus.ERROR, job.status())
         self.assertIn(
             API_TO_JOB_ERROR_MESSAGE["CANCELLED - RAN TOO LONG"].format(
-                job.job_id, job_result_raw
+                job.job_id(), job_result_raw
             ),
             job.error_message(),
         )
@@ -132,7 +132,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         )
         job.wait_for_final_state()
         self.assertEqual(
-            job._api_client.job_get(job.job_id)["cost"], job_max_execution_time
+            job._api_client.job_get(job.job_id())["cost"], job_max_execution_time
         )
 
     @run_integration_test
@@ -140,13 +140,6 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         """Test that program fails when max_execution_time is less than 300."""
         with self.assertRaises(IBMRuntimeError):
             self._run_program(service, max_execution_time=299)
-
-    @run_integration_test
-    def test_run_program_failed_invalid_execution_time(self, service):
-        """Test a program that failed with an invalid execution time."""
-        program_id = self._upload_program(service)
-        with self.assertRaises(IBMRuntimeError):
-            self._run_program(service, program_id=program_id, max_execution_time=5000)
 
     @run_integration_test
     def test_cancel_job_queued(self, service):
@@ -158,7 +151,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         if not cancel_job_safe(job, self.log):
             return
         time.sleep(10)  # Wait a bit for DB to update.
-        rjob = service.job(job.job_id)
+        rjob = service.job(job.job_id())
         self.assertEqual(rjob.status(), JobStatus.CANCELLED)
 
     @run_integration_test
@@ -169,7 +162,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         if not cancel_job_safe(job, self.log):
             return
         time.sleep(10)  # Wait a bit for DB to update.
-        rjob = service.job(job.job_id)
+        rjob = service.job(job.job_id())
         self.assertEqual(rjob.status(), JobStatus.CANCELLED)
 
     @run_integration_test
@@ -188,9 +181,9 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
             with self.subTest(status=status):
                 job = self._run_program(service, iterations=2)
                 wait_for_status(job, status)
-                service.delete_job(job.job_id)
+                service.delete_job(job.job_id())
                 with self.assertRaises(RuntimeJobNotFound):
-                    service.job(job.job_id)
+                    service.job(job.job_id())
 
     @run_integration_test
     def test_delete_job_queued(self, service):
@@ -199,9 +192,9 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         _ = self._run_program(service, iterations=10, backend=real_device)
         job = self._run_program(service, iterations=2, backend=real_device)
         wait_for_status(job, JobStatus.QUEUED)
-        service.delete_job(job.job_id)
+        service.delete_job(job.job_id())
         with self.assertRaises(RuntimeJobNotFound):
-            service.job(job.job_id)
+            service.job(job.job_id())
 
     @run_integration_test
     def test_final_result(self, service):
@@ -211,7 +204,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         result = job.result(decoder=SerializableClassDecoder)
         self.assertEqual(final_result, result)
 
-        rresults = service.job(job.job_id).result(decoder=SerializableClassDecoder)
+        rresults = service.job(job.job_id()).result(decoder=SerializableClassDecoder)
         self.assertEqual(final_result, rresults)
 
     @run_integration_test
@@ -228,7 +221,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         inputs = {"iterations": 1, "interim_results": interim_results}
         job = self._run_program(service, inputs=inputs)
         self.assertEqual(inputs, job.inputs)
-        rjob = service.job(job.job_id)
+        rjob = service.job(job.job_id())
         rinterim_results = rjob.inputs["interim_results"]
         self._assert_complex_types_equal(interim_results, rinterim_results)
 
@@ -236,7 +229,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     def test_job_backend(self, service):
         """Test job backend."""
         job = self._run_program(service)
-        self.assertEqual(self.sim_backends[service.channel], job.backend.name)
+        self.assertEqual(self.sim_backends[service.channel], job.backend().name)
 
     @run_integration_test
     def test_job_program_id(self, service):
@@ -266,7 +259,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         """Test job creation date."""
         job = self._run_program(service, iterations=1)
         self.assertTrue(job.creation_date)
-        rjob = service.job(job.job_id)
+        rjob = service.job(job.job_id())
         self.assertTrue(rjob.creation_date)
         rjobs = service.jobs(limit=2)
         for rjob in rjobs:
@@ -284,14 +277,14 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         self.assertIn("this is a stderr message", job_logs)
 
     @run_integration_test
-    def test_job_metadata(self, service):
-        """Test job metadata."""
+    def test_job_metrics(self, service):
+        """Test job metrics."""
         job = self._run_program(service)
         job.wait_for_final_state()
-        metadata = job.metadata()
-        self.assertTrue(metadata)
-        self.assertIn("timestamps", metadata)
-        self.assertIn("qiskit_version", metadata)
+        metrics = job.metrics()
+        self.assertTrue(metrics)
+        self.assertIn("timestamps", metrics)
+        self.assertIn("qiskit_version", metrics)
 
     def _assert_complex_types_equal(self, expected, received):
         """Verify the received data in complex types is expected."""

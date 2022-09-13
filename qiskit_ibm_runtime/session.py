@@ -20,6 +20,7 @@ from qiskit_ibm_runtime import QiskitRuntimeService
 from .runtime_job import RuntimeJob
 from .runtime_program import ParameterNamespace
 from .program.result_decoder import ResultDecoder
+from .ibm_backend import IBMBackend
 from .utils.converters import hms_to_seconds
 
 
@@ -38,27 +39,33 @@ def _active_session(func):  # type: ignore
 class Session:
     """Class for creating a flexible Qiskit Runtime session.
 
-    The ``Session`` class allows you to open a "session" with the Qiskit Runtime service.
-    Jobs submitted during a session get prioritized scheduling. This class allows
-    you to submit jobs to one or more of the primitives.
+    A Qiskit Runtime ``session`` allows you to group a collection of iterative calls to
+    the quantum computer. A session is started when the first job within the session
+    is started. Subsequent jobs within the session are prioritized by the scheduler.
+    Data used within a session, such as transpiled circuits, is also cached to avoid
+    unnecessary overhead.
+
+    You can open a Qiskit Runtime session using this ``Session`` class and submit jobs
+    to one or more primitives.
 
     For example::
 
         from qiskit.test.reference_circuits import ReferenceCircuits
         from qiskit_ibm_runtime import Sampler, Session, Options
 
-        options = Options(backend="ibmq_qasm_simulator", optimization_level=3)
+        options = Options(optimization_level=3)
 
-        with Session() as session:
+        with Session(backend="ibmq_qasm_simulator") as session:
             sampler = Sampler(session=session, options=options)
             job = sampler.run(circ)
-            print(f"Sampler job ID: {job.job_id}")
+            print(f"Sampler job ID: {job.job_id()}")
             print(f"Sampler job result:" {job.result()})
     """
 
     def __init__(
         self,
         service: Optional[QiskitRuntimeService] = None,
+        backend: Optional[Union[str, IBMBackend]] = None,
         max_time: Optional[Union[int, str]] = None,
     ):
         """Session constructor.
@@ -67,12 +74,25 @@ class Session:
             service: Optional instance of the ``QiskitRuntimeService`` class,
                 defaults to ``QiskitRuntimeService()`` which tries to initialize
                 your default saved account.
+            backend: Optional instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
+                string name of backend. If not specified, a backend will be selected
+                automatically (IBM Cloud channel only).
             max_time: (EXPERIMENTAL setting, can break between releases without warning)
                 Maximum amount of time, a runtime session can be open before being
                 forcibly closed. Can be specified as seconds (int) or a string like "2h 30m 40s".
+
+        Raises:
+            ValueError: If an input value is invalid.
         """
 
         self._service = service or QiskitRuntimeService()
+
+        if self._service.channel == "ibm_quantum" and not backend:
+            raise ValueError('"backend" is required for ``ibm_quantum`` channel.')
+        if isinstance(backend, IBMBackend):
+            backend = backend.name
+        self._backend = backend
+
         self._session_id: Optional[str] = None
         self._active = True
 
@@ -98,7 +118,6 @@ class Session:
                 to the runtime program.
             options: Runtime options that control the execution environment.
 
-                * backend: target backend to run on. This is required for ``ibm_quantum`` runtime.
                 * image: the runtime image used to execute the program, specified in
                   the form of ``image_name:tag``. Not all accounts are
                   authorized to select a different image.
@@ -114,6 +133,8 @@ class Session:
 
         # TODO: Do we really need to specify a None max time if session has started?
         max_time = self._max_time if not self._session_id else None
+        options = options or {}
+        options["backend"] = self._backend
 
         job = self._service.run(
             program_id=program_id,
@@ -126,7 +147,10 @@ class Session:
         )
 
         if self._session_id is None:
-            self._session_id = job.job_id
+            self._session_id = job.job_id()
+
+        if self._backend is None:
+            self._backend = job.backend().name
 
         return job
 
@@ -135,6 +159,14 @@ class Session:
         self._active = False
         if self._session_id:
             self._service._api_client.close_session(self._session_id)
+
+    def backend(self) -> Optional[str]:
+        """Return backend for this session.
+
+        Returns:
+            Backend for this session. None if unknown.
+        """
+        return self._backend
 
     @property
     def session_id(self) -> str:
@@ -155,6 +187,7 @@ class Session:
         return self._service
 
     def __enter__(self) -> "Session":
+        set_cm_session(self)
         return self
 
     def __exit__(
@@ -163,8 +196,53 @@ class Session:
         exc_val: Optional[BaseException],
         exc_tb: Optional[TracebackType],
     ) -> None:
+        set_cm_session(None)
         self.close()
 
 
 # Default session
 _DEFAULT_SESSION: Optional[Session] = None
+_IN_SESSION_CM = False
+
+
+def set_cm_session(session: Optional[Session]) -> None:
+    """Set the context manager session."""
+    global _DEFAULT_SESSION  # pylint: disable=global-statement
+    global _IN_SESSION_CM  # pylint: disable=global-statement
+    _DEFAULT_SESSION = session
+    _IN_SESSION_CM = session is not None
+
+
+def get_default_session(
+    service: Optional[QiskitRuntimeService] = None,
+    backend: Optional[Union[str, IBMBackend]] = None,
+) -> Session:
+    """Return the default session.
+
+    Args:
+        service: Service to use to create a default session.
+        backend: Backend for the default session.
+    """
+    backend_name = backend.name if isinstance(backend, IBMBackend) else backend
+
+    global _DEFAULT_SESSION  # pylint: disable=global-statement
+    session = _DEFAULT_SESSION
+    if (  # pylint: disable=too-many-boolean-expressions
+        _DEFAULT_SESSION is None
+        or not _DEFAULT_SESSION._active
+        or (backend_name is not None and _DEFAULT_SESSION._backend != backend_name)
+        or (service is not None and _DEFAULT_SESSION.service.channel != service.channel)
+    ):
+        # Create a new session if one doesn't exist, or if the user wants to switch backend/channel.
+        if _DEFAULT_SESSION and not _IN_SESSION_CM and _DEFAULT_SESSION._active:
+            _DEFAULT_SESSION.close()
+        if service is None:
+            service = (
+                backend.service
+                if isinstance(backend, IBMBackend)
+                else QiskitRuntimeService()
+            )
+        session = Session(service=service, backend=backend)
+        if not _IN_SESSION_CM:
+            _DEFAULT_SESSION = session
+    return session
