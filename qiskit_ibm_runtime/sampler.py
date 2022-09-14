@@ -285,10 +285,8 @@ class Sampler(BaseSampler):
             inputs=inputs,
             options=Options._get_runtime_options(combined),
         ).result()
-        return SamplerResult(
-            quasi_dists=raw_result.quasi_dists,
-            metadata=raw_result.metadata,
-        )
+
+        return raw_result
 
     @deprecate_function(
         deprecated="close",
