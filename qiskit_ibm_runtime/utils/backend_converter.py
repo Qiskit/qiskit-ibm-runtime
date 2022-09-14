@@ -131,6 +131,10 @@ def convert_to_target(
                             target[inst][(qubit,)].calibration = sched
                     else:
                         target[inst][qarg].calibration = sched
+    if "delay" not in target:
+        target.add_instruction(
+            Delay(Parameter("t")), {(bit,): None for bit in range(target.num_qubits)}
+        )
     return target
 
 
