@@ -18,6 +18,7 @@ from qiskit.transpiler.target import Target, InstructionProperties
 from qiskit.utils.units import apply_prefix
 from qiskit.circuit.library.standard_gates import IGate, SXGate, XGate, CXGate, RZGate
 from qiskit.circuit.parameter import Parameter
+from qiskit.circuit.delay import Delay
 from qiskit.circuit.gate import Gate
 from qiskit.circuit.measure import Measure
 from qiskit.circuit.reset import Reset
