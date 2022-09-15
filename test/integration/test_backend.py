@@ -12,6 +12,7 @@
 
 """Tests for backend functions using real runtime service."""
 
+import os
 from unittest import SkipTest
 
 from qiskit.transpiler.target import Target
@@ -141,7 +142,11 @@ class TestIBMBackend(IBMIntegrationTestCase):
             raise SkipTest(
                 "Skip since cloud account does not have circuit-runner program."
             )
-        job = self.backend.run(ReferenceCircuits.bell(), shots=10)
+        if os.environ.get("QISKIT_IBM_USE_STAGING_CREDENTIALS", ""):
+            backend = self.dependencies.service.backend("ibmq_qasm_simulator")
+            backend.run(ReferenceCircuits.bell(), shots=10)
+        else:
+            job = self.backend.run(ReferenceCircuits.bell(), shots=10)
         job.wait_for_final_state()
         result = job.result()
         self.assertTrue(result)
