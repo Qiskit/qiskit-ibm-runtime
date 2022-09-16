@@ -199,7 +199,6 @@ Classes
    RuntimeOptions
    RuntimeEncoder
    RuntimeDecoder
-   RunnerResult
 """
 
 import logging
@@ -219,7 +218,6 @@ from .version import __version__
 from .estimator import Estimator
 from .sampler import Sampler
 from .options import Options
-from .runner_result import RunnerResult
 
 # TODO remove when terra code is released
 from .qiskit.primitives import (
