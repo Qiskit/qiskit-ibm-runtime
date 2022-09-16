@@ -47,7 +47,7 @@ class TestSession(IBMTestCase):
         backend = MagicMock(spec=IBMBackend)
         backend.name = "ibm_gotham"
         session = Session(service=MagicMock(), backend=backend)
-        self.assertEqual(session.backend, "ibm_gotham")
+        self.assertEqual(session.backend(), "ibm_gotham")
 
     def test_max_time(self):
         """Test max time."""
@@ -74,7 +74,7 @@ class TestSession(IBMTestCase):
     def test_run(self):
         """Test the run method."""
         job = MagicMock()
-        job.job_id = "12345"
+        job.job_id.return_value = "12345"
         service = MagicMock()
         service.run.return_value = job
         backend = "ibm_gotham"
@@ -84,7 +84,7 @@ class TestSession(IBMTestCase):
         decoder = MagicMock()
         max_time = 42
         session = Session(service=service, backend=backend, max_time=max_time)
-        session_ids = [None, job.job_id]
+        session_ids = [None, job.job_id()]
         start_sessions = [True, False]
 
         for idx in range(2):
@@ -101,8 +101,8 @@ class TestSession(IBMTestCase):
             self.assertEqual(kwargs["session_id"], session_ids[idx])
             self.assertEqual(kwargs["start_session"], start_sessions[idx])
             self.assertEqual(kwargs["result_decoder"], decoder)
-            self.assertEqual(session.session_id, job.job_id)
-            self.assertEqual(session.backend, backend)
+            self.assertEqual(session.session_id, job.job_id())
+            self.assertEqual(session.backend(), backend)
 
     def test_close_without_run(self):
         """Test closing without run."""
@@ -122,14 +122,14 @@ class TestSession(IBMTestCase):
     def test_default_backend(self):
         """Test default backend set."""
         job = MagicMock()
-        job.backend.name = "ibm_gotham"
+        job.backend().name = "ibm_gotham"
         service = MagicMock()
         service.run.return_value = job
         service.channel = "ibm_cloud"
 
         session = Session(service=service)
         session.run(program_id="foo", inputs={})
-        self.assertEqual(session.backend, "ibm_gotham")
+        self.assertEqual(session.backend(), "ibm_gotham")
 
     def test_opening_default_session(self):
         """Test opening default session."""
@@ -138,7 +138,7 @@ class TestSession(IBMTestCase):
         session = get_default_session(service=service, backend=backend)
         self.assertIsInstance(session, Session)
         self.assertEqual(session.service, service)
-        self.assertEqual(session.backend, backend)
+        self.assertEqual(session.backend(), backend)
 
         session2 = get_default_session(service=service, backend=backend)
         self.assertEqual(session, session2)
@@ -153,7 +153,7 @@ class TestSession(IBMTestCase):
         session2 = get_default_session(service=service, backend=backend)
         self.assertNotEqual(session, session2)
         self.assertEqual(session2.service, service)
-        self.assertEqual(session2.backend, backend)
+        self.assertEqual(session2.backend(), backend)
 
     def test_default_session_different_backend(self):
         """Test default session backend change."""
@@ -162,7 +162,7 @@ class TestSession(IBMTestCase):
         session2 = get_default_session(service=service, backend="ibm_metropolis")
         self.assertNotEqual(session, session2)
         self.assertFalse(session._active)
-        self.assertEqual(session2.backend, "ibm_metropolis")
+        self.assertEqual(session2.backend(), "ibm_metropolis")
         self.assertTrue(session2._active)
 
     def test_default_session_different_service(self):
@@ -181,7 +181,7 @@ class TestSession(IBMTestCase):
         backend = "ibm_gotham"
         session = get_default_session(backend=backend)
         self.assertIsInstance(session, Session)
-        self.assertEqual(session.backend, backend)
+        self.assertEqual(session.backend(), backend)
         mock_service.assert_called_once()
 
     def test_default_session_backend_service(self):

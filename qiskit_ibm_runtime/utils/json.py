@@ -46,6 +46,7 @@ from qiskit.circuit import (
     QuantumRegister,
 )
 from qiskit.circuit.library import BlueprintCircuit
+from qiskit.circuit.parametertable import ParameterView
 from qiskit.result import Result
 from qiskit.version import __version__ as _terra_version_string
 
@@ -233,6 +234,8 @@ class RuntimeEncoder(json.JSONEncoder):
                 compress=False,
             )
             return {"__type__": "ParameterExpression", "__value__": value}
+        if isinstance(obj, ParameterView):
+            return obj.data
         if isinstance(obj, Instruction):
             # Append instruction to empty circuit
             quantum_register = QuantumRegister(obj.num_qubits)

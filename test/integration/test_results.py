@@ -36,7 +36,7 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
             if "iteration" in result:
                 final_it = result["iteration"]
             nonlocal callback_err
-            if job_id != job.job_id:
+            if job_id != job.job_id():
                 callback_err.append(f"Unexpected job ID: {job_id}")
             if "interim_results" in result and result["interim_results"] != int_res:
                 callback_err.append(f"Unexpected interim result: {result}")
@@ -67,7 +67,7 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
             if "iteration" in result:
                 final_it = result["iteration"]
             nonlocal callback_err
-            if job_id != job.job_id:
+            if job_id != job.job_id():
                 callback_err.append(f"Unexpected job ID: {job_id}")
             if "interim_results" in result and result["interim_results"] != int_res:
                 callback_err.append(f"Unexpected interim result: {result}")
@@ -98,7 +98,7 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
             if "iteration" in result:
                 final_it = result["iteration"]
             nonlocal callback_err
-            if job_id != job.job_id:
+            if job_id != job.job_id():
                 callback_err.append(f"Unexpected job ID: {job_id}")
             if "interim_results" in result and result["interim_results"] != int_res:
                 callback_err.append(f"Unexpected interim result: {result}")

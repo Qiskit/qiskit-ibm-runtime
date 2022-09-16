@@ -59,7 +59,7 @@ Run the Hello World program to ensure that your environment is set up properly:
                     options=options,
                     inputs=program_inputs
                     )
-    print(f"job id: {job.job_id}")
+    print(f"job id: {job.job_id()}")
     result = job.result()
     print(result)
 
