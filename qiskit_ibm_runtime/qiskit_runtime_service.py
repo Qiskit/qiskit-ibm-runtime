@@ -486,7 +486,7 @@ class QiskitRuntimeService(Provider):
                 return hgp
 
         raise QiskitBackendNotFoundError(
-            f"Backend {backend_name} cannot be found in any"
+            f"Backend {backend_name} cannot be found in any "
             f"hub/group/project for this account."
         )
 
