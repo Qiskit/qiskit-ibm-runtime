@@ -12,6 +12,7 @@
 
 """Integration tests for Sampler primitive."""
 
+from math import sqrt
 from qiskit.circuit import QuantumCircuit, Gate
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.test.reference_circuits import ReferenceCircuits
@@ -133,9 +134,14 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
         with Session(service, self.backend) as session:
             sampler = Sampler(session=session)
             sampler.options.optimization_level = 3
-            result = sampler.run(self.bell).result()
-            self.assertAlmostEqual(result.quasi_dists[0]["11"], 0.5, delta=0.05)
-            self.assertAlmostEqual(result.quasi_dists[0]["00"], 0.5, delta=0.05)
+            shots = 1000
+            result = sampler.run(self.bell, shots=shots).result()
+            self.assertEqual(result.quasi_dists[0].shots, shots)
+            self.assertAlmostEqual(
+                result.quasi_dists[0]._stddev_upper_bound, sqrt(1 / shots), delta=0.05
+            )
+            self.assertAlmostEqual(result.quasi_dists[0][3], 0.5, delta=0.05)
+            self.assertAlmostEqual(result.quasi_dists[0][0], 0.5, delta=0.05)
 
     @run_integration_test
     def test_sampler_primitive_as_session(self, service):
