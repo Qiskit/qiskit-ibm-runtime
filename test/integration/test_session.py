@@ -34,15 +34,14 @@ class TestIntegrationSession(IBMIntegrationTestCase):
     @run_integration_test
     def test_estimator_sampler(self, service):
         """Test calling both estimator and sampler."""
-        options = {"backend": "ibmq_qasm_simulator"}
 
         psi1 = RealAmplitudes(num_qubits=2, reps=2)
         # pylint: disable=invalid-name
         H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
         theta1 = [0, 1, 1, 2, 3, 5]
 
-        with Session(service) as session:
-            estimator = Estimator(session=session, options=options)
+        with Session(service, backend="ibmq_qasm_simulator") as session:
+            estimator = Estimator(session=session)
             result = estimator.run(
                 circuits=[psi1], observables=[H1], parameter_values=[theta1], shots=100
             ).result()
@@ -51,14 +50,14 @@ class TestIntegrationSession(IBMIntegrationTestCase):
             self.assertEqual(len(result.metadata), 1)
             self.assertEqual(result.metadata[0]["shots"], 100)
 
-            sampler = Sampler(session=session, options=options)
+            sampler = Sampler(session=session)
             result = sampler.run(circuits=ReferenceCircuits.bell(), shots=200).result()
             self.assertIsInstance(result, SamplerResult)
             self.assertEqual(len(result.quasi_dists), 1)
             self.assertEqual(len(result.metadata), 1)
             self.assertEqual(result.metadata[0]["shots"], 200)
-            self.assertAlmostEqual(result.quasi_dists[0]["11"], 0.5, delta=0.05)
-            self.assertAlmostEqual(result.quasi_dists[0]["00"], 0.5, delta=0.05)
+            self.assertAlmostEqual(result.quasi_dists[0][3], 0.5, delta=0.05)
+            self.assertAlmostEqual(result.quasi_dists[0][0], 0.5, delta=0.05)
 
             result = estimator.run(
                 circuits=[psi1], observables=[H1], parameter_values=[theta1], shots=300
@@ -73,5 +72,5 @@ class TestIntegrationSession(IBMIntegrationTestCase):
             self.assertEqual(len(result.quasi_dists), 1)
             self.assertEqual(len(result.metadata), 1)
             self.assertEqual(result.metadata[0]["shots"], 400)
-            self.assertAlmostEqual(result.quasi_dists[0]["11"], 0.5, delta=0.05)
-            self.assertAlmostEqual(result.quasi_dists[0]["00"], 0.5, delta=0.05)
+            self.assertAlmostEqual(result.quasi_dists[0][3], 0.5, delta=0.05)
+            self.assertAlmostEqual(result.quasi_dists[0][0], 0.5, delta=0.05)
