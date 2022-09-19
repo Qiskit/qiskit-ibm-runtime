@@ -20,6 +20,7 @@ from .utils.deprecation import issue_deprecation_msg
 
 
 class OptionsNamespace(SimpleNamespace):
+    """A SimpleNamespace for options classes."""
 
     def to_dict(self) -> Dict:
         """Convert the class to a dictionary.
@@ -59,7 +60,8 @@ class Transpilation(OptionsNamespace):
             approximation_degree=approximation_degree,
             timing_constraints=timing_constraints,
             seed_transpiler=seed_transpiler,
-            **kwargs)
+            **kwargs,
+        )
 
 
 class Resilience(OptionsNamespace):
@@ -135,21 +137,18 @@ class Execution(OptionsNamespace):
             meas_lo_freq=meas_lo_freq,
             rep_delay=rep_delay,
             init_qubits=init_qubits,
-            **kwargs)
+            **kwargs,
+        )
+
 
 class Environment(OptionsNamespace):
     """Environmental options."""
 
     def __init__(
-        self,
-        log_level: str = "WARNING",
-        image: Optional[str] = None,
-        **kwargs: Any
+        self, log_level: str = "WARNING", image: Optional[str] = None, **kwargs: Any
     ) -> None:
-        super().__init__(
-            log_level=log_level,
-            image=image,
-            **kwargs)
+        super().__init__(log_level=log_level, image=image, **kwargs)
+
 
 class Options(OptionsNamespace):
     """Options for the primitive programs.
@@ -263,7 +262,8 @@ class Options(OptionsNamespace):
             transpilation=transpilation or Transpilation(),
             execution=execution or Execution(),
             environment=environment or Environment(),
-            **kwargs)
+            **kwargs,
+        )
 
     def _merge_options(self, new_options: Optional[Dict] = None) -> Dict:
         """Merge current options with the new ones.
@@ -284,22 +284,25 @@ class Options(OptionsNamespace):
                 if isinstance(val, Dict):
                     _update_options(val, new)
 
-        # First combine options.
         combined = copy.deepcopy(self.to_dict())
+        # First update values of the same key.
         _update_options(combined, new_options)
+        # Add new keys.
+        for key, val in new_options.items():
+            if key not in combined:
+                combined[key] = val
         return combined
 
     @classmethod
     def _from_dict(cls, data: Dict) -> "Options":
         data = copy.copy(data)
-        environment = Environment()
         if "image" in data.keys():
             issue_deprecation_msg(
                 msg="The 'image' option has been moved to the 'environment' category",
                 version="0.7",
                 remedy="Please specify 'environment':{'image': image} instead.",
             )
-            environment.image = data.pop("image")
+        environment = Environment(image=data.pop("image", None))
         transp = Transpilation(**data.pop("transpilation", {}))
         execution = Execution(**data.pop("execution", {}))
         return cls(
@@ -323,6 +326,18 @@ class Options(OptionsNamespace):
         )
         inputs["resilience_settings"] = {"level": options.get("resilience_level")}
         inputs["run_options"] = options.get("execution")
+
+        known_keys = [
+            "optimization_level",
+            "resilience_level",
+            "transpilation",
+            "execution",
+            "environment",
+        ]
+        # Add additional unknown keys.
+        for key in options.keys():
+            if key not in known_keys:
+                inputs[key] = options[key]
         return inputs
 
     @staticmethod

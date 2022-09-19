@@ -220,7 +220,34 @@ class TestPrimitives(IBMTestCase):
 
     def test_kwarg_options(self):
         """Test specifying arbitrary options."""
-        pass
+        session = MagicMock(spec=Session)
+        primitives = [Sampler, Estimator]
+        for cls in primitives:
+            with self.subTest(primitive=cls):
+                options = Options(foo="foo")
+                inst = cls(session=session, options=options)
+                inst.run(self.qx, observables=self.obs)
+                if sys.version_info >= (3, 8):
+                    inputs = session.run.call_args.kwargs["inputs"]
+                else:
+                    _, kwargs = session.run.call_args
+                    inputs = kwargs["inputs"]
+                self.assertEqual(inputs.get("foo"), "foo")
+
+    def test_run_kwarg_options(self):
+        """Test specifying arbitrary options in run."""
+        session = MagicMock(spec=Session)
+        primitives = [Sampler, Estimator]
+        for cls in primitives:
+            with self.subTest(primitive=cls):
+                inst = cls(session=session)
+                inst.run(self.qx, observables=self.obs, foo="foo")
+                if sys.version_info >= (3, 8):
+                    inputs = session.run.call_args.kwargs["inputs"]
+                else:
+                    _, kwargs = session.run.call_args
+                    inputs = kwargs["inputs"]
+                self.assertEqual(inputs.get("foo"), "foo")
 
     def _update_dict(self, dict1, dict2):
         for key, val in dict1.items():
