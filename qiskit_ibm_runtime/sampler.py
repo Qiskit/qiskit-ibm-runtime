@@ -13,19 +13,17 @@
 """Sampler primitive."""
 
 from __future__ import annotations
-from math import sqrt
 from typing import Dict, Iterable, Optional, Sequence, Any, Union
 import copy
 
 from qiskit.circuit import QuantumCircuit, Parameter
 from qiskit.circuit.parametertable import ParameterView
-from qiskit.result import QuasiDistribution
 
 # TODO import BaseSampler and SamplerResult from terra once released
 from .qiskit.primitives import BaseSampler, SamplerResult
 from .qiskit_runtime_service import QiskitRuntimeService
 from .options import Options
-from .program.result_decoder import ResultDecoder
+from .utils.sampler_result_decoder import SamplerResultDecoder
 from .runtime_job import RuntimeJob
 from .ibm_backend import IBMBackend
 from .session import get_default_session
@@ -288,10 +286,7 @@ class Sampler(BaseSampler):
             options=Options._get_runtime_options(combined),
         ).result()
 
-        return SamplerResult(
-            quasi_dists=raw_result["quasi_dists"],
-            metadata=raw_result["metadata"],
-        )
+        return raw_result
 
     @deprecate_function(
         deprecated="close",
@@ -310,30 +305,3 @@ class Sampler(BaseSampler):
             Session used by this primitive.
         """
         return self._session
-
-
-class SamplerResultDecoder(ResultDecoder):
-    """Class used to decode sampler results."""
-
-    @classmethod
-    def decode(cls, raw_result: str) -> SamplerResult:
-        """Convert the result to SamplerResult."""
-        decoded: Dict = super().decode(raw_result)
-        quasi_dists = []
-        for quasi, meta in zip(decoded["quasi_dists"], decoded["metadata"]):
-            shots = meta.get("shots", float("inf"))
-            overhead = meta.get("readout_mitigation_overhead", 1.0)
-
-            # M3 mitigation overhead is gamma^2
-            # https://github.com/Qiskit-Partners/mthree/blob/423d7e83a12491c59c9f58af46b75891bc622949/mthree/mitigation.py#L457
-            #
-            # QuasiDistribution stddev_upper_bound is gamma / sqrt(shots)
-            # https://github.com/Qiskit/qiskit-terra/blob/ff267b5de8b83aef86e2c9ac6c7f918f58500505/qiskit/result/mitigation/local_readout_mitigator.py#L288
-            stddev = sqrt(overhead / shots)
-            quasi_dists.append(
-                QuasiDistribution(quasi, shots=shots, stddev_upper_bound=stddev)
-            )
-        return SamplerResult(
-            quasi_dists=quasi_dists,
-            metadata=decoded["metadata"],
-        )
