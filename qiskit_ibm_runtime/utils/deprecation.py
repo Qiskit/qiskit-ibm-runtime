@@ -59,7 +59,7 @@ def deprecate_arguments(
         stacklevel: The warning stackevel to use.
     """
     issue_deprecation_msg(
-        f"The {deprecated} keyword arguments are deprecated",
+        f"The '{deprecated}' keyword arguments are deprecated",
         version,
         remedy,
         stacklevel + 1,

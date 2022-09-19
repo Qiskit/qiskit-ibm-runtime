@@ -30,7 +30,11 @@ from .qiskit.primitives import BaseEstimator, EstimatorResult
 from .qiskit_runtime_service import QiskitRuntimeService
 from .program.result_decoder import ResultDecoder
 from .runtime_job import RuntimeJob
-from .utils.deprecation import deprecate_arguments, issue_deprecation_msg
+from .utils.deprecation import (
+    deprecate_arguments,
+    issue_deprecation_msg,
+    deprecate_function,
+)
 from .ibm_backend import IBMBackend
 from .session import get_default_session
 from .options import Options
@@ -115,11 +119,16 @@ class Estimator(BaseEstimator):
                 defaults to `QiskitRuntimeService()` which tries to initialize your default
                 saved account.
 
-            session: Session in which to call the primitive. If an instance of
-                :class:`qiskit_ibm_runtime.IBMBackend` class or
-                string name of a backend is specified, a new session is created for
-                that backend. If ``None``, a new session is created using the default
-                saved account and a default backend (IBM Cloud channel only).
+            session: Session in which to call the primitive.
+
+                * If an instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
+                  string name of a backend is specified, a new session is created for
+                  that backend, unless a default session for the same backend
+                  and channel already exists.
+
+                * If ``None``, a new session is created using the default saved
+                  account and a default backend (IBM Cloud channel only), unless
+                  a default session already exists.
 
             options: Primitive options, see :class:`Options` for detailed description.
                 The ``backend`` keyword is still supported but is deprecated.
@@ -203,6 +212,7 @@ class Estimator(BaseEstimator):
 
         Returns:
             Submitted job.
+            The result of the job is an instance of :class:`qiskit.primitives.EstimatorResult`.
 
         Raises:
             QiskitError: Invalid arguments are given.
@@ -214,7 +224,7 @@ class Estimator(BaseEstimator):
         if (
             parameter_values is not None
             and len(parameter_values) > 1
-            and not isinstance(parameter_values[0], Sequence)
+            and not isinstance(parameter_values[0], (Sequence, Iterable))
         ):
             parameter_values = [parameter_values]  # type: ignore[assignment]
         if (
@@ -279,22 +289,6 @@ class Estimator(BaseEstimator):
             result_decoder=EstimatorResultDecoder,
         )
 
-    def __call__(
-        self,
-        circuits: Sequence[int],
-        observables: Sequence[int],
-        parameter_values: Optional[
-            Union[Sequence[float], Sequence[Sequence[float]]]
-        ] = None,
-        **run_options: Any,
-    ) -> EstimatorResult:
-        issue_deprecation_msg(
-            msg="Calling an Estimator instance directly has been deprecated ",
-            version="0.7",
-            remedy="Please use qiskit_ibm_runtime.Session and Estimator.run() instead.",
-        )
-        return super().__call__(circuits, observables, parameter_values, **run_options)
-
     def _call(
         self,
         circuits: Sequence[int],
@@ -344,6 +338,11 @@ class Estimator(BaseEstimator):
             result_decoder=EstimatorResultDecoder,
         ).result()
 
+    @deprecate_function(
+        deprecated="close",
+        version="0.7",
+        remedy="Use qiskit_ibm_runtime.Session.close() instead",
+    )
     def close(self) -> None:
         """Close the session and free resources"""
         self._session.close()
