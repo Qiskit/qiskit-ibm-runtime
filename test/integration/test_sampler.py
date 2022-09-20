@@ -166,21 +166,3 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
             self.assertIsInstance(result, SamplerResult)
             self.assertEqual(len(result.quasi_dists), len(circuits0))
             self.assertEqual(len(result.metadata), len(circuits0))
-
-    @run_integration_test
-    def test_sampler_raise_error(self, service):
-        """Test error check properly works."""
-        with Session(service, self.backend) as session:
-            sampler = Sampler(session=session)
-
-            with self.subTest("invalid input: int"):
-                with self.assertRaises(ValueError):
-                    _ = sampler.run(123)
-            with self.subTest("invalid input: list[int]"):
-                with self.assertRaises(ValueError):
-                    _ = sampler.run([123])
-
-            with self.subTest("no classical bits"):
-                circuit = QuantumCircuit(2)
-                with self.assertRaises(ValueError):
-                    _ = sampler.run(circuit)
