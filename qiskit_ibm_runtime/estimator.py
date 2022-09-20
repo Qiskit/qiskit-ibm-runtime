@@ -16,8 +16,8 @@ from __future__ import annotations
 import copy
 from typing import Iterable, Optional, Dict, Sequence, Any, Union
 
-import numpy as np
 from qiskit.circuit import QuantumCircuit, Parameter
+from qiskit.circuit.parametertable import ParameterView
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.opflow import PauliSumOp
 from qiskit.quantum_info.operators.base_operator import BaseOperator
@@ -27,9 +27,13 @@ from qiskit.quantum_info.operators.base_operator import BaseOperator
 # TODO import BaseEstimator and EstimatorResult from terra once released
 from .qiskit.primitives import BaseEstimator, EstimatorResult
 from .qiskit_runtime_service import QiskitRuntimeService
-from .program.result_decoder import ResultDecoder
+from .utils.estimator_result_decoder import EstimatorResultDecoder
 from .runtime_job import RuntimeJob
-from .utils.deprecation import deprecate_arguments, issue_deprecation_msg
+from .utils.deprecation import (
+    deprecate_arguments,
+    issue_deprecation_msg,
+    deprecate_function,
+)
 from .ibm_backend import IBMBackend
 from .session import get_default_session
 from .options import Options
@@ -114,11 +118,16 @@ class Estimator(BaseEstimator):
                 defaults to `QiskitRuntimeService()` which tries to initialize your default
                 saved account.
 
-            session: Session in which to call the primitive. If an instance of
-                :class:`qiskit_ibm_runtime.IBMBackend` class or
-                string name of a backend is specified, a new session is created for
-                that backend. If ``None``, a new session is created using the default
-                saved account and a default backend (IBM Cloud channel only).
+            session: Session in which to call the primitive.
+
+                * If an instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
+                  string name of a backend is specified, a new session is created for
+                  that backend, unless a default session for the same backend
+                  and channel already exists.
+
+                * If ``None``, a new session is created using the default saved
+                  account and a default backend (IBM Cloud channel only), unless
+                  a default session already exists.
 
             options: Primitive options, see :class:`Options` for detailed description.
                 The ``backend`` keyword is still supported but is deprecated.
@@ -132,13 +141,6 @@ class Estimator(BaseEstimator):
             parameters=parameters,
         )
 
-        # TODO: Remove deprecation warnings if done in base class
-        if circuits or parameters or observables:
-            deprecate_arguments(
-                "circuits, parameters, and observables",
-                "0.7",
-                f"You can instead specify these inputs using the {self.__class__.__name__}.run method.",
-            )
         if skip_transpilation:
             deprecate_arguments(
                 "skip_transpilation",
@@ -186,12 +188,65 @@ class Estimator(BaseEstimator):
 
     def run(
         self,
-        circuits: Union[QuantumCircuit, Sequence[QuantumCircuit]],
+        circuits: QuantumCircuit | Sequence[QuantumCircuit],
+        observables: BaseOperator | PauliSumOp | Sequence[BaseOperator | PauliSumOp],
+        parameter_values: Sequence[float] | Sequence[Sequence[float]] | None = None,
+        parameters: Sequence[Parameter] | Sequence[Sequence[Parameter]] | None = None,
+        **kwargs: Any,
+    ) -> RuntimeJob:
+        """Submit a request to the estimator primitive program.
+
+        Args:
+            circuits: a (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
+                a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
+
+            observables: Observable objects.
+
+            parameter_values: Concrete parameters to be bound.
+
+            parameters: Parameters of quantum circuits, specifying the order in which values
+                will be bound. Defaults to ``[circ.parameters for circ in circuits]``
+
+            **kwargs: Individual options to overwrite the default primitive options.
+
+        Returns:
+            Submitted job.
+            The result of the job is an instance of :class:`qiskit.primitives.EstimatorResult`.
+
+        Raises:
+            QiskitError: Invalid arguments are given.
+        """
+        if not isinstance(circuits, Sequence):
+            circuits = [circuits]
+        if not isinstance(observables, Sequence):
+            observables = [observables]
+        if (
+            parameter_values is not None
+            and len(parameter_values) > 1
+            and not isinstance(parameter_values[0], (Sequence, Iterable))
+        ):
+            parameter_values = [parameter_values]  # type: ignore[assignment]
+        if (
+            parameters is not None
+            and len(parameters) > 1
+            and not isinstance(parameters[0], Sequence)
+        ):
+            parameters = [parameters]
+
+        return super().run(
+            circuits=circuits,
+            observables=observables,
+            parameter_values=parameter_values,
+            parameters=parameters,
+            **kwargs,
+        )
+
+    def _run(
+        self,
+        circuits: Sequence[QuantumCircuit],
         observables: Sequence[BaseOperator | PauliSumOp],
-        parameter_values: Optional[
-            Union[Sequence[float], Sequence[Sequence[float]]]
-        ] = None,
-        parameters: Sequence[Sequence[Parameter]] | None = None,
+        parameter_values: Sequence[Sequence[float]],
+        parameters: list[ParameterView],
         **kwargs: Any,
     ) -> RuntimeJob:
         """Submit a request to the estimator primitive program.
@@ -213,29 +268,12 @@ class Estimator(BaseEstimator):
 
         Returns:
             Submitted job.
-
-        Raises:
-            ValueError: If the input values are invalid.
         """
-        if isinstance(circuits, Iterable) and not all(
-            isinstance(inst, QuantumCircuit) for inst in circuits
-        ):
-            raise ValueError(
-                "The circuits parameter has to be instances of QuantumCircuit."
-            )
-
-        circ_count = 1 if isinstance(circuits, QuantumCircuit) else len(circuits)
-        obs_count = (
-            1
-            if isinstance(observables, (BaseOperator, PauliSumOp))
-            else len(observables)
-        )
-
         inputs = {
             "circuits": circuits,
-            "circuit_indices": list(range(circ_count)),
+            "circuit_indices": list(range(len(circuits))),
             "observables": observables,
-            "observable_indices": list(range(obs_count)),
+            "observable_indices": list(range(len(observables))),
             "parameters": parameters,
             "parameter_values": parameter_values,
         }
@@ -249,22 +287,6 @@ class Estimator(BaseEstimator):
             options=Options._get_runtime_options(combined),
             result_decoder=EstimatorResultDecoder,
         )
-
-    def __call__(
-        self,
-        circuits: Sequence[int],
-        observables: Sequence[int],
-        parameter_values: Optional[
-            Union[Sequence[float], Sequence[Sequence[float]]]
-        ] = None,
-        **run_options: Any,
-    ) -> EstimatorResult:
-        issue_deprecation_msg(
-            msg="Calling an Estimator instance directly has been deprecated ",
-            version="0.7",
-            remedy="Please use qiskit_ibm_runtime.Session and Estimator.run() instead.",
-        )
-        return super().__call__(circuits, observables, parameter_values, **run_options)
 
     def _call(
         self,
@@ -315,6 +337,11 @@ class Estimator(BaseEstimator):
             result_decoder=EstimatorResultDecoder,
         ).result()
 
+    @deprecate_function(
+        deprecated="close",
+        version="0.7",
+        remedy="Use qiskit_ibm_runtime.Session.close() instead",
+    )
     def close(self) -> None:
         """Close the session and free resources"""
         self._session.close()
@@ -327,16 +354,3 @@ class Estimator(BaseEstimator):
             Session used by this primitive.
         """
         return self._session
-
-
-class EstimatorResultDecoder(ResultDecoder):
-    """Class used to decode estimator results"""
-
-    @classmethod
-    def decode(cls, raw_result: str) -> EstimatorResult:
-        """Convert the result to EstimatorResult."""
-        decoded: Dict = super().decode(raw_result)
-        return EstimatorResult(
-            values=np.asarray(decoded["values"]),
-            metadata=decoded["metadata"],
-        )

@@ -16,11 +16,6 @@ Using Qiskit Runtime, for example, a research team at IBM Quantum was able to ac
 up in their lithium hydride simulation. For more information, see the
 [IBM Research blog](https://research.ibm.com/blog/120x-quantum-speedup).
 
-Qiskit Runtime allows authorized users to upload quantum programs. A quantum program, also called a
-Qiskit runtime program, is a piece of Python code that takes certain inputs, performs
-quantum and classical computation, and returns the processing results. The users can then
-invoke these quantum programs by simply passing in the required input parameters.
-
 This module provides the interface to access Qiskit Runtime.
 
 ## Installation
@@ -84,6 +79,7 @@ Alternatively, the service can discover credentials from environment variables:
 ```bash
 export QISKIT_IBM_TOKEN="MY_IBM_CLOUD_API_KEY"
 export QISKIT_IBM_INSTANCE="MY_IBM_CLOUD_CRN"
+export QISKIT_IBM_CHANNEL="ibm_cloud"
 ```
 
 Then instantiate the service without any arguments:
@@ -92,7 +88,7 @@ from qiskit_ibm_runtime import QiskitRuntimeService
 service = QiskitRuntimeService()
 ```
 
-### Enabling Account for Current Session
+### Enabling Account for Current Python Session
 
 As another alternative, you can also enable an account just for the current session by instantiating the
 service with your credentials.
@@ -107,7 +103,81 @@ ibm_cloud_service = QiskitRuntimeService(channel="ibm_cloud", token="MY_IBM_CLOU
 ibm_quantum_service = QiskitRuntimeService(channel="ibm_quantum", token="MY_IBM_QUANTUM_TOKEN")
 ```
 
+## Qiskit Runtime Session
+
+A Qiskit Runtime **session** allows you to group a collection of iterative calls to the quantum computer. A session is started when the first job within the session is started. Subsequent jobs within the session are prioritized by the scheduler to minimize artificial delay within an iterative algorithm. Data used within a session, such as transpiled circuits, is also cached to avoid unnecessary overhead.
+
+You can use the [`qiskit_ibm_runtime.Session`](https://github.com/Qiskit/qiskit-ibm-runtime/blob/main/qiskit_ibm_runtime/session.py) class to start a
+session. You are encouraged to start a session as a context manager, to ensure the session is automatically closed upon exit. There are some examples in the sections below.
+
+## Primitives
+
+**Primitives** are prebuilt programs that provide a simplified interface for defining near-time quantum-classical workloads required to efficiently build and customize applications. The initial release of Qiskit Runtime includes two primitives: ``Estimator`` and ``Sampler``. They perform foundational quantum computing tasks and act as an entry point to the Qiskit Runtime service.
+
+There are several different options you can specify when calling the primitive programs. See [`qiskit_ibm_runtime.Options`](https://github.com/Qiskit/qiskit-ibm-runtime/blob/main/qiskit_ibm_runtime/options.py#L103) class for more information.
+
+### Sampler
+
+This is a program that takes a list of user circuits as an input and generates an error-mitigated readout of quasi-probabilities. This provides users a way to better evaluate shot results using error mitigation and enables them to more efficiently evaluate the possibility of multiple relevant data points in the context of destructive interference.
+
+To invoke the `Sampler` primitive within a session:
+
+```python
+from qiskit_ibm_runtime import QiskitRuntimeService, Session, Options, Sampler
+from qiskit import QuantumCircuit
+
+service = QiskitRuntimeService()
+options = Options(optimization_level=1)
+options.execution.shots = 1024  # Options can be set using auto-complete.
+
+bell = QuantumCircuit(2)
+bell.h(0)
+bell.cx(0, 1)
+bell.measure_all()
+
+with Session(service=service, backend="ibmq_qasm_simulator") as session:
+    sampler = Sampler(session=session, options=options)
+    job = sampler.run(circuits=bell)
+    print(f"Job ID is {job.job_id()}")
+    print(f"Job result is {job.result()}")
+
+    # You can make additional calls to Sampler and/or Estimator.
+```
+
+### Estimator
+
+This is a program that takes circuits and observables to evaluate expectation values and variances for a given parameter input. This primitive allows users to efficiently calculate and interpret expectation values of quantum operators required for many algorithms.
+
+To invoke the `Estimator` primitive within a session:
+
+```python
+from qiskit_ibm_runtime import QiskitRuntimeService, Session, Options, Estimator
+from qiskit import QuantumCircuit
+from qiskit.circuit.library import RealAmplitudes
+from qiskit.quantum_info import SparsePauliOp
+
+service = QiskitRuntimeService()
+options = Options(optimization_level=1)
+options.execution.shots = 1024  # Options can be set using auto-complete.
+
+psi1 = RealAmplitudes(num_qubits=2, reps=2)
+H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
+theta1 = [0, 1, 1, 2, 3, 5]
+
+with Session(service=service, backend="ibmq_qasm_simulator") as session:
+    estimator = Estimator(session=session, options=options)
+
+    # calculate [ <psi1(theta1)|H1|psi1(theta1)> ]
+    job = estimator.run(circuits=[psi1], observables=[H1], parameter_values=[theta1])
+    print(f"Job ID is {job.job_id()}")
+    print(f"Job result is {job.result()}")
+
+    # You can make additional calls to Sampler and/or Estimator.
+```
+
 ## Accessing Qiskit Runtime Programs
+
+In addition to the primitives, there are other Qiskit Runtime programs that you can call directly. These programs, however, don't have special class wrappers.
 
 ### Finding available programs
 
@@ -129,20 +199,18 @@ will print all metadata for all programs visible to you.
 To run a program, specify the program ID, input parameters, as well as any execution options:
 
 ```python
-from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit_ibm_runtime import QiskitRuntimeService
 
 service = QiskitRuntimeService()
 program_inputs = {
-    'circuits': ReferenceCircuits.bell(),
-    'circuit_indices': [0]
+    'iterations': 1
 }
-options = {'backend_name': 'ibmq_qasm_simulator'}
+options = {'backend': 'ibmq_qasm_simulator'}
 job = service.run(
-    program_id="sampler",
+    program_id="hello-world",
     options=options,
     inputs=program_inputs)
-print(f"job ID: {job.job_id}")
+print(f"job ID: {job.job_id()}")
 result = job.result()
 ```
 
@@ -162,6 +230,9 @@ print(service.backends())
 
 # Get a specific backend.
 backend = service.backend('ibmq_qasm_simulator')
+
+# Print backend coupling map.
+print(backend.coupling_map)
 ```
 
 ## Next Steps

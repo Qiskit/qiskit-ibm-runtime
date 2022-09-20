@@ -131,10 +131,6 @@ class Options:
             log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
             The default level is ``WARNING``.
 
-        log_level: logging level to set in the execution environment. The valid
-            log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
-            The default level is ``WARNING``.
-
         transpilation: Transpilation options.
 
             * skip_transpilation: Whether to skip transpilation.

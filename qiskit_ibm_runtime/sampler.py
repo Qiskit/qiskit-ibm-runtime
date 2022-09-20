@@ -13,22 +13,25 @@
 """Sampler primitive."""
 
 from __future__ import annotations
-from math import sqrt
 from typing import Dict, Iterable, Optional, Sequence, Any, Union
 import copy
 
 from qiskit.circuit import QuantumCircuit, Parameter
-from qiskit.result import QuasiDistribution
+from qiskit.circuit.parametertable import ParameterView
 
 # TODO import BaseSampler and SamplerResult from terra once released
 from .qiskit.primitives import BaseSampler, SamplerResult
 from .qiskit_runtime_service import QiskitRuntimeService
 from .options import Options
-from .program.result_decoder import ResultDecoder
+from .utils.sampler_result_decoder import SamplerResultDecoder
 from .runtime_job import RuntimeJob
 from .ibm_backend import IBMBackend
 from .session import get_default_session
-from .utils.deprecation import deprecate_arguments, issue_deprecation_msg
+from .utils.deprecation import (
+    deprecate_arguments,
+    issue_deprecation_msg,
+    deprecate_function,
+)
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
@@ -59,7 +62,7 @@ class Sampler(BaseSampler):
             sampler.options.resilience_level = 1
 
             job = sampler.run(bell)
-            print(f"Job ID: {job.job_id}")
+            print(f"Job ID: {job.job_id()}")
             print(f"Job result: {job.result()}")
     """
 
@@ -89,11 +92,16 @@ class Sampler(BaseSampler):
                 defaults to `QiskitRuntimeService()` which tries to initialize your default
                 saved account.
 
-            session: Session in which to call the primitive. If an instance of
-                :class:`qiskit_ibm_runtime.IBMBackend` class or
-                string name of a backend is specified, a new session is created for
-                that backend. If ``None``, a new session is created using the default
-                saved account and a default backend (IBM Cloud channel only).
+            session: Session in which to call the primitive.
+
+                * If an instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
+                  string name of a backend is specified, a new session is created for
+                  that backend, unless a default session for the same backend
+                  and channel already exists.
+
+                * If ``None``, a new session is created using the default saved
+                  account and a default backend (IBM Cloud channel only), unless
+                  a default session already exists.
 
             options: Primitive options, see :class:`Options` for detailed description.
                 The ``backend`` keyword is still supported but is deprecated.
@@ -101,19 +109,11 @@ class Sampler(BaseSampler):
             skip_transpilation (DEPRECATED): Transpilation is skipped if set to True. False by default.
                 Ignored ``skip_transpilation`` is also specified in ``options``.
         """
-        # TODO: Fix base classes once done
         super().__init__(
             circuits=circuits,
             parameters=parameters,
         )
 
-        # TODO: Remove deprecation warnings if done in base class
-        if circuits or parameters:
-            deprecate_arguments(
-                "circuits and parameters",
-                "0.7",
-                f"You can instead specify these inputs using the {self.__class__.__name__}.run method.",
-            )
         if skip_transpilation:
             deprecate_arguments(
                 "skip_transpilation",
@@ -156,9 +156,55 @@ class Sampler(BaseSampler):
 
     def run(
         self,
-        circuits: Union[QuantumCircuit, Sequence[QuantumCircuit]],
-        parameter_values: Sequence[Sequence[float]] | None = None,
-        parameters: Sequence[Sequence[Parameter]] | None = None,
+        circuits: QuantumCircuit | Sequence[QuantumCircuit],
+        parameter_values: Sequence[float] | Sequence[Sequence[float]] | None = None,
+        parameters: Sequence[Parameter] | Sequence[Sequence[Parameter]] | None = None,
+        **kwargs: Any,
+    ) -> RuntimeJob:
+        """Submit a request to the sampler primitive program.
+
+        Args:
+            circuits: A (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
+                a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
+            parameter_values: Concrete parameters to be bound.
+            parameters: Parameters of each of the quantum circuits.
+                Defaults to ``[circ.parameters for circ in circuits]``.
+            **kwargs: Individual options to overwrite the default primitive options.
+
+        Returns:
+            Submitted job.
+            The result of the job is an instance of :class:`qiskit.primitives.SamplerResult`.
+
+        Raises:
+            QiskitError: Invalid arguments are given.
+        """
+        if not isinstance(circuits, Sequence):
+            circuits = [circuits]
+        if (
+            parameter_values is not None
+            and len(parameter_values) > 1
+            and not isinstance(parameter_values[0], (Sequence, Iterable))
+        ):
+            parameter_values = [parameter_values]  # type: ignore[assignment]
+        if (
+            parameters is not None
+            and len(parameters) > 1
+            and not isinstance(parameters[0], Sequence)
+        ):
+            parameters = [parameters]
+
+        return super().run(
+            circuits=circuits,
+            parameter_values=parameter_values,
+            parameters=parameters,
+            **kwargs,
+        )
+
+    def _run(
+        self,
+        circuits: Sequence[QuantumCircuit],
+        parameter_values: Sequence[Sequence[float]],
+        parameters: Sequence[ParameterView],
         **kwargs: Any,
     ) -> RuntimeJob:
         """Submit a request to the sampler primitive program.
@@ -178,23 +224,11 @@ class Sampler(BaseSampler):
 
         Returns:
             Submitted job.
-
-        Raises:
-            ValueError: If the input values are invalid.
         """
-        if isinstance(circuits, Iterable) and not all(
-            isinstance(inst, QuantumCircuit) for inst in circuits
-        ):
-            raise ValueError(
-                "The circuits parameter has to be instances of QuantumCircuit."
-            )
-
-        circ_count = 1 if isinstance(circuits, QuantumCircuit) else len(circuits)
-
         inputs = {
             "circuits": circuits,
             "parameters": parameters,
-            "circuit_indices": list(range(circ_count)),
+            "circuit_indices": list(range(len(circuits))),
             "parameter_values": parameter_values,
         }
         combined = self.options._merge_options(kwargs)
@@ -206,19 +240,6 @@ class Sampler(BaseSampler):
             options=Options._get_runtime_options(combined),
             result_decoder=SamplerResultDecoder,
         )
-
-    def __call__(
-        self,
-        circuits: Sequence[int | QuantumCircuit],
-        parameter_values: Sequence[Sequence[float]] | None = None,
-        **run_options: Any,
-    ) -> SamplerResult:
-        issue_deprecation_msg(
-            msg="Calling a Sampler instance directly has been deprecated ",
-            version="0.7",
-            remedy="Please use qiskit_ibm_runtime.Session and Sampler.run() instead.",
-        )
-        return super().__call__(circuits, parameter_values, **run_options)
 
     def _call(
         self,
@@ -263,27 +284,15 @@ class Sampler(BaseSampler):
             program_id=self._PROGRAM_ID,
             inputs=inputs,
             options=Options._get_runtime_options(combined),
-            result_decoder=SamplerResultDecoder,
         ).result()
-        quasi_dists = []
-        for quasi, meta in zip(raw_result["quasi_dists"], raw_result["metadata"]):
-            shots = meta.get("shots", float("inf"))
-            overhead = meta.get("readout_mitigation_overhead", 1.0)
 
-            # M3 mitigation overhead is gamma^2
-            # https://github.com/Qiskit-Partners/mthree/blob/423d7e83a12491c59c9f58af46b75891bc622949/mthree/mitigation.py#L457
-            #
-            # QuasiDistribution stddev_upper_bound is gamma / sqrt(shots)
-            # https://github.com/Qiskit/qiskit-terra/blob/ff267b5de8b83aef86e2c9ac6c7f918f58500505/qiskit/result/mitigation/local_readout_mitigator.py#L288
-            stddev = sqrt(overhead / shots)
-            quasi_dists.append(
-                QuasiDistribution(quasi, shots=shots, stddev_upper_bound=stddev)
-            )
-        return SamplerResult(
-            quasi_dists=quasi_dists,
-            metadata=raw_result["metadata"],
-        )
+        return raw_result
 
+    @deprecate_function(
+        deprecated="close",
+        version="0.7",
+        remedy="Use qiskit_ibm_runtime.Session.close() instead",
+    )
     def close(self) -> None:
         """Close the session and free resources"""
         self._session.close()
@@ -296,16 +305,3 @@ class Sampler(BaseSampler):
             Session used by this primitive.
         """
         return self._session
-
-
-class SamplerResultDecoder(ResultDecoder):
-    """Class used to decode sampler results."""
-
-    @classmethod
-    def decode(cls, raw_result: str) -> SamplerResult:
-        """Convert the result to SamplerResult."""
-        decoded: Dict = super().decode(raw_result)
-        return SamplerResult(
-            quasi_dists=decoded["quasi_dists"],
-            metadata=decoded["metadata"],
-        )

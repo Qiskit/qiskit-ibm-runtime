@@ -17,6 +17,7 @@ import logging
 import time
 import unittest
 from unittest import mock
+from typing import Dict
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.providers.jobstatus import JOB_FINAL_STATES, JobStatus
@@ -109,7 +110,7 @@ def cancel_job_safe(job: RuntimeJob, logger: logging.Logger) -> bool:
         assert (
             status is JobStatus.CANCELLED
         ), "cancel() was successful for job {} but its " "status is {}.".format(
-            job.job_id, status
+            job.job_id(), status
         )
         return True
     except RuntimeInvalidStateError:
@@ -126,7 +127,7 @@ def wait_for_status(job, status, poll_time=1, time_out=20):
         time.sleep(wait_time)
         time_out -= wait_time
     if job.status() != status:
-        raise unittest.SkipTest(f"Job {job.job_id} unable to reach status {status}.")
+        raise unittest.SkipTest(f"Job {job.job_id()} unable to reach status {status}.")
 
 
 def get_real_device(service):
@@ -145,5 +146,17 @@ def mock_wait_for_final_state(service, job):
     return mock.patch.object(
         RuntimeJob,
         "wait_for_final_state",
-        side_effect=service._api_client.wait_for_final_state(job.job_id),
+        side_effect=service._api_client.wait_for_final_state(job.job_id()),
     )
+
+
+def dict_paritally_equal(dict1: Dict, dict2: Dict) -> bool:
+    """Determine whether all keys in dict2 are in dict1 and have same values."""
+    for key, val in dict2.items():
+        if isinstance(val, dict):
+            return dict_paritally_equal(dict1.get(key), val)
+        elif key in dict1:
+            return val == dict1[key]
+        return False
+
+    return True
