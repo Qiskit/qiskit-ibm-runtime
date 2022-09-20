@@ -17,6 +17,7 @@ import logging
 import time
 import unittest
 from unittest import mock
+from typing import Dict
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.providers.jobstatus import JOB_FINAL_STATES, JobStatus
@@ -147,3 +148,15 @@ def mock_wait_for_final_state(service, job):
         "wait_for_final_state",
         side_effect=service._api_client.wait_for_final_state(job.job_id()),
     )
+
+
+def dict_paritally_equal(dict1: Dict, dict2: Dict) -> bool:
+    """Determine whether all keys in dict2 are in dict1 and have same values."""
+    for key, val in dict2.items():
+        if isinstance(val, dict):
+            return dict_paritally_equal(dict1.get(key), val)
+        elif key in dict1:
+            return val == dict1[key]
+        return False
+
+    return True
