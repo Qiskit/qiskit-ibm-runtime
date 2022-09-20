@@ -144,7 +144,7 @@ class TestIBMBackend(IBMIntegrationTestCase):
             )
         if os.environ.get("QISKIT_IBM_USE_STAGING_CREDENTIALS", ""):
             backend = self.dependencies.service.backend("ibmq_qasm_simulator")
-            backend.run(ReferenceCircuits.bell(), shots=10)
+            job = backend.run(ReferenceCircuits.bell(), shots=10)
         else:
             job = self.backend.run(ReferenceCircuits.bell(), shots=10)
         job.wait_for_final_state()
