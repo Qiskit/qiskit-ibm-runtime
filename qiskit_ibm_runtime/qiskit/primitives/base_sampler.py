@@ -359,6 +359,14 @@ class BaseSampler(ABC):
                     f"the number of parameters ({circuit.num_parameters}) for the {i}-th circuit."
                 )
 
+        for i, circuit in enumerate(circuits):
+            if circuit.num_clbits == 0:
+                raise QiskitError(
+                    f"The {i}-th circuit does not have any classical bit. "
+                    "Sampler requires classical bits, plus measurements "
+                    "on the desired qubits."
+                )
+
         return self._run(circuits, parameter_values, parameter_views, **run_options)
 
     @abstractmethod
