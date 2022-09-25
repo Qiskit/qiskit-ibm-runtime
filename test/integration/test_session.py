@@ -56,7 +56,7 @@ class TestIntegrationSession(IBMIntegrationTestCase):
             self.assertEqual(len(result.quasi_dists), 1)
             self.assertEqual(len(result.metadata), 1)
             self.assertEqual(result.metadata[0]["shots"], 200)
-            self.assertAlmostEqual(result.quasi_dists[0][3], 0.5, delta=0.05)
+            self.assertAlmostEqual(result.quasi_dists[0][3], 0.5, delta=0.07)
             self.assertAlmostEqual(result.quasi_dists[0][0], 0.5, delta=0.05)
 
             result = estimator.run(
