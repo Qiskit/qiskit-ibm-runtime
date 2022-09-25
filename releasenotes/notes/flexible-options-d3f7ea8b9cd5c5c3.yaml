@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    The :class:`qiskit_ibm_runtime.Options` class now accepts an `instance`
+    parameter under `environment`, which can be the hub/group/project
+    used to run the primitives. In addition, `Options` also accepts
+    arbitrary keyword values.

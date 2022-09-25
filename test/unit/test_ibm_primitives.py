@@ -98,7 +98,12 @@ class TestPrimitives(IBMTestCase):
                         # We'll get 2 deprecation warnings - one for service and one for backend.
                         # We need service otherwise backend will get ignored.
                         self.assertEqual(len(warn), 2)
-                        self.assertTrue(all(issubclass(one_warn.category, DeprecationWarning) for one_warn in warn))
+                        self.assertTrue(
+                            all(
+                                issubclass(one_warn.category, DeprecationWarning)
+                                for one_warn in warn
+                            )
+                        )
                     self.assertEqual(inst.session.backend(), backend_name)
 
     def test_runtime_options(self):
@@ -109,7 +114,7 @@ class TestPrimitives(IBMTestCase):
             {"log_level": "DEBUG"},
             {"image": "foo:latest"},
             {"instance": "hub/group/project"},
-            {"log_level": "INFO", "image": "bar:latest"}
+            {"log_level": "INFO", "image": "bar:latest"},
         ]
         for cls in primitives:
             for env in env_vars:
@@ -290,7 +295,7 @@ class TestPrimitives(IBMTestCase):
         primitives = [Sampler, Estimator]
         for cls in primitives:
             with self.subTest(primitive=cls):
-                options = Options(foo="foo")
+                options = Options(foo="foo")  # pylint: disable=unexpected-keyword-arg
                 inst = cls(session=session, options=options)
                 inst.run(self.qx, observables=self.obs)
                 if sys.version_info >= (3, 8):

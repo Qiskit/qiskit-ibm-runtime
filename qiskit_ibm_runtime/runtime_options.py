@@ -20,7 +20,6 @@ from typing import Optional
 from qiskit.utils.deprecation import deprecate_arguments
 
 from .exceptions import IBMInputValueError
-from .options import Options
 from .utils.deprecation import issue_deprecation_msg
 
 
@@ -76,7 +75,9 @@ class RuntimeOptions:
             )
 
         if self.instance and channel != "ibm_quantum":
-            raise IBMInputValueError('"instance" is only supported for "ibm_quantum" channel.')
+            raise IBMInputValueError(
+                '"instance" is only supported for "ibm_quantum" channel.'
+            )
 
         if self.log_level and not isinstance(
             logging.getLevelName(self.log_level.upper()), int
@@ -85,12 +86,6 @@ class RuntimeOptions:
                 f"{self.log_level} is not a valid log level. The valid log levels are: `DEBUG`, "
                 f"`INFO`, `WARNING`, `ERROR`, and `CRITICAL`."
             )
-
-    def _to_new_options(self) -> Options:
-        return Options(
-            log_level=self.log_level,
-            experimental={"image": self.image},
-        )
 
     @property
     def backend_name(self) -> str:

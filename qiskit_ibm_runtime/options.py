@@ -13,38 +13,40 @@
 """Primitive options."""
 
 from typing import Optional, List, Dict, Union, Any, ClassVar
-from dataclasses import dataclass, asdict, fields, field, make_dataclass, is_dataclass
+from dataclasses import dataclass, asdict, fields, field, make_dataclass
 import copy
 
 from .utils.deprecation import issue_deprecation_msg
 
 
-def flexible(cls):
+def _flexible(cls):  # type: ignore
     """Decorator used to allow a flexible dataclass.
 
-    It allows the dataclass to have arbitrary kwargs input and converts
+    This is used to dynamically create a new dataclass with the
+    arbitrary kwargs input converted to fields. It also converts
     input dictionary to objects based on the _obj_fields attribute.
     """
 
-    def __new__(cls, *args, **kwargs):
-
-        def _to_obj(cls_, data):
+    def __new__(cls, *args, **kwargs):  # type: ignore
+        def _to_obj(cls_, data):  # type: ignore
             if data is None:
                 return cls_()
             if isinstance(data, cls_):
                 return data
             if isinstance(data, Dict):
                 return cls_(**data)
-            raise TypeError(f"{data} has an unspported type {type(data)}. It can only be {cls_} or a dictionary.")
+            raise TypeError(
+                f"{data} has an unspported type {type(data)}. It can only be {cls_} or a dictionary."
+            )
 
         updated_kwargs = copy.deepcopy(kwargs)
         all_fields = []
         orig_field_names = set()
         obj_fields = getattr(cls, "_obj_fields", {})
 
-        for f in fields(cls):
-            all_fields.append((f.name, f.type, f))
-            orig_field_names.add(f.name)
+        for fld in fields(cls):
+            all_fields.append((fld.name, fld.type, fld))
+            orig_field_names.add(fld.name)
 
         for key, val in updated_kwargs.items():
             if key not in orig_field_names:
@@ -52,7 +54,11 @@ def flexible(cls):
             elif key in obj_fields:
                 updated_kwargs[key] = _to_obj(obj_fields[key], val)
 
-        new_cls = make_dataclass(cls.__name__, all_fields, bases=(cls,), namespace=getattr(cls, "_namespace", None))
+        new_cls = make_dataclass(
+            cls.__name__,
+            all_fields,
+            bases=(cls,),
+        )
         obj = object.__new__(new_cls)
         obj.__init__(*args, **updated_kwargs)
         return obj
@@ -61,7 +67,7 @@ def flexible(cls):
     return cls
 
 
-@flexible
+@_flexible
 @dataclass
 class TranspilationOptions:
     """Transpilation options."""
@@ -78,7 +84,7 @@ class TranspilationOptions:
     seed_transpiler: Optional[int] = None
 
 
-@flexible
+@_flexible
 @dataclass
 class ResilienceOptions:
     """Resilience options."""
@@ -86,7 +92,7 @@ class ResilienceOptions:
     pass
 
 
-@flexible
+@_flexible
 @dataclass(init=False)
 class SimulatorOptions:
     """Simulator options.
@@ -94,9 +100,6 @@ class SimulatorOptions:
         noise_model: Noise model, must have a to_dict() method.
         seed_simulator: Random seed to control sampling.
     """
-
-    noise_model: Any = None
-    seed_simulator: Optional[int] = None
 
     def __init__(
         self, noise_model: Any = None, seed_simulator: Optional[int] = None
@@ -131,7 +134,7 @@ class SimulatorOptions:
                 )
 
 
-@flexible
+@_flexible
 @dataclass
 class ExecutionOptions:
     """Execution options."""
@@ -144,16 +147,17 @@ class ExecutionOptions:
     init_qubits: bool = True
 
 
-@flexible
+@_flexible
 @dataclass
 class EnvironmentOptions:
     """Options related to the execution environment."""
+
     log_level: str = "WARNING"
     image: Optional[str] = None
     instance: Optional[str] = None
 
 
-def _merge_options(self, new_options: Optional[Dict] = None) -> Dict:
+def _merge_options(self: Any, new_options: Optional[Dict] = None) -> Dict:
     """Merge current options with the new ones.
 
     Args:
@@ -182,7 +186,7 @@ def _merge_options(self, new_options: Optional[Dict] = None) -> Dict:
     return combined
 
 
-@flexible
+@_flexible
 @dataclass
 class Options:
     """Options for the primitive programs.
@@ -288,16 +292,18 @@ class Options:
     optimization_level: int = 1
     resilience_level: int = 0
     transpilation: Union[TranspilationOptions, Dict] = field(
-        default_factory=TranspilationOptions)
+        default_factory=TranspilationOptions
+    )
     execution: Union[ExecutionOptions, Dict] = field(default_factory=ExecutionOptions)
-    environment: Union[EnvironmentOptions, Dict] = field(default_factory=EnvironmentOptions)
+    environment: Union[EnvironmentOptions, Dict] = field(
+        default_factory=EnvironmentOptions
+    )
 
     _obj_fields: ClassVar[Dict] = {
         "transpilation": TranspilationOptions,
         "execution": ExecutionOptions,
-        "environment": EnvironmentOptions
+        "environment": EnvironmentOptions,
     }
-    _namespace: ClassVar[Dict] = {"_merge_options": _merge_options}
 
     @classmethod
     def _from_dict(cls, data: Dict) -> "Options":
@@ -328,11 +334,9 @@ class Options:
         inputs = {}
         inputs["transpilation_settings"] = options.get("transpilation", {})
         inputs["transpilation_settings"].update(
-            {"optimization_settings": {
-                "level": options.get("optimization_level")}}
+            {"optimization_settings": {"level": options.get("optimization_level")}}
         )
-        inputs["resilience_settings"] = {
-            "level": options.get("resilience_level")}
+        inputs["resilience_settings"] = {"level": options.get("resilience_level")}
         inputs["run_options"] = options.get("execution")
 
         known_keys = [
@@ -361,3 +365,31 @@ class Options:
         for key in ["log_level", "image", "instance"]:
             out[key] = environment.get(key, default_env.get(key))
         return out
+
+    def _merge_options(self, new_options: Optional[Dict] = None) -> Dict:
+        """Merge current options with the new ones.
+
+        Args:
+            new_options: New options to merge.
+
+        Returns:
+            Merged dictionary.
+        """
+
+        def _update_options(old: Dict, new: Dict) -> None:
+            if not new:
+                return
+            for key, val in old.items():
+                if key in new.keys():
+                    old[key] = new.pop(key)
+                if isinstance(val, Dict):
+                    _update_options(val, new)
+
+        combined = asdict(self)
+        # First update values of the same key.
+        _update_options(combined, new_options)
+        # Add new keys.
+        for key, val in new_options.items():
+            if key not in combined:
+                combined[key] = val
+        return combined

@@ -51,7 +51,11 @@ from .utils.hgp import to_instance_format, from_instance_format
 from .utils.utils import validate_job_tags, validate_runtime_options
 from .api.client_parameters import ClientParameters
 from .runtime_options import RuntimeOptions
-from .utils.deprecation import deprecate_function, issue_deprecation_msg, deprecate_arguments
+from .utils.deprecation import (
+    deprecate_function,
+    issue_deprecation_msg,
+    deprecate_arguments,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -904,8 +908,17 @@ class QiskitRuntimeService(Provider):
             )
         validate_job_tags(job_tags, IBMInputValueError)
 
+        if options is None:
+            options = {}
+        elif isinstance(options, RuntimeOptions):
+            options = asdict(options)
+
         if instance:
-            deprecate_arguments(deprecated="instance", version="0.7", remedy='Please specify "instance" inside "options".')
+            deprecate_arguments(
+                deprecated="instance",
+                version="0.7",
+                remedy='Please specify "instance" inside "options".',
+            )
         instance = instance or options.get("instance", None)
         if instance and self._channel != "ibm_quantum":
             raise IBMInputValueError(
@@ -917,10 +930,6 @@ class QiskitRuntimeService(Provider):
             inputs.validate()
             inputs = vars(inputs)
 
-        if options is None:
-            options = {}
-        elif isinstance(options, RuntimeOptions):
-            options = asdict(options)
         options["backend"] = options.get("backend", options.get("backend_name", None))
         validate_runtime_options(options=options, channel=self.channel)
 
