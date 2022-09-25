@@ -15,6 +15,8 @@
 import sys
 import copy
 from unittest.mock import MagicMock, patch, ANY
+import warnings
+from dataclasses import asdict
 
 from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit.quantum_info import SparsePauliOp
@@ -75,9 +77,9 @@ class TestPrimitives(IBMTestCase):
             for options in options_vars:
                 with self.subTest(primitive=cls, options=options):
                     inst = cls(session=MagicMock(spec=Session), options=options)
-                    expected = Options().to_dict()
+                    expected = asdict(Options())
                     self._update_dict(expected, copy.deepcopy(options))
-                    self.assertDictEqual(expected, inst.options.to_dict())
+                    self.assertDictEqual(expected, asdict(inst.options))
 
     def test_backend_in_options(self):
         """Test specifying backend in options."""
@@ -90,8 +92,38 @@ class TestPrimitives(IBMTestCase):
             for backend in backends:
                 with self.subTest(primitive=cls, backend=backend):
                     options = {"backend": backend}
-                    inst = cls(service=MagicMock(), options=options)
+                    with warnings.catch_warnings(record=True) as warn:
+                        warnings.simplefilter("always")
+                        inst = cls(service=MagicMock(), options=options)
+                        # We'll get 2 deprecation warnings - one for service and one for backend.
+                        # We need service otherwise backend will get ignored.
+                        self.assertEqual(len(warn), 2)
+                        self.assertTrue(all(issubclass(one_warn.category, DeprecationWarning) for one_warn in warn))
                     self.assertEqual(inst.session.backend(), backend_name)
+
+    def test_runtime_options(self):
+        """Test RuntimeOptions specified as primitive options."""
+        session = MagicMock(spec=Session)
+        primitives = [Sampler, Estimator]
+        env_vars = [
+            {"log_level": "DEBUG"},
+            {"image": "foo:latest"},
+            {"instance": "hub/group/project"},
+            {"log_level": "INFO", "image": "bar:latest"}
+        ]
+        for cls in primitives:
+            for env in env_vars:
+                with self.subTest(primitive=cls, env=env):
+                    options = Options(environment=env)
+                    inst = cls(session=session, options=options)
+                    inst.run(self.qx, observables=self.obs)
+                    if sys.version_info >= (3, 8):
+                        run_options = session.run.call_args.kwargs["options"]
+                    else:
+                        _, kwargs = session.run.call_args
+                        run_options = kwargs["options"]
+                    for key, val in env.items():
+                        self.assertEqual(run_options[key], val)
 
     @patch("qiskit_ibm_runtime.session.Session")
     @patch("qiskit_ibm_runtime.session.QiskitRuntimeService")
@@ -250,7 +282,7 @@ class TestPrimitives(IBMTestCase):
                         _, kwargs = session.run.call_args
                         inputs = kwargs["inputs"]
                     self._assert_dict_paritally_equal(inputs, expected)
-                    self.assertDictEqual(inst.options.to_dict(), Options().to_dict())
+                    self.assertDictEqual(asdict(inst.options), asdict(Options()))
 
     def test_kwarg_options(self):
         """Test specifying arbitrary options."""

@@ -12,86 +12,101 @@
 
 """Primitive options."""
 
-from typing import Optional, List, Dict, Union, Any
-from types import SimpleNamespace
+from typing import Optional, List, Dict, Union, Any, ClassVar
+from dataclasses import dataclass, asdict, fields, field, make_dataclass, is_dataclass
 import copy
 
 from .utils.deprecation import issue_deprecation_msg
 
 
-class OptionsNamespace(SimpleNamespace):
-    """A SimpleNamespace for options classes."""
+def flexible(cls):
+    """Decorator used to allow a flexible dataclass.
 
-    def to_dict(self) -> Dict:
-        """Convert the class to a dictionary.
+    It allows the dataclass to have arbitrary kwargs input and converts
+    input dictionary to objects based on the _obj_fields attribute.
+    """
 
-        Returns:
-            Dictionary representation of the options.
-        """
-        out = copy.deepcopy(self.__dict__)
-        for key, val in out.items():
-            if isinstance(val, OptionsNamespace):
-                out[key] = val.to_dict()
-        return out
+    def __new__(cls, *args, **kwargs):
+
+        def _to_obj(cls_, data):
+            if data is None:
+                return cls_()
+            if isinstance(data, cls_):
+                return data
+            if isinstance(data, Dict):
+                return cls_(**data)
+            raise TypeError(f"{data} has an unspported type {type(data)}. It can only be {cls_} or a dictionary.")
+
+        updated_kwargs = copy.deepcopy(kwargs)
+        all_fields = []
+        orig_field_names = set()
+        obj_fields = getattr(cls, "_obj_fields", {})
+
+        for f in fields(cls):
+            all_fields.append((f.name, f.type, f))
+            orig_field_names.add(f.name)
+
+        for key, val in updated_kwargs.items():
+            if key not in orig_field_names:
+                all_fields.append((key, type(val), field(default=None)))
+            elif key in obj_fields:
+                updated_kwargs[key] = _to_obj(obj_fields[key], val)
+
+        new_cls = make_dataclass(cls.__name__, all_fields, bases=(cls,), namespace=getattr(cls, "_namespace", None))
+        obj = object.__new__(new_cls)
+        obj.__init__(*args, **updated_kwargs)
+        return obj
+
+    cls.__new__ = __new__
+    return cls
 
 
-class Transpilation(OptionsNamespace):
+@flexible
+@dataclass
+class TranspilationOptions:
     """Transpilation options."""
 
-    def __init__(
-        self,
-        skip_transpilation: bool = False,
-        initial_layout: Optional[Union[Dict, List]] = None,  # TODO: Support Layout
-        layout_method: Optional[str] = None,
-        routing_method: Optional[str] = None,
-        translation_method: Optional[str] = None,
-        approximation_degree: Optional[float] = None,
-        timing_constraints: Optional[Dict[str, int]] = None,
-        seed_transpiler: Optional[int] = None,
-        **kwargs: Any
-    ) -> None:
-        # TODO: Double check transpilation settings.
-        super().__init__(
-            skip_transpilation=skip_transpilation,
-            initial_layout=initial_layout,
-            layout_method=layout_method,
-            routing_method=routing_method,
-            translation_method=translation_method,
-            approximation_degree=approximation_degree,
-            timing_constraints=timing_constraints,
-            seed_transpiler=seed_transpiler,
-            **kwargs,
-        )
+    # TODO: Double check transpilation settings.
+
+    skip_transpilation: bool = False
+    initial_layout: Optional[Union[Dict, List]] = None  # TODO: Support Layout
+    layout_method: Optional[str] = None
+    routing_method: Optional[str] = None
+    translation_method: Optional[str] = None
+    approximation_degree: Optional[float] = None
+    timing_constraints: Optional[Dict[str, int]] = None
+    seed_transpiler: Optional[int] = None
 
 
-class Resilience(OptionsNamespace):
-    """Resilience settings."""
+@flexible
+@dataclass
+class ResilienceOptions:
+    """Resilience options."""
 
     pass
 
 
-class SimulatorOptions(OptionsNamespace):
+@flexible
+@dataclass(init=False)
+class SimulatorOptions:
     """Simulator options.
-
     Args:
         noise_model: Noise model, must have a to_dict() method.
         seed_simulator: Random seed to control sampling.
     """
 
+    noise_model: Any = None
+    seed_simulator: Optional[int] = None
+
     def __init__(
-        self,
-        noise_model: Any = None,
-        seed_simulator: Optional[int] = None,
-        **kwargs: Any
+        self, noise_model: Any = None, seed_simulator: Optional[int] = None
     ) -> None:
         self.noise_model = noise_model
         self.seed_simulator = seed_simulator
-        super().__init__(**kwargs)
 
     @property
     def noise_model(self) -> Dict:
         """Return the noise model.
-
         Returns:
             The noise model.
         """
@@ -100,10 +115,8 @@ class SimulatorOptions(OptionsNamespace):
     @noise_model.setter
     def noise_model(self, noise_model: Any) -> None:
         """Set the noise model.
-
         Args:
             noise_model: Noise model to use.
-
         Raises:
             ValueError: If the noise model doesn't have a ``to_dict()`` method.
         """
@@ -118,39 +131,60 @@ class SimulatorOptions(OptionsNamespace):
                 )
 
 
-class Execution(OptionsNamespace):
+@flexible
+@dataclass
+class ExecutionOptions:
     """Execution options."""
 
-    def __init__(
-        self,
-        shots: int = 4000,
-        qubit_lo_freq: Optional[List[float]] = None,
-        meas_lo_freq: Optional[List[float]] = None,
-        # TODO: need to be able to serialize schedule_los before we can support it
-        rep_delay: Optional[float] = None,
-        init_qubits: bool = True,
-        **kwargs: Any
-    ) -> None:
-        super().__init__(
-            shots=shots,
-            qubit_lo_freq=qubit_lo_freq,
-            meas_lo_freq=meas_lo_freq,
-            rep_delay=rep_delay,
-            init_qubits=init_qubits,
-            **kwargs,
-        )
+    shots: int = 4000
+    qubit_lo_freq: Optional[List[float]] = None
+    meas_lo_freq: Optional[List[float]] = None
+    # TODO: need to be able to serialize schedule_los before we can support it
+    rep_delay: Optional[float] = None
+    init_qubits: bool = True
 
 
-class Environment(OptionsNamespace):
-    """Environmental options."""
+@flexible
+@dataclass
+class EnvironmentOptions:
+    """Options related to the execution environment."""
+    log_level: str = "WARNING"
+    image: Optional[str] = None
+    instance: Optional[str] = None
 
-    def __init__(
-        self, log_level: str = "WARNING", image: Optional[str] = None, **kwargs: Any
-    ) -> None:
-        super().__init__(log_level=log_level, image=image, **kwargs)
+
+def _merge_options(self, new_options: Optional[Dict] = None) -> Dict:
+    """Merge current options with the new ones.
+
+    Args:
+        new_options: New options to merge.
+
+    Returns:
+        Merged dictionary.
+    """
+
+    def _update_options(old: Dict, new: Dict) -> None:
+        if not new:
+            return
+        for key, val in old.items():
+            if key in new.keys():
+                old[key] = new.pop(key)
+            if isinstance(val, Dict):
+                _update_options(val, new)
+
+    combined = copy.deepcopy(asdict(self))
+    # First update values of the same key.
+    _update_options(combined, new_options)
+    # Add new keys.
+    for key, val in new_options.items():
+        if key not in combined:
+            combined[key] = val
+    return combined
 
 
-class Options(OptionsNamespace):
+@flexible
+@dataclass
+class Options:
     """Options for the primitive programs.
 
     Args:
@@ -236,7 +270,7 @@ class Options(OptionsNamespace):
             * init_qubits: Whether to reset the qubits to the ground state for each shot.
               Default: ``True``.
 
-        environment: Environmental options.
+        environment: Options related to the execution environment.
 
             * log_level: logging level to set in the execution environment. The valid
               log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
@@ -245,53 +279,25 @@ class Options(OptionsNamespace):
             * image: The runtime image used to execute the program, specified in
               the form of ``image_name:tag``. Not all accounts are
               authorized to select a different image.
+
+            * instance: The hub/group/project to use, in that format. This is only supported
+                for ``ibm_quantum`` channel. If ``None``, a hub/group/project that provides
+                access to the target backend is randomly selected.
     """
 
-    def __init__(
-        self,
-        optimization_level: int = 1,
-        resilience_level: int = 0,
-        transpilation: Optional[Transpilation] = None,
-        execution: Optional[Execution] = None,
-        environment: Optional[Environment] = None,
-        **kwargs: Any
-    ) -> None:
-        super().__init__(
-            optimization_level=optimization_level,
-            resilience_level=resilience_level,
-            transpilation=transpilation or Transpilation(),
-            execution=execution or Execution(),
-            environment=environment or Environment(),
-            **kwargs,
-        )
+    optimization_level: int = 1
+    resilience_level: int = 0
+    transpilation: Union[TranspilationOptions, Dict] = field(
+        default_factory=TranspilationOptions)
+    execution: Union[ExecutionOptions, Dict] = field(default_factory=ExecutionOptions)
+    environment: Union[EnvironmentOptions, Dict] = field(default_factory=EnvironmentOptions)
 
-    def _merge_options(self, new_options: Optional[Dict] = None) -> Dict:
-        """Merge current options with the new ones.
-
-        Args:
-            new_options: New options to merge.
-
-        Returns:
-            Merged dictionary.
-        """
-
-        def _update_options(old: Dict, new: Dict) -> None:
-            if not new:
-                return
-            for key, val in old.items():
-                if key in new.keys():
-                    old[key] = new.pop(key)
-                if isinstance(val, Dict):
-                    _update_options(val, new)
-
-        combined = copy.deepcopy(self.to_dict())
-        # First update values of the same key.
-        _update_options(combined, new_options)
-        # Add new keys.
-        for key, val in new_options.items():
-            if key not in combined:
-                combined[key] = val
-        return combined
+    _obj_fields: ClassVar[Dict] = {
+        "transpilation": TranspilationOptions,
+        "execution": ExecutionOptions,
+        "environment": EnvironmentOptions
+    }
+    _namespace: ClassVar[Dict] = {"_merge_options": _merge_options}
 
     @classmethod
     def _from_dict(cls, data: Dict) -> "Options":
@@ -302,9 +308,9 @@ class Options(OptionsNamespace):
                 version="0.7",
                 remedy="Please specify 'environment':{'image': image} instead.",
             )
-        environment = Environment(image=data.pop("image", None))
-        transp = Transpilation(**data.pop("transpilation", {}))
-        execution = Execution(**data.pop("execution", {}))
+        environment = EnvironmentOptions(image=data.pop("image", None))
+        transp = TranspilationOptions(**data.pop("transpilation", {}))
+        execution = ExecutionOptions(**data.pop("execution", {}))
         return cls(
             environment=environment,
             transpilation=transp,
@@ -322,9 +328,11 @@ class Options(OptionsNamespace):
         inputs = {}
         inputs["transpilation_settings"] = options.get("transpilation", {})
         inputs["transpilation_settings"].update(
-            {"optimization_settings": {"level": options.get("optimization_level")}}
+            {"optimization_settings": {
+                "level": options.get("optimization_level")}}
         )
-        inputs["resilience_settings"] = {"level": options.get("resilience_level")}
+        inputs["resilience_settings"] = {
+            "level": options.get("resilience_level")}
         inputs["run_options"] = options.get("execution")
 
         known_keys = [
@@ -347,8 +355,9 @@ class Options(OptionsNamespace):
         Returns:
             Runtime options.
         """
+        default_env = asdict(EnvironmentOptions())
         environment = options.get("environment") or {}
-        return {
-            "log_level": options.get("log_level"),
-            "image": environment.get("image", None),
-        }
+        out = {}
+        for key in ["log_level", "image", "instance"]:
+            out[key] = environment.get(key, default_env.get(key))
+        return out
