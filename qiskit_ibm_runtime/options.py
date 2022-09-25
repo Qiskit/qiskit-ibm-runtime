@@ -17,6 +17,7 @@ from dataclasses import dataclass, asdict, fields, field, make_dataclass
 import copy
 
 from .utils.deprecation import issue_deprecation_msg
+from .runtime_options import RuntimeOptions
 
 
 def _flexible(cls):  # type: ignore
@@ -96,6 +97,7 @@ class ResilienceOptions:
 @dataclass(init=False)
 class SimulatorOptions:
     """Simulator options.
+
     Args:
         noise_model: Noise model, must have a to_dict() method.
         seed_simulator: Random seed to control sampling.
@@ -110,6 +112,7 @@ class SimulatorOptions:
     @property
     def noise_model(self) -> Dict:
         """Return the noise model.
+
         Returns:
             The noise model.
         """
@@ -118,8 +121,10 @@ class SimulatorOptions:
     @noise_model.setter
     def noise_model(self, noise_model: Any) -> None:
         """Set the noise model.
+
         Args:
             noise_model: Noise model to use.
+
         Raises:
             ValueError: If the noise model doesn't have a ``to_dict()`` method.
         """
@@ -155,35 +160,6 @@ class EnvironmentOptions:
     log_level: str = "WARNING"
     image: Optional[str] = None
     instance: Optional[str] = None
-
-
-def _merge_options(self: Any, new_options: Optional[Dict] = None) -> Dict:
-    """Merge current options with the new ones.
-
-    Args:
-        new_options: New options to merge.
-
-    Returns:
-        Merged dictionary.
-    """
-
-    def _update_options(old: Dict, new: Dict) -> None:
-        if not new:
-            return
-        for key, val in old.items():
-            if key in new.keys():
-                old[key] = new.pop(key)
-            if isinstance(val, Dict):
-                _update_options(val, new)
-
-    combined = copy.deepcopy(asdict(self))
-    # First update values of the same key.
-    _update_options(combined, new_options)
-    # Add new keys.
-    for key, val in new_options.items():
-        if key not in combined:
-            combined[key] = val
-    return combined
 
 
 @_flexible
@@ -359,11 +335,14 @@ class Options:
         Returns:
             Runtime options.
         """
-        default_env = asdict(EnvironmentOptions())
+        # default_env = asdict(EnvironmentOptions())
         environment = options.get("environment") or {}
         out = {}
-        for key in ["log_level", "image", "instance"]:
-            out[key] = environment.get(key, default_env.get(key))
+
+        for fld in fields(RuntimeOptions):
+            if fld.name in environment:
+                out[fld.name] = environment[fld.name]
+
         return out
 
     def _merge_options(self, new_options: Optional[Dict] = None) -> Dict:

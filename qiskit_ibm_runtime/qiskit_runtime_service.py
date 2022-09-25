@@ -19,7 +19,6 @@ import warnings
 from datetime import datetime
 from collections import OrderedDict
 from typing import Dict, Callable, Optional, Union, List, Any, Type
-from dataclasses import asdict
 
 from qiskit.providers.backend import BackendV1 as Backend
 from qiskit.providers.provider import ProviderV1 as Provider
@@ -48,7 +47,7 @@ from .runtime_session import RuntimeSession  # pylint: disable=cyclic-import
 from .utils import RuntimeDecoder, to_base64_string, to_python_identifier
 from .utils.backend_decoder import configuration_from_server_data
 from .utils.hgp import to_instance_format, from_instance_format
-from .utils.utils import validate_job_tags, validate_runtime_options
+from .utils.utils import validate_job_tags
 from .api.client_parameters import ClientParameters
 from .runtime_options import RuntimeOptions
 from .utils.deprecation import (
@@ -908,10 +907,11 @@ class QiskitRuntimeService(Provider):
             )
         validate_job_tags(job_tags, IBMInputValueError)
 
+        qrt_options: RuntimeOptions = options
         if options is None:
-            options = {}
-        elif isinstance(options, RuntimeOptions):
-            options = asdict(options)
+            qrt_options = RuntimeOptions()
+        elif isinstance(options, Dict):
+            qrt_options = RuntimeOptions(**options)
 
         if instance:
             deprecate_arguments(
@@ -919,37 +919,32 @@ class QiskitRuntimeService(Provider):
                 version="0.7",
                 remedy='Please specify "instance" inside "options".',
             )
-        instance = instance or options.get("instance", None)
-        if instance and self._channel != "ibm_quantum":
-            raise IBMInputValueError(
-                "The 'instance' keyword is only supported for ``ibm_quantum`` runtime. "
-            )
+            qrt_options.instance = qrt_options.instance or instance
 
         # If using params object, extract as dictionary
         if isinstance(inputs, ParameterNamespace):
             inputs.validate()
             inputs = vars(inputs)
 
-        options["backend"] = options.get("backend", options.get("backend_name", None))
-        validate_runtime_options(options=options, channel=self.channel)
+        qrt_options.validate(channel=self.channel)
 
         backend = None
         hgp_name = None
         if self._channel == "ibm_quantum":
             # Find the right hgp
-            hgp = self._get_hgp(instance=instance, backend_name=options["backend"])
-            backend = hgp.backend(options["backend"])
+            hgp = self._get_hgp(instance=instance, backend_name=qrt_options.backend)
+            backend = hgp.backend(qrt_options.backend)
             hgp_name = hgp.name
 
         result_decoder = result_decoder or ResultDecoder
         try:
             response = self._api_client.program_run(
                 program_id=program_id,
-                backend_name=options["backend"],
+                backend_name=qrt_options.backend,
                 params=inputs,
-                image=options.get("image"),
+                image=qrt_options.image,
                 hgp=hgp_name,
-                log_level=options.get("log_level"),
+                log_level=qrt_options.log_level,
                 session_id=session_id,
                 job_tags=job_tags,
                 max_execution_time=max_execution_time,
@@ -986,7 +981,7 @@ class QiskitRuntimeService(Provider):
             params=inputs,
             user_callback=callback,
             result_decoder=result_decoder,
-            image=options.get("image"),
+            image=qrt_options.image,
         )
         return job
 

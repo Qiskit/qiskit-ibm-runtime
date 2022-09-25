@@ -23,9 +23,14 @@ from .exceptions import IBMInputValueError
 from .utils.deprecation import issue_deprecation_msg
 
 
-@dataclass
+@dataclass(init=False)
 class RuntimeOptions:
     """Class for representing generic runtime execution options."""
+
+    backend: Optional[str] = None
+    image: Optional[str] = None
+    log_level: Optional[str] = None
+    instance: Optional[str] = None
 
     @deprecate_arguments({"backend_name": "backend"})
     def __init__(
