@@ -16,7 +16,6 @@ from __future__ import annotations
 import copy
 from typing import Iterable, Optional, Dict, Sequence, Any, Union
 
-import numpy as np
 from qiskit.circuit import QuantumCircuit, Parameter
 from qiskit.circuit.parametertable import ParameterView
 from qiskit.quantum_info import SparsePauliOp
@@ -28,7 +27,7 @@ from qiskit.quantum_info.operators.base_operator import BaseOperator
 # TODO import BaseEstimator and EstimatorResult from terra once released
 from .qiskit.primitives import BaseEstimator, EstimatorResult
 from .qiskit_runtime_service import QiskitRuntimeService
-from .program.result_decoder import ResultDecoder
+from .utils.estimator_result_decoder import EstimatorResultDecoder
 from .runtime_job import RuntimeJob
 from .utils.deprecation import (
     deprecate_arguments,
@@ -359,16 +358,3 @@ class Estimator(BaseEstimator):
             Session used by this primitive.
         """
         return self._session
-
-
-class EstimatorResultDecoder(ResultDecoder):
-    """Class used to decode estimator results"""
-
-    @classmethod
-    def decode(cls, raw_result: str) -> EstimatorResult:
-        """Convert the result to EstimatorResult."""
-        decoded: Dict = super().decode(raw_result)
-        return EstimatorResult(
-            values=np.asarray(decoded["values"]),
-            metadata=decoded["metadata"],
-        )

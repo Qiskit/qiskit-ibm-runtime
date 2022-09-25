@@ -24,6 +24,7 @@ from qiskit_ibm_runtime import Sampler, Estimator, Options, Session
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 import qiskit_ibm_runtime.session as session_pkg
 from ..ibm_test_case import IBMTestCase
+from ..utils import dict_paritally_equal
 
 
 class TestPrimitives(IBMTestCase):
@@ -130,6 +131,40 @@ class TestPrimitives(IBMTestCase):
                     for key, val in env.items():
                         self.assertEqual(run_options[key], val)
 
+    def test_options_copied(self):
+        """Test modifying original options does not affect primitives."""
+        options = Options()
+        primitives = [Sampler, Estimator]
+        for cls in primitives:
+            with self.subTest(primitive=cls):
+                options.transpilation.skip_transpilation = True
+                inst = cls(session=MagicMock(spec=Session), options=options)
+                options.transpilation.skip_transpilation = False
+                self.assertTrue(inst.options.transpilation.skip_transpilation)
+
+    @patch("qiskit_ibm_runtime.session.Session")
+    @patch("qiskit_ibm_runtime.session.QiskitRuntimeService")
+    def test_default_session(self, *_):
+        """Test a session is created if not passed in."""
+        try:
+            sampler = Sampler()
+            self.assertIsNotNone(sampler.session)
+            estimator = Estimator()
+            self.assertEqual(estimator.session, sampler.session)
+        finally:
+            # Ensure it's cleaned up or next test will fail.
+            session_pkg._DEFAULT_SESSION = None
+
+    def test_default_session_after_close(self):
+        """Test a new default session is open after previous is closed."""
+        service = MagicMock()
+        sampler = Sampler(service=service)
+        sampler.session.close()
+        estimator = Estimator(service=service)
+        self.assertIsNotNone(estimator.session)
+        self.assertTrue(estimator.session._active)
+        self.assertNotEqual(estimator.session, sampler.session)
+
     @patch("qiskit_ibm_runtime.session.Session")
     @patch("qiskit_ibm_runtime.session.QiskitRuntimeService")
     def test_backend_str_as_session(self, _, mock_session):
@@ -153,15 +188,6 @@ class TestPrimitives(IBMTestCase):
             with self.subTest(primitive=cls):
                 inst = cls(session=backend)
                 self.assertEqual(inst.session.backend(), backend.name)
-
-    @patch("qiskit_ibm_runtime.session.Session")
-    @patch("qiskit_ibm_runtime.session.QiskitRuntimeService")
-    def test_default_session(self, *_):
-        """Test a session is created if not passed in."""
-        sampler = Sampler()
-        self.assertIsNotNone(sampler.session)
-        estimator = Estimator()
-        self.assertEqual(estimator.session, sampler.session)
 
     def test_default_session_context_manager(self):
         """Test getting default session within context manager."""
@@ -197,7 +223,7 @@ class TestPrimitives(IBMTestCase):
                     self.assertEqual(inst2.session, session)
                 self.assertFalse(session._active)
 
-    def test_run_inputs_default(self):
+    def test_run_default_options(self):
         """Test run using default options."""
         session = MagicMock(spec=Session)
         options_vars = [
@@ -228,7 +254,7 @@ class TestPrimitives(IBMTestCase):
 
                     self._assert_dict_paritally_equal(inputs, expected)
 
-    def test_run_inputs_updated_default(self):
+    def test_run_updated_default_options(self):
         """Test run using updated default options."""
         session = MagicMock(spec=Session)
         primitives = [Sampler, Estimator]
@@ -255,7 +281,7 @@ class TestPrimitives(IBMTestCase):
                     },
                 )
 
-    def test_run_inputs_overwrite(self):
+    def test_run_overwrite_options(self):
         """Test run using overwritten options."""
         session = MagicMock(spec=Session)
         options_vars = [
@@ -320,6 +346,33 @@ class TestPrimitives(IBMTestCase):
                     inputs = kwargs["inputs"]
                 self.assertEqual(inputs.get("foo"), "foo")
 
+    def test_run_multiple_different_options(self):
+        """Test multiple runs with different options."""
+        session = MagicMock(spec=Session)
+        primitives = [Sampler, Estimator]
+        for cls in primitives:
+            with self.subTest(primitive=cls):
+                inst = cls(session=session)
+                inst.run(self.qx, observables=self.obs, shots=100)
+                inst.run(self.qx, observables=self.obs, shots=200)
+                kwargs_list = session.run.call_args_list
+                for idx, shots in zip([0, 1], [100, 200]):
+                    self.assertEqual(
+                        kwargs_list[idx][1]["inputs"]["run_options"]["shots"], shots
+                    )
+                self.assertDictEqual(asdict(inst.options), asdict(Options()))
+
+    def test_run_same_session(self):
+        """Test multiple runs within a session."""
+        num_runs = 5
+        primitives = [Sampler, Estimator]
+        session = MagicMock(spec=Session)
+        for idx in range(num_runs):
+            cls = primitives[idx % 2]
+            inst = cls(session=session)
+            inst.run(self.qx, observables=self.obs)
+        self.assertEqual(session.run.call_count, num_runs)
+
     def _update_dict(self, dict1, dict2):
         for key, val in dict1.items():
             if isinstance(val, dict):
@@ -328,8 +381,7 @@ class TestPrimitives(IBMTestCase):
                 dict1[key] = dict2.pop(key)
 
     def _assert_dict_paritally_equal(self, dict1, dict2):
-        for key, val in dict2.items():
-            if isinstance(val, dict):
-                self._assert_dict_paritally_equal(dict1.get(key), val)
-            elif key in dict1:
-                self.assertEqual(val, dict1[key])
+        self.assertTrue(
+            dict_paritally_equal(dict1, dict2),
+            f"{dict1} and {dict2} not partially equal.",
+        )
