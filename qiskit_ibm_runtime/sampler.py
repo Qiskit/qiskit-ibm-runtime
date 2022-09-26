@@ -17,7 +17,6 @@ from typing import Dict, Iterable, Optional, Sequence, Any, Union
 import copy
 
 from qiskit.circuit import QuantumCircuit, Parameter
-from qiskit.circuit.parametertable import ParameterView
 
 # TODO import BaseSampler and SamplerResult from terra once released
 from .qiskit.primitives import BaseSampler, SamplerResult
@@ -158,7 +157,6 @@ class Sampler(BaseSampler):
         self,
         circuits: QuantumCircuit | Sequence[QuantumCircuit],
         parameter_values: Sequence[float] | Sequence[Sequence[float]] | None = None,
-        parameters: Sequence[Parameter] | Sequence[Sequence[Parameter]] | None = None,
         **kwargs: Any,
     ) -> RuntimeJob:
         """Submit a request to the sampler primitive program.
@@ -167,8 +165,6 @@ class Sampler(BaseSampler):
             circuits: A (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
                 a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
             parameter_values: Concrete parameters to be bound.
-            parameters: Parameters of each of the quantum circuits.
-                Defaults to ``[circ.parameters for circ in circuits]``.
             **kwargs: Individual options to overwrite the default primitive options.
 
         Returns:
@@ -186,17 +182,10 @@ class Sampler(BaseSampler):
             and not isinstance(parameter_values[0], (Sequence, Iterable))
         ):
             parameter_values = [parameter_values]  # type: ignore[assignment]
-        if (
-            parameters is not None
-            and len(parameters) > 1
-            and not isinstance(parameters[0], Sequence)
-        ):
-            parameters = [parameters]
 
         return super().run(
             circuits=circuits,
             parameter_values=parameter_values,
-            parameters=parameters,
             **kwargs,
         )
 
@@ -204,7 +193,6 @@ class Sampler(BaseSampler):
         self,
         circuits: Sequence[QuantumCircuit],
         parameter_values: Sequence[Sequence[float]],
-        parameters: Sequence[ParameterView],
         **kwargs: Any,
     ) -> RuntimeJob:
         """Submit a request to the sampler primitive program.
@@ -215,11 +203,6 @@ class Sampler(BaseSampler):
 
             parameter_values: An optional list of concrete parameters to be bound.
 
-            parameters: A list of parameters of the quantum circuits
-                (:class:`~qiskit.circuit.parametertable.ParameterView` or
-                a list of :class:`~qiskit.circuit.Parameter`).
-                Defaults to ``[circ.parameters for circ in circuits]``.
-
             **kwargs: Individual options to overwrite the default primitive options.
 
         Returns:
@@ -227,7 +210,7 @@ class Sampler(BaseSampler):
         """
         inputs = {
             "circuits": circuits,
-            "parameters": parameters,
+            "parameters": [circ.parameters for circ in circuits],
             "circuit_indices": list(range(len(circuits))),
             "parameter_values": parameter_values,
         }
