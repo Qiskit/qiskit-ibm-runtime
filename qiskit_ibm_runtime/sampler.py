@@ -21,6 +21,7 @@ from qiskit.circuit.parametertable import ParameterView
 
 # TODO import BaseSampler and SamplerResult from terra once released
 from .qiskit.primitives import BaseSampler, SamplerResult
+from .qiskit.primitives.utils import _circuit_key
 from .qiskit_runtime_service import QiskitRuntimeService
 from .options import Options
 from .utils.sampler_result_decoder import SamplerResultDecoder
@@ -113,6 +114,13 @@ class Sampler(BaseSampler):
             circuits=circuits,
             parameters=parameters,
         )
+
+        self._first_run = True
+        self._circuits_map = {}
+        if self.circuits:
+            for circuit in self.circuits:
+                circuit_id = str(hash(_circuit_key(circuit)))
+                self._circuits_map[circuit_id] = circuit
 
         if skip_transpilation:
             deprecate_arguments(
@@ -225,10 +233,24 @@ class Sampler(BaseSampler):
         Returns:
             Submitted job.
         """
+        circuits_map = {}
+        circuit_ids = []
+        for circuit in circuits:
+            circuit_id = str(hash(_circuit_key(circuit)))
+            circuit_ids.append(circuit_id)
+            if circuit_id in self._circuits_map:
+                continue
+            self._circuits_map[circuit_id] = circuit
+            circuits_map[circuit_id] = circuit
+
+        if self._first_run:
+            self._first_run = False
+            circuits_map.update(self._circuits_map)
+
         inputs = {
-            "circuits": circuits,
+            "circuits": circuits_map,
             "parameters": parameters,
-            "circuit_indices": list(range(len(circuits))),
+            "circuit_ids": circuit_ids,
             "parameter_values": parameter_values,
         }
         combined = self.options._merge_options(kwargs)

@@ -26,6 +26,7 @@ from qiskit.quantum_info.operators.base_operator import BaseOperator
 
 # TODO import BaseEstimator and EstimatorResult from terra once released
 from .qiskit.primitives import BaseEstimator, EstimatorResult
+from .qiskit.primitives.utils import _circuit_key
 from .qiskit_runtime_service import QiskitRuntimeService
 from .utils.estimator_result_decoder import EstimatorResultDecoder
 from .runtime_job import RuntimeJob
@@ -140,6 +141,13 @@ class Estimator(BaseEstimator):
             observables=observables,
             parameters=parameters,
         )
+
+        self._first_run = True
+        self._circuits_map = {}
+        if self.circuits:
+            for circuit in self.circuits:
+                circuit_id = str(hash(_circuit_key(circuit)))
+                self._circuits_map[circuit_id] = circuit
 
         if skip_transpilation:
             deprecate_arguments(
@@ -269,9 +277,23 @@ class Estimator(BaseEstimator):
         Returns:
             Submitted job.
         """
+        circuits_map = {}
+        circuit_ids = []
+        for circuit in circuits:
+            circuit_id = str(hash(_circuit_key(circuit)))
+            circuit_ids.append(circuit_id)
+            if circuit_id in self._circuits_map:
+                continue
+            self._circuits_map[circuit_id] = circuit
+            circuits_map[circuit_id] = circuit
+
+        if self._first_run:
+            self._first_run = False
+            circuits_map.update(self._circuits_map)
+
         inputs = {
-            "circuits": circuits,
-            "circuit_indices": list(range(len(circuits))),
+            "circuits": circuits_map,
+            "circuit_ids": circuit_ids,
             "observables": observables,
             "observable_indices": list(range(len(observables))),
             "parameters": parameters,
