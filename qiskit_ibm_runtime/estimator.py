@@ -275,7 +275,7 @@ class Estimator(BaseEstimator):
             **kwargs: Individual options to overwrite the default primitive options.
 
         Returns:
-            Submitted job.
+            Submitted job
         """
         circuits_map = {}
         circuit_ids = []
