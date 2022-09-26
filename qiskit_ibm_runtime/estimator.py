@@ -159,7 +159,9 @@ class Estimator(BaseEstimator):
             self.options = Options()
         elif isinstance(options, Options):
             self.options = copy.deepcopy(options)
-            skip_transpilation = self.options.transpilation.skip_transpilation
+            skip_transpilation = (
+                self.options.transpilation.skip_transpilation  # type: ignore[union-attr]
+            )
         else:
             backend = options.pop("backend", None)
             if backend is not None:
@@ -172,7 +174,9 @@ class Estimator(BaseEstimator):
             skip_transpilation = options.get("transpilation", {}).get(
                 "skip_transpilation", False
             )
-        self.options.transpilation.skip_transpilation = skip_transpilation
+        self.options.transpilation.skip_transpilation = (  # type: ignore[union-attr]
+            skip_transpilation
+        )
 
         self._initial_inputs = {
             "circuits": circuits,
