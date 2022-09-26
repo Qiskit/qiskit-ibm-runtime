@@ -1,0 +1,12 @@
+---
+features:
+  - |
+    The :class:`qiskit_ibm_runtime.Options` class now accepts an `instance`
+    parameter under `environment`, which can be the hub/group/project
+    used to run the primitives.
+deprecations:
+  - |
+    Passing `instance` parameter to the
+    :meth:`qiskit_ibm_runtime.QiskitRuntimeService.run` has been deprecated.
+    Instead, you can pass the `instance` parameter inside the `options`
+    parameter.
