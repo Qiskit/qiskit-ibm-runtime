@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 import copy
+import json
 from typing import Iterable, Optional, Dict, Sequence, Any, Union
 
 from qiskit.circuit import QuantumCircuit, Parameter
@@ -29,6 +30,8 @@ from .qiskit.primitives import BaseEstimator, EstimatorResult
 from .qiskit.primitives.utils import _circuit_key
 from .qiskit_runtime_service import QiskitRuntimeService
 from .utils.estimator_result_decoder import EstimatorResultDecoder
+from .utils.json import RuntimeEncoder
+from .utils.utils import _hash
 from .runtime_job import RuntimeJob
 from .utils.deprecation import (
     deprecate_arguments,
@@ -146,7 +149,9 @@ class Estimator(BaseEstimator):
         self._circuits_map = {}
         if self.circuits:
             for circuit in self.circuits:
-                circuit_id = str(hash(_circuit_key(circuit)))
+                circuit_id = _hash(
+                    json.dumps(_circuit_key(circuit), cls=RuntimeEncoder)
+                )
                 self._circuits_map[circuit_id] = circuit
 
         if skip_transpilation:
@@ -280,7 +285,7 @@ class Estimator(BaseEstimator):
         circuits_map = {}
         circuit_ids = []
         for circuit in circuits:
-            circuit_id = str(hash(_circuit_key(circuit)))
+            circuit_id = _hash(json.dumps(_circuit_key(circuit), cls=RuntimeEncoder))
             circuit_ids.append(circuit_id)
             if circuit_id in self._circuits_map:
                 continue

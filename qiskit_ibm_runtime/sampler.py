@@ -15,6 +15,7 @@
 from __future__ import annotations
 from typing import Dict, Iterable, Optional, Sequence, Any, Union
 import copy
+import json
 
 from qiskit.circuit import QuantumCircuit, Parameter
 from qiskit.circuit.parametertable import ParameterView
@@ -25,6 +26,8 @@ from .qiskit.primitives.utils import _circuit_key
 from .qiskit_runtime_service import QiskitRuntimeService
 from .options import Options
 from .utils.sampler_result_decoder import SamplerResultDecoder
+from .utils.json import RuntimeEncoder
+from .utils.utils import _hash
 from .runtime_job import RuntimeJob
 from .ibm_backend import IBMBackend
 from .session import get_default_session
@@ -119,7 +122,9 @@ class Sampler(BaseSampler):
         self._circuits_map = {}
         if self.circuits:
             for circuit in self.circuits:
-                circuit_id = str(hash(_circuit_key(circuit)))
+                circuit_id = _hash(
+                    json.dumps(_circuit_key(circuit), cls=RuntimeEncoder)
+                )
                 self._circuits_map[circuit_id] = circuit
 
         if skip_transpilation:
@@ -236,7 +241,7 @@ class Sampler(BaseSampler):
         circuits_map = {}
         circuit_ids = []
         for circuit in circuits:
-            circuit_id = str(hash(_circuit_key(circuit)))
+            circuit_id = _hash(json.dumps(_circuit_key(circuit), cls=RuntimeEncoder))
             circuit_ids.append(circuit_id)
             if circuit_id in self._circuits_map:
                 continue

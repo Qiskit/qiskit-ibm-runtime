@@ -16,6 +16,7 @@ import keyword
 import logging
 import os
 import re
+import hashlib
 from queue import Queue
 from threading import Condition
 from typing import List, Optional, Any, Dict, Union, Tuple, Type
@@ -288,6 +289,13 @@ def _filter_value(
                 data[filter_key[0]][filter_key[1]] = "..."
             elif isinstance(value, dict):
                 _filter_value(value, filter_keys)
+
+
+def _hash(hash_str: str) -> str:
+    """Hashes and returns a digest.
+    blake2s is supposedly faster than SHAs.
+    """
+    return hashlib.blake2s(hash_str.encode()).hexdigest()
 
 
 class RefreshQueue(Queue):
