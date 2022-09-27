@@ -124,6 +124,9 @@ class Session:
                 * log_level: logging level to set in the execution environment. The valid
                   log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
                   The default level is ``WARNING``.
+                * instance: The hub/group/project to use, in that format. This is only supported
+                    for ``ibm_quantum`` channel. If ``None``, a hub/group/project that provides
+                    access to the target backend is randomly selected.
 
         Returns:
             Submitted job.
