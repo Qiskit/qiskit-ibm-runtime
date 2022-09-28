@@ -194,12 +194,15 @@ class Estimator(BaseEstimator):
             self._session = get_default_session(service, backend)
 
         self._first_run = True
+        self._circuits_map = {}
         if self.circuits:
             for circuit in self.circuits:
                 circuit_id = _hash(
                     json.dumps(_circuit_key(circuit), cls=RuntimeEncoder)
                 )
-                self._session._circuits_map[circuit_id] = circuit
+                if circuit_id not in self._session._circuits_map:
+                    self._circuits_map[circuit_id] = circuit
+                    self._session._circuits_map[circuit_id] = circuit
 
     def run(
         self,
@@ -279,7 +282,7 @@ class Estimator(BaseEstimator):
 
         if self._first_run:
             self._first_run = False
-            circuits_map.update(self._session._circuits_map)
+            circuits_map.update(self._circuits_map)
 
         inputs = {
             "circuits": circuits_map,
