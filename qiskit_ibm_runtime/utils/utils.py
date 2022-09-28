@@ -25,8 +25,6 @@ import requests
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 from ibm_platform_services import ResourceControllerV2
 
-from ..exceptions import IBMInputValueError
-
 
 def calculate_cost(
     cost_parameters: Dict, num_circuits: int, shots: Union[float, int]
@@ -65,33 +63,6 @@ def validate_job_tags(
         or not all(isinstance(tag, str) for tag in job_tags)
     ):
         raise exception("job_tags needs to be a list of strings.")
-
-
-def validate_runtime_options(options: Dict, channel: str) -> None:
-    """Validate runtime options.
-
-    Args:
-        options: Runtime options to validate.
-
-    Raises:
-        IBMInputValueError: If input values are invalid.
-    """
-    if options.get("image") and not re.match(
-        "[a-zA-Z0-9]+([/.\\-_][a-zA-Z0-9]+)*:[a-zA-Z0-9]+([.\\-_][a-zA-Z0-9]+)*$",
-        options["image"],
-    ):
-        raise IBMInputValueError('"image" needs to be in form of image_name:tag')
-
-    if channel == "ibm_quantum" and not options.get("backend"):
-        raise IBMInputValueError('"backend" is required for ``ibm_quantum`` runtime.')
-
-    if options.get("log_level") and not isinstance(
-        logging.getLevelName(options["log_level"].upper()), int
-    ):
-        raise IBMInputValueError(
-            f"{options['log_level']} is not a valid log level. The valid log levels are: "
-            "`DEBUG`, `INFO`, `WARNING`, `ERROR`, and `CRITICAL`."
-        )
 
 
 def get_iam_api_url(cloud_url: str) -> str:
