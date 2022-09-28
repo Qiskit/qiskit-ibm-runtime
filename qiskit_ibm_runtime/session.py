@@ -17,6 +17,7 @@ from types import TracebackType
 from functools import wraps
 
 from qiskit_ibm_runtime import QiskitRuntimeService
+from qiskit.circuit import QuantumCircuit
 from .runtime_job import RuntimeJob
 from .runtime_program import ParameterNamespace
 from .program.result_decoder import ResultDecoder
@@ -95,6 +96,8 @@ class Session:
 
         self._session_id: Optional[str] = None
         self._active = True
+
+        self._circuits_map: Dict[str, QuantumCircuit] = {}
 
         self._max_time = (
             max_time

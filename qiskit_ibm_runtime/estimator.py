@@ -144,15 +144,6 @@ class Estimator(BaseEstimator):
             parameters=parameters,
         )
 
-        self._first_run = True
-        self._circuits_map = {}
-        if self.circuits:
-            for circuit in self.circuits:
-                circuit_id = _hash(
-                    json.dumps(_circuit_key(circuit), cls=RuntimeEncoder)
-                )
-                self._circuits_map[circuit_id] = circuit
-
         if skip_transpilation:
             deprecate_arguments(
                 "skip_transpilation",
@@ -201,6 +192,14 @@ class Estimator(BaseEstimator):
         else:
             backend = session or backend
             self._session = get_default_session(service, backend)
+
+        self._first_run = True
+        if self.circuits:
+            for circuit in self.circuits:
+                circuit_id = _hash(
+                    json.dumps(_circuit_key(circuit), cls=RuntimeEncoder)
+                )
+                self._session._circuits_map[circuit_id] = circuit
 
     def run(
         self,
@@ -273,14 +272,14 @@ class Estimator(BaseEstimator):
         for circuit in circuits:
             circuit_id = _hash(json.dumps(_circuit_key(circuit), cls=RuntimeEncoder))
             circuit_ids.append(circuit_id)
-            if circuit_id in self._circuits_map:
+            if circuit_id in self._session._circuits_map:
                 continue
-            self._circuits_map[circuit_id] = circuit
+            self._session._circuits_map[circuit_id] = circuit
             circuits_map[circuit_id] = circuit
 
         if self._first_run:
             self._first_run = False
-            circuits_map.update(self._circuits_map)
+            circuits_map.update(self._session._circuits_map)
 
         inputs = {
             "circuits": circuits_map,
