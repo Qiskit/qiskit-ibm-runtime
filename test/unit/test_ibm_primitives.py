@@ -17,14 +17,23 @@ import copy
 from unittest.mock import MagicMock, patch, ANY
 import warnings
 from dataclasses import asdict
+from typing import Dict
 
+from qiskit.circuit import QuantumCircuit
 from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit.quantum_info import SparsePauliOp
+
 from qiskit_ibm_runtime import Sampler, Estimator, Options, Session
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 import qiskit_ibm_runtime.session as session_pkg
 from ..ibm_test_case import IBMTestCase
 from ..utils import dict_paritally_equal
+
+
+class MockSession(Session):
+    """Mock for session class"""
+
+    _circuits_map: Dict[str, QuantumCircuit] = {}
 
 
 class TestPrimitives(IBMTestCase):
@@ -45,7 +54,7 @@ class TestPrimitives(IBMTestCase):
         primitives = [Sampler, Estimator]
         for cls in primitives:
             with self.subTest(primitive=cls):
-                inst = cls(session=MagicMock(spec=Session), skip_transpilation=True)
+                inst = cls(session=MagicMock(spec=MockSession), skip_transpilation=True)
                 self.assertTrue(inst.options.transpilation.skip_transpilation)
 
     def test_skip_transpilation_overwrite(self):
@@ -56,7 +65,7 @@ class TestPrimitives(IBMTestCase):
         for cls in primitives:
             with self.subTest(primitive=cls):
                 inst = cls(
-                    session=MagicMock(spec=Session),
+                    session=MagicMock(spec=MockSession),
                     options=options,
                     skip_transpilation=True,
                 )
@@ -77,7 +86,7 @@ class TestPrimitives(IBMTestCase):
         for cls in primitives:
             for options in options_vars:
                 with self.subTest(primitive=cls, options=options):
-                    inst = cls(session=MagicMock(spec=Session), options=options)
+                    inst = cls(session=MagicMock(spec=MockSession), options=options)
                     expected = asdict(Options())
                     self._update_dict(expected, copy.deepcopy(options))
                     self.assertDictEqual(expected, asdict(inst.options))
@@ -109,7 +118,7 @@ class TestPrimitives(IBMTestCase):
 
     def test_runtime_options(self):
         """Test RuntimeOptions specified as primitive options."""
-        session = MagicMock(spec=Session)
+        session = MagicMock(spec=MockSession)
         primitives = [Sampler, Estimator]
         env_vars = [
             {"log_level": "DEBUG"},
@@ -138,7 +147,7 @@ class TestPrimitives(IBMTestCase):
         for cls in primitives:
             with self.subTest(primitive=cls):
                 options.transpilation.skip_transpilation = True
-                inst = cls(session=MagicMock(spec=Session), options=options)
+                inst = cls(session=MagicMock(spec=MockSession), options=options)
                 options.transpilation.skip_transpilation = False
                 self.assertTrue(inst.options.transpilation.skip_transpilation)
 
@@ -225,7 +234,7 @@ class TestPrimitives(IBMTestCase):
 
     def test_run_default_options(self):
         """Test run using default options."""
-        session = MagicMock(spec=Session)
+        session = MagicMock(spec=MockSession)
         options_vars = [
             (Options(resilience_level=9), {"resilience_settings": {"level": 9}}),
             (
@@ -256,7 +265,7 @@ class TestPrimitives(IBMTestCase):
 
     def test_run_updated_default_options(self):
         """Test run using updated default options."""
-        session = MagicMock(spec=Session)
+        session = MagicMock(spec=MockSession)
         primitives = [Sampler, Estimator]
         for cls in primitives:
             with self.subTest(primitive=cls):
@@ -283,7 +292,7 @@ class TestPrimitives(IBMTestCase):
 
     def test_run_overwrite_options(self):
         """Test run using overwritten options."""
-        session = MagicMock(spec=Session)
+        session = MagicMock(spec=MockSession)
         options_vars = [
             ({"resilience_level": 9}, {"resilience_settings": {"level": 9}}),
             ({"shots": 200}, {"run_options": {"shots": 200}}),
@@ -317,7 +326,7 @@ class TestPrimitives(IBMTestCase):
 
     def test_kwarg_options(self):
         """Test specifying arbitrary options."""
-        session = MagicMock(spec=Session)
+        session = MagicMock(spec=MockSession)
         primitives = [Sampler, Estimator]
         for cls in primitives:
             with self.subTest(primitive=cls):
@@ -333,7 +342,7 @@ class TestPrimitives(IBMTestCase):
 
     def test_run_kwarg_options(self):
         """Test specifying arbitrary options in run."""
-        session = MagicMock(spec=Session)
+        session = MagicMock(spec=MockSession)
         primitives = [Sampler, Estimator]
         for cls in primitives:
             with self.subTest(primitive=cls):
@@ -348,7 +357,7 @@ class TestPrimitives(IBMTestCase):
 
     def test_run_multiple_different_options(self):
         """Test multiple runs with different options."""
-        session = MagicMock(spec=Session)
+        session = MagicMock(spec=MockSession)
         primitives = [Sampler, Estimator]
         for cls in primitives:
             with self.subTest(primitive=cls):
@@ -366,7 +375,7 @@ class TestPrimitives(IBMTestCase):
         """Test multiple runs within a session."""
         num_runs = 5
         primitives = [Sampler, Estimator]
-        session = MagicMock(spec=Session)
+        session = MagicMock(spec=MockSession)
         for idx in range(num_runs):
             cls = primitives[idx % 2]
             inst = cls(session=session)
