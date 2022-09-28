@@ -16,8 +16,9 @@ from typing import Dict, Optional, Type, Union
 from types import TracebackType
 from functools import wraps
 
-from qiskit_ibm_runtime import QiskitRuntimeService
 from qiskit.circuit import QuantumCircuit
+
+from qiskit_ibm_runtime import QiskitRuntimeService
 from .runtime_job import RuntimeJob
 from .runtime_program import ParameterNamespace
 from .program.result_decoder import ResultDecoder
