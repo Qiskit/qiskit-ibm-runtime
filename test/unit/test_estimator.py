@@ -67,6 +67,7 @@ class TestEstimator(IBMTestCase):
             with patch.object(estimator._session, "run") as mock_run:
                 estimator.run([psi1], [H1], [theta1])
                 run_kwargs = mock_run.call_args.kwargs
+                print(f"Printing run_kwargs in estimator: {run_kwargs}")
                 self.assertEqual(
                     run_kwargs.get("inputs").get("circuits"),
                     {psi1_id: psi1, psi2_id: psi2},

@@ -65,6 +65,7 @@ class TestSampler(IBMTestCase):
             with patch.object(sampler._session, "run") as mock_run:
                 sampler.run([pqc], [theta1])
                 run_kwargs = mock_run.call_args.kwargs
+                print(f"Printing run_kwargs in sampler: {run_kwargs}")
                 self.assertEqual(
                     run_kwargs.get("inputs").get("circuits"),
                     {pqc_id: pqc, pqc2_id: pqc2},
