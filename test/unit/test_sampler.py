@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Tests for estimator class."""
+"""Tests for sampler class."""
 
 import json
 from unittest.mock import patch
@@ -23,15 +23,15 @@ from qiskit_ibm_runtime.utils.json import RuntimeEncoder
 from qiskit_ibm_runtime.utils.utils import _hash
 from qiskit_ibm_runtime.qiskit.primitives.utils import _circuit_key
 
-from qiskit_ibm_runtime import Estimator
+from qiskit_ibm_runtime import Sampler
 import qiskit_ibm_runtime.session as session_pkg
 from ..ibm_test_case import IBMTestCase
 
 from .mock.fake_runtime_service import FakeRuntimeService
 
 
-class TestEstimator(IBMTestCase):
-    """Class for testing the Estimator class."""
+class TestSampler(IBMTestCase):
+    """Class for testing the Sampler class."""
 
     @classmethod
     def setUpClass(cls):
@@ -43,39 +43,36 @@ class TestEstimator(IBMTestCase):
         super().tearDown()
         session_pkg._DEFAULT_SESSION = None
 
-    def test_estimator_circuit_caching(self):
-        """Test circuit caching in Estimator class"""
-        psi1 = RealAmplitudes(num_qubits=2, reps=2)
-        psi2 = RealAmplitudes(num_qubits=2, reps=3)
-        psi1_id = _hash(json.dumps(_circuit_key(psi1), cls=RuntimeEncoder))
-        psi2_id = _hash(json.dumps(_circuit_key(psi2), cls=RuntimeEncoder))
-        # pylint: disable=invalid-name
-        H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
-        H2 = SparsePauliOp.from_list([("IZ", 1)])
+    def test_sampler_circuit_caching(self):
+        """Test circuit caching in Sampler class"""
 
-        with Estimator(
-            circuits=[psi1, psi2],
-            observables=[H1, H2],
+        pqc = RealAmplitudes(num_qubits=2, reps=2)
+        pqc.measure_all()
+        pqc2 = RealAmplitudes(num_qubits=2, reps=3)
+        pqc2.measure_all()
+        pqc_id = _hash(json.dumps(_circuit_key(pqc), cls=RuntimeEncoder))
+        pqc2_id = _hash(json.dumps(_circuit_key(pqc2), cls=RuntimeEncoder))
+
+        theta1 = [0, 1, 1, 2, 3, 5]
+        theta2 = [0, 1, 2, 3, 4, 5, 6, 7]
+
+        with Sampler(
+            circuits=[pqc, pqc2],
             service=FakeRuntimeService(channel="ibm_quantum", token="abc"),
             options={"backend": "ibmq_qasm_simulator"},
-        ) as estimator:
+        ) as sampler:
 
-            theta1 = [0, 1, 1, 2, 3, 5]
-            theta2 = [0, 1, 1, 2, 3, 5, 8, 13]
-
-            # calculate [ <psi1(theta1)|H1|psi1(theta1)> ]
-            with patch.object(estimator._session, "run") as mock_run:
-                estimator.run([psi1], [H1], [theta1])
+            with patch.object(sampler._session, "run") as mock_run:
+                sampler.run([pqc], [theta1])
                 run_kwargs = mock_run.call_args.kwargs
                 self.assertEqual(
                     run_kwargs.get("inputs").get("circuits"),
-                    {psi1_id: psi1, psi2_id: psi2},
+                    {pqc_id: pqc, pqc2_id: pqc2},
                 )
-                self.assertEqual(run_kwargs.get("inputs").get("circuit_ids"), [psi1_id])
+                self.assertEqual(run_kwargs.get("inputs").get("circuit_ids"), [pqc_id])
 
-            # calculate [ <psi2(theta2)|H2|psi2(theta2)> ]
-            with patch.object(estimator._session, "run") as mock_run:
-                estimator.run([psi2], [H2], [theta2])
+            with patch.object(sampler._session, "run") as mock_run:
+                sampler.run([pqc2], [theta2])
                 run_kwargs = mock_run.call_args.kwargs
                 self.assertEqual(run_kwargs.get("inputs").get("circuits"), {})
-                self.assertEqual(run_kwargs.get("inputs").get("circuit_ids"), [psi2_id])
+                self.assertEqual(run_kwargs.get("inputs").get("circuit_ids"), [pqc2_id])
