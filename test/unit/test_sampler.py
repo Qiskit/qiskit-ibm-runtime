@@ -14,9 +14,7 @@
 
 import json
 from unittest.mock import patch, ANY
-from typing import Dict
 
-from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit.quantum_info import SparsePauliOp
@@ -30,12 +28,6 @@ import qiskit_ibm_runtime.session as session_pkg
 from ..ibm_test_case import IBMTestCase
 
 from .mock.fake_runtime_service import FakeRuntimeService
-
-
-class MockSession(Session):
-    """Mock for session class"""
-
-    _circuits_map: Dict[str, QuantumCircuit] = {}
 
 
 class TestSampler(IBMTestCase):

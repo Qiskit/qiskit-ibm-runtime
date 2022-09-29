@@ -13,7 +13,7 @@
 """Tests for estimator class."""
 
 import json
-from unittest.mock import patch
+from unittest.mock import patch, ANY
 
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.test.reference_circuits import ReferenceCircuits
@@ -23,7 +23,7 @@ from qiskit_ibm_runtime.utils.json import RuntimeEncoder
 from qiskit_ibm_runtime.utils.utils import _hash
 from qiskit_ibm_runtime.qiskit.primitives.utils import _circuit_key
 
-from qiskit_ibm_runtime import Estimator
+from qiskit_ibm_runtime import Estimator, Session
 import qiskit_ibm_runtime.session as session_pkg
 from ..ibm_test_case import IBMTestCase
 
@@ -49,34 +49,59 @@ class TestEstimator(IBMTestCase):
         psi2 = RealAmplitudes(num_qubits=2, reps=3)
         psi1_id = _hash(json.dumps(_circuit_key(psi1), cls=RuntimeEncoder))
         psi2_id = _hash(json.dumps(_circuit_key(psi2), cls=RuntimeEncoder))
+
         # pylint: disable=invalid-name
         H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
         H2 = SparsePauliOp.from_list([("IZ", 1)])
 
-        with Estimator(
-            circuits=[psi1, psi2],
-            observables=[H1, H2],
-            service=FakeRuntimeService(channel="ibm_quantum", token="abc"),
-            options={"backend": "ibmq_qasm_simulator"},
-        ) as estimator:
+        theta1 = [0, 1, 1, 2, 3, 5]
+        theta2 = [0, 1, 1, 2, 3, 5, 8, 13]
 
-            theta1 = [0, 1, 1, 2, 3, 5]
-            theta2 = [0, 1, 1, 2, 3, 5, 8, 13]
+        with Session(
+            service=FakeRuntimeService(channel="ibm_quantum", token="abc"),
+            backend="ibmq_qasm_simulator",
+        ) as session:
+            estimator = Estimator(session=session)
 
             # calculate [ <psi1(theta1)|H1|psi1(theta1)> ]
             with patch.object(estimator._session, "run") as mock_run:
-                estimator.run([psi1], [H1], [theta1])
-                run_kwargs = mock_run.call_args.kwargs
-                print(f"Printing run_kwargs in estimator: {run_kwargs}")
-                self.assertEqual(
-                    run_kwargs.get("inputs").get("circuits"),
-                    {psi1_id: psi1, psi2_id: psi2},
+                estimator.run([psi1, psi2], [H1, H2], [theta1, theta2])
+                mock_run.assert_called_once_with(
+                    program_id="estimator",
+                    inputs={
+                        "circuits": {
+                            psi1_id: psi1,
+                            psi2_id: psi2,
+                        },
+                        "circuit_ids": [psi1_id, psi2_id],
+                        "observables": ANY,
+                        "observable_indices": ANY,
+                        "parameters": ANY,
+                        "parameter_values": ANY,
+                        "transpilation_settings": ANY,
+                        "resilience_settings": ANY,
+                        "run_options": ANY,
+                    },
+                    options=ANY,
+                    result_decoder=ANY,
                 )
-                self.assertEqual(run_kwargs.get("inputs").get("circuit_ids"), [psi1_id])
 
             # calculate [ <psi2(theta2)|H2|psi2(theta2)> ]
             with patch.object(estimator._session, "run") as mock_run:
                 estimator.run([psi2], [H2], [theta2])
-                run_kwargs = mock_run.call_args.kwargs
-                self.assertEqual(run_kwargs.get("inputs").get("circuits"), {})
-                self.assertEqual(run_kwargs.get("inputs").get("circuit_ids"), [psi2_id])
+                mock_run.assert_called_once_with(
+                    program_id="estimator",
+                    inputs={
+                        "circuits": {},
+                        "circuit_ids": [psi2_id],
+                        "observables": ANY,
+                        "observable_indices": ANY,
+                        "parameters": ANY,
+                        "parameter_values": ANY,
+                        "transpilation_settings": ANY,
+                        "resilience_settings": ANY,
+                        "run_options": ANY,
+                    },
+                    options=ANY,
+                    result_decoder=ANY,
+                )
