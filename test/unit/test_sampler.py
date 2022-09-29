@@ -13,7 +13,7 @@
 """Tests for sampler class."""
 
 import json
-from unittest.mock import patch
+from unittest.mock import patch, ANY
 from typing import Dict
 
 from qiskit.circuit import QuantumCircuit
@@ -69,23 +69,39 @@ class TestSampler(IBMTestCase):
             backend="ibmq_qasm_simulator",
         ) as session:
             sampler = Sampler(session=session)
-
             with patch.object(sampler._session, "run") as mock_run:
                 sampler.run([pqc, pqc2], [theta1, theta2])
-                run_kwargs = mock_run.call_args.kwargs
-                run_args = mock_run.call_args.args
-                print(f"Printing run_args in sampler: {run_args}")
-                print(f"Printing run_kwargs in sampler: {run_kwargs}")
-                self.assertEqual(
-                    run_kwargs.get("inputs").get("circuits"),
-                    {pqc_id: pqc, pqc2_id: pqc2},
-                )
-                self.assertEqual(
-                    run_kwargs.get("inputs").get("circuit_ids"), [pqc_id, pqc2_id]
+                mock_run.assert_called_once_with(
+                    program_id="sampler",
+                    inputs={
+                        "circuits": {
+                            pqc_id: pqc,
+                            pqc2_id: pqc2,
+                        },
+                        "circuit_ids": [pqc_id, pqc2_id],
+                        "parameters": ANY,
+                        "parameter_values": ANY,
+                        "transpilation_settings": ANY,
+                        "resilience_settings": ANY,
+                        "run_options": ANY,
+                    },
+                    options=ANY,
+                    result_decoder=ANY,
                 )
 
             with patch.object(sampler._session, "run") as mock_run:
                 sampler.run([pqc2], [theta2])
-                run_kwargs = mock_run.call_args.kwargs
-                self.assertEqual(run_kwargs.get("inputs").get("circuits"), {})
-                self.assertEqual(run_kwargs.get("inputs").get("circuit_ids"), [pqc2_id])
+                mock_run.assert_called_once_with(
+                    program_id="sampler",
+                    inputs={
+                        "circuits": {},
+                        "circuit_ids": [pqc2_id],
+                        "parameters": ANY,
+                        "parameter_values": ANY,
+                        "transpilation_settings": ANY,
+                        "resilience_settings": ANY,
+                        "run_options": ANY,
+                    },
+                    options=ANY,
+                    result_decoder=ANY,
+                )
