@@ -14,7 +14,9 @@
 
 import json
 from unittest.mock import patch
+from typing import Dict
 
+from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit.quantum_info import SparsePauliOp
@@ -23,11 +25,17 @@ from qiskit_ibm_runtime.utils.json import RuntimeEncoder
 from qiskit_ibm_runtime.utils.utils import _hash
 from qiskit_ibm_runtime.qiskit.primitives.utils import _circuit_key
 
-from qiskit_ibm_runtime import Sampler
+from qiskit_ibm_runtime import Sampler, Session
 import qiskit_ibm_runtime.session as session_pkg
 from ..ibm_test_case import IBMTestCase
 
 from .mock.fake_runtime_service import FakeRuntimeService
+
+
+class MockSession(Session):
+    """Mock for session class"""
+
+    _circuits_map: Dict[str, QuantumCircuit] = {}
 
 
 class TestSampler(IBMTestCase):
@@ -56,14 +64,14 @@ class TestSampler(IBMTestCase):
         theta1 = [0, 1, 1, 2, 3, 5]
         theta2 = [0, 1, 2, 3, 4, 5, 6, 7]
 
-        with Sampler(
-            circuits=[pqc, pqc2],
+        with Session(
             service=FakeRuntimeService(channel="ibm_quantum", token="abc"),
-            options={"backend": "ibmq_qasm_simulator"},
-        ) as sampler:
+            backend="ibmq_qasm_simulator",
+        ) as session:
+            sampler = Sampler(session=session)
 
             with patch.object(sampler._session, "run") as mock_run:
-                sampler.run([pqc], [theta1])
+                sampler.run([pqc, pqc2], [theta1, theta2])
                 run_kwargs = mock_run.call_args.kwargs
                 run_args = mock_run.call_args.args
                 print(f"Printing run_args in sampler: {run_args}")
@@ -72,7 +80,9 @@ class TestSampler(IBMTestCase):
                     run_kwargs.get("inputs").get("circuits"),
                     {pqc_id: pqc, pqc2_id: pqc2},
                 )
-                self.assertEqual(run_kwargs.get("inputs").get("circuit_ids"), [pqc_id])
+                self.assertEqual(
+                    run_kwargs.get("inputs").get("circuit_ids"), [pqc_id, pqc2_id]
+                )
 
             with patch.object(sampler._session, "run") as mock_run:
                 sampler.run([pqc2], [theta2])
