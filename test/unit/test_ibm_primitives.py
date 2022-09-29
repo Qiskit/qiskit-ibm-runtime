@@ -14,20 +14,26 @@
 
 import sys
 import copy
+import json
 from unittest.mock import MagicMock, patch, ANY
 import warnings
 from dataclasses import asdict
 from typing import Dict
 
 from qiskit.circuit import QuantumCircuit
+from qiskit.circuit.library import RealAmplitudes
 from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit.quantum_info import SparsePauliOp
 
-from qiskit_ibm_runtime import Sampler, Estimator, Options, Session
+from qiskit_ibm_runtime import Sampler, Estimator, Options, Session, RuntimeEncoder
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 import qiskit_ibm_runtime.session as session_pkg
+from qiskit_ibm_runtime.utils.utils import _hash
+from qiskit_ibm_runtime.qiskit.primitives.utils import _circuit_key
 from ..ibm_test_case import IBMTestCase
 from ..utils import dict_paritally_equal
+
+from .mock.fake_runtime_service import FakeRuntimeService
 
 
 class MockSession(Session):
@@ -37,7 +43,7 @@ class MockSession(Session):
 
 
 class TestPrimitives(IBMTestCase):
-    """Class for testing the Sampler class."""
+    """Class for testing the Sampler and Estimator classes."""
 
     @classmethod
     def setUpClass(cls):
@@ -381,6 +387,69 @@ class TestPrimitives(IBMTestCase):
             inst = cls(session=session)
             inst.run(self.qx, observables=self.obs)
         self.assertEqual(session.run.call_count, num_runs)
+
+    def test_primitives_circuit_caching(self):
+        """Test circuit caching in Estimator and Sampler classes"""
+        psi1 = RealAmplitudes(num_qubits=2, reps=2)
+        psi1.measure_all()
+        psi2 = RealAmplitudes(num_qubits=2, reps=3)
+        psi2.measure_all()
+        psi1_id = _hash(json.dumps(_circuit_key(psi1), cls=RuntimeEncoder))
+        psi2_id = _hash(json.dumps(_circuit_key(psi2), cls=RuntimeEncoder))
+
+        # pylint: disable=invalid-name
+        H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
+        H2 = SparsePauliOp.from_list([("IZ", 1)])
+
+        theta1 = [0, 1, 1, 2, 3, 5]
+        theta2 = [0, 1, 1, 2, 3, 5, 8, 13]
+
+        with Session(
+            service=FakeRuntimeService(channel="ibm_quantum", token="abc"),
+            backend="ibmq_qasm_simulator",
+        ) as session:
+            estimator = Estimator(session=session)
+
+            # calculate [ <psi1(theta1)|H1|psi1(theta1)> ]
+            with patch.object(estimator._session, "run") as mock_run:
+                estimator.run([psi1, psi2], [H1, H2], [theta1, theta2])
+                mock_run.assert_called_once_with(
+                    program_id="estimator",
+                    inputs={
+                        "circuits": {
+                            psi1_id: psi1,
+                            psi2_id: psi2,
+                        },
+                        "circuit_ids": [psi1_id, psi2_id],
+                        "observables": ANY,
+                        "observable_indices": ANY,
+                        "parameters": ANY,
+                        "parameter_values": ANY,
+                        "transpilation_settings": ANY,
+                        "resilience_settings": ANY,
+                        "run_options": ANY,
+                    },
+                    options=ANY,
+                    result_decoder=ANY,
+                )
+
+            sampler = Sampler(session=session)
+            with patch.object(sampler._session, "run") as mock_run:
+                sampler.run([psi1, psi2], [theta1, theta2])
+                mock_run.assert_called_once_with(
+                    program_id="sampler",
+                    inputs={
+                        "circuits": {},
+                        "circuit_ids": [psi1_id, psi2_id],
+                        "parameters": ANY,
+                        "parameter_values": ANY,
+                        "transpilation_settings": ANY,
+                        "resilience_settings": ANY,
+                        "run_options": ANY,
+                    },
+                    options=ANY,
+                    result_decoder=ANY,
+                )
 
     def _update_dict(self, dict1, dict2):
         for key, val in dict1.items():
