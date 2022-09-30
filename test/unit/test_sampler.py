@@ -37,8 +37,14 @@ class TestSampler(IBMTestCase):
         pqc.measure_all()
         pqc2 = RealAmplitudes(num_qubits=2, reps=3)
         pqc2.measure_all()
+        pqc3 = RealAmplitudes(num_qubits=2, reps=2)
+        pqc3.measure_all()
+        pqc4 = RealAmplitudes(num_qubits=2, reps=3)
+        pqc4.measure_all()
         pqc_id = _hash(json.dumps(_circuit_key(pqc), cls=RuntimeEncoder))
         pqc2_id = _hash(json.dumps(_circuit_key(pqc2), cls=RuntimeEncoder))
+        pqc3_id = _hash(json.dumps(_circuit_key(pqc3), cls=RuntimeEncoder))
+        pqc4_id = _hash(json.dumps(_circuit_key(pqc4), cls=RuntimeEncoder))
 
         with Session(
             service=FakeRuntimeService(channel="ibm_quantum", token="abc"),
@@ -58,3 +64,17 @@ class TestSampler(IBMTestCase):
                 inputs = kwargs["inputs"]
                 self.assertDictEqual(inputs["circuits"], {})
                 self.assertEqual(inputs["circuit_ids"], [pqc2_id])
+
+            with patch.object(sampler._session, "run") as mock_run:
+                sampler.run([pqc3], [[ANY] * 6])
+                _, kwargs = mock_run.call_args
+                inputs = kwargs["inputs"]
+                self.assertDictEqual(inputs["circuits"], {pqc3_id: pqc3})
+                self.assertEqual(inputs["circuit_ids"], [pqc3_id])
+
+            with patch.object(sampler._session, "run") as mock_run:
+                sampler.run([pqc4, pqc], [[ANY] * 8, [ANY] * 6])
+                _, kwargs = mock_run.call_args
+                inputs = kwargs["inputs"]
+                self.assertDictEqual(inputs["circuits"], {pqc4_id: pqc4})
+                self.assertEqual(inputs["circuit_ids"], [pqc4_id, pqc_id])
