@@ -46,15 +46,15 @@ class TestSampler(IBMTestCase):
         ) as session:
             sampler = Sampler(session=session)
             with patch.object(sampler._session, "run") as mock_run:
-                sampler.run([pqc, pqc2], [[ANY]*6, [ANY]*8])
+                sampler.run([pqc, pqc2], [[ANY] * 6, [ANY] * 8])
                 _, kwargs = mock_run.call_args
                 inputs = kwargs["inputs"]
-                self.assertDictEqual(inputs["circuits"],{pqc_id: pqc, pqc2_id: pqc2})
-                self.assertEqual(inputs["circuit_ids"],[pqc_id, pqc2_id])
+                self.assertDictEqual(inputs["circuits"], {pqc_id: pqc, pqc2_id: pqc2})
+                self.assertEqual(inputs["circuit_ids"], [pqc_id, pqc2_id])
 
             with patch.object(sampler._session, "run") as mock_run:
-                sampler.run([pqc2], [[ANY]*8])
+                sampler.run([pqc2], [[ANY] * 8])
                 _, kwargs = mock_run.call_args
                 inputs = kwargs["inputs"]
-                self.assertDictEqual(inputs["circuits"],{})
-                self.assertEqual(inputs["circuit_ids"],[pqc2_id])
+                self.assertDictEqual(inputs["circuits"], {})
+                self.assertEqual(inputs["circuit_ids"], [pqc2_id])

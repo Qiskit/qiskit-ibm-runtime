@@ -50,16 +50,16 @@ class TestEstimator(IBMTestCase):
 
             # calculate [ <psi1(theta1)|H1|psi1(theta1)> ]
             with patch.object(estimator._session, "run") as mock_run:
-                estimator.run([psi1, psi2], [H1, H2], [[ANY]*6, [ANY]*8])
+                estimator.run([psi1, psi2], [H1, H2], [[ANY] * 6, [ANY] * 8])
                 _, kwargs = mock_run.call_args
                 inputs = kwargs["inputs"]
-                self.assertDictEqual(inputs["circuits"],{psi1_id: psi1, psi2_id: psi2})
-                self.assertEqual(inputs["circuit_ids"],[psi1_id, psi2_id])
+                self.assertDictEqual(inputs["circuits"], {psi1_id: psi1, psi2_id: psi2})
+                self.assertEqual(inputs["circuit_ids"], [psi1_id, psi2_id])
 
             # calculate [ <psi2(theta2)|H2|psi2(theta2)> ]
             with patch.object(estimator._session, "run") as mock_run:
-                estimator.run([psi2], [H1], [[ANY]*8])
+                estimator.run([psi2], [H1], [[ANY] * 8])
                 _, kwargs = mock_run.call_args
                 inputs = kwargs["inputs"]
-                self.assertDictEqual(inputs["circuits"],{})
-                self.assertEqual(inputs["circuit_ids"],[psi2_id])
+                self.assertDictEqual(inputs["circuits"], {})
+                self.assertEqual(inputs["circuit_ids"], [psi2_id])

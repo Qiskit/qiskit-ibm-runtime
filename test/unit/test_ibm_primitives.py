@@ -409,20 +409,19 @@ class TestPrimitives(IBMTestCase):
 
             # calculate [ <psi1(theta1)|H1|psi1(theta1)> ]
             with patch.object(estimator._session, "run") as mock_run:
-                estimator.run([psi1, psi2], [H1, H2], [[ANY]*6, [ANY]*8])
+                estimator.run([psi1, psi2], [H1, H2], [[ANY] * 6, [ANY] * 8])
                 _, kwargs = mock_run.call_args
                 inputs = kwargs["inputs"]
-                self.assertDictEqual(inputs["circuits"],{psi1_id: psi1, psi2_id: psi2})
-                self.assertEqual(inputs["circuit_ids"],[psi1_id, psi2_id])
+                self.assertDictEqual(inputs["circuits"], {psi1_id: psi1, psi2_id: psi2})
+                self.assertEqual(inputs["circuit_ids"], [psi1_id, psi2_id])
 
             sampler = Sampler(session=session)
             with patch.object(sampler._session, "run") as mock_run:
-                sampler.run([psi1, psi2], [[ANY]*6, [ANY]*8])
+                sampler.run([psi1, psi2], [[ANY] * 6, [ANY] * 8])
                 _, kwargs = mock_run.call_args
                 inputs = kwargs["inputs"]
-                self.assertDictEqual(inputs["circuits"],{})
-                self.assertEqual(inputs["circuit_ids"],[psi1_id, psi2_id])
-
+                self.assertDictEqual(inputs["circuits"], {})
+                self.assertEqual(inputs["circuit_ids"], [psi1_id, psi2_id])
 
     def _update_dict(self, dict1, dict2):
         for key, val in dict1.items():
