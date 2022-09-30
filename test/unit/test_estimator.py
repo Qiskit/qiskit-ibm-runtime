@@ -58,42 +58,15 @@ class TestEstimator(IBMTestCase):
             # calculate [ <psi1(theta1)|H1|psi1(theta1)> ]
             with patch.object(estimator._session, "run") as mock_run:
                 estimator.run([psi1, psi2], [H1, H2], [theta1, theta2])
-                mock_run.assert_called_once_with(
-                    program_id="estimator",
-                    inputs={
-                        "circuits": {
-                            psi1_id: psi1,
-                            psi2_id: psi2,
-                        },
-                        "circuit_ids": [psi1_id, psi2_id],
-                        "observables": ANY,
-                        "observable_indices": ANY,
-                        "parameters": ANY,
-                        "parameter_values": ANY,
-                        "transpilation_settings": ANY,
-                        "resilience_settings": ANY,
-                        "run_options": ANY,
-                    },
-                    options=ANY,
-                    result_decoder=ANY,
-                )
+                _, kwargs = mock_run.call_args
+                inputs = kwargs["inputs"]
+                self.assertDictEqual(inputs["circuits"],{psi1_id: psi1, psi2_id: psi2})
+                self.assertEqual(inputs["circuit_ids"],[psi1_id, psi2_id])
 
             # calculate [ <psi2(theta2)|H2|psi2(theta2)> ]
             with patch.object(estimator._session, "run") as mock_run:
                 estimator.run([psi2], [H2], [theta2])
-                mock_run.assert_called_once_with(
-                    program_id="estimator",
-                    inputs={
-                        "circuits": {},
-                        "circuit_ids": [psi2_id],
-                        "observables": ANY,
-                        "observable_indices": ANY,
-                        "parameters": ANY,
-                        "parameter_values": ANY,
-                        "transpilation_settings": ANY,
-                        "resilience_settings": ANY,
-                        "run_options": ANY,
-                    },
-                    options=ANY,
-                    result_decoder=ANY,
-                )
+                _, kwargs = mock_run.call_args
+                inputs = kwargs["inputs"]
+                self.assertDictEqual(inputs["circuits"],{})
+                self.assertEqual(inputs["circuit_ids"],[psi2_id])
