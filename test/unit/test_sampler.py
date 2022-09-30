@@ -30,10 +30,6 @@ from .mock.fake_runtime_service import FakeRuntimeService
 class TestSampler(IBMTestCase):
     """Class for testing the Sampler class."""
 
-    @classmethod
-    def setUpClass(cls):
-        return super().setUpClass()
-
     def test_sampler_circuit_caching(self):
         """Test circuit caching in Sampler class"""
 
@@ -44,47 +40,21 @@ class TestSampler(IBMTestCase):
         pqc_id = _hash(json.dumps(_circuit_key(pqc), cls=RuntimeEncoder))
         pqc2_id = _hash(json.dumps(_circuit_key(pqc2), cls=RuntimeEncoder))
 
-        theta1 = [0, 1, 1, 2, 3, 5]
-        theta2 = [0, 1, 2, 3, 4, 5, 6, 7]
-
         with Session(
             service=FakeRuntimeService(channel="ibm_quantum", token="abc"),
             backend="ibmq_qasm_simulator",
         ) as session:
             sampler = Sampler(session=session)
             with patch.object(sampler._session, "run") as mock_run:
-                sampler.run([pqc, pqc2], [theta1, theta2])
-                mock_run.assert_called_once_with(
-                    program_id="sampler",
-                    inputs={
-                        "circuits": {
-                            pqc_id: pqc,
-                            pqc2_id: pqc2,
-                        },
-                        "circuit_ids": [pqc_id, pqc2_id],
-                        "parameters": ANY,
-                        "parameter_values": ANY,
-                        "transpilation_settings": ANY,
-                        "resilience_settings": ANY,
-                        "run_options": ANY,
-                    },
-                    options=ANY,
-                    result_decoder=ANY,
-                )
+                sampler.run([pqc, pqc2], [[ANY]*6, [ANY]*8])
+                _, kwargs = mock_run.call_args
+                inputs = kwargs["inputs"]
+                self.assertDictEqual(inputs["circuits"],{pqc_id: pqc, pqc2_id: pqc2})
+                self.assertEqual(inputs["circuit_ids"],[pqc_id, pqc2_id])
 
             with patch.object(sampler._session, "run") as mock_run:
-                sampler.run([pqc2], [theta2])
-                mock_run.assert_called_once_with(
-                    program_id="sampler",
-                    inputs={
-                        "circuits": {},
-                        "circuit_ids": [pqc2_id],
-                        "parameters": ANY,
-                        "parameter_values": ANY,
-                        "transpilation_settings": ANY,
-                        "resilience_settings": ANY,
-                        "run_options": ANY,
-                    },
-                    options=ANY,
-                    result_decoder=ANY,
-                )
+                sampler.run([pqc2], [[ANY]*8])
+                _, kwargs = mock_run.call_args
+                inputs = kwargs["inputs"]
+                self.assertDictEqual(inputs["circuits"],{})
+                self.assertEqual(inputs["circuit_ids"],[pqc2_id])

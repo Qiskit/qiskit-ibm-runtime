@@ -401,9 +401,6 @@ class TestPrimitives(IBMTestCase):
         H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
         H2 = SparsePauliOp.from_list([("IZ", 1)])
 
-        theta1 = [0, 1, 1, 2, 3, 5]
-        theta2 = [0, 1, 1, 2, 3, 5, 8, 13]
-
         with Session(
             service=FakeRuntimeService(channel="ibm_quantum", token="abc"),
             backend="ibmq_qasm_simulator",
@@ -412,44 +409,20 @@ class TestPrimitives(IBMTestCase):
 
             # calculate [ <psi1(theta1)|H1|psi1(theta1)> ]
             with patch.object(estimator._session, "run") as mock_run:
-                estimator.run([psi1, psi2], [H1, H2], [theta1, theta2])
-                mock_run.assert_called_once_with(
-                    program_id="estimator",
-                    inputs={
-                        "circuits": {
-                            psi1_id: psi1,
-                            psi2_id: psi2,
-                        },
-                        "circuit_ids": [psi1_id, psi2_id],
-                        "observables": ANY,
-                        "observable_indices": ANY,
-                        "parameters": ANY,
-                        "parameter_values": ANY,
-                        "transpilation_settings": ANY,
-                        "resilience_settings": ANY,
-                        "run_options": ANY,
-                    },
-                    options=ANY,
-                    result_decoder=ANY,
-                )
+                estimator.run([psi1, psi2], [H1, H2], [[ANY]*6, [ANY]*8])
+                _, kwargs = mock_run.call_args
+                inputs = kwargs["inputs"]
+                self.assertDictEqual(inputs["circuits"],{psi1_id: psi1, psi2_id: psi2})
+                self.assertEqual(inputs["circuit_ids"],[psi1_id, psi2_id])
 
             sampler = Sampler(session=session)
             with patch.object(sampler._session, "run") as mock_run:
-                sampler.run([psi1, psi2], [theta1, theta2])
-                mock_run.assert_called_once_with(
-                    program_id="sampler",
-                    inputs={
-                        "circuits": {},
-                        "circuit_ids": [psi1_id, psi2_id],
-                        "parameters": ANY,
-                        "parameter_values": ANY,
-                        "transpilation_settings": ANY,
-                        "resilience_settings": ANY,
-                        "run_options": ANY,
-                    },
-                    options=ANY,
-                    result_decoder=ANY,
-                )
+                sampler.run([psi1, psi2], [[ANY]*6, [ANY]*8])
+                _, kwargs = mock_run.call_args
+                inputs = kwargs["inputs"]
+                self.assertDictEqual(inputs["circuits"],{})
+                self.assertEqual(inputs["circuit_ids"],[psi1_id, psi2_id])
+
 
     def _update_dict(self, dict1, dict2):
         for key, val in dict1.items():

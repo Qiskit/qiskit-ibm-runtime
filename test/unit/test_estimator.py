@@ -31,10 +31,6 @@ from .mock.fake_runtime_service import FakeRuntimeService
 class TestEstimator(IBMTestCase):
     """Class for testing the Estimator class."""
 
-    @classmethod
-    def setUpClass(cls):
-        return super().setUpClass()
-
     def test_estimator_circuit_caching(self):
         """Test circuit caching in Estimator class"""
         psi1 = RealAmplitudes(num_qubits=2, reps=2)
@@ -46,9 +42,6 @@ class TestEstimator(IBMTestCase):
         H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
         H2 = SparsePauliOp.from_list([("IZ", 1)])
 
-        theta1 = [0, 1, 1, 2, 3, 5]
-        theta2 = [0, 1, 1, 2, 3, 5, 8, 13]
-
         with Session(
             service=FakeRuntimeService(channel="ibm_quantum", token="abc"),
             backend="ibmq_qasm_simulator",
@@ -57,7 +50,7 @@ class TestEstimator(IBMTestCase):
 
             # calculate [ <psi1(theta1)|H1|psi1(theta1)> ]
             with patch.object(estimator._session, "run") as mock_run:
-                estimator.run([psi1, psi2], [H1, H2], [theta1, theta2])
+                estimator.run([psi1, psi2], [H1, H2], [[ANY]*6, [ANY]*8])
                 _, kwargs = mock_run.call_args
                 inputs = kwargs["inputs"]
                 self.assertDictEqual(inputs["circuits"],{psi1_id: psi1, psi2_id: psi2})
@@ -65,7 +58,7 @@ class TestEstimator(IBMTestCase):
 
             # calculate [ <psi2(theta2)|H2|psi2(theta2)> ]
             with patch.object(estimator._session, "run") as mock_run:
-                estimator.run([psi2], [H2], [theta2])
+                estimator.run([psi2], [H1], [[ANY]*8])
                 _, kwargs = mock_run.call_args
                 inputs = kwargs["inputs"]
                 self.assertDictEqual(inputs["circuits"],{})
