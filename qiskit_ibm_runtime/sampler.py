@@ -157,7 +157,7 @@ class Sampler(BaseSampler):
             backend = session or backend
             self._session = get_default_session(service, backend)
 
-    def run(
+    def run(  # pylint: disable=arguments-differ
         self,
         circuits: QuantumCircuit | Sequence[QuantumCircuit],
         parameter_values: Sequence[float] | Sequence[Sequence[float]] | None = None,
@@ -200,7 +200,7 @@ class Sampler(BaseSampler):
             **kwargs,
         )
 
-    def _run(
+    def _run(  # pylint: disable=arguments-differ
         self,
         circuits: Sequence[QuantumCircuit],
         parameter_values: Sequence[Sequence[float]],

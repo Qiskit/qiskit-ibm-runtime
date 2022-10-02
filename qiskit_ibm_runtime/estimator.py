@@ -189,7 +189,7 @@ class Estimator(BaseEstimator):
             backend = session or backend
             self._session = get_default_session(service, backend)
 
-    def run(
+    def run(  # pylint: disable=arguments-differ
         self,
         circuits: QuantumCircuit | Sequence[QuantumCircuit],
         observables: BaseOperator | PauliSumOp | Sequence[BaseOperator | PauliSumOp],
@@ -241,7 +241,7 @@ class Estimator(BaseEstimator):
             **kwargs,
         )
 
-    def _run(
+    def _run(  # pylint: disable=arguments-differ
         self,
         circuits: Sequence[QuantumCircuit],
         observables: Sequence[BaseOperator | PauliSumOp],
