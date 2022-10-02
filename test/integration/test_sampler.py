@@ -13,7 +13,6 @@
 """Integration tests for Sampler primitive."""
 
 from math import sqrt
-from dataclasses import asdict
 
 from qiskit.circuit import QuantumCircuit, Gate
 from qiskit.circuit.library import RealAmplitudes

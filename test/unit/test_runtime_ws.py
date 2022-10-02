@@ -18,7 +18,13 @@ from unittest.mock import MagicMock
 from qiskit.providers.fake_provider import FakeQasmSimulator
 from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit.quantum_info import SparsePauliOp
-from qiskit_ibm_runtime import RuntimeJob, QiskitRuntimeService, Sampler, Estimator, Session
+from qiskit_ibm_runtime import (
+    RuntimeJob,
+    QiskitRuntimeService,
+    Sampler,
+    Estimator,
+    Session,
+)
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 from qiskit_ibm_runtime.exceptions import RuntimeInvalidStateError
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
@@ -77,20 +83,20 @@ class TestRuntimeWebsocketClient(IBMTestCase):
             results.append(interim_result)
             self.assertEqual(JOB_ID_PROGRESS_DONE, job_id)
 
-        def _patched_run(callback, *args, **kwargs):
+        def _patched_run(callback, *args, **kwargs):  # pylint: disable=unused-argument
             return self._get_job(callback=callback, backend=MagicMock(spec=IBMBackend))
 
         service = MagicMock(spec=QiskitRuntimeService)
         service.run = _patched_run
 
-        qx = ReferenceCircuits.bell()
+        circ = ReferenceCircuits.bell()
         obs = SparsePauliOp.from_list([("IZ", 1)])
         primitives = [Sampler, Estimator]
         for cls in primitives:
             with self.subTest(primitive=cls):
                 results = []
                 inst = cls(session=Session(service=service))
-                job = inst.run(qx, observables=obs, callback=result_callback)
+                job = inst.run(circ, observables=obs, callback=result_callback)
                 time.sleep(JOB_PROGRESS_RESULT_COUNT + 2)
                 self.assertEqual(JOB_PROGRESS_RESULT_COUNT, len(results))
                 self.assertFalse(job._ws_client.connected)
