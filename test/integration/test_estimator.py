@@ -14,6 +14,7 @@
 
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.quantum_info import SparsePauliOp
+from qiskit.test.reference_circuits import ReferenceCircuits
 
 from qiskit_ibm_runtime import Estimator, EstimatorResult, BaseEstimator, Session
 
@@ -24,11 +25,13 @@ from ..ibm_test_case import IBMIntegrationTestCase
 class TestIntegrationEstimator(IBMIntegrationTestCase):
     """Integration tests for Estimator primitive."""
 
+    def setUp(self) -> None:
+        super().setUp()
+        self.backend = "ibmq_qasm_simulator"
+
     @run_integration_test
     def test_estimator_session(self, service):
         """Verify if estimator primitive returns expected results"""
-
-        backend = "ibmq_qasm_simulator"
 
         psi1 = RealAmplitudes(num_qubits=2, reps=2)
         psi2 = RealAmplitudes(num_qubits=2, reps=3)
@@ -38,7 +41,7 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
         H2 = SparsePauliOp.from_list([("IZ", 1)])
         H3 = SparsePauliOp.from_list([("ZI", 1), ("ZZ", 1)])
 
-        with Session(service, backend) as session:
+        with Session(service, self.backend) as session:
             estimator = Estimator(session=session)
             self.assertIsInstance(estimator, BaseEstimator)
 
@@ -105,7 +108,7 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
     def test_estimator_primitive(self, service):
         """Test to verify that estimator as a primitive still works."""
 
-        options = {"backend": "ibmq_qasm_simulator"}
+        options = {"backend": self.backend}
 
         psi1 = RealAmplitudes(num_qubits=2, reps=2)
         psi2 = RealAmplitudes(num_qubits=2, reps=3)
@@ -163,3 +166,27 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
             self.assertIsInstance(result5, EstimatorResult)
             self.assertEqual(len(result5.values), len(circuits5))
             self.assertEqual(len(result5.metadata), len(circuits5))
+
+    @run_integration_test
+    def test_estimator_callback(self, service):
+        """Test Estimator callback function."""
+
+        def _callback(job_id_, result_):
+            nonlocal ws_result
+            ws_result.append(result_)
+            nonlocal job_ids
+            job_ids.add(job_id_)
+
+        ws_result = []
+        job_ids = set()
+
+        bell = ReferenceCircuits.bell()
+        obs = SparsePauliOp.from_list([("IZ", 1)])
+
+        with Session(service, self.backend) as session:
+            estimator = Estimator(session=session)
+            job = estimator.run(circuits=bell, observables=[obs], callback=_callback)
+            result = job.result()
+            self.assertEqual(result.values, ws_result[-1].values)
+            self.assertEqual(len(job_ids), 1)
+            self.assertEqual(job.job_id(), job_ids.pop())
