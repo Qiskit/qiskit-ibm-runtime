@@ -15,7 +15,7 @@
 from __future__ import annotations
 import copy
 import json
-from typing import Iterable, Optional, Dict, Sequence, Any, Union
+from typing import Iterable, Optional, Dict, Sequence, Any, Union, Callable
 
 from qiskit.circuit import QuantumCircuit, Parameter
 from qiskit.quantum_info import SparsePauliOp
@@ -204,11 +204,12 @@ class Estimator(BaseEstimator):
                     self._circuits_map[circuit_id] = circuit
                     self._session._circuits_map[circuit_id] = circuit
 
-    def run(
+    def run(  # pylint: disable=arguments-differ
         self,
         circuits: QuantumCircuit | Sequence[QuantumCircuit],
         observables: BaseOperator | PauliSumOp | Sequence[BaseOperator | PauliSumOp],
         parameter_values: Sequence[float] | Sequence[Sequence[float]] | None = None,
+        callback: Optional[Callable] = None,
         **kwargs: Any,
     ) -> RuntimeJob:
         """Submit a request to the estimator primitive program.
@@ -220,6 +221,12 @@ class Estimator(BaseEstimator):
             observables: Observable objects.
 
             parameter_values: Concrete parameters to be bound.
+
+            callback: Callback function to be invoked for any interim results and final result.
+                The callback function will receive 2 positional parameters:
+
+                    1. Job ID
+                    2. Job result.
 
             **kwargs: Individual options to overwrite the default primitive options.
 
@@ -245,14 +252,16 @@ class Estimator(BaseEstimator):
             circuits=circuits,
             observables=observables,
             parameter_values=parameter_values,
+            callback=callback,
             **kwargs,
         )
 
-    def _run(
+    def _run(  # pylint: disable=arguments-differ
         self,
         circuits: Sequence[QuantumCircuit],
         observables: Sequence[BaseOperator | PauliSumOp],
         parameter_values: Sequence[Sequence[float]],
+        callback: Optional[Callable] = None,
         **kwargs: Any,
     ) -> RuntimeJob:
         """Submit a request to the estimator primitive program.
@@ -300,6 +309,7 @@ class Estimator(BaseEstimator):
             program_id=self._PROGRAM_ID,
             inputs=inputs,
             options=Options._get_runtime_options(combined),
+            callback=callback,
             result_decoder=EstimatorResultDecoder,
         )
 
