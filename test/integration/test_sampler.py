@@ -13,6 +13,7 @@
 """Integration tests for Sampler primitive."""
 
 from math import sqrt
+
 from qiskit.circuit import QuantumCircuit, Gate
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.test.reference_circuits import ReferenceCircuits
@@ -172,3 +173,25 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
             self.assertIsInstance(result, SamplerResult)
             self.assertEqual(len(result.quasi_dists), len(circuits0))
             self.assertEqual(len(result.metadata), len(circuits0))
+
+    @run_integration_test
+    def test_sampler_callback(self, service):
+        """Test Sampler callback function."""
+
+        def _callback(job_id_, result_):
+            nonlocal ws_result
+            ws_result.append(result_)
+            nonlocal job_ids
+            job_ids.add(job_id_)
+
+        ws_result = []
+        job_ids = set()
+
+        with Session(service, self.backend) as session:
+            sampler = Sampler(session=session)
+            job = sampler.run(circuits=self.bell, callback=_callback)
+            result = job.result()
+
+            self.assertEqual(result.quasi_dists, ws_result[-1].quasi_dists)
+            self.assertEqual(len(job_ids), 1)
+            self.assertEqual(job.job_id(), job_ids.pop())
