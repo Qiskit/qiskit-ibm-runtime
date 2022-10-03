@@ -12,12 +12,20 @@
 
 """Primitive options."""
 
-from typing import Optional, List, Dict, Union, Any, ClassVar
+from typing import Optional, List, Union, Any, ClassVar, TYPE_CHECKING
+from typing import Dict as DictType
 from dataclasses import dataclass, asdict, fields, field, make_dataclass
 import copy
 
 from .utils.deprecation import issue_deprecation_msg
 from .runtime_options import RuntimeOptions
+
+if TYPE_CHECKING:
+    try:
+        import qiskit_aer
+        HAS_AER = True
+    except ImportError:
+        HAS_AER = False
 
 
 def _flexible(cls):  # type: ignore
@@ -34,7 +42,7 @@ def _flexible(cls):  # type: ignore
                 return cls_()
             if isinstance(data, cls_):
                 return data
-            if isinstance(data, Dict):
+            if isinstance(data, dict):
                 return cls_(**data)
             raise TypeError(
                 f"{data} has an unspported type {type(data)}. It can only be {cls_} or a dictionary."
@@ -68,6 +76,15 @@ def _flexible(cls):  # type: ignore
     return cls
 
 
+class Dict:
+    """Fake Dict type.
+
+    This class is used to show dictionary as an acceptable type in docs without
+    attaching all the dictionary attributes in Jupyter's auto-complete.
+    """
+    pass
+
+
 @_flexible
 @dataclass
 class TranspilationOptions:
@@ -76,12 +93,12 @@ class TranspilationOptions:
     # TODO: Double check transpilation settings.
 
     skip_transpilation: bool = False
-    initial_layout: Optional[Union[Dict, List]] = None  # TODO: Support Layout
+    initial_layout: Optional[Union[dict, List]] = None  # TODO: Support Layout
     layout_method: Optional[str] = None
     routing_method: Optional[str] = None
     translation_method: Optional[str] = None
     approximation_degree: Optional[float] = None
-    timing_constraints: Optional[Dict[str, int]] = None
+    timing_constraints: Optional[DictType[str, int]] = None
     seed_transpiler: Optional[int] = None
 
 
@@ -94,49 +111,28 @@ class ResilienceOptions:
 
 
 @_flexible
-@dataclass(init=False)
+@dataclass()
 class SimulatorOptions:
     """Simulator options.
 
+    For best practice in simulating a backend make sure to pass the
+    basis gates and coupling map of that backend.
+
     Args:
-        noise_model: Noise model, must have a to_dict() method.
+        noise_model: Noise model for the simulator.
         seed_simulator: Random seed to control sampling.
+        coupling_map: Directed coupling map to target in mapping. If
+            the coupling map is symmetric, both directions need to be specified.
+            Each entry in the list specifies a directed two-qubit interactions,
+               e.g: ``[[0, 1], [0, 3], [1, 2], [1, 5], [2, 5], [4, 1], [5, 3]]``
+        basis_gates: List of basis gate names to unroll to
+            (e.g: ``['u1', 'u2', 'u3', 'cx']``). If ``None``, do not unroll.
     """
 
-    def __init__(
-        self, noise_model: Any = None, seed_simulator: Optional[int] = None
-    ) -> None:
-        self.noise_model = noise_model
-        self.seed_simulator = seed_simulator
-
-    @property
-    def noise_model(self) -> Dict:
-        """Return the noise model.
-
-        Returns:
-            The noise model.
-        """
-        return self._noise_model
-
-    @noise_model.setter
-    def noise_model(self, noise_model: Any) -> None:
-        """Set the noise model.
-
-        Args:
-            noise_model: Noise model to use.
-
-        Raises:
-            ValueError: If the noise model doesn't have a ``to_dict()`` method.
-        """
-        if isinstance(noise_model, Dict):
-            self._noise_model = noise_model
-        else:
-            try:
-                self._noise_model = noise_model.to_dict()
-            except AttributeError:
-                raise ValueError(
-                    "Only noise models that have a to_dict() method are supported"
-                )
+    noise_model: Optional[Union[dict, "qiskit_aer.noise.noise_model.NoiseModel"]] = None
+    seed_simulator: Optional[int] = None
+    coupling_map: Optional[List[List[int]]] = None
+    basis_gates: Optional[List[str]] = None
 
 
 @_flexible
@@ -274,15 +270,17 @@ class Options:
     environment: Union[EnvironmentOptions, Dict] = field(
         default_factory=EnvironmentOptions
     )
+    simulator: Union[SimulatorOptions, Dict] = field(default_factory=SimulatorOptions)
 
-    _obj_fields: ClassVar[Dict] = {
+    _obj_fields: ClassVar[dict] = {
         "transpilation": TranspilationOptions,
         "execution": ExecutionOptions,
         "environment": EnvironmentOptions,
+        "simulator": SimulatorOptions,
     }
 
     @classmethod
-    def _from_dict(cls, data: Dict) -> "Options":
+    def _from_dict(cls, data: dict) -> "Options":
         data = copy.copy(data)
         if "image" in data.keys():
             issue_deprecation_msg(
@@ -301,7 +299,7 @@ class Options:
         )
 
     @staticmethod
-    def _get_program_inputs(options: Dict) -> Dict:
+    def _get_program_inputs(options: dict) -> dict:
         """Convert the input options to program compatible inputs.
 
         Returns:
@@ -314,14 +312,9 @@ class Options:
         )
         inputs["resilience_settings"] = {"level": options.get("resilience_level")}
         inputs["run_options"] = options.get("execution")
+        inputs["run_options"].update(options.get("simulator"))
 
-        known_keys = [
-            "optimization_level",
-            "resilience_level",
-            "transpilation",
-            "execution",
-            "environment",
-        ]
+        known_keys = Options.__dataclass_fields__.keys()
         # Add additional unknown keys.
         for key in options.keys():
             if key not in known_keys:
@@ -329,7 +322,7 @@ class Options:
         return inputs
 
     @staticmethod
-    def _get_runtime_options(options: Dict) -> Dict:
+    def _get_runtime_options(options: dict) -> dict:
         """Extract runtime options.
 
         Returns:
@@ -345,7 +338,7 @@ class Options:
 
         return out
 
-    def _merge_options(self, new_options: Optional[Dict] = None) -> Dict:
+    def _merge_options(self, new_options: Optional[dict] = None) -> dict:
         """Merge current options with the new ones.
 
         Args:
@@ -355,13 +348,13 @@ class Options:
             Merged dictionary.
         """
 
-        def _update_options(old: Dict, new: Dict) -> None:
+        def _update_options(old: dict, new: dict) -> None:
             if not new:
                 return
             for key, val in old.items():
                 if key in new.keys():
                     old[key] = new.pop(key)
-                if isinstance(val, Dict):
+                if isinstance(val, dict):
                     _update_options(val, new)
 
         combined = asdict(self)
