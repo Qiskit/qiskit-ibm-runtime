@@ -39,6 +39,7 @@ except ImportError:
 
 try:
     import qiskit_aer
+
     HAS_AER = True
 except ImportError:
     HAS_AER = False

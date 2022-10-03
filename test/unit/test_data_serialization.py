@@ -58,10 +58,10 @@ from qiskit.opflow import (
     SummedOp,
     TensoredOp,
 )
+from qiskit.providers.fake_provider import FakeNairobi
 from qiskit.quantum_info import SparsePauliOp, Pauli, PauliTable, Statevector
 from qiskit.result import Result
 from qiskit_aer.noise import NoiseModel
-from qiskit.providers.fake_provider import FakeNairobi
 
 from qiskit_ibm_runtime.utils import RuntimeEncoder, RuntimeDecoder
 from .mock.fake_runtime_client import CustomResultRuntimeJob

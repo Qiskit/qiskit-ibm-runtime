@@ -67,7 +67,7 @@ class TestOptions(IBMTestCase):
     def test_program_inputs(self):
         """Test converting to program inputs."""
         noise_model = NoiseModel.from_backend(FakeNairobiV2())
-        options = Options(
+        options = Options(  # pylint: disable=unexpected-keyword-arg
             optimization_level=1,
             resilience_level=2,
             transpilation={"seed_transpiler": 24, "skip_transpilation": True},
