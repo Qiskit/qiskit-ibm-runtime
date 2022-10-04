@@ -862,6 +862,7 @@ class QiskitRuntimeService(Provider):
             inputs: Program input parameters. These input values are passed
                 to the runtime program.
             options: Runtime options that control the execution environment.
+
                 * backend: target backend to run on. This is required for ``ibm_quantum`` runtime.
                 * image: the runtime image used to execute the program, specified in
                     the form of ``image_name:tag``. Not all accounts are
