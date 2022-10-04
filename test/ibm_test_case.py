@@ -203,8 +203,12 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
         backend_name = (
             backend if backend is not None else self.sim_backends[service.channel]
         )
-        options = {"backend": backend_name, "log_level": log_level,'job_tags': job_tags, 
-            'max_execution_time': max_execution_time}
+        options = {
+            "backend": backend_name,
+            "log_level": log_level,
+            "job_tags": job_tags,
+            "max_execution_time": max_execution_time,
+        }
         job = service.run(
             program_id=pid,
             inputs=inputs,
