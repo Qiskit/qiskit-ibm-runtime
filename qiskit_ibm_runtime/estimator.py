@@ -15,11 +15,13 @@
 from __future__ import annotations
 import copy
 from typing import Iterable, Optional, Dict, Sequence, Any, Union, Callable
+from dataclasses import asdict
 
 from qiskit.circuit import QuantumCircuit, Parameter
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.opflow import PauliSumOp
 from qiskit.quantum_info.operators.base_operator import BaseOperator
+from qiskit.providers.options import Options as TerraOptions
 
 # pylint: disable=unused-import,cyclic-import
 
@@ -155,11 +157,11 @@ class Estimator(BaseEstimator):
         self._session: Session = None
 
         if options is None:
-            self.options = Options()
+            self._options = Options()
         elif isinstance(options, Options):
-            self.options = copy.deepcopy(options)
+            self._options = copy.deepcopy(options)
             skip_transpilation = (
-                self.options.transpilation.skip_transpilation  # type: ignore[union-attr]
+                self._options.transpilation.skip_transpilation  # type: ignore[union-attr]
             )
         else:
             backend = options.pop("backend", None)
@@ -169,11 +171,11 @@ class Estimator(BaseEstimator):
                     version="0.7",
                     remedy="Please pass the backend when opening a session.",
                 )
-            self.options = Options._from_dict(options)
+            self._options = Options._from_dict(options)
             skip_transpilation = options.get("transpilation", {}).get(
                 "skip_transpilation", False
             )
-        self.options.transpilation.skip_transpilation = (  # type: ignore[union-attr]
+        self._options.transpilation.skip_transpilation = (  # type: ignore[union-attr]
             skip_transpilation
         )
 
@@ -220,19 +222,8 @@ class Estimator(BaseEstimator):
             The result of the job is an instance of :class:`qiskit.primitives.EstimatorResult`.
 
         Raises:
-            QiskitError: Invalid arguments are given.
+            ValueError: Invalid arguments are given.
         """
-        if not isinstance(circuits, Sequence):
-            circuits = [circuits]
-        if not isinstance(observables, Sequence):
-            observables = [observables]
-        if (
-            parameter_values is not None
-            and len(parameter_values) > 1
-            and not isinstance(parameter_values[0], (Sequence, Iterable))
-        ):
-            parameter_values = [parameter_values]  # type: ignore[assignment]
-
         return super().run(
             circuits=circuits,
             observables=observables,
@@ -350,3 +341,20 @@ class Estimator(BaseEstimator):
             Session used by this primitive.
         """
         return self._session
+
+    @property
+    def options(self) -> TerraOptions:
+        """Return options values for the estimator.
+
+        Returns:
+            options
+        """
+        return TerraOptions(**asdict(self._options))
+
+    def set_options(self, **fields):
+        """Set options values for the estimator.
+
+        Args:
+            **fields: The fields to update the options
+        """
+        self._options = Options._from_dict(self._options._merge_options(fields))

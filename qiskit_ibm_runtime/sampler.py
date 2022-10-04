@@ -15,8 +15,10 @@
 from __future__ import annotations
 from typing import Dict, Iterable, Optional, Sequence, Any, Union, Callable
 import copy
+from dataclasses import asdict
 
 from qiskit.circuit import QuantumCircuit, Parameter
+from qiskit.providers.options import Options as TerraOptions
 
 # TODO import BaseSampler and SamplerResult from terra once released
 from .qiskit.primitives import BaseSampler, SamplerResult
@@ -128,11 +130,11 @@ class Sampler(BaseSampler):
         self._session: Session = None
 
         if options is None:
-            self.options = Options()
+            self._options = Options()
         elif isinstance(options, Options):
-            self.options = copy.deepcopy(options)
+            self._options = copy.deepcopy(options)
             skip_transpilation = (
-                self.options.transpilation.skip_transpilation  # type: ignore[union-attr]
+                self._options.transpilation.skip_transpilation  # type: ignore[union-attr]
             )
         else:
             backend = options.pop("backend", None)
@@ -142,11 +144,11 @@ class Sampler(BaseSampler):
                     version="0.7",
                     remedy="Please pass the backend when opening a session.",
                 )
-            self.options = Options._from_dict(options)
+            self._options = Options._from_dict(options)
             skip_transpilation = options.get("transpilation", {}).get(
                 "skip_transpilation", False
             )
-        self.options.transpilation.skip_transpilation = (  # type: ignore[union-attr]
+        self._options.transpilation.skip_transpilation = (  # type: ignore[union-attr]
             skip_transpilation
         )
 
@@ -175,24 +177,15 @@ class Sampler(BaseSampler):
 
                     1. Job ID
                     2. Job result.
-            **kwargs: Individual options to overwrite the default primitive options.
+            kwargs: Individual options to overwrite the default primitive options.
 
         Returns:
             Submitted job.
             The result of the job is an instance of :class:`qiskit.primitives.SamplerResult`.
 
         Raises:
-            QiskitError: Invalid arguments are given.
+            ValueError: Invalid arguments are given.
         """
-        if not isinstance(circuits, Sequence):
-            circuits = [circuits]
-        if (
-            parameter_values is not None
-            and len(parameter_values) > 1
-            and not isinstance(parameter_values[0], (Sequence, Iterable))
-        ):
-            parameter_values = [parameter_values]  # type: ignore[assignment]
-
         return super().run(
             circuits=circuits,
             parameter_values=parameter_values,
@@ -300,3 +293,20 @@ class Sampler(BaseSampler):
             Session used by this primitive.
         """
         return self._session
+
+    @property
+    def options(self) -> TerraOptions:
+        """Return options values for the sampler.
+
+        Returns:
+            options
+        """
+        return TerraOptions(**asdict(self._options))
+
+    def set_options(self, **fields):
+        """Set options values for the sampler.
+
+        Args:
+            **fields: The fields to update the options
+        """
+        self._options = Options._from_dict(self._options._merge_options(fields))
