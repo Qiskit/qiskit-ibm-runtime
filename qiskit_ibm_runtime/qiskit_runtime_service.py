@@ -928,7 +928,9 @@ class QiskitRuntimeService(Provider):
         hgp_name = None
         if self._channel == "ibm_quantum":
             # Find the right hgp
-            hgp = self._get_hgp(instance=instance, backend_name=qrt_options.backend)
+            hgp = self._get_hgp(
+                instance=qrt_options.instance, backend_name=qrt_options.backend
+            )
             backend = hgp.backend(qrt_options.backend)
             hgp_name = hgp.name
 

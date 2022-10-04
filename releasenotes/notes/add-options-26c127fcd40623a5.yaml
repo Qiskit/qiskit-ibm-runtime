@@ -1,6 +1,6 @@
 ---
 upgrade:
   - |
-    ``job_tags`` and ``max_execution_time`` can now be passed into 
-    :class:`qiskit_ibm_runtime.Options`. :class:`qiskit_ibm_runtime.RuntimeOptions` 
-    has also been updated to include these two parameters.
+    The :class:`qiskit_ibm_runtime.Options` class now accepts 
+    ``max_execution_time`` as a first level option and ``job_tags`` as an option under `environment`. 
+    :class:`qiskit_ibm_runtime.RuntimeOptions` has also been updated to include these two parameters.  

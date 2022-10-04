@@ -169,6 +169,9 @@ class Options:
     """Options for the primitive programs.
 
     Args:
+        max_execution_time: Maximum execution time in seconds. If
+            a job exceeds this time limit, it is forcibly cancelled.
+
         optimization_level: How much optimization to perform on the circuits.
             Higher levels generate more optimized circuits,
             at the expense of longer transpilation times.
@@ -270,6 +273,7 @@ class Options:
                 function call.
     """
 
+    max_execution_time: int = None
     optimization_level: int = 1
     resilience_level: int = 0
     transpilation: Union[TranspilationOptions, Dict] = field(
@@ -349,7 +353,7 @@ class Options:
         for fld in fields(RuntimeOptions):
             if fld.name in environment:
                 out[fld.name] = environment[fld.name]
-
+        out["max_execution_time"] = options.get("max_execution_time")
         return out
 
     def _merge_options(self, new_options: Optional[Dict] = None) -> Dict:
