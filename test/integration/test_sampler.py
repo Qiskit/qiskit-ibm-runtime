@@ -18,7 +18,7 @@ from qiskit.circuit import QuantumCircuit, Gate
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.test.reference_circuits import ReferenceCircuits
 
-from qiskit_ibm_runtime import Sampler, BaseSampler, SamplerResult, Session
+from qiskit_ibm_runtime import Sampler, BaseSampler, SamplerResult, Session, Options
 from qiskit_ibm_runtime.exceptions import RuntimeJobFailureError
 
 from ..decorators import run_integration_test
@@ -132,6 +132,33 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
             self.assertEqual(len(result.metadata), 2)
             self.assertEqual(result.quasi_dists[0][3], 1)
             self.assertEqual(result.quasi_dists[1][31], 1)
+
+    @run_integration_test
+    def test_sampler_non_parameterized_circuit_caching_with_transpilation_options(self, service):
+        """Verify if circuit caching works in sampler primitive
+        by passing correct and incorrect transpilation options."""
+
+        qc1 = QuantumCircuit(2)
+        qc1.x(range(2))
+        qc1.measure_all()
+
+        with Session(service, self.backend) as session:
+            sampler = Sampler(session=session)
+            # pass correct initial_layout
+            transpilation = {"initial_layout": [0, 1]}
+            job = sampler.run(circuits=[qc1], transpilation=transpilation)
+            result = job.result()
+            self.assertEqual(len(result.quasi_dists), 1)
+            self.assertEqual(len(result.metadata), 1)
+            self.assertEqual(result.quasi_dists[0][3], 1)
+
+            # pass incorrect initial_layout
+            # since a new transpilation option is passed it should not use the
+            # cached transpiled circuit from the first run above
+            transpilation = {"initial_layout": [0]}
+            job = sampler.run(circuits=[qc1], transpilation=transpilation)
+            with self.assertRaises(RuntimeJobFailureError):
+                job.result()
 
     @run_integration_test
     def test_sampler_primitive_parameterized_circuits(self, service):
