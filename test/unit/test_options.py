@@ -44,6 +44,10 @@ class TestOptions(IBMTestCase):
             {},
             {"resilience_level": 9},
             {"resilience_level": 9, "transpilation": {"seed_transpiler": 24}},
+            {
+                "execution": {"shots": 100},
+                "environment": {"image": "foo:bar", "log_level": "INFO"},
+            },
         ]
         for new_ops in options_vars:
             with self.subTest(new_ops=new_ops):
