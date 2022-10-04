@@ -21,6 +21,7 @@ from qiskit.utils.deprecation import deprecate_arguments
 
 from .exceptions import IBMInputValueError
 from .utils.deprecation import issue_deprecation_msg
+from .utils.utils import validate_job_tags
 
 
 @dataclass(init=False)
@@ -31,6 +32,8 @@ class RuntimeOptions:
     image: Optional[str] = None
     log_level: Optional[str] = None
     instance: Optional[str] = None
+    job_tags: Optional[List[str]] = None
+    max_execution_time: Optional[int] = None
 
     @deprecate_arguments({"backend_name": "backend"})
     def __init__(
@@ -39,6 +42,8 @@ class RuntimeOptions:
         image: Optional[str] = None,
         log_level: Optional[str] = None,
         instance: Optional[str] = None,
+        job_tags: Optional[List[str]] = None,
+        max_execution_time: Optional[int] = None,
     ) -> None:
         """RuntimeOptions constructor.
 
@@ -53,11 +58,17 @@ class RuntimeOptions:
             instance: The hub/group/project to use, in that format. This is only supported
                 for ``ibm_quantum`` channel. If ``None``, a hub/group/project that provides
                 access to the target backend is randomly selected.
+            job_tags: Tags to be assigned to the job. The tags can subsequently be used
+                as a filter in the :meth:`jobs()` function call.
+            max_execution_time: Maximum execution time in seconds. If
+                a job exceeds this time limit, it is forcibly cancelled.
         """
         self.backend = backend
         self.image = image
         self.log_level = log_level
         self.instance = instance
+        self.job_tags = job_tags
+        self.max_execution_time = max_execution_time
 
     def validate(self, channel: str) -> None:
         """Validate options.
@@ -91,6 +102,8 @@ class RuntimeOptions:
                 f"{self.log_level} is not a valid log level. The valid log levels are: `DEBUG`, "
                 f"`INFO`, `WARNING`, `ERROR`, and `CRITICAL`."
             )
+        if self.job_tags:
+            validate_job_tags(self.job_tags, IBMInputValueError)
 
     @property
     def backend_name(self) -> str:

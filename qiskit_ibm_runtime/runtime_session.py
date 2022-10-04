@@ -91,7 +91,6 @@ class RuntimeSession:
             inputs=inputs,
             session_id=self._session_id,
             start_session=self._start_session,
-            max_execution_time=self._max_time,
         )
 
     @_active_session

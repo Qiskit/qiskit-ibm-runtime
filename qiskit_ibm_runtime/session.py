@@ -133,13 +133,14 @@ class Session:
         Returns:
             Submitted job.
         """
-
         # TODO: Cache data when server supports it.
 
-        # TODO: Do we really need to specify a None max time if session has started?
-        max_time = self._max_time if not self._session_id else None
         options = options or {}
         options["backend"] = self._backend
+        # TODO: Do we really need to specify a None max time if session has started?
+        max_time = self._max_time if not self._session_id else None
+        if max_time:
+            options["max_execution_time"] = max_time
 
         job = self._service.run(
             program_id=program_id,
@@ -147,7 +148,6 @@ class Session:
             inputs=inputs,
             session_id=self._session_id,
             start_session=self._session_id is None,
-            max_execution_time=max_time,
             callback=callback,
             result_decoder=result_decoder,
         )

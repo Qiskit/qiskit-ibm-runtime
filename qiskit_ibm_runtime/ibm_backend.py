@@ -545,6 +545,10 @@ class IBMBackend(Backend):
         """
         # pylint: disable=arguments-differ
         options = {"backend_name": self.name}
+        if job_tags:
+            options["job_tags"] = job_tags
+        if max_execution_time:
+            options["max_execution_time"] = max_execution_time
         inputs = {"circuits": circuits}
         if shots:
             inputs["shots"] = shots
@@ -573,8 +577,6 @@ class IBMBackend(Backend):
             result_decoder=result_decoder,
             instance=instance,
             session_id=session_id,
-            job_tags=job_tags,
-            max_execution_time=max_execution_time,
             start_session=start_session,
         )
 

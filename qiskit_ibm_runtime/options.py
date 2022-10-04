@@ -160,6 +160,7 @@ class EnvironmentOptions:
     log_level: str = "WARNING"
     image: Optional[str] = None
     instance: Optional[str] = None
+    job_tags: Optional[List[str]] = None
 
 
 @_flexible
@@ -168,13 +169,6 @@ class Options:
     """Options for the primitive programs.
 
     Args:
-        max_execution_time: Maximum execution time in seconds. If
-            a job exceeds this time limit, it is forcibly cancelled.
-
-        job_tags: Tags to be assigned to the job. The tags can subsequently be used
-            as a filter in the :meth:`qiskit_ibm_runtime.qiskit_runtime_service.jobs()`
-            function call.
-
         optimization_level: How much optimization to perform on the circuits.
             Higher levels generate more optimized circuits,
             at the expense of longer transpilation times.
@@ -270,6 +264,10 @@ class Options:
             * instance: The hub/group/project to use, in that format. This is only supported
                 for ``ibm_quantum`` channel. If ``None``, a hub/group/project that provides
                 access to the target backend is randomly selected.
+
+            * job_tags: Tags to be assigned to the job. The tags can subsequently be used
+                as a filter in the :meth:`qiskit_ibm_runtime.qiskit_runtime_service.jobs()`
+                function call.
     """
 
     optimization_level: int = 1
