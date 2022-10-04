@@ -12,15 +12,65 @@
 
 """Primitive options."""
 
-from typing import Optional, List, Dict, Union, Any
-from dataclasses import dataclass, asdict, field
+from typing import Optional, List, Dict, Union, Any, ClassVar
+from dataclasses import dataclass, asdict, fields, field, make_dataclass
 import copy
 
 from .utils.deprecation import issue_deprecation_msg
+from .runtime_options import RuntimeOptions
 
 
+def _flexible(cls):  # type: ignore
+    """Decorator used to allow a flexible dataclass.
+
+    This is used to dynamically create a new dataclass with the
+    arbitrary kwargs input converted to fields. It also converts
+    input dictionary to objects based on the _obj_fields attribute.
+    """
+
+    def __new__(cls, *args, **kwargs):  # type: ignore
+        def _to_obj(cls_, data):  # type: ignore
+            if data is None:
+                return cls_()
+            if isinstance(data, cls_):
+                return data
+            if isinstance(data, Dict):
+                return cls_(**data)
+            raise TypeError(
+                f"{data} has an unspported type {type(data)}. It can only be {cls_} or a dictionary."
+            )
+
+        updated_kwargs = copy.deepcopy(kwargs)
+        all_fields = []
+        orig_field_names = set()
+        obj_fields = getattr(cls, "_obj_fields", {})
+
+        for fld in fields(cls):
+            all_fields.append((fld.name, fld.type, fld))
+            orig_field_names.add(fld.name)
+
+        for key, val in updated_kwargs.items():
+            if key not in orig_field_names:
+                all_fields.append((key, type(val), field(default=None)))
+            elif key in obj_fields:
+                updated_kwargs[key] = _to_obj(obj_fields[key], val)
+
+        new_cls = make_dataclass(
+            cls.__name__,
+            all_fields,
+            bases=(cls,),
+        )
+        obj = object.__new__(new_cls)
+        obj.__init__(*args, **updated_kwargs)
+        return obj
+
+    cls.__new__ = __new__
+    return cls
+
+
+@_flexible
 @dataclass
-class Transpilation:
+class TranspilationOptions:
     """Transpilation options."""
 
     # TODO: Double check transpilation settings.
@@ -35,14 +85,16 @@ class Transpilation:
     seed_transpiler: Optional[int] = None
 
 
+@_flexible
 @dataclass
-class Resilience:
-    """Resilience settings."""
+class ResilienceOptions:
+    """Resilience options."""
 
     pass
 
 
-@dataclass
+@_flexible
+@dataclass(init=False)
 class SimulatorOptions:
     """Simulator options.
 
@@ -87,8 +139,9 @@ class SimulatorOptions:
                 )
 
 
+@_flexible
 @dataclass
-class Execution:
+class ExecutionOptions:
     """Execution options."""
 
     shots: int = 4000
@@ -99,6 +152,17 @@ class Execution:
     init_qubits: bool = True
 
 
+@_flexible
+@dataclass
+class EnvironmentOptions:
+    """Options related to the execution environment."""
+
+    log_level: str = "WARNING"
+    image: Optional[str] = None
+    instance: Optional[str] = None
+
+
+@_flexible
 @dataclass
 class Options:
     """Options for the primitive programs.
@@ -119,10 +183,6 @@ class Options:
 
             * 0: no resilience
             * 1: light resilience
-
-        log_level: logging level to set in the execution environment. The valid
-            log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
-            The default level is ``WARNING``.
 
         transpilation: Transpilation options.
 
@@ -189,14 +249,103 @@ class Options:
 
             * init_qubits: Whether to reset the qubits to the ground state for each shot.
               Default: ``True``.
+
+        environment: Options related to the execution environment.
+
+            * log_level: logging level to set in the execution environment. The valid
+              log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
+              The default level is ``WARNING``.
+
+            * image: The runtime image used to execute the program, specified in
+              the form of ``image_name:tag``. Not all accounts are
+              authorized to select a different image.
+
+            * instance: The hub/group/project to use, in that format. This is only supported
+                for ``ibm_quantum`` channel. If ``None``, a hub/group/project that provides
+                access to the target backend is randomly selected.
     """
 
     optimization_level: int = 1
     resilience_level: int = 0
-    log_level: str = "WARNING"
-    transpilation: Transpilation = field(default_factory=Transpilation)
-    execution: Execution = field(default_factory=Execution)
-    experimental: dict = None
+    transpilation: Union[TranspilationOptions, Dict] = field(
+        default_factory=TranspilationOptions
+    )
+    execution: Union[ExecutionOptions, Dict] = field(default_factory=ExecutionOptions)
+    environment: Union[EnvironmentOptions, Dict] = field(
+        default_factory=EnvironmentOptions
+    )
+
+    _obj_fields: ClassVar[Dict] = {
+        "transpilation": TranspilationOptions,
+        "execution": ExecutionOptions,
+        "environment": EnvironmentOptions,
+    }
+
+    @classmethod
+    def _from_dict(cls, data: Dict) -> "Options":
+        data = copy.copy(data)
+        environ_dict = data.pop("environment", {})
+        if "image" in data.keys():
+            issue_deprecation_msg(
+                msg="The 'image' option has been moved to the 'environment' category",
+                version="0.7",
+                remedy="Please specify 'environment':{'image': image} instead.",
+            )
+            environ_dict["image"] = data.pop("image")
+        environment = EnvironmentOptions(**environ_dict)
+        transp = TranspilationOptions(**data.pop("transpilation", {}))
+        execution = ExecutionOptions(**data.pop("execution", {}))
+        return cls(
+            environment=environment,
+            transpilation=transp,
+            execution=execution,
+            **data,
+        )
+
+    @staticmethod
+    def _get_program_inputs(options: Dict) -> Dict:
+        """Convert the input options to program compatible inputs.
+
+        Returns:
+            Inputs acceptable by primitive programs.
+        """
+        inputs = {}
+        inputs["transpilation_settings"] = options.get("transpilation", {})
+        inputs["transpilation_settings"].update(
+            {"optimization_settings": {"level": options.get("optimization_level")}}
+        )
+        inputs["resilience_settings"] = {"level": options.get("resilience_level")}
+        inputs["run_options"] = options.get("execution")
+
+        known_keys = [
+            "optimization_level",
+            "resilience_level",
+            "transpilation",
+            "execution",
+            "environment",
+        ]
+        # Add additional unknown keys.
+        for key in options.keys():
+            if key not in known_keys:
+                inputs[key] = options[key]
+        return inputs
+
+    @staticmethod
+    def _get_runtime_options(options: Dict) -> Dict:
+        """Extract runtime options.
+
+        Returns:
+            Runtime options.
+        """
+        # default_env = asdict(EnvironmentOptions())
+        environment = options.get("environment") or {}
+        out = {}
+
+        for fld in fields(RuntimeOptions):
+            if fld.name in environment:
+                out[fld.name] = environment[fld.name]
+
+        return out
 
     def _merge_options(self, new_options: Optional[Dict] = None) -> Dict:
         """Merge current options with the new ones.
@@ -217,56 +366,11 @@ class Options:
                 if isinstance(val, Dict):
                     _update_options(val, new)
 
-        # First combine options.
-        combined = copy.deepcopy(asdict(self))
+        combined = asdict(self)
+        # First update values of the same key.
         _update_options(combined, new_options)
+        # Add new keys.
+        for key, val in new_options.items():
+            if key not in combined:
+                combined[key] = val
         return combined
-
-    @classmethod
-    def _from_dict(cls, data: Dict) -> "Options":
-        data = copy.copy(data)
-        experimental = None
-        if "image" in data.keys():
-            issue_deprecation_msg(
-                msg="The 'image' option has been moved to the 'experimental' category",
-                version="0.7",
-                remedy="Please specify 'experimental':{'image': image} instead.",
-            )
-            experimental = {"image": data.pop("image")}
-        transp = Transpilation(**data.pop("transpilation", {}))
-        execution = Execution(**data.pop("execution", {}))
-        return cls(
-            experimental=experimental,
-            transpilation=transp,
-            execution=execution,
-            **data,
-        )
-
-    @staticmethod
-    def _get_program_inputs(options: Dict) -> Dict:
-        """Convert the input options to program compatible inputs.
-
-        Returns:
-            Inputs acceptable by primitive programs.
-        """
-        inputs = {}
-        inputs["transpilation_settings"] = options.get("transpilation", {})
-        inputs["transpilation_settings"].update(
-            {"optimization_settings": {"level": options.get("optimization_level")}}
-        )
-        inputs["resilience_settings"] = {"level": options.get("resilience_level")}
-        inputs["run_options"] = options.get("execution")
-        return inputs
-
-    @staticmethod
-    def _get_runtime_options(options: Dict) -> Dict:
-        """Extract runtime options.
-
-        Returns:
-            Runtime options.
-        """
-        experimental = options.get("experimental") or {}
-        return {
-            "log_level": options.get("log_level"),
-            "image": experimental.get("image", None),
-        }

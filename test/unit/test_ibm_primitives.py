@@ -13,7 +13,9 @@
 """Tests for primitive classes."""
 
 import sys
+import copy
 from unittest.mock import MagicMock, patch, ANY
+import warnings
 from dataclasses import asdict
 
 from qiskit.test.reference_circuits import ReferenceCircuits
@@ -68,7 +70,6 @@ class TestPrimitives(IBMTestCase):
                 "resilience_level": 1,
                 "transpilation": {"seed_transpiler": 24},
                 "execution": {"shots": 100, "init_qubits": True},
-                "log_level": "INFO",
             },
             {"transpilation": {}},
         ]
@@ -78,7 +79,7 @@ class TestPrimitives(IBMTestCase):
                 with self.subTest(primitive=cls, options=options):
                     inst = cls(session=MagicMock(spec=Session), options=options)
                     expected = asdict(Options())
-                    self._update_dict(expected, options)
+                    self._update_dict(expected, copy.deepcopy(options))
                     self.assertDictEqual(expected, asdict(inst.options))
 
     def test_backend_in_options(self):
@@ -92,8 +93,43 @@ class TestPrimitives(IBMTestCase):
             for backend in backends:
                 with self.subTest(primitive=cls, backend=backend):
                     options = {"backend": backend}
-                    inst = cls(service=MagicMock(), options=options)
+                    with warnings.catch_warnings(record=True) as warn:
+                        warnings.simplefilter("always")
+                        inst = cls(service=MagicMock(), options=options)
+                        # We'll get 2 deprecation warnings - one for service and one for backend.
+                        # We need service otherwise backend will get ignored.
+                        self.assertEqual(len(warn), 2)
+                        self.assertTrue(
+                            all(
+                                issubclass(one_warn.category, DeprecationWarning)
+                                for one_warn in warn
+                            )
+                        )
                     self.assertEqual(inst.session.backend(), backend_name)
+
+    def test_runtime_options(self):
+        """Test RuntimeOptions specified as primitive options."""
+        session = MagicMock(spec=Session)
+        primitives = [Sampler, Estimator]
+        env_vars = [
+            {"log_level": "DEBUG"},
+            {"image": "foo:latest"},
+            {"instance": "hub/group/project"},
+            {"log_level": "INFO", "image": "bar:latest"},
+        ]
+        for cls in primitives:
+            for env in env_vars:
+                with self.subTest(primitive=cls, env=env):
+                    options = Options(environment=env)
+                    inst = cls(session=session, options=options)
+                    inst.run(self.qx, observables=self.obs)
+                    if sys.version_info >= (3, 8):
+                        run_options = session.run.call_args.kwargs["options"]
+                    else:
+                        _, kwargs = session.run.call_args
+                        run_options = kwargs["options"]
+                    for key, val in env.items():
+                        self.assertEqual(run_options[key], val)
 
     def test_options_copied(self):
         """Test modifying original options does not affect primitives."""
@@ -278,6 +314,37 @@ class TestPrimitives(IBMTestCase):
                         inputs = kwargs["inputs"]
                     self._assert_dict_paritally_equal(inputs, expected)
                     self.assertDictEqual(asdict(inst.options), asdict(Options()))
+
+    def test_kwarg_options(self):
+        """Test specifying arbitrary options."""
+        session = MagicMock(spec=Session)
+        primitives = [Sampler, Estimator]
+        for cls in primitives:
+            with self.subTest(primitive=cls):
+                options = Options(foo="foo")  # pylint: disable=unexpected-keyword-arg
+                inst = cls(session=session, options=options)
+                inst.run(self.qx, observables=self.obs)
+                if sys.version_info >= (3, 8):
+                    inputs = session.run.call_args.kwargs["inputs"]
+                else:
+                    _, kwargs = session.run.call_args
+                    inputs = kwargs["inputs"]
+                self.assertEqual(inputs.get("foo"), "foo")
+
+    def test_run_kwarg_options(self):
+        """Test specifying arbitrary options in run."""
+        session = MagicMock(spec=Session)
+        primitives = [Sampler, Estimator]
+        for cls in primitives:
+            with self.subTest(primitive=cls):
+                inst = cls(session=session)
+                inst.run(self.qx, observables=self.obs, foo="foo")
+                if sys.version_info >= (3, 8):
+                    inputs = session.run.call_args.kwargs["inputs"]
+                else:
+                    _, kwargs = session.run.call_args
+                    inputs = kwargs["inputs"]
+                self.assertEqual(inputs.get("foo"), "foo")
 
     def test_run_multiple_different_options(self):
         """Test multiple runs with different options."""

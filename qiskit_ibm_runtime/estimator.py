@@ -14,10 +14,9 @@
 
 from __future__ import annotations
 import copy
-from typing import Iterable, Optional, Dict, Sequence, Any, Union
+from typing import Iterable, Optional, Dict, Sequence, Any, Union, Callable
 
 from qiskit.circuit import QuantumCircuit, Parameter
-from qiskit.circuit.parametertable import ParameterView
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.opflow import PauliSumOp
 from qiskit.quantum_info.operators.base_operator import BaseOperator
@@ -159,7 +158,9 @@ class Estimator(BaseEstimator):
             self.options = Options()
         elif isinstance(options, Options):
             self.options = copy.deepcopy(options)
-            skip_transpilation = self.options.transpilation.skip_transpilation
+            skip_transpilation = (
+                self.options.transpilation.skip_transpilation  # type: ignore[union-attr]
+            )
         else:
             backend = options.pop("backend", None)
             if backend is not None:
@@ -172,7 +173,9 @@ class Estimator(BaseEstimator):
             skip_transpilation = options.get("transpilation", {}).get(
                 "skip_transpilation", False
             )
-        self.options.transpilation.skip_transpilation = skip_transpilation
+        self.options.transpilation.skip_transpilation = (  # type: ignore[union-attr]
+            skip_transpilation
+        )
 
         self._initial_inputs = {
             "circuits": circuits,
@@ -186,12 +189,12 @@ class Estimator(BaseEstimator):
             backend = session or backend
             self._session = get_default_session(service, backend)
 
-    def run(
+    def run(  # pylint: disable=arguments-differ
         self,
         circuits: QuantumCircuit | Sequence[QuantumCircuit],
         observables: BaseOperator | PauliSumOp | Sequence[BaseOperator | PauliSumOp],
         parameter_values: Sequence[float] | Sequence[Sequence[float]] | None = None,
-        parameters: Sequence[Parameter] | Sequence[Sequence[Parameter]] | None = None,
+        callback: Optional[Callable] = None,
         **kwargs: Any,
     ) -> RuntimeJob:
         """Submit a request to the estimator primitive program.
@@ -204,8 +207,11 @@ class Estimator(BaseEstimator):
 
             parameter_values: Concrete parameters to be bound.
 
-            parameters: Parameters of quantum circuits, specifying the order in which values
-                will be bound. Defaults to ``[circ.parameters for circ in circuits]``
+            callback: Callback function to be invoked for any interim results and final result.
+                The callback function will receive 2 positional parameters:
+
+                    1. Job ID
+                    2. Job result.
 
             **kwargs: Individual options to overwrite the default primitive options.
 
@@ -226,27 +232,21 @@ class Estimator(BaseEstimator):
             and not isinstance(parameter_values[0], (Sequence, Iterable))
         ):
             parameter_values = [parameter_values]  # type: ignore[assignment]
-        if (
-            parameters is not None
-            and len(parameters) > 1
-            and not isinstance(parameters[0], Sequence)
-        ):
-            parameters = [parameters]
 
         return super().run(
             circuits=circuits,
             observables=observables,
             parameter_values=parameter_values,
-            parameters=parameters,
+            callback=callback,
             **kwargs,
         )
 
-    def _run(
+    def _run(  # pylint: disable=arguments-differ
         self,
         circuits: Sequence[QuantumCircuit],
         observables: Sequence[BaseOperator | PauliSumOp],
         parameter_values: Sequence[Sequence[float]],
-        parameters: list[ParameterView],
+        callback: Optional[Callable] = None,
         **kwargs: Any,
     ) -> RuntimeJob:
         """Submit a request to the estimator primitive program.
@@ -259,11 +259,6 @@ class Estimator(BaseEstimator):
 
             parameter_values: An optional list of concrete parameters to be bound.
 
-            parameters: A list of parameters of the quantum circuits
-                (:class:`~qiskit.circuit.parametertable.ParameterView` or
-                a list of :class:`~qiskit.circuit.Parameter`).
-                Defaults to ``[circ.parameters for circ in circuits]``.
-
             **kwargs: Individual options to overwrite the default primitive options.
 
         Returns:
@@ -274,7 +269,7 @@ class Estimator(BaseEstimator):
             "circuit_indices": list(range(len(circuits))),
             "observables": observables,
             "observable_indices": list(range(len(observables))),
-            "parameters": parameters,
+            "parameters": [circ.parameters for circ in circuits],
             "parameter_values": parameter_values,
         }
 
@@ -285,6 +280,7 @@ class Estimator(BaseEstimator):
             program_id=self._PROGRAM_ID,
             inputs=inputs,
             options=Options._get_runtime_options(combined),
+            callback=callback,
             result_decoder=EstimatorResultDecoder,
         )
 
