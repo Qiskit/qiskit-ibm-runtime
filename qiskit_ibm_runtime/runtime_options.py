@@ -20,13 +20,17 @@ from typing import Optional, List
 from qiskit.utils.deprecation import deprecate_arguments
 
 from .exceptions import IBMInputValueError
-from .options import Options
 from .utils.deprecation import issue_deprecation_msg
 
 
-@dataclass
+@dataclass(init=False)
 class RuntimeOptions:
     """Class for representing generic runtime execution options."""
+
+    backend: Optional[str] = None
+    image: Optional[str] = None
+    log_level: Optional[str] = None
+    instance: Optional[str] = None
 
     @deprecate_arguments({"backend_name": "backend"})
     def __init__(
@@ -34,8 +38,7 @@ class RuntimeOptions:
         backend: Optional[str] = None,
         image: Optional[str] = None,
         log_level: Optional[str] = None,
-        job_tags: Optional[List[str]] = None,
-        max_execution_time: Optional[int] = None,
+        instance: Optional[str] = None,
     ) -> None:
         """RuntimeOptions constructor.
 
@@ -47,16 +50,14 @@ class RuntimeOptions:
             log_level: logging level to set in the execution environment. The valid
                 log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
                 The default level is ``WARNING``.
-            job_tags: Tags to be assigned to the job. The tags can subsequently be used
-                as a filter in the :meth:`jobs()` function call.
-            max_execution_time: Maximum execution time in seconds. If
-                a job exceeds this time limit, it is forcibly cancelled.
+            instance: The hub/group/project to use, in that format. This is only supported
+                for ``ibm_quantum`` channel. If ``None``, a hub/group/project that provides
+                access to the target backend is randomly selected.
         """
         self.backend = backend
         self.image = image
         self.log_level = log_level
-        self.job_tags = job_tags
-        self.max_execution_time = max_execution_time
+        self.instance = instance
 
     def validate(self, channel: str) -> None:
         """Validate options.
@@ -75,7 +76,12 @@ class RuntimeOptions:
 
         if channel == "ibm_quantum" and not self.backend:
             raise IBMInputValueError(
-                '"backend" is required field in "options" for ``ibm_quantum`` runtime.'
+                '"backend" is required field in "options" for "ibm_quantum" channel.'
+            )
+
+        if self.instance and channel != "ibm_quantum":
+            raise IBMInputValueError(
+                '"instance" is only supported for "ibm_quantum" channel.'
             )
 
         if self.log_level and not isinstance(
@@ -85,12 +91,6 @@ class RuntimeOptions:
                 f"{self.log_level} is not a valid log level. The valid log levels are: `DEBUG`, "
                 f"`INFO`, `WARNING`, `ERROR`, and `CRITICAL`."
             )
-
-    def _to_new_options(self) -> Options:
-        return Options(
-            log_level=self.log_level,
-            experimental={"image": self.image},
-        )
 
     @property
     def backend_name(self) -> str:
