@@ -18,7 +18,7 @@ from qiskit.circuit import QuantumCircuit, Gate
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.test.reference_circuits import ReferenceCircuits
 
-from qiskit_ibm_runtime import Sampler, BaseSampler, SamplerResult, Session, Options
+from qiskit_ibm_runtime import Sampler, BaseSampler, SamplerResult, Session
 from qiskit_ibm_runtime.exceptions import RuntimeJobFailureError
 
 from ..decorators import run_integration_test
@@ -134,7 +134,9 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
             self.assertEqual(result.quasi_dists[1][31], 1)
 
     @run_integration_test
-    def test_sampler_non_parameterized_circuit_caching_with_transpilation_options(self, service):
+    def test_sampler_non_parameterized_circuit_caching_with_transpilation_options(
+        self, service
+    ):
         """Verify if circuit caching works in sampler primitive
         by passing correct and incorrect transpilation options."""
 
