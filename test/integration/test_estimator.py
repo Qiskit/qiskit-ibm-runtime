@@ -12,11 +12,13 @@
 
 """Integration tests for Estimator primitive."""
 
+from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.test.reference_circuits import ReferenceCircuits
 
 from qiskit_ibm_runtime import Estimator, EstimatorResult, BaseEstimator, Session
+from qiskit_ibm_runtime.exceptions import RuntimeJobFailureError
 
 from ..decorators import run_integration_test
 from ..ibm_test_case import IBMIntegrationTestCase
@@ -103,6 +105,92 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
             self.assertIsInstance(result5, EstimatorResult)
             self.assertEqual(len(result5.values), len(circuits5))
             self.assertEqual(len(result5.metadata), len(circuits5))
+
+    @run_integration_test
+    def test_estimator_session_circuit_caching(self, service):
+        """Verify if estimator primitive circuit caching works"""
+
+        backend = "ibmq_qasm_simulator"
+
+        qc1 = QuantumCircuit(2)
+        qc1.x(range(2))
+        qc1.measure_all()
+        qc2 = QuantumCircuit(2)
+        qc2.measure_all()
+        qc3 = QuantumCircuit(2)
+        qc3.h(range(2))
+        qc3.measure_all()
+
+        # pylint: disable=invalid-name
+        H = SparsePauliOp.from_list([("IZ", 1)])
+
+        with Session(service, backend) as session:
+            estimator = Estimator(session=session)
+
+            job = estimator.run(
+                circuits=[qc1, qc2],
+                observables=[H, H],
+            )
+            result = job.result()
+            self.assertEqual(len(result.values), 2)
+            self.assertEqual(len(result.metadata), 2)
+            self.assertEqual(result.values[0], -1)
+            self.assertEqual(result.values[1], 1)
+
+            job = estimator.run(
+                circuits=[qc3],
+                observables=[H],
+            )
+            result = job.result()
+            self.assertEqual(len(result.values), 1)
+            self.assertEqual(len(result.metadata), 1)
+            self.assertNotEqual(result.values[0], -1)
+            self.assertNotEqual(result.values[0], 1)
+
+            job = estimator.run(
+                circuits=[qc1, qc3],
+                observables=[H, H],
+            )
+            result = job.result()
+            self.assertEqual(len(result.values), 2)
+            self.assertEqual(len(result.metadata), 2)
+            self.assertEqual(result.values[0], -1)
+            self.assertNotEqual(result.values[1], -1)
+            self.assertNotEqual(result.values[1], 1)
+
+    @run_integration_test
+    def test_estimator_circuit_caching_with_transpilation_options(self, service):
+        """Verify if circuit caching works in estimator primitive
+        by passing correct and incorrect transpilation options."""
+
+        qc1 = QuantumCircuit(2)
+        qc1.x(range(2))
+        qc1.measure_all()
+
+        # pylint: disable=invalid-name
+        H = SparsePauliOp.from_list([("IZ", 1)])
+
+        with Session(service, self.backend) as session:
+            estimator = Estimator(session=session)
+            # pass correct initial_layout
+            transpilation = {"initial_layout": [0, 1]}
+            job = estimator.run(
+                circuits=[qc1], observables=[H], transpilation=transpilation
+            )
+            result = job.result()
+            self.assertEqual(len(result.values), 1)
+            self.assertEqual(len(result.metadata), 1)
+            self.assertEqual(result.values[0], -1)
+
+            # pass incorrect initial_layout
+            # since a new transpilation option is passed it should not use the
+            # cached transpiled circuit from the first run above
+            transpilation = {"initial_layout": [0]}
+            job = estimator.run(
+                circuits=[qc1], observables=[H], transpilation=transpilation
+            )
+            with self.assertRaises(RuntimeJobFailureError):
+                job.result()
 
     @run_integration_test
     def test_estimator_primitive(self, service):

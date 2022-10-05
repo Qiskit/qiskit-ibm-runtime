@@ -46,8 +46,8 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
             self.assertIsInstance(result, SamplerResult)
             self.assertEqual(len(result.quasi_dists), 1)
             self.assertEqual(len(result.metadata), 1)
-            self.assertAlmostEqual(result.quasi_dists[0][3], 0.5, delta=0.05)
-            self.assertAlmostEqual(result.quasi_dists[0][0], 0.5, delta=0.05)
+            self.assertAlmostEqual(result.quasi_dists[0][3], 0.5, delta=0.1)
+            self.assertAlmostEqual(result.quasi_dists[0][0], 0.5, delta=0.1)
             self.assertTrue(session.session_id)
 
     @run_integration_test
@@ -65,8 +65,8 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
             self.assertEqual(len(result1.quasi_dists), len(circuits1))
             self.assertEqual(len(result1.metadata), len(circuits1))
             for i in range(len(circuits1)):
-                self.assertAlmostEqual(result1.quasi_dists[i][3], 0.5, delta=0.05)
-                self.assertAlmostEqual(result1.quasi_dists[i][0], 0.5, delta=0.05)
+                self.assertAlmostEqual(result1.quasi_dists[i][3], 0.5, delta=0.1)
+                self.assertAlmostEqual(result1.quasi_dists[i][0], 0.5, delta=0.1)
 
             circuits2 = [circuits[0], circuits[2]]
             result2 = sampler.run(circuits=circuits2).result()
@@ -74,8 +74,8 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
             self.assertEqual(len(result2.quasi_dists), len(circuits2))
             self.assertEqual(len(result2.metadata), len(circuits2))
             for i in range(len(circuits2)):
-                self.assertAlmostEqual(result2.quasi_dists[i][3], 0.5, delta=0.05)
-                self.assertAlmostEqual(result2.quasi_dists[i][0], 0.5, delta=0.05)
+                self.assertAlmostEqual(result2.quasi_dists[i][3], 0.5, delta=0.1)
+                self.assertAlmostEqual(result2.quasi_dists[i][0], 0.5, delta=0.1)
 
             circuits3 = [circuits[1], circuits[2]]
             result3 = sampler.run(circuits=circuits3).result()
@@ -83,8 +83,84 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
             self.assertEqual(len(result3.quasi_dists), len(circuits3))
             self.assertEqual(len(result3.metadata), len(circuits3))
             for i in range(len(circuits3)):
-                self.assertAlmostEqual(result3.quasi_dists[i][3], 0.5, delta=0.05)
-                self.assertAlmostEqual(result3.quasi_dists[i][0], 0.5, delta=0.05)
+                self.assertAlmostEqual(result3.quasi_dists[i][3], 0.5, delta=0.1)
+                self.assertAlmostEqual(result3.quasi_dists[i][0], 0.5, delta=0.1)
+
+    @run_integration_test
+    def test_sampler_non_parameterized_circuit_caching(self, service):
+        """Verify if circuit caching works in sampler primitive
+        and returns expected results for non-parameterized circuits."""
+
+        qc1 = QuantumCircuit(2)
+        qc1.x(range(2))
+        qc1.measure_all()
+        qc2 = QuantumCircuit(3)
+        qc2.x(range(3))
+        qc2.measure_all()
+        qc3 = QuantumCircuit(4)
+        qc3.x(range(4))
+        qc3.measure_all()
+        qc4 = QuantumCircuit(5)
+        qc4.x(range(5))
+        qc4.measure_all()
+
+        with Session(service, self.backend) as session:
+            sampler = Sampler(session=session)
+            self.assertIsInstance(sampler, BaseSampler)
+            job = sampler.run(circuits=[qc1, qc2])
+            result = job.result()
+            self.assertEqual(len(result.quasi_dists), 2)
+            self.assertEqual(len(result.metadata), 2)
+            self.assertEqual(result.quasi_dists[0][3], 1)
+            self.assertEqual(result.quasi_dists[1][7], 1)
+
+            job = sampler.run(circuits=[qc1])
+            result = job.result()
+            self.assertEqual(len(result.quasi_dists), 1)
+            self.assertEqual(len(result.metadata), 1)
+            self.assertEqual(result.quasi_dists[0][3], 1)
+
+            job = sampler.run(circuits=[qc3])
+            result = job.result()
+            self.assertEqual(len(result.quasi_dists), 1)
+            self.assertEqual(len(result.metadata), 1)
+            self.assertEqual(result.quasi_dists[0][15], 1)
+
+            job = sampler.run(circuits=[qc1, qc4])
+            result = job.result()
+            self.assertEqual(len(result.quasi_dists), 2)
+            self.assertEqual(len(result.metadata), 2)
+            self.assertEqual(result.quasi_dists[0][3], 1)
+            self.assertEqual(result.quasi_dists[1][31], 1)
+
+    @run_integration_test
+    def test_sampler_non_parameterized_circuit_caching_with_transpilation_options(
+        self, service
+    ):
+        """Verify if circuit caching works in sampler primitive
+        by passing correct and incorrect transpilation options."""
+
+        qc1 = QuantumCircuit(2)
+        qc1.x(range(2))
+        qc1.measure_all()
+
+        with Session(service, self.backend) as session:
+            sampler = Sampler(session=session)
+            # pass correct initial_layout
+            transpilation = {"initial_layout": [0, 1]}
+            job = sampler.run(circuits=[qc1], transpilation=transpilation)
+            result = job.result()
+            self.assertEqual(len(result.quasi_dists), 1)
+            self.assertEqual(len(result.metadata), 1)
+            self.assertEqual(result.quasi_dists[0][3], 1)
+
+            # pass incorrect initial_layout
+            # since a new transpilation option is passed it should not use the
+            # cached transpiled circuit from the first run above
+            transpilation = {"initial_layout": [0]}
+            job = sampler.run(circuits=[qc1], transpilation=transpilation)
+            with self.assertRaises(RuntimeJobFailureError):
+                job.result()
 
     @run_integration_test
     def test_sampler_primitive_parameterized_circuits(self, service):
@@ -139,10 +215,10 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
             result = sampler.run(self.bell, shots=shots).result()
             self.assertEqual(result.quasi_dists[0].shots, shots)
             self.assertAlmostEqual(
-                result.quasi_dists[0]._stddev_upper_bound, sqrt(1 / shots), delta=0.05
+                result.quasi_dists[0]._stddev_upper_bound, sqrt(1 / shots), delta=0.1
             )
-            self.assertAlmostEqual(result.quasi_dists[0][3], 0.5, delta=0.05)
-            self.assertAlmostEqual(result.quasi_dists[0][0], 0.5, delta=0.05)
+            self.assertAlmostEqual(result.quasi_dists[0][3], 0.5, delta=0.1)
+            self.assertAlmostEqual(result.quasi_dists[0][0], 0.5, delta=0.1)
 
     @run_integration_test
     def test_sampler_primitive_as_session(self, service):
