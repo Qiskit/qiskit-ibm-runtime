@@ -12,9 +12,11 @@
 
 """Qiskit Runtime flexible session."""
 
-from typing import Dict, Optional, Type, Union
+from typing import Dict, Optional, Type, Union, Callable
 from types import TracebackType
 from functools import wraps
+
+from qiskit.circuit import QuantumCircuit
 
 from qiskit_ibm_runtime import QiskitRuntimeService
 from .runtime_job import RuntimeJob
@@ -96,6 +98,8 @@ class Session:
         self._session_id: Optional[str] = None
         self._active = True
 
+        self._circuits_map: Dict[str, QuantumCircuit] = {}
+
         self._max_time = (
             max_time
             if max_time is None or isinstance(max_time, int)
@@ -108,6 +112,7 @@ class Session:
         program_id: str,
         inputs: Union[Dict, ParameterNamespace],
         options: Optional[Dict] = None,
+        callback: Optional[Callable] = None,
         result_decoder: Optional[Type[ResultDecoder]] = None,
     ) -> RuntimeJob:
         """Run a program in the session.
@@ -127,6 +132,7 @@ class Session:
                 * instance: The hub/group/project to use, in that format. This is only supported
                     for ``ibm_quantum`` channel. If ``None``, a hub/group/project that provides
                     access to the target backend is randomly selected.
+            callback: Callback function to be invoked for any interim results and final result.
 
         Returns:
             Submitted job.
@@ -146,6 +152,7 @@ class Session:
             session_id=self._session_id,
             start_session=self._session_id is None,
             max_execution_time=max_time,
+            callback=callback,
             result_decoder=result_decoder,
         )
 
