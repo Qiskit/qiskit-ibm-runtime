@@ -14,21 +14,36 @@
 
 import sys
 import copy
+import json
 from unittest.mock import MagicMock, patch, ANY
 import warnings
 from dataclasses import asdict
+from typing import Dict
 
+from qiskit.circuit import QuantumCircuit
+from qiskit.circuit.library import RealAmplitudes
 from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit.quantum_info import SparsePauliOp
-from qiskit_ibm_runtime import Sampler, Estimator, Options, Session
+
+from qiskit_ibm_runtime import Sampler, Estimator, Options, Session, RuntimeEncoder
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 import qiskit_ibm_runtime.session as session_pkg
+from qiskit_ibm_runtime.utils.utils import _hash
+from qiskit_ibm_runtime.qiskit.primitives.utils import _circuit_key
 from ..ibm_test_case import IBMTestCase
 from ..utils import dict_paritally_equal
 
+from .mock.fake_runtime_service import FakeRuntimeService
+
+
+class MockSession(Session):
+    """Mock for session class"""
+
+    _circuits_map: Dict[str, QuantumCircuit] = {}
+
 
 class TestPrimitives(IBMTestCase):
-    """Class for testing the Sampler class."""
+    """Class for testing the Sampler and Estimator classes."""
 
     @classmethod
     def setUpClass(cls):
@@ -45,7 +60,7 @@ class TestPrimitives(IBMTestCase):
         primitives = [Sampler, Estimator]
         for cls in primitives:
             with self.subTest(primitive=cls):
-                inst = cls(session=MagicMock(spec=Session), skip_transpilation=True)
+                inst = cls(session=MagicMock(spec=MockSession), skip_transpilation=True)
                 self.assertTrue(inst.options.transpilation.skip_transpilation)
 
     def test_skip_transpilation_overwrite(self):
@@ -56,7 +71,7 @@ class TestPrimitives(IBMTestCase):
         for cls in primitives:
             with self.subTest(primitive=cls):
                 inst = cls(
-                    session=MagicMock(spec=Session),
+                    session=MagicMock(spec=MockSession),
                     options=options,
                     skip_transpilation=True,
                 )
@@ -77,7 +92,7 @@ class TestPrimitives(IBMTestCase):
         for cls in primitives:
             for options in options_vars:
                 with self.subTest(primitive=cls, options=options):
-                    inst = cls(session=MagicMock(spec=Session), options=options)
+                    inst = cls(session=MagicMock(spec=MockSession), options=options)
                     expected = asdict(Options())
                     self._update_dict(expected, copy.deepcopy(options))
                     self.assertDictEqual(expected, asdict(inst.options))
@@ -109,7 +124,7 @@ class TestPrimitives(IBMTestCase):
 
     def test_runtime_options(self):
         """Test RuntimeOptions specified as primitive options."""
-        session = MagicMock(spec=Session)
+        session = MagicMock(spec=MockSession)
         primitives = [Sampler, Estimator]
         env_vars = [
             {"log_level": "DEBUG"},
@@ -138,7 +153,7 @@ class TestPrimitives(IBMTestCase):
         for cls in primitives:
             with self.subTest(primitive=cls):
                 options.transpilation.skip_transpilation = True
-                inst = cls(session=MagicMock(spec=Session), options=options)
+                inst = cls(session=MagicMock(spec=MockSession), options=options)
                 options.transpilation.skip_transpilation = False
                 self.assertTrue(inst.options.transpilation.skip_transpilation)
 
@@ -225,7 +240,7 @@ class TestPrimitives(IBMTestCase):
 
     def test_run_default_options(self):
         """Test run using default options."""
-        session = MagicMock(spec=Session)
+        session = MagicMock(spec=MockSession)
         options_vars = [
             (Options(resilience_level=9), {"resilience_settings": {"level": 9}}),
             (
@@ -256,7 +271,7 @@ class TestPrimitives(IBMTestCase):
 
     def test_run_updated_default_options(self):
         """Test run using updated default options."""
-        session = MagicMock(spec=Session)
+        session = MagicMock(spec=MockSession)
         primitives = [Sampler, Estimator]
         for cls in primitives:
             with self.subTest(primitive=cls):
@@ -283,7 +298,7 @@ class TestPrimitives(IBMTestCase):
 
     def test_run_overwrite_options(self):
         """Test run using overwritten options."""
-        session = MagicMock(spec=Session)
+        session = MagicMock(spec=MockSession)
         options_vars = [
             ({"resilience_level": 9}, {"resilience_settings": {"level": 9}}),
             ({"shots": 200}, {"run_options": {"shots": 200}}),
@@ -317,7 +332,7 @@ class TestPrimitives(IBMTestCase):
 
     def test_kwarg_options(self):
         """Test specifying arbitrary options."""
-        session = MagicMock(spec=Session)
+        session = MagicMock(spec=MockSession)
         primitives = [Sampler, Estimator]
         for cls in primitives:
             with self.subTest(primitive=cls):
@@ -333,7 +348,7 @@ class TestPrimitives(IBMTestCase):
 
     def test_run_kwarg_options(self):
         """Test specifying arbitrary options in run."""
-        session = MagicMock(spec=Session)
+        session = MagicMock(spec=MockSession)
         primitives = [Sampler, Estimator]
         for cls in primitives:
             with self.subTest(primitive=cls):
@@ -348,7 +363,7 @@ class TestPrimitives(IBMTestCase):
 
     def test_run_multiple_different_options(self):
         """Test multiple runs with different options."""
-        session = MagicMock(spec=Session)
+        session = MagicMock(spec=MockSession)
         primitives = [Sampler, Estimator]
         for cls in primitives:
             with self.subTest(primitive=cls):
@@ -366,12 +381,67 @@ class TestPrimitives(IBMTestCase):
         """Test multiple runs within a session."""
         num_runs = 5
         primitives = [Sampler, Estimator]
-        session = MagicMock(spec=Session)
+        session = MagicMock(spec=MockSession)
         for idx in range(num_runs):
             cls = primitives[idx % 2]
             inst = cls(session=session)
             inst.run(self.qx, observables=self.obs)
         self.assertEqual(session.run.call_count, num_runs)
+
+    def test_primitives_circuit_caching(self):
+        """Test circuit caching in Estimator and Sampler classes"""
+        psi1 = RealAmplitudes(num_qubits=2, reps=2)
+        psi1.measure_all()
+        psi2 = RealAmplitudes(num_qubits=2, reps=3)
+        psi2.measure_all()
+        psi3 = RealAmplitudes(num_qubits=2, reps=2)
+        psi3.measure_all()
+        psi4 = RealAmplitudes(num_qubits=2, reps=3)
+        psi4.measure_all()
+        psi1_id = _hash(json.dumps(_circuit_key(psi1), cls=RuntimeEncoder))
+        psi2_id = _hash(json.dumps(_circuit_key(psi2), cls=RuntimeEncoder))
+        psi3_id = _hash(json.dumps(_circuit_key(psi3), cls=RuntimeEncoder))
+        psi4_id = _hash(json.dumps(_circuit_key(psi4), cls=RuntimeEncoder))
+
+        # pylint: disable=invalid-name
+        H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
+        H2 = SparsePauliOp.from_list([("IZ", 1)])
+
+        with Session(
+            service=FakeRuntimeService(channel="ibm_quantum", token="abc"),
+            backend="ibmq_qasm_simulator",
+        ) as session:
+            estimator = Estimator(session=session)
+
+            # calculate [ <psi1(theta1)|H1|psi1(theta1)> ]
+            with patch.object(estimator._session, "run") as mock_run:
+                estimator.run([psi1, psi2], [H1, H2], [[ANY] * 6, [ANY] * 8])
+                _, kwargs = mock_run.call_args
+                inputs = kwargs["inputs"]
+                self.assertDictEqual(inputs["circuits"], {psi1_id: psi1, psi2_id: psi2})
+                self.assertEqual(inputs["circuit_ids"], [psi1_id, psi2_id])
+
+            sampler = Sampler(session=session)
+            with patch.object(sampler._session, "run") as mock_run:
+                sampler.run([psi1, psi2], [[ANY] * 6, [ANY] * 8])
+                _, kwargs = mock_run.call_args
+                inputs = kwargs["inputs"]
+                self.assertDictEqual(inputs["circuits"], {})
+                self.assertEqual(inputs["circuit_ids"], [psi1_id, psi2_id])
+
+            with patch.object(estimator._session, "run") as mock_run:
+                estimator.run([psi3], [H1], [[ANY] * 6])
+                _, kwargs = mock_run.call_args
+                inputs = kwargs["inputs"]
+                self.assertDictEqual(inputs["circuits"], {psi3_id: psi3})
+                self.assertEqual(inputs["circuit_ids"], [psi3_id])
+
+            with patch.object(sampler._session, "run") as mock_run:
+                sampler.run([psi4, psi1], [[ANY] * 8, [ANY] * 6])
+                _, kwargs = mock_run.call_args
+                inputs = kwargs["inputs"]
+                self.assertDictEqual(inputs["circuits"], {psi4_id: psi4})
+                self.assertEqual(inputs["circuit_ids"], [psi4_id, psi1_id])
 
     def _update_dict(self, dict1, dict2):
         for key, val in dict1.items():
