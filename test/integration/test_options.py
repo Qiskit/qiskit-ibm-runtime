@@ -12,13 +12,10 @@
 
 """Tests for job functions using real runtime service."""
 
-import random
-import time
-
 from qiskit import QuantumCircuit
 from qiskit.providers.fake_provider import FakeManila
 from qiskit_aer.noise import NoiseModel
-from qiskit_ibm_runtime import Session, Sampler, QiskitRuntimeService, Options
+from qiskit_ibm_runtime import Session, Sampler, Options
 
 from ..ibm_test_case import IBMIntegrationTestCase
 from ..decorators import run_integration_test
@@ -36,27 +33,28 @@ class TestIntegrationOptions(IBMIntegrationTestCase):
         fake_backend = FakeManila()
         noise_model = NoiseModel.from_backend(fake_backend)
 
-        qc = QuantumCircuit(1, 1)
-        qc.x(0)
-        qc.measure_all(add_bits=False)
+        circ = QuantumCircuit(1, 1)
+        circ.x(0)
+        circ.measure_all(add_bits=False)
 
-        options = Options(simulator={
-            "noise_model": noise_model,
-            "basis_gates": fake_backend.configuration().basis_gates,
-            "coupling_map": fake_backend.configuration().basis_gates,
-            "seed_simulator": 42
+        options = Options(
+            simulator={
+                "noise_model": noise_model,
+                "basis_gates": fake_backend.configuration().basis_gates,
+                "coupling_map": fake_backend.configuration().basis_gates,
+                "seed_simulator": 42,
             }
         )
 
         with Session(service=service, backend=backend):
             sampler = Sampler(options=options)
-            job1 = sampler.run(qc)
+            job1 = sampler.run(circ)
             self.log.info("Runtime job %s submitted.", job1.job_id())
             result1 = job1.result()
             # We should get both 0 and 1 if there is noise.
             self.assertEqual(len(result1.quasi_dists[0].keys()), 2)
 
-            job2 = sampler.run(qc)
+            job2 = sampler.run(circ)
             self.log.info("Runtime job %s submitted.", job2.job_id())
             result2 = job2.result()
             # We should get both 0 and 1 if there is noise.
