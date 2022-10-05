@@ -284,13 +284,15 @@ class Options:
     @classmethod
     def _from_dict(cls, data: Dict) -> "Options":
         data = copy.copy(data)
+        environ_dict = data.pop("environment", {})
         if "image" in data.keys():
             issue_deprecation_msg(
                 msg="The 'image' option has been moved to the 'environment' category",
                 version="0.7",
                 remedy="Please specify 'environment':{'image': image} instead.",
             )
-        environment = EnvironmentOptions(image=data.pop("image", None))
+            environ_dict["image"] = data.pop("image")
+        environment = EnvironmentOptions(**environ_dict)
         transp = TranspilationOptions(**data.pop("transpilation", {}))
         execution = ExecutionOptions(**data.pop("execution", {}))
         return cls(
