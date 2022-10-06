@@ -65,6 +65,7 @@ DEPRECATED_PROGRAMS = [
     "torch-infer",
     "sample-expval",
     "quantum_kernal_alignment",
+    "sample-program"
 ]
 
 _JOB_DEPRECATION_ISSUED = False
