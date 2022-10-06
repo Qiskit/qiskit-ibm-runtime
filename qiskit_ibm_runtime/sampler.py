@@ -13,7 +13,7 @@
 """Sampler primitive."""
 
 from __future__ import annotations
-from typing import Dict, Iterable, Optional, Sequence, Any, Union, Callable
+from typing import Dict, Iterable, Optional, Sequence, Any, Union
 import copy
 import json
 
@@ -176,7 +176,6 @@ class Sampler(BaseSampler):
         self,
         circuits: QuantumCircuit | Sequence[QuantumCircuit],
         parameter_values: Sequence[float] | Sequence[Sequence[float]] | None = None,
-        callback: Optional[Callable] = None,
         **kwargs: Any,
     ) -> RuntimeJob:
         """Submit a request to the sampler primitive program.
@@ -185,11 +184,6 @@ class Sampler(BaseSampler):
             circuits: A (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
                 a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
             parameter_values: Concrete parameters to be bound.
-            callback: Callback function to be invoked for any interim results and final result.
-                The callback function will receive 2 positional parameters:
-
-                    1. Job ID
-                    2. Job result.
             **kwargs: Individual options to overwrite the default primitive options.
 
         Returns:
@@ -211,7 +205,6 @@ class Sampler(BaseSampler):
         return super().run(
             circuits=circuits,
             parameter_values=parameter_values,
-            callback=callback,
             **kwargs,
         )
 
@@ -219,7 +212,6 @@ class Sampler(BaseSampler):
         self,
         circuits: Sequence[QuantumCircuit],
         parameter_values: Sequence[Sequence[float]],
-        callback: Optional[Callable] = None,
         **kwargs: Any,
     ) -> RuntimeJob:
         """Submit a request to the sampler primitive program.
@@ -228,7 +220,6 @@ class Sampler(BaseSampler):
             circuits: A (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
                 a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
             parameter_values: An optional list of concrete parameters to be bound.
-            callback: Callback function to be invoked for any interim results and final result.
             **kwargs: Individual options to overwrite the default primitive options.
 
         Returns:
@@ -261,7 +252,7 @@ class Sampler(BaseSampler):
             program_id=self._PROGRAM_ID,
             inputs=inputs,
             options=Options._get_runtime_options(combined),
-            callback=callback,
+            callback=combined["environment"]["callback"],
             result_decoder=SamplerResultDecoder,
         )
 
