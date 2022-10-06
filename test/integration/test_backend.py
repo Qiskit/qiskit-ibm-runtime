@@ -12,13 +12,9 @@
 
 """Tests for backend functions using real runtime service."""
 
-import os
 from unittest import SkipTest
 
 from qiskit.transpiler.target import Target
-from qiskit.providers.jobstatus import JobStatus
-from qiskit.test.reference_circuits import ReferenceCircuits
-
 from qiskit_ibm_runtime import QiskitRuntimeService
 
 from ..ibm_test_case import IBMIntegrationTestCase
@@ -137,18 +133,8 @@ class TestIBMBackend(IBMIntegrationTestCase):
                 backend.foobar  # pylint: disable=pointless-statement
 
     def test_backend_run(self):
-        """Test running a job from a backend."""
-        if self.dependencies.channel == "ibm_cloud":
-            raise SkipTest(
-                "Skip since cloud account does not have circuit-runner program."
-            )
-        if os.environ.get("QISKIT_IBM_USE_STAGING_CREDENTIALS", ""):
-            backend = self.dependencies.service.backend("ibmq_qasm_simulator")
-            job = backend.run(ReferenceCircuits.bell(), shots=10)
-        else:
-            job = self.backend.run(ReferenceCircuits.bell(), shots=10)
-        job.wait_for_final_state()
-        result = job.result()
-        self.assertTrue(result)
-        self.assertEqual(result["results"][0]["shots"], 10)
-        self.assertEqual(JobStatus.DONE, job.status())
+        """Check one cannot do backend.run"""
+        backend = self.backend
+        with self.subTest(backend=backend.name):
+            with self.assertRaises(RuntimeError):
+                backend.run()
