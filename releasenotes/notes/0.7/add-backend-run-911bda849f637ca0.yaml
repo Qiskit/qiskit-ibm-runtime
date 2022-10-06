@@ -1,5 +1,0 @@
----
-upgrade:
-  - |
-    Users can now call :meth:`~qiskit_ibm_runtime.IBMBackend.run` to run jobs
-    on the given backend through the ``circuit-runner`` program. 
