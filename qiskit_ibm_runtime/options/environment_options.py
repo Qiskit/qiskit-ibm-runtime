@@ -12,7 +12,7 @@
 
 """Options related to the execution environment."""
 
-from typing import Optional
+from typing import Optional, Callable
 from dataclasses import dataclass
 
 from .utils import _flexible
@@ -35,8 +35,14 @@ class EnvironmentOptions:
         instance: The hub/group/project to use, in that format. This is only supported
             for ``ibm_quantum`` channel. If ``None``, a hub/group/project that provides
             access to the target backend is randomly selected.
+
+        callback: Callback function to be invoked for any interim results and final result.
+            The callback function will receive 2 positional parameters:
+                1. Job ID
+                2. Job result.
     """
 
     log_level: str = "WARNING"
     image: Optional[str] = None
     instance: Optional[str] = None
+    callback: Optional[Callable] = None
