@@ -12,7 +12,7 @@
 
 """Primitive options."""
 
-from typing import Optional, List, Dict, Union, Any, ClassVar
+from typing import Optional, List, Dict, Union, Any, ClassVar, Callable
 from dataclasses import dataclass, asdict, fields, field, make_dataclass
 import copy
 
@@ -160,6 +160,7 @@ class EnvironmentOptions:
     log_level: str = "WARNING"
     image: Optional[str] = None
     instance: Optional[str] = None
+    callback: Optional[Callable] = None
 
 
 @_flexible
@@ -263,6 +264,11 @@ class Options:
             * instance: The hub/group/project to use, in that format. This is only supported
                 for ``ibm_quantum`` channel. If ``None``, a hub/group/project that provides
                 access to the target backend is randomly selected.
+            * callback: Callback function to be invoked for any interim results and final result.
+                The callback function will receive 2 positional parameters:
+
+                    1. Job ID
+                    2. Job result.
     """
 
     optimization_level: int = 1
