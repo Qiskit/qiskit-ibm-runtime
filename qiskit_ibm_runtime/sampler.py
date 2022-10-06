@@ -252,7 +252,7 @@ class Sampler(BaseSampler):
             program_id=self._PROGRAM_ID,
             inputs=inputs,
             options=Options._get_runtime_options(combined),
-            callback=combined["environment"]["callback"],
+            callback=combined.get("environment", {}).get("callback", None),
             result_decoder=SamplerResultDecoder,
         )
 
