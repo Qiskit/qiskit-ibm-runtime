@@ -16,7 +16,6 @@ from typing import Optional, Union, ClassVar
 from dataclasses import dataclass, asdict, fields, field
 import copy
 
-from ..utils.deprecation import issue_deprecation_msg
 from ..runtime_options import RuntimeOptions
 from .utils import _flexible, Dict
 from .environment_options import EnvironmentOptions
