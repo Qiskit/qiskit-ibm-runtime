@@ -24,6 +24,7 @@ from qiskit_ibm_runtime import (
     Sampler,
     Estimator,
     Session,
+    Options,
 )
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 from qiskit_ibm_runtime.exceptions import RuntimeInvalidStateError
@@ -92,14 +93,20 @@ class TestRuntimeWebsocketClient(IBMTestCase):
         circ = ReferenceCircuits.bell()
         obs = SparsePauliOp.from_list([("IZ", 1)])
         primitives = [Sampler, Estimator]
+        sub_tests = [
+            ({"options": Options(environment={"callback": result_callback})}, {}),
+            ({}, {"callback": result_callback}),
+        ]
+
         for cls in primitives:
-            with self.subTest(primitive=cls):
-                results = []
-                inst = cls(session=Session(service=service))
-                job = inst.run(circ, observables=obs, callback=result_callback)
-                time.sleep(JOB_PROGRESS_RESULT_COUNT + 2)
-                self.assertEqual(JOB_PROGRESS_RESULT_COUNT, len(results))
-                self.assertFalse(job._ws_client.connected)
+            for options, callback in sub_tests:
+                with self.subTest(primitive=cls, options=options, callback=callback):
+                    results = []
+                    inst = cls(session=Session(service=service), **options)
+                    job = inst.run(circ, observables=obs, **callback)
+                    time.sleep(JOB_PROGRESS_RESULT_COUNT + 2)
+                    self.assertEqual(JOB_PROGRESS_RESULT_COUNT, len(results))
+                    self.assertFalse(job._ws_client.connected)
 
     def test_stream_results(self):
         """Test streaming results."""

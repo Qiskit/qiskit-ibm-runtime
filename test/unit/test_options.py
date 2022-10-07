@@ -14,6 +14,9 @@
 
 from dataclasses import asdict
 
+from qiskit_aer.noise import NoiseModel
+from qiskit.providers.fake_provider import FakeNairobiV2
+
 from qiskit_ibm_runtime import Options, RuntimeOptions
 from ..ibm_test_case import IBMTestCase
 from ..utils import dict_paritally_equal
@@ -44,6 +47,10 @@ class TestOptions(IBMTestCase):
             {},
             {"resilience_level": 9},
             {"resilience_level": 9, "transpilation": {"seed_transpiler": 24}},
+            {
+                "execution": {"shots": 100},
+                "environment": {"image": "foo:bar", "log_level": "INFO"},
+            },
         ]
         for new_ops in options_vars:
             with self.subTest(new_ops=new_ops):
@@ -60,3 +67,29 @@ class TestOptions(IBMTestCase):
             vars(rt_options).items(),
             Options._get_runtime_options(vars(rt_options)).items(),
         )
+
+    def test_program_inputs(self):
+        """Test converting to program inputs."""
+        noise_model = NoiseModel.from_backend(FakeNairobiV2())
+        options = Options(  # pylint: disable=unexpected-keyword-arg
+            optimization_level=1,
+            resilience_level=2,
+            transpilation={"seed_transpiler": 24, "skip_transpilation": True},
+            execution={"shots": 100},
+            environment={"log_level": "DEBUG"},
+            simulator={"noise_model": noise_model},
+            foo="foo",
+        )
+
+        inputs = Options._get_program_inputs(asdict(options))
+        expected = {
+            "run_options": {"shots": 100, "noise_model": noise_model},
+            "transpilation_settings": {
+                "optimization_settings": {"level": 1},
+                "skip_transpilation": True,
+                "seed_transpiler": 24,
+            },
+            "resilience_settings": {"level": 2},
+            "foo": "foo",
+        }
+        self.assertDictEqual(inputs, expected)
