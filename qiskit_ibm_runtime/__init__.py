@@ -191,7 +191,6 @@ Classes
    Estimator
    Sampler
    Session
-   Options
    IBMBackend
    RuntimeJob
    RuntimeProgram

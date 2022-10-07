@@ -58,8 +58,10 @@ from qiskit.opflow import (
     SummedOp,
     TensoredOp,
 )
+from qiskit.providers.fake_provider import FakeNairobi
 from qiskit.quantum_info import SparsePauliOp, Pauli, PauliTable, Statevector
 from qiskit.result import Result
+from qiskit_aer.noise import NoiseModel
 
 from qiskit_ibm_runtime.utils import RuntimeEncoder, RuntimeDecoder
 from .mock.fake_runtime_client import CustomResultRuntimeJob
@@ -199,6 +201,17 @@ class TestDataSerialization(IBMTestCase):
                 self.assertTrue(isinstance(decoded, opt_cls))
                 for key, value in settings.items():
                     self.assertEqual(decoded.settings[key], value)
+
+    def test_coder_noise_model(self):
+        """Test encoding and decoding a noise model."""
+        noise_model = NoiseModel.from_backend(FakeNairobi())
+        self.assertIsInstance(noise_model, NoiseModel)
+        encoded = json.dumps(noise_model, cls=RuntimeEncoder)
+        self.assertIsInstance(encoded, str)
+        decoded = json.loads(encoded, cls=RuntimeDecoder)
+        self.assertIsInstance(decoded, NoiseModel)
+        self.assertEqual(noise_model.noise_qubits, decoded.noise_qubits)
+        self.assertEqual(noise_model.noise_instructions, decoded.noise_instructions)
 
     def test_encoder_datetime(self):
         """Test encoding a datetime."""
