@@ -125,28 +125,22 @@ class Session:
             inputs: Program input parameters. These input values are passed
                 to the runtime program.
             options: Runtime options that control the execution environment.
-
-                * image: the runtime image used to execute the program, specified in
-                  the form of ``image_name:tag``. Not all accounts are
-                  authorized to select a different image.
-                * log_level: logging level to set in the execution environment. The valid
-                  log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
-                  The default level is ``WARNING``.
-                * instance: The hub/group/project to use, in that format. This is only supported
-                    for ``ibm_quantum`` channel. If ``None``, a hub/group/project that provides
-                    access to the target backend is randomly selected.
+                See :class:`qiskit_ibm_runtime.RuntimeOptions` for all available options.
             callback: Callback function to be invoked for any interim results and final result.
 
         Returns:
             Submitted job.
         """
 
-        # TODO: Cache data when server supports it.
-
-        # TODO: Do we really need to specify a None max time if session has started?
-        max_time = self._max_time if not self._session_id else None
         options = options or {}
         options["backend"] = self._backend
+
+        # TODO: Do we really need to specify a None max time if session has started?
+
+        if not self._session_id:
+            # TODO: What happens if session max time != first job max time?
+            # Use session max time if this is first job.
+            options["max_execution_time"] = self._max_time
 
         job = self._service.run(
             program_id=program_id,
@@ -154,7 +148,6 @@ class Session:
             inputs=inputs,
             session_id=self._session_id,
             start_session=self._session_id is None,
-            max_execution_time=max_time,
             callback=callback,
             result_decoder=result_decoder,
         )

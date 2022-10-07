@@ -12,8 +12,8 @@
 
 """Options related to the execution environment."""
 
-from typing import Optional, Callable
-from dataclasses import dataclass
+from typing import Optional, Callable, List
+from dataclasses import dataclass, field
 
 from .utils import _flexible
 
@@ -41,9 +41,14 @@ class EnvironmentOptions:
 
                 1. Job ID
                 2. Job result.
+
+        job_tags: Tags to be assigned to the job. The tags can subsequently be used
+            as a filter in the :meth:`qiskit_ibm_runtime.qiskit_runtime_service.jobs()`
+            function call.
     """
 
     log_level: str = "WARNING"
     image: Optional[str] = None
     instance: Optional[str] = None
     callback: Optional[Callable] = None
+    job_tags: Optional[List] = field(default_factory=list)
