@@ -138,7 +138,6 @@ class Options:
         Returns:
             Runtime options.
         """
-        # default_env = asdict(EnvironmentOptions())
         environment = options.get("environment") or {}
         out = {"max_execution_time": options.get("max_execution_time", None)}
 
