@@ -76,7 +76,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Sequence
 from copy import copy
-from typing import cast, Any
+from typing import cast
 from warnings import warn
 
 import numpy as np
@@ -378,7 +378,7 @@ class BaseSampler(ABC):
         self,
         circuits: Sequence[int],
         parameter_values: Sequence[Sequence[float]],
-        **run_options: Any,
+        **run_options,
     ) -> SamplerResult:
         ...
 
@@ -388,7 +388,7 @@ class BaseSampler(ABC):
         self,
         circuits: Sequence[QuantumCircuit],
         parameter_values: Sequence[Sequence[float]],
-        **run_options: Any,
+        **run_options,
     ) -> Job:
         raise NotImplementedError(
             "_run method is not implemented. This method will be @abstractmethod after 0.22."
