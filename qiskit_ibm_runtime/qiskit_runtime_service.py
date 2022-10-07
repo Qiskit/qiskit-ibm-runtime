@@ -64,6 +64,7 @@ DEPRECATED_PROGRAMS = [
     "torch-infer",
     "sample-expval",
     "quantum_kernal_alignment",
+    "sample-program",
 ]
 
 _JOB_DEPRECATION_ISSUED = False
@@ -893,7 +894,8 @@ class QiskitRuntimeService(Provider):
         """
         if program_id in DEPRECATED_PROGRAMS:
             warnings.warn(
-                f"The {program_id} program will be deprecated on August 29th.",
+                f"The {program_id} program has been deprecated as of qiskit-ibm-runtime 0.7 \
+                and will be removed no sooner than 1 month after the release date.",
                 DeprecationWarning,
                 stacklevel=2,
             )
