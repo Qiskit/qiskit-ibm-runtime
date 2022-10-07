@@ -377,4 +377,4 @@ class Estimator(BaseEstimator):
         Args:
             **fields: The fields to update the options
         """
-        self._options = Options._from_dict(self._options._merge_options(fields))
+        self._options = self._options._merge_options(fields, inplace=True)

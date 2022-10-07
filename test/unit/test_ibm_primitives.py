@@ -443,6 +443,26 @@ class TestPrimitives(IBMTestCase):
                 self.assertDictEqual(inputs["circuits"], {psi4_id: psi4})
                 self.assertEqual(inputs["circuit_ids"], [psi4_id, psi1_id])
 
+
+    def test_set_options(self):
+        """Test set options."""
+        options = Options(optimization_level=1, execution={"shots": 100})
+        new_options = [
+            {"optimization_level": 2},
+            {"optimization_level": 3, "shots": 200},
+            {"shots": 300, "foo": "foo"}
+        ]
+
+        session = MagicMock(spec=MockSession)
+        primitives = [Sampler, Estimator]
+        for cls in primitives:
+            for new_opt in new_options:
+                with self.subTest(primitive=cls, new_opt=new_opt):
+                    inst = cls(session=session, options=options)
+                    inst.set_options(**new_opt)
+                    self._assert_dict_paritally_equal(inst.options, new_opt)
+
+
     def _update_dict(self, dict1, dict2):
         for key, val in dict1.items():
             if isinstance(val, dict):
@@ -451,6 +471,7 @@ class TestPrimitives(IBMTestCase):
                 dict1[key] = dict2.pop(key)
 
     def _assert_dict_paritally_equal(self, dict1, dict2):
+        """Assert all keys in dict2 are in dict1 and have same values."""
         self.assertTrue(
             dict_paritally_equal(dict1, dict2),
             f"{dict1} and {dict2} not partially equal.",

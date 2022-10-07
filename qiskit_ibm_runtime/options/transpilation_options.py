@@ -63,8 +63,6 @@ class TranspilationOptions:
                 This information will be provided by the backend configuration.
                 If the backend doesn't have any restriction on the instruction time allocation,
                 then ``timing_constraints`` is None and no adjustment will be performed.
-
-        seed_transpiler: Sets random seed for the stochastic parts of the transpiler.
     """
 
     # TODO: Double check transpilation settings.
@@ -76,4 +74,3 @@ class TranspilationOptions:
     translation_method: Optional[str] = None
     approximation_degree: Optional[float] = None
     timing_constraints: Optional[Dict[str, int]] = None
-    seed_transpiler: Optional[int] = None

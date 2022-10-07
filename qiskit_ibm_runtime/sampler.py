@@ -329,4 +329,5 @@ class Sampler(BaseSampler):
         Args:
             **fields: The fields to update the options
         """
-        self._options = Options._from_dict(self._options._merge_options(fields))
+        combined = self._options._merge_options(fields)
+        self._options = Options._from_dict(**combined)

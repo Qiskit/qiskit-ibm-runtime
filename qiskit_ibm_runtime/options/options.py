@@ -140,7 +140,7 @@ class Options:
 
         return out
 
-    def _merge_options(self, new_options: Optional[dict] = None, inplace: bool = False) -> Union[dict, "Options"]:
+    def _merge_options(self, new_options: Optional[dict] = None) -> dict:
         """Merge current options with the new ones.
 
         Args:
@@ -154,24 +154,27 @@ class Options:
             if not new:
                 return
             for key, val in old.items():
+                if isinstance(val, dict):
+                    new.update(new.pop(key, {}))
+                    _update_options(val, new)
                 if key in new.keys():
                     old[key] = new.pop(key)
-                if isinstance(val, dict):
-                    _update_options(val, new)
+
+        def _add_new_keys(kwargs, combined_):
+            for key, val in kwargs.items():
+                if key not in combined_.keys():
+                    combined_[key] = val
+                elif isinstance(val, dict):
+                    _add_new_keys(val, combined_[key])
 
         combined = asdict(self)
-        # First update values of the same key.
-        _update_options(combined, new_options)
-        # Add new keys.
-        for key, val in new_options.items():
-            if key not in combined:
-                combined[key] = val
-
-        if not inplace:
+        if not new_options:
             return combined
+        new_options_copy = copy.deepcopy(new_options)
+        # First update values of the same key.
+        _update_options(combined, new_options_copy)
+        # Add new keys.
+        if new_options_copy:
+            _add_new_keys(new_options, combined)
 
-        if all (key in fields(Options) for key in combined):
-            setattr(self, key, combined[key])
-            return self
-        else:
-            return Options._from_dict(**combined)
+        return combined

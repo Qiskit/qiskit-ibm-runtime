@@ -19,7 +19,7 @@ from qiskit.providers.fake_provider import FakeNairobiV2
 
 from qiskit_ibm_runtime import Options, RuntimeOptions
 from ..ibm_test_case import IBMTestCase
-from ..utils import dict_paritally_equal
+from ..utils import dict_paritally_equal, flat_dict_partially_equal, dict_keys_equal
 
 
 class TestOptions(IBMTestCase):
@@ -28,18 +28,33 @@ class TestOptions(IBMTestCase):
     def test_merge_options(self):
         """Test merging options."""
         options_vars = [
-            {},
-            {"resilience_level": 9},
-            {"resilience_level": 9, "transpilation": {"seed_transpiler": 24}},
+            # {},
+            # {"resilience_level": 9},
+            # {"resilience_level": 9, "transpilation": {"initial_layout": [1, 2]}},
+            # {"shots": 99},
+            # {"resilience_level": 99, "shots": 98, "initial_layout": [1, 2]},
+            # {"initial_layout": [1, 2], "transpilation": {"layout_method": "trivial"}, "shots": 97},
+            # {"initial_layout": [2, 3], "transpilation": {"layout_method": "trivial"}, "foo": "foo"},
+            {"initial_layout": [3, 4], "transpilation": {"layout_method": "dense", "bar": "bar"}}
         ]
         for new_ops in options_vars:
             with self.subTest(new_ops=new_ops):
                 options = Options()
                 combined = options._merge_options(new_ops)
-                self.assertTrue(
-                    dict_paritally_equal(asdict(options), combined),
-                    f"options={options}, combined={combined}",
-                )
+                import pprint
+                pprint.pprint(combined)
+
+                # Make sure the values are equal.
+                self.assertTrue(flat_dict_partially_equal(combined, new_ops),
+                    f"new_ops={new_ops}, combined={combined}",)
+                # Make sure the structure didn't change.
+                # self.assertTrue(dict_keys_equal(combined, asdict(options)),
+                #     f"options={options}, combined={combined}",)
+
+                # self.assertTrue(
+                #     dict_paritally_equal(combined, new_ops),
+                #     f"options={new_ops}, combined={combined}",
+                # )
 
     def test_from_dict(self):
         """Test converting options from a dictionary."""
