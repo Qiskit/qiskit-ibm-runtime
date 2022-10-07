@@ -140,7 +140,7 @@ class Options:
 
         return out
 
-    def _merge_options(self, new_options: Optional[dict] = None) -> dict:
+    def _merge_options(self, new_options: Optional[dict] = None, inplace: bool = False) -> Union[dict, "Options"]:
         """Merge current options with the new ones.
 
         Args:
@@ -166,4 +166,12 @@ class Options:
         for key, val in new_options.items():
             if key not in combined:
                 combined[key] = val
-        return combined
+
+        if not inplace:
+            return combined
+
+        if all (key in fields(Options) for key in combined):
+            setattr(self, key, combined[key])
+            return self
+        else:
+            return Options._from_dict(**combined)
