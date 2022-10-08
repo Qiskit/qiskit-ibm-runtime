@@ -47,7 +47,6 @@ from .runtime_session import RuntimeSession  # pylint: disable=cyclic-import
 from .utils import RuntimeDecoder, to_base64_string, to_python_identifier
 from .utils.backend_decoder import configuration_from_server_data
 from .utils.hgp import to_instance_format, from_instance_format
-from .utils.utils import validate_job_tags
 from .api.client_parameters import ClientParameters
 from .runtime_options import RuntimeOptions
 from .utils.deprecation import (
@@ -866,14 +865,7 @@ class QiskitRuntimeService(Provider):
             inputs: Program input parameters. These input values are passed
                 to the runtime program.
             options: Runtime options that control the execution environment.
-
-                * backend: target backend to run on. This is required for ``ibm_quantum`` runtime.
-                * image: the runtime image used to execute the program, specified in
-                    the form of ``image_name:tag``. Not all accounts are
-                    authorized to select a different image.
-                * log_level: logging level to set in the execution environment. The valid
-                    log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
-                    The default level is ``WARNING``.
+                See :class:`RuntimeOptions` for all available options.
 
             callback: Callback function to be invoked for any interim results and final result.
                 The callback function will receive 2 positional parameters:
@@ -883,13 +875,13 @@ class QiskitRuntimeService(Provider):
 
             result_decoder: A :class:`ResultDecoder` subclass used to decode job results.
                 ``ResultDecoder`` is used if not specified.
-            instance: This is only supported for ``ibm_quantum`` runtime and is in the
+            instance: (DEPRECATED) This is only supported for ``ibm_quantum`` runtime and is in the
                 hub/group/project format.
             session_id: Job ID of the first job in a runtime session.
-            job_tags: Tags to be assigned to the job. The tags can subsequently be used
+            job_tags: (DEPRECATED) Tags to be assigned to the job. The tags can subsequently be used
                 as a filter in the :meth:`jobs()` function call.
-            max_execution_time: Maximum execution time in seconds. This overrides
-                the max_execution_time of the program and cannot exceed it.
+            max_execution_time: (DEPRECATED) Maximum execution time in seconds. This overrides
+                the max_execution_time of the program.
             start_session: Set to True to explicitly start a runtime session. Defaults to False.
 
         Returns:
@@ -907,7 +899,6 @@ class QiskitRuntimeService(Provider):
                 DeprecationWarning,
                 stacklevel=2,
             )
-        validate_job_tags(job_tags, IBMInputValueError)
 
         qrt_options: RuntimeOptions = options
         if options is None:
@@ -915,13 +906,19 @@ class QiskitRuntimeService(Provider):
         elif isinstance(options, Dict):
             qrt_options = RuntimeOptions(**options)
 
-        if instance:
-            deprecate_arguments(
-                deprecated="instance",
-                version="0.7",
-                remedy='Please specify "instance" inside "options".',
-            )
-            qrt_options.instance = qrt_options.instance or instance
+        deprecated = {
+            "instance": instance,
+            "job_tags": job_tags,
+            "max_execution_time": max_execution_time,
+        }
+        for name, param in deprecated.items():
+            if param is not None:
+                deprecate_arguments(
+                    deprecated=name,
+                    version="0.7",
+                    remedy=f'Please specify "{name}" inside "options".',
+                )
+                setattr(qrt_options, name, param)
 
         # If using params object, extract as dictionary
         if isinstance(inputs, ParameterNamespace):
@@ -950,8 +947,8 @@ class QiskitRuntimeService(Provider):
                 hgp=hgp_name,
                 log_level=qrt_options.log_level,
                 session_id=session_id,
-                job_tags=job_tags,
-                max_execution_time=max_execution_time,
+                job_tags=qrt_options.job_tags,
+                max_execution_time=qrt_options.max_execution_time,
                 start_session=start_session,
             )
         except RequestsApiError as ex:
