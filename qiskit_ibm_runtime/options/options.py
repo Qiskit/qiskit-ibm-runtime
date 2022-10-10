@@ -13,10 +13,9 @@
 """Primitive options."""
 
 from typing import Optional, Union, ClassVar
-from dataclasses import dataclass, asdict, fields, field
+from dataclasses import dataclass, fields, field
 import copy
 
-from ..utils.deprecation import issue_deprecation_msg
 from ..runtime_options import RuntimeOptions
 from .utils import _flexible, Dict
 from .environment_options import EnvironmentOptions
@@ -79,27 +78,6 @@ class Options:
         "simulator": SimulatorOptions,
     }
 
-    @classmethod
-    def _from_dict(cls, data: dict) -> "Options":
-        data = copy.copy(data)
-        environ_dict = data.pop("environment", {})
-        if "image" in data.keys():
-            issue_deprecation_msg(
-                msg="The 'image' option has been moved to the 'environment' category",
-                version="0.7",
-                remedy="Please specify 'environment':{'image': image} instead.",
-            )
-            environ_dict["image"] = data.pop("image")
-        environment = EnvironmentOptions(**environ_dict)
-        transp = TranspilationOptions(**data.pop("transpilation", {}))
-        execution = ExecutionOptions(**data.pop("execution", {}))
-        return cls(
-            environment=environment,
-            transpilation=transp,
-            execution=execution,
-            **data,
-        )
-
     @staticmethod
     def _get_program_inputs(options: dict) -> dict:
         """Convert the input options to program compatible inputs.
@@ -130,7 +108,6 @@ class Options:
         Returns:
             Runtime options.
         """
-        # default_env = asdict(EnvironmentOptions())
         environment = options.get("environment") or {}
         out = {}
 
@@ -140,7 +117,8 @@ class Options:
 
         return out
 
-    def _merge_options(self, new_options: Optional[dict] = None) -> dict:
+    @staticmethod
+    def _merge_options(old_options: dict, new_options: Optional[dict] = None) -> dict:
         """Merge current options with the new ones.
 
         Args:
@@ -150,31 +128,35 @@ class Options:
             Merged dictionary.
         """
 
-        def _update_options(old: dict, new: dict) -> None:
-            if not new:
+        def _update_options(
+            old: dict, new: dict, matched: Optional[dict] = None
+        ) -> None:
+            if not new and not matched:
                 return
+            matched = matched or {}
+
             for key, val in old.items():
                 if isinstance(val, dict):
-                    new.update(new.pop(key, {}))
-                    _update_options(val, new)
-                if key in new.keys():
+                    matched = new.pop(key, {})
+                    _update_options(val, new, matched)
+                elif key in new.keys():
                     old[key] = new.pop(key)
+                elif key in matched.keys():
+                    old[key] = matched.pop(key)
 
-        def _add_new_keys(kwargs, combined_):
-            for key, val in kwargs.items():
-                if key not in combined_.keys():
-                    combined_[key] = val
-                elif isinstance(val, dict):
-                    _add_new_keys(val, combined_[key])
+            # Add new keys.
+            for key, val in matched.items():
+                old[key] = val
 
-        combined = asdict(self)
+        combined = copy.deepcopy(old_options)
         if not new_options:
             return combined
         new_options_copy = copy.deepcopy(new_options)
+
         # First update values of the same key.
         _update_options(combined, new_options_copy)
+
         # Add new keys.
-        if new_options_copy:
-            _add_new_keys(new_options, combined)
+        combined.update(new_options_copy)
 
         return combined

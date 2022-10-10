@@ -47,12 +47,16 @@ class BasePrimitiveResult(ABC):
         """
         for value in self._field_values:  # type: Sequence
             # TODO: enforce all data fields to be tuples instead of sequences
-            if not isinstance(value, (Sequence, ndarray)) or isinstance(value, (str, bytes)):
+            if not isinstance(value, (Sequence, ndarray)) or isinstance(
+                value, (str, bytes)
+            ):
                 raise TypeError(
                     f"Expected sequence or `numpy.ndarray`, provided {type(value)} instead."
                 )
             if len(value) != self.num_experiments:
-                raise ValueError("Inconsistent number of experiments across data fields.")
+                raise ValueError(
+                    "Inconsistent number of experiments across data fields."
+                )
 
     @property  # TODO: functools.cached_property when py37 is droppped
     def num_experiments(self) -> int:

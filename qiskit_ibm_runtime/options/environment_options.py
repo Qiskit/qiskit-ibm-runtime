@@ -44,6 +44,4 @@ class EnvironmentOptions:
     """
 
     log_level: str = "WARNING"
-    image: Optional[str] = None
-    instance: Optional[str] = None
     callback: Optional[Callable] = None

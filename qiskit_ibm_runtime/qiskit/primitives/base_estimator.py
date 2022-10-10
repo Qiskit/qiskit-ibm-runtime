@@ -81,7 +81,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Sequence
 from copy import copy
-from typing import cast
+from typing import cast, Any
 from warnings import warn
 
 import numpy as np
@@ -113,7 +113,7 @@ class BaseEstimator(ABC):
         observables: Iterable[SparsePauliOp] | SparsePauliOp | None = None,
         parameters: Iterable[Iterable[Parameter]] | None = None,
         options: dict | None = None,
-    ):
+    ) -> None:
         """
         Creating an instance of an Estimator, or using one in a ``with`` context opens a session that
         holds resources until the instance is ``close()`` ed or the context is exited.
@@ -171,19 +171,22 @@ class BaseEstimator(ABC):
             self._run_options.update_options(**options)
 
     def __new__(
-        cls,
+        cls,  # pylint: disable=unused-argument
         circuits: Iterable[QuantumCircuit] | QuantumCircuit | None = None,
         observables: Iterable[SparsePauliOp] | SparsePauliOp | None = None,
-        parameters: Iterable[Iterable[Parameter]] | None = None,  # pylint: disable=unused-argument
-        **kwargs,  # pylint: disable=unused-argument
-    ):
+        parameters: Iterable[Iterable[Parameter]]  # pylint: disable=unused-argument
+        | None = None,  # pylint: disable=unused-argument
+        **kwargs: Any,  # pylint: disable=unused-argument
+    ) -> BaseEstimator:
 
         self = super().__new__(cls)
         if circuits is None:
             self._circuit_ids = {}
         elif isinstance(circuits, Iterable):
             circuits = copy(circuits)
-            self._circuit_ids = {_circuit_key(circuit): i for i, circuit in enumerate(circuits)}
+            self._circuit_ids = {
+                _circuit_key(circuit): i for i, circuit in enumerate(circuits)
+            }
         else:
             self._circuit_ids = {_circuit_key(circuits): 0}
         if observables is None:
@@ -203,7 +206,7 @@ class BaseEstimator(ABC):
         "and will be removed no sooner than 3 months after the releasedate. "
         "BaseEstimator should be initialized directly.",
     )
-    def __enter__(self):
+    def __enter__(self) -> BaseEstimator:
         return self
 
     @deprecate_function(
@@ -211,10 +214,10 @@ class BaseEstimator(ABC):
         "and will be removed no sooner than 3 months after the releasedate. "
         "BaseEstimator should be initialized directly.",
     )
-    def __exit__(self, *exc_info):
+    def __exit__(self, *exc_info: Any) -> None:
         self.close()
 
-    def close(self):
+    def close(self) -> None:
         """Close the session and free resources"""
         ...
 
@@ -254,7 +257,7 @@ class BaseEstimator(ABC):
         """
         return self._run_options
 
-    def set_options(self, **fields):
+    def set_options(self, **fields: Any) -> None:
         """Set options values for the estimator.
 
         Args:
@@ -267,13 +270,15 @@ class BaseEstimator(ABC):
         "and will be removed no sooner than 3 months after the releasedate. "
         "Use run method instead.",
     )
-    @deprecate_arguments({"circuit_indices": "circuits", "observable_indices": "observables"})
+    @deprecate_arguments(
+        {"circuit_indices": "circuits", "observable_indices": "observables"}
+    )
     def __call__(
         self,
         circuits: Sequence[int | QuantumCircuit],
         observables: Sequence[int | SparsePauliOp],
         parameter_values: Sequence[Sequence[float]] | None = None,
-        **run_options,
+        **run_options: Any,
     ) -> EstimatorResult:
         """Run the estimation of expectation value(s).
 
@@ -405,7 +410,7 @@ class BaseEstimator(ABC):
         circuits: QuantumCircuit | Sequence[QuantumCircuit],
         observables: BaseOperator | PauliSumOp | Sequence[BaseOperator | PauliSumOp],
         parameter_values: Sequence[float] | Sequence[Sequence[float]] | None = None,
-        **run_options,
+        **run_options: Any,
     ) -> Job:
         """Run the job of the estimation of expectation value(s).
 
@@ -432,7 +437,7 @@ class BaseEstimator(ABC):
             circuits: one or more circuit objects.
             observables: one or more observable objects.
             parameter_values: concrete parameters to be bound.
-            run_options: runtime options used for circuit execution.
+            **run_options: runtime options used for circuit execution.
 
         Returns:
             The job object of EstimatorResult.
@@ -482,9 +487,9 @@ class BaseEstimator(ABC):
             )
 
         for i, (circuit, parameter_value) in enumerate(zip(circuits, parameter_values)):
-            if len(parameter_value) != circuit.num_parameters:
+            if len(parameter_value) != circuit.num_parameters:  # type: ignore
                 raise ValueError(
-                    f"The number of values ({len(parameter_value)}) does not match "
+                    f"The number of values ({len(parameter_value)}) does not match "  # type: ignore
                     f"the number of parameters ({circuit.num_parameters}) for the {i}-th circuit."
                 )
 
@@ -501,7 +506,7 @@ class BaseEstimator(ABC):
         return self._run(
             circuits,
             observables,
-            parameter_values,
+            parameter_values,  # type: ignore
             **run_opts.__dict__,
         )
 
@@ -511,7 +516,7 @@ class BaseEstimator(ABC):
         circuits: Sequence[int],
         observables: Sequence[int],
         parameter_values: Sequence[Sequence[float]],
-        **run_options,
+        **run_options: Any,
     ) -> EstimatorResult:
         ...
 
@@ -522,7 +527,7 @@ class BaseEstimator(ABC):
         circuits: Sequence[QuantumCircuit],
         observables: Sequence[BaseOperator | PauliSumOp],
         parameter_values: Sequence[Sequence[float]],
-        **run_options,
+        **run_options: Any,
     ) -> Job:
         raise NotImplementedError(
             "_run method is not implemented. This method will be @abstractmethod after 0.22."

@@ -51,9 +51,6 @@ features:
         # Pass the options to Sampler.
         sampler = Sampler(session=session, options=options)
 
-        # You can also configure options after initialization.
-        sampler.options.execution.shots = 1024
-
         # Or at job level.
         job = sampler.run(circuits=ReferenceCircuits.bell(), shots=4000)
 upgrade:

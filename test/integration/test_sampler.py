@@ -199,9 +199,8 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
 
         with Session(service, self.backend) as session:
             sampler = Sampler(session=session)
-            sampler.options.transpilation.skip_transpilation = True
             with self.assertRaises(RuntimeJobFailureError) as err:
-                sampler.run(circuits=circ).result()
+                sampler.run(circuits=circ, skip_transpilation=True).result()
                 # If transpilation not skipped the error would be something about cannot expand.
                 self.assertIn("invalid instructions", err.exception.message)
 
@@ -209,8 +208,7 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
     def test_sampler_optimization_level(self, service):
         """Test transpiler optimization level is properly mapped."""
         with Session(service, self.backend) as session:
-            sampler = Sampler(session=session)
-            sampler.options.optimization_level = 3
+            sampler = Sampler(session=session, options={"optimization_level": 3})
             shots = 1000
             result = sampler.run(self.bell, shots=shots).result()
             self.assertEqual(result.quasi_dists[0].shots, shots)

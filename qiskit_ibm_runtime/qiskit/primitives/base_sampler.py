@@ -76,7 +76,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Sequence
 from copy import copy
-from typing import cast
+from typing import cast, Any
 from warnings import warn
 
 import numpy as np
@@ -145,18 +145,21 @@ class BaseSampler(ABC):
             self._run_options.update_options(**options)
 
     def __new__(
-        cls,
+        cls,  # pylint: disable=unused-argument
         circuits: Iterable[QuantumCircuit] | QuantumCircuit | None = None,
-        parameters: Iterable[Iterable[Parameter]] | None = None,  # pylint: disable=unused-argument
-        **kwargs,  # pylint: disable=unused-argument
-    ):
+        parameters: Iterable[Iterable[Parameter]]  # pylint: disable=unused-argument
+        | None = None,  # pylint: disable=unused-argument
+        **kwargs: Any,  # pylint: disable=unused-argument
+    ) -> BaseSampler:
 
         self = super().__new__(cls)
         if circuits is None:
             self._circuit_ids = {}
         elif isinstance(circuits, Iterable):
             circuits = copy(circuits)
-            self._circuit_ids = {_circuit_key(circuit): i for i, circuit in enumerate(circuits)}
+            self._circuit_ids = {
+                _circuit_key(circuit): i for i, circuit in enumerate(circuits)
+            }
         else:
             self._circuit_ids = {_circuit_key(circuits): 0}
         return self
@@ -166,7 +169,7 @@ class BaseSampler(ABC):
         "and will be removed no sooner than 3 months after the releasedate. "
         "BaseSampler should be initialized directly.",
     )
-    def __enter__(self):
+    def __enter__(self) -> BaseSampler:
         return self
 
     @deprecate_function(
@@ -174,10 +177,10 @@ class BaseSampler(ABC):
         "and will be removed no sooner than 3 months after the releasedate. "
         "BaseSampler should be initialized directly.",
     )
-    def __exit__(self, *exc_info):
+    def __exit__(self, *exc_info: Any) -> None:
         self.close()
 
-    def close(self):
+    def close(self) -> None:
         """Close the session and free resources"""
         ...
 
@@ -208,7 +211,7 @@ class BaseSampler(ABC):
         """
         return self._run_options
 
-    def set_options(self, **fields):
+    def set_options(self, **fields: Any) -> None:
         """Set options values for the estimator.
 
         Args:
@@ -226,7 +229,7 @@ class BaseSampler(ABC):
         self,
         circuits: Sequence[int | QuantumCircuit],
         parameter_values: Sequence[Sequence[float]] | None = None,
-        **run_options,
+        **run_options: Any,
     ) -> SamplerResult:
         """Run the sampling of bitstrings.
 
@@ -305,14 +308,14 @@ class BaseSampler(ABC):
         self,
         circuits: QuantumCircuit | Sequence[QuantumCircuit],
         parameter_values: Sequence[float] | Sequence[Sequence[float]] | None = None,
-        **run_options,
+        **run_options: Any,
     ) -> Job:
         """Run the job of the sampling of bitstrings.
 
         Args:
             circuits: One of more circuit objects.
             parameter_values: Parameters to be bound to the circuit.
-            run_options: Backend runtime options used for circuit execution.
+            **run_options: Backend runtime options used for circuit execution.
 
         Returns:
             The job object of the result of the sampler. The i-th result corresponds to
@@ -328,7 +331,8 @@ class BaseSampler(ABC):
         if not isinstance(circuits, Sequence):
             circuits = [circuits]
         if parameter_values is not None and (
-            len(parameter_values) == 0 or not isinstance(parameter_values[0], (Sequence, Iterable))
+            len(parameter_values) == 0
+            or not isinstance(parameter_values[0], (Sequence, Iterable))
         ):
             parameter_values = [parameter_values]  # type: ignore[assignment]
 
@@ -350,9 +354,9 @@ class BaseSampler(ABC):
             )
 
         for i, (circuit, parameter_value) in enumerate(zip(circuits, parameter_values)):
-            if len(parameter_value) != circuit.num_parameters:
+            if len(parameter_value) != circuit.num_parameters:  # type: ignore
                 raise ValueError(
-                    f"The number of values ({len(parameter_value)}) does not match "
+                    f"The number of values ({len(parameter_value)}) does not match "  # type: ignore
                     f"the number of parameters ({circuit.num_parameters}) for the {i}-th circuit."
                 )
 
@@ -369,7 +373,7 @@ class BaseSampler(ABC):
 
         return self._run(
             circuits,
-            parameter_values,
+            parameter_values,  # type: ignore
             **run_opts.__dict__,
         )
 
@@ -378,7 +382,7 @@ class BaseSampler(ABC):
         self,
         circuits: Sequence[int],
         parameter_values: Sequence[Sequence[float]],
-        **run_options,
+        **run_options: Any,
     ) -> SamplerResult:
         ...
 
@@ -388,7 +392,7 @@ class BaseSampler(ABC):
         self,
         circuits: Sequence[QuantumCircuit],
         parameter_values: Sequence[Sequence[float]],
-        **run_options,
+        **run_options: Any,
     ) -> Job:
         raise NotImplementedError(
             "_run method is not implemented. This method will be @abstractmethod after 0.22."
