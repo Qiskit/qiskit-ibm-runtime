@@ -16,6 +16,7 @@ from __future__ import annotations
 import copy
 import json
 from typing import Iterable, Optional, Dict, Sequence, Any, Union
+import logging
 from dataclasses import asdict
 
 from qiskit.circuit import QuantumCircuit, Parameter
@@ -45,6 +46,8 @@ from .options import Options
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
+
+logger = logging.getLogger(__name__)
 
 
 class Estimator(BaseEstimator):
@@ -293,6 +296,7 @@ class Estimator(BaseEstimator):
         }
 
         combined = Options._merge_options(self._options, kwargs.get("_user_kwargs", {}))
+        logger.info("Submitting job using options %s", combined)
         inputs.update(Options._get_program_inputs(combined))
 
         return self._session.run(

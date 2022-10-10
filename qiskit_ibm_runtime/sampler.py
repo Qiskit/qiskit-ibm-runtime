@@ -16,6 +16,7 @@ from __future__ import annotations
 from typing import Dict, Iterable, Optional, Sequence, Any, Union
 import copy
 import json
+import logging
 from dataclasses import asdict
 
 from qiskit.circuit import QuantumCircuit, Parameter
@@ -40,6 +41,8 @@ from .utils.deprecation import (
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
+
+logger = logging.getLogger(__name__)
 
 
 class Sampler(BaseSampler):
@@ -246,6 +249,7 @@ class Sampler(BaseSampler):
             "parameter_values": parameter_values,
         }
         combined = Options._merge_options(self._options, kwargs.get("_user_kwargs", {}))
+        logger.info("Submitting job using options %s", combined)
         inputs.update(Options._get_program_inputs(combined))
 
         return self._session.run(
@@ -293,6 +297,7 @@ class Sampler(BaseSampler):
             "parameter_values": parameter_values,
         }
         combined = Options._merge_options(self._options, run_options)
+
         inputs.update(Options._get_program_inputs(combined))
 
         raw_result = self._session.run(
