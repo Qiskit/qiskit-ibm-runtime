@@ -102,11 +102,22 @@ class TestOptions(IBMTestCase):
 
     def test_runtime_options(self):
         """Test converting runtime options."""
-        rt_options = RuntimeOptions(backend="foo", log_level="DEBUG")
-        self.assertGreaterEqual(
-            vars(rt_options).items(),
-            Options._get_runtime_options(vars(rt_options)).items(),
+        full_options = RuntimeOptions(
+            backend="ibm_gotham",
+            image="foo:bar",
+            log_level="DEBUG",
+            instance="h/g/p",
+            job_tags=["foo", "bar"],
+            max_execution_time=600,
         )
+        partial_options = RuntimeOptions(backend="foo", log_level="DEBUG")
+
+        for rt_options in [full_options, partial_options]:
+            with self.subTest(rt_options=rt_options):
+                self.assertGreaterEqual(
+                    vars(rt_options).items(),
+                    Options._get_runtime_options(vars(rt_options)).items(),
+                )
 
     def test_program_inputs(self):
         """Test converting to program inputs."""

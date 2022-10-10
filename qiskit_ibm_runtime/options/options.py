@@ -48,6 +48,13 @@ class Options:
             * 0: no resilience
             * 1: light resilience
 
+        max_execution_time: Maximum execution time in seconds. If
+            a job exceeds this time limit, it is forcibly cancelled. If ``None``, the
+            maximum execution time of the primitive is used.
+            This value must be in between 300 seconds and the
+            `system imposed maximum
+            <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/faqs/max_execution_time.html>`_.
+
         transpilation: Transpilation options. See :class:`TranspilationOptions` for all
             available options.
 
@@ -62,6 +69,7 @@ class Options:
 
     optimization_level: int = 1
     resilience_level: int = 0
+    max_execution_time: Optional[int] = None
     transpilation: Union[TranspilationOptions, Dict] = field(
         default_factory=TranspilationOptions
     )
@@ -109,7 +117,7 @@ class Options:
             Runtime options.
         """
         environment = options.get("environment") or {}
-        out = {}
+        out = {"max_execution_time": options.get("max_execution_time", None)}
 
         for fld in fields(RuntimeOptions):
             if fld.name in environment:

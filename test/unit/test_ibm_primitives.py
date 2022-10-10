@@ -132,6 +132,7 @@ class TestPrimitives(IBMTestCase):
         primitives = [Sampler, Estimator]
         env_vars = [
             {"log_level": "DEBUG"},
+            {"job_tags": ["foo", "bar"]},
         ]
         for cls in primitives:
             for env in env_vars:
@@ -330,6 +331,30 @@ class TestPrimitives(IBMTestCase):
                         inputs = kwargs["inputs"]
                     self._assert_dict_paritally_equal(inputs, expected)
                     self.assertDictEqual(inst.options.__dict__, asdict(Options()))
+
+    def test_run_overwrite_runtime_options(self):
+        """Test run using overwritten runtime options."""
+        session = MagicMock(spec=MockSession)
+        options_vars = [
+            {"log_level": "DEBUG"},
+            {"image": "foo:bar"},
+            {"instance": "h/g/p"},
+            {"job_tags": ["foo", "bar"]},
+            {"max_execution_time": 600},
+            {"log_level": "INFO", "max_execution_time": 800},
+        ]
+        primitives = [Sampler, Estimator]
+        for cls in primitives:
+            for options in options_vars:
+                with self.subTest(primitive=cls, options=options):
+                    inst = cls(session=session)
+                    inst.run(self.qx, observables=self.obs, **options)
+                    if sys.version_info >= (3, 8):
+                        rt_options = session.run.call_args.kwargs["options"]
+                    else:
+                        _, kwargs = session.run.call_args
+                        rt_options = kwargs["options"]
+                    self._assert_dict_paritally_equal(rt_options, options)
 
     def test_kwarg_options(self):
         """Test specifying arbitrary options."""
