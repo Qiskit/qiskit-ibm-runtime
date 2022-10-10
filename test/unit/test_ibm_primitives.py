@@ -337,8 +337,6 @@ class TestPrimitives(IBMTestCase):
         session = MagicMock(spec=MockSession)
         options_vars = [
             {"log_level": "DEBUG"},
-            {"image": "foo:bar"},
-            {"instance": "h/g/p"},
             {"job_tags": ["foo", "bar"]},
             {"max_execution_time": 600},
             {"log_level": "INFO", "max_execution_time": 800},
