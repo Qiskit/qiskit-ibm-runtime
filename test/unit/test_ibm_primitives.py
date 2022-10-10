@@ -83,7 +83,7 @@ class TestPrimitives(IBMTestCase):
             {},
             {
                 "resilience_level": 1,
-                "transpilation": {"seed_transpiler": 24},
+                "transpilation": {"initial_layout": [1, 2]},
                 "execution": {"shots": 100, "init_qubits": True},
             },
             {"transpilation": {}},
@@ -128,9 +128,6 @@ class TestPrimitives(IBMTestCase):
         primitives = [Sampler, Estimator]
         env_vars = [
             {"log_level": "DEBUG"},
-            {"image": "foo:latest"},
-            {"instance": "hub/group/project"},
-            {"log_level": "INFO", "image": "bar:latest"},
             {"job_tags": ["foo", "bar"]},
         ]
         for cls in primitives:
@@ -249,9 +246,12 @@ class TestPrimitives(IBMTestCase):
                 {"transpilation_settings": {"optimization_settings": {"level": 8}}},
             ),
             (
-                {"transpilation": {"seed_transpiler": 24}, "execution": {"shots": 100}},
                 {
-                    "transpilation_settings": {"seed_transpiler": 24},
+                    "transpilation": {"initial_layout": [1, 2]},
+                    "execution": {"shots": 100},
+                },
+                {
+                    "transpilation_settings": {"initial_layout": [1, 2]},
                     "run_options": {"shots": 100},
                 },
             ),
@@ -308,11 +308,11 @@ class TestPrimitives(IBMTestCase):
                 {"transpilation_settings": {"optimization_settings": {"level": 8}}},
             ),
             (
-                {"seed_transpiler": 24, "optimization_level": 8},
+                {"initial_layout": [1, 2], "optimization_level": 8},
                 {
                     "transpilation_settings": {
                         "optimization_settings": {"level": 8},
-                        "seed_transpiler": 24,
+                        "initial_layout": [3, 4],
                     }
                 },
             ),
@@ -336,8 +336,6 @@ class TestPrimitives(IBMTestCase):
         session = MagicMock(spec=MockSession)
         options_vars = [
             {"log_level": "DEBUG"},
-            {"image": "foo:bar"},
-            {"instance": "h/g/p"},
             {"job_tags": ["foo", "bar"]},
             {"max_execution_time": 600},
             {"log_level": "INFO", "max_execution_time": 800},

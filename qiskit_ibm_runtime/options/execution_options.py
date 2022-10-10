@@ -26,30 +26,9 @@ class ExecutionOptions:
     Args:
         shots: Number of repetitions of each circuit, for sampling. Default: 4000.
 
-        qubit_lo_freq: List of job level qubit drive LO frequencies in Hz. Overridden by
-            ``schedule_los`` if specified. Must have length ``n_qubits.``
-
-        meas_lo_freq: List of measurement LO frequencies in Hz. Overridden by ``schedule_los`` if
-            specified. Must have length ``n_qubits.``
-
-        schedule_los: Experiment level (ie circuit or schedule) LO frequency configurations for
-            qubit drive and measurement channels. These values override the job level values from
-            ``default_qubit_los`` and ``default_meas_los``. Frequencies are in Hz. Settable for qasm
-            and pulse jobs.
-
-        rep_delay: Delay between programs in seconds. Only supported on certain
-            backends (if ``backend.configuration().dynamic_reprate_enabled=True``).
-            If supported, it must be from the range supplied by the backend
-            (``backend.configuration().rep_delay_range``).
-            Default is given by ``backend.configuration().default_rep_delay``.
-
         init_qubits: Whether to reset the qubits to the ground state for each shot.
             Default: ``True``.
     """
 
     shots: int = 4000
-    qubit_lo_freq: Optional[List[float]] = None
-    meas_lo_freq: Optional[List[float]] = None
-    # TODO: need to be able to serialize schedule_los before we can support it
-    rep_delay: Optional[float] = None
     init_qubits: bool = True

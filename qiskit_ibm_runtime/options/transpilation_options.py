@@ -45,29 +45,25 @@ class TranspilationOptions:
             resolution. A quantum computer backend may report a set of restrictions, namely:
 
             * granularity: An integer value representing minimum pulse gate
-                resolution in units of ``dt``. A user-defined pulse gate should have
-                duration of a multiple of this granularity value.
+              resolution in units of ``dt``. A user-defined pulse gate should have
+              duration of a multiple of this granularity value.
 
             * min_length: An integer value representing minimum pulse gate
-                length in units of ``dt``. A user-defined pulse gate should be longer
-                than this length.
+              length in units of ``dt``. A user-defined pulse gate should be longer
+              than this length.
 
             * pulse_alignment: An integer value representing a time resolution of gate
-                instruction starting time. Gate instruction should start at time which
-                is a multiple of the alignment value.
+              instruction starting time. Gate instruction should start at time which
+              is a multiple of the alignment value.
 
             * acquire_alignment: An integer value representing a time resolution of measure
-                instruction starting time. Measure instruction should start at time which
-                is a multiple of the alignment value.
+              instruction starting time. Measure instruction should start at time which
+              is a multiple of the alignment value.
 
-                This information will be provided by the backend configuration.
-                If the backend doesn't have any restriction on the instruction time allocation,
-                then ``timing_constraints`` is None and no adjustment will be performed.
-
-        seed_transpiler: Sets random seed for the stochastic parts of the transpiler.
+              This information will be provided by the backend configuration.
+              If the backend doesn't have any restriction on the instruction time allocation,
+              then ``timing_constraints`` is None and no adjustment will be performed.
     """
-
-    # TODO: Double check transpilation settings.
 
     skip_transpilation: bool = False
     initial_layout: Optional[Union[dict, List]] = None  # TODO: Support Layout
@@ -76,4 +72,3 @@ class TranspilationOptions:
     translation_method: Optional[str] = None
     approximation_degree: Optional[float] = None
     timing_constraints: Optional[Dict[str, int]] = None
-    seed_transpiler: Optional[int] = None

@@ -30,7 +30,7 @@ class TestOptions(IBMTestCase):
         options_vars = [
             {},
             {"resilience_level": 9},
-            {"resilience_level": 9, "transpilation": {"seed_transpiler": 24}},
+            {"resilience_level": 9, "transpilation": {"initial_layout": [1, 2]}},
         ]
         for new_ops in options_vars:
             with self.subTest(new_ops=new_ops):
@@ -46,10 +46,10 @@ class TestOptions(IBMTestCase):
         options_vars = [
             {},
             {"resilience_level": 9},
-            {"resilience_level": 9, "transpilation": {"seed_transpiler": 24}},
+            {"resilience_level": 9, "transpilation": {"initial_layout": [1, 2]}},
             {
                 "execution": {"shots": 100},
-                "environment": {"image": "foo:bar", "log_level": "INFO"},
+                "environment": {"log_level": "INFO"},
             },
         ]
         for new_ops in options_vars:
@@ -85,7 +85,7 @@ class TestOptions(IBMTestCase):
         options = Options(  # pylint: disable=unexpected-keyword-arg
             optimization_level=1,
             resilience_level=2,
-            transpilation={"seed_transpiler": 24, "skip_transpilation": True},
+            transpilation={"initial_layout": [1, 2], "skip_transpilation": True},
             execution={"shots": 100},
             environment={"log_level": "DEBUG"},
             simulator={"noise_model": noise_model},
@@ -98,7 +98,7 @@ class TestOptions(IBMTestCase):
             "transpilation_settings": {
                 "optimization_settings": {"level": 1},
                 "skip_transpilation": True,
-                "seed_transpiler": 24,
+                "initial_layout": [1, 2],
             },
             "resilience_settings": {"level": 2},
             "foo": "foo",
