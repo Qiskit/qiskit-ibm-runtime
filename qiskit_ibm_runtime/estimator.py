@@ -238,6 +238,7 @@ class Estimator(BaseEstimator):
         Raises:
             ValueError: Invalid arguments are given.
         """
+        # To bypass base class merging of options.
         user_kwargs = {"_user_kwargs": kwargs}
         return super().run(
             circuits=circuits,

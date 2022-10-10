@@ -65,8 +65,6 @@ class TranspilationOptions:
                 then ``timing_constraints`` is None and no adjustment will be performed.
     """
 
-    # TODO: Double check transpilation settings.
-
     skip_transpilation: bool = False
     initial_layout: Optional[Union[dict, List]] = None  # TODO: Support Layout
     layout_method: Optional[str] = None
