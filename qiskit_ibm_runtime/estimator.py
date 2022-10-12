@@ -16,11 +16,14 @@ from __future__ import annotations
 import copy
 import json
 from typing import Iterable, Optional, Dict, Sequence, Any, Union
+import logging
+from dataclasses import asdict
 
 from qiskit.circuit import QuantumCircuit, Parameter
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.opflow import PauliSumOp
 from qiskit.quantum_info.operators.base_operator import BaseOperator
+from qiskit.providers.options import Options as TerraOptions
 
 # pylint: disable=unused-import,cyclic-import
 
@@ -43,6 +46,8 @@ from .options import Options
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
+
+logger = logging.getLogger(__name__)
 
 
 class Estimator(BaseEstimator):
@@ -138,6 +143,10 @@ class Estimator(BaseEstimator):
             skip_transpilation: (DEPRECATED) Transpilation is skipped if set to True. False by default.
                 Ignored ``skip_transpilation`` is also specified in ``options``.
         """
+        # `_options` in this class is an instance of qiskit_ibm_runtime.Options class.
+        # The base class, however, uses a `_run_options` which is an instance of
+        # qiskit.providers.Options. We largely ignore this _run_options because we use
+        # a nested dictionary to categorize options.
         super().__init__(
             circuits=circuits,
             observables=observables,
@@ -159,27 +168,29 @@ class Estimator(BaseEstimator):
         self._session: Session = None
 
         if options is None:
-            self.options = Options()
+            _options = Options()
         elif isinstance(options, Options):
-            self.options = copy.deepcopy(options)
+            _options = copy.deepcopy(options)
             skip_transpilation = (
-                self.options.transpilation.skip_transpilation  # type: ignore[union-attr]
+                _options.transpilation.skip_transpilation  # type: ignore[union-attr]
             )
         else:
-            backend = options.pop("backend", None)
+            options_copy = copy.deepcopy(options)
+            backend = options_copy.pop("backend", None)
             if backend is not None:
                 issue_deprecation_msg(
                     msg="The 'backend' key in 'options' has been deprecated",
                     version="0.7",
                     remedy="Please pass the backend when opening a session.",
                 )
-            self.options = Options._from_dict(options)
             skip_transpilation = options.get("transpilation", {}).get(
                 "skip_transpilation", False
             )
-        self.options.transpilation.skip_transpilation = (  # type: ignore[union-attr]
+            _options = Options(**options_copy)
+        _options.transpilation.skip_transpilation = (  # type: ignore[union-attr]
             skip_transpilation
         )
+        self._options: dict = asdict(_options)
 
         self._initial_inputs = {
             "circuits": circuits,
@@ -228,24 +239,15 @@ class Estimator(BaseEstimator):
             The result of the job is an instance of :class:`qiskit.primitives.EstimatorResult`.
 
         Raises:
-            QiskitError: Invalid arguments are given.
+            ValueError: Invalid arguments are given.
         """
-        if not isinstance(circuits, Sequence):
-            circuits = [circuits]
-        if not isinstance(observables, Sequence):
-            observables = [observables]
-        if (
-            parameter_values is not None
-            and len(parameter_values) > 1
-            and not isinstance(parameter_values[0], (Sequence, Iterable))
-        ):
-            parameter_values = [parameter_values]  # type: ignore[assignment]
-
+        # To bypass base class merging of options.
+        user_kwargs = {"_user_kwargs": kwargs}
         return super().run(
             circuits=circuits,
             observables=observables,
             parameter_values=parameter_values,
-            **kwargs,
+            **user_kwargs,
         )
 
     def _run(  # pylint: disable=arguments-differ
@@ -292,7 +294,8 @@ class Estimator(BaseEstimator):
             "parameter_values": parameter_values,
         }
 
-        combined = self.options._merge_options(kwargs)
+        combined = Options._merge_options(self._options, kwargs.get("_user_kwargs", {}))
+        logger.info("Submitting job using options %s", combined)
         inputs.update(Options._get_program_inputs(combined))
 
         return self._session.run(
@@ -342,7 +345,7 @@ class Estimator(BaseEstimator):
             "parameter_values": parameter_values,
             "observable_indices": observables,
         }
-        combined = self.options._merge_options(run_options)
+        combined = Options._merge_options(self._options, run_options)
         inputs.update(Options._get_program_inputs(combined))
 
         return self._session.run(
@@ -369,3 +372,20 @@ class Estimator(BaseEstimator):
             Session used by this primitive.
         """
         return self._session
+
+    @property
+    def options(self) -> TerraOptions:
+        """Return options values for the estimator.
+
+        Returns:
+            options
+        """
+        return TerraOptions(**self._options)
+
+    def set_options(self, **fields: Any) -> None:
+        """Set options values for the estimator.
+
+        Args:
+            **fields: The fields to update the options
+        """
+        self._options = Options._merge_options(self._options, fields)

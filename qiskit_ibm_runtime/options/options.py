@@ -13,7 +13,7 @@
 """Primitive options."""
 
 from typing import Optional, Union, ClassVar
-from dataclasses import dataclass, asdict, fields, field
+from dataclasses import dataclass, fields, field
 import copy
 
 from ..runtime_options import RuntimeOptions
@@ -86,19 +86,6 @@ class Options:
         "simulator": SimulatorOptions,
     }
 
-    @classmethod
-    def _from_dict(cls, data: dict) -> "Options":
-        data = copy.copy(data)
-        environment = EnvironmentOptions(**data.pop("environment", {}))
-        transp = TranspilationOptions(**data.pop("transpilation", {}))
-        execution = ExecutionOptions(**data.pop("execution", {}))
-        return cls(
-            environment=environment,
-            transpilation=transp,
-            execution=execution,
-            **data,
-        )
-
     @staticmethod
     def _get_program_inputs(options: dict) -> dict:
         """Convert the input options to program compatible inputs.
@@ -138,7 +125,8 @@ class Options:
 
         return out
 
-    def _merge_options(self, new_options: Optional[dict] = None) -> dict:
+    @staticmethod
+    def _merge_options(old_options: dict, new_options: Optional[dict] = None) -> dict:
         """Merge current options with the new ones.
 
         Args:
@@ -148,20 +136,35 @@ class Options:
             Merged dictionary.
         """
 
-        def _update_options(old: dict, new: dict) -> None:
-            if not new:
+        def _update_options(
+            old: dict, new: dict, matched: Optional[dict] = None
+        ) -> None:
+            if not new and not matched:
                 return
-            for key, val in old.items():
-                if key in new.keys():
-                    old[key] = new.pop(key)
-                if isinstance(val, dict):
-                    _update_options(val, new)
+            matched = matched or {}
 
-        combined = asdict(self)
+            for key, val in old.items():
+                if isinstance(val, dict):
+                    matched = new.pop(key, {})
+                    _update_options(val, new, matched)
+                elif key in new.keys():
+                    old[key] = new.pop(key)
+                elif key in matched.keys():
+                    old[key] = matched.pop(key)
+
+            # Add new keys.
+            for key, val in matched.items():
+                old[key] = val
+
+        combined = copy.deepcopy(old_options)
+        if not new_options:
+            return combined
+        new_options_copy = copy.deepcopy(new_options)
+
         # First update values of the same key.
-        _update_options(combined, new_options)
+        _update_options(combined, new_options_copy)
+
         # Add new keys.
-        for key, val in new_options.items():
-            if key not in combined:
-                combined[key] = val
+        combined.update(new_options_copy)
+
         return combined

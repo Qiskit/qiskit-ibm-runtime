@@ -135,8 +135,6 @@ class Session:
         options = options or {}
         options["backend"] = self._backend
 
-        # TODO: Do we really need to specify a None max time if session has started?
-
         if not self._session_id:
             # TODO: What happens if session max time != first job max time?
             # Use session max time if this is first job.

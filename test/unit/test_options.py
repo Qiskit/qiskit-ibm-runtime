@@ -19,7 +19,7 @@ from qiskit.providers.fake_provider import FakeNairobiV2
 
 from qiskit_ibm_runtime import Options, RuntimeOptions
 from ..ibm_test_case import IBMTestCase
-from ..utils import dict_paritally_equal
+from ..utils import dict_paritally_equal, flat_dict_partially_equal, dict_keys_equal
 
 
 class TestOptions(IBMTestCase):
@@ -30,34 +30,74 @@ class TestOptions(IBMTestCase):
         options_vars = [
             {},
             {"resilience_level": 9},
-            {"resilience_level": 9, "transpilation": {"initial_layout": [1, 2]}},
-        ]
-        for new_ops in options_vars:
-            with self.subTest(new_ops=new_ops):
-                options = Options()
-                combined = options._merge_options(new_ops)
-                self.assertTrue(
-                    dict_paritally_equal(asdict(options), combined),
-                    f"options={options}, combined={combined}",
-                )
-
-    def test_from_dict(self):
-        """Test converting options from a dictionary."""
-        options_vars = [
-            {},
-            {"resilience_level": 9},
-            {"resilience_level": 9, "transpilation": {"initial_layout": [1, 2]}},
+            {"resilience_level": 8, "transpilation": {"initial_layout": [1, 2]}},
+            {"shots": 99, "seed_simulator": 42},
+            {"resilience_level": 99, "shots": 98, "initial_layout": [3, 4]},
             {
-                "execution": {"shots": 100},
-                "environment": {"log_level": "INFO"},
+                "initial_layout": [1, 2],
+                "transpilation": {"layout_method": "trivial"},
+                "log_level": "INFO",
             },
         ]
         for new_ops in options_vars:
             with self.subTest(new_ops=new_ops):
-                options = Options._from_dict(new_ops)
+                options = Options()
+                combined = Options._merge_options(asdict(options), new_ops)
+
+                # Make sure the values are equal.
                 self.assertTrue(
-                    dict_paritally_equal(asdict(options), new_ops),
-                    f"{options} and {new_ops} not partially equal.",
+                    flat_dict_partially_equal(combined, new_ops),
+                    f"new_ops={new_ops}, combined={combined}",
+                )
+                # Make sure the structure didn't change.
+                self.assertTrue(
+                    dict_keys_equal(combined, asdict(options)),
+                    f"options={options}, combined={combined}",
+                )
+
+    def test_merge_options_extra_fields(self):
+        """Test merging options with extra fields."""
+        options_vars = [
+            (
+                {
+                    "initial_layout": [2, 3],
+                    "transpilation": {"layout_method": "trivial"},
+                    "foo": "foo",
+                },
+                Options(foo="foo"),  # pylint: disable=unexpected-keyword-arg
+            ),
+            (
+                {
+                    "initial_layout": [3, 4],
+                    "transpilation": {"layout_method": "dense", "bar": "bar"},
+                },
+                Options(transpilation={"bar": "bar"}),
+            ),
+            (
+                {
+                    "initial_layout": [1, 2],
+                    "foo": "foo",
+                    "transpilation": {"layout_method": "dense", "foo": "foo"},
+                },
+                Options(  # pylint: disable=unexpected-keyword-arg
+                    foo="foo", transpilation={"foo": "foo"}
+                ),
+            ),
+        ]
+        for new_ops, expected in options_vars:
+            with self.subTest(new_ops=new_ops):
+                options = Options()
+                combined = Options._merge_options(asdict(options), new_ops)
+
+                # Make sure the values are equal.
+                self.assertTrue(
+                    flat_dict_partially_equal(combined, new_ops),
+                    f"new_ops={new_ops}, combined={combined}",
+                )
+                # Make sure the structure didn't change.
+                self.assertTrue(
+                    dict_keys_equal(combined, asdict(expected)),
+                    f"expected={expected}, combined={combined}",
                 )
 
     def test_runtime_options(self):
@@ -103,4 +143,34 @@ class TestOptions(IBMTestCase):
             "resilience_settings": {"level": 2},
             "foo": "foo",
         }
-        self.assertDictEqual(inputs, expected)
+        self.assertTrue(
+            dict_paritally_equal(inputs, expected),
+            f"inputs={inputs}, expected={expected}",
+        )
+
+    def test_init_options_with_dictionary(self):
+        """Test initializing options with dictionaries."""
+
+        options_dicts = [
+            {},
+            {"resilience_level": 9},
+            {"simulator": {"seed_simulator": 42}},
+            {"resilience_level": 8, "environment": {"log_level": "WARNING"}},
+            {
+                "transpilation": {"initial_layout": [1, 2], "layout_method": "trivial"},
+                "execution": {"shots": 100},
+            },
+        ]
+
+        for opts_dict in options_dicts:
+            with self.subTest(opts_dict=opts_dict):
+                options = asdict(Options(**opts_dict))
+                self.assertTrue(
+                    dict_paritally_equal(options, opts_dict),
+                    f"options={options}, opts_dict={opts_dict}",
+                )
+
+                # Make sure the structure didn't change.
+                self.assertTrue(
+                    dict_keys_equal(asdict(Options()), options), f"options={options}"
+                )
