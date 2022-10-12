@@ -43,7 +43,7 @@ class TestIntegrationOptions(IBMIntegrationTestCase):
             simulator={
                 "noise_model": noise_model,
                 "basis_gates": fake_backend.configuration().basis_gates,
-                "coupling_map": fake_backend.configuration().basis_gates,
+                "coupling_map": fake_backend.configuration().coupling_map,
                 "seed_simulator": 42,
             }
         )
