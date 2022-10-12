@@ -93,14 +93,25 @@ class Options:
         Returns:
             Inputs acceptable by primitive programs.
         """
+        sim_options = options.get("simulator", {})
         inputs = {}
         inputs["transpilation_settings"] = options.get("transpilation", {})
         inputs["transpilation_settings"].update(
-            {"optimization_settings": {"level": options.get("optimization_level")}}
+            {
+                "optimization_settings": {"level": options.get("optimization_level")},
+                "coupling_map": sim_options.get("coupling_map", None),
+                "basis_gates": sim_options.get("basis_gates", None),
+            }
         )
+
         inputs["resilience_settings"] = {"level": options.get("resilience_level")}
         inputs["run_options"] = options.get("execution")
-        inputs["run_options"].update(options.get("simulator"))
+        inputs["run_options"].update(
+            {
+                "noise_model": sim_options.get("noise_model", None),
+                "seed_simulator": sim_options.get("seed_simulator", None),
+            }
+        )
 
         known_keys = Options.__dataclass_fields__.keys()
         # Add additional unknown keys.
