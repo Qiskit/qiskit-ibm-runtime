@@ -103,4 +103,7 @@ class TestOptions(IBMTestCase):
             "resilience_settings": {"level": 2},
             "foo": "foo",
         }
-        self.assertDictEqual(inputs, expected)
+        self.assertTrue(
+            dict_paritally_equal(inputs, expected),
+            f"inputs={inputs}, expected={expected}",
+        )
