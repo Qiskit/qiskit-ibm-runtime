@@ -13,7 +13,29 @@
 """Utility functions for options."""
 
 from dataclasses import fields, field, make_dataclass
-import copy
+from typing import Any
+
+
+def _to_obj(cls_, data):  # type: ignore
+    if data is None:
+        return cls_()
+    if isinstance(data, cls_):
+        return data
+    if isinstance(data, dict):
+        return cls_(**data)
+    raise TypeError(
+        f"{data} has an unspported type {type(data)}. It can only be {cls_} or a dictionary."
+    )
+
+
+def _post_init(self):  # type: ignore
+    """Convert dictionary fields to object."""
+
+    obj_fields = getattr(self, "_obj_fields", {})
+    for key in obj_fields.keys():
+        if hasattr(self, key):
+            orig_val = getattr(self, key)
+            setattr(self, key, _to_obj(obj_fields[key], orig_val))
 
 
 def _flexible(cls):  # type: ignore
@@ -24,40 +46,26 @@ def _flexible(cls):  # type: ignore
     input dictionary to objects based on the _obj_fields attribute.
     """
 
-    def __new__(cls, *args, **kwargs):  # type: ignore
-        def _to_obj(cls_, data):  # type: ignore
-            if data is None:
-                return cls_()
-            if isinstance(data, cls_):
-                return data
-            if isinstance(data, dict):
-                return cls_(**data)
-            raise TypeError(
-                f"{data} has an unspported type {type(data)}. It can only be {cls_} or a dictionary."
-            )
+    def __new__(cls, *_, **kwargs):  # type: ignore
 
-        updated_kwargs = copy.deepcopy(kwargs)
         all_fields = []
         orig_field_names = set()
-        obj_fields = getattr(cls, "_obj_fields", {})
 
         for fld in fields(cls):
             all_fields.append((fld.name, fld.type, fld))
             orig_field_names.add(fld.name)
 
-        for key, val in updated_kwargs.items():
+        for key, val in kwargs.items():
             if key not in orig_field_names:
                 all_fields.append((key, type(val), field(default=None)))
-            elif key in obj_fields:
-                updated_kwargs[key] = _to_obj(obj_fields[key], val)
 
         new_cls = make_dataclass(
             cls.__name__,
             all_fields,
             bases=(cls,),
+            namespace={"__post_init__": _post_init},
         )
         obj = object.__new__(new_cls)
-        obj.__init__(*args, **updated_kwargs)
         return obj
 
     cls.__new__ = __new__

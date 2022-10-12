@@ -31,7 +31,7 @@ import qiskit_ibm_runtime.session as session_pkg
 from qiskit_ibm_runtime.utils.utils import _hash
 from qiskit_ibm_runtime.qiskit.primitives.utils import _circuit_key
 from ..ibm_test_case import IBMTestCase
-from ..utils import dict_paritally_equal
+from ..utils import dict_paritally_equal, flat_dict_partially_equal, dict_keys_equal
 
 from .mock.fake_runtime_service import FakeRuntimeService
 
@@ -61,7 +61,9 @@ class TestPrimitives(IBMTestCase):
         for cls in primitives:
             with self.subTest(primitive=cls):
                 inst = cls(session=MagicMock(spec=MockSession), skip_transpilation=True)
-                self.assertTrue(inst.options.transpilation.skip_transpilation)
+                self.assertTrue(
+                    inst.options.get("transpilation").get("skip_transpilation")
+                )
 
     def test_skip_transpilation_overwrite(self):
         """Test overwriting skip_transpilation."""
@@ -75,7 +77,9 @@ class TestPrimitives(IBMTestCase):
                     options=options,
                     skip_transpilation=True,
                 )
-                self.assertFalse(inst.options.transpilation.skip_transpilation)
+                self.assertFalse(
+                    inst.options.get("transpilation").get("skip_transpilation")
+                )
 
     def test_dict_options(self):
         """Test passing a dictionary as options."""
@@ -95,7 +99,7 @@ class TestPrimitives(IBMTestCase):
                     inst = cls(session=MagicMock(spec=MockSession), options=options)
                     expected = asdict(Options())
                     self._update_dict(expected, copy.deepcopy(options))
-                    self.assertDictEqual(expected, asdict(inst.options))
+                    self.assertDictEqual(expected, inst.options.__dict__)
 
     def test_backend_in_options(self):
         """Test specifying backend in options."""
@@ -153,7 +157,9 @@ class TestPrimitives(IBMTestCase):
                 options.transpilation.skip_transpilation = True
                 inst = cls(session=MagicMock(spec=MockSession), options=options)
                 options.transpilation.skip_transpilation = False
-                self.assertTrue(inst.options.transpilation.skip_transpilation)
+                self.assertTrue(
+                    inst.options.get("transpilation").get("skip_transpilation")
+                )
 
     @patch("qiskit_ibm_runtime.session.Session")
     @patch("qiskit_ibm_runtime.session.QiskitRuntimeService")
@@ -277,9 +283,7 @@ class TestPrimitives(IBMTestCase):
         for cls in primitives:
             with self.subTest(primitive=cls):
                 inst = cls(session=session)
-                inst.options.resilience_level = 1
-                inst.options.optimization_level = 2
-                inst.options.execution.shots = 3
+                inst.set_options(resilience_level=1, optimization_level=2, shots=99)
                 inst.run(self.qx, observables=self.obs)
                 if sys.version_info >= (3, 8):
                     inputs = session.run.call_args.kwargs["inputs"]
@@ -293,7 +297,7 @@ class TestPrimitives(IBMTestCase):
                         "transpilation_settings": {
                             "optimization_settings": {"level": 2}
                         },
-                        "run_options": {"shots": 3},
+                        "run_options": {"shots": 99},
                     },
                 )
 
@@ -312,7 +316,7 @@ class TestPrimitives(IBMTestCase):
                 {
                     "transpilation_settings": {
                         "optimization_settings": {"level": 8},
-                        "initial_layout": [3, 4],
+                        "initial_layout": [1, 2],
                     }
                 },
             ),
@@ -329,7 +333,7 @@ class TestPrimitives(IBMTestCase):
                         _, kwargs = session.run.call_args
                         inputs = kwargs["inputs"]
                     self._assert_dict_paritally_equal(inputs, expected)
-                    self.assertDictEqual(asdict(inst.options), asdict(Options()))
+                    self.assertDictEqual(inst.options.__dict__, asdict(Options()))
 
     def test_run_overwrite_runtime_options(self):
         """Test run using overwritten runtime options."""
@@ -398,7 +402,7 @@ class TestPrimitives(IBMTestCase):
                     self.assertEqual(
                         kwargs_list[idx][1]["inputs"]["run_options"]["shots"], shots
                     )
-                self.assertDictEqual(asdict(inst.options), asdict(Options()))
+                self.assertDictEqual(inst.options.__dict__, asdict(Options()))
 
     def test_run_same_session(self):
         """Test multiple runs within a session."""
@@ -466,6 +470,37 @@ class TestPrimitives(IBMTestCase):
                 self.assertDictEqual(inputs["circuits"], {psi4_id: psi4})
                 self.assertEqual(inputs["circuit_ids"], [psi4_id, psi1_id])
 
+    def test_set_options(self):
+        """Test set options."""
+        options = Options(optimization_level=1, execution={"shots": 100})
+        new_options = [
+            ({"optimization_level": 2}, Options()),
+            ({"optimization_level": 3, "shots": 200}, Options()),
+            (
+                {"shots": 300, "foo": "foo"},
+                Options(foo="foo"),  # pylint: disable=unexpected-keyword-arg
+            ),
+        ]
+
+        session = MagicMock(spec=MockSession)
+        primitives = [Sampler, Estimator]
+        for cls in primitives:
+            for new_opt, new_str in new_options:
+                with self.subTest(primitive=cls, new_opt=new_opt):
+                    inst = cls(session=session, options=options)
+                    inst.set_options(**new_opt)
+                    # Make sure the values are equal.
+                    inst_options = inst.options.__dict__
+                    self.assertTrue(
+                        flat_dict_partially_equal(inst_options, new_opt),
+                        f"inst_options={inst_options}, new_opt={new_opt}",
+                    )
+                    # Make sure the structure didn't change.
+                    self.assertTrue(
+                        dict_keys_equal(inst_options, asdict(new_str)),
+                        f"inst_options={inst_options}, new_str={new_str}",
+                    )
+
     def _update_dict(self, dict1, dict2):
         for key, val in dict1.items():
             if isinstance(val, dict):
@@ -474,6 +509,7 @@ class TestPrimitives(IBMTestCase):
                 dict1[key] = dict2.pop(key)
 
     def _assert_dict_paritally_equal(self, dict1, dict2):
+        """Assert all keys in dict2 are in dict1 and have same values."""
         self.assertTrue(
             dict_paritally_equal(dict1, dict2),
             f"{dict1} and {dict2} not partially equal.",
