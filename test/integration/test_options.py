@@ -14,8 +14,10 @@
 
 from qiskit import QuantumCircuit
 from qiskit.providers.fake_provider import FakeManila
+from qiskit.quantum_info import SparsePauliOp
 from qiskit_aer.noise import NoiseModel
-from qiskit_ibm_runtime import Session, Sampler, Options
+from qiskit_ibm_runtime import Session, Sampler, Options, Estimator
+from qiskit_ibm_runtime.exceptions import RuntimeJobFailureError
 
 from ..ibm_test_case import IBMIntegrationTestCase
 from ..decorators import run_integration_test
@@ -61,3 +63,35 @@ class TestIntegrationOptions(IBMIntegrationTestCase):
             self.assertEqual(len(result2.quasi_dists[0].keys()), 2)
             # The results should be the same because we used the same seed.
             self.assertEqual(result1.quasi_dists, result2.quasi_dists)
+
+    @run_integration_test
+    def test_simulator_transpile(self, service):
+        """Test simulator transpile options."""
+        backend = service.backends(simulator=True)[0]
+        self.log.info(f"Using backend {backend.name}")
+
+        circ = QuantumCircuit(2, 2)
+        circ.cx(0, 1)
+        circ.measure_all(add_bits=False)
+        obs = SparsePauliOp.from_list([("IZ", 1)])
+
+        option_vars = [
+            Options(simulator={"coupling_map": []}),
+            Options(simulator={"basis_gates": ["foo"]}),
+        ]
+
+        with Session(service=service, backend=backend):
+            for opt in option_vars:
+                with self.subTest(opt=opt):
+                    sampler = Sampler(options=opt)
+                    job1 = sampler.run(circ)
+                    self.log.info("Runtime job %s submitted.", job1.job_id())
+                    with self.assertRaises(RuntimeJobFailureError) as err:
+                        job1.result()
+                    self.assertIn("TranspilerError", err.exception.message)
+
+                    estimator = Estimator(options=opt)
+                    job2 = estimator.run(circ, observables=obs)
+                    with self.assertRaises(RuntimeJobFailureError) as err:
+                        job2.result()
+                    self.assertIn("TranspilerError", err.exception.message)
