@@ -291,7 +291,6 @@ class Estimator(BaseEstimator):
             "circuit_ids": circuit_ids,
             "observables": observables,
             "observable_indices": list(range(len(observables))),
-            "parameters": [circ.parameters for circ in circuits],
             "parameter_values": parameter_values,
         }
 

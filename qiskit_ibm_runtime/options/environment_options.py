@@ -28,14 +28,6 @@ class EnvironmentOptions:
             log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
             The default level is ``WARNING``.
 
-        image: The runtime image used to execute the program, specified in
-            the form of ``image_name:tag``. Not all accounts are
-            authorized to select a different image.
-
-        instance: The hub/group/project to use, in that format. This is only supported
-            for ``ibm_quantum`` channel. If ``None``, a hub/group/project that provides
-            access to the target backend is randomly selected.
-
         callback: Callback function to be invoked for any interim results and final result.
             The callback function will receive 2 positional parameters:
 

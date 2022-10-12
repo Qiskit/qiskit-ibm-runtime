@@ -45,24 +45,24 @@ class TranspilationOptions:
             resolution. A quantum computer backend may report a set of restrictions, namely:
 
             * granularity: An integer value representing minimum pulse gate
-                resolution in units of ``dt``. A user-defined pulse gate should have
-                duration of a multiple of this granularity value.
+              resolution in units of ``dt``. A user-defined pulse gate should have
+              duration of a multiple of this granularity value.
 
             * min_length: An integer value representing minimum pulse gate
-                length in units of ``dt``. A user-defined pulse gate should be longer
-                than this length.
+              length in units of ``dt``. A user-defined pulse gate should be longer
+              than this length.
 
             * pulse_alignment: An integer value representing a time resolution of gate
-                instruction starting time. Gate instruction should start at time which
-                is a multiple of the alignment value.
+              instruction starting time. Gate instruction should start at time which
+              is a multiple of the alignment value.
 
             * acquire_alignment: An integer value representing a time resolution of measure
-                instruction starting time. Measure instruction should start at time which
-                is a multiple of the alignment value.
+              instruction starting time. Measure instruction should start at time which
+              is a multiple of the alignment value.
 
-                This information will be provided by the backend configuration.
-                If the backend doesn't have any restriction on the instruction time allocation,
-                then ``timing_constraints`` is None and no adjustment will be performed.
+              This information will be provided by the backend configuration.
+              If the backend doesn't have any restriction on the instruction time allocation,
+              then ``timing_constraints`` is None and no adjustment will be performed.
     """
 
     skip_transpilation: bool = False

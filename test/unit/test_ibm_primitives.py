@@ -252,9 +252,12 @@ class TestPrimitives(IBMTestCase):
                 {"transpilation_settings": {"optimization_settings": {"level": 8}}},
             ),
             (
-                {"transpilation": {"seed_transpiler": 24}, "execution": {"shots": 100}},
                 {
-                    "transpilation_settings": {"seed_transpiler": 24},
+                    "transpilation": {"initial_layout": [1, 2]},
+                    "execution": {"shots": 100},
+                },
+                {
+                    "transpilation_settings": {"initial_layout": [1, 2]},
                     "run_options": {"shots": 100},
                 },
             ),

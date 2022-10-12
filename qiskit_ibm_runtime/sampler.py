@@ -244,7 +244,6 @@ class Sampler(BaseSampler):
 
         inputs = {
             "circuits": circuits_map,
-            "parameters": [circ.parameters for circ in circuits],
             "circuit_ids": circuit_ids,
             "parameter_values": parameter_values,
         }
