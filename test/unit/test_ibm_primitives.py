@@ -126,6 +126,22 @@ class TestPrimitives(IBMTestCase):
                         )
                     self.assertEqual(inst.session.backend(), backend_name)
 
+    def test_old_options(self):
+        """Test specifying old runtime options."""
+        primitives = [Sampler, Estimator]
+        session = MagicMock(spec=MockSession)
+        options = [{"log_level": "WARNING"}, {"image": "foo:bar"}]
+
+        for cls in primitives:
+            for opt in options:
+                with self.subTest(primitive=cls, options=opt):
+                    inst = cls(session=session, options=opt)
+                    inst.run(self.qx, observable=self.obs)
+                    _, kwargs = session.run.call_args
+                    run_options = kwargs["options"]
+                    for key, val in opt.items():
+                        self.assertEqual(run_options[key], val)
+
     def test_runtime_options(self):
         """Test RuntimeOptions specified as primitive options."""
         session = MagicMock(spec=MockSession)
