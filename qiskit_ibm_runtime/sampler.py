@@ -148,7 +148,8 @@ class Sampler(BaseSampler):
                 _options.transpilation.skip_transpilation  # type: ignore[union-attr]
             )
         else:
-            backend = options.pop("backend", None)
+            options_copy = copy.deepcopy(options)
+            backend = options_copy.pop("backend", None)
             if backend is not None:
                 issue_deprecation_msg(
                     msg="The 'backend' key in 'options' has been deprecated",
@@ -158,7 +159,16 @@ class Sampler(BaseSampler):
             skip_transpilation = options.get("transpilation", {}).get(
                 "skip_transpilation", False
             )
-            _options = Options(**options)
+            log_level = options_copy.pop("log_level", None)
+            _options = Options(**options_copy)
+            if log_level:
+                issue_deprecation_msg(
+                    msg="The 'log_level' option has been moved to the 'environment' category",
+                    version="0.7",
+                    remedy="Please specify 'environment':{'log_level': log_level} instead.",
+                )
+                _options.environment.log_level = log_level  # type: ignore[union-attr]
+
         _options.transpilation.skip_transpilation = (  # type: ignore[union-attr]
             skip_transpilation
         )

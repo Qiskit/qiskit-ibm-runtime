@@ -16,12 +16,12 @@ from typing import Optional, Union, ClassVar
 from dataclasses import dataclass, fields, field
 import copy
 
-from ..runtime_options import RuntimeOptions
 from .utils import _flexible, Dict
 from .environment_options import EnvironmentOptions
 from .execution_options import ExecutionOptions
 from .simulator_options import SimulatorOptions
 from .transpilation_options import TranspilationOptions
+from ..runtime_options import RuntimeOptions
 
 
 @_flexible
@@ -133,6 +133,9 @@ class Options:
         for fld in fields(RuntimeOptions):
             if fld.name in environment:
                 out[fld.name] = environment[fld.name]
+
+        if "image" in options:
+            out["image"] = options["image"]
 
         return out
 
