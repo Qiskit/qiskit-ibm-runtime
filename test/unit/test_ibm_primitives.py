@@ -136,7 +136,7 @@ class TestPrimitives(IBMTestCase):
             for opt in options:
                 with self.subTest(primitive=cls, options=opt):
                     inst = cls(session=session, options=opt)
-                    inst.run(self.qx, observable=self.obs)
+                    inst.run(self.qx, observables=self.obs)
                     _, kwargs = session.run.call_args
                     run_options = kwargs["options"]
                     for key, val in opt.items():
