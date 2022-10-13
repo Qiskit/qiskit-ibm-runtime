@@ -271,7 +271,7 @@ class RuntimeJob(Job):
                     raise RuntimeJobTimeoutError(
                         f"Timed out waiting for job to complete after {timeout} secs."
                     )
-                time.sleep(3)
+                time.sleep(0.1)
                 status = self.status()
         except futures.TimeoutError:
             raise RuntimeJobTimeoutError(
