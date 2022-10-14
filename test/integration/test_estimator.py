@@ -16,8 +16,9 @@ from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.test.reference_circuits import ReferenceCircuits
+from qiskit.primitives import BaseEstimator, EstimatorResult
 
-from qiskit_ibm_runtime import Estimator, EstimatorResult, BaseEstimator, Session
+from qiskit_ibm_runtime import Estimator, Session
 from qiskit_ibm_runtime.exceptions import RuntimeJobFailureError
 
 from ..decorators import run_integration_test
