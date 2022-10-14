@@ -59,7 +59,7 @@ from qiskit.opflow import (
     TensoredOp,
 )
 from qiskit.providers.fake_provider import FakeNairobi
-from qiskit.quantum_info import SparsePauliOp, Pauli, PauliTable, Statevector
+from qiskit.quantum_info import SparsePauliOp, Pauli, Statevector
 from qiskit.result import Result
 from qiskit_aer.noise import NoiseModel
 
