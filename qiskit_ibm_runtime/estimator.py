@@ -24,11 +24,9 @@ from qiskit.quantum_info import SparsePauliOp
 from qiskit.opflow import PauliSumOp
 from qiskit.quantum_info.operators.base_operator import BaseOperator
 from qiskit.providers.options import Options as TerraOptions
+from qiskit.primitives import BaseEstimator, EstimatorResult
 
-# pylint: disable=unused-import,cyclic-import
-
-# TODO import BaseEstimator and EstimatorResult from terra once released
-from .qiskit.primitives import BaseEstimator, EstimatorResult
+# TODO import _circuit_key from terra once 0.23 is released
 from .qiskit.primitives.utils import _circuit_key
 from .qiskit_runtime_service import QiskitRuntimeService
 from .utils.estimator_result_decoder import EstimatorResultDecoder

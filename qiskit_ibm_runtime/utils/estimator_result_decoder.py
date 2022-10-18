@@ -15,8 +15,9 @@
 from typing import Dict
 import numpy as np
 
+from qiskit.primitives import EstimatorResult
+
 from ..program.result_decoder import ResultDecoder
-from ..qiskit.primitives import EstimatorResult
 
 
 class EstimatorResultDecoder(ResultDecoder):
