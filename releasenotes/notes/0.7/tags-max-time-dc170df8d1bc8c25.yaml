@@ -3,7 +3,7 @@ features:
   - |
     The :class:`qiskit_ibm_runtime.Options` class now accepts
     ``max_execution_time`` as a first level option and ``job_tags``
-    as an option under `environment`.
+    as an option under ``environment``.
     :class:`qiskit_ibm_runtime.RuntimeOptions` has also been updated
     to include these two parameters.
 deprecations:
