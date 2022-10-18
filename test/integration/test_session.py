@@ -15,13 +15,12 @@
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.test.reference_circuits import ReferenceCircuits
+from qiskit.primitives import EstimatorResult, SamplerResult
 
 from qiskit_ibm_runtime import (
     Estimator,
-    EstimatorResult,
     Session,
     Sampler,
-    SamplerResult,
 )
 
 from ..decorators import run_integration_test
