@@ -1,0 +1,5 @@
+---
+upgrade:
+  - |
+    This version of qiskit-ibm-runtime requires qiskit-terra version 0.22 or
+    higher. The ``requirements.txt`` file has been updated accordingly.

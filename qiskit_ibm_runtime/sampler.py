@@ -21,9 +21,9 @@ from dataclasses import asdict
 
 from qiskit.circuit import QuantumCircuit, Parameter
 from qiskit.providers.options import Options as TerraOptions
+from qiskit.primitives import BaseSampler, SamplerResult
 
-# TODO import BaseSampler and SamplerResult from terra once released
-from .qiskit.primitives import BaseSampler, SamplerResult
+# TODO import _circuit_key from terra once 0.23 released
 from .qiskit.primitives.utils import _circuit_key
 from .qiskit_runtime_service import QiskitRuntimeService
 from .options import Options
@@ -114,7 +114,7 @@ class Sampler(BaseSampler):
                 The ``backend`` keyword is still supported but is deprecated.
 
             skip_transpilation (DEPRECATED): Transpilation is skipped if set to True. False by default.
-                Ignored ``skip_transpilation`` is also specified in ``options``.
+                Ignored if ``skip_transpilation`` is also specified in ``options``.
         """
         # `_options` in this class is an instance of qiskit_ibm_runtime.Options class.
         # The base class, however, uses a `_run_options` which is an instance of
