@@ -12,8 +12,11 @@
 
 """Integration tests for Estimator primitive."""
 
-from qiskit.circuit import QuantumCircuit
+import numpy as np
+
+from qiskit.circuit import QuantumCircuit, Parameter
 from qiskit.circuit.library import RealAmplitudes
+from qiskit.primitives import Estimator as TerraEstimator
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.test.reference_circuits import ReferenceCircuits
 
@@ -278,3 +281,55 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
             self.assertEqual(result.values, ws_result[-1].values)
             self.assertEqual(len(job_ids), 1)
             self.assertEqual(job.job_id(), job_ids.pop())
+
+    @run_integration_test
+    def test_estimator_coeffs(self, service):
+        """Verify estimator with same operator different coefficients."""
+
+        cir = QuantumCircuit(2)
+        cir.h(0)
+        cir.cx(0, 1)
+        cir.ry(Parameter("theta"), 0)
+
+        theta_vec = np.linspace(-np.pi, np.pi, 15)
+
+        ## OBSERVABLE
+        obs1 = SparsePauliOp(["ZZ", "ZX", "XZ", "XX"], [1, -1, +1, 1])
+        obs2 = SparsePauliOp(["ZZ", "ZX", "XZ", "XX"], [1, +1, -1, 1])
+
+        ## TERRA ESTIMATOR
+        estimator = TerraEstimator()
+
+        job1 = estimator.run(
+            circuits=[cir] * len(theta_vec),
+            observables=[obs1] * len(theta_vec),
+            parameter_values=[[v] for v in theta_vec],
+        )
+        job2 = estimator.run(
+            circuits=[cir] * len(theta_vec),
+            observables=[obs2] * len(theta_vec),
+            parameter_values=[[v] for v in theta_vec],
+        )
+
+        chsh1_terra = job1.result()
+        chsh2_terra = job2.result()
+
+        with Session(service=service, backend=self.backend) as session:
+            estimator = Estimator(session=session)
+
+            job1 = estimator.run(
+                circuits=[cir] * len(theta_vec),
+                observables=[obs1] * len(theta_vec),
+                parameter_values=[[v] for v in theta_vec],
+            )
+            job2 = estimator.run(
+                circuits=[cir] * len(theta_vec),
+                observables=[obs2] * len(theta_vec),
+                parameter_values=[[v] for v in theta_vec],
+            )
+
+            chsh1_runtime = job1.result()
+            chsh2_runtime = job2.result()
+
+        self.assertTrue(np.allclose(chsh1_terra.values, chsh1_runtime.values, rtol=0.3))
+        self.assertTrue(np.allclose(chsh2_terra.values, chsh2_runtime.values, rtol=0.3))
