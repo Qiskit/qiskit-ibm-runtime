@@ -101,7 +101,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     def test_run_program_failed_ran_too_long(self, service):
         """Test a program that failed since it ran longer than maximum execution time."""
         max_execution_time = 60
-        inputs = {"iterations": 1, "sleep_per_iteration": 60}
+        inputs = {"iterations": 1, "sleep_per_iteration": 61}
         program_id = self._upload_program(
             service, max_execution_time=max_execution_time
         )
