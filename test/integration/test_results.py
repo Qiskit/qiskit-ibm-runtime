@@ -227,7 +227,7 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
         callback_called = False
 
         with use_proxies(service, MockProxyServer.VALID_PROXIES):
-            job = self._run_program(service, iterations=1, callback=result_callback)
+            job = self._run_program(service, iterations=10, callback=result_callback)
             job.wait_for_final_state()
 
         self.assertTrue(callback_called)
