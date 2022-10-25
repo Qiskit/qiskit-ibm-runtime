@@ -264,7 +264,7 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
 
         with Session(service, self.backend) as session:
             sampler = Sampler(session=session)
-            job = sampler.run(circuits=[self.bell]*20, callback=_callback)
+            job = sampler.run(circuits=[self.bell] * 20, callback=_callback)
             result = job.result()
 
             self.assertEqual(result.quasi_dists, ws_result[-1].quasi_dists)
