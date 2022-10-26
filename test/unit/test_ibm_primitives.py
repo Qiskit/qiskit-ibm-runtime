@@ -19,6 +19,7 @@ from unittest.mock import MagicMock, patch, ANY
 import warnings
 from dataclasses import asdict
 from typing import Dict
+import unittest
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.library import RealAmplitudes
@@ -30,9 +31,9 @@ from qiskit_ibm_runtime.ibm_backend import IBMBackend
 import qiskit_ibm_runtime.session as session_pkg
 from qiskit_ibm_runtime.utils.utils import _hash
 from qiskit_ibm_runtime.qiskit.primitives.utils import _circuit_key
+
 from ..ibm_test_case import IBMTestCase
 from ..utils import dict_paritally_equal, flat_dict_partially_equal, dict_keys_equal
-
 from .mock.fake_runtime_service import FakeRuntimeService
 
 
@@ -141,6 +142,8 @@ class TestPrimitives(IBMTestCase):
                     run_options = kwargs["options"]
                     for key, val in opt.items():
                         self.assertEqual(run_options[key], val)
+                    inputs = kwargs["inputs"]
+                    self.assertTrue(all(key not in inputs.keys() for key in opt))
 
     def test_runtime_options(self):
         """Test RuntimeOptions specified as primitive options."""
@@ -431,6 +434,7 @@ class TestPrimitives(IBMTestCase):
             inst.run(self.qx, observables=self.obs)
         self.assertEqual(session.run.call_count, num_runs)
 
+    @unittest.skip("Skip until data caching is reenabled.")
     def test_primitives_circuit_caching(self):
         """Test circuit caching in Estimator and Sampler classes"""
         psi1 = RealAmplitudes(num_qubits=2, reps=2)
@@ -458,7 +462,7 @@ class TestPrimitives(IBMTestCase):
 
             # calculate [ <psi1(theta1)|H1|psi1(theta1)> ]
             with patch.object(estimator._session, "run") as mock_run:
-                estimator.run([psi1, psi2], [H1, H2], [[ANY] * 6, [ANY] * 8])
+                estimator.run([psi1, psi2], [H1, H2], [[1] * 6, [1] * 8])
                 _, kwargs = mock_run.call_args
                 inputs = kwargs["inputs"]
                 self.assertDictEqual(inputs["circuits"], {psi1_id: psi1, psi2_id: psi2})
@@ -466,21 +470,21 @@ class TestPrimitives(IBMTestCase):
 
             sampler = Sampler(session=session)
             with patch.object(sampler._session, "run") as mock_run:
-                sampler.run([psi1, psi2], [[ANY] * 6, [ANY] * 8])
+                sampler.run([psi1, psi2], [[1] * 6, [1] * 8])
                 _, kwargs = mock_run.call_args
                 inputs = kwargs["inputs"]
                 self.assertDictEqual(inputs["circuits"], {})
                 self.assertEqual(inputs["circuit_ids"], [psi1_id, psi2_id])
 
             with patch.object(estimator._session, "run") as mock_run:
-                estimator.run([psi3], [H1], [[ANY] * 6])
+                estimator.run([psi3], [H1], [[1] * 6])
                 _, kwargs = mock_run.call_args
                 inputs = kwargs["inputs"]
                 self.assertDictEqual(inputs["circuits"], {psi3_id: psi3})
                 self.assertEqual(inputs["circuit_ids"], [psi3_id])
 
             with patch.object(sampler._session, "run") as mock_run:
-                sampler.run([psi4, psi1], [[ANY] * 8, [ANY] * 6])
+                sampler.run([psi4, psi1], [[1] * 8, [1] * 6])
                 _, kwargs = mock_run.call_args
                 inputs = kwargs["inputs"]
                 self.assertDictEqual(inputs["circuits"], {psi4_id: psi4})

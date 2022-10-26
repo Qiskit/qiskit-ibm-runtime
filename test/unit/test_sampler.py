@@ -13,23 +13,24 @@
 """Tests for sampler class."""
 
 import json
-from unittest.mock import patch, ANY
+from unittest.mock import patch
+import unittest
 
 from qiskit.circuit.library import RealAmplitudes
 
 from qiskit_ibm_runtime.utils.json import RuntimeEncoder
 from qiskit_ibm_runtime.utils.utils import _hash
 from qiskit_ibm_runtime.qiskit.primitives.utils import _circuit_key
-
 from qiskit_ibm_runtime import Sampler, Session
-from ..ibm_test_case import IBMTestCase
 
+from ..ibm_test_case import IBMTestCase
 from .mock.fake_runtime_service import FakeRuntimeService
 
 
 class TestSampler(IBMTestCase):
     """Class for testing the Sampler class."""
 
+    @unittest.skip("Skip until data caching is reenabled.")
     def test_sampler_circuit_caching(self):
         """Test circuit caching in Sampler class"""
 
@@ -52,28 +53,28 @@ class TestSampler(IBMTestCase):
         ) as session:
             sampler = Sampler(session=session)
             with patch.object(sampler._session, "run") as mock_run:
-                sampler.run([pqc, pqc2], [[ANY] * 6, [ANY] * 8])
+                sampler.run([pqc, pqc2], [[1] * 6, [1] * 8])
                 _, kwargs = mock_run.call_args
                 inputs = kwargs["inputs"]
                 self.assertDictEqual(inputs["circuits"], {pqc_id: pqc, pqc2_id: pqc2})
                 self.assertEqual(inputs["circuit_ids"], [pqc_id, pqc2_id])
 
             with patch.object(sampler._session, "run") as mock_run:
-                sampler.run([pqc2], [[ANY] * 8])
+                sampler.run([pqc2], [[1] * 8])
                 _, kwargs = mock_run.call_args
                 inputs = kwargs["inputs"]
                 self.assertDictEqual(inputs["circuits"], {})
                 self.assertEqual(inputs["circuit_ids"], [pqc2_id])
 
             with patch.object(sampler._session, "run") as mock_run:
-                sampler.run([pqc3], [[ANY] * 6])
+                sampler.run([pqc3], [[1] * 6])
                 _, kwargs = mock_run.call_args
                 inputs = kwargs["inputs"]
                 self.assertDictEqual(inputs["circuits"], {pqc3_id: pqc3})
                 self.assertEqual(inputs["circuit_ids"], [pqc3_id])
 
             with patch.object(sampler._session, "run") as mock_run:
-                sampler.run([pqc4, pqc], [[ANY] * 8, [ANY] * 6])
+                sampler.run([pqc4, pqc], [[1] * 8, [1] * 6])
                 _, kwargs = mock_run.call_args
                 inputs = kwargs["inputs"]
                 self.assertDictEqual(inputs["circuits"], {pqc4_id: pqc4})

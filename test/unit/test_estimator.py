@@ -12,8 +12,9 @@
 
 """Tests for estimator class."""
 
+import unittest
 import json
-from unittest.mock import patch, ANY
+from unittest.mock import patch
 
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.quantum_info import SparsePauliOp
@@ -21,16 +22,16 @@ from qiskit.quantum_info import SparsePauliOp
 from qiskit_ibm_runtime.utils.json import RuntimeEncoder
 from qiskit_ibm_runtime.utils.utils import _hash
 from qiskit_ibm_runtime.qiskit.primitives.utils import _circuit_key
-
 from qiskit_ibm_runtime import Estimator, Session
-from ..ibm_test_case import IBMTestCase
 
+from ..ibm_test_case import IBMTestCase
 from .mock.fake_runtime_service import FakeRuntimeService
 
 
 class TestEstimator(IBMTestCase):
     """Class for testing the Estimator class."""
 
+    @unittest.skip("Skip until data caching is reenabled.")
     def test_estimator_circuit_caching(self):
         """Test circuit caching in Estimator class"""
         psi1 = RealAmplitudes(num_qubits=2, reps=2)
@@ -54,7 +55,7 @@ class TestEstimator(IBMTestCase):
 
             # calculate [ <psi1(theta1)|H1|psi1(theta1)> ]
             with patch.object(estimator._session, "run") as mock_run:
-                estimator.run([psi1, psi2], [H1, H2], [[ANY] * 6, [ANY] * 8])
+                estimator.run([psi1, psi2], [H1, H2], [[1] * 6, [1] * 8])
                 _, kwargs = mock_run.call_args
                 inputs = kwargs["inputs"]
                 self.assertDictEqual(inputs["circuits"], {psi1_id: psi1, psi2_id: psi2})
@@ -62,21 +63,21 @@ class TestEstimator(IBMTestCase):
 
             # calculate [ <psi2(theta2)|H2|psi2(theta2)> ]
             with patch.object(estimator._session, "run") as mock_run:
-                estimator.run([psi2], [H1], [[ANY] * 8])
+                estimator.run([psi2], [H1], [[1] * 8])
                 _, kwargs = mock_run.call_args
                 inputs = kwargs["inputs"]
                 self.assertDictEqual(inputs["circuits"], {})
                 self.assertEqual(inputs["circuit_ids"], [psi2_id])
 
             with patch.object(estimator._session, "run") as mock_run:
-                estimator.run([psi3], [H1], [[ANY] * 6])
+                estimator.run([psi3], [H1], [[1] * 6])
                 _, kwargs = mock_run.call_args
                 inputs = kwargs["inputs"]
                 self.assertDictEqual(inputs["circuits"], {psi3_id: psi3})
                 self.assertEqual(inputs["circuit_ids"], [psi3_id])
 
             with patch.object(estimator._session, "run") as mock_run:
-                estimator.run([psi4, psi1], [H2, H1], [[ANY] * 8, [ANY] * 6])
+                estimator.run([psi4, psi1], [H2, H1], [[1] * 8, [1] * 6])
                 _, kwargs = mock_run.call_args
                 inputs = kwargs["inputs"]
                 self.assertDictEqual(inputs["circuits"], {psi4_id: psi4})
