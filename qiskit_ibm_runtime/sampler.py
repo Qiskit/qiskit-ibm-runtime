@@ -238,6 +238,7 @@ class Sampler(BaseSampler):
         Returns:
             Submitted job.
         """
+        # TODO: Re-enable data caching when ntc 1748 is fixed
         # circuits_map = {}
         # circuit_ids = []
         # for circuit in circuits:

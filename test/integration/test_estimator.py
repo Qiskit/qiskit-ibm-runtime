@@ -12,6 +12,8 @@
 
 """Integration tests for Estimator primitive."""
 
+import unittest
+
 import numpy as np
 
 from qiskit.circuit import QuantumCircuit, Parameter
@@ -110,6 +112,7 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
             self.assertEqual(len(result5.values), len(circuits5))
             self.assertEqual(len(result5.metadata), len(circuits5))
 
+    @unittest.skip("Skip until data caching is reenabled.")
     @run_integration_test
     def test_estimator_session_circuit_caching(self, service):
         """Verify if estimator primitive circuit caching works"""
@@ -162,6 +165,7 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
             self.assertNotEqual(result.values[1], -1)
             self.assertNotEqual(result.values[1], 1)
 
+    @unittest.skip("Skip until data caching is reenabled.")
     @run_integration_test
     def test_estimator_circuit_caching_with_transpilation_options(self, service):
         """Verify if circuit caching works in estimator primitive

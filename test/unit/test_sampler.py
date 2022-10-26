@@ -14,6 +14,7 @@
 
 import json
 from unittest.mock import patch
+import unittest
 
 from qiskit.circuit.library import RealAmplitudes
 
@@ -29,6 +30,7 @@ from .mock.fake_runtime_service import FakeRuntimeService
 class TestSampler(IBMTestCase):
     """Class for testing the Sampler class."""
 
+    @unittest.skip("Skip until data caching is reenabled.")
     def test_sampler_circuit_caching(self):
         """Test circuit caching in Sampler class"""
 
