@@ -88,10 +88,12 @@ class TestIntegrationOptions(IBMIntegrationTestCase):
                     self.log.info("Runtime job %s submitted.", job1.job_id())
                     with self.assertRaises(RuntimeJobFailureError) as err:
                         job1.result()
-                    self.assertIn("TranspilerError", err.exception.message)
+                    # TODO: Re-enable when ntc-1651 is fixed
+                    # self.assertIn("TranspilerError", err.exception.message)
 
                     estimator = Estimator(options=opt)
                     job2 = estimator.run(circ, observables=obs)
                     with self.assertRaises(RuntimeJobFailureError) as err:
                         job2.result()
-                    self.assertIn("TranspilerError", err.exception.message)
+                    # TODO: Re-enable when ntc-1651 is fixed
+                    # self.assertIn("TranspilerError", err.exception.message)

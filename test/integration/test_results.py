@@ -169,11 +169,12 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
                 final_it = result["iteration"]
 
         final_it = 0
-        iterations = 3
+        iterations = 10
+        inputs = {"iterations": iterations, "sleep_per_iteration": 3}
         with self.assertLogs("qiskit_ibm_runtime", level="WARNING") as err_cm:
             job = self._run_program(
                 service,
-                iterations=iterations,
+                inputs=inputs,
                 interim_results="foo",
                 callback=result_callback,
             )
