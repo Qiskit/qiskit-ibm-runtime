@@ -19,6 +19,7 @@ from unittest.mock import MagicMock, patch, ANY
 import warnings
 from dataclasses import asdict
 from typing import Dict
+import unittest
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.library import RealAmplitudes
@@ -431,6 +432,7 @@ class TestPrimitives(IBMTestCase):
             inst.run(self.qx, observables=self.obs)
         self.assertEqual(session.run.call_count, num_runs)
 
+    @unittest.skip("Skip until data caching is reenabled.")
     def test_primitives_circuit_caching(self):
         """Test circuit caching in Estimator and Sampler classes"""
         psi1 = RealAmplitudes(num_qubits=2, reps=2)
