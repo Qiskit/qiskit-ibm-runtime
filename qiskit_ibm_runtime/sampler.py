@@ -15,7 +15,6 @@
 from __future__ import annotations
 from typing import Dict, Iterable, Optional, Sequence, Any, Union
 import copy
-import json
 import logging
 from dataclasses import asdict
 
@@ -24,12 +23,9 @@ from qiskit.providers.options import Options as TerraOptions
 from qiskit.primitives import BaseSampler, SamplerResult
 
 # TODO import _circuit_key from terra once 0.23 released
-from .qiskit.primitives.utils import _circuit_key
 from .qiskit_runtime_service import QiskitRuntimeService
 from .options import Options
 from .utils.sampler_result_decoder import SamplerResultDecoder
-from .utils.json import RuntimeEncoder
-from .utils.utils import _hash
 from .runtime_job import RuntimeJob
 from .ibm_backend import IBMBackend
 from .session import get_default_session
@@ -181,16 +177,16 @@ class Sampler(BaseSampler):
             backend = session or backend
             self._session = get_default_session(service, backend)
 
-        self._first_run = True
-        self._circuits_map = {}
-        if self.circuits:
-            for circuit in self.circuits:
-                circuit_id = _hash(
-                    json.dumps(_circuit_key(circuit), cls=RuntimeEncoder)
-                )
-                if circuit_id not in self._session._circuits_map:
-                    self._circuits_map[circuit_id] = circuit
-                    self._session._circuits_map[circuit_id] = circuit
+        # self._first_run = True
+        # self._circuits_map = {}
+        # if self.circuits:
+        #     for circuit in self.circuits:
+        #         circuit_id = _hash(
+        #             json.dumps(_circuit_key(circuit), cls=RuntimeEncoder)
+        #         )
+        #         if circuit_id not in self._session._circuits_map:
+        #             self._circuits_map[circuit_id] = circuit
+        #             self._session._circuits_map[circuit_id] = circuit
 
     def run(  # pylint: disable=arguments-differ
         self,
@@ -238,23 +234,30 @@ class Sampler(BaseSampler):
         Returns:
             Submitted job.
         """
-        circuits_map = {}
-        circuit_ids = []
-        for circuit in circuits:
-            circuit_id = _hash(json.dumps(_circuit_key(circuit), cls=RuntimeEncoder))
-            circuit_ids.append(circuit_id)
-            if circuit_id in self._session._circuits_map:
-                continue
-            self._session._circuits_map[circuit_id] = circuit
-            circuits_map[circuit_id] = circuit
+        # TODO: Re-enable data caching when ntc 1748 is fixed
+        # circuits_map = {}
+        # circuit_ids = []
+        # for circuit in circuits:
+        #     circuit_id = _hash(json.dumps(_circuit_key(circuit), cls=RuntimeEncoder))
+        #     circuit_ids.append(circuit_id)
+        #     if circuit_id in self._session._circuits_map:
+        #         continue
+        #     self._session._circuits_map[circuit_id] = circuit
+        #     circuits_map[circuit_id] = circuit
 
-        if self._first_run:
-            self._first_run = False
-            circuits_map.update(self._circuits_map)
+        # if self._first_run:
+        #     self._first_run = False
+        #     circuits_map.update(self._circuits_map)
 
+        # inputs = {
+        #     "circuits": circuits_map,
+        #     "circuit_ids": circuit_ids,
+        #     "parameter_values": parameter_values,
+        # }
         inputs = {
-            "circuits": circuits_map,
-            "circuit_ids": circuit_ids,
+            "circuits": circuits,
+            "parameters": [circ.parameters for circ in circuits],
+            "circuit_indices": list(range(len(circuits))),
             "parameter_values": parameter_values,
         }
         combined = Options._merge_options(self._options, kwargs.get("_user_kwargs", {}))
