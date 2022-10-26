@@ -113,7 +113,8 @@ class Options:
             }
         )
 
-        known_keys = Options.__dataclass_fields__.keys()
+        known_keys = list(Options.__dataclass_fields__.keys())
+        known_keys.append("image")
         # Add additional unknown keys.
         for key in options.keys():
             if key not in known_keys:
