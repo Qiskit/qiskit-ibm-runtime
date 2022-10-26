@@ -142,6 +142,8 @@ class TestPrimitives(IBMTestCase):
                     run_options = kwargs["options"]
                     for key, val in opt.items():
                         self.assertEqual(run_options[key], val)
+                    inputs = kwargs["inputs"]
+                    self.assertTrue(all(key not in inputs.keys() for key in opt))
 
     def test_runtime_options(self):
         """Test RuntimeOptions specified as primitive options."""
