@@ -282,7 +282,7 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
         with Session(service, self.backend) as session:
             estimator = Estimator(session=session)
             job = estimator.run(
-                circuits=[bell] * 20, observables=[obs] * 20, callback=_callback
+                circuits=[bell] * 40, observables=[obs] * 40, callback=_callback
             )
             result = job.result()
             self.assertTrue((result.values == ws_result[-1].values).all())

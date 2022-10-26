@@ -93,9 +93,10 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
             API_TO_JOB_ERROR_MESSAGE["FAILED"].format(job.job_id(), job_result_raw),
             job.error_message(),
         )
-        with self.assertRaises(RuntimeJobFailureError) as err_cm:
+        with self.assertRaises(RuntimeJobFailureError):
             job.result()
-        self.assertIn("KeyError", str(err_cm.exception))
+        # TODO: Re-enable when ntc-1651 is fixed
+        # self.assertIn("KeyError", str(err_cm.exception))
 
     @run_integration_test
     def test_run_program_failed_ran_too_long(self, service):
