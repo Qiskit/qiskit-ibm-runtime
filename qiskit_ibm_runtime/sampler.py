@@ -15,7 +15,6 @@
 from __future__ import annotations
 from typing import Dict, Iterable, Optional, Sequence, Any, Union
 import copy
-import json
 import logging
 from dataclasses import asdict
 
@@ -24,12 +23,9 @@ from qiskit.providers.options import Options as TerraOptions
 from qiskit.primitives import BaseSampler, SamplerResult
 
 # TODO import _circuit_key from terra once 0.23 released
-from .qiskit.primitives.utils import _circuit_key
 from .qiskit_runtime_service import QiskitRuntimeService
 from .options import Options
 from .utils.sampler_result_decoder import SamplerResultDecoder
-from .utils.json import RuntimeEncoder
-from .utils.utils import _hash
 from .runtime_job import RuntimeJob
 from .ibm_backend import IBMBackend
 from .session import get_default_session

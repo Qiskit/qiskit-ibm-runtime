@@ -14,7 +14,6 @@
 
 from __future__ import annotations
 import copy
-import json
 from typing import Iterable, Optional, Dict, Sequence, Any, Union
 import logging
 from dataclasses import asdict
@@ -27,11 +26,8 @@ from qiskit.providers.options import Options as TerraOptions
 from qiskit.primitives import BaseEstimator, EstimatorResult
 
 # TODO import _circuit_key from terra once 0.23 is released
-from .qiskit.primitives.utils import _circuit_key
 from .qiskit_runtime_service import QiskitRuntimeService
 from .utils.estimator_result_decoder import EstimatorResultDecoder
-from .utils.json import RuntimeEncoder
-from .utils.utils import _hash
 from .runtime_job import RuntimeJob
 from .utils.deprecation import (
     deprecate_arguments,
