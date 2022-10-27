@@ -3,5 +3,5 @@ features:
   - |
     :class:`qiskit_ibm_runtime.Options` class now accepts arbitrary
     keyword arguments. This allows users to specify new options to the
-    primitive programs without upgrading `qiskit_ibm_runtime`. These
+    primitive programs without upgrading ``qiskit_ibm_runtime``. These
     arbitrary keyword arguments, however, are not validated.
