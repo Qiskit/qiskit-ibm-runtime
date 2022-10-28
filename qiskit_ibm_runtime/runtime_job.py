@@ -12,7 +12,7 @@
 
 """Qiskit runtime job."""
 
-from typing import Any, Optional, Callable, Dict, Type, Union, List
+from typing import Any, Optional, Callable, Dict, Type, Union, Sequence
 import time
 import json
 import logging
@@ -93,7 +93,7 @@ class RuntimeJob(Job):
         creation_date: Optional[str] = None,
         user_callback: Optional[Callable] = None,
         result_decoder: Optional[
-            Union[Type[ResultDecoder], List[Type[ResultDecoder]]]
+            Union[Type[ResultDecoder], Sequence[Type[ResultDecoder]]]
         ] = None,
         image: Optional[str] = "",
     ) -> None:
@@ -127,7 +127,7 @@ class RuntimeJob(Job):
         decoder = (
             result_decoder or DEFAULT_DECODERS.get(program_id, None) or ResultDecoder
         )
-        if isinstance(decoder, list):
+        if isinstance(decoder, Sequence):
             self._interim_result_decoder, self._final_result_decoder = decoder
         else:
             self._interim_result_decoder = self._final_result_decoder = decoder

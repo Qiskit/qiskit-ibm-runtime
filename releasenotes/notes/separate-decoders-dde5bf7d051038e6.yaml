@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    You can now specify a pair of result decoders for the ``result_decoder``
+    parameter of :meth:`qiskit_ibm_runtime.QiskitRuntimeService.run` method.
+    If a pair is specified, the first one is used to decode interim results
+    and the second the final results.

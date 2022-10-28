@@ -18,7 +18,7 @@ import traceback
 import warnings
 from datetime import datetime
 from collections import OrderedDict
-from typing import Dict, Callable, Optional, Union, List, Any, Type
+from typing import Dict, Callable, Optional, Union, List, Any, Type, Sequence
 
 from qiskit.providers.backend import BackendV1 as Backend
 from qiskit.providers.provider import ProviderV1 as Provider
@@ -852,7 +852,7 @@ class QiskitRuntimeService(Provider):
         options: Optional[Union[RuntimeOptions, Dict]] = None,
         callback: Optional[Callable] = None,
         result_decoder: Optional[
-            Union[Type[ResultDecoder], List[Type[ResultDecoder]]]
+            Union[Type[ResultDecoder], Sequence[Type[ResultDecoder]]]
         ] = None,
         instance: Optional[str] = None,
         session_id: Optional[str] = None,
@@ -876,8 +876,8 @@ class QiskitRuntimeService(Provider):
                     2. Job result.
 
             result_decoder: A :class:`ResultDecoder` subclass used to decode job results.
-                If more than one decoder is specified, the first is used for interim result and
-                the second final result. If not specified, a program-specific decoder or the default
+                If more than one decoder is specified, the first is used for interim results and
+                the second final results. If not specified, a program-specific decoder or the default
                 ``ResultDecoder`` is used.
             instance: (DEPRECATED) This is only supported for ``ibm_quantum`` runtime and is in the
                 hub/group/project format.
