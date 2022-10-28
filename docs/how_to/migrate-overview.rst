@@ -75,6 +75,7 @@ each primitive:
 * `Sampler <https://cloud.ibm.com/docs/quantum-computing?topic=quantum-computing-program-sampler>`__
 * `Estimator <https://cloud.ibm.com/docs/quantum-computing?topic=quantum-computing-program-estimator>`__
 
+
 Why use Qiskit Runtime?
 -----------------------
 
@@ -85,7 +86,6 @@ Using Qiskit Runtime unlocks the following advantages:
 * Use primitive programs to further abstract and simplify how you work with quantum hardware. Primitive programs provide methods that make it easier to build modular algorithms and other higher-order programs. Instead of simply returning counts, they return more immediately meaningful information. 
 * Access our most powerful and exploratory quantum systems with shorter wait times by creating and running quantum programs at scale.  
 * Allows seamless integrations with future functionality:
-
 
   * Expanded IBM Cloud access will allow users to couple Qiskit Runtime with other compute services while leveraging the efficiency of our quantum computing service architecture. 
   * Qiskit Runtime will continue to expand support of key capabilities that enable research with Qiskit. For example, support of the ability to iterate on existing programs by allowing users to run programs with variations inputs and configurations, and offering intermediate results to individual executions. 
