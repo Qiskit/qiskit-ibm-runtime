@@ -10,6 +10,7 @@ instance in a case that covers both the statevector simulator and a
 shot-based backend. 
 
 .. _current-sam-est:
+
 Code example without primitives
 -------------------------------
 
