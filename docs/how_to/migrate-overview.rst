@@ -81,8 +81,7 @@ Why use Qiskit Runtime?
 
 Using Qiskit Runtime unlocks the following advantages:
 
-* Run circuits faster with our cloud-native architecture that runs close to quantum hardware in low-latency, containerized compute
- environments. This architecture leads to significant performance enhancements, especially when considering variational quantum algorithms such as VQE, where loops between classical and quantum computation can be carried out with minimized latency. 
+* Run circuits faster with our cloud-native architecture that runs close to quantum hardware in low-latency, containerized compute environments. This architecture leads to significant performance enhancements, especially when considering variational quantum algorithms such as VQE, where loops between classical and quantum computation can be carried out with minimized latency. 
 * Use primitive programs to further abstract and simplify how you work with quantum hardware. Primitive programs provide methods that make it easier to build modular algorithms and other higher-order programs. Instead of simply returning counts, they return more immediately meaningful information. 
 * Access our most powerful and exploratory quantum systems with shorter wait times by creating and running quantum programs at scale.  
 * Allows seamless integrations with future functionality:
