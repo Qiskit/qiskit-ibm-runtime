@@ -92,5 +92,6 @@ Using Qiskit Runtime unlocks the following advantages:
   * Take advantage of seamless integration with the latest performance and hardware optimizations as we scale up and improve our offerings. With managed performance, users can quickly adopt our latest patterns and advances such as error suppression and mitigation, resulting in faster, higher-quality executions.
   * Upcoming primitive programs will allow easy access to future functionality, such as error suppression and mitigation.
 
+
 .. image:: images/runtime-architecture.png
   :alt: A Qiskit Runtime job is shown, moving from a program to the queue, then to the hardware.
