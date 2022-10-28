@@ -86,7 +86,7 @@ Next Steps
    :caption: Migration
 	
     Migrate from Qiskit to Qiskit Runtime <how_to/migrate-overview>
-    FAQs <how_to/migrate-FAQs>
+    FAQs <how_to/migrate-FAQ>
     Use Sampler in an algorithm <how_to/migrate-sampler>
     Use Estimator in an algorithm <how_to/migrate-estimator>
     Use Estimator and Sampler in an algorithm <how_to/migrate-est-sam>
