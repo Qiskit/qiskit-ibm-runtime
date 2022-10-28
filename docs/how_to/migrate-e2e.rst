@@ -275,6 +275,4 @@ To run the program in the cloud, we proceed as follows.
 Related links
 -------------
 
-You can download the updated code here: - `Primitive-enabled Iterative
-Quantum Amplitude Estimation
-algorithm <https://github.com/Qiskit/qiskit-terra/blob/main/qiskit/algorithms/amplitude_estimators/iae.py>`__
+You can download the updated code here: - `Primitive-enabled Iterative Quantum Amplitude Estimation algorithm <https://github.com/Qiskit/qiskit-terra/blob/main/qiskit/algorithms/amplitude_estimators/iae.py>`__

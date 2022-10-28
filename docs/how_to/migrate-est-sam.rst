@@ -137,5 +137,4 @@ Code example updated to use primitives
 Related links
 -------------
 
-`VQD implementation with
-   primitives <https://qiskit.org/documentation/stubs/qiskit.algorithms.VQD.html#qiskit.algorithms.VQD>`__
+`VQD implementation with primitives <https://qiskit.org/documentation/stubs/qiskit.algorithms.VQD.html#qiskit.algorithms.VQD>`__

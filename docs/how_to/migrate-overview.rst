@@ -38,8 +38,7 @@ interface for defining near-time quantum-classical workloads. They help
 you efficiently build and customize quantum applications, making it easy
 to build modular algorithms and higher-order programs. Additionally,
 they offer seamless integration with the latest optimizations in quantum
-hardware and software. For more information, see `Overview of primitive
-programs <https://cloud.ibm.com/docs/quantum-computing?topic=quantum-computing-overview#primitive-programs>`__. 
+hardware and software. For more information, see `Overview of primitive programs <https://cloud.ibm.com/docs/quantum-computing?topic=quantum-computing-overview#primitive-programs>`__. 
 
 Sessions
 ~~~~~~~~
