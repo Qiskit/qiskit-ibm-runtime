@@ -92,5 +92,5 @@ Using Qiskit Runtime unlocks the following advantages:
   * Upcoming primitive programs will allow easy access to future functionality, such as error suppression and mitigation.
 
 
-.. image:: images/runtime-architecture.png
+.. image:: ../images/runtime-architecture.png
   :alt: A Qiskit Runtime job is shown, moving from a program to the queue, then to the hardware.
