@@ -25,7 +25,6 @@ from qiskit.primitives import BaseSampler, SamplerResult
 # TODO import _circuit_key from terra once 0.23 released
 from .qiskit_runtime_service import QiskitRuntimeService
 from .options import Options
-from .utils.sampler_result_decoder import SamplerResultDecoder
 from .runtime_job import RuntimeJob
 from .ibm_backend import IBMBackend
 from .session import get_default_session
@@ -34,6 +33,7 @@ from .utils.deprecation import (
     issue_deprecation_msg,
     deprecate_function,
 )
+from .constants import DEFAULT_DECODERS
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
@@ -269,7 +269,7 @@ class Sampler(BaseSampler):
             inputs=inputs,
             options=Options._get_runtime_options(combined),
             callback=combined.get("environment", {}).get("callback", None),
-            result_decoder=SamplerResultDecoder,
+            result_decoder=DEFAULT_DECODERS.get(self._PROGRAM_ID),
         )
 
     def _call(

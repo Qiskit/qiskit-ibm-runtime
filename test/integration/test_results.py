@@ -124,7 +124,9 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
             called_back_count += 1
 
         called_back_count = 0
-        job = self._run_program(service, interim_results="foobar")
+        job = self._run_program(
+            service, interim_results="foobar", sleep_per_iteration=10
+        )
         job.wait_for_final_state()
         job._status = JobStatus.RUNNING  # Allow stream_results()
         job.stream_results(result_callback)

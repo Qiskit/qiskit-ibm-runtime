@@ -851,7 +851,9 @@ class QiskitRuntimeService(Provider):
         inputs: Union[Dict, ParameterNamespace],
         options: Optional[Union[RuntimeOptions, Dict]] = None,
         callback: Optional[Callable] = None,
-        result_decoder: Optional[Type[ResultDecoder]] = None,
+        result_decoder: Optional[
+            Union[Type[ResultDecoder], List[Type[ResultDecoder]]]
+        ] = None,
         instance: Optional[str] = None,
         session_id: Optional[str] = None,
         job_tags: Optional[List[str]] = None,
@@ -874,7 +876,9 @@ class QiskitRuntimeService(Provider):
                     2. Job result.
 
             result_decoder: A :class:`ResultDecoder` subclass used to decode job results.
-                ``ResultDecoder`` is used if not specified.
+                If more than one decoder is specified, the first is used for interim result and
+                the second final result. If not specified, a program-specific decoder or the default
+                ``ResultDecoder`` is used.
             instance: (DEPRECATED) This is only supported for ``ibm_quantum`` runtime and is in the
                 hub/group/project format.
             session_id: Job ID of the first job in a runtime session.
@@ -937,7 +941,6 @@ class QiskitRuntimeService(Provider):
             backend = hgp.backend(qrt_options.backend)
             hgp_name = hgp.name
 
-        result_decoder = result_decoder or ResultDecoder
         try:
             response = self._api_client.program_run(
                 program_id=program_id,
