@@ -27,7 +27,6 @@ from qiskit.primitives import BaseEstimator, EstimatorResult
 
 # TODO import _circuit_key from terra once 0.23 is released
 from .qiskit_runtime_service import QiskitRuntimeService
-from .utils.estimator_result_decoder import EstimatorResultDecoder
 from .runtime_job import RuntimeJob
 from .utils.deprecation import (
     deprecate_arguments,
@@ -37,6 +36,7 @@ from .utils.deprecation import (
 from .ibm_backend import IBMBackend
 from .session import get_default_session
 from .options import Options
+from .constants import DEFAULT_DECODERS
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
@@ -315,7 +315,7 @@ class Estimator(BaseEstimator):
             inputs=inputs,
             options=Options._get_runtime_options(combined),
             callback=combined.get("environment", {}).get("callback", None),
-            result_decoder=EstimatorResultDecoder,
+            result_decoder=DEFAULT_DECODERS.get(self._PROGRAM_ID),
         )
 
     def _call(
@@ -364,7 +364,7 @@ class Estimator(BaseEstimator):
             program_id=self._PROGRAM_ID,
             inputs=inputs,
             options=Options._get_runtime_options(combined),
-            result_decoder=EstimatorResultDecoder,
+            result_decoder=DEFAULT_DECODERS.get(self._PROGRAM_ID),
         ).result()
 
     @deprecate_function(

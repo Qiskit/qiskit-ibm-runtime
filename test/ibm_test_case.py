@@ -187,6 +187,7 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
         max_execution_time=None,
         session_id=None,
         start_session=False,
+        sleep_per_iteration=0,
     ):
         """Run a program."""
         self.log.debug("Running program on %s", service.channel)
@@ -197,6 +198,7 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
                 "iterations": iterations,
                 "interim_results": interim_results or {},
                 "final_result": final_result or {},
+                "sleep_per_iteration": sleep_per_iteration,
             }
         )
         pid = program_id or self.program_ids[service.channel]
