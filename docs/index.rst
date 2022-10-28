@@ -50,18 +50,54 @@ Next Steps
 `Tutorials <tutorials.html>`_
 
 .. toctree::
-    :hidden:
+   :maxdepth: 1
+   :hidden:
+   :caption: Get started
 
     Overview <self>
     Getting Started <getting_started>
+    Qiskit Vs. Qiskit Runtime <compare>
+	
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+   :caption: Tutorials
+	
     Tutorials <tutorials>
-    How to <how_to>
+    Getting started with Sampler <tutorials/how-to-getting-started-with-sampler>
+    Getting started with Estimator <tutorials/how-to-getting-started-with-estimator>
+	
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+   :caption: How to
+	
+    List available backends <how_to/list_available_backends>
+    Filter backends <how_to/filter_backends>
+    Specify a backend <how_to/specify_the_backend>
+    Run a job <how_to/run_a_job>
+    Choose a system or simulator <how_to/choose-system>
+    Retrieve job results <how_to/retrieve_job_results>
+    Manage job time limits <how_to/time-limits>
+	
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+   :caption: Migration
+	
+    Migrate from Qiskit to Qiskit Runtime <how_to/migrate-overview>
+    FAQs <how_to/migrate-FAQs>
+    Use Sampler in an algorithm <how_to/migrate-sampler>
+    Use Estimator in an algorithm <how_to/migrate-estimator>
+    Use Estimator and Sampler in an algorithm <how_to/migrate-est-sam>
+    Update parameter values while running <how_to/migrate-update-parm>
+    Primitive-based routines <how_to/migrate-prim-based>
+    End-to-end example <how_to/migrate-e2e>
+
     API Reference <apidocs/ibm-runtime>
     FAQs <faqs>
     Release Notes <release_notes>
     GitHub <https://github.com/Qiskit/qiskit-ibm-runtime>
-
-
 
 .. Hiding - Indices and tables
    :ref:`genindex`
