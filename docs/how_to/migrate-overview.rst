@@ -25,7 +25,7 @@ of *primitive* programs. These programs are optimized to help users
 efficiently define workloads that can extrapolate and perform
 foundational quantum computing functions with improved performance.
 
-.. figure:: images/QR-arch.png
+.. figure:: ../images/runtime-architecture.png
    :alt: A Qiskit Runtime job is shown, moving from a program to the queue, then to the hardware.
 
    Figure 1. Diagram of Qiskit Runtime architecture
