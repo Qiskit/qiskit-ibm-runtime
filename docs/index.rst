@@ -57,21 +57,21 @@ Next Steps
     Overview <self>
     Getting Started <getting_started>
     Qiskit Vs. Qiskit Runtime <compare>
-	
+
 .. toctree::
    :maxdepth: 1
    :hidden:
    :caption: Tutorials
-	
+
     Tutorials <tutorials>
     Getting started with Sampler <tutorials/how-to-getting-started-with-sampler>
     Getting started with Estimator <tutorials/how-to-getting-started-with-estimator>
-	
+
 .. toctree::
    :maxdepth: 1
    :hidden:
    :caption: How to
-	
+
     List available backends <how_to/list_available_backends>
     Filter backends <how_to/filter_backends>
     Specify a backend <how_to/specify_the_backend>
@@ -79,12 +79,12 @@ Next Steps
     Choose a system or simulator <how_to/choose-system>
     Retrieve job results <how_to/retrieve_job_results>
     Manage job time limits <how_to/time-limits>
-	
+
 .. toctree::
    :maxdepth: 1
    :hidden:
    :caption: Migration
-	
+
     Migrate from Qiskit to Qiskit Runtime <how_to/migrate-overview>
     FAQs <how_to/migrate-FAQ>
     Use Sampler in an algorithm <how_to/migrate-sampler>
@@ -93,6 +93,11 @@ Next Steps
     Update parameter values while running <how_to/migrate-update-parm>
     Primitive-based routines <how_to/migrate-prim-based>
     End-to-end example <how_to/migrate-e2e>
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+   :caption: Reference
 
     API Reference <apidocs/ibm-runtime>
     FAQs <faqs>
