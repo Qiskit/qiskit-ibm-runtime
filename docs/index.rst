@@ -13,7 +13,6 @@ programs.
 .. figure:: images/runtime-architecture.png
     :align: center
 
-
 Key Concepts
 ==============
 
@@ -100,9 +99,18 @@ Next Steps
 .. toctree::
    :maxdepth: 1
    :hidden:
+   :caption: Work with Qiskit Runtime in IBM Cloud
+
+    Getting started <cloud/quickstart>
+    Pricing plans <cloud/plans>
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
    :caption: Reference
 
     API Reference <apidocs/ibm-runtime>
+    Swagger API Reference for building applications that use Qiskit Runtime <https://us-east.quantum-computing.cloud.ibm.com/openapi/>
     FAQs <faqs>
     Release Notes <release_notes>
     GitHub <https://github.com/Qiskit/qiskit-ibm-runtime>
