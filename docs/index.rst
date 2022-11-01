@@ -103,6 +103,14 @@ Next Steps
 
     Getting started <cloud/quickstart>
     Pricing plans <cloud/plans>
+    View the cost <cloud/view-cost>
+    Manage the cost <cloud/cost>
+    Set up Qiskit Runtime for an organization <cloud/quickstart-org>
+    Configure Qiskit Runtime for an organization <cloud/quickstart-steps-org>
+    Manage IBM Cloud users for an organization <cloud/cloud-provider-org>
+    Manage ID provider users with IBM Cloud for an organization <cloud/appid-cloud-org>
+    Manage ID provider users with the ID provider for an organization <cloud/appid-org>
+    Considerations for using Qiskit Runtime in an organization <cloud/considerations-org>
 
 .. toctree::
    :maxdepth: 1
