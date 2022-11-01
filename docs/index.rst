@@ -72,6 +72,8 @@ Next Steps
    :hidden:
    :caption: How to
 
+    Work with primitives <how_to/primitives>
+    Work with sessions <how_to/sessions>
     List available backends <how_to/list_available_backends>
     Filter backends <how_to/filter_backends>
     Specify a backend <how_to/specify_the_backend>
@@ -83,10 +85,11 @@ Next Steps
 .. toctree::
    :maxdepth: 1
    :hidden:
-   :caption: Migration
+   :caption: Migrate to the Qiskit Runtime workflow
 
-    Migrate from Qiskit to Qiskit Runtime <how_to/migrate-overview>
-    FAQs <how_to/migrate-FAQ>
+    Why migrate? <how_to/migrate-overview>
+    Migrate code <how_to/migrate-code>
+    Considerations <how_to/migrate-FAQ>
     Use Sampler in an algorithm <how_to/migrate-sampler>
     Use Estimator in an algorithm <how_to/migrate-estimator>
     Use Estimator and Sampler in an algorithm <how_to/migrate-est-sam>

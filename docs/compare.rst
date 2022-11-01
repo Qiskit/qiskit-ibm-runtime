@@ -29,7 +29,7 @@ avoiding latencies of queue wait times after the session is actively
 running. As a result, Qiskit Runtime is much more efficient than its
 predecessors.
 
-.. table:: Table 1. Comparison of Qiskit to Qiskit Runtime
+.. table:: Comparison of Qiskit to Qiskit Runtime
 
    +-----------------------+------------+----------------+
    | Function              | Qiskit     | Qiskit Runtime |

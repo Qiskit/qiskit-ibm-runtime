@@ -1,5 +1,5 @@
-FAQs for Qiskit Runtime migration
-=================================
+Considerations for Qiskit Runtime migration
+============================================
 
 Users might have the followings questions when planning to migrate their
 code to Qiskit Runtime.
