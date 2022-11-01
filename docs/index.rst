@@ -111,6 +111,7 @@ Next Steps
     Manage ID provider users with IBM Cloud for an organization <cloud/appid-cloud-org>
     Manage ID provider users with the ID provider for an organization <cloud/appid-org>
     Considerations for using Qiskit Runtime in an organization <cloud/considerations-org>
+    Audit events for Qiskit Runtime <cloud/at-events>
 
 .. toctree::
    :maxdepth: 1
