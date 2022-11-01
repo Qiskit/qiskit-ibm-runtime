@@ -4,7 +4,7 @@ Primitive-based routines
 We consider primitive-based routines that use the primitives interfaces
 but perform more complicated actions, such as fidelity, gradient
 primitives, and povm measurement. They accept basic primitives (Sampler
-or Estimator) in the initializer and use them for calculations.  
+or Estimator) in the initializer and use them for calculations.
 
 Fidelity primitive
 ------------------
@@ -12,7 +12,7 @@ Fidelity primitive
 Suppose that we have an algorithm that requires a calculation of quantum
 states overlaps. To save us some work, we might use the higher-level
 fidelity primitive, such as pVQD or VQD, that accepts the Sampler
-primitive. 
+primitive.
 
 In the code example without primitives, we can see how a user
 would implement this algorithm with the quantum instance in a case that
@@ -108,7 +108,7 @@ Gradient primitive
 Suppose that we have an algorithm that requires a calculation of
 gradients of quantum circuits, such as VarQite. To save us some work, we
 might use the higher-level gradient primitive that accepts the Estimator
-primitive. 
+primitive.
 
 The code example without primitives illustrates how a user would
 implement this algorithm with the quantum instance in a case that covers
@@ -118,7 +118,7 @@ To write an equivalent algorithm that uses Qiskit Runtime primitives,
 first remove all dependencies on ``QuantumInstance`` and ``Backend``.
 Next, replace them with one of the implementations of the
 ``BaseEstimatorGradient`` initialized with one of the Estimator
-(``BaseEstimator``) primitives. The updated algorithm is shown in 
+(``BaseEstimator``) primitives. The updated algorithm is shown in
 :ref:`code-example-with-primitives-1`. In this case, it
 is not necessary to manually construct the quantum circuits for
 gradients or use the gradient framework from Qiskit Opflow.
@@ -223,7 +223,11 @@ Code example with primitives
 Related links
 -------------
 
-* `State fidelities <https://qiskit.org/documentation/stubs/qiskit.algorithms.state_fidelities.html#module-qiskit.algorithms.state_fidelities>`__
-* `PVQD with primitives <https://qiskit.org/documentation/stubs/qiskit.algorithms.PVQD.html#qiskit.algorithms.PVQD>`__
-* `VQD with primitives <https://qiskit.org/documentation/stubs/qiskit.algorithms.VQD.html#qiskit.algorithms.VQD>`__
-* `Gradients <https://qiskit.org/documentation/stubs/qiskit.algorithms.gradients.html#module-qiskit.algorithms.gradients>`__
+* `State fidelities documentation <https://qiskit.org/documentation/stubs/qiskit.algorithms.state_fidelities.html#module-qiskit.algorithms.state_fidelities>`__
+* `State fidelities code <https://github.com/Qiskit/qiskit-terra/tree/main/qiskit/algorithms/state_fidelities>`__
+* `PVQD with primitives documentation <https://qiskit.org/documentation/stubs/qiskit.algorithms.PVQD.html#qiskit.algorithms.PVQD>`__
+* `PVQD with primitives code <https://github.com/Qiskit/qiskit-terra/blob/main/qiskit/algorithms/time_evolvers/pvqd/pvqd.py>`__
+* `VQD with primitives documentation <https://qiskit.org/documentation/stubs/qiskit.algorithms.VQD.html#qiskit.algorithms.VQD>`__
+* `VQD with primitives code <https://github.com/Qiskit/qiskit-terra/blob/main/qiskit/algorithms/eigen_solvers/vqd.py>`__
+* `Gradients documentation <https://qiskit.org/documentation/stubs/qiskit.algorithms.gradients.html#module-qiskit.algorithms.gradients>`__
+* `Gradients code <https://github.com/Qiskit/qiskit-terra/tree/main/qiskit/algorithms/gradients>`__

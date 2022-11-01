@@ -2,7 +2,7 @@ Update parameter values of parametrized circuits during algorithm execution
 ===========================================================================
 
 We consider an algorithm, such as VQE, that iteratively calls one of the
-primitive programs (here, the Estimator) during its execution. 
+primitive programs (here, the Estimator) during its execution.
 
 Overview
 --------
@@ -111,4 +111,5 @@ Code example updated to use primitives
 Related links
 -------------
 
-`VQE implementation with primitives <https://qiskit.org/documentation/stubs/qiskit.algorithms.minimum_eigensolvers.VQE.html#qiskit.algorithms.minimum_eigensolvers.VQE>`__
+* `VQE implementation with primitives code <https://github.com/Qiskit/qiskit-terra/blob/main/qiskit/algorithms/eigen_solvers/vqd.py>`__
+* `VQE implementation with primitives documentation <https://qiskit.org/documentation/stubs/qiskit.algorithms.minimum_eigensolvers.VQE.html#qiskit.algorithms.minimum_eigensolvers.VQE>`__

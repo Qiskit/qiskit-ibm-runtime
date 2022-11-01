@@ -5,7 +5,7 @@ We consider an algorithm in pseudocode that requires a single sample
 from each of two quantum states to produce the result (Quantum
 Amplitude/Phase Estimation). In the code example without primitives, we can see how a user would implement
 this with a quantum instance in a case that covers both the statevector
-simulator and a shot-based backend. 
+simulator and a shot-based backend.
 
 Code example without primitives
 -------------------------------
@@ -82,7 +82,7 @@ Code example updated to use primitives
 Related links
 -------------
 
-You can download the updated code here:
-
-* `Phase estimators <https://github.com/Qiskit/qiskit-terra/blob/main/qiskit/algorithms/phase_estimators/phase_estimation.py>`__  
-* `Amplitude estimators <https://github.com/Qiskit/qiskit-terra/blob/main/qiskit/algorithms/amplitude_estimators/ae.py>`__
+* `Phase estimators code <https://github.com/Qiskit/qiskit-terra/blob/main/qiskit/algorithms/phase_estimators/phase_estimation.py>`__
+* `Phase estimators documentation <https://qiskit.org/documentation/stubs/qiskit.algorithms.PhaseEstimation.html#qiskit.algorithms.PhaseEstimation>`__
+* `Amplitude estimators code <https://github.com/Qiskit/qiskit-terra/blob/main/qiskit/algorithms/amplitude_estimators/ae.py>`__
+* `Amplitude estimators documentation <https://qiskit.org/documentation/stubs/qiskit.algorithms.AmplitudeEstimation.html#qiskit.algorithms.AmplitudeEstimation>`__

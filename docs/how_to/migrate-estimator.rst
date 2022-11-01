@@ -5,7 +5,7 @@ We consider an algorithm in pseudocode that requires a single estimation
 from each of two pairs of quantum states and observables to produce the
 result, for example, TrotterQRTE. In the code example without primitives, we see how a user would implement this
 algorithm with the quantum instance in a case that covers both the
-statevector simulator and a shot-based backend. 
+statevector simulator and a shot-based backend.
 
 Code example without primitives
 -------------------------------
@@ -98,4 +98,5 @@ Code example updated to use primitives
 Related links
 -------------
 
-You can download the updated code here: - `VQE implementation with estimator primitive <https://github.com/Qiskit/qiskit-terra/blob/main/qiskit/algorithms/time_evolvers/trotterization/trotter_qrte.py>`__
+* `VQE implementation with estimator primitive code <https://github.com/Qiskit/qiskit-terra/blob/main/qiskit/algorithms/time_evolvers/trotterization/trotter_qrte.py>`__
+* `VQE implementation with estimator documentation <https://qiskit.org/documentation/stubs/qiskit.algorithms.time_evolvers.trotterization.TrotterQRTE.html#qiskit.algorithms.time_evolvers.trotterization.TrotterQRTE>`__
