@@ -73,8 +73,9 @@ class Session:
         """Session constructor.
 
         Args:
-            service: Optional instance of the ``QiskitRuntimeService`` class,
-                defaults to ``QiskitRuntimeService()`` which tries to initialize
+            service: Optional instance of the ``QiskitRuntimeService`` class.
+                If ``None``, the service associated with the backend, if known, is used.
+                Otherwise ``QiskitRuntimeService()`` is used to initialize
                 your default saved account.
             backend: Optional instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
                 string name of backend. If not specified, a backend will be selected
@@ -90,7 +91,10 @@ class Session:
             ValueError: If an input value is invalid.
         """
 
-        self._service = service or QiskitRuntimeService()
+        if service is None:
+            self._service = backend.service if isinstance(backend, IBMBackend) else QiskitRuntimeService()
+        else:
+            self._service = service
 
         if self._service.channel == "ibm_quantum" and not backend:
             raise ValueError('"backend" is required for ``ibm_quantum`` channel.')
