@@ -104,7 +104,8 @@ class Options:
             }
         )
 
-        inputs["resilience_settings"] = {"level": options.get("resilience_level")}
+        inputs["resilience_settings"] = options.get("resilience", {})
+        inputs["resilience_settings"].update({"level": options.get("resilience_level")})
         inputs["run_options"] = options.get("execution")
         inputs["run_options"].update(
             {
