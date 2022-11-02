@@ -19,7 +19,6 @@ Available primitives
 
 The following primitive programs are available:
 
-.. table:: Available primitives
 
 +-----------------------+-----------------------+------------------------------------+
 | Primitive             | Description           | Example output                     |
@@ -64,5 +63,5 @@ How to use primitives
 
 Primitive program interfaces vary based on the type of task that you want to run on the quantum computer and the corresponding data that you want returned as a result. After identifying the appropriate primitive for your program, you can use Qiskit to prepare inputs, such as circuits, observables (for Estimator), and customizable options to optimize your job. For more information, see the appropriate topic:
 
-- [Sampler](/docs/quantum-computing?topic=quantum-computing-example-sampler)
-- [Estimator](/docs/quantum-computing?topic=quantum-computing-example-estimator)
+-  `Sampler </docs/quantum-computing?topic=quantum-computing-example-sampler>`__
+-  `Estimator </docs/quantum-computing?topic=quantum-computing-example-estimator>`__
