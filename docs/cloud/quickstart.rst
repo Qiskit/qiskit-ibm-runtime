@@ -60,7 +60,7 @@ Authenticate to the service
 -----------------------------------
 
 
-To authenticate to the service, call ``QiskitRuntimeService`` with your IBM Cloud API key and the CRN:
+To authenticate to the service, call "QiskitRuntimeService" with your IBM Cloud API key and the CRN:
 
 .. code-block:: python
 
@@ -73,16 +73,16 @@ Find your access credentials
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 1. Find your API key. From the `API keys page <https://cloud.ibm.com/iam/apikeys>`__, view or create your API key, then copy it to a secure location so you can use it for authentication.
-2. Find your Cloud Resource Name (CRN). Open the 'Instances page <https://cloud.ibm.com/quantum/instances>'__ and click your instance. In the page that opens, click the icon to copy your CRN. Save it in a secure location so you can use it for authentication.
+2. Find your Cloud Resource Name (CRN). Open the `Instances page <https://cloud.ibm.com/quantum/instances>`__ and click your instance. In the page that opens, click the icon to copy your CRN. Save it in a secure location so you can use it for authentication.
 
 
 Optionally save your credentials to disk
 -------------------------------------------
 
 
-Optionally save your credentials to disk (in the ``$HOME/.qiskit/qiskit-ibm.json`` file). If you don't save your credentials to disk, you must specify your credentials every time you start a new session.
+Optionally save your credentials to disk (in the "$HOME/.qiskit/qiskit-ibm.json" file). If you don't save your credentials to disk, you must specify your credentials every time you start a new session.
 
-If you save your credentials to disk, you can use ``QiskitRuntimeService()`` in the future to initialize your account.
+If you save your credentials to disk, you can use "QiskitRuntimeService()" in the future to initialize your account.
 
 .. code-block:: python
 
@@ -94,7 +94,7 @@ If you save your credentials to disk, you can use ``QiskitRuntimeService()`` in 
    service = QiskitRuntimeService()
 
 
-If you need to update your saved credentials, run ``save_account`` again, passing in ``overwrite=True``  and the updated credentials. For more information about managing your account, see the `account management tutorial <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/tutorials/04_account_management.html>`__.
+If you need to update your saved credentials, run "save_account" again, passing in "overwrite=True"  and the updated credentials. For more information about managing your account, see the `account management tutorial <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/tutorials/04_account_management.html>`__.
 
 Test your setup
 -------------------
@@ -104,8 +104,8 @@ Run the Hello World program to ensure that your environment is set up properly.
 .. note::
    If you are using the Standard plan, running Hello World incurs a cost. See `Manage costs <cost>`__ for cost information.
 
-If you did not save your credentials to disk, specify ``QiskitRuntimeService(channel="ibm_cloud", token=<IBM Cloud API key>, instance=<IBM Cloud CRN>)``
-instead of ``QiskitRuntimeService()`` in the following code.
+If you did not save your credentials to disk, specify "QiskitRuntimeService(channel="ibm_cloud", token=<IBM Cloud API key>, instance=<IBM Cloud CRN>)"
+instead of "QiskitRuntimeService()" in the following code.
 
 .. code-block:: python
 
