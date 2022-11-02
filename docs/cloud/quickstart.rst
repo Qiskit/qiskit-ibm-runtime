@@ -36,8 +36,7 @@ If you already created a Qiskit Runtime service instance or were invited to one 
 Install or update Qiskit packages
 -----------------------------------
 
-
-Install or update the following packages in your development environment. They let you create circuits and work with primitive programs with Qiskit Runtime. For detailed instructions, refer to the `Qiskit textbook <https://qiskit.org/textbook/ch-appendix/qiskit.html`__. Periodically check the `Qiskit release notes <https://qiskit.org/documentation/release_notes.html>`__ (or rerun these commands) so that you always have the latest version.
+Install or update the following packages in your development environment. They let you create circuits and work with primitive programs with Qiskit Runtime. For detailed instructions, refer to the `Qiskit textbook <https://qiskit.org/textbook/ch-appendix/qiskit.html>`__. Periodically check the `Qiskit release notes <https://qiskit.org/documentation/release_notes.html>`__ (or rerun these commands) so that you always have the latest version.
 
  .. note::
 
