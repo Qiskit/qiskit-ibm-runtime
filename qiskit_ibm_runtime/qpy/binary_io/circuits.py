@@ -676,6 +676,9 @@ def _write_custom_operation(  # type: ignore[no-untyped-def]
         # state is open, and the definition setter (during a subsequent read) uses the "fully
         # excited" control definition only.
         has_definition = True
+        # Build internal definition to support overloaded subclasses by
+        # calling definition getter on object
+        operation.definition  # pylint: disable=pointless-statement
         data = common.data_to_binary(operation._definition, write_circuit)
         size = len(data)
         num_ctrl_qubits = operation.num_ctrl_qubits
@@ -1007,12 +1010,12 @@ def read_circuit(file_obj, version, metadata_deserializer=None):  # type: ignore
             qubits = [Qubit() for _ in range(num_qubits - len(circ.qubits))]
             circ.add_bits(qubits)
         if len(circ.clbits) < num_clbits:
-            clbits = [Clbit() for _ in range(num_qubits - len(circ.clbits))]
+            clbits = [Clbit() for _ in range(num_clbits - len(circ.clbits))]
             circ.add_bits(clbits)
     else:
         circ = QuantumCircuit(
-            num_qubits,
-            num_clbits,
+            [Qubit() for _ in [None] * num_qubits],
+            [Clbit() for _ in [None] * num_clbits],
             name=name,
             global_phase=global_phase,
             metadata=metadata,
