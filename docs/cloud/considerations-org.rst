@@ -42,4 +42,4 @@ Consistent and repeatable deployment of the configuration
 
 The steps of this tutorial can be automated for consistent and repeatable management of users, projects, and the mapping between those. Refer to the `Terraform IBM Cloud Provider documentation <https://registry.terraform.io/providers/IBM-Cloud/ibm/latest/docs>`__ for templates.
 
-.. |event| image:: images/org-guide-audit-example.png
+.. |event| image:: ../images/org-guide-audit-example.png

@@ -84,4 +84,4 @@ Next steps
 
 See `Additional considerations <considerations-org>`__ for more information.
 
-.. |change| image:: images/org-guide-manage-user.png
+.. |change| image:: ../images/org-guide-manage-user.png

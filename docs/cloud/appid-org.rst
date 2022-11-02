@@ -103,7 +103,7 @@ User flow
 1. A user is sent the ID provider URL for the IBM Cloud account.
 
    .. note::
-      The administrator can always go to `Manage → Access (IAM) → Identity providers <https://cloud.ibm.com/iam/identity-providers>`__ to look up the ID provider URL. 
+      The administrator can always go to `Manage → Access (IAM) → Identity providers <https://cloud.ibm.com/iam/identity-providers>`__ to look up the ID provider URL.
 
 2. To work with Qiskit Runtime serive instances, users must create an API key by going to `Manage → Access (IAM) → API keys <https://cloud.ibm.com/iam/apikeys>`__.
 
@@ -152,7 +152,7 @@ Next steps
 
 For more information, see `additional considerations <considerations-org>`__.
 
-.. |create| image:: images/org-guide-create-appid.png
-.. |identity| image:: images/org-guide-idp-reference.png
-.. |Dynamic| image:: images/org-guide-create-dynamic-rule1.png
-.. |Condition| image:: images/org-guide-create-dynamic-rule2.png
+.. |create| image:: ../images/org-guide-create-appid.png
+.. |identity| image:: ../images/org-guide-idp-reference.png
+.. |Dynamic| image:: ../images/org-guide-create-dynamic-rule1.png
+.. |Condition| image:: ../images/org-guide-create-dynamic-rule2.png

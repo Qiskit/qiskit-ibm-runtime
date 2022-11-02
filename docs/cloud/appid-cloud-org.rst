@@ -60,10 +60,10 @@ When you use App ID as ID provider with the Cloud directory, you can create user
 Create or modify users’ project assignments
 -------------------------------------------
 
-1. Go to `Manage → Access (IAM) → Users <https://cloud.ibm.com/iam/users>`__ and click the user. 
+1. Go to `Manage → Access (IAM) → Users <https://cloud.ibm.com/iam/users>`__ and click the user.
 
    |access|
-   
+
    .. note::
       If you don’t see the user that you want to manage, verify that they logged in to IBM Cloud at least once. See step 1 in the :ref:`user-org`.
 
@@ -128,6 +128,6 @@ Next steps
 
 For more information, see `additional considerations <considerations-org>`__.
 
-.. |create| image:: images/org-guide-create-appid.png
-.. |identity| image:: images/org-guide-idp-reference.png
-.. |access| image:: images/org-guide-manage-user.png
+.. |create| image:: ../images/org-guide-create-appid.png
+.. |identity| image:: ../images/org-guide-idp-reference.png
+.. |access| image:: ../images/org-guide-manage-user.png

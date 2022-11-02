@@ -90,7 +90,7 @@ Follow these steps to set up an access group:
    |resources|
 
    5. For Roles and actions, select **Viewer** and the custom role that was created previously. Click **Add**, then **Assign**.
-   
+
    |roles|
 
    6. Repeat this step if you want to give an access group permission to several service instances.
