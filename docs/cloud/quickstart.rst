@@ -3,7 +3,7 @@ Getting started
 
 This tutorial walks you through the steps to set up a Qiskit Runtime service instance, log in to your service instance, and run your first job on a quantum computer.
 
-If you are an administrator who needs to set up Qiskit Runtime for your organization, refer to `Plan Qiskit Runtime for an organization <quickstart-org>` for instructions to set up a service instance and work with users.
+If you are an administrator who needs to set up Qiskit Runtime for your organization, refer to `Plan Qiskit Runtime for an organization <quickstart-org>`__ for instructions to set up a service instance and work with users.
 
 
 Create a service instance
@@ -140,5 +140,7 @@ Qiskit Runtime uses primitive programs to interface with quantum computers. The 
 
    ../tutorials/how-to-getting-started-with-sampler
    ../tutorials/how-to-getting-started-with-estimator
+
+
 
 
