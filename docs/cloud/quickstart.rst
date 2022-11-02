@@ -45,11 +45,13 @@ Install or update the following packages in your development environment. They l
 
 
 .. code-block:: python
+
    # Installs the latest version of the Qiskit meta-package for circuit creation.
    pip install qiskit -U
 
 
 .. code-block:: python
+
    # Installs the latest version of the Qiskit Runtime package, which is needed to interact with the Qiskit Runtime primitives on IBM Cloud.
    pip install qiskit-ibm-runtime -U
 
@@ -61,6 +63,7 @@ Authenticate to the service
 To authenticate to the service, call `QiskitRuntimeService` with your IBM Cloud API key and the CRN:
 
 .. code-block:: python
+
    from qiskit_ibm_runtime import QiskitRuntimeService
 
    service = QiskitRuntimeService(channel="ibm_cloud", token="<IBM Cloud API key>", instance="<IBM Cloud CRN>")
@@ -105,6 +108,7 @@ If you did not save your credentials to disk, specify ``QiskitRuntimeService(cha
 instead of ``QiskitRuntimeService()`` in the following code.
 
 .. code-block:: python
+
    from qiskit_ibm_runtime import QiskitRuntimeService
 
    service = QiskitRuntimeService()
@@ -121,7 +125,8 @@ instead of ``QiskitRuntimeService()`` in the following code.
 
 Result:
 
-.. code-block:: test
+.. code-block:: 
+
        Hello world!
 
 
