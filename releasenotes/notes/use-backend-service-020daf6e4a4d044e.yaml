@@ -1,0 +1,7 @@
+---
+fixes:
+  - |
+    If a :class:`qiskit_ibm_runtime.IBMBackend` instance is passed to
+    the :class:`qiskit_ibm_runtime.Session` constructor, the service used
+    to initialize the ``IBMBackend`` instance is used for the session
+    instead of the default account service.

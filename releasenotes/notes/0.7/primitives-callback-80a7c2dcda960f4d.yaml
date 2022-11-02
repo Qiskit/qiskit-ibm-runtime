@@ -1,6 +1,7 @@
 ---
 features:
   - |
-    The `run()` methods of the primitives now accept a `callback` parameter.
+    The :class:`qiskit_ibm_runtime.options.EnvironmentOptions` class now
+    accepts a ``callback`` parameter.
     This parameter can be used to stream the interim and final results of the
     primitives.

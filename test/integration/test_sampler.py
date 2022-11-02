@@ -12,12 +12,14 @@
 
 """Integration tests for Sampler primitive."""
 
+import unittest
 from math import sqrt
 
 from qiskit.circuit import QuantumCircuit, Gate
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit.primitives import BaseSampler, SamplerResult
+from qiskit.result import QuasiDistribution
 
 from qiskit_ibm_runtime import Sampler, Session
 from qiskit_ibm_runtime.exceptions import RuntimeJobFailureError
@@ -87,6 +89,7 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
                 self.assertAlmostEqual(result3.quasi_dists[i][3], 0.5, delta=0.1)
                 self.assertAlmostEqual(result3.quasi_dists[i][0], 0.5, delta=0.1)
 
+    @unittest.skip("Skip until data caching is reenabled.")
     @run_integration_test
     def test_sampler_non_parameterized_circuit_caching(self, service):
         """Verify if circuit caching works in sampler primitive
@@ -134,6 +137,7 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
             self.assertEqual(result.quasi_dists[0][3], 1)
             self.assertEqual(result.quasi_dists[1][31], 1)
 
+    @unittest.skip("Skip until data caching is reenabled.")
     @run_integration_test
     def test_sampler_non_parameterized_circuit_caching_with_transpilation_options(
         self, service
@@ -264,9 +268,13 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
 
         with Session(service, self.backend) as session:
             sampler = Sampler(session=session)
-            job = sampler.run(circuits=self.bell, callback=_callback)
+            job = sampler.run(circuits=[self.bell] * 20, callback=_callback)
             result = job.result()
 
-            self.assertEqual(result.quasi_dists, ws_result[-1].quasi_dists)
+            self.assertIsInstance(ws_result[-1], dict)
+            ws_result_quasi = [
+                QuasiDistribution(quasi) for quasi in ws_result[-1]["quasi_dists"]
+            ]
+            self.assertEqual(result.quasi_dists, ws_result_quasi)
             self.assertEqual(len(job_ids), 1)
             self.assertEqual(job.job_id(), job_ids.pop())

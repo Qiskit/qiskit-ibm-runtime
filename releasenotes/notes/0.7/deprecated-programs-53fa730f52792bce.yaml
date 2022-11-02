@@ -1,0 +1,6 @@
+---
+deprecations:
+  - |
+    Qiskit Runtime programs ``torch-train``, ``torch-infer``, ``sample-expval``,
+    ``sample-program``, and ``quantum_kernal_alignment`` have been deprecated
+    due to low usage.

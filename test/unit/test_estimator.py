@@ -12,6 +12,7 @@
 
 """Tests for estimator class."""
 
+import unittest
 import json
 from unittest.mock import patch
 
@@ -30,6 +31,7 @@ from .mock.fake_runtime_service import FakeRuntimeService
 class TestEstimator(IBMTestCase):
     """Class for testing the Estimator class."""
 
+    @unittest.skip("Skip until data caching is reenabled.")
     def test_estimator_circuit_caching(self):
         """Test circuit caching in Estimator class"""
         psi1 = RealAmplitudes(num_qubits=2, reps=2)

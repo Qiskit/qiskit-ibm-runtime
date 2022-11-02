@@ -19,6 +19,7 @@ from unittest.mock import MagicMock, patch, ANY
 import warnings
 from dataclasses import asdict
 from typing import Dict
+import unittest
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.library import RealAmplitudes
@@ -141,6 +142,8 @@ class TestPrimitives(IBMTestCase):
                     run_options = kwargs["options"]
                     for key, val in opt.items():
                         self.assertEqual(run_options[key], val)
+                    inputs = kwargs["inputs"]
+                    self.assertTrue(all(key not in inputs.keys() for key in opt))
 
     def test_runtime_options(self):
         """Test RuntimeOptions specified as primitive options."""
@@ -431,6 +434,7 @@ class TestPrimitives(IBMTestCase):
             inst.run(self.qx, observables=self.obs)
         self.assertEqual(session.run.call_count, num_runs)
 
+    @unittest.skip("Skip until data caching is reenabled.")
     def test_primitives_circuit_caching(self):
         """Test circuit caching in Estimator and Sampler classes"""
         psi1 = RealAmplitudes(num_qubits=2, reps=2)
