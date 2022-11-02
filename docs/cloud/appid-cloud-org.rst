@@ -69,7 +69,7 @@ Create or modify users’ project assignments
 
 2. Add access groups with **Assign group** or remove the user from an access group by clicking the three dot menu and choosing **Remove user**.
 
-.. user-org:
+.. _user-org:
 
 User flow
 ---------
