@@ -29,33 +29,22 @@ avoiding latencies of queue wait times after the session is actively
 running. As a result, Qiskit Runtime is much more efficient than its
 predecessors.
 
-.. table:: Comparison of Qiskit to Qiskit Runtime
+.. table:: Comparison of Qiskit to Qiskit Runtime Primitives
 
-   +-----------------------+------------+----------------+
-   | Function              | Qiskit     | Qiskit Runtime |
-   +=======================+============+================+
-   | Primitive interface   | No         | Yes            |
-   | as abstraction for    |            |                |
-   | circuits and          |            |                |
-   | variational workload  |            |                |
-   +-----------------------+------------+----------------+
-   | Sessions to improve   | No         | Yes            |
-   | performance for a     |            |                |
-   | sequence of jobs      |            |                |
-   +-----------------------+------------+----------------+
-   | Abstracted interface  | No         | Yes            |
-   | that allows for       |            |                |
-   | automated error       |            |                |
-   | suppression and       |            |                |
-   | mitigation            |            |                |
-   +-----------------------+------------+----------------+
-   | Increased performance | No         | Yes            |
-   | for variational       |            |                |
-   | algorithms            |            |                |
-   +-----------------------+------------+----------------+
-   | Working examples of   | Yes        | No             |
-   | code developed by     |            |                |
-   | Qiskit community      |            |                |
-   +-----------------------+------------+----------------+
-   | OpenPulse             | Yes        | No             |
-   +-----------------------+------------+----------------+
++---------------------------------------------------------------------------------+-----------------------+---------------------------+
+| Function                                                                        | qiskit-ibmq-provider  | Qiskit Runtime Primitives |
++=================================================================================+=======================+===========================+
+| Primitive interface as abstraction for circuits and variational workload        | No                    | Yes                       |
++---------------------------------------------------------------------------------+-----------------------+---------------------------+
+| Sessions to improve performance for a sequence of jobs                          | No                    | Yes                       |
++---------------------------------------------------------------------------------+-----------------------+---------------------------+
+| Abstracted interface that allows for automated error suppression and mitigation | No                    | Yes                       |
++---------------------------------------------------------------------------------+-----------------------+---------------------------+
+| Increased performance for variational algorithms                                | No                    | Yes                       |
++---------------------------------------------------------------------------------+-----------------------+---------------------------+
+| Working examples of code developed by Qiskit community                          | Yes                   | No                        |
++---------------------------------------------------------------------------------+-----------------------+---------------------------+
+| OpenPulse                                                                       | Yes                   | No                        |
++---------------------------------------------------------------------------------+-----------------------+---------------------------+
+| Pulse Gates                                                                     | Yes                   | Yes                       |
++---------------------------------------------------------------------------------+-----------------------+---------------------------+
