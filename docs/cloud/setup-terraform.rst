@@ -25,7 +25,7 @@ After the job completes, you can view the results.
 
 1. In your Terraform configuration file, add the following code.  Change the name of the service instance (parameter “name”) and the plan (parameter “plan”) according to your requirements:
 
-     .. code:: terraform
+     .. code:: 
 
         resource "ibm_resource_instance" "my-instance" {
                 name = "my-instance-name"
@@ -38,14 +38,14 @@ After the job completes, you can view the results.
 
 2. Create a Terraform execution plan.
 
-   .. code:: terraform
+   .. code:: 
 
       terraform plan
 
 
 3. Remove the namespace and re-create it with a new name. Note that this process might take a few minutes to complete.
 
-   .. code:: terraform
+   .. code:: 
 
       terraform apply
 
