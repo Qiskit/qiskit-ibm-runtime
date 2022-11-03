@@ -136,7 +136,5 @@ Choose a program to run
 
 Qiskit Runtime uses primitive programs to interface with quantum computers. The following programs are publicly available. Choose the appropriate link to continue learning how to run a program.
 
-.. nbgallery::
-
-   ../tutorials/how-to-getting-started-with-sampler
-   ../tutorials/how-to-getting-started-with-estimator
+`Getting started with Sampler <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/tutorials/how-to-getting-started-with-sampler.html>`__
+`Getting started with Estimator <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/tutorials/how-to-getting-started-with-estimator.html>`__
