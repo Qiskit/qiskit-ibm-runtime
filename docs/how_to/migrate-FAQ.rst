@@ -15,7 +15,7 @@ through IBM Cloud or IBM Quantum Platform.  Some information that might help in 
 * The available plans:
 
   * Qiskit Runtime is available in both the Open or Premium plan of the IBM Quantum Platform. See `IBM Quantum access plans <https://www.ibm.com/quantum/access-plans>`__ for details.
-  * Qiskit Runtime is accessible through the Lite or Standard plan in IBM Cloud. See `Plans <https://cloud.ibm.com/docs/quantum-computing?topic=quantum-computing-plans>`__ for details.
+  * Qiskit Runtime is accessible through the Lite or Standard plan in IBM Cloud. See `Plans <../cloud/plans>`__ for details.
 
 * The use case requirements:
 
@@ -32,7 +32,7 @@ can get set up on either platform using the instructions below:
 To get started with Qiskit Runtime on IBM Quantum Platform, see
 `Experiment with Qiskit Runtime <https://quantum-computing.ibm.com/services/resources/docs/resources/runtime/start>`__.
 
-To get started with Qiskit Runtime on IBM Cloud, see the `Getting Started guide <https://cloud.ibm.com/docs/quantum-computing?topic=quantum-computing-quickstart>`__.
+To get started with Qiskit Runtime on IBM Cloud, see the `Getting Started guide <../cloud/quickstart>`__.
 
 Should I modify the Qiskit Terra algorithms to use Qiskit Runtime primitives?
 -----------------------------------------------------------------------------
@@ -69,7 +69,7 @@ implementation of the ``BaseEstimator``, ``BaseSampler``, or both
 primitives from the ``qiskit_ibm_runtime`` library.
 
 It is also possible to use local implementations, as shown in the
-`Amplitude estimation use case </how_to/migrate-e2e#amplitude>`__
+`Amplitude estimation use case <migrate-e2e#amplitude>`__
 
 Notably, for common scenarios it is not necessary to handle backends
 differently nor to construct expressions for expectation values
