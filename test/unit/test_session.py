@@ -49,6 +49,13 @@ class TestSession(IBMTestCase):
         session = Session(service=MagicMock(), backend=backend)
         self.assertEqual(session.backend(), "ibm_gotham")
 
+    def test_using_ibm_backend_service(self):
+        """Test using service from an IBMBackend instance."""
+        backend = MagicMock(spec=IBMBackend)
+        backend.name = "ibm_gotham"
+        session = Session(backend=backend)
+        self.assertEqual(session.service, backend.service)
+
     def test_max_time(self):
         """Test max time."""
         max_times = [
