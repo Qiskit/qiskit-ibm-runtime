@@ -29,8 +29,6 @@ avoiding latencies of queue wait times after the session is actively
 running. As a result, Qiskit Runtime is much more efficient than its
 predecessors.
 
-.. table:: Comparison of Qiskit to Qiskit Runtime Primitives
-
 +---------------------------------------------------------------------------------+-----------------------+---------------------------+
 | Function                                                                        | qiskit-ibmq-provider  | Qiskit Runtime Primitives |
 +=================================================================================+=======================+===========================+
