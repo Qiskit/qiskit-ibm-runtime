@@ -65,5 +65,5 @@ Primitive program interfaces vary based on the type of task that you want to run
 
 .. nbgallery::
 
-   tutorials/how-to-getting-started-with-sampler
-   tutorials/how-to-getting-started-with-estimator
+   ../tutorials/how-to-getting-started-with-sampler
+   ../tutorials/how-to-getting-started-with-estimator
