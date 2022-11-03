@@ -15,7 +15,7 @@ If you already created a Qiskit Runtime service instance or were invited to one 
 .. figure:: ../images/instances.png
    :alt: This image shows an Instances page with two instances.
 
-   Instances page showing multiple instances.   
+   Instances page showing multiple instances.
 
 1. From the `Qiskit Runtime Provisioning page <https://cloud.ibm.com/catalog/services/quantum-computing>`__, choose the appropriate service plan, depending on what you need access to. For more information about these plans, see the `Qiskit Runtime plans <plans>`__ topic.
 
@@ -27,7 +27,7 @@ If you already created a Qiskit Runtime service instance or were invited to one 
       .. note::
 
          If you want to access physical devices as well as simulators, you need to set up one instance with the Lite plan and one instance with the Standard plan.
-      
+
 
 2. Complete the required information, then click **Create**.
 
@@ -67,6 +67,7 @@ To authenticate to the service, call "QiskitRuntimeService" with your IBM Cloud 
 
    service = QiskitRuntimeService(channel="ibm_cloud", token="<IBM Cloud API key>", instance="<IBM Cloud CRN>")
 
+.. _credentials:
 
 Find your access credentials
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -124,7 +125,7 @@ instead of "QiskitRuntimeService()" in the following code.
 
 Result:
 
-.. code-block:: 
+.. code-block::
 
        Hello world!
 
@@ -139,7 +140,3 @@ Qiskit Runtime uses primitive programs to interface with quantum computers. The 
 
    ../tutorials/how-to-getting-started-with-sampler
    ../tutorials/how-to-getting-started-with-estimator
-
-
-
-

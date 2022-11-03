@@ -111,7 +111,11 @@ Next Steps
     Manage ID provider users with IBM Cloud for an organization <cloud/appid-cloud-org>
     Manage ID provider users with the ID provider for an organization <cloud/appid-org>
     Considerations for using Qiskit Runtime in an organization <cloud/considerations-org>
+    Set up Terraform for Qiskit Runtime <cloud/setup-terraform>
+    Qiskit Runtime architecture and workload isolation <cloud/architecture-workload-isolation>
+    Securing your data in Qiskit Runtime <cloud/data-security>
     Audit events for Qiskit Runtime <cloud/at-events>
+    Release notes for Qiskit Runtime in IBM Cloud <cloud/release-notes>
 
 .. toctree::
    :maxdepth: 1
