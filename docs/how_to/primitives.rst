@@ -23,7 +23,7 @@ The following primitive programs are available:
 +-----------------------+-----------------------+------------------------------------+
 | Primitive             | Description           | Example output                     |
 +=======================+=======================+====================================+
-| Sampler               | Allows a user to      | .. image:: ../images/estimator.png |
+| Sampler               | Allows a user to      | .. image:: ../images/sampler.png   |
 |                       | input a circuit and   |                                    |
 |                       | then generate         |                                    |
 |                       | quasiprobabilities.   |                                    |

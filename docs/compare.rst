@@ -1,7 +1,7 @@
 How does Qiskit differ from Qiskit Runtime?
 ===========================================
 
-The existing Qiskit backend interface (``backend.run()``) was originally
+The existing Qiskit (qiskit-ibmq-provider) backend interface (``backend.run()``) was originally
 designed to accept a list of circuits and return shot counts for every
 job. As our users' needs changed, we realized that we would need a new,
 more flexible tool to address those needs, and Qiskit Runtime was born.
