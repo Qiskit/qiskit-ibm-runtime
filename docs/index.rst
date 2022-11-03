@@ -55,7 +55,7 @@ Next Steps
 
     Overview <self>
     Getting Started <getting_started>
-    Qiskit Vs. Qiskit Runtime <compare>
+    Qiskit vs. Qiskit Runtime <compare>
 
 .. toctree::
    :maxdepth: 1
