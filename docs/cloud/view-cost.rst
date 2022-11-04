@@ -28,5 +28,5 @@ These are the columns relevant to cost:
 Next steps
 ----------
 
--  To learn about how costs are incurred, see `Qiskit Runtime plans <plans>`__.
--  To learn how to limit costs, see `Manage costs <cost>`__.
+-  To learn about how costs are incurred, see `Qiskit Runtime plans <plans.html>`__.
+-  To learn how to limit costs, see `Manage costs <cost.html>`__.

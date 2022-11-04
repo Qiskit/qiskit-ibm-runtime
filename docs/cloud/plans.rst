@@ -56,5 +56,5 @@ The quantum and near-time classical compute times are grouped to deliver the bes
 Next steps
 ----------
 
-See `Manage costs <cost>`__ to learn how to determine and minimize your costs.
+See `Manage costs <cost.html>`__ to learn how to determine and minimize your costs.
 

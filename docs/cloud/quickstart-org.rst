@@ -26,9 +26,9 @@ This tutorial uses the following terms:
 
 -  *Resource*: A generic IBM Cloud term that refers to an object that can be managed through the Cloud user interface, CLI, or API. For this tutorial, a *resource* is a Qiskit Runtime service instance.
 
--  *Service instance*: A service instance is used to access Cloud functions. Specifically, quantum computing on real devices or simulators. It is defined through the catalog. You can define several service instances based on the same or different plans, which offer access to different quantum computing backends. See `Qiskit Runtime plans <plans>`__ for more details.
+-  *Service instance*: A service instance is used to access Cloud functions. Specifically, quantum computing on real devices or simulators. It is defined through the catalog. You can define several service instances based on the same or different plans, which offer access to different quantum computing backends. See `Qiskit Runtime plans <plans.html>`__ for more details.
 
--  *Project*: A grouping unit that enables users to work on the same resources. This tutorial uses two projects; ``ml`` and ``finance``. See `Hierarchical project structures <considerations-org#nest-org>`__ for more information.
+-  *Project*: A grouping unit that enables users to work on the same resources. This tutorial uses two projects; ``ml`` and ``finance``. See `Hierarchical project structures <considerations-org#nest-org.html>`__ for more information.
 
    .. note::
 
@@ -49,10 +49,10 @@ Before you set up Qiskit Runtime for your organization, you need to make these d
    -  Do not make project names substrings of another. For example, if you use ``ml`` and ``chemlab`` for project names, then later you set up a project match for ``ml``, it triggers on both values, accidentally granting more access than expected. Instead, use unique names such as ``ml`` and ``chem-lab``. Alternatively, use prefix or suffix values to avoid such unintended substring matches.
    -  Using naming conventions, along with prefix or suffix values can help you easily allow access to several projects.
    -  Quantum experiments (jobs) belong to service instances, and users that have access to an instance can see its jobs.
-   -  Service instances can be based on different plans, allowing access to different backends like real devices or simulators. See `Choose a system or simulator </how_to/choose-system>`__ for details.
+   -  Service instances can be based on different plans, allowing access to different backends like real devices or simulators. See `Choose a system or simulator <../how_to/choose-system.html>`__ for details.
 
 -  Which users need to access which projects?
--  Should users be able to delete jobs? Keeping jobs in service instances gives more traceability for billing costs. This information combines well with the audit trail of `Activity Tracker <computing-considerations-org>`__, which tracks which user submitted the job.
+-  Should users be able to delete jobs? Keeping jobs in service instances gives more traceability for billing costs. This information combines well with the audit trail of `Activity Tracker <at-events.html>`__, which tracks which user submitted the job.
 -  Will you use access groups that directly reference Qiskit Runtime service instances or organize services into resource groups?
 
    -  **Access groups** are a convenient and common way of controlling user access for IBM Cloud resources. They are a simple but powerful means to consistently assign user access. We create an access group for each project and map users to access groups. Each access group uses a custom role that allows users to access specific Qiskit Runtime service instances or resource groups.
@@ -70,7 +70,7 @@ You should understand the following considerations when setting up your environm
 Auditability
 ~~~~~~~~~~~~~
 
-Activity tracker logs significant actions performed on Qiskit Runtime service instances. Create an instance of Activity Tracker in the region of your Qiskit Runtime instances to get an audit trail of events. Refer to the Qiskit Runtime `Activity Tracker page <at_events>`__ for details about the events logged.
+Activity tracker logs significant actions performed on Qiskit Runtime service instances. Create an instance of Activity Tracker in the region of your Qiskit Runtime instances to get an audit trail of events. Refer to the Qiskit Runtime `Activity Tracker page <at_events.html>`__ for details about the events logged.
 
 This audit log contains the fields ``initiator_authnName`` and ``initiator_authnId``, which match the name shown in `Manage → Access (IAM) → Users <https://cloud.ibm.com/iam/users>`__. To view this field, click on the user name, then **Details** in the **IAM ID** field.
 
@@ -87,7 +87,7 @@ To achieve that, define two different custom roles such as ``MLreader`` and ``ML
 
 When using dynamic rules, that is, when the IDP administrator manages access through custom IDP user attributes, do not use IDP custom user attributes that are substrings of each other. For instance, don’t use ``ml`` and ``mlReader``, as the string comparison of ``ml`` would also accept ``mlReader``. You could use ``MLreader`` and ``MLwriter`` to avoid this conflict. {: note}
 
-For an example of setting up custom roles, see `Create access groups for projects <quickstart-steps-org#create-group-org>`__.
+For an example of setting up custom roles, see `Create access groups for projects <quickstart-steps-org#create-group-org.html>`__.
 
 Other Cloud resources
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -112,6 +112,6 @@ The steps of this tutorial can be automated for consistent and repeatable manage
 Next steps
 ----------
 
-See `Configure Qiskit Runtime for an organization <quickstart-steps-org>`__ for the steps to set up Qiskit Runtime.
+See `Configure Qiskit Runtime for an organization <quickstart-steps-org.html>`__ for the steps to set up Qiskit Runtime.
 
 .. |event| image:: ../images/org-guide-audit-example.png

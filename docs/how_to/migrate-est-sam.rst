@@ -2,8 +2,8 @@ Use Estimator and Sampler in an algorithm
 =========================================
 
 We consider an algorithm in pseudocode that combines scenarios from
-these topics: `Use Estimator in an algorithm </how_to/migrate-estimator>`__
-and `Use Sampler in an algorithm </how_to/migrate-sampler>`__
+these topics: `Use Estimator in an algorithm <migrate-estimator.html>`__
+and `Use Sampler in an algorithm <migrate-sampler.html>`__
 to produce the result. In the code example without primitives,
 we can see how a user would implement this algorithm with the quantum
 instance in a case that covers both the statevector simulator and a

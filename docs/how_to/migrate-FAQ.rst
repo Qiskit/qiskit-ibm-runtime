@@ -13,7 +13,7 @@ through IBM Cloud or IBM Quantum Platform.  Some information that might help in 
 * The available plans:
 
   * Qiskit Runtime is available in both the Open or Premium plan of the IBM Quantum Platform. See `IBM Quantum access plans <https://www.ibm.com/quantum/access-plans>`__ for details.
-  * Qiskit Runtime is accessible through the Lite or Standard plan in IBM Cloud. See :doc:`../cloud/plans` for details.
+  * Qiskit Runtime is accessible through the Lite or Standard plan in IBM Cloud. See `Plans <../cloud/plans.html>`__ for details.
 
 * The use case requirements:
 

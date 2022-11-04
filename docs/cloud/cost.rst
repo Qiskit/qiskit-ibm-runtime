@@ -39,4 +39,4 @@ You can set up spending notifications to get notified when your account or a par
 Next steps
 ----------
 
-See `Qiskit Runtime plans <plans>`__ to learn about the plans.
+See `Qiskit Runtime plans <plans.html>`__ to learn about the plans.

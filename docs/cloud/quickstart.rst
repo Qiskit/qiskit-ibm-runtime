@@ -17,12 +17,12 @@ If you already created a Qiskit Runtime service instance or were invited to one 
 
    Instances page showing multiple instances.
 
-1. From the `Qiskit Runtime Provisioning page <https://cloud.ibm.com/catalog/services/quantum-computing>`__, choose the appropriate service plan, depending on what you need access to. For more information about these plans, see the `Qiskit Runtime plans <plans>`__ topic.
+1. From the `Qiskit Runtime Provisioning page <https://cloud.ibm.com/catalog/services/quantum-computing>`__, choose the appropriate service plan, depending on what you need access to. For more information about these plans, see the `Qiskit Runtime plans <plans.html>`__ topic.
 
       - **Lite**: Free simulators-only plan to help you get started with Qiskit Runtime. Learn to use Qiskit Runtime by following our examples and tutorials for one of the pre-built programs available for running circuits efficiently.
       - **Standard**: A pay-as-you-go model for accessing IBM Quantum systems. Build your own programs and leverage all the benefits of Qiskit Runtime by running on real quantum hardware.
 
-      Because this is not a free plan, it is important to understand how to best manage your costs. See `Manage the cost <cost>`__ for tips to limit your cost, how to set up spending notifications, and more.
+      Because this is not a free plan, it is important to understand how to best manage your costs. See `Manage the cost <cost.html>`__ for tips to limit your cost, how to set up spending notifications, and more.
 
       .. note::
 
@@ -102,7 +102,7 @@ Test your setup
 Run the Hello World program to ensure that your environment is set up properly.
 
 .. note::
-   If you are using the Standard plan, running Hello World incurs a cost. See `Manage costs <cost>`__ for cost information.
+   If you are using the Standard plan, running Hello World incurs a cost. See `Manage costs <cost.html>`__ for cost information.
 
 If you did not save your credentials to disk, specify "QiskitRuntimeService(channel="ibm_cloud", token=<IBM Cloud API key>, instance=<IBM Cloud CRN>)"
 instead of "QiskitRuntimeService()" in the following code.
