@@ -3,11 +3,11 @@ Manage users
 
 You can manage IBM Cloud users or ID provider users.  Follow the instructions in the relevant section, depending on your setup. 
 
-- ::ref:`cloud` 
-- :ref:`provider-appid` 
-- :ref:`provider-cloud`
+* ::ref:`cloud-users`
+* ::ref:`provider-cloud`
+* ::ref:`provider-appid`
 
-.. `_cloud:`
+.. _cloud-users:
 
 Manage IBM Cloud users
 ----------------------
