@@ -1,23 +1,16 @@
 .. _tutorials:
 
 =========
-Tutorials
+All tutorials
 =========
-
-How-to guides
-=================================
-
-.. nbgallery::
-
-   tutorials/how-to-getting-started-with-sampler
-   tutorials/how-to-getting-started-with-estimator
-
 
 Primitives
 =================================
 
 .. nbgallery::
 
+   tutorials/how-to-getting-started-with-sampler
+   tutorials/how-to-getting-started-with-estimator
    tutorials/grover_with_sampler
    tutorials/user-transpiled-circuits
    tutorials/sea_with_sampler

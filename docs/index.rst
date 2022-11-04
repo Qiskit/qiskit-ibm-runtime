@@ -62,9 +62,12 @@ Next Steps
    :hidden:
    :caption: Tutorials
 
-    Tutorials <tutorials>
     Getting started with Sampler <tutorials/how-to-getting-started-with-sampler>
     Getting started with Estimator <tutorials/how-to-getting-started-with-estimator>
+    SEA with Sampler <tutorials/sea_with_sampler>
+    Database search with Grover and Sampler <tutorials/grover_with_sampler>
+    VQE with Estimator <tutorials/vqe_with_estimator>
+    All tutorials <tutorials>
 
 .. toctree::
    :maxdepth: 1
