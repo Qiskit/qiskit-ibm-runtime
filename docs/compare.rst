@@ -32,7 +32,7 @@ predecessors.
 +---------------------------------------------------------------------------------+-----------------------+---------------------------+
 | Function                                                                        | qiskit-ibmq-provider  | Qiskit Runtime Primitives |
 +=================================================================================+=======================+===========================+
-| Primitive interface as abstraction for circuits and variational workload        | No                    | Yes                       |
+| Primitive interface as abstraction for circuits and variational workload        | Yes                   | Yes                       |
 +---------------------------------------------------------------------------------+-----------------------+---------------------------+
 | Sessions to improve performance for a sequence of jobs                          | No                    | Yes                       |
 +---------------------------------------------------------------------------------+-----------------------+---------------------------+
