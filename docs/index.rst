@@ -84,7 +84,7 @@ Next Steps
 .. toctree::
    :maxdepth: 1
    :hidden:
-   :caption: Migrate to the Qiskit Runtime workflow
+   :caption: Migrate to using primitives
 
     Why migrate? <how_to/migrate-overview>
     Migrate code <how_to/migrate-code>
@@ -105,17 +105,14 @@ Next Steps
     Pricing plans <cloud/plans>
     View the cost <cloud/view-cost>
     Manage the cost <cloud/cost>
-    Set up Qiskit Runtime for an organization <cloud/quickstart-org>
-    Configure Qiskit Runtime for an organization <cloud/quickstart-steps-org>
-    Manage IBM Cloud users for an organization <cloud/cloud-provider-org>
-    Manage ID provider users with IBM Cloud for an organization <cloud/appid-cloud-org>
-    Manage ID provider users with the ID provider for an organization <cloud/appid-org>
-    Considerations for using Qiskit Runtime in an organization <cloud/considerations-org>
-    Set up Terraform for Qiskit Runtime <cloud/setup-terraform>
-    Qiskit Runtime architecture and workload isolation <cloud/architecture-workload-isolation>
-    Securing your data in Qiskit Runtime <cloud/data-security>
-    Audit events for Qiskit Runtime <cloud/at-events>
-    Release notes for Qiskit Runtime in IBM Cloud <cloud/release-notes>
+    Set up for an organization <cloud/quickstart-org>
+    Configure for an organization <cloud/quickstart-steps-org>
+    Manage users in an organization <cloud/cloud-provider-org>
+    Set up Terraform <cloud/setup-terraform>
+    Architecture and workload isolation <cloud/architecture-workload-isolation>
+    Securing your data <cloud/data-security>
+    Audit events <cloud/at-events>
+    Release notes <cloud/release-notes>
 
 .. toctree::
    :maxdepth: 1
@@ -123,7 +120,7 @@ Next Steps
    :caption: Reference
 
     API Reference <apidocs/ibm-runtime>
-    Swagger API Reference for building applications that use Qiskit Runtime <https://us-east.quantum-computing.cloud.ibm.com/openapi/>
+    Swagger API for building applications that use Qiskit Runtime <https://us-east.quantum-computing.cloud.ibm.com/openapi/>
     FAQs <faqs>
     Release Notes <release_notes>
     GitHub <https://github.com/Qiskit/qiskit-ibm-runtime>
