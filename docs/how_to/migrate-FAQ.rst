@@ -30,7 +30,7 @@ can get set up on either platform using the instructions below:
 To get started with Qiskit Runtime on IBM Quantum Platform, see
 `Experiment with Qiskit Runtime <https://quantum-computing.ibm.com/services/resources/docs/resources/runtime/start>`__.
 
-To get started with Qiskit Runtime on IBM Cloud, see the `Getting Started guide <../cloud/quickstart>`__.
+To get started with Qiskit Runtime on IBM Cloud, see the `Getting Started guide <../cloud/quickstart.html>`__.
 
 Should I modify the Qiskit Terra algorithms?
 -----------------------------------------------------------------------------
