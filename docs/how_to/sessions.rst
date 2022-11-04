@@ -15,7 +15,7 @@ Start by loading the options into a primitive constructor, then pass in circuits
   
   with Session(service) as session:
     estimator = Estimator(session=session, options=options) #primitive constructor
-	  estimator.run(circuit, parameters, observable) #job call
+    estimator.run(circuit, parameters, observable) #job call
 
 
 How session jobs fit into the job queue
