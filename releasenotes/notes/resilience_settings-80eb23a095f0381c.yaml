@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    Advanced resilience options can now be set under ``options.resilience``.
+    See :class:`qiskit_ibm_runtime.options.ResilienceOptions` for all
+    available options.

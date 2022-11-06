@@ -21,6 +21,7 @@ from .environment_options import EnvironmentOptions
 from .execution_options import ExecutionOptions
 from .simulator_options import SimulatorOptions
 from .transpilation_options import TranspilationOptions
+from .resilience_options import ResilienceOptions
 from ..runtime_options import RuntimeOptions
 
 
@@ -73,6 +74,7 @@ class Options:
     transpilation: Union[TranspilationOptions, Dict] = field(
         default_factory=TranspilationOptions
     )
+    resilience: Union[ResilienceOptions, Dict] = field(default_factory=ResilienceOptions)
     execution: Union[ExecutionOptions, Dict] = field(default_factory=ExecutionOptions)
     environment: Union[EnvironmentOptions, Dict] = field(
         default_factory=EnvironmentOptions
