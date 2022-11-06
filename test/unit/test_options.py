@@ -141,7 +141,10 @@ class TestOptions(IBMTestCase):
                 "skip_transpilation": True,
                 "initial_layout": [1, 2],
             },
-            "resilience_settings": {"level": 2, "noise_amplifier": "GlobalFoldingAmplifier"},
+            "resilience_settings": {
+                "level": 2,
+                "noise_amplifier": "GlobalFoldingAmplifier",
+            },
             "foo": "foo",
         }
         self.assertTrue(

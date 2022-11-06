@@ -74,7 +74,9 @@ class Options:
     transpilation: Union[TranspilationOptions, Dict] = field(
         default_factory=TranspilationOptions
     )
-    resilience: Union[ResilienceOptions, Dict] = field(default_factory=ResilienceOptions)
+    resilience: Union[ResilienceOptions, Dict] = field(
+        default_factory=ResilienceOptions
+    )
     execution: Union[ExecutionOptions, Dict] = field(default_factory=ExecutionOptions)
     environment: Union[EnvironmentOptions, Dict] = field(
         default_factory=EnvironmentOptions

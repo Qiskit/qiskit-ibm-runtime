@@ -18,8 +18,19 @@ from typing_extensions import Literal
 
 from .utils import _flexible
 
-NoiseAmplifierType = Literal["TwoQubitAmplifier", "GlobalFoldingAmplifier", "LocalFoldingAmplifier", "CxAmplifier"]
-ExtrapolatorType = Literal["LinearExtrapolator", "PolynomialExtrapolator", "QuadraticExtrapolator", "CubicExtrapolator", "QuarticExtrapolator"]
+NoiseAmplifierType = Literal[
+    "TwoQubitAmplifier",
+    "GlobalFoldingAmplifier",
+    "LocalFoldingAmplifier",
+    "CxAmplifier",
+]
+ExtrapolatorType = Literal[
+    "LinearExtrapolator",
+    "PolynomialExtrapolator",
+    "QuadraticExtrapolator",
+    "CubicExtrapolator",
+    "QuarticExtrapolator",
+]
 
 
 @_flexible
