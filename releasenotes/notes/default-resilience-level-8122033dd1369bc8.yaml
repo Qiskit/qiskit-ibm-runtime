@@ -1,0 +1,5 @@
+---
+upgrade:
+  - |
+    The default ``resilience_level`` option for
+    :class:`qiskit_ibm_runtime.Estimator` has been changed from 0 to 1.

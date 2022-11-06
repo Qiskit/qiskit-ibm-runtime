@@ -48,6 +48,8 @@ class Options:
             * 0: no resilience
             * 1: light resilience
 
+            Default is 0 for sampler and 1 for estimator.
+
         max_execution_time: Maximum execution time in seconds. If
             a job exceeds this time limit, it is forcibly cancelled. If ``None``, the
             maximum execution time of the primitive is used.
@@ -68,7 +70,7 @@ class Options:
     """
 
     optimization_level: int = 1
-    resilience_level: int = 0
+    resilience_level: Optional[int] = None
     max_execution_time: Optional[int] = None
     transpilation: Union[TranspilationOptions, Dict] = field(
         default_factory=TranspilationOptions
