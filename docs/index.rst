@@ -106,7 +106,7 @@ Next Steps
 
     Getting started <cloud/quickstart>
     Pricing plans <cloud/plans>
-    Set up for an organization <cloud/quickstart-org>
+    Plan for an organization <cloud/quickstart-org>
     Configure for an organization <cloud/quickstart-steps-org>
     Manage users in an organization <cloud/cloud-provider-org>
     Manage the cost <cloud/cost>

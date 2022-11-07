@@ -34,7 +34,7 @@ This tutorial uses the following terms:
 
       This project is not related to the “project” concept in IBM Quantum Platform. 
 
-Plan your setup
+Decisions
 ---------------
 
 Before you set up Qiskit Runtime for your organization, you need to make these decisions:
