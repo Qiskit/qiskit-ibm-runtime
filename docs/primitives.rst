@@ -20,7 +20,7 @@ The following primitives are available:
 +-----------------------+-----------------------+------------------------------------+
 | Primitive             | Description           | Example output                     |
 +=======================+=======================+====================================+
-| Estimator             | Allows a user to      | .. image:: ../images/estimator.png |
+| Estimator             | Allows a user to      | .. image:: images/estimator.png    |
 |                       | specify a list of     |                                    |
 |                       | circuits and          |                                    |
 |                       | observables and       |                                    |
@@ -39,7 +39,7 @@ The following primitives are available:
 |                       | required for many     |                                    |
 |                       | algorithms.           |                                    |
 +-----------------------+-----------------------+------------------------------------+
-| Sampler               | Allows a user to      | .. image:: ../images/sampler.png   |
+| Sampler               | Allows a user to      | .. image:: images/sampler.png      |
 |                       | input a circuit and   |                                    |
 |                       | then generate         |                                    |
 |                       | quasiprobabilities.   |                                    |

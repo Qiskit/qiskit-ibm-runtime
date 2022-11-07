@@ -74,13 +74,12 @@ Next Steps
    :hidden:
    :caption: How to
 
-    Work with sessions <how_to/sessions>
+    Run a sessions <how_to/run_session>
     Configure primitive options <how_to/options>
     Configure error mitigation options <how_to/resiliance>
     Configure optimization levels <how_to/optimization>
     Configure transpilation settings <how_to/transpilation>
-    Run a primitive program in a session <how_to/run_session>
-
+    
 .. toctree::
    :maxdepth: 1
    :hidden:
