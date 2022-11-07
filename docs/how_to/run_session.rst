@@ -4,6 +4,16 @@ Working with sessions
 A Qiskit Runtime session allows you to group a collection of iterative calls to the quantum computer. A session is started when the first job within the session is started. As long as the session is active, subsequent jobs within the session are prioritized by the scheduler to minimize artificial delay within an iterative algorithm. Data used within a session, such as transpiled circuits, is also cached to avoid unnecessary overhead.
 As a result, sessions allow you to more efficiently run programs that require iterative calls between classical and quantum resources while giving you the flexibility to deploy your programs remotely on cloud or on-premise classical resources (including your laptop).
 
+Before you begin
+----------------
+Before starting a session, you must `Set up Qiskit Runtime <getting_started.html>`__ and initialize it as a service:
+
+.. code-block:: python
+  
+  from qiskit_ibm_runtime import QiskitRuntimeService
+
+   service = QiskitRuntimeService()
+
 How to run a job in a session
 -------------------------------
 
