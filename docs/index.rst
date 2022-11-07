@@ -62,11 +62,13 @@ Next Steps
    :hidden:
    :caption: Tutorials
 
-    Getting started with Sampler <tutorials/how-to-getting-started-with-sampler>
     Getting started with Estimator <tutorials/how-to-getting-started-with-estimator>
-    SEA with Sampler <tutorials/sea_with_sampler>
-    Database search - Grover and Sampler <tutorials/grover_with_sampler>
+    CHSH with Estimator <tutorials/chsh_with_estimator>
     VQE with Estimator <tutorials/vqe_with_estimator>
+    Getting started with Sampler <tutorials/how-to-getting-started-with-sampler>
+    QPE with Sampler <tutorials/qpe_with_sampler>
+    Grover with Sampler <tutorials/grover_with_sampler>
+    SEA with Sampler <tutorials/sea_with_sampler>
     All tutorials <tutorials>
 
 .. toctree::
@@ -76,13 +78,11 @@ Next Steps
 
     Work with primitives <how_to/primitives>
     Work with sessions <how_to/sessions>
-    List available backends <how_to/list_available_backends>
-    Filter backends <how_to/filter_backends>
-    Specify a backend <how_to/specify_the_backend>
-    Run a job <how_to/run_a_job>
-    Choose a system or simulator <how_to/choose-system>
-    Retrieve job results <how_to/retrieve_job_results>
-    Manage job time limits <how_to/time-limits>
+    Configure primitive options <how_to/options>
+    Configure error mitigation options <how_to/resiliance>
+    Configure optimization levels <how_to/optimization>
+    Configure transpilation settings <how_to/transpilation>
+    Run a primitive program in a session <how_to/run_session>
 
 .. toctree::
    :maxdepth: 1
@@ -106,11 +106,10 @@ Next Steps
 
     Getting started <cloud/quickstart>
     Pricing plans <cloud/plans>
-    View the cost <cloud/view-cost>
-    Manage the cost <cloud/cost>
     Set up for an organization <cloud/quickstart-org>
     Configure for an organization <cloud/quickstart-steps-org>
     Manage users in an organization <cloud/cloud-provider-org>
+    Manage the cost <cloud/cost>
     Set up Terraform <cloud/setup-terraform>
     Architecture and workload isolation <cloud/architecture-workload-isolation>
     Securing your data <cloud/data-security>
