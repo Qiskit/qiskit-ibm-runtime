@@ -18,19 +18,7 @@ Key Concepts
 
 **Primitives**
 
-Primitives are predefined programs that provide a simplified interface for defining
-near-time quantum-classical workloads required to efficiently build and customize
-applications. The initial release of Qiskit Runtime includes two primitives: Estimator
-and Sampler. They perform foundational quantum computing tasks and act as an entry point
-to the Qiskit Runtime service.
-
-
-**Sampler**
-
-This is a program that takes a user circuit as an input and generates an error-mitigated
-readout of quasiprobabilities. This provides users a way to better evaluate shot results
-using error mitigation and enables them to more efficiently evaluate the possibility of
-multiple relevant data points in the context of destructive interference.
+Primitives are core functions that provide a simplified interface for defining near-time quantum-classical workloads required to efficiently build and customize applications. The initial release of Qiskit Runtime includes two primitives: Estimator and Sampler. They perform foundational quantum computing tasks and act as an entry point to the Qiskit Runtime service.
 
 
 **Estimator**
@@ -39,6 +27,14 @@ The estimator primitive allows users to efficiently calculate and interpret expe
 values of quantum operators required for many algorithms. Users specify a list of circuits
 and observables, then tell the program how to selectively group between the lists to
 efficiently evaluate expectation values and variances for a given parameter input.
+
+**Sampler**
+
+This primitive takes a user circuit as an input and generates an error-mitigated
+readout of quasiprobabilities. This provides users a way to better evaluate shot results
+using error mitigation and enables them to more efficiently evaluate the possibility of
+multiple relevant data points in the context of destructive interference.
+
 
 
 Next Steps
@@ -56,6 +52,8 @@ Next Steps
     Overview <self>
     Getting Started <getting_started>
     Qiskit vs. Qiskit Runtime <compare>
+    Introduction to primitives <primitives>
+
 
 .. toctree::
    :maxdepth: 1
@@ -76,7 +74,6 @@ Next Steps
    :hidden:
    :caption: How to
 
-    Work with primitives <how_to/primitives>
     Work with sessions <how_to/sessions>
     Configure primitive options <how_to/options>
     Configure error mitigation options <how_to/resiliance>
@@ -92,9 +89,9 @@ Next Steps
     Why migrate? <how_to/migrate-overview>
     Migrate code <how_to/migrate-code>
     Considerations <how_to/migrate-FAQ>
-    Use Sampler in an algorithm <how_to/migrate-sampler>
     Use Estimator in an algorithm <how_to/migrate-estimator>
     Use Estimator and Sampler in an algorithm <how_to/migrate-est-sam>
+    Use Sampler in an algorithm <how_to/migrate-sampler>
     Update parameter values while running <how_to/migrate-update-parm>
     Primitive-based routines <how_to/migrate-prim-based>
     End-to-end example <how_to/migrate-e2e>

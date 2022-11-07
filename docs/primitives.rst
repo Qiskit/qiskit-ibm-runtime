@@ -1,10 +1,7 @@
-Work with primitive programs
+Introduction to primitives
 =============================
 
-Overview of primitive programs
----------------------------------
-
-With Qiskit Runtime, we are introducing a new set of interfaces, in the form of primitive programs, to expand on how users run jobs on quantum computers.
+With Qiskit Runtime, we are introducing a new set of interfaces, in the form of primitives, to expand on how users run jobs on quantum computers.
 
 The existing Qiskit interface to backends (`backend.run()`) was originally designed to accept a list of circuits and return counts for every job. Over time, it became clear that users have diverse purposes for quantum computing, and therefore the ways in which they define the requirements for their computing jobs are expanding. Therefore, their results also look different.
 
@@ -17,26 +14,12 @@ The basic operations that one can do with a probability distribution is to sampl
 Available primitives
 --------------------
 
-The following primitive programs are available:
+The following primitives are available:
 
 
 +-----------------------+-----------------------+------------------------------------+
 | Primitive             | Description           | Example output                     |
 +=======================+=======================+====================================+
-| Sampler               | Allows a user to      | .. image:: ../images/sampler.png   |
-|                       | input a circuit and   |                                    |
-|                       | then generate         |                                    |
-|                       | quasiprobabilities.   |                                    |
-|                       | This generation       |                                    |
-|                       | enables users to more |                                    |
-|                       | efficiently evaluate  |                                    |
-|                       | the possibility of    |                                    |
-|                       | multiple relevant     |                                    |
-|                       | data points in the    |                                    |
-|                       | context of            |                                    |
-|                       | destructive           |                                    |
-|                       | interference.         |                                    |
-+-----------------------+-----------------------+------------------------------------+
 | Estimator             | Allows a user to      | .. image:: ../images/estimator.png |
 |                       | specify a list of     |                                    |
 |                       | circuits and          |                                    |
@@ -56,6 +39,20 @@ The following primitive programs are available:
 |                       | required for many     |                                    |
 |                       | algorithms.           |                                    |
 +-----------------------+-----------------------+------------------------------------+
+| Sampler               | Allows a user to      | .. image:: ../images/sampler.png   |
+|                       | input a circuit and   |                                    |
+|                       | then generate         |                                    |
+|                       | quasiprobabilities.   |                                    |
+|                       | This generation       |                                    |
+|                       | enables users to more |                                    |
+|                       | efficiently evaluate  |                                    |
+|                       | the possibility of    |                                    |
+|                       | multiple relevant     |                                    |
+|                       | data points in the    |                                    |
+|                       | context of            |                                    |
+|                       | destructive           |                                    |
+|                       | interference.         |                                    |
++-----------------------+-----------------------+------------------------------------+
 
 
 How to use primitives
@@ -63,5 +60,5 @@ How to use primitives
 
 Primitive program interfaces vary based on the type of task that you want to run on the quantum computer and the corresponding data that you want returned as a result. After identifying the appropriate primitive for your program, you can use Qiskit to prepare inputs, such as circuits, observables (for Estimator), and customizable options to optimize your job. For more information, see the appropriate topic:
 
-* `Getting started with Sampler <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/tutorials/how-to-getting-started-with-sampler.html>`__
 * `Getting started with Estimator <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/tutorials/how-to-getting-started-with-estimator.html>`__
+* `Getting started with Sampler <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/tutorials/how-to-getting-started-with-sampler.html>`__

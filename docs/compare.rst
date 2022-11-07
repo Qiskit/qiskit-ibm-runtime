@@ -1,5 +1,5 @@
-How does Qiskit differ from Qiskit Runtime?
-===========================================
+How does the qiskit-ibmq-provider differ from Qiskit Runtime primitives?
+============================================================================
 
 The existing Qiskit (qiskit-ibmq-provider) backend interface (``backend.run()``) was originally
 designed to accept a list of circuits and return shot counts for every
