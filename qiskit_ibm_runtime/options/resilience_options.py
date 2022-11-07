@@ -26,7 +26,6 @@ NoiseAmplifierType = Literal[
 ]
 ExtrapolatorType = Literal[
     "LinearExtrapolator",
-    "PolynomialExtrapolator",
     "QuadraticExtrapolator",
     "CubicExtrapolator",
     "QuarticExtrapolator",
