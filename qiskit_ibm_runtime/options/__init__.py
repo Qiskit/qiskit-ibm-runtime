@@ -43,11 +43,13 @@ Classes
 .. autosummary::
    :toctree: ../stubs/
 
-   EnvironmentOptions
-   ExecutionOptions
    Options
-   SimulatorOptions
    TranspilationOptions
+   ResilienceOptions
+   ExecutionOptions
+   EnvironmentOptions
+   SimulatorOptions
+
 """
 
 from .environment_options import EnvironmentOptions
@@ -55,3 +57,4 @@ from .execution_options import ExecutionOptions
 from .options import Options
 from .simulator_options import SimulatorOptions
 from .transpilation_options import TranspilationOptions
+from .resilience_options import ResilienceOptions
