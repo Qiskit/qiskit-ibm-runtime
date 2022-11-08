@@ -1,82 +1,151 @@
-Run a primitive in a session
+Run on quantum backends
 =================================
 
-A Qiskit Runtime session allows you to group a collection of iterative calls to the quantum computer. A session is started when the first job within the session is started. As long as the session is active, subsequent jobs within the session are prioritized by the scheduler to minimize artificial delay within an iterative algorithm. Data used within a session, such as transpiled circuits, is also cached to avoid unnecessary overhead.
-As a result, sessions allow you to more efficiently run programs that require iterative calls between classical and quantum resources while giving you the flexibility to deploy your programs remotely on cloud or on-premise classical resources (including your laptop).
+A **backend** represents either a simulator or a real quantum computer and are responsible for running quantum circuits and/or pulse schedules and returning results.
 
-Before you begin
-----------------
-Before starting a session, you must `Set up Qiskit Runtime <getting_started.html>`__ and initialize it as a service:
+In qiskit-ibm-runtime, a backend is represented by an instance of the ``IBMBackend`` class. Attributes of this class provides information about this backend. For example:
+
+* name: Name of the backend.
+* instructions: A list of instructions the backend supports.
+* operation_names: A list of instruction names the backend supported.
+* num_qubits: The number of qubits the backend has.
+* coupling_map: Coupling map of the backend.
+* dt: System time resolution of input signals.
+* dtm: System time resolution of output signals.
+
+Refer to the `API reference <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/stubs/qiskit_ibm_runtime.IBMBackend.html#qiskit_ibm_runtime.IBMBackend>`__ for a complete list of attributes and methods.
+
+Initialize the service
+------------------------
+
+Before calling ``IBMBackend``, inialize the service:
 
 .. code-block:: python
-  
+
   from qiskit_ibm_runtime import QiskitRuntimeService
 
-   service = QiskitRuntimeService()
+  # Initialize the account first.
+  service = QiskitRuntimeService()
 
-Run a job in a session
--------------------------------
+List backends
+-------------
 
-You can set up a runtime session by using the context manager (`with ...:`), which automatically opens and closes the session for you. A session is started when the first primitive job in this context manager starts. For example, the following code creates an Estimator instance inside a Session context manager.
+Use the ``backends()`` method to list all backends you have access to. This method returns a list of ``IBMBackend`` instances:
 
-Start by loading the options into a primitive constructor, then pass in circuits, parameters, and observables:
+.. code-block:: python
+
+  service.backends()
+
+.. code-block::
+
+  [<IBMBackend('ibmq_qasm_simulator')>,
+  <IBMBackend('simulator_stabilizer')>,
+  <IBMBackend('simulator_mps')>,
+  <IBMBackend('simulator_extended_stabilizer')>,
+  <IBMBackend('simulator_statevector')>]  
+
+The ``backend()`` (note that this is singular: *backend*) method takes the name of the backend as the input parameter and returns an ``IBMBackend`` instance representing that particular backend:
+
+.. code-block:: python
+
+  service.backend("ibmq_qasm_simulator")
+
+.. code-block::
+
+  <IBMBackend('ibmq_qasm_simulator')>  
+
+
+Filter backends
+----------------
+
+You may also optionally filter the set backends, by passing arguments that query the backend's configuration, status, or properties. For more general filters, you can make advanced functions using a lambda function. Refer to the API documentation for more details.
+
+Let's try getting only backends that fit these criteria:
+
+* Are real quantum devices (``simulator=False``)
+* Are currently operational (``operational=True``)
+* Have at least 5 qubits (``min_num_qubits=5``)
+
+.. code-block:: python
+
+  service.backends(simulator=False, operational=True, min_num_qubits=5)
+
+A similar method is ``least_busy()``, which takes the same filters as ``backends()`` but returns the backend that matches the filters and has the least number of jobs pending in the queue:
+
+.. code-block:: python
+
+  service.least_busy(operational=True, min_num_qubits=5)
+
+Some programs also define the type of backends they need in the ``backend_requirements`` field of the program metadata.
+
+The hello-world program, for example, needs a backend that has at least 5 qubits:
 
 .. code-block:: python
   
-  with Session(service) as session:
-    estimator = Estimator(session=session, options=options) #primitive constructor
-    estimator.run(circuit, parameters, observable) #job call
+  ibm_quantum_service = QiskitRuntimeService(channel="ibm_quantum")
+  program = ibm_quantum_service.program("hello-world")
+  print(program.backend_requirements)
 
-Session options
------------------
+.. code-block::
 
-When you start your session, you can specify options, such as the backend to run on.  For the full list of options, see the `Sessions API documentation <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/stubs/qiskit_ibm_runtime.Session.html#qiskit_ibm_runtime.Session>`__
+  {'min_num_qubits': 5}
 
-**Example:**
+After determining the backend requirements, you can find backends that meet the criteria:
 
 .. code-block:: python
 
-  with Session(service=service, backend="ibmq_qasm_simulator"):
-    estimator = Estimator(options=options)
-    
-.. note::
-  When running in IBM Cloud, if you don't specify a backend, the least busy backend is used. 
-
-How long a session stays active
---------------------------------
-
-When a session is started, it is assigned a maximum session timeout value.  You can set this value by using the `max_time` parameter, which can be greater than the program’s `max_execution_time`.
+  ibm_quantum_service.backends(min_num_qubits=5)
 
 
-If you do not specify a timeout value, it is set to the initial job's maximum execution time and is the smaller of these values:
+Determine backend attributes
+-------------------------------------
 
-   * The system limit (8 hours for physical systems).
-   * The `max_execution_time` defined by the program.
+As mentioned previously, the ``IBMBackend`` class attributes provide information about the backend.  For example: 
 
-After this time limit is reached, the session is permanently closed.
+.. code-block:: python
+  
+  backend = service.backend("ibmq_qasm_simulator")
+  backend.name #returns the backend's name
+  backend.backend_version #returns the version number
+  backend.simulator #returns True or False, depending on whether it is a simulator
+  backend.num_qubits #returns the number of qubits the backend has
 
-Additionally, there is an *interactive* timeout value. If there are no session jobs queued within that window, the session is temporarily deactivated and normal job selection resumes. After a session is deactivated, a subsequent job could start an additional session.  Jobs for the new session would then take priority until the new session deactivates or is closed. After the new session becomes inactive, if the job scheduler gets a job from the original session and its maximum timeout value has not been reached, the session is reactivated until its maximum timeout value is reached.
-
-When using primitives with their context managers as previously described, the session is closed automatically when the block is exited.
-
-Retrieve job results
---------------------
-
-After starting your job, the job ID is returned.  Note that ID. After the job completes, you can view the results.
-
-Immediately after running the job, follow up the Qiskit Runtime  QiskitRuntimeService.run() method by running `job.status()`.
-
-If you ran other jobs since running the job you want to investigate, run `job = service.job(job_id)` then run `job.status()`.
-
-Jobs are also listed on the Jobs page for your quantum service instance. 
-
-* From the IBM Cloud console quantum `Instances page <https://cloud.ibm.com/quantum/instances>`__, click the name of your instance, then click the Jobs tab. To see the status of your job, click the refresh arrow in the upper right corner.
-* In IBM Quantum Platform, open the `Jobs page <https://quantum-computing.ibm.com/jobs>`__
+See the `IBMBackend class documentation <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/stubs/qiskit_ibm_runtime.IBMBackend.html#qiskit_ibm_runtime.IBMBackend>`__ for the full list of backend attributes.  
 
 
+Find backend information from other channels
+--------------------------------------------------
 
-How session jobs fit into the job queue
-------------------------------------------
+To find your available systems and simulators on **IBM Cloud**, view the `Compute resources page <https://cloud.ibm.com/quantum/resources/your-resources>`__. You must be logged in to see your available compute resources. You are shown a snapshot of each backend.  To see full details, click the backend name. You can also search for backends from this page.
 
-For each backend, the first job in the session waits its turn in the queue normally, but while the session is active, subsequent jobs within the same session take priority over any other queued jobs. If there are no jobs that are part of a session, the next job from the regular fair-share queue is run. Jobs still run one at a time. Thus, jobs that belong to a session still queue up if you already have one running, but you do not have to wait for them to complete before submitting more jobs.
+To find your available systems and simulators on **IBM Quantum Platform**, view the `Compute resources page <https://quantum-computing.ibm.com/services/resources>`__. You are shown a snapshot of each backend.  To see full details, click the backend name. You can also sort, filter, and search from this page. 
 
+Specify a backend when running a job
+---------------------------------------
+
+To specify a backend when running a job, add the ``backend`` option when starting your session. For details about working with sessions, see `Run a primitive in a session <run_session.html>`__.
+
+.. code-block:: python
+
+  from qiskit.circuit.random import random_circuit
+  from qiskit.quantum_info import SparsePauliOp
+  from qiskit_ibm_runtime import QiskitRuntimeService, Session, Estimator, Options
+
+  circuit = random_circuit(2, 2, seed=1).decompose(reps=1)
+  observable = SparsePauliOp("IY")
+
+  options = Options()
+  options.optimization_level = 2
+  options.resilience_level = 2
+
+  service = QiskitRuntimeService()
+  with Session(service=service, backend="ibmq_qasm_simulator") as session:
+       estimator = Estimator(session=session, options=options)
+       job = estimator.run(circuit, observable)
+
+  result = job.result()
+
+  display(circuit.draw("mpl"))
+  print(f" > Observable: {observable.paulis}")
+  print(f" > Expectation value: {result.values[0]}")
+  print(f" > Metadata: {result.metadata[0]}")

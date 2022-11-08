@@ -185,8 +185,8 @@ As a part of the beta release of the resilience options, users will be able conf
 | Options                                                       | Inputs                           | Description                                            |
 +===============================================================+==================================+========================================================+
 | options.resilience.noise_amplifier(Optional[str])             | ``TwoQubitAmplifier`` [Default]  | Amplifies noise of all two qubit gates by performing   |
-| select your amplification strategy                            |                                  | local gate folding.                                    |
-|                                                               +----------------------------------+--------------------------------------------------------+
+|                                                               |                                  | local gate folding.                                    |
+| select your amplification strategy                            +----------------------------------+--------------------------------------------------------+
 |                                                               | ``CxAmplifier``                  | Amplifies noise of all CNOT gates by performing local  |
 |                                                               |                                  | gate folding.                                          |
 |                                                               +----------------------------------+--------------------------------------------------------+

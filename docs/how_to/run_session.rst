@@ -42,6 +42,37 @@ When you start your session, you can specify options, such as the backend to run
 .. note::
   When running in IBM Cloud, if you don't specify a backend, the least busy backend is used. 
 
+Full example
+------------
+
+This example starts a session, runs an Estimator job, and outputs the result:
+
+.. code-block:: python
+
+  from qiskit.circuit.random import random_circuit
+  from qiskit.quantum_info import SparsePauliOp
+  from qiskit_ibm_runtime import QiskitRuntimeService, Session, Estimator, Options
+
+  circuit = random_circuit(2, 2, seed=1).decompose(reps=1)
+  observable = SparsePauliOp("IY")
+
+  options = Options()
+  options.optimization_level = 2
+  options.resilience_level = 2
+
+  service = QiskitRuntimeService()
+  with Session(service=service, backend="ibmq_qasm_simulator") as session:
+       estimator = Estimator(session=session, options=options)
+       job = estimator.run(circuit, observable)
+
+  result = job.result()
+
+  display(circuit.draw("mpl"))
+  print(f" > Observable: {observable.paulis}")
+  print(f" > Expectation value: {result.values[0]}")
+  print(f" > Metadata: {result.metadata[0]}")
+
+
 How long a session stays active
 --------------------------------
 
@@ -59,10 +90,10 @@ Additionally, there is an *interactive* timeout value. If there are no session j
 
 When using primitives with their context managers as previously described, the session is closed automatically when the block is exited.
 
-Retrieve job results
---------------------
+Retrieve previous job results
+-----------------------------------
 
-After starting your job, the job ID is returned.  Note that ID. After the job completes, you can view the results.
+You can review job results immediately after the job completes by calling ``job.result()``, but there are also several ways to retrieve your results later.  After starting your job, the job ID is returned.  Note that ID. After the job completes, you can view the results.
 
 Immediately after running the job, follow up the Qiskit Runtime  QiskitRuntimeService.run() method by running ``job.status()``.
 

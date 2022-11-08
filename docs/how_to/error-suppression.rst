@@ -82,7 +82,7 @@ Advanced transpilation options
 
 You also have the ability to tune a variety of advanced options to configure your transpilation strategy further. These methods can be used alongside optimization levels.  They allow you to change the options of interest and let your optimization level manage the rest.  
 
-Most of the transpilation options are inherited from 'qiskit.compiler.transpile <https://qiskit.org/documentation/stubs/qiskit.compiler.transpile.html>'__. 
+Most of the transpilation options are inherited from `qiskit.compiler.transpile <https://qiskit.org/documentation/stubs/qiskit.compiler.transpile.html>`__. 
 
 +---------------------------------------------------------------+-------------------------------------------------------------------------+
 | Options                                                       | Description                                                             |
