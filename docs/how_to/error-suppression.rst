@@ -1,7 +1,9 @@
 Configure error suppression
 =============================
 
-Employing error suppression typically adds more run time to your job.  Therefore, it is important to achieve a balance between perfecting your results and ensuring that your job completes in a reasonable amount of time. 
+Error suppression techniques optimize and transform your circuit at the point of compilation to minimize errors. This is the most basic error handling technique.  
+
+Error suppression typically results in some classical pre-processing overhead to your overall runtime. Therefore, it is important to achieve a balance between perfecting your results and ensuring that your job completes in a reasonable amount of time. 
 
 Primitives let you employ error suppression techniques by setting the optimization level ("optimization_level" option) and by choosing advanced transpilation options. 
 
@@ -15,25 +17,25 @@ The optimization_levels setting specifies how much optimization to perform on th
 +====================+===================================================================================================+
 | 0                  | No optimization: typically used for hardware characterization                                     |
 |                    |                                                                                                   |
-|                    | * basic translation                                                                               |
-|                    | * layout (as specified)                                                                           |
-|                    | * routing (stochastic swaps)                                                                      |
+|                    | - basic translation                                                                               |
+|                    | - layout (as specified)                                                                           |
+|                    | - routing (stochastic swaps)                                                                      |
 |                    |                                                                                                   |
 +--------------------+---------------------------------------------------------------------------------------------------+
 | 1                  | Light optimization:                                                                               |
 |                    |                                                                                                   |
-|                    | * Layout (trivial → vf2 → SabreLayout if routing is required)                                     |
-|                    | * routing (SabreSWAPs if needed)                                                                  |
-|                    | * 1Q gate optimization                                                                            |
-|                    | * Error Suppression: Dynamical Decoupling                                                         |
+|                    | - Layout (trivial → vf2 → SabreLayout if routing is required)                                     |
+|                    | - routing (SabreSWAPs if needed)                                                                  |
+|                    | - 1Q gate optimization                                                                            |
+|                    | - Error Suppression: Dynamical Decoupling                                                         |
 |                    |                                                                                                   |
 +--------------------+---------------------------------------------------------------------------------------------------+
 | 2                  | Medium optimization:                                                                              |
 |                    |                                                                                                   |
-|                    | * Layout/Routing: Optimization level 1 (without trivial) + heuristic                              |
-|                    | optimized with greater search depth and trials of optimization function                           |
-|                    | * commutative cancellation                                                                        |
-|                    | * Error Suppression: Dynamical Decoupling                                                         |
+|                    | - Layout/Routing: Optimization level 1 (without trivial) + heuristic optimized with greater       |
+|                    |      search depth and trials of optimization function                                             |
+|                    | - commutative cancellation                                                                        |
+|                    | - Error Suppression: Dynamical Decoupling                                                         |
 |                    |                                                                                                   |
 +--------------------+---------------------------------------------------------------------------------------------------+
 | 3 (default)        | High Optimization:                                                                                |
