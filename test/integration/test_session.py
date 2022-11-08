@@ -47,7 +47,7 @@ class TestIntegrationSession(IBMIntegrationTestCase):
             self.assertIsInstance(result, EstimatorResult)
             self.assertEqual(len(result.values), 1)
             self.assertEqual(len(result.metadata), 1)
-            self.assertEqual(result.metadata[0]["shots"], 100)
+            self.assertAlmostEqual(result.metadata[0]["shots"], 100, delta=20)
 
             sampler = Sampler(session=session)
             result = sampler.run(circuits=ReferenceCircuits.bell(), shots=200).result()
@@ -64,7 +64,7 @@ class TestIntegrationSession(IBMIntegrationTestCase):
             self.assertIsInstance(result, EstimatorResult)
             self.assertEqual(len(result.values), 1)
             self.assertEqual(len(result.metadata), 1)
-            self.assertEqual(result.metadata[0]["shots"], 300)
+            self.assertAlmostEqual(result.metadata[0]["shots"], 300, delta=20)
 
             result = sampler.run(circuits=ReferenceCircuits.bell(), shots=400).result()
             self.assertIsInstance(result, SamplerResult)
