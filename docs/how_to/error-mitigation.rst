@@ -17,8 +17,8 @@ Given this, each level corresponds to a method or methods with increasing level 
 +==================+=======================================================+==========================================+=========+
 | 0                | No mitigation                                         | None                                     | None    |
 +------------------+-------------------------------------------------------+------------------------------------------+---------+
-| 1 [Default]      | Minimal mitigation costs: Mitigate error associated   | Twirled Readout Error eXtinction (TREX)  | M3      |
-|                  | with readout errors                                   | {Hyperlink to description}               |         |
+| 1 [Default]      | Minimal mitigation costs: Mitigate error associated   | Twirled Readout Error eXtinction         | M3      |
+|                  | with readout errors                                   | (:ref:`TREX <TREX>`)                     |         |
 +------------------+-------------------------------------------------------+------------------------------------------+---------+
 | 2                | Medium mitigation costs. Typically reduces bias       | Zero Noise Extrapolation (ZNE)           | ---     |
 |                  | in estimators, but is not guaranteed to be zero bias. | {Hyperlink to description}               |         |
@@ -44,3 +44,30 @@ Configure the Estimator with resilience levels
 
    </details>
 
+.. _TREX:
+.. raw:: html
+
+  <details>
+  <summary>Resilience Level 1</summary>
+
+Level 1 applies error mitigation methods that particularly address readout errors. In the Estimator, we apply a model-free technique known as Twirled Readout Error eXtinction (TREX). It reduces measurement error by diagonalizing the noise channel associated with measurement by randomly flipping qubits via X gates immediately prior to measurement, and flipping the corresponding measured bit if an X gate was applied. A rescaling term from the diagonal noise channel is learned by benchmarking random circuits initialized in the zero state. This allows the service to remove bias from expectation values that result from readout noise. This approach is described further in `Model-free readout-error mitigation for quantum expectation values <https://arxiv.org/abs/2012.09738>`__.
+
+.. raw:: html
+
+   </details>
+
+   .. raw:: html
+
+  <details>
+  <summary>Resilience Level 2</summary>
+
+Level 2 leverages Zero Noise Extrapolation method (ZNE) which computes an expectation value of the observable for different noise factors (amplification stage) and then uses the measured expectation values to infer the ideal expectation value at the zero-noise limit (extrapolation stage). This approach tends to reduce errors in expectation values, but is not guaranteed to produce an unbiased result. 
+
+.. figure:: ../images/resiliance-2.png
+   :alt: This image shows a graph that compares the noise amplification factor to expectation values.
+
+   Illustration of the ZNE method
+
+.. raw:: html
+
+   </details>

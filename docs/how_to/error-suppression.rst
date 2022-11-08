@@ -50,6 +50,7 @@ Example: configure Estimator with optimization levels
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: python
+
     from qiskit_ibm_runtime import QiskitRuntimeService, Session, Estimator, Options
 
     service = QiskitRuntimeService()
@@ -67,6 +68,7 @@ Example: configure Sampler with optimization levels
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: python
+    
     from qiskit_ibm_runtime import QiskitRuntimeService, Session, Sampler, Options
 
     service = QiskitRuntimeService()
