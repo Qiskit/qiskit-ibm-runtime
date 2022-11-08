@@ -20,8 +20,8 @@ Given this, each level corresponds to a method or methods with increasing level 
 | 1 [Default]      | Minimal mitigation costs: Mitigate error associated   | Twirled Readout Error eXtinction         | M3      |
 |                  | with readout errors                                   | (:ref:`TREX <TREX>`)                     |         |
 +------------------+-------------------------------------------------------+------------------------------------------+---------+
-| 2                | Medium mitigation costs. Typically reduces bias       | Zero Noise Extrapolation (ZNE)           | ---     |
-|                  | in estimators, but is not guaranteed to be zero bias. | {Hyperlink to description}               |         |
+| 2                | Medium mitigation costs. Typically reduces bias       | Zero Noise Extrapolation                 | ---     |
+|                  | in estimators, but is not guaranteed to be zero bias. | (:ref:`ZNE <ZNE>`)                       |         |
 +------------------+-------------------------------------------------------+------------------------------------------+---------+
 | 3                | Heavy mitigation with layer sampling. Theoretically   | Probabilistic Error Cancellation (PEC)   | ---     |
 |                  | expected to deliver zero bias estimators.             | {Hyperlink to description}               |         |
@@ -61,6 +61,7 @@ Level 1 applies error mitigation methods that particularly address readout error
   <details>
   <summary>Resilience Level 2</summary>
 
+.. _ZNE:
 Level 2 leverages Zero Noise Extrapolation method (ZNE) which computes an expectation value of the observable for different noise factors (amplification stage) and then uses the measured expectation values to infer the ideal expectation value at the zero-noise limit (extrapolation stage). This approach tends to reduce errors in expectation values, but is not guaranteed to produce an unbiased result. 
 
 .. figure:: ../images/resiliance-2.png
