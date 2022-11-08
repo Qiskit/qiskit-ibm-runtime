@@ -26,7 +26,6 @@ NoiseAmplifierType = Literal[
 ]
 ExtrapolatorType = Literal[
     "LinearExtrapolator",
-    "PolynomialExtrapolator",
     "QuadraticExtrapolator",
     "CubicExtrapolator",
     "QuarticExtrapolator",
@@ -42,9 +41,15 @@ class ResilienceOptions:
         noise_factors: An list of real valued noise factors that determine by what amount the
             circuits' noise is amplified. Default: (1, 3, 5).
 
-        noise_amplifier: A noise amplification strategy. Default: "TwoQubitAmplifier".
+        noise_amplifier: A noise amplification strategy. One of ``"TwoQubitAmplifier"``,
+            ``"GlobalFoldingAmplifier"``, ``"LocalFoldingAmplifier"``, ``"CxAmplifier"``.
+            Default: "TwoQubitAmplifier".
 
-        extrapolator: An extrapolation strategy. Default: "LinearExtrapolator".
+        extrapolator: An extrapolation strategy. One of ``"LinearExtrapolator"``,
+            ``"QuadraticExtrapolator"``, ``"CubicExtrapolator"``, ``"QuarticExtrapolator"``.
+            Note that ``"CubicExtrapolator"`` and ``"QuarticExtrapolator"`` require more
+            noise factors than the default.
+            Default: "LinearExtrapolator".
     """
 
     noise_amplifier: NoiseAmplifierType = "TwoQubitAmplifier"
