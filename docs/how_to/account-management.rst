@@ -28,10 +28,10 @@ Following are examples of saving an IBM Cloud and an IBM Quantum account. The ``
   from qiskit_ibm_runtime import QiskitRuntimeService
 
   # Save an IBM Cloud account on disk.
-  QiskitRuntimeService.save_account(channel="ibm_cloud", token=<`IBM Cloud API ke`y>, instance=<`IBM Cloud CRN`> or <`IBM Cloud service name`>)
+  QiskitRuntimeService.save_account(channel="ibm_cloud", token=<*IBM Cloud API key*>, instance=<*IBM Cloud CRN*> or <*IBM Cloud service name*>)
 
   # Save an IBM Quantum account on disk.
-  QiskitRuntimeService.save_account(channel="ibm_quantum", token=<`IBM Quantum API token`>)
+  QiskitRuntimeService.save_account(channel="ibm_quantum", token=<*IBM Quantum API token*>)
 
 Initialize your account
 -------------------------
@@ -50,7 +50,7 @@ Alternatively, if you specified a name for your account when saving it, you can 
 .. code-block:: python
 
   # Save an IBM Cloud account on disk and give it a name.
-  QiskitRuntimeService.save_account(channel="ibm_cloud", token=<`IBM Cloud API key`>, instance=<`IBM Cloud CRN`>, name="prod")
+  QiskitRuntimeService.save_account(channel="ibm_cloud", token=<*IBM Cloud API key*>, instance=<*IBM Cloud CRN*>, name="prod")
 
   service = QiskitRuntimeService(name="prod")
 
@@ -59,4 +59,4 @@ If you want to use your credentials for just the session instead of saving it, y
 .. code-block:: python
 
   # Initialize an IBM Cloud account without saving it.
-  service = QiskitRuntimeService(channel="ibm_cloud", token=<`IBM Cloud API key`>, instance=<`IBM Cloud CRN`>)
+  service = QiskitRuntimeService(channel="ibm_cloud", token=<*IBM Cloud API key*>, instance=<*IBM Cloud CRN*>)
