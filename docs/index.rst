@@ -78,6 +78,7 @@ Next Steps
     Configure primitive options <how_to/options>
     Configure error mitigation options <how_to/error-mitigation>
     Configure error suppression <how_to/error-suppression>
+    Find available backends <how_to/backends>
     
 .. toctree::
    :maxdepth: 1
