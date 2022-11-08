@@ -38,7 +38,7 @@ Configure the Estimator with resilience levels
   <details>
   <summary>Resilience Level 0</summary>
 
-**Resilience Level 0** | No error mitigation is applied to the user program
+No error mitigation is applied to the user program.
 
 .. raw:: html
 
@@ -57,11 +57,12 @@ Level 1 applies error mitigation methods that particularly address readout error
 
    </details>
 
-.. _ZNE:
 .. raw:: html
 
   <details>
   <summary>Resilience Level 2</summary>
+
+.. _ZNE:
 
 Level 2 leverages Zero Noise Extrapolation method (ZNE) which computes an expectation value of the observable for different noise factors (amplification stage) and then uses the measured expectation values to infer the ideal expectation value at the zero-noise limit (extrapolation stage). This approach tends to reduce errors in expectation values, but is not guaranteed to produce an unbiased result. 
 
@@ -76,11 +77,12 @@ The overhead of this method scales with the number of noise factors. The default
 
    </details>
 
-.. _PEC:
 .. raw:: html
 
   <details>
   <summary>Resilience Level 3</summary>
+
+.. _PEC:
 
 Level 3 enables the Probabilistic Error Cancellation (PEC) method. This approach mitigates error by learning and inverting a sparse noise model that is able to capture correlated noise. PEC returns an unbiased estimate of an expectation value so long as learned noise model faithfully represents the actual noise model at the time of mitigation.  In practice, the experimental procedure for learning the noise model has ambiguities due to certain error terms that cannot be independently distinguished. These are resolved by a symmetry assumption, which depending on the true underlying noise may lead a biased estimate of the mitigated expectation values due to using an imperfect noise model. 
 
@@ -95,7 +97,7 @@ The overhead of this method scales with the number of noise factors. The default
 
 PEC uses a quasi-probability method to mimic the effect of inverting the learned noise. This requires sampling from a randomized circuit family associated with the user's original circuit. Applying PEC will reduce the precision in returned expectation value estimates unless the number of samples is also increased by a factor that scales exponentially with the noise strength of the mitigated circuit. 
 
-When estimating an unmitigated Pauli observable :math:`\langle P\rangle` the standard error in the estimated expectation value is given by :math:`\frac{1}{\sqrt{N_{\mbox{shots}}}\left(1- \langle P\rangle^2\right)` where :math:`N_{\mbox{shots}}` is the number shots used to estimate :math:`\langle P\rangle`. When applying PEC mitigation the standard error becomes :math:`\sqrt{\frac{S}{N_{\mbox{samples}}}\left(1- \langle P\rangle^2\right)` where :math:`N_{\mbox{samples}}` is the number of PEC samples and :math:`S` is the *sampling overhead*. To obtain a PEC estimate with a standard error comparable to the unmitigated observable for a given number of shots the required number of samples is :math:`N_{\mbox{samples}} = S N_{\mbox{shots}}`.
+When estimating an unmitigated Pauli observable :math:`\langle P\rangle` the standard error in the estimated expectation value is given by :math:`\frac{1}{\sqrt{N_{\mbox{shots}}}}\left(1- \langle P\rangle^2\right)` where :math:`N_{\mbox{shots}}` is the number shots used to estimate :math:`\langle P\rangle`. When applying PEC mitigation the standard error becomes :math:`\sqrt{\frac{S}{N_{\mbox{samples}}}}\left(1- \langle P\rangle^2\right)` where :math:`N_{\mbox{samples}}` is the number of PEC samples and :math:`S` is the *sampling overhead*. To obtain a PEC estimate with a standard error comparable to the unmitigated observable for a given number of shots the required number of samples is :math:`N_{\mbox{samples}} = S N_{\mbox{shots}}`.
 
 The sampling overhead :math:`S` scales exponentially with a parameter that characterizes the collective noise of the input circuit. As the Qiskit Runtime primitive learns the noise of your circuit, it will return metadata about the sampling overhead associated with that particular layer.  Let's label the overhead of layer :math:`l` as :math:`\gamma_l`. Then the total sampling overhead for mitigating your circuit is the product of all the layer overheads, that is:
 
