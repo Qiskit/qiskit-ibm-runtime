@@ -119,6 +119,7 @@ Example
 The Estimator interface lets users seamlessly work with the variety of error mitigation methods to reduce error in expectation values of observables. Below is an example of leveraging Zero Noise Extrapolation by simply setting "resilience_level 2":
 
 .. code-block:: python
+    
   from qiskit_ibm_runtime import QiskitRuntimeService, Session, Estimator, Options
 
     service = QiskitRuntimeService()
@@ -133,3 +134,36 @@ The Estimator interface lets users seamlessly work with the variety of error mit
 
 .. note::
     As you increase the resilience level, you will be able to leverage additional methods to improve the accuracy of your result. However, because the methods become more advanced with each level, they require additional sampling overhead (time) to generate more accurate expectation values.     
+
+Configure Sampler with resilience levels 
+-----------------------------------------
+
+The Sampler default resilience setting (level 1) does not enable error mitigation to allow users to generate unmitigated probability distributions. Users can enable one resilience level for sampling tasks, which allows them to leverage readout error mitigation as described below.
+
+   .. raw:: html
+
+  <details>
+  <summary>Resilience Level 1</summary>
+
+Level 1 leverages matrix-free measurement mitigation (M3) routine to mitigate readout error. M3 works in a reduced subspace defined by the noisy input bitstrings that are to be corrected. Because the number of unique bitstrings can be much smaller than the dimensionality of the full multi-qubit Hilbert space, the resulting linear system of equations is nominally much easier to solve.
+
+.. figure:: ../images/m3.png
+   :alt: This image illustrates the M3 routine.
+
+   Illustration of the M3 method
+
+.. raw:: html
+
+   </details>
+
+.. code-block:: python
+
+    from qiskit_ibm_runtime import QiskitRuntimeService, Session, Sampler, Options
+
+    service = QiskitRuntimeService()
+    options = Options()
+    options.resilience_level = 1
+    options.optimization_level = 3
+
+    with Session(service=service, backend="ibmq_qasm_simulator") as session:
+    sampler = Sampler(session=session, options=options)     
