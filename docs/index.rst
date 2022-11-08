@@ -67,6 +67,7 @@ Next Steps
     QPE with Sampler <tutorials/qpe_with_sampler>
     Grover with Sampler <tutorials/grover_with_sampler>
     SEA with Sampler <tutorials/sea_with_sampler>
+    Submitting user-transpiled circuits using primitives <tutorials/user-transpiled-circuits>
     All tutorials <tutorials>
 
 .. toctree::
