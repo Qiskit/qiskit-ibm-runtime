@@ -74,11 +74,10 @@ Next Steps
    :hidden:
    :caption: How to
 
-    Run a sessions <how_to/run_session>
+    Run a session <how_to/run_session>
     Configure primitive options <how_to/options>
-    Configure error mitigation options <how_to/resiliance>
-    Configure optimization levels <how_to/optimization>
-    Configure transpilation settings <how_to/transpilation>
+    Configure error mitigation options <how_to/error-mitigation>
+    Configure error suppression <how_to/error-suppression>
     
 .. toctree::
    :maxdepth: 1
