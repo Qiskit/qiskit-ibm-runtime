@@ -13,7 +13,7 @@ When calling the primitives, you can pass in options, as shown in the line "esti
     with Session(service=service, backend="ibmq_qasm_simulator"):
     estimator = Estimator(options=options)
 
-The most commonly used options are for error suppression and mitigation, which are described in this topic. For a full list of available options, see the `Options API reference <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/stubs/qiskit_ibm_runtime.options.Options.html#qiskit_ibm_runtime.options.Options>`__
+The most commonly used options are for error suppression and mitigation, which are described in this topic. For a full list of available options, see the `Options API reference <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/stubs/qiskit_ibm_runtime.options.Options.html#qiskit_ibm_runtime.options.Options>`__.
 
 Overview of error suppression and mitigation
 --------------------------------------------
@@ -26,6 +26,6 @@ Primitives let you employ error suppression techniques by setting the optimizati
 
 * **Error mitigation**: Techniques that allow users to mitigate circuit errors by modeling the device noise at the time of execution. This typically results in quantum pre-processing overhead related to model training, and classical post-processing overhead to mitigate errors in the raw results by using the generated model.
 
-The error mitigation techniques built in to primitives are advanced resilience options.   To specify these options, use the `resilience_level` when submitting your job.  See `error-mitigation.html`__ for details. 
+The error mitigation techniques built in to primitives are advanced resilience options.   To specify these options, use the "resilience_level" when submitting your job.  See `error-mitigation.html`__ for details. 
 
 

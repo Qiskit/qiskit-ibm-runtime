@@ -68,6 +68,32 @@ Level 2 leverages Zero Noise Extrapolation method (ZNE) which computes an expect
 
    Illustration of the ZNE method
 
+The overhead of this method scales with the number of noise factors. The default settings sample the expectation value at three noise factors, leading to a roughly 3x overhead when employing this resilience level.   
+
 .. raw:: html
 
    </details>
+
+   .. raw:: html
+
+  <details>
+  <summary>Resilience Level 3</summary>
+
+Level 3 enables the Probabilistic Error Cancellation (PEC) method. This approach mitigates error by learning and inverting a sparse noise model that is able to capture correlated noise. PEC returns an unbiased estimate of an expectation value so long as learned noise model faithfully represents the actual noise model at the time of mitigation.  In practice, the experimental procedure for learning the noise model has ambiguities due to certain error terms that cannot be independently distinguished. These are resolved by a symmetry assumption, which depending on the true underlying noise may lead a biased estimate of the mitigated expectation values due to using an imperfect noise model. 
+
+The Qiskit Runtime primitive implementation of PEC specifically addresses noise in self-inverse two-qubit gates, so it first *stratifies* each input circuit into an alternating sequence of simultaneous 1-qubit gates followed by a layer of simultaneous 2-qubit gates. Then it learns the noise model associated with each unique 2-qubit gate layer.
+
+.. figure:: ../images/stratified.png
+   :alt: This image shows stratified circuit.
+
+   This is an example of a `stratified` circuit, where the layers of two-qubit gates are labeled layer 1 through n. Note that each :math:`U_l` is composed of two-qubit gates on the native connectivity graph of the quantum processor. The open boxes represent arbitrary single-qubit gates.
+
+The overhead of this method scales with the number of noise factors. The default settings sample the expectation value at three noise factors, leading to a roughly 3x overhead when employing this resilience level.   
+
+PEC uses a quasi-probability method to mimic the effect of inverting the learned noise. This requires sampling from a randomized circuit family associated with the user's original circuit. Applying PEC will reduce the precision in returned expectation value estimates unless the number of samples is also increased by a factor that scales exponentially with the noise strength of the mitigated circuit. 
+
+When estimating an unmitigated Pauli observable :math:`\langle P\rangle` the standard error in the estimated expectation value is given by :math:`\frac{1}{\sqrt{N_{\mbox{shots}}}\left(1- \langle P\rangle^2\right)` where :math:`N_{\mbox{shots}}` is the number shots used to estimate :math:`\langle P\rangle`. When applying PEC mitigation the standard error becomes :math:`\sqrt{\frac{S}{N_{\mbox{samples}}}\left(1- \langle P\rangle^2\right)` where :math:`N_{\mbox{samples}}` is the number of PEC samples and :math:`S` is the *sampling overhead*. To obtain a PEC estimate with a standard error comparable to the unmitigated observable for a given number of shots the required number of samples is :math:`N_{\mbox{samples}} = S N_{\mbox{shots}}`.
+
+.. raw:: html
+
+   </details>   
