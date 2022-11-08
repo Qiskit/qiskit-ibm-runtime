@@ -84,7 +84,7 @@ Level 3 enables the Probabilistic Error Cancellation (PEC) method. This approach
 The Qiskit Runtime primitive implementation of PEC specifically addresses noise in self-inverse two-qubit gates, so it first *stratifies* each input circuit into an alternating sequence of simultaneous 1-qubit gates followed by a layer of simultaneous 2-qubit gates. Then it learns the noise model associated with each unique 2-qubit gate layer.
 
 .. figure:: ../images/stratified.png
-   :alt: This image shows stratified circuit.
+   :alt: This image shows a stratified circuit.
 
    This is an example of a `stratified` circuit, where the layers of two-qubit gates are labeled layer 1 through n. Note that each :math:`U_l` is composed of two-qubit gates on the native connectivity graph of the quantum processor. The open boxes represent arbitrary single-qubit gates.
 
@@ -93,6 +93,21 @@ The overhead of this method scales with the number of noise factors. The default
 PEC uses a quasi-probability method to mimic the effect of inverting the learned noise. This requires sampling from a randomized circuit family associated with the user's original circuit. Applying PEC will reduce the precision in returned expectation value estimates unless the number of samples is also increased by a factor that scales exponentially with the noise strength of the mitigated circuit. 
 
 When estimating an unmitigated Pauli observable :math:`\langle P\rangle` the standard error in the estimated expectation value is given by :math:`\frac{1}{\sqrt{N_{\mbox{shots}}}\left(1- \langle P\rangle^2\right)` where :math:`N_{\mbox{shots}}` is the number shots used to estimate :math:`\langle P\rangle`. When applying PEC mitigation the standard error becomes :math:`\sqrt{\frac{S}{N_{\mbox{samples}}}\left(1- \langle P\rangle^2\right)` where :math:`N_{\mbox{samples}}` is the number of PEC samples and :math:`S` is the *sampling overhead*. To obtain a PEC estimate with a standard error comparable to the unmitigated observable for a given number of shots the required number of samples is :math:`N_{\mbox{samples}} = S N_{\mbox{shots}}`.
+
+The sampling overhead :math:`S` scales exponentially with a parameter that characterizes the collective noise of the input circuit. As the Qiskit Runtime primitive learns the noise of your circuit, it will return metadata about the sampling overhead associated with that particular layer.  Let's label the overhead of layer :math:`l` as :math:`\gamma_l`. Then the total sampling overhead for mitigating your circuit is the product of all the layer overheads, that is:
+
+:math:`S = \prod_l \gamma_l `
+
+When the Estimator completes the model-learning phase of the primitive query, it will return metadata about the total sampling overhead for circuit.
+
+Depending on the precision required by your application, you will need to scale the number of samples accordingly. The plot below illustrates the relationship between estimator error and number of circuit samples for different total sampling overheads.
+
+.. figure:: ../images/sampling-overhead.png
+   :alt: This image shows that samping overhead goes down as the number of samples increases.
+
+Note that the number of samples required to deliver a desired accuracy is not known before the primitive query because the mitigation scaling factor is discovered during the learning phase of PEC.
+
+We recommend starting with short depth circuits to get a feel for the scaling of the sampling overhead of PEC prior to attempting larger problems.
 
 .. raw:: html
 
