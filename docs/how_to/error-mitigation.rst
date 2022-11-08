@@ -96,7 +96,7 @@ When estimating an unmitigated Pauli observable :math:`\langle P\rangle` the sta
 
 The sampling overhead :math:`S` scales exponentially with a parameter that characterizes the collective noise of the input circuit. As the Qiskit Runtime primitive learns the noise of your circuit, it will return metadata about the sampling overhead associated with that particular layer.  Let's label the overhead of layer :math:`l` as :math:`\gamma_l`. Then the total sampling overhead for mitigating your circuit is the product of all the layer overheads, that is:
 
-:math:`S = \prod_l \gamma_l `
+:math:`S = \prod_l \gamma_l`
 
 When the Estimator completes the model-learning phase of the primitive query, it will return metadata about the total sampling overhead for circuit.
 
@@ -112,3 +112,24 @@ We recommend starting with short depth circuits to get a feel for the scaling of
 .. raw:: html
 
    </details>   
+
+Example
+^^^^^^^
+
+The Estimator interface lets users seamlessly work with the variety of error mitigation methods to reduce error in expectation values of observables. Below is an example of leveraging Zero Noise Extrapolation by simply setting "resilience_level 2":
+
+.. code-block:: python
+  from qiskit_ibm_runtime import QiskitRuntimeService, Session, Estimator, Options
+
+    service = QiskitRuntimeService()
+    options = Options()
+    options.resilience_level = 2
+    options.optimization_level = 3
+
+    with Session(service=service, backend="ibmq_qasm_simulator") as session:
+    estimator = Estimator(session=session, options=options)
+    job = estimator.run(circuits=[psi1], observables=[H1], parameter_values=[theta1])
+    psi1_H1 = job.result()  
+
+.. note::
+    As you increase the resilience level, you will be able to leverage additional methods to improve the accuracy of your result. However, because the methods become more advanced with each level, they require additional sampling overhead (time) to generate more accurate expectation values.     
