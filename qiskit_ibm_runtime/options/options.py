@@ -59,6 +59,9 @@ class Options:
         transpilation: Transpilation options. See :class:`TranspilationOptions` for all
             available options.
 
+        resilience: Advanced resilience options to fine tune the resilience strategy.
+            See :class:`ResilienceOptions` for all available options.
+
         execution: Execution time options. See :class:`ExecutionOptions` for all available options.
 
         environment: Options related to the execution environment. See
