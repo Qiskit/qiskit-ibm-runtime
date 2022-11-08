@@ -56,7 +56,7 @@ Level 1 applies error mitigation methods that particularly address readout error
 
    </details>
 
-   .. raw:: html
+.. raw:: html
 
   <details>
   <summary>Resilience Level 2</summary>
@@ -74,7 +74,7 @@ The overhead of this method scales with the number of noise factors. The default
 
    </details>
 
-   .. raw:: html
+.. raw:: html
 
   <details>
   <summary>Resilience Level 3</summary>
@@ -119,7 +119,7 @@ Example
 The Estimator interface lets users seamlessly work with the variety of error mitigation methods to reduce error in expectation values of observables. Below is an example of leveraging Zero Noise Extrapolation by simply setting "resilience_level 2":
 
 .. code-block:: python
-    
+
   from qiskit_ibm_runtime import QiskitRuntimeService, Session, Estimator, Options
 
     service = QiskitRuntimeService()
@@ -138,9 +138,10 @@ The Estimator interface lets users seamlessly work with the variety of error mit
 Configure Sampler with resilience levels 
 -----------------------------------------
 
+
 The Sampler default resilience setting (level 1) does not enable error mitigation to allow users to generate unmitigated probability distributions. Users can enable one resilience level for sampling tasks, which allows them to leverage readout error mitigation as described below.
 
-   .. raw:: html
+.. raw:: html
 
   <details>
   <summary>Resilience Level 1</summary>
@@ -167,3 +168,60 @@ Level 1 leverages matrix-free measurement mitigation (M3) routine to mitigate re
 
     with Session(service=service, backend="ibmq_qasm_simulator") as session:
     sampler = Sampler(session=session, options=options)     
+
+Advanced resilience options
+----------------------------
+
+You can tune advanced options to configure your resilience strategy further. These methods can be used alongside resilience levels where you change the specific options of interest and let your previously set resilience level manage the rest. 
+
+As a part of the beta release of the resilience options, users will be able configure ZNE by using the following advanced options below. We will soon add options to tune other resilience levels that include PEC. 
+
++---------------------------------------------------------------+---------------------------------+--------------------------------------------------------+
+| Options                                                       | Inputs                          | Description                                            |
++===============================================================+=================================+========================================================+
+| options.resilience.noise_amplifier(Optional[str])             | "TwoQubitAmplifier" [Default]   | Amplifies noise of all two qubit gates by performing   |
+| select your amplification strategy                            |                                 | local gate folding.                                    |
+|                                                               +---------------------------------+--------------------------------------------------------+
+|                                                               | "CxAmplifier"                   | Amplifies noise of all CNOT gates by performing local  |
+|                                                               |                                 | gate folding.                                          |
+|                                                               +---------------------------------+--------------------------------------------------------+
+|                                                               | "LocalFoldingAmplifer"          | Amplifies noise of all gates by performing local       |
+|                                                               |                                 | gate folding.                                          |
+|                                                               +---------------------------------+--------------------------------------------------------+
+|                                                               | "GlobalFoldingAmplifier"        | Amplifies noise of the input circuit by performing     |
+|                                                               |                                 | global folding of the entire input circuit.            |
++---------------------------------------------------------------+---------------------------------+--------------------------------------------------------+
+| options.resilience.noise_factors((Optional[Sequence[float]])  | (1, 3, 5) [Default]             | Noise amplification factors, where `1` represents the  |
+|                                                               |                                 | baseline noise. They all need to be greater than or    |
+|                                                               |                                 | equal to the baseline.                                 |
++---------------------------------------------------------------+---------------------------------+--------------------------------------------------------+
+| options.resilience.extrapolator(Optional[str])                | "LinearExtrapolator" [Default]  | Polynomial extrapolation of degree one.                |
+|                                                               +---------------------------------+--------------------------------------------------------+
+|                                                               | "QuadraticExtrapolator"         | Polynomial extrapolation of degree two and lower.      |
+|                                                               +---------------------------------+--------------------------------------------------------+
+|                                                               | "CubicExtrapolator"             | Polynomial extrapolation of degree three and lower.    |
+|                                                               +---------------------------------+--------------------------------------------------------+
+|                                                               | "QuarticExtrapolator"           | Polynomial extrapolation of degree four and lower.     |
++---------------------------------------------------------------+---------------------------------+--------------------------------------------------------+
+
+Example of adding "resilience_options" into your estimator session  
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: python
+
+    from qiskit_ibm_runtime import QiskitRuntimeService, Session, Estimator, Options
+
+    service = QiskitRuntimeService()
+    options = Options()
+    options.optimization_level = 3
+    options.resilience_level = 2
+    options.resilience.noise_factors = (1, 2, 3, 4)
+    options.resilience.noise_amplifer = 'CxAmplifer'
+    options.resilience.extrapolator = 'QuadraticExtrapolator'
+
+
+    with Session(service=service, backend="ibmq_qasm_simulator") as session:
+    estimator = Estimator(session=session, options=options)
+    job = estimator.run(circuits=[psi1], observables=[H1], parameter_values=[theta1])
+    psi1_H1 = job.result()
+
