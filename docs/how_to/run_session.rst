@@ -17,7 +17,7 @@ Before starting a session, you must `Set up Qiskit Runtime <getting_started.html
 Run a job in a session
 -------------------------------
 
-You can set up a runtime session by using the context manager (`with ...:`), which automatically opens and closes the session for you. A session is started when the first primitive job in this context manager starts. For example, the following code creates an Estimator instance inside a Session context manager.
+You can set up a runtime session by using the context manager (``with ...:``), which automatically opens and closes the session for you. A session is started when the first primitive job in this context manager starts. For example, the following code creates an Estimator instance inside a Session context manager.
 
 Start by loading the options into a primitive constructor, then pass in circuits, parameters, and observables:
 
@@ -45,13 +45,13 @@ When you start your session, you can specify options, such as the backend to run
 How long a session stays active
 --------------------------------
 
-When a session is started, it is assigned a maximum session timeout value.  You can set this value by using the `max_time` parameter, which can be greater than the program’s `max_execution_time`.
+When a session is started, it is assigned a maximum session timeout value.  You can set this value by using the ``max_time`` parameter, which can be greater than the program's ``max_execution_time``.
 
 
 If you do not specify a timeout value, it is set to the initial job's maximum execution time and is the smaller of these values:
 
    * The system limit (8 hours for physical systems).
-   * The `max_execution_time` defined by the program.
+   * The ``max_execution_time`` defined by the program.
 
 After this time limit is reached, the session is permanently closed.
 
@@ -64,14 +64,14 @@ Retrieve job results
 
 After starting your job, the job ID is returned.  Note that ID. After the job completes, you can view the results.
 
-Immediately after running the job, follow up the Qiskit Runtime  QiskitRuntimeService.run() method by running `job.status()`.
+Immediately after running the job, follow up the Qiskit Runtime  QiskitRuntimeService.run() method by running ``job.status()``.
 
-If you ran other jobs since running the job you want to investigate, run `job = service.job(job_id)` then run `job.status()`.
+If you ran other jobs since running the job you want to investigate, run ``job = service.job(job_id)`` then run ``job.status()``.
 
 Jobs are also listed on the Jobs page for your quantum service instance. 
 
 * From the IBM Cloud console quantum `Instances page <https://cloud.ibm.com/quantum/instances>`__, click the name of your instance, then click the Jobs tab. To see the status of your job, click the refresh arrow in the upper right corner.
-* In IBM Quantum Platform, open the `Jobs page <https://quantum-computing.ibm.com/jobs>`__
+* In IBM Quantum Platform, open the `Jobs page <https://quantum-computing.ibm.com/jobs>`__.
 
 
 

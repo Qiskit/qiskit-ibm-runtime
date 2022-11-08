@@ -5,7 +5,7 @@ Error suppression techniques optimize and transform your circuit at the point of
 
 Error suppression typically results in some classical pre-processing overhead to your overall runtime. Therefore, it is important to achieve a balance between perfecting your results and ensuring that your job completes in a reasonable amount of time. 
 
-Primitives let you employ error suppression techniques by setting the optimization level ("optimization_level" option) and by choosing advanced transpilation options. 
+Primitives let you employ error suppression techniques by setting the optimization level (``optimization_level`` option) and by choosing advanced transpilation options. 
 
 Setting the optimization level
 ------------------------------
@@ -62,13 +62,13 @@ Example: configure Estimator with optimization levels
     psi1_H1 = job.result()
 
 .. note:: 
-    If optimization level is not specified, the service uses `optimization_level = 3`     
+    If optimization level is not specified, the service uses ``optimization_level = 3``.  
 
 Example: configure Sampler with optimization levels
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: python
-    
+
     from qiskit_ibm_runtime import QiskitRuntimeService, Session, Sampler, Options
 
     service = QiskitRuntimeService()
@@ -89,11 +89,11 @@ Most of the transpilation options are inherited from 'qiskit.compiler.transpile 
 +===============================================================+=========================================================================+
 | options.transpilation.initial_layout(Union[dict, List, None]) | Initial position of virtual qubits on physical qubits.                  |
 +---------------------------------------------------------------+-------------------------------------------------------------------------+
-| options.transpilation.layout_method (Optional[str])           | Name of layout selection pass. One of "trivial", "dense",               |
-|                                                               | "noise_adaptive", "sabre".                                              |
+| options.transpilation.layout_method (Optional[str])           | Name of layout selection pass. One of ``trivial``, ``dense``,           |
+|                                                               | ``noise_adaptive``, ``sabre``.                                          |
 +---------------------------------------------------------------+-------------------------------------------------------------------------+
-| options.transpilation.routing_method (Optional[str])          | Name of routing pass: "basic", "lookahead", "stochastic",               |
-|                                                               | "sabre", "none".                                                        |
+| options.transpilation.routing_method (Optional[str])          | Name of routing pass: ``basic``, ``lookahead``, ``stochastic``,         |
+|                                                               | ``sabre``, ``none``.                                                    |
 +---------------------------------------------------------------+-------------------------------------------------------------------------+
 | options.transpilation.skip_transpilation (bool)               | This option is specific to Qiskit Runtime primitives.                   |
 |                                                               | Allows for skipping transpilation entirely. If you use this method,     |

@@ -118,7 +118,7 @@ We recommend starting with short depth circuits to get a feel for the scaling of
 Example
 ^^^^^^^
 
-The Estimator interface lets users seamlessly work with the variety of error mitigation methods to reduce error in expectation values of observables. Below is an example of leveraging Zero Noise Extrapolation by simply setting "resilience_level 2":
+The Estimator interface lets users seamlessly work with the variety of error mitigation methods to reduce error in expectation values of observables. Below is an example of leveraging Zero Noise Extrapolation by simply setting ``resilience_level 2``.
 
 .. code-block:: python
 
@@ -178,35 +178,35 @@ You can tune advanced options to configure your resilience strategy further. The
 
 As a part of the beta release of the resilience options, users will be able configure ZNE by using the following advanced options below. We will soon add options to tune other resilience levels that include PEC. 
 
-+---------------------------------------------------------------+---------------------------------+--------------------------------------------------------+
-| Options                                                       | Inputs                          | Description                                            |
-+===============================================================+=================================+========================================================+
-| options.resilience.noise_amplifier(Optional[str])             | "TwoQubitAmplifier" [Default]   | Amplifies noise of all two qubit gates by performing   |
-| select your amplification strategy                            |                                 | local gate folding.                                    |
-|                                                               +---------------------------------+--------------------------------------------------------+
-|                                                               | "CxAmplifier"                   | Amplifies noise of all CNOT gates by performing local  |
-|                                                               |                                 | gate folding.                                          |
-|                                                               +---------------------------------+--------------------------------------------------------+
-|                                                               | "LocalFoldingAmplifer"          | Amplifies noise of all gates by performing local       |
-|                                                               |                                 | gate folding.                                          |
-|                                                               +---------------------------------+--------------------------------------------------------+
-|                                                               | "GlobalFoldingAmplifier"        | Amplifies noise of the input circuit by performing     |
-|                                                               |                                 | global folding of the entire input circuit.            |
-+---------------------------------------------------------------+---------------------------------+--------------------------------------------------------+
-| options.resilience.noise_factors((Optional[Sequence[float]])  | (1, 3, 5) [Default]             | Noise amplification factors, where `1` represents the  |
-|                                                               |                                 | baseline noise. They all need to be greater than or    |
-|                                                               |                                 | equal to the baseline.                                 |
-+---------------------------------------------------------------+---------------------------------+--------------------------------------------------------+
-| options.resilience.extrapolator(Optional[str])                | "LinearExtrapolator" [Default]  | Polynomial extrapolation of degree one.                |
-|                                                               +---------------------------------+--------------------------------------------------------+
-|                                                               | "QuadraticExtrapolator"         | Polynomial extrapolation of degree two and lower.      |
-|                                                               +---------------------------------+--------------------------------------------------------+
-|                                                               | "CubicExtrapolator"             | Polynomial extrapolation of degree three and lower.    |
-|                                                               +---------------------------------+--------------------------------------------------------+
-|                                                               | "QuarticExtrapolator"           | Polynomial extrapolation of degree four and lower.     |
-+---------------------------------------------------------------+---------------------------------+--------------------------------------------------------+
++---------------------------------------------------------------+----------------------------------+--------------------------------------------------------+
+| Options                                                       | Inputs                           | Description                                            |
++===============================================================+==================================+========================================================+
+| options.resilience.noise_amplifier(Optional[str])             | ``TwoQubitAmplifier`` [Default]  | Amplifies noise of all two qubit gates by performing   |
+| select your amplification strategy                            |                                  | local gate folding.                                    |
+|                                                               +----------------------------------+--------------------------------------------------------+
+|                                                               | ``CxAmplifier``                  | Amplifies noise of all CNOT gates by performing local  |
+|                                                               |                                  | gate folding.                                          |
+|                                                               +----------------------------------+--------------------------------------------------------+
+|                                                               | ``LocalFoldingAmplifer``         | Amplifies noise of all gates by performing local       |
+|                                                               |                                  | gate folding.                                          |
+|                                                               +----------------------------------+--------------------------------------------------------+
+|                                                               | ``GlobalFoldingAmplifier``       | Amplifies noise of the input circuit by performing     |
+|                                                               |                                  | global folding of the entire input circuit.            |
++---------------------------------------------------------------+----------------------------------+--------------------------------------------------------+
+| options.resilience.noise_factors((Optional[Sequence[float]])  | (1, 3, 5) [Default]              | Noise amplification factors, where `1` represents the  |
+|                                                               |                                  | baseline noise. They all need to be greater than or    |
+|                                                               |                                  | equal to the baseline.                                 |
++---------------------------------------------------------------+----------------------------------+--------------------------------------------------------+
+| options.resilience.extrapolator(Optional[str])                | ``LinearExtrapolator`` [Default] | Polynomial extrapolation of degree one.                |
+|                                                               +----------------------------------+--------------------------------------------------------+
+|                                                               | ``QuadraticExtrapolator``        | Polynomial extrapolation of degree two and lower.      |
+|                                                               +----------------------------------+--------------------------------------------------------+
+|                                                               | ``CubicExtrapolator``            | Polynomial extrapolation of degree three and lower.    |
+|                                                               +----------------------------------+--------------------------------------------------------+
+|                                                               | ``QuarticExtrapolator``          | Polynomial extrapolation of degree four and lower.     |
++---------------------------------------------------------------+----------------------------------+--------------------------------------------------------+
 
-Example of adding "resilience_options" into your estimator session  
+Example of adding ``resilience_options`` into your estimator session  
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: python
