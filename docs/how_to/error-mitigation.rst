@@ -12,20 +12,20 @@ Given this, each level corresponds to a method or methods with increasing level 
 .. note::
     Error mitigation is task specific so the techniques you are able to apply vary based whether you are sampling a distribution or generating expectation values. 
 
-+------------------+-------------------------------------------------------+------------------------------------------+---------+
-| Resilience Level | Definition                                            | Estimator                                | Sampler |
-+==================+=======================================================+==========================================+=========+
-| 0                | No mitigation                                         | None                                     | None    |
-+------------------+-------------------------------------------------------+------------------------------------------+---------+
-| 1 [Default]      | Minimal mitigation costs: Mitigate error associated   | Twirled Readout Error eXtinction         | M3      |
-|                  | with readout errors                                   | (:ref:`TREX <TREX>`)                     |         |
-+------------------+-------------------------------------------------------+------------------------------------------+---------+
-| 2                | Medium mitigation costs. Typically reduces bias       | Zero Noise Extrapolation                 | ---     |
-|                  | in estimators, but is not guaranteed to be zero bias. | (:ref:`ZNE <ZNE>`)                       |         |
-+------------------+-------------------------------------------------------+------------------------------------------+---------+
-| 3                | Heavy mitigation with layer sampling. Theoretically   | Probabilistic Error Cancellation (PEC)   | ---     |
-|                  | expected to deliver zero bias estimators.             | {Hyperlink to description}               |         |
-+------------------+-------------------------------------------------------+------------------------------------------+---------+
++------------------+-------------------------------------------------------+-----------------------------------+---------+
+| Resilience Level | Definition                                            | Estimator                         | Sampler |
++==================+=======================================================+===================================+=========+
+| 0                | No mitigation                                         | None                              | None    |
++------------------+-------------------------------------------------------+-----------------------------------+---------+
+| 1 [Default]      | Minimal mitigation costs: Mitigate error associated   | Twirled Readout Error eXtinction  | M3      |
+|                  | with readout errors                                   | (:ref:`TREX <TREX>`)              |         |
++------------------+-------------------------------------------------------+-----------------------------------+---------+
+| 2                | Medium mitigation costs. Typically reduces bias       | Zero Noise Extrapolation          | ---     |
+|                  | in estimators, but is not guaranteed to be zero bias. | (:ref:`ZNE <ZNE>`)                |         |
++------------------+-------------------------------------------------------+-----------------------------------+---------+
+| 3                | Heavy mitigation with layer sampling. Theoretically   | Probabilistic Error Cancellation  | ---     |
+|                  | expected to deliver zero bias estimators.             | (:ref:`PEC <PEC>`)                |         |
++------------------+-------------------------------------------------------+-----------------------------------+---------+
 
 .. note::
     Resilience levels are currently in beta so sampling overhead and solution quality will vary from circuit to circuit. New features, advanced options and management tools will be released on a rolling basis. Specific error mitigation methods are not guaranteed to be applied at each resilience level.
@@ -75,6 +75,7 @@ The overhead of this method scales with the number of noise factors. The default
 
    </details>
 
+.. _PEC:
 .. raw:: html
 
   <details>
