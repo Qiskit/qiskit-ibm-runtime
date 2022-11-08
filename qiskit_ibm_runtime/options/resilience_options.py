@@ -39,16 +39,20 @@ class ResilienceOptions:
 
     Args:
         noise_factors: An list of real valued noise factors that determine by what amount the
-            circuits' noise is amplified. Default: (1, 3, 5).
+            circuits' noise is amplified.
+            Only applicable for ``resilience_level=2``.
+            Default: (1, 3, 5).
 
         noise_amplifier: A noise amplification strategy. One of ``"TwoQubitAmplifier"``,
             ``"GlobalFoldingAmplifier"``, ``"LocalFoldingAmplifier"``, ``"CxAmplifier"``.
+            Only applicable for ``resilience_level=2``.
             Default: "TwoQubitAmplifier".
 
         extrapolator: An extrapolation strategy. One of ``"LinearExtrapolator"``,
             ``"QuadraticExtrapolator"``, ``"CubicExtrapolator"``, ``"QuarticExtrapolator"``.
             Note that ``"CubicExtrapolator"`` and ``"QuarticExtrapolator"`` require more
             noise factors than the default.
+            Only applicable for ``resilience_level=2``.
             Default: "LinearExtrapolator".
     """
 
