@@ -99,7 +99,6 @@ class TestPrimitives(IBMTestCase):
                 with self.subTest(primitive=cls, options=options):
                     inst = cls(session=MagicMock(spec=MockSession), options=options)
                     expected = asdict(Options())
-                    expected["resilience_level"] = cls._DEFAULT_RESILIENCE_LEVEL
                     self._update_dict(expected, copy.deepcopy(options))
                     self.assertDictEqual(expected, inst.options.__dict__)
 
@@ -353,9 +352,7 @@ class TestPrimitives(IBMTestCase):
                         _, kwargs = session.run.call_args
                         inputs = kwargs["inputs"]
                     self._assert_dict_paritally_equal(inputs, expected)
-                    expected = asdict(Options())
-                    expected["resilience_level"] = cls._DEFAULT_RESILIENCE_LEVEL
-                    self.assertDictEqual(inst.options.__dict__, expected)
+                    self.assertDictEqual(inst.options.__dict__, asdict(Options()))
 
     def test_run_overwrite_runtime_options(self):
         """Test run using overwritten runtime options."""
@@ -424,9 +421,7 @@ class TestPrimitives(IBMTestCase):
                     self.assertEqual(
                         kwargs_list[idx][1]["inputs"]["run_options"]["shots"], shots
                     )
-                expected = asdict(Options())
-                expected["resilience_level"] = cls._DEFAULT_RESILIENCE_LEVEL
-                self.assertDictEqual(inst.options.__dict__, expected)
+                self.assertDictEqual(inst.options.__dict__, asdict(Options()))
 
     def test_run_same_session(self):
         """Test multiple runs within a session."""
@@ -525,16 +520,6 @@ class TestPrimitives(IBMTestCase):
                         dict_keys_equal(inst_options, asdict(new_str)),
                         f"inst_options={inst_options}, new_str={new_str}",
                     )
-
-    def test_default_resilience_level(self):
-        """Test default resilience level."""
-        primitives = [Sampler, Estimator]
-        for cls in primitives:
-            with self.subTest(primitive=cls):
-                inst = cls(session=MagicMock(spec=MockSession))
-                self.assertEqual(
-                    inst.options.get("resilience_level"), cls._DEFAULT_RESILIENCE_LEVEL
-                )
 
     def _update_dict(self, dict1, dict2):
         for key, val in dict1.items():

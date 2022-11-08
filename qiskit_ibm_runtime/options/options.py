@@ -22,6 +22,7 @@ from .execution_options import ExecutionOptions
 from .simulator_options import SimulatorOptions
 from .transpilation_options import TranspilationOptions
 from ..runtime_options import RuntimeOptions
+from ..utils.deprecation import issue_deprecation_msg
 
 
 @_flexible
@@ -34,7 +35,7 @@ class Options:
             Higher levels generate more optimized circuits,
             at the expense of longer transpilation times. This is based on the
             ``optimization_level`` parameter in qiskit-terra but may include
-            backend-specific optimization.
+            backend-specific optimization. Default: 3.
 
             * 0: no optimization
             * 1: light optimization
@@ -43,12 +44,14 @@ class Options:
 
         resilience_level: How much resilience to build against errors.
             Higher levels generate more accurate results,
-            at the expense of longer processing times.
+            at the expense of longer processing times. Default: 1.
 
-            * 0: no resilience
-            * 1: light resilience
-
-            Default is 0 for sampler and 1 for estimator.
+            * 0: No mitigation.
+            * 1: Minimal mitigation costs. Mitigate error associated with readout errors.
+            * 2: Medium mitigation costs. Typically reduces bias in estimators but
+              is not guaranteed to be zero bias. Only applies to estimator.
+            * 3: Heavy mitigation with layer sampling. Theoretically expected to deliver zero
+              bias estimators. Only applies to estimator.
 
         max_execution_time: Maximum execution time in seconds. If
             a job exceeds this time limit, it is forcibly cancelled. If ``None``, the
@@ -69,8 +72,8 @@ class Options:
             :class:`SimulatorOptions` for all available options.
     """
 
-    optimization_level: int = 1
-    resilience_level: Optional[int] = None
+    optimization_level: int = 3
+    resilience_level: int = 1
     max_execution_time: Optional[int] = None
     transpilation: Union[TranspilationOptions, Dict] = field(
         default_factory=TranspilationOptions
@@ -115,6 +118,14 @@ class Options:
                 "seed_simulator": sim_options.get("seed_simulator", None),
             }
         )
+
+        for deprecated in ["translation_method", "timing_constraints"]:
+            if deprecated in inputs["transpilation_settings"]:
+                issue_deprecation_msg(
+                    msg=f"The {deprecated} transpilation option has been deprecated",
+                    version="0.8",
+                    remedy="",
+                )
 
         known_keys = list(Options.__dataclass_fields__.keys())
         known_keys.append("image")

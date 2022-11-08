@@ -91,7 +91,6 @@ class Estimator(BaseEstimator):
     """
 
     _PROGRAM_ID = "estimator"
-    _DEFAULT_RESILIENCE_LEVEL = 1
 
     def __init__(
         self,
@@ -195,8 +194,6 @@ class Estimator(BaseEstimator):
             skip_transpilation
         )
         self._options: dict = asdict(_options)
-        if self._options["resilience_level"] is None:
-            self._options["resilience_level"] = self._DEFAULT_RESILIENCE_LEVEL
 
         self._initial_inputs = {
             "circuits": circuits,

@@ -1,5 +1,10 @@
 ---
 upgrade:
   - |
-    The default ``resilience_level`` option for
-    :class:`qiskit_ibm_runtime.Estimator` has been changed from 0 to 1.
+    The default ``resilience_level`` option for has been changed from 0 to 1.
+    In addition, the default ``optimization_level`` option has been changed
+    from 1 to 3.
+deprecations:
+  - |
+    The transpilation options ``translation_method`` and ``timing_constraints``
+    have been deprecated.

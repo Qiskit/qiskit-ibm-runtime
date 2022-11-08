@@ -70,7 +70,6 @@ class Sampler(BaseSampler):
     """
 
     _PROGRAM_ID = "sampler"
-    _DEFAULT_RESILIENCE_LEVEL = 0
 
     def __init__(
         self,
@@ -170,8 +169,6 @@ class Sampler(BaseSampler):
             skip_transpilation
         )
         self._options: dict = asdict(_options)
-        if self._options["resilience_level"] is None:
-            self._options["resilience_level"] = self._DEFAULT_RESILIENCE_LEVEL
 
         self._initial_inputs = {"circuits": circuits, "parameters": parameters}
         if isinstance(session, Session):
