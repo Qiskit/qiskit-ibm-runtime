@@ -56,12 +56,12 @@ Level 1 applies error mitigation methods that particularly address readout error
 
    </details>
 
+.. _ZNE:
 .. raw:: html
 
   <details>
   <summary>Resilience Level 2</summary>
 
-.. _ZNE:
 Level 2 leverages Zero Noise Extrapolation method (ZNE) which computes an expectation value of the observable for different noise factors (amplification stage) and then uses the measured expectation values to infer the ideal expectation value at the zero-noise limit (extrapolation stage). This approach tends to reduce errors in expectation values, but is not guaranteed to produce an unbiased result. 
 
 .. figure:: ../images/resiliance-2.png
