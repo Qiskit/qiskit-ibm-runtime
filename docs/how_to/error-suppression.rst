@@ -1,67 +1,77 @@
-Work with primitive programs
+Configure error suppression
 =============================
 
-Overview of primitive programs
----------------------------------
+Employing error suppression typically adds more run time to your job.  Therefore, it is important to achieve a balance between perfecting your results and ensuring that your job completes in a reasonable amount of time. 
 
-With Qiskit Runtime, we are introducing a new set of interfaces, in the form of primitive programs, to expand on how users run jobs on quantum computers.
+Primitives let you employ error suppression techniques by setting the optimization level ("optimization_level" option) and by choosing advanced transpilation options. 
 
-The existing Qiskit interface to backends (`backend.run()`) was originally designed to accept a list of circuits and return counts for every job. Over time, it became clear that users have diverse purposes for quantum computing, and therefore the ways in which they define the requirements for their computing jobs are expanding. Therefore, their results also look different.
+Setting the optimization level
+------------------------------
 
-For example, an algorithm researcher and developer cares about information beyond counts; they are more focused on efficiently calculating quasiprobabilities and expectation values of observables.
+The optimization_levels setting specifies how much optimization to perform on the circuits. Higher levels generate more optimized circuits, at the expense of longer transpilation times.
 
-Our primitives provide methods that make it easier to build modular algorithms and other higher-order programs. Instead of simply returning counts, they return more immediately meaningful information. Additionally, they provide a seamless way to access the latest optimizations in IBM Quantum hardware and software.
++--------------------+---------------------------------------------------------------------------------------------------+
+| Optimization Level | Estimator & Sampler                                                                               |
++--------------------+---------------------------------------------------------------------------------------------------+
+| 0                  | No optimization: typically used for hardware characterization                                     |
+|                    |                                                                                                   |
+|                    | * basic translation                                                                               |
+|                    | * layout (as specified)                                                                           |
+|                    | * routing (stochastic swaps)                                                                      |
++--------------------+---------------------------------------------------------------------------------------------------+
+| 1                  | Light optimization:                                                                               |
+|                    |                                                                                                   |
+|                    | * Layout (trivial → vf2 → SabreLayout if routing is required)                                     |
+|                    | * routing (SabreSWAPs if needed)                                                                  |
+|                    | * 1Q gate optimization                                                                            |
+|                    | * Error Suppression: Dynamical Decoupling                                                         |
++--------------------+---------------------------------------------------------------------------------------------------+
+| 2                  | Medium optimization:                                                                              |
+|                    |                                                                                                   |
+|                    | * Layout/Routing: Optimization level 1 (without trivial) + heuristic                              |
+|                    | optimized with greater search depth and trials of optimization function                           |
+|                    | * commutative cancellation                                                                        |
+|                    | * Error Suppression: Dynamical Decoupling                                                         |
++--------------------+---------------------------------------------------------------------------------------------------+
+| 3 (default)        | High Optimization:                                                                                |
+|                    |                                                                                                   |
+|                    | * Optimization level 2 + heuristic optimized on layout/routing further with greater effort/trials |
+|                    | * 2 qubit KAK optimization                                                                        |
+|                    | * Error Suppression: Dynamical Decoupling                                                         |
++--------------------+---------------------------------------------------------------------------------------------------+
 
-The basic operations that one can do with a probability distribution is to sample from it or to estimate quantities on it. Therefore, these operations form the fundamental building blocks of quantum algorithm development. Our first two Qiskit Runtime primitives (Sampler and Estimator) use these sampling and estimating operations as core interfaces to our quantum systems.
+Example: configure Estimator with optimization levels
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Available primitives
---------------------
+.. code-block:: python
+    from qiskit_ibm_runtime import QiskitRuntimeService, Session, Estimator, Options
 
-The following primitive programs are available:
+    service = QiskitRuntimeService()
+    options = Options(optimization_level=2)
 
+    with Session(service=service, backend="ibmq_qasm_simulator") as session:
+    estimator = Estimator(session=session, options=options)
+    job = estimator.run(circuits=[psi1], observables=[H1], parameter_values=[theta1])
+    psi1_H1 = job.result()
 
-+-----------------------+-----------------------+------------------------------------+
-| Primitive             | Description           | Example output                     |
-+=======================+=======================+====================================+
-| Sampler               | Allows a user to      | .. image:: ../images/sampler.png   |
-|                       | input a circuit and   |                                    |
-|                       | then generate         |                                    |
-|                       | quasiprobabilities.   |                                    |
-|                       | This generation       |                                    |
-|                       | enables users to more |                                    |
-|                       | efficiently evaluate  |                                    |
-|                       | the possibility of    |                                    |
-|                       | multiple relevant     |                                    |
-|                       | data points in the    |                                    |
-|                       | context of            |                                    |
-|                       | destructive           |                                    |
-|                       | interference.         |                                    |
-+-----------------------+-----------------------+------------------------------------+
-| Estimator             | Allows a user to      | .. image:: ../images/estimator.png |
-|                       | specify a list of     |                                    |
-|                       | circuits and          |                                    |
-|                       | observables and       |                                    |
-|                       | selectively group     |                                    |
-|                       | between the lists to  |                                    |
-|                       | efficiently evaluate  |                                    |
-|                       | expectation values    |                                    |
-|                       | and variances for a   |                                    |
-|                       | parameter input. It   |                                    |
-|                       | is designed to enable |                                    |
-|                       | users to efficiently  |                                    |
-|                       | calculate and         |                                    |
-|                       | interpret expectation |                                    |
-|                       | values of quantum     |                                    |
-|                       | operators that are    |                                    |
-|                       | required for many     |                                    |
-|                       | algorithms.           |                                    |
-+-----------------------+-----------------------+------------------------------------+
+.. note:: 
+    If optimization level is not specified, the service uses `optimization_level = 3`     
 
+Example: configure Sampler with optimization levels
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-How to use primitives
----------------------
+.. code-block:: python
+    from qiskit_ibm_runtime import QiskitRuntimeService, Session, Sampler, Options
 
-Primitive program interfaces vary based on the type of task that you want to run on the quantum computer and the corresponding data that you want returned as a result. After identifying the appropriate primitive for your program, you can use Qiskit to prepare inputs, such as circuits, observables (for Estimator), and customizable options to optimize your job. For more information, see the appropriate topic:
+    service = QiskitRuntimeService()
+    options = Options(optimization_level=3)
 
-* `Getting started with Sampler <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/tutorials/how-to-getting-started-with-sampler.html>`__
-* `Getting started with Estimator <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/tutorials/how-to-getting-started-with-estimator.html>`__
+    with Session(service=service, backend="ibmq_qasm_simulator") as session:
+    sampler = Sampler(session=session, options=options)
+  
+Advanced transpilation options
+------------------------------
+
+You also have the ability to tune a variety of advanced options to configure your transpilation strategy further. These methods can be used alongside optimization levels.  They allow you to change the options of interest and let your optimization level manage the rest.  
+
+Most of the transpilation options are inherited from 'qiskit.compiler.transpile <https://qiskit.org/documentation/stubs/qiskit.compiler.transpile.html>'__. 
