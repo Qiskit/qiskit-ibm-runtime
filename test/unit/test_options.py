@@ -129,7 +129,7 @@ class TestOptions(IBMTestCase):
             execution={"shots": 100},
             environment={"log_level": "DEBUG"},
             simulator={"noise_model": noise_model},
-            resilience={"seed_mitigation": 42},
+            resilience={"noise_amplifier": "GlobalFoldingAmplifier"},
             foo="foo",
         )
 
@@ -141,7 +141,10 @@ class TestOptions(IBMTestCase):
                 "skip_transpilation": True,
                 "initial_layout": [1, 2],
             },
-            "resilience_settings": {"level": 2, "seed_mitigation": 42},
+            "resilience_settings": {
+                "level": 2,
+                "noise_amplifier": "GlobalFoldingAmplifier",
+            },
             "foo": "foo",
         }
         self.assertTrue(

@@ -21,6 +21,7 @@ from .environment_options import EnvironmentOptions
 from .execution_options import ExecutionOptions
 from .simulator_options import SimulatorOptions
 from .transpilation_options import TranspilationOptions
+from .resilience_options import ResilienceOptions
 from ..runtime_options import RuntimeOptions
 
 
@@ -58,6 +59,9 @@ class Options:
         transpilation: Transpilation options. See :class:`TranspilationOptions` for all
             available options.
 
+        resilience: Advanced resilience options to fine tune the resilience strategy.
+            See :class:`ResilienceOptions` for all available options.
+
         execution: Execution time options. See :class:`ExecutionOptions` for all available options.
 
         environment: Options related to the execution environment. See
@@ -72,6 +76,9 @@ class Options:
     max_execution_time: Optional[int] = None
     transpilation: Union[TranspilationOptions, Dict] = field(
         default_factory=TranspilationOptions
+    )
+    resilience: Union[ResilienceOptions, Dict] = field(
+        default_factory=ResilienceOptions
     )
     execution: Union[ExecutionOptions, Dict] = field(default_factory=ExecutionOptions)
     environment: Union[EnvironmentOptions, Dict] = field(
