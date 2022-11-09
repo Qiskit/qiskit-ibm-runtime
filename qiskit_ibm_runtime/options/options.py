@@ -21,7 +21,9 @@ from .environment_options import EnvironmentOptions
 from .execution_options import ExecutionOptions
 from .simulator_options import SimulatorOptions
 from .transpilation_options import TranspilationOptions
+from .resilience_options import ResilienceOptions
 from ..runtime_options import RuntimeOptions
+from ..utils.deprecation import issue_deprecation_msg
 
 
 @_flexible
@@ -34,7 +36,7 @@ class Options:
             Higher levels generate more optimized circuits,
             at the expense of longer transpilation times. This is based on the
             ``optimization_level`` parameter in qiskit-terra but may include
-            backend-specific optimization.
+            backend-specific optimization. Default: 3.
 
             * 0: no optimization
             * 1: light optimization
@@ -43,10 +45,19 @@ class Options:
 
         resilience_level: How much resilience to build against errors.
             Higher levels generate more accurate results,
-            at the expense of longer processing times.
+            at the expense of longer processing times. Default: 1.
 
-            * 0: no resilience
-            * 1: light resilience
+            * 0: No mitigation.
+            * 1: Minimal mitigation costs. Mitigate error associated with readout errors.
+            * 2: Medium mitigation costs. Typically reduces bias in estimators but
+              is not guaranteed to be zero bias. Only applies to estimator.
+            * 3: Heavy mitigation with layer sampling. Theoretically expected to deliver zero
+              bias estimators. Only applies to estimator.
+
+            Refer to the
+            `Qiskit Runtime documentation
+            <https://qiskit.org/documentation/partners/qiskit_ibm_runtime>`_.
+            for more information about the error mitigation methods used at each level.
 
         max_execution_time: Maximum execution time in seconds. If
             a job exceeds this time limit, it is forcibly cancelled. If ``None``, the
@@ -58,6 +69,9 @@ class Options:
         transpilation: Transpilation options. See :class:`TranspilationOptions` for all
             available options.
 
+        resilience: Advanced resilience options to fine tune the resilience strategy.
+            See :class:`ResilienceOptions` for all available options.
+
         execution: Execution time options. See :class:`ExecutionOptions` for all available options.
 
         environment: Options related to the execution environment. See
@@ -67,11 +81,14 @@ class Options:
             :class:`SimulatorOptions` for all available options.
     """
 
-    optimization_level: int = 1
-    resilience_level: int = 0
+    optimization_level: int = 3
+    resilience_level: int = 1
     max_execution_time: Optional[int] = None
     transpilation: Union[TranspilationOptions, Dict] = field(
         default_factory=TranspilationOptions
+    )
+    resilience: Union[ResilienceOptions, Dict] = field(
+        default_factory=ResilienceOptions
     )
     execution: Union[ExecutionOptions, Dict] = field(default_factory=ExecutionOptions)
     environment: Union[EnvironmentOptions, Dict] = field(
@@ -104,7 +121,8 @@ class Options:
             }
         )
 
-        inputs["resilience_settings"] = {"level": options.get("resilience_level")}
+        inputs["resilience_settings"] = options.get("resilience", {})
+        inputs["resilience_settings"].update({"level": options.get("resilience_level")})
         inputs["run_options"] = options.get("execution")
         inputs["run_options"].update(
             {
@@ -112,6 +130,14 @@ class Options:
                 "seed_simulator": sim_options.get("seed_simulator", None),
             }
         )
+
+        for deprecated in ["translation_method", "timing_constraints"]:
+            if deprecated in inputs["transpilation_settings"]:
+                issue_deprecation_msg(
+                    msg=f"The {deprecated} transpilation option has been deprecated",
+                    version="0.8",
+                    remedy="",
+                )
 
         known_keys = list(Options.__dataclass_fields__.keys())
         known_keys.append("image")

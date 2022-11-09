@@ -19,6 +19,7 @@ from qiskit.circuit import QuantumCircuit, Gate
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit.primitives import BaseSampler, SamplerResult
+from qiskit.result import QuasiDistribution
 
 from qiskit_ibm_runtime import Sampler, Session
 from qiskit_ibm_runtime.exceptions import RuntimeJobFailureError
@@ -270,6 +271,10 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
             job = sampler.run(circuits=[self.bell] * 20, callback=_callback)
             result = job.result()
 
-            self.assertEqual(result.quasi_dists, ws_result[-1].quasi_dists)
+            self.assertIsInstance(ws_result[-1], dict)
+            ws_result_quasi = [
+                QuasiDistribution(quasi) for quasi in ws_result[-1]["quasi_dists"]
+            ]
+            self.assertEqual(result.quasi_dists, ws_result_quasi)
             self.assertEqual(len(job_ids), 1)
             self.assertEqual(job.job_id(), job_ids.pop())

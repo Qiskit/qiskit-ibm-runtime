@@ -12,7 +12,7 @@
 
 """Qiskit runtime job."""
 
-from typing import Any, Optional, Callable, Dict, Type
+from typing import Any, Optional, Callable, Dict, Type, Union, Sequence
 import time
 import json
 import logging
@@ -24,11 +24,8 @@ from datetime import datetime
 from qiskit.providers.backend import Backend
 from qiskit.providers.jobstatus import JobStatus, JOB_FINAL_STATES
 from qiskit.providers.job import JobV1 as Job
-from .utils.estimator_result_decoder import EstimatorResultDecoder
-from .utils.sampler_result_decoder import SamplerResultDecoder
 
-
-from .constants import API_TO_JOB_ERROR_MESSAGE, API_TO_JOB_STATUS
+from .constants import API_TO_JOB_ERROR_MESSAGE, API_TO_JOB_STATUS, DEFAULT_DECODERS
 from .exceptions import (
     RuntimeJobFailureError,
     RuntimeInvalidStateError,
@@ -95,7 +92,9 @@ class RuntimeJob(Job):
         params: Optional[Dict] = None,
         creation_date: Optional[str] = None,
         user_callback: Optional[Callable] = None,
-        result_decoder: Type[ResultDecoder] = ResultDecoder,
+        result_decoder: Optional[
+            Union[Type[ResultDecoder], Sequence[Type[ResultDecoder]]]
+        ] = None,
         image: Optional[str] = "",
     ) -> None:
         """RuntimeJob constructor.
@@ -122,9 +121,16 @@ class RuntimeJob(Job):
         self._status = JobStatus.INITIALIZING
         self._reason: Optional[str] = None
         self._error_message: Optional[str] = None
-        self._result_decoder = result_decoder
         self._image = image
         self._final_interim_results = False
+
+        decoder = (
+            result_decoder or DEFAULT_DECODERS.get(program_id, None) or ResultDecoder
+        )
+        if isinstance(decoder, Sequence):
+            self._interim_result_decoder, self._final_result_decoder = decoder
+        else:
+            self._interim_result_decoder = self._final_result_decoder = decoder
 
         # Used for streaming
         self._ws_client_future = None  # type: Optional[futures.Future]
@@ -159,7 +165,7 @@ class RuntimeJob(Job):
             RuntimeJobFailureError: If the job failed.
         """
         if not self._final_interim_results:
-            _decoder = decoder or self._result_decoder
+            _decoder = decoder or self._interim_result_decoder
             interim_results_raw = self._api_client.job_interim_results(
                 job_id=self.job_id()
             )
@@ -186,12 +192,8 @@ class RuntimeJob(Job):
             RuntimeJobFailureError: If the job failed.
             RuntimeJobMaxTimeoutError: If the job does not complete within given timeout.
         """
-        if self.program_id == "sampler":
-            self._result_decoder = SamplerResultDecoder
-        elif self.program_id == "estimator":
-            self._result_decoder = EstimatorResultDecoder
-        _decoder = decoder or self._result_decoder
-        if self._results is None or (_decoder != self._result_decoder):
+        _decoder = decoder or self._final_result_decoder
+        if self._results is None or (_decoder != self._final_result_decoder):
             self.wait_for_final_state(timeout=timeout)
             if self._status == JobStatus.ERROR:
                 error_message = self.error_message()
@@ -474,7 +476,7 @@ class RuntimeJob(Job):
             decoder: A :class:`ResultDecoder` (sub)class used to decode job results.
         """
         logger.debug("Start result streaming for job %s", self.job_id())
-        _decoder = decoder or self._result_decoder
+        _decoder = decoder or self._interim_result_decoder
         while True:
             try:
                 response = result_queue.get()
