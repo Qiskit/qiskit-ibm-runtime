@@ -17,11 +17,7 @@ from qiskit.quantum_info import SparsePauliOp
 from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit.primitives import EstimatorResult, SamplerResult
 
-from qiskit_ibm_runtime import (
-    Estimator,
-    Session,
-    Sampler,
-)
+from qiskit_ibm_runtime import Estimator, Session, Sampler, Options
 
 from ..decorators import run_integration_test
 from ..ibm_test_case import IBMIntegrationTestCase
@@ -39,8 +35,10 @@ class TestIntegrationSession(IBMIntegrationTestCase):
         H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
         theta1 = [0, 1, 1, 2, 3, 5]
 
+        options = Options(resilience_level=0)
+
         with Session(service, backend="ibmq_qasm_simulator") as session:
-            estimator = Estimator(session=session)
+            estimator = Estimator(session=session, options=options)
             result = estimator.run(
                 circuits=[psi1], observables=[H1], parameter_values=[theta1], shots=100
             ).result()
@@ -49,7 +47,7 @@ class TestIntegrationSession(IBMIntegrationTestCase):
             self.assertEqual(len(result.metadata), 1)
             self.assertEqual(result.metadata[0]["shots"], 100)
 
-            sampler = Sampler(session=session)
+            sampler = Sampler(session=session, options=options)
             result = sampler.run(circuits=ReferenceCircuits.bell(), shots=200).result()
             self.assertIsInstance(result, SamplerResult)
             self.assertEqual(len(result.quasi_dists), 1)

@@ -45,7 +45,8 @@ class TestIntegrationOptions(IBMIntegrationTestCase):
                 "basis_gates": fake_backend.configuration().basis_gates,
                 "coupling_map": fake_backend.configuration().coupling_map,
                 "seed_simulator": 42,
-            }
+            },
+            resilience_level=0,
         )
 
         with Session(service=service, backend=backend):
