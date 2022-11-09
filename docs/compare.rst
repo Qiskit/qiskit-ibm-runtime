@@ -30,7 +30,7 @@ running. As a result, Qiskit Runtime is much more efficient than its
 predecessors.
 
 +---------------------------------------------------------------------------------+-----------------------+---------------------------+
-| Function                                                                        | qiskit-ibmq-provider  | Qiskit Runtime Primitives |
+| Function                                                                        | backend.run           | Qiskit Runtime Primitives |
 +=================================================================================+=======================+===========================+
 | Primitive interface as abstraction for circuits and variational workload        | No                    | Yes                       |
 +---------------------------------------------------------------------------------+-----------------------+---------------------------+
