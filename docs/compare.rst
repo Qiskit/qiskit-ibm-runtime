@@ -1,7 +1,7 @@
-How does the qiskit-ibmq-provider differ from Qiskit Runtime primitives?
+How does backend.run differ from Qiskit Runtime primitives?
 ============================================================================
 
-The existing Qiskit (qiskit-ibmq-provider) backend interface (``backend.run()``) was originally
+The existing Qiskit backend interface (``backend.run()``) was originally
 designed to accept a list of circuits and return shot counts for every
 job. As our users' needs changed, we realized that we would need a new,
 more flexible tool to address those needs, and Qiskit Runtime was born.
@@ -32,7 +32,7 @@ predecessors.
 +---------------------------------------------------------------------------------+-----------------------+---------------------------+
 | Function                                                                        | qiskit-ibmq-provider  | Qiskit Runtime Primitives |
 +=================================================================================+=======================+===========================+
-| Primitive interface as abstraction for circuits and variational workload        | Yes                   | Yes                       |
+| Primitive interface as abstraction for circuits and variational workload        | No                    | Yes                       |
 +---------------------------------------------------------------------------------+-----------------------+---------------------------+
 | Sessions to improve performance for a sequence of jobs                          | No                    | Yes                       |
 +---------------------------------------------------------------------------------+-----------------------+---------------------------+

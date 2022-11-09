@@ -10,6 +10,7 @@ Estimator
 .. nbgallery::
 
    tutorials/how-to-getting-started-with-estimator
+   tutorials/Error-Suppression-and-Error-Mitigation
    tutorials/vqe_with_estimator
    tutorials/chsh_with_estimator
 

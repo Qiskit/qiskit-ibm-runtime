@@ -57,9 +57,9 @@ Example: configure Estimator with optimization levels
     options = Options(optimization_level=2)
 
     with Session(service=service, backend="ibmq_qasm_simulator") as session:
-    estimator = Estimator(session=session, options=options)
-    job = estimator.run(circuits=[psi1], observables=[H1], parameter_values=[theta1])
-    psi1_H1 = job.result()
+        estimator = Estimator(session=session, options=options)
+        job = estimator.run(circuits=[psi1], observables=[H1], parameter_values=[theta1])
+        psi1_H1 = job.result()
 
 .. note:: 
     If optimization level is not specified, the service uses ``optimization_level = 3``.  
@@ -75,7 +75,7 @@ Example: configure Sampler with optimization levels
     options = Options(optimization_level=3)
 
     with Session(service=service, backend="ibmq_qasm_simulator") as session:
-    sampler = Sampler(session=session, options=options)
+        sampler = Sampler(session=session, options=options)
   
 Advanced transpilation options
 ------------------------------

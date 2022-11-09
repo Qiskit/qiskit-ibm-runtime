@@ -93,9 +93,9 @@ When using primitives with their context managers as previously described, the s
 Retrieve previous job results
 -----------------------------------
 
-You can review job results immediately after the job completes by calling ``job.result()``, but there are also several ways to retrieve your results later.  After starting your job, the job ID is returned.  Note that ID. After the job completes, you can view the results.
+You can review job results immediately after the job completes by calling ``job.result()``, but there are also several ways to retrieve your results later.  After starting your job, a job instance returned.  Run ``job.job_id()`` to get the ID. After the job completes, you can view the results.
 
-Immediately after running the job, follow up the Qiskit Runtime  QiskitRuntimeService.run() method by running ``job.status()``.
+You can check the status of your job by calling ``job.status()``.
 
 If you ran other jobs since running the job you want to investigate, run ``job = service.job(job_id)`` then run ``job.status()``.
 

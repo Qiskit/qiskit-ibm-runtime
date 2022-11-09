@@ -95,11 +95,13 @@ The Qiskit Runtime primitive implementation of PEC specifically addresses noise 
 
 The overhead of this method scales with the number of noise factors. The default settings sample the expectation value at three noise factors, leading to a roughly 3x overhead when employing this resilience level.   
 
-PEC uses a quasi-probability method to mimic the effect of inverting the learned noise. This requires sampling from a randomized circuit family associated with the user's original circuit. Applying PEC will reduce the precision in returned expectation value estimates unless the number of samples is also increased by a factor that scales exponentially with the noise strength of the mitigated circuit. 
+PEC uses a quasi-probability method to mimic the effect of inverting the learned noise. This requires sampling from a randomized circuit family associated with the user’s original circuit. Applying PEC will increase the variability of the returned expectation value estimates unless the number of samples per circuit is also increased for both input and characterization circuits. The amount of samples required to counter this variability scales exponentially with the noise strength of the mitigated circuit. 
 
-When estimating an unmitigated Pauli observable :math:`\langle P\rangle` the standard error in the estimated expectation value is given by :math:`\frac{1}{\sqrt{N_{\mbox{shots}}}}\left(1- \langle P\rangle^2\right)` where :math:`N_{\mbox{shots}}` is the number shots used to estimate :math:`\langle P\rangle`. When applying PEC mitigation the standard error becomes :math:`\sqrt{\frac{S}{N_{\mbox{samples}}}}\left(1- \langle P\rangle^2\right)` where :math:`N_{\mbox{samples}}` is the number of PEC samples and :math:`S` is the *sampling overhead*. To obtain a PEC estimate with a standard error comparable to the unmitigated observable for a given number of shots the required number of samples is :math:`N_{\mbox{samples}} = S N_{\mbox{shots}}`.
+How this works:
 
-The sampling overhead :math:`S` scales exponentially with a parameter that characterizes the collective noise of the input circuit. As the Qiskit Runtime primitive learns the noise of your circuit, it will return metadata about the sampling overhead associated with that particular layer.  Let's label the overhead of layer :math:`l` as :math:`\gamma_l`. Then the total sampling overhead for mitigating your circuit is the product of all the layer overheads, that is:
+When estimating an unmitigated Pauli observable :math:`\langle P\rangle` the standard error in the estimated expectation value is given by :math:`\frac{1}{\sqrt{N_{\mbox{shots}}}}\left(1- \langle P\rangle^2\right)` where :math:`N_{\mbox{shots}}` is the number of shots used to estimate :math:`\langle P\rangle`. When applying PEC mitigation, the standard error becomes :math:`\sqrt{\frac{S}{N_{\mbox{samples}}}}\left(1- \langle P\rangle^2\right)` where :math:`N_{\mbox{samples}}` is the number of PEC samples.
+
+The sampling overhead scales exponentially with a parameter that characterizes the collective noise of the input circuit. As the Qiskit Runtime primitive learns the noise of your circuit, it will return metadata about the sampling overhead associated with that particular layer.  Let's label the overhead of layer :math:`l` as :math:`\gamma_l`. Then the total sampling overhead for mitigating your circuit is the product of all the layer overheads, that is:
 
 :math:`S = \prod_l \gamma_l`
 
@@ -144,7 +146,7 @@ Configure Sampler with resilience levels
 -----------------------------------------
 
 
-The Sampler default resilience setting (level 1) does not enable error mitigation to allow users to generate unmitigated probability distributions. Users can enable one resilience level for sampling tasks, which allows them to leverage readout error mitigation as described below.
+The Sampler default resilience setting (level 1) enables readout error mitigation to allow users to generate mitigated quasi-probability distributions. 
 
 .. raw:: html
 

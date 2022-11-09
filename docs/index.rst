@@ -51,7 +51,7 @@ Next Steps
 
     Overview <self>
     Getting Started <getting_started>
-    qiskit-ibmq-provider vs. Qiskit Runtime <compare>
+    backend.run vs. Qiskit Runtime <compare>
     Introduction to primitives <primitives>
 
 
@@ -60,14 +60,15 @@ Next Steps
    :hidden:
    :caption: Tutorials
 
-    Getting started with Estimator <tutorials/how-to-getting-started-with-estimator>
+    Get started with Estimator <tutorials/how-to-getting-started-with-estimator>
+    Get started with error suppression and error mitigation <tutorials/Error-Suppression-and-Error-Mitigation>
     CHSH with Estimator <tutorials/chsh_with_estimator>
     VQE with Estimator <tutorials/vqe_with_estimator>
-    Getting started with Sampler <tutorials/how-to-getting-started-with-sampler>
+    Get started with Sampler <tutorials/how-to-getting-started-with-sampler>
     QPE with Sampler <tutorials/qpe_with_sampler>
     Grover with Sampler <tutorials/grover_with_sampler>
     SEA with Sampler <tutorials/sea_with_sampler>
-    Submitting user-transpiled circuits using primitives <tutorials/user-transpiled-circuits>
+    Submit user-transpiled circuits using primitives <tutorials/user-transpiled-circuits>
     All tutorials <tutorials>
 
 .. toctree::
@@ -81,21 +82,6 @@ Next Steps
     Configure error mitigation options <how_to/error-mitigation>
     Configure error suppression <how_to/error-suppression>
     Manage your account <how_to/account-management>
-    
-.. toctree::
-   :maxdepth: 1
-   :hidden:
-   :caption: Migrate to using primitives
-
-    Why migrate? <how_to/migrate-overview>
-    Migrate code <how_to/migrate-code>
-    Considerations <how_to/migrate-FAQ>
-    Use Estimator in an algorithm <how_to/migrate-estimator>
-    Use Estimator and Sampler in an algorithm <how_to/migrate-est-sam>
-    Use Sampler in an algorithm <how_to/migrate-sampler>
-    Update parameter values while running <how_to/migrate-update-parm>
-    Primitive-based routines <how_to/migrate-prim-based>
-    End-to-end example <how_to/migrate-e2e>
 
 .. toctree::
    :maxdepth: 1
