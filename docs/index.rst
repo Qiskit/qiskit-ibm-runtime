@@ -98,7 +98,6 @@ Next Steps
     Architecture and workload isolation <cloud/architecture-workload-isolation>
     Securing your data <cloud/data-security>
     Audit events <cloud/at-events>
-    Release notes <cloud/release-notes>
 
 .. toctree::
    :maxdepth: 1

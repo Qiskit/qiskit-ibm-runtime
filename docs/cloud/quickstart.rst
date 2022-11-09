@@ -94,7 +94,7 @@ If you save your credentials to disk, you can use ``QiskitRuntimeService()`` in 
    service = QiskitRuntimeService()
 
 
-If you need to update your saved credentials, run ``save_account`` again, passing in ``overwrite=True``  and the updated credentials. For more information about managing your account, see the `account management tutorial <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/tutorials/04_account_management.html>`__.
+If you need to update your saved credentials, run ``save_account`` again, passing in ``overwrite=True``  and the updated credentials. For more information about managing your account, see the `account management topic <how_to/account-management.html>`__.
 
 Test your setup
 -------------------
@@ -137,4 +137,5 @@ Choose a program to run
 Qiskit Runtime uses primitive programs to interface with quantum computers. The following programs are publicly available. Choose the appropriate link to continue learning how to run a program.
 
 `Getting started with Sampler <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/tutorials/how-to-getting-started-with-sampler.html>`__
+
 `Getting started with Estimator <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/tutorials/how-to-getting-started-with-estimator.html>`__

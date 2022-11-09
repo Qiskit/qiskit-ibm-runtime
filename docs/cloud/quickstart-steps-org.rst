@@ -98,11 +98,7 @@ Follow these steps to set up an access group:
 Set up your ID provider and assign users
 ----------------------------------------
 
-Follow the steps in the appropriate topic, depending on the ID provider you chose to use:
-
--  `Use IBM Cloud as the ID provider for users that have IBM Cloud accounts <cloud-provider-org>`__
--  `Use IBM Cloud as the ID provider for users that do not have IBM Cloud accounts <appid-cloud-org>`__
--  `Use an ID provider other than IBM Cloud for users that do not have IBM Cloud accounts <appid-org>`__
+Follow the steps in the `manage users topic <cloud-provider-org.html>`__.
 
 .. |IAM settings| image:: ../images/org-guide-iam-settings.png
 .. |custom| image:: ../images/org-guide-create-custom-role.png

@@ -85,7 +85,7 @@ The actions in the custom roles can be used for more fine grained access control
 
 To achieve that, define two different custom roles such as ``MLreader`` and ``MLwriter``. Remove all cancel, delete, and update roles from the ``MLreader`` custom role, and include all actions in the ``MLwriter`` custom role. Next, add the roles to two different access groups accordingly.
 
-When using dynamic rules, that is, when the IDP administrator manages access through custom IDP user attributes, do not use IDP custom user attributes that are substrings of each other. For instance, don’t use ``ml`` and ``mlReader``, as the string comparison of ``ml`` would also accept ``mlReader``. You could use ``MLreader`` and ``MLwriter`` to avoid this conflict. {: note}
+When using dynamic rules, that is, when the IDP administrator manages access through custom IDP user attributes, do not use IDP custom user attributes that are substrings of each other. For instance, don't use ``ml`` and ``mlReader``, as the string comparison of ``ml`` would also accept ``mlReader``. You could use ``MLreader`` and ``MLwriter`` to avoid this conflict.
 
 For an example of setting up custom roles, see `Create access groups for projects <quickstart-steps-org#create-group-org.html>`__.
 
