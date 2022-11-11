@@ -77,7 +77,7 @@ Next Steps
    :caption: How to
 
     Run a session <how_to/run_session>
-    Run on real backends <how_to/backends>
+    Run on quantum backends <how_to/backends>
     Configure primitive options <how_to/options>
     Configure error mitigation options <how_to/error-mitigation>
     Configure error suppression <how_to/error-suppression>
