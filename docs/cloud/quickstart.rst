@@ -113,12 +113,12 @@ instead of ``QiskitRuntimeService()`` in the following code.
 
    service = QiskitRuntimeService()
    program_inputs = {'iterations': 1}
-   options = {"backend_name": ""}
+   options = {"backend": ""}
    job = service.run(program_id="hello-world",
                   options=options,
                   inputs=program_inputs
                  )
-   print(f"job id: {job.job_id}")
+   print(f"job id: {job.job_id()}")
    result = job.result()
    print(result)
 
