@@ -15,11 +15,6 @@ How to limit your cost
 
 The time your job takes (and therefore, its cost) depends on how many iterations you make in a session and how many shots are run in each iteration. Thus, you can manage your cost by running only as many iterations and shots as you need.
 
-To set cost limits, navigate to the `IBM Cloud Instances page <https://cloud.ibm.com/quantum/instances>`__, then click your instance. You can set these limits:
-
-* **Instance cost limit**: Specify how much total cost this instance can incur.
-* **Max cost per session**: Specify how much can be spent running jobs in each session.
-
 How to see what you’re being charged
 ------------------------------------
 
