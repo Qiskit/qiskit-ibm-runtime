@@ -201,6 +201,7 @@ class Sampler(BaseSampler):
                 a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
             parameter_values: Concrete parameters to be bound.
             **kwargs: Individual options to overwrite the default primitive options.
+            These options include ``log_level``, ``image``, ``job_tags``, and ``max_execution_time``.
 
         Returns:
             Submitted job.
@@ -230,6 +231,7 @@ class Sampler(BaseSampler):
                 a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
             parameter_values: An optional list of concrete parameters to be bound.
             **kwargs: Individual options to overwrite the default primitive options.
+            These options include ``log_level``, ``image``, ``job_tags``, and ``max_execution_time``.
 
         Returns:
             Submitted job.
