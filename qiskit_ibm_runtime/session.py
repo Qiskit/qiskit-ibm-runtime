@@ -185,7 +185,7 @@ class Session:
         """Return the session ID.
 
         Returns:
-            Session ID.
+            Session ID. None until a job runs in the session.
         """
         return self._session_id
 
