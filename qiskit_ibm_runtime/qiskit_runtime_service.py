@@ -1405,7 +1405,11 @@ class QiskitRuntimeService(Provider):
                 instance = to_instance_format(hub, group, project)
         # Try to find the right backend
         try:
-            backend = self.backend(raw_data["backend"], instance=instance)
+            if "backend" in raw_data:
+                backend = self.backend(raw_data["backend"], instance=instance)
+            else:
+                if self.channel == "ibm_cloud":
+                    backend = None
         except QiskitBackendNotFoundError:
             backend = ibm_backend.IBMRetiredBackend.from_name(
                 backend_name=raw_data["backend"],
