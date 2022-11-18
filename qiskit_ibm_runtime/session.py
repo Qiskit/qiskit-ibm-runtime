@@ -141,7 +141,8 @@ class Session:
         """
 
         options = options or {}
-        options["backend"] = self._backend
+        if "backend" not in options:
+            options["backend"] = self._backend
 
         if not self._session_id:
             # TODO: What happens if session max time != first job max time?
