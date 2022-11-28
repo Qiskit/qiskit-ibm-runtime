@@ -246,9 +246,10 @@ class RuntimeJob(Job):
         self,
         timeout: Optional[float] = None,
     ) -> None:
-        """Use the websocket server to wait for the final the state of a job. The server
-            will remain open if the job is still running and the connection will be terminated
-            once the job completes. Then update and return the status of the job.
+        """Use the websocket server to wait for the final the state of a job.
+
+        The server will remain open if the job is still running and the connection will
+        be terminated once the job completes. Then update and return the status of the job.
 
         Args:
             timeout: Seconds to wait for the job. If ``None``, wait indefinitely.
