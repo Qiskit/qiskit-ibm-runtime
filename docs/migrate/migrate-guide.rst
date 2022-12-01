@@ -31,7 +31,7 @@ The following image compares the execution paths and function availablilty for b
  :scale: 50 %
  :alt: Execution paths for backend.run compared to Qiskit Runtime
 
- Comparison of backend.run to the Qiskit Runtime execution model. 
+ Comparing backend.run to the Qiskit Runtime execution model. 
 
 
 .. _migfaqs:
