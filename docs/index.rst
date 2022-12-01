@@ -86,6 +86,19 @@ Next Steps
 .. toctree::
    :maxdepth: 1
    :hidden:
+   :caption: Migrate
+
+    Migrate to the Qiskit Runtime execution model <migrate/migrate-guide>
+    Use Estimator in an algorithm <migrate/migrate-estimator>
+    Use Sampler in an algorithm <migrate/migrate-sampler>
+    Use Estimator and Sampler in an algorithm <migrate/migrate-est-sam>
+    Update parameter values while running <migrate/migrate-update-parm>
+    Primitive-based routines <migrate/migrate-prim-based>  
+    End-to-end example <migrate/migrate-e2e> 
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
    :caption: Work with Qiskit Runtime in IBM Cloud
 
     Getting started <cloud/quickstart>
