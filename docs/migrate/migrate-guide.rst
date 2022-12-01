@@ -14,12 +14,12 @@ Using Qiskit Runtime unlocks the following advantages:
   * Especially helpfulfor variational quantum algorithms, where loops between classical and quantum computation can be carried out with minimized latency.
 
 * Use primitive programs write code more efficiently
+  
   .. figure:: ../images/compare-code.png
    :scale: 50 %
    :alt: Two code snippets, side by side
 
    Code without primitives, and after it's been rewritten to use primitives.
-
 
 * Seamlessly access our latest performance and hardware optimizations.
 
