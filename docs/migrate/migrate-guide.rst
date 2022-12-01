@@ -34,7 +34,7 @@ The following image compares the execution paths and function availablilty for b
  Comparison of backend.run to the Qiskit Runtime execution model. 
 
 
-.. _faqs:
+.. _migfaqs:
 
 FAQs
 --------------------------------------------
