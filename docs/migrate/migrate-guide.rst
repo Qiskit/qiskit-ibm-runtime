@@ -11,7 +11,8 @@ Using Qiskit Runtime unlocks the following advantages:
 * Access our most powerful quantum systems with shorter wait times.
 
 * Run circuits faster with our containerized, cloud-native architecture.
-  * Especially helpfulfor variational quantum algorithms, where loops between classical and quantum computation can be carried out with minimized latency.
+
+  * Especially helpful for variational quantum algorithms, where loops between classical and quantum computation can be carried out with minimized latency.
 
 * Use primitive programs write code more efficiently
   
@@ -25,10 +26,10 @@ Using Qiskit Runtime unlocks the following advantages:
 
 * Combine with IBM Cloud access to couple Qiskit Runtime with other compute services.
 
+
 The following image compares the execution paths and function availablilty for backend.run compared to the Qiskit Runtime execution model. Items marked with a clock are coming soon.
 
 .. figure:: ../images/execution-paths.png
- :scale: 50 %
  :alt: Execution paths for backend.run compared to Qiskit Runtime
 
  Comparing backend.run to the Qiskit Runtime execution model. 
@@ -120,7 +121,7 @@ the extremal energy of a system is to be discovered, for example.
 
    </details>
 
-   .. raw:: html
+.. raw:: html
 
   <details>
   <summary>Which parts of my code do I need to refactor?</summary>
