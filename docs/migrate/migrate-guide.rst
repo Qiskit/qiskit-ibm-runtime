@@ -10,9 +10,9 @@ Using Qiskit Runtime unlocks the following advantages:
 
 * Access our most powerful quantum systems with shorter wait times.
 
-* Run circuits faster with our containerized, cloud-native architecture.
-
+  * Run circuits faster with our containerized, cloud-native architecture. 
   * Especially helpful for variational quantum algorithms, where loops between classical and quantum computation can be carried out with minimized latency.
+  * Decrease total time from start to finish. 
 
 * Use primitive programs write code more efficiently
   
@@ -20,9 +20,9 @@ Using Qiskit Runtime unlocks the following advantages:
    :scale: 50 %
    :alt: Two code snippets, side by side
 
-   Code without primitives, and after it's been rewritten to use primitives.
+   Code without primitives, and the same code after being rewritten to use primitives.
 
-* Seamlessly access our latest performance and hardware optimizations.
+  * Seamlessly access our latest performance and hardware optimizations.
 
 * Combine with IBM Cloud access to couple Qiskit Runtime with other compute services.
 
