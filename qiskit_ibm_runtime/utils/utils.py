@@ -126,7 +126,7 @@ def _is_experimental_runtime_url(url: str) -> bool:
     Args:
         url: The URL.
     """
-    return isinstance(url, str) and "experimental" in url and url.endswith(".cloud")
+    return isinstance(url, str) and "experimental" in url
 
 
 def _location_from_crn(crn: str) -> str:
