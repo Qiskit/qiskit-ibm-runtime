@@ -81,6 +81,7 @@ Next Steps
     Configure primitive options <how_to/options>
     Configure error mitigation options <how_to/error-mitigation>
     Configure error suppression <how_to/error-suppression>
+    Build primitive based routines <how_to/build-prim-based>
     Manage your account <how_to/account-management>
 
 .. toctree::
@@ -88,7 +89,7 @@ Next Steps
    :hidden:
    :caption: Migrate
 
-    Migrate to the Qiskit Runtime execution model <migrate/migrate-guide>
+    Migrate to using Qiskit Runtime primitives <migrate/migrate-guide>
     Use Estimator in an algorithm <migrate/migrate-estimator>
     Use Sampler in an algorithm <migrate/migrate-sampler>
     Use Estimator and Sampler in an algorithm <migrate/migrate-est-sam>
