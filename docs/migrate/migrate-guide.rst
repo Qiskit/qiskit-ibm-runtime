@@ -3,36 +3,37 @@ Migration guide
 
 .. _why-migrate:
 
-Why use the Qiskit Runtime execution model?
+Why use the Qiskit Runtime?
 --------------------------------------------
 
-Using Qiskit Runtime unlocks the following advantages:
++---------------------------------------+----------------------+---------------------+
+|                                       | Backend.run          | Runtime Primitives  |
++=======================================+======================+=====================+
+| Simplified algorithm building blocks  | ../images/close.gif  | ../images/check.gif |
+| Flexible interface                    | ../images/check.gif  | ../images/check.gif |
+| Elastic compute integration           | ../images/check.gif  | ../images/check.gif |
+| Queuing Efficiency                    | ../images/close.gif  | ../images/check.gif |
+| Data caching                          | ../images/close.gif  | ../images/clock.gif |
+| Error mitigation support              | ../images/close.gif  | ../images/check.gif |
+| Saas enablement                       | ../images/close.gif  | ../images/clock.gif |
++---------------------------------------+----------------------+---------------------+
 
-* Access our most powerful quantum systems with shorter wait times.
+**Benefits of using Qiskit Runtime**:
 
-  * Run circuits faster with our containerized, cloud-native architecture. 
-  * Especially helpful for variational quantum algorithms, where loops between classical and quantum computation can be carried out with minimized latency.
-  * Decrease total time from start to finish. 
+* Use Qiskit Runtime Primitives to simplify algorithm design and optimization. 
+* Run circuits faster using sessions - a context manager designed to efficiently manage iterative workloads and minimize artificial latency between quantum and classical sub-components.
+* Access our most powerful quantum systems with our latest performance and hardware optimization, including capabilities like error suppression and mitigation.
+* Easily integrate Qiskit Runtime with your cloud or on-premise classical compute resources using the quantum serverless toolkit.
 
-* Use primitive programs to write code more efficiently
+**Simplified interface**:
+
+Use primitive programs to write code more efficiently:
 
   .. figure:: ../images/compare-code.png
    :scale: 50 %
    :alt: Two code snippets, side by side
 
    Code without primitives, and the same code after being rewritten to use primitives.
-
-  * Seamlessly access our latest performance and hardware optimizations.
-
-* Combine with IBM Cloud access to couple Qiskit Runtime with other compute services.
-
-
-The following image compares the execution paths and function availablilty for backend.run compared to the Qiskit Runtime execution model. Items marked with a clock are coming soon.
-
-.. figure:: ../images/execution-paths.png
- :alt: Execution paths for backend.run compared to Qiskit Runtime
-
- Comparing backend.run to the Qiskit Runtime execution model. 
 
 
 .. _migfaqs:
@@ -167,6 +168,15 @@ The following topics are use cases with code migration examples:
 * `Update parameter values while running <migrate-update-parm.html>`__
 * `Primitive-based routines <migrate-prim-based.html>`__
 * `End-to-end example <migrate-e2e.html>`__
+
+.. nbgallery::
+
+   migrate-estimator
+   migrate-sampler
+   migrate-est-sam
+   migrate-update-parm
+   migrate-prim-based
+   migrate-e2e
 
 
 Related links
