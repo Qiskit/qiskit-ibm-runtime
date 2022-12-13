@@ -6,18 +6,13 @@ Migration guide
 Why use Qiskit Runtime?
 --------------------------------------------
 
-+---------------------------------------+---------------------------------+---------------------------------+
-|                                       | Backend.run                     | Runtime Primitives              |
-+=======================================+=================================+=================================+
-| Simplified algorithm building blocks  | .. image:: ../images/close.png  | .. image:: ../images/check.png  |
-| Flexible interface                    | .. image:: ../images/check.png  | .. image:: ../images/check.png  |
-| Elastic compute integration           | .. image:: ../images/check.png  | .. image:: ../images/check.png  |
-| Queuing Efficiency                    | .. image:: ../images/close.png  | .. image:: ../images/check.png  |
-| Data caching                          | .. image:: ../images/close.png  | .. image:: ../images/clock.png  |
-| Error mitigation support              | .. image:: ../images/close.png  | .. image:: ../images/check.png  |
-| Saas enablement                       | .. image:: ../images/close.png  | .. image:: ../images/clock.png  |
-+---------------------------------------+---------------------------------+---------------------------------+
+  .. figure:: ../images/table.png
+   :alt: table comparing backend.run to Qiskit Runtime primitives
 
+
+Test image: .. image:: ../images/close.png
+
+  
 **Benefits of using Qiskit Runtime**:
 
 * Use Qiskit Runtime Primitives to simplify algorithm design and optimization. 
