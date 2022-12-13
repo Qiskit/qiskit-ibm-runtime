@@ -10,9 +10,6 @@ Why use Qiskit Runtime?
    :alt: table comparing backend.run to Qiskit Runtime primitives
 
 
-Test image: .. image:: ../images/close.png
-
-  
 **Benefits of using Qiskit Runtime**:
 
 * Use Qiskit Runtime Primitives to simplify algorithm design and optimization. 
@@ -163,15 +160,6 @@ The following topics are use cases with code migration examples:
 * `Update parameter values while running <migrate-update-parm.html>`__
 * `Primitive-based routines <migrate-prim-based.html>`__
 * `End-to-end example <migrate-e2e.html>`__
-
-.. nbgallery::
-
-   migrate-estimator
-   migrate-sampler
-   migrate-est-sam
-   migrate-update-parm
-   migrate-prim-based
-   migrate-e2e
 
 
 Related links

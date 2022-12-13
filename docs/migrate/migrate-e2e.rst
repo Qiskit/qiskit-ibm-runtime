@@ -8,13 +8,11 @@ execution model.
 Overview
 --------
 
-Recall that When choosing which primitive to use we first need to
-understand whether our algorithm needs to to use a quasi-probability
-distribution sampled from a quantum state (a list of
-quasi-probabilities), or an expectation value of a certain observable
-with respect to a quantum state (a real number). 
+Recall that when choosing which primitive to use, we first need to
+understand whether our algorithm needs to generate the entire quasi-probability
+distribution, or expectation values of observables. 
 
-In our use case, the iterative amplitude estimation (IAE), we want to
+In our use case, an iterative amplitude estimation (IAE), we want to
 discover one of the probability amplitudes of a quantum state. Thus, the
 algorithm should rely on the Sampler primitive.
 
@@ -132,32 +130,14 @@ locally, hence the reference to import
 adjusted to use a primitive, we initialize the primitive and then pass
 it to the algorithm.
 
-Step 1. Decide which package to import the primitive from
+Step 1. Import the correct primitive package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Following are some common possibilities that are currently supported:
+How you import the primitive depends on what type of backend you want to run on.  
 
-* ``from qiskit.primitives import Sampler``
-
-   This code imports a Sampler primitive from a reference implementation
-   package. It allows for an exact or shot-based classical simulation of
-   quantum circuits. For the shot-based case, a normal probability
-   distribution is fixed. This is typically used  for testing purposes.
-
-* ``from qiskit.providers.aer.primitives import Sampler``
-
-   This code imports a Sampler primitive from Qiskit Aer ,which gives
-   access to an array of quantum circuit classical simulators that are
-   better optimized and more customizable than the previous option. This
-   is recommended for running advanced classical simulations of quantum
-   algorithms.
-
-* ``from qiskit_ibm_runtime import Sampler``    ``from qiskit_ibm_runtime import QiskitRuntimeService``
-
-   These imports allow us to use IBM Cloud resources for simulating
-   quantum circuits classically or running them on real quantum
-   hardware. This Sampler import also requires that you import
-   ``QiskitRuntimeService``. 
+* If you want to use **IBM Cloud resources** for simulating quantum circuits classically or running them on real quantum hardware, run ``from qiskit_ibm_runtime import Sampler``    ``from qiskit_ibm_runtime import QiskitRuntimeService``.
+* If you don't need a lot of advanced features and **just want to run tests**, run ``from qiskit.primitives import Sampler``. This allows for an exact or shot-based classical simulation of quantum circuits. For the shot-based case, a normal probability distribution is fixed.
+* If you want to run **advanced classical simulations** of quantum algorithms, run ``from qiskit.providers.aer.primitives import Sampler``.  This gives you access to an array of quantum circuit classical simulators that are better optimized and more customizable than the previous option.
 
 .. note::
    
@@ -275,4 +255,4 @@ To run the program in the cloud, we proceed as follows.
 Related links
 -------------
 
-You can download the updated code here: - `Primitive-enabled Iterative Quantum Amplitude Estimation algorithm <https://github.com/Qiskit/qiskit-terra/blob/main/qiskit/algorithms/amplitude_estimators/iae.py>`__
+You can download the code that uses primitives here: - `Primitive-enabled Iterative Quantum Amplitude Estimation algorithm <https://github.com/Qiskit/qiskit-terra/blob/main/qiskit/algorithms/amplitude_estimators/iae.py>`__
