@@ -1,5 +1,5 @@
-Using Estimator in an algorithm
-===============================
+Using Estimator to design an algorithm
+=======================================
 
 We consider an algorithm in pseudocode that requires a single estimation
 from each of two pairs of quantum states and observables to produce the
