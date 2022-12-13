@@ -90,7 +90,7 @@ Next Steps
    :caption: Migrate
 
     Migrate to using Qiskit Runtime primitives <migrate/migrate-guide>
-    Use Estimator in an algorithm <migrate/migrate-estimator>
+    Use Estimator to design an algorithm <migrate/migrate-estimator>
     Use Sampler in an algorithm <migrate/migrate-sampler>
     Use Estimator and Sampler in an algorithm <migrate/migrate-est-sam>
     Update parameter values while running <migrate/migrate-update-parm>
