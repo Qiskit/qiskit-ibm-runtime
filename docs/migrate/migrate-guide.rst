@@ -6,17 +6,17 @@ Migration guide
 Why use Qiskit Runtime?
 --------------------------------------------
 
-+---------------------------------------+----------------------+---------------------+
-|                                       | Backend.run          | Runtime Primitives  |
-+=======================================+======================+=====================+
-| Simplified algorithm building blocks  | ../images/close.gif  | ../images/check.gif |
-| Flexible interface                    | ../images/check.gif  | ../images/check.gif |
-| Elastic compute integration           | ../images/check.gif  | ../images/check.gif |
-| Queuing Efficiency                    | ../images/close.gif  | ../images/check.gif |
-| Data caching                          | ../images/close.gif  | ../images/clock.gif |
-| Error mitigation support              | ../images/close.gif  | ../images/check.gif |
-| Saas enablement                       | ../images/close.gif  | ../images/clock.gif |
-+---------------------------------------+----------------------+---------------------+
++---------------------------------------+---------------------------------+---------------------------------+
+|                                       | Backend.run                     | Runtime Primitives              |
++=======================================+=================================+=================================+
+| Simplified algorithm building blocks  | .. image:: ../images/close.gif  | .. image:: ../images/check.gif  |
+| Flexible interface                    | .. image:: ../images/check.gif  | .. image:: ../images/check.gif  |
+| Elastic compute integration           | .. image:: ../images/check.gif  | .. image:: ../images/check.gif  |
+| Queuing Efficiency                    | .. image:: ../images/close.gif  | .. image:: ../images/check.gif  |
+| Data caching                          | .. image:: ../images/close.gif  | .. image:: ../images/clock.gif  |
+| Error mitigation support              | .. image:: ../images/close.gif  | .. image:: ../images/check.gif  |
+| Saas enablement                       | .. image:: ../images/close.gif  | .. image:: ../images/clock.gif  |
++---------------------------------------+---------------------------------+---------------------------------+
 
 **Benefits of using Qiskit Runtime**:
 
