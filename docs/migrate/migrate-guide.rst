@@ -9,13 +9,13 @@ Why use Qiskit Runtime?
 +---------------------------------------+---------------------------------+---------------------------------+
 |                                       | Backend.run                     | Runtime Primitives              |
 +=======================================+=================================+=================================+
-| Simplified algorithm building blocks  | .. image:: ../images/close.gif  | .. image:: ../images/check.gif  |
-| Flexible interface                    | .. image:: ../images/check.gif  | .. image:: ../images/check.gif  |
-| Elastic compute integration           | .. image:: ../images/check.gif  | .. image:: ../images/check.gif  |
-| Queuing Efficiency                    | .. image:: ../images/close.gif  | .. image:: ../images/check.gif  |
-| Data caching                          | .. image:: ../images/close.gif  | .. image:: ../images/clock.gif  |
-| Error mitigation support              | .. image:: ../images/close.gif  | .. image:: ../images/check.gif  |
-| Saas enablement                       | .. image:: ../images/close.gif  | .. image:: ../images/clock.gif  |
+| Simplified algorithm building blocks  | .. image:: ../images/close.png  | .. image:: ../images/check.png  |
+| Flexible interface                    | .. image:: ../images/check.png  | .. image:: ../images/check.png  |
+| Elastic compute integration           | .. image:: ../images/check.png  | .. image:: ../images/check.png  |
+| Queuing Efficiency                    | .. image:: ../images/close.png  | .. image:: ../images/check.png  |
+| Data caching                          | .. image:: ../images/close.png  | .. image:: ../images/clock.png  |
+| Error mitigation support              | .. image:: ../images/close.png  | .. image:: ../images/check.png  |
+| Saas enablement                       | .. image:: ../images/close.png  | .. image:: ../images/clock.png  |
 +---------------------------------------+---------------------------------+---------------------------------+
 
 **Benefits of using Qiskit Runtime**:
