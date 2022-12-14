@@ -6,45 +6,9 @@ Migration guide
 Why use Qiskit Runtime?
 --------------------------------------------
 
-.. |close| image:: ../images/close.png  
-   :width: 16 px 
-.. |check| image:: ../images/check.png
-   :width: 15 px  
-.. |clock| image:: ../images/clock.png
-   :width: 16 px  
-
-+---------------------------------------+--------------+---------------------+
-|                                       | Backend.run  | Runtime Primitives  |
-+=======================================+==============+=====================+
-| Simplified algorithm building blocks  | |close|      | |check|             |
-+---------------------------------------+--------------+---------------------+
-| Flexible interface                    | |check|      | |check|             |
-+---------------------------------------+--------------+---------------------+
-| Elastic compute integration           | |check|      | |check|             |
-+---------------------------------------+--------------+---------------------+
-| Queuing Efficiency                    | |close|      | |check|             |
-+---------------------------------------+--------------+---------------------+
-| Data caching                          | |close|      | |clock|             |
-+---------------------------------------+--------------+---------------------+
-| Error mitigation support              | |close|      | |clock|             |
-+---------------------------------------+--------------+---------------------+
-| Saas enablement                       | |close|      | |clock|             |
-+---------------------------------------+--------------+---------------------+
-
-+---------------------------------------+--------------+---------------------+
-|                                       | Backend.run  | Runtime Primitives  |
-+=======================================+==============+=====================+
-| Simplified algorithm building blocks  | |close|      | |check|             |
-| Flexible interface                    | |check|      | |check|             |
-| Elastic compute integration           | |check|      | |check|             |
-| Queuing Efficiency                    | |close|      | |check|             |
-| Data caching                          | |close|      | |clock|             |
-| Error mitigation support              | |close|      | |clock|             |
-| Saas enablement                       | |close|      | |clock|             |
-+---------------------------------------+--------------+---------------------+
-
 .. figure:: ../images/table.png
    :alt: table comparing backend.run to Qiskit Runtime primitives
+
 
 **Benefits of using Qiskit Runtime**:
 
