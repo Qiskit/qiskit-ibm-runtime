@@ -6,6 +6,13 @@ Migration guide
 Why use Qiskit Runtime?
 --------------------------------------------
 
+.. |close| image:: ../images/close.png    
+   :align: middle
+.. |check| image:: ../images/check.png
+   :align: middle
+.. |clock| image:: ../images/clock.png
+   :align: middle  
+
 +---------------------------------------+--------------+---------------------+
 |                                       | Backend.run  | Runtime Primitives  |
 +=======================================+==============+=====================+
