@@ -6,11 +6,14 @@ Migration guide
 Why use Qiskit Runtime?
 --------------------------------------------
 
-.. |close| image:: ../images/close.png    
+.. |close| image:: ../images/close.png  
+   :width: 16 px 
    :align: middle
 .. |check| image:: ../images/check.png
+   :width: 15 px  
    :align: middle
 .. |clock| image:: ../images/clock.png
+   :width: 16 px  
    :align: middle  
 
 +---------------------------------------+--------------+---------------------+
