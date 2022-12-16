@@ -24,6 +24,7 @@ Use primitive programs to write code more efficiently:
   .. figure:: ../images/compare-code.png
    :scale: 50 %
    :alt: Two code snippets, side by side
+   :target: migrate-prim-based
 
    Code without primitives, and the same code after being rewritten to use primitives.
 
