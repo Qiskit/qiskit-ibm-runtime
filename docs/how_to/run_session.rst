@@ -12,7 +12,7 @@ Before starting a session, you must `Set up Qiskit Runtime <getting_started.html
   
   from qiskit_ibm_runtime import QiskitRuntimeService
 
-   service = QiskitRuntimeService()
+  service = QiskitRuntimeService()
 
 Run a job in a session
 -------------------------------
@@ -24,8 +24,8 @@ Start by loading the options into a primitive constructor, then pass in circuits
 .. code-block:: python
   
   with Session(service) as session:
-    estimator = Estimator(session=session, options=options) #primitive constructor
-    estimator.run(circuit, parameters, observable) #job call
+      estimator = Estimator(session=session, options=options) #primitive constructor
+      estimator.run(circuit, parameters, observable) #job call
 
 Session options
 -----------------
@@ -37,7 +37,7 @@ When you start your session, you can specify options, such as the backend to run
 .. code-block:: python
 
   with Session(service=service, backend="ibmq_qasm_simulator"):
-    estimator = Estimator(options=options)
+      estimator = Estimator(options=options)
     
 .. note::
   When running in IBM Cloud, if you don't specify a backend, the least busy backend is used. 
@@ -62,8 +62,8 @@ This example starts a session, runs an Estimator job, and outputs the result:
 
   service = QiskitRuntimeService()
   with Session(service=service, backend="ibmq_qasm_simulator") as session:
-       estimator = Estimator(session=session, options=options)
-       job = estimator.run(circuit, observable)
+      estimator = Estimator(session=session, options=options)
+      job = estimator.run(circuit, observable)
 
   result = job.result()
 
