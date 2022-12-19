@@ -71,3 +71,33 @@ class TestIntegrationSession(IBMIntegrationTestCase):
             self.assertEqual(result.metadata[0]["shots"], 400)
             self.assertAlmostEqual(result.quasi_dists[0][3], 0.5, delta=0.1)
             self.assertAlmostEqual(result.quasi_dists[0][0], 0.5, delta=0.1)
+
+    @run_integration_test
+    def test_choosing_correct_backend(self, service):
+        """Test that the backend selected in options is used."""
+
+        backend = "ibmq_qasm_simulator"
+        inputs = {"iterations": 1}
+        options = {
+            "backend": backend,
+        }
+        with Session(service=service, backend="statevector_simulator") as session:
+            job = session.run(program_id="hello-world", options=options, inputs=inputs)
+            self.assertEqual(backend, job.backend().name)
+
+    @run_integration_test
+    def test_using_options_backend_cloud(self, service):
+        """Test that the backend selected in options is used when no backend is passed in the session."""
+
+        if self.dependencies.channel == "ibm_quantum":
+            self.skipTest("Not supported on ibm_quantum")
+
+        backend = "ibmq_qasm_simulator"
+        inputs = {"iterations": 1}
+        options = {
+            "backend": backend,
+        }
+
+        with Session(service=service) as session:
+            job = session.run(program_id="hello-world", options=options, inputs=inputs)
+            self.assertEqual(backend, job.backend().name)
