@@ -71,3 +71,14 @@ class TestIntegrationSession(IBMIntegrationTestCase):
             self.assertEqual(result.metadata[0]["shots"], 400)
             self.assertAlmostEqual(result.quasi_dists[0][3], 0.5, delta=0.1)
             self.assertAlmostEqual(result.quasi_dists[0][0], 0.5, delta=0.1)
+
+    @run_integration_test
+    def test_using_correct_instance(self, service):
+        """Test the instance used when filtering backends is honored."""
+        instance = "ibm-q/open/main"
+        backend = service.backend("ibmq_qasm_simulator", instance=instance)
+        with Session(service, backend=backend) as session:
+            sampler = Sampler(session=session)
+            job = sampler.run(ReferenceCircuits.bell(), shots=400)
+            self.assertEqual(instance, backend._instance)
+            self.assertEqual(instance, job._backend._instance)
