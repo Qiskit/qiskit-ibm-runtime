@@ -103,8 +103,10 @@ class Session:
         if self._service.channel == "ibm_quantum" and not backend:
             raise ValueError('"backend" is required for ``ibm_quantum`` channel.')
         if isinstance(backend, IBMBackend):
+            instance = backend._instance
             backend = backend.name
         self._backend = backend
+        self._instance = instance
 
         self._session_id: Optional[str] = None
         self._active = True
@@ -141,7 +143,10 @@ class Session:
         """
 
         options = options or {}
+
         options["backend"] = self._backend
+        if "instance" not in options:
+            options["instance"] = self._instance
 
         if not self._session_id:
             # TODO: What happens if session max time != first job max time?
