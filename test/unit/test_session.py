@@ -45,6 +45,7 @@ class TestSession(IBMTestCase):
     def test_passing_ibm_backend(self):
         """Test passing in IBMBackend instance."""
         backend = MagicMock(spec=IBMBackend)
+        backend._instance = None
         backend.name = "ibm_gotham"
         session = Session(service=MagicMock(), backend=backend)
         self.assertEqual(session.backend(), "ibm_gotham")
@@ -52,6 +53,7 @@ class TestSession(IBMTestCase):
     def test_using_ibm_backend_service(self):
         """Test using service from an IBMBackend instance."""
         backend = MagicMock(spec=IBMBackend)
+        backend._instance = None
         backend.name = "ibm_gotham"
         session = Session(backend=backend)
         self.assertEqual(session.service, backend.service)
@@ -196,6 +198,7 @@ class TestSession(IBMTestCase):
         backend = MagicMock(spec=IBMBackend)
         service = MagicMock()
         backend.service = service
+        backend._instance = None
         backend.name = "ibm_gotham"
         session = get_default_session(backend=backend)
         self.assertIsInstance(session, Session)
