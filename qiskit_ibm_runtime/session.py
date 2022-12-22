@@ -141,22 +141,27 @@ class Session:
         Returns:
             Submitted job.
 
-        Raises: 
+        Raises:
             IBMInputValueError: If a backend is passed in through options that does not match
                 the current session backend.
         """
 
         options = options or {}
-        if 'backend' in options: 
+        if "backend" in options:
             issue_deprecation_msg(
-                    "'backend' is no longer a supported option within a session",
-                    "0.8",
-                    "Sessions do not support multiple backends.",
-                    3
-                )
-            if self._session_id and self._backend and options["backend"] != self._backend:
+                "'backend' is no longer a supported option within a session",
+                "0.8",
+                "Sessions do not support multiple backends.",
+                3,
+            )
+            if (
+                self._session_id
+                and self._backend
+                and options["backend"] != self._backend
+            ):
                 raise IBMInputValueError(
-                    f"The backend '{options['backend']}' is different from the session backend '{self._backend}'"
+                    f"The backend '{options['backend']}' is different from",
+                    f"the session backend '{self._backend}'",
                 )
 
         options["backend"] = self._backend
