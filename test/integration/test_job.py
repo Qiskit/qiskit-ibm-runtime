@@ -93,15 +93,16 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
             API_TO_JOB_ERROR_MESSAGE["FAILED"].format(job.job_id(), job_result_raw),
             job.error_message(),
         )
-        with self.assertRaises(RuntimeJobFailureError) as err_cm:
+        with self.assertRaises(RuntimeJobFailureError):
             job.result()
-        self.assertIn("KeyError", str(err_cm.exception))
+        # TODO: Re-enable when ntc-1651 is fixed
+        # self.assertIn("KeyError", str(err_cm.exception))
 
     @run_integration_test
     def test_run_program_failed_ran_too_long(self, service):
         """Test a program that failed since it ran longer than maximum execution time."""
         max_execution_time = 60
-        inputs = {"iterations": 1, "sleep_per_iteration": 60}
+        inputs = {"iterations": 1, "sleep_per_iteration": 61}
         program_id = self._upload_program(
             service, max_execution_time=max_execution_time
         )

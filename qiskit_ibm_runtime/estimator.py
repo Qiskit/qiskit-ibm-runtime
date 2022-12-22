@@ -15,19 +15,18 @@
 from __future__ import annotations
 import copy
 from typing import Iterable, Optional, Dict, Sequence, Any, Union
+import logging
+from dataclasses import asdict
 
 from qiskit.circuit import QuantumCircuit, Parameter
-from qiskit.circuit.parametertable import ParameterView
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.opflow import PauliSumOp
 from qiskit.quantum_info.operators.base_operator import BaseOperator
+from qiskit.providers.options import Options as TerraOptions
+from qiskit.primitives import BaseEstimator, EstimatorResult
 
-# pylint: disable=unused-import,cyclic-import
-
-# TODO import BaseEstimator and EstimatorResult from terra once released
-from .qiskit.primitives import BaseEstimator, EstimatorResult
+# TODO import _circuit_key from terra once 0.23 is released
 from .qiskit_runtime_service import QiskitRuntimeService
-from .utils.estimator_result_decoder import EstimatorResultDecoder
 from .runtime_job import RuntimeJob
 from .utils.deprecation import (
     deprecate_arguments,
@@ -37,9 +36,12 @@ from .utils.deprecation import (
 from .ibm_backend import IBMBackend
 from .session import get_default_session
 from .options import Options
+from .constants import DEFAULT_DECODERS
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
+
+logger = logging.getLogger(__name__)
 
 
 class Estimator(BaseEstimator):
@@ -135,6 +137,10 @@ class Estimator(BaseEstimator):
             skip_transpilation: (DEPRECATED) Transpilation is skipped if set to True. False by default.
                 Ignored ``skip_transpilation`` is also specified in ``options``.
         """
+        # `_options` in this class is an instance of qiskit_ibm_runtime.Options class.
+        # The base class, however, uses a `_run_options` which is an instance of
+        # qiskit.providers.Options. We largely ignore this _run_options because we use
+        # a nested dictionary to categorize options.
         super().__init__(
             circuits=circuits,
             observables=observables,
@@ -156,23 +162,38 @@ class Estimator(BaseEstimator):
         self._session: Session = None
 
         if options is None:
-            self.options = Options()
+            _options = Options()
         elif isinstance(options, Options):
-            self.options = copy.deepcopy(options)
-            skip_transpilation = self.options.transpilation.skip_transpilation
+            _options = copy.deepcopy(options)
+            skip_transpilation = (
+                _options.transpilation.skip_transpilation  # type: ignore[union-attr]
+            )
         else:
-            backend = options.pop("backend", None)
+            options_copy = copy.deepcopy(options)
+            backend = options_copy.pop("backend", None)
             if backend is not None:
                 issue_deprecation_msg(
                     msg="The 'backend' key in 'options' has been deprecated",
                     version="0.7",
                     remedy="Please pass the backend when opening a session.",
                 )
-            self.options = Options._from_dict(options)
             skip_transpilation = options.get("transpilation", {}).get(
                 "skip_transpilation", False
             )
-        self.options.transpilation.skip_transpilation = skip_transpilation
+            log_level = options_copy.pop("log_level", None)
+            _options = Options(**options_copy)
+            if log_level:
+                issue_deprecation_msg(
+                    msg="The 'log_level' option has been moved to the 'environment' category",
+                    version="0.7",
+                    remedy="Please specify 'environment':{'log_level': log_level} instead.",
+                )
+                _options.environment.log_level = log_level  # type: ignore[union-attr]
+
+        _options.transpilation.skip_transpilation = (  # type: ignore[union-attr]
+            skip_transpilation
+        )
+        self._options: dict = asdict(_options)
 
         self._initial_inputs = {
             "circuits": circuits,
@@ -186,12 +207,22 @@ class Estimator(BaseEstimator):
             backend = session or backend
             self._session = get_default_session(service, backend)
 
-    def run(
+        # self._first_run = True
+        # self._circuits_map = {}
+        # if self.circuits:
+        #     for circuit in self.circuits:
+        #         circuit_id = _hash(
+        #             json.dumps(_circuit_key(circuit), cls=RuntimeEncoder)
+        #         )
+        #         if circuit_id not in self._session._circuits_map:
+        #             self._circuits_map[circuit_id] = circuit
+        #             self._session._circuits_map[circuit_id] = circuit
+
+    def run(  # pylint: disable=arguments-differ
         self,
         circuits: QuantumCircuit | Sequence[QuantumCircuit],
         observables: BaseOperator | PauliSumOp | Sequence[BaseOperator | PauliSumOp],
         parameter_values: Sequence[float] | Sequence[Sequence[float]] | None = None,
-        parameters: Sequence[Parameter] | Sequence[Sequence[Parameter]] | None = None,
         **kwargs: Any,
     ) -> RuntimeJob:
         """Submit a request to the estimator primitive program.
@@ -204,49 +235,30 @@ class Estimator(BaseEstimator):
 
             parameter_values: Concrete parameters to be bound.
 
-            parameters: Parameters of quantum circuits, specifying the order in which values
-                will be bound. Defaults to ``[circ.parameters for circ in circuits]``
-
             **kwargs: Individual options to overwrite the default primitive options.
+                These include the runtime options in :class:`qiskit_ibm_runtime.RuntimeOptions`.
 
         Returns:
             Submitted job.
             The result of the job is an instance of :class:`qiskit.primitives.EstimatorResult`.
 
         Raises:
-            QiskitError: Invalid arguments are given.
+            ValueError: Invalid arguments are given.
         """
-        if not isinstance(circuits, Sequence):
-            circuits = [circuits]
-        if not isinstance(observables, Sequence):
-            observables = [observables]
-        if (
-            parameter_values is not None
-            and len(parameter_values) > 1
-            and not isinstance(parameter_values[0], (Sequence, Iterable))
-        ):
-            parameter_values = [parameter_values]  # type: ignore[assignment]
-        if (
-            parameters is not None
-            and len(parameters) > 1
-            and not isinstance(parameters[0], Sequence)
-        ):
-            parameters = [parameters]
-
+        # To bypass base class merging of options.
+        user_kwargs = {"_user_kwargs": kwargs}
         return super().run(
             circuits=circuits,
             observables=observables,
             parameter_values=parameter_values,
-            parameters=parameters,
-            **kwargs,
+            **user_kwargs,
         )
 
-    def _run(
+    def _run(  # pylint: disable=arguments-differ
         self,
         circuits: Sequence[QuantumCircuit],
         observables: Sequence[BaseOperator | PauliSumOp],
         parameter_values: Sequence[Sequence[float]],
-        parameters: list[ParameterView],
         **kwargs: Any,
     ) -> RuntimeJob:
         """Submit a request to the estimator primitive program.
@@ -259,33 +271,53 @@ class Estimator(BaseEstimator):
 
             parameter_values: An optional list of concrete parameters to be bound.
 
-            parameters: A list of parameters of the quantum circuits
-                (:class:`~qiskit.circuit.parametertable.ParameterView` or
-                a list of :class:`~qiskit.circuit.Parameter`).
-                Defaults to ``[circ.parameters for circ in circuits]``.
-
             **kwargs: Individual options to overwrite the default primitive options.
+                These include the runtime options in :class:`~qiskit_ibm_runtime.RuntimeOptions`.
 
         Returns:
-            Submitted job.
+            Submitted job
         """
+        # TODO: Re-enable data caching when ntc 1748 is fixed
+        # circuits_map = {}
+        # circuit_ids = []
+        # for circuit in circuits:
+        #     circuit_id = _hash(json.dumps(_circuit_key(circuit), cls=RuntimeEncoder))
+        #     circuit_ids.append(circuit_id)
+        #     if circuit_id in self._session._circuits_map:
+        #         continue
+        #     self._session._circuits_map[circuit_id] = circuit
+        #     circuits_map[circuit_id] = circuit
+
+        # if self._first_run:
+        #     self._first_run = False
+        #     circuits_map.update(self._circuits_map)
+
+        # inputs = {
+        #     "circuits": circuits_map,
+        #     "circuit_ids": circuit_ids,
+        #     "observables": observables,
+        #     "observable_indices": list(range(len(observables))),
+        #     "parameter_values": parameter_values,
+        # }
         inputs = {
             "circuits": circuits,
             "circuit_indices": list(range(len(circuits))),
             "observables": observables,
             "observable_indices": list(range(len(observables))),
-            "parameters": parameters,
+            "parameters": [circ.parameters for circ in circuits],
             "parameter_values": parameter_values,
         }
 
-        combined = self.options._merge_options(kwargs)
+        combined = Options._merge_options(self._options, kwargs.get("_user_kwargs", {}))
+        logger.info("Submitting job using options %s", combined)
         inputs.update(Options._get_program_inputs(combined))
 
         return self._session.run(
             program_id=self._PROGRAM_ID,
             inputs=inputs,
             options=Options._get_runtime_options(combined),
-            result_decoder=EstimatorResultDecoder,
+            callback=combined.get("environment", {}).get("callback", None),
+            result_decoder=DEFAULT_DECODERS.get(self._PROGRAM_ID),
         )
 
     def _call(
@@ -327,14 +359,14 @@ class Estimator(BaseEstimator):
             "parameter_values": parameter_values,
             "observable_indices": observables,
         }
-        combined = self.options._merge_options(run_options)
+        combined = Options._merge_options(self._options, run_options)
         inputs.update(Options._get_program_inputs(combined))
 
         return self._session.run(
             program_id=self._PROGRAM_ID,
             inputs=inputs,
             options=Options._get_runtime_options(combined),
-            result_decoder=EstimatorResultDecoder,
+            result_decoder=DEFAULT_DECODERS.get(self._PROGRAM_ID),
         ).result()
 
     @deprecate_function(
@@ -354,3 +386,20 @@ class Estimator(BaseEstimator):
             Session used by this primitive.
         """
         return self._session
+
+    @property
+    def options(self) -> TerraOptions:
+        """Return options values for the estimator.
+
+        Returns:
+            options
+        """
+        return TerraOptions(**self._options)
+
+    def set_options(self, **fields: Any) -> None:
+        """Set options values for the estimator.
+
+        Args:
+            **fields: The fields to update the options
+        """
+        self._options = Options._merge_options(self._options, fields)

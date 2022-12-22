@@ -14,6 +14,12 @@
 
 from qiskit.providers.jobstatus import JobStatus
 
+from .program.result_decoder import ResultDecoder
+from .utils.estimator_result_decoder import EstimatorResultDecoder
+from .utils.sampler_result_decoder import SamplerResultDecoder
+from .utils.runner_result import RunnerResult
+
+
 QISKIT_IBM_RUNTIME_API_URL = "https://auth.quantum-computing.ibm.com/api"
 
 API_TO_JOB_STATUS = {
@@ -28,4 +34,11 @@ API_TO_JOB_ERROR_MESSAGE = {
     "FAILED": "Job {} has failed:\n{}",
     "CANCELLED - RAN TOO LONG": "Job {} ran longer than maximum execution time. "
     "Job was cancelled:\n{}",
+}
+
+DEFAULT_DECODERS = {
+    "sampler": [ResultDecoder, SamplerResultDecoder],
+    "estimator": [ResultDecoder, EstimatorResultDecoder],
+    "circuit-runner": RunnerResult,
+    "qasm3-runner": RunnerResult,
 }

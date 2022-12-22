@@ -2,7 +2,7 @@
 prelude: >
     There are significant changes to how primitives are invoked within a
     session, and the options available to the primitives. Please review the
-    rest of the release note and the tutorials for full information.
+    rest of the release notes and the tutorials for full information.
 features:
   - |
     You can now invoke the same or different primitive programs multiple times
@@ -51,17 +51,15 @@ features:
         # Pass the options to Sampler.
         sampler = Sampler(session=session, options=options)
 
-        # You can also configure options after initialization.
-        sampler.options.execution.shots = 1024
-
         # Or at job level.
         job = sampler.run(circuits=ReferenceCircuits.bell(), shots=4000)
 upgrade:
   - |
-    The experimental parameters `transpilation_settings`, `resilience_settings`,
-    and `max_time` to the `Sampler` and `Estimator` constructors have been removed.
-    You can instead use the `qiskit_ibm_runtime.Options` class to specify
-    the settings, and `max_time` can be specified when starting a new session.
+    The experimental parameters ``transpilation_settings``, ``resilience_settings``,
+    and ``max_time`` to the `:class:`qiskit_ibm_runtime.Sampler` and
+    :class:`qiskit_ibm_runtime.Estimator` constructors have been removed.
+    You can instead use the :class:`qiskit_ibm_runtime.Options` class to specify
+    the settings, and ``max_time`` can be specified when starting a new session.
     For example::
 
       from qiskit_ibm_runtime import Session, Sampler, Options
@@ -81,15 +79,16 @@ deprecations:
     You can instead use the `qiskit_ibm_runtime.Session` class to create a new
     session and invoke one or more primitives within the session.
 
-    As a result, passing input parameters, such as `circuits`, `observables`,
-    `parameters`, and `parameter_values`, as well as `service`
-    to the constructors of `Sampler` and
-    `Estimator` has also been deprecated. The inputs can now be passed to the
-    `run()` method of the primitive classes, and `service` can be passed
-    to `qiskit_ibm_runtime.Session` when starting a new session.
+    As a result, passing input parameters, such as ``circuits``, ``observables``,
+    and ``parameter_values``, as well as ``service``
+    to the constructors of ``Sampler`` and
+    ``Estimator`` has also been deprecated. The inputs can now be passed to the
+    ``run()`` method of the primitive classes, and ``service`` can be passed
+    to :class:`qiskit_ibm_runtime.Session` when starting a new session.
   - |
-    Passing `skip_transpilation` to the `Sampler` and `Estimator` constructors
-    has been deprecated. You can instead use the `qiskit_ibm_runtime.Options`
+    Passing ``skip_transpilation`` to the `:class:`qiskit_ibm_runtime.Sampler` and
+    :class:`qiskit_ibm_runtime.Estimator` constructors
+    has been deprecated. You can instead use the :class:`qiskit_ibm_runtime.Options`
     class to specify this option. For example::
 
       from qiskit_ibm_runtime import Options

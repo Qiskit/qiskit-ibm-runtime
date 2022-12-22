@@ -191,7 +191,6 @@ Classes
    Estimator
    Sampler
    Session
-   Options
    IBMBackend
    RuntimeJob
    RuntimeProgram
@@ -218,14 +217,6 @@ from .version import __version__
 from .estimator import Estimator
 from .sampler import Sampler
 from .options import Options
-
-# TODO remove when terra code is released
-from .qiskit.primitives import (
-    BaseEstimator,
-    EstimatorResult,
-    BaseSampler,
-    SamplerResult,
-)
 
 # Setup the logger for the IBM Quantum Provider package.
 logger = logging.getLogger(__name__)

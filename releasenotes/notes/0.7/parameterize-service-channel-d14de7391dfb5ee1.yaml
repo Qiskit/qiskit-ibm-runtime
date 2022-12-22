@@ -1,8 +1,8 @@
 ---
-upgrade:
+features:
   - |
     The :class:`qiskit_ibm_runtime.QiskitRuntimeService` ``channel`` can now be stored
-    as an environment variable, ``QISKIT_IBM_CHANNEL``. This way, when using Runtime 
-    Primitives, the service does not have to be instantiated manually and can instead 
+    as an environment variable, ``QISKIT_IBM_CHANNEL``. This way, when using Runtime
+    Primitives, the service does not have to be instantiated manually and can instead
     be created directly from environment variables.
 

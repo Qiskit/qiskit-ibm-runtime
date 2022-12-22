@@ -12,9 +12,11 @@
 
 """Qiskit Runtime flexible session."""
 
-from typing import Dict, Optional, Type, Union
+from typing import Dict, Optional, Type, Union, Callable
 from types import TracebackType
 from functools import wraps
+
+from qiskit.circuit import QuantumCircuit
 
 from qiskit_ibm_runtime import QiskitRuntimeService
 from .runtime_job import RuntimeJob
@@ -67,12 +69,13 @@ class Session:
         service: Optional[QiskitRuntimeService] = None,
         backend: Optional[Union[str, IBMBackend]] = None,
         max_time: Optional[Union[int, str]] = None,
-    ):
+    ):  # pylint: disable=line-too-long
         """Session constructor.
 
         Args:
-            service: Optional instance of the ``QiskitRuntimeService`` class,
-                defaults to ``QiskitRuntimeService()`` which tries to initialize
+            service: Optional instance of the ``QiskitRuntimeService`` class.
+                If ``None``, the service associated with the backend, if known, is used.
+                Otherwise ``QiskitRuntimeService()`` is used to initialize
                 your default saved account.
             backend: Optional instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
                 string name of backend. If not specified, a backend will be selected
@@ -80,12 +83,22 @@ class Session:
             max_time: (EXPERIMENTAL setting, can break between releases without warning)
                 Maximum amount of time, a runtime session can be open before being
                 forcibly closed. Can be specified as seconds (int) or a string like "2h 30m 40s".
+                This value must be in between 300 seconds and the
+                `system imposed maximum
+                <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/faqs/max_execution_time.html>`_.
 
         Raises:
             ValueError: If an input value is invalid.
         """
 
-        self._service = service or QiskitRuntimeService()
+        if service is None:
+            self._service = (
+                backend.service
+                if isinstance(backend, IBMBackend)
+                else QiskitRuntimeService()
+            )
+        else:
+            self._service = service
 
         if self._service.channel == "ibm_quantum" and not backend:
             raise ValueError('"backend" is required for ``ibm_quantum`` channel.')
@@ -95,6 +108,8 @@ class Session:
 
         self._session_id: Optional[str] = None
         self._active = True
+
+        self._circuits_map: Dict[str, QuantumCircuit] = {}
 
         self._max_time = (
             max_time
@@ -108,6 +123,7 @@ class Session:
         program_id: str,
         inputs: Union[Dict, ParameterNamespace],
         options: Optional[Dict] = None,
+        callback: Optional[Callable] = None,
         result_decoder: Optional[Type[ResultDecoder]] = None,
     ) -> RuntimeJob:
         """Run a program in the session.
@@ -117,24 +133,20 @@ class Session:
             inputs: Program input parameters. These input values are passed
                 to the runtime program.
             options: Runtime options that control the execution environment.
-
-                * image: the runtime image used to execute the program, specified in
-                  the form of ``image_name:tag``. Not all accounts are
-                  authorized to select a different image.
-                * log_level: logging level to set in the execution environment. The valid
-                  log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
-                  The default level is ``WARNING``.
+                See :class:`qiskit_ibm_runtime.RuntimeOptions` for all available options.
+            callback: Callback function to be invoked for any interim results and final result.
 
         Returns:
             Submitted job.
         """
 
-        # TODO: Cache data when server supports it.
-
-        # TODO: Do we really need to specify a None max time if session has started?
-        max_time = self._max_time if not self._session_id else None
         options = options or {}
         options["backend"] = self._backend
+
+        if not self._session_id:
+            # TODO: What happens if session max time != first job max time?
+            # Use session max time if this is first job.
+            options["max_execution_time"] = self._max_time
 
         job = self._service.run(
             program_id=program_id,
@@ -142,7 +154,7 @@ class Session:
             inputs=inputs,
             session_id=self._session_id,
             start_session=self._session_id is None,
-            max_execution_time=max_time,
+            callback=callback,
             result_decoder=result_decoder,
         )
 
@@ -173,7 +185,7 @@ class Session:
         """Return the session ID.
 
         Returns:
-            Session ID.
+            Session ID. None until a job runs in the session.
         """
         return self._session_id
 

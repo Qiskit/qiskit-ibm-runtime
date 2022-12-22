@@ -18,8 +18,7 @@ import traceback
 import warnings
 from datetime import datetime
 from collections import OrderedDict
-from typing import Dict, Callable, Optional, Union, List, Any, Type
-from dataclasses import asdict
+from typing import Dict, Callable, Optional, Union, List, Any, Type, Sequence
 
 from qiskit.providers.backend import BackendV1 as Backend
 from qiskit.providers.provider import ProviderV1 as Provider
@@ -48,10 +47,13 @@ from .runtime_session import RuntimeSession  # pylint: disable=cyclic-import
 from .utils import RuntimeDecoder, to_base64_string, to_python_identifier
 from .utils.backend_decoder import configuration_from_server_data
 from .utils.hgp import to_instance_format, from_instance_format
-from .utils.utils import validate_job_tags, validate_runtime_options
 from .api.client_parameters import ClientParameters
 from .runtime_options import RuntimeOptions
-from .utils.deprecation import deprecate_function, issue_deprecation_msg
+from .utils.deprecation import (
+    deprecate_function,
+    issue_deprecation_msg,
+    deprecate_arguments,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -62,6 +64,7 @@ DEPRECATED_PROGRAMS = [
     "torch-infer",
     "sample-expval",
     "quantum_kernal_alignment",
+    "sample-program",
 ]
 
 _JOB_DEPRECATION_ISSUED = False
@@ -848,7 +851,9 @@ class QiskitRuntimeService(Provider):
         inputs: Union[Dict, ParameterNamespace],
         options: Optional[Union[RuntimeOptions, Dict]] = None,
         callback: Optional[Callable] = None,
-        result_decoder: Optional[Type[ResultDecoder]] = None,
+        result_decoder: Optional[
+            Union[Type[ResultDecoder], Sequence[Type[ResultDecoder]]]
+        ] = None,
         instance: Optional[str] = None,
         session_id: Optional[str] = None,
         job_tags: Optional[List[str]] = None,
@@ -862,14 +867,7 @@ class QiskitRuntimeService(Provider):
             inputs: Program input parameters. These input values are passed
                 to the runtime program.
             options: Runtime options that control the execution environment.
-
-                * backend: target backend to run on. This is required for ``ibm_quantum`` runtime.
-                * image: the runtime image used to execute the program, specified in
-                    the form of ``image_name:tag``. Not all accounts are
-                    authorized to select a different image.
-                * log_level: logging level to set in the execution environment. The valid
-                    log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
-                    The default level is ``WARNING``.
+                See :class:`RuntimeOptions` for all available options.
 
             callback: Callback function to be invoked for any interim results and final result.
                 The callback function will receive 2 positional parameters:
@@ -878,14 +876,16 @@ class QiskitRuntimeService(Provider):
                     2. Job result.
 
             result_decoder: A :class:`ResultDecoder` subclass used to decode job results.
-                ``ResultDecoder`` is used if not specified.
-            instance: This is only supported for ``ibm_quantum`` runtime and is in the
+                If more than one decoder is specified, the first is used for interim results and
+                the second final results. If not specified, a program-specific decoder or the default
+                ``ResultDecoder`` is used.
+            instance: (DEPRECATED) This is only supported for ``ibm_quantum`` runtime and is in the
                 hub/group/project format.
             session_id: Job ID of the first job in a runtime session.
-            job_tags: Tags to be assigned to the job. The tags can subsequently be used
+            job_tags: (DEPRECATED) Tags to be assigned to the job. The tags can subsequently be used
                 as a filter in the :meth:`jobs()` function call.
-            max_execution_time: Maximum execution time in seconds. This overrides
-                the max_execution_time of the program and cannot exceed it.
+            max_execution_time: (DEPRECATED) Maximum execution time in seconds. This overrides
+                the max_execution_time of the program.
             start_session: Set to True to explicitly start a runtime session. Defaults to False.
 
         Returns:
@@ -898,49 +898,60 @@ class QiskitRuntimeService(Provider):
         """
         if program_id in DEPRECATED_PROGRAMS:
             warnings.warn(
-                f"The {program_id} program will be deprecated on August 29th.",
+                f"The {program_id} program has been deprecated as of qiskit-ibm-runtime 0.7 \
+                and will be removed no sooner than 1 month after the release date.",
                 DeprecationWarning,
                 stacklevel=2,
             )
-        validate_job_tags(job_tags, IBMInputValueError)
 
-        if instance and self._channel != "ibm_quantum":
-            raise IBMInputValueError(
-                "The 'instance' keyword is only supported for ``ibm_quantum`` runtime. "
-            )
+        qrt_options: RuntimeOptions = options
+        if options is None:
+            qrt_options = RuntimeOptions()
+        elif isinstance(options, Dict):
+            qrt_options = RuntimeOptions(**options)
+
+        deprecated = {
+            "instance": instance,
+            "job_tags": job_tags,
+            "max_execution_time": max_execution_time,
+        }
+        for name, param in deprecated.items():
+            if param is not None:
+                deprecate_arguments(
+                    deprecated=name,
+                    version="0.7",
+                    remedy=f'Please specify "{name}" inside "options".',
+                )
+                setattr(qrt_options, name, param)
 
         # If using params object, extract as dictionary
         if isinstance(inputs, ParameterNamespace):
             inputs.validate()
             inputs = vars(inputs)
 
-        if options is None:
-            options = {}
-        elif isinstance(options, RuntimeOptions):
-            options = asdict(options)
-        options["backend"] = options.get("backend", options.get("backend_name", None))
-        validate_runtime_options(options=options, channel=self.channel)
+        qrt_options.validate(channel=self.channel)
 
         backend = None
         hgp_name = None
         if self._channel == "ibm_quantum":
             # Find the right hgp
-            hgp = self._get_hgp(instance=instance, backend_name=options["backend"])
-            backend = hgp.backend(options["backend"])
+            hgp = self._get_hgp(
+                instance=qrt_options.instance, backend_name=qrt_options.backend
+            )
+            backend = hgp.backend(qrt_options.backend)
             hgp_name = hgp.name
 
-        result_decoder = result_decoder or ResultDecoder
         try:
             response = self._api_client.program_run(
                 program_id=program_id,
-                backend_name=options["backend"],
+                backend_name=qrt_options.backend,
                 params=inputs,
-                image=options.get("image"),
+                image=qrt_options.image,
                 hgp=hgp_name,
-                log_level=options.get("log_level"),
+                log_level=qrt_options.log_level,
                 session_id=session_id,
-                job_tags=job_tags,
-                max_execution_time=max_execution_time,
+                job_tags=qrt_options.job_tags,
+                max_execution_time=qrt_options.max_execution_time,
                 start_session=start_session,
             )
         except RequestsApiError as ex:
@@ -974,7 +985,7 @@ class QiskitRuntimeService(Provider):
             params=inputs,
             user_callback=callback,
             result_decoder=result_decoder,
-            image=options.get("image"),
+            image=qrt_options.image,
         )
         return job
 

@@ -1,5 +1,5 @@
 ---
-upgrade:
+features:
   - |
     :class:`qiskit_ibm_runtime.RuntimeJob` has a new method
     :meth:`~qiskit_ibm_runtime.RuntimeJob.metrics`. This method returns

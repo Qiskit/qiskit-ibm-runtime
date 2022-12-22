@@ -58,8 +58,10 @@ from qiskit.opflow import (
     SummedOp,
     TensoredOp,
 )
-from qiskit.quantum_info import SparsePauliOp, Pauli, PauliTable, Statevector
+from qiskit.providers.fake_provider import FakeNairobi
+from qiskit.quantum_info import SparsePauliOp, Pauli, Statevector
 from qiskit.result import Result
+from qiskit_aer.noise import NoiseModel
 
 from qiskit_ibm_runtime.utils import RuntimeEncoder, RuntimeDecoder
 from .mock.fake_runtime_client import CustomResultRuntimeJob
@@ -131,8 +133,6 @@ class TestDataSerialization(IBMTestCase):
         coeff_y = coeff_x + 1
         quantum_circuit = QuantumCircuit(1)
         quantum_circuit.h(0)
-        coeffs = np.array([1, 2, 3, 4, 5, 6])
-        table = PauliTable.from_labels(["III", "IXI", "IYY", "YIZ", "XYZ", "III"])
         operator = 2.0 * I ^ I
         z2_symmetries = Z2Symmetries(
             [Pauli("IIZI"), Pauli("ZIII")],
@@ -150,7 +150,6 @@ class TestDataSerialization(IBMTestCase):
             PauliSumOp.from_list(
                 [("II", -1.052373245772859), ("IZ", 0.39793742484318045)]
             ),
-            PauliSumOp(SparsePauliOp(table, coeffs), coeff=10),
             MatrixOp(primitive=np.array([[0, -1j], [1j, 0]]), coeff=coeff_x),
             PauliOp(primitive=Pauli("Y"), coeff=coeff_x),
             CircuitOp(quantum_circuit, coeff=coeff_x),
@@ -199,6 +198,17 @@ class TestDataSerialization(IBMTestCase):
                 self.assertTrue(isinstance(decoded, opt_cls))
                 for key, value in settings.items():
                     self.assertEqual(decoded.settings[key], value)
+
+    def test_coder_noise_model(self):
+        """Test encoding and decoding a noise model."""
+        noise_model = NoiseModel.from_backend(FakeNairobi())
+        self.assertIsInstance(noise_model, NoiseModel)
+        encoded = json.dumps(noise_model, cls=RuntimeEncoder)
+        self.assertIsInstance(encoded, str)
+        decoded = json.loads(encoded, cls=RuntimeDecoder)
+        self.assertIsInstance(decoded, NoiseModel)
+        self.assertEqual(noise_model.noise_qubits, decoded.noise_qubits)
+        self.assertEqual(noise_model.noise_instructions, decoded.noise_instructions)
 
     def test_encoder_datetime(self):
         """Test encoding a datetime."""

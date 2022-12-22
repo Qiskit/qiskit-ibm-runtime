@@ -12,10 +12,19 @@
 
 """Integration tests for Estimator primitive."""
 
-from qiskit.circuit.library import RealAmplitudes
-from qiskit.quantum_info import SparsePauliOp
+import unittest
 
-from qiskit_ibm_runtime import Estimator, EstimatorResult, BaseEstimator, Session
+import numpy as np
+
+from qiskit.circuit import QuantumCircuit, Parameter
+from qiskit.circuit.library import RealAmplitudes
+from qiskit.primitives import Estimator as TerraEstimator
+from qiskit.quantum_info import SparsePauliOp
+from qiskit.test.reference_circuits import ReferenceCircuits
+from qiskit.primitives import BaseEstimator, EstimatorResult
+
+from qiskit_ibm_runtime import Estimator, Session
+from qiskit_ibm_runtime.exceptions import RuntimeJobFailureError
 
 from ..decorators import run_integration_test
 from ..ibm_test_case import IBMIntegrationTestCase
@@ -24,11 +33,13 @@ from ..ibm_test_case import IBMIntegrationTestCase
 class TestIntegrationEstimator(IBMIntegrationTestCase):
     """Integration tests for Estimator primitive."""
 
+    def setUp(self) -> None:
+        super().setUp()
+        self.backend = "ibmq_qasm_simulator"
+
     @run_integration_test
     def test_estimator_session(self, service):
         """Verify if estimator primitive returns expected results"""
-
-        backend = "ibmq_qasm_simulator"
 
         psi1 = RealAmplitudes(num_qubits=2, reps=2)
         psi2 = RealAmplitudes(num_qubits=2, reps=3)
@@ -38,7 +49,7 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
         H2 = SparsePauliOp.from_list([("IZ", 1)])
         H3 = SparsePauliOp.from_list([("ZI", 1), ("ZZ", 1)])
 
-        with Session(service, backend) as session:
+        with Session(service, self.backend) as session:
             estimator = Estimator(session=session)
             self.assertIsInstance(estimator, BaseEstimator)
 
@@ -101,11 +112,99 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
             self.assertEqual(len(result5.values), len(circuits5))
             self.assertEqual(len(result5.metadata), len(circuits5))
 
+    @unittest.skip("Skip until data caching is reenabled.")
+    @run_integration_test
+    def test_estimator_session_circuit_caching(self, service):
+        """Verify if estimator primitive circuit caching works"""
+
+        backend = "ibmq_qasm_simulator"
+
+        qc1 = QuantumCircuit(2)
+        qc1.x(range(2))
+        qc1.measure_all()
+        qc2 = QuantumCircuit(2)
+        qc2.measure_all()
+        qc3 = QuantumCircuit(2)
+        qc3.h(range(2))
+        qc3.measure_all()
+
+        # pylint: disable=invalid-name
+        H = SparsePauliOp.from_list([("IZ", 1)])
+
+        with Session(service, backend) as session:
+            estimator = Estimator(session=session)
+
+            job = estimator.run(
+                circuits=[qc1, qc2],
+                observables=[H, H],
+            )
+            result = job.result()
+            self.assertEqual(len(result.values), 2)
+            self.assertEqual(len(result.metadata), 2)
+            self.assertEqual(result.values[0], -1)
+            self.assertEqual(result.values[1], 1)
+
+            job = estimator.run(
+                circuits=[qc3],
+                observables=[H],
+            )
+            result = job.result()
+            self.assertEqual(len(result.values), 1)
+            self.assertEqual(len(result.metadata), 1)
+            self.assertNotEqual(result.values[0], -1)
+            self.assertNotEqual(result.values[0], 1)
+
+            job = estimator.run(
+                circuits=[qc1, qc3],
+                observables=[H, H],
+            )
+            result = job.result()
+            self.assertEqual(len(result.values), 2)
+            self.assertEqual(len(result.metadata), 2)
+            self.assertEqual(result.values[0], -1)
+            self.assertNotEqual(result.values[1], -1)
+            self.assertNotEqual(result.values[1], 1)
+
+    @unittest.skip("Skip until data caching is reenabled.")
+    @run_integration_test
+    def test_estimator_circuit_caching_with_transpilation_options(self, service):
+        """Verify if circuit caching works in estimator primitive
+        by passing correct and incorrect transpilation options."""
+
+        qc1 = QuantumCircuit(2)
+        qc1.x(range(2))
+        qc1.measure_all()
+
+        # pylint: disable=invalid-name
+        H = SparsePauliOp.from_list([("IZ", 1)])
+
+        with Session(service, self.backend) as session:
+            estimator = Estimator(session=session)
+            # pass correct initial_layout
+            transpilation = {"initial_layout": [0, 1]}
+            job = estimator.run(
+                circuits=[qc1], observables=[H], transpilation=transpilation
+            )
+            result = job.result()
+            self.assertEqual(len(result.values), 1)
+            self.assertEqual(len(result.metadata), 1)
+            self.assertEqual(result.values[0], -1)
+
+            # pass incorrect initial_layout
+            # since a new transpilation option is passed it should not use the
+            # cached transpiled circuit from the first run above
+            transpilation = {"initial_layout": [0]}
+            job = estimator.run(
+                circuits=[qc1], observables=[H], transpilation=transpilation
+            )
+            with self.assertRaises(RuntimeJobFailureError):
+                job.result()
+
     @run_integration_test
     def test_estimator_primitive(self, service):
         """Test to verify that estimator as a primitive still works."""
 
-        options = {"backend": "ibmq_qasm_simulator"}
+        options = {"backend": self.backend}
 
         psi1 = RealAmplitudes(num_qubits=2, reps=2)
         psi2 = RealAmplitudes(num_qubits=2, reps=3)
@@ -163,3 +262,83 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
             self.assertIsInstance(result5, EstimatorResult)
             self.assertEqual(len(result5.values), len(circuits5))
             self.assertEqual(len(result5.metadata), len(circuits5))
+
+    @run_integration_test
+    def test_estimator_callback(self, service):
+        """Test Estimator callback function."""
+
+        def _callback(job_id_, result_):
+            nonlocal ws_result
+            ws_result.append(result_)
+            nonlocal job_ids
+            job_ids.add(job_id_)
+
+        ws_result = []
+        job_ids = set()
+
+        bell = ReferenceCircuits.bell()
+        obs = SparsePauliOp.from_list([("IZ", 1)])
+
+        with Session(service, self.backend) as session:
+            estimator = Estimator(session=session)
+            job = estimator.run(
+                circuits=[bell] * 60, observables=[obs] * 60, callback=_callback
+            )
+            result = job.result()
+            self.assertIsInstance(ws_result[-1], dict)
+            ws_result_values = np.asarray(ws_result[-1]["values"])
+            self.assertTrue((result.values == ws_result_values).all())
+            self.assertEqual(len(job_ids), 1)
+            self.assertEqual(job.job_id(), job_ids.pop())
+
+    @run_integration_test
+    def test_estimator_coeffs(self, service):
+        """Verify estimator with same operator different coefficients."""
+
+        cir = QuantumCircuit(2)
+        cir.h(0)
+        cir.cx(0, 1)
+        cir.ry(Parameter("theta"), 0)
+
+        theta_vec = np.linspace(-np.pi, np.pi, 15)
+
+        ## OBSERVABLE
+        obs1 = SparsePauliOp(["ZZ", "ZX", "XZ", "XX"], [1, -1, +1, 1])
+        obs2 = SparsePauliOp(["ZZ", "ZX", "XZ", "XX"], [1, +1, -1, 1])
+
+        ## TERRA ESTIMATOR
+        estimator = TerraEstimator()
+
+        job1 = estimator.run(
+            circuits=[cir] * len(theta_vec),
+            observables=[obs1] * len(theta_vec),
+            parameter_values=[[v] for v in theta_vec],
+        )
+        job2 = estimator.run(
+            circuits=[cir] * len(theta_vec),
+            observables=[obs2] * len(theta_vec),
+            parameter_values=[[v] for v in theta_vec],
+        )
+
+        chsh1_terra = job1.result()
+        chsh2_terra = job2.result()
+
+        with Session(service=service, backend=self.backend) as session:
+            estimator = Estimator(session=session)
+
+            job1 = estimator.run(
+                circuits=[cir] * len(theta_vec),
+                observables=[obs1] * len(theta_vec),
+                parameter_values=[[v] for v in theta_vec],
+            )
+            job2 = estimator.run(
+                circuits=[cir] * len(theta_vec),
+                observables=[obs2] * len(theta_vec),
+                parameter_values=[[v] for v in theta_vec],
+            )
+
+            chsh1_runtime = job1.result()
+            chsh2_runtime = job2.result()
+
+        self.assertTrue(np.allclose(chsh1_terra.values, chsh1_runtime.values, rtol=0.3))
+        self.assertTrue(np.allclose(chsh2_terra.values, chsh2_runtime.values, rtol=0.3))

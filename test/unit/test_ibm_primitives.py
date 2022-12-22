@@ -13,20 +13,38 @@
 """Tests for primitive classes."""
 
 import sys
+import copy
+import json
 from unittest.mock import MagicMock, patch, ANY
+import warnings
 from dataclasses import asdict
+from typing import Dict
+import unittest
 
+from qiskit.circuit import QuantumCircuit
+from qiskit.circuit.library import RealAmplitudes
 from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit.quantum_info import SparsePauliOp
-from qiskit_ibm_runtime import Sampler, Estimator, Options, Session
+
+from qiskit_ibm_runtime import Sampler, Estimator, Options, Session, RuntimeEncoder
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 import qiskit_ibm_runtime.session as session_pkg
+from qiskit_ibm_runtime.utils.utils import _hash
+from qiskit_ibm_runtime.qiskit.primitives.utils import _circuit_key
+
 from ..ibm_test_case import IBMTestCase
-from ..utils import dict_paritally_equal
+from ..utils import dict_paritally_equal, flat_dict_partially_equal, dict_keys_equal
+from .mock.fake_runtime_service import FakeRuntimeService
+
+
+class MockSession(Session):
+    """Mock for session class"""
+
+    _circuits_map: Dict[str, QuantumCircuit] = {}
 
 
 class TestPrimitives(IBMTestCase):
-    """Class for testing the Sampler class."""
+    """Class for testing the Sampler and Estimator classes."""
 
     @classmethod
     def setUpClass(cls):
@@ -43,8 +61,10 @@ class TestPrimitives(IBMTestCase):
         primitives = [Sampler, Estimator]
         for cls in primitives:
             with self.subTest(primitive=cls):
-                inst = cls(session=MagicMock(spec=Session), skip_transpilation=True)
-                self.assertTrue(inst.options.transpilation.skip_transpilation)
+                inst = cls(session=MagicMock(spec=MockSession), skip_transpilation=True)
+                self.assertTrue(
+                    inst.options.get("transpilation").get("skip_transpilation")
+                )
 
     def test_skip_transpilation_overwrite(self):
         """Test overwriting skip_transpilation."""
@@ -54,11 +74,13 @@ class TestPrimitives(IBMTestCase):
         for cls in primitives:
             with self.subTest(primitive=cls):
                 inst = cls(
-                    session=MagicMock(spec=Session),
+                    session=MagicMock(spec=MockSession),
                     options=options,
                     skip_transpilation=True,
                 )
-                self.assertFalse(inst.options.transpilation.skip_transpilation)
+                self.assertFalse(
+                    inst.options.get("transpilation").get("skip_transpilation")
+                )
 
     def test_dict_options(self):
         """Test passing a dictionary as options."""
@@ -66,9 +88,8 @@ class TestPrimitives(IBMTestCase):
             {},
             {
                 "resilience_level": 1,
-                "transpilation": {"seed_transpiler": 24},
+                "transpilation": {"initial_layout": [1, 2]},
                 "execution": {"shots": 100, "init_qubits": True},
-                "log_level": "INFO",
             },
             {"transpilation": {}},
         ]
@@ -76,10 +97,10 @@ class TestPrimitives(IBMTestCase):
         for cls in primitives:
             for options in options_vars:
                 with self.subTest(primitive=cls, options=options):
-                    inst = cls(session=MagicMock(spec=Session), options=options)
+                    inst = cls(session=MagicMock(spec=MockSession), options=options)
                     expected = asdict(Options())
-                    self._update_dict(expected, options)
-                    self.assertDictEqual(expected, asdict(inst.options))
+                    self._update_dict(expected, copy.deepcopy(options))
+                    self.assertDictEqual(expected, inst.options.__dict__)
 
     def test_backend_in_options(self):
         """Test specifying backend in options."""
@@ -92,8 +113,59 @@ class TestPrimitives(IBMTestCase):
             for backend in backends:
                 with self.subTest(primitive=cls, backend=backend):
                     options = {"backend": backend}
-                    inst = cls(service=MagicMock(), options=options)
+                    with warnings.catch_warnings(record=True) as warn:
+                        warnings.simplefilter("always")
+                        inst = cls(service=MagicMock(), options=options)
+                        # We'll get 2 deprecation warnings - one for service and one for backend.
+                        # We need service otherwise backend will get ignored.
+                        self.assertEqual(len(warn), 2)
+                        self.assertTrue(
+                            all(
+                                issubclass(one_warn.category, DeprecationWarning)
+                                for one_warn in warn
+                            )
+                        )
                     self.assertEqual(inst.session.backend(), backend_name)
+
+    def test_old_options(self):
+        """Test specifying old runtime options."""
+        primitives = [Sampler, Estimator]
+        session = MagicMock(spec=MockSession)
+        options = [{"log_level": "WARNING"}, {"image": "foo:bar"}]
+
+        for cls in primitives:
+            for opt in options:
+                with self.subTest(primitive=cls, options=opt):
+                    inst = cls(session=session, options=opt)
+                    inst.run(self.qx, observables=self.obs)
+                    _, kwargs = session.run.call_args
+                    run_options = kwargs["options"]
+                    for key, val in opt.items():
+                        self.assertEqual(run_options[key], val)
+                    inputs = kwargs["inputs"]
+                    self.assertTrue(all(key not in inputs.keys() for key in opt))
+
+    def test_runtime_options(self):
+        """Test RuntimeOptions specified as primitive options."""
+        session = MagicMock(spec=MockSession)
+        primitives = [Sampler, Estimator]
+        env_vars = [
+            {"log_level": "DEBUG"},
+            {"job_tags": ["foo", "bar"]},
+        ]
+        for cls in primitives:
+            for env in env_vars:
+                with self.subTest(primitive=cls, env=env):
+                    options = Options(environment=env)
+                    inst = cls(session=session, options=options)
+                    inst.run(self.qx, observables=self.obs)
+                    if sys.version_info >= (3, 8):
+                        run_options = session.run.call_args.kwargs["options"]
+                    else:
+                        _, kwargs = session.run.call_args
+                        run_options = kwargs["options"]
+                    for key, val in env.items():
+                        self.assertEqual(run_options[key], val)
 
     def test_options_copied(self):
         """Test modifying original options does not affect primitives."""
@@ -102,9 +174,11 @@ class TestPrimitives(IBMTestCase):
         for cls in primitives:
             with self.subTest(primitive=cls):
                 options.transpilation.skip_transpilation = True
-                inst = cls(session=MagicMock(spec=Session), options=options)
+                inst = cls(session=MagicMock(spec=MockSession), options=options)
                 options.transpilation.skip_transpilation = False
-                self.assertTrue(inst.options.transpilation.skip_transpilation)
+                self.assertTrue(
+                    inst.options.get("transpilation").get("skip_transpilation")
+                )
 
     @patch("qiskit_ibm_runtime.session.Session")
     @patch("qiskit_ibm_runtime.session.QiskitRuntimeService")
@@ -189,7 +263,7 @@ class TestPrimitives(IBMTestCase):
 
     def test_run_default_options(self):
         """Test run using default options."""
-        session = MagicMock(spec=Session)
+        session = MagicMock(spec=MockSession)
         options_vars = [
             (Options(resilience_level=9), {"resilience_settings": {"level": 9}}),
             (
@@ -197,9 +271,12 @@ class TestPrimitives(IBMTestCase):
                 {"transpilation_settings": {"optimization_settings": {"level": 8}}},
             ),
             (
-                {"transpilation": {"seed_transpiler": 24}, "execution": {"shots": 100}},
                 {
-                    "transpilation_settings": {"seed_transpiler": 24},
+                    "transpilation": {"initial_layout": [1, 2]},
+                    "execution": {"shots": 100},
+                },
+                {
+                    "transpilation_settings": {"initial_layout": [1, 2]},
                     "run_options": {"shots": 100},
                 },
             ),
@@ -220,14 +297,12 @@ class TestPrimitives(IBMTestCase):
 
     def test_run_updated_default_options(self):
         """Test run using updated default options."""
-        session = MagicMock(spec=Session)
+        session = MagicMock(spec=MockSession)
         primitives = [Sampler, Estimator]
         for cls in primitives:
             with self.subTest(primitive=cls):
                 inst = cls(session=session)
-                inst.options.resilience_level = 1
-                inst.options.optimization_level = 2
-                inst.options.execution.shots = 3
+                inst.set_options(resilience_level=1, optimization_level=2, shots=99)
                 inst.run(self.qx, observables=self.obs)
                 if sys.version_info >= (3, 8):
                     inputs = session.run.call_args.kwargs["inputs"]
@@ -241,13 +316,13 @@ class TestPrimitives(IBMTestCase):
                         "transpilation_settings": {
                             "optimization_settings": {"level": 2}
                         },
-                        "run_options": {"shots": 3},
+                        "run_options": {"shots": 99},
                     },
                 )
 
     def test_run_overwrite_options(self):
         """Test run using overwritten options."""
-        session = MagicMock(spec=Session)
+        session = MagicMock(spec=MockSession)
         options_vars = [
             ({"resilience_level": 9}, {"resilience_settings": {"level": 9}}),
             ({"shots": 200}, {"run_options": {"shots": 200}}),
@@ -256,11 +331,11 @@ class TestPrimitives(IBMTestCase):
                 {"transpilation_settings": {"optimization_settings": {"level": 8}}},
             ),
             (
-                {"seed_transpiler": 24, "optimization_level": 8},
+                {"initial_layout": [1, 2], "optimization_level": 8},
                 {
                     "transpilation_settings": {
                         "optimization_settings": {"level": 8},
-                        "seed_transpiler": 24,
+                        "initial_layout": [1, 2],
                     }
                 },
             ),
@@ -277,11 +352,64 @@ class TestPrimitives(IBMTestCase):
                         _, kwargs = session.run.call_args
                         inputs = kwargs["inputs"]
                     self._assert_dict_paritally_equal(inputs, expected)
-                    self.assertDictEqual(asdict(inst.options), asdict(Options()))
+                    self.assertDictEqual(inst.options.__dict__, asdict(Options()))
+
+    def test_run_overwrite_runtime_options(self):
+        """Test run using overwritten runtime options."""
+        session = MagicMock(spec=MockSession)
+        options_vars = [
+            {"log_level": "DEBUG"},
+            {"job_tags": ["foo", "bar"]},
+            {"max_execution_time": 600},
+            {"log_level": "INFO", "max_execution_time": 800},
+        ]
+        primitives = [Sampler, Estimator]
+        for cls in primitives:
+            for options in options_vars:
+                with self.subTest(primitive=cls, options=options):
+                    inst = cls(session=session)
+                    inst.run(self.qx, observables=self.obs, **options)
+                    if sys.version_info >= (3, 8):
+                        rt_options = session.run.call_args.kwargs["options"]
+                    else:
+                        _, kwargs = session.run.call_args
+                        rt_options = kwargs["options"]
+                    self._assert_dict_paritally_equal(rt_options, options)
+
+    def test_kwarg_options(self):
+        """Test specifying arbitrary options."""
+        session = MagicMock(spec=MockSession)
+        primitives = [Sampler, Estimator]
+        for cls in primitives:
+            with self.subTest(primitive=cls):
+                options = Options(foo="foo")  # pylint: disable=unexpected-keyword-arg
+                inst = cls(session=session, options=options)
+                inst.run(self.qx, observables=self.obs)
+                if sys.version_info >= (3, 8):
+                    inputs = session.run.call_args.kwargs["inputs"]
+                else:
+                    _, kwargs = session.run.call_args
+                    inputs = kwargs["inputs"]
+                self.assertEqual(inputs.get("foo"), "foo")
+
+    def test_run_kwarg_options(self):
+        """Test specifying arbitrary options in run."""
+        session = MagicMock(spec=MockSession)
+        primitives = [Sampler, Estimator]
+        for cls in primitives:
+            with self.subTest(primitive=cls):
+                inst = cls(session=session)
+                inst.run(self.qx, observables=self.obs, foo="foo")
+                if sys.version_info >= (3, 8):
+                    inputs = session.run.call_args.kwargs["inputs"]
+                else:
+                    _, kwargs = session.run.call_args
+                    inputs = kwargs["inputs"]
+                self.assertEqual(inputs.get("foo"), "foo")
 
     def test_run_multiple_different_options(self):
         """Test multiple runs with different options."""
-        session = MagicMock(spec=Session)
+        session = MagicMock(spec=MockSession)
         primitives = [Sampler, Estimator]
         for cls in primitives:
             with self.subTest(primitive=cls):
@@ -293,18 +421,105 @@ class TestPrimitives(IBMTestCase):
                     self.assertEqual(
                         kwargs_list[idx][1]["inputs"]["run_options"]["shots"], shots
                     )
-                self.assertDictEqual(asdict(inst.options), asdict(Options()))
+                self.assertDictEqual(inst.options.__dict__, asdict(Options()))
 
     def test_run_same_session(self):
         """Test multiple runs within a session."""
         num_runs = 5
         primitives = [Sampler, Estimator]
-        session = MagicMock(spec=Session)
+        session = MagicMock(spec=MockSession)
         for idx in range(num_runs):
             cls = primitives[idx % 2]
             inst = cls(session=session)
             inst.run(self.qx, observables=self.obs)
         self.assertEqual(session.run.call_count, num_runs)
+
+    @unittest.skip("Skip until data caching is reenabled.")
+    def test_primitives_circuit_caching(self):
+        """Test circuit caching in Estimator and Sampler classes"""
+        psi1 = RealAmplitudes(num_qubits=2, reps=2)
+        psi1.measure_all()
+        psi2 = RealAmplitudes(num_qubits=2, reps=3)
+        psi2.measure_all()
+        psi3 = RealAmplitudes(num_qubits=2, reps=2)
+        psi3.measure_all()
+        psi4 = RealAmplitudes(num_qubits=2, reps=3)
+        psi4.measure_all()
+        psi1_id = _hash(json.dumps(_circuit_key(psi1), cls=RuntimeEncoder))
+        psi2_id = _hash(json.dumps(_circuit_key(psi2), cls=RuntimeEncoder))
+        psi3_id = _hash(json.dumps(_circuit_key(psi3), cls=RuntimeEncoder))
+        psi4_id = _hash(json.dumps(_circuit_key(psi4), cls=RuntimeEncoder))
+
+        # pylint: disable=invalid-name
+        H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
+        H2 = SparsePauliOp.from_list([("IZ", 1)])
+
+        with Session(
+            service=FakeRuntimeService(channel="ibm_quantum", token="abc"),
+            backend="ibmq_qasm_simulator",
+        ) as session:
+            estimator = Estimator(session=session)
+
+            # calculate [ <psi1(theta1)|H1|psi1(theta1)> ]
+            with patch.object(estimator._session, "run") as mock_run:
+                estimator.run([psi1, psi2], [H1, H2], [[1] * 6, [1] * 8])
+                _, kwargs = mock_run.call_args
+                inputs = kwargs["inputs"]
+                self.assertDictEqual(inputs["circuits"], {psi1_id: psi1, psi2_id: psi2})
+                self.assertEqual(inputs["circuit_ids"], [psi1_id, psi2_id])
+
+            sampler = Sampler(session=session)
+            with patch.object(sampler._session, "run") as mock_run:
+                sampler.run([psi1, psi2], [[1] * 6, [1] * 8])
+                _, kwargs = mock_run.call_args
+                inputs = kwargs["inputs"]
+                self.assertDictEqual(inputs["circuits"], {})
+                self.assertEqual(inputs["circuit_ids"], [psi1_id, psi2_id])
+
+            with patch.object(estimator._session, "run") as mock_run:
+                estimator.run([psi3], [H1], [[1] * 6])
+                _, kwargs = mock_run.call_args
+                inputs = kwargs["inputs"]
+                self.assertDictEqual(inputs["circuits"], {psi3_id: psi3})
+                self.assertEqual(inputs["circuit_ids"], [psi3_id])
+
+            with patch.object(sampler._session, "run") as mock_run:
+                sampler.run([psi4, psi1], [[1] * 8, [1] * 6])
+                _, kwargs = mock_run.call_args
+                inputs = kwargs["inputs"]
+                self.assertDictEqual(inputs["circuits"], {psi4_id: psi4})
+                self.assertEqual(inputs["circuit_ids"], [psi4_id, psi1_id])
+
+    def test_set_options(self):
+        """Test set options."""
+        options = Options(optimization_level=1, execution={"shots": 100})
+        new_options = [
+            ({"optimization_level": 2}, Options()),
+            ({"optimization_level": 3, "shots": 200}, Options()),
+            (
+                {"shots": 300, "foo": "foo"},
+                Options(foo="foo"),  # pylint: disable=unexpected-keyword-arg
+            ),
+        ]
+
+        session = MagicMock(spec=MockSession)
+        primitives = [Sampler, Estimator]
+        for cls in primitives:
+            for new_opt, new_str in new_options:
+                with self.subTest(primitive=cls, new_opt=new_opt):
+                    inst = cls(session=session, options=options)
+                    inst.set_options(**new_opt)
+                    # Make sure the values are equal.
+                    inst_options = inst.options.__dict__
+                    self.assertTrue(
+                        flat_dict_partially_equal(inst_options, new_opt),
+                        f"inst_options={inst_options}, new_opt={new_opt}",
+                    )
+                    # Make sure the structure didn't change.
+                    self.assertTrue(
+                        dict_keys_equal(inst_options, asdict(new_str)),
+                        f"inst_options={inst_options}, new_str={new_str}",
+                    )
 
     def _update_dict(self, dict1, dict2):
         for key, val in dict1.items():
@@ -314,6 +529,7 @@ class TestPrimitives(IBMTestCase):
                 dict1[key] = dict2.pop(key)
 
     def _assert_dict_paritally_equal(self, dict1, dict2):
+        """Assert all keys in dict2 are in dict1 and have same values."""
         self.assertTrue(
             dict_paritally_equal(dict1, dict2),
             f"{dict1} and {dict2} not partially equal.",

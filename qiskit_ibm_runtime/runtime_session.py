@@ -16,6 +16,7 @@ from typing import Dict, Any, Optional, Type, Union
 from types import TracebackType
 import copy
 from functools import wraps
+from dataclasses import asdict
 
 from qiskit_ibm_runtime import qiskit_runtime_service  # pylint: disable=unused-import
 from .runtime_job import RuntimeJob
@@ -53,17 +54,22 @@ class RuntimeSession:
             program_id: Program ID.
             inputs: Initial program inputs.
             options: Runtime options.
+            max_time: (DEPRECATED) Maximum amount of time, a runtime session can
+                be open before being forcibly closed.
         """
         self._service = service
         self._program_id = program_id
-        self._options: Optional[Union[RuntimeOptions, Dict]] = options
+        self._options: dict = options
+        if isinstance(options, RuntimeOptions):
+            self._options = asdict(options)
+        if max_time:
+            self._options["max_execution_time"] = max_time
         self._initial_inputs = inputs
         self._initial_job: Optional[RuntimeJob] = None
         self._job: Optional[RuntimeJob] = None
         self._session_id: Optional[str] = None
         self._active = True
         self._start_session = True
-        self._max_time = max_time
 
     @_active_session
     def write(self, **kwargs: Dict) -> None:
@@ -80,7 +86,7 @@ class RuntimeSession:
             self._session_id = self._job.job_id()
         else:
             self._start_session = False
-            self._max_time = None
+            self._options["max_execution_time"] = None
             self._job = self._run(inputs=inputs)
 
     def _run(self, inputs: Union[Dict, ParameterNamespace]) -> RuntimeJob:
@@ -91,7 +97,6 @@ class RuntimeSession:
             inputs=inputs,
             session_id=self._session_id,
             start_session=self._start_session,
-            max_execution_time=self._max_time,
         )
 
     @_active_session
@@ -116,7 +121,7 @@ class RuntimeSession:
         """
         out = {}
         if self._options:
-            out["backend"] = self._options["backend_name"] or "unknown"  # type: ignore
+            out["backend"] = self._options["backend"] or "unknown"  # type: ignore
         if self._job:
             out["job_id"] = self._job.job_id()
             out["job_status"] = self._job.status()

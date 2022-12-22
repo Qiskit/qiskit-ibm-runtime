@@ -16,6 +16,7 @@ import keyword
 import logging
 import os
 import re
+import hashlib
 from queue import Queue
 from threading import Condition
 from typing import List, Optional, Any, Dict, Union, Tuple, Type
@@ -24,8 +25,6 @@ from urllib.parse import urlparse
 import requests
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 from ibm_platform_services import ResourceControllerV2
-
-from ..exceptions import IBMInputValueError
 
 
 def validate_job_tags(
@@ -45,33 +44,6 @@ def validate_job_tags(
         or not all(isinstance(tag, str) for tag in job_tags)
     ):
         raise exception("job_tags needs to be a list of strings.")
-
-
-def validate_runtime_options(options: Dict, channel: str) -> None:
-    """Validate runtime options.
-
-    Args:
-        options: Runtime options to validate.
-
-    Raises:
-        IBMInputValueError: If input values are invalid.
-    """
-    if options.get("image") and not re.match(
-        "[a-zA-Z0-9]+([/.\\-_][a-zA-Z0-9]+)*:[a-zA-Z0-9]+([.\\-_][a-zA-Z0-9]+)*$",
-        options["image"],
-    ):
-        raise IBMInputValueError('"image" needs to be in form of image_name:tag')
-
-    if channel == "ibm_quantum" and not options.get("backend"):
-        raise IBMInputValueError('"backend" is required for ``ibm_quantum`` runtime.')
-
-    if options.get("log_level") and not isinstance(
-        logging.getLevelName(options["log_level"].upper()), int
-    ):
-        raise IBMInputValueError(
-            f"{options['log_level']} is not a valid log level. The valid log levels are: "
-            "`DEBUG`, `INFO`, `WARNING`, `ERROR`, and `CRITICAL`."
-        )
 
 
 def get_iam_api_url(cloud_url: str) -> str:
@@ -154,7 +126,7 @@ def _is_experimental_runtime_url(url: str) -> bool:
     Args:
         url: The URL.
     """
-    return isinstance(url, str) and "experimental" in url and url.endswith(".cloud")
+    return isinstance(url, str) and "experimental" in url
 
 
 def _location_from_crn(crn: str) -> str:
@@ -288,6 +260,13 @@ def _filter_value(
                 data[filter_key[0]][filter_key[1]] = "..."
             elif isinstance(value, dict):
                 _filter_value(value, filter_keys)
+
+
+def _hash(hash_str: str) -> str:
+    """Hashes and returns a digest.
+    blake2s is supposedly faster than SHAs.
+    """
+    return hashlib.blake2s(hash_str.encode()).hexdigest()
 
 
 class RefreshQueue(Queue):

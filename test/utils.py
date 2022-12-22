@@ -154,9 +154,43 @@ def dict_paritally_equal(dict1: Dict, dict2: Dict) -> bool:
     """Determine whether all keys in dict2 are in dict1 and have same values."""
     for key, val in dict2.items():
         if isinstance(val, dict):
-            return dict_paritally_equal(dict1.get(key), val)
-        elif key in dict1:
-            return val == dict1[key]
-        return False
+            if not dict_paritally_equal(dict1.get(key), val):
+                return False
+        elif key not in dict1 or val != dict1[key]:
+            return False
+
+    return True
+
+
+def flat_dict_partially_equal(dict1: dict, dict2: dict) -> bool:
+    """Flat the dictionaries then determine whether all keys in dict2 are
+    in dict1 and have the same values."""
+
+    def _flat_dict(in_dict, out_dict):
+        for key_, val_ in in_dict.items():
+            if isinstance(val_, dict):
+                _flat_dict(val_, out_dict)
+            else:
+                out_dict[key_] = val_
+
+    flat_dict1: dict = {}
+    flat_dict2: dict = {}
+    _flat_dict(dict1, flat_dict1)
+    _flat_dict(dict2, flat_dict2)
+
+    for key, val in flat_dict2.items():
+        if key not in flat_dict1 or flat_dict1[key] != val:
+            return False
+    return True
+
+
+def dict_keys_equal(dict1: dict, dict2: dict) -> bool:
+    """Determine whether the dictionaries have the same keys."""
+    for key, val in dict1.items():
+        if key not in dict2:
+            return False
+        if isinstance(val, dict):
+            if not dict_keys_equal(val, dict2[key]):
+                return False
 
     return True

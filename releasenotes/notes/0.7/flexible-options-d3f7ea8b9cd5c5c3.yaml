@@ -1,0 +1,7 @@
+---
+deprecations:
+  - |
+    Passing ``instance`` parameter to the
+    :meth:`qiskit_ibm_runtime.QiskitRuntimeService.run` has been deprecated.
+    Instead, you can pass the ``instance`` parameter inside the ``options``
+    parameter.

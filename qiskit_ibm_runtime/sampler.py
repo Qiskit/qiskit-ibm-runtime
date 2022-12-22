@@ -15,15 +15,16 @@
 from __future__ import annotations
 from typing import Dict, Iterable, Optional, Sequence, Any, Union
 import copy
+import logging
+from dataclasses import asdict
 
 from qiskit.circuit import QuantumCircuit, Parameter
-from qiskit.circuit.parametertable import ParameterView
+from qiskit.providers.options import Options as TerraOptions
+from qiskit.primitives import BaseSampler, SamplerResult
 
-# TODO import BaseSampler and SamplerResult from terra once released
-from .qiskit.primitives import BaseSampler, SamplerResult
+# TODO import _circuit_key from terra once 0.23 released
 from .qiskit_runtime_service import QiskitRuntimeService
 from .options import Options
-from .utils.sampler_result_decoder import SamplerResultDecoder
 from .runtime_job import RuntimeJob
 from .ibm_backend import IBMBackend
 from .session import get_default_session
@@ -32,9 +33,12 @@ from .utils.deprecation import (
     issue_deprecation_msg,
     deprecate_function,
 )
+from .constants import DEFAULT_DECODERS
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
+
+logger = logging.getLogger(__name__)
 
 
 class Sampler(BaseSampler):
@@ -59,9 +63,8 @@ class Sampler(BaseSampler):
 
         with Session(service) as session:
             sampler = Sampler(session=session)
-            sampler.options.resilience_level = 1
 
-            job = sampler.run(bell)
+            job = sampler.run(bell, shots=1024)
             print(f"Job ID: {job.job_id()}")
             print(f"Job result: {job.result()}")
     """
@@ -107,8 +110,13 @@ class Sampler(BaseSampler):
                 The ``backend`` keyword is still supported but is deprecated.
 
             skip_transpilation (DEPRECATED): Transpilation is skipped if set to True. False by default.
-                Ignored ``skip_transpilation`` is also specified in ``options``.
+                Ignored if ``skip_transpilation`` is also specified in ``options``.
         """
+        # `_options` in this class is an instance of qiskit_ibm_runtime.Options class.
+        # The base class, however, uses a `_run_options` which is an instance of
+        # qiskit.providers.Options. We largely ignore this _run_options because we use
+        # a nested dictionary to categorize options.
+
         super().__init__(
             circuits=circuits,
             parameters=parameters,
@@ -129,23 +137,38 @@ class Sampler(BaseSampler):
         self._session: Session = None
 
         if options is None:
-            self.options = Options()
+            _options = Options()
         elif isinstance(options, Options):
-            self.options = copy.deepcopy(options)
-            skip_transpilation = self.options.transpilation.skip_transpilation
+            _options = copy.deepcopy(options)
+            skip_transpilation = (
+                _options.transpilation.skip_transpilation  # type: ignore[union-attr]
+            )
         else:
-            backend = options.pop("backend", None)
+            options_copy = copy.deepcopy(options)
+            backend = options_copy.pop("backend", None)
             if backend is not None:
                 issue_deprecation_msg(
                     msg="The 'backend' key in 'options' has been deprecated",
                     version="0.7",
                     remedy="Please pass the backend when opening a session.",
                 )
-            self.options = Options._from_dict(options)
             skip_transpilation = options.get("transpilation", {}).get(
                 "skip_transpilation", False
             )
-        self.options.transpilation.skip_transpilation = skip_transpilation
+            log_level = options_copy.pop("log_level", None)
+            _options = Options(**options_copy)
+            if log_level:
+                issue_deprecation_msg(
+                    msg="The 'log_level' option has been moved to the 'environment' category",
+                    version="0.7",
+                    remedy="Please specify 'environment':{'log_level': log_level} instead.",
+                )
+                _options.environment.log_level = log_level  # type: ignore[union-attr]
+
+        _options.transpilation.skip_transpilation = (  # type: ignore[union-attr]
+            skip_transpilation
+        )
+        self._options: dict = asdict(_options)
 
         self._initial_inputs = {"circuits": circuits, "parameters": parameters}
         if isinstance(session, Session):
@@ -154,11 +177,21 @@ class Sampler(BaseSampler):
             backend = session or backend
             self._session = get_default_session(service, backend)
 
-    def run(
+        # self._first_run = True
+        # self._circuits_map = {}
+        # if self.circuits:
+        #     for circuit in self.circuits:
+        #         circuit_id = _hash(
+        #             json.dumps(_circuit_key(circuit), cls=RuntimeEncoder)
+        #         )
+        #         if circuit_id not in self._session._circuits_map:
+        #             self._circuits_map[circuit_id] = circuit
+        #             self._session._circuits_map[circuit_id] = circuit
+
+    def run(  # pylint: disable=arguments-differ
         self,
         circuits: QuantumCircuit | Sequence[QuantumCircuit],
         parameter_values: Sequence[float] | Sequence[Sequence[float]] | None = None,
-        parameters: Sequence[Parameter] | Sequence[Sequence[Parameter]] | None = None,
         **kwargs: Any,
     ) -> RuntimeJob:
         """Submit a request to the sampler primitive program.
@@ -167,44 +200,28 @@ class Sampler(BaseSampler):
             circuits: A (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
                 a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
             parameter_values: Concrete parameters to be bound.
-            parameters: Parameters of each of the quantum circuits.
-                Defaults to ``[circ.parameters for circ in circuits]``.
             **kwargs: Individual options to overwrite the default primitive options.
+                These include the runtime options in :class:`qiskit_ibm_runtime.RuntimeOptions`.
 
         Returns:
             Submitted job.
             The result of the job is an instance of :class:`qiskit.primitives.SamplerResult`.
 
         Raises:
-            QiskitError: Invalid arguments are given.
+            ValueError: Invalid arguments are given.
         """
-        if not isinstance(circuits, Sequence):
-            circuits = [circuits]
-        if (
-            parameter_values is not None
-            and len(parameter_values) > 1
-            and not isinstance(parameter_values[0], (Sequence, Iterable))
-        ):
-            parameter_values = [parameter_values]  # type: ignore[assignment]
-        if (
-            parameters is not None
-            and len(parameters) > 1
-            and not isinstance(parameters[0], Sequence)
-        ):
-            parameters = [parameters]
-
+        # To bypass base class merging of options.
+        user_kwargs = {"_user_kwargs": kwargs}
         return super().run(
             circuits=circuits,
             parameter_values=parameter_values,
-            parameters=parameters,
-            **kwargs,
+            **user_kwargs,
         )
 
-    def _run(
+    def _run(  # pylint: disable=arguments-differ
         self,
         circuits: Sequence[QuantumCircuit],
         parameter_values: Sequence[Sequence[float]],
-        parameters: Sequence[ParameterView],
         **kwargs: Any,
     ) -> RuntimeJob:
         """Submit a request to the sampler primitive program.
@@ -212,33 +229,49 @@ class Sampler(BaseSampler):
         Args:
             circuits: A (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
                 a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
-
             parameter_values: An optional list of concrete parameters to be bound.
-
-            parameters: A list of parameters of the quantum circuits
-                (:class:`~qiskit.circuit.parametertable.ParameterView` or
-                a list of :class:`~qiskit.circuit.Parameter`).
-                Defaults to ``[circ.parameters for circ in circuits]``.
-
             **kwargs: Individual options to overwrite the default primitive options.
+                These include the runtime options in :class:`qiskit_ibm_runtime.RuntimeOptions`.
 
         Returns:
             Submitted job.
         """
+        # TODO: Re-enable data caching when ntc 1748 is fixed
+        # circuits_map = {}
+        # circuit_ids = []
+        # for circuit in circuits:
+        #     circuit_id = _hash(json.dumps(_circuit_key(circuit), cls=RuntimeEncoder))
+        #     circuit_ids.append(circuit_id)
+        #     if circuit_id in self._session._circuits_map:
+        #         continue
+        #     self._session._circuits_map[circuit_id] = circuit
+        #     circuits_map[circuit_id] = circuit
+
+        # if self._first_run:
+        #     self._first_run = False
+        #     circuits_map.update(self._circuits_map)
+
+        # inputs = {
+        #     "circuits": circuits_map,
+        #     "circuit_ids": circuit_ids,
+        #     "parameter_values": parameter_values,
+        # }
         inputs = {
             "circuits": circuits,
-            "parameters": parameters,
+            "parameters": [circ.parameters for circ in circuits],
             "circuit_indices": list(range(len(circuits))),
             "parameter_values": parameter_values,
         }
-        combined = self.options._merge_options(kwargs)
+        combined = Options._merge_options(self._options, kwargs.get("_user_kwargs", {}))
+        logger.info("Submitting job using options %s", combined)
         inputs.update(Options._get_program_inputs(combined))
 
         return self._session.run(
             program_id=self._PROGRAM_ID,
             inputs=inputs,
             options=Options._get_runtime_options(combined),
-            result_decoder=SamplerResultDecoder,
+            callback=combined.get("environment", {}).get("callback", None),
+            result_decoder=DEFAULT_DECODERS.get(self._PROGRAM_ID),
         )
 
     def _call(
@@ -277,7 +310,8 @@ class Sampler(BaseSampler):
             "circuit_indices": circuits,
             "parameter_values": parameter_values,
         }
-        combined = self.options._merge_options(run_options)
+        combined = Options._merge_options(self._options, run_options)
+
         inputs.update(Options._get_program_inputs(combined))
 
         raw_result = self._session.run(
@@ -305,3 +339,20 @@ class Sampler(BaseSampler):
             Session used by this primitive.
         """
         return self._session
+
+    @property
+    def options(self) -> TerraOptions:
+        """Return options values for the sampler.
+
+        Returns:
+            options
+        """
+        return TerraOptions(**self._options)
+
+    def set_options(self, **fields: Any) -> None:
+        """Set options values for the sampler.
+
+        Args:
+            **fields: The fields to update the options
+        """
+        self._options = Options._merge_options(self._options, fields)

@@ -124,7 +124,9 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
             called_back_count += 1
 
         called_back_count = 0
-        job = self._run_program(service, interim_results="foobar")
+        job = self._run_program(
+            service, interim_results="foobar", sleep_per_iteration=10
+        )
         job.wait_for_final_state()
         job._status = JobStatus.RUNNING  # Allow stream_results()
         job.stream_results(result_callback)
@@ -169,11 +171,12 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
                 final_it = result["iteration"]
 
         final_it = 0
-        iterations = 3
+        iterations = 10
+        inputs = {"iterations": iterations, "sleep_per_iteration": 3}
         with self.assertLogs("qiskit_ibm_runtime", level="WARNING") as err_cm:
             job = self._run_program(
                 service,
-                iterations=iterations,
+                inputs=inputs,
                 interim_results="foo",
                 callback=result_callback,
             )
@@ -227,7 +230,7 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
         callback_called = False
 
         with use_proxies(service, MockProxyServer.VALID_PROXIES):
-            job = self._run_program(service, iterations=1, callback=result_callback)
+            job = self._run_program(service, iterations=10, callback=result_callback)
             job.wait_for_final_state()
 
         self.assertTrue(callback_called)
