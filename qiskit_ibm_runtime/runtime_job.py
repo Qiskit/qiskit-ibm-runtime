@@ -150,7 +150,6 @@ class RuntimeJob(Job):
         # For backward compatibility. These can be removed once 'job_id' and 'backend'
         # as attributes are no longer supported.
         self.job_id = CallableStr(job_id)
-        self.backend = self._backend
 
     def interim_results(self, decoder: Optional[Type[ResultDecoder]] = None) -> Any:
         """Return the interim results of the job.
@@ -223,6 +222,20 @@ class RuntimeJob(Job):
             raise IBMRuntimeError(f"Failed to cancel job: {ex}") from None
         self.cancel_result_streaming()
         self._status = JobStatus.CANCELLED
+
+    def backend(self) -> Backend:
+        """Return the backend where this job was executed. Retrieve data again if backend is None.
+
+        Raises:
+            IBMRuntimeError: If a network error occurred.
+        """
+        if not self._backend:  # type: ignore
+            try:
+                response = self._api_client.job_get(self.job_id())
+                self._backend = response.get("backend")
+            except RequestsApiError as err:
+                raise IBMRuntimeError(f"Failed to get job backend: {err}") from None
+        return self._backend
 
     def status(self) -> JobStatus:
         """Return the status of the job.
