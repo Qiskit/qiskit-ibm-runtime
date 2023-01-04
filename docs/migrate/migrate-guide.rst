@@ -19,7 +19,7 @@ Why use Qiskit Runtime?
 
 **Simplified interface**:
 
-Use primitive programs to write code more efficiently.  For details, see the examples topics, such as `Using Estimator to design an algorithm <migrate-estimator>`__
+Use primitive programs to write code more efficiently.  For details, see the examples topics, such as `Using Estimator to design an algorithm <migrate-estimator>`__.
 
   .. figure:: ../images/compare-code.png
    :scale: 50 %
@@ -136,7 +136,7 @@ manually.
 
 .. _migrate-code:
 
-Migrate code
+Code migration examples
 --------------------------------------------
 
 We have identified key patterns of behavior and use cases with code examples to help you migrate code to Qiskit
@@ -155,8 +155,8 @@ manually.
 
 The following topics are use cases with code migration examples:
 
-* `Use Estimator in an algorithm <migrate-estimator.html>`__
-* `Use Sampler in an algorithm <migrate-sampler.html>`__
+* `Use Estimator to design an algorithm <migrate-estimator.html>`__
+* `Use Sampler to design an algorithm <migrate-sampler.html>`__
 * `Use Estimator and Sampler in an algorithm <migrate-est-sam.html>`__
 * `Update parameter values while running <migrate-update-parm.html>`__
 * `Primitive-based routines <migrate-prim-based.html>`__
