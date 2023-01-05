@@ -20,7 +20,6 @@ from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.jobstatus import JobStatus
 
 from qiskit_ibm_runtime import RuntimeJob
-from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.constants import API_TO_JOB_ERROR_MESSAGE
 from qiskit_ibm_runtime.exceptions import (
     RuntimeJobFailureError,
