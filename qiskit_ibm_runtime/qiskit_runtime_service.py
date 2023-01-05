@@ -986,6 +986,7 @@ class QiskitRuntimeService(Provider):
             user_callback=callback,
             result_decoder=result_decoder,
             image=qrt_options.image,
+            service=self,
         )
         return job
 

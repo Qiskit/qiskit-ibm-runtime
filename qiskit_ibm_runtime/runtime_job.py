@@ -25,6 +25,9 @@ from qiskit.providers.backend import Backend
 from qiskit.providers.jobstatus import JobStatus, JOB_FINAL_STATES
 from qiskit.providers.job import JobV1 as Job
 
+# pylint: disable=unused-import,cyclic-import
+from qiskit_ibm_runtime import qiskit_runtime_service
+
 from .constants import API_TO_JOB_ERROR_MESSAGE, API_TO_JOB_STATUS, DEFAULT_DECODERS
 from .exceptions import (
     RuntimeJobFailureError,
@@ -96,6 +99,7 @@ class RuntimeJob(Job):
             Union[Type[ResultDecoder], Sequence[Type[ResultDecoder]]]
         ] = None,
         image: Optional[str] = "",
+        service: "qiskit_runtime_service.QiskitRuntimeService" = None,
     ) -> None:
         """RuntimeJob constructor.
 
@@ -110,6 +114,7 @@ class RuntimeJob(Job):
             user_callback: User callback function.
             result_decoder: A :class:`ResultDecoder` subclass used to decode job results.
             image: Runtime image used for this job: image_name:tag.
+            service: Runtime service.
         """
         super().__init__(backend=backend, job_id=job_id)
         self._api_client = api_client
@@ -123,6 +128,7 @@ class RuntimeJob(Job):
         self._error_message: Optional[str] = None
         self._image = image
         self._final_interim_results = False
+        self._service = service
 
         decoder = (
             result_decoder or DEFAULT_DECODERS.get(program_id, None) or ResultDecoder
@@ -231,8 +237,9 @@ class RuntimeJob(Job):
         """
         if not self._backend:  # type: ignore
             try:
-                response = self._api_client.job_get(self.job_id())
-                self._backend = response.get("backend")
+                raw_data = self._api_client.job_get(self.job_id())
+                if "backend" in raw_data:
+                    self._backend = self._service.backend(raw_data["backend"])
             except RequestsApiError as err:
                 raise IBMRuntimeError(f"Failed to get job backend: {err}") from None
         return self._backend
