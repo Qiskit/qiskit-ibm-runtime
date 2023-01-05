@@ -238,7 +238,7 @@ class RuntimeJob(Job):
         if not self._backend:  # type: ignore
             try:
                 raw_data = self._api_client.job_get(self.job_id())
-                if "backend" in raw_data:
+                if raw_data.get("backend"):
                     self._backend = self._service.backend(raw_data["backend"])
             except RequestsApiError as err:
                 raise IBMRuntimeError(f"Failed to get job backend: {err}") from None
