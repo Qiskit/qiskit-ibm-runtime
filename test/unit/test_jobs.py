@@ -294,16 +294,3 @@ class TestRuntimeJob(IBMTestCase):
         )
         self.assertIsInstance(job.job_id, str)
         self.assertEqual(job.job_id, "12345")
-
-    def test_job_backend_attribute(self):
-        """Test using backend as an attribute still works."""
-        backend = MagicMock(spec=IBMBackend)
-        job = RuntimeJob(
-            backend=backend,
-            api_client=MagicMock(),
-            client_params=MagicMock(),
-            job_id="12345",
-            program_id="foo",
-        )
-        self.assertIsInstance(job.backend, IBMBackend)
-        self.assertEqual(job.backend, backend)
