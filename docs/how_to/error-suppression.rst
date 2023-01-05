@@ -52,13 +52,19 @@ Example: configure Estimator with optimization levels
 .. code-block:: python
 
     from qiskit_ibm_runtime import QiskitRuntimeService, Session, Estimator, Options
+    from qiskit.circuit.library import RealAmplitudes
+    from qiskit.quantum_info import SparsePauliOp
 
     service = QiskitRuntimeService()
     options = Options(optimization_level=2)
 
+    psi = RealAmplitudes(num_qubits=2, reps=2)
+    H = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
+    theta = [0, 1, 1, 2, 3, 5]
+
     with Session(service=service, backend="ibmq_qasm_simulator") as session:
         estimator = Estimator(session=session, options=options)
-        job = estimator.run(circuits=[psi1], observables=[H1], parameter_values=[theta1])
+        job = estimator.run(circuits=[psi], observables=[H], parameter_values=[theta])
         psi1_H1 = job.result()
 
 .. note:: 
