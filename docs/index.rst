@@ -81,7 +81,6 @@ Next Steps
     Configure primitive options <how_to/options>
     Configure error mitigation options <how_to/error-mitigation>
     Configure error suppression <how_to/error-suppression>
-    Build primitive based routines <how_to/build-prim-based>
     Manage your account <how_to/account-management>
 
 
