@@ -1,0 +1,7 @@
+---
+upgrade:
+  - |
+    If a job is returned without a backend, retrieving the backend through 
+    :meth:`qiskit_ibm_runtime.RuntimeJob.backend` will re-retrieve data from 
+    the server and attempt to update the backend.
+
