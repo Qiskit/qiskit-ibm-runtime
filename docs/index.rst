@@ -84,18 +84,6 @@ Next Steps
     Build primitive based routines <how_to/build-prim-based>
     Manage your account <how_to/account-management>
 
-.. toctree::
-   :maxdepth: 1
-   :hidden:
-   :caption: Migrate
-
-    Migrate to using Qiskit Runtime primitives <migrate/migrate-guide>
-    Use Estimator to design an algorithm <migrate/migrate-estimator>
-    Use Sampler to design an algorithm <migrate/migrate-sampler>
-    Use Estimator and Sampler in an algorithm <migrate/migrate-est-sam>
-    Update parameter values while running <migrate/migrate-update-parm>
-    Primitive-based routines <migrate/migrate-prim-based>  
-    End-to-end example <migrate/migrate-e2e> 
 
 .. toctree::
    :maxdepth: 1
