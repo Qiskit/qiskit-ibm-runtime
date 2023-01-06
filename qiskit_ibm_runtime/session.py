@@ -163,8 +163,8 @@ class Session:
                     f"The backend '{options['backend']}' is different from",
                     f"the session backend '{self._backend}'",
                 )
-
-        options["backend"] = self._backend
+        else:
+            options["backend"] = self._backend
 
         if not self._session_id:
             # TODO: What happens if session max time != first job max time?
