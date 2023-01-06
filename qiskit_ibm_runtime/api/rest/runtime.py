@@ -181,7 +181,7 @@ class Runtime(RestAdapterBase):
             payload["group"] = group
             payload["project"] = project
         data = json.dumps(payload, cls=RuntimeEncoder)
-        return self.session.post(url, data=data).json()
+        return self.session.post(url, data=data, timeout=900).json()
 
     def jobs_get(
         self,
