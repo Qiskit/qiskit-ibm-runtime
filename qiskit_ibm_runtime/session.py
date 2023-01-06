@@ -155,11 +155,7 @@ class Session:
                 "Instead, specify a backend when creating a Session instance.",
                 3,
             )
-            if (
-                self._session_id
-                and self._backend
-                and options["backend"] != self._backend
-            ):
+            if self._backend and options["backend"] != self._backend:
                 raise IBMInputValueError(
                     f"The backend '{options['backend']}' is different from",
                     f"the session backend '{self._backend}'",
