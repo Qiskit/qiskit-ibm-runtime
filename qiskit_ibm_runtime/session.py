@@ -151,7 +151,7 @@ class Session:
             issue_deprecation_msg(
                 "'backend' is no longer a supported option within a session",
                 "0.8",
-                "Sessions do not support multiple backends.",
+                "Instead, specify a backend when creating a Session instance.",
                 3,
             )
             if (
