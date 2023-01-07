@@ -193,7 +193,7 @@ equation below.
 
    \langle ZZ\rangle =\langle \psi | ZZ | \psi\rangle=\langle \psi|(|0\rangle\langle 0| -|1\rangle\langle 1|)\otimes(|0\rangle\langle 0| - |1\rangle\langle 1|) |\psi\rangle =|\langle 00|\psi\rangle|^2 - |\langle 01 | \psi\rangle|^2 - |\langle 10 | \psi\rangle|^2 + |\langle 11|\psi\rangle|^2
 
-The next cell will implement the above as shown
+The next cell will implement the above as shown.
 
 .. code-block:: python
 
@@ -301,7 +301,7 @@ enabled.
 
 When you set the ``resilience_level`` to 1, M3 is activated in Sampler.
 All available resilience level configurations can be found
-`here <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/how_to/error-mitigation.html>`__
+`here <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/how_to/error-mitigation.html>`__.
 
 .. code-block:: python
 
