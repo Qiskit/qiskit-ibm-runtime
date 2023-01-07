@@ -2,7 +2,7 @@ Noisy Simulators in Qiskit Runtime
 ==================================
 
 This notebook shows how to setup ``ibmq_qasm_simulator`` and map a basic
-noise model for an an IBMQ hardware device in **Qiskit Runtime**, and
+noise model for an IBM Quantum hardware device in **Qiskit Runtime**, and
 use this noise model to do noisy simulations of ``QuantumCircuits`` on
 ``Sampler`` and ``Estimator`` to study the effects of errors which occur
 on real devices.
@@ -232,8 +232,8 @@ The next cell will implement the above as shown
 Running a noisy simulation
 --------------------------
 
-Now we’ll setup our simulator to run a noisy simulationrather than the
-ideal one. We can pass custom ``noise_models`` to the simulator on
+Now we’ll setup our simulator to run a noisy simulation rather than the
+ideal one. We can pass a custom ``noise_model`` to the simulator on
 Runtime by specifying it in the ``Options`` parameter. Here we will try
 to mimic a real backend and map on the noise_model from a
 ``FakeBackend`` class. The noise model can be extracted from the
@@ -277,7 +277,7 @@ simulation as we have described above.
 To see the comparision, we shall define two set of ``Options``. The ibmq
 qasm simulator allows for the activation of the resilience levels
 offered by Qiskit Runtime, and the use of these levels on simulators is
-best demonstrated using the noisy simulation that we have built.Here,
+best demonstrated using the noisy simulation that we have built. Here,
 ``options`` is set to\ ``resilience level`` = ``0`` to represent a
 normal run without error mitigation, and ``options with em`` is set to
 ``resilience level`` = ``1`` to represent a run with error mitigation
