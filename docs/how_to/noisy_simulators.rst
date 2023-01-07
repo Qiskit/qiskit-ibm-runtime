@@ -95,7 +95,7 @@ below:
 .. code-block:: python
 
     options = Options()
-    options.simulator = {"seed_simulator": 42}
+    options.simulator.seed_simulator = 42
     options.execution.shots = 1000
     options.optimization_level = 0 # no optimization
     options.resilience_level = 0 # no error mitigation
