@@ -57,7 +57,7 @@ in Qiskit documentation.
 
 
 
-.. image:: /docs/images/noisy-sim-circuit.png
+.. image:: ../images/noisy-sim-circuit.png
 
 
 
@@ -144,7 +144,7 @@ primitive <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/tutorial
 
 
 
-.. image:: /docs/images/noisy-sim-sampler-ideal.png
+.. image:: ../images/noisy-sim-sampler-ideal.png
 
 
 Run the circuits on Estimator
@@ -168,7 +168,7 @@ the circuit doesn’t require any measurements. Currently the circuit
 
 
 
-.. image:: /docs/images/noisy-sim-estimator-circuit.png
+.. image:: ../images/noisy-sim-estimator-circuit.png
 
 
 
@@ -225,7 +225,7 @@ The next cell will implement the above as shown.
 
 
 
-.. image:: /docs/images/noisy-sim-estimator-ideal.png
+.. image:: ../images/noisy-sim-estimator-ideal.png
 
 
 Running a noisy simulation
@@ -342,7 +342,7 @@ All available resilience level configurations can be found
 
 
 
-.. image:: /docs/images/noisy-sim-sampler-noisy.png
+.. image:: ../images/noisy-sim-sampler-noisy.png
 
 
 ``T-REx`` is triggered in Estimator when the resilience level is set to
@@ -389,7 +389,7 @@ All available resilience level configurations can be found
 
 
 
-.. image:: /docs/images/noisy-sim-estimator-noisy.png
+.. image:: ../images/noisy-sim-estimator-noisy.png
 
 
 Resilience levels are currently in beta so sampling overhead and
