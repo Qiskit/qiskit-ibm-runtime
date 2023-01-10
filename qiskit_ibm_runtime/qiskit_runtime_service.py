@@ -1430,6 +1430,7 @@ class QiskitRuntimeService(Provider):
             program_id=raw_data.get("program", {}).get("id", ""),
             params=decoded,
             creation_date=raw_data.get("created", None),
+            session_id=raw_data.get("session_id"),
         )
 
     def least_busy(
