@@ -1431,6 +1431,7 @@ class QiskitRuntimeService(Provider):
             params=decoded,
             creation_date=raw_data.get("created", None),
             session_id=raw_data.get("session_id"),
+            tags=raw_data.get("tags"),
         )
 
     def least_busy(

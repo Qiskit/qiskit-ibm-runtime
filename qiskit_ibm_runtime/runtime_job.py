@@ -12,7 +12,7 @@
 
 """Qiskit runtime job."""
 
-from typing import Any, Optional, Callable, Dict, Type, Union, Sequence
+from typing import Any, Optional, Callable, Dict, Type, Union, Sequence, List
 import time
 import json
 import logging
@@ -97,6 +97,7 @@ class RuntimeJob(Job):
         ] = None,
         image: Optional[str] = "",
         session_id: Optional[str] = None,
+        tags: Optional[List] = None,
     ) -> None:
         """RuntimeJob constructor.
 
@@ -112,6 +113,7 @@ class RuntimeJob(Job):
             result_decoder: A :class:`ResultDecoder` subclass used to decode job results.
             image: Runtime image used for this job: image_name:tag.
             session_id: Job ID of the first job in a runtime session.
+            tags: Tags assigned to the job.
         """
         super().__init__(backend=backend, job_id=job_id)
         self._api_client = api_client
@@ -126,6 +128,7 @@ class RuntimeJob(Job):
         self._image = image
         self._final_interim_results = False
         self._session_id = session_id
+        self._tags = tags
 
         decoder = (
             result_decoder or DEFAULT_DECODERS.get(program_id, None) or ResultDecoder
@@ -563,3 +566,12 @@ class RuntimeJob(Job):
             Job ID of the first job in a runtime session.
         """
         return self._session_id
+
+    @property
+    def tags(self) -> List:
+        """Job tags.
+
+        Returns:
+            Tags assigned to the job that can be used for filtering.
+        """
+        return self._tags
