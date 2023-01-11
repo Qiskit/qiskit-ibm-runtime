@@ -209,7 +209,6 @@ class Session:
         exc_tb: Optional[TracebackType],
     ) -> None:
         set_cm_session(None)
-        self.close()
 
 
 # Default session
