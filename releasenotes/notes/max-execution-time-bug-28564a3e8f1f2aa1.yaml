@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    Fixed an issue where the ``max_execution_time`` passed in 
+    through :class:`qiskit_ibm_runtime.Options` was being overridden
+    by the session ``max_time``.
