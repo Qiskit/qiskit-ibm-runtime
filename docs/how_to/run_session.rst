@@ -64,8 +64,7 @@ This example starts a session, runs an Estimator job, and outputs the result:
   with Session(service=service, backend="ibmq_qasm_simulator") as session:
       estimator = Estimator(session=session, options=options)
       job = estimator.run(circuit, observable)
-
-  result = job.result()
+      result = job.result()
 
   display(circuit.draw("mpl"))
   print(f" > Observable: {observable.paulis}")
@@ -88,7 +87,6 @@ After this time limit is reached, the session is permanently closed.
 
 Additionally, there is an *interactive* timeout value. If there are no session jobs queued within that window, the session is temporarily deactivated and normal job selection resumes. After a session is deactivated, a subsequent job could start an additional session.  Jobs for the new session would then take priority until the new session deactivates or is closed. After the new session becomes inactive, if the job scheduler gets a job from the original session and its maximum timeout value has not been reached, the session is reactivated until its maximum timeout value is reached.
 
-When using primitives with their context managers as previously described, the session is closed automatically when the block is exited.
 
 Retrieve previous job results
 -----------------------------------
