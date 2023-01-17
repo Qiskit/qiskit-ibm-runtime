@@ -62,6 +62,7 @@ class Session:
             job = sampler.run(circ)
             print(f"Sampler job ID: {job.job_id()}")
             print(f"Sampler job result:" {job.result()})
+            session.close()
     """
 
     def __init__(

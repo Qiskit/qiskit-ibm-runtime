@@ -26,6 +26,7 @@ Start by loading the options into a primitive constructor, then pass in circuits
   with Session(service) as session:
       estimator = Estimator(session=session, options=options) #primitive constructor
       estimator.run(circuit, parameters, observable) #job call
+      session.close() #close the session
 
 Session options
 -----------------
@@ -65,6 +66,7 @@ This example starts a session, runs an Estimator job, and outputs the result:
       estimator = Estimator(session=session, options=options)
       job = estimator.run(circuit, observable)
       result = job.result()
+      session.close()
 
   display(circuit.draw("mpl"))
   print(f" > Observable: {observable.paulis}")
