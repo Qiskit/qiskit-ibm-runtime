@@ -33,7 +33,7 @@ If you already created Qiskit Runtime service instances, skip this step.
 1. From the `Qiskit Runtime Provisioning page <https://cloud.ibm.com/catalog/services/quantum-computing>`__, select the Create tab, then choose the appropriate service plan, depending on what you need access to:
 
    -  **Lite**: Free simulators-only plan to help you get started with Qiskit Runtime. Learn to use Qiskit Runtime by following our examples and tutorials for one of the pre-built programs available for running circuits efficiently.
-   -  **Standard**: A pay-as-you-go model for accessing IBM Quantum systems. Build your own programs and use all the benefits of Qiskit Runtime by running on real quantum hardware.
+   -  **Standard**: A pay-as-you-go model for accessing IBM Quantum systems and simulators. Build your own programs and use all the benefits of Qiskit Runtime by running on real quantum hardware.
 
 2. Complete the required information, then click **Create**.
 
