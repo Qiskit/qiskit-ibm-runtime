@@ -62,8 +62,8 @@ Next Steps
 
     Get started with Estimator <tutorials/how-to-getting-started-with-estimator>
     Get started with error suppression and error mitigation <tutorials/Error-Suppression-and-Error-Mitigation>
-    CHSH with Estimator <tutorials/chsh_with_estimator>
     VQE with Estimator <tutorials/vqe_with_estimator>
+    CHSH with Estimator <tutorials/chsh_with_estimator>
     Get started with Sampler <tutorials/how-to-getting-started-with-sampler>
     QPE with Sampler <tutorials/qpe_with_sampler>
     Grover with Sampler <tutorials/grover_with_sampler>
@@ -82,6 +82,8 @@ Next Steps
     Configure error mitigation options <how_to/error-mitigation>
     Configure error suppression <how_to/error-suppression>
     Manage your account <how_to/account-management>
+    Run noisy simulations <how_to/noisy_simulators>
+
 
 .. toctree::
    :maxdepth: 1

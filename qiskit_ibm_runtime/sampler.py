@@ -67,6 +67,7 @@ class Sampler(BaseSampler):
             job = sampler.run(bell, shots=1024)
             print(f"Job ID: {job.job_id()}")
             print(f"Job result: {job.result()}")
+            session.close()
     """
 
     _PROGRAM_ID = "sampler"
@@ -201,6 +202,7 @@ class Sampler(BaseSampler):
                 a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
             parameter_values: Concrete parameters to be bound.
             **kwargs: Individual options to overwrite the default primitive options.
+                These include the runtime options in :class:`qiskit_ibm_runtime.RuntimeOptions`.
 
         Returns:
             Submitted job.
@@ -230,6 +232,7 @@ class Sampler(BaseSampler):
                 a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
             parameter_values: An optional list of concrete parameters to be bound.
             **kwargs: Individual options to overwrite the default primitive options.
+                These include the runtime options in :class:`qiskit_ibm_runtime.RuntimeOptions`.
 
         Returns:
             Submitted job.

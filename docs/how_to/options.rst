@@ -11,7 +11,7 @@ When calling the primitives, you can pass in options, as shown in the line ``est
     options = Options(optimization_level=1)
 
     with Session(service=service, backend="ibmq_qasm_simulator"):
-    estimator = Estimator(options=options)
+        estimator = Estimator(options=options)
 
 The most commonly used options are for error suppression and mitigation, which are described in this topic. For a full list of available options, see the `Options API reference <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/stubs/qiskit_ibm_runtime.options.Options.html#qiskit_ibm_runtime.options.Options>`__.
 

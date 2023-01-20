@@ -129,15 +129,16 @@ The Estimator interface lets users seamlessly work with the variety of error mit
 
   from qiskit_ibm_runtime import QiskitRuntimeService, Session, Estimator, Options
 
-    service = QiskitRuntimeService()
-    options = Options()
-    options.resilience_level = 2
-    options.optimization_level = 3
+  service = QiskitRuntimeService()
+  options = Options()
+  options.resilience_level = 2
+  options.optimization_level = 3
 
-    with Session(service=service, backend="ibmq_qasm_simulator") as session:
-    estimator = Estimator(session=session, options=options)
-    job = estimator.run(circuits=[psi1], observables=[H1], parameter_values=[theta1])
-    psi1_H1 = job.result()  
+  with Session(service=service, backend="ibmq_qasm_simulator") as session:
+      estimator = Estimator(session=session, options=options)
+      job = estimator.run(circuits=[psi1], observables=[H1], parameter_values=[theta1])
+      psi1_H1 = job.result() 
+      session.close()
 
 .. note::
     As you increase the resilience level, you will be able to leverage additional methods to improve the accuracy of your result. However, because the methods become more advanced with each level, they require additional sampling overhead (time) to generate more accurate expectation values.     
@@ -174,7 +175,7 @@ Level 1 leverages matrix-free measurement mitigation (M3) routine to mitigate re
     options.optimization_level = 3
 
     with Session(service=service, backend="ibmq_qasm_simulator") as session:
-    sampler = Sampler(session=session, options=options)     
+        sampler = Sampler(session=session, options=options)     
 
 Advanced resilience options
 ----------------------------
@@ -228,7 +229,8 @@ Example of adding ``resilience_options`` into your estimator session
 
 
     with Session(service=service, backend="ibmq_qasm_simulator") as session:
-    estimator = Estimator(session=session, options=options)
-    job = estimator.run(circuits=[psi1], observables=[H1], parameter_values=[theta1])
-    psi1_H1 = job.result()
+        estimator = Estimator(session=session, options=options)
+        job = estimator.run(circuits=[psi1], observables=[H1], parameter_values=[theta1])
+        psi1_H1 = job.result()
+        session.close()
 
