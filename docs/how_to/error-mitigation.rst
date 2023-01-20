@@ -137,7 +137,8 @@ The Estimator interface lets users seamlessly work with the variety of error mit
   with Session(service=service, backend="ibmq_qasm_simulator") as session:
       estimator = Estimator(session=session, options=options)
       job = estimator.run(circuits=[psi1], observables=[H1], parameter_values=[theta1])
-      psi1_H1 = job.result()  
+      psi1_H1 = job.result() 
+      session.close()
 
 .. note::
     As you increase the resilience level, you will be able to leverage additional methods to improve the accuracy of your result. However, because the methods become more advanced with each level, they require additional sampling overhead (time) to generate more accurate expectation values.     
@@ -231,4 +232,5 @@ Example of adding ``resilience_options`` into your estimator session
         estimator = Estimator(session=session, options=options)
         job = estimator.run(circuits=[psi1], observables=[H1], parameter_values=[theta1])
         psi1_H1 = job.result()
+        session.close()
 

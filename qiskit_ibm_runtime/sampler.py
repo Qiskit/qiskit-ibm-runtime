@@ -67,6 +67,7 @@ class Sampler(BaseSampler):
             job = sampler.run(bell, shots=1024)
             print(f"Job ID: {job.job_id()}")
             print(f"Job result: {job.result()}")
+            session.close()
     """
 
     _PROGRAM_ID = "sampler"

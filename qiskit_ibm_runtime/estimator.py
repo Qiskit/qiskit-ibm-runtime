@@ -88,6 +88,7 @@ class Estimator(BaseEstimator):
                 parameter_values=[theta1]*2
             )
             print(psi1_H23.result())
+            session.close()
     """
 
     _PROGRAM_ID = "estimator"
