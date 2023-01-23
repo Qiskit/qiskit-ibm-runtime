@@ -99,11 +99,3 @@ Calling the VQE algorithm that uses Sampler (SamplingVQE)
     eigenvalue = result.eigenvalue
 
 
-Related links
--------------
-
-* `VQE implementation with Estimator code <https://github.com/Qiskit/qiskit-terra/blob/main/qiskit/algorithms/minimum_eigensolvers/vqe.py>`__
-* `VQE implementation with Estimator documentation <https://qiskit.org/documentation/stubs/qiskit.algorithms.minimum_eigensolvers.VQE.html#qiskit.algorithms.minimum_eigensolvers.VQE>`__
-* `VQE implementation with Estimator code <https://github.com/Qiskit/qiskit-terra/blob/main/qiskit/algorithms/minimum_eigensolvers/sampling_vqe.py>`__
-* `VQE implementation with Estimator documentation <https://qiskit.org/documentation/stubs/qiskit.algorithms.minimum_eigensolvers.SamplingVQE.html#qiskit.algorithms.minimum_eigensolvers.SamplingVQE>`__
-* `Primitives overview and usage <https://qiskit.org/documentation/apidoc/primitives.html>`__
