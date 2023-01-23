@@ -48,6 +48,7 @@ Legacy methods (using opflow)
 Opflow provided its own classes to represent both operators and quantum states:
 
 .. code-block:: python
+
     from qiskit.opflow import CircuitStateFn, PauliSumOp
 
     opflow_op = PauliSumOp(op)
@@ -60,6 +61,7 @@ Sometimes the system is small enough that we can compute the expectation value c
 
 
 .. code-block:: python
+
     opflow_state_func = opflow_state.adjoint().compose(opflow_op).compose(opflow_state)
     expectation_value_1 = opflow_state_func.eval().real # easy expectation value, use for small systems only!
 
@@ -69,6 +71,7 @@ Option 2: Construct the expectation circuit and sample on a system or simulator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
+
     from qiskit.opflow import StateFn, PauliExpectation, CircuitSampler
 
     # Define the state to sample
@@ -106,6 +109,7 @@ Next, the actual calculation is done by the `CircuitSampler` class, which receiv
 Here we use the `ibmq_qasm_simulator`, but the workflow is the same when using a real device.
 
 .. code-block:: python
+
     from qiskit import IBMQ
 
     IBMQ.load_account()
@@ -131,6 +135,7 @@ New method: Use primitives
 Opflow provided its own classes to represent both operators and quantum states:
 
 .. code-block:: python
+
     from qiskit.opflow import CircuitStateFn, PauliSumOp
 
     opflow_op = PauliSumOp(op)
@@ -143,6 +148,7 @@ This can be done with the Estimator primitive in `qiskit.primitives`:
 
 
 .. code-block:: python
+
     from qiskit.primitives import Estimator
 
     estimator = Estimator()
@@ -171,6 +177,7 @@ For the terra primitive, if no shots are specified, it performs an exact calcula
 *********************************************
 
 .. code-block:: python
+
     from qiskit_aer.primitives import Estimator
 
     estimator = Estimator(run_options={"shots": 1024})
@@ -182,6 +189,7 @@ For the terra primitive, if no shots are specified, it performs an exact calcula
 *********************************************
 
 .. code-block:: python
+    
     from qiskit_ibm_runtime import QiskitRuntimeService, Estimator
 
     service = QiskitRuntimeService(channel="ibm_quantum")
