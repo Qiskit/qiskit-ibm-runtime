@@ -27,6 +27,7 @@ Option 1: Run locally using an AerSimulator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
+
     from qiskit import Aer, transpile
 
     # Transpile for simulator
@@ -43,6 +44,7 @@ Option 2: Run on a remote simulator or real backend
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
+
     from qiskit import IBMQ
 
     IBMQ.load_account()
@@ -67,6 +69,7 @@ Option 1: Run locally
 This can be done with the reference sampler in `qiskit.primitives`:
 
 .. code-block:: python
+
     from qiskit.primitives import Sampler
 
     sampler = Sampler()
@@ -77,6 +80,7 @@ This can be done with the reference sampler in `qiskit.primitives`:
 If shots are specified, this primitive outputs a shot-based simulation:
 
 .. code-block:: python
+
     from qiskit.primitives import Sampler
 
     sampler = Sampler(options={"shots": 1024})
@@ -88,6 +92,7 @@ Option 2: Run on a remote simulator or real backend
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: python
+    
     from qiskit_ibm_runtime import QiskitRuntimeService, Sampler
 
     service = QiskitRuntimeService(channel="ibm_quantum")
