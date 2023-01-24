@@ -1,6 +1,41 @@
 Migration guide
 ===========================================
 
+.. _mig_ex:
+
+Code migration examples
+--------------------------------------------
+
+The following sections have more information We have identified key patterns of behavior and use cases with code examples to help you migrate code to Qiskit Runtime.  
+
+.. note::
+
+   The key to writing an equivalent algorithm using Qiskit Runtime primitives is to remove all dependencies on ``QuantumInstance`` and ``Backend`` and replace them with the implementation of the Estimator, Sampler, or both primitives from the ``qiskit_ibm_runtime`` library. 
+
+We use  `backend.run()` in the examples, but anywhere backends are used, `backend.run()` could be replaced by `QuantumInstance` and the updated code would look the same.
+
+Notably, for common scenarios it is not necessary to handle backends
+differently nor to construct expressions for expectation values
+manually.
+
+We have examples for two basic situations:
+
+1. Algorithm developers need to refactor algorithms to use primitives instead of backend.run.
+
+   * `Update code that performs circuit sampling <migrate-sampler.html>`__
+   * `Update code that calculates expectation values <migrate-estimator.html>`__
+   
+2. Algorithm users don't use primitives directly, but use Qiskit algorithms.  These users now need to pass in a primitive instead of a backend to the udpdated Qiskit algorithmes.
+
+   * `Work with updated Qiskit algorithms <migrate-qiskit-alg.html>`__
+
+The following topics are use cases with code migration examples:
+
+
+* `Update parameter values while running <migrate-update-parm.html>`__
+* `Primitive-based routines <migrate-prim-based.html>`__
+* `End-to-end example <migrate-e2e.html>`__
+
 .. _why-migrate:
 
 Why use Qiskit Runtime?
@@ -28,6 +63,11 @@ Use primitive programs to write code more efficiently.  For details, see the exa
 
    Code without primitives, and the same code after being rewritten to use primitives.
 
+..
+   If we decide to keep this section, I would change the snippet (compare-code.png). I think that there are more visual examples of how the primitives simplify the code.
+
+   I see this as a "sneak peek" into the code migration section, so after refactoring the rest, we could just take one of the updated examples from there and add it here.
+..      
 
 .. _migfaqs:
 
@@ -132,40 +172,7 @@ It is also possible to use local implementations, as shown in the
 
    </details>
 
-.. _mig_ex:
 
-Code migration examples
---------------------------------------------
-
-We have identified key patterns of behavior and use cases with code examples to help you migrate code to Qiskit Runtime.  
-
-.. note::
-
-   The key to writing an equivalent algorithm using Qiskit Runtime primitives is to remove all dependencies on ``QuantumInstance`` and ``Backend`` (any ``qiskit-ibmq-provider`` backend instance obtained through ``provider.get_backend()``), and replace them with the implementation of the ``Estimator``, ``Sampler``, or both primitives. 
-
-We use ``backend.run()`` in the examples, but anywhere backends are used, ``backend.run()`` could be replaced by ``QuantumInstance.execute()`` and the updated code would look the same.
-
-Notably, for common scenarios it is not necessary to handle backends
-differently nor to construct expressions for expectation values
-manually.
-
-We have examples for two basic situations:
-
-1. Algorithm developers need to refactor algorithms to use primitives instead of backend.run.
-
-   * `Update code that performs circuit sampling <migrate-sampler.html>`__
-   * `Update code that calculates expectation values <migrate-estimator.html>`__
-   
-2. Algorithm users don't use primitives directly, but use Qiskit algorithms.  These users now need to pass in a primitive instead of a backend to the udpdated Qiskit algorithmes.
-
-   * `Work with updated Qiskit algorithms <migrate-qiskit-alg.html>`__
-
-The following topics are use cases with code migration examples:
-
-
-* `Update parameter values while running <migrate-update-parm.html>`__
-* `Primitive-based routines <migrate-prim-based.html>`__
-* `End-to-end example <migrate-e2e.html>`__
 
 
 Related links
