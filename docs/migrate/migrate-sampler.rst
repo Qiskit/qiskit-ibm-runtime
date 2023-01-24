@@ -74,7 +74,7 @@ New method: Use primitives
 Option 1: Run locally
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This can be done with the reference sampler in `qiskit.primitives`:
+This can be done with the reference sampler in `qiskit.primitives` (exact statevector calculation):
 
 .. code-block:: python
 
