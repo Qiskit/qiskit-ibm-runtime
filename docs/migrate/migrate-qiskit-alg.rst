@@ -36,7 +36,7 @@ Calling the VQE algorithm that doesn't use primitives (deprecated)
  
     quantum_instance = BasicAer.get_backend(“statevector_simulator”) 
     optimizer = SLSQP() 
-    ansatz = TwoLocal(rotation_blocks=[“ry”, “rz”], entanglement_blocks=”cz”) 
+    ansatz = TwoLocal(rotation_blocks=[“ry”, “rz”], entanglement_blocks=“cz”) 
  
     vqe = VQE(ansatz, optimizer, quantum_instance=quantum_instance) 
     result = vqe.compute_minimum_eigenvalue(operator=hamiltonian) 
@@ -62,7 +62,7 @@ Calling the VQE algorithm that uses Estimator
  
     estimator = Estimator() 
     optimizer = SLSQP() 
-    ansatz = TwoLocal(rotation_blocks=[“ry”, “rz”], entanglement_blocks=”cz”) 
+    ansatz = TwoLocal(rotation_blocks=[“ry”, “rz”], entanglement_blocks=“cz”) 
  
     vqe = VQE(estimator, ansatz, optimizer) 
     result = vqe.compute_minimum_eigenvalue(operator=hamiltonian) 
