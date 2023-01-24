@@ -113,7 +113,7 @@ Here we use the `ibmq_qasm_simulator`, but the workflow is the same when using a
     from qiskit import IBMQ
 
     IBMQ.load_account()
-    provider = IBMQ.get_provider(hub='ibm-q-internal') # here the hub should not be internal
+    provider = IBMQ.get_provider(hub='ibm-q')
     backend = provider.get_backend("ibmq_qasm_simulator")
 
     # inject backend into circuit sampler
