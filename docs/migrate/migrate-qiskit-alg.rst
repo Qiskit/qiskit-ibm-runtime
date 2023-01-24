@@ -32,11 +32,11 @@ Calling the VQE algorithm that doesn't use primitives (deprecated)
     from qiskit.opflow import PauliSumOp 
     from qiskit.quantum_info import SparsePauliOp 
  
-    hamiltonian = PauliSumOp(SparsePauliOp.from_list([(“II”, -1), (“IZ”, 0.3), (“XI”, -0.3), (“ZY”, -0.01), (“YX”, 0.1)])) 
+    hamiltonian = PauliSumOp(SparsePauliOp.from_list([("II", -1), ("IZ", 0.3), ("XI", -0.3), ("ZY", -0.01), ("YX", 0.1)])) 
  
-    quantum_instance = BasicAer.get_backend(“statevector_simulator”) 
+    quantum_instance = BasicAer.get_backend("statevector_simulator") 
     optimizer = SLSQP() 
-    ansatz = TwoLocal(rotation_blocks=[“ry”, “rz”], entanglement_blocks=“cz”) 
+    ansatz = TwoLocal(rotation_blocks=["ry", "rz"], entanglement_blocks="cz") 
  
     vqe = VQE(ansatz, optimizer, quantum_instance=quantum_instance) 
     result = vqe.compute_minimum_eigenvalue(operator=hamiltonian) 
@@ -58,11 +58,11 @@ Calling the VQE algorithm that uses Estimator
     service = QiskitRuntimeService(channel="ibm_quantum")
     backend = service.backend("ibmq_qasm_simulator")
 
-    hamiltonian = SparsePauliOp.from_list([(“II”, -1), (“IZ”, 0.3), (“XI”, -0.3), (“ZY”, -0.01), (“YX”, 0.1)]) 
+    hamiltonian = SparsePauliOp.from_list([("II", -1), ("IZ", 0.3), ("XI", -0.3), ("ZY", -0.01), ("YX", 0.1)]) 
  
     estimator = Estimator() 
     optimizer = SLSQP() 
-    ansatz = TwoLocal(rotation_blocks=[“ry”, “rz”], entanglement_blocks=“cz”) 
+    ansatz = TwoLocal(rotation_blocks=["ry", "rz"], entanglement_blocks="cz") 
  
     vqe = VQE(estimator, ansatz, optimizer) 
     result = vqe.compute_minimum_eigenvalue(operator=hamiltonian) 
@@ -84,10 +84,10 @@ Calling the VQE algorithm that uses Sampler (SamplingVQE)
     service = QiskitRuntimeService(channel="ibm_quantum")
     backend = service.backend("ibmq_qasm_simulator")
  
-    operator = SparsePauliOp.from_list([(“ZZ”, 1), (“IZ”, -0.5), (“II”, 0.12)]) 
+    operator = SparsePauliOp.from_list([("ZZ", 1), ("IZ", -0.5), ("II", 0.12)]) 
  
     sampler = Sampler() 
-    ansatz = TwoLocal(rotation_blocks=[“ry”, “rz”], entanglement_blocks=”cz”) 
+    ansatz = TwoLocal(rotation_blocks=["ry", "rz"], entanglement_blocks="cz") 
     optimizer = SLSQP() 
  
     sampling_vqe = SamplingVQE(sampler, ansatz, optimizer) 
