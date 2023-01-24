@@ -143,7 +143,7 @@ We have identified key patterns of behavior and use cases with code examples to 
 
    The key to writing an equivalent algorithm using Qiskit Runtime primitives is to remove all dependencies on ``QuantumInstance`` and ``Backend`` and replace them with the implementation of the Estimator, Sampler, or both primitives from the ``qiskit_ibm_runtime`` library. 
 
-We use  `backend.run()` in the examples, but anywhere backends are used, `backend.run()` could be replaced by `QuantumInstance` and the updated code would look the same.
+We use ``backend.run()`` in the examples, but anywhere backends are used, ``backend.run()`` could be replaced by ``QuantumInstance.execute()`` and the updated code would look the same.
 
 Notably, for common scenarios it is not necessary to handle backends
 differently nor to construct expressions for expectation values
