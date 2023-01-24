@@ -57,8 +57,7 @@ Calling the VQE algorithm that uses Estimator
 
     service = QiskitRuntimeService(channel="ibm_quantum")
     backend = service.backend("ibmq_qasm_simulator")
- 
- 
+
     hamiltonian = SparsePauliOp.from_list([(“II”, -1), (“IZ”, 0.3), (“XI”, -0.3), (“ZY”, -0.01), (“YX”, 0.1)]) 
  
     estimator = Estimator() 
@@ -84,7 +83,6 @@ Calling the VQE algorithm that uses Sampler (SamplingVQE)
 
     service = QiskitRuntimeService(channel="ibm_quantum")
     backend = service.backend("ibmq_qasm_simulator")
- 
  
     operator = SparsePauliOp.from_list([(“ZZ”, 1), (“IZ”, -0.5), (“II”, 0.12)]) 
  
