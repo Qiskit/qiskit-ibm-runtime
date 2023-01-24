@@ -50,12 +50,16 @@ Option 2: Run on a remote simulator or real backend
     provider = IBMQ.get_provider(hub='ibm-q-internal') # here the hub should not be internal
     backend = provider.get_backend("ibmq_qasm_simulator")
 
-    circ = transpile(circuit, backend)
-
     # Run and get counts
-    result = simulator.run(circ).result()
-    counts = result.get_counts(circ)
+    result = simulator.run(circuit, shots=1024).result()
+    counts = result.get_counts(circuit)
     print(counts)
+    
+    # Get quasi prob. distribution
+    quasi_dists = {}
+    for key,count in counts.items():
+        quasi_dists[key] = count/1024
+    print(quasi_dists)
 
     # The quantum instance example is analogous to option 1.
 
