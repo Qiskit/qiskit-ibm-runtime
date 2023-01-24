@@ -37,7 +37,7 @@ We want to compute the expectation value of a quantum state (circuit) with respe
 Legacy methods (using opflow)
 -----------------------------
 
-Opflow provided its own classes to represent both operators and quantum states:
+`Opflow <https://qiskit.org/documentation/apidoc/opflow.html>`__ provided its own classes to represent both operators and quantum states:
 
 .. code-block:: python
 
