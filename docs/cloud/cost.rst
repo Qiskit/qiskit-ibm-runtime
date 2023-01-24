@@ -21,7 +21,7 @@ Additionally, an instance administrator can limit how much is spent. To set cost
    The instance cost limit is always specified in US dollars (USD), then converted to runtime seconds.  However, for monthly billing purposes, you are charged in your local currency, specified on your IBM Cloud account. Because currency exchange rates can fluctuate, the cost for `X` runtime seconds might be different when initially calculated in USD than when you're actually charged in your local currency.  As a result, if your local currency is not USD, the total amount charged for the number of seconds specified in this field could vary from the dollar amount you specify.
 
 What happens when the cost limit is reached
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When the instance's cost limit is reached, the currently running job is stopped.  Its status is set to `Cancelled` with a reason of `Ran too long`. Any available partial results are kept. 
 
@@ -36,7 +36,7 @@ You are sent a monthly invoice that provides details about your resource charges
 Additionally, you can determine cost per instance or per job at any time.
 
 View instance cost
-==================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To determine how much has been billed to an instance during the current billing cycle, from the `Instances page <https://cloud.ibm.com/quantum/instances>`__, click the instance to open its details page.
 
@@ -50,7 +50,7 @@ These are the fields relevant to cost:
 You can view your billing cycle on the `Billing and usage page <https://cloud.ibm.com/billing>`__.
 
 View job cost
-==================
+~~~~~~~~~~~~~~~~
 
 To determine how much has been billed to each job associated with an instance, from the `Instances page <https://cloud.ibm.com/quantum/instances>`__, click the instance to open its details page. Next, on the left side, click Jobs.
 
