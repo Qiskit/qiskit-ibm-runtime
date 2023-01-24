@@ -32,7 +32,6 @@ Calling the VQE algorithm that doesn't use primitives (deprecated)
     from qiskit.opflow import PauliSumOp 
     from qiskit.quantum_info import SparsePauliOp 
  
- 
     hamiltonian = PauliSumOp(SparsePauliOp.from_list([(“II”, -1), (“IZ”, 0.3), (“XI”, -0.3), (“ZY”, -0.01), (“YX”, 0.1)])) 
  
     quantum_instance = BasicAer.get_backend(“statevector_simulator”) 
@@ -42,7 +41,6 @@ Calling the VQE algorithm that doesn't use primitives (deprecated)
     vqe = VQE(ansatz, optimizer, quantum_instance=quantum_instance) 
     result = vqe.compute_minimum_eigenvalue(operator=hamiltonian) 
     eigenvalue = result.eigenvalue
-
 
 
 Calling the VQE algorithm that uses Estimator
