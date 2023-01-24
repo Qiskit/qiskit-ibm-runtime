@@ -85,7 +85,7 @@ This can be done with the reference sampler in `qiskit.primitives`:
     result = sampler.run(circuit).result().quasi_dists
     print(result)
 
-If shots are specified, this primitive outputs a shot-based simulation:
+If shots are specified, this primitive outputs a shot-based simulation (no longer exact):
 
 .. code-block:: python
 
