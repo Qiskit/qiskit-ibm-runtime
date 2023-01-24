@@ -12,7 +12,7 @@ The Estimator primitive serves a double purpose here:
 Problem definition 
 -------------------------------
 
-We want to compute the expectation value of a quantum state (circuit) with respect to a certain operator. Here we are using the H2 molecule and a random circuit as the quantum state:
+We want to compute the expectation value of a quantum state (circuit) with respect to a certain operator. Here we are using the H2 molecule and an arbitrary circuit as the quantum state:
 
 
 .. code-block:: python
