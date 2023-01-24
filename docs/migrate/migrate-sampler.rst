@@ -13,7 +13,6 @@ We want to measure a quantum state:
 .. code-block:: python
 
     from qiskit import QuantumCircuit
-    from qiskit.quantum_info import SparsePauliOp
 
     circuit = QuantumCircuit(2)
     circuit.x(0)
