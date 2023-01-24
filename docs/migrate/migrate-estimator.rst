@@ -21,7 +21,6 @@ We want to measure a quantum state:
 
 .. code-block:: python
 
-    # See https://www.youtube.com/watch?v=1oiYH87vx1A
 
     from qiskit import QuantumCircuit
     from qiskit.quantum_info import SparsePauliOp
