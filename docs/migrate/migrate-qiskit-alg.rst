@@ -12,7 +12,7 @@ Overview
 
 To migrate code that uses Qiskit algorithms, such as VQE, you need to do the following:
 * Initialize your account, specifying the backend that you want to use.
-* Reviw the algorithm's attributes in the `Qiskit documentation (https://qiskit.org/documentation/index.html)`__ to determine which primitive the algorithm now uses. 
+* Reviw the algorithm's attributes in the `Qiskit documentation <https://qiskit.org/documentation/index.html>`__ to determine which primitive the algorithm now uses. 
 * Change the attributes in the algorithm call to refer to that primitive instead of the backend, and add or remove other attributes as necessary.
 * Add and remove attribute definitions as necessary.
 * Import the appropriate libraries.  These will probably be `Estimator`, `Sampler`, `QiskitRuntimeService`, or some combination of those. 
