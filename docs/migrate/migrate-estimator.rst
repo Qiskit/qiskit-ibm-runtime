@@ -124,10 +124,6 @@ Here we use the `ibmq_qasm_simulator`, but the workflow is the same when using a
 
     print("sampled: ", expectation_value_4)
 
-Legacy methods (not using opflow)
----------------------------------
-
-Construct the circuit entirely by yourself and call `backend.run()`.
 
 New method: Use primitives
 -----------------------------
