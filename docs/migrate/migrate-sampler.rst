@@ -31,12 +31,17 @@ Option 1: Run locally using an AerSimulator
 
     # Transpile for simulator
     simulator = Aer.get_backend('aer_simulator')
-    circ = transpile(circuit, simulator)
 
     # Run and get counts
-    result = simulator.run(circ).result()
-    counts = result.get_counts(circ)
+    result = simulator.run(circuit, shots=1024).result()
+    counts = result.get_counts(circuit)
     print(counts)
+    
+    # Get quasi prob. distribution
+    quasi_dists = {}
+    for key,count in counts.items():
+        quasi_dists[key] = count/1024
+    print(quasi_dists)
 
 
 Option 2: Run on a remote simulator or real backend
