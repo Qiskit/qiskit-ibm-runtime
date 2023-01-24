@@ -82,9 +82,9 @@ If shots are specified, this primitive outputs a shot-based simulation:
 
     from qiskit.primitives import Sampler
 
-    sampler = Sampler(options={"shots": 1024})
+    sampler = Sampler()
 
-    result = sampler.run([circ]).result().quasi_dists
+    result = sampler.run(circuit, shots = 1024).result().quasi_dists
     print(result)
 
 Option 2: Run on a remote simulator or real backend   
