@@ -99,5 +99,5 @@ Option 2: Run on a remote simulator or real backend
 
     sampler = Sampler(session=backend)
 
-    result = sampler.run([state], [op]).result().quasi_dists
+    result = sampler.run(circuit, shots=1024).result().quasi_dists
     print(result)
