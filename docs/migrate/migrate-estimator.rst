@@ -14,10 +14,6 @@ Problem definition
 
 We want to compute the expectation value of a quantum state (circuit) with respect to a certain operator. Here we are using the H2 molecule and a random circuit as the quantum state:
 
-Problem definition 
----------------------------
-
-We want to measure a quantum state:
 
 .. code-block:: python
 
