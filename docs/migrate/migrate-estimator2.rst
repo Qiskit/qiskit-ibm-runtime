@@ -34,7 +34,7 @@ We want to compute the expectation value of a quantum state (circuit) with respe
     state.x(0)
     state.x(1)
 
-.. _legacy-opflow:
+_2legacy-opflow:
 
 Legacy methods (using opflow)
 -----------------------------
@@ -62,7 +62,7 @@ Opflow provided its own classes to represent both operators and quantum states:
     opflow_op = PauliSumOp(op)
     opflow_state = CircuitStateFn(state) # convert to a state
 
-.. _legacy-exact:
+_2legacy-exact:
 
 Option 1: Calculate the expectation value exactly (classical)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -105,7 +105,7 @@ This can be done with the Estimator primitive in `qiskit.primitives`:
 
    </details>
 
-.. _legacy-construct:
+.. _2legacy-construct:
 
 Option 2: Construct the expectation circuit and sample on a system or simulator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -141,7 +141,7 @@ For the terra primitive, if no shots are specified, it performs an exact calcula
     result = estimator.run([state], [op]).result().values
     print(result)
 
-.. _legacy-run-aer:
+_2legacy-run-aer:
 
 1. Run locally by using an AerSimulator
 *****************************************
@@ -172,7 +172,7 @@ For the terra primitive, if no shots are specified, it performs an exact calcula
     result = estimator.run([state], [op]).result().values
     print(result)
 
-.. _legacy-run-remote:
+_2legacy-run-remote:
 
 2. Run on a remote simulator or real backend
 *********************************************
