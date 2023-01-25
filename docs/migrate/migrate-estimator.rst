@@ -39,7 +39,7 @@ We want to compute the expectation value of a quantum state (circuit) with respe
 Legacy methods (using opflow)
 -----------------------------
 
-Compare this section to :ref:`new`.
+Compare this section to :ref:`new-primitives`.
 
 `Opflow <https://qiskit.org/documentation/apidoc/opflow.html>`__ provided its own classes to represent both operators and quantum states:
 
@@ -137,7 +137,7 @@ Here we use the `ibmq_qasm_simulator`, but the workflow is the same when using a
     print("sampled: ", expectation_value_4)
 
 
-.. new:
+.. new-primitives:
 
 New method: Use primitives
 -----------------------------
