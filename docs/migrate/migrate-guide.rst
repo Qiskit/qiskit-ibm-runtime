@@ -33,7 +33,6 @@ The following topics are use cases with code migration examples:
 
 
 * `Update parameter values while running <migrate-update-parm.html>`__
-* `Primitive-based routines <migrate-prim-based.html>`__
 * `End-to-end example <migrate-e2e.html>`__
 
 .. _why-migrate:
