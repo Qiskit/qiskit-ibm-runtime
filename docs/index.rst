@@ -92,6 +92,7 @@ Next Steps
 
     Migrate to using Qiskit Runtime primitives <migrate/migrate-guide>
     Use Estimator to design an algorithm <migrate/migrate-estimator>
+    Use Estimator to design an algorithm <migrate/migrate-estimator2>
     Use Sampler to design an algorithm <migrate/migrate-sampler>
     Update parameter values while running <migrate/migrate-update-parm>
     Work with updated Qiskit algorithms <migrate/migrate-qiskit-alg>
