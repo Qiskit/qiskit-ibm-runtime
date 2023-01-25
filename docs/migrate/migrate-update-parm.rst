@@ -1,115 +1,74 @@
-Update parameter values of parametrized circuits during algorithm execution
-===========================================================================
-
-We consider an algorithm, such as VQE, that iteratively calls one of the
-primitive programs (here, the Estimator) during its execution.
+Parametrized Circuits With Primitives
+================================
 
 Overview
---------
+------------
 
-Initializing an estimator object inside a session allows allows the cloud backend to
-recognize calls that originate from the same algorithm and to prioritize
-their execution, making the overall algorithm execution time much
-faster.
+Parametrized circuits are a commonly used tool for quantum algorithm design. `backend.run()` and `QuantumInstance.execute()` didn't take in parametrized circuits, but the primitives do. This, again, is a simplification of the interface, as it is no longer necessary to bind parameters to a circuit before its execution.
 
-Since the algorithm uses the same parametrized quantum circuit with
-different parameters in each call, the primitive is smart enough to
-recognize it and perform quantum circuit transpilation only once, which
-uses classical resources more efficiently. Moreover, only the updated
-parameters are transferred to the cloud, saving additional bandwidth.
-
-In the code example without primitives, we can see how
-a user would implement the algorithm with the quantum instance in a case
-that covers both the statevector simulator and a shot-based backend.
-
-Code example without primitives
--------------------------------
+Example
+---------
+Let's define a parametrized circuit:
 
 .. code-block:: python
 
-   from qiskit.providers import Backend
-   from qiskit.utils import QuantumInstance
-   from typing import Optional, Union
-   from qiskit import QuantumCircuit
-   from qiskit.opflow import OperatorBase
+   from qiskit.circuit import QuantumCircuit, ParameterVector
 
-   class QuantumEstimationAlgorithmWithUpdates:
-       def __init__(
-           self,
-           ...,
-           quantum_instance: Optional[Union[QuantumInstance, Backend]],
-       ) -> None:
-           pass
-       def _construct_parametrized_state(self, ...) -> QuantumCircuit:
-           pass
-       def _construct_observable(self, ...) -> OperatorBase:
-           pass
-       def _calculate_new_params(self, estimations, ...):
-           pass
-       def _is_finished(self, ...) -> bool:
-           pass
-       def run_estimation_algorithm(self, ...):
-           state = self._construct_parametrized_state(...)
-           observable = self._construct_observable(...)
-           estimations = ...
-           expectation = ~StateFn(observable) @ StateFn(state)
-           while not self._is_finished(...):
-               param_values = self._calculate_new_params(estimations, ...)
-               bound_expectation = expectation.bind_parameters(param_values)
-               if self._quantum_instance.is_statevector:
-                   # run state on statevector simulator
-                   statevector = self.quantum_instance.execute([bound_expectation]).get_statevector()
-                   estimations = self._process_statevector_results(...)
-               else:
-                   # run state on QASM simulator or backend
-                   # for real backends, each queues joins the end of the current device queue
-                   counts = self.quantum_instance.execute([bound_expectation]).get_counts()
-                   estimations = self._process_qasm_results(...)
-           return estimations
+   n = 3
+   thetas = ParameterVector('θ',n)
 
+   qc = QuantumCircuit(n, 1)
+   qc.h(0)
 
+   for i in range(n-1):
+       qc.cx(i, i+1)
 
-Code example updated to use primitives
---------------------------------------
+   for i,t in enumerate(thetas):
+       qc.rz(t, i)
+
+   for i in reversed(range(n-1)):
+       qc.cx(i, i+1)
+    
+   qc.h(0)
+   qc.measure(0, 0)
+
+   qc.draw()
+
+We want to assign the following parameter values to the circuit:
 
 .. code-block:: python
 
-   from qiskit.primitives import BaseEstimator
-   from qiskit import QuantumCircuit
-
-   class QuantumEstimationAlgorithmWithUpdates:
-       def __init__(
-           self,
-           ...,
-           estimator: BaseEstimator,
-       ) -> None:
-           pass
-       def _construct_parametrized_state(self, ...) -> QuantumCircuit:
-           pass
-       def _construct_observable(self, ...) -> OperatorBase:
-           pass
-       def _calculate_new_params(self, estimations, ...):
-           pass
-       def _is_finished(self, ...) -> bool:
-           pass
-       def run_estimation_algorithm(self, ...):
-           state = self._construct_parametrized_state(...)
-           observable = self._construct_observable(...)
-           estimations = ...
-
-           while not self._is_finished(...):
-               param_values = self._calculate_new_params(estimations, ...)
-               # highly optimized queuing for calls that come from the same algorithm - no waiting at the end of the queue every time
-               # the same circuit is used and only compiled/transpiled once for the whole algorithm execution - only parameters are changed
-               estimated = self.estimator.run([state], [observable], [param_values])
-               estimations = estimated.result().values
-
-           return estimations
+   import numpy as np
+   theta_values = [np.pi/2, np.pi/2, np.pi/2]
 
 
+Legacy
+---------
+Before the primitives, the parameter values had to be bound to their respective circuit parameters prior to calling `backend.run()`.
 
-Related links
--------------
+.. code-block:: python
 
-* `VQE implementation with primitives code <https://github.com/Qiskit/qiskit-terra/blob/main/qiskit/algorithms/minimum_eigensolvers/vqe.py>`__
-* `VQE implementation with primitives documentation <https://qiskit.org/documentation/stubs/qiskit.algorithms.minimum_eigensolvers.VQE.html#qiskit.algorithms.minimum_eigensolvers.VQE>`__
+   from qiskit import Aer
+
+   bound_circuit = qc.bind_parameters(theta_values)
+   bound_circuit.draw()
+
+   backend = Aer.get_backend('aer_simulator')
+   job = backend.run(bound_circuit)
+   counts = job.result().get_counts()
+   print(counts)
+
+Primitives
+------------
+Now, the primitives take in parametrized circuits directly, together with the parameter values, and the parameter assignment operation can be performed more efficiently on the server side of the primitive.
+
+This feature is particularly interesting when working with iterative algorithms, as the parametrized circuit remains unchanged between calls, while the parameter values change. The primitives are able to transpile once, and then cache the unbound circuit, using classical resources more efficiently. Moreover, only the updated parameters are transferred to the cloud, saving additional bandwidth.
+
+.. code-block:: python
+
+   from qiskit.primitives import Sampler
+
+   sampler = Sampler()
+   job = sampler.run(qc, theta_values)
+   result = job.result().quasi_dists
+   print(result)
