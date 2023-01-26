@@ -11,7 +11,6 @@ Problem definition
 
 We want to compute the expectation value of a quantum state (circuit) with respect to a certain operator. Here we are using the H2 molecule and an arbitrary circuit as the quantum state:
 
-
 .. code-block:: python
 
 
@@ -34,7 +33,7 @@ We want to compute the expectation value of a quantum state (circuit) with respe
     state.x(0)
     state.x(1)
 
-_2legacy-opflow:
+.. _a-legacy-opflow:
 
 Legacy methods (using opflow)
 -----------------------------
@@ -62,7 +61,7 @@ Opflow provided its own classes to represent both operators and quantum states:
     opflow_op = PauliSumOp(op)
     opflow_state = CircuitStateFn(state) # convert to a state
 
-_2legacy-exact:
+.. _a-legacy-exact:
 
 Option 1: Calculate the expectation value exactly (classical)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -72,7 +71,7 @@ Sometimes the system is small enough that we can compute the expectation value c
 .. raw:: html
 
     <details>
-    <summary><a>**Legacy method**</a></summary>
+    <summary><a>Legacy method</a></summary>
 
 .. code-block:: python
 
@@ -88,7 +87,7 @@ Sometimes the system is small enough that we can compute the expectation value c
 .. raw:: html
 
     <details>
-    <summary><a>**New method**</a></summary>
+    <summary><a>New method</a></summary>
 
 This can be done with the Estimator primitive in `qiskit.primitives`:
 
@@ -105,12 +104,13 @@ This can be done with the Estimator primitive in `qiskit.primitives`:
 
    </details>
 
-.. _2legacy-construct:
+.. _a-legacy-construct:
 
 Option 2: Construct the expectation circuit and sample on a system or simulator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 **Legacy method**
+
 .. code-block:: python
 
     from qiskit.opflow import StateFn, PauliExpectation, CircuitSampler
@@ -127,6 +127,7 @@ Option 2: Construct the expectation circuit and sample on a system or simulator
 Next, the actual calculation is done by the `CircuitSampler` class, which receives a backend or `QuantumInstance` and the expectation object. Here are some examples of how it can be used:
 
 **New method - Run locally by using the terra primitive**
+
 0. Run locally by using the terra primitive
 *********************************************
 
@@ -141,12 +142,13 @@ For the terra primitive, if no shots are specified, it performs an exact calcula
     result = estimator.run([state], [op]).result().values
     print(result)
 
-_2legacy-run-aer:
+.. _a-legacy-run-aer:
 
 1. Run locally by using an AerSimulator
 *****************************************
 
 **Legacy method**
+
 .. code-block:: python
 
    from qiskit.providers.aer import AerSimulator
@@ -163,6 +165,7 @@ _2legacy-run-aer:
     print("sampled: ", expectation_value_2)
 
 **New method**
+
 .. code-block:: python
 
     from qiskit_aer.primitives import Estimator
@@ -172,12 +175,13 @@ _2legacy-run-aer:
     result = estimator.run([state], [op]).result().values
     print(result)
 
-_2legacy-run-remote:
+.. _a-legacy-run-remote:
 
 2. Run on a remote simulator or real backend
 *********************************************
 
 **Legacy method**
+
 Here we use the `ibmq_qasm_simulator`, but the workflow is the same when using a real device.
 
 .. code-block:: python
@@ -197,6 +201,7 @@ Here we use the `ibmq_qasm_simulator`, but the workflow is the same when using a
     print("sampled: ", expectation_value_4)
 
 **New method**
+
 .. code-block:: python
     
     from qiskit_ibm_runtime import QiskitRuntimeService, Estimator
