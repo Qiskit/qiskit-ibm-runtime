@@ -219,5 +219,5 @@ Compare this section to :ref:`legacy-run-remote`.
 
     estimator = Estimator(session=backend)
 
-    result = estimator.run([state], [op]).result().values
+    result = estimator.run(state, op).result().values
     print(result)
