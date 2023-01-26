@@ -198,9 +198,9 @@ Compare this section to :ref:`legacy-run-aer`.
 
     from qiskit_aer.primitives import Estimator
 
-    estimator = Estimator(run_options={"shots": 1024})
+    estimator = Estimator()
 
-    result = estimator.run([state], [op]).result().values
+    result = estimator.run(state, op, shots=1024).result().values
     print(result)
 
 .. _new-run-remote:
