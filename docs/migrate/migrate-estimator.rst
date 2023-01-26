@@ -152,7 +152,7 @@ Option 1: Calculate the expectation value exactly
 
 Compare this section to :ref:`legacy-exact`.
 
-This can be done with the Estimator primitive in `qiskit.primitives`:
+The reference ``Estimator`` in ``qiskit.primitives`` uses the ``qiskit.quantum_info.Statevector`` class to compute expectation values. If no shots are specified, the outcome corresponds to the exact statevector calculation.
 
 
 .. code-block:: python
