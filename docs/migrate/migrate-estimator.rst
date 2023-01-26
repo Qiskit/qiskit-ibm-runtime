@@ -182,9 +182,9 @@ The reference ``Estimator`` in ``qiskit.primitives`` uses the ``qiskit.quantum_i
 
    from qiskit.primitives import Estimator
 
-    estimator = Estimator(options={"shots": 1024})
+    estimator = Estimator()
 
-    result = estimator.run([state], [op]).result().values
+    result = estimator.run(state, op, shots=1024).result().values
     print(result)
 
 .. _new-run-aer:
