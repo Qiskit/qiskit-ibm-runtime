@@ -144,14 +144,6 @@ New method: Use primitives
 
 Compare this section to :ref:`legacy-opflow`.
 
-Opflow provided its own classes to represent both operators and quantum states:
-
-.. code-block:: python
-
-    from qiskit.opflow import CircuitStateFn, PauliSumOp
-
-    opflow_op = PauliSumOp(op)
-    opflow_state = CircuitStateFn(state) # convert to a state
 
 .. _new-exact:
 
