@@ -176,7 +176,7 @@ Compare this section to :ref:`legacy-construct`.
 0. Run locally by using the terra primitive
 *********************************************
 
-For the terra primitive, if no shots are specified, it performs an exact calculation. If shots are specified, it performs a shot-based simulation (not quite qasm, as you can see). There is no real legacy alternative for this:
+The reference ``Estimator`` in ``qiskit.primitives`` uses the ``qiskit.quantum_info.Statevector`` class to compute expectation values. If the number of shots is specificed, the result will no longer be exact.
 
 .. code-block:: python
 
