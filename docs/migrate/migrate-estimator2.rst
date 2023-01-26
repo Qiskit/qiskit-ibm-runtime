@@ -52,15 +52,6 @@ New methods (using primitives)
 
 These code examples have been updated to use primitives.
 
-Opflow provided its own classes to represent both operators and quantum states:
-
-.. code-block:: python
-
-    from qiskit.opflow import CircuitStateFn, PauliSumOp
-
-    opflow_op = PauliSumOp(op)
-    opflow_state = CircuitStateFn(state) # convert to a state
-
 .. _a-legacy-exact:
 
 Option 1: Calculate the expectation value exactly (classical)
