@@ -137,7 +137,7 @@ Here we use the `ibmq_qasm_simulator`, but the workflow is the same when using a
     print("sampled: ", expectation_value_4)
 
 
-.. new-primitives:
+.. _new-primitives:
 
 New method: Use primitives
 -----------------------------
