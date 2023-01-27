@@ -161,7 +161,7 @@ The reference ``Estimator`` in ``qiskit.primitives`` uses the ``qiskit.quantum_i
 
     estimator = Estimator()
 
-    result = estimator.run([state], [op]).result().values
+    result = estimator.run(state, op).result().values
     print(result)
 
 .. _new-construct:
