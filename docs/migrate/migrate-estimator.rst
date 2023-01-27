@@ -11,7 +11,6 @@ Problem definition
 
 We want to compute the expectation value of a quantum state (circuit) with respect to a certain operator. Here we are using the H2 molecule and an arbitrary circuit as the quantum state:
 
-
 .. code-block:: python
 
 
@@ -34,12 +33,10 @@ We want to compute the expectation value of a quantum state (circuit) with respe
     state.x(0)
     state.x(1)
 
-.. _legacy-opflow:
+.. _a-legacy-opflow:
 
 Legacy methods (using opflow)
 -----------------------------
-
-Compare this section to :ref:`new-primitives`.
 
 `Opflow <https://qiskit.org/documentation/apidoc/opflow.html>`__ provided its own classes to represent both operators and quantum states:
 
@@ -50,15 +47,22 @@ Compare this section to :ref:`new-primitives`.
     opflow_op = PauliSumOp(op)
     opflow_state = CircuitStateFn(state) # convert to a state
 
-.. _legacy-exact:
+New methods (using primitives)
+-------------------------------
+
+These code examples have been updated to use primitives.
+
+.. _a-legacy-exact:
 
 Option 1: Calculate the expectation value exactly (classical)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Compare this section to :ref:`new-exact`.
-
 Sometimes the system is small enough that we can compute the expectation value classically. With opflow, this was done by composing the circuit and operator states, then calling for the exact evaluation method:
 
+.. raw:: html
+
+    <details>
+    <summary><a>Legacy method</a></summary>
 
 .. code-block:: python
 
@@ -67,12 +71,36 @@ Sometimes the system is small enough that we can compute the expectation value c
 
     print("exact: ", expectation_value_1)
 
-.. _legacy-construct:
+.. raw:: html
+
+   </details>
+
+.. raw:: html
+
+    <details>
+    <summary><a>New method</a></summary>
+
+This can be done with the Estimator primitive in `qiskit.primitives`:
+
+.. code-block:: python
+
+    from qiskit.primitives import Estimator
+
+    estimator = Estimator()
+
+    result = estimator.run([state], [op]).result().values
+    print(result)
+
+.. raw:: html
+
+   </details>
+
+.. _a-legacy-construct:
 
 Option 2: Construct the expectation circuit and sample on a system or simulator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Compare this section to :ref:`new-construct`.
+**Legacy method**
 
 .. code-block:: python
 
@@ -89,12 +117,28 @@ Compare this section to :ref:`new-construct`.
 
 Next, the actual calculation is done by the `CircuitSampler` class, which receives a backend or `QuantumInstance` and the expectation object. Here are some examples of how it can be used:
 
-.. _legacy-run-aer:
+**New method - Run locally by using the terra primitive**
+
+0. Run locally by using the terra primitive
+*********************************************
+
+For the terra primitive, if no shots are specified, it performs an exact calculation. If shots are specified, it performs a shot-based simulation (not quite qasm, as you can see). There is no real legacy alternative for this:
+
+.. code-block:: python
+
+   from qiskit.primitives import Estimator
+
+    estimator = Estimator(options={"shots": 1024})
+
+    result = estimator.run([state], [op]).result().values
+    print(result)
+
+.. _a-legacy-run-aer:
 
 1. Run locally by using an AerSimulator
 *****************************************
 
-Compare this section to :ref:`new-run-aer`.
+**Legacy method**
 
 .. code-block:: python
 
@@ -111,12 +155,23 @@ Compare this section to :ref:`new-run-aer`.
 
     print("sampled: ", expectation_value_2)
 
-.. _legacy-run-remote:
+**New method**
+
+.. code-block:: python
+
+    from qiskit_aer.primitives import Estimator
+
+    estimator = Estimator(run_options={"shots": 1024})
+
+    result = estimator.run([state], [op]).result().values
+    print(result)
+
+.. _a-legacy-run-remote:
 
 2. Run on a remote simulator or real backend
 *********************************************
 
-Compare this section to :ref:`new-run-remote`.
+**Legacy method**
 
 Here we use the `ibmq_qasm_simulator`, but the workflow is the same when using a real device.
 
@@ -136,6 +191,7 @@ Here we use the `ibmq_qasm_simulator`, but the workflow is the same when using a
 
     print("sampled: ", expectation_value_4)
 
+<<<<<<< Updated upstream
 
 .. _new-primitives:
 
@@ -209,6 +265,9 @@ Compare this section to :ref:`legacy-run-aer`.
 *********************************************
 
 Compare this section to :ref:`legacy-run-remote`.
+=======
+**New method**
+>>>>>>> Stashed changes
 
 .. code-block:: python
     
@@ -219,5 +278,6 @@ Compare this section to :ref:`legacy-run-remote`.
 
     estimator = Estimator(session=backend)
 
-    result = estimator.run(state, op).result().values
+    result = estimator.run([state], [op]).result().values
     print(result)
+

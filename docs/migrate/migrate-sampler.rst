@@ -19,11 +19,12 @@ We want to measure a quantum state:
     circuit.x(1)
     circuit.measure_all()
 
-Legacy methods
---------------
+Option 1: Run locally 
+~~~~~~~~~~~~~~~~~~~~~~~~
+.. raw:: html
 
-Option 1: Run locally using an AerSimulator
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    <details>
+    <summary><a>Legacy method</a></summary>
 
 .. code-block:: python
 
@@ -43,36 +44,14 @@ Option 1: Run locally using an AerSimulator
         quasi_dists[key] = count/1024
     print(quasi_dists)
 
+.. raw:: html
 
-Option 2: Run on a remote simulator or real backend
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   </details>
 
-.. code-block:: python
+.. raw:: html
 
-    from qiskit import IBMQ
-
-    IBMQ.load_account()
-    provider = IBMQ.get_provider(hub='ibm-q-internal') # here the hub should not be internal
-    backend = provider.get_backend("ibmq_qasm_simulator")
-
-    # Run and get counts
-    result = simulator.run(circuit, shots=1024).result()
-    counts = result.get_counts(circuit)
-    print(counts)
-    
-    # Get quasi prob. distribution
-    quasi_dists = {}
-    for key,count in counts.items():
-        quasi_dists[key] = count/1024
-    print(quasi_dists)
-
-    # The quantum instance example is analogous to option 1.
-
-New method: Use primitives
---------------------------
-
-Option 1: Run locally
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+    <details>
+    <summary><a>New method</a></summary>
 
 This can be done with the reference sampler in `qiskit.primitives` (exact statevector calculation):
 
@@ -96,8 +75,48 @@ If shots are specified, this primitive outputs a shot-based simulation (no longe
     result = sampler.run(circuit, shots = 1024).result().quasi_dists
     print(result)
 
-Option 2: Run on a remote simulator or real backend   
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. raw:: html
+
+   </details>    
+
+
+Option 2: Run on a remote simulator or real backend
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. raw:: html
+
+    <details>
+    <summary><a>Legacy method</a></summary>
+
+.. code-block:: python
+
+    from qiskit import IBMQ
+
+    IBMQ.load_account()
+    provider = IBMQ.get_provider(hub='ibm-q-internal') # here the hub should not be internal
+    backend = provider.get_backend("ibmq_qasm_simulator")
+
+    # Run and get counts
+    result = simulator.run(circuit, shots=1024).result()
+    counts = result.get_counts(circuit)
+    print(counts)
+    
+    # Get quasi prob. distribution
+    quasi_dists = {}
+    for key,count in counts.items():
+        quasi_dists[key] = count/1024
+    print(quasi_dists)
+
+    # The quantum instance example is analogous to option 1.
+
+.. raw:: html
+
+   </details>
+
+.. raw:: html
+
+    <details>
+    <summary><a>New method</a></summary>
 
 .. code-block:: python
     
@@ -110,3 +129,7 @@ Option 2: Run on a remote simulator or real backend
 
     result = sampler.run(circuit, shots=1024).result().quasi_dists
     print(result)
+
+.. raw:: html
+
+   </details>   

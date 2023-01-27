@@ -10,33 +10,47 @@ The VQE algorithm has changed more than most, in that there are now two versions
 
 The updated VQE algorithm now uses the Estimator instead of a quantum instance, and the SparsePauliOp instead of the PauliSumOp (although the PauliSumOp is currently still supported). The comparison of the current and the old version of VQE on a simple example follows:
 
-.. list-table:: VQE usage changes
-   :widths: 50 50
-   :header-rows: 1
+.. raw:: html
 
-   * - QuantumInstance VQE
-     - Estimator VQE
-   * - .. code-block:: python
+    <details>
+    <summary><a>Legacy method - QuantumInstance VQE</a></summary>
+
+.. code-block:: python
+
+    from qiskit.algorithms.minimum_eigen_solvers import VQE
+    from qiskit.utils import QuantumInstance
+    from qiskit import Aer
+
+    qi = QuantumInstance(
+      backend=Aer.get_backend('statevector_simulator'))
    
-            from qiskit.algorithms.minimum_eigen_solvers import VQE
-            from qiskit.utils import QuantumInstance
-            from qiskit import Aer
+    vqe = VQE(ansatz, optimizer, quantum_instance=qi)
+    result = vqe.compute_minimum_eigenvalue(hamiltonian)
 
-            qi = QuantumInstance(
-                backend=Aer.get_backend('statevector_simulator'))
-   
-            vqe = VQE(ansatz, optimizer, quantum_instance=qi)
-            result = vqe.compute_minimum_eigenvalue(hamiltonian)
-     - .. code-block:: python
+.. raw:: html
 
-            # note change of namespace
-            from qiskit.algorithms.minimum_eigensolvers import VQE
-            from qiskit.primitives import Estimator
+   </details>
 
-            estimator = Estimator()
+.. raw:: html
+
+    <details>
+    <summary><a>New method - Estimator VQE</a></summary>
+
+.. code-block:: python
+
+    # note change of namespace
+    from qiskit.algorithms.minimum_eigensolvers import VQE
+    from qiskit.primitives import Estimator
+
+    estimator = Estimator()
     
-            vqe = VQE(estimator, ansatz, optimizer)
-            result = vqe.compute_minimum_eigenvalue(hamiltonian)
+    vqe = VQE(estimator, ansatz, optimizer)
+    result = vqe.compute_minimum_eigenvalue(hamiltonian)
+
+.. raw:: html
+
+   </details>
+
 
 Related links
 ----------------
