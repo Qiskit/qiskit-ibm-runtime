@@ -191,83 +191,7 @@ Here we use the `ibmq_qasm_simulator`, but the workflow is the same when using a
 
     print("sampled: ", expectation_value_4)
 
-<<<<<<< Updated upstream
-
-.. _new-primitives:
-
-New method: Use primitives
------------------------------
-
-Compare this section to :ref:`legacy-opflow`.
-
-
-.. _new-exact:
-
-Option 1: Calculate the expectation value exactly
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Compare this section to :ref:`legacy-exact`.
-
-The reference ``Estimator`` in ``qiskit.primitives`` uses the ``qiskit.quantum_info.Statevector`` class to compute expectation values. If no shots are specified, the outcome corresponds to the exact statevector calculation.
-
-
-.. code-block:: python
-
-    from qiskit.primitives import Estimator
-
-    estimator = Estimator()
-
-    result = estimator.run(state, op).result().values
-    print(result)
-
-.. _new-construct:
-
-Option 2: Construct the expectation circuit and sample on a system or simulator
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Compare this section to :ref:`legacy-construct`.
-
-.. _new-construct-run-terra:
-
-0. Run locally by using the terra primitive
-*********************************************
-
-The reference ``Estimator`` in ``qiskit.primitives`` uses the ``qiskit.quantum_info.Statevector`` class to compute expectation values. If the number of shots is specificed, the result will no longer be exact.
-
-.. code-block:: python
-
-   from qiskit.primitives import Estimator
-
-    estimator = Estimator()
-
-    result = estimator.run(state, op, shots=1024).result().values
-    print(result)
-
-.. _new-run-aer:
-
-1. Run locally by using an AerSimulator 
-*********************************************
-
-Compare this section to :ref:`legacy-run-aer`.
-
-.. code-block:: python
-
-    from qiskit_aer.primitives import Estimator
-
-    estimator = Estimator()
-
-    result = estimator.run(state, op, shots=1024).result().values
-    print(result)
-
-.. _new-run-remote:
-
-2. Run on a remote simulator or real backend
-*********************************************
-
-Compare this section to :ref:`legacy-run-remote`.
-=======
 **New method**
->>>>>>> Stashed changes
 
 .. code-block:: python
     
@@ -280,4 +204,3 @@ Compare this section to :ref:`legacy-run-remote`.
 
     result = estimator.run([state], [op]).result().values
     print(result)
-
