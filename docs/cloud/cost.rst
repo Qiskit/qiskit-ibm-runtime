@@ -20,6 +20,11 @@ Additionally, an instance administrator can limit how much is spent. To set cost
 .. note::
    The cost limit is always specified in US dollars (USD), then converted to runtime seconds.  However, for monthly billing purposes, you are charged in your local currency, specified on your IBM Cloud account. Because currency exchange rates can fluctuate, the cost for `X` runtime seconds might be different when initially calculated in USD than when you're actually charged in your local currency.  As a result, if your local currency is not USD, the total amount charged for the number of seconds specified in this field could vary from the dollar amount you specify.
 
+How to remove a cost limit
+****************************
+
+An instance administrator can remove the cost limit.  To do so, navigate to the `IBM Cloud Instances page <https://cloud.ibm.com/quantum/instances>`__, then open the instance and click the edit button by the **Cost limit**. Delete the value and click **Save**.
+
 What happens when the cost limit is reached
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
