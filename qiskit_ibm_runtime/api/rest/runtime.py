@@ -137,6 +137,7 @@ class Runtime(RestAdapterBase):
         job_tags: Optional[List[str]] = None,
         max_execution_time: Optional[int] = None,
         start_session: Optional[bool] = False,
+        session_time: Optional[int] = None,
     ) -> Dict:
         """Execute the program.
 
@@ -153,6 +154,7 @@ class Runtime(RestAdapterBase):
             job_tags: Tags to be assigned to the job.
             max_execution_time: Maximum execution time in seconds.
             start_session: Set to True to explicitly start a runtime session. Defaults to False.
+            session_time: Length of session in seconds.
 
         Returns:
             JSON response.
@@ -176,6 +178,7 @@ class Runtime(RestAdapterBase):
             payload["cost"] = max_execution_time
         if start_session:
             payload["start_session"] = start_session
+            payload["session_time"] = session_time
         if all([hub, group, project]):
             payload["hub"] = hub
             payload["group"] = group
