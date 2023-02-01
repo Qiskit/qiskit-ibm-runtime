@@ -259,6 +259,7 @@ class TestPrimitives(IBMTestCase):
                     self.assertTrue(session._active)
                     inst2 = cls()
                     self.assertEqual(inst2.session, session)
+                    session.close()
                 self.assertFalse(session._active)
 
     def test_run_default_options(self):
