@@ -6,7 +6,7 @@ As a result, sessions allow you to more efficiently run programs that require it
 
 Before you begin
 ----------------
-Before starting a session, you must `Set up Qiskit Runtime <getting_started.html>`__ and initialize it as a service:
+Before starting a session, you must `Set up Qiskit Runtime <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/getting_started.html>`__ and initialize it as a service:
 
 .. code-block:: python
   
