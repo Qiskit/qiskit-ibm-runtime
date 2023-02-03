@@ -193,7 +193,7 @@ As a part of the beta release of the resilience options, users will be able conf
 |                                                               | ``CxAmplifier``                  | Amplifies noise of all CNOT gates by performing local  |
 |                                                               |                                  | gate folding.                                          |
 |                                                               +----------------------------------+--------------------------------------------------------+
-|                                                               | ``LocalFoldingAmplifier``         | Amplifies noise of all gates by performing local       |
+|                                                               | ``LocalFoldingAmplifier``        | Amplifies noise of all gates by performing local       |
 |                                                               |                                  | gate folding.                                          |
 |                                                               +----------------------------------+--------------------------------------------------------+
 |                                                               | ``GlobalFoldingAmplifier``       | Amplifies noise of the input circuit by performing     |
