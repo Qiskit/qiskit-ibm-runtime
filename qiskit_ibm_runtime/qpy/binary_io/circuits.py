@@ -179,22 +179,13 @@ def _read_instruction(  # type: ignore[no-untyped-def]
     params = []
     condition_tuple = None
     if instruction.has_condition:
-        # If an invalid register name is used assume it's a single bit
-        # condition and treat the register name as a string of the clbit index
-        if ClassicalRegister.name_format.match(condition_register) is None:
-            # If invalid register prefixed with null character it's a clbit
-            # index for single bit condition
-            if condition_register[0] == "\x00":
-                conditional_bit = int(condition_register[1:])
-                condition_tuple = (
-                    circuit.clbits[conditional_bit],
-                    instruction.condition_value,
-                )
-            else:
-                raise ValueError(
-                    f"Invalid register name: {condition_register} for condition register of "
-                    f"instruction: {gate_name}"
-                )
+        # If register name prefixed with null character it's a clbit index for single bit condition.
+        if condition_register[0] == "\x00":
+            conditional_bit = int(condition_register[1:])
+            condition_tuple = (
+                circuit.clbits[conditional_bit],
+                instruction.condition_value,
+            )
         else:
             condition_tuple = (
                 registers["c"][condition_register],
@@ -257,7 +248,7 @@ def _read_instruction(  # type: ignore[no-untyped-def]
             inst_obj.label = label
         if circuit is None:
             return inst_obj
-        circuit._append(CircuitInstruction(inst_obj, qargs, cargs))
+        circuit._append(inst_obj, qargs, cargs)
         return None
     elif hasattr(library, gate_name):
         gate_class = getattr(library, gate_name)
@@ -275,7 +266,14 @@ def _read_instruction(  # type: ignore[no-untyped-def]
     if gate_name in {"IfElseOp", "WhileLoopOp"}:
         gate = gate_class(condition_tuple, *params)
     elif version >= 5 and issubclass(gate_class, ControlledGate):
-        if gate_name in {"MCPhaseGate", "MCU1Gate"}:
+        if gate_name in {
+            "MCPhaseGate",
+            "MCU1Gate",
+            "MCXGrayCode",
+            "MCXGate",
+            "MCXRecursive",
+            "MCXVChain",
+        }:
             gate = gate_class(*params, instruction.num_ctrl_qubits)
         else:
             gate = gate_class(*params)
@@ -294,12 +292,12 @@ def _read_instruction(  # type: ignore[no-untyped-def]
         gate.condition = condition_tuple
     if instruction.label_size > 0:
         gate.label = label
-        if circuit is None:
-            return gate
+    if circuit is None:
+        return gate
     if not isinstance(gate, Instruction):
         circuit.append(gate, qargs, cargs)
     else:
-        circuit._append(gate, qargs, cargs)
+        circuit._append(CircuitInstruction(gate, qargs, cargs))
     return None
 
 
@@ -420,6 +418,7 @@ def _read_custom_operations(file_obj, version, vectors):  # type: ignore[no-unty
                         file_obj.read(formats.CUSTOM_CIRCUIT_INST_DEF_V2_SIZE),
                     )
                 )
+
             name = file_obj.read(data.gate_name_size).decode(common.ENCODE)
             type_str = data.type
             definition_circuit = None
@@ -927,7 +926,6 @@ def read_circuit(file_obj, version, metadata_deserializer=None):  # type: ignore
                 if in_circuit:
                     circ.add_register(register)
                 out_registers[bit_type_label][register_name] = register
-
     custom_operations = _read_custom_operations(file_obj, version, vectors)
     for _instruction in range(num_instructions):
         _read_instruction(
