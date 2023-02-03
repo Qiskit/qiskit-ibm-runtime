@@ -367,6 +367,7 @@ class BaseFakeRuntimeClient:
         job_tags: Optional[List[str]] = None,
         max_execution_time: Optional[int] = None,
         start_session: Optional[bool] = None,
+        session_time: Optional[int] = None,
     ) -> Dict[str, Any]:
         """Run the specified program."""
         _ = self._get_program(program_id)
