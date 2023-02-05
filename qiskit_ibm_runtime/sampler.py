@@ -170,7 +170,8 @@ class Sampler(BaseSampler):
         )
 
         if (_options.optimization_level is None):
-            if _options.simulator and not hasattr(_options.simulator, "noise_model"):
+            if _options.simulator and (not hasattr(_options.simulator, "noise_model")
+                                       or _options.simulator.noise_model is None):
                 _options.optimization_level = 1
             else:
                 _options.optimization_level = Options._DEFAULT_OPTIMIZATION_LEVEL
