@@ -80,8 +80,8 @@ class Options:
         simulator: Simulator options. See
             :class:`SimulatorOptions` for all available options.
     """
-
-    optimization_level: int = 3
+    _DEFAULT_OPTIMIZATION_LEVEL = 3
+    optimization_level: Optional[int] = None
     resilience_level: int = 1
     max_execution_time: Optional[int] = None
     transpilation: Union[TranspilationOptions, Dict] = field(
