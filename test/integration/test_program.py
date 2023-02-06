@@ -22,7 +22,7 @@ from qiskit_ibm_runtime.exceptions import (
 )
 from qiskit_ibm_runtime.runtime_program import RuntimeProgram
 from ..ibm_test_case import IBMIntegrationTestCase
-from ..decorators import run_integration_test
+from ..decorators import run_integration_test, quantum_only
 from ..templates import RUNTIME_PROGRAM, PROGRAM_PREFIX
 
 
@@ -30,6 +30,7 @@ class TestIntegrationProgram(IBMIntegrationTestCase):
     """Integration tests for runtime modules."""
 
     @run_integration_test
+    @quantum_only
     def test_list_programs(self, service):
         """Test listing programs."""
         program_id = self._upload_program(service)
@@ -43,6 +44,7 @@ class TestIntegrationProgram(IBMIntegrationTestCase):
         self.assertTrue(found, f"Program {program_id} not found!")
 
     @run_integration_test
+    @quantum_only
     def test_list_programs_with_limit_skip(self, service):
         """Test listing programs with limit and skip."""
         for _ in range(4):
@@ -58,6 +60,7 @@ class TestIntegrationProgram(IBMIntegrationTestCase):
         self.assertIn(all_ids[2], some_ids)
 
     @run_integration_test
+    @quantum_only
     def test_list_program(self, service):
         """Test listing a single program."""
         program_id = self._upload_program(service)
@@ -66,6 +69,7 @@ class TestIntegrationProgram(IBMIntegrationTestCase):
         self._validate_program(program)
 
     @run_integration_test
+    @quantum_only
     def test_retrieve_program_data(self, service):
         """Test retrieving program data"""
         program_id = self._upload_program(service)
@@ -88,6 +92,7 @@ class TestIntegrationProgram(IBMIntegrationTestCase):
             return not_mine.data
 
     @run_integration_test
+    @quantum_only
     def test_upload_program(self, service):
         """Test uploading a program."""
         max_execution_time = 3000
@@ -100,6 +105,7 @@ class TestIntegrationProgram(IBMIntegrationTestCase):
         self.assertEqual(max_execution_time, program.max_execution_time)
 
     @run_integration_test
+    @quantum_only
     def test_upload_program_file(self, service):
         """Test uploading a program using a file."""
         temp_fp = tempfile.NamedTemporaryFile(mode="w", delete=False)
@@ -152,6 +158,7 @@ class TestIntegrationProgram(IBMIntegrationTestCase):
         self.assertNotEqual(start_vis, end_vis)
 
     @run_integration_test
+    @quantum_only
     def test_delete_program(self, service):
         """Test deleting program."""
         program_id = self._upload_program(service)
@@ -160,6 +167,7 @@ class TestIntegrationProgram(IBMIntegrationTestCase):
             service.program(program_id, refresh=True)
 
     @run_integration_test
+    @quantum_only
     def test_double_delete_program(self, service):
         """Test deleting a deleted program."""
         program_id = self._upload_program(service)
@@ -168,6 +176,7 @@ class TestIntegrationProgram(IBMIntegrationTestCase):
             service.delete_program(program_id)
 
     @run_integration_test
+    @quantum_only
     def test_update_program_data(self, service):
         """Test updating program data."""
         program_v1 = """
@@ -184,6 +193,7 @@ def main(backend, user_messenger, **kwargs):
         self.assertEqual(program_v2, service.program(program_id).data)
 
     @run_integration_test
+    @quantum_only
     def test_update_program_metadata(self, service):
         """Test updating program metadata."""
         program_id = self._upload_program(service)
