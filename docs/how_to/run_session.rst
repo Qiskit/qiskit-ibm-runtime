@@ -6,7 +6,7 @@ As a result, sessions allow you to more efficiently run programs that require it
 
 Before you begin
 ----------------
-Before starting a session, you must `Set up Qiskit Runtime <getting_started.html>`__ and initialize it as a service:
+Before starting a session, you must `Set up Qiskit Runtime <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/getting_started.html>`__ and initialize it as a service:
 
 .. code-block:: python
   
@@ -17,7 +17,7 @@ Before starting a session, you must `Set up Qiskit Runtime <getting_started.html
 Run a job in a session
 -------------------------------
 
-You can set up a runtime session by using the context manager (``with ...:``), which automatically opens and closes the session for you. A session is started when the first primitive job in this context manager starts. For example, the following code creates an Estimator instance inside a Session context manager.
+You can set up a runtime session by using the context manager (``with ...:``), which automatically opens the session for you. A session is started when the first primitive job in this context manager starts. For example, the following code creates an Estimator instance inside a Session context manager.
 
 Start by loading the options into a primitive constructor, then pass in circuits, parameters, and observables:
 
@@ -26,6 +26,7 @@ Start by loading the options into a primitive constructor, then pass in circuits
   with Session(service) as session:
       estimator = Estimator(session=session, options=options) #primitive constructor
       estimator.run(circuit, parameters, observable) #job call
+      session.close() #close the session
 
 Session options
 -----------------
@@ -64,8 +65,8 @@ This example starts a session, runs an Estimator job, and outputs the result:
   with Session(service=service, backend="ibmq_qasm_simulator") as session:
       estimator = Estimator(session=session, options=options)
       job = estimator.run(circuit, observable)
-
-  result = job.result()
+      result = job.result()
+      session.close()
 
   display(circuit.draw("mpl"))
   print(f" > Observable: {observable.paulis}")
@@ -88,7 +89,7 @@ After this time limit is reached, the session is permanently closed.
 
 Additionally, there is an *interactive* timeout value. If there are no session jobs queued within that window, the session is temporarily deactivated and normal job selection resumes. After a session is deactivated, a subsequent job could start an additional session.  Jobs for the new session would then take priority until the new session deactivates or is closed. After the new session becomes inactive, if the job scheduler gets a job from the original session and its maximum timeout value has not been reached, the session is reactivated until its maximum timeout value is reached.
 
-When using primitives with their context managers as previously described, the session is closed automatically when the block is exited.
+When you are done submitting jobs, you are encouraged to use ``session.close()`` to close the session. This allows the scheduler to run the next job without waiting for the session timeout. Keep in mind, however, that you cannot submit more jobs to a closed session.
 
 Retrieve previous job results
 -----------------------------------

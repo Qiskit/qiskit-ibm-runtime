@@ -64,6 +64,7 @@ class Session:
             job = sampler.run(circ)
             print(f"Sampler job ID: {job.job_id()}")
             print(f"Sampler job result:" {job.result()})
+            session.close()
     """
 
     def __init__(
@@ -229,7 +230,6 @@ class Session:
         exc_tb: Optional[TracebackType],
     ) -> None:
         set_cm_session(None)
-        self.close()
 
 
 # Default session
