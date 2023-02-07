@@ -22,7 +22,7 @@ SOURCE_LANG='en'
 TARGET_REPOSITORY="git@github.com:qiskit-community/qiskit-translations.git"
 TARGET_BRANCH_PO="master"
 
-DOC_DIR_PO="docs/locale"
+DOC_DIR_PO="docs/locale/"
 
 echo "show current dir: "
 pwd
