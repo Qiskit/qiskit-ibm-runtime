@@ -5,7 +5,7 @@ Migration guide from ``qiskit-ibmq-provider``
 Introduction
 ============
 
-The classes related with Qiskit Runtime that used to be included in ``qiskit-ibmq-provider`` are now part of ``qiskit-ibm-runtime``. Before, the provider used to populate the ``qiskit.providers.ibmq.runtime`` namespace with objects for Qiskit Runtime that now live in the ``qiskit_ibm_runtime`` module.
+The classes related to Qiskit Runtime that used to be included in ``qiskit-ibmq-provider`` are now part of ``qiskit-ibm-runtime``. Before, the provider used to populate the ``qiskit.providers.ibmq.runtime`` namespace with objects for Qiskit Runtime. These now live in the ``qiskit_ibm_runtime`` module.
 
 Changes in Class name and location
 ==================================
