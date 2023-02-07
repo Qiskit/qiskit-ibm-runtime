@@ -21,7 +21,7 @@ import struct
 
 from . import formats
 
-QPY_VERSION = 5
+QPY_VERSION = 6
 ENCODE = "utf8"
 
 

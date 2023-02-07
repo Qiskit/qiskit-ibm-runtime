@@ -124,6 +124,7 @@ def dump(  # type: ignore[no-untyped-def]
         metadata_serializer: An optional JSONEncoder class that
             will be passed the ``.metadata`` attribute for each program in ``programs`` and will be
             used as the ``cls`` kwarg on the `json.dump()`` call to JSON serialize that dictionary.
+
     Raises:
         QpyError: When multiple data format is mixed in the output.
         TypeError: When invalid data type is input.
@@ -215,10 +216,6 @@ def load(  # type: ignore[no-untyped-def]
             the default ``JSONDecoder`` class.
 
     Returns:
-        list: List of ``QuantumCircuit``
-            The list of :class:`~qiskit.circuit.QuantumCircuit` objects
-            contained in the QPY data. A list is always returned, even if there
-            is only 1 circuit in the QPY data.
         The list of Qiskit programs contained in the QPY data.
         A list is always returned, even if there is only 1 program in the QPY data.
 
@@ -235,21 +232,20 @@ def load(  # type: ignore[no-untyped-def]
     if data.preface.decode(common.ENCODE) != "QISKIT":
         raise QiskitError("Input file is not a valid QPY file")
     version_match = VERSION_PATTERN_REGEX.search(__version__)
-    version_parts = [int(x) for x in version_match.group("release").split(".")]
+    env_qiskit_version = [int(x) for x in version_match.group("release").split(".")]
 
-    header_version_parts = [data.major_version, data.minor_version, data.patch_version]
-
+    qiskit_version = (data.major_version, data.minor_version, data.patch_version)
     # pylint: disable=too-many-boolean-expressions
     if (
-        version_parts[0] < header_version_parts[0]
+        env_qiskit_version[0] < qiskit_version[0]
         or (
-            version_parts[0] == header_version_parts[0]
-            and header_version_parts[1] > version_parts[1]
+            env_qiskit_version[0] == qiskit_version[0]
+            and qiskit_version[1] > env_qiskit_version[1]
         )
         or (
-            version_parts[0] == header_version_parts[0]
-            and header_version_parts[1] == version_parts[1]
-            and header_version_parts[2] > version_parts[2]
+            env_qiskit_version[0] == qiskit_version[0]
+            and qiskit_version[1] == env_qiskit_version[1]
+            and qiskit_version[2] > env_qiskit_version[2]
         )
     ):
         warnings.warn(
@@ -257,7 +253,7 @@ def load(  # type: ignore[no-untyped-def]
             "file, %s, is newer than the current qiskit version %s. "
             "This may result in an error if the QPY file uses "
             "instructions not present in this current qiskit "
-            "version" % (".".join([str(x) for x in header_version_parts]), __version__)
+            "version" % (".".join([str(x) for x in qiskit_version]), __version__)
         )
 
     if data.qpy_version < 5:
@@ -276,7 +272,9 @@ def load(  # type: ignore[no-untyped-def]
     for _ in range(data.num_programs):
         programs.append(
             loader(  # type: ignore[no-untyped-call]
-                file_obj, data.qpy_version, metadata_deserializer=metadata_deserializer
+                file_obj,
+                data.qpy_version,
+                metadata_deserializer=metadata_deserializer,
             )
         )
     return programs
