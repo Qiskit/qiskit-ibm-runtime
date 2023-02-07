@@ -20,7 +20,7 @@ The module from which the classes are imported has changed. Below is a table of 
      - Notes
    * - ``qiskit.providers.ibmq.runtime.IBMRuntimeService``
      - :class:`qiskit_ibm_runtime.QiskitRuntimeService`
-     - ``IBMRuntimeService`` class was removed from ``qiskit_ibm_runtime 0.6.0`` and replaced by :class:`~QiskitRuntimeService`.
+     - ``IBMRuntimeService`` class was removed from ``qiskit_ibm_runtime 0.6.0`` and replaced by :class:`qiskit_ibm_runtime.QiskitRuntimeService`.
    * - ``qiskit.providers.ibmq.runtime.RuntimeJob``
      - :class:`qiskit_ibm_runtime.RuntimeJob`
      -  
