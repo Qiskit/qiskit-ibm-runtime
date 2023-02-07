@@ -17,7 +17,7 @@ from unittest.mock import patch
 import unittest
 
 from qiskit.circuit.library import RealAmplitudes
-from qiskit.primitives.utils import _cicuit_key
+from qiskit.primitives.utils import _circuit_key
 
 from qiskit_ibm_runtime.utils.json import RuntimeEncoder
 from qiskit_ibm_runtime.utils.utils import _hash

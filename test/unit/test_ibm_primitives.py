@@ -25,7 +25,7 @@ from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit.quantum_info import SparsePauliOp
-from qiskit.primitives.utils import _cicuit_key
+from qiskit.primitives.utils import _circuit_key
 
 from qiskit_ibm_runtime import Sampler, Estimator, Options, Session, RuntimeEncoder
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
