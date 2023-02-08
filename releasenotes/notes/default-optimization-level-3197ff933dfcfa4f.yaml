@@ -3,5 +3,5 @@
 other:
   - |
     Changed the default value for `optimization_level`  in `Options`.
-    Unless defined by the user, value will be set to 1 if the backend
+    Unless defined by the user, its value will be set to 1 if the backend
     is a noiseless simulator. Otherwise, it will be set to 3.
