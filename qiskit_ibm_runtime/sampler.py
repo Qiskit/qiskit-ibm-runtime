@@ -136,6 +136,7 @@ class Sampler(BaseSampler):
 
         backend = None
         self._session: Session = None
+
         if options is None:
             _options = Options()
         elif isinstance(options, Options):
