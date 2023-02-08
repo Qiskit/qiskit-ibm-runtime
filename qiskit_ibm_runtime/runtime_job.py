@@ -530,6 +530,9 @@ class RuntimeJob(Job):
         Returns:
             Input parameters used in this job.
         """
+        if not self._params:
+            response = self._api_client.job_get(job_id=self.job_id())
+            self._params = response.get("params", {})
         return self._params
 
     @property

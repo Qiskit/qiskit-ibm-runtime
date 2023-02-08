@@ -1,0 +1,7 @@
+---
+fixes:
+  - |
+    Fixed a bug where jobs that did not run before a session closes 
+    are not actually run as a part of that session. Jobs should run as a part
+    of a session even if that session is closed by the exit of the 
+    context manager.
