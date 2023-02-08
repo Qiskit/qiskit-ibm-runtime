@@ -196,7 +196,7 @@ class TestOptions(IBMTestCase):
             self.assertTrue(cls_with_noise.options.optimization_level == 3)
 
             user_given_options = Options()
-            for opt_level in [0,1,2,3,99]:
+            for opt_level in [0, 1, 2, 3, 99]:
                 user_given_options.optimization_level = opt_level
                 cls_default = cls(session=backend, options=user_given_options)
                 self.assertTrue(cls_default.options.optimization_level == opt_level)
