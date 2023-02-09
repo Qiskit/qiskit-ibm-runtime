@@ -178,4 +178,3 @@ class TestOptions(IBMTestCase):
                 self.assertTrue(
                     dict_keys_equal(asdict(Options()), options), f"options={options}"
                 )
-
