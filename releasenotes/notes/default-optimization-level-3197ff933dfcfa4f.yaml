@@ -1,6 +1,5 @@
 ---
-
-other:
+upgrade:
   - |
     Changed the default value for `optimization_level`  in `Options`.
     Unless defined by the user, its value will be set to 1 if the backend
