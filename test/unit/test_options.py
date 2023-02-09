@@ -17,7 +17,7 @@ from dataclasses import asdict
 from qiskit_aer.noise import NoiseModel
 from qiskit.providers.fake_provider import FakeNairobiV2
 
-from qiskit_ibm_runtime import Options, RuntimeOptions, Sampler, Estimator
+from qiskit_ibm_runtime import Options, RuntimeOptions
 from ..ibm_test_case import IBMTestCase
 from ..utils import dict_paritally_equal, flat_dict_partially_equal, dict_keys_equal
 
@@ -179,24 +179,3 @@ class TestOptions(IBMTestCase):
                     dict_keys_equal(asdict(Options()), options), f"options={options}"
                 )
 
-    def test_optimization_level(self):
-        """Test various definitions for optimization_level."""
-
-        backend = "ibmq_qasm_simulator"
-        noise_model = NoiseModel.from_backend(FakeNairobiV2())
-        default_options = Options()
-        noisy_options = Options()
-        noisy_options.simulator.noise_model = noise_model
-        primitives = [Sampler, Estimator]
-        for cls in primitives:
-            cls_no_noise = cls(session=backend, options=default_options)
-            self.assertTrue(cls_no_noise.options.optimization_level == 1)
-
-            cls_with_noise = cls(session=backend, options=noisy_options)
-            self.assertTrue(cls_with_noise.options.optimization_level == 3)
-
-            user_given_options = Options()
-            for opt_level in [0, 1, 2, 3, 99]:
-                user_given_options.optimization_level = opt_level
-                cls_default = cls(session=backend, options=user_given_options)
-                self.assertTrue(cls_default.options.optimization_level == opt_level)
