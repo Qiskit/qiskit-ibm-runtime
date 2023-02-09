@@ -68,7 +68,7 @@ class TestIntegrationOptions(IBMIntegrationTestCase):
     @run_integration_test
     def test_simulator_transpile(self, service):
         """Test simulator transpile options."""
-        print("servie = "+str(dir(service)))
+        print("servie = " + str(dir(service)))
         backend = service.backends(simulator=True)[0]
         self.log.info(f"Using backend {backend.name}")
 
