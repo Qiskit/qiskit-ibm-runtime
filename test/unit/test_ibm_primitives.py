@@ -25,12 +25,12 @@ from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit.quantum_info import SparsePauliOp
+from qiskit.primitives.utils import _circuit_key
 
 from qiskit_ibm_runtime import Sampler, Estimator, Options, Session, RuntimeEncoder
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 import qiskit_ibm_runtime.session as session_pkg
 from qiskit_ibm_runtime.utils.utils import _hash
-from qiskit_ibm_runtime.qiskit.primitives.utils import _circuit_key
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import dict_paritally_equal, flat_dict_partially_equal, dict_keys_equal
