@@ -29,7 +29,7 @@ class TestIntegrationOptions(IBMIntegrationTestCase):
     @run_integration_test
     def test_noise_model(self, service):
         """Test running with noise model."""
-        backend = service.get_backend("ibmq_qasm_simulator")
+        backend = service.backends(simulator=True)[0]
         self.log.info(f"Using backend {backend.name}")
 
         fake_backend = FakeManila()
@@ -68,7 +68,7 @@ class TestIntegrationOptions(IBMIntegrationTestCase):
     @run_integration_test
     def test_simulator_transpile(self, service):
         """Test simulator transpile options."""
-        backend = service.get_backend("ibmq_qasm_simulator")
+        backend = service.backends(simulator=True)[0]
         self.log.info(f"Using backend {backend.name}")
 
         circ = QuantumCircuit(2, 2)
@@ -100,10 +100,10 @@ class TestIntegrationOptions(IBMIntegrationTestCase):
                     # self.assertIn("TranspilerError", err.exception.message)
 
     @run_integration_test
-    def test_optimization_level(self, service):
+    def test_optimization_and_resilience_levels(self, service):
         """Test various definitions for optimization_level."""
 
-        backend = service.get_backend("ibmq_qasm_simulator")
+        backend = service.backends(simulator=True)[0]
         noise_model = NoiseModel.from_backend(FakeManila())
         default_options = Options()
         noisy_options = Options()
@@ -114,12 +114,16 @@ class TestIntegrationOptions(IBMIntegrationTestCase):
             for cls in primitives:
                 cls_no_noise = cls(options=default_options)
                 self.assertTrue(cls_no_noise.options.optimization_level == 1)
+                self.assertTrue(cls_no_noise.options.resilience_level == 0)
 
                 cls_with_noise = cls(options=noisy_options)
                 self.assertTrue(cls_with_noise.options.optimization_level == 3)
+                self.assertTrue(cls_with_noise.options.resilience_level == 1)
 
                 user_given_options = Options()
                 for opt_level in [0, 1, 2, 3, 99]:
                     user_given_options.optimization_level = opt_level
+                    user_given_options.resilience_level = opt_level
                     cls_default = cls(options=user_given_options)
                     self.assertTrue(cls_default.options.optimization_level == opt_level)
+                    self.assertTrue(cls_default.options.resilience_level == opt_level)

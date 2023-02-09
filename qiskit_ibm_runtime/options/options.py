@@ -81,8 +81,10 @@ class Options:
             :class:`SimulatorOptions` for all available options.
     """
 
-    # Default for optimization_level will be assigned in Sampler/Estimator
+    # Defaults for optimization_level and for resilience_level will be assigned
+    # in Sampler/Estimator
     _DEFAULT_OPTIMIZATION_LEVEL = 3
+    _DEFAULT_RESILIENCE_LEVEL = 1
     optimization_level: Optional[int] = None
     resilience_level: int = 1
     max_execution_time: Optional[int] = None

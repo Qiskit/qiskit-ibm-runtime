@@ -98,7 +98,7 @@ class TestPrimitives(IBMTestCase):
             for options in options_vars:
                 with self.subTest(primitive=cls, options=options):
                     inst = cls(session=MagicMock(spec=MockSession), options=options)
-                    expected = asdict(Options(optimization_level=1))
+                    expected = asdict(Options(optimization_level=1, resilience_level=0))
                     self._update_dict(expected, copy.deepcopy(options))
                     self.assertDictEqual(expected, inst.options.__dict__)
 
@@ -294,7 +294,7 @@ class TestPrimitives(IBMTestCase):
                         _, kwargs = session.run.call_args
                         inputs = kwargs["inputs"]
 
-                    self._assert_dict_paritally_equal(inputs, expected)
+                    self._assert_dict_partially_equal(inputs, expected)
 
     def test_run_updated_default_options(self):
         """Test run using updated default options."""
@@ -310,7 +310,7 @@ class TestPrimitives(IBMTestCase):
                 else:
                     _, kwargs = session.run.call_args
                     inputs = kwargs["inputs"]
-                self._assert_dict_paritally_equal(
+                self._assert_dict_partially_equal(
                     inputs,
                     {
                         "resilience_settings": {"level": 1},
@@ -352,8 +352,8 @@ class TestPrimitives(IBMTestCase):
                     else:
                         _, kwargs = session.run.call_args
                         inputs = kwargs["inputs"]
-                    self._assert_dict_paritally_equal(inputs, expected)
-                    expected = asdict(Options(optimization_level=1))
+                    self._assert_dict_partially_equal(inputs, expected)
+                    expected = asdict(Options(optimization_level=1, resilience_level=0))
                     self.assertDictEqual(inst.options.__dict__, expected)
 
     def test_run_overwrite_runtime_options(self):
@@ -376,7 +376,7 @@ class TestPrimitives(IBMTestCase):
                     else:
                         _, kwargs = session.run.call_args
                         rt_options = kwargs["options"]
-                    self._assert_dict_paritally_equal(rt_options, options)
+                    self._assert_dict_partially_equal(rt_options, options)
 
     def test_kwarg_options(self):
         """Test specifying arbitrary options."""
@@ -423,7 +423,7 @@ class TestPrimitives(IBMTestCase):
                     self.assertEqual(
                         kwargs_list[idx][1]["inputs"]["run_options"]["shots"], shots
                     )
-                expected = asdict(Options(optimization_level=1))
+                expected = asdict(Options(optimization_level=1, resilience_level=0))
                 self.assertDictEqual(inst.options.__dict__, expected)
 
     def test_run_same_session(self):
@@ -531,7 +531,7 @@ class TestPrimitives(IBMTestCase):
             elif key in dict2.keys():
                 dict1[key] = dict2.pop(key)
 
-    def _assert_dict_paritally_equal(self, dict1, dict2):
+    def _assert_dict_partially_equal(self, dict1, dict2):
         """Assert all keys in dict2 are in dict1 and have same values."""
         self.assertTrue(
             dict_paritally_equal(dict1, dict2),
