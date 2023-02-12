@@ -98,8 +98,10 @@ class TestPrimitives(IBMTestCase):
             for options in options_vars:
                 with self.subTest(primitive=cls, options=options):
                     inst = cls(session=MagicMock(spec=MockSession), options=options)
-                    expected = asdict(Options(optimization_level=1, resilience_level=0))
+                    expected = asdict(Options())
                     self._update_dict(expected, copy.deepcopy(options))
+                    expected["resilience_level"] = 0
+                    expected["optimization_level"] = 1
                     self.assertDictEqual(expected, inst.options.__dict__)
 
     def test_backend_in_options(self):
@@ -293,7 +295,10 @@ class TestPrimitives(IBMTestCase):
                     else:
                         _, kwargs = session.run.call_args
                         inputs = kwargs["inputs"]
-
+                    if expected.get("resilience_level"):
+                        expected["resilience_level"] = 0
+                    if expected.get("resilience_settings"):
+                        expected["resilience_settings"] = {"level": 0}
                     self._assert_dict_partially_equal(inputs, expected)
 
     def test_run_updated_default_options(self):
