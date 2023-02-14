@@ -380,7 +380,12 @@ class TestAccountManager(IBMTestCase):
             (_TEST_IBM_QUANTUM_ACCOUNT, user_filename, "acct-1", "acct-1"),
             (_TEST_IBM_CLOUD_ACCOUNT, user_filename, "acct-2", "acct-2"),
             # verify default account name handling for ibm_cloud accounts
-            (_TEST_IBM_CLOUD_ACCOUNT, user_filename, None, _DEFAULT_ACCOUNT_NAME_IBM_CLOUD),
+            (
+                _TEST_IBM_CLOUD_ACCOUNT,
+                user_filename,
+                None,
+                _DEFAULT_ACCOUNT_NAME_IBM_CLOUD,
+            ),
             (_TEST_IBM_CLOUD_ACCOUNT, user_filename, None, None),
             # verify default account name handling for ibm_quantum accounts
             (
@@ -409,7 +414,9 @@ class TestAccountManager(IBMTestCase):
                     name=name_save,
                     overwrite=True,
                 )
-                self.assertEqual(account, AccountManager.get(filename=file_name, name=name_get))
+                self.assertEqual(
+                    account, AccountManager.get(filename=file_name, name=name_get)
+                )
 
     @temporary_account_config_file(
         contents=json.dumps(
