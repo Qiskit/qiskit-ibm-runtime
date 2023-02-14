@@ -1,0 +1,7 @@
+---
+upgrade:
+  - |
+    Allow the user to store account details in a file specified by the user. The default remains 
+    `~/.qiskit/qiskit-ibm.json`.
+
+
