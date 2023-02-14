@@ -6,18 +6,40 @@ Migration guide
 Code migration examples
 --------------------------------------------
 
-The following sections have more information We have identified key patterns of behavior and use cases with code examples to help you migrate code to Qiskit Runtime.  
+The following sections have more information We have identified key patterns of behavior and use cases with code
+examples to help you migrate code to use the Qiskit Runtime Primitives.
+
+The Qiskit Runtime Primitives implement the reference ``Sampler`` and ``Estimator`` interface found in
+`qiskit.primitives <https://qiskit.org/documentation/apidoc/primitives.html>`_ . This interface allows to
+switch between primitive implementations with minimal code changes. Different primitive implementations
+can be found in the ``qiskit``, ``qiskit_aer``, and ``qiskit_ibm_runtime`` library.
+
+Each implementation serves a specific purpose. The primitives in ``qiskit`` can perform local statevector
+simulations, useful for quick prototyping of algorithms. The primitives in ``qiskit_aer`` give access to the local
+Aer simulators, for tasks such as noisy simulation. And the primitives in ``qiskit_ibm_runtime`` provide access
+to the Qiskit Runtime service, as well as features such as built-in circuit optimization and error mitigation support.
+
+.. attention::
+
+    The **only primitives that provide access to the Qiskit Runtime service** are those imported
+    from ``qiskit_ibm_runtime`` (*Qiskit Runtime Primitives*).
+
+The key to write an equivalent algorithm using primitives is to identify what is the minimal unit of information
+your algorithm is based on:
+
+* If it's an **expectation value** - you will need an ``Estimator``
+* If it's a **probability distribution** (from sampling the device) - you will need a ``Sampler``
+
+Most algorithms can be rewritten to use one of these two units of information. Once you know which primitive to use,
+you should identify where in algorithm is the backend accessed (call to ``backend.run()``).
+Now, you can replace this call with the respective primitive call, as shown in the examples listed below.
 
 .. note::
 
-   The key to writing an equivalent algorithm using Qiskit Runtime primitives is to remove all dependencies on ``QuantumInstance`` and ``Backend`` and replace them with the implementation of the Estimator, Sampler, or both primitives from the ``qiskit_ibm_runtime`` library. 
-
-We use  `backend.run()` in the examples, but anywhere backends are used, `backend.run()` could be replaced by `QuantumInstance` and the updated code would look the same.
-
-Notably, for common scenarios it is not necessary to handle backends
-differently nor to construct expressions for expectation values
-manually.
-
+   Some qiskit libraries provide their own ``backend.run()`` wrappers, for example: ``QuantumInstance``,
+   formerly used in ``qiskit.algorithms``. To migrate code with these dependencies, replace the execution
+   method with the corresponding primitive. For more information on migrating code based on the
+   ``QuantumInstance`` , check out the Quantum Instance migration guide.
 We have examples for two basic situations:
 
 1. Algorithm developers need to refactor algorithms to use primitives instead of backend.run.
