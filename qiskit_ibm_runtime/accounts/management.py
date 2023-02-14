@@ -55,7 +55,7 @@ class AccountManager:
         filename = filename if filename else _DEFAULT_ACCOUNT_CONFIG_JSON_FILE
         filename = os.path.expanduser(filename)
         return save_config(
-            filename= filename,
+            filename=filename,
             name=name,
             overwrite=overwrite,
             config=Account(
@@ -126,7 +126,7 @@ class AccountManager:
         cls,
         filename: Optional[str] = None,
         name: Optional[str] = None,
-        channel: Optional[ChannelType] = None
+        channel: Optional[ChannelType] = None,
     ) -> Optional[Account]:
         """Read account from disk.
 
@@ -144,9 +144,7 @@ class AccountManager:
         filename = filename if filename else _DEFAULT_ACCOUNT_CONFIG_JSON_FILE
         filename = os.path.expanduser(filename)
         if name:
-            saved_account = read_config(
-                filename=filename, name=name
-            )
+            saved_account = read_config(filename=filename, name=name)
             if not saved_account:
                 raise AccountNotFoundError(
                     f"Account with the name {name} does not exist on disk."

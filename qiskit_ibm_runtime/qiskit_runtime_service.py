@@ -255,7 +255,6 @@ class QiskitRuntimeService(Provider):
         """Discover account."""
         account = None
         verify_ = verify or True
-        filename = filename
         if name:
             if any([auth, channel, token, url]):
                 logger.warning(
