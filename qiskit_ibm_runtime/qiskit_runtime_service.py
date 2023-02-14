@@ -132,6 +132,7 @@ class QiskitRuntimeService(Provider):
         auth: Optional[AccountType] = None,
         token: Optional[str] = None,
         url: Optional[str] = None,
+        filename: Optional[str] = None,
         name: Optional[str] = None,
         instance: Optional[str] = None,
         proxies: Optional[dict] = None,
@@ -186,6 +187,7 @@ class QiskitRuntimeService(Provider):
             instance=instance,
             channel=channel,
             auth=auth,
+            filename = filename,
             name=name,
             proxies=ProxyConfiguration(**proxies) if proxies else None,
             verify=verify,
@@ -245,6 +247,7 @@ class QiskitRuntimeService(Provider):
         instance: Optional[str] = None,
         channel: Optional[ChannelType] = None,
         auth: Optional[AccountType] = None,
+        filename: Optional[str] = None,
         name: Optional[str] = None,
         proxies: Optional[ProxyConfiguration] = None,
         verify: Optional[bool] = None,
@@ -252,6 +255,7 @@ class QiskitRuntimeService(Provider):
         """Discover account."""
         account = None
         verify_ = verify or True
+        filename = filename
         if name:
             if any([auth, channel, token, url]):
                 logger.warning(
@@ -259,7 +263,7 @@ class QiskitRuntimeService(Provider):
                     "'channel', 'token' or 'url' are ignored.",
                     name,
                 )
-            account = AccountManager.get(name=name)
+            account = AccountManager.get(name=name, filename=filename)
         elif auth or channel:
             if auth and auth not in ["legacy", "cloud"]:
                 raise ValueError("'auth' can only be 'cloud' or 'legacy'")
@@ -280,16 +284,14 @@ class QiskitRuntimeService(Provider):
                     logger.warning(
                         "Loading default %s account. Input 'url' is ignored.", channel
                     )
-                account = AccountManager.get(channel=channel)
+                account = AccountManager.get(channel=channel, filename=filename)
         elif any([token, url]):
             # Let's not infer based on these attributes as they may change in the future.
             raise ValueError(
                 "'channel' or 'auth' is required if 'token', or 'url' is specified but 'name' is not."
             )
-
         if account is None:
-            account = AccountManager.get()
-
+            account = AccountManager.get(filename=filename)
         if instance:
             account.instance = instance
         if proxies:
@@ -303,7 +305,6 @@ class QiskitRuntimeService(Provider):
 
         # ensure account is valid, fail early if not
         account.validate()
-
         return account
 
     def _discover_cloud_backends(self) -> Dict[str, "ibm_backend.IBMBackend"]:
@@ -604,6 +605,7 @@ class QiskitRuntimeService(Provider):
         instance: Optional[str] = None,
         channel: Optional[ChannelType] = None,
         auth: Optional[AccountType] = None,
+        filename: Optional[str] = None,
         name: Optional[str] = None,
         proxies: Optional[dict] = None,
         verify: Optional[bool] = None,
@@ -637,6 +639,7 @@ class QiskitRuntimeService(Provider):
             url=url,
             instance=instance,
             channel=channel,
+            filename = filename,
             name=name,
             proxies=ProxyConfiguration(**proxies) if proxies else None,
             verify=verify,

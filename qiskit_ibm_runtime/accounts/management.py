@@ -43,6 +43,7 @@ class AccountManager:
         url: Optional[str] = None,
         instance: Optional[str] = None,
         channel: Optional[ChannelType] = None,
+        filename: Optional[str] = None,
         name: Optional[str] = _DEFAULT_ACCOUNT_NAME,
         proxies: Optional[ProxyConfiguration] = None,
         verify: Optional[bool] = None,
@@ -51,8 +52,10 @@ class AccountManager:
         """Save account on disk."""
         cls.migrate()
         name = name or cls._get_default_account_name(channel)
+        filename = filename if filename else _DEFAULT_ACCOUNT_CONFIG_JSON_FILE
+        filename = os.path.expanduser(filename)
         return save_config(
-            filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE,
+            filename= filename,
             name=name,
             overwrite=overwrite,
             config=Account(
@@ -120,7 +123,10 @@ class AccountManager:
 
     @classmethod
     def get(
-        cls, name: Optional[str] = None, channel: Optional[ChannelType] = None
+        cls,
+        filename: Optional[str] = None,
+        name: Optional[str] = None,
+        channel: Optional[ChannelType] = None
     ) -> Optional[Account]:
         """Read account from disk.
 
@@ -135,9 +141,11 @@ class AccountManager:
             AccountNotFoundError: If the input value cannot be found on disk.
         """
         cls.migrate()
+        filename = filename if filename else _DEFAULT_ACCOUNT_CONFIG_JSON_FILE
+        filename = os.path.expanduser(filename)
         if name:
             saved_account = read_config(
-                filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE, name=name
+                filename=filename, name=name
             )
             if not saved_account:
                 raise AccountNotFoundError(
@@ -152,14 +160,14 @@ class AccountManager:
 
         if channel:
             saved_account = read_config(
-                filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE,
+                filename=filename,
                 name=cls._get_default_account_name(channel=channel),
             )
             if saved_account is None:
                 raise AccountNotFoundError(f"No default {channel} account saved.")
             return Account.from_saved_format(saved_account)
 
-        all_config = read_config(filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE)
+        all_config = read_config(filename=filename)
         for channel_type in _CHANNEL_TYPES:
             account_name = cls._get_default_account_name(channel=channel_type)
             if account_name in all_config:

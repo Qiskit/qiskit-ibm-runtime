@@ -358,24 +358,42 @@ class TestAccountManager(IBMTestCase):
         # - account to save
         # - the name passed to AccountManager.save
         # - the name passed to AccountManager.get
+        user_filename = os.path.expanduser("~/temp_qiskit_account.json")
         sub_tests = [
             # verify accounts can be saved and retrieved via custom names
-            (_TEST_IBM_QUANTUM_ACCOUNT, "acct-1", "acct-1"),
-            (_TEST_IBM_CLOUD_ACCOUNT, "acct-2", "acct-2"),
+            (_TEST_IBM_QUANTUM_ACCOUNT, None, "acct-1", "acct-1"),
+            (_TEST_IBM_CLOUD_ACCOUNT, None, "acct-2", "acct-2"),
             # verify default account name handling for ibm_cloud accounts
-            (_TEST_IBM_CLOUD_ACCOUNT, None, _DEFAULT_ACCOUNT_NAME_IBM_CLOUD),
-            (_TEST_IBM_CLOUD_ACCOUNT, None, None),
+            (_TEST_IBM_CLOUD_ACCOUNT, None, None, _DEFAULT_ACCOUNT_NAME_IBM_CLOUD),
+            (_TEST_IBM_CLOUD_ACCOUNT, None, None, None),
             # verify default account name handling for ibm_quantum accounts
             (
                 _TEST_IBM_QUANTUM_ACCOUNT,
                 None,
+                None,
                 _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM,
             ),
             # verify account override
-            (_TEST_IBM_QUANTUM_ACCOUNT, "acct", "acct"),
-            (_TEST_IBM_CLOUD_ACCOUNT, "acct", "acct"),
+            (_TEST_IBM_QUANTUM_ACCOUNT, None, "acct", "acct"),
+            (_TEST_IBM_CLOUD_ACCOUNT, None, "acct", "acct"),
+            # same with filename
+            (_TEST_IBM_QUANTUM_ACCOUNT, user_filename, "acct-1", "acct-1"),
+            (_TEST_IBM_CLOUD_ACCOUNT, user_filename, "acct-2", "acct-2"),
+            # verify default account name handling for ibm_cloud accounts
+            (_TEST_IBM_CLOUD_ACCOUNT, user_filename, None, _DEFAULT_ACCOUNT_NAME_IBM_CLOUD),
+            (_TEST_IBM_CLOUD_ACCOUNT, user_filename, None, None),
+            # verify default account name handling for ibm_quantum accounts
+            (
+                _TEST_IBM_QUANTUM_ACCOUNT,
+                user_filename,
+                None,
+                _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM,
+            ),
+            # verify account override
+            (_TEST_IBM_QUANTUM_ACCOUNT, user_filename, "acct", "acct"),
+            (_TEST_IBM_CLOUD_ACCOUNT, user_filename, "acct", "acct"),
         ]
-        for account, name_save, name_get in sub_tests:
+        for account, file_name, name_save, name_get in sub_tests:
             with self.subTest(
                 f"for account type '{account.channel}' "
                 f"using `save(name={name_save})` and `get(name={name_get})`"
@@ -387,10 +405,11 @@ class TestAccountManager(IBMTestCase):
                     channel=account.channel,
                     proxies=account.proxies,
                     verify=account.verify,
+                    filename=file_name,
                     name=name_save,
                     overwrite=True,
                 )
-                self.assertEqual(account, AccountManager.get(name=name_get))
+                self.assertEqual(account, AccountManager.get(filename=file_name, name=name_get))
 
     @temporary_account_config_file(
         contents=json.dumps(
