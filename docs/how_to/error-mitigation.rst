@@ -193,7 +193,7 @@ As a part of the beta release of the resilience options, users will be able conf
 |                                                               | ``CxAmplifier``                  | Amplifies noise of all CNOT gates by performing local  |
 |                                                               |                                  | gate folding.                                          |
 |                                                               +----------------------------------+--------------------------------------------------------+
-|                                                               | ``LocalFoldingAmplifer``         | Amplifies noise of all gates by performing local       |
+|                                                               | ``LocalFoldingAmplifier``        | Amplifies noise of all gates by performing local       |
 |                                                               |                                  | gate folding.                                          |
 |                                                               +----------------------------------+--------------------------------------------------------+
 |                                                               | ``GlobalFoldingAmplifier``       | Amplifies noise of the input circuit by performing     |
@@ -224,7 +224,7 @@ Example of adding ``resilience_options`` into your estimator session
     options.optimization_level = 3
     options.resilience_level = 2
     options.resilience.noise_factors = (1, 2, 3, 4)
-    options.resilience.noise_amplifer = 'CxAmplifer'
+    options.resilience.noise_amplifier = 'CxAmplifier'
     options.resilience.extrapolator = 'QuadraticExtrapolator'
 
 

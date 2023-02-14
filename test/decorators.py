@@ -23,6 +23,20 @@ from qiskit_ibm_runtime import QiskitRuntimeService
 from .unit.mock.fake_runtime_service import FakeRuntimeService
 
 
+def quantum_only(func):
+    """Decorator that runs a test using only ibm_quantum services."""
+
+    @wraps(func)
+    def _wrapper(self, service):
+        if service._channel != "ibm_quantum":
+            raise SkipTest(
+                f"Skipping integration test. {self} does not support channel type {service._channel}"
+            )
+        func(self, service)
+
+    return _wrapper
+
+
 def run_quantum_and_cloud_fake(func):
     """Decorator that runs a test using both quantum and cloud fake services."""
 
