@@ -20,6 +20,7 @@ from concurrent import futures
 import traceback
 import queue
 from datetime import datetime
+import requests
 
 from qiskit.providers.backend import Backend
 from qiskit.providers.jobstatus import JobStatus, JOB_FINAL_STATES
@@ -209,6 +210,14 @@ class RuntimeJob(Job):
                     f"Unable to retrieve job result. " f"{error_message}"
                 )
             result_raw = self._api_client.job_results(job_id=self.job_id())
+
+            if "url" in result_raw:
+                cosJSON = json.loads(result_raw)
+                if "url" in cosJSON:
+                    url = cosJSON['url']
+                    response = requests.get(url)
+                    result_raw = response.content
+                    
             self._results = _decoder.decode(result_raw) if result_raw else None
         return self._results
 
