@@ -101,8 +101,8 @@ class TestPrimitives(IBMTestCase):
                     inst = cls(session=MagicMock(spec=MockSession), options=options)
                     expected = asdict(Options())
                     self._update_dict(expected, copy.deepcopy(options))
-                    # for resilience_level and optimization_level, if given by the user, maintain value. Otherwise,
-                    # set default as given in Sampler/Estimator
+                    # for resilience_level and optimization_level, if given by the user,
+                    # maintain value. Otherwise, set default as given in Sampler/Estimator
                     if not options.get("resilience_level"):
                         expected["resilience_level"] = 0
                     if not options.get("optimization_level"):

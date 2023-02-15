@@ -206,8 +206,8 @@ class Estimator(BaseEstimator):
 
         if _options.resilience_level is None:
             if _options.simulator and (
-                    not hasattr(_options.simulator, "noise_model")
-                    or asdict(_options.simulator)["noise_model"] is None
+                not hasattr(_options.simulator, "noise_model")
+                or asdict(_options.simulator)["noise_model"] is None
             ):
                 _options.resilience_level = 0
             else:
