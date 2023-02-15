@@ -258,9 +258,9 @@ class QiskitRuntimeService(Provider):
         if name:
             if any([auth, channel, token, url]):
                 logger.warning(
-                    "Loading account with name %s. Any input 'auth', "
+                    "Loading account from file %s with name %s. Any input 'auth', "
                     "'channel', 'token' or 'url' are ignored.",
-                    name,
+                    filename, name,
                 )
             account = AccountManager.get(name=name, filename=filename)
         elif auth or channel:
@@ -283,7 +283,7 @@ class QiskitRuntimeService(Provider):
                     logger.warning(
                         "Loading default %s account. Input 'url' is ignored.", channel
                     )
-                account = AccountManager.get(channel=channel, filename=filename)
+                account = AccountManager.get(name=name, channel=channel, filename=filename)
         elif any([token, url]):
             # Let's not infer based on these attributes as they may change in the future.
             raise ValueError(
@@ -301,7 +301,6 @@ class QiskitRuntimeService(Provider):
         # resolve CRN if needed
         if account.channel == "ibm_cloud":
             self._resolve_crn(account)
-
         # ensure account is valid, fail early if not
         account.validate()
         return account
@@ -639,7 +638,6 @@ class QiskitRuntimeService(Provider):
         if auth:
             QiskitRuntimeService._auth_warning()
             channel = channel or QiskitRuntimeService._get_channel_for_auth(auth)
-
         AccountManager.save(
             token=token,
             url=url,
