@@ -201,9 +201,16 @@ class Estimator(BaseEstimator):
                 or asdict(_options.simulator)["noise_model"] is None
             ):
                 _options.optimization_level = 1
-                _options.resilience_level = 0
             else:
                 _options.optimization_level = Options._DEFAULT_OPTIMIZATION_LEVEL
+
+        if _options.resilience_level is None:
+            if _options.simulator and (
+                    not hasattr(_options.simulator, "noise_model")
+                    or asdict(_options.simulator)["noise_model"] is None
+            ):
+                _options.resilience_level = 0
+            else:
                 _options.resilience_level = Options._DEFAULT_RESILIENCE_LEVEL
 
         self._options: dict = asdict(_options)

@@ -86,7 +86,7 @@ class Options:
     _DEFAULT_OPTIMIZATION_LEVEL = 3
     _DEFAULT_RESILIENCE_LEVEL = 1
     optimization_level: Optional[int] = None
-    resilience_level: int = 1
+    resilience_level: Optional[int] = None
     max_execution_time: Optional[int] = None
     transpilation: Union[TranspilationOptions, Dict] = field(
         default_factory=TranspilationOptions

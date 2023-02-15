@@ -91,6 +91,7 @@ class TestPrimitives(IBMTestCase):
                 "transpilation": {"initial_layout": [1, 2]},
                 "execution": {"shots": 100, "init_qubits": True},
             },
+            {"optimization_level": 2},
             {"transpilation": {}},
         ]
         primitives = [Sampler, Estimator]
@@ -100,8 +101,12 @@ class TestPrimitives(IBMTestCase):
                     inst = cls(session=MagicMock(spec=MockSession), options=options)
                     expected = asdict(Options())
                     self._update_dict(expected, copy.deepcopy(options))
-                    expected["resilience_level"] = 0
-                    expected["optimization_level"] = 1
+                    # for resilience_level and optimization_level, if given by the user, maintain value. Otherwise,
+                    # set default as given in Sampler/Estimator
+                    if not options.get("resilience_level"):
+                        expected["resilience_level"] = 0
+                    if not options.get("optimization_level"):
+                        expected["optimization_level"] = 1
                     self.assertDictEqual(expected, inst.options.__dict__)
 
     def test_backend_in_options(self):
@@ -295,10 +300,6 @@ class TestPrimitives(IBMTestCase):
                     else:
                         _, kwargs = session.run.call_args
                         inputs = kwargs["inputs"]
-                    if expected.get("resilience_level"):
-                        expected["resilience_level"] = 0
-                    if expected.get("resilience_settings"):
-                        expected["resilience_settings"] = {"level": 0}
                     self._assert_dict_partially_equal(inputs, expected)
 
     def test_run_updated_default_options(self):
