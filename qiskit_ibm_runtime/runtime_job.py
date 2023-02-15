@@ -210,11 +210,11 @@ class RuntimeJob(Job):
                     f"Unable to retrieve job result. " f"{error_message}"
                 )
             result_raw = self._api_client.job_results(job_id=self.job_id())
-
+            # TODO: productize proof-of-concept
             if "url" in result_raw:
-                cosJSON = json.loads(result_raw)
-                if "url" in cosJSON:
-                    url = cosJSON['url']
+                result_url_json = json.loads(result_raw)
+                if "url" in result_url_json:
+                    url = result_url_json['url']
                     response = requests.get(url)
                     result_raw = response.content
                     
@@ -499,6 +499,13 @@ class RuntimeJob(Job):
                 if response == self._POISON_PILL:
                     self._empty_result_queue(result_queue)
                     return
+                # TODO: productize proof-of-concept
+                if "url" in response:
+                    result_url_json = json.loads(response)
+                    if "url" in result_url_json:
+                        url = result_url_json['url']
+                        resultResponse = requests.get(url)
+                        response = resultResponse.content                
                 user_callback(self.job_id(), _decoder.decode(response))
             except Exception:  # pylint: disable=broad-except
                 logger.warning(
