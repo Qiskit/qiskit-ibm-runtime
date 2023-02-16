@@ -81,6 +81,7 @@ _TEST_CLOUD_ACCOUNT = {
 }
 _TEST_FILENAME = os.path.expanduser("~/temp_qiskit_account.json")
 
+
 class TestAccount(IBMTestCase):
     """Tests for Account class."""
 
@@ -600,11 +601,19 @@ class TestAccountManager(IBMTestCase):
         filename = "~/account_to_delete.json"
         name = "key1"
         channel = "ibm_quantum"
-        AccountManager.save(channel=channel, filename=filename, name=name, token="temp_token")
-        self.assertTrue(AccountManager.delete(channel = "ibm_quantum", filename=filename, name=name))
-        self.assertFalse(AccountManager.delete(channel = "ibm_quantum", filename=filename, name=name))
+        AccountManager.save(
+            channel=channel, filename=filename, name=name, token="temp_token"
+        )
+        self.assertTrue(
+            AccountManager.delete(channel="ibm_quantum", filename=filename, name=name)
+        )
+        self.assertFalse(
+            AccountManager.delete(channel="ibm_quantum", filename=filename, name=name)
+        )
 
-        self.assertTrue(len(AccountManager.list(channel = "ibm_quantum", filename=filename)) == 0)
+        self.assertTrue(
+            len(AccountManager.list(channel="ibm_quantum", filename=filename)) == 0
+        )
 
     def test_account_with_filename(self):
         """Test saving an account to a given filename retrieving it."""
