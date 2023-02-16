@@ -55,7 +55,7 @@ The following topics are use cases with code migration examples:
 
 
 * `Update parameter values while running <migrate-update-parm.html>`__
-* `End-to-end example <migrate-e2e.html>`__
+* `Algorithm tuning options (shots, transpilation, error mitigation) <migrate-e2e.html>`__
 
 .. _why-migrate:
 
