@@ -93,7 +93,7 @@ Next Steps
     Use Sampler to design an algorithm <migrate/migrate-sampler>
     Update parameter values while running <migrate/migrate-update-parm>
     Work with updated Qiskit algorithms <migrate/migrate-qiskit-alg>
-    Algorithm tuning options (shots, transpilation, error mitigation) <migrate/migrate-e2e> 
+    Algorithm tuning options (shots, transpilation, error mitigation) <migrate/tuning> 
 
 .. toctree::
    :maxdepth: 1
