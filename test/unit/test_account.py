@@ -79,7 +79,7 @@ _TEST_CLOUD_ACCOUNT = {
         "urls": {"https": "127.0.0.1"},
     },
 }
-
+_TEST_FILENAME = os.path.expanduser("~/temp_qiskit_account.json")
 
 class TestAccount(IBMTestCase):
     """Tests for Account class."""
@@ -184,17 +184,34 @@ class TestAccountManager(IBMTestCase):
     )
     def test_save_without_overwrite(self):
         """Test to overwrite an existing account without setting overwrite=True."""
-        for filename in ["~/temp_qiskit_account.json", None]:
-            with self.assertRaises(AccountAlreadyExistsError):
-                AccountManager.save(
-                    filename=filename,
-                    name="conflict",
-                    token=_TEST_IBM_CLOUD_ACCOUNT.token,
-                    url=_TEST_IBM_CLOUD_ACCOUNT.url,
-                    instance=_TEST_IBM_CLOUD_ACCOUNT.instance,
-                    channel="ibm_cloud",
-                    overwrite=False,
-                )
+        with self.assertRaises(AccountAlreadyExistsError):
+            AccountManager.save(
+                name="conflict",
+                token=_TEST_IBM_CLOUD_ACCOUNT.token,
+                url=_TEST_IBM_CLOUD_ACCOUNT.url,
+                instance=_TEST_IBM_CLOUD_ACCOUNT.instance,
+                channel="ibm_cloud",
+                overwrite=False,
+            )
+        AccountManager.save(
+            filename=_TEST_FILENAME,
+            name="conflict",
+            token=_TEST_IBM_CLOUD_ACCOUNT.token,
+            url=_TEST_IBM_CLOUD_ACCOUNT.url,
+            instance=_TEST_IBM_CLOUD_ACCOUNT.instance,
+            channel="ibm_cloud",
+            overwrite=True,
+        )
+        with self.assertRaises(AccountAlreadyExistsError):
+            AccountManager.save(
+                filename=_TEST_FILENAME,
+                name="conflict",
+                token=_TEST_IBM_CLOUD_ACCOUNT.token,
+                url=_TEST_IBM_CLOUD_ACCOUNT.url,
+                instance=_TEST_IBM_CLOUD_ACCOUNT.instance,
+                channel="ibm_cloud",
+                overwrite=False,
+            )
 
     # TODO remove test when removing auth parameter
     @temporary_account_config_file(
@@ -360,7 +377,7 @@ class TestAccountManager(IBMTestCase):
         # - account to save
         # - the name passed to AccountManager.save
         # - the name passed to AccountManager.get
-        user_filename = os.path.expanduser("~/temp_qiskit_account.json")
+        user_filename = _TEST_FILENAME
         sub_tests = [
             # verify accounts can be saved and retrieved via custom names
             (_TEST_IBM_QUANTUM_ACCOUNT, None, "acct-1", "acct-1"),
@@ -553,7 +570,7 @@ class TestAccountManager(IBMTestCase):
         with self.subTest("delete default ibm_cloud account"):
             self.assertTrue(AccountManager.delete())
 
-        self.assertTrue(len(AccountManager.list()) == 0)
+            self.assertTrue(len(AccountManager.list()) == 0)
 
     @temporary_account_config_file(
         contents={
@@ -577,9 +594,21 @@ class TestAccountManager(IBMTestCase):
 
         self.assertTrue(len(AccountManager.list()) == 0)
 
+    def test_delete_filename(self):
+        """Test delete accounts with filename parameter."""
+
+        filename = "~/account_to_delete.json"
+        name = "key1"
+        channel = "ibm_quantum"
+        AccountManager.save(channel=channel, filename=filename, name=name, token="temp_token")
+        self.assertTrue(AccountManager.delete(channel = "ibm_quantum", filename=filename, name=name))
+        self.assertFalse(AccountManager.delete(channel = "ibm_quantum", filename=filename, name=name))
+
+        self.assertTrue(len(AccountManager.list(channel = "ibm_quantum", filename=filename)) == 0)
+
     def test_account_with_filename(self):
         """Test saving an account to a given filename retrieving it."""
-        user_filename = os.path.expanduser("~/temp_qiskit_account.json")
+        user_filename = _TEST_FILENAME
         account_name = "my_account"
         dummy_token = "dummy_token"
         AccountManager.save(

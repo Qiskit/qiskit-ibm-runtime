@@ -156,12 +156,6 @@ class AccountManager:
             return Account.from_saved_format(saved_account)
 
         channel_ = channel or os.getenv("QISKIT_IBM_CHANNEL") or _DEFAULT_CHANNEL_TYPE
-        if filename:
-            saved_account = read_config(
-                filename=filename,
-                name=cls._get_default_account_name(channel=channel),
-            )
-            return Account.from_saved_format(saved_account)
 
         env_account = cls._from_env_variables(channel_)
         if env_account is not None:
