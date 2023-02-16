@@ -294,8 +294,10 @@ class QiskitRuntimeService(Provider):
             raise ValueError(
                 "'channel' or 'auth' is required if 'token', or 'url' is specified but 'name' is not."
             )
+
         if account is None:
             account = AccountManager.get(filename=filename)
+
         if instance:
             account.instance = instance
         if proxies:
@@ -306,8 +308,10 @@ class QiskitRuntimeService(Provider):
         # resolve CRN if needed
         if account.channel == "ibm_cloud":
             self._resolve_crn(account)
+
         # ensure account is valid, fail early if not
         account.validate()
+
         return account
 
     def _discover_cloud_backends(self) -> Dict[str, "ibm_backend.IBMBackend"]:
@@ -644,6 +648,7 @@ class QiskitRuntimeService(Provider):
         if auth:
             QiskitRuntimeService._auth_warning()
             channel = channel or QiskitRuntimeService._get_channel_for_auth(auth)
+
         AccountManager.save(
             token=token,
             url=url,

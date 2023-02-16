@@ -616,7 +616,7 @@ class TestAccountManager(IBMTestCase):
         )
 
     def test_account_with_filename(self):
-        """Test saving an account to a given filename retrieving it."""
+        """Test saving an account to a given filename and retrieving it."""
         user_filename = _TEST_FILENAME
         account_name = "my_account"
         dummy_token = "dummy_token"
