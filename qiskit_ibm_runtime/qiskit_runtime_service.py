@@ -159,6 +159,8 @@ class QiskitRuntimeService(Provider):
             url: The API URL.
                 Defaults to https://cloud.ibm.com (ibm_cloud) or
                 https://auth.quantum-computing.ibm.com/api (ibm_quantum).
+            filename: Full path of the file where the account is created.
+                Default: _DEFAULT_ACCOUNT_CONFIG_JSON_FILE
             name: Name of the account to load.
             instance: The service instance to use.
                 For ``ibm_cloud`` runtime, this is the Cloud Resource Name (CRN) or the service name.
@@ -260,7 +262,8 @@ class QiskitRuntimeService(Provider):
                 logger.warning(
                     "Loading account from file %s with name %s. Any input 'auth', "
                     "'channel', 'token' or 'url' are ignored.",
-                    filename, name,
+                    filename,
+                    name,
                 )
             account = AccountManager.get(name=name, filename=filename)
         elif auth or channel:
@@ -283,7 +286,9 @@ class QiskitRuntimeService(Provider):
                     logger.warning(
                         "Loading default %s account. Input 'url' is ignored.", channel
                     )
-                account = AccountManager.get(name=name, channel=channel, filename=filename)
+                account = AccountManager.get(
+                    name=name, channel=channel, filename=filename
+                )
         elif any([token, url]):
             # Let's not infer based on these attributes as they may change in the future.
             raise ValueError(
@@ -626,6 +631,7 @@ class QiskitRuntimeService(Provider):
             instance: The CRN (ibm_cloud) or hub/group/project (ibm_quantum).
             channel: Channel type. `ibm_cloud` or `ibm_quantum`.
             auth: (DEPRECATED, use `channel` instead) Authentication type. `cloud` or `legacy`.
+            filename: Full path of the file where the account is saved.
             name: Name of the account to save.
             proxies: Proxy configuration. Supported optional keys are
                 ``urls`` (a dictionary mapping protocol or protocol and host to the URL of the proxy,

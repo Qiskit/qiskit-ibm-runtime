@@ -19,7 +19,6 @@ import uuid
 from typing import Any
 from unittest import skipIf
 
-from qiskit_ibm_runtime import QiskitRuntimeService
 from qiskit_ibm_runtime.accounts import (
     AccountManager,
     Account,
@@ -174,6 +173,7 @@ class TestAccount(IBMTestCase):
                     ).validate()
                 self.assertIn("Invalid proxy configuration", str(err.exception))
 
+
 # NamedTemporaryFiles not supported in Windows
 @skipIf(os.name == "nt", "Test not supported in Windows")
 class TestAccountManager(IBMTestCase):
@@ -187,14 +187,14 @@ class TestAccountManager(IBMTestCase):
         for filename in ["~/temp_qiskit_account.json", None]:
             with self.assertRaises(AccountAlreadyExistsError):
                 AccountManager.save(
-                filename=filename,
-                name="conflict",
-                token=_TEST_IBM_CLOUD_ACCOUNT.token,
-                url=_TEST_IBM_CLOUD_ACCOUNT.url,
-                instance=_TEST_IBM_CLOUD_ACCOUNT.instance,
-                channel="ibm_cloud",
-                overwrite=False,
-            )
+                    filename=filename,
+                    name="conflict",
+                    token=_TEST_IBM_CLOUD_ACCOUNT.token,
+                    url=_TEST_IBM_CLOUD_ACCOUNT.url,
+                    instance=_TEST_IBM_CLOUD_ACCOUNT.instance,
+                    channel="ibm_cloud",
+                    overwrite=False,
+                )
 
     # TODO remove test when removing auth parameter
     @temporary_account_config_file(
@@ -578,16 +578,22 @@ class TestAccountManager(IBMTestCase):
         self.assertTrue(len(AccountManager.list()) == 0)
 
     def test_account_with_filename(self):
+        """Test saving an account to a given filename retrieving it."""
         user_filename = os.path.expanduser("~/temp_qiskit_account.json")
         account_name = "my_account"
         dummy_token = "dummy_token"
-        AccountManager.save(channel="ibm_quantum",
-                            filename=user_filename,
-                            name=account_name,
-                            overwrite=True,
-                            token=dummy_token)
-        account = AccountManager.get(channel="ibm_quantum", filename=user_filename, name=account_name)
+        AccountManager.save(
+            channel="ibm_quantum",
+            filename=user_filename,
+            name=account_name,
+            overwrite=True,
+            token=dummy_token,
+        )
+        account = AccountManager.get(
+            channel="ibm_quantum", filename=user_filename, name=account_name
+        )
         self.assertEqual(account.token, dummy_token)
+
 
 MOCK_PROXY_CONFIG_DICT = {
     "urls": {"https": "127.0.0.1", "username_ntlm": "", "password_ntlm": ""}

@@ -134,6 +134,7 @@ class AccountManager:
         """Read account from disk.
 
         Args:
+            filename: Full path of the file from which to get the account.
             name: Account name. Takes precedence if `auth` is also specified.
             channel: Channel type.
 
@@ -156,11 +157,11 @@ class AccountManager:
 
         channel_ = channel or os.getenv("QISKIT_IBM_CHANNEL") or _DEFAULT_CHANNEL_TYPE
         if filename:
-           saved_account = read_config(
+            saved_account = read_config(
                 filename=filename,
                 name=cls._get_default_account_name(channel=channel),
             )
-           return Account.from_saved_format(saved_account)
+            return Account.from_saved_format(saved_account)
 
         env_account = cls._from_env_variables(channel_)
         if env_account is not None:
@@ -228,7 +229,7 @@ class AccountManager:
         )
 
     @classmethod
-    def migrate(cls, filename:Optional[str] = None) -> None:
+    def migrate(cls, filename: Optional[str] = None) -> None:
         """Migrate accounts on disk by removing `auth` and adding `channel`."""
         filename = filename if filename else _DEFAULT_ACCOUNT_CONFIG_JSON_FILE
         filename = os.path.expanduser(filename)
