@@ -30,8 +30,7 @@ your algorithm is based on:
 * If it's an **expectation value** - you will need an ``Estimator``.
 * If it's a **probability distribution** (from sampling the device) - you will need a ``Sampler``.
 
-Most algorithms can be rewritten to use one of these two units of information. Once you know which primitive to use,
- identify where in algorithm the backend is accessed (the call to ``backend.run()``).
+Most algorithms can be rewritten to use one of these two units of information. Once you know which primitive to use, identify where in algorithm the backend is accessed (the call to ``backend.run()``).
 Next, you can replace this call with the respective primitive call, as shown in the following examples.
 
 .. note::
