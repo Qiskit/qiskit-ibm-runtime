@@ -84,7 +84,7 @@ If you do not specify a timeout value, it is set to the initial job's maximum ex
    * The system limit (8 hours for physical systems).
    * The ``max_execution_time`` defined by the program.
 
-After this time limit is reached, the session is permanently closed.
+After this time limit is reached, the session is permanently closed and any queued jobs are put into an error state.
 
 Additionally, there is an *interactive* timeout value. If there are no session jobs queued within that window, the session is temporarily deactivated and normal job selection resumes. After a session is deactivated, a subsequent job could start an additional session.  Jobs for the new session would then take priority until the new session deactivates or is closed. After the new session becomes inactive, if the job scheduler gets a job from the original session and its maximum timeout value has not been reached, the session is reactivated until its maximum timeout value is reached.
 
