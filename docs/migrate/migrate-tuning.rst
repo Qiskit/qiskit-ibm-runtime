@@ -14,8 +14,7 @@ to tune certain primitive options. This section describes some of the common set
 1. Shots
 ~~~~~~~~
 
-For some algorithms, setting a specific number of shots is a core part of their routines. Before the primitives,
- shots could be set during the call to ``backend.run(shots=1024)``. Now, that setting is part of the execution
+For some algorithms, setting a specific number of shots is a core part of their routines. Previously, shots could be set during the call to ``backend.run(shots=1024)``. Now, that setting is part of the execution
 options ("second level option"). This can be done during the primitive setup:
 
 .. code-block:: python
