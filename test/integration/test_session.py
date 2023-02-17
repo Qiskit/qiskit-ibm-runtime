@@ -71,3 +71,4 @@ class TestIntegrationSession(IBMIntegrationTestCase):
             self.assertEqual(result.metadata[0]["shots"], 400)
             self.assertAlmostEqual(result.quasi_dists[0][3], 0.5, delta=0.1)
             self.assertAlmostEqual(result.quasi_dists[0][0], 0.5, delta=0.1)
+            session.close()

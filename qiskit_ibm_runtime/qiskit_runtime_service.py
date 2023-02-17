@@ -109,6 +109,7 @@ class QiskitRuntimeService(Provider):
                 circuits=[psi], observables=[H1], parameter_values=[theta]
             )
             print(f"Estimator results: {job.result()}")
+            session.close()
 
     The example above uses the dedicated :class:`~qiskit_ibm_runtime.Sampler`
     and :class:`~qiskit_ibm_runtime.Estimator` classes. You can also
@@ -448,7 +449,7 @@ class QiskitRuntimeService(Provider):
     def _get_hgp(
         self,
         instance: Optional[str] = None,
-        backend_name: Optional[str] = None,
+        backend_name: Optional[Any] = None,
     ) -> HubGroupProject:
         """Return an instance of `HubGroupProject`.
 
@@ -488,10 +489,17 @@ class QiskitRuntimeService(Provider):
             if hgp.backend(backend_name):
                 return hgp
 
-        raise QiskitBackendNotFoundError(
+        error_message = (
             f"Backend {backend_name} cannot be found in any "
             f"hub/group/project for this account."
         )
+        if not isinstance(backend_name, str):
+            error_message += (
+                f" {backend_name} is of type {type(backend_name)} but should "
+                f"instead be initialized through the {self}."
+            )
+
+        raise QiskitBackendNotFoundError(error_message)
 
     def _discover_backends(self) -> None:
         """Discovers the remote backends for this account, if not already known."""
@@ -1430,6 +1438,8 @@ class QiskitRuntimeService(Provider):
             program_id=raw_data.get("program", {}).get("id", ""),
             params=decoded,
             creation_date=raw_data.get("created", None),
+            session_id=raw_data.get("session_id"),
+            tags=raw_data.get("tags"),
         )
 
     def least_busy(

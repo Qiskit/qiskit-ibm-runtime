@@ -49,8 +49,8 @@ class Sampler(BaseSampler):
 
     The :meth:`run` method can be used to submit circuits and parameters to the Sampler primitive.
 
-    You are encourage to use :class:`~qiskit_ibm_runtime.Session` to open a session,
-    during which you can invoke one or more primitive programs. Jobs sumitted within a session
+    You are encouraged to use :class:`~qiskit_ibm_runtime.Session` to open a session,
+    during which you can invoke one or more primitive programs. Jobs submitted within a session
     are prioritized by the scheduler, and data is cached for efficiency.
 
     Example::
@@ -67,6 +67,7 @@ class Sampler(BaseSampler):
             job = sampler.run(bell, shots=1024)
             print(f"Job ID: {job.job_id()}")
             print(f"Job result: {job.result()}")
+            session.close()
     """
 
     _PROGRAM_ID = "sampler"
@@ -168,6 +169,25 @@ class Sampler(BaseSampler):
         _options.transpilation.skip_transpilation = (  # type: ignore[union-attr]
             skip_transpilation
         )
+
+        if _options.optimization_level is None:
+            if _options.simulator and (
+                not hasattr(_options.simulator, "noise_model")
+                or asdict(_options.simulator)["noise_model"] is None
+            ):
+                _options.optimization_level = 1
+            else:
+                _options.optimization_level = Options._DEFAULT_OPTIMIZATION_LEVEL
+
+        if _options.resilience_level is None:
+            if _options.simulator and (
+                not hasattr(_options.simulator, "noise_model")
+                or asdict(_options.simulator)["noise_model"] is None
+            ):
+                _options.resilience_level = 0
+            else:
+                _options.resilience_level = Options._DEFAULT_RESILIENCE_LEVEL
+
         self._options: dict = asdict(_options)
 
         self._initial_inputs = {"circuits": circuits, "parameters": parameters}
