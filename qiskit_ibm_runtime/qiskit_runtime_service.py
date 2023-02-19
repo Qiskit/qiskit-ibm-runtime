@@ -258,13 +258,21 @@ class QiskitRuntimeService(Provider):
         account = None
         verify_ = verify or True
         if name:
-            if any([auth, channel, token, url]):
-                logger.warning(
-                    "Loading account from file %s with name %s. Any input 'auth', "
-                    "'channel', 'token' or 'url' are ignored.",
-                    filename,
-                    name,
-                )
+            if filename:
+                if any([auth, channel, token, url]):
+                    logger.warning(
+                        "Loading account from file %s with name %s. Any input 'auth', "
+                        "'channel', 'token' or 'url' are ignored.",
+                        filename,
+                        name,
+                    )
+            else:
+                if any([auth, channel, token, url]):
+                    logger.warning(
+                        "Loading account with name %s. Any input 'auth', "
+                        "'channel', 'token' or 'url' are ignored.",
+                        name,
+                    )
             account = AccountManager.get(filename=filename, name=name)
         elif auth or channel:
             if auth and auth not in ["legacy", "cloud"]:
