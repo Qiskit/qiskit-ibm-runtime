@@ -79,8 +79,8 @@ _TEST_CLOUD_ACCOUNT = {
         "urls": {"https": "127.0.0.1"},
     },
 }
-_TEST_FILENAME = os.path.expanduser("~/temp_qiskit_account.json")
 
+_TEST_FILENAME = "/tmp/temp_qiskit_account.json"
 
 class TestAccount(IBMTestCase):
     """Tests for Account class."""
@@ -173,7 +173,6 @@ class TestAccount(IBMTestCase):
                         url=self.dummy_ibm_cloud_url,
                     ).validate()
                 self.assertIn("Invalid proxy configuration", str(err.exception))
-
 
 # NamedTemporaryFiles not supported in Windows
 @skipIf(os.name == "nt", "Test not supported in Windows")
@@ -396,7 +395,7 @@ class TestAccountManager(IBMTestCase):
             # verify account override
             (_TEST_IBM_QUANTUM_ACCOUNT, None, "acct", "acct"),
             (_TEST_IBM_CLOUD_ACCOUNT, None, "acct", "acct"),
-            # same with filename
+            # same as above with filename
             (_TEST_IBM_QUANTUM_ACCOUNT, user_filename, "acct-1", "acct-1"),
             (_TEST_IBM_CLOUD_ACCOUNT, user_filename, "acct-2", "acct-2"),
             # verify default account name handling for ibm_cloud accounts
@@ -632,6 +631,11 @@ class TestAccountManager(IBMTestCase):
         )
         self.assertEqual(account.token, dummy_token)
 
+    def tearDown(self) -> None:
+        """Test level tear down."""
+        super().tearDown()
+        if os.path.exists(_TEST_FILENAME):
+            os.remove(_TEST_FILENAME)
 
 MOCK_PROXY_CONFIG_DICT = {
     "urls": {"https": "127.0.0.1", "username_ntlm": "", "password_ntlm": ""}
