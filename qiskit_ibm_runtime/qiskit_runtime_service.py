@@ -265,7 +265,7 @@ class QiskitRuntimeService(Provider):
                     filename,
                     name,
                 )
-            account = AccountManager.get(name=name, filename=filename)
+            account = AccountManager.get(filename=filename, name=name)
         elif auth or channel:
             if auth and auth not in ["legacy", "cloud"]:
                 raise ValueError("'auth' can only be 'cloud' or 'legacy'")
@@ -287,7 +287,7 @@ class QiskitRuntimeService(Provider):
                         "Loading default %s account. Input 'url' is ignored.", channel
                     )
                 account = AccountManager.get(
-                    name=name, channel=channel, filename=filename
+                    filename=filename, name=name, channel=channel
                 )
         elif any([token, url]):
             # Let's not infer based on these attributes as they may change in the future.
@@ -582,6 +582,7 @@ class QiskitRuntimeService(Provider):
 
     @staticmethod
     def delete_account(
+        filename: Optional[str] = None,
         name: Optional[str] = None,
         auth: Optional[str] = None,
         channel: Optional[ChannelType] = None,
@@ -589,6 +590,7 @@ class QiskitRuntimeService(Provider):
         """Delete a saved account from disk.
 
         Args:
+            filename: Name of file from which to delete the account.
             name: Name of the saved account to delete.
             auth: (DEPRECATED, use `channel` instead) Authentication type of the default
                 account to delete. Ignored if account name is provided.
@@ -603,7 +605,7 @@ class QiskitRuntimeService(Provider):
             QiskitRuntimeService._auth_warning()
             channel = channel or QiskitRuntimeService._get_channel_for_auth(auth=auth)
 
-        return AccountManager.delete(name=name, channel=channel)
+        return AccountManager.delete(filename=filename, name=name, channel=channel)
 
     @staticmethod
     def _get_channel_for_auth(auth: str) -> str:
@@ -666,6 +668,7 @@ class QiskitRuntimeService(Provider):
         default: Optional[bool] = None,
         auth: Optional[str] = None,
         channel: Optional[ChannelType] = None,
+        filename: Optional[str] = None,
         name: Optional[str] = None,
     ) -> dict:
         """List the accounts saved on disk.
@@ -675,6 +678,7 @@ class QiskitRuntimeService(Provider):
             auth: (DEPRECATED, use `channel` instead) If set, only accounts with the given
                 authentication type are returned.
             channel: Channel type. `ibm_cloud` or `ibm_quantum`.
+            filename: Name of file whose accounts are returned.
             name: If set, only accounts with the given name are returned.
 
         Returns:
@@ -690,7 +694,7 @@ class QiskitRuntimeService(Provider):
             map(
                 lambda kv: (kv[0], Account.to_saved_format(kv[1])),
                 AccountManager.list(
-                    default=default, channel=channel, name=name
+                    default=default, channel=channel, filename=filename, name=name
                 ).items(),
             ),
         )
