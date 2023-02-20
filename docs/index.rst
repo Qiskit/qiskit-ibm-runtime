@@ -85,7 +85,6 @@ Next Steps
     Manage your account <how_to/account-management>
     Run noisy simulations <how_to/noisy_simulators>
 
-
 .. toctree::
    :maxdepth: 1
    :hidden:
