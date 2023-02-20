@@ -1289,6 +1289,7 @@ class QiskitRuntimeService(Provider):
         self,
         limit: Optional[int] = 10,
         skip: int = 0,
+        backend_name: Optional[str] = None,
         pending: bool = None,
         program_id: str = None,
         instance: Optional[str] = None,
@@ -1303,6 +1304,7 @@ class QiskitRuntimeService(Provider):
         Args:
             limit: Number of jobs to retrieve. ``None`` means no limit.
             skip: Starting index for the job retrieval.
+            backend_name: Name of the backend to retrieve jobs from.
             pending: Filter by job pending state. If ``True``, 'QUEUED' and 'RUNNING'
                 jobs are included. If ``False``, 'DONE', 'CANCELLED' and 'ERROR' jobs
                 are included.
@@ -1342,6 +1344,7 @@ class QiskitRuntimeService(Provider):
             jobs_response = self._api_client.jobs_get(
                 limit=current_page_limit,
                 skip=offset,
+                backend_name=backend_name,
                 pending=pending,
                 program_id=program_id,
                 hub=hub,
