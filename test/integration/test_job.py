@@ -12,8 +12,10 @@
 
 """Tests for job functions using real runtime service."""
 
+import os
 import random
 import time
+from unittest import SkipTest
 
 from qiskit.providers.jobstatus import JOB_FINAL_STATES, JobStatus
 from qiskit.test.decorators import slow_test
@@ -145,6 +147,11 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     @run_integration_test
     def test_cancel_job_queued(self, service):
         """Test canceling a queued job."""
+        if (
+            os.environ.get("QISKIT_IBM_USE_STAGING_CREDENTIALS", "")
+            and self.dependencies.channel == "ibm_quantum"
+        ):
+            raise SkipTest("Fake backends not supported.")
         real_device = get_real_device(service)
         _ = self._run_program(service, iterations=10, backend=real_device)
         job = self._run_program(service, iterations=2, backend=real_device)
@@ -189,6 +196,11 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     @run_integration_test
     def test_delete_job_queued(self, service):
         """Test deleting a queued job."""
+        if (
+            os.environ.get("QISKIT_IBM_USE_STAGING_CREDENTIALS", "")
+            and self.dependencies.channel == "ibm_quantum"
+        ):
+            raise SkipTest("Fake backends not supported.")
         real_device = get_real_device(service)
         _ = self._run_program(service, iterations=10, backend=real_device)
         job = self._run_program(service, iterations=2, backend=real_device)

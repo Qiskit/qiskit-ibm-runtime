@@ -12,7 +12,9 @@
 
 """Tests for job functions using real runtime service."""
 
+import os
 import uuid
+from unittest import SkipTest
 from datetime import datetime, timezone
 from qiskit.providers.jobstatus import JobStatus
 
@@ -27,6 +29,11 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
     @run_integration_test
     def test_retrieve_job_queued(self, service):
         """Test retrieving a queued job."""
+        if (
+            os.environ.get("QISKIT_IBM_USE_STAGING_CREDENTIALS", "")
+            and self.dependencies.channel == "ibm_quantum"
+        ):
+            raise SkipTest("Fake backends not supported.")
         real_device = get_real_device(service)
         _ = self._run_program(service, iterations=10, backend=real_device)
         job = self._run_program(service, iterations=2, backend=real_device)
