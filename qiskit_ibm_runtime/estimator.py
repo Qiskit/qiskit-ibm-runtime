@@ -88,6 +88,7 @@ class Estimator(BaseEstimator):
                 parameter_values=[theta1]*2
             )
             print(psi1_H23.result())
+            # Close the session only if all jobs are finished, and you don't need to run more in the session
             session.close()
     """
 
@@ -395,7 +396,7 @@ class Estimator(BaseEstimator):
         remedy="Use qiskit_ibm_runtime.Session.close() instead",
     )
     def close(self) -> None:
-        """Close the session and free resources"""
+        """Close the session and free resources. Close the session only if all jobs are finished and you don't need to run more in the session."""
         self._session.close()
 
     @property

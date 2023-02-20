@@ -204,6 +204,7 @@ class TestPrimitives(IBMTestCase):
         """Test a new default session is open after previous is closed."""
         service = MagicMock()
         sampler = Sampler(service=service)
+        # Close the session only if all jobs are finished and you don't need to run more in the session.
         sampler.session.close()
         estimator = Estimator(service=service)
         self.assertIsNotNone(estimator.session)
@@ -266,6 +267,7 @@ class TestPrimitives(IBMTestCase):
                     self.assertTrue(session._active)
                     inst2 = cls()
                     self.assertEqual(inst2.session, session)
+                    # Close the session only if all jobs are finished and you don't need to run more in the session.
                     session.close()
                 self.assertFalse(session._active)
 
