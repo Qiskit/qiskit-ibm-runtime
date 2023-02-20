@@ -1,7 +1,7 @@
 Calculate expectation values in an algorithm
 ==============================================
 
-The role of the `Estimator` primitive is two-fold: on one hand, it acts as an entry point to the quantum devices or simulators, replacing `backend.run()` (or `QuantumInstance.execute()`). On the other hand, it is an **algorithmic abstraction** for expectation value calculations, which removes the need to perform operations to construct the final expectation circuit. This results in a considerable reduction of the code complexity, and a more compact algorithm design. 
+The role of the ``Estimator`` primitive is two-fold: on one hand, it acts as an entry point to the quantum devices or simulators, replacing ``backend.run()``. On the other hand, it is an **algorithmic abstraction** for expectation value calculations, which removes the need to perform operations to construct the final expectation circuit. This results in a considerable reduction of the code complexity, and a more compact algorithm design. 
 
 The following example uses common tools from the ``qiskit.opflow`` module as a reference for the "legacy way of doing things", but we acknowledge that some of you might have used custom code for this task. In that case, you can decide between keeping your custom code and replacing `backend.run()` with a `Sampler`, or replacing your custom code with the `Estimator` primitive.
 
