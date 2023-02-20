@@ -74,7 +74,6 @@ class TestSession(IBMTestCase):
     def test_run_after_close(self):
         """Test running after session is closed."""
         session = Session(service=MagicMock(), backend="ibm_gotham")
-        # Close the session only if all jobs are finished and you don't need to run more in the session.
         session.close()
         with self.assertRaises(RuntimeError):
             session.run(program_id="program_id", inputs={})
@@ -118,7 +117,6 @@ class TestSession(IBMTestCase):
         api = MagicMock()
         service._api_client = api
         session = Session(service=service, backend="ibm_gotham")
-        # Close the session only if all jobs are finished and you don't need to run more in the session.
         session.close()
         api.close_session.assert_not_called()
 
@@ -126,7 +124,6 @@ class TestSession(IBMTestCase):
         """Test session as a context manager."""
         with Session(service=MagicMock(), backend="ibm_gotham") as session:
             session.run(program_id="foo", inputs={})
-            # Close the session only if all jobs are finished and you don't need to run more in the session.
             session.close()
         self.assertFalse(session._active)
 
@@ -159,7 +156,6 @@ class TestSession(IBMTestCase):
         backend = "ibm_gotham"
         service = MagicMock()
         session = get_default_session(service=service, backend=backend)
-        # Close the session only if all jobs are finished and you don't need to run more in the session.
         session.close()
 
         session2 = get_default_session(service=service, backend=backend)
