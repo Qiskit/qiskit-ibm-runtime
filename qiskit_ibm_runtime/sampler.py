@@ -67,6 +67,8 @@ class Sampler(BaseSampler):
             job = sampler.run(bell, shots=1024)
             print(f"Job ID: {job.job_id()}")
             print(f"Job result: {job.result()}")
+            # Close the session only if all jobs are finished
+            # and you don't need to run more in the session.
             session.close()
     """
 
@@ -348,7 +350,8 @@ class Sampler(BaseSampler):
         remedy="Use qiskit_ibm_runtime.Session.close() instead",
     )
     def close(self) -> None:
-        """Close the session and free resources"""
+        """Close the session and free resources.
+        Close the session only if all jobs are finished and you don't need to run more in the session."""
         self._session.close()
 
     @property
