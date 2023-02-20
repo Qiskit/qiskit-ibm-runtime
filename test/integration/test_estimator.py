@@ -203,7 +203,7 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
             )
             with self.assertRaises(RuntimeJobFailureError):
                 job.result()
-            # Close the session only if all jobs are finished and you don't need to run more in the session.    
+            # Close the session only if all jobs are finished and you don't need to run more in the session.
             session.close()
 
     @run_integration_test

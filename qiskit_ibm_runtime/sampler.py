@@ -349,8 +349,7 @@ class Sampler(BaseSampler):
         remedy="Use qiskit_ibm_runtime.Session.close() instead",
     )
     def close(self) -> None:
-        """Close the session and free resources. Close the session only if all jobs are finished and you don't need to run more in the session.
-"""
+        """Close the session and free resources. Close the session only if all jobs are finished and you don't need to run more in the session."""
         self._session.close()
 
     @property
