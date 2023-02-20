@@ -53,6 +53,7 @@ Next Steps
     Getting Started <getting_started>
     backend.run vs. Qiskit Runtime <compare>
     Introduction to primitives <primitives>
+    Migration guide from qiskit-ibmq-provider <migrate_from_ibmq>
 
 
 .. toctree::
