@@ -18,8 +18,11 @@ from qiskit.exceptions import QiskitError
 class IBMError(QiskitError):
     """Base class for errors raised by the runtime service modules."""
 
-    pass
-
+    def __init__(self, message):
+        """Set the error message."""
+        if len(message) >2000:
+            message = message[-2000:-1]
+        super().__init__(message)
 
 class IBMAccountError(IBMError):
     """Account related errors."""
