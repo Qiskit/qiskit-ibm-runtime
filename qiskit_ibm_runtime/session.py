@@ -62,6 +62,8 @@ class Session:
             job = sampler.run(circ)
             print(f"Sampler job ID: {job.job_id()}")
             print(f"Sampler job result:" {job.result()})
+            # Close the session only if all jobs are finished and
+            # you don't need to run more in the session.
             session.close()
     """
 
@@ -247,6 +249,7 @@ def get_default_session(
         or (service is not None and _DEFAULT_SESSION.service.channel != service.channel)
     ):
         # Create a new session if one doesn't exist, or if the user wants to switch backend/channel.
+        # Close the session only if all jobs are finished and you don't need to run more in the session.
         if _DEFAULT_SESSION and not _IN_SESSION_CM and _DEFAULT_SESSION._active:
             _DEFAULT_SESSION.close()
         if service is None:
