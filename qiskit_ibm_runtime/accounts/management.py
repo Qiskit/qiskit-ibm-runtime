@@ -43,16 +43,19 @@ class AccountManager:
         url: Optional[str] = None,
         instance: Optional[str] = None,
         channel: Optional[ChannelType] = None,
+        filename: Optional[str] = None,
         name: Optional[str] = _DEFAULT_ACCOUNT_NAME,
         proxies: Optional[ProxyConfiguration] = None,
         verify: Optional[bool] = None,
         overwrite: Optional[bool] = False,
     ) -> None:
         """Save account on disk."""
-        cls.migrate()
+        cls.migrate(filename=filename)
         name = name or cls._get_default_account_name(channel)
+        filename = filename if filename else _DEFAULT_ACCOUNT_CONFIG_JSON_FILE
+        filename = os.path.expanduser(filename)
         return save_config(
-            filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE,
+            filename=filename,
             name=name,
             overwrite=overwrite,
             config=Account(
@@ -71,10 +74,13 @@ class AccountManager:
     def list(
         default: Optional[bool] = None,
         channel: Optional[ChannelType] = None,
+        filename: Optional[str] = None,
         name: Optional[str] = None,
     ) -> Dict[str, Account]:
-        """List all accounts saved on disk."""
-        AccountManager.migrate()
+        """List all accounts in a given filename, or in the default account file."""
+        filename = filename if filename else _DEFAULT_ACCOUNT_CONFIG_JSON_FILE
+        filename = os.path.expanduser(filename)
+        AccountManager.migrate(filename)
 
         def _matching_name(account_name: str) -> bool:
             return name is None or name == account_name
@@ -101,7 +107,7 @@ class AccountManager:
                 kv[0],
                 Account.from_saved_format(kv[1]),
             ),
-            read_config(filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE).items(),
+            read_config(filename=filename).items(),
         )
 
         # filter based on input parameters
@@ -120,11 +126,15 @@ class AccountManager:
 
     @classmethod
     def get(
-        cls, name: Optional[str] = None, channel: Optional[ChannelType] = None
+        cls,
+        filename: Optional[str] = None,
+        name: Optional[str] = None,
+        channel: Optional[ChannelType] = None,
     ) -> Optional[Account]:
         """Read account from disk.
 
         Args:
+            filename: Full path of the file from which to get the account.
             name: Account name. Takes precedence if `auth` is also specified.
             channel: Channel type.
 
@@ -134,11 +144,11 @@ class AccountManager:
         Raises:
             AccountNotFoundError: If the input value cannot be found on disk.
         """
-        cls.migrate()
+        filename = filename if filename else _DEFAULT_ACCOUNT_CONFIG_JSON_FILE
+        filename = os.path.expanduser(filename)
+        cls.migrate(filename)
         if name:
-            saved_account = read_config(
-                filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE, name=name
-            )
+            saved_account = read_config(filename=filename, name=name)
             if not saved_account:
                 raise AccountNotFoundError(
                     f"Account with the name {name} does not exist on disk."
@@ -152,7 +162,7 @@ class AccountManager:
 
         if channel:
             saved_account = read_config(
-                filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE,
+                filename=filename,
                 name=cls._get_default_account_name(channel=channel),
             )
             if saved_account is None:
@@ -161,7 +171,7 @@ class AccountManager:
                 raise AccountNotFoundError(f"No default {channel} account saved.")
             return Account.from_saved_format(saved_account)
 
-        all_config = read_config(filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE)
+        all_config = read_config(filename=filename)
         for channel_type in _CHANNEL_TYPES:
             account_name = cls._get_default_account_name(channel=channel_type)
             if account_name in all_config:
@@ -175,28 +185,33 @@ class AccountManager:
     @classmethod
     def delete(
         cls,
+        filename: Optional[str] = None,
         name: Optional[str] = None,
         channel: Optional[ChannelType] = None,
     ) -> bool:
         """Delete account from disk."""
-        cls.migrate()
+        filename = filename if filename else _DEFAULT_ACCOUNT_CONFIG_JSON_FILE
+        filename = os.path.expanduser(filename)
+        cls.migrate(filename=filename)
         name = name or cls._get_default_account_name(channel)
         return delete_config(
-            filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE,
+            filename=filename,
             name=name,
         )
 
     @classmethod
-    def migrate(cls) -> None:
+    def migrate(cls, filename: Optional[str] = None) -> None:
         """Migrate accounts on disk by removing `auth` and adding `channel`."""
-        data = read_config(filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE)
+        filename = filename if filename else _DEFAULT_ACCOUNT_CONFIG_JSON_FILE
+        filename = os.path.expanduser(filename)
+        data = read_config(filename=filename)
         for key, value in data.items():
             if key == _DEFAULT_ACCOUNT_NAME_CLOUD:
                 value.pop("auth", None)
                 value.update(channel="ibm_cloud")
-                delete_config(filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE, name=key)
+                delete_config(filename=filename, name=key)
                 save_config(
-                    filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE,
+                    filename=filename,
                     name=_DEFAULT_ACCOUNT_NAME_IBM_CLOUD,
                     config=value,
                     overwrite=False,
@@ -204,9 +219,9 @@ class AccountManager:
             elif key == _DEFAULT_ACCOUNT_NAME_LEGACY:
                 value.pop("auth", None)
                 value.update(channel="ibm_quantum")
-                delete_config(filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE, name=key)
+                delete_config(filename=filename, name=key)
                 save_config(
-                    filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE,
+                    filename=filename,
                     name=_DEFAULT_ACCOUNT_NAME_IBM_QUANTUM,
                     config=value,
                     overwrite=False,
@@ -219,7 +234,7 @@ class AccountManager:
                         value.update(channel="ibm_quantum")
                     value.pop("auth", None)
                     save_config(
-                        filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE,
+                        filename=filename,
                         name=key,
                         config=value,
                         overwrite=True,
