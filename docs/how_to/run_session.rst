@@ -6,7 +6,7 @@ As a result, sessions allow you to more efficiently run programs that require it
 
 Before you begin
 ----------------
-Before starting a session, you must `Set up Qiskit Runtime <getting_started.html>`__ and initialize it as a service:
+Before starting a session, you must `Set up Qiskit Runtime <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/getting_started.html>`__ and initialize it as a service:
 
 .. code-block:: python
   
@@ -26,7 +26,9 @@ Start by loading the options into a primitive constructor, then pass in circuits
   with Session(service) as session:
       estimator = Estimator(session=session, options=options) #primitive constructor
       estimator.run(circuit, parameters, observable) #job call
-      session.close() #close the session
+      job.result()
+      # Close the session only if all jobs are finished, and you don't need to run more in the session
+      session.close() 
 
 Session options
 -----------------
@@ -66,6 +68,7 @@ This example starts a session, runs an Estimator job, and outputs the result:
       estimator = Estimator(session=session, options=options)
       job = estimator.run(circuit, observable)
       result = job.result()
+      # Close the session only if all jobs are finished, and you don't need to run more in the session
       session.close()
 
   display(circuit.draw("mpl"))
@@ -85,7 +88,7 @@ If you do not specify a timeout value, it is set to the initial job's maximum ex
    * The system limit (8 hours for physical systems).
    * The ``max_execution_time`` defined by the program.
 
-After this time limit is reached, the session is permanently closed.
+After this time limit is reached, the session is permanently closed and any queued jobs are put into an error state.
 
 Additionally, there is an *interactive* timeout value. If there are no session jobs queued within that window, the session is temporarily deactivated and normal job selection resumes. After a session is deactivated, a subsequent job could start an additional session.  Jobs for the new session would then take priority until the new session deactivates or is closed. After the new session becomes inactive, if the job scheduler gets a job from the original session and its maximum timeout value has not been reached, the session is reactivated until its maximum timeout value is reached.
 
