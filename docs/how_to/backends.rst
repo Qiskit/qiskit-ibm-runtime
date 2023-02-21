@@ -143,7 +143,8 @@ To specify a backend when running a job, add the ``backend`` option when startin
        estimator = Estimator(session=session, options=options)
        job = estimator.run(circuit, observable)
        result = job.result()
-       session.close()
+       # Close the session only if all jobs are finished, and you don't need to run more in the session
+       session.close() # Closes the session
 
   display(circuit.draw("mpl"))
   print(f" > Observable: {observable.paulis}")
