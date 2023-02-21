@@ -265,30 +265,28 @@ class AccountManager:
     @classmethod
     def _from_qiskitrc_file(cls) -> Optional[Account]:
         """Read account from qiskitrc file."""
-        if os.path.isfile(_QISKITRC_CONFIG_FILE):
-            qiskitrc_data = read_qiskitrc(_QISKITRC_CONFIG_FILE)
-            proxies = (
-                ProxyConfiguration(ast.literal_eval(qiskitrc_data["proxies"]))
-                if "proxies" in qiskitrc_data
-                else None
+        qiskitrc_data = read_qiskitrc(_QISKITRC_CONFIG_FILE)
+        proxies = (
+            ProxyConfiguration(ast.literal_eval(qiskitrc_data["proxies"]))
+            if "proxies" in qiskitrc_data
+            else None
+        )
+        save_config(
+            filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE,
+            name=_DEFAULT_ACCOUNT_NAME_IBM_QUANTUM,
+            overwrite=False,
+            config=Account(
+                token=qiskitrc_data.get("token", None),
+                url=qiskitrc_data.get("url", None),
+                instance=qiskitrc_data.get("default_provider", None),
+                verify=bool(qiskitrc_data.get("verify", None)),
+                proxies=proxies,
+                channel="ibm_quantum",
             )
-            save_config(
-                filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE,
-                name=_DEFAULT_ACCOUNT_NAME_IBM_QUANTUM,
-                overwrite=False,
-                config=Account(
-                    token=qiskitrc_data.get("token", None),
-                    url=qiskitrc_data.get("url", None),
-                    instance=qiskitrc_data.get("default_provider", None),
-                    verify=bool(qiskitrc_data.get("verify", None)),
-                    proxies=proxies,
-                    channel="ibm_quantum",
-                )
-                .validate()
-                .to_saved_format(),
-            )
-            default_config = read_config(filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE)
-            return Account.from_saved_format(
-                default_config[_DEFAULT_ACCOUNT_NAME_IBM_QUANTUM]
-            )
-        return None
+            .validate()
+            .to_saved_format(),
+        )
+        default_config = read_config(filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE)
+        return Account.from_saved_format(
+            default_config[_DEFAULT_ACCOUNT_NAME_IBM_QUANTUM]
+        )
