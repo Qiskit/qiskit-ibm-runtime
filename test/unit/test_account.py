@@ -80,6 +80,8 @@ _TEST_CLOUD_ACCOUNT = {
     },
 }
 
+_TEST_FILENAME = "/tmp/temp_qiskit_account.json"
+
 
 class TestAccount(IBMTestCase):
     """Tests for Account class."""
@@ -186,6 +188,25 @@ class TestAccountManager(IBMTestCase):
         """Test to overwrite an existing account without setting overwrite=True."""
         with self.assertRaises(AccountAlreadyExistsError):
             AccountManager.save(
+                name="conflict",
+                token=_TEST_IBM_CLOUD_ACCOUNT.token,
+                url=_TEST_IBM_CLOUD_ACCOUNT.url,
+                instance=_TEST_IBM_CLOUD_ACCOUNT.instance,
+                channel="ibm_cloud",
+                overwrite=False,
+            )
+        AccountManager.save(
+            filename=_TEST_FILENAME,
+            name="conflict",
+            token=_TEST_IBM_CLOUD_ACCOUNT.token,
+            url=_TEST_IBM_CLOUD_ACCOUNT.url,
+            instance=_TEST_IBM_CLOUD_ACCOUNT.instance,
+            channel="ibm_cloud",
+            overwrite=True,
+        )
+        with self.assertRaises(AccountAlreadyExistsError):
+            AccountManager.save(
+                filename=_TEST_FILENAME,
                 name="conflict",
                 token=_TEST_IBM_CLOUD_ACCOUNT.token,
                 url=_TEST_IBM_CLOUD_ACCOUNT.url,
@@ -358,24 +379,47 @@ class TestAccountManager(IBMTestCase):
         # - account to save
         # - the name passed to AccountManager.save
         # - the name passed to AccountManager.get
+        user_filename = _TEST_FILENAME
         sub_tests = [
             # verify accounts can be saved and retrieved via custom names
-            (_TEST_IBM_QUANTUM_ACCOUNT, "acct-1", "acct-1"),
-            (_TEST_IBM_CLOUD_ACCOUNT, "acct-2", "acct-2"),
+            (_TEST_IBM_QUANTUM_ACCOUNT, None, "acct-1", "acct-1"),
+            (_TEST_IBM_CLOUD_ACCOUNT, None, "acct-2", "acct-2"),
             # verify default account name handling for ibm_cloud accounts
-            (_TEST_IBM_CLOUD_ACCOUNT, None, _DEFAULT_ACCOUNT_NAME_IBM_CLOUD),
-            (_TEST_IBM_CLOUD_ACCOUNT, None, None),
+            (_TEST_IBM_CLOUD_ACCOUNT, None, None, _DEFAULT_ACCOUNT_NAME_IBM_CLOUD),
+            (_TEST_IBM_CLOUD_ACCOUNT, None, None, None),
             # verify default account name handling for ibm_quantum accounts
             (
                 _TEST_IBM_QUANTUM_ACCOUNT,
                 None,
+                None,
                 _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM,
             ),
             # verify account override
-            (_TEST_IBM_QUANTUM_ACCOUNT, "acct", "acct"),
-            (_TEST_IBM_CLOUD_ACCOUNT, "acct", "acct"),
+            (_TEST_IBM_QUANTUM_ACCOUNT, None, "acct", "acct"),
+            (_TEST_IBM_CLOUD_ACCOUNT, None, "acct", "acct"),
+            # same as above with filename
+            (_TEST_IBM_QUANTUM_ACCOUNT, user_filename, "acct-1", "acct-1"),
+            (_TEST_IBM_CLOUD_ACCOUNT, user_filename, "acct-2", "acct-2"),
+            # verify default account name handling for ibm_cloud accounts
+            (
+                _TEST_IBM_CLOUD_ACCOUNT,
+                user_filename,
+                None,
+                _DEFAULT_ACCOUNT_NAME_IBM_CLOUD,
+            ),
+            (_TEST_IBM_CLOUD_ACCOUNT, user_filename, None, None),
+            # verify default account name handling for ibm_quantum accounts
+            (
+                _TEST_IBM_QUANTUM_ACCOUNT,
+                user_filename,
+                None,
+                _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM,
+            ),
+            # verify account override
+            (_TEST_IBM_QUANTUM_ACCOUNT, user_filename, "acct", "acct"),
+            (_TEST_IBM_CLOUD_ACCOUNT, user_filename, "acct", "acct"),
         ]
-        for account, name_save, name_get in sub_tests:
+        for account, file_name, name_save, name_get in sub_tests:
             with self.subTest(
                 f"for account type '{account.channel}' "
                 f"using `save(name={name_save})` and `get(name={name_get})`"
@@ -387,10 +431,13 @@ class TestAccountManager(IBMTestCase):
                     channel=account.channel,
                     proxies=account.proxies,
                     verify=account.verify,
+                    filename=file_name,
                     name=name_save,
                     overwrite=True,
                 )
-                self.assertEqual(account, AccountManager.get(name=name_get))
+                self.assertEqual(
+                    account, AccountManager.get(filename=file_name, name=name_get)
+                )
 
     @temporary_account_config_file(
         contents=json.dumps(
@@ -525,7 +572,7 @@ class TestAccountManager(IBMTestCase):
         with self.subTest("delete default ibm_cloud account"):
             self.assertTrue(AccountManager.delete())
 
-        self.assertTrue(len(AccountManager.list()) == 0)
+            self.assertTrue(len(AccountManager.list()) == 0)
 
     @temporary_account_config_file(
         contents={
@@ -548,6 +595,49 @@ class TestAccountManager(IBMTestCase):
             self.assertTrue(AccountManager.delete())
 
         self.assertTrue(len(AccountManager.list()) == 0)
+
+    def test_delete_filename(self):
+        """Test delete accounts with filename parameter."""
+
+        filename = "~/account_to_delete.json"
+        name = "key1"
+        channel = "ibm_quantum"
+        AccountManager.save(
+            channel=channel, filename=filename, name=name, token="temp_token"
+        )
+        self.assertTrue(
+            AccountManager.delete(channel="ibm_quantum", filename=filename, name=name)
+        )
+        self.assertFalse(
+            AccountManager.delete(channel="ibm_quantum", filename=filename, name=name)
+        )
+
+        self.assertTrue(
+            len(AccountManager.list(channel="ibm_quantum", filename=filename)) == 0
+        )
+
+    def test_account_with_filename(self):
+        """Test saving an account to a given filename and retrieving it."""
+        user_filename = _TEST_FILENAME
+        account_name = "my_account"
+        dummy_token = "dummy_token"
+        AccountManager.save(
+            channel="ibm_quantum",
+            filename=user_filename,
+            name=account_name,
+            overwrite=True,
+            token=dummy_token,
+        )
+        account = AccountManager.get(
+            channel="ibm_quantum", filename=user_filename, name=account_name
+        )
+        self.assertEqual(account.token, dummy_token)
+
+    def tearDown(self) -> None:
+        """Test level tear down."""
+        super().tearDown()
+        if os.path.exists(_TEST_FILENAME):
+            os.remove(_TEST_FILENAME)
 
 
 MOCK_PROXY_CONFIG_DICT = {

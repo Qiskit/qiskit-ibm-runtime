@@ -142,8 +142,9 @@ To specify a backend when running a job, add the ``backend`` option when startin
   with Session(service=service, backend="ibmq_qasm_simulator") as session:
        estimator = Estimator(session=session, options=options)
        job = estimator.run(circuit, observable)
-
-  result = job.result()
+       result = job.result()
+       # Close the session only if all jobs are finished, and you don't need to run more in the session
+       session.close() # Closes the session
 
   display(circuit.draw("mpl"))
   print(f" > Observable: {observable.paulis}")

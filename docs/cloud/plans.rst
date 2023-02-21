@@ -4,10 +4,10 @@ Qiskit Runtime plans
 The Qiskit Runtime service offers these plans for running quantum programs: 
 
 - Lite Plan: Simulator access plan (free) 
-- Standard Plan: Quantum hardware access plan
+- Standard Plan: Quantum hardware and simulator access plan
 
-Lite plans
-----------
+Lite plan
+---------
 
 A free plan that gives you access to quantum simulators to help you get started with Qiskit Runtime. It does not include access to IBM Quantum systems. The following simulators are included in this plan:
 
@@ -39,12 +39,12 @@ A free plan that gives you access to quantum simulators to help you get started 
 Standard plan
 -------------
 
-A pay-as-you-go plan for accessing IBM Quantum systems. Build your own programs and access all the benefits of Qiskit Runtime by running on real quantum hardware.
+A pay-as-you-go plan for accessing IBM Quantum systems. Build your own programs and access all the benefits of Qiskit Runtime by running on real quantum hardware, while maintaining access to all of the simulators available in the Lite plan.
 
 Pricing overview
 ----------------
 
-The Lite plan is free. The Standard plan charges you per *runtime second*. The following diagram illustrates what is included in a runtime second. For this service, one runtime second includes quantum compute time as well as classical near-time pre- and post-processing time. Any time spent waiting for results or in the queue for the quantum computer are excluded from the classical processing time.
+The Lite plan is free. The Standard plan charges you per *runtime second* when running on physical systems. The following diagram illustrates what is included in a runtime second. For this service, one runtime second includes quantum compute time as well as classical near-time pre- and post-processing time. Any time spent waiting for results or in the queue for the quantum computer are excluded from the classical processing time.
 
 .. figure:: ../images/Runtime_Accounting_Diagram.png
    :alt: This diagram shows that everything before the program starts (such as queuing) is free. After the job starts, it costs $1.60 per second.

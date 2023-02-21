@@ -137,7 +137,9 @@ The Estimator interface lets users seamlessly work with the variety of error mit
   with Session(service=service, backend="ibmq_qasm_simulator") as session:
       estimator = Estimator(session=session, options=options)
       job = estimator.run(circuits=[psi1], observables=[H1], parameter_values=[theta1])
-      psi1_H1 = job.result()  
+      psi1_H1 = job.result() 
+      # Close the session only if all jobs are finished, and you don't need to run more in the session
+      session.close() 
 
 .. note::
     As you increase the resilience level, you will be able to leverage additional methods to improve the accuracy of your result. However, because the methods become more advanced with each level, they require additional sampling overhead (time) to generate more accurate expectation values.     
@@ -192,7 +194,7 @@ As a part of the beta release of the resilience options, users will be able conf
 |                                                               | ``CxAmplifier``                  | Amplifies noise of all CNOT gates by performing local  |
 |                                                               |                                  | gate folding.                                          |
 |                                                               +----------------------------------+--------------------------------------------------------+
-|                                                               | ``LocalFoldingAmplifer``         | Amplifies noise of all gates by performing local       |
+|                                                               | ``LocalFoldingAmplifier``        | Amplifies noise of all gates by performing local       |
 |                                                               |                                  | gate folding.                                          |
 |                                                               +----------------------------------+--------------------------------------------------------+
 |                                                               | ``GlobalFoldingAmplifier``       | Amplifies noise of the input circuit by performing     |
@@ -223,7 +225,7 @@ Example of adding ``resilience_options`` into your estimator session
     options.optimization_level = 3
     options.resilience_level = 2
     options.resilience.noise_factors = (1, 2, 3, 4)
-    options.resilience.noise_amplifer = 'CxAmplifer'
+    options.resilience.noise_amplifier = 'CxAmplifier'
     options.resilience.extrapolator = 'QuadraticExtrapolator'
 
 
@@ -231,4 +233,6 @@ Example of adding ``resilience_options`` into your estimator session
         estimator = Estimator(session=session, options=options)
         job = estimator.run(circuits=[psi1], observables=[H1], parameter_values=[theta1])
         psi1_H1 = job.result()
+        # Close the session only if all jobs are finished, and you don't need to run more in the session
+        session.close()
 

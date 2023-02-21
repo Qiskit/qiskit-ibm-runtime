@@ -16,6 +16,7 @@
 import json
 import struct
 import zlib
+import warnings
 
 import numpy as np
 
@@ -23,9 +24,14 @@ from qiskit.exceptions import QiskitError
 from qiskit.pulse import library, channels
 from qiskit.pulse.schedule import ScheduleBlock
 from qiskit.utils import optionals as _optional
-
 from .. import formats, common, type_keys
 from . import value
+
+
+if _optional.HAS_SYMENGINE:
+    import symengine as sym
+else:
+    import sympy as sym
 
 
 def _read_channel(file_obj, version):  # type: ignore[no-untyped-def]
@@ -73,10 +79,14 @@ def _loads_symbolic_expr(expr_bytes):  # type: ignore[no-untyped-def]
 
 
 def _read_symbolic_pulse(file_obj, version):  # type: ignore[no-untyped-def]
-    header = formats.SYMBOLIC_PULSE._make(
+    make = formats.SYMBOLIC_PULSE._make
+    pack = formats.SYMBOLIC_PULSE_PACK
+    size = formats.SYMBOLIC_PULSE_SIZE
+
+    header = make(
         struct.unpack(
-            formats.SYMBOLIC_PULSE_PACK,
-            file_obj.read(formats.SYMBOLIC_PULSE_SIZE),
+            pack,
+            file_obj.read(size),
         )
     )
     pulse_type = file_obj.read(header.type_size).decode(common.ENCODE)
@@ -91,35 +101,121 @@ def _read_symbolic_pulse(file_obj, version):  # type: ignore[no-untyped-def]
         version=version,
         vectors={},
     )
+
+    # In the transition to Qiskit Terra 0.23 (QPY version 6), the representation of library pulses
+    # was changed from complex "amp" to float "amp" and "angle". The existing library pulses in
+    # previous versions are handled here separately to conform with the new representation. To
+    # avoid role assumption for "amp" for custom pulses, only the library pulses are handled this
+    # way.
+
+    # List of pulses in the library in QPY version 5 and below:
+    legacy_library_pulses = ["Gaussian", "GaussianSquare", "Drag", "Constant"]
+    class_name = "SymbolicPulse"  # Default class name, if not in the library
+
+    if pulse_type in legacy_library_pulses:
+        # Once complex amp support will be deprecated we will need:
+        # parameters["angle"] = np.angle(parameters["amp"])
+        # parameters["amp"] = np.abs(parameters["amp"])
+
+        # In the meanwhile we simply add:
+        parameters["angle"] = 0
+        _amp, _angle = sym.symbols("amp, angle")
+        envelope = envelope.subs(_amp, _amp * sym.exp(sym.I * _angle))
+
+        # And warn that this will change in future releases:
+        warnings.warn(
+            "Complex amp support for symbolic library pulses will be deprecated. "
+            "Once deprecated, library pulses loaded from old QPY files (Terra version < 0.23),"
+            " will be converted automatically to float (amp,angle) representation.",
+            PendingDeprecationWarning,
+        )
+        class_name = "ScalableSymbolicPulse"
+
     duration = value.read_value(file_obj, version, {})
     name = value.read_value(file_obj, version, {})
 
-    # TODO remove this and merge subclasses into a single kind of SymbolicPulse
-    #  We need some refactoring of our codebase,
-    #  mainly removal of isinstance check and name access with self.__class__.__name__.
-    if pulse_type == "Gaussian":
-        pulse_cls = library.Gaussian
-    elif pulse_type == "GaussianSquare":
-        pulse_cls = library.GaussianSquare
-    elif pulse_type == "Drag":
-        pulse_cls = library.Drag
-    elif pulse_type == "Constant":
-        pulse_cls = library.Constant
+    if class_name == "SymbolicPulse":
+        return library.SymbolicPulse(
+            pulse_type=pulse_type,
+            duration=duration,
+            parameters=parameters,
+            name=name,
+            limit_amplitude=header.amp_limited,
+            envelope=envelope,
+            constraints=constraints,
+            valid_amp_conditions=valid_amp_conditions,
+        )
+    elif class_name == "ScalableSymbolicPulse":
+        return library.ScalableSymbolicPulse(
+            pulse_type=pulse_type,
+            duration=duration,
+            amp=parameters["amp"],
+            angle=parameters["angle"],
+            parameters=parameters,
+            name=name,
+            limit_amplitude=header.amp_limited,
+            envelope=envelope,
+            constraints=constraints,
+            valid_amp_conditions=valid_amp_conditions,
+        )
     else:
-        pulse_cls = library.SymbolicPulse
+        raise NotImplementedError(f"Unknown class '{class_name}'")
 
-    # Skip calling constructor to absorb signature mismatch in subclass.
-    instance = object.__new__(pulse_cls)
-    instance.duration = duration
-    instance.name = name
-    instance._limit_amplitude = header.amp_limited
-    instance._pulse_type = pulse_type
-    instance._params = parameters
-    instance._envelope = envelope
-    instance._constraints = constraints
-    instance._valid_amp_conditions = valid_amp_conditions
 
-    return instance
+def _read_symbolic_pulse_v6(file_obj, version):  # type: ignore[no-untyped-def]
+    make = formats.SYMBOLIC_PULSE_V2._make
+    pack = formats.SYMBOLIC_PULSE_PACK_V2
+    size = formats.SYMBOLIC_PULSE_SIZE_V2
+
+    header = make(
+        struct.unpack(
+            pack,
+            file_obj.read(size),
+        )
+    )
+    class_name = file_obj.read(header.class_name_size).decode(common.ENCODE)
+    pulse_type = file_obj.read(header.type_size).decode(common.ENCODE)
+    envelope = _loads_symbolic_expr(file_obj.read(header.envelope_size))
+    constraints = _loads_symbolic_expr(file_obj.read(header.constraints_size))
+    valid_amp_conditions = _loads_symbolic_expr(
+        file_obj.read(header.valid_amp_conditions_size)
+    )
+    parameters = common.read_mapping(
+        file_obj,
+        deserializer=value.loads_value,
+        version=version,
+        vectors={},
+    )
+
+    duration = value.read_value(file_obj, version, {})
+    name = value.read_value(file_obj, version, {})
+
+    if class_name == "SymbolicPulse":
+        return library.SymbolicPulse(
+            pulse_type=pulse_type,
+            duration=duration,
+            parameters=parameters,
+            name=name,
+            limit_amplitude=header.amp_limited,
+            envelope=envelope,
+            constraints=constraints,
+            valid_amp_conditions=valid_amp_conditions,
+        )
+    elif class_name == "ScalableSymbolicPulse":
+        return library.ScalableSymbolicPulse(
+            pulse_type=pulse_type,
+            duration=duration,
+            amp=parameters["amp"],
+            angle=parameters["angle"],
+            parameters=parameters,
+            name=name,
+            limit_amplitude=header.amp_limited,
+            envelope=envelope,
+            constraints=constraints,
+            valid_amp_conditions=valid_amp_conditions,
+        )
+    else:
+        raise NotImplementedError(f"Unknown class '{class_name}'")
 
 
 def _read_alignment_context(file_obj, version):  # type: ignore[no-untyped-def]
@@ -143,9 +239,14 @@ def _loads_operand(type_key, data_bytes, version):  # type: ignore[no-untyped-de
     if type_key == type_keys.ScheduleOperand.WAVEFORM:
         return common.data_from_binary(data_bytes, _read_waveform, version=version)
     if type_key == type_keys.ScheduleOperand.SYMBOLIC_PULSE:
-        return common.data_from_binary(
-            data_bytes, _read_symbolic_pulse, version=version
-        )
+        if version < 6:
+            return common.data_from_binary(
+                data_bytes, _read_symbolic_pulse, version=version
+            )
+        else:
+            return common.data_from_binary(
+                data_bytes, _read_symbolic_pulse_v6, version=version
+            )
     if type_key == type_keys.ScheduleOperand.CHANNEL:
         return common.data_from_binary(data_bytes, _read_channel, version=version)
 
@@ -159,9 +260,7 @@ def _read_element(file_obj, version, metadata_deserializer):  # type: ignore[no-
         return read_schedule_block(file_obj, version, metadata_deserializer)
 
     operands = common.read_sequence(
-        file_obj,
-        deserializer=_loads_operand,
-        version=version,
+        file_obj, deserializer=_loads_operand, version=version
     )
     name = value.read_value(file_obj, version, {})
 
@@ -204,13 +303,15 @@ def _dumps_symbolic_expr(expr):  # type: ignore[no-untyped-def]
 
 
 def _write_symbolic_pulse(file_obj, data):  # type: ignore[no-untyped-def]
+    class_name_bytes = data.__class__.__name__.encode(common.ENCODE)
     pulse_type_bytes = data.pulse_type.encode(common.ENCODE)
     envelope_bytes = _dumps_symbolic_expr(data.envelope)
     constraints_bytes = _dumps_symbolic_expr(data.constraints)
     valid_amp_conditions_bytes = _dumps_symbolic_expr(data.valid_amp_conditions)
 
     header_bytes = struct.pack(
-        formats.SYMBOLIC_PULSE_PACK,
+        formats.SYMBOLIC_PULSE_PACK_V2,
+        len(class_name_bytes),
         len(pulse_type_bytes),
         len(envelope_bytes),
         len(constraints_bytes),
@@ -218,6 +319,7 @@ def _write_symbolic_pulse(file_obj, data):  # type: ignore[no-untyped-def]
         data._limit_amplitude,
     )
     file_obj.write(header_bytes)
+    file_obj.write(class_name_bytes)
     file_obj.write(pulse_type_bytes)
     file_obj.write(envelope_bytes)
     file_obj.write(constraints_bytes)
@@ -274,6 +376,7 @@ def _write_element(file_obj, element, metadata_serializer):  # type: ignore[no-u
 
 def read_schedule_block(file_obj, version, metadata_deserializer=None):  # type: ignore[no-untyped-def]
     """Read a single ScheduleBlock from the file like object.
+
     Args:
         file_obj (File): A file like object that contains the QPY binary data.
         version (int): QPY version.
@@ -284,12 +387,15 @@ def read_schedule_block(file_obj, version, metadata_deserializer=None):  # type:
             in the file-like object. If this is not specified the circuit metadata will
             be parsed as JSON with the stdlib ``json.load()`` function using
             the default ``JSONDecoder`` class.
+
     Returns:
         ScheduleBlock: The schedule block object from the file.
+
     Raises:
         TypeError: If any of the instructions is invalid data format.
         QiskitError: QPY version is earlier than block support.
     """
+
     if version < 5:
         QiskitError(f"QPY version {version} does not support ScheduleBlock.")
 
@@ -318,6 +424,7 @@ def read_schedule_block(file_obj, version, metadata_deserializer=None):  # type:
 
 def write_schedule_block(file_obj, block, metadata_serializer=None):  # type: ignore[no-untyped-def]
     """Write a single ScheduleBlock object in the file like object.
+
     Args:
         file_obj (File): The file like object to write the circuit data in.
         block (ScheduleBlock): A schedule block data to write.
@@ -325,6 +432,7 @@ def write_schedule_block(file_obj, block, metadata_serializer=None):  # type: ig
             will be passed the :attr:`.ScheduleBlock.metadata` dictionary for
             ``block`` and will be used as the ``cls`` kwarg
             on the ``json.dump()`` call to JSON serialize that dictionary.
+
     Raises:
         TypeError: If any of the instructions is invalid data format.
     """

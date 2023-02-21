@@ -1,0 +1,7 @@
+---
+upgrade:
+  - |
+    Changed the default values for ``optimization_level`` and for ``resilience_level`` 
+    in :class:`qiskit_ibm_runtime.Options`. If their values are defined by the user, they are not modified. 
+    If not set, if the backend is a noiseless simulator then ``optimization_level`` is set to 1 and 
+    ``resilience_level`` is set to 0; Otherwise, they are be set to 3 and 1 respectively.
