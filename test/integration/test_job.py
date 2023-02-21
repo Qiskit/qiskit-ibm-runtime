@@ -151,7 +151,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
             os.environ.get("QISKIT_IBM_USE_STAGING_CREDENTIALS", "")
             and self.dependencies.channel == "ibm_quantum"
         ):
-            raise SkipTest("Fake backends not supported.")
+            raise SkipTest("Runtime program doesn't exist on staging.")
         real_device = get_real_device(service)
         _ = self._run_program(service, iterations=10, backend=real_device)
         job = self._run_program(service, iterations=2, backend=real_device)
@@ -200,7 +200,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
             os.environ.get("QISKIT_IBM_USE_STAGING_CREDENTIALS", "")
             and self.dependencies.channel == "ibm_quantum"
         ):
-            raise SkipTest("Fake backends not supported.")
+            raise SkipTest("Runtime program doesn't exist on staging.")
         real_device = get_real_device(service)
         _ = self._run_program(service, iterations=10, backend=real_device)
         job = self._run_program(service, iterations=2, backend=real_device)
