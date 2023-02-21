@@ -6,8 +6,8 @@ The Qiskit Runtime service offers these plans for running quantum programs:
 - Lite Plan: Simulator access plan (free) 
 - Standard Plan: Quantum hardware and simulator access plan
 
-Lite plans
-----------
+Lite plan
+---------
 
 A free plan that gives you access to quantum simulators to help you get started with Qiskit Runtime. It does not include access to IBM Quantum systems. The following simulators are included in this plan:
 
