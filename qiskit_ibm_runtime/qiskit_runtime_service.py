@@ -109,6 +109,8 @@ class QiskitRuntimeService(Provider):
                 circuits=[psi], observables=[H1], parameter_values=[theta]
             )
             print(f"Estimator results: {job.result()}")
+            # Close the session only if all jobs are finished
+            # and you don't need to run more in the session.
             session.close()
 
     The example above uses the dedicated :class:`~qiskit_ibm_runtime.Sampler`
@@ -132,6 +134,7 @@ class QiskitRuntimeService(Provider):
         auth: Optional[AccountType] = None,
         token: Optional[str] = None,
         url: Optional[str] = None,
+        filename: Optional[str] = None,
         name: Optional[str] = None,
         instance: Optional[str] = None,
         proxies: Optional[dict] = None,
@@ -158,6 +161,8 @@ class QiskitRuntimeService(Provider):
             url: The API URL.
                 Defaults to https://cloud.ibm.com (ibm_cloud) or
                 https://auth.quantum-computing.ibm.com/api (ibm_quantum).
+            filename: Full path of the file where the account is created.
+                Default: _DEFAULT_ACCOUNT_CONFIG_JSON_FILE
             name: Name of the account to load.
             instance: The service instance to use.
                 For ``ibm_cloud`` runtime, this is the Cloud Resource Name (CRN) or the service name.
@@ -186,6 +191,7 @@ class QiskitRuntimeService(Provider):
             instance=instance,
             channel=channel,
             auth=auth,
+            filename=filename,
             name=name,
             proxies=ProxyConfiguration(**proxies) if proxies else None,
             verify=verify,
@@ -245,6 +251,7 @@ class QiskitRuntimeService(Provider):
         instance: Optional[str] = None,
         channel: Optional[ChannelType] = None,
         auth: Optional[AccountType] = None,
+        filename: Optional[str] = None,
         name: Optional[str] = None,
         proxies: Optional[ProxyConfiguration] = None,
         verify: Optional[bool] = None,
@@ -253,13 +260,22 @@ class QiskitRuntimeService(Provider):
         account = None
         verify_ = verify or True
         if name:
-            if any([auth, channel, token, url]):
-                logger.warning(
-                    "Loading account with name %s. Any input 'auth', "
-                    "'channel', 'token' or 'url' are ignored.",
-                    name,
-                )
-            account = AccountManager.get(name=name)
+            if filename:
+                if any([auth, channel, token, url]):
+                    logger.warning(
+                        "Loading account from file %s with name %s. Any input 'auth', "
+                        "'channel', 'token' or 'url' are ignored.",
+                        filename,
+                        name,
+                    )
+            else:
+                if any([auth, channel, token, url]):
+                    logger.warning(
+                        "Loading account with name %s. Any input 'auth', "
+                        "'channel', 'token' or 'url' are ignored.",
+                        name,
+                    )
+            account = AccountManager.get(filename=filename, name=name)
         elif auth or channel:
             if auth and auth not in ["legacy", "cloud"]:
                 raise ValueError("'auth' can only be 'cloud' or 'legacy'")
@@ -280,7 +296,9 @@ class QiskitRuntimeService(Provider):
                     logger.warning(
                         "Loading default %s account. Input 'url' is ignored.", channel
                     )
-                account = AccountManager.get(channel=channel)
+                account = AccountManager.get(
+                    filename=filename, name=name, channel=channel
+                )
         elif any([token, url]):
             # Let's not infer based on these attributes as they may change in the future.
             raise ValueError(
@@ -288,7 +306,7 @@ class QiskitRuntimeService(Provider):
             )
 
         if account is None:
-            account = AccountManager.get()
+            account = AccountManager.get(filename=filename)
 
         if instance:
             account.instance = instance
@@ -449,7 +467,7 @@ class QiskitRuntimeService(Provider):
     def _get_hgp(
         self,
         instance: Optional[str] = None,
-        backend_name: Optional[str] = None,
+        backend_name: Optional[Any] = None,
     ) -> HubGroupProject:
         """Return an instance of `HubGroupProject`.
 
@@ -489,10 +507,17 @@ class QiskitRuntimeService(Provider):
             if hgp.backend(backend_name):
                 return hgp
 
-        raise QiskitBackendNotFoundError(
+        error_message = (
             f"Backend {backend_name} cannot be found in any "
             f"hub/group/project for this account."
         )
+        if not isinstance(backend_name, str):
+            error_message += (
+                f" {backend_name} is of type {type(backend_name)} but should "
+                f"instead be initialized through the {self}."
+            )
+
+        raise QiskitBackendNotFoundError(error_message)
 
     def _discover_backends(self) -> None:
         """Discovers the remote backends for this account, if not already known."""
@@ -567,6 +592,7 @@ class QiskitRuntimeService(Provider):
 
     @staticmethod
     def delete_account(
+        filename: Optional[str] = None,
         name: Optional[str] = None,
         auth: Optional[str] = None,
         channel: Optional[ChannelType] = None,
@@ -574,6 +600,7 @@ class QiskitRuntimeService(Provider):
         """Delete a saved account from disk.
 
         Args:
+            filename: Name of file from which to delete the account.
             name: Name of the saved account to delete.
             auth: (DEPRECATED, use `channel` instead) Authentication type of the default
                 account to delete. Ignored if account name is provided.
@@ -588,7 +615,7 @@ class QiskitRuntimeService(Provider):
             QiskitRuntimeService._auth_warning()
             channel = channel or QiskitRuntimeService._get_channel_for_auth(auth=auth)
 
-        return AccountManager.delete(name=name, channel=channel)
+        return AccountManager.delete(filename=filename, name=name, channel=channel)
 
     @staticmethod
     def _get_channel_for_auth(auth: str) -> str:
@@ -604,6 +631,7 @@ class QiskitRuntimeService(Provider):
         instance: Optional[str] = None,
         channel: Optional[ChannelType] = None,
         auth: Optional[AccountType] = None,
+        filename: Optional[str] = None,
         name: Optional[str] = None,
         proxies: Optional[dict] = None,
         verify: Optional[bool] = None,
@@ -619,6 +647,7 @@ class QiskitRuntimeService(Provider):
             instance: The CRN (ibm_cloud) or hub/group/project (ibm_quantum).
             channel: Channel type. `ibm_cloud` or `ibm_quantum`.
             auth: (DEPRECATED, use `channel` instead) Authentication type. `cloud` or `legacy`.
+            filename: Full path of the file where the account is saved.
             name: Name of the account to save.
             proxies: Proxy configuration. Supported optional keys are
                 ``urls`` (a dictionary mapping protocol or protocol and host to the URL of the proxy,
@@ -637,6 +666,7 @@ class QiskitRuntimeService(Provider):
             url=url,
             instance=instance,
             channel=channel,
+            filename=filename,
             name=name,
             proxies=ProxyConfiguration(**proxies) if proxies else None,
             verify=verify,
@@ -648,6 +678,7 @@ class QiskitRuntimeService(Provider):
         default: Optional[bool] = None,
         auth: Optional[str] = None,
         channel: Optional[ChannelType] = None,
+        filename: Optional[str] = None,
         name: Optional[str] = None,
     ) -> dict:
         """List the accounts saved on disk.
@@ -657,6 +688,7 @@ class QiskitRuntimeService(Provider):
             auth: (DEPRECATED, use `channel` instead) If set, only accounts with the given
                 authentication type are returned.
             channel: Channel type. `ibm_cloud` or `ibm_quantum`.
+            filename: Name of file whose accounts are returned.
             name: If set, only accounts with the given name are returned.
 
         Returns:
@@ -672,7 +704,7 @@ class QiskitRuntimeService(Provider):
             map(
                 lambda kv: (kv[0], Account.to_saved_format(kv[1])),
                 AccountManager.list(
-                    default=default, channel=channel, name=name
+                    default=default, channel=channel, filename=filename, name=name
                 ).items(),
             ),
         )
@@ -1282,6 +1314,7 @@ class QiskitRuntimeService(Provider):
         self,
         limit: Optional[int] = 10,
         skip: int = 0,
+        backend_name: Optional[str] = None,
         pending: bool = None,
         program_id: str = None,
         instance: Optional[str] = None,
@@ -1296,6 +1329,7 @@ class QiskitRuntimeService(Provider):
         Args:
             limit: Number of jobs to retrieve. ``None`` means no limit.
             skip: Starting index for the job retrieval.
+            backend_name: Name of the backend to retrieve jobs from.
             pending: Filter by job pending state. If ``True``, 'QUEUED' and 'RUNNING'
                 jobs are included. If ``False``, 'DONE', 'CANCELLED' and 'ERROR' jobs
                 are included.
@@ -1335,6 +1369,7 @@ class QiskitRuntimeService(Provider):
             jobs_response = self._api_client.jobs_get(
                 limit=current_page_limit,
                 skip=offset,
+                backend_name=backend_name,
                 pending=pending,
                 program_id=program_id,
                 hub=hub,
@@ -1431,6 +1466,8 @@ class QiskitRuntimeService(Provider):
             program_id=raw_data.get("program", {}).get("id", ""),
             params=decoded,
             creation_date=raw_data.get("created", None),
+            session_id=raw_data.get("session_id"),
+            tags=raw_data.get("tags"),
         )
 
     def least_busy(

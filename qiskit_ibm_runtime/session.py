@@ -64,6 +64,8 @@ class Session:
             job = sampler.run(circ)
             print(f"Sampler job ID: {job.job_id()}")
             print(f"Sampler job result:" {job.result()})
+            # Close the session only if all jobs are finished and
+            # you don't need to run more in the session.
             session.close()
     """
 
@@ -81,8 +83,9 @@ class Session:
                 Otherwise ``QiskitRuntimeService()`` is used to initialize
                 your default saved account.
             backend: Optional instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
-                string name of backend. If not specified, a backend will be selected
-                automatically (IBM Cloud channel only).
+                string name of backend. An instance of :class:`qiskit_ibm_provider.IBMBackend` will not work.
+                If not specified, a backend will be selected automatically (IBM Cloud channel only).
+
             max_time: (EXPERIMENTAL setting, can break between releases without warning)
                 Maximum amount of time, a runtime session can be open before being
                 forcibly closed. Can be specified as seconds (int) or a string like "2h 30m 40s".
@@ -266,6 +269,7 @@ def get_default_session(
         or (service is not None and _DEFAULT_SESSION.service.channel != service.channel)
     ):
         # Create a new session if one doesn't exist, or if the user wants to switch backend/channel.
+        # Close the session only if all jobs are finished and you don't need to run more in the session.
         if _DEFAULT_SESSION and not _IN_SESSION_CM and _DEFAULT_SESSION._active:
             _DEFAULT_SESSION.close()
         if service is None:
