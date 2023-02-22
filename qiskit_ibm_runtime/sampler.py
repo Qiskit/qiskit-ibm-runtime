@@ -61,7 +61,7 @@ class Sampler(BaseSampler):
         service = QiskitRuntimeService(channel="ibm_cloud")
         bell = ReferenceCircuits.bell()
 
-        with Session(service) as session:
+        with Session(service, backend="ibmq_qasm_simulator") as session:
             sampler = Sampler(session=session)
 
             job = sampler.run(bell, shots=1024)
