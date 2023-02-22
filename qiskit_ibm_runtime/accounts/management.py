@@ -166,6 +166,8 @@ class AccountManager:
                 name=cls._get_default_account_name(channel=channel),
             )
             if saved_account is None:
+                if os.path.isfile(_QISKITRC_CONFIG_FILE):
+                    return cls._from_qiskitrc_file()
                 raise AccountNotFoundError(f"No default {channel} account saved.")
             return Account.from_saved_format(saved_account)
 
@@ -176,31 +178,7 @@ class AccountManager:
                 return Account.from_saved_format(all_config[account_name])
 
         if os.path.isfile(_QISKITRC_CONFIG_FILE):
-            qiskitrc_data = read_qiskitrc(_QISKITRC_CONFIG_FILE)
-            proxies = (
-                ProxyConfiguration(ast.literal_eval(qiskitrc_data["proxies"]))
-                if "proxies" in qiskitrc_data
-                else None
-            )
-            save_config(
-                filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE,
-                name=_DEFAULT_ACCOUNT_NAME_IBM_QUANTUM,
-                overwrite=False,
-                config=Account(
-                    token=qiskitrc_data.get("token", None),
-                    url=qiskitrc_data.get("url", None),
-                    instance=qiskitrc_data.get("default_provider", None),
-                    verify=bool(qiskitrc_data.get("verify", None)),
-                    proxies=proxies,
-                    channel="ibm_quantum",
-                )
-                .validate()
-                .to_saved_format(),
-            )
-            default_config = read_config(filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE)
-            return Account.from_saved_format(
-                default_config[_DEFAULT_ACCOUNT_NAME_IBM_QUANTUM]
-            )
+            return cls._from_qiskitrc_file()
 
         raise AccountNotFoundError("Unable to find account.")
 
@@ -282,4 +260,33 @@ class AccountManager:
             _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM
             if channel == "ibm_quantum"
             else _DEFAULT_ACCOUNT_NAME_IBM_CLOUD
+        )
+
+    @classmethod
+    def _from_qiskitrc_file(cls) -> Optional[Account]:
+        """Read account from qiskitrc file."""
+        qiskitrc_data = read_qiskitrc(_QISKITRC_CONFIG_FILE)
+        proxies = (
+            ProxyConfiguration(ast.literal_eval(qiskitrc_data["proxies"]))
+            if "proxies" in qiskitrc_data
+            else None
+        )
+        save_config(
+            filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE,
+            name=_DEFAULT_ACCOUNT_NAME_IBM_QUANTUM,
+            overwrite=False,
+            config=Account(
+                token=qiskitrc_data.get("token", None),
+                url=qiskitrc_data.get("url", None),
+                instance=qiskitrc_data.get("default_provider", None),
+                verify=bool(qiskitrc_data.get("verify", None)),
+                proxies=proxies,
+                channel="ibm_quantum",
+            )
+            .validate()
+            .to_saved_format(),
+        )
+        default_config = read_config(filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE)
+        return Account.from_saved_format(
+            default_config[_DEFAULT_ACCOUNT_NAME_IBM_QUANTUM]
         )
