@@ -1,9 +1,9 @@
 Calculate expectation values in an algorithm
 ==============================================
 
-The role of the ``Estimator`` primitive is two-fold: on one hand, it acts as an **entry point** to quantum devices or simulators, replacing ``backend.run()``. On the other hand, it is an **algorithmic abstraction** for expectation value calculations, which removes the need to perform operations to construct the final expectation circuit. This results in a considerable reduction of code complexity and a more compact algorithm design. 
+The role of the ``Estimator`` primitive is two-fold: on one hand, it acts as an entry point to the quantum devices or simulators, replacing ``backend.run()``. On the other hand, it is an **algorithmic abstraction** for expectation value calculations, which removes the need to perform operations to construct the final expectation circuit. This results in a considerable reduction of the code complexity, and a more compact algorithm design. 
 
-The following example uses common tools from the ``qiskit.opflow`` module as a reference for the "legacy way of doing things", but we acknowledge that some people might have used custom code for this task. In that case, you can decide between keeping your custom code and replacing ``backend.run()`` with a ``Sampler``, or replacing your custom code with the ``Estimator`` primitive.
+The following example uses common tools from the ``qiskit.opflow`` module as a reference for the "legacy way of doing things", but we acknowledge that some of you might have used custom code for this task. In that case, you can decide between keeping your custom code and replacing ``backend.run()`` with a ``Sampler``, or replacing your custom code with the ``Estimator`` primitive.
 
 
 Problem definition 
@@ -100,10 +100,7 @@ This can be done with the Estimator primitive in `qiskit.primitives`:
 Option 2: Construct the expectation circuit and sample on a system or simulator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. raw:: html
-
-    <details>
-    <summary><a>Legacy method</a></summary>
+**Legacy method**
 
 .. code-block:: python
 
@@ -118,21 +115,14 @@ Option 2: Construct the expectation circuit and sample on a system or simulator
     # Note that there are other expectation value methods: MatrixExpectation(), AerPauliExpectation(), 
     # but they are used just like PauliExpectation()
 
-.. raw:: html
-
-   </details>
-
 Next, the actual calculation is done by the `CircuitSampler` class, which receives a backend or `QuantumInstance` and the expectation object. Here are some examples of how it can be used:
 
-0. Run locally by using the terra primitive (New)
-**************************************************
+**New method - Run locally by using the terra primitive**
+
+0. Run locally by using the terra primitive
+*********************************************
 
 For the terra primitive, if no shots are specified, it performs an exact calculation. If shots are specified, it performs a shot-based simulation (not quite qasm, as you can see). There is no real legacy alternative for this:
-
-.. raw:: html
-
-    <details>
-    <summary><a>New method</a></summary>
 
 .. code-block:: python
 
@@ -143,19 +133,12 @@ For the terra primitive, if no shots are specified, it performs an exact calcula
     result = estimator.run([state], [op]).result().values
     print(result)
 
-.. raw:: html
-
-   </details>    
-
 .. _a-legacy-run-aer:
 
 1. Run locally by using an AerSimulator
 *****************************************
 
-.. raw:: html
-
-    <details>
-    <summary><a>Legacy method</a></summary>
+**Legacy method**
 
 .. code-block:: python
 
@@ -172,14 +155,7 @@ For the terra primitive, if no shots are specified, it performs an exact calcula
 
     print("sampled: ", expectation_value_2)
 
-.. raw:: html
-
-   </details>
-
-.. raw:: html
-
-    <details>
-    <summary><a>New method</a></summary>
+**New method**
 
 .. code-block:: python
 
@@ -190,20 +166,12 @@ For the terra primitive, if no shots are specified, it performs an exact calcula
     result = estimator.run([state], [op]).result().values
     print(result)
 
-.. raw:: html
-
-   </details>
-   
-
 .. _a-legacy-run-remote:
 
 2. Run on a remote simulator or real backend
 *********************************************
 
-.. raw:: html
-
-    <details>
-    <summary><a>Legacy method</a></summary>
+**Legacy method**
 
 Here we use the `ibmq_qasm_simulator`, but the workflow is the same when using a real device.
 
@@ -223,14 +191,7 @@ Here we use the `ibmq_qasm_simulator`, but the workflow is the same when using a
 
     print("sampled: ", expectation_value_4)
 
-.. raw:: html
-
-   </details>
-
-.. raw:: html
-
-    <details>
-    <summary><a>New method</a></summary>
+**New method**
 
 .. code-block:: python
     
@@ -243,6 +204,3 @@ Here we use the `ibmq_qasm_simulator`, but the workflow is the same when using a
 
     result = estimator.run([state], [op]).result().values
     print(result)
-.. raw:: html
-
-   </details>
