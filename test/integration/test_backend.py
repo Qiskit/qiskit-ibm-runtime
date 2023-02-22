@@ -12,7 +12,6 @@
 
 """Tests for backend functions using real runtime service."""
 
-import os
 from unittest import SkipTest
 
 
@@ -20,7 +19,7 @@ from qiskit.transpiler.target import Target
 from qiskit_ibm_runtime import QiskitRuntimeService
 
 from ..ibm_test_case import IBMIntegrationTestCase
-from ..decorators import run_integration_test
+from ..decorators import run_integration_test, production_only
 
 
 class TestIntegrationBackend(IBMIntegrationTestCase):
@@ -69,13 +68,9 @@ class TestIBMBackend(IBMIntegrationTestCase):
         with self.subTest(backend=backend.name):
             self.assertIsInstance(backend.service, QiskitRuntimeService)
 
+    @production_only
     def test_backend_target(self):
         """Check if the target property is set."""
-        if (
-            os.environ.get("QISKIT_IBM_USE_STAGING_CREDENTIALS", "")
-            and self.dependencies.channel == "ibm_quantum"
-        ):
-            raise SkipTest("Fake backends not supported.")
         backend = self.backend
         with self.subTest(backend=backend.name):
             self.assertIsNotNone(backend.target)
@@ -87,13 +82,9 @@ class TestIBMBackend(IBMIntegrationTestCase):
         with self.subTest(backend=backend.name):
             self.assertIsNotNone(backend.max_circuits)
 
+    @production_only
     def test_backend_qubit_properties(self):
         """Check if the qubit properties are set."""
-        if (
-            os.environ.get("QISKIT_IBM_USE_STAGING_CREDENTIALS", "")
-            and self.dependencies.channel == "ibm_quantum"
-        ):
-            raise SkipTest("Fake backends not supported.")
         backend = self.backend
         with self.subTest(backend=backend.name):
             if backend.simulator:
@@ -113,26 +104,18 @@ class TestIBMBackend(IBMIntegrationTestCase):
         with self.subTest(backend=backend.name):
             self.assertTrue(backend.status().operational)
 
+    @production_only
     def test_backend_properties(self):
         """Check the properties of calibration of a real chip."""
-        if (
-            os.environ.get("QISKIT_IBM_USE_STAGING_CREDENTIALS", "")
-            and self.dependencies.channel == "ibm_quantum"
-        ):
-            raise SkipTest("Fake backends not supported.")
         backend = self.backend
         with self.subTest(backend=backend.name):
             if backend.simulator:
                 raise SkipTest("Skip since simulator does not have properties.")
             self.assertIsNotNone(backend.properties())
 
+    @production_only
     def test_backend_pulse_defaults(self):
         """Check the backend pulse defaults of each backend."""
-        if (
-            os.environ.get("QISKIT_IBM_USE_STAGING_CREDENTIALS", "")
-            and self.dependencies.channel == "ibm_quantum"
-        ):
-            raise SkipTest("Fake backends not supported.")
         backend = self.backend
         with self.subTest(backend=backend.name):
             if backend.simulator:
@@ -147,13 +130,9 @@ class TestIBMBackend(IBMIntegrationTestCase):
         with self.subTest(backend=backend.name):
             self.assertIsNotNone(backend.configuration())
 
+    @production_only
     def test_backend_invalid_attribute(self):
         """Check if AttributeError is raised when an invalid backend attribute is accessed."""
-        if (
-            os.environ.get("QISKIT_IBM_USE_STAGING_CREDENTIALS", "")
-            and self.dependencies.channel == "ibm_quantum"
-        ):
-            raise SkipTest("Fake backends not supported.")
         backend = self.backend
         with self.subTest(backend=backend.name):
             with self.assertRaises(AttributeError):

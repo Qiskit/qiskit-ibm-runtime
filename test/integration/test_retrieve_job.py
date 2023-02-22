@@ -12,14 +12,12 @@
 
 """Tests for job functions using real runtime service."""
 
-import os
 import uuid
-from unittest import SkipTest
 from datetime import datetime, timezone
 from qiskit.providers.jobstatus import JobStatus
 
 from ..ibm_test_case import IBMIntegrationJobTestCase
-from ..decorators import run_integration_test
+from ..decorators import run_integration_test, production_only
 from ..utils import wait_for_status, get_real_device
 
 
@@ -27,13 +25,9 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
     """Integration tests for job retrieval functions."""
 
     @run_integration_test
+    @production_only
     def test_retrieve_job_queued(self, service):
         """Test retrieving a queued job."""
-        if (
-            os.environ.get("QISKIT_IBM_USE_STAGING_CREDENTIALS", "")
-            and self.dependencies.channel == "ibm_quantum"
-        ):
-            raise SkipTest("Runtime program doesn't exist on staging.")
         real_device = get_real_device(service)
         _ = self._run_program(service, iterations=10, backend=real_device)
         job = self._run_program(service, iterations=2, backend=real_device)
