@@ -214,3 +214,11 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         self.assertEqual(
             [job.job_id() for job in rjobs], [job.job_id() for job in rjobs_desc]
         )
+
+    @run_integration_test
+    def test_retrieve_jobs_backend(self, service):
+        """Test retrieving jobs with backend filter."""
+        backend = self.sim_backends[service.channel]
+        jobs = service.jobs(backend_name=backend)
+        for job in jobs:
+            self.assertEqual(backend, job.backend().name)
