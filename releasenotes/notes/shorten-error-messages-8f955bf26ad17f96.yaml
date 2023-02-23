@@ -1,0 +1,5 @@
+---
+other:
+  - |
+    Since error messages from a failing job may be long, we shortened them so that they begin from the last 
+    ``Traceback`` in the message.
