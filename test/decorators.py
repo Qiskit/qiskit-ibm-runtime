@@ -28,7 +28,7 @@ def production_only(func):
 
     @wraps(func)
     def _wrapper(self, *args):
-        if "dev" in os.environ.get("QISKIT_IBM_URL", ""):
+        if "dev" in self.dependencies.url:
             raise SkipTest(
                 f"Skipping integration test. {self} is not supported on staging."
             )
