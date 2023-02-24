@@ -10,6 +10,17 @@ Background
 .. |BaseEstimator| replace:: ``BaseEstimator``
 .. _BaseEstimator: https://qiskit.org/documentation/stubs/qiskit.primitives.BaseEstimator.html
 
+.. |BaseSampler| replace:: ``BaseSampler``
+.. _BaseSampler: https://qiskit.org/documentation/stubs/qiskit.primitives.BaseSampler.html
+
+.. |qiskit_aer.primitives| replace:: ``qiskit_aer.primitives``
+.. _qiskit_aer.primitives: https://github.com/Qiskit/qiskit-aer/tree/main/qiskit_aer/primitives
+
+.. |qiskit.primitives| replace:: ``qiskit.primitives``
+.. _qiskit.primitives: https://qiskit.org/documentation/apidoc/primitives.html
+
+
+
 The role of the ``Estimator`` primitive is two-fold: on one hand, it acts as an entry point to the quantum devices or
 simulators, replacing ``backend.run()``. On the other hand, it is an **algorithmic abstraction** for expectation
 value calculations, which removes the need
@@ -50,7 +61,7 @@ complexity, and a more compact algorithm design.
 
     **Primitives model:** You can access real backends and remote simulators through the ``qiskit_ibm_runtime``
     **primitives** (``Sampler``, ``Estimator``). If you want to run **local** simulations, you can import specific local primitives
-    from ``qiskit_aer`` and ``qiskit``. All of them follow the ``BaseSampler`` and ``BaseEstimator`` interfaces, but
+    from |qiskit_aer.primitives|_ and |qiskit.primitives|_. All of them follow the |BaseSampler|_ and |BaseEstimator|_ interfaces, but
     **only the Runtime Primitives offer access to the Runtime service, sessions, and built-in error mitigation**.
 
     .. raw:: html
@@ -219,7 +230,7 @@ but can help improve your performance and results. For more information, you can
 - `The tutorial on error mitigation in the Runtime Primitives <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/tutorials/Error-Suppression-and-Error-Mitigation.html>`_
 - `The how-to setting execution options in the Runtime Primitives <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/how_to/options.html>`_
 - `The API reference for execution options in the Runtime Primitives <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/stubs/qiskit_ibm_runtime.options.Options.html#qiskit_ibm_runtime.options.Options>`_
-- `The how-to on sessions for faster execution of iterable workloads <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/how_to/run_session.html>`_
+- `The how-to on sessions for faster execution of iterative workloads <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/how_to/run_session.html>`_
 
 
 3. Other execution alternatives (non-Runtime)
