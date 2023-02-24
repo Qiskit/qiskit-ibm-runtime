@@ -87,10 +87,9 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         """Test a failed program execution."""
         job = self._run_program(service, inputs={})
         job.wait_for_final_state()
-        job_result_raw = service._api_client.job_results(job.job_id())
         self.assertEqual(JobStatus.ERROR, job.status())
         self.assertIn(
-            API_TO_JOB_ERROR_MESSAGE["FAILED"].format(job.job_id(), job_result_raw),
+            API_TO_JOB_ERROR_MESSAGE["FAILED"].format(job.job_id(), ""),
             job.error_message(),
         )
         with self.assertRaises(RuntimeJobFailureError):
