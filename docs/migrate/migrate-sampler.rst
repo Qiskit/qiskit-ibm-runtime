@@ -20,7 +20,7 @@ We want to measure a quantum state:
     circuit.measure_all()
 
 Option 1: Run locally 
-~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------
 .. raw:: html
 
     <details>
@@ -81,7 +81,7 @@ If shots are specified, this primitive outputs a shot-based simulation (no longe
 
 
 Option 2: Run on a remote simulator or real backend
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+----------------------------------------------------
 
 .. raw:: html
 
@@ -93,7 +93,7 @@ Option 2: Run on a remote simulator or real backend
     from qiskit import IBMQ
 
     IBMQ.load_account()
-    provider = IBMQ.get_provider(hub='ibm-q-internal') # here the hub should not be internal
+    provider = IBMQ.get_provider(hub='ibm-q') 
     backend = provider.get_backend("ibmq_qasm_simulator")
 
     # Run and get counts
