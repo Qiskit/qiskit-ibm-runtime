@@ -27,12 +27,12 @@ def production_only(func):
     """Decorator that runs a test only on production services."""
 
     @wraps(func)
-    def _wrapper(self, *args):
+    def _wrapper(self, *args, **kwargs):
         if "dev" in self.dependencies.url:
             raise SkipTest(
                 f"Skipping integration test. {self} is not supported on staging."
             )
-        func(self, *args)
+        func(self, *args, **kwargs)
 
     return _wrapper
 
