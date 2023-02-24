@@ -423,6 +423,7 @@ class BaseFakeRuntimeClient:
         self,
         limit=None,
         skip=None,
+        backend_name=None,
         pending=None,
         program_id=None,
         hub=None,
@@ -441,6 +442,9 @@ class BaseFakeRuntimeClient:
         skip = skip or 0
         jobs = list(self._jobs.values())
         count = len(self._jobs)
+        if backend_name:
+            jobs = [job for job in jobs if job._backend == backend_name]
+            count = len(jobs)
         if pending is not None:
             job_status_list = pending_statuses if pending else returned_statuses
             jobs = [job for job in jobs if job._status in job_status_list]

@@ -1,0 +1,5 @@
+---
+upgrade:
+  - |
+    :meth:`~qiskit_ibm_runtime.RuntimeJob.session_id` and :meth:`~qiskit_ibm_runtime.RuntimeJob.tags`
+    were added for an easy way to return the session_id and job_tags of a job.
