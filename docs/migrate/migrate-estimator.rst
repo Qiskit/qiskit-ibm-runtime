@@ -21,13 +21,13 @@ Background
 
 
 
-The role of the ``Estimator`` primitive is two-fold: it acts as an **access point** to the quantum devices or
+The role of the ``Estimator`` primitive is two-fold: it acts as an **entry point** to quantum devices or
 simulators, replacing ``backend.run()``. Additionally, it is an **algorithmic abstraction** for expectation
 value calculations, so you don't have to manually construct the final expectation circuit. This results in a considerable reduction of the code complexity and a more compact algorithm design.
 
 .. note::
 
-    **Backend.run() model:** You accessed real backends and remote simulators through the ``qiskit_ibm_provider``
+    **Backend.run() model:** In this model, you accessed real backends and remote simulators through the ``qiskit_ibm_provider``
     module. If you wanted to run **local** simulations, you could import a specific backend
     from ``qiskit_aer``. All of them followed the ``backend.run()`` interface.
 
