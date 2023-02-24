@@ -66,6 +66,7 @@ Example: configure Estimator with optimization levels
         estimator = Estimator(session=session, options=options)
         job = estimator.run(circuits=[psi], observables=[H], parameter_values=[theta])
         psi1_H1 = job.result()
+        # Close the session only if all jobs are finished, and you don't need to run more in the session
         session.close()
 
 .. note:: 

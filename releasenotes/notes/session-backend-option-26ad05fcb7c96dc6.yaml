@@ -1,0 +1,8 @@
+---
+deprecations:
+  - |
+    ``backend`` is no longer a supported option when using :meth:`qiskit_ibm_runtime.Session.run`.
+    Sessions do not support multiple cross backends. Additionally, an exception will be raised 
+    if a backend passed in through options does not match the original session backend in an
+    active session.
+
