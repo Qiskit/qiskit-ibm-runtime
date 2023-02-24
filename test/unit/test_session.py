@@ -124,6 +124,7 @@ class TestSession(IBMTestCase):
         """Test session as a context manager."""
         with Session(service=MagicMock(), backend="ibm_gotham") as session:
             session.run(program_id="foo", inputs={})
+            session.close()
         self.assertFalse(session._active)
 
     def test_default_backend(self):

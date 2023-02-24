@@ -66,6 +66,7 @@ Below is an example of using primitives within a session::
             circuits=[psi], observables=[H1], parameter_values=[theta]
         )
         print(f"Estimator results: {job.result()}")
+        session.close()
 
 Backend data
 ------------
