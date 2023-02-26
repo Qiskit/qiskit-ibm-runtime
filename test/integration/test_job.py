@@ -27,7 +27,7 @@ from qiskit_ibm_runtime.exceptions import (
     RuntimeJobMaxTimeoutError,
 )
 from ..ibm_test_case import IBMIntegrationJobTestCase
-from ..decorators import run_integration_test
+from ..decorators import run_integration_test, production_only
 from ..serialization import (
     get_complex_types,
     SerializableClassDecoder,
@@ -143,6 +143,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
             self._run_program(service, max_execution_time=299)
 
     @run_integration_test
+    @production_only
     def test_cancel_job_queued(self, service):
         """Test canceling a queued job."""
         real_device = get_real_device(service)
@@ -187,6 +188,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
                     service.job(job.job_id())
 
     @run_integration_test
+    @production_only
     def test_delete_job_queued(self, service):
         """Test deleting a queued job."""
         real_device = get_real_device(service)
