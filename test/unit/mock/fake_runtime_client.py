@@ -438,7 +438,6 @@ class BaseFakeRuntimeClient:
         limit = limit or len(self._jobs)
         skip = skip or 0
         jobs = list(self._jobs.values())
-        count = len(self._jobs)
 
         if backend_name:
             jobs = [job for job in jobs if job._backend == backend_name]
