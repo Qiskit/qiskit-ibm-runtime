@@ -23,7 +23,8 @@ Background
 
 The role of the ``Estimator`` primitive is two-fold: it acts as an **entry point** to quantum devices or
 simulators, replacing ``backend.run()``. Additionally, it is an **algorithmic abstraction** for expectation
-value calculations, so you don't have to manually construct the final expectation circuit. This results in a considerable reduction of the code complexity and a more compact algorithm design.
+value calculations, so you don't have to manually construct the final expectation circuit.
+This results in a considerable reduction of the code complexity and a more compact algorithm design.
 
 .. note::
 
@@ -265,8 +266,8 @@ solve the problem defined above with a local statevector simulation.
     expectation:  -1.0636533500290943
 
 
-3.b. [New] Using Reference ``Estimator`` or Aer ``Estimator``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+3.b. [New] Using the Reference ``Estimator`` or Aer ``Estimator`` primitive
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The Reference ``Estimator`` lets you perform either an exact or a shot-based noisy simulation based
 on the ``Statevector`` class in the ``qiskit.quantum_info`` module.
@@ -310,5 +311,5 @@ the simulation method has been fixed to match the result from 3.a.
 For more information on using the Aer Primitives, check out this
 `VQE tutorial <https://qiskit.org/documentation/tutorials/algorithms/03_vqe_simulation_with_noise.html>`_ .
 
-For more information on running noisy simulations with the **Runtime Pritives**, you can see this
+For more information on running noisy simulations with the **Runtime Primitives**, you can see this
 `topic <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/how_to/noisy_simulators.html>`_.
