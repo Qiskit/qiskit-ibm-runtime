@@ -196,7 +196,7 @@ value:
 2.b. [New] Using the ``Estimator`` Runtime primitive
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You can see how ``Estimator`` simplifies the user-side syntax, which makes it a more
+You can see how the ``Estimator`` simplifies the user-side syntax, which makes it a more
 convenient tool for algorithm design.
 
 .. note::
@@ -234,7 +234,10 @@ to migrate from, but can help improve your performance and results. For more inf
 3. Other execution alternatives (non-Runtime)
 ----------------------------------------------
 
-You might want to test an algorithm using local simulation. We will next present other migration paths using non-Runtime primitives to show how this can be done. Let's assume that we want to
+You might want to test an algorithm using local simulation. We will next present other migration paths using
+non-Runtime primitives to show how this can be done.
+
+Let's assume that we want to
 solve the problem defined above with a local statevector simulation.
 
 3.a. [Legacy] Using the Qiskit Aer simulator
@@ -298,9 +301,6 @@ the simulation method has been fixed to match the result from 3.a.
 
     estimator = Estimator(run_options= {"method": "statevector"})
 
-    result = estimator.run(state, op).result().values
-
-    # for shot-based simulation:
     expectation_value = estimator.run(state, op, shots=100).result().values
 
 .. code-block:: python
