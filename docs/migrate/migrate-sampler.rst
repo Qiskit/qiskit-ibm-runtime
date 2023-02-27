@@ -19,6 +19,8 @@ Background
 .. |qiskit.primitives| replace:: ``qiskit.primitives``
 .. _qiskit.primitives: https://qiskit.org/documentation/apidoc/primitives.html
 
+.. |QuasiDistribution.binary_probabilities| replace:: ``QuasiDistribution.binary_probabilities()``
+.. _QuasiDistribution.binary_probabilities: https://qiskit.org/documentation/stubs/qiskit.result.QuasiDistribution.binary_probabilities.html#qiskit.result.QuasiDistribution.binary_probabilities
 
 
 The role of the ``Sampler`` primitive is two-fold: it acts as an **entry point** to the quantum devices or
@@ -28,6 +30,7 @@ for the extraction of probability distributions from measurement counts.
 They both take in circuits as inputs, bue the main difference between the former and the latter is the format of the
 output: ``backend.run()`` outputs **counts**, while the ``Sampler`` processes those counts and outputs
 the **quasi-probability distribution** associated with them.
+
 
 .. note::
 
@@ -43,7 +46,7 @@ the **quasi-probability distribution** associated with them.
     .. raw:: html
 
         <details>
-        <summary><a>Code Example for ``qiskit-ibmq-provider`` + ``backend.run()`` </a></summary>
+        <summary><a>Code Example for <code>qiskit-ibmq-provider</code> + <code>backend.run()</code></a></summary>
         <br>
 
     .. code-block:: python
@@ -67,7 +70,7 @@ the **quasi-probability distribution** associated with them.
     .. raw:: html
 
         <details>
-        <summary><a>Code Example for ``qiskit-aer`` + ``backend.run()`` </a></summary>
+        <summary><a>Code Example for <code>qiskit-aer</code> + <code>backend.run()</code> </a></summary>
         <br>
 
     .. code-block:: python
@@ -149,6 +152,11 @@ End-to-end example
 
 We want to find out the probability (or quasi-probability) distribution associated to a quantum state:
 
+.. attention::
+
+    Careful with the measurements!!! If you want to use the ``Sampler`` primitive, the circuit
+    **must contain measurements**.
+
 .. code-block:: python
 
     from qiskit import QuantumCircuit
@@ -156,7 +164,7 @@ We want to find out the probability (or quasi-probability) distribution associat
     circuit = QuantumCircuit(2)
     circuit.x(0)
     circuit.x(1)
-    circuit.measure_all()
+    circuit.measure_all() # measurement!!!
 
 2. Calculate probability distribution on real device or cloud simulator
 -----------------------------------------------------------------------
@@ -179,10 +187,10 @@ First, let's run the circuit in a cloud simulator and see the result object:
 
 .. code-block:: python
 
-    from qiskit_ibm_provider import IBMProvider
+    from qiskit import IBMQ
 
     # Define provider and backend
-    provider = IBMProvider()
+    provider = IBMQ.get_provider(hub="ibm-q", group="open", project="main")
     backend = provider.get_backend("ibmq_qasm_simulator")
 
     # Run
@@ -255,11 +263,6 @@ notice that the workflow is now simplified, as the quasi-probability distributio
     result = sampler.run(circuit, shots=1024).result()
     quasi_dists = result.quasi_dists
 
-.. attention::
-
-    Pay attention to the output format, the states are now longer bitstrings (i.e ``\"11\"``\),
-    but integers (i.e ``3``\).
-
 .. code-block:: python
 
     >>> print("result: ", result)
@@ -268,6 +271,21 @@ notice that the workflow is now simplified, as the quasi-probability distributio
     'shots': 1024, 'readout_mitigation_overhead': 1.0,
     'readout_mitigation_time': 0.024925401899963617}])
     quasi_dists:  [{3: 1.0}]
+
+.. attention::
+
+    Careful with the output format!!! With the ``Sampler`` the states are now longer represented
+    with bitstrings (i.e ``"11"``\),
+    but integers (i.e ``3``\). If you want to convert the ``Sampler``\'s output to bitstrings,
+    you can use the |QuasiDistribution.binary_probabilities|_ method as shown below.
+
+.. code-block:: python
+
+    >>> # convert output to bitstrings
+    >>> binary_quasi_dist = quasi_dists[0].binary_probabilities()
+    >>> print("binary_quasi_dist: ", binary_quasi_dist)
+    binary_quasi_dist:  {'11': 1.0}
+
 
 The ``Sampler`` Runtime primitive offers a series of features and tuning options that do not have a legacy alternative
 to migrate from, but can help improve your performance and results. For more information, refer to the following:
@@ -383,7 +401,7 @@ the simulation method has been fixed to match the result from 3.a.
 
 .. code-block:: python
 
-    from qiskit_aer.primitives import Sampler as AerSampler # all that changes is the import!!!
+    from qiskit_aer.primitives import Sampler as AerSampler # import change!!!
 
     sampler = AerSampler(run_options= {"method": "statevector"})
 
