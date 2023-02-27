@@ -43,104 +43,104 @@ the **quasi-probability distribution** associated with them.
     For more information in how to migrate to the new ``qiskit-ibm-provider``, please read the following
     `provider migration guide <https://github.com/Qiskit/qiskit-ibm-provider/blob/main/docs/tutorials/Migration_Guide_from_qiskit-ibmq-provider.ipynb>`_.
 
-    .. raw:: html
+        .. raw:: html
 
-        <details>
-        <summary><a>Code Example for <code>qiskit-ibmq-provider</code> + <code>backend.run()</code></a></summary>
-        <br>
+            <details>
+            <summary><a>Code Example for <code>qiskit-ibmq-provider</code> + <code>backend.run()</code></a></summary>
+            <br>
 
-    .. code-block:: python
+        .. code-block:: python
 
-        from qiskit import IBMQ
+            from qiskit import IBMQ
 
-        # Select provider
-        provider = IBMQ.load_account()
+            # Select provider
+            provider = IBMQ.load_account()
 
-        # Get backend
-        backend = provider.get_backend("ibmq_qasm_simulator") # cloud simulator
+            # Get backend
+            backend = provider.get_backend("ibmq_qasm_simulator") # cloud simulator
 
-        # Run
-        result = backend.run(circuits)
+            # Run
+            result = backend.run(circuits)
 
-    .. raw:: html
+        .. raw:: html
 
-        </details>
-        <br>
+            </details>
+            <br>
 
-    .. raw:: html
+        .. raw:: html
 
-        <details>
-        <summary><a>Code Example for <code>qiskit-aer</code> + <code>backend.run()</code> </a></summary>
-        <br>
+            <details>
+            <summary><a>Code Example for <code>qiskit-aer</code> + <code>backend.run()</code> </a></summary>
+            <br>
 
-    .. code-block:: python
+        .. code-block:: python
 
-        from qiskit_aer import AerSimulator # former import: from qiskit import Aer
+            from qiskit_aer import AerSimulator # former import: from qiskit import Aer
 
-        # Get local simulator backend
-        backend = AerSimulator()
+            # Get local simulator backend
+            backend = AerSimulator()
 
-        # Run
-        result = backend.run(circuits)
+            # Run
+            result = backend.run(circuits)
 
-    .. raw:: html
+        .. raw:: html
 
-        </details>
-        <br>
+            </details>
+            <br>
 
     **Primitives model:** You access real backends and remote simulators through the `qiskit-ibm-runtime`
     **primitives** (`Sampler` and `Estimator`). If you want to run **local** simulations, you can import specific `local` primitives
     from |qiskit_aer.primitives|_ and |qiskit.primitives|_. All of them follow the |BaseSampler|_ and |BaseEstimator|_ interfaces, but
     **only the Runtime primitives offer access to the Runtime service, sessions, and built-in error mitigation**.
 
-    .. raw:: html
+        .. raw:: html
 
-        <details>
-        <summary><a>Code Example for Runtime Sampler</a></summary>
-        <br>
+            <details>
+            <summary><a>Code Example for Runtime Sampler</a></summary>
+            <br>
 
-    .. code-block:: python
+        .. code-block:: python
 
-        from qiskit_ibm_runtime import QiskitRuntimeService, Sampler
+            from qiskit_ibm_runtime import QiskitRuntimeService, Sampler
 
-        # Define service
-        service = QiskitRuntimeService()
+            # Define service
+            service = QiskitRuntimeService()
 
-        # Get backend
-        backend = service.backend("ibmq_qasm_simulator") # cloud simulator
+            # Get backend
+            backend = service.backend("ibmq_qasm_simulator") # cloud simulator
 
-        # Define Sampler
-        # (see tutorials more more info on sessions)
-        sampler = Sampler(session=backend)
+            # Define Sampler
+            # (see tutorials more more info on sessions)
+            sampler = Sampler(session=backend)
 
-        # Run Quasi-Probability calculation
-        result = sampler.run(circuits).result()
+            # Run Quasi-Probability calculation
+            result = sampler.run(circuits).result()
 
-    .. raw:: html
+        .. raw:: html
 
-        </details>
-        <br>
+            </details>
+            <br>
 
-    .. raw:: html
+        .. raw:: html
 
-        <details>
-        <summary><a>Code Example for Aer Estimator</a></summary>
-        <br>
+            <details>
+            <summary><a>Code Example for Aer Estimator</a></summary>
+            <br>
 
-    .. code-block:: python
+        .. code-block:: python
 
-        from qiskit_aer import Sampler
+            from qiskit_aer import Sampler
 
-        # Get local simulator Sampler
-        sampler = Sampler()
+            # Get local simulator Sampler
+            sampler = Sampler()
 
-        # Run Quasi-Probability calculation
-        result = sampler.run(circuits).result()
+            # Run Quasi-Probability calculation
+            result = sampler.run(circuits).result()
 
-    .. raw:: html
+        .. raw:: html
 
-        </details>
-        <br>
+            </details>
+            <br>
 
 Let's see how to sample a circuit with ``backend.run()`` and using the ``Sampler``.
 
