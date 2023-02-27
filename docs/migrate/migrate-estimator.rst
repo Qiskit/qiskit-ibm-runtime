@@ -22,74 +22,93 @@ Background
 
 
 The role of the ``Estimator`` primitive is two-fold: it acts as an **entry point** to quantum devices or
-simulators, replacing ``backend.run()``. Additionally, it is an **algorithmic abstraction** for expectation
+simulators, replacing the ``Backend`` interface (commonly referred to as ``backend.run()``). Additionally, it is an
+**algorithmic abstraction** for expectation
 value calculations, so you don't have to manually construct the final expectation circuit.
 This results in a considerable reduction of the code complexity and a more compact algorithm design.
 
 .. note::
 
-    **Backend.run() model:** In this model, you accessed real backends and remote simulators through the ``qiskit_ibm_provider``
-    module. If you wanted to run **local** simulations, you could import a specific backend
-    from ``qiskit_aer``. All of them followed the ``backend.run()`` interface.
+    **Backend.run() model:** In this model, you accessed real backends and remote simulators using the
+    ``qiskit-ibmq-provider`` module (now migrated to ``qiskit-ibm-provider``). If you wanted to run
+    **local** simulations, you could import a specific backend from ``qiskit-aer``. All of them followed
+    the ``backend.run()`` interface.
+
+    This guide will use the now deprecated ``qiskit-ibmq-provider`` syntax for the legacy code examples.
+    For more information in how to migrate to the new ``qiskit-ibm-provider``, please read the following
+    `provider migration guide <https://github.com/Qiskit/qiskit-ibm-provider/blob/main/docs/tutorials/Migration_Guide_from_qiskit-ibmq-provider.ipynb>`_.
 
     .. raw:: html
 
         <details>
-        <summary><a>Code Example</a></summary>
+        <summary><a>Code Example for <code>qiskit-ibmq-provider</code> + <code>backend.run()</code> </a></summary>
         <br>
 
     .. code-block:: python
 
-        from qiskit_ibm_provider import IBMProvider # former import: from qiskit import IBMQ
-        # define provider and backend
-        provider = IBMProvider()
-        backend = provider.get_backend("ibmq_qasm_simulator") # cloud simulator
-        ...
-        result = backend.run(circuits)
+        from qiskit import IBMQ
 
-        from qiskit_aer import AerSimulator # former import: from qiskit import Aer
-        # define local simulation method
-        backend = AerSimulator()
-        ...
-        result = backend.run(circuits)
+        # Select provider
+        provider = IBMQ.get_provider(hub="ibm-q", group="open", project="main")
+
+        # Get backend
+        backend = provider.get_backend("ibmq_qasm_simulator") # cloud simulator
+
+        # Run
+        result = backend.run(expectation_circuits)
 
     .. raw:: html
 
         </details>
         <br>
 
-    **Primitives model:** You access real backends and remote simulators through the `qiskit_ibm_runtime`
-    **primitives** (`Sampler` and `Estimator`). If you want to run **local** simulations, you can import specific `local` primitives
+    .. raw:: html
+
+        <details>
+        <summary><a>Code Example for <code>qiskit-aer</code> + <code>backend.run()</code> </a></summary>
+        <br>
+
+    .. code-block:: python
+
+        from qiskit_aer import AerSimulator # former import: from qiskit import Aer
+
+        # Get local simulator backend
+        backend = AerSimulator()
+
+        # Run
+        result = backend.run(expectation_circuits)
+
+    .. raw:: html
+
+        </details>
+        <br>
+
+    **Primitives model:** You access real backends and remote simulators through the ``qiskit-ibm-runtime``
+    **primitives** (``Sampler`` and ``Estimator``). If you want to run **local** simulations, you can import specific `local` primitives
     from |qiskit_aer.primitives|_ and |qiskit.primitives|_. All of them follow the |BaseSampler|_ and |BaseEstimator|_ interfaces, but
     **only the Runtime primitives offer access to the Runtime service, sessions, and built-in error mitigation**.
 
     .. raw:: html
 
         <details>
-        <summary><a>Code Example</a></summary>
+        <summary><a>Code Example for Runtime Estimator</a></summary>
         <br>
 
     .. code-block:: python
 
         from qiskit_ibm_runtime import QiskitRuntimeService, Estimator
-        # define service and backend
+
+        # Define service
         service = QiskitRuntimeService()
+
+        # Get backend
         backend = service.backend("ibmq_qasm_simulator") # cloud simulator
-        # see tutorials more more info on sessions
+
+        # Define Estimator
+        # (see tutorials more more info on sessions)
         estimator = Estimator(session=backend)
-        ...
-        result = estimator.run(circuits, observables).result()
 
-        from qiskit_aer import Estimator as AerEstimator
-        # the Aer primitive's backend is fixed to the Aer Simulator
-        estimator = AerEstimator()
-        ...
-        result = estimator.run(circuits, observables).result()
-
-        from qiskit import Estimator as ReferenceEstimator
-        # the Qiskit reference primitives' backend is fixed to a Statevector simulator
-        estimator = ReferenceEstimator()
-        ...
+        # Run Expectation value calculation
         result = estimator.run(circuits, observables).result()
 
     .. raw:: html
@@ -97,9 +116,30 @@ This results in a considerable reduction of the code complexity and a more compa
         </details>
         <br>
 
-If your code previously calculated expectation values using `backend.run()`, you most likely used the |qiskit.opflow|_
+    .. raw:: html
+
+        <details>
+        <summary><a>Code Example for Aer Estimator</a></summary>
+        <br>
+
+    .. code-block:: python
+
+        from qiskit_aer import Estimator
+
+        # Get local simulator Estimator
+        estimator = Estimator()
+
+        # Run Expectation value calculation
+        result = estimator.run(circuits, observables).result()
+
+    .. raw:: html
+
+        </details>
+        <br>
+
+If your code previously calculated expectation values using ``backend.run()``, you most likely used the |qiskit.opflow|_
 module to handle operators and state functions. To support this scenario, the following migration example shows how to replace
-the (|qiskit.opflow|_ + `backend.run()`) workflow with an `Estimator`-based workflow.
+the (|qiskit.opflow|_ + ``backend.run()``) workflow with an ``Estimator``-based workflow.
 
 End-to-end example
 ------------------
@@ -170,7 +210,7 @@ value:
 .. code-block:: python
 
     from qiskit.opflow import StateFn, PauliExpectation, CircuitSampler
-    from qiskit_ibm_provider import IBMProvider
+    from qiskit import IBMQ
 
     # Define the state to sample
     measurable_expression = StateFn(opflow_op, is_measurement=True).compose(opflow_state)
@@ -178,8 +218,8 @@ value:
     # Convert to expectation value calculation object
     expectation = PauliExpectation().convert(measurable_expression)
 
-    # Define provider and backend (formerly imported from IBMQ)
-    provider = IBMProvider()
+    # Define provider and backend
+    provider = IBMQ.get_provider(hub="ibm-q", group="open", project="main")
     backend = provider.get_backend("ibmq_qasm_simulator")
 
     # Inject backend into circuit sampler
@@ -258,10 +298,10 @@ solve the problem defined above with a local statevector simulation.
     simulator = AerSimulator(method="statevector", shots=100)
 
     # Inject backend into circuit sampler
-    sampler = CircuitSampler(simulator).convert(expectation)
+    circuit_sampler = CircuitSampler(simulator).convert(expectation)
 
     # Evaluate
-    expectation_value = sampler.eval().real
+    expectation_value = circuit_sampler.eval().real
 
 .. code-block:: python
 
@@ -281,7 +321,7 @@ on the ``Statevector`` class in the ``qiskit.quantum_info`` module.
 
     estimator = Estimator()
 
-    result = estimator.run(state, op).result().values
+    expectation_value = estimator.run(state, op).result().values
 
     # for shot-based simulation:
     expectation_value = estimator.run(state, op, shots=100).result().values
