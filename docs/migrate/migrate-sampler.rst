@@ -311,7 +311,6 @@ If shots are specified, this primitive outputs a shot-based simulation (no longe
     >>> print("quasi_dists: ", quasi_dists)
     quasi_dists:  [{3: 1.0}]
 
-
 You can still access the Aer Simulator through its dedicated
 ``Sampler``. This can come in handy for performing simulations with noise models. In this example,
 the simulation method has been fixed to match the result from 3.a.

@@ -24,6 +24,8 @@ from .runtime_program import ParameterNamespace
 from .program.result_decoder import ResultDecoder
 from .ibm_backend import IBMBackend
 from .utils.converters import hms_to_seconds
+from .utils.deprecation import issue_deprecation_msg
+from .exceptions import IBMInputValueError
 
 
 def _active_session(func):  # type: ignore
@@ -62,6 +64,8 @@ class Session:
             job = sampler.run(circ)
             print(f"Sampler job ID: {job.job_id()}")
             print(f"Sampler job result:" {job.result()})
+            # Close the session only if all jobs are finished and
+            # you don't need to run more in the session.
             session.close()
     """
 
@@ -135,15 +139,33 @@ class Session:
             inputs: Program input parameters. These input values are passed
                 to the runtime program.
             options: Runtime options that control the execution environment.
-                See :class:`qiskit_ibm_runtime.RuntimeOptions` for all available options.
+                See :class:`qiskit_ibm_runtime.RuntimeOptions` for all available options,
+                EXCEPT ``backend``, which should be specified during session initialization.
             callback: Callback function to be invoked for any interim results and final result.
 
         Returns:
             Submitted job.
+
+        Raises:
+            IBMInputValueError: If a backend is passed in through options that does not match
+                the current session backend.
         """
 
         options = options or {}
-        options["backend"] = self._backend
+        if "backend" in options:
+            issue_deprecation_msg(
+                "'backend' is no longer a supported option within a session",
+                "0.9",
+                "Instead, specify a backend when creating a Session instance.",
+                3,
+            )
+            if self._backend and options["backend"] != self._backend:
+                raise IBMInputValueError(
+                    f"The backend '{options['backend']}' is different from",
+                    f"the session backend '{self._backend}'",
+                )
+        else:
+            options["backend"] = self._backend
 
         if not self._session_id:
             # TODO: What happens if session max time != first job max time?
@@ -247,6 +269,7 @@ def get_default_session(
         or (service is not None and _DEFAULT_SESSION.service.channel != service.channel)
     ):
         # Create a new session if one doesn't exist, or if the user wants to switch backend/channel.
+        # Close the session only if all jobs are finished and you don't need to run more in the session.
         if _DEFAULT_SESSION and not _IN_SESSION_CM and _DEFAULT_SESSION._active:
             _DEFAULT_SESSION.close()
         if service is None:
