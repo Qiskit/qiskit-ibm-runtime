@@ -214,10 +214,10 @@ class RuntimeJob(Job):
             if "url" in result_raw:
                 result_url_json = json.loads(result_raw)
                 if "url" in result_url_json:
-                    url = result_url_json['url']
+                    url = result_url_json["url"]
                     response = requests.get(url)
                     result_raw = response.content
-                    
+
             self._results = _decoder.decode(result_raw) if result_raw else None
         return self._results
 
@@ -507,9 +507,9 @@ class RuntimeJob(Job):
                 if "url" in response:
                     result_url_json = json.loads(response)
                     if "url" in result_url_json:
-                        url = result_url_json['url']
-                        resultResponse = requests.get(url)
-                        response = resultResponse.content                
+                        url = result_url_json["url"]
+                        result_response = requests.get(url)
+                        response = result_response.content
                 user_callback(self.job_id(), _decoder.decode(response))
             except Exception:  # pylint: disable=broad-except
                 logger.warning(
