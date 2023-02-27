@@ -23,30 +23,28 @@ Background
 .. _QuasiDistribution.binary_probabilities: https://qiskit.org/documentation/stubs/qiskit.result.QuasiDistribution.binary_probabilities.html#qiskit.result.QuasiDistribution.binary_probabilities
 
 
-The role of the ``Sampler`` primitive is two-fold: it acts as an **entry point** to the quantum devices or
-simulators, replacing ``backend.run()``. Additionally, it is an **algorithmic abstraction**
-for the extraction of probability distributions from measurement counts.
+The role of the ``Sampler`` primitive is two-fold: it acts as an **entry point** to quantum devices or
+simulators, replacing ``backend.run()``. Additionally, it is an **algorithmic abstraction** to extract probability distributions from measurement counts.
 
-They both take in circuits as inputs, bue the main difference between the former and the latter is the format of the
-output: ``backend.run()`` outputs **counts**, while the ``Sampler`` processes those counts and outputs
+Both ``Sampler`` and  ``backend.run()`` take in circuits as inputs. The main difference is the format of the
+output: ``backend.run()`` outputs **counts**, while ``Sampler`` processes those counts and outputs
 the **quasi-probability distribution** associated with them.
 
 
 .. note::
 
-    **Backend.run() model:** In this model, you accessed real backends and remote simulators using the
-    ``qiskit-ibmq-provider`` module (now migrated to ``qiskit-ibm-provider``). If you wanted to run
-    **local** simulations, you could import a specific backend from ``qiskit-aer``. All of them followed
+    **Backend.run() model:** In this model, you use  the
+    ``qiskit-ibmq-provider`` (now migrated to ``qiskit-ibm-provider``) module to access real backends and remote simulators. If you wanted to run **local** simulations, you could import a specific backend from ``qiskit-aer``. All of them followed
     the ``backend.run()`` interface.
 
-    This guide will use the now deprecated ``qiskit-ibmq-provider`` syntax for the legacy code examples.
-    For more information in how to migrate to the new ``qiskit-ibm-provider``, please read the following
+    This guide uses the now deprecated ``qiskit-ibmq-provider`` syntax for the legacy code examples.
+    For instructions to migrate to the new ``qiskit-ibm-provider``, review the 
     `provider migration guide <https://github.com/Qiskit/qiskit-ibm-provider/blob/main/docs/tutorials/Migration_Guide_from_qiskit-ibmq-provider.ipynb>`_.
 
         .. raw:: html
 
             <details>
-            <summary><a>Code Example for <code>qiskit-ibmq-provider</code> + <code>backend.run()</code></a></summary>
+            <summary><a>Code example with <code>qiskit-ibmq-provider</code> & <code>backend.run()</code></a></summary>
             <br>
 
         .. code-block:: python
@@ -57,7 +55,7 @@ the **quasi-probability distribution** associated with them.
             provider = IBMQ.load_account()
 
             # Get backend
-            backend = provider.get_backend("ibmq_qasm_simulator") # cloud simulator
+            backend = provider.get_backend("ibmq_qasm_simulator") # Use the cloud simulator
 
             # Run
             result = backend.run(circuits)
@@ -70,7 +68,7 @@ the **quasi-probability distribution** associated with them.
         .. raw:: html
 
             <details>
-            <summary><a>Code Example for <code>qiskit-aer</code> + <code>backend.run()</code> </a></summary>
+            <summary><a>Code example for <code>qiskit-aer</code> & <code>backend.run()</code> </a></summary>
             <br>
 
         .. code-block:: python
@@ -88,7 +86,7 @@ the **quasi-probability distribution** associated with them.
             </details>
             <br>
 
-    **Primitives model:** You access real backends and remote simulators through the `qiskit-ibm-runtime`
+    **Primitives model:** Access real backends and remote simulators through the `qiskit-ibm-runtime`
     **primitives** (`Sampler` and `Estimator`). If you want to run **local** simulations, you can import specific `local` primitives
     from |qiskit_aer.primitives|_ and |qiskit.primitives|_. All of them follow the |BaseSampler|_ and |BaseEstimator|_ interfaces, but
     **only the Runtime primitives offer access to the Runtime service, sessions, and built-in error mitigation**.
@@ -96,7 +94,7 @@ the **quasi-probability distribution** associated with them.
         .. raw:: html
 
             <details>
-            <summary><a>Code Example for Runtime Sampler</a></summary>
+            <summary><a>Code example for Runtime Sampler</a></summary>
             <br>
 
         .. code-block:: python
@@ -107,7 +105,7 @@ the **quasi-probability distribution** associated with them.
             service = QiskitRuntimeService()
 
             # Get backend
-            backend = service.backend("ibmq_qasm_simulator") # cloud simulator
+            backend = service.backend("ibmq_qasm_simulator") # Use a cloud simulator
 
             # Define Sampler
             # (see tutorials more more info on sessions)
@@ -124,7 +122,7 @@ the **quasi-probability distribution** associated with them.
         .. raw:: html
 
             <details>
-            <summary><a>Code Example for Aer Estimator</a></summary>
+            <summary><a>Code example for Aer Estimator</a></summary>
             <br>
 
         .. code-block:: python
@@ -142,7 +140,7 @@ the **quasi-probability distribution** associated with them.
             </details>
             <br>
 
-Let's see how to sample a circuit with ``backend.run()`` and using the ``Sampler``.
+Next, we will sample a circuit: first, with ``backend.run()``, then by using the ``Sampler``.
 
 End-to-end example
 ------------------
@@ -150,12 +148,11 @@ End-to-end example
 1. Problem definition
 ----------------------
 
-We want to find out the probability (or quasi-probability) distribution associated to a quantum state:
+We want to find the probability (or quasi-probability) distribution associated with a quantum state:
 
 .. attention::
 
-    Careful with the measurements!!! If you want to use the ``Sampler`` primitive, the circuit
-    **must contain measurements**.
+    Important: If you want to use the ``Sampler`` primitive, the circuit **must contain measurements**.
 
 .. code-block:: python
 
@@ -166,19 +163,20 @@ We want to find out the probability (or quasi-probability) distribution associat
     circuit.cx(0,1)
     circuit.measure_all() # measurement!!!
 
-2. Calculate probability distribution on real device or cloud simulator
------------------------------------------------------------------------
+2. Calculate probability distribution on a real device or cloud simulator
+-------------------------------------------------------------------------
 
-2.a. [Legacy] Using ``backend.run()``
+
+2.a. [Legacy] Use ``backend.run()``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The required steps to reach our goal with ``backend.run()`` are:
 
-1. Execute circuits
-2. Get counts from result object
-3. Calculate probability distribution from counts and total number of shots
+1. Run circuits
+2. Get counts from the result object
+3. Use the counts and shots to calculate the probability distribution
 
-First, let's run the circuit in a cloud simulator and see the result object:
+First, let's run the circuit in a cloud simulator and output the result object:
 
 .. note::
 
@@ -234,10 +232,10 @@ Now let's get the probability distribution from the output:
     quasi_dists:  {'0000': 0.2490234375, '0001': 0.251953125, '0010': 0.2373046875, '0011': 0.26171875}
 
 
-2.b. [New] Using the ``Sampler`` Runtime primitive
+2.b. [New] Use the ``Sampler`` Runtime primitive
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-While the user-side syntax if the ``Sampler`` is very similar to  ``backend.run()``, you can
+While the user-side syntax if the ``Sampler`` is very similar to  ``backend.run()``, 
 notice that the workflow is now simplified, as the quasi-probability distribution is returned
 **directly** (no need to perform post-processing), together with some key metadata.
 
@@ -269,9 +267,9 @@ notice that the workflow is now simplified, as the quasi-probability distributio
 
 .. attention::
 
-    Careful with the output format!!! With the ``Sampler`` the states are now longer represented
-    with bitstrings (i.e ``"11"``\),
-    but integers (i.e ``3``\). If you want to convert the ``Sampler``\'s output to bitstrings,
+    Careful with the output format!!! With ``Sampler``, the states are no longer represented
+    by bitstrings, for example, ``"11"``, 
+    but integers, for example, ``3``. If you want to convert ``Sampler``\'s output to bitstrings,
     you can use the |QuasiDistribution.binary_probabilities|_ method as shown below.
 
 .. code-block:: python
@@ -281,7 +279,7 @@ notice that the workflow is now simplified, as the quasi-probability distributio
     >>> print("binary_quasi_dist: ", binary_quasi_dist)
     binary_quasi_dist:  {'0000': 0.2802734375, '0001': 0.2509765625, '0010': 0.232421875, '0011': 0.236328125}
 
-The ``Sampler`` Runtime primitive offers a series of features and tuning options that do not have a legacy alternative
+The ``Sampler`` Runtime primitive offers several features and tuning options that do not have a legacy alternative
 to migrate from, but can help improve your performance and results. For more information, refer to the following:
 
 - `Error mitigation tutorial <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/tutorials/Error-Suppression-and-Error-Mitigation.html>`_
@@ -293,12 +291,12 @@ to migrate from, but can help improve your performance and results. For more inf
 3. Other execution alternatives (non-Runtime)
 ---------------------------------------------
 
-You might want to test an algorithm using local simulation. We will next present other migration paths
-using non-Runtime primitives to show how this can be done.
+You might want to use local simulation to test an algorithm. We will next describe migration paths
+that use non-Runtime primitives to show how this can be done.
 
-Let's assume that we want to solve the problem defined above with a local statevector simulation.
+Let's assume that we want use a local statevector simulation to solve the problem defined above.
 
-3.a. [Legacy] Using the Qiskit Aer simulator
+3.a. [Legacy] Use the Qiskit Aer simulator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -306,7 +304,7 @@ Let's assume that we want to solve the problem defined above with a local statev
 
     from qiskit_aer import AerSimulator
 
-    # Define statevector simulator
+    # Define the statevector simulator
     simulator = AerSimulator(method="statevector")
 
     # Run and get counts
@@ -349,10 +347,10 @@ Now let's get the probability distribution from the output:
     counts:  {'0010': 236, '0000': 276, '0011': 262, '0001': 250}
     quasi_dists:  {'0010': 0.23046875, '0000': 0.26953125, '0011': 0.255859375, '0001': 0.244140625}
 
-3.b. [New] Using the Reference ``Sampler`` or Aer ``Sampler`` primitive
+3.b. [New] Use the Reference ``Sampler`` or Aer ``Sampler`` primitive
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The Reference ``Sampler`` lets you perform either an exact or a shot-based noisy simulation based
+The Reference ``Sampler`` lets you perform an exact or a shot-based noisy simulation based
 on the ``Statevector`` class in the ``qiskit.quantum_info`` module.
 
 .. code-block:: python
@@ -394,7 +392,7 @@ If shots are specified, this primitive outputs a shot-based simulation (no longe
 
 You can still access the Aer Simulator through its dedicated
 ``Sampler``. This can be handy for performing simulations with noise models. In this example,
-the simulation method has been fixed to match the result from 3.a.
+the simulation method has been updated to match the result from 3.a.
 
 .. code-block:: python
 
@@ -421,10 +419,10 @@ the simulation method has been fixed to match the result from 3.a.
 
 .. code-block:: python
 
-    >>> # convert output to bitstrings
+    >>> # Convert the output to bitstrings
     >>> binary_quasi_dist = quasi_dists[0].binary_probabilities()
     >>> print("binary_quasi_dist: ", binary_quasi_dist)
     binary_quasi_dist:  {'0001': 0.2802734375, '0010': 0.2412109375, '0000': 0.2392578125, '0011': 0.2392578125}
 
-For more information on running noisy simulations with the **Runtime Primitives**, you can see this
+For information about running noisy simulations with the **Runtime Primitives**, see this
 `topic <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/how_to/noisy_simulators.html>`_.
