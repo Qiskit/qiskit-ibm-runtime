@@ -131,6 +131,14 @@ We want to find out the probability (or quasi-probability) distribution associat
 2.a. [Legacy] Using ``backend.run()``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+The required steps to reach our goal with ``backend.run()`` are:
+
+1. Execute circuits
+2. Get counts from result object
+3. Calculate probability distribution from counts and total number of shots
+
+First, let's run the circuit in a cloud simulator and see the result object:
+
 .. note::
 
     You can replace ``ibmq_qasm_simulator`` with your device name to see the
@@ -193,6 +201,15 @@ Now let's get the probability distribution from the output:
 2.b. [New] Using the ``Sampler`` Runtime primitive
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+While the user-side syntax if the ``Sampler`` is very similar to  ``backend.run()``, you can
+notice that the workflow is now simplified, as the quasi-probability distribution is returned
+**directly** (no need to perform post-processing), together with some key metadata.
+
+.. note::
+
+    You can replace ``ibmq_qasm_simulator`` with your device name to see the
+    complete workflow for a real device.
+
 .. code-block:: python
 
     from qiskit_ibm_runtime import QiskitRuntimeService, Sampler
@@ -205,6 +222,11 @@ Now let's get the probability distribution from the output:
     result = sampler.run(circuit, shots=1024).result()
     quasi_dists = result.quasi_dists
 
+.. attention::
+
+    Pay attention to the output format, the states are now longer bitstrings (i.e ``\"11\"``\),
+    but integers (i.e ``3``\).
+
 .. code-block:: python
 
     >>> print("result: ", result)
@@ -214,12 +236,22 @@ Now let's get the probability distribution from the output:
     'readout_mitigation_time': 0.024925401899963617}])
     quasi_dists:  [{3: 1.0}]
 
+The ``Sampler`` Runtime primitive offers a series of features and tuning options that do not have a legacy alternative
+to migrate from, but can help improve your performance and results. For more information, refer to the following:
+
+- `Error mitigation tutorial <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/tutorials/Error-Suppression-and-Error-Mitigation.html>`_
+- `Setting execution options topic <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/how_to/options.html>`_
+- `Primitive execution options API reference <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/stubs/qiskit_ibm_runtime.options.Options.html#qiskit_ibm_runtime.options.Options>`_
+- `How to run a session topic <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/how_to/run_session.html>`_
+
+
 3. Other execution alternatives (non-Runtime)
 ---------------------------------------------
 
-In some cases, you might want to test your algorithm using local simulation. For this means, we
-will show you two more migration paths using non-runtime primitives. Let's say that you want to
-solve the problem defined above with a local statevector simulation.
+You might want to test an algorithm using local simulation. We will next present other migration paths
+using non-Runtime primitives to show how this can be done.
+
+Let's assume that we want to solve the problem defined above with a local statevector simulation.
 
 3.a. [Legacy] Using the Qiskit Aer simulator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -238,28 +270,23 @@ solve the problem defined above with a local statevector simulation.
 .. code-block:: python
 
     >>> print("result: ", result)
-    result: Result(backend_name='qasm_simulator', backend_version='0.11.2',
-    qobj_id='29fb4c00-1d88-4275-b5f2-289e191ccb30',
-    job_id='3228877b-f478-49f8-8811-70912aa3163e',
+    result: Result(backend_name='aer_simulator_statevector', backend_version='0.11.2',
+    qobj_id='bf5ee881-bac9-4a3f-97ef-efd2fa2702e0', job_id='0c2b83f4-15ce-43ec-971f-bd591516c5c3',
     success=True, results=[ExperimentResult(shots=1024, success=True, meas_level=2,
-    data=ExperimentResultData(counts={'0x3': 1024}),
-    header=QobjExperimentHeader(clbit_labels=[['meas', 0],
-    ['meas', 1]], creg_sizes=[['meas', 2]],
-    global_phase=0.0, memory_slots=2, metadata={},
-    n_qubits=2, name='circuit-925', qreg_sizes=[['q', 2]],
-    qubit_labels=[['q', 0], ['q', 1]]), status=DONE, seed_simulator=1687731339,
-    metadata={'parallel_state_update': 16, 'sample_measure_time': 0.001434541,
-    'noise': 'ideal', 'batched_shots_optimization': False, 'measure_sampling': True,
-    'device': 'CPU', 'num_qubits': 2, 'parallel_shots': 1, 'remapped_qubits': False,
-    'method': 'stabilizer', 'active_input_qubits': [0, 1], 'num_clbits': 2,
-    'input_qubit_map': [[1, 1], [0, 0]], 'fusion': {'enabled': False}},
-    time_taken=0.005606335)], date=2023-02-24 16:36:20.889579+01:00,
-    status=COMPLETED, header=QobjHeader(backend_name='qasm_simulator',
-    backend_version='0.11.2'), metadata={'time_taken': 0.00604436,
-    'time_taken_execute': 0.005678122, 'mpi_rank': 0, 'parallel_experiments': 1,
-    'omp_enabled': True, 'max_gpu_memory_mb': 0, 'num_processes_per_experiments': 1,
-    'num_mpi_processes': 1, 'time_taken_load_qobj': 0.00034589, 'max_memory_mb': 64216},
-    time_taken=0.00669550895690918)
+    data=ExperimentResultData(counts={'0x3': 1024}), header=QobjExperimentHeader(clbit_labels=[['meas', 0],
+    ['meas', 1]], creg_sizes=[['meas', 2]], global_phase=0.0, memory_slots=2, metadata={}, n_qubits=2,
+    name='circuit-925', qreg_sizes=[['q', 2]], qubit_labels=[['q', 0], ['q', 1]]), status=DONE,
+    seed_simulator=3084062053, metadata={'parallel_state_update': 16, 'parallel_shots': 1,
+    'sample_measure_time': 0.000650894, 'noise': 'ideal', 'batched_shots_optimization': False,
+    'remapped_qubits': False, 'device': 'CPU', 'active_input_qubits': [0, 1], 'measure_sampling': True,
+    'num_clbits': 2, 'input_qubit_map': [[1, 1], [0, 0]], 'num_qubits': 2, 'method': 'statevector',
+    'fusion': {'applied': False, 'max_fused_qubits': 5, 'threshold': 14, 'enabled': True}},
+    time_taken=0.005783171)], date=2023-02-27T10:12:47.854046, status=COMPLETED,
+    header=QobjHeader(backend_name='aer_simulator_statevector', backend_version='0.11.2'),
+    metadata={'mpi_rank': 0, 'num_mpi_processes': 1, 'num_processes_per_experiments': 1,
+    'time_taken': 0.011051999, 'max_gpu_memory_mb': 0, 'time_taken_execute': 0.006339488,
+    'max_memory_mb': 65536, 'time_taken_load_qobj': 0.003530616, 'parallel_experiments': 1,
+    'omp_enabled': True}, time_taken=0.04119110107421875)
 
 Now let's get the probability distribution from the output:
 
@@ -289,11 +316,14 @@ on the ``Statevector`` class in the ``qiskit.quantum_info`` module.
 
     sampler = Sampler()
 
-    quasi_dists = sampler.run(circuit).result().quasi_dists
+    result = sampler.run(circuit).result()
+    quasi_dists = result.quasi_dists
 
 .. code-block:: python
 
+    >>> print("result: ", result)
     >>> print("quasi_dists: ", quasi_dists)
+    result:  SamplerResult(quasi_dists=[{3: 1.0}], metadata=[{}])
     quasi_dists:  [{3: 1.0}]
 
 If shots are specified, this primitive outputs a shot-based simulation (no longer exact):
@@ -304,11 +334,14 @@ If shots are specified, this primitive outputs a shot-based simulation (no longe
 
     sampler = Sampler()
 
-    quasi_dists = sampler.run(circuit, shots = 1024).result().quasi_dists
+    result = sampler.run(circuit, shots=1024).result()
+    quasi_dists = result.quasi_dists
 
 .. code-block:: python
 
+    >>> print("result: ", result)
     >>> print("quasi_dists: ", quasi_dists)
+    result:  SamplerResult(quasi_dists=[{3: 1.0}], metadata=[{'shots': 1024}])
     quasi_dists:  [{3: 1.0}]
 
 You can still access the Aer Simulator through its dedicated
@@ -321,14 +354,19 @@ the simulation method has been fixed to match the result from 3.a.
 
     sampler = AerSampler(run_options= {"method": "statevector"})
 
-    result = sampler.run(state, op).result().values
-
-    # for shot-based simulation:
-    expectation_value = sampler.run(state, op, shots=100).result().values
+    result = sampler.run(circuit, shots=1024).result()
+    quasi_dists = result.quasi_dists
 
 .. code-block:: python
 
+    >>> print("result: ", result)
     >>> print("quasi_dists: ", quasi_dists)
+    result:  SamplerResult(quasi_dists=[{3: 1.0}], metadata=[{'shots': 1024,
+    'simulator_metadata': {'parallel_state_update': 16, 'parallel_shots': 1,
+    'sample_measure_time': 0.000330278, 'noise': 'ideal', 'batched_shots_optimization': False,
+    'remapped_qubits': False, 'device': 'CPU', 'active_input_qubits': [0, 1], 'measure_sampling': True,
+    'num_clbits': 2, 'input_qubit_map': [[1, 1], [0, 0]], 'num_qubits': 2, 'method': 'statevector',
+    'fusion': {'applied': False, 'max_fused_qubits': 5, 'threshold': 14, 'enabled': True}}}])
     quasi_dists:  [{3: 1.0}]
 
 
