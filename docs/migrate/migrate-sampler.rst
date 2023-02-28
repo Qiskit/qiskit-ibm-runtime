@@ -176,6 +176,11 @@ The required steps to reach our goal with ``backend.run()`` are:
 2. Get counts from the result object
 3. Use the counts and shots to calculate the probability distribution
 
+
+.. raw:: html
+
+    <br>
+    
 First, let's run the circuit in a cloud simulator and output the result object:
 
 .. note::
