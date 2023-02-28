@@ -548,12 +548,25 @@ class QiskitRuntimeService(Provider):
                 For example::
 
                     QiskitRuntimeService.backends(
-                        filters=lambda b: b.configuration().quantum_volume > 16)
-            **kwargs: Simple filters that specify a ``True``/``False`` criteria in the
-                backend configuration or status.
-                An example to get the operational real backends::
+                        filters=lambda b: b.max_shots > 50000)
+                    QiskitRuntimeService.backends(
+                        filters=lambda x: ("rz" in x.basis_gates )
 
+            **kwargs: Simple filters that require a specific value for an attribute in
+                backend configuration or status.
+                Examples::
+
+                    # Get the operational real backends
                     QiskitRuntimeService.backends(simulator=False, operational=True)
+
+                    # Get the backends with at least 127 qubits
+                    QiskitRuntimeService.backends(min_num_qubits=127)
+
+                    # Get the backends that support OpenPulse
+                    QiskitRuntimeService.backends(open_pulse=True)
+
+                For the full list of backend attributes, see the `IBMBackend` class documentation
+                <https://qiskit.org/documentation/apidoc/providers_models.html>
 
         Returns:
             The list of available backends that match the filter.
@@ -1483,14 +1496,7 @@ class QiskitRuntimeService(Provider):
             min_num_qubits: Minimum number of qubits the backend has to have.
             instance: This is only supported for ``ibm_quantum`` runtime and is in the
                 hub/group/project format.
-            filters: More complex filters, such as lambda functions.
-                For example::
-
-                    AccountProvider.backends(
-                        filters=lambda b: b.configuration().quantum_volume > 16)
-
-            **kwargs: Simple filters that specify a ``True``/``False`` criteria in the
-                backend configuration, backends status, or provider credentials.
+            filters: Filters can be defined as for the :meth:`backends` method.
                 An example to get the operational backends with 5 qubits::
 
                     QiskitRuntimeService.least_busy(n_qubits=5, operational=True)
