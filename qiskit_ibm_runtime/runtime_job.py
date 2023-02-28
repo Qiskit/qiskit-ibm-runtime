@@ -159,6 +159,21 @@ class RuntimeJob(Job):
         self.job_id = CallableStr(job_id)
         self.backend = self._backend
 
+    def _download_external_result(self, response: Any) -> Any:
+        """Download result from external URL.
+
+        Args:
+            response: Response to check for url keyword, if available, download result from given URL
+        """
+        if "url" in response:
+            result_url_json = json.loads(response)
+            if "url" in result_url_json:
+                url = result_url_json["url"]
+                result_response = requests.get(url)
+                response = result_response.content
+
+        return response
+
     def interim_results(self, decoder: Optional[Type[ResultDecoder]] = None) -> Any:
         """Return the interim results of the job.
 
@@ -209,14 +224,10 @@ class RuntimeJob(Job):
                 raise RuntimeJobFailureError(
                     f"Unable to retrieve job result. " f"{error_message}"
                 )
-            result_raw = self._api_client.job_results(job_id=self.job_id())
-            # TODO: productize proof-of-concept
-            if "url" in result_raw:
-                result_url_json = json.loads(result_raw)
-                if "url" in result_url_json:
-                    url = result_url_json["url"]
-                    response = requests.get(url)
-                    result_raw = response.content
+
+            result_raw = self._download_external_result(
+                self._api_client.job_results(job_id=self.job_id())
+            )
 
             self._results = _decoder.decode(result_raw) if result_raw else None
         return self._results
@@ -503,13 +514,9 @@ class RuntimeJob(Job):
                 if response == self._POISON_PILL:
                     self._empty_result_queue(result_queue)
                     return
-                # TODO: productize proof-of-concept
-                if "url" in response:
-                    result_url_json = json.loads(response)
-                    if "url" in result_url_json:
-                        url = result_url_json["url"]
-                        result_response = requests.get(url)
-                        response = result_response.content
+
+                response = self._download_external_result(response)
+
                 user_callback(self.job_id(), _decoder.decode(response))
             except Exception:  # pylint: disable=broad-except
                 logger.warning(
