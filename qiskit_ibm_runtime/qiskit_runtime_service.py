@@ -559,7 +559,7 @@ class QiskitRuntimeService(Provider):
                     # Get the operational real backends
                     QiskitRuntimeService.backends(simulator=False, operational=True)
 
-                    # Get the backends with at least 127 qubits::
+                    # Get the backends with at least 127 qubits
                     QiskitRuntimeService.backends(min_num_qubits=127)
 
                     # Get the backends that support OpenPulse
