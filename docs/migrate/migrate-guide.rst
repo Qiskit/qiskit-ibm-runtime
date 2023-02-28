@@ -86,13 +86,12 @@ Use primitive programs to write code more efficiently.  For details, see the exa
 
 .. code-block:: python
 
-
     def get_evaluate_energy_vqe(
     self,
     ansatz: QuantumCircuit,
     operator: OperatorBase,
     return_expectation: bool = False,
-) -> Callable[[np.ndarray], np.ndarray | float]:
+    ) -> Callable[[np.ndarray], np.ndarray | float]:
 
     num_parameters = ansatz.num_parameters
     ansatz_params = ansatz.parameters
@@ -118,7 +117,7 @@ Use primitive programs to write code more efficiently.  For details, see the exa
     return energy_evaluation
 
 .. code-block:: python
-   
+
     def _get_evaluate_energy_vqe_primitives(
         self,
         ansatz: QuantumCircuit,
