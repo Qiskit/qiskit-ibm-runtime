@@ -4,7 +4,10 @@ Parametrized Circuits With Primitives
 Overview
 ------------
 
-Parametrized circuits are a commonly used tool for quantum algorithm design. `backend.run()` and `QuantumInstance.execute()` didn't take in parametrized circuits, but the primitives do. This, again, is a simplification of the interface, as it is no longer necessary to bind parameters to a circuit before its execution.
+Parametrized circuits are a commonly used tool for quantum algorithm design. 
+Because `backend.run()` did not accept parametrized circuits, the parameter binding step had to be integrated in the algorithm workflow. Now, the primitives are able to perform the parameter binding step internally, which results in a simplification of the algorithm-side logic.
+
+The following example summarizes the new workflow for managing parametrized circuits.
 
 Example
 ---------

@@ -41,7 +41,7 @@ This results in a considerable reduction of the code complexity and a more compa
         .. raw:: html
 
             <details>
-            <summary><a>Code Example for <code>qiskit-ibmq-provider</code> + <code>backend.run()</code> </a></summary>
+            <summary><a>Code Example for <code>qiskit-ibmq-provider</code> & <code>backend.run()</code> </a></summary>
             <br>
 
         .. code-block:: python
@@ -65,7 +65,7 @@ This results in a considerable reduction of the code complexity and a more compa
         .. raw:: html
 
             <details>
-            <summary><a>Code Example for <code>qiskit-aer</code> + <code>backend.run()</code> </a></summary>
+            <summary><a>Code Example for <code>qiskit-aer</code> & <code>backend.run()</code> </a></summary>
             <br>
 
         .. code-block:: python
@@ -139,7 +139,7 @@ This results in a considerable reduction of the code complexity and a more compa
 
 If your code previously calculated expectation values using ``backend.run()``, you most likely used the |qiskit.opflow|_
 module to handle operators and state functions. To support this scenario, the following migration example shows how to replace
-the (|qiskit.opflow|_ + ``backend.run()``) workflow with an ``Estimator``-based workflow.
+the (|qiskit.opflow|_ & ``backend.run()``) workflow with an ``Estimator``-based workflow.
 
 End-to-end example
 ------------------
@@ -196,7 +196,7 @@ This step is no longer necessary using the primitives.
 2. Calculate expectation values on real device or cloud simulator
 -------------------------------------------------------------------
 
-2.a. [Legacy] Using ``opflow`` + ``backend.run()``
+2.a. [Legacy] Using ``opflow`` & ``backend.run()``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You can see the number of steps that were required in the legacy workflow to compute an expectation
@@ -337,7 +337,7 @@ the simulation method has been fixed to match the result from 3.a.
 
 .. code-block:: python
 
-    from qiskit_aer.primitives import Estimator # all that changes is the import!!!
+    from qiskit_aer.primitives import Estimator # import change!!!
 
     estimator = Estimator(run_options= {"method": "statevector"})
 

@@ -1,27 +1,40 @@
 Work with updated Qiskit algorithms
 ===================================
+.. |QuantumInstance| replace:: ``QuantumInstance``
+.. _QuantumInstance: https://qiskit.org/documentation/stubs/qiskit.utils.QuantumInstance.html
 
-The ``qiskit.algorithms`` module has been updated to leverage the primitives in all of it classes.
+.. |qiskit.algorithms| replace:: ``qiskit.algorithms``
+.. _qiskit.algorithms: https://qiskit.org/documentation/apidoc/algorithms.html
+
+.. |qiskit.opflow| replace:: ``qiskit.opflow``
+.. _qiskit.opflow: https://qiskit.org/documentation/apidoc/opflow.html
+
+.. |qiskit.quantum_info| replace:: ``qiskit.quantum_info``
+.. _qiskit.quantum_info: https://qiskit.org/documentation/apidoc/quantum_info.html
+
+The |qiskit.algorithms|_ module has been updated to leverage the primitives in all of its classes.
 In practice, this means that:
 
-1. All algorithms now take in a primitive instead of a ``Backend`` or ``QuantumInstance``
+1. All algorithms now take in a primitive instead of a ``Backend`` or |QuantumInstance|_
 2. Some algorithms now have a new import path
 3. New primitive-specific algorithms have been introduced
-4. As a side effect of the primitives refactoring, the ``qiskit.algorithms`` no longer
-   use ``opflow`` under the hood
+4. As a side effect of the primitives refactoring, |qiskit.algorithms|_ no longer
+   use |qiskit.opflow|_ under the hood
 
 .. raw:: html
 
     <br>
 
-Using runtime sessions can be particularly advantageous when working with variational algorithms, as they
+Using **Runtime Sessions** can be particularly advantageous when working with variational algorithms, as they
 present iterative workloads that can submit multiple jobs per iteration. On top of this, the runtime
 primitives allow to try out different error mitigation techniques with no changes to the algorithm,
 just a simple option configuration.
 
-The migration of ``qiskit.algorithms`` to work with primitives (any primitive implementation) has been explained
-in detail in the algorithm migration guide. However, we will now show an example to point out how to adapt
-these primitive-generic guidelines to the specific case of the Runtime Primitives.
+.. note::
+
+	The following end-to-end example will illustrate how to use one of the refactored algorithms from 		
+	|qiskit.algorithms|_ with the **Qiskit Runtime Primitives**. For a detailed explanation of other algorithm
+	migration scenarios, please visit the `Qiskit algorithms migration guide <https://qisk.it/algo_migration>`_.
 
 Example: VQE
 -------------
@@ -43,13 +56,13 @@ Step 1: Problem Definition
 The problem definition step is common to the old and new workflow: defining the hamiltonian, ansatz,
 optimizer and initial point.
 
-The only difference is that the operator definition now relies on ``quantum_info`` instead
-of ``opflow``. In practice, this means that all ``PauliSumOp`` dependencies should be replaced
-by ``SparsePauliOp``.
+The only difference is that the operator definition now relies on |qiskit.quantum_info|_ instead
+of |qiskit.opflow|_ . In practice, this means that all ``PauliSumOp`` dependencies should be replaced
+by ``SparsePauliOp``. For more information, you can refer to the `Opflow migration guide <http://qisk.it/opflow_migration>`_.
 
 .. note::
 
-   All of the refactored classes in ``qiskit.algorithms`` now take in operators as instances of
+   All of the refactored classes in |qiskit.algorithms|_ now take in operators as instances of
    ``SparsePauliOp`` instead of ``PauliSumOp``.
 
 The ansatz, optimizer and initial point are defined identically:
@@ -122,8 +135,8 @@ Step 2: Backend setup
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Let's say that you want to run VQE on the ``ibmq_qasm_simulator`` in the cloud. Before you would load you IBMQ account,
-get the corresponding backend from the provider, and use it to set up a ``QuantumInstance``. Now, you need to initialize
-a ``QiskitRuntimeService``, open a session and use it to instantiate your ``Estimator``.
+get the corresponding backend from the provider, and use it to set up a |QuantumInstance|_. Now, you need to initialize
+a ``QiskitRuntimeService``, open a session and use it to instantiate your :class:`.Estimator`.
 
 **Legacy VQE**
 
@@ -209,6 +222,6 @@ Related links
 
 * See the `Qiskit algorithm documentation <https://qiskit.org/documentation/apidoc/algorithms.html>`__ for details about each algorithm.
 * See the `Qiskit algorithm tutorials <https://qiskit.org/documentation/tutorials/algorithms/index.html>`__ for examples of how to use algorithms.
-* Read the blog`Introducing Qiskit Algorithms With Qiskit Primitives! <https://medium.com/qiskit/introducing-qiskit-algorithms-with-qiskit-runtime-primitives-d89703ecfca3>`__ for an introduction to using the updated algorithms.
+* Read the blog `Introducing Qiskit Algorithms With Qiskit Primitives! <https://medium.com/qiskit/introducing-qiskit-algorithms-with-qiskit-runtime-primitives-d89703ecfca3>`_ for an introduction to using the updated algorithms.
 
 

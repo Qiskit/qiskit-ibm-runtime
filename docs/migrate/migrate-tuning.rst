@@ -5,11 +5,17 @@ One of the advantages of the primitives is that they abstract away the circuit e
 can focus on the pure algorithmic components. However, sometimes, to get the most out of an algorithm, you might want
 to tune certain primitive options. This section describes some of the common settings you might need.
 
+.. |qiskit.primitives| replace:: ``qiskit.primitives``
+.. _qiskit.primitives: https://qiskit.org/documentation/apidoc/primitives.html
+
+.. |qiskit_aer.primitives| replace:: ``qiskit_aer.primitives``
+.. _qiskit_aer.primitives: https://qiskit.org/documentation/locale/de_DE/apidoc/aer_primitives.html
+
 .. attention::
 
     This section focuses on Qiskit Runtime Primitive :class:`.Options` (imported from ``qiskit_ibm_runtime``). While
     most of the primitives interface is common across implementations, most :class:`.Options` are not. Consult the
-    corresponding API references for further information on the ``qiskit`` and ``qiskit_aer`` primitive options.
+    corresponding API references for further information on the |qiskit.primitives|_ and |qiskit_aer.primitives|_ options.
 
 1. Shots
 ~~~~~~~~
