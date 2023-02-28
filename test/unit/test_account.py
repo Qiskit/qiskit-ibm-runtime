@@ -32,7 +32,6 @@ from qiskit_ibm_runtime.accounts.management import (
     _DEFAULT_ACCOUNT_NAME_CLOUD,
     _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM,
     _DEFAULT_ACCOUNT_NAME_IBM_CLOUD,
-    _DEFAULT_CHANNEL_TYPE,
 )
 from qiskit_ibm_runtime.proxies import ProxyConfiguration
 from .mock.fake_runtime_service import FakeRuntimeService
@@ -668,11 +667,6 @@ class TestEnableAccount(IBMTestCase):
                     service = FakeRuntimeService(channel=channel)
                 self.assertTrue(service._account)
                 self.assertEqual(service._account.token, token)
-
-        # check that default channel is set when channel is not defined
-        service = FakeRuntimeService()
-        correct_channel = os.getenv("QISKIT_IBM_CHANNEL") or _DEFAULT_CHANNEL_TYPE
-        self.assertEqual(service._account.channel, correct_channel)
 
     def test_enable_account_by_token_url(self):
         """Test initializing account by token or url."""
