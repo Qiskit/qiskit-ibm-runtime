@@ -84,11 +84,61 @@ Use primitive programs to write code more efficiently.  For details, see the exa
 
    Code without primitives, and the same code after being rewritten to use primitives.
 
-..
-   If we decide to keep this section, I would change the snippet (compare-code.png). I think that there are more visual examples of how the primitives simplify the code.
+.. code-block:: python
 
-   I see this as a "sneak peek" into the code migration section, so after refactoring the rest, we could just take one of the updated examples from there and add it here.
-..      
+
+    def get_evaluate_energy_vqe(
+    self,
+    ansatz: QuantumCircuit,
+    operator: OperatorBase,
+    return_expectation: bool = False,
+) -> Callable[[np.ndarray], np.ndarray | float]:
+
+    num_parameters = ansatz.num_parameters
+    ansatz_params = ansatz.parameters
+
+    expect_op, expectation = self.construct_expectation(
+        ansatz_params, operator, return_expectation=True
+    )
+
+    def evaluate_energy(parameters: np.ndarray):
+
+        parameter_sets = np.reshape(parameters, (-1, num_parameters))
+        # Create dict associating each parameter with the lists of parameterization values for it
+        param_bindings = dict(zip(ansatz_params, parameter_sets.transpose().tolist()))
+
+        sampled_expect_op = self._circuit_sampler.convert(expect_op, params=param_bindings)
+        means = np.real(sampled_expect_op.eval())
+
+        return means if len(means) > 1 else means[0]
+
+    if return_expectation:
+        return energy_evaluation, expectation
+
+    return energy_evaluation
+
+.. code-block:: python
+   
+    def _get_evaluate_energy_vqe_primitives(
+        self,
+        ansatz: QuantumCircuit,
+        operator: BaseOperator | PauliSumOp,
+    ) -> Callable[[np.ndarray], np.ndarray | float]:
+
+    num_parameters = ansatz.num_parameters
+
+    def evaluate_energy(parameters: np.ndarray):
+
+        parameters = np.reshape(parameters, (-1, num_parameters)).tolist()
+        batch_size = len(parameters)
+
+        job = self.estimator.run(batch_size * [ansatz], batch_size * [operator], parameters)
+        estimator_result = job.result()
+        values = estimator_result.values
+
+        return values[0] if len(values) == 1 else values
+
+    return evaluate_energy
 
 .. _migfaqs:
 
