@@ -295,11 +295,10 @@ class TestRuntimeJob(IBMTestCase):
         self.assertIsInstance(job.job_id, str)
         self.assertEqual(job.job_id, "12345")
 
-
     @run_quantum_and_cloud_fake
     def test_download_external_job_result(self, service):
         """Test downloading the job result from an external URL."""
-        with patch('qiskit_ibm_runtime.runtime_job.requests') as request_mock:
+        with patch("qiskit_ibm_runtime.runtime_job.requests") as request_mock:
             job = run_program(service=service)
             with mock_wait_for_final_state(service, job):
                 mock_response = MagicMock()
@@ -307,7 +306,9 @@ class TestRuntimeJob(IBMTestCase):
                 request_mock.get.return_value = mock_response
                 with mock_wait_for_final_state(service, job):
                     job.wait_for_final_state()
-                    job._api_client.job_results = MagicMock(return_value="{\"url\": \"https://external-url.com/\"}")
+                    job._api_client.job_results = MagicMock(
+                        return_value='{"url": "https://external-url.com/"}'
+                    )
                     result = job.result()
 
         self.assertEqual(result, "content-from-external-url")
