@@ -23,6 +23,20 @@ from qiskit_ibm_runtime import QiskitRuntimeService
 from .unit.mock.fake_runtime_service import FakeRuntimeService
 
 
+def production_only(func):
+    """Decorator that runs a test only on production services."""
+
+    @wraps(func)
+    def _wrapper(self, *args, **kwargs):
+        if "dev" in self.dependencies.url:
+            raise SkipTest(
+                f"Skipping integration test. {self} is not supported on staging."
+            )
+        func(self, *args, **kwargs)
+
+    return _wrapper
+
+
 def quantum_only(func):
     """Decorator that runs a test using only ibm_quantum services."""
 
