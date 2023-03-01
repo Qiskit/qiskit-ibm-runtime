@@ -16,6 +16,7 @@ import unittest
 import json
 from unittest.mock import patch
 
+from qiskit import QuantumCircuit
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.primitives.utils import _circuit_key
@@ -82,3 +83,32 @@ class TestEstimator(IBMTestCase):
                 inputs = kwargs["inputs"]
                 self.assertDictEqual(inputs["circuits"], {psi4_id: psi4})
                 self.assertEqual(inputs["circuit_ids"], [psi4_id, psi1_id])
+
+    def test_errors(self):
+        """Test for errors"""
+        qc1 = QuantumCircuit(1)
+        qc2 = QuantumCircuit(2)
+        qc3 = QuantumCircuit(2, 2)
+
+        op1 = SparsePauliOp.from_list([("I", 1)])
+        op2 = SparsePauliOp.from_list([("II", 1)])
+
+        with Session(
+            service=FakeRuntimeService(channel="ibm_quantum", token="abc"),
+            backend="ibmq_qasm_simulator",
+        ) as session:
+            estimator = Estimator(session=session)
+            with self.assertRaises(ValueError):
+                estimator.run([qc1], [op2], [[]]).result()
+            with self.assertRaises(ValueError):
+                estimator.run([qc2], [op1], [[]]).result()
+            with self.assertRaises(ValueError):
+                estimator.run([qc1], [op1], [[1e4]]).result()
+            with self.assertRaises(ValueError):
+                estimator.run([qc2], [op2], [[1, 2]]).result()
+            with self.assertRaises(ValueError):
+                estimator.run([qc1, qc2], [op2], [[1]]).result()
+            with self.assertRaises(ValueError):
+                estimator.run([qc1], [op1, op2], [[1]]).result()
+            with self.assertRaises(ValueError):
+                estimator.run([qc3], [op2], [[1]]).result()

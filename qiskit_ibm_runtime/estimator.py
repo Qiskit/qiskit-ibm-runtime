@@ -427,3 +427,19 @@ class Estimator(BaseEstimator):
             **fields: The fields to update the options
         """
         self._options = Options._merge_options(self._options, fields)
+
+    @classmethod
+    def _validate_circuits(
+        cls,
+        circuits: Sequence[QuantumCircuit] | QuantumCircuit,
+    ) -> tuple[QuantumCircuit, ...]:
+        circuits = super()._validate_circuits(circuits)
+        for i, circuit in enumerate(circuits):
+            # Note: we need to remove the following check when Runtime Estimator
+            # supports dynamic circuits.
+            if circuit.num_clbits > 0:
+                raise ValueError(
+                    f"The {i}-th circuit has some classical bits. "
+                    "Estimator accepts quantum circuits without classical bits."
+                )
+        return circuits
