@@ -740,10 +740,18 @@ class QiskitRuntimeService(Provider):
         Raises:
             QiskitBackendNotFoundError: if no backend could be found.
         """
-        # pylint: disable=arguments-differ
+        # pylint: disable=arguments-differ, line-too-long
         backends = self.backends(name, instance=instance)
         if not backends:
-            raise QiskitBackendNotFoundError("No backend matches the criteria")
+            cloud_msg_url = ""
+            if self._channel == "ibm_cloud":
+                cloud_msg_url = (
+                    " Learn more about available backends here "
+                    "https://cloud.ibm.com/docs/quantum-computing?topic=quantum-computing-choose-backend "
+                )
+            raise QiskitBackendNotFoundError(
+                "No backend matches the criteria." + cloud_msg_url
+            )
         return backends[0]
 
     def get_backend(self, name: str = None, **kwargs: Any) -> Backend:
