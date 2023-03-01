@@ -125,7 +125,7 @@ class RuntimeSession:
         if self._job:
             out["job_id"] = self._job.job_id()
             out["job_status"] = self._job.status()
-            out["backend"] = self._job.backend
+            out["backend"] = self._job.backend()
         return out
 
     def close(self) -> None:

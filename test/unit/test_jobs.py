@@ -323,5 +323,5 @@ class TestRuntimeJob(IBMTestCase):
             job_id="12345",
             program_id="foo",
         )
-        self.assertIsInstance(job.backend, IBMBackend)
-        self.assertEqual(job.backend, backend)
+        self.assertIsInstance(job.backend(), IBMBackend)
+        self.assertEqual(job.backend(), backend)
