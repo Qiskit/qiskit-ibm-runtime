@@ -1,6 +1,8 @@
 Calculate expectation values in an algorithm
 ==============================================
 
+The Estimator primitive is used to design an algorithm that calculates expectation values.
+
 Background
 ----------
 
@@ -30,18 +32,18 @@ This results in a considerable reduction of the code complexity and a more compa
 .. note::
 
     **Backend.run() model:** In this model, you accessed real backends and remote simulators using the
-    ``qiskit-ibmq-provider`` module (now migrated to ``qiskit-ibm-provider``). If you wanted to run
+    ``qiskit-ibmq-provider`` module (now migrated to ``qiskit-ibm-provider``). To run
     **local** simulations, you could import a specific backend from ``qiskit-aer``. All of them followed
     the ``backend.run()`` interface.
 
-    This guide will use the now deprecated ``qiskit-ibmq-provider`` syntax for the legacy code examples.
-    For more information in how to migrate to the new ``qiskit-ibm-provider``, please read the following
+    This guide uses the now deprecated ``qiskit-ibmq-provider`` syntax for the legacy code examples.
+    For instructions to migrate to ``qiskit-ibm-provider``, see the 
     `provider migration guide <https://github.com/Qiskit/qiskit-ibm-provider/blob/main/docs/tutorials/Migration_Guide_from_qiskit-ibmq-provider.ipynb>`_.
 
         .. raw:: html
 
             <details>
-            <summary><a>Code Example for <code>qiskit-ibmq-provider</code> & <code>backend.run()</code> </a></summary>
+            <summary><a>Code example for <code>qiskit-ibmq-provider</code> & <code>backend.run()</code> </a></summary>
             <br>
 
         .. code-block:: python
@@ -65,7 +67,7 @@ This results in a considerable reduction of the code complexity and a more compa
         .. raw:: html
 
             <details>
-            <summary><a>Code Example for <code>qiskit-aer</code> & <code>backend.run()</code> </a></summary>
+            <summary><a>Code example for <code>qiskit-aer</code> & <code>backend.run()</code> </a></summary>
             <br>
 
         .. code-block:: python
@@ -83,15 +85,15 @@ This results in a considerable reduction of the code complexity and a more compa
             </details>
             <br>
 
-    **Primitives model:** You access real backends and remote simulators through the ``qiskit-ibm-runtime``
-    **primitives** (``Sampler`` and ``Estimator``). If you want to run **local** simulations, you can import specific `local` primitives
+    **Primitives model:** Access real backends and remote simulators through the ``qiskit-ibm-runtime``
+    **primitives** (``Sampler`` and ``Estimator``). To run **local** simulations, you can import specific `local` primitives
     from |qiskit_aer.primitives|_ and |qiskit.primitives|_. All of them follow the |BaseSampler|_ and |BaseEstimator|_ interfaces, but
     **only the Runtime primitives offer access to the Runtime service, sessions, and built-in error mitigation**.
 
         .. raw:: html
 
             <details>
-            <summary><a>Code Example for Runtime Estimator</a></summary>
+            <summary><a>Code example for Runtime Estimator</a></summary>
             <br>
 
         .. code-block:: python
@@ -119,7 +121,7 @@ This results in a considerable reduction of the code complexity and a more compa
         .. raw:: html
 
             <details>
-            <summary><a>Code Example for Aer Estimator</a></summary>
+            <summary><a>Code example for Aer Estimator</a></summary>
             <br>
 
         .. code-block:: python
@@ -129,7 +131,7 @@ This results in a considerable reduction of the code complexity and a more compa
             # Get local simulator Estimator
             estimator = Estimator()
 
-            # Run Expectation value calculation
+            # Run expectation value calculation
             result = estimator.run(circuits, observables).result()
 
         .. raw:: html
@@ -148,10 +150,9 @@ End-to-end example
 ----------------------
 
 We want to compute the expectation value of a quantum state (circuit) with respect to a certain operator.
-Here we are using the H2 molecule and an arbitrary circuit as the quantum state:
+In this example, we are using the H2 molecule and an arbitrary circuit as the quantum state:
 
 .. code-block:: python
-
 
     from qiskit import QuantumCircuit
     from qiskit.quantum_info import SparsePauliOp
@@ -187,24 +188,25 @@ operators and quantum states, so the problem defined above would be wrapped as:
     opflow_op = PauliSumOp(op)
     opflow_state = CircuitStateFn(state)
 
-This step is no longer necessary using the primitives.
+This step is no longer necessary when using the primitives.
 
 .. note::
 
-    For more information on migrating from |qiskit.opflow|_, see the `opflow migration guide <qisk.it/opflow_migration>`_ .
+    For instructions to migrate from |qiskit.opflow|_, see the `opflow migration guide <qisk.it/opflow_migration>`_ .
 
 2. Calculate expectation values on real device or cloud simulator
 -------------------------------------------------------------------
 
-2.a. [Legacy] Using ``opflow`` & ``backend.run()``
+
+2.a. [Legacy] Use ``opflow`` & ``backend.run()``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You can see the number of steps that were required in the legacy workflow to compute an expectation
+The legacy workflow required many steps to compute an expectation
 value:
 
 .. note::
 
-    You can replace ``ibmq_qasm_simulator`` with your device name to see the
+    Replace ``ibmq_qasm_simulator`` with your device name to see the
     complete workflow for a real device.
 
 .. code-block:: python
@@ -233,15 +235,15 @@ value:
     >>> print("expectation: ", expectation_value)
     expectation:  -1.065734058826613
 
-2.b. [New] Using the ``Estimator`` Runtime primitive
+2.b. [New] Use the ``Estimator`` Runtime primitive
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You can see how the ``Estimator`` simplifies the user-side syntax, which makes it a more
+The ``Estimator`` simplifies the user-side syntax, making it a more
 convenient tool for algorithm design.
 
 .. note::
 
-    You can replace ``ibmq_qasm_simulator`` with your device name to see the
+    Replace ``ibmq_qasm_simulator`` with your device name to see the
     complete workflow for a real device.
 
 .. code-block:: python
@@ -274,11 +276,7 @@ to migrate from, but can help improve your performance and results. For more inf
 3. Other execution alternatives (non-Runtime)
 ----------------------------------------------
 
-You might want to test an algorithm using local simulation. We will next present other migration paths using
-non-Runtime primitives to show how this can be done.
-
-Let's assume that we want to
-solve the problem defined above with a local statevector simulation.
+This section describes how to use non-Runtime primitives to test an algorithm using local simulation.  Let's assume that we want to solve the problem defined above with a local statevector simulation.
 
 3.a. [Legacy] Using the Qiskit Aer simulator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -309,7 +307,7 @@ solve the problem defined above with a local statevector simulation.
     expectation:  -1.0636533500290943
 
 
-3.b. [New] Using the Reference ``Estimator`` or Aer ``Estimator`` primitive
+3.b. [New] Use the Reference ``Estimator`` or Aer ``Estimator`` primitive
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The Reference ``Estimator`` lets you perform either an exact or a shot-based noisy simulation based
@@ -333,7 +331,7 @@ on the ``Statevector`` class in the ``qiskit.quantum_info`` module.
 
 You can still access the Aer Simulator through its dedicated
 ``Estimator``. This can be handy for performing simulations with noise models. In this example,
-the simulation method has been fixed to match the result from 3.a.
+the simulation method has been updated to match the result from 3.a.
 
 .. code-block:: python
 
@@ -348,8 +346,8 @@ the simulation method has been fixed to match the result from 3.a.
     >>> print("expectation: ", expectation_value)
     expectation:  [-1.06365335]
 
-For more information on using the Aer Primitives, check out this
+For more information on using the Aer Ppimitives, see the 
 `VQE tutorial <https://qiskit.org/documentation/tutorials/algorithms/03_vqe_simulation_with_noise.html>`_ .
 
-For more information on running noisy simulations with the **Runtime Primitives**, you can see this
+For more information about running noisy simulations with the **Runtime Primitives**, see this
 `topic <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/how_to/noisy_simulators.html>`_.

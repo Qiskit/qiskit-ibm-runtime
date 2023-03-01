@@ -1,11 +1,9 @@
 Parametrized Circuits With Primitives
 =======================================
 
-Overview
-------------
 
 Parametrized circuits are a commonly used tool for quantum algorithm design. 
-Because `backend.run()` did not accept parametrized circuits, the parameter binding step had to be integrated in the algorithm workflow. Now, the primitives are able to perform the parameter binding step internally, which results in a simplification of the algorithm-side logic.
+Because `backend.run()` did not accept parametrized circuits, the parameter binding step had to be integrated in the algorithm workflow. The primitives can perform the parameter binding step internally, which results in a simplification of the algorithm-side logic.
 
 The following example summarizes the new workflow for managing parametrized circuits.
 
@@ -47,7 +45,7 @@ We want to assign the following parameter values to the circuit:
 
 Legacy
 ---------
-Before the primitives, the parameter values had to be bound to their respective circuit parameters prior to calling `backend.run()`.
+Previously, the parameter values had to be bound to their respective circuit parameters prior to calling `backend.run()`.
 
 .. code-block:: python
 
@@ -65,7 +63,7 @@ Primitives
 ------------
 Now, the primitives take in parametrized circuits directly, together with the parameter values, and the parameter assignment operation can be performed more efficiently on the server side of the primitive.
 
-This feature is particularly interesting when working with iterative algorithms, as the parametrized circuit remains unchanged between calls, while the parameter values change. The primitives are able to transpile once, and then cache the unbound circuit, using classical resources more efficiently. Moreover, only the updated parameters are transferred to the cloud, saving additional bandwidth.
+This feature is particularly interesting when working with iterative algorithms because the parametrized circuit remains unchanged between calls while the parameter values change. The primitives can transpile once and then cache the unbound circuit, using classical resources more efficiently. Moreover, only the updated parameters are transferred to the cloud, saving additional bandwidth.
 
 .. code-block:: python
 

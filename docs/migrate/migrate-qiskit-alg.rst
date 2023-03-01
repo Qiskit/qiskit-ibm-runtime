@@ -19,7 +19,7 @@ In practice, this means that:
 2. Some algorithms now have a new import path
 3. New primitive-specific algorithms have been introduced
 4. As a side effect of the primitives refactoring, |qiskit.algorithms|_ no longer
-   use |qiskit.opflow|_ under the hood
+   use |qiskit.opflow|_ 
 
 .. raw:: html
 
@@ -32,17 +32,17 @@ just a simple option configuration.
 
 .. note::
 
-	The following end-to-end example will illustrate how to use one of the refactored algorithms from 		
-	|qiskit.algorithms|_ with the **Qiskit Runtime Primitives**. For a detailed explanation of other algorithm
-	migration scenarios, please visit the `Qiskit algorithms migration guide <https://qisk.it/algo_migration>`_.
+	The following end-to-end example illustrates how to use one of the refactored algorithms from 		
+	|qiskit.algorithms|_ with the **Qiskit Runtime primitives**. For a detailed explanation of other algorithm
+	migration scenarios, see the `Qiskit algorithms migration guide <https://qisk.it/algo_migration>`_.
 
 Example: VQE
 -------------
 
 The legacy ``VQE`` algorithm has been split into two new implementations:
 
-- ``VQE`` : based on the Estimator
-- ``SamplingVQE`` : for diagonal operators, based on the Sampler
+- ``VQE`` : Based on the Estimator
+- ``SamplingVQE`` : For diagonal operators, based on the Sampler
 
 The choice of implementation depends on the use case — whether you are interested in accessing the
 probability distribution corresponding to a quantum state (``SamplingVQE``) or an estimation of
@@ -67,6 +67,7 @@ by ``SparsePauliOp``. For more information, you can refer to the `Opflow migrati
 
 The ansatz, optimizer and initial point are defined identically:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 .. code-block:: python
 
     from qiskit.algorithms.optimizers import SLSQP
@@ -96,7 +97,10 @@ The ansatz, optimizer and initial point are defined identically:
 The operator definition changes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-**Legacy VQE**
+.. raw:: html
+
+    <details>
+    <summary><a>Legacy VQE</a></summary>
 
 .. code-block:: python
 
@@ -111,9 +115,14 @@ The operator definition changes
             ("XX", 0.18093119978423156),
         ]
     )
+.. raw:: html
 
+    </details>
 
-**New VQE**
+.. raw:: html
+
+    <details>
+    <summary><a>New VQE</a></summary>
 
 .. code-block:: python
 
@@ -128,7 +137,9 @@ The operator definition changes
             ("XX", 0.18093119978423156),
         ]
     )
+.. raw:: html
 
+    </details>
 
 
 Step 2: Backend setup
@@ -138,7 +149,10 @@ Let's say that you want to run VQE on the ``ibmq_qasm_simulator`` in the cloud. 
 get the corresponding backend from the provider, and use it to set up a |QuantumInstance|_. Now, you need to initialize
 a ``QiskitRuntimeService``, open a session and use it to instantiate your :class:`.Estimator`.
 
-**Legacy VQE**
+.. raw:: html
+
+    <details>
+    <summary><a>Legacy VQE</a></summary>
 
 .. code-block:: python
 
@@ -150,8 +164,14 @@ a ``QiskitRuntimeService``, open a session and use it to instantiate your :class
     my_backend = provider.get_backend("ibmq_qasm_simulator")
     qi = QuantumInstance(backend=my_backend)
 
+.. raw:: html
 
-**New VQE**
+    </details>
+
+.. raw:: html
+
+    <details>
+    <summary><a>New VQE</a></summary>
 
 .. code-block:: python
 
@@ -162,19 +182,24 @@ a ``QiskitRuntimeService``, open a session and use it to instantiate your :class
     session = Session(service, backend="ibmq_qasm_simulator") # open session
     estimator = Estimator(session = session)
 
+.. raw:: html
+
+    </details>
 
 Step 3: Run VQE
 ~~~~~~~~~~~~~~~
 
-Now that you have set up both the problem and the execution path, you can instantiate and run VQE. Please note
-that after running your program, you must **close your session**.
+Now that both the problem and the execution path have been set up, you can instantiate and run VQE. Close the session only if all jobs are finished and you don't need to run more jobs in the session.
 
 .. attention::
 
     ``VQE`` is one of the algorithms with a changed import path. If you do not specify the full path during the import,
     you might run into conflicts with the legacy code.
 
-**Legacy VQE**
+.. raw:: html
+
+    <details>
+    <summary><a>Legacy VQE</a></summary>
 
 .. code-block:: python
 
@@ -183,7 +208,14 @@ that after running your program, you must **close your session**.
     vqe = VQE(ansatz, optimizer, quantum_instance=qi)
     result = vqe.compute_minimum_eigenvalue(hamiltonian)
 
-**New VQE**
+.. raw:: html
+
+    </details>
+
+.. raw:: html
+
+    <details>
+    <summary><a>New VQE</a></summary>
 
 .. code-block:: python
 
@@ -196,11 +228,14 @@ that after running your program, you must **close your session**.
     # close session!
     session.close()
 
+.. raw:: html
 
-Using Context Managers
+    </details>
+
+Using context managers
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-To not forget about closing sessions, we recommend that you initialize your primitive and run your algorithm using
+We recommend that you initialize your primitive and run your algorithm using
 a context manager. The code for steps 2 and 3 would then look like:
 
 .. code-block:: python

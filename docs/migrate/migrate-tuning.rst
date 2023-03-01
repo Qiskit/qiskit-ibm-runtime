@@ -14,13 +14,13 @@ to tune certain primitive options. This section describes some of the common set
 .. attention::
 
     This section focuses on Qiskit Runtime Primitive :class:`.Options` (imported from ``qiskit_ibm_runtime``). While
-    most of the primitives interface is common across implementations, most :class:`.Options` are not. Consult the
-    corresponding API references for further information on the |qiskit.primitives|_ and |qiskit_aer.primitives|_ options.
+    most of the `Primitives` interface is common across implementations, most :class:`.Options` are not. Consult the
+    corresponding API references for information about the |qiskit.primitives|_ and |qiskit_aer.primitives|_ options.
 
 1. Shots
 ~~~~~~~~
 
-For some algorithms, setting a specific number of shots is a core part of their routines. Previously, shots could be set during the call to ``backend.run(shots=1024)``. Now, that setting is part of the execution
+For some algorithms, setting a specific number of shots is a core part of their routines. Previously, shots could be set during the call to `backend.run()`. For example, ``backend.run(shots=1024)``. Now, that setting is part of the execution
 options ("second level option"). This can be done during the primitive setup:
 
 .. code-block:: python
@@ -33,7 +33,7 @@ options ("second level option"). This can be done during the primitive setup:
     estimator = Estimator(session=session, options=options)
 
 
-If you need to modify the number of shots set between iterations/primitive calls, you can set the
+If you need to modify the number of shots set between iterations (primitive calls), you can set the
 shorts directly in the ``run()`` method. This overwrites the initial ``shots`` setting.
 
 .. code-block:: python
@@ -48,15 +48,14 @@ shorts directly in the ``run()`` method. This overwrites the initial ``shots`` s
 
     estimator.run(circuits=circuits, observables=observables, shots=100)
 
-For more information on the primitive options, check out the 
-`API reference <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/stubs/qiskit_ibm_runtime.options.Options.html#qiskit_ibm_runtime.options.Options>`_.
-for the ``Options`` class.
+For more information about the primitive options, refer to the 
+`Options class API reference <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/stubs/qiskit_ibm_runtime.options.Options.html#qiskit_ibm_runtime.options.Options>`_.
 
 
 2. Transpilation
 ~~~~~~~~~~~~~~~~
 
-By default, the Qiskit Runtime primitives perform circuit transpilation under the hood. There are several optimization
+By default, the Qiskit Runtime primitives perform circuit transpilation. There are several optimization
 levels you can choose from. These levels affect the transpilation strategy and might include additional error
 suppression mechanisms. Level 0 only involves basic transpilation.
 To learn about each optimization level, view the Optimization level table in the 
@@ -90,10 +89,10 @@ options you can set up. These are "second level options", and can be set as foll
 
     estimator = Estimator(session=session, options=options)
 
-For more information, and a complete list of advanced transpilation options, check out the Advanced transpilation options table in the 
+For more information, and a complete list of advanced transpilation options, see the Advanced transpilation options table in the 
 `Error supppression topic <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/locale/es_UN/how_to/error-suppression.html#advanced-transpilation-options>`_.
 
-Finally, you might want to specify further settings that are not available through the primitives interface,
+Finally, you might want to specify settings that are not available through the primitives interface,
 or use custom transpiler passes. In these cases, you can set ``skip_transpilation=True`` to submit
 user-transpiled circuits. To learn how this is done, refer to the 
 `Submitting user-transpiled circuits using primitives tutorial <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/tutorials/user-transpiled-circuits.html>`_.
@@ -110,15 +109,15 @@ The ``skip_transpilation`` option is an advanced transpilation option, set as fo
     estimator = Estimator(session=session, options=options)
 
 
-3. Error Mitigation
+3. Error mitigation
 ~~~~~~~~~~~~~~~~~~~
 
-Finally, you might want to leverage different error mitigation methods and see how these affect the performance of your
+You might want to leverage different error mitigation methods and see how these affect the performance of your
 algorithm. These can also be set through the ``resilience_level`` option. The method selected for each level is
 different for ``Sampler`` and ``Estimator``. You can find more information in the 
 `Configure error mitigation topic <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/how_to/error-mitigation.html>`_.
 
-The configuration is similar to the rest of the options:
+The configuration is similar to the other options:
 
 The ``skip_transpilation`` option is an advanced transpilation option, set as follows:
 

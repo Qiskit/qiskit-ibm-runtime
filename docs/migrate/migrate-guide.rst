@@ -1,53 +1,45 @@
 Migration guide
-===========================================
+================
 
-.. _mig_ex:
-
-Code migration examples
---------------------------------------------
-
-The following sections describe key patterns of behavior and use cases with code
+This guide describes key patterns of behavior and use cases with code
 examples to help you migrate code to use the Qiskit Runtime Primitives.
 
-The Qiskit Runtime Primitives implement the reference ``Sampler`` and ``Estimator`` interface found in
-`qiskit.primitives <https://qiskit.org/documentation/apidoc/primitives.html>`_. This interface lets you 
+The Qiskit Runtime Primitives implement the reference ``Sampler`` and ``Estimator`` interfaces found in
+`qiskit.primitives <https://qiskit.org/documentation/apidoc/primitives.html>`_. These interfaces let you 
 switch between primitive implementations with minimal code changes. Different primitive implementations
-can be found in the ``qiskit``, ``qiskit_aer``, and ``qiskit_ibm_runtime`` library.
+can be found in the ``qiskit``, ``qiskit_aer``, and ``qiskit_ibm_runtime`` library. Each implementation serves a specific purpose:
 
-Each implementation serves a specific purpose. The primitives in ``qiskit`` can perform local statevector
-simulations, useful to quickly prototye algorithms. The primitives in ``qiskit_aer`` give access to the local
-Aer simulators, for tasks such as noisy simulation. Finally, the primitives in ``qiskit_ibm_runtime`` provide access
-to the Qiskit Runtime service, as well as features such as built-in circuit optimization and error mitigation support.
+* The primitives in ``qiskit`` can perform local statevector simulations - useful for quickly prototying algorithms. 
+* The primitives in ``qiskit_aer`` give access to the local Aer simulators for tasks such as noisy simulation. 
+* The primitives in ``qiskit_ibm_runtime`` provide access to the Qiskit Runtime service and features such as built-in circuit optimization and error mitigation support.
 
 .. attention::
 
     The **only primitives that provide access to the Qiskit Runtime service** are those imported
-    from ``qiskit_ibm_runtime`` (*Qiskit Runtime Primitives*).
+    from ``qiskit_ibm_runtime`` (Qiskit Runtime Primitives).
 
-The key to writing an equivalent algorithm using primitives is to identify what is the minimal unit of information
-your algorithm is based on:
+When migrating, the key to writing an equivalent algorithm using primitives is to first identify what is the minimal unit of information your algorithm is based on:
 
-* If it's an **expectation value** - you will need an ``Estimator``.
-* If it's a **probability distribution** (from sampling the device) - you will need a ``Sampler``.
+* If it uses an **expectation value**, you will need an ``Estimator``.
+* If it uses a **probability distribution** (from sampling the device), you will need a ``Sampler``.
 
-Most algorithms can be rewritten to use one of these two units of information. Once you know which primitive to use, identify where in algorithm the backend is accessed (the call to ``backend.run()``).
-Next, you can replace this call with the respective primitive call, as shown in the following examples.
+Most algorithms can be rewritten to use one of these units of information. After determining which primitive to use, identify where the algorithm accesses the backend.  Look for the call to ``backend.run()``. Next, you will replace this call with the respective primitive call, as shown in the following examples.
 
 .. note::
 
    Some qiskit libraries provide their own ``backend.run()`` wrappers, for example: ``QuantumInstance``,
-   formerly used in ``qiskit.algorithms``. To migrate code with these dependencies, replace the execution
-   method with the corresponding primitive. For more information to migrate code based on the
+   formerly used in ``qiskit.algorithms``. To migrate code that has such dependencies, replace the execution
+   method with the corresponding primitive. For instructions to migrate code based on 
    ``QuantumInstance``, refer to the `Quantum Instance migration guide <http://qisk.it/qi_migration>`__.
 
-This guide has examples for two basic situations:
+This guide has examples for two basic types of user:
 
-1. Algorithm developers need to refactor algorithms to use primitives instead of backend.run.
+1. Algorithm developers who need to refactor algorithms to use primitives instead of `backend.run` should refer to these topics:
 
    * `Update code that performs circuit sampling <migrate-sampler.html>`__
    * `Update code that calculates expectation values <migrate-estimator.html>`__
    
-2. Algorithm users don't use primitives directly, but use Qiskit algorithms.  These users now need to pass in a primitive instead of a backend to the udpdated Qiskit algorithmes.
+2. Algorithm users that refer to Qiskit algorithms but do not directly use primitives.  These users now need to pass in a primitive instead of a backend to the udpdated Qiskit algorithmes.  Refer to this topic for details:
 
    * `Work with updated Qiskit algorithms <migrate-qiskit-alg.html>`__
 
@@ -68,10 +60,10 @@ Why use Qiskit Runtime?
 
 **Benefits of using Qiskit Runtime**:
 
-* Use Qiskit Runtime primitives to simplify algorithm design and optimization. 
-* Run circuits faster using sessions - a context manager designed to efficiently manage iterative workloads and minimize artificial latency between quantum and classical sub-components.
+* Simplify algorithm design and optimization. 
+* Run circuits faster by using sessions - a context manager designed to efficiently manage iterative workloads and minimize artificial latency between quantum and classical sub-components.
 * Access our most powerful quantum systems with our latest performance and hardware optimization, including capabilities like error suppression and mitigation.
-* Easily integrate Qiskit Runtime with your cloud or on-premise classical compute resources using the quantum serverless toolkit.
+* Easily integrate Qiskit Runtime with your cloud or on-premise classical compute resources by using the quantum serverless toolkit.
 
 **Simplified interface**:
 
@@ -98,12 +90,12 @@ code to Qiskit Runtime:
   <details>
   <summary>Which channel should I use?</summary>
 
-After deciding to use Qiskit Runtime primitives, the user must first decide whether their needs are better suited to using Qiskit Runtime
-through IBM Cloud or IBM Quantum Platform.  Some information that might help in making this decision includes:
+After deciding to use Qiskit Runtime primitives, the user must determine whether to access Qiskit Runtime
+through IBM Cloud or IBM Quantum Platform.  Some information that might help you decide includes:
 
 * The available plans:
 
-  * Qiskit Runtime is available in both the Open (free access) or Premium (contract-based paid access) plan of the IBM Quantum Platform. See `IBM Quantum access plans <https://www.ibm.com/quantum/access-plans>`__ for details.
+  * Qiskit Runtime is available in both the Open (free access) or Premium (contract-based paid access) plan on IBM Quantum Platform. See `IBM Quantum access plans <https://www.ibm.com/quantum/access-plans>`__ for details.
   * Qiskit Runtime is accessible through the Lite (free access) or Standard (pay-as-you-go access) plan in IBM Cloud. See `Plans <../cloud/plans.html>`__ for details.
 
 * The use case requirements:
@@ -123,10 +115,9 @@ through IBM Cloud or IBM Quantum Platform.  Some information that might help in 
 After deciding which channel to use to interact with Qiskit Runtime, you
 can get set up on either platform using the instructions below:
 
-To get started with Qiskit Runtime on IBM Quantum Platform, see
+* To get started with Qiskit Runtime on IBM Quantum Platform, see
 `Experiment with Qiskit Runtime <https://quantum-computing.ibm.com/services/resources/docs/resources/runtime/start>`__.
-
-To get started with Qiskit Runtime on IBM Cloud, see the `Getting Started guide <../cloud/quickstart.html>`__.
+* To get started with Qiskit Runtime on IBM Cloud, see the `Getting Started guide <../cloud/get-started.html>`__.
 
 .. raw:: html
 
@@ -138,8 +129,7 @@ To get started with Qiskit Runtime on IBM Cloud, see the `Getting Started guide 
   <summary>Should I modify the Qiskit Terra algorithms?</summary>
 
 As of v0.22, `Qiskit Terra algorithms <https://github.com/Qiskit/qiskit-terra/tree/main/qiskit/algorithms>`__ use Qiskit Runtime primitives. Thus, there is no need for
-users to modify amplitude estimators or any other Qiskit Terra
-algorithms.
+users to modify amplitude estimators or any other Qiskit Terra algorithms.
 
 .. raw:: html
 
@@ -150,21 +140,20 @@ algorithms.
   <details>
   <summary>Which primitive should I use?</summary>
 
-When choosing which primitive to use, we first need to understand
-whether our algorithm is supposed to use a quasi-probability
-distribution sampled from a quantum state (a list of
-quasi-probabilities), or an expectation value of a certain observable
+When choosing which primitive to use, you first need to understand
+whether the algorithm uses a **quasi-probability distribution** sampled from a quantum state (a list of
+quasi-probabilities), or an **expectation value*** of a certain observable
 with respect to a quantum state (a real number).
 
 A probability distribution is often of interest in optimization problems
 that return a classical bit string, encoding a certain solution to a
-problem at hand. In these cases, we might be interested in finding a bit
+problem at hand. In these cases, you might be interested in finding a bit
 string that corresponds to a ket value with the largest probability of
 being measured from a quantum state, for example.
 
 An expectation value of an observable could be the target quantity in
 scenarios where knowing a quantum state is not relevant. This
-often occurs in optimization problems or chemistry applications.  For example, when trying to discover a system's extremal energy.
+often occurs in optimization problems or chemistry applications.  For example, when trying to discover the extremal energy of a system.
 
 .. raw:: html
 
