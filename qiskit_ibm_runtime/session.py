@@ -110,12 +110,11 @@ class Session:
             raise ValueError('"backend" is required for ``ibm_quantum`` channel.')
 
         self._instance = None
-
         if isinstance(backend, IBMBackend):
             self._instance = backend._instance
             backend = backend.name
-
         self._backend = backend
+
         self._session_id: Optional[str] = None
         self._active = True
 

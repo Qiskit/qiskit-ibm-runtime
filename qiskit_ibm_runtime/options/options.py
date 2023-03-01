@@ -165,9 +165,6 @@ class Options:
             if fld.name in environment:
                 out[fld.name] = environment[fld.name]
 
-        if "instance" in options:
-            out["instance"] = options["instance"]
-
         if "image" in options:
             out["image"] = options["image"]
 
