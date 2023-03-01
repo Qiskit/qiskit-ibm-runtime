@@ -88,6 +88,9 @@ class Estimator(BaseEstimator):
                 parameter_values=[theta1]*2
             )
             print(psi1_H23.result())
+            # Close the session only if all jobs are finished
+            # and you don't need to run more in the session
+            session.close()
     """
 
     _PROGRAM_ID = "estimator"
@@ -193,6 +196,25 @@ class Estimator(BaseEstimator):
         _options.transpilation.skip_transpilation = (  # type: ignore[union-attr]
             skip_transpilation
         )
+
+        if _options.optimization_level is None:
+            if _options.simulator and (
+                not hasattr(_options.simulator, "noise_model")
+                or asdict(_options.simulator)["noise_model"] is None
+            ):
+                _options.optimization_level = 1
+            else:
+                _options.optimization_level = Options._DEFAULT_OPTIMIZATION_LEVEL
+
+        if _options.resilience_level is None:
+            if _options.simulator and (
+                not hasattr(_options.simulator, "noise_model")
+                or asdict(_options.simulator)["noise_model"] is None
+            ):
+                _options.resilience_level = 0
+            else:
+                _options.resilience_level = Options._DEFAULT_RESILIENCE_LEVEL
+
         self._options: dict = asdict(_options)
 
         self._initial_inputs = {
@@ -375,7 +397,9 @@ class Estimator(BaseEstimator):
         remedy="Use qiskit_ibm_runtime.Session.close() instead",
     )
     def close(self) -> None:
-        """Close the session and free resources"""
+        """Close the session and free resources.
+        Close the session only if all jobs are finished
+        and you don't need to run more in the session."""
         self._session.close()
 
     @property

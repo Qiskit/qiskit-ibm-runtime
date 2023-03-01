@@ -1,0 +1,17 @@
+---
+upgrade:
+  - |
+    Allow the user to store account details in a file specified by the user in the parameter. 
+    ``filename``. The default remains `~/.qiskit/qiskit-ibm.json`. Example of usage: 
+    Ex::
+    
+        QiskitRuntimeService.save_account(channel="ibm_quantum",
+                                          filename="~/my_account_file.json",
+                                          name = "my_account",
+                                          token="my_token")
+        service = QiskitRuntimeService(channel="ibm_quantum", 
+                                       filename="~/my_account_file.json", 
+                                       name = "my_account",)
+    
+
+

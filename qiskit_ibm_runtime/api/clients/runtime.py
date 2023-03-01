@@ -215,6 +215,7 @@ class RuntimeClient(BaseBackendClient):
         self,
         limit: int = None,
         skip: int = None,
+        backend_name: str = None,
         pending: bool = None,
         program_id: str = None,
         hub: str = None,
@@ -231,6 +232,7 @@ class RuntimeClient(BaseBackendClient):
         Args:
             limit: Number of results to return.
             skip: Number of results to skip.
+            backend_name: Name of the backend to retrieve jobs from.
             pending: Returns 'QUEUED' and 'RUNNING' jobs if True,
                 returns 'DONE', 'CANCELLED' and 'ERROR' jobs if False.
             program_id: Filter by Program ID.
@@ -254,6 +256,7 @@ class RuntimeClient(BaseBackendClient):
         return self._api.jobs_get(
             limit=limit,
             skip=skip,
+            backend_name=backend_name,
             pending=pending,
             program_id=program_id,
             hub=hub,

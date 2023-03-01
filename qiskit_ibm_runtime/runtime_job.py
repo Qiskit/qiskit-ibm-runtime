@@ -12,7 +12,7 @@
 
 """Qiskit runtime job."""
 
-from typing import Any, Optional, Callable, Dict, Type, Union, Sequence
+from typing import Any, Optional, Callable, Dict, Type, Union, Sequence, List
 import time
 import json
 import logging
@@ -20,6 +20,7 @@ from concurrent import futures
 import traceback
 import queue
 from datetime import datetime
+import requests
 
 from qiskit.providers.backend import Backend
 from qiskit.providers.jobstatus import JobStatus, JOB_FINAL_STATES
@@ -96,6 +97,8 @@ class RuntimeJob(Job):
             Union[Type[ResultDecoder], Sequence[Type[ResultDecoder]]]
         ] = None,
         image: Optional[str] = "",
+        session_id: Optional[str] = None,
+        tags: Optional[List] = None,
     ) -> None:
         """RuntimeJob constructor.
 
@@ -110,6 +113,8 @@ class RuntimeJob(Job):
             user_callback: User callback function.
             result_decoder: A :class:`ResultDecoder` subclass used to decode job results.
             image: Runtime image used for this job: image_name:tag.
+            session_id: Job ID of the first job in a runtime session.
+            tags: Tags assigned to the job.
         """
         super().__init__(backend=backend, job_id=job_id)
         self._api_client = api_client
@@ -123,6 +128,8 @@ class RuntimeJob(Job):
         self._error_message: Optional[str] = None
         self._image = image
         self._final_interim_results = False
+        self._session_id = session_id
+        self._tags = tags
 
         decoder = (
             result_decoder or DEFAULT_DECODERS.get(program_id, None) or ResultDecoder
@@ -151,6 +158,21 @@ class RuntimeJob(Job):
         # as attributes are no longer supported.
         self.job_id = CallableStr(job_id)
         self.backend = self._backend
+
+    def _download_external_result(self, response: Any) -> Any:
+        """Download result from external URL.
+
+        Args:
+            response: Response to check for url keyword, if available, download result from given URL
+        """
+        if "url" in response:
+            result_url_json = json.loads(response)
+            if "url" in result_url_json:
+                url = result_url_json["url"]
+                result_response = requests.get(url)
+                response = result_response.content
+
+        return response
 
     def interim_results(self, decoder: Optional[Type[ResultDecoder]] = None) -> Any:
         """Return the interim results of the job.
@@ -202,7 +224,11 @@ class RuntimeJob(Job):
                 raise RuntimeJobFailureError(
                     f"Unable to retrieve job result. " f"{error_message}"
                 )
-            result_raw = self._api_client.job_results(job_id=self.job_id())
+
+            result_raw = self._download_external_result(
+                self._api_client.job_results(job_id=self.job_id())
+            )
+
             self._results = _decoder.decode(result_raw) if result_raw else None
         return self._results
 
@@ -415,6 +441,10 @@ class RuntimeJob(Job):
         """
         status = response["state"]["status"].upper()
         job_result_raw = self._api_client.job_results(job_id=self.job_id())
+        index = job_result_raw.rfind("Traceback")
+        if index != -1:
+            job_result_raw = job_result_raw[index:]
+
         error_msg = API_TO_JOB_ERROR_MESSAGE["FAILED"]
         if status == "CANCELLED" and self._reason == "RAN TOO LONG":
             error_msg = API_TO_JOB_ERROR_MESSAGE["CANCELLED - RAN TOO LONG"]
@@ -484,6 +514,9 @@ class RuntimeJob(Job):
                 if response == self._POISON_PILL:
                     self._empty_result_queue(result_queue)
                     return
+
+                response = self._download_external_result(response)
+
                 user_callback(self.job_id(), _decoder.decode(response))
             except Exception:  # pylint: disable=broad-except
                 logger.warning(
@@ -524,6 +557,9 @@ class RuntimeJob(Job):
         Returns:
             Input parameters used in this job.
         """
+        if not self._params:
+            response = self._api_client.job_get(job_id=self.job_id())
+            self._params = response.get("params", {})
         return self._params
 
     @property
@@ -551,3 +587,21 @@ class RuntimeJob(Job):
             return None
         creation_date_local_dt = utc_to_local(self._creation_date)
         return creation_date_local_dt
+
+    @property
+    def session_id(self) -> str:
+        """Session ID.
+
+        Returns:
+            Job ID of the first job in a runtime session.
+        """
+        return self._session_id
+
+    @property
+    def tags(self) -> List:
+        """Job tags.
+
+        Returns:
+            Tags assigned to the job that can be used for filtering.
+        """
+        return self._tags
