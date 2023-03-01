@@ -17,7 +17,7 @@ from datetime import datetime, timezone
 from qiskit.providers.jobstatus import JobStatus
 
 from ..ibm_test_case import IBMIntegrationJobTestCase
-from ..decorators import run_integration_test
+from ..decorators import run_integration_test, production_only
 from ..utils import wait_for_status, get_real_device
 
 
@@ -25,6 +25,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
     """Integration tests for job retrieval functions."""
 
     @run_integration_test
+    @production_only
     def test_retrieve_job_queued(self, service):
         """Test retrieving a queued job."""
         real_device = get_real_device(service)
@@ -207,3 +208,11 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         self.assertEqual(
             [job.job_id() for job in rjobs], [job.job_id() for job in rjobs_desc]
         )
+
+    @run_integration_test
+    def test_retrieve_jobs_backend(self, service):
+        """Test retrieving jobs with backend filter."""
+        backend = self.sim_backends[service.channel]
+        jobs = service.jobs(backend_name=backend)
+        for job in jobs:
+            self.assertEqual(backend, job.backend().name)
