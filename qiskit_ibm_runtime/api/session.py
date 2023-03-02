@@ -24,7 +24,7 @@ from requests import Session, RequestException, Response
 from requests.adapters import HTTPAdapter
 from requests.auth import AuthBase
 from urllib3.util.retry import Retry
-from pathlib import Path
+from pathlib import PurePath
 
 from qiskit_ibm_runtime.utils.utils import filter_data
 
@@ -281,14 +281,15 @@ class RetrySession(Session):
         # Set default caller
         headers.update({"X-Qx-Client-Application": "{}/qiskit".format(CLIENT_APPLICATION)})
 
-        caller_dict= {Path("qiskit/algorithms"): 'qiskit-terra-algorithms'}
+        # Use PurePath in order to support arbitrary path formats
+        caller_dict= {PurePath("qiskit/algorithms"): 'qiskit-terra-algorithms'}
 
         for frame in inspect.stack():
-            frame_path = str(Path(frame.filename))
+            frame_path = str(PurePath(frame.filename))
             for key, value in caller_dict.items():
                 if str(key) in frame_path:
                     headers.update({"X-Qx-Client-Application": "{}/{}".format(CLIENT_APPLICATION, value)})
-            
+
         try:
             self._log_request_info(final_url, method, kwargs)
             response = super().request(method, final_url, headers=headers, **kwargs)
