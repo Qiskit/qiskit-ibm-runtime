@@ -12,16 +12,19 @@
 
 """Session customized for IBM Quantum access."""
 
+import inspect
 import os
 import re
 import logging
-from typing import Dict, Optional, Any, Tuple, Union
+import sys
 import pkg_resources
 
+from typing import Dict, Optional, Any, Tuple, Union
 from requests import Session, RequestException, Response
 from requests.adapters import HTTPAdapter
 from requests.auth import AuthBase
 from urllib3.util.retry import Retry
+from pathlib import Path
 
 from qiskit_ibm_runtime.utils.utils import filter_data
 
@@ -51,20 +54,31 @@ RE_BACKENDS_ENDPOINT = re.compile(r"^(.*/backends/)([^/}]{2,})(.*)$", re.IGNOREC
 
 def _get_client_header() -> str:
     """Return the client version."""
-    try:
-        client_header = "qiskit/" + pkg_resources.get_distribution("qiskit").version
-        return client_header
-    except Exception:  # pylint: disable=broad-except
-        pass
+    
+    qiskit_pkgs = [
+        "qiskit-terra",
+        "qiskit-aer",
+        "qiskit-ignis",  # TODO: remove this?
+        "qiskit-aqua",  # TODO: remove this?
+        "qiskit-experiments",
+        "qiskit-nature",
+        "qiskit-machine-learning",
+        "qiskit-optimization",
+        "qiskit-finance",
+    ]
 
-    qiskit_pkgs = ["qiskit-terra", "qiskit-aer", "qiskit-ignis", "qiskit-aqua"]
-    pkg_versions = {"qiskit-ibm-runtime": ibm_runtime_version}
+    pkg_versions = {"qiskit-ibm-runtime": "{}-{}".format("qiskit-ibm-runtime", ibm_runtime_version)}
     for pkg_name in qiskit_pkgs:
         try:
-            pkg_versions[pkg_name] = pkg_resources.get_distribution(pkg_name).version
+            version_info = "{}-{}".format(pkg_name, pkg_resources.get_distribution(pkg_name).version)
+
+            if pkg_name in sys.modules:
+                version_info += "*"
+
+            pkg_versions[pkg_name] = version_info
         except Exception:  # pylint: disable=broad-except
             pass
-    return ",".join(pkg_versions.keys()) + "/" + ",".join(pkg_versions.values())
+    return "qiskit-version-2/{}".format(",".join(pkg_versions.values()))
 
 
 CLIENT_APPLICATION = _get_client_header()
@@ -264,6 +278,17 @@ class RetrySession(Session):
         headers = self.headers.copy()
         headers.update(kwargs.pop("headers", {}))
 
+        # Set default caller
+        headers.update({"X-Qx-Client-Application": "{}/qiskit".format(CLIENT_APPLICATION)})
+
+        caller_dict= {Path("qiskit/algorithms"): 'qiskit-terra-algorithms'}
+
+        for frame in inspect.stack():
+            frame_path = str(Path(frame.filename))
+            for key, value in caller_dict.items():
+                if str(key) in frame_path:
+                    headers.update({"X-Qx-Client-Application": "{}/{}".format(CLIENT_APPLICATION, value)})
+            
         try:
             self._log_request_info(final_url, method, kwargs)
             response = super().request(method, final_url, headers=headers, **kwargs)
