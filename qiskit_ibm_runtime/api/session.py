@@ -17,14 +17,14 @@ import os
 import re
 import logging
 import sys
+from typing import Dict, Optional, Any, Tuple, Union
+from pathlib import PurePath
 import pkg_resources
 
-from typing import Dict, Optional, Any, Tuple, Union
 from requests import Session, RequestException, Response
 from requests.adapters import HTTPAdapter
 from requests.auth import AuthBase
 from urllib3.util.retry import Retry
-from pathlib import PurePath
 
 from qiskit_ibm_runtime.utils.utils import filter_data
 
