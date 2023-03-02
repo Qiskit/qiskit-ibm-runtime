@@ -439,7 +439,7 @@ class Estimator(BaseEstimator):
             # supports dynamic circuits.
             if circuit.num_clbits > 0:
                 raise ValueError(
-                    f"The {i}-th circuit has some classical bits. "
-                    "Estimator accepts quantum circuits without classical bits."
+                    f"The {i}-th circuit has {circuit.num_clbits} classical bits. "
+                    "Estimator only accepts quantum circuits without classical bits."
                 )
         return circuits
