@@ -54,7 +54,7 @@ RE_BACKENDS_ENDPOINT = re.compile(r"^(.*/backends/)([^/}]{2,})(.*)$", re.IGNOREC
 
 def _get_client_header() -> str:
     """Return the client version."""
-    
+
     qiskit_pkgs = [
         "qiskit-terra",
         "qiskit-aer",
@@ -67,10 +67,14 @@ def _get_client_header() -> str:
         "qiskit-finance",
     ]
 
-    pkg_versions = {"qiskit-ibm-runtime": "{}-{}".format("qiskit-ibm-runtime", ibm_runtime_version)}
+    pkg_versions = {
+        "qiskit-ibm-runtime": "{}-{}".format("qiskit-ibm-runtime", ibm_runtime_version)
+    }
     for pkg_name in qiskit_pkgs:
         try:
-            version_info = "{}-{}".format(pkg_name, pkg_resources.get_distribution(pkg_name).version)
+            version_info = "{}-{}".format(
+                pkg_name, pkg_resources.get_distribution(pkg_name).version
+            )
 
             if pkg_name in sys.modules:
                 version_info += "*"
@@ -279,16 +283,24 @@ class RetrySession(Session):
         headers.update(kwargs.pop("headers", {}))
 
         # Set default caller
-        headers.update({"X-Qx-Client-Application": "{}/qiskit".format(CLIENT_APPLICATION)})
+        headers.update(
+            {"X-Qx-Client-Application": "{}/qiskit".format(CLIENT_APPLICATION)}
+        )
 
         # Use PurePath in order to support arbitrary path formats
-        caller_dict= {PurePath("qiskit/algorithms"): 'qiskit-terra-algorithms'}
+        caller_dict = {PurePath("qiskit/algorithms"): "qiskit-terra-algorithms"}
 
         for frame in inspect.stack():
             frame_path = str(PurePath(frame.filename))
             for key, value in caller_dict.items():
                 if str(key) in frame_path:
-                    headers.update({"X-Qx-Client-Application": "{}/{}".format(CLIENT_APPLICATION, value)})
+                    headers.update(
+                        {
+                            "X-Qx-Client-Application": "{}/{}".format(
+                                CLIENT_APPLICATION, value
+                            )
+                        }
+                    )
 
         try:
             self._log_request_info(final_url, method, kwargs)
