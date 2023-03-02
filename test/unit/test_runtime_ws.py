@@ -90,7 +90,10 @@ class TestRuntimeWebsocketClient(IBMTestCase):
         service = MagicMock(spec=QiskitRuntimeService)
         service.run = _patched_run
 
-        circ = ReferenceCircuits.bell()
+        circ = {
+            Sampler: ReferenceCircuits.bell(),
+            Estimator: ReferenceCircuits.bell_no_measure(),
+        }
         obs = SparsePauliOp.from_list([("IZ", 1)])
         primitives = [Sampler, Estimator]
         sub_tests = [
@@ -103,7 +106,7 @@ class TestRuntimeWebsocketClient(IBMTestCase):
                 with self.subTest(primitive=cls, options=options, callback=callback):
                     results = []
                     inst = cls(session=Session(service=service), **options)
-                    job = inst.run(circ, observables=obs, **callback)
+                    job = inst.run(circ[cls], observables=obs, **callback)
                     time.sleep(JOB_PROGRESS_RESULT_COUNT + 2)
                     self.assertEqual(JOB_PROGRESS_RESULT_COUNT, len(results))
                     self.assertFalse(job._ws_client.connected)
