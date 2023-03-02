@@ -48,7 +48,10 @@ class TestPrimitives(IBMTestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.qx = ReferenceCircuits.bell()
+        cls.qx = {
+            Sampler: ReferenceCircuits.bell(),
+            Estimator: ReferenceCircuits.bell_no_measure(),
+        }
         cls.obs = SparsePauliOp.from_list([("IZ", 1)])
         return super().setUpClass()
 
@@ -144,7 +147,7 @@ class TestPrimitives(IBMTestCase):
             for opt in options:
                 with self.subTest(primitive=cls, options=opt):
                     inst = cls(session=session, options=opt)
-                    inst.run(self.qx, observables=self.obs)
+                    inst.run(self.qx[cls], observables=self.obs)
                     _, kwargs = session.run.call_args
                     run_options = kwargs["options"]
                     for key, val in opt.items():
@@ -165,7 +168,7 @@ class TestPrimitives(IBMTestCase):
                 with self.subTest(primitive=cls, env=env):
                     options = Options(environment=env)
                     inst = cls(session=session, options=options)
-                    inst.run(self.qx, observables=self.obs)
+                    inst.run(self.qx[cls], observables=self.obs)
                     if sys.version_info >= (3, 8):
                         run_options = session.run.call_args.kwargs["options"]
                     else:
@@ -294,7 +297,7 @@ class TestPrimitives(IBMTestCase):
             for options, expected in options_vars:
                 with self.subTest(primitive=cls, options=options):
                     inst = cls(session=session, options=options)
-                    inst.run(self.qx, observables=self.obs)
+                    inst.run(self.qx[cls], observables=self.obs)
                     if sys.version_info >= (3, 8):
                         inputs = session.run.call_args.kwargs["inputs"]
                     else:
@@ -310,7 +313,7 @@ class TestPrimitives(IBMTestCase):
             with self.subTest(primitive=cls):
                 inst = cls(session=session)
                 inst.set_options(resilience_level=1, optimization_level=2, shots=99)
-                inst.run(self.qx, observables=self.obs)
+                inst.run(self.qx[cls], observables=self.obs)
                 if sys.version_info >= (3, 8):
                     inputs = session.run.call_args.kwargs["inputs"]
                 else:
@@ -352,7 +355,7 @@ class TestPrimitives(IBMTestCase):
             for options, expected in options_vars:
                 with self.subTest(primitive=cls, options=options):
                     inst = cls(session=session)
-                    inst.run(self.qx, observables=self.obs, **options)
+                    inst.run(self.qx[cls], observables=self.obs, **options)
                     if sys.version_info >= (3, 8):
                         inputs = session.run.call_args.kwargs["inputs"]
                     else:
@@ -376,7 +379,7 @@ class TestPrimitives(IBMTestCase):
             for options in options_vars:
                 with self.subTest(primitive=cls, options=options):
                     inst = cls(session=session)
-                    inst.run(self.qx, observables=self.obs, **options)
+                    inst.run(self.qx[cls], observables=self.obs, **options)
                     if sys.version_info >= (3, 8):
                         rt_options = session.run.call_args.kwargs["options"]
                     else:
@@ -392,7 +395,7 @@ class TestPrimitives(IBMTestCase):
             with self.subTest(primitive=cls):
                 options = Options(foo="foo")  # pylint: disable=unexpected-keyword-arg
                 inst = cls(session=session, options=options)
-                inst.run(self.qx, observables=self.obs)
+                inst.run(self.qx[cls], observables=self.obs)
                 if sys.version_info >= (3, 8):
                     inputs = session.run.call_args.kwargs["inputs"]
                 else:
@@ -407,7 +410,7 @@ class TestPrimitives(IBMTestCase):
         for cls in primitives:
             with self.subTest(primitive=cls):
                 inst = cls(session=session)
-                inst.run(self.qx, observables=self.obs, foo="foo")
+                inst.run(self.qx[cls], observables=self.obs, foo="foo")
                 if sys.version_info >= (3, 8):
                     inputs = session.run.call_args.kwargs["inputs"]
                 else:
@@ -422,8 +425,8 @@ class TestPrimitives(IBMTestCase):
         for cls in primitives:
             with self.subTest(primitive=cls):
                 inst = cls(session=session)
-                inst.run(self.qx, observables=self.obs, shots=100)
-                inst.run(self.qx, observables=self.obs, shots=200)
+                inst.run(self.qx[cls], observables=self.obs, shots=100)
+                inst.run(self.qx[cls], observables=self.obs, shots=200)
                 kwargs_list = session.run.call_args_list
                 for idx, shots in zip([0, 1], [100, 200]):
                     self.assertEqual(
@@ -440,7 +443,7 @@ class TestPrimitives(IBMTestCase):
         for idx in range(num_runs):
             cls = primitives[idx % 2]
             inst = cls(session=session)
-            inst.run(self.qx, observables=self.obs)
+            inst.run(self.qx[cls], observables=self.obs)
         self.assertEqual(session.run.call_count, num_runs)
 
     @unittest.skip("Skip until data caching is reenabled.")
