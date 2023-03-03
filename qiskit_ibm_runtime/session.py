@@ -237,8 +237,10 @@ class Session:
 
 
 # Default session
-_DEFAULT_SESSION = ContextVar("_DEFAULT_SESSION", default=None)
-_IN_SESSION_CM = ContextVar("_IN_SESSION_CM", default=False)
+_DEFAULT_SESSION: ContextVar[Optional[Session]] = ContextVar(
+    "_DEFAULT_SESSION", default=None
+)
+_IN_SESSION_CM: ContextVar[bool] = ContextVar("_IN_SESSION_CM", default=False)
 
 
 def set_cm_session(session: Optional[Session]) -> None:
