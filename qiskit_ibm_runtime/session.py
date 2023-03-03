@@ -15,6 +15,7 @@
 from typing import Dict, Optional, Type, Union, Callable
 from types import TracebackType
 from functools import wraps
+from contextvars import ContextVar
 
 from qiskit.circuit import QuantumCircuit
 
@@ -236,16 +237,14 @@ class Session:
 
 
 # Default session
-_DEFAULT_SESSION: Optional[Session] = None
-_IN_SESSION_CM = False
+_DEFAULT_SESSION = ContextVar("_DEFAULT_SESSION", default=None)
+_IN_SESSION_CM = ContextVar("_IN_SESSION_CM", default=False)
 
 
 def set_cm_session(session: Optional[Session]) -> None:
     """Set the context manager session."""
-    global _DEFAULT_SESSION  # pylint: disable=global-statement
-    global _IN_SESSION_CM  # pylint: disable=global-statement
-    _DEFAULT_SESSION = session
-    _IN_SESSION_CM = session is not None
+    _DEFAULT_SESSION.set(session)
+    _IN_SESSION_CM.set(session is not None)
 
 
 def get_default_session(
@@ -260,18 +259,17 @@ def get_default_session(
     """
     backend_name = backend.name if isinstance(backend, IBMBackend) else backend
 
-    global _DEFAULT_SESSION  # pylint: disable=global-statement
-    session = _DEFAULT_SESSION
+    session = _DEFAULT_SESSION.get()
     if (  # pylint: disable=too-many-boolean-expressions
-        _DEFAULT_SESSION is None
-        or not _DEFAULT_SESSION._active
-        or (backend_name is not None and _DEFAULT_SESSION._backend != backend_name)
-        or (service is not None and _DEFAULT_SESSION.service.channel != service.channel)
+        session is None
+        or not session._active
+        or (backend_name is not None and session._backend != backend_name)
+        or (service is not None and session.service.channel != service.channel)
     ):
         # Create a new session if one doesn't exist, or if the user wants to switch backend/channel.
         # Close the session only if all jobs are finished and you don't need to run more in the session.
-        if _DEFAULT_SESSION and not _IN_SESSION_CM and _DEFAULT_SESSION._active:
-            _DEFAULT_SESSION.close()
+        if session and not _IN_SESSION_CM.get() and session._active:
+            session.close()
         if service is None:
             service = (
                 backend.service
@@ -279,6 +277,6 @@ def get_default_session(
                 else QiskitRuntimeService()
             )
         session = Session(service=service, backend=backend)
-        if not _IN_SESSION_CM:
-            _DEFAULT_SESSION = session
+        if not _IN_SESSION_CM.get():
+            _DEFAULT_SESSION.set(session)
     return session
