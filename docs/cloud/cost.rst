@@ -1,7 +1,7 @@
 Manage costs
 ############
 
-The Standard plan is not free, except when running jobs on simulators. Use the information in this topic to help you understand how much you’re paying and how to limit your costs.
+The Standard plan is not free, although you are only charged for the time your job spends on actual quantum devices.  You are not charged for time on classical computers, including running jobs on simulators. Use the information in this topic to help you understand how much you’re paying and how to limit your costs.
 
 Time limits on programs
 ***********************
@@ -47,9 +47,9 @@ To determine how much has been billed to an instance during the current billing 
 
 These are the fields relevant to cost:
 
-- **Billing cycle QR usage**: The amount of quantum runtime used by this instance during the current billing cycle
+- **Billing cycle Q time**: The amount of quantum runtime used by this instance during the current billing cycle
 - **Billing cycle cost**: The total cost of running jobs during the current billing cycle
-- **Total QR usage**: The amount of quantum runtime used by this instance since it was created
+- **Total Q time**: The amount of quantum runtime used by this instance since it was created
 - **Total cost**: The total cost of running jobs on this instance since it was created (only administrators can set this value)
 
 You can view your billing cycle on the `Billing and usage page <https://cloud.ibm.com/billing>`__.
@@ -61,7 +61,7 @@ To determine how much has been billed to each job associated with an instance, f
 
 These are the columns relevant to cost:
 
-- **QR usage**: The amount of quantum runtime used by this job
+- **Q time**: The amount of quantum runtime used by this job
 - **Cost**: The total cost of running this job
 
 
