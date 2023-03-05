@@ -3,5 +3,7 @@ upgrade:
   - |
     If a job is returned without a backend, retrieving the backend through 
     :meth:`qiskit_ibm_runtime.RuntimeJob.backend` will re-retrieve data from 
-    the server and attempt to update the backend.
+    the server and attempt to update the backend. Additionally, ``job_id`` and ``backend``, 
+    which were deprecated attributes of :class:`qiskit_ibm_runtime.RuntimeJob` have now
+    been removed.
 
