@@ -20,7 +20,6 @@ from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.jobstatus import JobStatus
 
 from qiskit_ibm_runtime import RuntimeJob
-from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.constants import API_TO_JOB_ERROR_MESSAGE
 from qiskit_ibm_runtime.exceptions import (
     RuntimeJobFailureError,
@@ -283,19 +282,6 @@ class TestRuntimeJob(IBMTestCase):
         with self.assertRaises(RuntimeJobNotFound):
             service.job(job.job_id())
 
-    def test_job_id_attribute(self):
-        """Test using job_id as an attribute still works."""
-        job = RuntimeJob(
-            backend=MagicMock(),
-            api_client=MagicMock(),
-            client_params=MagicMock(),
-            service=FakeRuntimeService(),
-            job_id="12345",
-            program_id="foo",
-        )
-        self.assertIsInstance(job.job_id, str)
-        self.assertEqual(job.job_id, "12345")
-
     @run_quantum_and_cloud_fake
     def test_download_external_job_result(self, service):
         """Test downloading the job result from an external URL."""
@@ -313,17 +299,3 @@ class TestRuntimeJob(IBMTestCase):
                     result = job.result()
 
         self.assertEqual(result, "content-from-external-url")
-
-    def test_job_backend_attribute(self):
-        """Test using backend as an attribute still works."""
-        backend = MagicMock(spec=IBMBackend)
-        job = RuntimeJob(
-            backend=backend,
-            api_client=MagicMock(),
-            client_params=MagicMock(),
-            service=FakeRuntimeService(),
-            job_id="12345",
-            program_id="foo",
-        )
-        self.assertIsInstance(job.backend(), IBMBackend)
-        self.assertEqual(job.backend(), backend)

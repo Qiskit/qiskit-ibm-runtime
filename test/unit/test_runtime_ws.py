@@ -31,7 +31,6 @@ from qiskit_ibm_runtime.exceptions import RuntimeInvalidStateError
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 
 from .mock.fake_runtime_client import BaseFakeRuntimeClient
-from .mock.fake_runtime_service import FakeRuntimeService
 from .mock.ws_handler import (
     websocket_handler,
     JOB_ID_PROGRESS_DONE,
@@ -240,7 +239,7 @@ class TestRuntimeWebsocketClient(IBMTestCase):
             backend=backend,
             api_client=BaseFakeRuntimeClient(),
             client_params=params,
-            service=FakeRuntimeService(),
+            service=MagicMock(),
             job_id=job_id,
             program_id="my-program",
             user_callback=callback,
