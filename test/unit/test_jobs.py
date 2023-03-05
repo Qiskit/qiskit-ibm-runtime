@@ -289,6 +289,7 @@ class TestRuntimeJob(IBMTestCase):
             backend=MagicMock(),
             api_client=MagicMock(),
             client_params=MagicMock(),
+            service=FakeRuntimeService(),
             job_id="12345",
             program_id="foo",
         )
@@ -320,6 +321,7 @@ class TestRuntimeJob(IBMTestCase):
             backend=backend,
             api_client=MagicMock(),
             client_params=MagicMock(),
+            service=FakeRuntimeService(),
             job_id="12345",
             program_id="foo",
         )

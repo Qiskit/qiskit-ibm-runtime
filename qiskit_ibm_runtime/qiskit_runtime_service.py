@@ -51,7 +51,6 @@ from .api.client_parameters import ClientParameters
 from .runtime_options import RuntimeOptions
 from .utils.deprecation import (
     deprecate_function,
-    issue_deprecation_msg,
     deprecate_arguments,
 )
 
@@ -66,8 +65,6 @@ DEPRECATED_PROGRAMS = [
     "quantum_kernal_alignment",
     "sample-program",
 ]
-
-_JOB_DEPRECATION_ISSUED = False
 
 
 class QiskitRuntimeService(Provider):
@@ -1018,18 +1015,6 @@ class QiskitRuntimeService(Provider):
         if not backend:
             backend = self.backend(name=response["backend"])
 
-        global _JOB_DEPRECATION_ISSUED  # pylint: disable=global-statement
-        if not (start_session or session_id) and not _JOB_DEPRECATION_ISSUED:
-            # No need to issue warning if session is used since the old style session
-            # didn't return a job, and new style returns new job.
-            _JOB_DEPRECATION_ISSUED = True
-            issue_deprecation_msg(
-                msg="Note that the 'job_id' and 'backend' attributes of "
-                "a runtime job have been deprecated",
-                version="0.7",
-                remedy="Please use the job_id() and backend() methods instead.",
-            )
-
         job = RuntimeJob(
             backend=backend,
             api_client=self._api_client,
@@ -1487,6 +1472,7 @@ class QiskitRuntimeService(Provider):
             backend=backend,
             api_client=self._api_client,
             client_params=self._client_params,
+            service=self,
             job_id=raw_data["id"],
             program_id=raw_data.get("program", {}).get("id", ""),
             params=decoded,

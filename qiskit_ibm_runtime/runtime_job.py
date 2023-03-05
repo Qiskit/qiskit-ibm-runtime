@@ -93,6 +93,7 @@ class RuntimeJob(Job):
         client_params: ClientParameters,
         job_id: str,
         program_id: str,
+        service: "qiskit_runtime_service.QiskitRuntimeService",
         params: Optional[Dict] = None,
         creation_date: Optional[str] = None,
         user_callback: Optional[Callable] = None,
@@ -100,7 +101,6 @@ class RuntimeJob(Job):
             Union[Type[ResultDecoder], Sequence[Type[ResultDecoder]]]
         ] = None,
         image: Optional[str] = "",
-        service: "qiskit_runtime_service.QiskitRuntimeService" = None,
         session_id: Optional[str] = None,
         tags: Optional[List] = None,
     ) -> None:
@@ -159,10 +159,6 @@ class RuntimeJob(Job):
 
         if user_callback is not None:
             self.stream_results(user_callback)
-
-        # For backward compatibility. These can be removed once 'job_id' and 'backend'
-        # as attributes are no longer supported.
-        self.job_id = CallableStr(job_id)
 
     def _download_external_result(self, response: Any) -> Any:
         """Download result from external URL.
@@ -255,7 +251,7 @@ class RuntimeJob(Job):
         self.cancel_result_streaming()
         self._status = JobStatus.CANCELLED
 
-    def backend(self) -> Backend:
+    def backend(self) -> Optional[Backend]:
         """Return the backend where this job was executed. Retrieve data again if backend is None.
 
         Raises:
