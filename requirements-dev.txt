@@ -7,6 +7,7 @@ sphinx-rtd-theme>=0.4.0
 sphinx-tabs>=1.1.11
 sphinx-automodapi
 sphinx-autodoc-typehints<=1.19.2
+nbqa==1.5.3
 matplotlib>=2.1
 jupyter
 jupyter-sphinx

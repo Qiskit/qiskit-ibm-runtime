@@ -32,6 +32,9 @@ integration-test:
 e2e-test:
 	python -m unittest discover --verbose --top-level-directory . --start-directory test/e2e
 
+docs-test:
+	./test/docs/vale.sh
+
 unit-test-coverage:
 	coverage run -m unittest discover --verbose --top-level-directory . --start-directory test/unit
 	coverage lcov
