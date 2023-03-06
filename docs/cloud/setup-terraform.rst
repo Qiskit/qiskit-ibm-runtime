@@ -1,12 +1,12 @@
 Set up Terraform for Qiskit Runtime
 ===================================
 
-If you use Terraform to manage your infrastructure, the `IBM Cloud provider for Terraform <https://cloud.ibm.com/docs/ibm-cloud-provider-for-terraform?topic=ibm-cloud-provider-for-terraform-getting-started>`__ supports provisioning Qiskit Runtime service instances. The generic "ibm_resource_instance" resource is used for that. The following parameters have to be specified:
+If you use Terraform to manage your infrastructure, the `IBM Cloud provider for Terraform <https://cloud.ibm.com/docs/ibm-cloud-provider-for-terraform?topic=ibm-cloud-provider-for-terraform-getting-started>`__ supports provisioning Qiskit Runtime service instances. The generic ``ibm_resource_instance`` resource is used for that. The following parameters have to be specified:
 
 Provisioning with Terraform
 ---------------------------
 
-If you use Terraform to manage your infrastructure, the `IBM Cloud provider for Terraform <https://cloud.ibm.com/docs/ibm-cloud-provider-for-terraform?topic=ibm-cloud-provider-for-terraform-getting-started>`__ supports provisioning Qiskit Runtime service instances. The generic "ibm_resource_instance" resource is used for that. The following parameters have to be specified:
+If you use Terraform to manage your infrastructure, the `IBM Cloud provider for Terraform <https://cloud.ibm.com/docs/ibm-cloud-provider-for-terraform?topic=ibm-cloud-provider-for-terraform-getting-started>`__ supports provisioning Qiskit Runtime service instances. The generic ``ibm_resource_instance`` resource is used for that. The following parameters have to be specified:
 
 -  ``name`` – The name of your service instance.
 -  ``service`` – Specify ``quantum-computing`` to provision Qiskit Runtime instances.
@@ -18,7 +18,7 @@ Optional parameters include:
 -  ``resource_group_id`` – Creates the service instance in the specified resource group.
 -  ``tags`` – Add tags to the resource.
 
-Example: Creating a Service Instance of Qiskit Runtime
+Example: Creating a service instance of Qiskit Runtime
 ------------------------------------------------------
 
 After the job completes, you can view the results.
