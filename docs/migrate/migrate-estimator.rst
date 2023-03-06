@@ -346,7 +346,7 @@ the simulation method has been updated to match the result from 3.a.
     >>> print("expectation: ", expectation_value)
     expectation:  [-1.06365335]
 
-For more information on using the Aer Ppimitives, see the 
+For more information on using the Aer primitives, see the 
 `VQE tutorial <https://qiskit.org/documentation/tutorials/algorithms/03_vqe_simulation_with_noise.html>`_ .
 
 For more information about running noisy simulations with the **Runtime Primitives**, see this

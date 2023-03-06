@@ -124,7 +124,7 @@ the **quasi-probability distribution** associated with them.
         .. raw:: html
 
             <details>
-            <summary><a>Code example for Aer Estimator</a></summary>
+            <summary><a>Code example for Aer Sampler</a></summary>
             <br>
 
         .. code-block:: python
@@ -142,7 +142,7 @@ the **quasi-probability distribution** associated with them.
             </details>
             <br>
 
-Next, we will sample a circuit: first, with ``backend.run()``, then by using the ``Sampler``.
+Next, we will show an end-to-end example of sampling a circuit: first, with ``backend.run()``, then by using the ``Sampler``.
 
 End-to-end example
 ------------------
