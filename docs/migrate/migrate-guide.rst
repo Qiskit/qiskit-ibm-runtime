@@ -1,29 +1,43 @@
 Migration guide
 ================
 
-This guide describes key patterns of behavior and use cases with code
-examples to help you migrate code to use the Qiskit Runtime Primitives.
+This guide describes key patterns of behavior and use cases with code examples to help you migrate code from
+the legacy ``qiskit-ibmq-provider`` package to use the Qiskit Runtime primitives.
+
+The primitives are the recommended tool to write quantum algorithms, as they encapsulate common device queries
+seen in application packages, and allow for managed performance through the Qiskit Runtime service.
+However, if your algorithm requires more granular information, such as pre-shot measurements, the primitives might
+not provide the desired abstraction level. You can refer to the restructured ``qiskit-ibm-provider`` package,
+and its corresponding
+`migration guide <https://qiskit.org/documentation/partners/qiskit_ibm_provider/tutorials/Migration_Guide_from_qiskit-ibmq-provider.html>`_
+for further information on alternatives to the Qiskit Runtime primitives.
 
 The Qiskit Runtime Primitives implement the reference ``Sampler`` and ``Estimator`` interfaces found in
 `qiskit.primitives <https://qiskit.org/documentation/apidoc/primitives.html>`_. These interfaces let you 
 switch between primitive implementations with minimal code changes. Different primitive implementations
-can be found in the ``qiskit``, ``qiskit_aer``, and ``qiskit_ibm_runtime`` library. Each implementation serves a specific purpose:
+can be found in the ``qiskit``, ``qiskit_aer``, and ``qiskit_ibm_runtime`` library.
+Each implementation serves a specific purpose:
 
 * The primitives in ``qiskit`` can perform local statevector simulations - useful for quickly prototying algorithms. 
 * The primitives in ``qiskit_aer`` give access to the local Aer simulators for tasks such as noisy simulation. 
-* The primitives in ``qiskit_ibm_runtime`` provide access to the Qiskit Runtime service and features such as built-in circuit optimization and error mitigation support.
+* The primitives in ``qiskit_ibm_runtime`` provide access to real hardware and cloud simulators through the Qiskit
+  Runtime service. They include exclusive features such as built-in circuit optimization and error mitigation support.
 
 .. attention::
 
     The **only primitives that provide access to the Qiskit Runtime service** are those imported
     from ``qiskit_ibm_runtime`` (Qiskit Runtime Primitives).
 
-When migrating, the key to writing an equivalent algorithm using primitives is to first identify what is the minimal unit of information your algorithm is based on:
+When migrating, the key to writing an equivalent algorithm using primitives is to first identify what is the minimal
+unit of information your algorithm is based on:
 
 * If it uses an **expectation value**, you will need an ``Estimator``.
 * If it uses a **probability distribution** (from sampling the device), you will need a ``Sampler``.
 
-Most algorithms can be rewritten to use one of these units of information. After determining which primitive to use, identify where the algorithm accesses the backend.  Look for the call to ``backend.run()``. Next, you will replace this call with the respective primitive call, as shown in the following examples.
+After determining which primitive to use, identify where the algorithm accesses the backend. Look for the call to
+``backend.run()``.
+Next, you will replace this call with the respective primitive call, as shown in the following examples.
+
 
 .. note::
 

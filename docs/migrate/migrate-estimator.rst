@@ -36,10 +36,6 @@ This results in a considerable reduction of the code complexity and a more compa
     **local** simulations, you could import a specific backend from ``qiskit-aer``. All of them followed
     the ``backend.run()`` interface.
 
-    This guide uses the now deprecated ``qiskit-ibmq-provider`` syntax for the legacy code examples.
-    For instructions to migrate to ``qiskit-ibm-provider``, see the 
-    `provider migration guide <https://github.com/Qiskit/qiskit-ibm-provider/blob/main/docs/tutorials/Migration_Guide_from_qiskit-ibmq-provider.ipynb>`_.
-
         .. raw:: html
 
             <details>

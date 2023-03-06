@@ -144,10 +144,11 @@ The operator definition changes
 
 Step 2: Backend setup
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. _session: https://quantum-computing.ibm.com/lab/docs/iql/manage/systems/sessions
 
 Let's say that you want to run VQE on the ``ibmq_qasm_simulator`` in the cloud. Before you would load you IBMQ account,
 get the corresponding backend from the provider, and use it to set up a |QuantumInstance|_. Now, you need to initialize
-a ``QiskitRuntimeService``, open a session and use it to instantiate your :class:`.Estimator`.
+a ``QiskitRuntimeService``, open a `session`_ and use it to instantiate your :class:`.Estimator`.
 
 .. raw:: html
 
@@ -254,7 +255,8 @@ a context manager. The code for steps 2 and 3 would then look like:
 
 Related links
 ----------------
-
+* See the `Session documentation <session>`__ for further information about the Qiskit Runtime Sessions.
+* See the `How to run a primitive in a sesison <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/how_to/run_session.html>`__ topic for detailed code examples.
 * See the `Qiskit algorithm documentation <https://qiskit.org/documentation/apidoc/algorithms.html>`__ for details about each algorithm.
 * See the `Qiskit algorithm tutorials <https://qiskit.org/documentation/tutorials/algorithms/index.html>`__ for examples of how to use algorithms.
 * Read the blog `Introducing Qiskit Algorithms With Qiskit Primitives! <https://medium.com/qiskit/introducing-qiskit-algorithms-with-qiskit-runtime-primitives-d89703ecfca3>`_ for an introduction to using the updated algorithms.

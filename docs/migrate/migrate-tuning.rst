@@ -119,8 +119,6 @@ different for ``Sampler`` and ``Estimator``. You can find more information in th
 
 The configuration is similar to the other options:
 
-The ``skip_transpilation`` option is an advanced transpilation option, set as follows:
-
 .. code-block:: python
 
     from qiskit_ibm_runtime import Estimator, Options

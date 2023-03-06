@@ -36,12 +36,9 @@ the **quasi-probability distribution** associated with them.
 .. note::
 
     **Backend.run() model:** In this model, you used the
-    ``qiskit-ibmq-provider`` (now migrated to ``qiskit-ibm-provider``) module to access real backends and remote simulators. To run **local** simulations, you could import a specific backend from ``qiskit-aer``. All of them followed
+    ``qiskit-ibmq-provider`` (now migrated to ``qiskit-ibm-provider``) module to access real backends and remote simulators.
+    To run **local** simulations, you could import a specific backend from ``qiskit-aer``. All of them followed
     the ``backend.run()`` interface.
-
-    This guide uses the now deprecated ``qiskit-ibmq-provider`` syntax for the legacy code examples.
-    For instructions to migrate to the new ``qiskit-ibm-provider``, see the 
-    `provider migration guide <https://github.com/Qiskit/qiskit-ibm-provider/blob/main/docs/tutorials/Migration_Guide_from_qiskit-ibmq-provider.ipynb>`_.
 
         .. raw:: html
 
@@ -292,7 +289,6 @@ to migrate from, but can help improve your performance and results. For more inf
 
 - `Error mitigation tutorial <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/tutorials/Error-Suppression-and-Error-Mitigation.html>`_
 - `Setting execution options topic <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/how_to/options.html>`_
-- `Primitive execution options API reference <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/stubs/qiskit_ibm_runtime.options.Options.html#qiskit_ibm_runtime.options.Options>`_
 - `How to run a session topic <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/how_to/run_session.html>`_
 
 
