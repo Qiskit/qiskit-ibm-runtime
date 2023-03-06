@@ -51,6 +51,7 @@ class AccountManager:
     ) -> None:
         """Save account on disk."""
         cls.migrate(filename=filename)
+        channel = channel or os.getenv("QISKIT_IBM_CHANNEL") or _DEFAULT_CHANNEL_TYPE
         name = name or cls._get_default_account_name(channel)
         filename = filename if filename else _DEFAULT_ACCOUNT_CONFIG_JSON_FILE
         filename = os.path.expanduser(filename)
