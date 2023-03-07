@@ -13,8 +13,8 @@ to tune certain primitive options. This section describes some of the common set
 
 .. attention::
 
-    This section focuses on Qiskit Runtime Primitive :class:`.Options` (imported from ``qiskit_ibm_runtime``). While
-    most of the `Primitives` interface is common across implementations, most :class:`.Options` are not. Consult the
+    This section focuses on Qiskit Runtime primitive :class:`.Options` (imported from ``qiskit_ibm_runtime``). While
+    most of the `primitives` interface is common across implementations, most :class:`.Options` are not. Consult the
     corresponding API references for information about the |qiskit.primitives|_ and |qiskit_aer.primitives|_ options.
 
 1. Shots

@@ -425,5 +425,5 @@ the simulation method has been updated to match the result from 3.a.
     >>> print("binary_quasi_dist: ", binary_quasi_dist)
     binary_quasi_dist:  {'0001': 0.2802734375, '0010': 0.2412109375, '0000': 0.2392578125, '0011': 0.2392578125}
 
-For information about running noisy simulations with the **Runtime Primitives**, see 
+For information about running noisy simulations with the **Runtime primitives**, see 
 `this topic <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/how_to/noisy_simulators.html>`_.

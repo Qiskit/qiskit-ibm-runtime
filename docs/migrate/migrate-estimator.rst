@@ -345,5 +345,5 @@ the simulation method has been updated to match the result from 3.a.
 For more information on using the Aer primitives, see the 
 `VQE tutorial <https://qiskit.org/documentation/tutorials/algorithms/03_vqe_simulation_with_noise.html>`_ .
 
-For more information about running noisy simulations with the **Runtime Primitives**, see this
+For more information about running noisy simulations with the **Runtime primitives**, see this
 `topic <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/how_to/noisy_simulators.html>`_.

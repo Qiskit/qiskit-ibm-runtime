@@ -12,7 +12,7 @@ and its corresponding
 `migration guide <https://qiskit.org/documentation/partners/qiskit_ibm_provider/tutorials/Migration_Guide_from_qiskit-ibmq-provider.html>`_
 for further information on alternatives to the Qiskit Runtime primitives.
 
-The Qiskit Runtime Primitives implement the reference ``Sampler`` and ``Estimator`` interfaces found in
+The Qiskit Runtime primitives implement the reference ``Sampler`` and ``Estimator`` interfaces found in
 `qiskit.primitives <https://qiskit.org/documentation/apidoc/primitives.html>`_. These interfaces let you 
 switch between primitive implementations with minimal code changes. Different primitive implementations
 can be found in the ``qiskit``, ``qiskit_aer``, and ``qiskit_ibm_runtime`` library.

@@ -64,7 +64,7 @@ Run the Hello World program to ensure that your environment is set up properly:
     print(result)
 
 
-Getting started with Primitives
+Getting started with primitives
 =================================
 
 .. nbgallery::
