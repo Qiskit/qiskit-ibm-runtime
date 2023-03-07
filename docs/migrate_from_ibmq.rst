@@ -10,7 +10,7 @@ The classes related to Qiskit Runtime that used to be included in ``qiskit-ibmq-
 Changes in Class name and location
 ==================================
 
-The module from which the classes are imported has changed. Below is a table of example access patterns in ``qiskit.providers.ibmq.runtime`` and their new form in ``qiskit_ibm_runtime``:
+The module from which the classes are imported has changed. The following table contains example access patterns in ``qiskit.providers.ibmq.runtime`` and their new form in ``qiskit_ibm_runtime``:
 
 .. list-table:: Migrate from ``qiskit.providers.ibmq.runtime`` in ``qiskit-ibmq-provider`` to ``qiskit-ibm-runtime`` 
    :header-rows: 1

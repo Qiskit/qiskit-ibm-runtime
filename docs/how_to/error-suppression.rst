@@ -10,7 +10,7 @@ Primitives let you employ error suppression techniques by setting the optimizati
 Setting the optimization level
 ------------------------------
 
-The optimization_levels setting specifies how much optimization to perform on the circuits. Higher levels generate more optimized circuits, at the expense of longer transpilation times.
+The ``optimization_level`` setting specifies how much optimization to perform on the circuits. Higher levels generate more optimized circuits, at the expense of longer transpilation times.
 
 +--------------------+---------------------------------------------------------------------------------------------------+
 | Optimization Level | Estimator & Sampler                                                                               |

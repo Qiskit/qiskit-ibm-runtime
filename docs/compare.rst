@@ -24,7 +24,7 @@ Qiskit Runtime offers advantages in workload performance. Variational
 algorithms can run on classical compute resources that are colocated
 with the QPUs through the Estimator primitive program. This allows users
 to run iterative algorithm circuits back to back. In addition, sessions
-can drive a sequence of jobs without having to requeue each job,
+can drive a sequence of jobs without having to re-queue each job,
 avoiding latencies of queue wait times after the session is actively
 running. As a result, Qiskit Runtime is much more efficient than its
 predecessors.
