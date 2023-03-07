@@ -270,6 +270,19 @@ out$> make style
 out$> make mypy
 ```
 
+If you edit any documentation, refer to [IBM Quantum's writing style
+guide](https://github.com/IBM/ibm-quantum-style-guide). You can use
+[Vale](https://vale.sh) to automatically check some of these rules for you.
+With Vale installed, run the following command
+
+```sh
+make docs-test
+```
+
+This test also runs on CI and will fail if Vale encounters any spelling
+mistakes. To add a word to the dictionary, add it to
+`test/docs/dictionary.txt`.
+
 ### Development Cycle
 
 The development cycle for qiskit-ibm  is all handled in the open using
