@@ -165,7 +165,6 @@ class RetrySession(Session):
         proxies: Optional[Dict[str, str]] = None,
         auth: Optional[AuthBase] = None,
         timeout: Tuple[float, Union[float, None]] = (5.0, None),
-        custom_header: Optional[str] = None,
     ) -> None:
         """RetrySession constructor.
 
@@ -183,7 +182,7 @@ class RetrySession(Session):
         super().__init__()
 
         self.base_url = base_url
-
+        self.custom_header: Optional[str] = None
         self._initialize_retry(retries_total, retries_connect, backoff_factor)
         self._initialize_session_parameters(verify, proxies or {}, auth)
         self._timeout = timeout
