@@ -28,6 +28,7 @@ REQUIREMENTS = [
     "websocket-client>=1.5.1",
     "typing-extensions>=4.0.0",  # remove when support for Python 3.7 is dropped (use "from typing import" instead)
     "ibm-platform-services>=0.22.6",
+    "qiskit-ibm-provider>=0.4.0",
 ]
 
 # Handle version.
