@@ -24,10 +24,10 @@ from qiskit.providers.backend import BackendV1 as Backend
 from qiskit.providers.provider import ProviderV1 as Provider
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.providerutils import filter_backends
-
-from qiskit_ibm_runtime import ibm_backend
 from qiskit_ibm_provider.utils.backend_decoder import configuration_from_server_data
 from qiskit_ibm_provider.utils.hgp import to_instance_format, from_instance_format
+
+from qiskit_ibm_runtime import ibm_backend
 
 from .accounts import AccountManager, Account, AccountType, ChannelType
 from .proxies import ProxyConfiguration

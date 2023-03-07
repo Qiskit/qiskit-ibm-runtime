@@ -16,13 +16,13 @@ import logging
 from collections import OrderedDict
 from typing import Any, Dict, Optional
 
+from qiskit_ibm_provider.utils.backend_decoder import configuration_from_server_data
+from qiskit_ibm_provider.utils.hgp import from_instance_format
+
 from qiskit_ibm_runtime import (  # pylint: disable=unused-import
     ibm_backend,
     qiskit_runtime_service,
 )
-
-from qiskit_ibm_provider.utils.backend_decoder import configuration_from_server_data
-from qiskit_ibm_provider.utils.hgp import from_instance_format
 
 from .api.clients import AccountClient
 from .api.client_parameters import ClientParameters
