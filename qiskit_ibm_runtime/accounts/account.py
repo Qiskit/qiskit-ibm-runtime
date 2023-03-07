@@ -19,10 +19,10 @@ from urllib.parse import urlparse
 from requests.auth import AuthBase
 from typing_extensions import Literal
 
+from qiskit_ibm_provider.utils.hgp import from_instance_format
 from .exceptions import InvalidAccountError, CloudResourceNameResolutionError
 from ..api.auth import QuantumAuth, CloudAuth
 from ..proxies import ProxyConfiguration
-from ..utils.hgp import from_instance_format
 from ..utils import resolve_crn
 
 AccountType = Optional[Literal["cloud", "legacy"]]

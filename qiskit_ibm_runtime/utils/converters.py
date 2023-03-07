@@ -137,6 +137,7 @@ def duration_difference(date_time: datetime) -> str:
     return time_str
 
 
+# TODO add this method to qiskit-ibm-provider, then remove this file
 def hms_to_seconds(hms: str, msg_prefix: str = "") -> int:
     """Convert duration specified as hours minutes seconds to seconds.
 

@@ -17,7 +17,7 @@ import logging
 from typing import List, Dict, Any, Optional
 from datetime import datetime as python_datetime
 
-from qiskit_ibm_runtime.utils.hgp import from_instance_format
+from qiskit_ibm_provider.utils.hgp import from_instance_format
 
 from .backend import BaseBackendClient
 from ..rest import Account
