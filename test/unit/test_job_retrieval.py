@@ -13,7 +13,7 @@
 """Tests for runtime job retrieval."""
 
 from datetime import datetime, timedelta, timezone
-from qiskit_ibm_runtime.exceptions import IBMInputValueError
+from qiskit_ibm_provider.exceptions import IBMInputValueError
 from .mock.fake_runtime_service import FakeRuntimeService
 from ..ibm_test_case import IBMTestCase
 from ..decorators import run_quantum_and_cloud_fake
