@@ -58,8 +58,6 @@ def _get_client_header() -> str:
     qiskit_pkgs = [
         "qiskit-terra",
         "qiskit-aer",
-        "qiskit-ignis",  # TODO: remove this?
-        "qiskit-aqua",  # TODO: remove this?
         "qiskit-experiments",
         "qiskit-nature",
         "qiskit-machine-learning",
@@ -167,6 +165,7 @@ class RetrySession(Session):
         proxies: Optional[Dict[str, str]] = None,
         auth: Optional[AuthBase] = None,
         timeout: Tuple[float, Union[float, None]] = (5.0, None),
+        custom_header: Optional[str] = None,
     ) -> None:
         """RetrySession constructor.
 
@@ -228,17 +227,9 @@ class RetrySession(Session):
             proxies: Proxy URLs mapped by protocol.
             auth: Authentication handler.
         """
-        client_app_header = CLIENT_APPLICATION
-
-        # Append custom header to the end if specified
-        custom_header = os.getenv(CUSTOM_HEADER_ENV_VAR) or os.getenv(
+        self.custom_header = os.getenv(CUSTOM_HEADER_ENV_VAR) or os.getenv(
             QE_PROVIDER_HEADER_ENV_VAR
         )
-        if custom_header:
-            client_app_header += "/" + custom_header
-
-        self.headers.update({"X-Qx-Client-Application": client_app_header})
-
         self.auth = auth
         self.proxies = proxies or {}
         self.verify = verify
@@ -301,6 +292,11 @@ class RetrySession(Session):
                             )
                         }
                     )
+
+        if self.custom_header:
+            headers.update(
+                {"X-Qx-Client-Application": "{}/{}".format(headers["X-Qx-Client-Application"], self.custom_header)}
+            )
 
         try:
             self._log_request_info(final_url, method, kwargs)
