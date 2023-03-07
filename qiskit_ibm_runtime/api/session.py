@@ -295,7 +295,11 @@ class RetrySession(Session):
 
         if self.custom_header:
             headers.update(
-                {"X-Qx-Client-Application": "{}/{}".format(headers["X-Qx-Client-Application"], self.custom_header)}
+                {
+                    "X-Qx-Client-Application": "{}/{}".format(
+                        headers["X-Qx-Client-Application"], self.custom_header
+                    )
+                }
             )
 
         try:
