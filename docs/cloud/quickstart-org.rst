@@ -10,7 +10,7 @@ Overview
    
    IBM Cloud provides various ways to implement these mechanisms described in this tutorial. There are several ways to achieve these objectives. Additionally, most of the steps in this tutorial are generic to IBM Cloud and not specific to Qiskit Runtime, except the custom role details.
 
-Involved Personas
+Involved personas
 ~~~~~~~~~~~~~~~~~
 
 The are several main personas that are mentioned in this tutorial:
