@@ -46,14 +46,14 @@ Next, you will replace this call with the respective primitive call, as shown in
    method with the corresponding primitive. For instructions to migrate code based on 
    ``QuantumInstance``, refer to the `Quantum Instance migration guide <http://qisk.it/qi_migration>`__.
 
-This guide has examples for two basic types of user:
+This guide has examples for two basic types of users:
 
-1. Algorithm developers who need to refactor algorithms to use primitives instead of `backend.run` should refer to these topics:
+* Algorithm developers who need to refactor algorithms to use primitives instead of `backend.run` should refer to these topics:
 
    * `Update code that performs circuit sampling <migrate-sampler.html>`__
    * `Update code that calculates expectation values <migrate-estimator.html>`__
    
-2. Algorithm users that refer to Qiskit algorithms but do not directly use primitives.  These users now need to pass in a primitive instead of a backend to the udpdated Qiskit algorithmes.  Refer to this topic for details:
+* Algorithm users that refer to Qiskit algorithms but do not directly use primitives.  These users now need to pass in a primitive instead of a backend to the updated Qiskit algorithms.  Refer to this topic for details:
 
    * `Work with updated Qiskit algorithms <migrate-qiskit-alg.html>`__
 

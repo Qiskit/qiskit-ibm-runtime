@@ -255,7 +255,7 @@ a context manager. The code for steps 2 and 3 would then look like:
 
 Related links
 ----------------
-* See the `Session documentation <session>`__ for further information about the Qiskit Runtime Sessions.
+* See the `Session documentation <session.html>`__ for further information about the Qiskit Runtime sessions.
 * See the `How to run a primitive in a sesison <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/how_to/run_session.html>`__ topic for detailed code examples.
 * See the `Qiskit algorithm documentation <https://qiskit.org/documentation/apidoc/algorithms.html>`__ for details about each algorithm.
 * See the `Qiskit algorithm tutorials <https://qiskit.org/documentation/tutorials/algorithms/index.html>`__ for examples of how to use algorithms.

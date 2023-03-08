@@ -34,7 +34,7 @@ options ("second level option"). This can be done during the primitive setup:
 
 
 If you need to modify the number of shots set between iterations (primitive calls), you can set the
-shorts directly in the ``run()`` method. This overwrites the initial ``shots`` setting.
+shots directly in the ``run()`` method. This overwrites the initial ``shots`` setting.
 
 .. code-block:: python
 
