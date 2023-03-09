@@ -1,6 +1,7 @@
 ---
 features:
   - |
-    Added a new argument called session_time to the program_run method and RuntimeOptions.
-    Now value entered by the user for session max_time will be sent to the server side as session_time.
-    This allows users to specify different values for session max_time and max_execution_time.
+    Added a new argument called ``session_time`` to the program_run method and 
+    :class:`qiskit_ibm_runtime.RuntimeOptions`. Now values entered by the user for session ``max_time`` 
+    will be sent to the server side as ``session_time``. This allows users to specify different values 
+    for session ``max_time`` and ``max_execution_time``.
