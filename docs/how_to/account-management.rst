@@ -54,7 +54,7 @@ Alternatively, if you specified a name for your account when saving it, you can 
 
   service = QiskitRuntimeService(name="prod")
 
-If you want to use your credentials for just the session instead of saving it, you can pass the credentials in when initializing the ``QiskitRuntimeService`` instance:
+If you want to use your credentials for just the session rather than saving it, you can pass the credentials in when initializing the ``QiskitRuntimeService`` instance:
 
 .. code-block:: python
 

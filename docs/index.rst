@@ -13,7 +13,7 @@ programs.
 .. figure:: images/runtime-architecture.png
     :align: center
 
-Key Concepts
+Key concepts
 ==============
 
 **Primitives**
@@ -37,7 +37,7 @@ multiple relevant data points in the context of destructive interference.
 
 
 
-Next Steps
+Next steps
 =================================
 
 `Getting started <getting_started.html>`_
