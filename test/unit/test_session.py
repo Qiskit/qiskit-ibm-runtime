@@ -26,7 +26,7 @@ class TestSession(IBMTestCase):
 
     def tearDown(self) -> None:
         super().tearDown()
-        session_pkg._DEFAULT_SESSION = None
+        session_pkg._DEFAULT_SESSION.set(None)
 
     @patch("qiskit_ibm_runtime.session.QiskitRuntimeService", autospec=True)
     def test_default_service(self, mock_service):
