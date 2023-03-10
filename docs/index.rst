@@ -84,6 +84,7 @@ Next steps
     Configure error suppression <how_to/error-suppression>
     Manage your account <how_to/account-management>
     Run noisy simulations <how_to/noisy_simulators>
+    Retrieve jobs from a retired system <how_to/retrieve-job>
 
 .. toctree::
    :maxdepth: 1
@@ -108,7 +109,9 @@ Next steps
 
     API Reference <apidocs/ibm-runtime>
     Swagger API for building applications that use Qiskit Runtime <https://us-east.quantum-computing.cloud.ibm.com/openapi/>
+    API error codes <errors>
     FAQs <faqs>
+    Retired systems <retired>
     Release Notes <release_notes>
     GitHub <https://github.com/Qiskit/qiskit-ibm-runtime>
 
