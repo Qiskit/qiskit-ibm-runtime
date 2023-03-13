@@ -79,3 +79,9 @@ class TestSampler(IBMTestCase):
                 inputs = kwargs["inputs"]
                 self.assertDictEqual(inputs["circuits"], {pqc4_id: pqc4})
                 self.assertEqual(inputs["circuit_ids"], [pqc4_id, pqc_id])
+
+    def test_unsupported_values_for_options(self):
+        """Test that Sampler takes an exception when given an unsupported resilience_level"""
+        with self.assertRaises(ValueError):
+            options = {"resilience_level": 2}
+            _ = Sampler(options=options)

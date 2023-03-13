@@ -152,6 +152,13 @@ class TestOptions(IBMTestCase):
             f"inputs={inputs}, expected={expected}",
         )
 
+    def test_unsupported_program_inputs(self):
+        """Test error message when options are not supported."""
+        option_dicts = [{"optimization_level": 4}, {"resilience_level": 4}]
+        for opt in option_dicts:
+            with self.assertRaises(ValueError):
+                _ = Options._get_program_inputs(opt)
+
     def test_init_options_with_dictionary(self):
         """Test initializing options with dictionaries."""
 
