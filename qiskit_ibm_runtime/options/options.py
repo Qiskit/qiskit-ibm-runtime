@@ -85,6 +85,8 @@ class Options:
     # in Sampler/Estimator
     _DEFAULT_OPTIMIZATION_LEVEL = 3
     _DEFAULT_RESILIENCE_LEVEL = 1
+    _MAX_OPTIMIZATION_LEVEL = 3
+    _MAX_RESILIENCE_LEVEL = 3
     optimization_level: Optional[int] = None
     resilience_level: Optional[int] = None
     max_execution_time: Optional[int] = None
@@ -113,10 +115,21 @@ class Options:
 
         Returns:
             Inputs acceptable by primitive programs.
+
+        Raises:
+            ValueError: if optimization_level is out of the allowed range.
+            ValueError: if resilience_level is out of the allowed range.
         """
         sim_options = options.get("simulator", {})
         inputs = {}
         inputs["transpilation_settings"] = options.get("transpilation", {})
+        if not options.get("optimization_level") in list(
+            range(Options._MAX_OPTIMIZATION_LEVEL)
+        ):
+            raise ValueError(
+                f"optimization_level can only take the values "
+                f"{list(range(Options._MAX_OPTIMIZATION_LEVEL))}"
+            )
         inputs["transpilation_settings"].update(
             {
                 "optimization_settings": {"level": options.get("optimization_level")},
@@ -124,7 +137,12 @@ class Options:
                 "basis_gates": sim_options.get("basis_gates", None),
             }
         )
-
+        if not options.get("resilience_level") in list(
+            range(Options._MAX_RESILIENCE_LEVEL)
+        ):
+            raise ValueError(
+                f"resilience_level can only take the values {list(range(Options._MAX_RESILIENCE_LEVEL))}"
+            )
         inputs["resilience_settings"] = options.get("resilience", {})
         inputs["resilience_settings"].update({"level": options.get("resilience_level")})
         inputs["run_options"] = options.get("execution")

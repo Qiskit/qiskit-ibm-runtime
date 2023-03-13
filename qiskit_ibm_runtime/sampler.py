@@ -114,6 +114,8 @@ class Sampler(BaseSampler):
 
             skip_transpilation (DEPRECATED): Transpilation is skipped if set to True. False by default.
                 Ignored if ``skip_transpilation`` is also specified in ``options``.
+        Raises:
+            ValueError: if resilience_level is out of the allowed range.
         """
         # `_options` in this class is an instance of qiskit_ibm_runtime.Options class.
         # The base class, however, uses a `_run_options` which is an instance of
@@ -171,6 +173,10 @@ class Sampler(BaseSampler):
         _options.transpilation.skip_transpilation = (  # type: ignore[union-attr]
             skip_transpilation
         )
+        if _options.resilience_level and not _options.resilience_level in [0, 1]:
+            raise ValueError(
+                "resilience level can only take the values [0, 1] in Sampler"
+            )
 
         if _options.optimization_level is None:
             if _options.simulator and (
