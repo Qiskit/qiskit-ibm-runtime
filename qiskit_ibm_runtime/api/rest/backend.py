@@ -16,7 +16,7 @@ import json
 from typing import Dict, Optional, Any, List
 from datetime import datetime
 
-from .base import RestAdapterBase
+from qiskit_ibm_provider.api.rest.base import RestAdapterBase
 from ..session import RetrySession
 from .utils.data_mapper import map_jobs_limit_response
 

@@ -17,7 +17,7 @@ from datetime import datetime
 from typing import Dict, Any, List, Union, Optional
 import json
 
-from .base import RestAdapterBase
+from qiskit_ibm_provider.api.rest.base import RestAdapterBase
 from .program import Program
 from .program_job import ProgramJob
 from .runtime_session import RuntimeSession

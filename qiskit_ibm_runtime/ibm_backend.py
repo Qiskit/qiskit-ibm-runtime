@@ -35,6 +35,7 @@ from qiskit.pulse.channels import (
     MeasureChannel,
 )
 from qiskit.transpiler.target import Target
+from qiskit_ibm_provider.api.clients.base import BaseClient
 from qiskit_ibm_provider.utils.backend_converter import convert_to_target
 from qiskit_ibm_provider.utils.backend_decoder import (
     defaults_from_server_data,
@@ -46,7 +47,6 @@ from qiskit_ibm_runtime import (  # pylint: disable=unused-import,cyclic-import
 )
 
 from .api.clients import RuntimeClient
-from .api.clients.backend import BaseBackendClient
 from .exceptions import IBMBackendApiProtocolError
 from .utils.converters import local_to_utc
 
@@ -152,7 +152,7 @@ class IBMBackend(Backend):
         self,
         configuration: Union[QasmBackendConfiguration, PulseBackendConfiguration],
         service: "qiskit_runtime_service.QiskitRuntimeService",
-        api_client: BaseBackendClient,
+        api_client: BaseClient,
     ) -> None:
         """IBMBackend constructor.
 

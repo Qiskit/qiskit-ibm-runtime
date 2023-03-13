@@ -16,7 +16,7 @@ import logging
 from typing import Dict, List, Any, Union, Optional
 import json
 
-from .base import RestAdapterBase
+from qiskit_ibm_provider.api.rest.base import RestAdapterBase
 
 logger = logging.getLogger(__name__)
 

@@ -17,16 +17,16 @@ from typing import Any, Dict, List, Optional
 from datetime import datetime as python_datetime
 
 from qiskit_ibm_provider.utils.hgp import from_instance_format
+from qiskit_ibm_provider.api.clients.base import BaseClient
 from qiskit_ibm_runtime.api.session import RetrySession
 
-from .backend import BaseBackendClient
 from ..rest.runtime import Runtime
 from ..client_parameters import ClientParameters
 
 logger = logging.getLogger(__name__)
 
 
-class RuntimeClient(BaseBackendClient):
+class RuntimeClient(BaseClient):
     """Client for accessing runtime service."""
 
     def __init__(
@@ -336,7 +336,6 @@ class RuntimeClient(BaseBackendClient):
             session_id: Session ID.
         """
         self._api.runtime_session(session_id=session_id).close()
-
 
     def list_backends(self, hgp: str = None) -> Dict[str, Any]:
         """Return IBM Cloud backends available for this service instance.
