@@ -337,7 +337,7 @@ class RuntimeClient(BaseClient):
         """
         self._api.runtime_session(session_id=session_id).close()
 
-    def list_backends(self, hgp: str = None) -> Dict[str, Any]:
+    def list_backends(self, hgp: Optional[str] = None) -> Dict[str, Any]:
         """Return IBM Cloud backends available for this service instance.
 
         Returns:
@@ -345,7 +345,9 @@ class RuntimeClient(BaseClient):
         """
         return self._api.backends(hgp=hgp)
 
-    def backend_configuration(self, backend_name: str) -> Dict[str, Any]:
+    def backend_configuration(
+        self, backend_name: str, channel: str = "ibm_cloud"
+    ) -> Dict[str, Any]:
         """Return the configuration of the IBM Cloud backend.
 
         Args:
@@ -354,9 +356,11 @@ class RuntimeClient(BaseClient):
         Returns:
             Backend configuration.
         """
-        return self._api.backend(backend_name).configuration()
+        return self._api.backend(backend_name, channel).configuration()
 
-    def backend_status(self, backend_name: str) -> Dict[str, Any]:
+    def backend_status(
+        self, backend_name: str, channel: str = "ibm_cloud"
+    ) -> Dict[str, Any]:
         """Return the status of the IBM Cloud backend.
 
         Args:
@@ -365,10 +369,13 @@ class RuntimeClient(BaseClient):
         Returns:
             Backend status.
         """
-        return self._api.backend(backend_name).status()
+        return self._api.backend(backend_name, channel).status()
 
     def backend_properties(
-        self, backend_name: str, datetime: Optional[python_datetime] = None
+        self,
+        backend_name: str,
+        datetime: Optional[python_datetime] = None,
+        channel: str = "ibm_cloud",
     ) -> Dict[str, Any]:
         """Return the properties of the IBM Cloud backend.
 
@@ -382,11 +389,13 @@ class RuntimeClient(BaseClient):
         Raises:
             NotImplementedError: If `datetime` is specified.
         """
-        if datetime:
+        if datetime and channel == "ibm_cloud":
             raise NotImplementedError("'datetime' is not supported with cloud runtime.")
-        return self._api.backend(backend_name).properties()
+        return self._api.backend(backend_name, channel).properties()
 
-    def backend_pulse_defaults(self, backend_name: str) -> Dict:
+    def backend_pulse_defaults(
+        self, backend_name: str, channel: str = "ibm_cloud"
+    ) -> Dict:
         """Return the pulse defaults of the IBM Cloud backend.
 
         Args:
@@ -395,4 +404,4 @@ class RuntimeClient(BaseClient):
         Returns:
             Backend pulse defaults.
         """
-        return self._api.backend(backend_name).pulse_defaults()
+        return self._api.backend(backend_name, channel).pulse_defaults()

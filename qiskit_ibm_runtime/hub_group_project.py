@@ -47,6 +47,7 @@ class HubGroupProject:
         """
         self._service = service
         self._runtime_client = RuntimeClient(client_params)
+        self._channel = client_params.channel
         # Initialize the internal list of backends.
         self._backends: Dict[str, "ibm_backend.IBMBackend"] = {}
         self._hub, self._group, self._project = from_instance_format(instance)
@@ -82,7 +83,9 @@ class HubGroupProject:
         backends = self._runtime_client.list_backends(self.name)
         if backends:
             for backend in backends:
-                raw_config = self._runtime_client.backend_configuration(backend)
+                raw_config = self._runtime_client.backend_configuration(
+                    backend, self._channel
+                )
                 config = configuration_from_server_data(
                     raw_config=raw_config, instance=self.name
                 )

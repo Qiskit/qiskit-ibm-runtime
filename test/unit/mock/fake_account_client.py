@@ -71,10 +71,10 @@ class BaseFakeAccountClient:
                 config["backend_name"] = f"backend{idx}"
             self._backends.append(FakeApiBackend(config, status))
 
-    def list_backends(self) -> List[Dict[str, Any]]:
+    def list_backends(self, hgp: str = None) -> List[Dict[str, Any]]:
         """Return backends available for this provider."""
         # pylint: disable=unused-argument
-        return [back.configuration.copy() for back in self._backends]
+        return [back.name for back in self._backends]
 
     def backend_status(self, backend_name: str) -> Dict[str, Any]:
         """Return the status of the backend."""
@@ -98,6 +98,16 @@ class BaseFakeAccountClient:
         for back in self._backends:
             if back.name == backend_name:
                 return back.defaults.copy()
+        raise ValueError(f"Backend {backend_name} not found")
+
+    def backend_configuration(
+        self, backend_name: str, channel: str = "ibm_cloud"
+    ) -> Dict:
+        """Return the pulse defaults of the backend."""
+        # pylint: disable=unused-argument
+        for back in self._backends:
+            if back.name == backend_name:
+                return back.configuration.copy()
         raise ValueError(f"Backend {backend_name} not found")
 
     # Test-only methods.

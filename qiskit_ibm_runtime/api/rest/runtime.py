@@ -18,12 +18,13 @@ from typing import Dict, Any, List, Union, Optional
 import json
 
 from qiskit_ibm_provider.api.rest.base import RestAdapterBase
+from qiskit_ibm_provider.api.rest.program_job import ProgramJob
 from .program import Program
-from .program_job import ProgramJob
 from .runtime_session import RuntimeSession
 from ...utils import RuntimeEncoder
 from ...utils.converters import local_to_utc
 from .cloud_backend import CloudBackend
+from .backend import Backend
 
 logger = logging.getLogger(__name__)
 
@@ -251,8 +252,8 @@ class Runtime(RestAdapterBase):
             payload["provider"] = f"{hub}/{group}/{project}"
         return self.session.get(url, params=payload).json()
 
-    def backend(self, backend_name: str) -> CloudBackend:
-        """Return an adapter for the IBM Cloud backend.
+    def backend(self, backend_name: str, channel: str = "ibm_cloud") -> CloudBackend:
+        """Return an adapter for the IBM Quantum backend.
 
         Args:
             backend_name: Name of the backend.
@@ -260,9 +261,11 @@ class Runtime(RestAdapterBase):
         Returns:
             The backend adapter.
         """
+        if channel == "ibm_quantum":
+            return Backend(self.session, backend_name)
         return CloudBackend(self.session, backend_name)
 
-    def backends(self, hgp: str = None) -> Dict[str, List[str]]:
+    def backends(self, hgp: Optional[str] = None) -> Dict[str, List[str]]:
         """Return a list of IBM Cloud backends.
 
         Args:

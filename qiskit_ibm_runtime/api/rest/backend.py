@@ -18,7 +18,6 @@ from datetime import datetime
 
 from qiskit_ibm_provider.api.rest.base import RestAdapterBase
 from ..session import RetrySession
-from .utils.data_mapper import map_jobs_limit_response
 
 
 class Backend(RestAdapterBase):
@@ -28,8 +27,7 @@ class Backend(RestAdapterBase):
         "properties": "/properties",
         "pulse_defaults": "/defaults",
         "status": "/queue/status",
-        "jobs_limit": "/jobsLimit",
-        "bookings": "/bookings/v2",
+        "configuration": "/configuration",
     }
 
     def __init__(
@@ -107,33 +105,11 @@ class Backend(RestAdapterBase):
 
         return ret
 
-    def job_limit(self) -> Dict[str, Any]:
-        """Return backend job limit.
+    def configuration(self) -> Dict[str, Any]:
+        """Return backend configuration.
 
         Returns:
-            JSON response of job limit.
+            JSON response of backend configuration.
         """
-        url = self.get_url("jobs_limit")
-        return map_jobs_limit_response(self.session.get(url).json())
-
-    def reservations(
-        self,
-        start_datetime: Optional[datetime] = None,
-        end_datetime: Optional[datetime] = None,
-    ) -> List:
-        """Return backend reservation information.
-
-        Args:
-            start_datetime: Starting datetime in UTC.
-            end_datetime: Ending datetime in UTC.
-
-        Returns:
-            JSON response.
-        """
-        params = {}
-        if start_datetime:
-            params["initialDate"] = start_datetime.isoformat()
-        if end_datetime:
-            params["endDate"] = end_datetime.isoformat()
-        url = self.get_url("bookings")
-        return self.session.get(url, params=params).json()
+        url = self.get_url("configuration")
+        return self.session.get(url).json()
