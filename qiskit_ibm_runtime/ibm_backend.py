@@ -45,7 +45,7 @@ from qiskit_ibm_runtime import (  # pylint: disable=unused-import,cyclic-import
     qiskit_runtime_service,
 )
 
-from .api.clients import AccountClient, RuntimeClient
+from .api.clients import RuntimeClient
 from .api.clients.backend import BaseBackendClient
 from .exceptions import IBMBackendApiProtocolError
 from .utils.converters import local_to_utc
@@ -492,7 +492,7 @@ class IBMRetiredBackend(IBMBackend):
         self,
         configuration: Union[QasmBackendConfiguration, PulseBackendConfiguration],
         service: "qiskit_runtime_service.QiskitRuntimeService",
-        api_client: Optional[AccountClient] = None,
+        api_client: Optional[RuntimeClient] = None,
     ) -> None:
         """IBMRetiredBackend constructor.
 
@@ -533,7 +533,7 @@ class IBMRetiredBackend(IBMBackend):
     def from_name(
         cls,
         backend_name: str,
-        api: Optional[AccountClient] = None,
+        api: Optional[RuntimeClient] = None,
     ) -> "IBMRetiredBackend":
         """Return a retired backend from its name."""
         configuration = QasmBackendConfiguration(

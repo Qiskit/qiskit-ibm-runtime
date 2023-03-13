@@ -24,7 +24,7 @@ from qiskit_ibm_runtime import (  # pylint: disable=unused-import
     qiskit_runtime_service,
 )
 
-from .api.clients import AccountClient
+from .api.clients import RuntimeClient
 from .api.client_parameters import ClientParameters
 
 logger = logging.getLogger(__name__)
@@ -46,7 +46,7 @@ class HubGroupProject:
             instance: Hub/group/project.
         """
         self._service = service
-        self._api_client = AccountClient(client_params)
+        self._runtime_client = RuntimeClient(client_params)
         # Initialize the internal list of backends.
         self._backends: Dict[str, "ibm_backend.IBMBackend"] = {}
         self._hub, self._group, self._project = from_instance_format(instance)
@@ -78,18 +78,21 @@ class HubGroupProject:
             A dict of the remote backend instances, keyed by backend name.
         """
         ret = OrderedDict()
-        configs_list = self._api_client.list_backends()
-        for raw_config in configs_list:
-            config = configuration_from_server_data(
-                raw_config=raw_config, instance=self.name
-            )
-            if not config:
-                continue
-            ret[config.backend_name] = ibm_backend.IBMBackend(
-                configuration=config,
-                service=self._service,
-                api_client=self._api_client,
-            )
+        # TODO this is very slow
+        backends = self._runtime_client.list_backends(self.name)
+        if backends:
+            for backend in backends:
+                raw_config = self._runtime_client.backend_configuration(backend)
+                config = configuration_from_server_data(
+                    raw_config=raw_config, instance=self.name
+                )
+                if not config:
+                    continue
+                ret[config.backend_name] = ibm_backend.IBMBackend(
+                    configuration=config,
+                    service=self._service,
+                    api_client=self._runtime_client,
+                )
         return ret
 
     def backend(self, name: str) -> Optional["ibm_backend.IBMBackend"]:

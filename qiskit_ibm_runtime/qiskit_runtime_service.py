@@ -409,7 +409,7 @@ class QiskitRuntimeService(Provider):
             hgp_params = ClientParameters(
                 channel=self._account.channel,
                 token=auth_client.current_access_token(),
-                url=service_urls["http"],
+                url=service_urls["services"]["runtime"],
                 instance=to_instance_format(
                     hub_info["hub"], hub_info["group"], hub_info["project"]
                 ),

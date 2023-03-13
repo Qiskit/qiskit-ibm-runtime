@@ -16,5 +16,4 @@ from qiskit_ibm_provider.api.clients.auth import AuthClient
 from qiskit_ibm_provider.api.clients.runtime_ws import RuntimeWebsocketClient
 from qiskit_ibm_provider.api.clients.version import VersionClient
 from qiskit_ibm_provider.api.clients.base import BaseClient, WebsocketClientCloseCode
-from .account import AccountClient
 from .runtime import RuntimeClient
