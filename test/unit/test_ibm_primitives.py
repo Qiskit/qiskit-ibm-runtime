@@ -273,10 +273,10 @@ class TestPrimitives(IBMTestCase):
         """Test run using default options."""
         session = MagicMock(spec=MockSession)
         options_vars = [
-            (Options(resilience_level=9), {"resilience_settings": {"level": 9}}),
+            (Options(resilience_level=1), {"resilience_settings": {"level": 1}}),
             (
-                Options(optimization_level=8),
-                {"transpilation_settings": {"optimization_settings": {"level": 8}}},
+                Options(optimization_level=3),
+                {"transpilation_settings": {"optimization_settings": {"level": 3}}},
             ),
             (
                 {
@@ -331,17 +331,17 @@ class TestPrimitives(IBMTestCase):
         """Test run using overwritten options."""
         session = MagicMock(spec=MockSession)
         options_vars = [
-            ({"resilience_level": 9}, {"resilience_settings": {"level": 9}}),
+            ({"resilience_level": 1}, {"resilience_settings": {"level": 1}}),
             ({"shots": 200}, {"run_options": {"shots": 200}}),
             (
-                {"optimization_level": 8},
-                {"transpilation_settings": {"optimization_settings": {"level": 8}}},
+                {"optimization_level": 3},
+                {"transpilation_settings": {"optimization_settings": {"level": 3}}},
             ),
             (
-                {"initial_layout": [1, 2], "optimization_level": 8},
+                {"initial_layout": [1, 2], "optimization_level": 2},
                 {
                     "transpilation_settings": {
-                        "optimization_settings": {"level": 8},
+                        "optimization_settings": {"level": 2},
                         "initial_layout": [1, 2],
                     }
                 },

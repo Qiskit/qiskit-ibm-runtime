@@ -16,6 +16,7 @@ import json
 from unittest.mock import patch
 import unittest
 
+from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.primitives.utils import _circuit_key
 
@@ -82,6 +83,16 @@ class TestSampler(IBMTestCase):
 
     def test_unsupported_values_for_options(self):
         """Test that Sampler takes an exception when given an unsupported resilience_level"""
+        options_good = {"resilience_level": 1}
+        options_bad = {"resilience_level": 2}
         with self.assertRaises(ValueError):
-            options = {"resilience_level": 2}
-            _ = Sampler(options=options)
+            _ = Sampler(options=options_bad)
+
+        with Session(
+                service=FakeRuntimeService(channel="ibm_quantum", token="abc"),
+                backend="ibmq_qasm_simulator",
+        ) as session:
+            circuit = QuantumCircuit(1,1)
+            with self.assertRaises(ValueError):
+                inst = Sampler(session=session, options=options_good)
+                _ = inst.run(circuit, **options_bad)
