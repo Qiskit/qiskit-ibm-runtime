@@ -104,12 +104,15 @@ class TestIntegrationOptions(IBMIntegrationTestCase):
         """Test various definitions for optimization_level."""
 
         backend = service.backends(simulator=True)[0]
-        real_backend = service.backends(simulator=False)[0]
         noise_model = NoiseModel.from_backend(FakeManila())
         default_options = Options()
         noisy_options = Options()
         noisy_options.simulator.noise_model = noise_model
         primitives = [Sampler, Estimator]
+        if self.dependencies.channel == "ibm_quantum":
+            real_backend = service.backends(simulator=False)[0]
+        else:
+            real_backend = None
 
         with Session(service=service, backend=backend):
             for cls in primitives:
@@ -130,16 +133,17 @@ class TestIntegrationOptions(IBMIntegrationTestCase):
                     self.assertTrue(cls_default.options.resilience_level == opt_level)
 
         for primitive in primitives:
-            primitive_real_backend = primitive(session=real_backend)
-            self.assertEqual(
-                primitive_real_backend.options.resilience_level,
-                Options._DEFAULT_RESILIENCE_LEVEL,
-            )
-            self.assertEqual(
-                primitive_real_backend.options.optimization_level,
-                Options._DEFAULT_OPTIMIZATION_LEVEL,
-            )
-
             primitive_simulator = primitive(session=backend)
             self.assertEqual(primitive_simulator.options.resilience_level, 0)
             self.assertEqual(primitive_simulator.options.optimization_level, 1)
+
+            if real_backend:
+                primitive_real_backend = primitive(session=real_backend)
+                self.assertEqual(
+                    primitive_real_backend.options.resilience_level,
+                    Options._DEFAULT_RESILIENCE_LEVEL,
+                )
+                self.assertEqual(
+                    primitive_real_backend.options.optimization_level,
+                    Options._DEFAULT_OPTIMIZATION_LEVEL,
+                )
