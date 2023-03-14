@@ -172,19 +172,35 @@ class Sampler(BaseSampler):
             skip_transpilation
         )
 
+        if isinstance(session, Session):
+            self._session = session
+        else:
+            backend = session or backend
+            self._session = get_default_session(service, backend)
+
+        backend_obj = self._session._service._backends.get(self._session._backend)
+
         if _options.optimization_level is None:
-            if _options.simulator and (
-                not hasattr(_options.simulator, "noise_model")
-                or asdict(_options.simulator)["noise_model"] is None
+            if (
+                backend_obj
+                and backend_obj.configuration().simulator
+                and (
+                    not hasattr(_options.simulator, "noise_model")
+                    or asdict(_options.simulator)["noise_model"] is None
+                )
             ):
                 _options.optimization_level = 1
             else:
                 _options.optimization_level = Options._DEFAULT_OPTIMIZATION_LEVEL
 
         if _options.resilience_level is None:
-            if _options.simulator and (
-                not hasattr(_options.simulator, "noise_model")
-                or asdict(_options.simulator)["noise_model"] is None
+            if (
+                backend_obj
+                and backend_obj.configuration().simulator
+                and (
+                    not hasattr(_options.simulator, "noise_model")
+                    or asdict(_options.simulator)["noise_model"] is None
+                )
             ):
                 _options.resilience_level = 0
             else:
@@ -193,11 +209,6 @@ class Sampler(BaseSampler):
         self._options: dict = asdict(_options)
 
         self._initial_inputs = {"circuits": circuits, "parameters": parameters}
-        if isinstance(session, Session):
-            self._session = session
-        else:
-            backend = session or backend
-            self._session = get_default_session(service, backend)
 
         # self._first_run = True
         # self._circuits_map = {}
