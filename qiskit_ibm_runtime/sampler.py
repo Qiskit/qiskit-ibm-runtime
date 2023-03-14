@@ -174,9 +174,7 @@ class Sampler(BaseSampler):
             skip_transpilation
         )
         if _options.resilience_level and not _options.resilience_level in [0, 1]:
-            raise ValueError(
-                "resilience level can only take the values [0, 1] in Sampler"
-            )
+            raise ValueError("resilience level can only take the values [0, 1] in Sampler")
 
         if _options.optimization_level is None:
             if _options.simulator and (
@@ -291,6 +289,9 @@ class Sampler(BaseSampler):
             "parameter_values": parameter_values,
         }
         combined = Options._merge_options(self._options, kwargs.get("_user_kwargs", {}))
+        if combined.get("resilience_level") and not combined.get("resilience_level") in [0, 1]:
+            raise ValueError("resilience level can only take the values [0, 1] in Sampler")
+
         logger.info("Submitting job using options %s", combined)
         inputs.update(Options._get_program_inputs(combined))
 
