@@ -124,7 +124,7 @@ class Options:
         inputs = {}
         inputs["transpilation_settings"] = options.get("transpilation", {})
         if not options.get("optimization_level") in list(
-            range(Options._MAX_OPTIMIZATION_LEVEL+1)
+            range(Options._MAX_OPTIMIZATION_LEVEL + 1)
         ):
             raise ValueError(
                 f"optimization_level can only take the values "
@@ -138,10 +138,11 @@ class Options:
             }
         )
         if not options.get("resilience_level") in list(
-            range(Options._MAX_RESILIENCE_LEVEL+1)
+            range(Options._MAX_RESILIENCE_LEVEL + 1)
         ):
             raise ValueError(
-                f"resilience_level can only take the values {list(range(Options._MAX_RESILIENCE_LEVEL+1))}"
+                f"resilience_level can only take the values "
+                f"{list(range(Options._MAX_RESILIENCE_LEVEL+1))}"
             )
         inputs["resilience_settings"] = options.get("resilience", {})
         inputs["resilience_settings"].update({"level": options.get("resilience_level")})

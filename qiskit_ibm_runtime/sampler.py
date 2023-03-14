@@ -115,7 +115,7 @@ class Sampler(BaseSampler):
             skip_transpilation (DEPRECATED): Transpilation is skipped if set to True. False by default.
                 Ignored if ``skip_transpilation`` is also specified in ``options``.
         Raises:
-            ValueError: if resilience_level is out of the allowed range.
+            ValueError: if resilience_level is outside the allowed range.
         """
         # `_options` in this class is an instance of qiskit_ibm_runtime.Options class.
         # The base class, however, uses a `_run_options` which is an instance of
@@ -174,7 +174,9 @@ class Sampler(BaseSampler):
             skip_transpilation
         )
         if _options.resilience_level and not _options.resilience_level in [0, 1]:
-            raise ValueError("resilience level can only take the values [0, 1] in Sampler")
+            raise ValueError(
+                "resilience level can only take the values [0, 1] in Sampler"
+            )
 
         if _options.optimization_level is None:
             if _options.simulator and (
@@ -261,6 +263,9 @@ class Sampler(BaseSampler):
 
         Returns:
             Submitted job.
+
+         Raises:
+            ValueError: if resilience_level is outside the allowed range.
         """
         # TODO: Re-enable data caching when ntc 1748 is fixed
         # circuits_map = {}
@@ -289,8 +294,12 @@ class Sampler(BaseSampler):
             "parameter_values": parameter_values,
         }
         combined = Options._merge_options(self._options, kwargs.get("_user_kwargs", {}))
-        if combined.get("resilience_level") and not combined.get("resilience_level") in [0, 1]:
-            raise ValueError("resilience level can only take the values [0, 1] in Sampler")
+        if combined.get("resilience_level") and not combined.get(
+            "resilience_level"
+        ) in [0, 1]:
+            raise ValueError(
+                "resilience level can only take the values [0, 1] in Sampler"
+            )
 
         logger.info("Submitting job using options %s", combined)
         inputs.update(Options._get_program_inputs(combined))
