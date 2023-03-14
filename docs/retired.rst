@@ -2,8 +2,10 @@
 Retired systems
 #########################################
 
-The following systems have been retired. For the full list of available systems, run `service.backends()`.  For more information, see  `this page <how_to/backends>`__.
+The following systems have been retired. For the full list of available systems, run `service.backends()`.  For more information, see  `Run on quantum backends <how_to/backends.html>`__.
 
+.. container:: column-50
+    
 +--------------+-------------+
 | System name  | Qubit count |
 +==============+=============+

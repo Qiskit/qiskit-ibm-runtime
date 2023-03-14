@@ -4,9 +4,6 @@
 API error codes
 ###############
 
-.. contents:: Error codes
-   :local:
-
 1XXX
 ====
 .. _error1xxx:
