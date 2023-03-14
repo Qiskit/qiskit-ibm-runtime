@@ -18,7 +18,7 @@ import json
 from unittest.mock import MagicMock, patch, ANY
 import warnings
 from dataclasses import asdict
-from typing import Dict
+from typing import Dict, Union
 import unittest
 
 from qiskit.circuit import QuantumCircuit
@@ -27,7 +27,14 @@ from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.primitives.utils import _circuit_key
 
-from qiskit_ibm_runtime import Sampler, Estimator, Options, Session, RuntimeEncoder
+from qiskit_ibm_runtime import (
+    Sampler,
+    Estimator,
+    Options,
+    Session,
+    RuntimeEncoder,
+    QiskitRuntimeService,
+)
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 import qiskit_ibm_runtime.session as session_pkg
 from qiskit_ibm_runtime.utils.utils import _hash
@@ -41,6 +48,8 @@ class MockSession(Session):
     """Mock for session class"""
 
     _circuits_map: Dict[str, QuantumCircuit] = {}
+    _service: QiskitRuntimeService = None
+    _backend: Union[str, IBMBackend] = None
 
 
 class TestPrimitives(IBMTestCase):
