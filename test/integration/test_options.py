@@ -133,11 +133,11 @@ class TestIntegrationOptions(IBMIntegrationTestCase):
             primitive_real_backend = primitive(session=real_backend)
             self.assertEqual(
                 primitive_real_backend.options.resilience_level,
-                Options._DEFAULT_OPTIMIZATION_LEVEL,
+                Options._DEFAULT_RESILIENCE_LEVEL,
             )
             self.assertEqual(
                 primitive_real_backend.options.optimization_level,
-                Options._DEFAULT_RESILIENCE_LEVEL,
+                Options._DEFAULT_OPTIMIZATION_LEVEL,
             )
 
             primitive_simulator = primitive(session=backend)

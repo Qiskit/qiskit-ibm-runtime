@@ -89,6 +89,7 @@ class TestRuntimeWebsocketClient(IBMTestCase):
 
         service = MagicMock(spec=QiskitRuntimeService)
         service.run = _patched_run
+        service._backends = {}
 
         circ = ReferenceCircuits.bell()
         obs = SparsePauliOp.from_list([("IZ", 1)])
