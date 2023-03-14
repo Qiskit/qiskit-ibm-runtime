@@ -318,7 +318,7 @@ class RuntimeClient(BaseClient):
         """
         return self._api.program_job(job_id).logs()
 
-    def job_metadata(self, job_id: str) -> str:
+    def job_metadata(self, job_id: str) -> Dict:
         """Get job metadata.
 
         Args:

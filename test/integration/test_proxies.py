@@ -84,7 +84,7 @@ class TestProxies(IBMTestCase):
         service.programs(limit=1)
 
         auth_line = pproxy_desired_access_log_line(dependencies.url)
-        api_line = list(service._hgps.values())[0]._api_client._session.base_url
+        api_line = list(service._hgps.values())[0]._runtime_client._session.base_url
         api_line = pproxy_desired_access_log_line(api_line)
         self.proxy_process.terminate()  # kill to be able of reading the output
         proxy_output = self.proxy_process.stdout.read().decode("utf-8")
@@ -109,7 +109,7 @@ class TestProxies(IBMTestCase):
         self.proxy_process.terminate()  # kill to be able of reading the output
 
         auth_line = pproxy_desired_access_log_line(dependencies.url)
-        api_line = list(service._hgps.values())[0]._api_client._session.base_url
+        api_line = list(service._hgps.values())[0]._runtime_client._session.base_url
         api_line = pproxy_desired_access_log_line(api_line)
         proxy_output = self.proxy_process.stdout.read().decode("utf-8")
 

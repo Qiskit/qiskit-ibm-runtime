@@ -376,8 +376,7 @@ class RuntimeJob(Job):
             IBMRuntimeError: If a network error occurred.
         """
         try:
-            metadata_str = self._api_client.job_metadata(self.job_id())
-            return json.loads(metadata_str)
+            return self._api_client.job_metadata(self.job_id())
         except RequestsApiError as err:
             raise IBMRuntimeError(f"Failed to get job metadata: {err}") from None
 
