@@ -171,7 +171,7 @@ class Session:
         if not self._session_id:
             # TODO: What happens if session max time != first job max time?
             # Use session max time if this is first job.
-            options["max_execution_time"] = self._max_time
+            options["session_time"] = self._max_time
 
         job = self._service.run(
             program_id=program_id,

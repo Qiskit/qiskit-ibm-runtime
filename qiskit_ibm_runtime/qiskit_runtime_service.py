@@ -1007,6 +1007,7 @@ class QiskitRuntimeService(Provider):
                 job_tags=qrt_options.job_tags,
                 max_execution_time=qrt_options.max_execution_time,
                 start_session=start_session,
+                session_time=qrt_options.session_time,
             )
         except RequestsApiError as ex:
             if ex.status_code == 404:
