@@ -43,8 +43,12 @@ Next, you will replace this call with the respective primitive call, as shown in
 
    Some qiskit libraries provide their own ``backend.run()`` wrappers, for example: ``QuantumInstance``,
    formerly used in ``qiskit.algorithms``. To migrate code that has such dependencies, replace the execution
-   method with the corresponding primitive. For instructions to migrate code based on 
-   ``QuantumInstance``, refer to the `Quantum Instance migration guide <http://qisk.it/qi_migration>`__.
+   method with the corresponding primitive. 
+   
+..
+   Add this in later when it's done and we have the link
+   For instructions to migrate code based on ``QuantumInstance``, refer to the `Quantum Instance migration guide <http://qisk.it/qi_migration>`__.
+   
 
 This guide has examples for two basic types of users:
 

@@ -58,7 +58,11 @@ optimizer and initial point.
 
 The only difference is that the operator definition now relies on |qiskit.quantum_info|_ instead
 of |qiskit.opflow|_ . In practice, this means that all ``PauliSumOp`` dependencies should be replaced
-by ``SparsePauliOp``. For more information, you can refer to the `Opflow migration guide <http://qisk.it/opflow_migration>`_.
+by ``SparsePauliOp``. 
+
+.. 
+    Add this back in when it's done and we have the link. 
+    For more information, you can refer to the `Opflow migration guide <http://qisk.it/opflow_migration>`_.
 
 .. note::
 
