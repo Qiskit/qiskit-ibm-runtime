@@ -12,46 +12,44 @@
 
 """Utility functions for options."""
 
-from dataclasses import fields, field, make_dataclass, asdict
-from typing import TYPE_CHECKING
+from dataclasses import fields, field, make_dataclass
 from ..ibm_backend import IBMBackend
-
-if TYPE_CHECKING:
-    from .options import Options
 
 
 def set_default_error_levels(
-    options: "Options",
+    options: dict,
     backend: IBMBackend,
     default_optimization_level: int,
     default_resilience_level: int,
-) -> "Options":
+) -> dict:
     """Set default resilience and optimization levels.
 
     Args:
         options: user passed in options.
         backend: backend the job will run on.
+        default_optimization_level: the default optimization level from the options class
+        default_resilience_level: the default resilience level from the options class
 
     Returns:
         options with correct error level defaults.
     """
-    if options.optimization_level is None:
-        if backend.configuration().simulator and (
-            not hasattr(options.simulator, "noise_model")
-            or asdict(options.simulator)["noise_model"] is None
+    if options.get("optimization_level") is None:
+        if (
+            backend.configuration().simulator
+            and options.get("simulator", {}).get("noise_model") is None
         ):
-            options.optimization_level = 1
+            options["optimization_level"] = 1
         else:
-            options.optimization_level = default_optimization_level
+            options["optimization_level"] = default_optimization_level
 
-    if options.resilience_level is None:
-        if backend.configuration().simulator and (
-            not hasattr(options.simulator, "noise_model")
-            or asdict(options.simulator)["noise_model"] is None
+    if options.get("resilience_level") is None:
+        if (
+            backend.configuration().simulator
+            and options.get("simulator", {}).get("noise_model") is None
         ):
-            options.resilience_level = 0
+            options["resilience_level"] = 0
         else:
-            options.resilience_level = default_resilience_level
+            options["resilience_level"] = default_resilience_level
     return options
 
 

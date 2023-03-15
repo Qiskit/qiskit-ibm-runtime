@@ -198,21 +198,6 @@ class Estimator(BaseEstimator):
             skip_transpilation
         )
 
-        if isinstance(session, Session):
-            self._session = session
-        else:
-            backend = session or backend
-            self._session = get_default_session(service, backend)
-
-        if self._session.backend():
-            backend_obj = self._session.service.backend(self._session.backend())
-            _options = set_default_error_levels(
-                _options,
-                backend_obj,
-                Options._DEFAULT_OPTIMIZATION_LEVEL,
-                Options._DEFAULT_RESILIENCE_LEVEL,
-            )
-
         self._options: dict = asdict(_options)
 
         self._initial_inputs = {
@@ -220,6 +205,12 @@ class Estimator(BaseEstimator):
             "observables": observables,
             "parameters": parameters,
         }
+
+        if isinstance(session, Session):
+            self._session = session
+        else:
+            backend = session or backend
+            self._session = get_default_session(service, backend)
 
         # self._first_run = True
         # self._circuits_map = {}
@@ -260,6 +251,15 @@ class Estimator(BaseEstimator):
             ValueError: Invalid arguments are given.
         """
         # To bypass base class merging of options.
+        if "noise_model" not in kwargs:
+            if self._session.backend():
+                backend_obj = self._session.service.backend(self._session.backend())
+                self._options = set_default_error_levels(
+                    self._options,
+                    backend_obj,
+                    Options._DEFAULT_OPTIMIZATION_LEVEL,
+                    Options._DEFAULT_RESILIENCE_LEVEL,
+                )
         user_kwargs = {"_user_kwargs": kwargs}
         return super().run(
             circuits=circuits,
