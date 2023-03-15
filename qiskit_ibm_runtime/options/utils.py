@@ -12,8 +12,47 @@
 
 """Utility functions for options."""
 
-from dataclasses import fields, field, make_dataclass
-from typing import Any
+from dataclasses import fields, field, make_dataclass, asdict
+from typing import TYPE_CHECKING
+from ..ibm_backend import IBMBackend
+
+if TYPE_CHECKING:
+    from .options import Options
+
+
+def set_default_error_levels(
+    options: "Options",
+    backend: IBMBackend,
+    default_optimization_level: int,
+    default_resilience_level: int,
+) -> "Options":
+    """Set default resilience and optimization levels.
+
+    Args:
+        options: user passed in options.
+        backend: backend the job will run on.
+
+    Returns:
+        options with correct error level defaults.
+    """
+    if options.optimization_level is None:
+        if backend.configuration().simulator and (
+            not hasattr(options.simulator, "noise_model")
+            or asdict(options.simulator)["noise_model"] is None
+        ):
+            options.optimization_level = 1
+        else:
+            options.optimization_level = default_optimization_level
+
+    if options.resilience_level is None:
+        if backend.configuration().simulator and (
+            not hasattr(options.simulator, "noise_model")
+            or asdict(options.simulator)["noise_model"] is None
+        ):
+            options.resilience_level = 0
+        else:
+            options.resilience_level = default_resilience_level
+    return options
 
 
 def _to_obj(cls_, data):  # type: ignore

@@ -36,6 +36,7 @@ from .utils.deprecation import (
 from .ibm_backend import IBMBackend
 from .session import get_default_session
 from .options import Options
+from .options.utils import set_default_error_levels
 from .constants import DEFAULT_DECODERS
 
 # pylint: disable=unused-import,cyclic-import
@@ -203,33 +204,14 @@ class Estimator(BaseEstimator):
             backend = session or backend
             self._session = get_default_session(service, backend)
 
-        backend_obj = self._session.service.backend(self._session.backend())
-
-        if _options.optimization_level is None:
-            if (
-                backend_obj
-                and backend_obj.configuration().simulator
-                and (
-                    not hasattr(_options.simulator, "noise_model")
-                    or asdict(_options.simulator)["noise_model"] is None
-                )
-            ):
-                _options.optimization_level = 1
-            else:
-                _options.optimization_level = Options._DEFAULT_OPTIMIZATION_LEVEL
-
-        if _options.resilience_level is None:
-            if (
-                backend_obj
-                and backend_obj.configuration().simulator
-                and (
-                    not hasattr(_options.simulator, "noise_model")
-                    or asdict(_options.simulator)["noise_model"] is None
-                )
-            ):
-                _options.resilience_level = 0
-            else:
-                _options.resilience_level = Options._DEFAULT_RESILIENCE_LEVEL
+        if self._session.backend():
+            backend_obj = self._session.service.backend(self._session.backend())
+            _options = set_default_error_levels(
+                _options,
+                backend_obj,
+                Options._DEFAULT_OPTIMIZATION_LEVEL,
+                Options._DEFAULT_RESILIENCE_LEVEL,
+            )
 
         self._options: dict = asdict(_options)
 
