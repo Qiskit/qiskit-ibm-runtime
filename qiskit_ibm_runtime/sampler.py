@@ -178,33 +178,41 @@ class Sampler(BaseSampler):
         else:
             backend = session or backend
             self._session = get_default_session(service, backend)
-
         # if backend is a simulator with no noise, and the user did not
         # define optimization_level or resilience_level, set them
         # to the minimal values
-        if isinstance(backend, str):
-            actual_backend = QiskitRuntimeService().backends(backend)
-        else:
+        if isinstance(backend, IBMBackend):
             actual_backend = backend
-        print("_options=" + str(_options))
-        if _options.optimization_level is None:
-            if actual_backend and actual_backend.simulator and (
+        elif isinstance(backend, str):
+            actual_backend = QiskitRuntimeService().backends(backend)[0]
+        else:
+            actual_backend = None
+
+        if not options or options.optimization_level is None:
+            if (
+                actual_backend
+                and actual_backend.simulator
+                and (
                     not hasattr(_options.simulator, "noise_model")
                     or asdict(_options.simulator)["noise_model"] is None
+                )
             ):
                 _options.optimization_level = 1
             else:
                 _options.optimization_level = Options._DEFAULT_OPTIMIZATION_LEVEL
 
-        if _options.resilience_level is None:
-            if actual_backend and actual_backend.simulator and (
+        if not options or options.resilience_level is None:
+            if (
+                actual_backend
+                and actual_backend.simulator
+                and (
                     not hasattr(_options.simulator, "noise_model")
                     or asdict(_options.simulator)["noise_model"] is None
+                )
             ):
                 _options.resilience_level = 0
             else:
                 _options.resilience_level = Options._DEFAULT_RESILIENCE_LEVEL
-
         self._options: dict = asdict(_options)
 
         # self._first_run = True

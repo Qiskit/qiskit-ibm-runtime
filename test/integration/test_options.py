@@ -100,30 +100,47 @@ class TestIntegrationOptions(IBMIntegrationTestCase):
                     # self.assertIn("TranspilerError", err.exception.message)
 
     @run_integration_test
-    def test_optimization_and_resilience_levels(self, service):
+    def test_optimization_and_resilience_levels_default(self, service):
+        """Test defiaults for optimization_level and resilience_level."""
+
+        for simulator in [False, True]:
+            backend = service.backends(simulator=simulator)[0]
+            noise_model = NoiseModel.from_backend(FakeManila())
+            default_options = Options()
+            noisy_options = Options()
+            noisy_options.simulator.noise_model = noise_model
+            primitives = [Sampler, Estimator]
+            with Session(service=service, backend=backend):
+                for cls in primitives:
+                    cls_no_noise = cls(session=backend, options=default_options)
+                    if simulator:
+                        self.assertTrue(cls_no_noise.options.optimization_level == 1)
+                        self.assertTrue(cls_no_noise.options.resilience_level == 0)
+                    else:
+                        self.assertTrue(cls_no_noise.options.optimization_level == 3)
+                        self.assertTrue(cls_no_noise.options.resilience_level == 1)
+
+                    cls_with_noise = cls(session=backend, options=noisy_options)
+                    self.assertTrue(cls_with_noise.options.optimization_level == 3)
+                    self.assertTrue(cls_with_noise.options.resilience_level == 1)
+
+    @run_integration_test
+    def test_optimization_and_resilience_levels_user_given(self, service):
         """Test various definitions for optimization_level."""
+        for simulator in [False, True]:
+            backend = service.backends(simulator=simulator)[0]
+            primitives = [Sampler, Estimator]
 
-        backend = service.backends(simulator=True)[0]
-        noise_model = NoiseModel.from_backend(FakeManila())
-        default_options = Options()
-        noisy_options = Options()
-        noisy_options.simulator.noise_model = noise_model
-        primitives = [Sampler, Estimator]
-
-        with Session(service=service, backend=backend):
-            for cls in primitives:
-                cls_no_noise = cls(options=default_options)
-                self.assertTrue(cls_no_noise.options.optimization_level == 1)
-                self.assertTrue(cls_no_noise.options.resilience_level == 0)
-
-                cls_with_noise = cls(options=noisy_options)
-                self.assertTrue(cls_with_noise.options.optimization_level == 3)
-                self.assertTrue(cls_with_noise.options.resilience_level == 1)
-
-                user_given_options = Options()
-                for opt_level in [0, 1, 2, 3, 99]:
-                    user_given_options.optimization_level = opt_level
-                    user_given_options.resilience_level = opt_level
-                    cls_default = cls(options=user_given_options)
-                    self.assertTrue(cls_default.options.optimization_level == opt_level)
-                    self.assertTrue(cls_default.options.resilience_level == opt_level)
+            with Session(service=service, backend=backend):
+                for cls in primitives:
+                    user_given_options = Options()
+                    for opt_level in [0, 1, 2, 3]:
+                        user_given_options.optimization_level = opt_level
+                        user_given_options.resilience_level = opt_level
+                        cls_default = cls(options=user_given_options)
+                        self.assertTrue(
+                            cls_default.options.optimization_level == opt_level
+                        )
+                        self.assertTrue(
+                            cls_default.options.resilience_level == opt_level
+                        )
