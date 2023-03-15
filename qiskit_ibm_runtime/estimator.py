@@ -203,7 +203,7 @@ class Estimator(BaseEstimator):
             backend = session or backend
             self._session = get_default_session(service, backend)
 
-        backend_obj = self._session._service._backends.get(self._session._backend)
+        backend_obj = self._session.service.backend(self._session.backend())
 
         if _options.optimization_level is None:
             if (
