@@ -275,6 +275,7 @@ class BaseFakeRuntimeClient:
             "backend_client", BaseFakeAccountClient()
         )
         self._channel = test_options.get("channel", "ibm_quantum")
+        self.session_time = 0
 
     def set_job_classes(self, classes):
         """Set job classes to use."""
@@ -367,6 +368,7 @@ class BaseFakeRuntimeClient:
         job_tags: Optional[List[str]] = None,
         max_execution_time: Optional[int] = None,
         start_session: Optional[bool] = None,
+        session_time: Optional[int] = None,
     ) -> Dict[str, Any]:
         """Run the specified program."""
         _ = self._get_program(program_id)
@@ -404,6 +406,7 @@ class BaseFakeRuntimeClient:
             start_session=start_session,
             **self._job_kwargs,
         )
+        self.session_time = session_time
         self._jobs[job_id] = job
         return {"id": job_id, "backend": backend_name}
 
@@ -438,39 +441,33 @@ class BaseFakeRuntimeClient:
         limit = limit or len(self._jobs)
         skip = skip or 0
         jobs = list(self._jobs.values())
-        count = len(self._jobs)
+
         if backend_name:
             jobs = [job for job in jobs if job._backend == backend_name]
-            count = len(jobs)
         if pending is not None:
             job_status_list = pending_statuses if pending else returned_statuses
             jobs = [job for job in jobs if job._status in job_status_list]
-            count = len(jobs)
         if program_id:
             jobs = [job for job in jobs if job._program_id == program_id]
-            count = len(jobs)
         if all([hub, group, project]):
             jobs = [
                 job
                 for job in jobs
                 if job._hub == hub and job._group == group and job._project == project
             ]
-            count = len(jobs)
         if job_tags:
             jobs = [job for job in jobs if job._job_tags == job_tags]
-            count = len(jobs)
         if session_id:
             jobs = [job for job in jobs if job._session_id == session_id]
-            count = len(jobs)
         if created_after:
             jobs = [job for job in jobs if job._creation_date >= created_after]
-            count = len(jobs)
-        if created_before:
             jobs = [job for job in jobs if job._creation_date <= created_before]
-            count = len(jobs)
+
+        count = len(jobs)
         jobs = jobs[skip : limit + skip]
         if descending is False:
             jobs.reverse()
+
         return {"jobs": [job.to_dict() for job in jobs], "count": count}
 
     def set_program_visibility(self, program_id: str, public: bool) -> None:

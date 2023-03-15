@@ -1,5 +1,7 @@
+.. vale off
+
 *****************************************
-qiskit-ibm-runtime API Reference
+qiskit-ibm-runtime API reference
 *****************************************
 
 .. toctree::

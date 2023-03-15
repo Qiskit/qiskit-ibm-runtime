@@ -6,7 +6,7 @@ Install Qiskit packages
 ========================
 
 Install these packages. They let you create circuits and work with primitive programs
-via Qiskit Runtime.
+through Qiskit Runtime.
 
 .. code-block:: bash
 
