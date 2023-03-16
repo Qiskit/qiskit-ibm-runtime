@@ -173,15 +173,15 @@ class Sampler(BaseSampler):
             skip_transpilation
         )
 
+        self._options: dict = asdict(_options)
+
+        self._initial_inputs = {"circuits": circuits, "parameters": parameters}
+
         if isinstance(session, Session):
             self._session = session
         else:
             backend = session or backend
             self._session = get_default_session(service, backend)
-
-        self._options: dict = asdict(_options)
-
-        self._initial_inputs = {"circuits": circuits, "parameters": parameters}
 
         # self._first_run = True
         # self._circuits_map = {}
