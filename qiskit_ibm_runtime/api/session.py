@@ -276,7 +276,7 @@ class RetrySession(Session):
         )
 
         # Use PurePath in order to support arbitrary path formats
-        callers = {PurePath("qiskit/"), PurePath("qiskit_")}
+        callers = {PurePath("qiskit/"), "qiskit_"}
 
         for frame in inspect.stack():
             frame_path = str(PurePath(frame.filename))
