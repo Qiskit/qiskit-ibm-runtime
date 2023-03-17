@@ -65,12 +65,12 @@ def _get_client_header() -> str:
         "qiskit-finance",
     ]
 
-    pkg_versions = {
-        "qiskit-ibm-runtime": f"qiskit-ibm-runtime-{ibm_runtime_version}"
-    }
+    pkg_versions = {"qiskit-ibm-runtime": f"qiskit-ibm-runtime-{ibm_runtime_version}"}
     for pkg_name in qiskit_pkgs:
         try:
-            version_info = f"{pkg_name}-{pkg_resources.get_distribution(pkg_name).version}"
+            version_info = (
+                f"{pkg_name}-{pkg_resources.get_distribution(pkg_name).version}"
+            )
 
             if pkg_name in sys.modules:
                 version_info += "*"
@@ -271,9 +271,7 @@ class RetrySession(Session):
         headers.update(kwargs.pop("headers", {}))
 
         # Set default caller
-        headers.update(
-            {"X-Qx-Client-Application": f"{CLIENT_APPLICATION}/qiskit"}
-        )
+        headers.update({"X-Qx-Client-Application": f"{CLIENT_APPLICATION}/qiskit"})
 
         # Use PurePath in order to support arbitrary path formats
         callers = {PurePath("qiskit/"), "qiskit_"}
