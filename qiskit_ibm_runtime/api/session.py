@@ -66,13 +66,11 @@ def _get_client_header() -> str:
     ]
 
     pkg_versions = {
-        "qiskit-ibm-runtime": "{}-{}".format("qiskit-ibm-runtime", ibm_runtime_version)
+        "qiskit-ibm-runtime": f"qiskit-ibm-runtime-{ibm_runtime_version}"
     }
     for pkg_name in qiskit_pkgs:
         try:
-            version_info = "{}-{}".format(
-                pkg_name, pkg_resources.get_distribution(pkg_name).version
-            )
+            version_info = f"{pkg_name}-{pkg_resources.get_distribution(pkg_name).version}"
 
             if pkg_name in sys.modules:
                 version_info += "*"
@@ -80,7 +78,7 @@ def _get_client_header() -> str:
             pkg_versions[pkg_name] = version_info
         except Exception:  # pylint: disable=broad-except
             pass
-    return "qiskit-version-2/{}".format(",".join(pkg_versions.values()))
+    return f"qiskit-version-2/{','.join(pkg_versions.values())}"
 
 
 CLIENT_APPLICATION = _get_client_header()
@@ -274,30 +272,28 @@ class RetrySession(Session):
 
         # Set default caller
         headers.update(
-            {"X-Qx-Client-Application": "{}/qiskit".format(CLIENT_APPLICATION)}
+            {"X-Qx-Client-Application": f"{CLIENT_APPLICATION}/qiskit"}
         )
 
         # Use PurePath in order to support arbitrary path formats
-        caller_dict = {PurePath("qiskit/algorithms"): "qiskit-terra-algorithms"}
+        callers = {PurePath("qiskit/"), PurePath("qiskit_")}
 
         for frame in inspect.stack():
             frame_path = str(PurePath(frame.filename))
-            for key, value in caller_dict.items():
-                if str(key) in frame_path:
+            for caller in callers:
+                if str(caller) in frame_path:
+                    caller_str = str(caller) + frame_path.split(str(caller), 1)[-1]
+                    sanitized_caller_str = caller_str.replace("/", "~")
                     headers.update(
                         {
-                            "X-Qx-Client-Application": "{}/{}".format(
-                                CLIENT_APPLICATION, value
-                            )
+                            "X-Qx-Client-Application": f"{CLIENT_APPLICATION}/{sanitized_caller_str}"
                         }
                     )
 
         if self.custom_header:
             headers.update(
                 {
-                    "X-Qx-Client-Application": "{}/{}".format(
-                        headers["X-Qx-Client-Application"], self.custom_header
-                    )
+                    "X-Qx-Client-Application": f"{headers['X-Qx-Client-Application']}/{self.custom_header}"
                 }
             )
 
