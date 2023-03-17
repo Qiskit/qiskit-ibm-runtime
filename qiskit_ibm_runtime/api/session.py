@@ -289,10 +289,9 @@ class RetrySession(Session):
                     )
 
         if self.custom_header:
+            current = headers["X-Qx-Client-Application"]
             headers.update(
-                {
-                    "X-Qx-Client-Application": f"{headers['X-Qx-Client-Application']}/{self.custom_header}"
-                }
+                {"X-Qx-Client-Application": f"{current}/{self.custom_header}"}
             )
 
         try:
