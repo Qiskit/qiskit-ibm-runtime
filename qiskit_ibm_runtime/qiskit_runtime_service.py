@@ -729,7 +729,9 @@ class QiskitRuntimeService(Provider):
         Args:
             name: Name of the backend.
             instance: This is only supported for ``ibm_quantum`` runtime and is in the
-                hub/group/project format.
+                hub/group/project format. If an instance is not given, among the providers
+                with access to the backend, a premium provider will be priotized.
+                For users without access to a premium provider, the default open provider will be used.
 
         Returns:
             Backend: A backend matching the filtering.
@@ -1004,6 +1006,7 @@ class QiskitRuntimeService(Provider):
                 job_tags=qrt_options.job_tags,
                 max_execution_time=qrt_options.max_execution_time,
                 start_session=start_session,
+                session_time=qrt_options.session_time,
             )
         except RequestsApiError as ex:
             if ex.status_code == 404:

@@ -26,7 +26,7 @@ class TestSession(IBMTestCase):
 
     def tearDown(self) -> None:
         super().tearDown()
-        session_pkg._DEFAULT_SESSION = None
+        session_pkg._DEFAULT_SESSION.set(None)
 
     @patch("qiskit_ibm_runtime.session.QiskitRuntimeService", autospec=True)
     def test_default_service(self, mock_service):
@@ -104,6 +104,7 @@ class TestSession(IBMTestCase):
             _, kwargs = service.run.call_args
             self.assertEqual(kwargs["program_id"], program_id)
             self.assertDictEqual(kwargs["options"], {"backend": backend, **options})
+            self.assertDictContainsSubset({"session_time": 42}, kwargs["options"])
             self.assertDictEqual(kwargs["inputs"], inputs)
             self.assertEqual(kwargs["session_id"], session_ids[idx])
             self.assertEqual(kwargs["start_session"], start_sessions[idx])
