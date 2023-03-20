@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2022.
+# (C) Copyright IBM 2022, 2023.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -37,6 +37,7 @@ from .constants import DEFAULT_DECODERS
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
+from .utils.qasm import parse_qasm_circuits, QuantumProgram
 
 logger = logging.getLogger(__name__)
 
@@ -76,7 +77,7 @@ class Sampler(BaseSampler):
 
     def __init__(
         self,
-        circuits: Optional[Union[QuantumCircuit, Iterable[QuantumCircuit]]] = None,
+        circuits: Optional[Union[QuantumProgram, Iterable[QuantumProgram]]] = None,
         parameters: Optional[Iterable[Iterable[Parameter]]] = None,
         service: Optional[QiskitRuntimeService] = None,
         session: Optional[Union[Session, str, IBMBackend]] = None,
@@ -209,6 +210,12 @@ class Sampler(BaseSampler):
         #         if circuit_id not in self._session._circuits_map:
         #             self._circuits_map[circuit_id] = circuit
         #             self._session._circuits_map[circuit_id] = circuit
+
+    def _validate_circuits(
+        self, circuits: Union[Sequence[QuantumProgram], QuantumProgram]
+    ) -> tuple[QuantumCircuit, ...]:
+        quantum_circuits = parse_qasm_circuits(circuits)
+        return super()._validate_circuits(quantum_circuits)
 
     def run(  # pylint: disable=arguments-differ
         self,

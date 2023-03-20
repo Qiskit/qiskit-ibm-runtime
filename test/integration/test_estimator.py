@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2022.
+# (C) Copyright IBM 2022, 2023.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -347,3 +347,97 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
 
         self.assertTrue(np.allclose(chsh1_terra.values, chsh1_runtime.values, rtol=0.3))
         self.assertTrue(np.allclose(chsh2_terra.values, chsh2_runtime.values, rtol=0.3))
+
+    @run_integration_test
+    def test_qasm2(self, service):
+        """Test a QASM2 program that doesn't take any params"""
+        qasm2_program = """
+            OPENQASM 2.0;
+            include "qelib1.inc";
+            qreg q[3];
+            creg c[3];
+            h q[0];
+            cz q[0],q[1];
+            cx q[0],q[2];
+            measure q[0] -> c[0];
+            measure q[1] -> c[1];
+            measure q[2] -> c[2];
+        """
+        with Session(service, self.backend) as session:
+            estimator = Estimator(session=session)
+            job = estimator.run(
+                circuits=qasm2_program, observables=[SparsePauliOp("ZZZ")]
+            )
+            result = job.result()
+            self.assertEqual(len(result.values), 1)
+            self.assertEqual(len(result.metadata), 1)
+            self.assertAlmostEqual(result.values[0], 1, delta=0.1)
+            self.assertTrue(session.session_id)
+            session.close()
+
+    @run_integration_test
+    def test_qasm3_with_params(self, service):
+        """Test a QASM3 program that takes two angle params"""
+        qasm3_program_with_params = """
+            OPENQASM 3;
+            include "stdgates.inc";
+            input angle theta1;
+            input angle theta2;
+            bit[3] c;
+            qubit[3] q;
+            rz(theta1) q[0];
+            sx q[0];
+            rz(theta2) q[0];
+            cx q[0], q[1];
+            h q[1];
+            cx q[1], q[2];
+            c[0] = measure q[0];
+            c[1] = measure q[1];
+            c[2] = measure q[2];
+        """
+        with Session(service, self.backend) as session:
+            estimator = Estimator(session=session)
+            job = estimator.run(
+                circuits=qasm3_program_with_params,
+                observables=[SparsePauliOp("ZZZ")],
+                parameter_values=[[1.5, 1]],
+            )
+            result = job.result()
+            self.assertEqual(len(result.values), 1)
+            self.assertEqual(len(result.metadata), 1)
+            self.assertAlmostEqual(result.values[0], 0, delta=0.1)
+            self.assertTrue(session.session_id)
+            session.close()
+
+    @run_integration_test
+    def test_no_qasm_version(self, service):
+        """Test a QASM program that doesn't have a QASM version header"""
+        qasm3_program_with_params = """
+            include "stdgates.inc";
+            input angle theta1;
+            input angle theta2;
+            bit[3] c;
+            qubit[3] q;
+            rz(theta1) q[0];
+            sx q[0];
+            rz(theta2) q[0];
+            cx q[0], q[1];
+            h q[1];
+            cx q[1], q[2];
+            c[0] = measure q[0];
+            c[1] = measure q[1];
+            c[2] = measure q[2];
+        """
+        with Session(service, self.backend) as session:
+            estimator = Estimator(session=session)
+            job = estimator.run(
+                circuits=qasm3_program_with_params,
+                observables=[SparsePauliOp("ZZZ")],
+                parameter_values=[[1.5, 1]],
+            )
+            result = job.result()
+            self.assertEqual(len(result.values), 1)
+            self.assertEqual(len(result.metadata), 1)
+            self.assertAlmostEqual(result.values[0], 0, delta=0.1)
+            self.assertTrue(session.session_id)
+            session.close()

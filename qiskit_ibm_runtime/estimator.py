@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2022.
+# (C) Copyright IBM 2022, 2023.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -40,6 +40,7 @@ from .constants import DEFAULT_DECODERS
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
+from .utils.qasm import parse_qasm_circuits, QuantumProgram
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +98,7 @@ class Estimator(BaseEstimator):
 
     def __init__(
         self,
-        circuits: Optional[Union[QuantumCircuit, Iterable[QuantumCircuit]]] = None,
+        circuits: Optional[Union[QuantumProgram, Iterable[QuantumProgram]]] = None,
         observables: Optional[Iterable[SparsePauliOp]] = None,
         parameters: Optional[Iterable[Iterable[Parameter]]] = None,
         service: Optional[QiskitRuntimeService] = None,
@@ -275,6 +276,12 @@ class Estimator(BaseEstimator):
             parameter_values=parameter_values,
             **user_kwargs,
         )
+
+    def _validate_circuits(
+        self, circuits: Union[Sequence[QuantumProgram], QuantumProgram]
+    ) -> tuple[QuantumCircuit, ...]:
+        quantum_circuits = parse_qasm_circuits(circuits)
+        return super()._validate_circuits(quantum_circuits)
 
     def _run(  # pylint: disable=arguments-differ
         self,
