@@ -175,6 +175,34 @@ with Session(service=service, backend="ibmq_qasm_simulator") as session:
     # You can make additional calls to Sampler and/or Estimator.
 ```
 
+### Using OpenQASM programs with the primitives
+
+`Sampler` and `Estimator` also accept input circuits as OpenQASM program strings. Both OpenQASM2 and OpenQASM3 programs are supported.
+
+To invoke `Sampler` primitive with an OpenQASM program:
+
+```python
+qasm3_program = """
+    OPENQASM 3;
+    include "stdgates.inc";
+    bit[2] c;
+    qubit[2] q;
+    let qr = q[0:1];
+    h qr[0];
+    cx qr[0], qr[1];
+    c[0] = measure qr[0];
+    c[1] = measure qr[1];
+"""
+
+with Session(service=service, backend="ibmq_qasm_simulator") as session:
+    sampler = Sampler(session=session, options=options)
+    job = sampler.run(circuits=qasm3_program)
+    print(f"Job ID is {job.job_id()}")
+    print(f"Job result is {job.result()}")
+
+    # You can make additional calls to Sampler and/or Estimator.
+```
+
 ## Accessing Qiskit Runtime Programs
 
 In addition to the primitives, there are other Qiskit Runtime programs that you can call directly. These programs, however, don't have special class wrappers.
