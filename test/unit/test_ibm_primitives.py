@@ -54,7 +54,7 @@ class TestPrimitives(IBMTestCase):
 
     def tearDown(self) -> None:
         super().tearDown()
-        session_pkg._DEFAULT_SESSION = None
+        session_pkg._DEFAULT_SESSION.set(None)
 
     def test_skip_transpilation(self):
         """Test skip_transpilation is hornored."""
@@ -199,7 +199,7 @@ class TestPrimitives(IBMTestCase):
             self.assertEqual(estimator.session, sampler.session)
         finally:
             # Ensure it's cleaned up or next test will fail.
-            session_pkg._DEFAULT_SESSION = None
+            session_pkg._DEFAULT_SESSION.set(None)
 
     def test_default_session_after_close(self):
         """Test a new default session is open after previous is closed."""

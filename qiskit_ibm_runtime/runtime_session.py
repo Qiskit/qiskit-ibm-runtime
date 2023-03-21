@@ -63,7 +63,7 @@ class RuntimeSession:
         if isinstance(options, RuntimeOptions):
             self._options = asdict(options)
         if max_time:
-            self._options["max_execution_time"] = max_time
+            self._options["session_time"] = max_time
         self._initial_inputs = inputs
         self._initial_job: Optional[RuntimeJob] = None
         self._job: Optional[RuntimeJob] = None
@@ -86,7 +86,7 @@ class RuntimeSession:
             self._session_id = self._job.job_id()
         else:
             self._start_session = False
-            self._options["max_execution_time"] = None
+            self._options["session_time"] = None
             self._job = self._run(inputs=inputs)
 
     def _run(self, inputs: Union[Dict, ParameterNamespace]) -> RuntimeJob:
@@ -125,7 +125,7 @@ class RuntimeSession:
         if self._job:
             out["job_id"] = self._job.job_id()
             out["job_status"] = self._job.status()
-            out["backend"] = self._job.backend
+            out["backend"] = self._job.backend()
         return out
 
     def close(self) -> None:

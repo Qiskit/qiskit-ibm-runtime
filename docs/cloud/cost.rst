@@ -13,7 +13,7 @@ Additionally, the system limit on the job execution time is 3 hours for a job th
 How to limit your cost
 ***********************
 
-The time your job takes (and therefore, its cost) depends on how many iterations you make in a session and how many shots are run in each iteration. Thus, you can manage your cost by running only as many iterations and shots as you need.
+The time your job takes (and therefore, its cost) depends on how many iterations you make in a session and how many shots are run in each iteration. Therefore, you can manage your cost by running only as many iterations and shots as you need.
 
 Additionally, an instance administrator can limit how much is spent. To set cost limits, navigate to the `IBM Cloud Instances page <https://cloud.ibm.com/quantum/instances>`__, then click the instance and set the **Cost limit**. The cost limit refers to the total cost of all jobs run with this instance since it was created, and it will always be greater than or equal to the Total cost. After the instance reaches the specified number of total seconds, no further jobs can be run and no more cost is incurred.
 
@@ -71,7 +71,7 @@ Set up spending notifications
 You can set up spending notifications to get notified when your account or a particular service reaches a specific spending threshold that you set. For information, see the `IBM Cloud account Type description <https://cloud.ibm.com/docs/account?topic=account-accounts>`__. IBM Cloud spending notifications must be used with other methods of cost management for several reasons:
 
 - The notifications trigger only *after* cost surpasses the specified limit.
-- Cost is submitted to the billing system hourly. Thus, a long delay might occur between the job submission and the spending notification being sent.
+- Cost is submitted to the billing system hourly. Therefore, a long delay might occur between the job submission and the spending notification being sent.
 - The billing system can take multiple days to get information to the invoicing system, which might cause further delay in notifications. For more information about how the IBM Cloud billing system works, see `Setting spending notifications <https://cloud.ibm.com/docs/billing-usage?topic=billing-usage-spending>`__.
 
 Next steps

@@ -93,6 +93,7 @@ def run_program(
         "job_tags": job_tags,
         "max_execution_time": max_execution_time,
         "instance": instance,
+        "session_time": None,
     }
     if final_status is not None:
         service._api_client.set_final_status(final_status)
