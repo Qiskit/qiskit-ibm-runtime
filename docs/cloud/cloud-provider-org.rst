@@ -12,7 +12,7 @@ You can manage IBM Cloud users or ID provider (IDP) users.  Follow the instructi
 Manage IBM Cloud users
 ----------------------
 
-This tutorial how to use IBM Cloud to enable users who have IBM Cloud accounts and gives instructions for users to access the environment.
+This tutorial shows how to use IBM Cloud to enable users who have IBM Cloud accounts and gives instructions for users to access the environment.
 
 
 Invite users
