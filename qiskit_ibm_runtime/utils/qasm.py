@@ -51,7 +51,7 @@ def str_to_quantum_circuit(program: str) -> QuantumCircuit:
         if float(qasm_version) == 2:
             # OpenQASM2
             return QuantumCircuit.from_qasm_str(program)
-        else: # version 3 and other versions
+        else:  # version 3 and other versions
             # use default OpenQASM3 loads
             return qasm3_loads(program)
 
@@ -59,7 +59,7 @@ def str_to_quantum_circuit(program: str) -> QuantumCircuit:
 def parse_qasm_circuits(
     circuits: Union[Sequence[QuantumProgram], QuantumProgram]
 ) -> Iterable[QuantumCircuit]:
-    """ Convert from QASM to QauntumCircuit, if needed."""
+    """Convert from QASM to QauntumCircuit, if needed."""
 
     if isinstance(circuits, str):
         circuits = [str_to_quantum_circuit(circuits)]
