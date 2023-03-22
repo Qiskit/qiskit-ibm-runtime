@@ -150,7 +150,7 @@ class Options:
         for key in options.keys():
             if key not in known_keys:
                 warnings.warn(
-                    f"Key {key} not in available options. It will be ignored."
+                    f"Key '{key}' is an unrecognized option. It may be ignored."
                 )
                 inputs[key] = options[key]
         return inputs
