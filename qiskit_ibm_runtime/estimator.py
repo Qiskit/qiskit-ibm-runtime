@@ -251,15 +251,6 @@ class Estimator(BaseEstimator):
             ValueError: Invalid arguments are given.
         """
         # To bypass base class merging of options.
-        if "noise_model" not in kwargs:
-            if self._session.backend():
-                backend_obj = self._session.service.backend(self._session.backend())
-                self._options = set_default_error_levels(
-                    self._options,
-                    backend_obj,
-                    Options._DEFAULT_OPTIMIZATION_LEVEL,
-                    Options._DEFAULT_RESILIENCE_LEVEL,
-                )
         user_kwargs = {"_user_kwargs": kwargs}
         return super().run(
             circuits=circuits,
@@ -323,6 +314,14 @@ class Estimator(BaseEstimator):
         }
 
         combined = Options._merge_options(self._options, kwargs.get("_user_kwargs", {}))
+        if self._session.backend():
+            backend_obj = self._session.service.backend(self._session.backend())
+            combined = set_default_error_levels(
+                combined,
+                backend_obj,
+                Options._DEFAULT_OPTIMIZATION_LEVEL,
+                Options._DEFAULT_RESILIENCE_LEVEL,
+            )
         logger.info("Submitting job using options %s", combined)
         inputs.update(Options._get_program_inputs(combined))
 
