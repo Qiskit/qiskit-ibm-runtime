@@ -18,7 +18,7 @@ import json
 from unittest.mock import MagicMock, patch, ANY
 import warnings
 from dataclasses import asdict
-from typing import Dict, Union
+from typing import Dict
 import unittest
 
 from qiskit.circuit import QuantumCircuit
@@ -33,7 +33,6 @@ from qiskit_ibm_runtime import (
     Options,
     Session,
     RuntimeEncoder,
-    QiskitRuntimeService,
 )
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 import qiskit_ibm_runtime.session as session_pkg
@@ -48,8 +47,6 @@ class MockSession(Session):
     """Mock for session class"""
 
     _circuits_map: Dict[str, QuantumCircuit] = {}
-    _service: QiskitRuntimeService = None
-    _backend: Union[str, IBMBackend] = None
 
 
 class TestPrimitives(IBMTestCase):
@@ -362,8 +359,7 @@ class TestPrimitives(IBMTestCase):
                         _, kwargs = session.run.call_args
                         inputs = kwargs["inputs"]
                     self._assert_dict_partially_equal(inputs, expected)
-                    expected = asdict(Options(optimization_level=1, resilience_level=0))
-                    self.assertDictEqual(inst.options.__dict__, expected)
+                    self.assertDictEqual(inst.options.__dict__, asdict(Options()))
 
     def test_run_overwrite_runtime_options(self):
         """Test run using overwritten runtime options."""
@@ -432,8 +428,7 @@ class TestPrimitives(IBMTestCase):
                     self.assertEqual(
                         kwargs_list[idx][1]["inputs"]["run_options"]["shots"], shots
                     )
-                expected = asdict(Options(optimization_level=1, resilience_level=0))
-                self.assertDictEqual(inst.options.__dict__, expected)
+                self.assertDictEqual(inst.options.__dict__, asdict(Options()))
 
     def test_run_same_session(self):
         """Test multiple runs within a session."""
