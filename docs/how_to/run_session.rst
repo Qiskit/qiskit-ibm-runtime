@@ -116,5 +116,5 @@ How session jobs fit into the job queue
 For each backend, the first job in the session waits its turn in the queue normally, but while the session is active, subsequent jobs within the same session take priority over any other queued jobs. If there are no jobs that are part of a session, the next job from the regular fair-share queue is run. Jobs still run one at a time. Therefore, jobs that belong to a session still queue up if you already have one running, but you do not have to wait for them to complete before submitting more jobs.
 
 .. note::
-  Starting a session inside of a reservation is not recommended. Jobs within the session may go through the queue in an unpredictable order.   
+  Do not start a session inside of a reservation. If you use a session inside a reservation and all the session jobs don't finish during the reservation window, the pending jobs outside of the window might fail.   
 
