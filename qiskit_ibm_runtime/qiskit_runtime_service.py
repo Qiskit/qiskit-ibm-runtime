@@ -51,7 +51,6 @@ from .api.client_parameters import ClientParameters
 from .runtime_options import RuntimeOptions
 from .utils.deprecation import (
     deprecate_function,
-    issue_deprecation_msg,
     deprecate_arguments,
 )
 
@@ -66,8 +65,6 @@ DEPRECATED_PROGRAMS = [
     "quantum_kernal_alignment",
     "sample-program",
 ]
-
-_JOB_DEPRECATION_ISSUED = False
 
 
 class QiskitRuntimeService(Provider):
@@ -732,7 +729,9 @@ class QiskitRuntimeService(Provider):
         Args:
             name: Name of the backend.
             instance: This is only supported for ``ibm_quantum`` runtime and is in the
-                hub/group/project format.
+                hub/group/project format. If an instance is not given, among the providers
+                with access to the backend, a premium provider will be priotized.
+                For users without access to a premium provider, the default open provider will be used.
 
         Returns:
             Backend: A backend matching the filtering.
@@ -1019,18 +1018,6 @@ class QiskitRuntimeService(Provider):
         if not backend:
             backend = self.backend(name=response["backend"])
 
-        global _JOB_DEPRECATION_ISSUED  # pylint: disable=global-statement
-        if not (start_session or session_id) and not _JOB_DEPRECATION_ISSUED:
-            # No need to issue warning if session is used since the old style session
-            # didn't return a job, and new style returns new job.
-            _JOB_DEPRECATION_ISSUED = True
-            issue_deprecation_msg(
-                msg="Note that the 'job_id' and 'backend' attributes of "
-                "a runtime job have been deprecated",
-                version="0.7",
-                remedy="Please use the job_id() and backend() methods instead.",
-            )
-
         job = RuntimeJob(
             backend=backend,
             api_client=self._api_client,
@@ -1041,6 +1028,7 @@ class QiskitRuntimeService(Provider):
             user_callback=callback,
             result_decoder=result_decoder,
             image=qrt_options.image,
+            service=self,
         )
         return job
 
@@ -1463,7 +1451,10 @@ class QiskitRuntimeService(Provider):
                 instance = to_instance_format(hub, group, project)
         # Try to find the right backend
         try:
-            backend = self.backend(raw_data["backend"], instance=instance)
+            if "backend" in raw_data:
+                backend = self.backend(raw_data["backend"], instance=instance)
+            else:
+                backend = None
         except QiskitBackendNotFoundError:
             backend = ibm_backend.IBMRetiredBackend.from_name(
                 backend_name=raw_data["backend"],
@@ -1484,6 +1475,7 @@ class QiskitRuntimeService(Provider):
             backend=backend,
             api_client=self._api_client,
             client_params=self._client_params,
+            service=self,
             job_id=raw_data["id"],
             program_id=raw_data.get("program", {}).get("id", ""),
             params=decoded,
