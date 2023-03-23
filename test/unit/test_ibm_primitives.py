@@ -528,6 +528,63 @@ class TestPrimitives(IBMTestCase):
                         f"inst_options={inst_options}, new_str={new_str}",
                     )
 
+    def test_default_error_levels(self):
+        """Test the correct default error levels are used."""
+
+        session = MagicMock(spec=MockSession)
+        primitives = [Sampler, Estimator]
+        for cls in primitives:
+            with self.subTest(primitive=cls):
+                options = Options(
+                    simulator={"noise_model": "foo"},
+                )
+                inst = cls(session=session, options=options)
+                inst.run(self.qx, observables=self.obs)
+                if sys.version_info >= (3, 8):
+                    inputs = session.run.call_args.kwargs["inputs"]
+                else:
+                    _, kwargs = session.run.call_args
+                    inputs = kwargs["inputs"]
+                self.assertEqual(
+                    inputs["transpilation_settings"]["optimization_settings"]["level"],
+                    Options._DEFAULT_OPTIMIZATION_LEVEL,
+                )
+                self.assertEqual(
+                    inputs["resilience_settings"]["level"],
+                    Options._DEFAULT_RESILIENCE_LEVEL,
+                )
+
+                session.service.backend().configuration().simulator = False
+                inst = cls(session=session)
+                inst.run(self.qx, observables=self.obs)
+                if sys.version_info >= (3, 8):
+                    inputs = session.run.call_args.kwargs["inputs"]
+                else:
+                    _, kwargs = session.run.call_args
+                    inputs = kwargs["inputs"]
+                self.assertEqual(
+                    inputs["transpilation_settings"]["optimization_settings"]["level"],
+                    Options._DEFAULT_OPTIMIZATION_LEVEL,
+                )
+                self.assertEqual(
+                    inputs["resilience_settings"]["level"],
+                    Options._DEFAULT_RESILIENCE_LEVEL,
+                )
+
+                session.service.backend().configuration().simulator = True
+                inst = cls(session=session)
+                inst.run(self.qx, observables=self.obs)
+                if sys.version_info >= (3, 8):
+                    inputs = session.run.call_args.kwargs["inputs"]
+                else:
+                    _, kwargs = session.run.call_args
+                    inputs = kwargs["inputs"]
+                self.assertEqual(
+                    inputs["transpilation_settings"]["optimization_settings"]["level"],
+                    1,
+                )
+                self.assertEqual(inputs["resilience_settings"]["level"], 0)
+
     def _update_dict(self, dict1, dict2):
         for key, val in dict1.items():
             if isinstance(val, dict):
