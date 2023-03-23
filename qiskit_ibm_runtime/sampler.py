@@ -155,12 +155,11 @@ class Sampler(BaseSampler):
                     version="0.7",
                     remedy="Please pass the backend when opening a session.",
                 )
-            skip_transpilation = options.get("transpilation", {}).get(
-                "skip_transpilation", False
-            )
             default_options = asdict(Options())
             _options = Options._merge_options(default_options, options_copy)
-
+            skip_transpilation = _options.get("transpilation", {}).get(
+                "skip_transpilation", False
+            )
         _options["transpilation"][
             "skip_transpilation"
         ] = skip_transpilation  # type: ignore[union-attr]

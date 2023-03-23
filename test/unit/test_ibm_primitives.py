@@ -515,7 +515,7 @@ class TestPrimitives(IBMTestCase):
         primitives = [Sampler, Estimator]
         for cls in primitives:
             for new_opt, new_str in new_options:
-                with self.subTest(primitive=cls, new_opt=new_opt):
+                with self.subTest(primitive=cls, options=new_opt):
                     inst = cls(session=session, options=options)
                     inst.set_options(**new_opt)
                     # Make sure the values are equal.
@@ -528,6 +528,46 @@ class TestPrimitives(IBMTestCase):
                     self.assertTrue(
                         dict_keys_equal(inst_options, asdict(new_str)),
                         f"inst_options={inst_options}, new_str={new_str}",
+                    )
+
+    def test_accept_level_1_options(self):
+        """Test initializing options properly when given on level 1."""
+
+        options_dicts = [
+            {},
+            {"shots": 10},
+            {"seed_simulator": 123},
+            {"skip_transpilation": True, "log_level": "ERROR"},
+            {"initial_layout": [1, 2], "shots": 100, "noise_amplifier": "CxAmplifier"},
+        ]
+
+        expected_list = [Options(), Options(), Options(), Options(), Options()]
+        expected_list[1].execution.shots = 10
+        expected_list[2].simulator.seed_simulator = 123
+        expected_list[3].transpilation.skip_transpilation = True
+        expected_list[3].environment.log_level = "ERROR"
+        expected_list[4].transpilation.initial_layout = [1, 2]
+        expected_list[4].execution.shots = 100
+        expected_list[4].resilience.noise_amplifier = "CxAmplifier"
+
+        session = MagicMock(spec=MockSession)
+        primitives = [Sampler, Estimator]
+        for cls in primitives:
+            for opts, expected in zip(options_dicts, expected_list):
+                with self.subTest(primitive=cls, options=opts):
+                    inst1 = cls(session=session, options=opts)
+                    inst2 = cls(session=session, options=expected)
+                    # Make sure the values are equal.
+                    inst1_options = inst1.options.__dict__
+                    expected_dict = inst2.options.__dict__
+                    self.assertTrue(
+                        dict_paritally_equal(inst1_options, expected_dict),
+                        f"inst_options={inst1_options}, options={opts}",
+                    )
+                    # Make sure the structure didn't change.
+                    self.assertTrue(
+                        dict_keys_equal(inst1_options, expected_dict),
+                        f"inst_options={inst1_options}, expected={expected_dict}",
                     )
 
     def _update_dict(self, dict1, dict2):
