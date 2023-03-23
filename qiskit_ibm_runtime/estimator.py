@@ -140,7 +140,7 @@ class Estimator(BaseEstimator):
             skip_transpilation: (DEPRECATED) Transpilation is skipped if set to True. False by default.
                 Ignored ``skip_transpilation`` is also specified in ``options``.
         """
-        # `_options` in this class is an instance of qiskit_ibm_runtime.Options class.
+        # `_options` in this class is a Dict.
         # The base class, however, uses a `_run_options` which is an instance of
         # qiskit.providers.Options. We largely ignore this _run_options because we use
         # a nested dictionary to categorize options.
@@ -165,12 +165,12 @@ class Estimator(BaseEstimator):
         self._session: Session = None
 
         if options is None:
-            _options = Options()
+            _options = asdict(Options())
         elif isinstance(options, Options):
-            _options = copy.deepcopy(options)
             skip_transpilation = (
-                _options.transpilation.skip_transpilation  # type: ignore[union-attr]
+                options.transpilation.skip_transpilation  # type: ignore[union-attr]
             )
+            _options = asdict(copy.deepcopy(options))
         else:
             options_copy = copy.deepcopy(options)
             backend = options_copy.pop("backend", None)
@@ -183,39 +183,32 @@ class Estimator(BaseEstimator):
             skip_transpilation = options.get("transpilation", {}).get(
                 "skip_transpilation", False
             )
-            log_level = options_copy.pop("log_level", None)
-            _options = Options(**options_copy)
-            if log_level:
-                issue_deprecation_msg(
-                    msg="The 'log_level' option has been moved to the 'environment' category",
-                    version="0.7",
-                    remedy="Please specify 'environment':{'log_level': log_level} instead.",
-                )
-                _options.environment.log_level = log_level  # type: ignore[union-attr]
+            default_options = asdict(Options())
+            _options = Options._merge_options(default_options, options_copy)
 
-        _options.transpilation.skip_transpilation = (  # type: ignore[union-attr]
-            skip_transpilation
-        )
+        _options["transpilation"][
+            "skip_transpilation"
+        ] = skip_transpilation  # type: ignore[union-attr]
 
-        if _options.optimization_level is None:
-            if _options.simulator and (
-                not hasattr(_options.simulator, "noise_model")
-                or asdict(_options.simulator)["noise_model"] is None
+        if _options["optimization_level"] is None:
+            if _options["simulator"] and (
+                not hasattr(_options["simulator"], "noise_model")
+                or _options["simulator"]["noise_model"] is None
             ):
-                _options.optimization_level = 1
+                _options["optimization_level"] = 1
             else:
-                _options.optimization_level = Options._DEFAULT_OPTIMIZATION_LEVEL
+                _options["optimization_level"] = Options._DEFAULT_OPTIMIZATION_LEVEL
 
-        if _options.resilience_level is None:
-            if _options.simulator and (
-                not hasattr(_options.simulator, "noise_model")
-                or asdict(_options.simulator)["noise_model"] is None
+        if _options["resilience_level"] is None:
+            if _options["simulator"] and (
+                not hasattr(_options["simulator"], "noise_model")
+                or _options["simulator"]["noise_model"] is None
             ):
-                _options.resilience_level = 0
+                _options["resilience_level"] = 0
             else:
-                _options.resilience_level = Options._DEFAULT_RESILIENCE_LEVEL
+                _options["resilience_level"] = Options._DEFAULT_RESILIENCE_LEVEL
 
-        self._options: dict = asdict(_options)
+        self._options: dict = _options
 
         self._initial_inputs = {
             "circuits": circuits,

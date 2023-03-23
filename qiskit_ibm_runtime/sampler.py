@@ -115,7 +115,7 @@ class Sampler(BaseSampler):
             skip_transpilation (DEPRECATED): Transpilation is skipped if set to True. False by default.
                 Ignored if ``skip_transpilation`` is also specified in ``options``.
         """
-        # `_options` in this class is an instance of qiskit_ibm_runtime.Options class.
+        # `_options` in this class is a Dict.
         # The base class, however, uses a `_run_options` which is an instance of
         # qiskit.providers.Options. We largely ignore this _run_options because we use
         # a nested dictionary to categorize options.
@@ -142,13 +142,12 @@ class Sampler(BaseSampler):
         if options is None:
             _options = asdict(Options())
         elif isinstance(options, Options):
-            _options = asdict(copy.deepcopy(options))
             skip_transpilation = (
                 options.transpilation.skip_transpilation  # type: ignore[union-attr]
             )
+            _options = asdict(copy.deepcopy(options))
         else:
             options_copy = copy.deepcopy(options)
-            #print("options_copy = "+str(options_copy))
             backend = options_copy.pop("backend", None)
             if backend is not None:
                 issue_deprecation_msg(
@@ -156,29 +155,15 @@ class Sampler(BaseSampler):
                     version="0.7",
                     remedy="Please pass the backend when opening a session.",
                 )
-            log_level = options_copy.pop("log_level", None)
-            #print("log level" + str(log_level))
-            if log_level:
-                issue_deprecation_msg(
-                    msg="The 'log_level' option has been moved to the 'environment' category",
-                    version="0.7",
-                    remedy="Please specify 'environment':{'log_level': log_level} instead.",
-                )
-
-            default_options = asdict(Options())
-            #print("default_options = " + str(default_options))
-            _options = Options._merge_options(default_options, options_copy)
-            #print("_options = " + str(_options))
-            if log_level:
-                _options["environment"]["log_level"] = log_level  # type: ignore[union-attr]
-
-            skip_transpilation = _options.get("transpilation", {}).get(
+            skip_transpilation = options.get("transpilation", {}).get(
                 "skip_transpilation", False
             )
+            default_options = asdict(Options())
+            _options = Options._merge_options(default_options, options_copy)
 
-        _options["transpilation"]["skip_transpilation"] = (  # type: ignore[union-attr]
-                skip_transpilation
-        )
+        _options["transpilation"][
+            "skip_transpilation"
+        ] = skip_transpilation  # type: ignore[union-attr]
 
         if _options["optimization_level"] is None:
             if _options["simulator"] and (
@@ -199,7 +184,6 @@ class Sampler(BaseSampler):
                 _options["resilience_level"] = Options._DEFAULT_RESILIENCE_LEVEL
 
         self._options: dict = _options
-
 
         self._initial_inputs = {"circuits": circuits, "parameters": parameters}
         if isinstance(session, Session):
