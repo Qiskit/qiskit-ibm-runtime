@@ -24,3 +24,5 @@ pylatexenc
 mthree
 scikit-learn
 sphinx-design>=0.2.0
+tox==3.28.0
+doc8
