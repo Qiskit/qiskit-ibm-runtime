@@ -197,7 +197,9 @@ class Estimator(BaseEstimator):
             ):
                 self._options["optimization_level"] = 1
             else:
-                self._options["optimization_level"] = Options._DEFAULT_OPTIMIZATION_LEVEL
+                self._options[
+                    "optimization_level"
+                ] = Options._DEFAULT_OPTIMIZATION_LEVEL
 
         if self._options["resilience_level"] is None:
             if self._options["simulator"] and (
