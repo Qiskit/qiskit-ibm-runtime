@@ -515,7 +515,7 @@ class TestPrimitives(IBMTestCase):
         primitives = [Sampler, Estimator]
         for cls in primitives:
             for new_opt, new_str in new_options:
-                with self.subTest(primitive=cls, options=new_opt):
+                with self.subTest(primitive=cls, new_opt=new_opt):
                     inst = cls(session=session, options=options)
                     inst.set_options(**new_opt)
                     # Make sure the values are equal.

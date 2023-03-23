@@ -140,7 +140,7 @@ class Estimator(BaseEstimator):
             skip_transpilation: (DEPRECATED) Transpilation is skipped if set to True. False by default.
                 Ignored ``skip_transpilation`` is also specified in ``options``.
         """
-        # `_options` in this class is a Dict.
+        # `self._options` in this class is a Dict.
         # The base class, however, uses a `_run_options` which is an instance of
         # qiskit.providers.Options. We largely ignore this _run_options because we use
         # a nested dictionary to categorize options.
@@ -165,12 +165,12 @@ class Estimator(BaseEstimator):
         self._session: Session = None
 
         if options is None:
-            _options = asdict(Options())
+            self._options = asdict(Options())
         elif isinstance(options, Options):
             skip_transpilation = (
                 options.transpilation.skip_transpilation  # type: ignore[union-attr]
             )
-            _options = asdict(copy.deepcopy(options))
+            self._options = asdict(copy.deepcopy(options))
         else:
             options_copy = copy.deepcopy(options)
             backend = options_copy.pop("backend", None)
@@ -181,34 +181,32 @@ class Estimator(BaseEstimator):
                     remedy="Please pass the backend when opening a session.",
                 )
             default_options = asdict(Options())
-            _options = Options._merge_options(default_options, options_copy)
-            skip_transpilation = _options.get("transpilation", {}).get(
+            self._options = Options._merge_options(default_options, options_copy)
+            skip_transpilation = self._options.get("transpilation", {}).get(
                 "skip_transpilation", False
             )
 
-        _options["transpilation"][
+        self._options["transpilation"][
             "skip_transpilation"
         ] = skip_transpilation  # type: ignore[union-attr]
 
-        if _options["optimization_level"] is None:
-            if _options["simulator"] and (
-                not hasattr(_options["simulator"], "noise_model")
-                or _options["simulator"]["noise_model"] is None
+        if self._options["optimization_level"] is None:
+            if self._options["simulator"] and (
+                not hasattr(self._options["simulator"], "noise_model")
+                or self._options["simulator"]["noise_model"] is None
             ):
-                _options["optimization_level"] = 1
+                self._options["optimization_level"] = 1
             else:
-                _options["optimization_level"] = Options._DEFAULT_OPTIMIZATION_LEVEL
+                self._options["optimization_level"] = Options._DEFAULT_OPTIMIZATION_LEVEL
 
-        if _options["resilience_level"] is None:
-            if _options["simulator"] and (
-                not hasattr(_options["simulator"], "noise_model")
-                or _options["simulator"]["noise_model"] is None
+        if self._options["resilience_level"] is None:
+            if self._options["simulator"] and (
+                not hasattr(self._options["simulator"], "noise_model")
+                or self._options["simulator"]["noise_model"] is None
             ):
-                _options["resilience_level"] = 0
+                self._options["resilience_level"] = 0
             else:
-                _options["resilience_level"] = Options._DEFAULT_RESILIENCE_LEVEL
-
-        self._options: dict = _options
+                self._options["resilience_level"] = Options._DEFAULT_RESILIENCE_LEVEL
 
         self._initial_inputs = {
             "circuits": circuits,
