@@ -247,7 +247,7 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
         with Sampler(
             circuits=[pqc, pqc2],
             service=service,
-            options={"backend": "ibmq_qasm_simulator"},
+            options={"backend": "ibmq_qasm_simulator", "optimization_level": 1},
         ) as sampler:
             self.assertIsInstance(sampler, BaseSampler)
 
