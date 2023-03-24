@@ -1,24 +1,24 @@
 Run on quantum backends
 =================================
 
-A **backend** represents either a simulator or a real quantum computer and are responsible for running quantum circuits and/or pulse schedules and returning results.
+A **backend** represents either a simulator or a real quantum computer and are responsible for running quantum circuits, running pulse schedules, and returning results.
 
 In qiskit-ibm-runtime, a backend is represented by an instance of the ``IBMBackend`` class. Attributes of this class provides information about this backend. For example:
 
-* name: Name of the backend.
-* instructions: A list of instructions the backend supports.
-* operation_names: A list of instruction names the backend supported.
-* num_qubits: The number of qubits the backend has.
-* coupling_map: Coupling map of the backend.
-* dt: System time resolution of input signals.
-* dtm: System time resolution of output signals.
+* ``name``: Name of the backend.
+* ``instructions``: A list of instructions the backend supports.
+* ``operation_names``: A list of instruction names the backend supported.
+* ``num_qubits``: The number of qubits the backend has.
+* ``coupling_map``: Coupling map of the backend.
+* ``dt``: System time resolution of input signals.
+* ``dtm``: System time resolution of output signals.
 
 Refer to the `API reference <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/stubs/qiskit_ibm_runtime.IBMBackend.html#qiskit_ibm_runtime.IBMBackend>`__ for a complete list of attributes and methods.
 
 Initialize the service
 ------------------------
 
-Before calling ``IBMBackend``, inialize the service:
+Before calling ``IBMBackend``, initialize the service:
 
 .. code-block:: python
 
@@ -110,8 +110,11 @@ As mentioned previously, the ``IBMBackend`` class attributes provide information
   backend.simulator #returns True or False, depending on whether it is a simulator
   backend.num_qubits #returns the number of qubits the backend has
 
+.. vale IBMQuantum.Spelling = NO
+
 See the `IBMBackend class documentation <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/stubs/qiskit_ibm_runtime.IBMBackend.html#qiskit_ibm_runtime.IBMBackend>`__ for the full list of backend attributes.  
 
+.. vale IBMQuantum.Spelling = YES
 
 Find backend information from other channels
 --------------------------------------------------
@@ -143,7 +146,8 @@ To specify a backend when running a job, add the ``backend`` option when startin
        estimator = Estimator(session=session, options=options)
        job = estimator.run(circuit, observable)
        result = job.result()
-       session.close()
+       # Close the session only if all jobs are finished, and you don't need to run more in the session
+       session.close() # Closes the session
 
   display(circuit.draw("mpl"))
   print(f" > Observable: {observable.paulis}")

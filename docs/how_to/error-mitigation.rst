@@ -1,9 +1,11 @@
 Configure error mitigation
 =============================
 
+.. vale IBMQuantum.Definitions = NO
+
 Error mitigation techniques allow users to mitigate circuit errors by modeling the device noise at the time of execution. This typically results in quantum pre-processing overhead related to model training and classical post-processing overhead to mitigate errors in the raw results by using the generated model.  
 
-The error mitigation techniques built in to primitives are advanced resilience options.   To specify these options, use the `resilience_level` option when submitting your job.  
+The error mitigation techniques built in to primitives are advanced resilience options.   To specify these options, use the ``resilience_level`` option when submitting your job.  
 
 The resilience level specifies how much resilience to build against errors. Higher levels generate more accurate results, at the expense of longer processing times. Resilience levels can be used to configure the cost/accuracy trade-off when applying error mitigation to your primitive query. Error mitigation reduces errors (bias) in results by processing the outputs from a collection, or ensemble, of related circuits. The degree of error reduction depends on the method applied. The resilience level abstracts the detailed choice of error mitigation method to allow users to reason about the cost/accuracy trade that is appropriate to their application.
 
@@ -51,7 +53,7 @@ No error mitigation is applied to the user program.
 
 .. _TREX:
 
-Level 1 applies error mitigation methods that particularly address readout errors. In the Estimator, we apply a model-free technique known as Twirled Readout Error eXtinction (TREX). It reduces measurement error by diagonalizing the noise channel associated with measurement by randomly flipping qubits via X gates immediately prior to measurement, and flipping the corresponding measured bit if an X gate was applied. A rescaling term from the diagonal noise channel is learned by benchmarking random circuits initialized in the zero state. This allows the service to remove bias from expectation values that result from readout noise. This approach is described further in `Model-free readout-error mitigation for quantum expectation values <https://arxiv.org/abs/2012.09738>`__.
+Level 1 applies error mitigation methods that particularly address readout errors. In the Estimator, we apply a model-free technique known as Twirled Readout Error eXtinction (TREX). It reduces measurement error by diagonalizing the noise channel associated with measurement by randomly flipping qubits through X gates immediately before measurement, and flipping the corresponding measured bit if an X gate was applied. A rescaling term from the diagonal noise channel is learned by benchmarking random circuits initialized in the zero state. This allows the service to remove bias from expectation values that result from readout noise. This approach is described further in `Model-free readout-error mitigation for quantum expectation values <https://arxiv.org/abs/2012.09738>`__.
 
 .. raw:: html
 
@@ -64,7 +66,7 @@ Level 1 applies error mitigation methods that particularly address readout error
 
 .. _ZNE:
 
-Level 2 leverages Zero Noise Extrapolation method (ZNE) which computes an expectation value of the observable for different noise factors (amplification stage) and then uses the measured expectation values to infer the ideal expectation value at the zero-noise limit (extrapolation stage). This approach tends to reduce errors in expectation values, but is not guaranteed to produce an unbiased result. 
+Level 2 uses the Zero Noise Extrapolation method (ZNE) which computes an expectation value of the observable for different noise factors (amplification stage) and then uses the measured expectation values to infer the ideal expectation value at the zero-noise limit (extrapolation stage). This approach tends to reduce errors in expectation values, but is not guaranteed to produce an unbiased result. 
 
 .. figure:: ../images/resiliance-2.png
    :alt: This image shows a graph that compares the noise amplification factor to expectation values.
@@ -107,14 +109,14 @@ The sampling overhead scales exponentially with a parameter that characterizes t
 
 When the Estimator completes the model-learning phase of the primitive query, it will return metadata about the total sampling overhead for circuit.
 
-Depending on the precision required by your application, you will need to scale the number of samples accordingly. The plot below illustrates the relationship between estimator error and number of circuit samples for different total sampling overheads.
+Depending on the precision required by your application, you will need to scale the number of samples accordingly. The following plot illustrates the relationship between estimator error and number of circuit samples for different total sampling overheads.
 
 .. figure:: ../images/sampling-overhead.png
-   :alt: This image shows that samping overhead goes down as the number of samples increases.
+   :alt: This image shows that sampling overhead goes down as the number of samples increases.
 
 Note that the number of samples required to deliver a desired accuracy is not known before the primitive query because the mitigation scaling factor is discovered during the learning phase of PEC.
 
-We recommend starting with short depth circuits to get a feel for the scaling of the sampling overhead of PEC prior to attempting larger problems.
+We suggest starting with short depth circuits to get a feel for the scaling of the sampling overhead of PEC before attempting larger problems.
 
 .. raw:: html
 
@@ -123,7 +125,7 @@ We recommend starting with short depth circuits to get a feel for the scaling of
 Example
 ^^^^^^^
 
-The Estimator interface lets users seamlessly work with the variety of error mitigation methods to reduce error in expectation values of observables. Below is an example of leveraging Zero Noise Extrapolation by simply setting ``resilience_level 2``.
+The Estimator interface lets users seamlessly work with the variety of error mitigation methods to reduce error in expectation values of observables. The following code uses Zero Noise Extrapolation by simply setting ``resilience_level 2``.
 
 .. code-block:: python
 
@@ -138,10 +140,11 @@ The Estimator interface lets users seamlessly work with the variety of error mit
       estimator = Estimator(session=session, options=options)
       job = estimator.run(circuits=[psi1], observables=[H1], parameter_values=[theta1])
       psi1_H1 = job.result() 
-      session.close()
+      # Close the session only if all jobs are finished, and you don't need to run more in the session
+      session.close() 
 
 .. note::
-    As you increase the resilience level, you will be able to leverage additional methods to improve the accuracy of your result. However, because the methods become more advanced with each level, they require additional sampling overhead (time) to generate more accurate expectation values.     
+    As you increase the resilience level, you will be able to use additional methods to improve the accuracy of your result. However, because the methods become more advanced with each level, they require additional sampling overhead (time) to generate more accurate expectation values.     
 
 Configure Sampler with resilience levels 
 -----------------------------------------
@@ -154,7 +157,7 @@ The Sampler default resilience setting (level 1) enables readout error mitigatio
   <details>
   <summary>Resilience Level 1</summary>
 
-Level 1 leverages matrix-free measurement mitigation (M3) routine to mitigate readout error. M3 works in a reduced subspace defined by the noisy input bitstrings that are to be corrected. Because the number of unique bitstrings can be much smaller than the dimensionality of the full multi-qubit Hilbert space, the resulting linear system of equations is nominally much easier to solve.
+Level 1 uses matrix-free measurement mitigation (M3) routine to mitigate readout error. M3 works in a reduced subspace defined by the noisy input bit strings that are to be corrected. Because the number of unique bit strings can be much smaller than the dimensionality of the full multi-qubit Hilbert space, the resulting linear system of equations is nominally much easier to solve.
 
 .. figure:: ../images/m3.png
    :alt: This image illustrates the M3 routine.
@@ -182,7 +185,7 @@ Advanced resilience options
 
 You can tune advanced options to configure your resilience strategy further. These methods can be used alongside resilience levels where you change the specific options of interest and let your previously set resilience level manage the rest. 
 
-As a part of the beta release of the resilience options, users will be able configure ZNE by using the following advanced options below. We will soon add options to tune other resilience levels that include PEC. 
+As a part of the beta release of the resilience options, users will be able configure ZNE by using the following advanced options. We will soon add options to tune other resilience levels that include PEC. 
 
 +---------------------------------------------------------------+----------------------------------+--------------------------------------------------------+
 | Options                                                       | Inputs                           | Description                                            |
@@ -232,5 +235,6 @@ Example of adding ``resilience_options`` into your estimator session
         estimator = Estimator(session=session, options=options)
         job = estimator.run(circuits=[psi1], observables=[H1], parameter_values=[theta1])
         psi1_H1 = job.result()
+        # Close the session only if all jobs are finished, and you don't need to run more in the session
         session.close()
 

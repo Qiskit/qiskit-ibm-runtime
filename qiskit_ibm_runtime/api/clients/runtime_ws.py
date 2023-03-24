@@ -55,7 +55,7 @@ class RuntimeWebsocketClient(BaseWebsocketClient):
             self._message_queue.put_nowait(message)
             self._current_retry = 0
 
-    def job_results(self, max_retries: int = 5, backoff_factor: float = 0.5) -> None:
+    def job_results(self, max_retries: int = 8, backoff_factor: float = 0.5) -> None:
         """Return the interim result of a runtime job.
 
         Args:

@@ -1,7 +1,7 @@
 Manage users
 ======================
 
-You can manage IBM Cloud users or ID provider users.  Follow the instructions in the relevant section, depending on your setup. 
+You can manage IBM Cloud users or ID provider (IDP) users.  Follow the instructions in the relevant section, depending on your setup. 
 
 * :ref:`cloud-users`
 * :ref:`provider-cloud`
@@ -12,7 +12,7 @@ You can manage IBM Cloud users or ID provider users.  Follow the instructions in
 Manage IBM Cloud users
 ----------------------
 
-This tutorial how to use IBM Cloud to enable users who have IBM Cloud accounts and gives instructions for users to access the environment.
+This tutorial shows how to use IBM Cloud to enable users who have IBM Cloud accounts and gives instructions for users to access the environment.
 
 
 Invite users
@@ -42,7 +42,7 @@ Optional: Modify users’ project assignments
 
 2. Add access groups with **Assign group** or remove the user from an access group by clicking the three dot menu and choosing **Remove user**.
 
-User Flow
+User flow
 ~~~~~~~~~~~~~
 
 1. After they accept an invitation, users can log in through the `IBM Cloud portal <https://cloud.ibm.com/>`__.
@@ -135,7 +135,7 @@ Integrate the App ID instance as the ID provider for the administrator’s accou
 
 4. The default IdP URL is shown. Share this URL with users when they need to log in.
 
-Add Users
+Add users
 ~~~~~~~~~~
 
 When you use App ID as ID provider with the Cloud directory, you can create users in the IBM Cloud user interface.
@@ -314,7 +314,7 @@ User flow
    .. note::
       The administrator can always go to `Manage → Access (IAM) → Identity providers <https://cloud.ibm.com/iam/identity-providers>`__ to look up the ID provider URL.
 
-2. To work with Qiskit Runtime serive instances, users must create an API key by going to `Manage → Access (IAM) → API keys <https://cloud.ibm.com/iam/apikeys>`__.
+2. To work with Qiskit Runtime service instances, users must create an API key by going to `Manage → Access (IAM) → API keys <https://cloud.ibm.com/iam/apikeys>`__.
 
 3. For further information, users can review `Getting started, Step 2 <quickstart#install-packages>`__.
 

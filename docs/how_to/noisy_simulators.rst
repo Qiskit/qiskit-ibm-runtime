@@ -1,17 +1,17 @@
-Noisy Simulators in Qiskit Runtime
+Noisy simulators in Qiskit Runtime
 ==================================
 
-This notebook shows how to setup ``ibmq_qasm_simulator`` and map a basic
-noise model for an IBM Quantum hardware device in **Qiskit Runtime**, and
-use this noise model to do noisy simulations of ``QuantumCircuits`` on
-``Sampler`` and ``Estimator`` to study the effects of errors which occur
-on real devices.
+This notebook shows how to set up ``ibmq_qasm_simulator`` and map a basic noise
+model for an IBM Quantum hardware device in **Qiskit Runtime**, and use this
+noise model to perform noisy simulations of ``QuantumCircuits`` using
+``Sampler`` and ``Estimator`` to study the effects of errors which occur on
+real devices.
 
 Set up your local development environment
 -----------------------------------------
 
 This tutorial requires a Qiskit Runtime service instance to be setup. If
-you haven’t done so already, please follow `these
+you haven’t done so already, follow `these
 steps <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/getting_started.html>`__
 to set one up.
 
@@ -30,7 +30,7 @@ routine. One of the major benefits of using primitives is simplification
 of binding multiple parameters in parameterized circuits. To check this,
 here is an example circuit with a controlled
 `P-gate <https://qiskit.org/documentation/stubs/qiskit.circuit.library.PhaseGate.html>`__
-as implemented right below. Here, we parametrise the ``P-gate`` with a
+as implemented in the following code. Here, we parametrise the ``P-gate`` with a
 rotation parameter ``theta``. To learn how to create circuits and bind
 parameters to them by using Qiskit, see the `Circuit
 Basics <https://qiskit.org/documentation/tutorials/circuits/01_circuit_basics.html>`__
@@ -61,12 +61,11 @@ in Qiskit documentation.
 
 
 
-The circuit shown above is parameterized with the eigenvalue being
-kicked back into qubit 0 to be measured. The amount of kickback will be
-determined by the parameter theta. Now in the cell below, we shall
-define our parameters for our above circuit as a list. The parameters
-here will be from :math:`0` to :math:`2\pi` divided over 50 evenly
-spaced points.
+The circuit shown by the previous cell is parameterized with the eigenvalue
+being kicked back into qubit 0 to be measured. The amount of kickback will be
+determined by the parameter theta. Now in the following cell, we shall define
+our parameters for our circuit as a list. The parameters here will be from
+:math:`0` to :math:`2\pi` divided over 50 evenly spaced points.
 
 .. code-block:: python
 
@@ -85,8 +84,8 @@ Set the backend and options to use
 
 First we shall demonstrate a run using an ideal case without any
 ``noise_model``, ``optimization_level`` or ``resilience_level`` for both
-Sampler and Estimator. We shall proceed to setup the options as shown
-below:
+Sampler and Estimator. We shall proceed to setup the options in the following
+code:
 
 .. code-block:: python
 
@@ -104,8 +103,8 @@ Run the circuits on Sampler
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 We shall now sample the circuit to get the result probability
-distribution. We shall be utilizing the `Sampler
-primitive <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/stubs/qiskit_ibm_runtime.Sampler.html>`__
+distribution using the `Sampler primitive
+<https://qiskit.org/documentation/partners/qiskit_ibm_runtime/stubs/qiskit_ibm_runtime.Sampler.html>`__
 to do the same. To learn how to use the ``Sampler`` primitive and how to
 get started using Qiskit Runtime Sessions, you can check this tutorial:
 `Get started with the Sampler
@@ -154,7 +153,7 @@ To learn how to start a session for Estimator, you may check this
 tutorial: `Get started with the Estimator
 primitive <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/tutorials/how-to-getting-started-with-estimator.html>`__.
 
-The Estimator will bind single-qubit rotations to get hamiltonians
+The Estimator will bind single-qubit rotations to get Hamiltonians
 before it returns expectation values of quantum operators. Therefore,
 the circuit doesn’t require any measurements. Currently the circuit
 ``qc`` has measurements so we will remove these with
@@ -186,13 +185,13 @@ the circuit doesn’t require any measurements. Currently the circuit
 
 
 With this observable, the expectation value is calculated by the
-equation below.
+following equation.
 
 .. math::
 
    \langle ZZ\rangle =\langle \psi | ZZ | \psi\rangle=\langle \psi|(|0\rangle\langle 0| -|1\rangle\langle 1|)\otimes(|0\rangle\langle 0| - |1\rangle\langle 1|) |\psi\rangle =|\langle 00|\psi\rangle|^2 - |\langle 01 | \psi\rangle|^2 - |\langle 10 | \psi\rangle|^2 + |\langle 11|\psi\rangle|^2
 
-The next cell will implement the above as shown.
+The next cell will implement this as shown.
 
 .. code-block:: python
 
@@ -234,7 +233,7 @@ Running a noisy simulation
 Now we’ll setup our simulator to run a noisy simulation rather than the
 ideal one. We can pass a custom ``noise_model`` to the simulator on
 Runtime by specifying it in the ``Options`` parameter. Here we will try
-to mimic a real backend and map on the noise_model from a
+to mimic a real backend and map on the ``noise_model`` from a
 ``FakeBackend`` class. The noise model can be extracted from the
 ``FakeBackend`` and passed as a ``simulator`` parameter in options. If
 you want to know more about ``fake_provider``, check `Fake
@@ -271,16 +270,15 @@ that the backend supports to have a more realistic noisy simulation.
 The ``ibmq_qasm_simulator`` allows for the activation of the
 ``resilience_levels`` offered by the Qiskit Runtime Service, and use of
 these levels on simulators is best demonstrated using the noisy
-simulation as we have described above.
+simulation as we have described previously.
 
-To see the comparision, we shall define two set of ``Options``. The ibmq
-qasm simulator allows for the activation of the resilience levels
-offered by Qiskit Runtime, and the use of these levels on simulators is
-best demonstrated using the noisy simulation that we have built. Here,
-``options`` is set to\ ``resilience level`` = ``0`` to represent a
-normal run without error mitigation, and ``options with em`` is set to
-``resilience level`` = ``1`` to represent a run with error mitigation
-enabled.
+To see the comparison, we shall define two set of ``Options``. The
+``ibmq_qasm_simulator`` allows for the activation of the resilience levels
+offered by Qiskit Runtime, and the use of these levels on simulators is best
+demonstrated using the noisy simulation that we have built. Here, ``options``
+is set to\ ``resilience level`` = ``0`` to represent a normal run without error
+mitigation, and ``options with em`` is set to ``resilience level`` = ``1`` to
+represent a run with error mitigation enabled.
 
 .. code-block:: python
 
@@ -392,14 +390,16 @@ All available resilience level configurations can be found
 .. image:: ../images/noisy-sim-estimator-noisy.png
 
 
+.. vale IBMQuantum.Definitions = NO
+
 Resilience levels are currently in beta so sampling overhead and
 solution quality will vary from circuit to circuit. New features,
 advanced options and management tools will be released on a rolling
-basis. You can also play around wtih higher levels of resilience and
-explore additional options offered by them. If you wish to learn more
+basis. You can also play around with higher levels of resilience and
+explore additional options offered by them. If you want to learn more
 about activating features like *Digital-ZNE*, *PEC* in addition to *M3*
-and *T-REx* as shown in the examples above, check out this tutorial:
-`Error supression and error mitigation with Qiskit
+and *T-REx* as shown in the previous examples, check out this tutorial:
+`Error suppression and error mitigation with Qiskit
 Runtime <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/tutorials/Error-Suppression-and-Error-Mitigation.html>`__.
 
 .. code-block:: python

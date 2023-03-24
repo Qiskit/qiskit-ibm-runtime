@@ -137,6 +137,7 @@ class Runtime(RestAdapterBase):
         job_tags: Optional[List[str]] = None,
         max_execution_time: Optional[int] = None,
         start_session: Optional[bool] = False,
+        session_time: Optional[int] = None,
     ) -> Dict:
         """Execute the program.
 
@@ -153,6 +154,7 @@ class Runtime(RestAdapterBase):
             job_tags: Tags to be assigned to the job.
             max_execution_time: Maximum execution time in seconds.
             start_session: Set to True to explicitly start a runtime session. Defaults to False.
+            session_time: Length of session in seconds.
 
         Returns:
             JSON response.
@@ -176,6 +178,7 @@ class Runtime(RestAdapterBase):
             payload["cost"] = max_execution_time
         if start_session:
             payload["start_session"] = start_session
+            payload["session_time"] = session_time
         if all([hub, group, project]):
             payload["hub"] = hub
             payload["group"] = group
@@ -187,6 +190,7 @@ class Runtime(RestAdapterBase):
         self,
         limit: int = None,
         skip: int = None,
+        backend_name: str = None,
         pending: bool = None,
         program_id: str = None,
         hub: str = None,
@@ -203,6 +207,7 @@ class Runtime(RestAdapterBase):
         Args:
             limit: Number of results to return.
             skip: Number of results to skip.
+            backend_name: Name of the backend to retrieve jobs from.
             pending: Returns 'QUEUED' and 'RUNNING' jobs if True,
                 returns 'DONE', 'CANCELLED' and 'ERROR' jobs if False.
             program_id: Filter by Program ID.
@@ -229,6 +234,8 @@ class Runtime(RestAdapterBase):
             payload["limit"] = limit
         if skip:
             payload["offset"] = skip
+        if backend_name:
+            payload["backend"] = backend_name
         if pending is not None:
             payload["pending"] = "true" if pending else "false"
         if program_id:

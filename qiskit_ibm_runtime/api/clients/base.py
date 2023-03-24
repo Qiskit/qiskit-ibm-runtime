@@ -151,7 +151,7 @@ class BaseWebsocketClient(BaseClient, ABC):
     def stream(
         self,
         url: str,
-        retries: int = 5,
+        retries: int = 8,
         backoff_factor: float = 0.5,
     ) -> Any:
         """Stream from the websocket.
