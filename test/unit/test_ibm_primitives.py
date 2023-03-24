@@ -114,6 +114,7 @@ class TestPrimitives(IBMTestCase):
         primitives = [Sampler, Estimator]
         backend_name = "ibm_gotham"
         backend = MagicMock(spec=IBMBackend)
+        backend._instance = None
         backend.name = backend_name
         backends = [backend_name, backend]
         for cls in primitives:
@@ -226,6 +227,7 @@ class TestPrimitives(IBMTestCase):
         """Test specifying a backend as session."""
         primitives = [Sampler, Estimator]
         backend = MagicMock(spec=IBMBackend)
+        backend._instance = None
         backend.name = "ibm_gotham"
         backend.service = MagicMock()
 
@@ -251,6 +253,7 @@ class TestPrimitives(IBMTestCase):
         """Test using a different backend within context manager."""
         service = MagicMock()
         backend = MagicMock(spec=IBMBackend)
+        backend._instance = None
         backend.name = "ibm_gotham"
         backend.service = service
         cm_backend = "ibm_metropolis"
