@@ -19,7 +19,7 @@ from qiskit.primitives import EstimatorResult, SamplerResult
 
 from qiskit_ibm_runtime import Estimator, Session, Sampler, Options
 
-from ..decorators import run_integration_test
+from ..decorators import run_integration_test, quantum_only
 from ..ibm_test_case import IBMIntegrationTestCase
 
 
@@ -74,6 +74,7 @@ class TestIntegrationSession(IBMIntegrationTestCase):
             session.close()
 
     @run_integration_test
+    @quantum_only
     def test_using_correct_instance(self, service):
         """Test the instance used when filtering backends is honored."""
         instance = self.dependencies.instance
