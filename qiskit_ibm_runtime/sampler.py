@@ -288,9 +288,11 @@ class Sampler(BaseSampler):
             )
         logger.info("Submitting job using options %s", combined)
         if combined.get("resilience_level") and not combined.get(
-             "resilience_level"
-         ) in [0, 1]:
-             raise ValueError("resilience level can only take the values [0, 1] in Sampler")
+            "resilience_level"
+        ) in [0, 1]:
+            raise ValueError(
+                "resilience level can only take the values [0, 1] in Sampler"
+            )
         inputs.update(Options._get_program_inputs(combined))
         return self._session.run(
             program_id=self._PROGRAM_ID,
