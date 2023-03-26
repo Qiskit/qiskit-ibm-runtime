@@ -15,6 +15,7 @@
 from typing import Optional, Union, ClassVar
 from dataclasses import dataclass, fields, field
 import copy
+import warnings
 
 from .utils import _flexible, Dict
 from .environment_options import EnvironmentOptions
@@ -167,6 +168,9 @@ class Options:
         # Add additional unknown keys.
         for key in options.keys():
             if key not in known_keys:
+                warnings.warn(
+                    f"Key '{key}' is an unrecognized option. It may be ignored."
+                )
                 inputs[key] = options[key]
         return inputs
 
