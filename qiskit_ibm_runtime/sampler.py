@@ -25,6 +25,7 @@ from qiskit.primitives import BaseSampler, SamplerResult
 # TODO import _circuit_key from terra once 0.23 released
 from .qiskit_runtime_service import QiskitRuntimeService
 from .options import Options
+from .options.utils import set_default_error_levels
 from .runtime_job import RuntimeJob
 from .ibm_backend import IBMBackend
 from .session import get_default_session
@@ -164,27 +165,8 @@ class Sampler(BaseSampler):
             "skip_transpilation"
         ] = skip_transpilation  # type: ignore[union-attr]
 
-        if self._options["optimization_level"] is None:
-            if self._options["simulator"] and (
-                not hasattr(self._options["simulator"], "noise_model")
-                or self._options["simulator"]["noise_model"] is None
-            ):
-                self._options["optimization_level"] = 1
-            else:
-                self._options[
-                    "optimization_level"
-                ] = Options._DEFAULT_OPTIMIZATION_LEVEL
-
-        if self._options["resilience_level"] is None:
-            if self._options["simulator"] and (
-                not hasattr(self._options["simulator"], "noise_model")
-                or self._options["simulator"]["noise_model"] is None
-            ):
-                self._options["resilience_level"] = 0
-            else:
-                self._options["resilience_level"] = Options._DEFAULT_RESILIENCE_LEVEL
-
         self._initial_inputs = {"circuits": circuits, "parameters": parameters}
+
         if isinstance(session, Session):
             self._session = session
         else:
@@ -277,6 +259,14 @@ class Sampler(BaseSampler):
             "parameter_values": parameter_values,
         }
         combined = Options._merge_options(self._options, kwargs.get("_user_kwargs", {}))
+        if self._session.backend():
+            backend_obj = self._session.service.backend(self._session.backend())
+            combined = set_default_error_levels(
+                combined,
+                backend_obj,
+                Options._DEFAULT_OPTIMIZATION_LEVEL,
+                Options._DEFAULT_RESILIENCE_LEVEL,
+            )
         logger.info("Submitting job using options %s", combined)
         inputs.update(Options._get_program_inputs(combined))
 

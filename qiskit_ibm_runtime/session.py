@@ -109,7 +109,10 @@ class Session:
 
         if self._service.channel == "ibm_quantum" and not backend:
             raise ValueError('"backend" is required for ``ibm_quantum`` channel.')
+
+        self._instance = None
         if isinstance(backend, IBMBackend):
+            self._instance = backend._instance
             backend = backend.name
         self._backend = backend
 
@@ -153,6 +156,9 @@ class Session:
         """
 
         options = options or {}
+
+        if "instance" not in options:
+            options["instance"] = self._instance
         if "backend" in options:
             issue_deprecation_msg(
                 "'backend' is no longer a supported option within a session",

@@ -611,6 +611,9 @@ class RuntimeJob(Job):
         Returns:
             Job ID of the first job in a runtime session.
         """
+        if not self._session_id:
+            response = self._api_client.job_get(job_id=self.job_id())
+            self._session_id = response.get("session_id", None)
         return self._session_id
 
     @property
