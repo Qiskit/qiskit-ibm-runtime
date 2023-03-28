@@ -313,6 +313,9 @@ class Estimator(BaseEstimator):
                 Options._DEFAULT_OPTIMIZATION_LEVEL,
                 Options._DEFAULT_RESILIENCE_LEVEL,
             )
+        else:
+            combined["optimization_level"] = Options._DEFAULT_OPTIMIZATION_LEVEL
+            combined["resilience_level"] = Options._DEFAULT_RESILIENCE_LEVEL
         logger.info("Submitting job using options %s", combined)
         inputs.update(Options._get_program_inputs(combined))
 
