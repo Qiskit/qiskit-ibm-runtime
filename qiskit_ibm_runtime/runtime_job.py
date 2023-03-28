@@ -26,6 +26,9 @@ from qiskit.providers.backend import Backend
 from qiskit.providers.jobstatus import JobStatus, JOB_FINAL_STATES
 from qiskit.providers.job import JobV1 as Job
 
+# pylint: disable=unused-import,cyclic-import
+from qiskit_ibm_runtime import qiskit_runtime_service
+
 from .constants import API_TO_JOB_ERROR_MESSAGE, API_TO_JOB_STATUS, DEFAULT_DECODERS
 from .exceptions import (
     RuntimeJobFailureError,
@@ -90,6 +93,7 @@ class RuntimeJob(Job):
         client_params: ClientParameters,
         job_id: str,
         program_id: str,
+        service: "qiskit_runtime_service.QiskitRuntimeService",
         params: Optional[Dict] = None,
         creation_date: Optional[str] = None,
         user_callback: Optional[Callable] = None,
@@ -113,6 +117,7 @@ class RuntimeJob(Job):
             user_callback: User callback function.
             result_decoder: A :class:`ResultDecoder` subclass used to decode job results.
             image: Runtime image used for this job: image_name:tag.
+            service: Runtime service.
             session_id: Job ID of the first job in a runtime session.
             tags: Tags assigned to the job.
         """
@@ -128,6 +133,7 @@ class RuntimeJob(Job):
         self._error_message: Optional[str] = None
         self._image = image
         self._final_interim_results = False
+        self._service = service
         self._session_id = session_id
         self._tags = tags
 
@@ -153,11 +159,6 @@ class RuntimeJob(Job):
 
         if user_callback is not None:
             self.stream_results(user_callback)
-
-        # For backward compatibility. These can be removed once 'job_id' and 'backend'
-        # as attributes are no longer supported.
-        self.job_id = CallableStr(job_id)
-        self.backend = self._backend
 
     def _download_external_result(self, response: Any) -> Any:
         """Download result from external URL.
@@ -249,6 +250,21 @@ class RuntimeJob(Job):
             raise IBMRuntimeError(f"Failed to cancel job: {ex}") from None
         self.cancel_result_streaming()
         self._status = JobStatus.CANCELLED
+
+    def backend(self) -> Optional[Backend]:
+        """Return the backend where this job was executed. Retrieve data again if backend is None.
+
+        Raises:
+            IBMRuntimeError: If a network error occurred.
+        """
+        if not self._backend:  # type: ignore
+            try:
+                raw_data = self._api_client.job_get(self.job_id())
+                if raw_data.get("backend"):
+                    self._backend = self._service.backend(raw_data["backend"])
+            except RequestsApiError as err:
+                raise IBMRuntimeError(f"Failed to get job backend: {err}") from None
+        return self._backend
 
     def status(self) -> JobStatus:
         """Return the status of the job.
@@ -595,6 +611,9 @@ class RuntimeJob(Job):
         Returns:
             Job ID of the first job in a runtime session.
         """
+        if not self._session_id:
+            response = self._api_client.job_get(job_id=self.job_id())
+            self._session_id = response.get("session_id", None)
         return self._session_id
 
     @property

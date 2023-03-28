@@ -155,6 +155,7 @@ class IBMBackend(Backend):
         configuration: Union[QasmBackendConfiguration, PulseBackendConfiguration],
         service: "qiskit_runtime_service.QiskitRuntimeService",
         api_client: BaseBackendClient,
+        instance: Optional[str] = None,
     ) -> None:
         """IBMBackend constructor.
 
@@ -168,6 +169,7 @@ class IBMBackend(Backend):
             online_date=configuration.online_date,
             backend_version=configuration.backend_version,
         )
+        self._instance = instance
         self._service = service
         self._api_client = api_client
         self._configuration = configuration

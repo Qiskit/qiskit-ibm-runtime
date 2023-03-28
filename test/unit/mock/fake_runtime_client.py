@@ -275,6 +275,7 @@ class BaseFakeRuntimeClient:
             "backend_client", BaseFakeAccountClient()
         )
         self._channel = test_options.get("channel", "ibm_quantum")
+        self.session_time = 0
 
     def set_job_classes(self, classes):
         """Set job classes to use."""
@@ -367,6 +368,7 @@ class BaseFakeRuntimeClient:
         job_tags: Optional[List[str]] = None,
         max_execution_time: Optional[int] = None,
         start_session: Optional[bool] = None,
+        session_time: Optional[int] = None,
     ) -> Dict[str, Any]:
         """Run the specified program."""
         _ = self._get_program(program_id)
@@ -404,6 +406,7 @@ class BaseFakeRuntimeClient:
             start_session=start_session,
             **self._job_kwargs,
         )
+        self.session_time = session_time
         self._jobs[job_id] = job
         return {"id": job_id, "backend": backend_name}
 
