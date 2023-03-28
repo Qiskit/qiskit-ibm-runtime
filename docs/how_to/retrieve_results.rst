@@ -8,12 +8,25 @@ After submitting your job, a `job instance` is returned. Use the job instance to
 Retrieve job results at a later time
 ************************************
 
-Retrieving job results for a specific job at a later time requires the `job ID`, which uniquely identifies the job.  To determine the job ID, call `job.job_id()` after submitting the job.  It is recommended that you save the IDs of jobs you might want to retrieve later.  Call `QiskitRuntimeService.job(<job ID>)` to retrieve a job you previously submitted.  
+Retrieving job results for a specific job at a later time requires the `job ID`, which uniquely identifies the job.  To determine the job ID, call `job.job_id()` after submitting the job.  It is recommended that you save the IDs of jobs you might want to retrieve later.  Call `service.job(<job ID>)` to retrieve a job you previously submitted.  
 
-If you don't have the job ID, or if you want to retrieve multiple jobs at once; including jobs from retired systems, call `QiskitRuntimeService.jobs()` with optional filters instead.  See `QiskitRuntimeService.jobs <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/stubs/qiskit_ibm_runtime.QiskitRuntimeService.jobs.html>`__.
+If you don't have the job ID, or if you want to retrieve multiple jobs at once; including jobs from retired systems, call `service.jobs()` with optional filters instead.  See `QiskitRuntimeService.jobs <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/stubs/qiskit_ibm_runtime.QiskitRuntimeService.jobs.html>`__.
 
 .. note:: 
-  `QiskitRuntimeService.jobs()` returns only Qiskit Runtime jobs. 
+  `service.jobs()` returns only Qiskit Runtime jobs. 
+
+Example
+-------
+
+This example returns the 10 most recent runtime jobs that were run on `my_backend`:
+
+.. code-block:: python
+  from qiskit_ibm_runtime import QiskitRuntimeService
+
+  # Initialize the account first.
+  service = QiskitRuntimeService()
+
+  service.jobs(backend_name=my_backend)
 
 Jobs are also listed on the Jobs page for your quantum service channel:
 
