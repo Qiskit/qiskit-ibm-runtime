@@ -1,7 +1,7 @@
 Retrieve job results
 =================================
 
-After submitting your job, a `job instance` is returned. Use the job instance to check the job status or retrieve the results by using these commands: 
+After submitting your job, an `RuntimeJob <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/stubs/qiskit_ibm_runtime.RuntimeJob.html#qiskit_ibm_runtime.RuntimeJob>`_ instance is returned. Use the job instance to check the job status or retrieve the results by using these methods: 
 - `job.status()` 
 - `job.result()` - Job results are available after the job completes.  Therefore, `job.result()` is a blocking call until the job completes.
 
