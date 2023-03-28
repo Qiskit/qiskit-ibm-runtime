@@ -34,6 +34,7 @@ class RuntimeOptions:
     instance: Optional[str] = None
     job_tags: Optional[List[str]] = None
     max_execution_time: Optional[int] = None
+    session_time: Optional[int] = None
 
     @deprecate_arguments({"backend_name": "backend"})
     def __init__(
@@ -44,6 +45,7 @@ class RuntimeOptions:
         instance: Optional[str] = None,
         job_tags: Optional[List[str]] = None,
         max_execution_time: Optional[int] = None,
+        session_time: Optional[int] = None,
     ) -> None:
         """RuntimeOptions constructor.
 
@@ -62,6 +64,7 @@ class RuntimeOptions:
                 as a filter in the :meth:`jobs()` function call.
             max_execution_time: Maximum execution time in seconds. If
                 a job exceeds this time limit, it is forcibly cancelled.
+            session_time: Length of session in seconds.
         """
         self.backend = backend
         self.image = image
@@ -69,6 +72,7 @@ class RuntimeOptions:
         self.instance = instance
         self.job_tags = job_tags
         self.max_execution_time = max_execution_time
+        self.session_time = session_time
 
     def validate(self, channel: str) -> None:
         """Validate options.

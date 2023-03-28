@@ -207,7 +207,11 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
     def test_estimator_primitive(self, service):
         """Test to verify that estimator as a primitive still works."""
 
-        options = {"backend": self.backend}
+        options = {
+            "backend": self.backend,
+            "optimization_level": 1,
+            "resilience_level": 0,
+        }
 
         psi1 = RealAmplitudes(num_qubits=2, reps=2)
         psi2 = RealAmplitudes(num_qubits=2, reps=3)

@@ -79,12 +79,25 @@ Next steps
 
     Run a session <how_to/run_session>
     Run on quantum backends <how_to/backends>
+    Retrieve job results <how_to/retrieve_results>
     Configure primitive options <how_to/options>
     Configure error mitigation options <how_to/error-mitigation>
     Configure error suppression <how_to/error-suppression>
     Manage your account <how_to/account-management>
     Run noisy simulations <how_to/noisy_simulators>
     Retrieve jobs from a retired system <how_to/retrieve-job>
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+   :caption: Migrate
+
+    Migrate to using Qiskit Runtime primitives <migrate/migrate-guide>
+    Use Estimator to design an algorithm <migrate/migrate-estimator>
+    Use Sampler to design an algorithm <migrate/migrate-sampler>
+    Update parameter values while running <migrate/migrate-update-parm>
+    Work with updated Qiskit algorithms <migrate/migrate-qiskit-alg>
+    Algorithm tuning options (shots, transpilation, error mitigation) <migrate/migrate-tuning> 
 
 .. toctree::
    :maxdepth: 1
