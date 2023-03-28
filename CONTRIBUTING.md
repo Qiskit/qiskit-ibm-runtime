@@ -15,22 +15,20 @@ contributing to qiskit-ibm-runtime, these are documented below.
 
 ### Initial Steps
 
-1. Fork your own copy of qiskit-ibm-runtime repository, then clone it in your 
-   local.
-2. Setup a virtualenv based on the requirements.txt and requirements-dev.txt 
+1. Fork your own copy of qiskit-ibm-runtime repository, then clone it locally.
+2. Setup a virtual environment based on the requirements.txt and requirements-dev.txt 
    files.
-3. Create a new branch and then make your contribution on it.
+3. Create a new branch and then make your contributions on it.
 
 
 ### Pushing a new branch
 
 Before pushing your contribution please ensure that:
 
-1. The code follows the code style of the project. For convenience, you can 
+1. The code follows the code style of this project. For convenience, you can 
    check [Style guide](#style-guide)
-2. If it makes sense for your change that you have added new tests that cover 
-   the changes.
-3. All tests passes. For convenience, you can verify the [Test Types](#test).
+2. If it makes sense, add tests that cover the new changes.
+3. All tests pass. For convenience, you can verify the [Test Types](#test).
 4. The documentation has been updated accordingly. In particular, if a
    function or class has been modified during your contribution, please update
    the *docstring* accordingly. For convenience, you can check [Building the 
@@ -39,9 +37,9 @@ Before pushing your contribution please ensure that:
 ### Pull request creation
 
 When submitting a pull request and you feel it is ready for review,
-please ensure that if your change has an end user facing impact (new feature,
-deprecation, removal etc) that you have added a reno release note for that
-change and that the PR is tagged for the changelog.
+if your change has an end user facing impact (new feature, deprecation, removal 
+etc) please ensure that you add a reno release note and that the PR is tagged 
+for the changelog.
 
 ### Changelog generation
 
