@@ -3,12 +3,14 @@ Retrieve jobs from a retired system
 
 See a list of retired systems on `this page <../retired.html>`__.
 
-To retrieve jobs from a retired system, you can use code similar to this:
+To retrieve jobs that were not submitted by using Qiskit Runtime, use `qiskit-ibm-provider <https://qiskit.org/documentation/partners/qiskit_ibm_provider/stubs/qiskit_ibm_provider.IBMBackend.html#qiskit_ibm_provider.IBMBackend>` instead. 
+
+To retrieve Qiskit Runtime jobs from a retired system, use code similar to the following:
 
 
 .. code-block:: python
   
-  from qiskit_ibm_provider import IBMProvider
+  from qiskit_ibm_runtime import QiskitRuntimeService
 
   provider = IBMProvider(instance="hub/group/project")
 
