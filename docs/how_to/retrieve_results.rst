@@ -21,6 +21,7 @@ Example
 This example returns the 10 most recent runtime jobs that were run on `my_backend`:
 
 .. code-block:: python
+  
   from qiskit_ibm_runtime import QiskitRuntimeService
 
   # Initialize the account first.
