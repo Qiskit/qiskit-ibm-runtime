@@ -267,7 +267,9 @@ class Runtime(RestAdapterBase):
         """
         return CloudBackend(self.session, backend_name)
 
-    def backends(self, timeout: Optional[float] = None) -> Dict[str, List[str]]:
+    def backends(
+        self, hgp: Optional[str] = None, timeout: Optional[float] = None
+    ) -> Dict[str, List[str]]:
         """Return a list of IBM Cloud backends.
 
         Args:
@@ -277,4 +279,6 @@ class Runtime(RestAdapterBase):
             JSON response.
         """
         url = self.get_url("backends")
+        if hgp:
+            return self.session.get(url, params={"provider": hgp}).json()
         return self.session.get(url, timeout=timeout).json()
