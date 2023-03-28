@@ -286,6 +286,9 @@ class Sampler(BaseSampler):
                 Options._DEFAULT_OPTIMIZATION_LEVEL,
                 Options._DEFAULT_RESILIENCE_LEVEL,
             )
+        else:
+            combined["optimization_level"] = Options._DEFAULT_OPTIMIZATION_LEVEL
+            combined["resilience_level"] = Options._DEFAULT_RESILIENCE_LEVEL
         logger.info("Submitting job using options %s", combined)
         if combined.get("resilience_level") and not combined.get(
             "resilience_level"
