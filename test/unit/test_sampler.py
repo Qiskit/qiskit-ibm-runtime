@@ -90,7 +90,7 @@ class TestSampler(IBMTestCase):
 
         with Session(
             service=FakeRuntimeService(channel="ibm_quantum", token="abc"),
-            backend="ibmq_qasm_simulator",
+            backend="common_backend",
         ) as session:
             circuit = QuantumCircuit(1, 1)
             with self.assertRaises(ValueError):
