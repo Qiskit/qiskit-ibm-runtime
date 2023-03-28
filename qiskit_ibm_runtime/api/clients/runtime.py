@@ -348,7 +348,7 @@ class RuntimeClient(BaseBackendClient):
         Returns:
             IBM Cloud backends available for this service instance.
         """
-        return self._api.backends(hgp=hgp)
+        return self._api.backends(hgp=hgp)["devices"]
 
     def backend_configuration(self, backend_name: str) -> Dict[str, Any]:
         """Return the configuration of the IBM Cloud backend.
