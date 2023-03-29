@@ -18,18 +18,21 @@ from typing_extensions import Literal
 
 from .utils import _flexible
 
-NoiseAmplifierType = Literal[
+noise_amplifier_values = [
     "TwoQubitAmplifier",
     "GlobalFoldingAmplifier",
     "LocalFoldingAmplifier",
     "CxAmplifier",
 ]
-ExtrapolatorType = Literal[
+NoiseAmplifierType = Literal[noise_amplifier_values]
+
+extrapolator_values = [
     "LinearExtrapolator",
     "QuadraticExtrapolator",
     "CubicExtrapolator",
     "QuarticExtrapolator",
 ]
+ExtrapolatorType = Literal[extrapolator_values]
 
 
 @_flexible
@@ -59,3 +62,35 @@ class ResilienceOptions:
     noise_amplifier: NoiseAmplifierType = "TwoQubitAmplifier"
     noise_factors: Sequence[float] = (1, 3, 5)
     extrapolator: ExtrapolatorType = "LinearExtrapolator"
+
+    @staticmethod
+    def validate_resilience_options(resilience_options: dict) -> None:
+        """Validate that resilience options are legal.
+        Raises:
+            ValueError: if noise_amplifier is not in noise_amplifier_values.
+            ValueError: if extrapolator is not in extrapolator_values.
+            ValueError: if extrapolator == "QuarticExtrapolator" and number of noise_factors < 5.
+            ValueError: if extrapolator == "CubicExtrapolator" and number of noise_factors < 4.
+        """
+        noise_amplifier = resilience_options.get("noise_amplifier")
+        if not noise_amplifier in noise_amplifier_values:
+            raise ValueError(
+                f"Unsupported value {noise_amplifier} for noise_amplifier."
+                f"Supported values are {noise_amplifier_values}"
+            )
+        extrapolator = resilience_options.get("extrapolator")
+        if not extrapolator in extrapolator_values:
+            raise ValueError(
+                f"Unsupported value {extrapolator} for extrapolator."
+                f"Supported values are {extrapolator_values}"
+            )
+        if (
+            extrapolator == "QuarticExtrapolator"
+            and len(resilience_options.get("noise_factors")) < 5
+        ):
+            raise ValueError("QuarticExtrapolator requires at least 5 noise_factors")
+        if (
+            extrapolator == "CubicExtrapolator"
+            and len(resilience_options.get("noise_factors")) < 4
+        ):
+            raise ValueError("CubicExtrapolator requires at least 4 noise_factors")

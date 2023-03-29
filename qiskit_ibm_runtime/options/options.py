@@ -16,6 +16,8 @@ from typing import Optional, Union, ClassVar
 from dataclasses import dataclass, fields, field
 import copy
 import warnings
+from typing_extensions import Literal
+import os
 
 from .utils import _flexible, Dict
 from .environment_options import EnvironmentOptions
@@ -25,6 +27,9 @@ from .transpilation_options import TranspilationOptions
 from .resilience_options import ResilienceOptions
 from ..runtime_options import RuntimeOptions
 from ..utils.deprecation import issue_deprecation_msg
+from ..ibm_backend import IBMBackend
+
+PrimitiveType = Literal["Sampler" "Estimator"]
 
 
 @_flexible
@@ -87,7 +92,9 @@ class Options:
     _DEFAULT_OPTIMIZATION_LEVEL = 3
     _DEFAULT_RESILIENCE_LEVEL = 1
     _MAX_OPTIMIZATION_LEVEL = 3
-    _MAX_RESILIENCE_LEVEL = 3
+    _MAX_RESILIENCE_LEVEL_ESTIMATOR = 3
+    _MAX_RESILIENCE_LEVEL_SAMPLER = 1
+
     optimization_level: Optional[int] = None
     resilience_level: Optional[int] = None
     max_execution_time: Optional[int] = None
@@ -108,29 +115,23 @@ class Options:
         "execution": ExecutionOptions,
         "environment": EnvironmentOptions,
         "simulator": SimulatorOptions,
+        "resilience": ResilienceOptions
     }
 
     @staticmethod
-    def _get_program_inputs(options: dict) -> dict:
+    def _get_program_inputs(
+        options: dict, primitive: PrimitiveType, backend: IBMBackend = None
+    ) -> dict:
         """Convert the input options to program compatible inputs.
 
         Returns:
             Inputs acceptable by primitive programs.
-
-        Raises:
-            ValueError: if optimization_level is out of the allowed range.
-            ValueError: if resilience_level is out of the allowed range.
         """
+        if not os.getenv("QISKIT_RUNTIME_VALIDATE_OPTIONS"):
+            Options._validate_program_inputs(options, primitive, backend)
         sim_options = options.get("simulator", {})
         inputs = {}
         inputs["transpilation_settings"] = options.get("transpilation", {})
-        if not options.get("optimization_level") in list(
-            range(Options._MAX_OPTIMIZATION_LEVEL + 1)
-        ):
-            raise ValueError(
-                f"optimization_level can only take the values "
-                f"{list(range(Options._MAX_OPTIMIZATION_LEVEL+1))}"
-            )
         inputs["transpilation_settings"].update(
             {
                 "optimization_settings": {"level": options.get("optimization_level")},
@@ -138,13 +139,7 @@ class Options:
                 "basis_gates": sim_options.get("basis_gates", None),
             }
         )
-        if not options.get("resilience_level") in list(
-            range(Options._MAX_RESILIENCE_LEVEL + 1)
-        ):
-            raise ValueError(
-                f"resilience_level can only take the values "
-                f"{list(range(Options._MAX_RESILIENCE_LEVEL+1))}"
-            )
+
         inputs["resilience_settings"] = options.get("resilience", {})
         inputs["resilience_settings"].update({"level": options.get("resilience_level")})
         inputs["run_options"] = options.get("execution")
@@ -173,6 +168,46 @@ class Options:
                 )
                 inputs[key] = options[key]
         return inputs
+
+    @staticmethod
+    def _validate_program_inputs(
+        options: dict, primitive: PrimitiveType = "Sampler", backend: IBMBackend = None
+    ):
+        """Validate that program inputs (options) are valid
+        Raises:
+            ValueError: if optimization_level is out of the allowed range.
+            ValueError: if resilience_level is out of the allowed range.
+        """
+        if not options.get("optimization_level") in list(
+            range(Options._MAX_OPTIMIZATION_LEVEL + 1)
+        ):
+            raise ValueError(
+                f"optimization_level can only take the values "
+                f"{list(range(Options._MAX_OPTIMIZATION_LEVEL + 1))}"
+            )
+
+        if primitive=="Estimator" and not options.get("resilience_level") in list(
+            range(Options._MAX_RESILIENCE_LEVEL_ESTIMATOR + 1)
+        ):
+            raise ValueError(
+                f"resilience_level can only take the values "
+                f"{list(range(Options._MAX_RESILIENCE_LEVEL_ESTIMATOR + 1))} in Estimator"
+            )
+        if primitive == "Sampler" and options.get("resilience_level") and not options.get(
+                "resilience_level"
+            ) in [0, 1]:
+                raise ValueError(
+                    f"resilience level can only take the values "
+                    f"{list(range(Options._MAX_RESILIENCE_LEVEL_SAMPLER+ 1))} in Sampler"
+                )
+        if options.get("resilience_level") and options.get("resilience_level") == 3 and backend.simulator:
+            if not options.get("simulator").get("coupling_map") or options.get("simulator").get("coupling_map") == None:
+                 raise ValueError(
+                    "When the backend is a simulator and resilience_level == 3,"
+                    "a coupling map is required."
+                )
+
+        ResilienceOptions.validate_resilience_options(options.get("resilience"))
 
     @staticmethod
     def _get_runtime_options(options: dict) -> dict:

@@ -628,6 +628,46 @@ class TestPrimitives(IBMTestCase):
                 )
                 self.assertEqual(inputs["resilience_settings"]["level"], 0)
 
+    def test_resilience_options(self):
+        """Test resilience options."""
+        options_dicts = [
+            {
+                "optimization_level": 1,
+                "resilience_level": 1,
+                "resilience": {"noise_amplifier": "NoAmplifier"},
+            },
+            {
+                "optimization_level": 1,
+                "resilience_level": 1,
+                "resilience": {"extrapolator": "NoExtrapolator"},
+            },
+            {
+                "optimization_level": 1,
+                "resilience_level": 1,
+                "resilience": {
+                    "extrapolator": "QuarticExtrapolator",
+                    "noise_factors": [1, 2, 3, 4],
+                },
+            },
+            {
+                "optimization_level": 1,
+                "resilience_level": 1,
+                "resilience": {
+                    "extrapolator": "CubicExtrapolator",
+                    "noise_factors": [1, 2, 3],
+                },
+            },
+        ]
+
+        session = MagicMock(spec=MockSession)
+        primitives = [Sampler, Estimator]
+
+        for cls in primitives:
+            for opts_dict in options_dicts:
+                with self.assertRaises(ValueError):
+                    inst = cls(session=session, options=opts_dict)
+                    inst.run(self.qx, observables=self.obs)
+
     def _update_dict(self, dict1, dict2):
         for key, val in dict1.items():
             if isinstance(val, dict):
