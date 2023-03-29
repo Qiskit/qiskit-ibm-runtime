@@ -4,6 +4,8 @@ Retired systems
 
 The following systems have been retired. For the full list of available systems, run `service.backends()`.  For more information, see  `Run on quantum backends <how_to/backends.html>`__.
 
+For instructions to retrieve results from retired backends, see `Retrieve job results <how_to/retrieve_results.html>`__.
+
    
 +-----------------------+----------------------+
 | System name           | Qubit count          |

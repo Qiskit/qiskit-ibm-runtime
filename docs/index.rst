@@ -85,7 +85,6 @@ Next steps
     Configure error suppression <how_to/error-suppression>
     Manage your account <how_to/account-management>
     Run noisy simulations <how_to/noisy_simulators>
-    Retrieve jobs from a retired system <how_to/retrieve-job>
 
 .. toctree::
    :maxdepth: 1
