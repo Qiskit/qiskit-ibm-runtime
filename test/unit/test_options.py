@@ -171,7 +171,7 @@ class TestOptions(IBMTestCase):
                 "execution": {"shots": 100},
             },
             {"resilience": {"noise_amplifier": "GlobalFoldingAmplifier"}},
-            {"environment": {"log_level": "ERROR"}}
+            {"environment": {"log_level": "ERROR"}},
         ]
 
         for opts_dict in options_dicts:
