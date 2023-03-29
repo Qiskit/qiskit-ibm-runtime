@@ -1,0 +1,6 @@
+---
+upgrade:
+  - |
+    Accept all options on given on level 1 and assign them to the appropriate hierarchical option type.
+    For example, if the user provides ``options = {"shots": 10}`` as input to Sampler/Estimator, this will
+    be interpreted as ``options = {"execution: {"shots": 10}}``.

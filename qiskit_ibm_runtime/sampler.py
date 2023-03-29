@@ -118,7 +118,7 @@ class Sampler(BaseSampler):
         Raises:
             ValueError: if resilience_level is outside the allowed range.
         """
-        # `_options` in this class is an instance of qiskit_ibm_runtime.Options class.
+        # `self._options` in this class is a Dict.
         # The base class, however, uses a `_run_options` which is an instance of
         # qiskit.providers.Options. We largely ignore this _run_options because we use
         # a nested dictionary to categorize options.
@@ -143,12 +143,12 @@ class Sampler(BaseSampler):
         self._session: Session = None
 
         if options is None:
-            _options = Options()
+            self._options = asdict(Options())
         elif isinstance(options, Options):
-            _options = copy.deepcopy(options)
             skip_transpilation = (
-                _options.transpilation.skip_transpilation  # type: ignore[union-attr]
+                options.transpilation.skip_transpilation  # type: ignore[union-attr]
             )
+            self._options = asdict(copy.deepcopy(options))
         else:
             options_copy = copy.deepcopy(options)
             backend = options_copy.pop("backend", None)
@@ -158,28 +158,19 @@ class Sampler(BaseSampler):
                     version="0.7",
                     remedy="Please pass the backend when opening a session.",
                 )
-            skip_transpilation = options.get("transpilation", {}).get(
+            default_options = asdict(Options())
+            self._options = Options._merge_options(default_options, options_copy)
+            skip_transpilation = self._options.get("transpilation", {}).get(
                 "skip_transpilation", False
             )
-            log_level = options_copy.pop("log_level", None)
-            _options = Options(**options_copy)
-            if log_level:
-                issue_deprecation_msg(
-                    msg="The 'log_level' option has been moved to the 'environment' category",
-                    version="0.7",
-                    remedy="Please specify 'environment':{'log_level': log_level} instead.",
+            if self._options.get("resilience_level") and not self._options.get("resilience_level") in [0, 1]:
+                raise ValueError(
+                    "resilience level can only take the values [0, 1] in Sampler"
                 )
-                _options.environment.log_level = log_level  # type: ignore[union-attr]
 
-        _options.transpilation.skip_transpilation = (  # type: ignore[union-attr]
-            skip_transpilation
-        )
-        if _options.resilience_level and not _options.resilience_level in [0, 1]:
-            raise ValueError(
-                "resilience level can only take the values [0, 1] in Sampler"
-            )
-
-        self._options: dict = asdict(_options)
+        self._options["transpilation"][
+            "skip_transpilation"
+        ] = skip_transpilation  # type: ignore[union-attr]
 
         self._initial_inputs = {"circuits": circuits, "parameters": parameters}
 
