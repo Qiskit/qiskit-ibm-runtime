@@ -4,7 +4,7 @@ Retired systems
 
 The following systems have been retired. For the full list of available systems, run `service.backends()`.  For more information, see  `Run on quantum backends <how_to/backends.html>`__.
 
-For instructions to retrieve results from retired backends, use `qiskit-ibm-provider <https://qiskit.org/documentation/partners/qiskit_ibm_provider/stubs/qiskit_ibm_provider.IBMBackend.html#qiskit_ibm_provider.IBMBackend>` or `QiskitRuntimeService.jobs <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/stubs/qiskit_ibm_runtime.QiskitRuntimeService.jobs.html>`__.
+To retrieve results from retired backends, use `qiskit-ibm-provider <https://qiskit.org/documentation/partners/qiskit_ibm_provider/stubs/qiskit_ibm_provider.IBMBackend.html#qiskit_ibm_provider.IBMBackend>` or `QiskitRuntimeService.jobs <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/stubs/qiskit_ibm_runtime.QiskitRuntimeService.jobs.html>`__.
 
    
 +-----------------------+----------------------+
