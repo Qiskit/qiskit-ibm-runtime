@@ -631,27 +631,15 @@ class TestPrimitives(IBMTestCase):
     def test_resilience_options(self):
         """Test resilience options."""
         options_dicts = [
+            {"resilience": {"noise_amplifier": "NoAmplifier"}},
+            {"resilience": {"extrapolator": "NoExtrapolator"}},
             {
-                "optimization_level": 1,
-                "resilience_level": 1,
-                "resilience": {"noise_amplifier": "NoAmplifier"},
-            },
-            {
-                "optimization_level": 1,
-                "resilience_level": 1,
-                "resilience": {"extrapolator": "NoExtrapolator"},
-            },
-            {
-                "optimization_level": 1,
-                "resilience_level": 1,
                 "resilience": {
                     "extrapolator": "QuarticExtrapolator",
                     "noise_factors": [1, 2, 3, 4],
                 },
             },
             {
-                "optimization_level": 1,
-                "resilience_level": 1,
                 "resilience": {
                     "extrapolator": "CubicExtrapolator",
                     "noise_factors": [1, 2, 3],

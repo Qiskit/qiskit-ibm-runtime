@@ -134,7 +134,6 @@ class TestOptions(IBMTestCase):
             foo="foo",
             bar="bar",
         )
-
         with warnings.catch_warnings(record=True) as warn:
             warnings.simplefilter("always")
             inputs = Options._get_program_inputs(asdict(options), primitive="Estimator")
