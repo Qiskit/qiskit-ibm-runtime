@@ -79,6 +79,7 @@ Next steps
 
     Run a session <how_to/run_session>
     Run on quantum backends <how_to/backends>
+    Retrieve job results <how_to/retrieve_results>
     Configure primitive options <how_to/options>
     Configure error mitigation options <how_to/error-mitigation>
     Configure error suppression <how_to/error-suppression>
