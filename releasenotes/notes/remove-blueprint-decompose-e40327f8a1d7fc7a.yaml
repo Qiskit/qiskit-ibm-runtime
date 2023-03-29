@@ -1,0 +1,7 @@
+---
+fixes:
+  - |
+    Removed additional decomposition of ``BlueprintCircuit``\s in the JSON encoder. This was
+    introduced as a bugfix, but has since been fixed. Still doing the decomposition led to
+    possible problems if the decomposed circuit was not in the correct basis set of the backend
+    anymore.
