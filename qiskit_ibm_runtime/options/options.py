@@ -127,7 +127,7 @@ class Options:
         Returns:
             Inputs acceptable by primitive programs.
         """
-        if not os.getenv("QISKIT_RUNTIME_VALIDATE_OPTIONS"):
+        if not os.getenv("QISKIT_RUNTIME_REMOVE_OPTIONS_VALIDATION"):
             Options._validate_program_inputs(options, primitive, backend)
         sim_options = options.get("simulator", {})
         inputs = {}
