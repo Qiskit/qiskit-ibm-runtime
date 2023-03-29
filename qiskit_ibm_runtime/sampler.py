@@ -162,12 +162,6 @@ class Sampler(BaseSampler):
             skip_transpilation = self._options.get("transpilation", {}).get(
                 "skip_transpilation", False
             )
-            if self._options.get("resilience_level") and not self._options.get(
-                "resilience_level"
-            ) in [0, 1]:
-                raise ValueError(
-                    "resilience level can only take the values [0, 1] in Sampler"
-                )
 
         self._options["transpilation"][
             "skip_transpilation"
@@ -240,8 +234,6 @@ class Sampler(BaseSampler):
         Returns:
             Submitted job.
 
-         Raises:
-            ValueError: if resilience_level is outside the allowed range.
         """
         # TODO: Re-enable data caching when ntc 1748 is fixed
         # circuits_map = {}
