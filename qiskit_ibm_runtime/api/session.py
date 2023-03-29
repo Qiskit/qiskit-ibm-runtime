@@ -56,16 +56,16 @@ def _get_client_header() -> str:
     """Return the client version."""
 
     qiskit_pkgs = [
-        "qiskit-terra",
-        "qiskit-aer",
-        "qiskit-experiments",
-        "qiskit-nature",
-        "qiskit-machine-learning",
-        "qiskit-optimization",
-        "qiskit-finance",
+        "qiskit_terra",
+        "qiskit_aer",
+        "qiskit_experiments",
+        "qiskit_nature",
+        "qiskit_machine-learning",
+        "qiskit_optimization",
+        "qiskit_finance",
     ]
 
-    pkg_versions = {"qiskit-ibm-runtime": f"qiskit-ibm-runtime-{ibm_runtime_version}"}
+    pkg_versions = {"qiskit_ibm_runtime": f"qiskit_ibm_runtime-{ibm_runtime_version}"}
     for pkg_name in qiskit_pkgs:
         try:
             version_info = (
@@ -276,7 +276,11 @@ class RetrySession(Session):
         # Use PurePath in order to support arbitrary path formats
         callers = {PurePath("qiskit/"), "qiskit_"}
 
-        for frame in inspect.stack():
+        stack = inspect.stack()
+        stack.reverse()
+
+        found_caller = False
+        for frame in stack:
             frame_path = str(PurePath(frame.filename))
             for caller in callers:
                 if str(caller) in frame_path:
@@ -287,12 +291,13 @@ class RetrySession(Session):
                             "X-Qx-Client-Application": f"{CLIENT_APPLICATION}/{sanitized_caller_str}"
                         }
                     )
-
-        if self.custom_header:
-            current = headers["X-Qx-Client-Application"]
-            headers.update(
-                {"X-Qx-Client-Application": f"{current}/{self.custom_header}"}
-            )
+                    found_caller = True
+                    break  # break out of the inner loop
+            if found_caller:
+                break  # break out of the outer loop
+            
+        self.headers = headers
+        self._set_custom_header()
 
         try:
             self._log_request_info(final_url, method, kwargs)
@@ -402,6 +407,16 @@ class RetrySession(Session):
             return False
 
         return True
+
+    def _set_custom_header(self):
+        """Set custom header."""
+        headers = self.headers.copy()
+        if self.custom_header:
+            current = headers["X-Qx-Client-Application"]
+            headers.update(
+                {"X-Qx-Client-Application": f"{current}/{self.custom_header}"}
+            )
+            self.headers = headers
 
     def __getstate__(self) -> Dict:
         """Overwrite Session's getstate to include all attributes."""
