@@ -17,4 +17,3 @@ Job adaptor, for example, handles all /Jobs/{job id} endpoints.
 """
 
 from .root import Api
-from .account import Account
