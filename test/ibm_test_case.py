@@ -22,7 +22,6 @@ from collections import defaultdict
 from typing import DefaultDict, Dict
 
 from qiskit_ibm_runtime import QISKIT_IBM_RUNTIME_LOGGER_NAME
-from qiskit_ibm_runtime.exceptions import IBMNotAuthorizedError
 from qiskit_ibm_runtime import QiskitRuntimeService
 
 from .utils import setup_test_logging
@@ -133,7 +132,10 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
         # pylint: disable=arguments-differ
         # pylint: disable=no-value-for-parameter
         super().setUpClass()
-        cls._create_default_program()
+        cls.program_ids = {}
+        cls.sim_backends = {}
+        service = cls.service
+        cls.program_ids[service.channel] = "hello-world"
         cls._find_sim_backends()
 
     @classmethod
@@ -149,21 +151,6 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
                 service.channel,
                 cls.program_ids[service.channel],
             )
-
-    @classmethod
-    def _create_default_program(cls):
-        """Create a default program."""
-        metadata = copy.deepcopy(RUNTIME_PROGRAM_METADATA)
-        metadata["name"] = PROGRAM_PREFIX
-        cls.program_ids = {}
-        cls.sim_backends = {}
-        service = cls.service
-        try:
-            prog_id = service.upload_program(data=RUNTIME_PROGRAM, metadata=metadata)
-            cls.log.debug("Uploaded %s program %s", service.channel, prog_id)
-            cls.program_ids[service.channel] = prog_id
-        except IBMNotAuthorizedError:
-            raise unittest.SkipTest("No upload access.")
 
     @classmethod
     def _find_sim_backends(cls):
