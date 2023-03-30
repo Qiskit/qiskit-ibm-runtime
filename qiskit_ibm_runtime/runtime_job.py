@@ -456,7 +456,9 @@ class RuntimeJob(Job):
             Error message.
         """
         status = response["state"]["status"].upper()
-        job_result_raw = self._api_client.job_results(job_id=self.job_id())
+        job_result_raw = self._download_external_result(
+            self._api_client.job_results(job_id=self.job_id())
+        )
         index = job_result_raw.rfind("Traceback")
         if index != -1:
             job_result_raw = job_result_raw[index:]
