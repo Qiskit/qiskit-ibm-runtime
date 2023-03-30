@@ -254,10 +254,8 @@ class Runtime(RestAdapterBase):
             payload["provider"] = f"{hub}/{group}/{project}"
         return self.session.get(url, params=payload).json()
 
-    # IBM Cloud only functions
-
     def backend(self, backend_name: str) -> CloudBackend:
-        """Return an adapter for the IBM Cloud backend.
+        """Return an adapter for the IBM backend.
 
         Args:
             backend_name: Name of the backend.
@@ -270,7 +268,7 @@ class Runtime(RestAdapterBase):
     def backends(
         self, hgp: Optional[str] = None, timeout: Optional[float] = None
     ) -> Dict[str, List[str]]:
-        """Return a list of IBM Cloud backends.
+        """Return a list of IBM backends.
 
         Args:
             timeout: Number of seconds to wait for the request.
