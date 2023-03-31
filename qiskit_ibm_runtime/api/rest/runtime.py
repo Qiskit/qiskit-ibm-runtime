@@ -137,6 +137,7 @@ class Runtime(RestAdapterBase):
         job_tags: Optional[List[str]] = None,
         max_execution_time: Optional[int] = None,
         start_session: Optional[bool] = False,
+        session_time: Optional[int] = None,
     ) -> Dict:
         """Execute the program.
 
@@ -153,6 +154,7 @@ class Runtime(RestAdapterBase):
             job_tags: Tags to be assigned to the job.
             max_execution_time: Maximum execution time in seconds.
             start_session: Set to True to explicitly start a runtime session. Defaults to False.
+            session_time: Length of session in seconds.
 
         Returns:
             JSON response.
@@ -176,6 +178,7 @@ class Runtime(RestAdapterBase):
             payload["cost"] = max_execution_time
         if start_session:
             payload["start_session"] = start_session
+            payload["session_time"] = session_time
         if all([hub, group, project]):
             payload["hub"] = hub
             payload["group"] = group
@@ -251,10 +254,8 @@ class Runtime(RestAdapterBase):
             payload["provider"] = f"{hub}/{group}/{project}"
         return self.session.get(url, params=payload).json()
 
-    # IBM Cloud only functions
-
     def backend(self, backend_name: str) -> CloudBackend:
-        """Return an adapter for the IBM Cloud backend.
+        """Return an adapter for the IBM backend.
 
         Args:
             backend_name: Name of the backend.
@@ -264,8 +265,10 @@ class Runtime(RestAdapterBase):
         """
         return CloudBackend(self.session, backend_name)
 
-    def backends(self, timeout: Optional[float] = None) -> Dict[str, List[str]]:
-        """Return a list of IBM Cloud backends.
+    def backends(
+        self, hgp: Optional[str] = None, timeout: Optional[float] = None
+    ) -> Dict[str, List[str]]:
+        """Return a list of IBM backends.
 
         Args:
             timeout: Number of seconds to wait for the request.
@@ -274,4 +277,6 @@ class Runtime(RestAdapterBase):
             JSON response.
         """
         url = self.get_url("backends")
+        if hgp:
+            return self.session.get(url, params={"provider": hgp}).json()
         return self.session.get(url, timeout=timeout).json()

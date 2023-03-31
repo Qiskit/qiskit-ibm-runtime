@@ -15,6 +15,7 @@
 from typing import Dict, Optional, Type, Union, Callable
 from types import TracebackType
 from functools import wraps
+from contextvars import ContextVar
 
 from qiskit.circuit import QuantumCircuit
 
@@ -108,7 +109,10 @@ class Session:
 
         if self._service.channel == "ibm_quantum" and not backend:
             raise ValueError('"backend" is required for ``ibm_quantum`` channel.')
+
+        self._instance = None
         if isinstance(backend, IBMBackend):
+            self._instance = backend._instance
             backend = backend.name
         self._backend = backend
 
@@ -152,6 +156,9 @@ class Session:
         """
 
         options = options or {}
+
+        if "instance" not in options:
+            options["instance"] = self._instance
         if "backend" in options:
             issue_deprecation_msg(
                 "'backend' is no longer a supported option within a session",
@@ -170,7 +177,7 @@ class Session:
         if not self._session_id:
             # TODO: What happens if session max time != first job max time?
             # Use session max time if this is first job.
-            options["max_execution_time"] = self._max_time
+            options["session_time"] = self._max_time
 
         job = self._service.run(
             program_id=program_id,
@@ -236,16 +243,16 @@ class Session:
 
 
 # Default session
-_DEFAULT_SESSION: Optional[Session] = None
-_IN_SESSION_CM = False
+_DEFAULT_SESSION: ContextVar[Optional[Session]] = ContextVar(
+    "_DEFAULT_SESSION", default=None
+)
+_IN_SESSION_CM: ContextVar[bool] = ContextVar("_IN_SESSION_CM", default=False)
 
 
 def set_cm_session(session: Optional[Session]) -> None:
     """Set the context manager session."""
-    global _DEFAULT_SESSION  # pylint: disable=global-statement
-    global _IN_SESSION_CM  # pylint: disable=global-statement
-    _DEFAULT_SESSION = session
-    _IN_SESSION_CM = session is not None
+    _DEFAULT_SESSION.set(session)
+    _IN_SESSION_CM.set(session is not None)
 
 
 def get_default_session(
@@ -260,18 +267,17 @@ def get_default_session(
     """
     backend_name = backend.name if isinstance(backend, IBMBackend) else backend
 
-    global _DEFAULT_SESSION  # pylint: disable=global-statement
-    session = _DEFAULT_SESSION
+    session = _DEFAULT_SESSION.get()
     if (  # pylint: disable=too-many-boolean-expressions
-        _DEFAULT_SESSION is None
-        or not _DEFAULT_SESSION._active
-        or (backend_name is not None and _DEFAULT_SESSION._backend != backend_name)
-        or (service is not None and _DEFAULT_SESSION.service.channel != service.channel)
+        session is None
+        or not session._active
+        or (backend_name is not None and session._backend != backend_name)
+        or (service is not None and session.service.channel != service.channel)
     ):
         # Create a new session if one doesn't exist, or if the user wants to switch backend/channel.
         # Close the session only if all jobs are finished and you don't need to run more in the session.
-        if _DEFAULT_SESSION and not _IN_SESSION_CM and _DEFAULT_SESSION._active:
-            _DEFAULT_SESSION.close()
+        if session and not _IN_SESSION_CM.get() and session._active:
+            session.close()
         if service is None:
             service = (
                 backend.service
@@ -279,6 +285,6 @@ def get_default_session(
                 else QiskitRuntimeService()
             )
         session = Session(service=service, backend=backend)
-        if not _IN_SESSION_CM:
-            _DEFAULT_SESSION = session
+        if not _IN_SESSION_CM.get():
+            _DEFAULT_SESSION.set(session)
     return session

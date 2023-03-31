@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    If an instance is passed in to :meth:`qiskit_ibm_runtime.QiskitRuntimeService.get_backend` and then the
+    backend is used in a session, all jobs within the session will be run from the original
+    instance passed in. 

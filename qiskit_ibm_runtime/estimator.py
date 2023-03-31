@@ -36,6 +36,7 @@ from .utils.deprecation import (
 from .ibm_backend import IBMBackend
 from .session import get_default_session
 from .options import Options
+from .options.utils import set_default_error_levels
 from .constants import DEFAULT_DECODERS
 
 # pylint: disable=unused-import,cyclic-import
@@ -140,7 +141,7 @@ class Estimator(BaseEstimator):
             skip_transpilation: (DEPRECATED) Transpilation is skipped if set to True. False by default.
                 Ignored ``skip_transpilation`` is also specified in ``options``.
         """
-        # `_options` in this class is an instance of qiskit_ibm_runtime.Options class.
+        # `self._options` in this class is a Dict.
         # The base class, however, uses a `_run_options` which is an instance of
         # qiskit.providers.Options. We largely ignore this _run_options because we use
         # a nested dictionary to categorize options.
@@ -165,12 +166,12 @@ class Estimator(BaseEstimator):
         self._session: Session = None
 
         if options is None:
-            _options = Options()
+            self._options = asdict(Options())
         elif isinstance(options, Options):
-            _options = copy.deepcopy(options)
             skip_transpilation = (
-                _options.transpilation.skip_transpilation  # type: ignore[union-attr]
+                options.transpilation.skip_transpilation  # type: ignore[union-attr]
             )
+            self._options = asdict(copy.deepcopy(options))
         else:
             options_copy = copy.deepcopy(options)
             backend = options_copy.pop("backend", None)
@@ -180,42 +181,15 @@ class Estimator(BaseEstimator):
                     version="0.7",
                     remedy="Please pass the backend when opening a session.",
                 )
-            skip_transpilation = options.get("transpilation", {}).get(
+            default_options = asdict(Options())
+            self._options = Options._merge_options(default_options, options_copy)
+            skip_transpilation = self._options.get("transpilation", {}).get(
                 "skip_transpilation", False
             )
-            log_level = options_copy.pop("log_level", None)
-            _options = Options(**options_copy)
-            if log_level:
-                issue_deprecation_msg(
-                    msg="The 'log_level' option has been moved to the 'environment' category",
-                    version="0.7",
-                    remedy="Please specify 'environment':{'log_level': log_level} instead.",
-                )
-                _options.environment.log_level = log_level  # type: ignore[union-attr]
 
-        _options.transpilation.skip_transpilation = (  # type: ignore[union-attr]
-            skip_transpilation
-        )
-
-        if _options.optimization_level is None:
-            if _options.simulator and (
-                not hasattr(_options.simulator, "noise_model")
-                or asdict(_options.simulator)["noise_model"] is None
-            ):
-                _options.optimization_level = 1
-            else:
-                _options.optimization_level = Options._DEFAULT_OPTIMIZATION_LEVEL
-
-        if _options.resilience_level is None:
-            if _options.simulator and (
-                not hasattr(_options.simulator, "noise_model")
-                or asdict(_options.simulator)["noise_model"] is None
-            ):
-                _options.resilience_level = 0
-            else:
-                _options.resilience_level = Options._DEFAULT_RESILIENCE_LEVEL
-
-        self._options: dict = asdict(_options)
+        self._options["transpilation"][
+            "skip_transpilation"
+        ] = skip_transpilation  # type: ignore[union-attr]
 
         self._initial_inputs = {
             "circuits": circuits,
@@ -331,6 +305,17 @@ class Estimator(BaseEstimator):
         }
 
         combined = Options._merge_options(self._options, kwargs.get("_user_kwargs", {}))
+        if self._session.backend():
+            backend_obj = self._session.service.backend(self._session.backend())
+            combined = set_default_error_levels(
+                combined,
+                backend_obj,
+                Options._DEFAULT_OPTIMIZATION_LEVEL,
+                Options._DEFAULT_RESILIENCE_LEVEL,
+            )
+        else:
+            combined["optimization_level"] = Options._DEFAULT_OPTIMIZATION_LEVEL
+            combined["resilience_level"] = Options._DEFAULT_RESILIENCE_LEVEL
         logger.info("Submitting job using options %s", combined)
         inputs.update(Options._get_program_inputs(combined))
 

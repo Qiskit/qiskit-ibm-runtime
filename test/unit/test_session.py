@@ -17,6 +17,7 @@ from unittest.mock import MagicMock, patch
 from qiskit_ibm_runtime import Session
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.session import get_default_session
+from qiskit_ibm_runtime.exceptions import IBMInputValueError
 import qiskit_ibm_runtime.session as session_pkg
 from ..ibm_test_case import IBMTestCase
 
@@ -26,7 +27,7 @@ class TestSession(IBMTestCase):
 
     def tearDown(self) -> None:
         super().tearDown()
-        session_pkg._DEFAULT_SESSION = None
+        session_pkg._DEFAULT_SESSION.set(None)
 
     @patch("qiskit_ibm_runtime.session.QiskitRuntimeService", autospec=True)
     def test_default_service(self, mock_service):
@@ -45,6 +46,7 @@ class TestSession(IBMTestCase):
     def test_passing_ibm_backend(self):
         """Test passing in IBMBackend instance."""
         backend = MagicMock(spec=IBMBackend)
+        backend._instance = None
         backend.name = "ibm_gotham"
         session = Session(service=MagicMock(), backend=backend)
         self.assertEqual(session.backend(), "ibm_gotham")
@@ -52,6 +54,7 @@ class TestSession(IBMTestCase):
     def test_using_ibm_backend_service(self):
         """Test using service from an IBMBackend instance."""
         backend = MagicMock(spec=IBMBackend)
+        backend._instance = None
         backend.name = "ibm_gotham"
         session = Session(backend=backend)
         self.assertEqual(session.service, backend.service)
@@ -77,6 +80,16 @@ class TestSession(IBMTestCase):
         session.close()
         with self.assertRaises(RuntimeError):
             session.run(program_id="program_id", inputs={})
+
+    def test_conflicting_backend(self):
+        """Test passing in different backend through options."""
+        service = MagicMock()
+        backend = "ibm_gotham"
+        session = Session(service=service, backend=backend)
+        with self.assertRaises(IBMInputValueError):
+            session.run(
+                program_id="test", inputs={}, options={"backend": "different_backend"}
+            )
 
     def test_run(self):
         """Test the run method."""
@@ -104,6 +117,7 @@ class TestSession(IBMTestCase):
             _, kwargs = service.run.call_args
             self.assertEqual(kwargs["program_id"], program_id)
             self.assertDictEqual(kwargs["options"], {"backend": backend, **options})
+            self.assertDictContainsSubset({"session_time": 42}, kwargs["options"])
             self.assertDictEqual(kwargs["inputs"], inputs)
             self.assertEqual(kwargs["session_id"], session_ids[idx])
             self.assertEqual(kwargs["start_session"], start_sessions[idx])
@@ -197,6 +211,7 @@ class TestSession(IBMTestCase):
         backend = MagicMock(spec=IBMBackend)
         service = MagicMock()
         backend.service = service
+        backend._instance = None
         backend.name = "ibm_gotham"
         session = get_default_session(backend=backend)
         self.assertIsInstance(session, Session)

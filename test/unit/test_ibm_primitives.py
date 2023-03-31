@@ -27,7 +27,13 @@ from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.primitives.utils import _circuit_key
 
-from qiskit_ibm_runtime import Sampler, Estimator, Options, Session, RuntimeEncoder
+from qiskit_ibm_runtime import (
+    Sampler,
+    Estimator,
+    Options,
+    Session,
+    RuntimeEncoder,
+)
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 import qiskit_ibm_runtime.session as session_pkg
 from qiskit_ibm_runtime.utils.utils import _hash
@@ -54,7 +60,7 @@ class TestPrimitives(IBMTestCase):
 
     def tearDown(self) -> None:
         super().tearDown()
-        session_pkg._DEFAULT_SESSION = None
+        session_pkg._DEFAULT_SESSION.set(None)
 
     def test_skip_transpilation(self):
         """Test skip_transpilation is hornored."""
@@ -101,12 +107,6 @@ class TestPrimitives(IBMTestCase):
                     inst = cls(session=MagicMock(spec=MockSession), options=options)
                     expected = asdict(Options())
                     self._update_dict(expected, copy.deepcopy(options))
-                    # for resilience_level and optimization_level, if given by the user,
-                    # maintain value. Otherwise, set default as given in Sampler/Estimator
-                    if not options.get("resilience_level"):
-                        expected["resilience_level"] = 0
-                    if not options.get("optimization_level"):
-                        expected["optimization_level"] = 1
                     self.assertDictEqual(expected, inst.options.__dict__)
 
     def test_backend_in_options(self):
@@ -114,6 +114,7 @@ class TestPrimitives(IBMTestCase):
         primitives = [Sampler, Estimator]
         backend_name = "ibm_gotham"
         backend = MagicMock(spec=IBMBackend)
+        backend._instance = None
         backend.name = backend_name
         backends = [backend_name, backend]
         for cls in primitives:
@@ -198,7 +199,7 @@ class TestPrimitives(IBMTestCase):
             self.assertEqual(estimator.session, sampler.session)
         finally:
             # Ensure it's cleaned up or next test will fail.
-            session_pkg._DEFAULT_SESSION = None
+            session_pkg._DEFAULT_SESSION.set(None)
 
     def test_default_session_after_close(self):
         """Test a new default session is open after previous is closed."""
@@ -226,6 +227,7 @@ class TestPrimitives(IBMTestCase):
         """Test specifying a backend as session."""
         primitives = [Sampler, Estimator]
         backend = MagicMock(spec=IBMBackend)
+        backend._instance = None
         backend.name = "ibm_gotham"
         backend.service = MagicMock()
 
@@ -251,6 +253,7 @@ class TestPrimitives(IBMTestCase):
         """Test using a different backend within context manager."""
         service = MagicMock()
         backend = MagicMock(spec=IBMBackend)
+        backend._instance = None
         backend.name = "ibm_gotham"
         backend.service = service
         cm_backend = "ibm_metropolis"
@@ -359,8 +362,7 @@ class TestPrimitives(IBMTestCase):
                         _, kwargs = session.run.call_args
                         inputs = kwargs["inputs"]
                     self._assert_dict_partially_equal(inputs, expected)
-                    expected = asdict(Options(optimization_level=1, resilience_level=0))
-                    self.assertDictEqual(inst.options.__dict__, expected)
+                    self.assertDictEqual(inst.options.__dict__, asdict(Options()))
 
     def test_run_overwrite_runtime_options(self):
         """Test run using overwritten runtime options."""
@@ -429,8 +431,7 @@ class TestPrimitives(IBMTestCase):
                     self.assertEqual(
                         kwargs_list[idx][1]["inputs"]["run_options"]["shots"], shots
                     )
-                expected = asdict(Options(optimization_level=1, resilience_level=0))
-                self.assertDictEqual(inst.options.__dict__, expected)
+                self.assertDictEqual(inst.options.__dict__, asdict(Options()))
 
     def test_run_same_session(self):
         """Test multiple runs within a session."""
@@ -529,6 +530,103 @@ class TestPrimitives(IBMTestCase):
                         dict_keys_equal(inst_options, asdict(new_str)),
                         f"inst_options={inst_options}, new_str={new_str}",
                     )
+
+    def test_accept_level_1_options(self):
+        """Test initializing options properly when given on level 1."""
+
+        options_dicts = [
+            {},
+            {"shots": 10},
+            {"seed_simulator": 123},
+            {"skip_transpilation": True, "log_level": "ERROR"},
+            {"initial_layout": [1, 2], "shots": 100, "noise_amplifier": "CxAmplifier"},
+        ]
+
+        expected_list = [Options(), Options(), Options(), Options(), Options()]
+        expected_list[1].execution.shots = 10
+        expected_list[2].simulator.seed_simulator = 123
+        expected_list[3].transpilation.skip_transpilation = True
+        expected_list[3].environment.log_level = "ERROR"
+        expected_list[4].transpilation.initial_layout = [1, 2]
+        expected_list[4].execution.shots = 100
+        expected_list[4].resilience.noise_amplifier = "CxAmplifier"
+
+        session = MagicMock(spec=MockSession)
+        primitives = [Sampler, Estimator]
+        for cls in primitives:
+            for opts, expected in zip(options_dicts, expected_list):
+                with self.subTest(primitive=cls, options=opts):
+                    inst1 = cls(session=session, options=opts)
+                    inst2 = cls(session=session, options=expected)
+                    # Make sure the values are equal.
+                    inst1_options = inst1.options.__dict__
+                    expected_dict = inst2.options.__dict__
+                    self.assertTrue(
+                        dict_paritally_equal(inst1_options, expected_dict),
+                        f"inst_options={inst1_options}, options={opts}",
+                    )
+                    # Make sure the structure didn't change.
+                    self.assertTrue(
+                        dict_keys_equal(inst1_options, expected_dict),
+                        f"inst_options={inst1_options}, expected={expected_dict}",
+                    )
+
+    def test_default_error_levels(self):
+        """Test the correct default error levels are used."""
+
+        session = MagicMock(spec=MockSession)
+        primitives = [Sampler, Estimator]
+        for cls in primitives:
+            with self.subTest(primitive=cls):
+                options = Options(
+                    simulator={"noise_model": "foo"},
+                )
+                inst = cls(session=session, options=options)
+                inst.run(self.qx, observables=self.obs)
+                if sys.version_info >= (3, 8):
+                    inputs = session.run.call_args.kwargs["inputs"]
+                else:
+                    _, kwargs = session.run.call_args
+                    inputs = kwargs["inputs"]
+                self.assertEqual(
+                    inputs["transpilation_settings"]["optimization_settings"]["level"],
+                    Options._DEFAULT_OPTIMIZATION_LEVEL,
+                )
+                self.assertEqual(
+                    inputs["resilience_settings"]["level"],
+                    Options._DEFAULT_RESILIENCE_LEVEL,
+                )
+
+                session.service.backend().configuration().simulator = False
+                inst = cls(session=session)
+                inst.run(self.qx, observables=self.obs)
+                if sys.version_info >= (3, 8):
+                    inputs = session.run.call_args.kwargs["inputs"]
+                else:
+                    _, kwargs = session.run.call_args
+                    inputs = kwargs["inputs"]
+                self.assertEqual(
+                    inputs["transpilation_settings"]["optimization_settings"]["level"],
+                    Options._DEFAULT_OPTIMIZATION_LEVEL,
+                )
+                self.assertEqual(
+                    inputs["resilience_settings"]["level"],
+                    Options._DEFAULT_RESILIENCE_LEVEL,
+                )
+
+                session.service.backend().configuration().simulator = True
+                inst = cls(session=session)
+                inst.run(self.qx, observables=self.obs)
+                if sys.version_info >= (3, 8):
+                    inputs = session.run.call_args.kwargs["inputs"]
+                else:
+                    _, kwargs = session.run.call_args
+                    inputs = kwargs["inputs"]
+                self.assertEqual(
+                    inputs["transpilation_settings"]["optimization_settings"]["level"],
+                    1,
+                )
+                self.assertEqual(inputs["resilience_settings"]["level"], 0)
 
     def _update_dict(self, dict1, dict2):
         for key, val in dict1.items():

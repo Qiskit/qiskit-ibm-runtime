@@ -3,7 +3,7 @@ Getting started
 
 This tutorial walks you through the steps to set up a Qiskit Runtime service instance, log in to your service instance, and run your first job on a quantum computer.
 
-If you are an administrator who needs to set up Qiskit Runtime for your organization, refer to `Plan Qiskit Runtime for an organization <quickstart-org>`__ for instructions to set up a service instance and work with users.
+If you are an administrator who needs to set up Qiskit Runtime for your organization, refer to `Plan Qiskit Runtime for an organization <quickstart-org.html>`__ for instructions to set up a service instance and work with users.
 
 
 Create a service instance
@@ -20,7 +20,7 @@ If you already created a Qiskit Runtime service instance or were invited to one 
 1. From the `Qiskit Runtime Provisioning page <https://cloud.ibm.com/catalog/services/quantum-computing>`__, choose the appropriate service plan, depending on what you need access to. For more information about these plans, see the `Qiskit Runtime plans <plans.html>`__ topic.
 
       - **Lite**: Free simulators-only plan to help you get started with Qiskit Runtime. Learn to use Qiskit Runtime by following our examples and tutorials for one of the pre-built programs available for running circuits efficiently.
-      - **Standard**: A pay-as-you-go model for accessing IBM Quantum systems and simulators. Build your own programs and leverage all the benefits of Qiskit Runtime by running on real quantum hardware.
+      - **Standard**: A pay-as-you-go model for accessing IBM Quantum systems and simulators. Build your own programs and use all the benefits of Qiskit Runtime by running on real quantum hardware.
 
       Because this is not a free plan, it is important to understand how to best manage your costs. See `Manage the cost <cost.html>`__ for tips to limit your cost, how to set up spending notifications, and more.
 
