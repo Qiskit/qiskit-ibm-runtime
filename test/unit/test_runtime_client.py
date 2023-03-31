@@ -10,12 +10,11 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Tests for the AccountClient class."""
+"""Tests for the RuntimeClient class."""
 
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
-from qiskit_ibm_runtime.api.clients import AccountClient
+from qiskit_ibm_runtime.api.clients import RuntimeClient
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
-from qiskit_ibm_runtime.api.session import RetrySession
 
 from .mock.http_server import SimpleServer, ClientErrorHandler
 from ..ibm_test_case import IBMTestCase
@@ -23,7 +22,7 @@ from ..account import custom_envs, no_envs
 
 
 class TestAccountClient(IBMTestCase):
-    """Tests for AccountClient."""
+    """Tests for RuntimeClient."""
 
     def setUp(self):
         """Initial test setup."""
@@ -37,7 +36,7 @@ class TestAccountClient(IBMTestCase):
             self.fake_server.stop()
 
     def _get_client(self):
-        """Helper for instantiating an AccountClient."""
+        """Helper for instantiating an RuntimeClient."""
         # pylint: disable=no-value-for-parameter
         params = ClientParameters(
             channel="ibm_quantum",
@@ -45,7 +44,7 @@ class TestAccountClient(IBMTestCase):
             token="foo",
             instance="h/g/p",
         )
-        return AccountClient(params)
+        return RuntimeClient(params)
 
     def test_client_error(self):
         """Test client error."""
@@ -77,9 +76,7 @@ class TestAccountClient(IBMTestCase):
             {"QISKIT_IBM_RUNTIME_CUSTOM_CLIENT_APP_HEADER": custom_header}
         ):
             client = self._get_client()
-            client._session.headers.update(
-                {"X-Qx-Client-Application": "qiskit-version-2/qiskit"}
-            )
+            client._session.headers.update({"X-Qx-Client-Application": "qiskit-version-2/qiskit"})
             client._session._set_custom_header()
             self.assertIn(
                 custom_header, client._session.headers["X-Qx-Client-Application"]
@@ -88,9 +85,7 @@ class TestAccountClient(IBMTestCase):
         # Make sure the header is re-initialized
         with no_envs(["QISKIT_IBM_RUNTIME_CUSTOM_CLIENT_APP_HEADER"]):
             client = self._get_client()
-            client._session.headers.update(
-                {"X-Qx-Client-Application": "qiskit-version-2/qiskit"}
-            )
+            client._session.headers.update({"X-Qx-Client-Application": "qiskit-version-2/qiskit"})
             client._session.custom_header = None
             client._session._set_custom_header()
             self.assertNotIn(
