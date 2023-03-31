@@ -17,7 +17,7 @@ import os
 import re
 import logging
 import sys
-from typing import Dict, MutableMapping, Optional, Any, Tuple, Union
+from typing import Dict, Optional, Any, Tuple, Union
 from pathlib import PurePath
 import pkg_resources
 
@@ -267,7 +267,7 @@ class RetrySession(Session):
         if not self.proxies and "timeout" not in kwargs:
             kwargs.update({"timeout": self._timeout})
 
-        headers: MutableMapping[str, str | bytes] = self.headers.copy()
+        headers = self.headers.copy()  # type: ignore
         headers.update(kwargs.pop("headers", {}))
 
         # Set default caller
@@ -410,7 +410,7 @@ class RetrySession(Session):
 
     def _set_custom_header(self) -> None:
         """Set custom header."""
-        headers: MutableMapping[str, str | bytes] = self.headers.copy()
+        headers = self.headers.copy()  # type: ignore
         if self.custom_header:
             current = headers["X-Qx-Client-Application"]
             headers.update(
