@@ -408,7 +408,7 @@ class RetrySession(Session):
 
         return True
 
-    def _set_custom_header(self):
+    def _set_custom_header(self) -> None:
         """Set custom header."""
         headers = self.headers.copy()
         if self.custom_header:
