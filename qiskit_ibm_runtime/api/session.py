@@ -60,7 +60,7 @@ def _get_client_header() -> str:
         "qiskit_aer",
         "qiskit_experiments",
         "qiskit_nature",
-        "qiskit_machine-learning",
+        "qiskit_machine_learning",
         "qiskit_optimization",
         "qiskit_finance",
     ]
@@ -295,7 +295,7 @@ class RetrySession(Session):
                     break  # break out of the inner loop
             if found_caller:
                 break  # break out of the outer loop
-            
+
         self.headers = headers
         self._set_custom_header()
 
