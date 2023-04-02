@@ -12,9 +12,9 @@
 
 """Resilience options."""
 
-from typing import Sequence, get_args
+from typing import Sequence
 from dataclasses import dataclass
-from typing_extensions import Literal
+from typing_extensions import Literal, get_args
 
 from .utils import _flexible
 
