@@ -15,6 +15,7 @@
 import sys
 import copy
 import json
+import os
 from unittest.mock import MagicMock, patch, ANY
 import warnings
 from dataclasses import asdict
@@ -652,9 +653,17 @@ class TestPrimitives(IBMTestCase):
 
         for cls in primitives:
             for opts_dict in options_dicts:
+                # When this environment variable is set, validation is turned off
+                os.environ["QISKIT_RUNTIME_REMOVE_OPTIONS_VALIDATION"] = "1"
+                inst = cls(session=session, options=opts_dict)
+                inst.run(self.qx, observables=self.obs)
+
+                # Delete environment variable to validate input
+                del os.environ["QISKIT_RUNTIME_REMOVE_OPTIONS_VALIDATION"]
                 with self.assertRaises(ValueError):
                     inst = cls(session=session, options=opts_dict)
                     inst.run(self.qx, observables=self.obs)
+
 
     def test_unsupported_input_combinations(self):
         """Test that when resilience_level==3, and backend is a simulator,

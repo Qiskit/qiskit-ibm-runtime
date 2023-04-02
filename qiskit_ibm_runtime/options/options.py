@@ -178,8 +178,6 @@ class Options:
             ValueError: if optimization_level is out of the allowed range.
             ValueError: if resilience_level is out of the allowed range.
         """
-        print("options = ")
-        print(options)
         if not options.get("optimization_level") in list(
             range(Options._MAX_OPTIMIZATION_LEVEL + 1)
         ):
