@@ -93,7 +93,7 @@ class FakeRuntimeService(QiskitRuntimeService):
                     },
                 ]
                 fake_account_client = BaseFakeAccountClient(specs=specs, hgp=hgp_name)
-            hgp._api_client = fake_account_client
+            hgp._runtime_client = fake_account_client
             hgps[hgp_name] = hgp
 
         return hgps

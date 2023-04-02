@@ -121,7 +121,9 @@ Next steps
 
     API Reference <apidocs/ibm-runtime>
     Swagger API for building applications that use Qiskit Runtime <https://us-east.quantum-computing.cloud.ibm.com/openapi/>
+    API error codes <errors>
     FAQs <faqs>
+    Retired systems <retired>
     Release Notes <release_notes>
     GitHub <https://github.com/Qiskit/qiskit-ibm-runtime>
 
