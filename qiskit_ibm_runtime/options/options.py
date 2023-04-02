@@ -29,7 +29,7 @@ from ..runtime_options import RuntimeOptions
 from ..utils.deprecation import issue_deprecation_msg
 from ..ibm_backend import IBMBackend
 
-PrimitiveType = Literal["Sampler" "Estimator"]
+PrimitiveType = Literal["Sampler", "Estimator"]
 
 
 @_flexible
@@ -172,7 +172,7 @@ class Options:
     @staticmethod
     def _validate_program_inputs(
         options: dict, primitive: PrimitiveType = "Sampler", backend: IBMBackend = None
-    ):
+    ) -> None:
         """Validate that program inputs (options) are valid
         Raises:
             ValueError: if optimization_level is out of the allowed range.
