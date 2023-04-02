@@ -324,11 +324,7 @@ class Estimator(BaseEstimator):
                 )
             )
         else:
-            inputs.update(
-                Options._get_program_inputs(
-                    combined, primitive="Estimator"
-                )
-            )
+            inputs.update(Options._get_program_inputs(combined, primitive="Estimator"))
 
         return self._session.run(
             program_id=self._PROGRAM_ID,

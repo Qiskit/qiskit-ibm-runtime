@@ -282,9 +282,7 @@ class Sampler(BaseSampler):
                 )
             )
         else:
-            inputs.update(
-                Options._get_program_inputs(combined, primitive="Sampler")
-            )
+            inputs.update(Options._get_program_inputs(combined, primitive="Sampler"))
         return self._session.run(
             program_id=self._PROGRAM_ID,
             inputs=inputs,
