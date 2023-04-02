@@ -656,6 +656,17 @@ class TestPrimitives(IBMTestCase):
                     inst = cls(session=session, options=opts_dict)
                     inst.run(self.qx, observables=self.obs)
 
+    def test_unsupported_input_combinations(self):
+        """Test that when resilience_level==3, and backend is a simulator,
+        a coupling map is required."""
+        options = Options()
+        options.resilience_level = 3
+        session = MagicMock(spec=MockSession)
+        session.service.backend().configuration().simulator = True
+        with self.assertRaises(ValueError):
+            inst = Estimator(session=session, options=options)
+            inst.run(self.qx, observables=self.obs)
+
     def _update_dict(self, dict1, dict2):
         for key, val in dict1.items():
             if isinstance(val, dict):
