@@ -13,7 +13,7 @@ Retrieving job results for a specific job at a later time requires the `job ID`,
 If you don't have the job ID, or if you want to retrieve multiple jobs at once; including jobs from retired systems, call `service.jobs()` with optional filters instead.  See `QiskitRuntimeService.jobs <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/stubs/qiskit_ibm_runtime.QiskitRuntimeService.jobs.html>`__.
 
 .. note:: 
-  `service.jobs()` returns only Qiskit Runtime jobs. 
+  `service.jobs()` returns only Qiskit Runtime jobs. To retrieve other jobs, use `qiskit-ibm-provider <https://qiskit.org/documentation/partners/qiskit_ibm_provider/stubs/qiskit_ibm_provider.IBMBackend.html#qiskit_ibm_provider.IBMBackend>`__ instead.
 
 Example
 -------
