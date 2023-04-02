@@ -664,7 +664,6 @@ class TestPrimitives(IBMTestCase):
                     inst = cls(session=session, options=opts_dict)
                     inst.run(self.qx, observables=self.obs)
 
-
     def test_unsupported_input_combinations(self):
         """Test that when resilience_level==3, and backend is a simulator,
         a coupling map is required."""
