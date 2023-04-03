@@ -12,10 +12,13 @@
 
 """Session customized for IBM Quantum access."""
 
+import inspect
 import os
 import re
 import logging
+import sys
 from typing import Dict, Optional, Any, Tuple, Union
+from pathlib import PurePath
 import pkg_resources
 
 from requests import Session, RequestException, Response
@@ -51,20 +54,31 @@ RE_BACKENDS_ENDPOINT = re.compile(r"^(.*/backends/)([^/}]{2,})(.*)$", re.IGNOREC
 
 def _get_client_header() -> str:
     """Return the client version."""
-    try:
-        client_header = "qiskit/" + pkg_resources.get_distribution("qiskit").version
-        return client_header
-    except Exception:  # pylint: disable=broad-except
-        pass
 
-    qiskit_pkgs = ["qiskit-terra", "qiskit-aer", "qiskit-ignis", "qiskit-aqua"]
-    pkg_versions = {"qiskit-ibm-runtime": ibm_runtime_version}
+    qiskit_pkgs = [
+        "qiskit_terra",
+        "qiskit_aer",
+        "qiskit_experiments",
+        "qiskit_nature",
+        "qiskit_machine_learning",
+        "qiskit_optimization",
+        "qiskit_finance",
+    ]
+
+    pkg_versions = {"qiskit_ibm_runtime": f"qiskit_ibm_runtime-{ibm_runtime_version}"}
     for pkg_name in qiskit_pkgs:
         try:
-            pkg_versions[pkg_name] = pkg_resources.get_distribution(pkg_name).version
+            version_info = (
+                f"{pkg_name}-{pkg_resources.get_distribution(pkg_name).version}"
+            )
+
+            if pkg_name in sys.modules:
+                version_info += "*"
+
+            pkg_versions[pkg_name] = version_info
         except Exception:  # pylint: disable=broad-except
             pass
-    return ",".join(pkg_versions.keys()) + "/" + ",".join(pkg_versions.values())
+    return f"qiskit-version-2/{','.join(pkg_versions.values())}"
 
 
 CLIENT_APPLICATION = _get_client_header()
@@ -166,7 +180,7 @@ class RetrySession(Session):
         super().__init__()
 
         self.base_url = base_url
-
+        self.custom_header: Optional[str] = None
         self._initialize_retry(retries_total, retries_connect, backoff_factor)
         self._initialize_session_parameters(verify, proxies or {}, auth)
         self._timeout = timeout
@@ -210,17 +224,9 @@ class RetrySession(Session):
             proxies: Proxy URLs mapped by protocol.
             auth: Authentication handler.
         """
-        client_app_header = CLIENT_APPLICATION
-
-        # Append custom header to the end if specified
-        custom_header = os.getenv(CUSTOM_HEADER_ENV_VAR) or os.getenv(
+        self.custom_header = os.getenv(CUSTOM_HEADER_ENV_VAR) or os.getenv(
             QE_PROVIDER_HEADER_ENV_VAR
         )
-        if custom_header:
-            client_app_header += "/" + custom_header
-
-        self.headers.update({"X-Qx-Client-Application": client_app_header})
-
         self.auth = auth
         self.proxies = proxies or {}
         self.verify = verify
@@ -261,8 +267,37 @@ class RetrySession(Session):
         if not self.proxies and "timeout" not in kwargs:
             kwargs.update({"timeout": self._timeout})
 
-        headers = self.headers.copy()
+        headers = self.headers.copy()  # type: ignore
         headers.update(kwargs.pop("headers", {}))
+
+        # Set default caller
+        headers.update({"X-Qx-Client-Application": f"{CLIENT_APPLICATION}/qiskit"})
+
+        # Use PurePath in order to support arbitrary path formats
+        callers = {PurePath("qiskit/"), "qiskit_"}
+
+        stack = inspect.stack()
+        stack.reverse()
+
+        found_caller = False
+        for frame in stack:
+            frame_path = str(PurePath(frame.filename))
+            for caller in callers:
+                if str(caller) in frame_path:
+                    caller_str = str(caller) + frame_path.split(str(caller), 1)[-1]
+                    sanitized_caller_str = caller_str.replace("/", "~")
+                    headers.update(
+                        {
+                            "X-Qx-Client-Application": f"{CLIENT_APPLICATION}/{sanitized_caller_str}"
+                        }
+                    )
+                    found_caller = True
+                    break  # break out of the inner loop
+            if found_caller:
+                break  # break out of the outer loop
+
+        self.headers = headers
+        self._set_custom_header()
 
         try:
             self._log_request_info(final_url, method, kwargs)
@@ -372,6 +407,16 @@ class RetrySession(Session):
             return False
 
         return True
+
+    def _set_custom_header(self) -> None:
+        """Set custom header."""
+        headers = self.headers.copy()  # type: ignore
+        if self.custom_header:
+            current = headers["X-Qx-Client-Application"]
+            headers.update(
+                {"X-Qx-Client-Application": f"{current}/{self.custom_header}"}
+            )
+            self.headers = headers
 
     def __getstate__(self) -> Dict:
         """Overwrite Session's getstate to include all attributes."""
