@@ -1,0 +1,6 @@
+---
+upgrade:
+  - |
+    Added validation checking for options given as input to ``resilience``.
+    Previously, this validation was done on the server side. By adding them
+    on the client side, response will be much faster upon failure.
