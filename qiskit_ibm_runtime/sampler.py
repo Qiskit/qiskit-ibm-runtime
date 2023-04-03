@@ -115,13 +115,12 @@ class Sampler(BaseSampler):
 
             skip_transpilation (DEPRECATED): Transpilation is skipped if set to True. False by default.
                 Ignored if ``skip_transpilation`` is also specified in ``options``.
-        Raises:
-            ValueError: if resilience_level is outside the allowed range.
         """
         # `self._options` in this class is a Dict.
         # The base class, however, uses a `_run_options` which is an instance of
         # qiskit.providers.Options. We largely ignore this _run_options because we use
         # a nested dictionary to categorize options.
+
         super().__init__(
             circuits=circuits,
             parameters=parameters,
@@ -162,7 +161,6 @@ class Sampler(BaseSampler):
             skip_transpilation = self._options.get("transpilation", {}).get(
                 "skip_transpilation", False
             )
-
         self._options["transpilation"][
             "skip_transpilation"
         ] = skip_transpilation  # type: ignore[union-attr]
@@ -230,7 +228,6 @@ class Sampler(BaseSampler):
             parameter_values: An optional list of concrete parameters to be bound.
             **kwargs: Individual options to overwrite the default primitive options.
                 These include the runtime options in :class:`qiskit_ibm_runtime.RuntimeOptions`.
-
         Returns:
             Submitted job.
 

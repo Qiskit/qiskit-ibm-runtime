@@ -177,6 +177,7 @@ class Options:
         Raises:
             ValueError: if optimization_level is out of the allowed range.
             ValueError: if resilience_level is out of the allowed range.
+            ValueError: if resilience_level==3, backend is simulator and no coupling map
         """
         if not options.get("optimization_level") in list(
             range(Options._MAX_OPTIMIZATION_LEVEL + 1)
@@ -200,7 +201,7 @@ class Options:
         ):
             raise ValueError(
                 f"resilience level can only take the values "
-                f"{list(range(Options._MAX_RESILIENCE_LEVEL_SAMPLER+ 1))} in Sampler"
+                f"{list(range(Options._MAX_RESILIENCE_LEVEL_SAMPLER + 1))} in Sampler"
             )
         if (
             options.get("resilience_level")
