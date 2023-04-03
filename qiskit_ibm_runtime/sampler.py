@@ -228,9 +228,9 @@ class Sampler(BaseSampler):
             parameter_values: An optional list of concrete parameters to be bound.
             **kwargs: Individual options to overwrite the default primitive options.
                 These include the runtime options in :class:`qiskit_ibm_runtime.RuntimeOptions`.
+
         Returns:
             Submitted job.
-
         """
         # TODO: Re-enable data caching when ntc 1748 is fixed
         # circuits_map = {}
