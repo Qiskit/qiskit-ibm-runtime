@@ -172,6 +172,7 @@ class RuntimeJob(Job):
                 url = result_url_json["url"]
                 result_response = requests.get(url)
                 return result_response.content
+            return response
         except json.JSONDecodeError:
             return response
 
