@@ -24,6 +24,10 @@ from qiskit.providers.backend import BackendV1 as Backend
 from qiskit.providers.provider import ProviderV1 as Provider
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.providerutils import filter_backends
+from qiskit.providers.models import (
+    PulseBackendConfiguration,
+    QasmBackendConfiguration,
+)
 
 from qiskit_ibm_runtime import ibm_backend
 from .accounts import AccountManager, Account, AccountType, ChannelType
@@ -49,6 +53,7 @@ from .utils.backend_decoder import configuration_from_server_data
 from .utils.hgp import to_instance_format, from_instance_format
 from .api.client_parameters import ClientParameters
 from .runtime_options import RuntimeOptions
+from .ibm_backend import IBMBackend
 from .utils.deprecation import (
     deprecate_function,
     deprecate_arguments,
@@ -206,6 +211,7 @@ class QiskitRuntimeService(Provider):
         self._channel = self._account.channel
         self._programs: Dict[str, RuntimeProgram] = {}
         self._backends: Dict[str, "ibm_backend.IBMBackend"] = {}
+        self._backend_configs: Dict[str, Any] = {}
 
         if self._channel == "ibm_cloud":
             self._api_client = RuntimeClient(self._client_params)
@@ -222,9 +228,9 @@ class QiskitRuntimeService(Provider):
             self._api_client = RuntimeClient(self._client_params)
             self._hgps = self._initialize_hgps(auth_client)
             for hgp in self._hgps.values():
-                for backend_name, backend in hgp.backends.items():
+                for backend_name in hgp.backends:
                     if backend_name not in self._backends:
-                        self._backends[backend_name] = backend
+                        self._backends[backend_name] = None
 
         # TODO - it'd be nice to allow some kind of autocomplete, but `service.ibmq_foo`
         # just seems wrong since backends are not runtime service instances.
@@ -572,11 +578,42 @@ class QiskitRuntimeService(Provider):
             IBMInputValueError: If an input is invalid.
         """
         # TODO filter out input_allowed not having runtime
+        backends: List[IBMBackend] = []
         if self._channel == "ibm_quantum":
             if instance:
-                backends = list(self._get_hgp(instance=instance).backends.values())
+                hgp = self._get_hgp(instance=instance)
+                for backend_name in hgp.backends.keys():
+                    if (
+                        not self._backends[backend_name]
+                        or instance != self._backends[backend_name]._instance
+                    ):
+                        self._set_backend_config(backend_name, instance)
+                        self._backends[backend_name] = self._create_backend_obj(
+                            self._backend_configs[backend_name], instance
+                        )
+                    backends.append(self._backends[backend_name])
+            elif name:
+                if not self._backends[name]:
+                    self._set_backend_config(name, instance)
+                    self._backends[name] = self._create_backend_obj(
+                        self._backend_configs[name], instance
+                    )
+                backends.append(self._backends[name])
             else:
-                backends = list(self._backends.values())
+                for backend_name, backend_config in self._backends.items():
+                    if not backend_config:
+                        self._set_backend_config(backend_name, instance)
+                        self._backends[backend_name] = self._create_backend_obj(
+                            self._backend_configs[backend_name], instance
+                        )
+                    backends.append(self._backends[backend_name])
+
+            for hgp in self._hgps.values():
+                for current_name, current_config in hgp._backends.items():
+                    for backend_name, backend_config in self._backends.items():
+                        if current_name == backend_name and not current_config:
+                            hgp._backends[backend_name] = backend_config
+
         else:
             if instance:
                 raise IBMInputValueError(
@@ -591,6 +628,40 @@ class QiskitRuntimeService(Provider):
                 filter(lambda b: b.configuration().n_qubits >= min_num_qubits, backends)
             )
         return filter_backends(backends, filters=filters, **kwargs)
+
+    def _set_backend_config(
+        self, backend_name: str, instance: Optional[str] = None
+    ) -> None:
+        """Retrieve backend configuration and add to backend_configs.
+        Args:
+            backend_name: backend name that will be returned.
+            instance: the current h/g/p.
+        """
+        if backend_name not in self._backend_configs:
+            raw_config = self._api_client.backend_configuration(backend_name)
+            config = configuration_from_server_data(
+                raw_config=raw_config, instance=instance
+            )
+            self._backend_configs[backend_name] = config
+
+    def _create_backend_obj(
+        self,
+        config: Union[QasmBackendConfiguration, PulseBackendConfiguration],
+        instance: Optional[str] = None,
+    ) -> IBMBackend:
+        """Given a backend configuration return the backend object.
+        Args:
+            config: backend configuration.
+            instance: the current h/g/p.
+        Returns:
+            A backend object.
+        """
+        return ibm_backend.IBMBackend(
+            instance=instance,
+            configuration=config,
+            service=self,
+            api_client=self._api_client,
+        )
 
     def active_account(self) -> Optional[Dict[str, str]]:
         """Return the IBM Quantum account currently in use for the session.
