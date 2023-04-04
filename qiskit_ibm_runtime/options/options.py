@@ -106,6 +106,7 @@ class Options:
         "execution": ExecutionOptions,
         "environment": EnvironmentOptions,
         "simulator": SimulatorOptions,
+        "resilience": ResilienceOptions,
     }
 
     @staticmethod
