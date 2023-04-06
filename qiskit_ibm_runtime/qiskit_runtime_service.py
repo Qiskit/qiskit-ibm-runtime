@@ -580,7 +580,19 @@ class QiskitRuntimeService(Provider):
         # TODO filter out input_allowed not having runtime
         backends: List[IBMBackend] = []
         if self._channel == "ibm_quantum":
-            if instance:
+            if name:
+                if (
+                    not self._backends[name]
+                    or instance != self._backends[name]._instance
+                ):
+                    self._set_backend_config(name)
+                    self._backends[name] = self._create_backend_obj(
+                        self._backend_configs[name],
+                        instance,
+                        list(self._hgps.values()),
+                    )
+                backends.append(self._backends[name])
+            elif instance:
                 hgp = self._get_hgp(instance=instance)
                 for backend_name in hgp.backends.keys():
                     if (
@@ -592,27 +604,15 @@ class QiskitRuntimeService(Provider):
                             self._backend_configs[backend_name], instance
                         )
                     backends.append(self._backends[backend_name])
-            elif name:
-                if not self._backends[name]:
-                    self._set_backend_config(name, instance)
-                    self._backends[name] = self._create_backend_obj(
-                        self._backend_configs[name], instance
-                    )
-                backends.append(self._backends[name])
             else:
+                hgps = list(self._hgps.values())
                 for backend_name, backend_config in self._backends.items():
                     if not backend_config:
-                        self._set_backend_config(backend_name, instance)
+                        self._set_backend_config(backend_name)
                         self._backends[backend_name] = self._create_backend_obj(
-                            self._backend_configs[backend_name], instance
+                            self._backend_configs[backend_name], hgps=hgps
                         )
                     backends.append(self._backends[backend_name])
-
-            for hgp in self._hgps.values():
-                for current_name, current_config in hgp._backends.items():
-                    for backend_name, backend_config in self._backends.items():
-                        if current_name == backend_name and not current_config:
-                            hgp._backends[backend_name] = backend_config
 
         else:
             if instance:
@@ -648,6 +648,7 @@ class QiskitRuntimeService(Provider):
         self,
         config: Union[QasmBackendConfiguration, PulseBackendConfiguration],
         instance: Optional[str] = None,
+        hgps: Optional[List] = None,
     ) -> IBMBackend:
         """Given a backend configuration return the backend object.
         Args:
@@ -656,6 +657,16 @@ class QiskitRuntimeService(Provider):
         Returns:
             A backend object.
         """
+        if not instance:
+            for hgp in hgps:
+                if config.backend_name in hgp.backends:
+                    instance = to_instance_format(hgp._hub, hgp._group, hgp._project)
+                    hgp.backends[config.backend_name] = config
+                    break
+        else:
+            hgp = self._get_hgp(instance=instance)
+            hgp.backends[config.backend_name] = config
+
         return ibm_backend.IBMBackend(
             instance=instance,
             configuration=config,
