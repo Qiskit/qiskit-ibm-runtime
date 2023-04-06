@@ -656,6 +656,8 @@ class QiskitRuntimeService(Provider):
             instance: the current h/g/p.
         Returns:
             A backend object.
+        Raises:
+            QiskitBackendNotFoundError: if the backend is not in the hgp passed in.
         """
         if not instance:
             for hgp in hgps:
@@ -663,6 +665,12 @@ class QiskitRuntimeService(Provider):
                     instance = to_instance_format(hgp._hub, hgp._group, hgp._project)
                     hgp.backends[config.backend_name] = config
                     break
+
+        elif config.backend_name not in self._get_hgp(instance=instance).backends:
+            raise QiskitBackendNotFoundError(
+                f"Backend {config.backend_name} is not in "
+                f"{instance}: please try a different hub/group/project."
+            )
         else:
             hgp = self._get_hgp(instance=instance)
             hgp.backends[config.backend_name] = config
