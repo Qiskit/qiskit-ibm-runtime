@@ -635,16 +635,6 @@ class TestPrimitives(IBMTestCase):
                 )
                 self.assertEqual(inputs["resilience_settings"]["level"], 0)
 
-    # def test_skip_transpilation(self):
-    #     """Test skip_transpilation is hornored."""
-    #     primitives = [Sampler, Estimator]
-    #     for cls in primitives:
-    #         with self.subTest(primitive=cls):
-    #             inst = cls(session=MagicMock(spec=MockSession), skip_transpilation=True)
-    #             self.assertTrue(
-    #                 inst.options.get("transpilation").get("skip_transpilation")
-    #             )
-
     def test_raise_faulty_qubits(self):
         """Test faulty qubits is raised."""
         fake_backend = FakeManila()
