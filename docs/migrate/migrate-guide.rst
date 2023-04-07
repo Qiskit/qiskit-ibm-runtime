@@ -2,15 +2,15 @@ Migration guide
 ================
 
 This guide describes key patterns of behavior and use cases with code examples to help you migrate code from
-the legacy ``qiskit-ibmq-provider`` package to use the Qiskit Runtime primitives.
+the legacy ``qiskit-ibmq-provider`` package to use the Qiskit Runtime primitives. 
 
-The primitives are the recommended tool to write quantum algorithms, as they encapsulate common device queries
-seen in application packages, and allow for managed performance through the Qiskit Runtime service.
+Primitives are the recommended tool to write quantum algorithms, as they encapsulate common device queries
+seen in application packages and allow for managed performance through the Qiskit Runtime service.
 However, if your algorithm requires more granular information, such as pre-shot measurements, the primitives might
-not provide the desired abstraction level. You can refer to the restructured ``qiskit-ibm-provider`` package,
-and its corresponding
-`migration guide <https://qiskit.org/documentation/partners/qiskit_ibm_provider/tutorials/Migration_Guide_from_qiskit-ibmq-provider.html>`_
-for further information on alternatives to the Qiskit Runtime primitives.
+not provide the desired abstraction level. 
+
+- Refer to the restructured ``qiskit-ibm-provider`` package and its corresponding `migration guide <https://qiskit.org/documentation/partners/qiskit_ibm_provider/tutorials/Migration_Guide_from_qiskit-ibmq-provider.html>`_ for further information about alternatives to the Qiskit Runtime primitives.
+- For instructions to migrate your setup to use Qiskit Runtime, see `Migrate setup from ``qiskit-ibmq-provider`` <migrate-setup.html>`__.
 
 The Qiskit Runtime primitives implement the reference ``Sampler`` and ``Estimator`` interfaces found in
 `qiskit.primitives <https://qiskit.org/documentation/apidoc/primitives.html>`_. These interfaces let you 
