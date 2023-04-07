@@ -203,7 +203,7 @@ def create_faulty_backend(
     model_backend: Backend,
     faulty_qubit: Optional[int] = None,
     faulty_edge: Optional[tuple] = None,
-):
+) -> IBMBackend:
     """Create an IBMBackend that has faulty qubits and/or edges.
 
     Args:
@@ -242,12 +242,12 @@ def create_faulty_backend(
         instance=None,
     )
 
-    out_backend.status = lambda: BackendStatus(
+    out_backend.status = lambda: BackendStatus(  # type: ignore[assignment]
         backend_name="foo",
         backend_version="1.0",
         operational=True,
         pending_jobs=0,
         status_msg="",
     )
-    out_backend.properties = lambda: BackendProperties.from_dict(properties)
+    out_backend.properties = lambda: BackendProperties.from_dict(properties)  # type: ignore
     return out_backend
