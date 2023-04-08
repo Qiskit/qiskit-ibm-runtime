@@ -576,11 +576,14 @@ class QiskitRuntimeService(Provider):
 
         Raises:
             IBMInputValueError: If an input is invalid.
+            QiskitBackendNotFoundError: If the backend is not in any instance.
         """
         # TODO filter out input_allowed not having runtime
         backends: List[IBMBackend] = []
         if self._channel == "ibm_quantum":
             if name:
+                if name not in self._backends:
+                    raise QiskitBackendNotFoundError("No backend matches the criteria.")
                 if (
                     not self._backends[name]
                     or instance != self._backends[name]._instance
