@@ -271,15 +271,11 @@ class Sampler(BaseSampler):
             combined["optimization_level"] = Options._DEFAULT_OPTIMIZATION_LEVEL
             combined["resilience_level"] = Options._DEFAULT_RESILIENCE_LEVEL
         logger.info("Submitting job using options %s", combined)
+        Options.validate_options(
+            combined, primitive="Sampler", backend=self._session.backend()
+        )
+        inputs.update(Options._get_program_inputs(combined))
 
-        if self._session.backend():
-            inputs.update(
-                Options._get_program_inputs(
-                    combined, primitive="Sampler", backend=self._session.backend()
-                )
-            )
-        else:
-            inputs.update(Options._get_program_inputs(combined, primitive="Sampler"))
         return self._session.run(
             program_id=self._PROGRAM_ID,
             inputs=inputs,
@@ -325,12 +321,10 @@ class Sampler(BaseSampler):
             "parameter_values": parameter_values,
         }
         combined = Options._merge_options(self._options, run_options)
-
-        inputs.update(
-            Options._get_program_inputs(
-                combined, primitive="Sampler", backend=self._session.backend()
-            )
+        Options.validate_options(
+            combined, primitive="Sampler", backend=self._session.backend()
         )
+        inputs.update(Options._get_program_inputs(combined))
 
         raw_result = self._session.run(
             program_id=self._PROGRAM_ID,

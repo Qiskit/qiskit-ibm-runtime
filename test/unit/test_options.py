@@ -136,7 +136,7 @@ class TestOptions(IBMTestCase):
         )
         with warnings.catch_warnings(record=True) as warn:
             warnings.simplefilter("always")
-            inputs = Options._get_program_inputs(asdict(options), primitive="Estimator")
+            inputs = Options._get_program_inputs(asdict(options))
             self.assertEqual(len(warn), 2)
 
         expected = {
@@ -165,7 +165,7 @@ class TestOptions(IBMTestCase):
         for primitive in primitives_str:
             for opt in option_dicts:
                 with self.assertRaises(ValueError):
-                    _ = Options._get_program_inputs(opt, primitive=primitive)
+                    _ = Options.validate_options(opt, primitive=primitive)
 
     def test_init_options_with_dictionary(self):
         """Test initializing options with dictionaries."""

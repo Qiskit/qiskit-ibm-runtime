@@ -120,15 +120,13 @@ class Options:
 
     @staticmethod
     def _get_program_inputs(
-        options: dict, primitive: PrimitiveType, backend: IBMBackend = None
+        options: dict,
     ) -> dict:
         """Convert the input options to program compatible inputs.
 
         Returns:
             Inputs acceptable by primitive programs.
         """
-        if not os.getenv("QISKIT_RUNTIME_REMOVE_OPTIONS_VALIDATION"):
-            Options._validate_program_inputs(options, primitive, backend)
         sim_options = options.get("simulator", {})
         inputs = {}
         inputs["transpilation_settings"] = options.get("transpilation", {})
@@ -170,7 +168,7 @@ class Options:
         return inputs
 
     @staticmethod
-    def _validate_program_inputs(
+    def validate_options(
         options: dict, primitive: PrimitiveType = "Sampler", backend: IBMBackend = None
     ) -> None:
         """Validate that program inputs (options) are valid
@@ -179,6 +177,8 @@ class Options:
             ValueError: if resilience_level is out of the allowed range.
             ValueError: if resilience_level==3, backend is simulator and no coupling map
         """
+        if os.getenv("QISKIT_RUNTIME_REMOVE_OPTIONS_VALIDATION"):
+            return
         if not options.get("optimization_level") in list(
             range(Options._MAX_OPTIMIZATION_LEVEL + 1)
         ):
