@@ -12,12 +12,10 @@
 
 """Primitive options."""
 
-import os
 from typing import Optional, Union, ClassVar
 from dataclasses import dataclass, fields, field
 import copy
 import warnings
-from typing_extensions import Literal
 
 from .utils import _flexible, Dict
 from .environment_options import EnvironmentOptions
@@ -27,9 +25,6 @@ from .transpilation_options import TranspilationOptions
 from .resilience_options import ResilienceOptions
 from ..runtime_options import RuntimeOptions
 from ..utils.deprecation import issue_deprecation_msg
-from ..ibm_backend import IBMBackend
-
-PrimitiveType = Literal["Sampler", "Estimator"]
 
 
 @_flexible
@@ -168,17 +163,11 @@ class Options:
         return inputs
 
     @staticmethod
-    def validate_options(
-        options: dict, primitive: PrimitiveType = "Sampler", backend: IBMBackend = None
-    ) -> None:
+    def validate_options(options: dict) -> None:
         """Validate that program inputs (options) are valid
         Raises:
             ValueError: if optimization_level is out of the allowed range.
-            ValueError: if resilience_level is out of the allowed range.
-            ValueError: if resilience_level==3, backend is simulator and no coupling map
         """
-        if os.getenv("QISKIT_RUNTIME_REMOVE_OPTIONS_VALIDATION"):
-            return
         if not options.get("optimization_level") in list(
             range(Options._MAX_OPTIMIZATION_LEVEL + 1)
         ):
@@ -186,37 +175,6 @@ class Options:
                 f"optimization_level can only take the values "
                 f"{list(range(Options._MAX_OPTIMIZATION_LEVEL + 1))}"
             )
-
-        if primitive == "Estimator" and not options.get("resilience_level") in list(
-            range(Options._MAX_RESILIENCE_LEVEL_ESTIMATOR + 1)
-        ):
-            raise ValueError(
-                f"resilience_level can only take the values "
-                f"{list(range(Options._MAX_RESILIENCE_LEVEL_ESTIMATOR + 1))} in Estimator"
-            )
-        if (
-            primitive == "Sampler"
-            and options.get("resilience_level")
-            and not options.get("resilience_level") in [0, 1]
-        ):
-            raise ValueError(
-                f"resilience level can only take the values "
-                f"{list(range(Options._MAX_RESILIENCE_LEVEL_SAMPLER + 1))} in Sampler"
-            )
-        if (
-            options.get("resilience_level")
-            and options.get("resilience_level") == 3
-            and backend.simulator
-        ):
-            if (
-                not options.get("simulator").get("coupling_map")
-                or options.get("simulator").get("coupling_map") is None
-            ):
-                raise ValueError(
-                    "When the backend is a simulator and resilience_level == 3,"
-                    "a coupling map is required."
-                )
-
         ResilienceOptions.validate_resilience_options(options.get("resilience"))
 
     @staticmethod

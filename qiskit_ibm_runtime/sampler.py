@@ -13,6 +13,7 @@
 """Sampler primitive."""
 
 from __future__ import annotations
+import os
 from typing import Dict, Iterable, Optional, Sequence, Any, Union
 import copy
 import logging
@@ -271,9 +272,7 @@ class Sampler(BaseSampler):
             combined["optimization_level"] = Options._DEFAULT_OPTIMIZATION_LEVEL
             combined["resilience_level"] = Options._DEFAULT_RESILIENCE_LEVEL
         logger.info("Submitting job using options %s", combined)
-        Options.validate_options(
-            combined, primitive="Sampler", backend=self._session.backend()
-        )
+        Sampler._validate_options(combined)
         inputs.update(Options._get_program_inputs(combined))
 
         return self._session.run(
@@ -321,9 +320,7 @@ class Sampler(BaseSampler):
             "parameter_values": parameter_values,
         }
         combined = Options._merge_options(self._options, run_options)
-        Options.validate_options(
-            combined, primitive="Sampler", backend=self._session.backend()
-        )
+        Sampler._validate_options(combined)
         inputs.update(Options._get_program_inputs(combined))
 
         raw_result = self._session.run(
@@ -369,3 +366,22 @@ class Sampler(BaseSampler):
             **fields: The fields to update the options
         """
         self._options = Options._merge_options(self._options, fields)
+
+    @staticmethod
+    def _validate_options(options: dict) -> None:
+        """Validate that program inputs (options) are valid
+        Raises:
+            ValueError: if resilience_level is out of the allowed range.
+        """
+        if os.getenv("QISKIT_RUNTIME_REMOVE_OPTIONS_VALIDATION"):
+            return
+
+        if options.get("resilience_level") and not options.get("resilience_level") in [
+            0,
+            1,
+        ]:
+            raise ValueError(
+                f"resilience level can only take the values "
+                f"{list(range(Options._MAX_RESILIENCE_LEVEL_SAMPLER + 1))} in Sampler"
+            )
+        Options.validate_options(options)
