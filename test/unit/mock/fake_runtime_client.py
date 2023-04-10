@@ -517,13 +517,11 @@ class BaseFakeRuntimeClient:
             raise RequestsApiError("Job not found", status_code=404)
         return self._jobs[job_id]
 
-    @cloud_only
     def list_backends(self):
         """Return IBM Cloud backends"""
         self._check_cloud_only()
         return self._backend_client.backend_names
 
-    @cloud_only
     def backend_configuration(self, backend_name: str) -> Dict[str, Any]:
         """Return the configuration of the IBM Cloud backend."""
         return self._backend_client.backend_configuration(backend_name)

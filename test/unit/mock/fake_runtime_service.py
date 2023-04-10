@@ -13,12 +13,14 @@
 """Context managers for using with IBM Provider unit tests."""
 
 from collections import OrderedDict
-from typing import Dict, Any
+from typing import Dict, Optional
 from unittest import mock
 
 from qiskit_ibm_runtime.accounts import Account
+from qiskit_ibm_runtime import ibm_backend
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 from qiskit_ibm_runtime.api.clients import AuthClient
+from qiskit_ibm_runtime.utils.backend_decoder import configuration_from_server_data
 from qiskit_ibm_runtime.hub_group_project import HubGroupProject
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
 from .fake_account_client import BaseFakeAccountClient
@@ -45,6 +47,7 @@ class FakeRuntimeService(QiskitRuntimeService):
         test_options = kwargs.pop("test_options", {})
         self._test_num_hgps = test_options.get("num_hgps", 2)
         self._fake_account_client = test_options.get("account_client")
+        self._backend_configs = {}
 
         with mock.patch(
             "qiskit_ibm_runtime.qiskit_runtime_service.RuntimeClient",
@@ -60,6 +63,21 @@ class FakeRuntimeService(QiskitRuntimeService):
 
     def _resolve_crn(self, account: Account) -> None:
         pass
+
+    def _set_backend_config(
+        self, backend_name: str, instance: Optional[str] = None
+    ) -> None:
+        """Retrieve backend configuration and add to backend_configs.
+        Args:
+            backend_name: backend name that will be returned.
+            instance: the current h/g/p.
+        """
+        if backend_name not in self._backend_configs:
+            raw_config = self._fake_account_client.backend_configuration(backend_name)
+            config = configuration_from_server_data(
+                raw_config=raw_config, instance=instance
+            )
+            self._backend_configs[backend_name] = config
 
     def _initialize_hgps(
         self,
@@ -94,8 +112,18 @@ class FakeRuntimeService(QiskitRuntimeService):
                 ]
                 fake_account_client = BaseFakeAccountClient(specs=specs, hgp=hgp_name)
             hgp._runtime_client = fake_account_client
+            self._fake_account_client = fake_account_client
+            for backend_name, backend in hgp.backends.items():
+                if not backend:
+                    self._set_backend_config(backend_name, hgp_name)
+                    backend_obj = ibm_backend.IBMBackend(
+                        instance=hgp_name,
+                        configuration=self._backend_configs[backend_name],
+                        service=self,
+                        api_client=hgp._runtime_client,
+                    )
+                    hgp.backends[backend_name] = backend_obj
             hgps[hgp_name] = hgp
-
         return hgps
 
     def _discover_cloud_backends(self):
