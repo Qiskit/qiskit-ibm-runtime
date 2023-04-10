@@ -526,12 +526,10 @@ class BaseFakeRuntimeClient:
         """Return the configuration of the IBM Cloud backend."""
         return self._backend_client.backend_configuration(backend_name)
 
-    @cloud_only
     def backend_status(self, backend_name: str) -> Dict[str, Any]:
         """Return the status of the IBM Cloud backend."""
         return self._backend_client.backend_status(backend_name)
 
-    @cloud_only
     def backend_properties(
         self, backend_name: str, datetime: Any = None
     ) -> Dict[str, Any]:
@@ -540,7 +538,6 @@ class BaseFakeRuntimeClient:
             raise NotImplementedError("'datetime' is not supported with cloud runtime.")
         return self._backend_client.backend_properties(backend_name)
 
-    @cloud_only
     def backend_pulse_defaults(self, backend_name: str) -> Dict[str, Any]:
         """Return the pulse defaults of the IBM Cloud backend."""
         return self._backend_client.backend_pulse_defaults(backend_name)

@@ -51,7 +51,7 @@ class TestBackendFilters(IBMTestCase):
                 backend_name = [back.name for back in backends]
                 self.assertEqual(len(backend_name), 2)
                 for back in backends:
-                    self.assertEqual(back._api_client.hgp, hgp)
+                    self.assertEqual(back._instance, hgp)
 
     def test_filter_config_properties(self):
         """Test filtering by configuration properties."""
@@ -201,21 +201,21 @@ class TestGetBackend(IBMTestCase):
         """Test getting a backend that is in default and non-default hgp."""
         service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
         backend = service.backend(FakeRuntimeService.DEFAULT_COMMON_BACKEND)
-        self.assertEqual(backend._api_client.hgp, list(service._hgps.keys())[0])
+        self.assertEqual(backend._instance, list(service._hgps.keys())[0])
 
     def test_get_unique_backend_default_hgp(self):
         """Test getting a backend in the default hgp."""
         service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
         backend_name = FakeRuntimeService.DEFAULT_UNIQUE_BACKEND_PREFIX + "0"
         backend = service.backend(backend_name)
-        self.assertEqual(backend._api_client.hgp, list(service._hgps.keys())[0])
+        self.assertEqual(backend._instance, list(service._hgps.keys())[0])
 
     def test_get_unique_backend_non_default_hgp(self):
         """Test getting a backend in the non default hgp."""
         service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
         backend_name = FakeRuntimeService.DEFAULT_UNIQUE_BACKEND_PREFIX + "1"
         backend = service.backend(backend_name)
-        self.assertEqual(backend._api_client.hgp, list(service._hgps.keys())[1])
+        self.assertEqual(backend._instance, list(service._hgps.keys())[1])
 
     def test_get_phantom_backend(self):
         """Test getting a phantom backend."""
@@ -229,7 +229,7 @@ class TestGetBackend(IBMTestCase):
         backend_name = FakeRuntimeService.DEFAULT_COMMON_BACKEND
         service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
         backend = service.backend(backend_name, instance=hgp)
-        self.assertEqual(backend._api_client.hgp, hgp)
+        self.assertEqual(backend._instance, hgp)
 
     def test_get_backend_by_bad_hgp(self):
         """Test getting a backend not in hgp."""
