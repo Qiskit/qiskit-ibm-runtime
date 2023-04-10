@@ -319,7 +319,7 @@ class Estimator(BaseEstimator):
             combined["resilience_level"] = Options._DEFAULT_RESILIENCE_LEVEL
         logger.info("Submitting job using options %s", combined)
 
-        Estimator._validate_options(combined, backend=self._session.backend())
+        self._validate_options(combined)
         inputs.update(Options._get_program_inputs(combined))
         return self._session.run(
             program_id=self._PROGRAM_ID,
@@ -370,7 +370,7 @@ class Estimator(BaseEstimator):
         }
         combined = Options._merge_options(self._options, run_options)
 
-        Estimator._validate_options(combined, backend=self._session.backend())
+        self._validate_options(combined)
         inputs.update(Options._get_program_inputs(combined))
 
         return self._session.run(
@@ -417,8 +417,7 @@ class Estimator(BaseEstimator):
         """
         self._options = Options._merge_options(self._options, fields)
 
-    @staticmethod
-    def _validate_options(options: dict, backend: IBMBackend = None) -> None:
+    def _validate_options(self, options: dict) -> None:
         """Validate that program inputs (options) are valid
         Raises:
             ValueError: if resilience_level is out of the allowed range.
@@ -434,11 +433,11 @@ class Estimator(BaseEstimator):
                 f"resilience_level can only take the values "
                 f"{list(range(Options._MAX_RESILIENCE_LEVEL_ESTIMATOR + 1))} in Estimator"
             )
-        if options.get("resilience_level") == 3 and backend.simulator:
-            if (
-                not options.get("simulator").get("coupling_map")
-                or options.get("simulator").get("coupling_map") is None
-            ):
+
+        if options.get("resilience_level") == 3 and self._session.backend() in [
+            b.name for b in self._session.service.backends(simulator=True)
+        ]:
+            if not options.get("simulator").get("coupling_map"):
                 raise ValueError(
                     "When the backend is a simulator and resilience_level == 3,"
                     "a coupling map is required."

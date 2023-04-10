@@ -16,6 +16,7 @@ import unittest
 import json
 from unittest.mock import patch
 
+from qiskit import QuantumCircuit
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.primitives.utils import _circuit_key
@@ -82,3 +83,20 @@ class TestEstimator(IBMTestCase):
                 inputs = kwargs["inputs"]
                 self.assertDictEqual(inputs["circuits"], {psi4_id: psi4})
                 self.assertEqual(inputs["circuit_ids"], [psi4_id, psi1_id])
+
+    def test_unsupported_values_for_estimator_options(self):
+        """Test exception when options levels are not supported."""
+        options_bad = [
+            {"optimization_level": 3, "resilience_level": 4},
+            {"optimization_level": 4, "resilience_level": 3},
+        ]
+        with Session(
+            service=FakeRuntimeService(channel="ibm_quantum", token="abc"),
+            backend="common_backend",
+        ) as session:
+            circuit = QuantumCircuit(1, 1)
+            obs = SparsePauliOp.from_list([("I", 1)])
+            for bad_opt in options_bad:
+                inst = Estimator(session=session)
+                with self.assertRaises(ValueError):
+                    _ = inst.run(circuit, observables=obs, **bad_opt)

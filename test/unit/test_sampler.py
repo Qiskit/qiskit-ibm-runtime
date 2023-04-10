@@ -81,16 +81,18 @@ class TestSampler(IBMTestCase):
                 self.assertDictEqual(inputs["circuits"], {pqc4_id: pqc4})
                 self.assertEqual(inputs["circuit_ids"], [pqc4_id, pqc_id])
 
-    def test_unsupported_values_for_options(self):
-        """Test that Sampler takes an exception when given an unsupported resilience_level"""
-        options_good = {"resilience_level": 1}
-        options_bad = {"resilience_level": 2}
-
+    def test_unsupported_values_for_sampler_options(self):
+        """Test exception when options levels are not supported."""
+        options_bad = [
+            {"optimization_level": 3, "resilience_level": 2},
+            {"optimization_level": 4, "resilience_level": 1},
+        ]
         with Session(
             service=FakeRuntimeService(channel="ibm_quantum", token="abc"),
             backend="common_backend",
         ) as session:
             circuit = QuantumCircuit(1, 1)
-            with self.assertRaises(ValueError):
-                inst = Sampler(session=session, options=options_good)
-                _ = inst.run(circuit, **options_bad)
+            for bad_opt in options_bad:
+                inst = Sampler(session=session)
+                with self.assertRaises(ValueError):
+                    _ = inst.run(circuit, **bad_opt)
