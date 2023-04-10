@@ -64,7 +64,7 @@ The new syntax combines the functionality from ``load_account()`` and ``get_prov
     service = QiskitRuntimeService(channel="ibm_quantum")
 
 
-Channel selection: "getting a provider"
+Channel selection (get a provider)
 ------------------------------------------
 
 Use the updated code to select a channel.
