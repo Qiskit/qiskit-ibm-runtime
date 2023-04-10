@@ -4,13 +4,13 @@ Migrate setup from ``qiskit-ibmq-provider``
 This guide describes how to migrate code from the legacy IBMQ provider (`qiskit-ibmq-provider`) package to use Qiskit Runtime (`qiskit-ibm-runtime`). This guide includes instructions to migrate legacy runtime programs to the new syntax. However, the ability to use custom uploaded programs is pending deprecation, so these should be migrated to use primitives instead.  
 
 - For instructions to use Qiskit Runtime primitives, see the `migration guide <migrate-guide.html>`__.  
-- For further details about migrating from `qiskit-ibmq-provider` to `qiskit-ibm-runtime`, see` Migration guide from qiskit-ibmq-provider <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/migrate_from_ibmq.html>`__.
+- For further details about migrating from `qiskit-ibmq-provider` to `qiskit-ibm-runtime`, see `Migration guide from qiskit-ibmq-provider <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/migrate_from_ibmq.html>`__.
 
  
 Import path
 -------------
 
-The import path has changed. 
+The import path has changed as follows:
 
 **Legacy**
 
@@ -110,7 +110,7 @@ Upload, view, or delete custom prototype programs
 ----------------------------------------------------
 To work with custom programs, replace ``provider.runtime`` with ``service``.
 
-..Note::
+.. note::
     This function is pending deprecation.
 
 **Legacy**
@@ -150,7 +150,7 @@ Run prototype programs
 
 To run prototype programs, replace ``provider.runtime`` with ``service``.
 
-..Note::
+.. note::
     This function is pending deprecation.
 
 **Legacy**
