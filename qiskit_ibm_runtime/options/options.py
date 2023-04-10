@@ -114,9 +114,7 @@ class Options:
     }
 
     @staticmethod
-    def _get_program_inputs(
-        options: dict,
-    ) -> dict:
+    def _get_program_inputs(options: dict) -> dict:
         """Convert the input options to program compatible inputs.
 
         Returns:
