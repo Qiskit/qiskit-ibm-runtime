@@ -306,6 +306,8 @@ class Estimator(BaseEstimator):
         }
 
         combined = Options._merge_options(self._options, kwargs.get("_user_kwargs", {}))
+
+        backend_obj: Optional[IBMBackend] = None
         if self._session.backend():
             backend_obj = self._session.service.backend(self._session.backend())
             combined = set_default_error_levels(
@@ -318,9 +320,13 @@ class Estimator(BaseEstimator):
             combined["optimization_level"] = Options._DEFAULT_OPTIMIZATION_LEVEL
             combined["resilience_level"] = Options._DEFAULT_RESILIENCE_LEVEL
         logger.info("Submitting job using options %s", combined)
-
         self._validate_options(combined)
         inputs.update(Options._get_program_inputs(combined))
+
+        if backend_obj and combined["transpilation"]["skip_transpilation"]:
+            for circ in circuits:
+                backend_obj.check_faulty(circ)
+
         return self._session.run(
             program_id=self._PROGRAM_ID,
             inputs=inputs,

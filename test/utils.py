@@ -17,11 +17,14 @@ import logging
 import time
 import unittest
 from unittest import mock
-from typing import Dict
+from typing import Dict, Optional
+from datetime import datetime
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.providers.jobstatus import JOB_FINAL_STATES, JobStatus
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
+from qiskit.providers.models import BackendStatus, BackendProperties
+from qiskit.providers.backend import Backend
 from qiskit_ibm_runtime.hub_group_project import HubGroupProject
 from qiskit_ibm_runtime import QiskitRuntimeService
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
@@ -194,3 +197,57 @@ def dict_keys_equal(dict1: dict, dict2: dict) -> bool:
                 return False
 
     return True
+
+
+def create_faulty_backend(
+    model_backend: Backend,
+    faulty_qubit: Optional[int] = None,
+    faulty_edge: Optional[tuple] = None,
+) -> IBMBackend:
+    """Create an IBMBackend that has faulty qubits and/or edges.
+
+    Args:
+        model_backend: Fake backend to model after.
+        faulty_qubit: Faulty qubit.
+        faulty_edge: Faulty edge, a tuple of (gate, qubits)
+
+    Returns:
+        An IBMBackend with faulty qubits/edges.
+    """
+
+    properties = model_backend.properties().to_dict()
+
+    if faulty_qubit:
+        properties["qubits"][faulty_qubit].append(
+            {"date": datetime.now(), "name": "operational", "unit": "", "value": 0}
+        )
+
+    if faulty_edge:
+        gate, qubits = faulty_edge
+        for gate_obj in properties["gates"]:
+            if gate_obj["gate"] == gate and gate_obj["qubits"] == qubits:
+                gate_obj["parameters"].append(
+                    {
+                        "date": datetime.now(),
+                        "name": "operational",
+                        "unit": "",
+                        "value": 0,
+                    }
+                )
+
+    out_backend = IBMBackend(
+        configuration=model_backend.configuration(),
+        service=mock.MagicMock(),
+        api_client=None,
+        instance=None,
+    )
+
+    out_backend.status = lambda: BackendStatus(  # type: ignore[assignment]
+        backend_name="foo",
+        backend_version="1.0",
+        operational=True,
+        pending_jobs=0,
+        status_msg="",
+    )
+    out_backend.properties = lambda: BackendProperties.from_dict(properties)  # type: ignore
+    return out_backend
