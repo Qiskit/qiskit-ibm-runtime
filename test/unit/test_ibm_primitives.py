@@ -671,7 +671,7 @@ class TestPrimitives(IBMTestCase):
                     inst = cls(session=session, options=opts_dict)
                     inst.run(self.qx, observables=self.obs)
 
-def test_raise_faulty_qubits(self):
+    def test_raise_faulty_qubits(self):
         """Test faulty qubits is raised."""
         fake_backend = FakeManila()
         num_qubits = fake_backend.configuration().num_qubits
