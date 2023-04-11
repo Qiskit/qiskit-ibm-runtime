@@ -26,13 +26,7 @@ from qiskit.providers.options import Options as TerraOptions
 from qiskit.primitives import BaseEstimator, EstimatorResult
 
 # TODO import _circuit_key from terra once 0.23 is released
-from .qiskit_runtime_service import QiskitRuntimeService
 from .runtime_job import RuntimeJob
-from .utils.deprecation import (
-    deprecate_arguments,
-    issue_deprecation_msg,
-    deprecate_function,
-)
 from .ibm_backend import IBMBackend
 from .session import get_default_session
 from .options import Options
@@ -97,10 +91,8 @@ class Estimator(BaseEstimator):
         circuits: Optional[Union[QuantumCircuit, Iterable[QuantumCircuit]]] = None,
         observables: Optional[Iterable[SparsePauliOp]] = None,
         parameters: Optional[Iterable[Iterable[Parameter]]] = None,
-        service: Optional[QiskitRuntimeService] = None,
         session: Optional[Union[Session, str, IBMBackend]] = None,
         options: Optional[Union[Dict, Options]] = None,
-        skip_transpilation: Optional[bool] = False,
     ):
         """Initializes the Estimator primitive.
 
@@ -115,11 +107,6 @@ class Estimator(BaseEstimator):
                 a list of :class:`~qiskit.circuit.Parameter`) specifying the order
                 in which parameter values will be bound.
 
-            service: (DEPRECATED) Optional instance of
-                :class:`qiskit_ibm_runtime.QiskitRuntimeService` class,
-                defaults to `QiskitRuntimeService()` which tries to initialize your default
-                saved account.
-
             session: Session in which to call the primitive.
 
                 * If an instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
@@ -133,9 +120,6 @@ class Estimator(BaseEstimator):
 
             options: Primitive options, see :class:`Options` for detailed description.
                 The ``backend`` keyword is still supported but is deprecated.
-
-            skip_transpilation: (DEPRECATED) Transpilation is skipped if set to True. False by default.
-                Ignored ``skip_transpilation`` is also specified in ``options``.
         """
         # `_options` in this class is an instance of qiskit_ibm_runtime.Options class.
         # The base class, however, uses a `_run_options` which is an instance of
@@ -147,17 +131,6 @@ class Estimator(BaseEstimator):
             parameters=parameters,
         )
 
-        if skip_transpilation:
-            deprecate_arguments(
-                "skip_transpilation",
-                "0.7",
-                "Instead, use the skip_transpilation keyword argument in transpilation_settings.",
-            )
-        if service:
-            deprecate_arguments(
-                "service", "0.7", "Please use the session parameter instead."
-            )
-
         backend = None
         self._session: Session = None
 
@@ -165,34 +138,16 @@ class Estimator(BaseEstimator):
             _options = Options()
         elif isinstance(options, Options):
             _options = copy.deepcopy(options)
-            skip_transpilation = (
-                _options.transpilation.skip_transpilation  # type: ignore[union-attr]
-            )
         else:
             options_copy = copy.deepcopy(options)
-            backend = options_copy.pop("backend", None)
-            if backend is not None:
-                issue_deprecation_msg(
-                    msg="The 'backend' key in 'options' has been deprecated",
-                    version="0.7",
-                    remedy="Please pass the backend when opening a session.",
-                )
             skip_transpilation = options.get("transpilation", {}).get(
                 "skip_transpilation", False
             )
-            log_level = options_copy.pop("log_level", None)
             _options = Options(**options_copy)
-            if log_level:
-                issue_deprecation_msg(
-                    msg="The 'log_level' option has been moved to the 'environment' category",
-                    version="0.7",
-                    remedy="Please specify 'environment':{'log_level': log_level} instead.",
-                )
-                _options.environment.log_level = log_level  # type: ignore[union-attr]
+            _options.transpilation.skip_transpilation = (  # type: ignore[union-attr]
+                skip_transpilation
+            )
 
-        _options.transpilation.skip_transpilation = (  # type: ignore[union-attr]
-            skip_transpilation
-        )
         self._options: dict = asdict(_options)
 
         self._initial_inputs = {
@@ -205,7 +160,7 @@ class Estimator(BaseEstimator):
             self._session = session
         else:
             backend = session or backend
-            self._session = get_default_session(service, backend)
+            self._session = get_default_session(None, backend)
 
         # self._first_run = True
         # self._circuits_map = {}
@@ -368,15 +323,6 @@ class Estimator(BaseEstimator):
             options=Options._get_runtime_options(combined),
             result_decoder=DEFAULT_DECODERS.get(self._PROGRAM_ID),
         ).result()
-
-    @deprecate_function(
-        deprecated="close",
-        version="0.7",
-        remedy="Use qiskit_ibm_runtime.Session.close() instead",
-    )
-    def close(self) -> None:
-        """Close the session and free resources"""
-        self._session.close()
 
     @property
     def session(self) -> Session:

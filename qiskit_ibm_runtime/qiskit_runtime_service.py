@@ -49,25 +49,10 @@ from .utils.backend_decoder import configuration_from_server_data
 from .utils.hgp import to_instance_format, from_instance_format
 from .api.client_parameters import ClientParameters
 from .runtime_options import RuntimeOptions
-from .utils.deprecation import (
-    deprecate_function,
-    issue_deprecation_msg,
-    deprecate_arguments,
-)
 
 logger = logging.getLogger(__name__)
 
 SERVICE_NAME = "runtime"
-
-DEPRECATED_PROGRAMS = [
-    "torch-train",
-    "torch-infer",
-    "sample-expval",
-    "quantum_kernal_alignment",
-    "sample-program",
-]
-
-_JOB_DEPRECATION_ISSUED = False
 
 
 class QiskitRuntimeService(Provider):
@@ -854,10 +839,7 @@ class QiskitRuntimeService(Provider):
         result_decoder: Optional[
             Union[Type[ResultDecoder], Sequence[Type[ResultDecoder]]]
         ] = None,
-        instance: Optional[str] = None,
         session_id: Optional[str] = None,
-        job_tags: Optional[List[str]] = None,
-        max_execution_time: Optional[int] = None,
         start_session: Optional[bool] = False,
     ) -> RuntimeJob:
         """Execute the runtime program.
@@ -879,13 +861,7 @@ class QiskitRuntimeService(Provider):
                 If more than one decoder is specified, the first is used for interim results and
                 the second final results. If not specified, a program-specific decoder or the default
                 ``ResultDecoder`` is used.
-            instance: (DEPRECATED) This is only supported for ``ibm_quantum`` runtime and is in the
-                hub/group/project format.
             session_id: Job ID of the first job in a runtime session.
-            job_tags: (DEPRECATED) Tags to be assigned to the job. The tags can subsequently be used
-                as a filter in the :meth:`jobs()` function call.
-            max_execution_time: (DEPRECATED) Maximum execution time in seconds. This overrides
-                the max_execution_time of the program.
             start_session: Set to True to explicitly start a runtime session. Defaults to False.
 
         Returns:
@@ -896,33 +872,12 @@ class QiskitRuntimeService(Provider):
             RuntimeProgramNotFound: If the program cannot be found.
             IBMRuntimeError: An error occurred running the program.
         """
-        if program_id in DEPRECATED_PROGRAMS:
-            warnings.warn(
-                f"The {program_id} program has been deprecated as of qiskit-ibm-runtime 0.7 \
-                and will be removed no sooner than 1 month after the release date.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
 
         qrt_options: RuntimeOptions = options
         if options is None:
             qrt_options = RuntimeOptions()
         elif isinstance(options, Dict):
             qrt_options = RuntimeOptions(**options)
-
-        deprecated = {
-            "instance": instance,
-            "job_tags": job_tags,
-            "max_execution_time": max_execution_time,
-        }
-        for name, param in deprecated.items():
-            if param is not None:
-                deprecate_arguments(
-                    deprecated=name,
-                    version="0.7",
-                    remedy=f'Please specify "{name}" inside "options".',
-                )
-                setattr(qrt_options, name, param)
 
         # If using params object, extract as dictionary
         if isinstance(inputs, ParameterNamespace):
@@ -964,18 +919,6 @@ class QiskitRuntimeService(Provider):
         if not backend:
             backend = self.backend(name=response["backend"])
 
-        global _JOB_DEPRECATION_ISSUED  # pylint: disable=global-statement
-        if not (start_session or session_id) and not _JOB_DEPRECATION_ISSUED:
-            # No need to issue warning if session is used since the old style session
-            # didn't return a job, and new style returns new job.
-            _JOB_DEPRECATION_ISSUED = True
-            issue_deprecation_msg(
-                msg="Note that the 'job_id' and 'backend' attributes of "
-                "a runtime job have been deprecated",
-                version="0.7",
-                remedy="Please use the job_id() and backend() methods instead.",
-            )
-
         job = RuntimeJob(
             backend=backend,
             api_client=self._api_client,
@@ -988,33 +931,6 @@ class QiskitRuntimeService(Provider):
             image=qrt_options.image,
         )
         return job
-
-    @deprecate_function(
-        "QiskitRuntimeService.open",
-        "0.7",
-        "Instead, use the qiskit_ibm_runtime.Session class to create a runtime session.",
-    )
-    def open(
-        self,
-        program_id: str,
-        inputs: Union[Dict, ParameterNamespace],
-        options: Optional[Union[RuntimeOptions, Dict]] = None,
-    ) -> RuntimeSession:
-        """Open a new runtime session.
-
-        Args:
-            program_id: Program ID.
-            inputs: Initial program input parameters. These input values are
-                persistent throughout the session.
-            options: Runtime options that control the execution environment. See
-                :class:`RuntimeOptions` for all available options.
-
-        Returns:
-            Runtime session.
-        """
-        return RuntimeSession(
-            service=self, program_id=program_id, inputs=inputs, options=options
-        )
 
     def upload_program(
         self, data: str, metadata: Optional[Union[Dict, str]] = None
