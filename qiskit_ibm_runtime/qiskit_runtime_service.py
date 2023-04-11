@@ -1108,7 +1108,7 @@ class QiskitRuntimeService(Provider):
                 ) from None
             raise IBMRuntimeError(f"Failed to run program: {ex}") from None
 
-        if not backend:
+        if not backend or not isinstance(backend, IBMBackend):
             backend = self.backend(name=response["backend"])
 
         job = RuntimeJob(
