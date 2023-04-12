@@ -1,0 +1,7 @@
+---
+upgrade:
+  - |
+    Backend configurations are no longer loaded when :class:`~qiskit_ibm_runtime.QiskitRuntimeService`
+    is initialized. Instead, the configuration is only loaded and cached during
+    :meth:`~qiskit_ibm_runtime.QiskitRuntimeService.get_backend` and
+    :meth:`~qiskit_ibm_runtime.QiskitRuntimeService.backends`.
