@@ -496,7 +496,7 @@ class QiskitRuntimeService(Provider):
                     f"Hub/group/project {instance} "
                     "could not be found for this account."
                 )
-            if backend_name and not self._hgps[instance].backend(backend_name):
+            if backend_name and not self._hgps[instance].has_backend(backend_name):
                 raise QiskitBackendNotFoundError(
                     f"Backend {backend_name} cannot be found in "
                     f"hub/group/project {instance}"
@@ -507,7 +507,7 @@ class QiskitRuntimeService(Provider):
             return list(self._hgps.values())[0]
 
         for hgp in self._hgps.values():
-            if hgp.backend(backend_name):
+            if hgp.has_backend(backend_name):
                 return hgp
 
         error_message = (
@@ -592,12 +592,11 @@ class QiskitRuntimeService(Provider):
                     self._backends[name] = self._create_backend_obj(
                         self._backend_configs[name],
                         instance,
-                        list(self._hgps.values()),
                     )
                 backends.append(self._backends[name])
             elif instance:
                 hgp = self._get_hgp(instance=instance)
-                for backend_name in hgp.backends.keys():
+                for backend_name in hgp.backends:
                     if (
                         not self._backends[backend_name]
                         or instance != self._backends[backend_name]._instance
@@ -608,12 +607,11 @@ class QiskitRuntimeService(Provider):
                         )
                     backends.append(self._backends[backend_name])
             else:
-                hgps = list(self._hgps.values())
                 for backend_name, backend_config in self._backends.items():
                     if not backend_config:
                         self._set_backend_config(backend_name)
                         self._backends[backend_name] = self._create_backend_obj(
-                            self._backend_configs[backend_name], hgps=hgps
+                            self._backend_configs[backend_name]
                         )
                     backends.append(self._backends[backend_name])
 
@@ -651,7 +649,6 @@ class QiskitRuntimeService(Provider):
         self,
         config: Union[QasmBackendConfiguration, PulseBackendConfiguration],
         instance: Optional[str] = None,
-        hgps: Optional[List] = None,
     ) -> IBMBackend:
         """Given a backend configuration return the backend object.
         Args:
@@ -663,10 +660,9 @@ class QiskitRuntimeService(Provider):
             QiskitBackendNotFoundError: if the backend is not in the hgp passed in.
         """
         if not instance:
-            for hgp in hgps:
+            for hgp in list(self._hgps.values()):
                 if config.backend_name in hgp.backends:
                     instance = to_instance_format(hgp._hub, hgp._group, hgp._project)
-                    hgp.backends[config.backend_name] = config
                     break
 
         elif config.backend_name not in self._get_hgp(instance=instance).backends:
@@ -674,9 +670,6 @@ class QiskitRuntimeService(Provider):
                 f"Backend {config.backend_name} is not in "
                 f"{instance}: please try a different hub/group/project."
             )
-        else:
-            hgp = self._get_hgp(instance=instance)
-            hgp.backends[config.backend_name] = config
 
         return ibm_backend.IBMBackend(
             instance=instance,
@@ -1077,14 +1070,12 @@ class QiskitRuntimeService(Provider):
 
         qrt_options.validate(channel=self.channel)
 
-        backend = None
         hgp_name = None
         if self._channel == "ibm_quantum":
             # Find the right hgp
             hgp = self._get_hgp(
                 instance=qrt_options.instance, backend_name=qrt_options.backend
             )
-            backend = hgp.backend(qrt_options.backend)
             hgp_name = hgp.name
 
         try:
@@ -1108,8 +1099,7 @@ class QiskitRuntimeService(Provider):
                 ) from None
             raise IBMRuntimeError(f"Failed to run program: {ex}") from None
 
-        if not backend or not isinstance(backend, IBMBackend):
-            backend = self.backend(name=response["backend"])
+        backend = self.backend(name=response["backend"], instance=hgp_name)
 
         job = RuntimeJob(
             backend=backend,

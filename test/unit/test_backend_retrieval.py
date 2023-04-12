@@ -12,12 +12,13 @@
 
 """Backends Filtering Test."""
 
-import unittest
+import uuid
+
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.fake_provider import FakeLima
 
-from .mock.fake_account_client import BaseFakeAccountClient
 from .mock.fake_runtime_service import FakeRuntimeService
+from .mock.fake_api_backend import FakeApiBackendSpecs
 from ..ibm_test_case import IBMTestCase
 from ..decorators import run_quantum_and_cloud_fake
 
@@ -58,9 +59,9 @@ class TestBackendFilters(IBMTestCase):
         """Test filtering by configuration properties."""
         n_qubits = 5
         fake_backends = [
-            self._get_specs(n_qubits=n_qubits, local=False),
-            self._get_specs(n_qubits=n_qubits * 2, local=False),
-            self._get_specs(n_qubits=n_qubits, local=True),
+            self._get_fake_backend_specs(n_qubits=n_qubits, local=False),
+            self._get_fake_backend_specs(n_qubits=n_qubits * 2, local=False),
+            self._get_fake_backend_specs(n_qubits=n_qubits, local=True),
         ]
 
         services = self._get_services(fake_backends)
@@ -73,14 +74,13 @@ class TestBackendFilters(IBMTestCase):
                 )
                 self.assertFalse(filtered_backends[0].configuration().local)
 
-    @unittest.skip("TODO")
     def test_filter_status_dict(self):
         """Test filtering by dictionary of mixed status/configuration properties."""
         fake_backends = [
-            self._get_specs(operational=True, simulator=True),
-            self._get_specs(operational=True, simulator=True),
-            self._get_specs(operational=True, simulator=False),
-            self._get_specs(operational=False, simulator=False),
+            self._get_fake_backend_specs(operational=True, simulator=True),
+            self._get_fake_backend_specs(operational=True, simulator=True),
+            self._get_fake_backend_specs(operational=True, simulator=False),
+            self._get_fake_backend_specs(operational=False, simulator=False),
         ]
 
         services = self._get_services(fake_backends)
@@ -99,9 +99,9 @@ class TestBackendFilters(IBMTestCase):
         """Test filtering by lambda function on configuration properties."""
         n_qubits = 5
         fake_backends = [
-            self._get_specs(n_qubits=n_qubits),
-            self._get_specs(n_qubits=n_qubits * 2),
-            self._get_specs(n_qubits=n_qubits - 1),
+            self._get_fake_backend_specs(n_qubits=n_qubits),
+            self._get_fake_backend_specs(n_qubits=n_qubits * 2),
+            self._get_fake_backend_specs(n_qubits=n_qubits - 1),
         ]
 
         services = self._get_services(fake_backends)
@@ -114,17 +114,16 @@ class TestBackendFilters(IBMTestCase):
                 for backend in filtered_backends:
                     self.assertGreaterEqual(backend.configuration().n_qubits, n_qubits)
 
-    @unittest.skip("TODO")
     def test_filter_least_busy(self):
         """Test filtering by least busy function."""
         default_stat = {"pending_jobs": 1, "operational": True, "status_msg": "active"}
         fake_backends = [
-            self._get_specs(
+            self._get_fake_backend_specs(
                 **{**default_stat, "backend_name": "bingo", "pending_jobs": 5}
             ),
-            self._get_specs(**{**default_stat, "pending_jobs": 7}),
-            self._get_specs(**{**default_stat, "operational": False}),
-            self._get_specs(**{**default_stat, "status_msg": "internal"}),
+            self._get_fake_backend_specs(**{**default_stat, "pending_jobs": 7}),
+            self._get_fake_backend_specs(**{**default_stat, "operational": False}),
+            self._get_fake_backend_specs(**{**default_stat, "status_msg": "internal"}),
         ]
 
         services = self._get_services(fake_backends)
@@ -137,9 +136,9 @@ class TestBackendFilters(IBMTestCase):
         """Test filtering by minimum number of qubits."""
         n_qubits = 5
         fake_backends = [
-            self._get_specs(n_qubits=n_qubits),
-            self._get_specs(n_qubits=n_qubits * 2),
-            self._get_specs(n_qubits=n_qubits - 1),
+            self._get_fake_backend_specs(n_qubits=n_qubits),
+            self._get_fake_backend_specs(n_qubits=n_qubits * 2),
+            self._get_fake_backend_specs(n_qubits=n_qubits - 1),
         ]
 
         services = self._get_services(fake_backends)
@@ -150,50 +149,53 @@ class TestBackendFilters(IBMTestCase):
                 for backend in filtered_backends:
                     self.assertGreaterEqual(backend.configuration().n_qubits, n_qubits)
 
-    @unittest.skip("TODO")
     def test_filter_by_hgp(self):
         """Test filtering by hub/group/project."""
         num_backends = 3
-        test_options = {
-            "account_client": BaseFakeAccountClient(num_backends=num_backends),
-            "num_hgps": 2,
-        }
+        hgp_name = "hub0/group0/project0"
+        hgp_backend_specs = [self._get_fake_backend_specs(hgps=[hgp_name]) for _ in range(num_backends)]
+        all_backend_specs = hgp_backend_specs + [self._get_fake_backend_specs(hgps=["hub1/group1/project1"])]
         ibm_quantum_service = FakeRuntimeService(
             channel="ibm_quantum",
             token="my_token",
             instance="h/g/p",
-            test_options=test_options,
+            num_hgps=2,
+            backend_specs=all_backend_specs
         )
         backends = ibm_quantum_service.backends(instance="hub0/group0/project0")
         self.assertEqual(len(backends), num_backends)
+        right_names = {spec.backend_name for spec in hgp_backend_specs}
+        got_names = {back.name for back in backends}
+        self.assertEqual(right_names, got_names)
 
-    def _get_specs(self, **kwargs):
-        """Get the backend specs to pass to the fake account client."""
-        specs = {"configuration": {}, "status": {}}
+    def _get_fake_backend_specs(self, hgps=None, **kwargs):
+        """Get the backend specs to pass to the fake client."""
+        config = {}
+        status = {}
         status_keys = FakeLima().status().to_dict()
         status_keys.pop("backend_name")  # name is in both config and status
         status_keys = list(status_keys.keys())
         for key, val in kwargs.items():
             if key in status_keys:
-                specs["status"][key] = val
+                status[key] = val
             else:
-                specs["configuration"][key] = val
-        return specs
+                config[key] = val
+        name = config.get("backend_name", uuid.uuid4().hex)
+        return FakeApiBackendSpecs(backend_name=name, configuration=config, status=status, hgps=hgps)
 
-    def _get_services(self, fake_backends):
+    def _get_services(self, fake_backend_specs):
         """Get both ibm_cloud and ibm_quantum services initialized with fake backends."""
-        test_options = {"account_client": BaseFakeAccountClient(specs=fake_backends)}
         ibm_quantum_service = FakeRuntimeService(
             channel="ibm_quantum",
             token="my_token",
             instance="h/g/p",
-            test_options=test_options,
+            backend_specs=fake_backend_specs
         )
         cloud_service = FakeRuntimeService(
             channel="ibm_cloud",
             token="my_token",
             instance="my_instance",
-            test_options=test_options,
+            backend_specs=fake_backend_specs
         )
         return [ibm_quantum_service, cloud_service]
 
