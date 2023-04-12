@@ -18,7 +18,7 @@ If you don't have the job ID, or if you want to retrieve multiple jobs at once; 
 Example
 -------
 
-This example returns the 10 most recent runtime jobs that were run on `my_backend`:
+This example returns the 10 most recent runtime jobs that were run on ``my_backend``:
 
 .. code-block:: python
   
