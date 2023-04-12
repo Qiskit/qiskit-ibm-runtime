@@ -6,6 +6,9 @@ The Estimator primitive is used to design an algorithm that calculates expectati
 Background
 ----------
 
+..
+  vale IBMQuantum.Spelling = NO
+
 .. |qiskit.opflow| replace:: ``qiskit.opflow``
 .. _qiskit.opflow: https://qiskit.org/documentation/apidoc/opflow.html
 
@@ -272,7 +275,7 @@ to migrate from, but can help improve your performance and results. For more inf
 3. Other execution alternatives (non-Runtime)
 ----------------------------------------------
 
-This section describes how to use non-Runtime primitives to test an algorithm using local simulation.  Let's assume that we want to solve the problem defined above with a local statevector simulation.
+This section describes how to use non-Runtime primitives to test an algorithm using local simulation.  Let's assume that we want to solve the problem defined above with a local state vector simulation.
 
 3.a. [Legacy] Using the Qiskit Aer simulator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
