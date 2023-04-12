@@ -1,4 +1,4 @@
-Parametrized Circuits With Primitives
+Parametrized circuits with primitives
 =======================================
 
 

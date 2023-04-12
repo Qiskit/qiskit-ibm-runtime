@@ -18,7 +18,7 @@ switch between primitive implementations with minimal code changes. Different pr
 can be found in the ``qiskit``, ``qiskit_aer``, and ``qiskit_ibm_runtime`` library.
 Each implementation serves a specific purpose:
 
-* The primitives in ``qiskit`` can perform local statevector simulations - useful for quickly prototying algorithms. 
+* The primitives in ``qiskit`` can perform local state vector simulations - useful for quickly prototyping algorithms. 
 * The primitives in ``qiskit_aer`` give access to the local Aer simulators for tasks such as noisy simulation. 
 * The primitives in ``qiskit_ibm_runtime`` provide access to cloud simulators and real hardware through the Qiskit
   Runtime service. They include exclusive features such as built-in circuit optimization and error mitigation support.
