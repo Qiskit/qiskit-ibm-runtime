@@ -59,6 +59,7 @@ logger = logging.getLogger(__name__)
 
 SERVICE_NAME = "runtime"
 
+
 class QiskitRuntimeService(Provider):
     """Class for interacting with the Qiskit Runtime service.
 

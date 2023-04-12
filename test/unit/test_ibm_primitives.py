@@ -104,7 +104,7 @@ class TestPrimitives(IBMTestCase):
                     options = {"backend": backend}
                     with warnings.catch_warnings(record=True) as warn:
                         warnings.simplefilter("always")
-                        inst = cls(session=MagicMock(spec=MockSession), options=options)
+                        cls(session=MagicMock(spec=MockSession), options=options)
                         self.assertTrue(
                             all(
                                 issubclass(one_warn.category, DeprecationWarning)

@@ -150,9 +150,9 @@ class Estimator(BaseEstimator):
                 "skip_transpilation", False
             )
             self._options["transpilation"][
-            "skip_transpilation"
+                "skip_transpilation"
             ] = skip_transpilation  # type: ignore[union-attr]
-           
+
         self._initial_inputs = {
             "circuits": circuits,
             "observables": observables,
