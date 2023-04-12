@@ -273,13 +273,13 @@ notice that the workflow is now simplified, as the quasi-probability distributio
 .. attention::
 
     Be careful with the output format. With ``Sampler``, the states are no longer represented
-    by bitstrings, for example, ``"11"``, 
-    but by integers, for example, ``3``. To convert the ``Sampler`` output to bitstrings,
+    by bit strings, for example, ``"11"``, 
+    but by integers, for example, ``3``. To convert the ``Sampler`` output to bit strings,
     you can use the |QuasiDistribution.binary_probabilities|_ method, as shown below.
 
 .. code-block:: python
 
-    >>> # convert the output to bitstrings
+    >>> # convert the output to bit strings
     >>> binary_quasi_dist = quasi_dists[0].binary_probabilities()
     >>> print("binary_quasi_dist: ", binary_quasi_dist)
     binary_quasi_dist:  {'0000': 0.2802734375, '0001': 0.2509765625, '0010': 0.232421875, '0011': 0.236328125}
@@ -295,7 +295,7 @@ to migrate from, but can help improve your performance and results. For more inf
 3. Other execution alternatives (non-Runtime)
 ---------------------------------------------
 
-The following migration paths use non-Runtime primitives to use local simulation to test an algorithm. Let's assume that we want to use a local statevector simulation to solve the problem defined above.
+The following migration paths use non-Runtime primitives to use local simulation to test an algorithm. Let's assume that we want to use a local state vector simulation to solve the problem defined above.
 
 3.a. [Legacy] Use the Qiskit Aer simulator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -420,10 +420,9 @@ the simulation method has been updated to match the result from 3.a.
 
 .. code-block:: python
 
-    >>> # Convert the output to bitstrings
+    >>> # Convert the output to bit strings
     >>> binary_quasi_dist = quasi_dists[0].binary_probabilities()
     >>> print("binary_quasi_dist: ", binary_quasi_dist)
     binary_quasi_dist:  {'0001': 0.2802734375, '0010': 0.2412109375, '0000': 0.2392578125, '0011': 0.2392578125}
 
-For information about running noisy simulations with the **Runtime primitives**, see 
-`this topic <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/how_to/noisy_simulators.html>`_.
+For information, see `Noisy simulators in Qiskit Runtime <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/how_to/noisy_simulators.html>`_.

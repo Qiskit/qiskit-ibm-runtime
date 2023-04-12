@@ -50,10 +50,10 @@ the ground state energy which might require, for example, measurements in multip
 
 Let's see the workflow changes for the Estimator-based VQE implementation:
 
-Step 1: Problem Definition
+Step 1: Problem definition
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The problem definition step is common to the old and new workflow: defining the hamiltonian, ansatz,
+The problem definition step is common to the old and new workflow: defining the Hamiltonian, ansatz,
 optimizer and initial point.
 
 The only difference is that the operator definition now relies on |qiskit.quantum_info|_ instead
@@ -260,7 +260,7 @@ a context manager. The code for steps 2 and 3 would then look like:
 Related links
 ----------------
 * See the `Session documentation <./how_to/run_session.html>` for further information about the Qiskit Runtime sessions.
-* See the `How to run a primitive in a sesison <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/how_to/run_session.html>`__ topic for detailed code examples.
+* See the `How to run a primitive in a session <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/how_to/run_session.html>`__ topic for detailed code examples.
 * See the `Qiskit algorithm documentation <https://qiskit.org/documentation/apidoc/algorithms.html>`__ for details about each algorithm.
 * See the `Qiskit algorithm tutorials <https://qiskit.org/documentation/tutorials/algorithms/index.html>`__ for examples of how to use algorithms.
 * Read the blog `Introducing Qiskit Algorithms With Qiskit Primitives! <https://medium.com/qiskit/introducing-qiskit-algorithms-with-qiskit-runtime-primitives-d89703ecfca3>`__ for an introduction to using the updated algorithms.
