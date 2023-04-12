@@ -47,7 +47,6 @@ from .hub_group_project import HubGroupProject  # pylint: disable=cyclic-import
 from .program.result_decoder import ResultDecoder
 from .runtime_job import RuntimeJob
 from .runtime_program import RuntimeProgram, ParameterNamespace
-from .runtime_session import RuntimeSession  # pylint: disable=cyclic-import
 from .utils import RuntimeDecoder, to_base64_string, to_python_identifier
 from .utils.backend_decoder import configuration_from_server_data
 from .utils.hgp import to_instance_format, from_instance_format
