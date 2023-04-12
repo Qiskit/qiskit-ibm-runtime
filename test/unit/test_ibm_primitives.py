@@ -21,11 +21,13 @@ from dataclasses import asdict
 from typing import Dict
 import unittest
 
+from qiskit import transpile
 from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.primitives.utils import _circuit_key
+from qiskit.providers.fake_provider import FakeManila
 
 from qiskit_ibm_runtime import (
     Sampler,
@@ -39,7 +41,12 @@ import qiskit_ibm_runtime.session as session_pkg
 from qiskit_ibm_runtime.utils.utils import _hash
 
 from ..ibm_test_case import IBMTestCase
-from ..utils import dict_paritally_equal, flat_dict_partially_equal, dict_keys_equal
+from ..utils import (
+    dict_paritally_equal,
+    flat_dict_partially_equal,
+    dict_keys_equal,
+    create_faulty_backend,
+)
 from .mock.fake_runtime_service import FakeRuntimeService
 
 
@@ -627,6 +634,178 @@ class TestPrimitives(IBMTestCase):
                     1,
                 )
                 self.assertEqual(inputs["resilience_settings"]["level"], 0)
+
+    def test_raise_faulty_qubits(self):
+        """Test faulty qubits is raised."""
+        fake_backend = FakeManila()
+        num_qubits = fake_backend.configuration().num_qubits
+        circ = QuantumCircuit(num_qubits, num_qubits)
+        for i in range(num_qubits):
+            circ.x(i)
+        transpiled = transpile(circ, backend=fake_backend)
+        observable = SparsePauliOp("Z" * num_qubits)
+
+        faulty_qubit = 4
+        ibm_backend = create_faulty_backend(fake_backend, faulty_qubit=faulty_qubit)
+        service = MagicMock()
+        service.backend.return_value = ibm_backend
+        session = Session(service=service, backend=fake_backend.name)
+        sampler = Sampler(session=session)
+        estimator = Estimator(session=session)
+
+        with self.assertRaises(ValueError) as err:
+            sampler.run(transpiled, skip_transpilation=True)
+        self.assertIn(f"faulty qubit {faulty_qubit}", str(err.exception))
+
+        with self.assertRaises(ValueError) as err:
+            estimator.run(transpiled, observable, skip_transpilation=True)
+        self.assertIn(f"faulty qubit {faulty_qubit}", str(err.exception))
+
+    def test_raise_faulty_qubits_many(self):
+        """Test faulty qubits is raised if one circuit uses it."""
+        fake_backend = FakeManila()
+        num_qubits = fake_backend.configuration().num_qubits
+
+        circ1 = QuantumCircuit(1, 1)
+        circ1.x(0)
+        circ2 = QuantumCircuit(num_qubits, num_qubits)
+        for i in range(num_qubits):
+            circ2.x(i)
+        transpiled = transpile([circ1, circ2], backend=fake_backend)
+        observable = SparsePauliOp("Z" * num_qubits)
+
+        faulty_qubit = 4
+        ibm_backend = create_faulty_backend(fake_backend, faulty_qubit=faulty_qubit)
+        service = MagicMock()
+        service.backend.return_value = ibm_backend
+        session = Session(service=service, backend=fake_backend.name)
+        sampler = Sampler(session=session)
+        estimator = Estimator(session=session)
+
+        with self.assertRaises(ValueError) as err:
+            sampler.run(transpiled, skip_transpilation=True)
+        self.assertIn(f"faulty qubit {faulty_qubit}", str(err.exception))
+
+        with self.assertRaises(ValueError) as err:
+            estimator.run(transpiled, [observable, observable], skip_transpilation=True)
+        self.assertIn(f"faulty qubit {faulty_qubit}", str(err.exception))
+
+    def test_raise_faulty_edge(self):
+        """Test faulty edge is raised."""
+        fake_backend = FakeManila()
+        num_qubits = fake_backend.configuration().num_qubits
+        circ = QuantumCircuit(num_qubits, num_qubits)
+        for i in range(num_qubits - 2):
+            circ.cx(i, i + 1)
+        transpiled = transpile(circ, backend=fake_backend)
+        observable = SparsePauliOp("Z" * num_qubits)
+
+        edge_qubits = [0, 1]
+        ibm_backend = create_faulty_backend(
+            fake_backend, faulty_edge=("cx", edge_qubits)
+        )
+        service = MagicMock()
+        service.backend.return_value = ibm_backend
+        session = Session(service=service, backend=fake_backend.name)
+        sampler = Sampler(session=session)
+        estimator = Estimator(session=session)
+
+        with self.assertRaises(ValueError) as err:
+            sampler.run(transpiled, skip_transpilation=True)
+        self.assertIn("cx", str(err.exception))
+        self.assertIn(f"faulty edge {tuple(edge_qubits)}", str(err.exception))
+
+        with self.assertRaises(ValueError) as err:
+            estimator.run(transpiled, observable, skip_transpilation=True)
+        self.assertIn("cx", str(err.exception))
+        self.assertIn(f"faulty edge {tuple(edge_qubits)}", str(err.exception))
+
+    def test_faulty_qubit_not_used(self):
+        """Test faulty qubit is not raise if not used."""
+        fake_backend = FakeManila()
+        circ = QuantumCircuit(2, 2)
+        for i in range(2):
+            circ.x(i)
+        transpiled = transpile(circ, backend=fake_backend, initial_layout=[0, 1])
+        observable = SparsePauliOp("Z" * fake_backend.configuration().num_qubits)
+
+        faulty_qubit = 4
+        ibm_backend = create_faulty_backend(fake_backend, faulty_qubit=faulty_qubit)
+
+        service = MagicMock()
+        service.backend.return_value = ibm_backend
+        session = Session(service=service, backend=fake_backend.name)
+        sampler = Sampler(session=session)
+        estimator = Estimator(session=session)
+
+        with patch.object(Session, "run") as mock_run:
+            sampler.run(transpiled, skip_transpilation=True)
+        mock_run.assert_called_once()
+
+        with patch.object(Session, "run") as mock_run:
+            estimator.run(transpiled, observable, skip_transpilation=True)
+        mock_run.assert_called_once()
+
+    def test_faulty_edge_not_used(self):
+        """Test faulty edge is not raised if not used."""
+        fake_backend = FakeManila()
+        coupling_map = fake_backend.configuration().coupling_map
+
+        circ = QuantumCircuit(2, 2)
+        circ.cx(0, 1)
+
+        transpiled = transpile(
+            circ, backend=fake_backend, initial_layout=coupling_map[0]
+        )
+        observable = SparsePauliOp("Z" * fake_backend.configuration().num_qubits)
+
+        edge_qubits = coupling_map[-1]
+        ibm_backend = create_faulty_backend(
+            fake_backend, faulty_edge=("cx", edge_qubits)
+        )
+
+        service = MagicMock()
+        service.backend.return_value = ibm_backend
+        session = Session(service=service, backend=fake_backend.name)
+        sampler = Sampler(session=session)
+        estimator = Estimator(session=session)
+
+        with patch.object(Session, "run") as mock_run:
+            sampler.run(transpiled, skip_transpilation=True)
+        mock_run.assert_called_once()
+
+        with patch.object(Session, "run") as mock_run:
+            estimator.run(transpiled, observable, skip_transpilation=True)
+        mock_run.assert_called_once()
+
+    def test_no_raise_skip_transpilation(self):
+        """Test faulty qubits and edges are not raise if not skipping."""
+        fake_backend = FakeManila()
+        num_qubits = fake_backend.configuration().num_qubits
+        circ = QuantumCircuit(num_qubits, num_qubits)
+        for i in range(num_qubits - 2):
+            circ.cx(i, i + 1)
+        transpiled = transpile(circ, backend=fake_backend)
+        observable = SparsePauliOp("Z" * num_qubits)
+
+        edge_qubits = [0, 1]
+        ibm_backend = create_faulty_backend(
+            fake_backend, faulty_qubit=0, faulty_edge=("cx", edge_qubits)
+        )
+
+        service = MagicMock()
+        service.backend.return_value = ibm_backend
+        session = Session(service=service, backend=fake_backend.name)
+        sampler = Sampler(session=session)
+        estimator = Estimator(session=session)
+
+        with patch.object(Session, "run") as mock_run:
+            sampler.run(transpiled)
+        mock_run.assert_called_once()
+
+        with patch.object(Session, "run") as mock_run:
+            estimator.run(transpiled, observable)
+        mock_run.assert_called_once()
 
     def _update_dict(self, dict1, dict2):
         for key, val in dict1.items():

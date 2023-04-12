@@ -166,14 +166,15 @@ class RuntimeJob(Job):
         Args:
             response: Response to check for url keyword, if available, download result from given URL
         """
-        if "url" in response:
+        try:
             result_url_json = json.loads(response)
             if "url" in result_url_json:
                 url = result_url_json["url"]
                 result_response = requests.get(url)
-                response = result_response.content
-
-        return response
+                return result_response.content
+            return response
+        except json.JSONDecodeError:
+            return response
 
     def interim_results(self, decoder: Optional[Type[ResultDecoder]] = None) -> Any:
         """Return the interim results of the job.
