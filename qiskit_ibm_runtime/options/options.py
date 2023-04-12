@@ -15,6 +15,7 @@
 from typing import Optional, Union, ClassVar
 from dataclasses import dataclass, fields, field
 import copy
+import warnings
 
 from .utils import _flexible, Dict
 from .environment_options import EnvironmentOptions
@@ -81,8 +82,12 @@ class Options:
             :class:`SimulatorOptions` for all available options.
     """
 
-    optimization_level: int = 3
-    resilience_level: int = 1
+    # Defaults for optimization_level and for resilience_level will be assigned
+    # in Sampler/Estimator
+    _DEFAULT_OPTIMIZATION_LEVEL = 3
+    _DEFAULT_RESILIENCE_LEVEL = 1
+    optimization_level: Optional[int] = None
+    resilience_level: Optional[int] = None
     max_execution_time: Optional[int] = None
     transpilation: Union[TranspilationOptions, Dict] = field(
         default_factory=TranspilationOptions
@@ -101,6 +106,7 @@ class Options:
         "execution": ExecutionOptions,
         "environment": EnvironmentOptions,
         "simulator": SimulatorOptions,
+        "resilience": ResilienceOptions,
     }
 
     @staticmethod
@@ -144,6 +150,9 @@ class Options:
         # Add additional unknown keys.
         for key in options.keys():
             if key not in known_keys:
+                warnings.warn(
+                    f"Key '{key}' is an unrecognized option. It may be ignored."
+                )
                 inputs[key] = options[key]
         return inputs
 

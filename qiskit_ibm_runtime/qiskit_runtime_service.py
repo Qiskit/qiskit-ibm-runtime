@@ -54,7 +54,6 @@ logger = logging.getLogger(__name__)
 
 SERVICE_NAME = "runtime"
 
-
 class QiskitRuntimeService(Provider):
     """Class for interacting with the Qiskit Runtime service.
 
@@ -94,6 +93,9 @@ class QiskitRuntimeService(Provider):
                 circuits=[psi], observables=[H1], parameter_values=[theta]
             )
             print(f"Estimator results: {job.result()}")
+            # Close the session only if all jobs are finished
+            # and you don't need to run more in the session.
+            session.close()
 
     The example above uses the dedicated :class:`~qiskit_ibm_runtime.Sampler`
     and :class:`~qiskit_ibm_runtime.Estimator` classes. You can also
@@ -116,6 +118,7 @@ class QiskitRuntimeService(Provider):
         auth: Optional[AccountType] = None,
         token: Optional[str] = None,
         url: Optional[str] = None,
+        filename: Optional[str] = None,
         name: Optional[str] = None,
         instance: Optional[str] = None,
         proxies: Optional[dict] = None,
@@ -142,6 +145,8 @@ class QiskitRuntimeService(Provider):
             url: The API URL.
                 Defaults to https://cloud.ibm.com (ibm_cloud) or
                 https://auth.quantum-computing.ibm.com/api (ibm_quantum).
+            filename: Full path of the file where the account is created.
+                Default: _DEFAULT_ACCOUNT_CONFIG_JSON_FILE
             name: Name of the account to load.
             instance: The service instance to use.
                 For ``ibm_cloud`` runtime, this is the Cloud Resource Name (CRN) or the service name.
@@ -170,6 +175,7 @@ class QiskitRuntimeService(Provider):
             instance=instance,
             channel=channel,
             auth=auth,
+            filename=filename,
             name=name,
             proxies=ProxyConfiguration(**proxies) if proxies else None,
             verify=verify,
@@ -229,6 +235,7 @@ class QiskitRuntimeService(Provider):
         instance: Optional[str] = None,
         channel: Optional[ChannelType] = None,
         auth: Optional[AccountType] = None,
+        filename: Optional[str] = None,
         name: Optional[str] = None,
         proxies: Optional[ProxyConfiguration] = None,
         verify: Optional[bool] = None,
@@ -237,13 +244,22 @@ class QiskitRuntimeService(Provider):
         account = None
         verify_ = verify or True
         if name:
-            if any([auth, channel, token, url]):
-                logger.warning(
-                    "Loading account with name %s. Any input 'auth', "
-                    "'channel', 'token' or 'url' are ignored.",
-                    name,
-                )
-            account = AccountManager.get(name=name)
+            if filename:
+                if any([auth, channel, token, url]):
+                    logger.warning(
+                        "Loading account from file %s with name %s. Any input 'auth', "
+                        "'channel', 'token' or 'url' are ignored.",
+                        filename,
+                        name,
+                    )
+            else:
+                if any([auth, channel, token, url]):
+                    logger.warning(
+                        "Loading account with name %s. Any input 'auth', "
+                        "'channel', 'token' or 'url' are ignored.",
+                        name,
+                    )
+            account = AccountManager.get(filename=filename, name=name)
         elif auth or channel:
             if auth and auth not in ["legacy", "cloud"]:
                 raise ValueError("'auth' can only be 'cloud' or 'legacy'")
@@ -264,7 +280,9 @@ class QiskitRuntimeService(Provider):
                     logger.warning(
                         "Loading default %s account. Input 'url' is ignored.", channel
                     )
-                account = AccountManager.get(channel=channel)
+                account = AccountManager.get(
+                    filename=filename, name=name, channel=channel
+                )
         elif any([token, url]):
             # Let's not infer based on these attributes as they may change in the future.
             raise ValueError(
@@ -272,7 +290,7 @@ class QiskitRuntimeService(Provider):
             )
 
         if account is None:
-            account = AccountManager.get()
+            account = AccountManager.get(filename=filename)
 
         if instance:
             account.instance = instance
@@ -374,7 +392,7 @@ class QiskitRuntimeService(Provider):
             hgp_params = ClientParameters(
                 channel=self._account.channel,
                 token=auth_client.current_access_token(),
-                url=service_urls["http"],
+                url=service_urls["services"]["runtime"],
                 instance=to_instance_format(
                     hub_info["hub"], hub_info["group"], hub_info["project"]
                 ),
@@ -433,7 +451,7 @@ class QiskitRuntimeService(Provider):
     def _get_hgp(
         self,
         instance: Optional[str] = None,
-        backend_name: Optional[str] = None,
+        backend_name: Optional[Any] = None,
     ) -> HubGroupProject:
         """Return an instance of `HubGroupProject`.
 
@@ -473,10 +491,17 @@ class QiskitRuntimeService(Provider):
             if hgp.backend(backend_name):
                 return hgp
 
-        raise QiskitBackendNotFoundError(
+        error_message = (
             f"Backend {backend_name} cannot be found in any "
             f"hub/group/project for this account."
         )
+        if not isinstance(backend_name, str):
+            error_message += (
+                f" {backend_name} is of type {type(backend_name)} but should "
+                f"instead be initialized through the {self}."
+            )
+
+        raise QiskitBackendNotFoundError(error_message)
 
     def _discover_backends(self) -> None:
         """Discovers the remote backends for this account, if not already known."""
@@ -507,12 +532,25 @@ class QiskitRuntimeService(Provider):
                 For example::
 
                     QiskitRuntimeService.backends(
-                        filters=lambda b: b.configuration().quantum_volume > 16)
-            **kwargs: Simple filters that specify a ``True``/``False`` criteria in the
-                backend configuration or status.
-                An example to get the operational real backends::
+                        filters=lambda b: b.max_shots > 50000)
+                    QiskitRuntimeService.backends(
+                        filters=lambda x: ("rz" in x.basis_gates )
 
+            **kwargs: Simple filters that require a specific value for an attribute in
+                backend configuration or status.
+                Examples::
+
+                    # Get the operational real backends
                     QiskitRuntimeService.backends(simulator=False, operational=True)
+
+                    # Get the backends with at least 127 qubits
+                    QiskitRuntimeService.backends(min_num_qubits=127)
+
+                    # Get the backends that support OpenPulse
+                    QiskitRuntimeService.backends(open_pulse=True)
+
+                For the full list of backend attributes, see the `IBMBackend` class documentation
+                <https://qiskit.org/documentation/apidoc/providers_models.html>
 
         Returns:
             The list of available backends that match the filter.
@@ -551,6 +589,7 @@ class QiskitRuntimeService(Provider):
 
     @staticmethod
     def delete_account(
+        filename: Optional[str] = None,
         name: Optional[str] = None,
         auth: Optional[str] = None,
         channel: Optional[ChannelType] = None,
@@ -558,6 +597,7 @@ class QiskitRuntimeService(Provider):
         """Delete a saved account from disk.
 
         Args:
+            filename: Name of file from which to delete the account.
             name: Name of the saved account to delete.
             auth: (DEPRECATED, use `channel` instead) Authentication type of the default
                 account to delete. Ignored if account name is provided.
@@ -572,7 +612,7 @@ class QiskitRuntimeService(Provider):
             QiskitRuntimeService._auth_warning()
             channel = channel or QiskitRuntimeService._get_channel_for_auth(auth=auth)
 
-        return AccountManager.delete(name=name, channel=channel)
+        return AccountManager.delete(filename=filename, name=name, channel=channel)
 
     @staticmethod
     def _get_channel_for_auth(auth: str) -> str:
@@ -588,6 +628,7 @@ class QiskitRuntimeService(Provider):
         instance: Optional[str] = None,
         channel: Optional[ChannelType] = None,
         auth: Optional[AccountType] = None,
+        filename: Optional[str] = None,
         name: Optional[str] = None,
         proxies: Optional[dict] = None,
         verify: Optional[bool] = None,
@@ -603,6 +644,7 @@ class QiskitRuntimeService(Provider):
             instance: The CRN (ibm_cloud) or hub/group/project (ibm_quantum).
             channel: Channel type. `ibm_cloud` or `ibm_quantum`.
             auth: (DEPRECATED, use `channel` instead) Authentication type. `cloud` or `legacy`.
+            filename: Full path of the file where the account is saved.
             name: Name of the account to save.
             proxies: Proxy configuration. Supported optional keys are
                 ``urls`` (a dictionary mapping protocol or protocol and host to the URL of the proxy,
@@ -621,6 +663,7 @@ class QiskitRuntimeService(Provider):
             url=url,
             instance=instance,
             channel=channel,
+            filename=filename,
             name=name,
             proxies=ProxyConfiguration(**proxies) if proxies else None,
             verify=verify,
@@ -632,6 +675,7 @@ class QiskitRuntimeService(Provider):
         default: Optional[bool] = None,
         auth: Optional[str] = None,
         channel: Optional[ChannelType] = None,
+        filename: Optional[str] = None,
         name: Optional[str] = None,
     ) -> dict:
         """List the accounts saved on disk.
@@ -641,6 +685,7 @@ class QiskitRuntimeService(Provider):
             auth: (DEPRECATED, use `channel` instead) If set, only accounts with the given
                 authentication type are returned.
             channel: Channel type. `ibm_cloud` or `ibm_quantum`.
+            filename: Name of file whose accounts are returned.
             name: If set, only accounts with the given name are returned.
 
         Returns:
@@ -656,7 +701,7 @@ class QiskitRuntimeService(Provider):
             map(
                 lambda kv: (kv[0], Account.to_saved_format(kv[1])),
                 AccountManager.list(
-                    default=default, channel=channel, name=name
+                    default=default, channel=channel, filename=filename, name=name
                 ).items(),
             ),
         )
@@ -671,7 +716,9 @@ class QiskitRuntimeService(Provider):
         Args:
             name: Name of the backend.
             instance: This is only supported for ``ibm_quantum`` runtime and is in the
-                hub/group/project format.
+                hub/group/project format. If an instance is not given, among the providers
+                with access to the backend, a premium provider will be priotized.
+                For users without access to a premium provider, the default open provider will be used.
 
         Returns:
             Backend: A backend matching the filtering.
@@ -679,10 +726,18 @@ class QiskitRuntimeService(Provider):
         Raises:
             QiskitBackendNotFoundError: if no backend could be found.
         """
-        # pylint: disable=arguments-differ
+        # pylint: disable=arguments-differ, line-too-long
         backends = self.backends(name, instance=instance)
         if not backends:
-            raise QiskitBackendNotFoundError("No backend matches the criteria")
+            cloud_msg_url = ""
+            if self._channel == "ibm_cloud":
+                cloud_msg_url = (
+                    " Learn more about available backends here "
+                    "https://cloud.ibm.com/docs/quantum-computing?topic=quantum-computing-choose-backend "
+                )
+            raise QiskitBackendNotFoundError(
+                "No backend matches the criteria." + cloud_msg_url
+            )
         return backends[0]
 
     def get_backend(self, name: str = None, **kwargs: Any) -> Backend:
@@ -908,6 +963,7 @@ class QiskitRuntimeService(Provider):
                 job_tags=qrt_options.job_tags,
                 max_execution_time=qrt_options.max_execution_time,
                 start_session=start_session,
+                session_time=qrt_options.session_time,
             )
         except RequestsApiError as ex:
             if ex.status_code == 404:
@@ -929,6 +985,7 @@ class QiskitRuntimeService(Provider):
             user_callback=callback,
             result_decoder=result_decoder,
             image=qrt_options.image,
+            service=self,
         )
         return job
 
@@ -1197,6 +1254,7 @@ class QiskitRuntimeService(Provider):
         self,
         limit: Optional[int] = 10,
         skip: int = 0,
+        backend_name: Optional[str] = None,
         pending: bool = None,
         program_id: str = None,
         instance: Optional[str] = None,
@@ -1211,6 +1269,7 @@ class QiskitRuntimeService(Provider):
         Args:
             limit: Number of jobs to retrieve. ``None`` means no limit.
             skip: Starting index for the job retrieval.
+            backend_name: Name of the backend to retrieve jobs from.
             pending: Filter by job pending state. If ``True``, 'QUEUED' and 'RUNNING'
                 jobs are included. If ``False``, 'DONE', 'CANCELLED' and 'ERROR' jobs
                 are included.
@@ -1250,6 +1309,7 @@ class QiskitRuntimeService(Provider):
             jobs_response = self._api_client.jobs_get(
                 limit=current_page_limit,
                 skip=offset,
+                backend_name=backend_name,
                 pending=pending,
                 program_id=program_id,
                 hub=hub,
@@ -1321,7 +1381,10 @@ class QiskitRuntimeService(Provider):
                 instance = to_instance_format(hub, group, project)
         # Try to find the right backend
         try:
-            backend = self.backend(raw_data["backend"], instance=instance)
+            if "backend" in raw_data:
+                backend = self.backend(raw_data["backend"], instance=instance)
+            else:
+                backend = None
         except QiskitBackendNotFoundError:
             backend = ibm_backend.IBMRetiredBackend.from_name(
                 backend_name=raw_data["backend"],
@@ -1342,10 +1405,13 @@ class QiskitRuntimeService(Provider):
             backend=backend,
             api_client=self._api_client,
             client_params=self._client_params,
+            service=self,
             job_id=raw_data["id"],
             program_id=raw_data.get("program", {}).get("id", ""),
             params=decoded,
             creation_date=raw_data.get("created", None),
+            session_id=raw_data.get("session_id"),
+            tags=raw_data.get("tags"),
         )
 
     def least_busy(
@@ -1361,14 +1427,7 @@ class QiskitRuntimeService(Provider):
             min_num_qubits: Minimum number of qubits the backend has to have.
             instance: This is only supported for ``ibm_quantum`` runtime and is in the
                 hub/group/project format.
-            filters: More complex filters, such as lambda functions.
-                For example::
-
-                    AccountProvider.backends(
-                        filters=lambda b: b.configuration().quantum_volume > 16)
-
-            **kwargs: Simple filters that specify a ``True``/``False`` criteria in the
-                backend configuration, backends status, or provider credentials.
+            filters: Filters can be defined as for the :meth:`backends` method.
                 An example to get the operational backends with 5 qubits::
 
                     QiskitRuntimeService.least_busy(n_qubits=5, operational=True)

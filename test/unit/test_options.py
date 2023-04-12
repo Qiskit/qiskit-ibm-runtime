@@ -13,6 +13,7 @@
 """Tests for Options class."""
 
 from dataclasses import asdict
+import warnings
 
 from qiskit_aer.noise import NoiseModel
 from qiskit.providers.fake_provider import FakeNairobiV2
@@ -131,9 +132,14 @@ class TestOptions(IBMTestCase):
             simulator={"noise_model": noise_model},
             resilience={"noise_amplifier": "GlobalFoldingAmplifier"},
             foo="foo",
+            bar="bar",
         )
 
-        inputs = Options._get_program_inputs(asdict(options))
+        with warnings.catch_warnings(record=True) as warn:
+            warnings.simplefilter("always")
+            inputs = Options._get_program_inputs(asdict(options))
+            self.assertEqual(len(warn), 2)
+
         expected = {
             "run_options": {"shots": 100, "noise_model": noise_model},
             "transpilation_settings": {
@@ -164,6 +170,8 @@ class TestOptions(IBMTestCase):
                 "transpilation": {"initial_layout": [1, 2], "layout_method": "trivial"},
                 "execution": {"shots": 100},
             },
+            {"resilience": {"noise_amplifier": "GlobalFoldingAmplifier"}},
+            {"environment": {"log_level": "ERROR"}},
         ]
 
         for opts_dict in options_dicts:

@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    Fixed a bug where the default values for ``optimization_level`` and for ``resilience_level`` 
+    were not being set correctly.
+

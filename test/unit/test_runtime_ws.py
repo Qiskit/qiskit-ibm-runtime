@@ -85,7 +85,9 @@ class TestRuntimeWebsocketClient(IBMTestCase):
             self.assertEqual(JOB_ID_PROGRESS_DONE, job_id)
 
         def _patched_run(callback, *args, **kwargs):  # pylint: disable=unused-argument
-            return self._get_job(callback=callback, backend=MagicMock(spec=IBMBackend))
+            backend = MagicMock(spec=IBMBackend)
+            backend.name = None
+            return self._get_job(callback=callback, backend=backend)
 
         service = MagicMock(spec=QiskitRuntimeService)
         service.run = _patched_run
@@ -237,6 +239,7 @@ class TestRuntimeWebsocketClient(IBMTestCase):
             backend=backend,
             api_client=BaseFakeRuntimeClient(),
             client_params=params,
+            service=MagicMock(),
             job_id=job_id,
             program_id="my-program",
             user_callback=callback,

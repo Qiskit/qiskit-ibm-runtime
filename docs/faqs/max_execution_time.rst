@@ -8,7 +8,7 @@ To ensure fairness, there is a maximum execution time for each Qiskit Runtime jo
 a job exceeds this time limit, it is forcibly cancelled. This is represented in the job
 status as `Cancelled - Ran too long`. The maximum execution time is the
 smaller of 1) the system limit and 2) the ``max_execution_time`` defined by the program.
-The system limit is defined below:
+The system limit is defined as follows:
 
 Qiskit Runtime on IBM Cloud
 ---------------------------
@@ -34,7 +34,7 @@ The system limit on the job execution time is
 Note that a *premium user* here means a user who has access to backends in providers other than ibm-q/open/main.
 
 
-Other Limitations
+Other limitations
 -----------------
 
 - Programs cannot exceed 750KB in size.

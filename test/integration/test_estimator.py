@@ -111,6 +111,7 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
             self.assertIsInstance(result5, EstimatorResult)
             self.assertEqual(len(result5.values), len(circuits5))
             self.assertEqual(len(result5.metadata), len(circuits5))
+            session.close()
 
     @unittest.skip("Skip until data caching is reenabled.")
     @run_integration_test
@@ -164,6 +165,7 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
             self.assertEqual(result.values[0], -1)
             self.assertNotEqual(result.values[1], -1)
             self.assertNotEqual(result.values[1], 1)
+            session.close()
 
     @unittest.skip("Skip until data caching is reenabled.")
     @run_integration_test
@@ -199,12 +201,17 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
             )
             with self.assertRaises(RuntimeJobFailureError):
                 job.result()
+            session.close()
 
     @run_integration_test
     def test_estimator_primitive(self, service):
         """Test to verify that estimator as a primitive still works."""
 
-        options = {"backend": self.backend}
+        options = {
+            "backend": self.backend,
+            "optimization_level": 1,
+            "resilience_level": 0,
+        }
 
         psi1 = RealAmplitudes(num_qubits=2, reps=2)
         psi2 = RealAmplitudes(num_qubits=2, reps=3)
@@ -290,6 +297,7 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
             self.assertTrue((result.values == ws_result_values).all())
             self.assertEqual(len(job_ids), 1)
             self.assertEqual(job.job_id(), job_ids.pop())
+            session.close()
 
     @run_integration_test
     def test_estimator_coeffs(self, service):
@@ -339,6 +347,7 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
 
             chsh1_runtime = job1.result()
             chsh2_runtime = job2.result()
+            session.close()
 
         self.assertTrue(np.allclose(chsh1_terra.values, chsh1_runtime.values, rtol=0.3))
         self.assertTrue(np.allclose(chsh2_terra.values, chsh2_runtime.values, rtol=0.3))

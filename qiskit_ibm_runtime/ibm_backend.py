@@ -17,6 +17,7 @@ import logging
 from typing import Iterable, Union, Optional, Any, List
 from datetime import datetime as python_datetime
 
+from qiskit import QuantumCircuit
 from qiskit.qobj.utils import MeasLevel, MeasReturnType
 from qiskit.providers.backend import BackendV2 as Backend
 from qiskit.providers.options import Options
@@ -40,7 +41,7 @@ from qiskit_ibm_runtime import (  # pylint: disable=unused-import,cyclic-import
     qiskit_runtime_service,
 )
 
-from .api.clients import AccountClient, RuntimeClient
+from .api.clients import RuntimeClient
 from .api.clients.backend import BaseBackendClient
 from .exceptions import IBMBackendApiProtocolError
 from .utils.backend_converter import (
@@ -155,6 +156,7 @@ class IBMBackend(Backend):
         configuration: Union[QasmBackendConfiguration, PulseBackendConfiguration],
         service: "qiskit_runtime_service.QiskitRuntimeService",
         api_client: BaseBackendClient,
+        instance: Optional[str] = None,
     ) -> None:
         """IBMBackend constructor.
 
@@ -168,6 +170,7 @@ class IBMBackend(Backend):
             online_date=configuration.online_date,
             backend_version=configuration.backend_version,
         )
+        self._instance = instance
         self._service = service
         self._api_client = api_client
         self._configuration = configuration
@@ -212,10 +215,14 @@ class IBMBackend(Backend):
                 )
             )
 
-    def _get_properties(self) -> None:
+    def _get_properties(self, datetime: Optional[python_datetime] = None) -> None:
         """Gets backend properties and decodes it"""
+        if datetime:
+            datetime = local_to_utc(datetime)
         if not self._properties:
-            api_properties = self._api_client.backend_properties(self.name)
+            api_properties = self._api_client.backend_properties(
+                self.name, datetime=datetime
+            )
             if api_properties:
                 backend_properties = properties_from_server_data(api_properties)
                 self._properties = backend_properties
@@ -307,6 +314,16 @@ class IBMBackend(Backend):
             Target
         """
         self._get_properties()
+        self._get_defaults()
+        self._convert_to_target()
+        return self._target
+
+    def target_history(self, datetime: Optional[python_datetime] = None) -> Target:
+        """A :class:`qiskit.transpiler.Target` object for the backend.
+        Returns:
+            Target with properties found on `datetime`
+        """
+        self._get_properties(datetime=datetime)
         self._get_defaults()
         self._convert_to_target()
         return self._target
@@ -486,6 +503,42 @@ class IBMBackend(Backend):
             "IBMBackend.run() is not supported in the Qiskit Runtime environment."
         )
 
+    def check_faulty(self, circuit: QuantumCircuit) -> None:
+        """Check if the input circuit uses faulty qubits or edges.
+
+        Args:
+            circuit: Circuit to check.
+
+        Raises:
+            ValueError: If an instruction operating on a faulty qubit or edge is found.
+        """
+        if not self.properties():
+            return
+
+        faulty_qubits = self.properties().faulty_qubits()
+        faulty_gates = self.properties().faulty_gates()
+        faulty_edges = [
+            tuple(gate.qubits) for gate in faulty_gates if len(gate.qubits) > 1
+        ]
+
+        for instr in circuit.data:
+            if instr.operation.name == "barrier":
+                continue
+            qubit_indices = tuple(circuit.find_bit(x).index for x in instr.qubits)
+
+            for circ_qubit in qubit_indices:
+                if circ_qubit in faulty_qubits:
+                    raise ValueError(
+                        f"Circuit {circuit.name} contains instruction "
+                        f"{instr} operating on a faulty qubit {circ_qubit}."
+                    )
+
+            if len(qubit_indices) == 2 and qubit_indices in faulty_edges:
+                raise ValueError(
+                    f"Circuit {circuit.name} contains instruction "
+                    f"{instr} operating on a faulty edge {qubit_indices}"
+                )
+
 
 class IBMRetiredBackend(IBMBackend):
     """Backend class interfacing with an IBM Quantum device no longer available."""
@@ -494,7 +547,7 @@ class IBMRetiredBackend(IBMBackend):
         self,
         configuration: Union[QasmBackendConfiguration, PulseBackendConfiguration],
         service: "qiskit_runtime_service.QiskitRuntimeService",
-        api_client: Optional[AccountClient] = None,
+        api_client: Optional[RuntimeClient] = None,
     ) -> None:
         """IBMRetiredBackend constructor.
 
@@ -535,7 +588,7 @@ class IBMRetiredBackend(IBMBackend):
     def from_name(
         cls,
         backend_name: str,
-        api: Optional[AccountClient] = None,
+        api: Optional[RuntimeClient] = None,
     ) -> "IBMRetiredBackend":
         """Return a retired backend from its name."""
         configuration = QasmBackendConfiguration(

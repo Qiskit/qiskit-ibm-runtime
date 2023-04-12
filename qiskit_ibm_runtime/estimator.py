@@ -30,6 +30,7 @@ from .runtime_job import RuntimeJob
 from .ibm_backend import IBMBackend
 from .session import get_default_session
 from .options import Options
+from .options.utils import set_default_error_levels
 from .constants import DEFAULT_DECODERS
 
 # pylint: disable=unused-import,cyclic-import
@@ -82,6 +83,9 @@ class Estimator(BaseEstimator):
                 parameter_values=[theta1]*2
             )
             print(psi1_H23.result())
+            # Close the session only if all jobs are finished
+            # and you don't need to run more in the session
+            session.close()
     """
 
     _PROGRAM_ID = "estimator"
@@ -121,7 +125,7 @@ class Estimator(BaseEstimator):
             options: Primitive options, see :class:`Options` for detailed description.
                 The ``backend`` keyword is still supported but is deprecated.
         """
-        # `_options` in this class is an instance of qiskit_ibm_runtime.Options class.
+        # `self._options` in this class is a Dict.
         # The base class, however, uses a `_run_options` which is an instance of
         # qiskit.providers.Options. We largely ignore this _run_options because we use
         # a nested dictionary to categorize options.
@@ -135,21 +139,20 @@ class Estimator(BaseEstimator):
         self._session: Session = None
 
         if options is None:
-            _options = Options()
+            self._options = asdict(Options())
         elif isinstance(options, Options):
-            _options = copy.deepcopy(options)
+            self._options = asdict(copy.deepcopy(options))
         else:
             options_copy = copy.deepcopy(options)
-            skip_transpilation = options.get("transpilation", {}).get(
+            default_options = asdict(Options())
+            self._options = Options._merge_options(default_options, options_copy)
+            skip_transpilation = self._options.get("transpilation", {}).get(
                 "skip_transpilation", False
             )
-            _options = Options(**options_copy)
-            _options.transpilation.skip_transpilation = (  # type: ignore[union-attr]
-                skip_transpilation
-            )
-
-        self._options: dict = asdict(_options)
-
+            self._options["transpilation"][
+            "skip_transpilation"
+            ] = skip_transpilation  # type: ignore[union-attr]
+           
         self._initial_inputs = {
             "circuits": circuits,
             "observables": observables,
@@ -264,8 +267,25 @@ class Estimator(BaseEstimator):
         }
 
         combined = Options._merge_options(self._options, kwargs.get("_user_kwargs", {}))
+
+        backend_obj: Optional[IBMBackend] = None
+        if self._session.backend():
+            backend_obj = self._session.service.backend(self._session.backend())
+            combined = set_default_error_levels(
+                combined,
+                backend_obj,
+                Options._DEFAULT_OPTIMIZATION_LEVEL,
+                Options._DEFAULT_RESILIENCE_LEVEL,
+            )
+        else:
+            combined["optimization_level"] = Options._DEFAULT_OPTIMIZATION_LEVEL
+            combined["resilience_level"] = Options._DEFAULT_RESILIENCE_LEVEL
         logger.info("Submitting job using options %s", combined)
         inputs.update(Options._get_program_inputs(combined))
+
+        if backend_obj and combined["transpilation"]["skip_transpilation"]:
+            for circ in circuits:
+                backend_obj.check_faulty(circ)
 
         return self._session.run(
             program_id=self._PROGRAM_ID,
