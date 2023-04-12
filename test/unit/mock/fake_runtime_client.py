@@ -272,7 +272,10 @@ class BaseFakeRuntimeClient:
 
         # Setup the available backends
         if not backend_specs:
-            backend_specs = [FakeApiBackendSpecs(backend_name=f"backend{idx}") for idx in range(num_backends)]
+            backend_specs = [
+                FakeApiBackendSpecs(backend_name=f"backend{idx}")
+                for idx in range(num_backends)
+            ]
         self._backends = [FakeApiBackend(specs) for specs in backend_specs]
 
     def set_job_classes(self, classes):
@@ -515,7 +518,7 @@ class BaseFakeRuntimeClient:
             raise RequestsApiError("Job not found", status_code=404)
         return self._jobs[job_id]
 
-    def list_backends(self, hgp: Optional[str] = None):
+    def list_backends(self, hgp: Optional[str] = None) -> List[str]:
         """Return IBM backends available for this service instance."""
         return [back.name for back in self._backends if back.has_access(hgp)]
 

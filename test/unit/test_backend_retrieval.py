@@ -153,14 +153,18 @@ class TestBackendFilters(IBMTestCase):
         """Test filtering by hub/group/project."""
         num_backends = 3
         hgp_name = "hub0/group0/project0"
-        hgp_backend_specs = [self._get_fake_backend_specs(hgps=[hgp_name]) for _ in range(num_backends)]
-        all_backend_specs = hgp_backend_specs + [self._get_fake_backend_specs(hgps=["hub1/group1/project1"])]
+        hgp_backend_specs = [
+            self._get_fake_backend_specs(hgps=[hgp_name]) for _ in range(num_backends)
+        ]
+        all_backend_specs = hgp_backend_specs + [
+            self._get_fake_backend_specs(hgps=["hub1/group1/project1"])
+        ]
         ibm_quantum_service = FakeRuntimeService(
             channel="ibm_quantum",
             token="my_token",
             instance="h/g/p",
             num_hgps=2,
-            backend_specs=all_backend_specs
+            backend_specs=all_backend_specs,
         )
         backends = ibm_quantum_service.backends(instance="hub0/group0/project0")
         self.assertEqual(len(backends), num_backends)
@@ -181,7 +185,9 @@ class TestBackendFilters(IBMTestCase):
             else:
                 config[key] = val
         name = config.get("backend_name", uuid.uuid4().hex)
-        return FakeApiBackendSpecs(backend_name=name, configuration=config, status=status, hgps=hgps)
+        return FakeApiBackendSpecs(
+            backend_name=name, configuration=config, status=status, hgps=hgps
+        )
 
     def _get_services(self, fake_backend_specs):
         """Get both ibm_cloud and ibm_quantum services initialized with fake backends."""
@@ -189,13 +195,13 @@ class TestBackendFilters(IBMTestCase):
             channel="ibm_quantum",
             token="my_token",
             instance="h/g/p",
-            backend_specs=fake_backend_specs
+            backend_specs=fake_backend_specs,
         )
         cloud_service = FakeRuntimeService(
             channel="ibm_cloud",
             token="my_token",
             instance="my_instance",
-            backend_specs=fake_backend_specs
+            backend_specs=fake_backend_specs,
         )
         return [ibm_quantum_service, cloud_service]
 

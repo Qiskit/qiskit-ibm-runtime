@@ -95,9 +95,7 @@ class TestRuntimeJob(IBMTestCase):
         self.assertIn(backend, default_hgp.backends)
         job = run_program(service=service, backend_name=backend)
         self.assertEqual(job.backend().name, backend)
-        self.assertEqual(
-            job.backend()._instance, FakeRuntimeService.DEFAULT_HGPS[0]
-        )
+        self.assertEqual(job.backend()._instance, FakeRuntimeService.DEFAULT_HGPS[0])
 
     def test_run_program_non_default_hgp_backend(self):
         """Test running a program with a backend in non-default hgp."""

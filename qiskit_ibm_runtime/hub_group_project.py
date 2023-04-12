@@ -13,8 +13,7 @@
 """A hub, group and project in an IBM Quantum account."""
 
 import logging
-from collections import OrderedDict
-from typing import Any, Dict, Optional, List
+from typing import Any, List
 
 from qiskit_ibm_runtime import (  # pylint: disable=unused-import
     ibm_backend,
@@ -75,7 +74,6 @@ class HubGroupProject:
         Returns:
             A list of backends.
         """
-        ret: OrderedDict[str, Any] = OrderedDict()
         backends = self._runtime_client.list_backends(self.name)
         return backends or []
 

@@ -10,6 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+"""Classes for FakeApiBackends"""
 from typing import Optional
 from datetime import datetime as python_datetime
 from dataclasses import dataclass
@@ -19,6 +20,8 @@ from qiskit.providers.fake_provider import FakeLima
 
 @dataclass
 class FakeApiBackendSpecs:
+    """FakeApiBackend specs."""
+
     backend_name: str
     configuration: dict = None
     """Backend configuration to overwrite."""
@@ -31,7 +34,7 @@ class FakeApiBackendSpecs:
 class FakeApiBackend:
     """Fake backend."""
 
-    def __init__(self, specs: Optional[FakeApiBackendSpecs]=None):
+    def __init__(self, specs: Optional[FakeApiBackendSpecs] = None):
         fake_backend = FakeLima()
         self.properties = fake_backend.properties().to_dict()
         self.defaults = fake_backend.defaults().to_dict()
@@ -50,6 +53,7 @@ class FakeApiBackend:
         self.hgps = specs.hgps
 
     def has_access(self, hgp):
+        """Check if hgp is accessible"""
         if not self.hgps:
             return True
         return hgp in self.hgps
