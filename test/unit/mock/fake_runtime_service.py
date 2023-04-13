@@ -13,7 +13,7 @@
 """Context managers for using with IBM Provider unit tests."""
 
 from collections import OrderedDict
-from typing import Dict, Any
+from typing import Dict
 from unittest import mock
 
 from qiskit_ibm_runtime.accounts import Account
@@ -21,8 +21,8 @@ from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 from qiskit_ibm_runtime.api.clients import AuthClient
 from qiskit_ibm_runtime.hub_group_project import HubGroupProject
 from qiskit_ibm_runtime.qiskit_runtime_service import QiskitRuntimeService
-from .fake_account_client import BaseFakeAccountClient
 from .fake_runtime_client import BaseFakeRuntimeClient
+from .fake_api_backend import FakeApiBackendSpecs
 
 
 class FakeRuntimeService(QiskitRuntimeService):
@@ -30,27 +30,30 @@ class FakeRuntimeService(QiskitRuntimeService):
 
     By default there are 2 h/g/p - `hub0/group0/project0` and `hub1/group1/project1`.
     Each h/g/p has 2 backends - `common_backend` and `unique_backend_<idx>`.
-
-    There are a few test options available, via the `test_options` input:
-
-        - num_hgps: Number of hub/group/project.
-        - account_client: Custom account (backend) client to use.
     """
 
     DEFAULT_HGPS = ["hub0/group0/project0", "hub1/group1/project1"]
     DEFAULT_COMMON_BACKEND = "common_backend"
     DEFAULT_UNIQUE_BACKEND_PREFIX = "unique_backend_"
 
-    def __init__(self, *args, **kwargs):
-        test_options = kwargs.pop("test_options", {})
-        self._test_num_hgps = test_options.get("num_hgps", 2)
-        self._fake_account_client = test_options.get("account_client")
+    def __init__(
+        self, *args, num_hgps=2, runtime_client=None, backend_specs=None, **kwargs
+    ):
+        self._test_num_hgps = num_hgps
+        self._fake_runtime_client = runtime_client
+        self._backend_specs = backend_specs
 
         with mock.patch(
             "qiskit_ibm_runtime.qiskit_runtime_service.RuntimeClient",
-            new=BaseFakeRuntimeClient,
+            new=mock.MagicMock,
         ):
             super().__init__(*args, **kwargs)
+
+        # Use default if api client is somehow not set.
+        if not isinstance(self._api_client, BaseFakeRuntimeClient):
+            self._api_client = self._fake_runtime_client or BaseFakeRuntimeClient(
+                backend_specs=self._backend_specs
+            )
 
     def _authenticate_ibm_quantum_account(
         self, client_params: ClientParameters
@@ -65,7 +68,11 @@ class FakeRuntimeService(QiskitRuntimeService):
         self,
         auth_client: AuthClient,
     ) -> Dict:
-        """Mock hgp initialization."""
+        """Mock hgp initialization.
+
+        By default there are 2 h/g/p - `hub0/group0/project0` and `hub1/group1/project1`.
+        Each h/g/p has 2 backends - `common_backend` and `unique_backend_<idx>`.
+        """
 
         hgps = OrderedDict()
 
@@ -81,44 +88,44 @@ class FakeRuntimeService(QiskitRuntimeService):
             hgp = HubGroupProject(
                 client_params=hgp_params, instance=hgp_name, service=self
             )
-            fake_account_client = self._fake_account_client
-            if not fake_account_client:
-                specs = [
-                    {"configuration": {"backend_name": self.DEFAULT_COMMON_BACKEND}},
-                    {
-                        "configuration": {
-                            "backend_name": self.DEFAULT_UNIQUE_BACKEND_PREFIX
-                            + str(idx)
-                        }
-                    },
-                ]
-                fake_account_client = BaseFakeAccountClient(specs=specs, hgp=hgp_name)
-            hgp._runtime_client = fake_account_client
+
             hgps[hgp_name] = hgp
+
+        # Set fake runtime clients
+        self._set_api_client(hgps=list(hgps.keys()))
+        for hgp in hgps.values():
+            hgp._runtime_client = self._api_client
 
         return hgps
 
     def _discover_cloud_backends(self):
         """Mock discovery cloud backends."""
-        if not self._fake_account_client:
-            specs = [{"configuration": {"backend_name": self.DEFAULT_COMMON_BACKEND}}]
-            for idx in range(self._test_num_hgps):
-                specs.append(
-                    {
-                        "configuration": {
-                            "backend_name": self.DEFAULT_UNIQUE_BACKEND_PREFIX
-                            + str(idx)
-                        }
-                    }
-                )
-            self._fake_account_client = BaseFakeAccountClient(specs=specs)
-
-        test_options = {
-            "backend_client": self._fake_account_client,
-            "channel": "ibm_cloud",
-        }
-        self._api_client = BaseFakeRuntimeClient(test_options=test_options)
+        self._api_client = self._fake_runtime_client
+        self._set_api_client(hgps=[None] * self._test_num_hgps)
         return super()._discover_cloud_backends()
+
+    def _set_api_client(self, hgps):
+        """Set api client to be the fake runtime client."""
+        if not self._fake_runtime_client:
+            if not self._backend_specs:
+                self._backend_specs = [
+                    FakeApiBackendSpecs(
+                        backend_name=self.DEFAULT_COMMON_BACKEND, hgps=hgps
+                    )
+                ]
+                for idx, hgp in enumerate(hgps):
+                    self._backend_specs.append(
+                        FakeApiBackendSpecs(
+                            backend_name=self.DEFAULT_UNIQUE_BACKEND_PREFIX + str(idx),
+                            hgps=[hgp],
+                        )
+                    )
+            self._fake_runtime_client = BaseFakeRuntimeClient(
+                backend_specs=self._backend_specs, channel="ibm_quantum"
+            )
+
+        # Set fake runtime clients
+        self._api_client = self._fake_runtime_client
 
 
 class FakeAuthClient(AuthClient):
