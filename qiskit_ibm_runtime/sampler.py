@@ -379,7 +379,7 @@ class Sampler(BaseSampler):
         Raises:
             ValueError: if resilience_level is out of the allowed range.
         """
-        if os.getenv("QISKIT_RUNTIME_REMOVE_OPTIONS_VALIDATION"):
+        if os.getenv("QISKIT_RUNTIME_SKIP_OPTIONS_VALIDATION"):
             return
 
         if options.get("resilience_level") and not options.get("resilience_level") in [

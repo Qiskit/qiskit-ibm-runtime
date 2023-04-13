@@ -1,4 +1,0 @@
----
-other:
-  - |
-    Added error messages in case the user defines unsupported values for 'optimization_level' or for 'resilience_level'.

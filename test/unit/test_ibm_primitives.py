@@ -661,12 +661,12 @@ class TestPrimitives(IBMTestCase):
         for cls in primitives:
             for opts_dict in options_dicts:
                 # When this environment variable is set, validation is turned off
-                os.environ["QISKIT_RUNTIME_REMOVE_OPTIONS_VALIDATION"] = "1"
+                os.environ["QISKIT_RUNTIME_SKIP_OPTIONS_VALIDATION"] = "1"
                 inst = cls(session=session, options=opts_dict)
                 inst.run(self.qx, observables=self.obs)
 
                 # Delete environment variable to validate input
-                del os.environ["QISKIT_RUNTIME_REMOVE_OPTIONS_VALIDATION"]
+                del os.environ["QISKIT_RUNTIME_SKIP_OPTIONS_VALIDATION"]
                 with self.assertRaises(ValueError):
                     inst = cls(session=session, options=opts_dict)
                     inst.run(self.qx, observables=self.obs)
