@@ -654,7 +654,6 @@ class TestPrimitives(IBMTestCase):
                 },
             },
         ]
-
         session = MagicMock(spec=MockSession)
         primitives = [Sampler, Estimator]
 
@@ -667,9 +666,12 @@ class TestPrimitives(IBMTestCase):
 
                 # Delete environment variable to validate input
                 del os.environ["QISKIT_RUNTIME_SKIP_OPTIONS_VALIDATION"]
-                with self.assertRaises(ValueError):
+                with self.assertRaises(ValueError) as exc:
                     inst = cls(session=session, options=opts_dict)
                     inst.run(self.qx, observables=self.obs)
+                self.assertIn(list(opts_dict["resilience"].values())[0], str(exc.exception))
+                if len(opts_dict["resilience"].keys()) > 1:
+                    self.assertIn(list(opts_dict["resilience"].keys())[1], str(exc.exception))
 
     def test_raise_faulty_qubits(self):
         """Test faulty qubits is raised."""
