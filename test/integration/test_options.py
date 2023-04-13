@@ -98,3 +98,18 @@ class TestIntegrationOptions(IBMIntegrationTestCase):
                         job2.result()
                     # TODO: Re-enable when ntc-1651 is fixed
                     # self.assertIn("TranspilerError", err.exception.message)
+
+    @run_integration_test
+    def test_unsupported_input_combinations(self, service):
+        """Test that when resilience_level==3, and backend is a simulator,
+        a coupling map is required."""
+        circ = QuantumCircuit(1)
+        obs = SparsePauliOp.from_list([("I", 1)])
+        options = Options()
+        options.resilience_level = 3
+        backend = service.backends(simulator=True)[0]
+        with Session(service=service, backend=backend) as session:
+            with self.assertRaises(ValueError) as exc:
+                inst = Estimator(session=session, options=options)
+                inst.run(circ, observables=obs)
+            self.assertIn("a coupling map is required.", str(exc.exception))
