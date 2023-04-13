@@ -669,9 +669,13 @@ class TestPrimitives(IBMTestCase):
                 with self.assertRaises(ValueError) as exc:
                     inst = cls(session=session, options=opts_dict)
                     inst.run(self.qx, observables=self.obs)
-                self.assertIn(list(opts_dict["resilience"].values())[0], str(exc.exception))
+                self.assertIn(
+                    list(opts_dict["resilience"].values())[0], str(exc.exception)
+                )
                 if len(opts_dict["resilience"].keys()) > 1:
-                    self.assertIn(list(opts_dict["resilience"].keys())[1], str(exc.exception))
+                    self.assertIn(
+                        list(opts_dict["resilience"].keys())[1], str(exc.exception)
+                    )
 
     def test_raise_faulty_qubits(self):
         """Test faulty qubits is raised."""
