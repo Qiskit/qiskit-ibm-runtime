@@ -40,7 +40,7 @@ You can access Qiskit Runtime from either IBM Quantum or IBM Cloud.
     # Save an IBM Cloud account.
     QiskitRuntimeService.save_account(channel="ibm_cloud", token="MY_IBM_CLOUD_API_KEY", instance="MY_IBM_CLOUD_CRN")
 
-`Retrieve IBM Cloud token <https://cloud.ibm.com/iam/apikeys>`__
+`Retrieve IBM Cloud token <https://cloud.ibm.com/iam/apikeys>`_
 
 
 Test your setup
