@@ -429,7 +429,7 @@ class Estimator(BaseEstimator):
             ValueError: if resilience_level is out of the allowed range.
             ValueError: if resilience_level==3, backend is simulator and no coupling map
         """
-        if os.getenv("QISKIT_RUNTIME_REMOVE_OPTIONS_VALIDATION"):
+        if os.getenv("QISKIT_RUNTIME_SKIP_OPTIONS_VALIDATION"):
             return
 
         if not options.get("resilience_level") in list(
