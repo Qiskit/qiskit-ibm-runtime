@@ -12,9 +12,9 @@
 
 """Resilience options."""
 
-from typing import Optional, Sequence
+from typing import Sequence
 from dataclasses import dataclass
-from typing_extensions import Literal
+from typing_extensions import Literal, get_args
 
 from .utils import _flexible
 
@@ -59,3 +59,35 @@ class ResilienceOptions:
     noise_amplifier: NoiseAmplifierType = "TwoQubitAmplifier"
     noise_factors: Sequence[float] = (1, 3, 5)
     extrapolator: ExtrapolatorType = "LinearExtrapolator"
+
+    @staticmethod
+    def validate_resilience_options(resilience_options: dict) -> None:
+        """Validate that resilience options are legal.
+        Raises:
+            ValueError: if noise_amplifier is not in NoiseAmplifierType.
+            ValueError: if extrapolator is not in ExtrapolatorType.
+            ValueError: if extrapolator == "QuarticExtrapolator" and number of noise_factors < 5.
+            ValueError: if extrapolator == "CubicExtrapolator" and number of noise_factors < 4.
+        """
+        noise_amplifier = resilience_options.get("noise_amplifier")
+        if not noise_amplifier in get_args(NoiseAmplifierType):
+            raise ValueError(
+                f"Unsupported value {noise_amplifier} for noise_amplifier."
+                f"Supported values are {get_args(NoiseAmplifierType)}"
+            )
+        extrapolator = resilience_options.get("extrapolator")
+        if not extrapolator in get_args(ExtrapolatorType):
+            raise ValueError(
+                f"Unsupported value {extrapolator} for extrapolator."
+                f"Supported values are {get_args(ExtrapolatorType)}"
+            )
+        if (
+            extrapolator == "QuarticExtrapolator"
+            and len(resilience_options.get("noise_factors")) < 5
+        ):
+            raise ValueError("QuarticExtrapolator requires at least 5 noise_factors")
+        if (
+            extrapolator == "CubicExtrapolator"
+            and len(resilience_options.get("noise_factors")) < 4
+        ):
+            raise ValueError("CubicExtrapolator requires at least 4 noise_factors")
