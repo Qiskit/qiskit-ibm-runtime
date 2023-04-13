@@ -109,6 +109,7 @@ class TestIntegrationOptions(IBMIntegrationTestCase):
         options.resilience_level = 3
         backend = service.backends(simulator=True)[0]
         with Session(service=service, backend=backend) as session:
-            with self.assertRaises(ValueError):
+            with self.assertRaises(ValueError) as exc:
                 inst = Estimator(session=session, options=options)
                 inst.run(circ, observables=obs)
+            self.assertIn("a coupling map is required.", str(exc.exception))

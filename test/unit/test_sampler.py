@@ -94,6 +94,6 @@ class TestSampler(IBMTestCase):
             circuit = QuantumCircuit(1, 1)
             for bad_opt in options_bad:
                 inst = Sampler(session=session)
-                with self.assertRaises(ValueError) as ctx:
+                with self.assertRaises(ValueError) as exc:
                     _ = inst.run(circuit, **bad_opt)
-                self.assertIn(list(bad_opt.keys())[0], str(ctx.exception))
+                self.assertIn(list(bad_opt.keys())[0], str(exc.exception))

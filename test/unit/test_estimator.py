@@ -98,6 +98,6 @@ class TestEstimator(IBMTestCase):
             obs = SparsePauliOp.from_list([("I", 1)])
             for bad_opt in options_bad:
                 inst = Estimator(session=session)
-                with self.assertRaises(ValueError) as ctx:
+                with self.assertRaises(ValueError) as exc:
                     _ = inst.run(circuit, observables=obs, **bad_opt)
-                self.assertIn(list(bad_opt.keys())[0], str(ctx.exception))
+                self.assertIn(list(bad_opt.keys())[0], str(exc.exception))
