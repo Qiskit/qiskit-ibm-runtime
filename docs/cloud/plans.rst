@@ -14,7 +14,7 @@ A free plan that gives you access to quantum simulators to help you get started 
 -  ``ibmq_qasm_simulator``: A general-purpose simulator for simulating quantum circuits both ideally and subject to noise modeling. The simulation method is automatically selected based on the input circuits and parameters.
 
    -  **Type**: General, context-aware
-   -  **Simulatable Qubits**: 32
+   -  **Simulated Qubits**: 32
 
 -  ``simulator_statevector``: Simulates a quantum circuit by computing the wave function of the qubit’s state vector as gates and instructions are applied. Supports general noise modeling.
 
