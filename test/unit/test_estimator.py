@@ -87,7 +87,7 @@ class TestEstimator(IBMTestCase):
     def test_unsupported_values_for_estimator_options(self):
         """Test exception when options levels are not supported."""
         options_bad = [
-            {"optimization_level": 3, "resilience_level": 4},
+            {"resilience_level": 4, "optimization_level": 3},
             {"optimization_level": 4, "resilience_level": 3},
         ]
         with Session(
@@ -98,5 +98,6 @@ class TestEstimator(IBMTestCase):
             obs = SparsePauliOp.from_list([("I", 1)])
             for bad_opt in options_bad:
                 inst = Estimator(session=session)
-                with self.assertRaises(ValueError):
+                with self.assertRaises(ValueError) as ctx:
                     _ = inst.run(circuit, observables=obs, **bad_opt)
+                self.assertIn(list(bad_opt.keys())[0], str(ctx.exception))

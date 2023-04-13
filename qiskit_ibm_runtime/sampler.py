@@ -387,7 +387,7 @@ class Sampler(BaseSampler):
             1,
         ]:
             raise ValueError(
-                f"resilience level can only take the values "
+                f"resilience_level can only take the values "
                 f"{list(range(Options._MAX_RESILIENCE_LEVEL_SAMPLER + 1))} in Sampler"
             )
         Options.validate_options(options)

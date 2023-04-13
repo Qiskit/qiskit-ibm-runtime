@@ -84,7 +84,7 @@ class TestSampler(IBMTestCase):
     def test_unsupported_values_for_sampler_options(self):
         """Test exception when options levels are not supported."""
         options_bad = [
-            {"optimization_level": 3, "resilience_level": 2},
+            {"resilience_level": 2, "optimization_level": 3},
             {"optimization_level": 4, "resilience_level": 1},
         ]
         with Session(
@@ -94,5 +94,6 @@ class TestSampler(IBMTestCase):
             circuit = QuantumCircuit(1, 1)
             for bad_opt in options_bad:
                 inst = Sampler(session=session)
-                with self.assertRaises(ValueError):
+                with self.assertRaises(ValueError) as ctx:
                     _ = inst.run(circuit, **bad_opt)
+                self.assertIn(list(bad_opt.keys())[0], str(ctx.exception))
