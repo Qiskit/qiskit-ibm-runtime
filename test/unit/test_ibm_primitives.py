@@ -678,6 +678,60 @@ class TestPrimitives(IBMTestCase):
                         list(opts_dict["resilience"].keys())[1], str(exc.exception)
                     )
 
+    def test_environment_options(self):
+        """Test environment options."""
+        options_dicts = [
+            {"environment": {"log_level": "NoLogLevel"}},
+        ]
+        session = MagicMock(spec=MockSession)
+        primitives = [Sampler, Estimator]
+
+        for cls in primitives:
+            for opts_dict in options_dicts:
+                # When this environment variable is set, validation is turned off
+                try:
+                    os.environ["QISKIT_RUNTIME_SKIP_OPTIONS_VALIDATION"] = "1"
+                    inst = cls(session=session, options=opts_dict)
+                    inst.run(self.qx, observables=self.obs)
+                finally:
+                    # Delete environment variable to validate input
+                    del os.environ["QISKIT_RUNTIME_SKIP_OPTIONS_VALIDATION"]
+                with self.assertRaises(ValueError) as exc:
+                    inst = cls(session=session, options=opts_dict)
+                    inst.run(self.qx, observables=self.obs)
+                self.assertIn(
+                    list(opts_dict["environment"].values())[0], str(exc.exception)
+                )
+
+    def test_transpilation_options(self):
+        """Test transpilation options."""
+        options_dicts = [
+            {"transpilation": {"layout_method": "NoLayoutMethod"}},
+            {"transpilation": {"routing_method": "NoRoutingMethod"}},
+            {"transpilation": {"approximation_degree": 1.1}}
+        ]
+        session = MagicMock(spec=MockSession)
+        primitives = [Sampler, Estimator]
+
+        for cls in primitives:
+            for opts_dict in options_dicts:
+                print("opt = "+str(opts_dict))
+                # When this environment variable is set, validation is turned off
+                try:
+                    os.environ["QISKIT_RUNTIME_SKIP_OPTIONS_VALIDATION"] = "1"
+                    inst = cls(session=session, options=opts_dict)
+                    inst.run(self.qx, observables=self.obs)
+                finally:
+                    # Delete environment variable to validate input
+                    del os.environ["QISKIT_RUNTIME_SKIP_OPTIONS_VALIDATION"]
+                with self.assertRaises(ValueError) as exc:
+                    inst = cls(session=session, options=opts_dict)
+                    inst.run(self.qx, observables=self.obs)
+                print("EXC = " + str(exc.exception))
+                self.assertIn(
+                    list(opts_dict["transpilation"].values())[0], str(exc.exception)
+                )
+
     def test_raise_faulty_qubits(self):
         """Test faulty qubits is raised."""
         fake_backend = FakeManila()
