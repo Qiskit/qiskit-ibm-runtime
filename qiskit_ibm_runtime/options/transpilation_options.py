@@ -63,11 +63,11 @@ class TranspilationOptions:
 
     @staticmethod
     def validate_transpilation_options(transpilation_options: dict) -> None:
-        """Validate that resilience options are legal.
+        """Validate that transpilation options are legal.
         Raises:
-            ValueError: if layout_method is not in LayoutMethodType.
-            ValueError: if routing_method is not in RoutingMethodType.
-            ValueError: if approximation_degree in not in the range 0.0 to 1.0.
+            ValueError: if layout_method is not in LayoutMethodType or None.
+            ValueError: if routing_method is not in RoutingMethodType or None.
+            ValueError: if approximation_degree in not None or in the range 0.0 to 1.0.
         """
         layout_method = transpilation_options.get("layout_method")
         if not (layout_method in get_args(LayoutMethodType) or layout_method is None):
@@ -79,7 +79,6 @@ class TranspilationOptions:
         if not (
             routing_method in get_args(RoutingMethodType) or routing_method is None
         ):
-            print("routing = " + str(routing_method))
             raise ValueError(
                 f"Unsupported value {routing_method} for routing_method. "
                 f"Supported values are {get_args(RoutingMethodType)} and None"
