@@ -61,6 +61,7 @@ class TranspilationOptions:
     routing_method: Optional[str] = None
     approximation_degree: Optional[float] = None
 
+    @staticmethod
     def validate_transpilation_options(transpilation_options: dict) -> None:
         """Validate that resilience options are legal.
         Raises:
@@ -69,21 +70,23 @@ class TranspilationOptions:
             ValueError: if approximation_degree in not in the range 0.0 to 1.0.
         """
         layout_method = transpilation_options.get("layout_method")
-        if not layout_method in get_args(LayoutMethodType):
+        if not (layout_method in get_args(LayoutMethodType) or layout_method is None):
             raise ValueError(
-                f"Unsupported value {layout_method} for layout_method."
-                f"Supported values are {get_args(LayoutMethodType)}"
+                f"Unsupported value {layout_method} for layout_method. "
+                f"Supported values are {get_args(LayoutMethodType)} and None"
             )
         routing_method = transpilation_options.get("routing_method")
-        print("routing = " + str(routing_method))
-        if not routing_method in get_args(RoutingMethodType):
-            print("routing = "+str(routing_method))
+        if not (
+            routing_method in get_args(RoutingMethodType) or routing_method is None
+        ):
+            print("routing = " + str(routing_method))
             raise ValueError(
-                f"Unsupported value {routing_method} for routing_method."
-                f"Supported values are {get_args(RoutingMethodType)}"
+                f"Unsupported value {routing_method} for routing_method. "
+                f"Supported values are {get_args(RoutingMethodType)} and None"
             )
         approximation_degree = transpilation_options.get("approximation_degree")
-        if not 0.0 <= approximation_degree <= 1.0:
+        if not (approximation_degree is None or 0.0 <= approximation_degree <= 1.0):
             raise ValueError(
-                "Approximation_degree must be between 0.0 (maximal approximation) and 1.0 (no approximation)"
+                "approximation_degree must be between 0.0 (maximal approximation) "
+                "and 1.0 (no approximation)"
             )

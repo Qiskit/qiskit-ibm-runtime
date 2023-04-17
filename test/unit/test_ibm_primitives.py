@@ -708,14 +708,13 @@ class TestPrimitives(IBMTestCase):
         options_dicts = [
             {"transpilation": {"layout_method": "NoLayoutMethod"}},
             {"transpilation": {"routing_method": "NoRoutingMethod"}},
-            {"transpilation": {"approximation_degree": 1.1}}
+            {"transpilation": {"approximation_degree": 1.1}},
         ]
         session = MagicMock(spec=MockSession)
         primitives = [Sampler, Estimator]
 
         for cls in primitives:
             for opts_dict in options_dicts:
-                print("opt = "+str(opts_dict))
                 # When this environment variable is set, validation is turned off
                 try:
                     os.environ["QISKIT_RUNTIME_SKIP_OPTIONS_VALIDATION"] = "1"
@@ -727,9 +726,8 @@ class TestPrimitives(IBMTestCase):
                 with self.assertRaises(ValueError) as exc:
                     inst = cls(session=session, options=opts_dict)
                     inst.run(self.qx, observables=self.obs)
-                print("EXC = " + str(exc.exception))
                 self.assertIn(
-                    list(opts_dict["transpilation"].values())[0], str(exc.exception)
+                    list(opts_dict["transpilation"].keys())[0], str(exc.exception)
                 )
 
     def test_raise_faulty_qubits(self):

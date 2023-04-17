@@ -25,6 +25,8 @@ LogLevelType = Literal[
     "ERROR",
     "CRITICAL",
 ]
+
+
 @_flexible
 @dataclass
 class EnvironmentOptions:
@@ -50,6 +52,7 @@ class EnvironmentOptions:
     callback: Optional[Callable] = None
     job_tags: Optional[List] = field(default_factory=list)
 
+    @staticmethod
     def validate_environment_options(environment_options: dict) -> None:
         """Validate that environment options are legal.
         Raises:
@@ -58,6 +61,6 @@ class EnvironmentOptions:
         log_level = environment_options.get("log_level")
         if not log_level in get_args(LogLevelType):
             raise ValueError(
-                f"Unsupported value {log_level} for noise_amplifier."
+                f"Unsupported value {log_level} for log_level. "
                 f"Supported values are {get_args(LogLevelType)}"
             )
