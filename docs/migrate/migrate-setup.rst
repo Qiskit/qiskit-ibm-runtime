@@ -39,10 +39,10 @@ Use the updated code to work with accounts.
 The new syntax accepts credentials for two different channels. For more information on retrieving account credentials, see the `getting started guide <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/getting_started.html>`_.
 .. code-block:: python
 
-    # ibm cloud channel
+    # IBM cloud channel
     QiskitRuntimeService.save_account(channel="ibm_cloud", token="<IBM Cloud API key>", instance="<IBM Cloud CRN>", overwrite=True)
 
-    # ibm quantum channel
+    # IBM quantum channel
     QiskitRuntimeService.save_account(channel="ibm_quantum", token="<IQX_TOKEN>", overwrite=True)
 
 **Legacy - Load accounts**
@@ -53,14 +53,14 @@ The new syntax accepts credentials for two different channels. For more informat
 
 **Updated - Load accounts**
 
-The new syntax combines the functionality from ``load_account()`` and ``get_provider()`` in one statement. The ``channel`` input parameter is optional. If multiple accounts have been saved in one device, and no ``channel`` is provided, the default will be ``"ibm_cloud"``.
+The new syntax combines the functionality from ``load_account()`` and ``get_provider()`` in one statement. The ``channel`` input parameter is optional. If multiple accounts have been saved in one device and no ``channel`` is provided, the default is ``"ibm_cloud"``.
 
 .. code-block:: python
 
-    # to access saved credentials for ibm cloud channel
+    # To access saved credentials for the IBM cloud channel
     service = QiskitRuntimeService(channel="ibm_cloud")
 
-    # to access saved credentials for ibm quantum channel
+    # To access saved credentials for the IBM quantum channel
     service = QiskitRuntimeService(channel="ibm_quantum")
 
 
@@ -78,15 +78,15 @@ Use the updated code to select a channel.
 **Updated**
 
 The new syntax combines the functionality from ``load_account()`` and ``get_provider()`` in one statement.
-If using the ``ibm_quantum`` channel, the ``hub``, ``group``, and ``project`` are specified through the new
+When using the ``ibm_quantum`` channel, the ``hub``, ``group``, and ``project`` are specified through the new
 ``instance`` keyword.
 
 .. code-block:: python
 
-    # to access saved credentials for ibm cloud channel
+    # To access saved credentials for the IBM cloud channel
     service = QiskitRuntimeService(channel="ibm_cloud")
 
-    # to access saved credentials for ibm quantum channel and select instance
+    # To access saved credentials for the IBM quantum channel and select an instance
     service = QiskitRuntimeService(channel="ibm_quantum", instance="my_hub/my_group/my_project")
 
 
@@ -117,13 +117,13 @@ To work with custom programs, replace ``provider.runtime`` with ``service``.
 
 .. code-block:: python
 
-    # printing existing programs
+    # Printing existing programs
     provider.runtime.pprint_programs()
 
-    # deleting custom program
-    provider.runtime.delete_program("my_program") # substitute "my_program" with your program id
+    # Deleting custom program
+    provider.runtime.delete_program("my_program") # Substitute "my_program" with your program ID
 
-    # uploading custom program
+    # Uploading custom program
     program_id = provider.runtime.upload_program(
                 data=program_data,
                 metadata=program_json
@@ -133,13 +133,13 @@ To work with custom programs, replace ``provider.runtime`` with ``service``.
 
 .. code-block:: python
 
-    # printing existing programs
+    # Printing existing programs
     service.pprint_programs()
 
-    # deleting custom program
-    service.delete_program("my_program") # substitute "my_program" with your program id
+    # Deleting custom program
+    service.delete_program("my_program") # Substitute "my_program" with your program ID
 
-    # uploading custom program
+    # Uploading custom program
     program_id = service.upload_program(
                 data=program_data,
                 metadata=program_json
