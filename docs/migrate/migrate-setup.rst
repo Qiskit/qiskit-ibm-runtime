@@ -53,7 +53,7 @@ Use the updated code to work with accounts.
 
 **Updated - Load accounts**
 
-The new syntax combines the functionality from ``load_account()`` and ``get_provider()`` in one statement.
+The new syntax combines the functionality from ``load_account()`` and ``get_provider()`` in one statement. The ``channel`` input parameter is optional. If multiple accounts have been saved in one device, and no ``channel`` is provided, the default will be ``"ibm_cloud"``.
 
 .. code-block:: python
 
