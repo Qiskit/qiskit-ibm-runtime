@@ -926,6 +926,7 @@ class TestEnableAccount(IBMTestCase):
         self.assertTrue(service._account)
         self.assertEqual(service._account.instance, instance)
 
+    @no_envs(["QISKIT_IBM_TOKEN"])
     def test_enable_account_by_qiskitrc(self):
         """Test initializing account by a qiskitrc file."""
         token = "token-x"

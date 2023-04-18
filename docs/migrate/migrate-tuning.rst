@@ -59,7 +59,7 @@ By default, the Qiskit Runtime primitives perform circuit transpilation. There a
 levels you can choose from. These levels affect the transpilation strategy and might include additional error
 suppression mechanisms. Level 0 only involves basic transpilation.
 To learn about each optimization level, view the Optimization level table in the 
-`Error suppression topic <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/locale/es_UN/how_to/error-suppression.html#setting-the-optimization-level>`_.
+`Error suppression topic <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/how_to/error-suppression.html#setting-the-optimization-level>`__.
 
 The optimization level option is a "first level option", and can be set as follows:
 
@@ -90,7 +90,7 @@ options you can set up. These are "second level options", and can be set as foll
     estimator = Estimator(session=session, options=options)
 
 For more information, and a complete list of advanced transpilation options, see the Advanced transpilation options table in the 
-`Error supppression topic <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/locale/es_UN/how_to/error-suppression.html#advanced-transpilation-options>`_.
+`Error suppression topic <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/how_to/error-suppression.html#advanced-transpilation-options>`__.
 
 Finally, you might want to specify settings that are not available through the primitives interface,
 or use custom transpiler passes. In these cases, you can set ``skip_transpilation=True`` to submit

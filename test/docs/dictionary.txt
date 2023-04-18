@@ -191,6 +191,7 @@ eigenstates
 endian
 exponentials
 expressibility
+extremal
 fanout
 fermionic
 fidelities
@@ -222,6 +223,7 @@ qutrits
 recalibrated
 reuploading
 satisfiability
+serverless
 simulability
 subfield
 subfields

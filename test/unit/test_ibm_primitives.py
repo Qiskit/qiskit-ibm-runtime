@@ -15,25 +15,39 @@
 import sys
 import copy
 import json
+import os
 from unittest.mock import MagicMock, patch, ANY
 import warnings
 from dataclasses import asdict
 from typing import Dict
 import unittest
 
+from qiskit import transpile
 from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.primitives.utils import _circuit_key
+from qiskit.providers.fake_provider import FakeManila
 
-from qiskit_ibm_runtime import Sampler, Estimator, Options, Session, RuntimeEncoder
+from qiskit_ibm_runtime import (
+    Sampler,
+    Estimator,
+    Options,
+    Session,
+    RuntimeEncoder,
+)
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 import qiskit_ibm_runtime.session as session_pkg
 from qiskit_ibm_runtime.utils.utils import _hash
 
 from ..ibm_test_case import IBMTestCase
-from ..utils import dict_paritally_equal, flat_dict_partially_equal, dict_keys_equal
+from ..utils import (
+    dict_paritally_equal,
+    flat_dict_partially_equal,
+    dict_keys_equal,
+    create_faulty_backend,
+)
 from .mock.fake_runtime_service import FakeRuntimeService
 
 
@@ -101,12 +115,6 @@ class TestPrimitives(IBMTestCase):
                     inst = cls(session=MagicMock(spec=MockSession), options=options)
                     expected = asdict(Options())
                     self._update_dict(expected, copy.deepcopy(options))
-                    # for resilience_level and optimization_level, if given by the user,
-                    # maintain value. Otherwise, set default as given in Sampler/Estimator
-                    if not options.get("resilience_level"):
-                        expected["resilience_level"] = 0
-                    if not options.get("optimization_level"):
-                        expected["optimization_level"] = 1
                     self.assertDictEqual(expected, inst.options.__dict__)
 
     def test_backend_in_options(self):
@@ -114,6 +122,7 @@ class TestPrimitives(IBMTestCase):
         primitives = [Sampler, Estimator]
         backend_name = "ibm_gotham"
         backend = MagicMock(spec=IBMBackend)
+        backend._instance = None
         backend.name = backend_name
         backends = [backend_name, backend]
         for cls in primitives:
@@ -226,6 +235,7 @@ class TestPrimitives(IBMTestCase):
         """Test specifying a backend as session."""
         primitives = [Sampler, Estimator]
         backend = MagicMock(spec=IBMBackend)
+        backend._instance = None
         backend.name = "ibm_gotham"
         backend.service = MagicMock()
 
@@ -251,6 +261,7 @@ class TestPrimitives(IBMTestCase):
         """Test using a different backend within context manager."""
         service = MagicMock()
         backend = MagicMock(spec=IBMBackend)
+        backend._instance = None
         backend.name = "ibm_gotham"
         backend.service = service
         cm_backend = "ibm_metropolis"
@@ -273,10 +284,10 @@ class TestPrimitives(IBMTestCase):
         """Test run using default options."""
         session = MagicMock(spec=MockSession)
         options_vars = [
-            (Options(resilience_level=9), {"resilience_settings": {"level": 9}}),
+            (Options(resilience_level=1), {"resilience_settings": {"level": 1}}),
             (
-                Options(optimization_level=8),
-                {"transpilation_settings": {"optimization_settings": {"level": 8}}},
+                Options(optimization_level=3),
+                {"transpilation_settings": {"optimization_settings": {"level": 3}}},
             ),
             (
                 {
@@ -331,17 +342,17 @@ class TestPrimitives(IBMTestCase):
         """Test run using overwritten options."""
         session = MagicMock(spec=MockSession)
         options_vars = [
-            ({"resilience_level": 9}, {"resilience_settings": {"level": 9}}),
+            ({"resilience_level": 1}, {"resilience_settings": {"level": 1}}),
             ({"shots": 200}, {"run_options": {"shots": 200}}),
             (
-                {"optimization_level": 8},
-                {"transpilation_settings": {"optimization_settings": {"level": 8}}},
+                {"optimization_level": 3},
+                {"transpilation_settings": {"optimization_settings": {"level": 3}}},
             ),
             (
-                {"initial_layout": [1, 2], "optimization_level": 8},
+                {"initial_layout": [1, 2], "optimization_level": 2},
                 {
                     "transpilation_settings": {
-                        "optimization_settings": {"level": 8},
+                        "optimization_settings": {"level": 2},
                         "initial_layout": [1, 2],
                     }
                 },
@@ -359,8 +370,7 @@ class TestPrimitives(IBMTestCase):
                         _, kwargs = session.run.call_args
                         inputs = kwargs["inputs"]
                     self._assert_dict_partially_equal(inputs, expected)
-                    expected = asdict(Options(optimization_level=1, resilience_level=0))
-                    self.assertDictEqual(inst.options.__dict__, expected)
+                    self.assertDictEqual(inst.options.__dict__, asdict(Options()))
 
     def test_run_overwrite_runtime_options(self):
         """Test run using overwritten runtime options."""
@@ -429,8 +439,7 @@ class TestPrimitives(IBMTestCase):
                     self.assertEqual(
                         kwargs_list[idx][1]["inputs"]["run_options"]["shots"], shots
                     )
-                expected = asdict(Options(optimization_level=1, resilience_level=0))
-                self.assertDictEqual(inst.options.__dict__, expected)
+                self.assertDictEqual(inst.options.__dict__, asdict(Options()))
 
     def test_run_same_session(self):
         """Test multiple runs within a session."""
@@ -529,6 +538,317 @@ class TestPrimitives(IBMTestCase):
                         dict_keys_equal(inst_options, asdict(new_str)),
                         f"inst_options={inst_options}, new_str={new_str}",
                     )
+
+    def test_accept_level_1_options(self):
+        """Test initializing options properly when given on level 1."""
+
+        options_dicts = [
+            {},
+            {"shots": 10},
+            {"seed_simulator": 123},
+            {"skip_transpilation": True, "log_level": "ERROR"},
+            {"initial_layout": [1, 2], "shots": 100, "noise_amplifier": "CxAmplifier"},
+        ]
+
+        expected_list = [Options(), Options(), Options(), Options(), Options()]
+        expected_list[1].execution.shots = 10
+        expected_list[2].simulator.seed_simulator = 123
+        expected_list[3].transpilation.skip_transpilation = True
+        expected_list[3].environment.log_level = "ERROR"
+        expected_list[4].transpilation.initial_layout = [1, 2]
+        expected_list[4].execution.shots = 100
+        expected_list[4].resilience.noise_amplifier = "CxAmplifier"
+
+        session = MagicMock(spec=MockSession)
+        primitives = [Sampler, Estimator]
+        for cls in primitives:
+            for opts, expected in zip(options_dicts, expected_list):
+                with self.subTest(primitive=cls, options=opts):
+                    inst1 = cls(session=session, options=opts)
+                    inst2 = cls(session=session, options=expected)
+                    # Make sure the values are equal.
+                    inst1_options = inst1.options.__dict__
+                    expected_dict = inst2.options.__dict__
+                    self.assertTrue(
+                        dict_paritally_equal(inst1_options, expected_dict),
+                        f"inst_options={inst1_options}, options={opts}",
+                    )
+                    # Make sure the structure didn't change.
+                    self.assertTrue(
+                        dict_keys_equal(inst1_options, expected_dict),
+                        f"inst_options={inst1_options}, expected={expected_dict}",
+                    )
+
+    def test_default_error_levels(self):
+        """Test the correct default error levels are used."""
+
+        session = MagicMock(spec=MockSession)
+        primitives = [Sampler, Estimator]
+        for cls in primitives:
+            with self.subTest(primitive=cls):
+                options = Options(
+                    simulator={"noise_model": "foo"},
+                )
+                inst = cls(session=session, options=options)
+                inst.run(self.qx, observables=self.obs)
+                if sys.version_info >= (3, 8):
+                    inputs = session.run.call_args.kwargs["inputs"]
+                else:
+                    _, kwargs = session.run.call_args
+                    inputs = kwargs["inputs"]
+                self.assertEqual(
+                    inputs["transpilation_settings"]["optimization_settings"]["level"],
+                    Options._DEFAULT_OPTIMIZATION_LEVEL,
+                )
+                self.assertEqual(
+                    inputs["resilience_settings"]["level"],
+                    Options._DEFAULT_RESILIENCE_LEVEL,
+                )
+
+                session.service.backend().configuration().simulator = False
+                inst = cls(session=session)
+                inst.run(self.qx, observables=self.obs)
+                if sys.version_info >= (3, 8):
+                    inputs = session.run.call_args.kwargs["inputs"]
+                else:
+                    _, kwargs = session.run.call_args
+                    inputs = kwargs["inputs"]
+                self.assertEqual(
+                    inputs["transpilation_settings"]["optimization_settings"]["level"],
+                    Options._DEFAULT_OPTIMIZATION_LEVEL,
+                )
+                self.assertEqual(
+                    inputs["resilience_settings"]["level"],
+                    Options._DEFAULT_RESILIENCE_LEVEL,
+                )
+
+                session.service.backend().configuration().simulator = True
+                inst = cls(session=session)
+                inst.run(self.qx, observables=self.obs)
+                if sys.version_info >= (3, 8):
+                    inputs = session.run.call_args.kwargs["inputs"]
+                else:
+                    _, kwargs = session.run.call_args
+                    inputs = kwargs["inputs"]
+                self.assertEqual(
+                    inputs["transpilation_settings"]["optimization_settings"]["level"],
+                    1,
+                )
+                self.assertEqual(inputs["resilience_settings"]["level"], 0)
+
+    def test_resilience_options(self):
+        """Test resilience options."""
+        options_dicts = [
+            {"resilience": {"noise_amplifier": "NoAmplifier"}},
+            {"resilience": {"extrapolator": "NoExtrapolator"}},
+            {
+                "resilience": {
+                    "extrapolator": "QuarticExtrapolator",
+                    "noise_factors": [1, 2, 3, 4],
+                },
+            },
+            {
+                "resilience": {
+                    "extrapolator": "CubicExtrapolator",
+                    "noise_factors": [1, 2, 3],
+                },
+            },
+        ]
+        session = MagicMock(spec=MockSession)
+        primitives = [Sampler, Estimator]
+
+        for cls in primitives:
+            for opts_dict in options_dicts:
+                # When this environment variable is set, validation is turned off
+                try:
+                    os.environ["QISKIT_RUNTIME_SKIP_OPTIONS_VALIDATION"] = "1"
+                    inst = cls(session=session, options=opts_dict)
+                    inst.run(self.qx, observables=self.obs)
+                finally:
+                    # Delete environment variable to validate input
+                    del os.environ["QISKIT_RUNTIME_SKIP_OPTIONS_VALIDATION"]
+                with self.assertRaises(ValueError) as exc:
+                    inst = cls(session=session, options=opts_dict)
+                    inst.run(self.qx, observables=self.obs)
+                self.assertIn(
+                    list(opts_dict["resilience"].values())[0], str(exc.exception)
+                )
+                if len(opts_dict["resilience"].keys()) > 1:
+                    self.assertIn(
+                        list(opts_dict["resilience"].keys())[1], str(exc.exception)
+                    )
+
+    def test_raise_faulty_qubits(self):
+        """Test faulty qubits is raised."""
+        fake_backend = FakeManila()
+        num_qubits = fake_backend.configuration().num_qubits
+        circ = QuantumCircuit(num_qubits, num_qubits)
+        for i in range(num_qubits):
+            circ.x(i)
+        transpiled = transpile(circ, backend=fake_backend)
+        observable = SparsePauliOp("Z" * num_qubits)
+
+        faulty_qubit = 4
+        ibm_backend = create_faulty_backend(fake_backend, faulty_qubit=faulty_qubit)
+        service = MagicMock()
+        service.backend.return_value = ibm_backend
+        session = Session(service=service, backend=fake_backend.name)
+        sampler = Sampler(session=session)
+        estimator = Estimator(session=session)
+
+        with self.assertRaises(ValueError) as err:
+            sampler.run(transpiled, skip_transpilation=True)
+        self.assertIn(f"faulty qubit {faulty_qubit}", str(err.exception))
+
+        with self.assertRaises(ValueError) as err:
+            estimator.run(transpiled, observable, skip_transpilation=True)
+        self.assertIn(f"faulty qubit {faulty_qubit}", str(err.exception))
+
+    def test_raise_faulty_qubits_many(self):
+        """Test faulty qubits is raised if one circuit uses it."""
+        fake_backend = FakeManila()
+        num_qubits = fake_backend.configuration().num_qubits
+
+        circ1 = QuantumCircuit(1, 1)
+        circ1.x(0)
+        circ2 = QuantumCircuit(num_qubits, num_qubits)
+        for i in range(num_qubits):
+            circ2.x(i)
+        transpiled = transpile([circ1, circ2], backend=fake_backend)
+        observable = SparsePauliOp("Z" * num_qubits)
+
+        faulty_qubit = 4
+        ibm_backend = create_faulty_backend(fake_backend, faulty_qubit=faulty_qubit)
+        service = MagicMock()
+        service.backend.return_value = ibm_backend
+        session = Session(service=service, backend=fake_backend.name)
+        sampler = Sampler(session=session)
+        estimator = Estimator(session=session)
+
+        with self.assertRaises(ValueError) as err:
+            sampler.run(transpiled, skip_transpilation=True)
+        self.assertIn(f"faulty qubit {faulty_qubit}", str(err.exception))
+
+        with self.assertRaises(ValueError) as err:
+            estimator.run(transpiled, [observable, observable], skip_transpilation=True)
+        self.assertIn(f"faulty qubit {faulty_qubit}", str(err.exception))
+
+    def test_raise_faulty_edge(self):
+        """Test faulty edge is raised."""
+        fake_backend = FakeManila()
+        num_qubits = fake_backend.configuration().num_qubits
+        circ = QuantumCircuit(num_qubits, num_qubits)
+        for i in range(num_qubits - 2):
+            circ.cx(i, i + 1)
+        transpiled = transpile(circ, backend=fake_backend)
+        observable = SparsePauliOp("Z" * num_qubits)
+
+        edge_qubits = [0, 1]
+        ibm_backend = create_faulty_backend(
+            fake_backend, faulty_edge=("cx", edge_qubits)
+        )
+        service = MagicMock()
+        service.backend.return_value = ibm_backend
+        session = Session(service=service, backend=fake_backend.name)
+        sampler = Sampler(session=session)
+        estimator = Estimator(session=session)
+
+        with self.assertRaises(ValueError) as err:
+            sampler.run(transpiled, skip_transpilation=True)
+        self.assertIn("cx", str(err.exception))
+        self.assertIn(f"faulty edge {tuple(edge_qubits)}", str(err.exception))
+
+        with self.assertRaises(ValueError) as err:
+            estimator.run(transpiled, observable, skip_transpilation=True)
+        self.assertIn("cx", str(err.exception))
+        self.assertIn(f"faulty edge {tuple(edge_qubits)}", str(err.exception))
+
+    def test_faulty_qubit_not_used(self):
+        """Test faulty qubit is not raise if not used."""
+        fake_backend = FakeManila()
+        circ = QuantumCircuit(2, 2)
+        for i in range(2):
+            circ.x(i)
+        transpiled = transpile(circ, backend=fake_backend, initial_layout=[0, 1])
+        observable = SparsePauliOp("Z" * fake_backend.configuration().num_qubits)
+
+        faulty_qubit = 4
+        ibm_backend = create_faulty_backend(fake_backend, faulty_qubit=faulty_qubit)
+
+        service = MagicMock()
+        service.backend.return_value = ibm_backend
+        session = Session(service=service, backend=fake_backend.name)
+        sampler = Sampler(session=session)
+        estimator = Estimator(session=session)
+
+        with patch.object(Session, "run") as mock_run:
+            sampler.run(transpiled, skip_transpilation=True)
+        mock_run.assert_called_once()
+
+        with patch.object(Session, "run") as mock_run:
+            estimator.run(transpiled, observable, skip_transpilation=True)
+        mock_run.assert_called_once()
+
+    def test_faulty_edge_not_used(self):
+        """Test faulty edge is not raised if not used."""
+        fake_backend = FakeManila()
+        coupling_map = fake_backend.configuration().coupling_map
+
+        circ = QuantumCircuit(2, 2)
+        circ.cx(0, 1)
+
+        transpiled = transpile(
+            circ, backend=fake_backend, initial_layout=coupling_map[0]
+        )
+        observable = SparsePauliOp("Z" * fake_backend.configuration().num_qubits)
+
+        edge_qubits = coupling_map[-1]
+        ibm_backend = create_faulty_backend(
+            fake_backend, faulty_edge=("cx", edge_qubits)
+        )
+
+        service = MagicMock()
+        service.backend.return_value = ibm_backend
+        session = Session(service=service, backend=fake_backend.name)
+        sampler = Sampler(session=session)
+        estimator = Estimator(session=session)
+
+        with patch.object(Session, "run") as mock_run:
+            sampler.run(transpiled, skip_transpilation=True)
+        mock_run.assert_called_once()
+
+        with patch.object(Session, "run") as mock_run:
+            estimator.run(transpiled, observable, skip_transpilation=True)
+        mock_run.assert_called_once()
+
+    def test_no_raise_skip_transpilation(self):
+        """Test faulty qubits and edges are not raise if not skipping."""
+        fake_backend = FakeManila()
+        num_qubits = fake_backend.configuration().num_qubits
+        circ = QuantumCircuit(num_qubits, num_qubits)
+        for i in range(num_qubits - 2):
+            circ.cx(i, i + 1)
+        transpiled = transpile(circ, backend=fake_backend)
+        observable = SparsePauliOp("Z" * num_qubits)
+
+        edge_qubits = [0, 1]
+        ibm_backend = create_faulty_backend(
+            fake_backend, faulty_qubit=0, faulty_edge=("cx", edge_qubits)
+        )
+
+        service = MagicMock()
+        service.backend.return_value = ibm_backend
+        session = Session(service=service, backend=fake_backend.name)
+        sampler = Sampler(session=session)
+        estimator = Estimator(session=session)
+
+        with patch.object(Session, "run") as mock_run:
+            sampler.run(transpiled)
+        mock_run.assert_called_once()
+
+        with patch.object(Session, "run") as mock_run:
+            estimator.run(transpiled, observable)
+        mock_run.assert_called_once()
 
     def _update_dict(self, dict1, dict2):
         for key, val in dict1.items():

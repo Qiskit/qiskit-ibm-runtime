@@ -13,6 +13,7 @@
 """Sampler primitive."""
 
 from __future__ import annotations
+import os
 from typing import Dict, Iterable, Optional, Sequence, Any, Union
 import copy
 import logging
@@ -25,6 +26,7 @@ from qiskit.primitives import BaseSampler, SamplerResult
 # TODO import _circuit_key from terra once 0.23 released
 from .qiskit_runtime_service import QiskitRuntimeService
 from .options import Options
+from .options.utils import set_default_error_levels
 from .runtime_job import RuntimeJob
 from .ibm_backend import IBMBackend
 from .session import get_default_session
@@ -115,7 +117,7 @@ class Sampler(BaseSampler):
             skip_transpilation (DEPRECATED): Transpilation is skipped if set to True. False by default.
                 Ignored if ``skip_transpilation`` is also specified in ``options``.
         """
-        # `_options` in this class is an instance of qiskit_ibm_runtime.Options class.
+        # `self._options` in this class is a Dict.
         # The base class, however, uses a `_run_options` which is an instance of
         # qiskit.providers.Options. We largely ignore this _run_options because we use
         # a nested dictionary to categorize options.
@@ -140,12 +142,12 @@ class Sampler(BaseSampler):
         self._session: Session = None
 
         if options is None:
-            _options = Options()
+            self._options = asdict(Options())
         elif isinstance(options, Options):
-            _options = copy.deepcopy(options)
             skip_transpilation = (
-                _options.transpilation.skip_transpilation  # type: ignore[union-attr]
+                options.transpilation.skip_transpilation  # type: ignore[union-attr]
             )
+            self._options = asdict(copy.deepcopy(options))
         else:
             options_copy = copy.deepcopy(options)
             backend = options_copy.pop("backend", None)
@@ -155,44 +157,17 @@ class Sampler(BaseSampler):
                     version="0.7",
                     remedy="Please pass the backend when opening a session.",
                 )
-            skip_transpilation = options.get("transpilation", {}).get(
+            default_options = asdict(Options())
+            self._options = Options._merge_options(default_options, options_copy)
+            skip_transpilation = self._options.get("transpilation", {}).get(
                 "skip_transpilation", False
             )
-            log_level = options_copy.pop("log_level", None)
-            _options = Options(**options_copy)
-            if log_level:
-                issue_deprecation_msg(
-                    msg="The 'log_level' option has been moved to the 'environment' category",
-                    version="0.7",
-                    remedy="Please specify 'environment':{'log_level': log_level} instead.",
-                )
-                _options.environment.log_level = log_level  # type: ignore[union-attr]
-
-        _options.transpilation.skip_transpilation = (  # type: ignore[union-attr]
-            skip_transpilation
-        )
-
-        if _options.optimization_level is None:
-            if _options.simulator and (
-                not hasattr(_options.simulator, "noise_model")
-                or asdict(_options.simulator)["noise_model"] is None
-            ):
-                _options.optimization_level = 1
-            else:
-                _options.optimization_level = Options._DEFAULT_OPTIMIZATION_LEVEL
-
-        if _options.resilience_level is None:
-            if _options.simulator and (
-                not hasattr(_options.simulator, "noise_model")
-                or asdict(_options.simulator)["noise_model"] is None
-            ):
-                _options.resilience_level = 0
-            else:
-                _options.resilience_level = Options._DEFAULT_RESILIENCE_LEVEL
-
-        self._options: dict = asdict(_options)
+        self._options["transpilation"][
+            "skip_transpilation"
+        ] = skip_transpilation  # type: ignore[union-attr]
 
         self._initial_inputs = {"circuits": circuits, "parameters": parameters}
+
         if isinstance(session, Session):
             self._session = session
         else:
@@ -285,8 +260,26 @@ class Sampler(BaseSampler):
             "parameter_values": parameter_values,
         }
         combined = Options._merge_options(self._options, kwargs.get("_user_kwargs", {}))
+
+        backend_obj: Optional[IBMBackend] = None
+        if self._session.backend():
+            backend_obj = self._session.service.backend(self._session.backend())
+            combined = set_default_error_levels(
+                combined,
+                backend_obj,
+                Options._DEFAULT_OPTIMIZATION_LEVEL,
+                Options._DEFAULT_RESILIENCE_LEVEL,
+            )
+        else:
+            combined["optimization_level"] = Options._DEFAULT_OPTIMIZATION_LEVEL
+            combined["resilience_level"] = Options._DEFAULT_RESILIENCE_LEVEL
         logger.info("Submitting job using options %s", combined)
+        Sampler._validate_options(combined)
         inputs.update(Options._get_program_inputs(combined))
+
+        if backend_obj and combined["transpilation"]["skip_transpilation"]:
+            for circ in circuits:
+                backend_obj.check_faulty(circ)
 
         return self._session.run(
             program_id=self._PROGRAM_ID,
@@ -333,7 +326,7 @@ class Sampler(BaseSampler):
             "parameter_values": parameter_values,
         }
         combined = Options._merge_options(self._options, run_options)
-
+        Sampler._validate_options(combined)
         inputs.update(Options._get_program_inputs(combined))
 
         raw_result = self._session.run(
@@ -379,3 +372,22 @@ class Sampler(BaseSampler):
             **fields: The fields to update the options
         """
         self._options = Options._merge_options(self._options, fields)
+
+    @staticmethod
+    def _validate_options(options: dict) -> None:
+        """Validate that program inputs (options) are valid
+        Raises:
+            ValueError: if resilience_level is out of the allowed range.
+        """
+        if os.getenv("QISKIT_RUNTIME_SKIP_OPTIONS_VALIDATION"):
+            return
+
+        if options.get("resilience_level") and not options.get("resilience_level") in [
+            0,
+            1,
+        ]:
+            raise ValueError(
+                f"resilience_level can only take the values "
+                f"{list(range(Options._MAX_RESILIENCE_LEVEL_SAMPLER + 1))} in Sampler"
+            )
+        Options.validate_options(options)

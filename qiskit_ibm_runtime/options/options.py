@@ -15,6 +15,7 @@
 from typing import Optional, Union, ClassVar
 from dataclasses import dataclass, fields, field
 import copy
+import warnings
 
 from .utils import _flexible, Dict
 from .environment_options import EnvironmentOptions
@@ -85,6 +86,10 @@ class Options:
     # in Sampler/Estimator
     _DEFAULT_OPTIMIZATION_LEVEL = 3
     _DEFAULT_RESILIENCE_LEVEL = 1
+    _MAX_OPTIMIZATION_LEVEL = 3
+    _MAX_RESILIENCE_LEVEL_ESTIMATOR = 3
+    _MAX_RESILIENCE_LEVEL_SAMPLER = 1
+
     optimization_level: Optional[int] = None
     resilience_level: Optional[int] = None
     max_execution_time: Optional[int] = None
@@ -105,6 +110,7 @@ class Options:
         "execution": ExecutionOptions,
         "environment": EnvironmentOptions,
         "simulator": SimulatorOptions,
+        "resilience": ResilienceOptions,
     }
 
     @staticmethod
@@ -148,8 +154,26 @@ class Options:
         # Add additional unknown keys.
         for key in options.keys():
             if key not in known_keys:
+                warnings.warn(
+                    f"Key '{key}' is an unrecognized option. It may be ignored."
+                )
                 inputs[key] = options[key]
         return inputs
+
+    @staticmethod
+    def validate_options(options: dict) -> None:
+        """Validate that program inputs (options) are valid
+        Raises:
+            ValueError: if optimization_level is out of the allowed range.
+        """
+        if not options.get("optimization_level") in list(
+            range(Options._MAX_OPTIMIZATION_LEVEL + 1)
+        ):
+            raise ValueError(
+                f"optimization_level can only take the values "
+                f"{list(range(Options._MAX_OPTIMIZATION_LEVEL + 1))}"
+            )
+        ResilienceOptions.validate_resilience_options(options.get("resilience"))
 
     @staticmethod
     def _get_runtime_options(options: dict) -> dict:

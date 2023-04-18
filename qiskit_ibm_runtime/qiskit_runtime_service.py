@@ -24,6 +24,10 @@ from qiskit.providers.backend import BackendV1 as Backend
 from qiskit.providers.provider import ProviderV1 as Provider
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.providerutils import filter_backends
+from qiskit.providers.models import (
+    PulseBackendConfiguration,
+    QasmBackendConfiguration,
+)
 
 from qiskit_ibm_runtime import ibm_backend
 from .accounts import AccountManager, Account, AccountType, ChannelType
@@ -49,9 +53,9 @@ from .utils.backend_decoder import configuration_from_server_data
 from .utils.hgp import to_instance_format, from_instance_format
 from .api.client_parameters import ClientParameters
 from .runtime_options import RuntimeOptions
+from .ibm_backend import IBMBackend
 from .utils.deprecation import (
     deprecate_function,
-    issue_deprecation_msg,
     deprecate_arguments,
 )
 
@@ -66,8 +70,6 @@ DEPRECATED_PROGRAMS = [
     "quantum_kernal_alignment",
     "sample-program",
 ]
-
-_JOB_DEPRECATION_ISSUED = False
 
 
 class QiskitRuntimeService(Provider):
@@ -209,6 +211,7 @@ class QiskitRuntimeService(Provider):
         self._channel = self._account.channel
         self._programs: Dict[str, RuntimeProgram] = {}
         self._backends: Dict[str, "ibm_backend.IBMBackend"] = {}
+        self._backend_configs: Dict[str, Any] = {}
 
         if self._channel == "ibm_cloud":
             self._api_client = RuntimeClient(self._client_params)
@@ -225,9 +228,9 @@ class QiskitRuntimeService(Provider):
             self._api_client = RuntimeClient(self._client_params)
             self._hgps = self._initialize_hgps(auth_client)
             for hgp in self._hgps.values():
-                for backend_name, backend in hgp.backends.items():
+                for backend_name in hgp.backends:
                     if backend_name not in self._backends:
-                        self._backends[backend_name] = backend
+                        self._backends[backend_name] = None
 
         # TODO - it'd be nice to allow some kind of autocomplete, but `service.ibmq_foo`
         # just seems wrong since backends are not runtime service instances.
@@ -408,7 +411,7 @@ class QiskitRuntimeService(Provider):
             hgp_params = ClientParameters(
                 channel=self._account.channel,
                 token=auth_client.current_access_token(),
-                url=service_urls["http"],
+                url=service_urls["services"]["runtime"],
                 instance=to_instance_format(
                     hub_info["hub"], hub_info["group"], hub_info["project"]
                 ),
@@ -493,7 +496,7 @@ class QiskitRuntimeService(Provider):
                     f"Hub/group/project {instance} "
                     "could not be found for this account."
                 )
-            if backend_name and not self._hgps[instance].backend(backend_name):
+            if backend_name and not self._hgps[instance].has_backend(backend_name):
                 raise QiskitBackendNotFoundError(
                     f"Backend {backend_name} cannot be found in "
                     f"hub/group/project {instance}"
@@ -504,7 +507,7 @@ class QiskitRuntimeService(Provider):
             return list(self._hgps.values())[0]
 
         for hgp in self._hgps.values():
-            if hgp.backend(backend_name):
+            if hgp.has_backend(backend_name):
                 return hgp
 
         error_message = (
@@ -573,13 +576,45 @@ class QiskitRuntimeService(Provider):
 
         Raises:
             IBMInputValueError: If an input is invalid.
+            QiskitBackendNotFoundError: If the backend is not in any instance.
         """
         # TODO filter out input_allowed not having runtime
+        backends: List[IBMBackend] = []
         if self._channel == "ibm_quantum":
-            if instance:
-                backends = list(self._get_hgp(instance=instance).backends.values())
+            if name:
+                if name not in self._backends:
+                    raise QiskitBackendNotFoundError("No backend matches the criteria.")
+                if (
+                    not self._backends[name]
+                    or instance != self._backends[name]._instance
+                ):
+                    self._set_backend_config(name)
+                    self._backends[name] = self._create_backend_obj(
+                        self._backend_configs[name],
+                        instance,
+                    )
+                backends.append(self._backends[name])
+            elif instance:
+                hgp = self._get_hgp(instance=instance)
+                for backend_name in hgp.backends:
+                    if (
+                        not self._backends[backend_name]
+                        or instance != self._backends[backend_name]._instance
+                    ):
+                        self._set_backend_config(backend_name, instance)
+                        self._backends[backend_name] = self._create_backend_obj(
+                            self._backend_configs[backend_name], instance
+                        )
+                    backends.append(self._backends[backend_name])
             else:
-                backends = list(self._backends.values())
+                for backend_name, backend_config in self._backends.items():
+                    if not backend_config:
+                        self._set_backend_config(backend_name)
+                        self._backends[backend_name] = self._create_backend_obj(
+                            self._backend_configs[backend_name]
+                        )
+                    backends.append(self._backends[backend_name])
+
         else:
             if instance:
                 raise IBMInputValueError(
@@ -594,6 +629,54 @@ class QiskitRuntimeService(Provider):
                 filter(lambda b: b.configuration().n_qubits >= min_num_qubits, backends)
             )
         return filter_backends(backends, filters=filters, **kwargs)
+
+    def _set_backend_config(
+        self, backend_name: str, instance: Optional[str] = None
+    ) -> None:
+        """Retrieve backend configuration and add to backend_configs.
+        Args:
+            backend_name: backend name that will be returned.
+            instance: the current h/g/p.
+        """
+        if backend_name not in self._backend_configs:
+            raw_config = self._api_client.backend_configuration(backend_name)
+            config = configuration_from_server_data(
+                raw_config=raw_config, instance=instance
+            )
+            self._backend_configs[backend_name] = config
+
+    def _create_backend_obj(
+        self,
+        config: Union[QasmBackendConfiguration, PulseBackendConfiguration],
+        instance: Optional[str] = None,
+    ) -> IBMBackend:
+        """Given a backend configuration return the backend object.
+        Args:
+            config: backend configuration.
+            instance: the current h/g/p.
+        Returns:
+            A backend object.
+        Raises:
+            QiskitBackendNotFoundError: if the backend is not in the hgp passed in.
+        """
+        if not instance:
+            for hgp in list(self._hgps.values()):
+                if config.backend_name in hgp.backends:
+                    instance = to_instance_format(hgp._hub, hgp._group, hgp._project)
+                    break
+
+        elif config.backend_name not in self._get_hgp(instance=instance).backends:
+            raise QiskitBackendNotFoundError(
+                f"Backend {config.backend_name} is not in "
+                f"{instance}: please try a different hub/group/project."
+            )
+
+        return ibm_backend.IBMBackend(
+            instance=instance,
+            configuration=config,
+            service=self,
+            api_client=self._api_client,
+        )
 
     def active_account(self) -> Optional[Dict[str, str]]:
         """Return the IBM Quantum account currently in use for the session.
@@ -987,14 +1070,12 @@ class QiskitRuntimeService(Provider):
 
         qrt_options.validate(channel=self.channel)
 
-        backend = None
         hgp_name = None
         if self._channel == "ibm_quantum":
             # Find the right hgp
             hgp = self._get_hgp(
                 instance=qrt_options.instance, backend_name=qrt_options.backend
             )
-            backend = hgp.backend(qrt_options.backend)
             hgp_name = hgp.name
 
         try:
@@ -1018,20 +1099,7 @@ class QiskitRuntimeService(Provider):
                 ) from None
             raise IBMRuntimeError(f"Failed to run program: {ex}") from None
 
-        if not backend:
-            backend = self.backend(name=response["backend"])
-
-        global _JOB_DEPRECATION_ISSUED  # pylint: disable=global-statement
-        if not (start_session or session_id) and not _JOB_DEPRECATION_ISSUED:
-            # No need to issue warning if session is used since the old style session
-            # didn't return a job, and new style returns new job.
-            _JOB_DEPRECATION_ISSUED = True
-            issue_deprecation_msg(
-                msg="Note that the 'job_id' and 'backend' attributes of "
-                "a runtime job have been deprecated",
-                version="0.7",
-                remedy="Please use the job_id() and backend() methods instead.",
-            )
+        backend = self.backend(name=response["backend"], instance=hgp_name)
 
         job = RuntimeJob(
             backend=backend,
@@ -1043,6 +1111,7 @@ class QiskitRuntimeService(Provider):
             user_callback=callback,
             result_decoder=result_decoder,
             image=qrt_options.image,
+            service=self,
         )
         return job
 
@@ -1465,7 +1534,10 @@ class QiskitRuntimeService(Provider):
                 instance = to_instance_format(hub, group, project)
         # Try to find the right backend
         try:
-            backend = self.backend(raw_data["backend"], instance=instance)
+            if "backend" in raw_data:
+                backend = self.backend(raw_data["backend"], instance=instance)
+            else:
+                backend = None
         except QiskitBackendNotFoundError:
             backend = ibm_backend.IBMRetiredBackend.from_name(
                 backend_name=raw_data["backend"],
@@ -1486,6 +1558,7 @@ class QiskitRuntimeService(Provider):
             backend=backend,
             api_client=self._api_client,
             client_params=self._client_params,
+            service=self,
             job_id=raw_data["id"],
             program_id=raw_data.get("program", {}).get("id", ""),
             params=decoded,

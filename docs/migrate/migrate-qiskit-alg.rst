@@ -50,10 +50,10 @@ the ground state energy which might require, for example, measurements in multip
 
 Let's see the workflow changes for the Estimator-based VQE implementation:
 
-Step 1: Problem Definition
+Step 1: Problem definition
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The problem definition step is common to the old and new workflow: defining the hamiltonian, ansatz,
+The problem definition step is common to the old and new workflow: defining the Hamiltonian, ansatz,
 optimizer and initial point.
 
 The only difference is that the operator definition now relies on |qiskit.quantum_info|_ instead
