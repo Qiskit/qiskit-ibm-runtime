@@ -36,7 +36,6 @@ class RuntimeOptions:
     max_execution_time: Optional[int] = None
     session_time: Optional[int] = None
 
-    @deprecate_arguments({"backend_name": "backend"})
     def __init__(
         self,
         backend: Optional[str] = None,
@@ -111,24 +110,19 @@ class RuntimeOptions:
             validate_job_tags(self.job_tags, IBMInputValueError)
 
     @property
-    def backend_name(self) -> str:
+    def backend(self) -> str:
         """Return backend.
 
         Returns:
             Backend name.
         """
-        return self.backend
+        return self._backend
 
-    @backend_name.setter
-    def backend_name(self, name: str) -> None:
+    @backend.setter
+    def backend(self, name: str) -> None:
         """Set backend name.
 
         Args:
             name: Backend to use.
         """
-        issue_deprecation_msg(
-            msg="The 'backend_name' attribute is deprecated",
-            version="0.7",
-            remedy="Please use 'backend' instead.",
-        )
         self._backend = name
