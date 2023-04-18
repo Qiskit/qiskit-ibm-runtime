@@ -14,12 +14,11 @@
 
 from __future__ import annotations
 import copy
-from typing import Iterable, Optional, Dict, Sequence, Any, Union
+from typing import Optional, Dict, Sequence, Any, Union
 import logging
 from dataclasses import asdict
 
-from qiskit.circuit import QuantumCircuit, Parameter
-from qiskit.quantum_info import SparsePauliOp
+from qiskit.circuit import QuantumCircuit
 from qiskit.opflow import PauliSumOp
 from qiskit.quantum_info.operators.base_operator import BaseOperator
 from qiskit.providers.options import Options as TerraOptions
@@ -92,25 +91,12 @@ class Estimator(BaseEstimator):
 
     def __init__(
         self,
-        circuits: Optional[Union[QuantumCircuit, Iterable[QuantumCircuit]]] = None,
-        observables: Optional[Iterable[SparsePauliOp]] = None,
-        parameters: Optional[Iterable[Iterable[Parameter]]] = None,
         session: Optional[Union[Session, str, IBMBackend]] = None,
         options: Optional[Union[Dict, Options]] = None,
     ):
         """Initializes the Estimator primitive.
 
         Args:
-            circuits: (DEPRECATED) A (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
-                a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
-
-            observables: (DEPRECATED) A list of :class:`~qiskit.quantum_info.SparsePauliOp`
-
-            parameters: (DEPRECATED) A list of parameters of the quantum circuits.
-                (:class:`~qiskit.circuit.parametertable.ParameterView` or
-                a list of :class:`~qiskit.circuit.Parameter`) specifying the order
-                in which parameter values will be bound.
-
             session: Session in which to call the primitive.
 
                 * If an instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
@@ -129,11 +115,7 @@ class Estimator(BaseEstimator):
         # The base class, however, uses a `_run_options` which is an instance of
         # qiskit.providers.Options. We largely ignore this _run_options because we use
         # a nested dictionary to categorize options.
-        super().__init__(
-            circuits=circuits,
-            observables=observables,
-            parameters=parameters,
-        )
+        super().__init__()
 
         backend = None
         self._session: Session = None
@@ -152,12 +134,6 @@ class Estimator(BaseEstimator):
             self._options["transpilation"][
                 "skip_transpilation"
             ] = skip_transpilation  # type: ignore[union-attr]
-
-        self._initial_inputs = {
-            "circuits": circuits,
-            "observables": observables,
-            "parameters": parameters,
-        }
 
         if isinstance(session, Session):
             self._session = session

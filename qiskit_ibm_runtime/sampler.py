@@ -13,12 +13,12 @@
 """Sampler primitive."""
 
 from __future__ import annotations
-from typing import Dict, Iterable, Optional, Sequence, Any, Union
+from typing import Dict, Optional, Sequence, Any, Union
 import copy
 import logging
 from dataclasses import asdict
 
-from qiskit.circuit import QuantumCircuit, Parameter
+from qiskit.circuit import QuantumCircuit
 from qiskit.providers.options import Options as TerraOptions
 from qiskit.primitives import BaseSampler, SamplerResult
 
@@ -71,21 +71,12 @@ class Sampler(BaseSampler):
 
     def __init__(
         self,
-        circuits: Optional[Union[QuantumCircuit, Iterable[QuantumCircuit]]] = None,
-        parameters: Optional[Iterable[Iterable[Parameter]]] = None,
         session: Optional[Union[Session, str, IBMBackend]] = None,
         options: Optional[Union[Dict, Options]] = None,
     ):
         """Initializes the Sampler primitive.
 
         Args:
-            circuits: (DEPRECATED) A (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
-                a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
-
-            parameters: (DEPRECATED) A list of parameters of the quantum circuits
-                (:class:`~qiskit.circuit.parametertable.ParameterView` or
-                a list of :class:`~qiskit.circuit.Parameter`)
-
             session: Session in which to call the primitive.
 
                 * If an instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
@@ -105,10 +96,7 @@ class Sampler(BaseSampler):
         # qiskit.providers.Options. We largely ignore this _run_options because we use
         # a nested dictionary to categorize options.
 
-        super().__init__(
-            circuits=circuits,
-            parameters=parameters,
-        )
+        super().__init__()
 
         backend = None
         self._session: Session = None
@@ -127,8 +115,6 @@ class Sampler(BaseSampler):
             self._options["transpilation"][
                 "skip_transpilation"
             ] = skip_transpilation  # type: ignore[union-attr]
-
-        self._initial_inputs = {"circuits": circuits, "parameters": parameters}
 
         if isinstance(session, Session):
             self._session = session
