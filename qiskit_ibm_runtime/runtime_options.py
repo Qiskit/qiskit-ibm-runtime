@@ -17,10 +17,7 @@ import logging
 from dataclasses import dataclass
 from typing import Optional, List
 
-from qiskit.utils.deprecation import deprecate_arguments
-
 from .exceptions import IBMInputValueError
-from .utils.deprecation import issue_deprecation_msg
 from .utils.utils import validate_job_tags
 
 
@@ -108,21 +105,3 @@ class RuntimeOptions:
 
         if self.job_tags:
             validate_job_tags(self.job_tags, IBMInputValueError)
-
-    @property
-    def backend(self) -> str:
-        """Return backend.
-
-        Returns:
-            Backend name.
-        """
-        return self._backend
-
-    @backend.setter
-    def backend(self, name: str) -> None:
-        """Set backend name.
-
-        Args:
-            name: Backend to use.
-        """
-        self._backend = name
