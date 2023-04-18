@@ -36,7 +36,7 @@ Use the updated code to work with accounts.
     IBMQ.save_account("<IQX_TOKEN>", overwrite=True)
 
 **Updated - Save accounts**
-
+The new syntax accepts credentials for two different channels. For more information on retrieving account credentials, see the `getting started guide <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/getting_started.html>`_.
 .. code-block:: python
 
     # ibm cloud channel
