@@ -13,6 +13,7 @@
 """Estimator primitive."""
 
 from __future__ import annotations
+import os
 import copy
 from typing import Optional, Dict, Sequence, Any, Union
 import logging
@@ -257,6 +258,7 @@ class Estimator(BaseEstimator):
             combined["optimization_level"] = Options._DEFAULT_OPTIMIZATION_LEVEL
             combined["resilience_level"] = Options._DEFAULT_RESILIENCE_LEVEL
         logger.info("Submitting job using options %s", combined)
+        self._validate_options(combined)
         inputs.update(Options._get_program_inputs(combined))
 
         if backend_obj and combined["transpilation"]["skip_transpilation"]:
@@ -311,6 +313,8 @@ class Estimator(BaseEstimator):
             "observable_indices": observables,
         }
         combined = Options._merge_options(self._options, run_options)
+
+        self._validate_options(combined)
         inputs.update(Options._get_program_inputs(combined))
 
         return self._session.run(
@@ -345,3 +349,30 @@ class Estimator(BaseEstimator):
             **fields: The fields to update the options
         """
         self._options = Options._merge_options(self._options, fields)
+
+    def _validate_options(self, options: dict) -> None:
+        """Validate that program inputs (options) are valid
+        Raises:
+            ValueError: if resilience_level is out of the allowed range.
+            ValueError: if resilience_level==3, backend is simulator and no coupling map
+        """
+        if os.getenv("QISKIT_RUNTIME_SKIP_OPTIONS_VALIDATION"):
+            return
+
+        if not options.get("resilience_level") in list(
+            range(Options._MAX_RESILIENCE_LEVEL_ESTIMATOR + 1)
+        ):
+            raise ValueError(
+                f"resilience_level can only take the values "
+                f"{list(range(Options._MAX_RESILIENCE_LEVEL_ESTIMATOR + 1))} in Estimator"
+            )
+
+        if options.get("resilience_level") == 3 and self._session.backend() in [
+            b.name for b in self._session.service.backends(simulator=True)
+        ]:
+            if not options.get("simulator").get("coupling_map"):
+                raise ValueError(
+                    "When the backend is a simulator and resilience_level == 3,"
+                    "a coupling map is required."
+                )
+        Options.validate_options(options)

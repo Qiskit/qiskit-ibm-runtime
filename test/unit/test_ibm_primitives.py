@@ -15,6 +15,7 @@
 import sys
 import copy
 import json
+import os
 from unittest.mock import MagicMock, patch, ANY
 import warnings
 from dataclasses import asdict
@@ -233,10 +234,10 @@ class TestPrimitives(IBMTestCase):
         """Test run using default options."""
         session = MagicMock(spec=MockSession)
         options_vars = [
-            (Options(resilience_level=9), {"resilience_settings": {"level": 9}}),
+            (Options(resilience_level=1), {"resilience_settings": {"level": 1}}),
             (
-                Options(optimization_level=8),
-                {"transpilation_settings": {"optimization_settings": {"level": 8}}},
+                Options(optimization_level=3),
+                {"transpilation_settings": {"optimization_settings": {"level": 3}}},
             ),
             (
                 {
@@ -291,17 +292,17 @@ class TestPrimitives(IBMTestCase):
         """Test run using overwritten options."""
         session = MagicMock(spec=MockSession)
         options_vars = [
-            ({"resilience_level": 9}, {"resilience_settings": {"level": 9}}),
+            ({"resilience_level": 1}, {"resilience_settings": {"level": 1}}),
             ({"shots": 200}, {"run_options": {"shots": 200}}),
             (
-                {"optimization_level": 8},
-                {"transpilation_settings": {"optimization_settings": {"level": 8}}},
+                {"optimization_level": 3},
+                {"transpilation_settings": {"optimization_settings": {"level": 3}}},
             ),
             (
-                {"initial_layout": [1, 2], "optimization_level": 8},
+                {"initial_layout": [1, 2], "optimization_level": 2},
                 {
                     "transpilation_settings": {
-                        "optimization_settings": {"level": 8},
+                        "optimization_settings": {"level": 2},
                         "initial_layout": [1, 2],
                     }
                 },
@@ -584,6 +585,48 @@ class TestPrimitives(IBMTestCase):
                     1,
                 )
                 self.assertEqual(inputs["resilience_settings"]["level"], 0)
+
+    def test_resilience_options(self):
+        """Test resilience options."""
+        options_dicts = [
+            {"resilience": {"noise_amplifier": "NoAmplifier"}},
+            {"resilience": {"extrapolator": "NoExtrapolator"}},
+            {
+                "resilience": {
+                    "extrapolator": "QuarticExtrapolator",
+                    "noise_factors": [1, 2, 3, 4],
+                },
+            },
+            {
+                "resilience": {
+                    "extrapolator": "CubicExtrapolator",
+                    "noise_factors": [1, 2, 3],
+                },
+            },
+        ]
+        session = MagicMock(spec=MockSession)
+        primitives = [Sampler, Estimator]
+
+        for cls in primitives:
+            for opts_dict in options_dicts:
+                # When this environment variable is set, validation is turned off
+                try:
+                    os.environ["QISKIT_RUNTIME_SKIP_OPTIONS_VALIDATION"] = "1"
+                    inst = cls(session=session, options=opts_dict)
+                    inst.run(self.qx, observables=self.obs)
+                finally:
+                    # Delete environment variable to validate input
+                    del os.environ["QISKIT_RUNTIME_SKIP_OPTIONS_VALIDATION"]
+                with self.assertRaises(ValueError) as exc:
+                    inst = cls(session=session, options=opts_dict)
+                    inst.run(self.qx, observables=self.obs)
+                self.assertIn(
+                    list(opts_dict["resilience"].values())[0], str(exc.exception)
+                )
+                if len(opts_dict["resilience"].keys()) > 1:
+                    self.assertIn(
+                        list(opts_dict["resilience"].keys())[1], str(exc.exception)
+                    )
 
     def test_raise_faulty_qubits(self):
         """Test faulty qubits is raised."""
