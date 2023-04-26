@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    Fixed a bug where retrieving a job from a backend without ``noise_model``
+    or ``seed_simulator`` options would result in a key error. 
+
