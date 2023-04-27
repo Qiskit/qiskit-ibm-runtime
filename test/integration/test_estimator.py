@@ -351,3 +351,29 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
 
         self.assertTrue(np.allclose(chsh1_terra.values, chsh1_runtime.values, rtol=0.3))
         self.assertTrue(np.allclose(chsh2_terra.values, chsh2_runtime.values, rtol=0.3))
+
+    @run_integration_test
+    def test_composed_circuit(self, service):
+        from qiskit.circuit import ParameterVector
+
+        def add_unit(qc: QuantumCircuit, qubit, params):
+            u = QuantumCircuit(1, name="U")
+            u.rz(params[0], 0)
+            qc.compose(u.to_instruction(), [qubit], inplace=True)
+
+        num_qubits = 2
+        qc = QuantumCircuit(num_qubits, name="QC")
+        num_params = 2
+        params = ParameterVector("u", num_params)
+        for qubit in [0, 1]:
+            param_index = qubit
+            unit_params = params[param_index: param_index + 1]
+            add_unit(qc, qubit, unit_params)
+
+        observable = SparsePauliOp("ZZ")
+        rand_param = np.random.rand(qc.num_parameters)
+        backend_name = "ibmq_qasm_simulator"
+        with Session(service=service, backend=backend_name) as session:
+            estimator = Estimator(session=session)
+            result = estimator.run(circuits=[qc], observables=observable, parameter_values=rand_param).result()
+            self.assertTrue(result.values[0] == 1)
