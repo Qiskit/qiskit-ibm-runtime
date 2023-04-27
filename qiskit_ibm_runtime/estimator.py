@@ -297,7 +297,7 @@ class Estimator(BaseEstimator):
         #     "parameter_values": parameter_values,
         # }
         inputs = {
-            "circuits": circuits,
+            "circuits": [c.decompose(reps=2) for c in circuits],
             "circuit_indices": list(range(len(circuits))),
             "observables": observables,
             "observable_indices": list(range(len(observables))),
