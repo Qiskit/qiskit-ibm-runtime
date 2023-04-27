@@ -16,7 +16,7 @@ import unittest
 
 import numpy as np
 
-from qiskit.circuit import QuantumCircuit, Parameter
+from qiskit.circuit import QuantumCircuit, Parameter, ParameterVector
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.primitives import Estimator as TerraEstimator
 from qiskit.quantum_info import SparsePauliOp
@@ -354,26 +354,28 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
 
     @run_integration_test
     def test_composed_circuit(self, service):
-        from qiskit.circuit import ParameterVector
+        """Test proper binding of parameter in composed circuit."""
 
-        def add_unit(qc: QuantumCircuit, qubit, params):
-            u = QuantumCircuit(1, name="U")
-            u.rz(params[0], 0)
-            qc.compose(u.to_instruction(), [qubit], inplace=True)
+        def add_unit(circuit: QuantumCircuit, qubit, params):
+            sub_circ = QuantumCircuit(1, name="Sub")
+            sub_circ.rz(params[0], 0)
+            circuit.compose(sub_circ.to_instruction(), [qubit], inplace=True)
 
         num_qubits = 2
-        qc = QuantumCircuit(num_qubits, name="QC")
+        circuit = QuantumCircuit(num_qubits, name="Main")
         num_params = 2
         params = ParameterVector("u", num_params)
         for qubit in [0, 1]:
             param_index = qubit
-            unit_params = params[param_index: param_index + 1]
-            add_unit(qc, qubit, unit_params)
+            unit_params = params[param_index : param_index + 1]
+            add_unit(circuit, qubit, unit_params)
 
         observable = SparsePauliOp("ZZ")
-        rand_param = np.random.rand(qc.num_parameters)
+        rand_param = np.random.rand(circuit.num_parameters)
         backend_name = "ibmq_qasm_simulator"
         with Session(service=service, backend=backend_name) as session:
             estimator = Estimator(session=session)
-            result = estimator.run(circuits=[qc], observables=observable, parameter_values=rand_param).result()
+            result = estimator.run(
+                circuits=[circuit], observables=observable, parameter_values=rand_param
+            ).result()
             self.assertTrue(result.values[0] == 1)
