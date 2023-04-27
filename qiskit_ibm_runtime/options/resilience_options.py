@@ -72,22 +72,22 @@ class ResilienceOptions:
         noise_amplifier = resilience_options.get("noise_amplifier")
         if not noise_amplifier in get_args(NoiseAmplifierType):
             raise ValueError(
-                f"Unsupported value {noise_amplifier} for noise_amplifier."
+                f"Unsupported value {noise_amplifier} for noise_amplifier. "
                 f"Supported values are {get_args(NoiseAmplifierType)}"
             )
         extrapolator = resilience_options.get("extrapolator")
         if not extrapolator in get_args(ExtrapolatorType):
             raise ValueError(
-                f"Unsupported value {extrapolator} for extrapolator."
+                f"Unsupported value {extrapolator} for extrapolator. "
                 f"Supported values are {get_args(ExtrapolatorType)}"
             )
         if (
             extrapolator == "QuarticExtrapolator"
             and len(resilience_options.get("noise_factors")) < 5
         ):
-            raise ValueError("QuarticExtrapolator requires at least 5 noise_factors")
+            raise ValueError("QuarticExtrapolator requires at least 5 noise_factors.")
         if (
             extrapolator == "CubicExtrapolator"
             and len(resilience_options.get("noise_factors")) < 4
         ):
-            raise ValueError("CubicExtrapolator requires at least 4 noise_factors")
+            raise ValueError("CubicExtrapolator requires at least 4 noise_factors.")
