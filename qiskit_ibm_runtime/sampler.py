@@ -122,10 +122,7 @@ class Sampler(BaseSampler):
         # qiskit.providers.Options. We largely ignore this _run_options because we use
         # a nested dictionary to categorize options.
 
-        super().__init__(
-            circuits=circuits,
-            parameters=parameters,
-        )
+        super().__init__()
 
         if skip_transpilation:
             deprecate_arguments(

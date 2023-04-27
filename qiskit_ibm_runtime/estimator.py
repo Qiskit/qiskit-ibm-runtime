@@ -146,11 +146,7 @@ class Estimator(BaseEstimator):
         # The base class, however, uses a `_run_options` which is an instance of
         # qiskit.providers.Options. We largely ignore this _run_options because we use
         # a nested dictionary to categorize options.
-        super().__init__(
-            circuits=circuits,
-            observables=observables,
-            parameters=parameters,
-        )
+        super().__init__()
 
         if skip_transpilation:
             deprecate_arguments(
