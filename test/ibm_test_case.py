@@ -94,7 +94,8 @@ class IBMIntegrationTestCase(IBMTestCase):
         service = self.service
         for prog in self.to_delete[service.channel]:
             with suppress(Exception):
-                service.delete_program(prog)
+                if "qiskit-test" in prog:
+                    service.delete_program(prog)
 
         # Cancel and delete jobs.
         for job in self.to_cancel[service.channel]:
@@ -145,12 +146,13 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
         # Delete default program.
         with suppress(Exception):
             service = cls.service
-            service.delete_program(cls.program_ids[service.channel])
-            cls.log.debug(
-                "Deleted %s program %s",
-                service.channel,
-                cls.program_ids[service.channel],
-            )
+            if "qiskit-test" in cls.program_ids[service.channel]:
+                service.delete_program(cls.program_ids[service.channel])
+                cls.log.debug(
+                    "Deleted %s program %s",
+                    service.channel,
+                    cls.program_ids[service.channel],
+                )
 
     @classmethod
     def _find_sim_backends(cls):
