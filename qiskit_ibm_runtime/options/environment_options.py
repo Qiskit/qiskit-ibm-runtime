@@ -14,8 +14,17 @@
 
 from typing import Optional, Callable, List
 from dataclasses import dataclass, field
+from typing_extensions import Literal, get_args
 
 from .utils import _flexible
+
+LogLevelType = Literal[
+    "DEBUG",
+    "INFO",
+    "WARNING",
+    "ERROR",
+    "CRITICAL",
+]
 
 
 @_flexible
@@ -42,3 +51,16 @@ class EnvironmentOptions:
     log_level: str = "WARNING"
     callback: Optional[Callable] = None
     job_tags: Optional[List] = field(default_factory=list)
+
+    @staticmethod
+    def validate_environment_options(environment_options: dict) -> None:
+        """Validate that environment options are legal.
+        Raises:
+            ValueError: if log_level is not in LogLevelType.
+        """
+        log_level = environment_options.get("log_level")
+        if not log_level in get_args(LogLevelType):
+            raise ValueError(
+                f"Unsupported value {log_level} for log_level. "
+                f"Supported values are {get_args(LogLevelType)}"
+            )

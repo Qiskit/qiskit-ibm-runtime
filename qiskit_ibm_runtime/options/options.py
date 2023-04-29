@@ -174,6 +174,10 @@ class Options:
                 f"{list(range(Options._MAX_OPTIMIZATION_LEVEL + 1))}"
             )
         ResilienceOptions.validate_resilience_options(options.get("resilience"))
+        TranspilationOptions.validate_transpilation_options(
+            options.get("transpilation")
+        )
+        EnvironmentOptions.validate_environment_options(options.get("environment"))
 
     @staticmethod
     def _get_runtime_options(options: dict) -> dict:
