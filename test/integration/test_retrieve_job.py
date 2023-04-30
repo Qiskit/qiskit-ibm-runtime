@@ -17,7 +17,7 @@ from datetime import datetime, timezone
 from qiskit.providers.jobstatus import JobStatus
 
 from ..ibm_test_case import IBMIntegrationJobTestCase
-from ..decorators import run_integration_test, production_only
+from ..decorators import run_integration_test, production_only, quantum_only
 from ..utils import wait_for_status, get_real_device
 
 
@@ -120,6 +120,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
                 break
         self.assertTrue(found, f"Returned job {job.job_id()} not retrieved.")
 
+    @quantum_only
     @run_integration_test
     def test_retrieve_jobs_by_program_id(self, service):
         """Test retrieving jobs by Program ID."""

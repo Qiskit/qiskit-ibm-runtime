@@ -42,10 +42,10 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     @run_integration_test
     def test_run_program(self, service):
         """Test running a program."""
-        job = self._run_program(service, final_result="foo")
+        job = self._run_program(service)
         result = job.result()
         self.assertEqual(JobStatus.DONE, job.status())
-        self.assertEqual("foo", result)
+        self.assertEqual("Hello, World!", result)
 
     @slow_test
     @run_integration_test
@@ -85,17 +85,16 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     @run_integration_test
     def test_run_program_failed(self, service):
         """Test a failed program execution."""
-        job = self._run_program(service, inputs={})
+        job = self._run_program(service, program_id="circuit-runner", inputs={})
         job.wait_for_final_state()
         self.assertEqual(JobStatus.ERROR, job.status())
         self.assertIn(
             API_TO_JOB_ERROR_MESSAGE["FAILED"].format(job.job_id(), ""),
             job.error_message(),
         )
-        with self.assertRaises(RuntimeJobFailureError):
+        with self.assertRaises(RuntimeJobFailureError) as err_cm:
             job.result()
-        # TODO: Re-enable when ntc-1651 is fixed
-        # self.assertIn("KeyError", str(err_cm.exception))
+            self.assertIn("KeyError", str(err_cm.exception))
 
     @run_integration_test
     def test_run_program_failed_ran_too_long(self, service):
