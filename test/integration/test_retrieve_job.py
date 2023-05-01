@@ -88,7 +88,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
     @run_integration_test
     def test_retrieve_pending_jobs(self, service):
         """Test retrieving pending jobs (QUEUED, RUNNING)."""
-        job = self._run_program(service, iterations=10)
+        job = self._run_program(service, iterations=20)
         wait_for_status(job, JobStatus.RUNNING)
         rjobs = service.jobs(pending=True)
         after_status = job.status()
@@ -120,8 +120,8 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
                 break
         self.assertTrue(found, f"Returned job {job.job_id()} not retrieved.")
 
-    @quantum_only
     @run_integration_test
+    @quantum_only
     def test_retrieve_jobs_by_program_id(self, service):
         """Test retrieving jobs by Program ID."""
         program_id = "hello-world"

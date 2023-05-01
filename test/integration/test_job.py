@@ -28,7 +28,7 @@ from qiskit_ibm_runtime.exceptions import (
     RuntimeJobMaxTimeoutError,
 )
 from ..ibm_test_case import IBMIntegrationJobTestCase
-from ..decorators import run_integration_test, production_only
+from ..decorators import run_integration_test, production_only, quantum_only
 from ..serialization import (
     get_complex_types,
     SerializableClassDecoder,
@@ -84,6 +84,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
                 )
 
     @run_integration_test
+    @quantum_only
     def test_run_program_failed(self, service):
         """Test a failed program execution."""
         job = self._run_program(service, program_id="circuit-runner", inputs={})

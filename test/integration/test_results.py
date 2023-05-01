@@ -138,11 +138,11 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
     @run_integration_test
     def test_retrieve_interim_results(self, service):
         """Test retrieving interim results with API endpoint"""
-        int_res = "foo"
-        job = self._run_program(service, interim_results=int_res)
+        job = self._run_program(service)
         job.wait_for_final_state()
         interim_results = job.interim_results()
-        self.assertIn(int_res, interim_results[0])
+        self.assertIn("iteration", interim_results[0])
+        self.assertIn("counts", interim_results[0])
 
     @run_integration_test
     def test_result_timeout(self, service):
