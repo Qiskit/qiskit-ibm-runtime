@@ -178,7 +178,11 @@ class IBMBackend(Backend):
         self._defaults = None
         self._target = None
         self._max_circuits = configuration.max_experiments
-        if not self._configuration.simulator:
+        if (
+            not self._configuration.simulator
+            and hasattr(self.options, "noise_model")
+            and hasattr(self.options, "seed_simulator")
+        ):
             self.options.set_validator("noise_model", type(None))
             self.options.set_validator("seed_simulator", type(None))
         if hasattr(configuration, "max_shots"):
