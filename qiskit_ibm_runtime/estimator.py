@@ -129,12 +129,6 @@ class Estimator(BaseEstimator):
             options_copy = copy.deepcopy(options)
             default_options = asdict(Options())
             self._options = Options._merge_options(default_options, options_copy)
-            skip_transpilation = self._options.get("transpilation", {}).get(
-                "skip_transpilation", False
-            )
-            self._options["transpilation"][
-                "skip_transpilation"
-            ] = skip_transpilation  # type: ignore[union-attr]
 
         if isinstance(session, Session):
             self._session = session
