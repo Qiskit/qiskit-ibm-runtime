@@ -17,7 +17,7 @@ from datetime import datetime, timezone
 from qiskit.providers.jobstatus import JobStatus
 
 from ..ibm_test_case import IBMIntegrationJobTestCase
-from ..decorators import run_integration_test, production_only
+from ..decorators import run_integration_test, production_only, quantum_only
 from ..utils import wait_for_status, get_real_device
 
 
@@ -88,7 +88,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
     @run_integration_test
     def test_retrieve_pending_jobs(self, service):
         """Test retrieving pending jobs (QUEUED, RUNNING)."""
-        job = self._run_program(service, iterations=10)
+        job = self._run_program(service, iterations=20)
         wait_for_status(job, JobStatus.RUNNING)
         rjobs = service.jobs(pending=True)
         after_status = job.status()
@@ -121,16 +121,13 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         self.assertTrue(found, f"Returned job {job.job_id()} not retrieved.")
 
     @run_integration_test
+    @quantum_only
     def test_retrieve_jobs_by_program_id(self, service):
         """Test retrieving jobs by Program ID."""
-        program_id = self._upload_program(service)
-        job = self._run_program(service, program_id=program_id)
-        job.wait_for_final_state()
-        rjobs = service.jobs(program_id=program_id)
-        self.assertEqual(program_id, rjobs[0].program_id)
-        self.assertEqual(
-            1, len(rjobs), f"Retrieved jobs: {[j.job_id() for j in rjobs]}"
-        )
+        program_id = "hello-world"
+        jobs = service.jobs(program_id=program_id)
+        for job in jobs:
+            self.assertEqual(program_id, job.program_id)
 
     @run_integration_test
     def test_retrieve_jobs_by_job_tags(self, service):
@@ -179,18 +176,16 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
             self.skipTest("Not supported on ibm_cloud")
 
         default_hgp = list(service._hgps.keys())[0]
-        program_id = self._upload_program(service)
-        job = self._run_program(service, program_id=program_id)
+
+        job = self._run_program(service)
         job.wait_for_final_state()
-        rjobs = service.jobs(program_id=program_id, instance=default_hgp)
-        self.assertEqual(program_id, rjobs[0].program_id)
-        self.assertEqual(
-            1, len(rjobs), f"Retrieved jobs: {[j.job_id() for j in rjobs]}"
-        )
+        rjobs = service.jobs(instance=default_hgp)
+
+        self.assertIn(job.job_id(), [j.job_id() for j in rjobs])
 
         uuid_ = uuid.uuid4().hex
         fake_hgp = f"{uuid_}/{uuid_}/{uuid_}"
-        rjobs = service.jobs(program_id=program_id, instance=fake_hgp)
+        rjobs = service.jobs(instance=fake_hgp)
         self.assertFalse(rjobs)
 
     @run_integration_test

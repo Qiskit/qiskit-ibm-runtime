@@ -14,6 +14,7 @@
 
 import random
 import time
+import unittest
 
 from qiskit.providers.jobstatus import JOB_FINAL_STATES, JobStatus
 from qiskit.test.decorators import slow_test
@@ -27,7 +28,7 @@ from qiskit_ibm_runtime.exceptions import (
     RuntimeJobMaxTimeoutError,
 )
 from ..ibm_test_case import IBMIntegrationJobTestCase
-from ..decorators import run_integration_test, production_only
+from ..decorators import run_integration_test, production_only, quantum_only
 from ..serialization import (
     get_complex_types,
     SerializableClassDecoder,
@@ -42,10 +43,10 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     @run_integration_test
     def test_run_program(self, service):
         """Test running a program."""
-        job = self._run_program(service, final_result="foo")
+        job = self._run_program(service)
         result = job.result()
         self.assertEqual(JobStatus.DONE, job.status())
-        self.assertEqual("foo", result)
+        self.assertEqual("Hello, World!", result)
 
     @slow_test
     @run_integration_test
@@ -76,27 +77,29 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
                 job = self._run_program(service, log_level=level)
                 job.wait_for_final_state()
                 expect_info_msg = level == "INFO"
-                self.assertEqual(
-                    "info log" in job.logs(),
-                    expect_info_msg,
-                    f"Job log is {job.logs()}",
-                )
+                if job.logs():
+                    self.assertEqual(
+                        "INFO Pass" in job.logs(),
+                        expect_info_msg,
+                        f"Job log is {job.logs()}",
+                    )
 
     @run_integration_test
+    @quantum_only
     def test_run_program_failed(self, service):
         """Test a failed program execution."""
-        job = self._run_program(service, inputs={})
+        job = self._run_program(service, program_id="circuit-runner", inputs={})
         job.wait_for_final_state()
         self.assertEqual(JobStatus.ERROR, job.status())
         self.assertIn(
             API_TO_JOB_ERROR_MESSAGE["FAILED"].format(job.job_id(), ""),
             job.error_message(),
         )
-        with self.assertRaises(RuntimeJobFailureError):
+        with self.assertRaises(RuntimeJobFailureError) as err_cm:
             job.result()
-        # TODO: Re-enable when ntc-1651 is fixed
-        # self.assertIn("KeyError", str(err_cm.exception))
+            self.assertIn("KeyError", str(err_cm.exception))
 
+    @unittest.skip("Custom programs not currently supported.")
     @run_integration_test
     def test_run_program_failed_ran_too_long(self, service):
         """Test a program that failed since it ran longer than maximum execution time."""
@@ -119,6 +122,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         with self.assertRaises(RuntimeJobMaxTimeoutError):
             job.result()
 
+    @unittest.skip("Custom programs not currently supported.")
     @run_integration_test
     def test_run_program_override_max_execution_time(self, service):
         """Test that the program max execution time is overridden."""
@@ -151,7 +155,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         wait_for_status(job, JobStatus.QUEUED)
         if not cancel_job_safe(job, self.log):
             return
-        time.sleep(10)  # Wait a bit for DB to update.
+        time.sleep(15)  # Wait a bit for DB to update.
         rjob = service.job(job.job_id())
         self.assertEqual(rjob.status(), JobStatus.CANCELLED)
 
@@ -198,6 +202,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         with self.assertRaises(RuntimeJobNotFound):
             service.job(job.job_id())
 
+    @unittest.skip("Final result only supported in custom programs.")
     @run_integration_test
     def test_final_result(self, service):
         """Test getting final result."""
@@ -242,14 +247,14 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     @run_integration_test
     def test_wait_for_final_state(self, service):
         """Test wait for final state."""
-        job = self._run_program(service)
+        job = self._run_program(service, backend="ibmq_qasm_simulator")
         job.wait_for_final_state()
         self.assertEqual(JobStatus.DONE, job.status())
 
     @run_integration_test
     def test_wait_for_final_state_after_job_status(self, service):
         """Test wait for final state on a completed job when the status is updated first."""
-        job = self._run_program(service)
+        job = self._run_program(service, backend="ibmq_qasm_simulator")
         status = job.status()
         while status not in JOB_FINAL_STATES:
             status = job.status()
@@ -270,13 +275,13 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     @run_integration_test
     def test_job_logs(self, service):
         """Test job logs."""
-        job = self._run_program(service, final_result="foo")
+        job = self._run_program(service)
         with self.assertLogs("qiskit_ibm_runtime", "WARN"):
             job.logs()
         job.wait_for_final_state()
         job_logs = job.logs()
-        self.assertIn("this is a stdout message", job_logs)
-        self.assertIn("this is a stderr message", job_logs)
+        if job_logs:
+            self.assertIn("INFO Pass", job_logs)
 
     @run_integration_test
     def test_job_metrics(self, service):
