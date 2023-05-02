@@ -220,7 +220,7 @@ class RuntimeJob(Job):
         if self._results is None or (_decoder != self._final_result_decoder):
             self.wait_for_final_state(timeout=timeout)
             if self._status == JobStatus.ERROR:
-                error_message = self._reason
+                error_message = self._reason if self._reason else self._error_message
                 if self._reason == "RAN TOO LONG":
                     raise RuntimeJobMaxTimeoutError(error_message)
                 raise RuntimeJobFailureError(
