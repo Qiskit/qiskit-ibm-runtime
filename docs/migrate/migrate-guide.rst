@@ -2,15 +2,15 @@ Migration guide
 ================
 
 This guide describes key patterns of behavior and use cases with code examples to help you migrate code from
-the legacy ``qiskit-ibmq-provider`` package to use the Qiskit Runtime primitives.
+the legacy ``qiskit-ibmq-provider`` package to use the Qiskit Runtime primitives. 
 
-The primitives are the recommended tool to write quantum algorithms, as they encapsulate common device queries
-seen in application packages, and allow for managed performance through the Qiskit Runtime service.
+Primitives are the recommended tool to write quantum algorithms, as they encapsulate common device queries
+seen in application packages and allow for managed performance through the Qiskit Runtime service.
 However, if your algorithm requires more granular information, such as pre-shot measurements, the primitives might
-not provide the desired abstraction level. You can refer to the restructured ``qiskit-ibm-provider`` package,
-and its corresponding
-`migration guide <https://qiskit.org/documentation/partners/qiskit_ibm_provider/tutorials/Migration_Guide_from_qiskit-ibmq-provider.html>`_
-for further information on alternatives to the Qiskit Runtime primitives.
+not provide the desired abstraction level. 
+
+- Refer to the restructured ``qiskit-ibm-provider`` package and its corresponding `migration guide <https://qiskit.org/documentation/partners/qiskit_ibm_provider/tutorials/Migration_Guide_from_qiskit-ibmq-provider.html>`_ for further information about alternatives to the Qiskit Runtime primitives.
+- For instructions to migrate your setup to use Qiskit Runtime, see `Migrate setup from ``qiskit-ibmq-provider`` <migrate-setup.html>`__.
 
 The Qiskit Runtime primitives implement the reference ``Sampler`` and ``Estimator`` interfaces found in
 `qiskit.primitives <https://qiskit.org/documentation/apidoc/primitives.html>`_. These interfaces let you 
@@ -65,7 +65,7 @@ The following topics are use cases with code migration examples:
 
 
 * `Update parameter values while running <migrate-update-parm.html>`__
-* `Algorithm tuning options (shots, transpilation, error mitigation) <migrate-e2e.html>`__
+* `Algorithm tuning options (shots, transpilation, error mitigation) <migrate-tuning.html>`__
 
 .. _why-migrate:
 
@@ -74,6 +74,48 @@ Why use Qiskit Runtime?
 
 .. figure:: ../images/table.png
    :alt: table comparing backend.run to Qiskit Runtime primitives
+
+Key:
+
+- :octicon:`x` Not supported
+- :octicon:`check` Full support
+- :octicon:`clock` Future support
+
+
+.. list-table::
+  :header-rows: 1
+
+  * - Function
+    - Backend.run
+    - Runtime Primitives
+
+  * - Simplified algorithm building blocks
+    - :octicon:`x`
+    - :octicon:`check`
+
+  * - Flexible interface
+    - :octicon:`check`
+    - :octicon:`check`
+
+  * - Elasic compute integration
+    - :octicon:`check`
+    - :octicon:`check`
+
+  * - Queuing efficiency
+    - :octicon:`x`
+    - :octicon:`check`
+
+  * - Data caching
+    - :octicon:`x`
+    - :octicon:`clock`
+
+  * - Error mitigation support
+    - :octicon:`x`
+    - :octicon:`check`
+
+  * - SAAS enablement
+    - :octicon:`x`
+    - :octicon:`clock`
 
 
 **Benefits of using Qiskit Runtime**:
@@ -171,78 +213,6 @@ being measured from a quantum state, for example.
 An expectation value of an observable could be the target quantity in
 scenarios where knowing a quantum state is not relevant. This
 often occurs in optimization problems or chemistry applications.  For example, when trying to discover the extremal energy of a system.
-
-.. raw:: html
-
-   </details>
-
-.. raw:: html
-
-  <details>
-  <summary>Which parts of my code do I need to refactor?</summary>
-
-Replace all dependencies on ``QuantumInstance`` and ``Backend`` with the
-implementation of the ``Estimator``, ``Sampler``, or both
-primitives from the ``qiskit_ibm_runtime`` library.
-
-It is also possible to use local implementations, as shown in the
-`Amplitude estimation use case <migrate-e2e#amplitude>`__.
-
-.. code-block:: python
-
-    def get_evaluate_energy_vqe(
-        self,
-        ansatz: QuantumCircuit,
-        operator: OperatorBase,
-        return_expectation: bool = False,
-    ) -> Callable[[np.ndarray], np.ndarray | float]:
-
-        num_parameters = ansatz.num_parameters
-        ansatz_params = ansatz.parameters
-
-        expect_op, expectation = self.construct_expectation(
-            ansatz_params, operator, return_expectation=True
-        )
-
-        def evaluate_energy(parameters: np.ndarray):
-
-            parameter_sets = np.reshape(parameters, (-1, num_parameters))
-            # Create dict associating each parameter with the lists of parameterization values for it
-            param_bindings = dict(zip(ansatz_params, parameter_sets.transpose().tolist()))
-
-            sampled_expect_op = self._circuit_sampler.convert(expect_op, params=param_bindings)
-            means = np.real(sampled_expect_op.eval())
-
-            return means if len(means) > 1 else means[0]
-
-        if return_expectation:
-            return energy_evaluation, expectation
-
-        return energy_evaluation
-
-.. code-block:: python
-
-    def _get_evaluate_energy_vqe_primitives(
-            self,
-            ansatz: QuantumCircuit,
-            operator: BaseOperator | PauliSumOp,
-        ) -> Callable[[np.ndarray], np.ndarray | float]:
-
-        num_parameters = ansatz.num_parameters
-
-        def evaluate_energy(parameters: np.ndarray):
-
-            parameters = np.reshape(parameters, (-1, num_parameters)).tolist()
-            batch_size = len(parameters)
-
-            job = self.estimator.run(batch_size * [ansatz], batch_size * [operator], parameters)
-            estimator_result = job.result()
-            values = estimator_result.values
-
-            return values[0] if len(values) == 1 else values
-
-         return evaluate_energy
-
 
 .. raw:: html
 
