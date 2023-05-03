@@ -2,10 +2,6 @@ Migrate setup from ``qiskit-ibmq-provider``
 ==============================================
 
 This guide describes how to migrate code from the legacy IBMQ provider (`qiskit-ibmq-provider`) package to use Qiskit Runtime (`qiskit-ibm-runtime`). This guide includes instructions to migrate legacy runtime programs to the new syntax. However, the ability to use custom uploaded programs is pending deprecation, so these should be migrated to use primitives instead.  
-
-- For instructions to use Qiskit Runtime primitives, see the `migration guide <migrate-guide.html>`__.  
-- For further details about migrating from `qiskit-ibmq-provider` to `qiskit-ibm-runtime`, see `Migration guide from qiskit-ibmq-provider <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/migrate_from_ibmq.html>`__.
-
  
 Import path
 -------------
@@ -36,14 +32,27 @@ Use the updated code to work with accounts.
     IBMQ.save_account("<IQX_TOKEN>", overwrite=True)
 
 **Updated - Save accounts**
-The new syntax accepts credentials for two different channels. For more information on retrieving account credentials, see the `getting started guide <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/getting_started.html>`_.
+The new syntax accepts credentials for Qiskit Runtime m on IBM Cloud or IBM Quantum Platform. For more information on retrieving account credentials, see the `getting started guide <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/getting_started.html>`_.
 .. code-block:: python
 
     # IBM cloud channel
     QiskitRuntimeService.save_account(channel="ibm_cloud", token="<IBM Cloud API key>", instance="<IBM Cloud CRN>", overwrite=True)
 
     # IBM quantum channel
-    QiskitRuntimeService.save_account(channel="ibm_quantum", token="<IQX_TOKEN>", overwrite=True)
+    QiskitRuntimeService.save_account(channel="ibm_quantum", token="<IQP_TOKEN>", overwrite=True)
+
+**Updated - Name saved credentials**
+You can now name your saved credentials and load the credentials by name.  Example:
+.. code-block:: python
+
+    # Save different accounts for open and premium access
+
+    QiskitRuntimeService.save_account(channel="ibm_quantum", token="<IQX_TOKEN>", instance="h1/g1/p1", name="premium")
+    QiskitRuntimeService.save_account(channel="ibm_quantum", token="<IQX_TOKEN>", instance="h2/g2/p2", name="open")
+
+    # Load the "open" credentials 
+
+    service = QiskitRuntimeService(name="open")
 
 **Legacy - Load accounts**
 
@@ -104,7 +113,11 @@ Use the updated code to view backends.
 
 .. code-block:: python
 
+    # method 1: Initialize a new service:
     backend = service.backend("ibmq_qasm_simulator")
+
+    # method 2: Specify an instance in service.backend() 
+    QiskitRuntimeService.backend(name=ibmq_qasm_simulator, instance=None)
 
 Upload, view, or delete custom prototype programs
 ----------------------------------------------------
