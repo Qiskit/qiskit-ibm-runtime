@@ -107,17 +107,15 @@ Use the updated code to view backends.
 
 .. code-block:: python
 
-    backend = provider.get_backend("ibmq_qasm_simulator")
+    provider = IBMQ.get_provider(hub="h1", group="g1", project="p1")
+    backend = provider.get_backend("ibm_backend")
 
 **Updated**
 
 .. code-block:: python
 
-    # method 1: Initialize a new service:
-    backend = service.backend("ibmq_qasm_simulator")
-
-    # method 2: Specify an instance in service.backend() 
-    QiskitRuntimeService.backend(name=ibmq_qasm_simulator, instance=None)
+    # You can specify the instance in service.backend() instead of initializing a new service
+    backend = service.backend("ibm_backend", instance="h1/g1/p1")
 
 Upload, view, or delete custom prototype programs
 ----------------------------------------------------
