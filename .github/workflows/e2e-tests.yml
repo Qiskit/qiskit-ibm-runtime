@@ -17,6 +17,7 @@ on:
   # allow everyone with write access to the repository to trigger the workflow run manually
   workflow_dispatch:
 jobs:
+  if: github.repository_owner == 'Qiskit'
   e2e-tests:
     name: Run e2e tests - ${{ matrix.environment }}
     runs-on: ${{ matrix.os }}
