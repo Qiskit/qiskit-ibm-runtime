@@ -96,7 +96,6 @@ Next steps
     Update parameter values while running <migrate/migrate-update-parm>
     Work with updated Qiskit algorithms <migrate/migrate-qiskit-alg>
     Algorithm tuning options (shots, transpilation, error mitigation) <migrate/migrate-tuning> 
-    Changes in Class name and location <migrate/migrate-class>
 
 
 .. toctree::

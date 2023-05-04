@@ -1,5 +1,5 @@
-Migration guide
-================
+Migrate to using Qiskit Runtime primitives
+============================================
 
 This guide describes key patterns of behavior and use cases with code examples to help you migrate code from
 the legacy ``qiskit-ibmq-provider`` package to use the Qiskit Runtime primitives. 
