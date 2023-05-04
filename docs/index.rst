@@ -53,8 +53,6 @@ Next steps
     Getting Started <getting_started>
     backend.run vs. Qiskit Runtime <compare>
     Introduction to primitives <primitives>
-    Migration guide from qiskit-ibmq-provider <migrate_from_ibmq>
-
 
 .. toctree::
    :maxdepth: 1
@@ -92,12 +90,13 @@ Next steps
    :caption: Migrate
 
     Migrate to using Qiskit Runtime primitives <migrate/migrate-guide>
+    Migrate your setup from ``qiskit-ibmq-provider`` <migrate/migrate-setup>
     Use Estimator to design an algorithm <migrate/migrate-estimator>
     Use Sampler to design an algorithm <migrate/migrate-sampler>
     Update parameter values while running <migrate/migrate-update-parm>
     Work with updated Qiskit algorithms <migrate/migrate-qiskit-alg>
     Algorithm tuning options (shots, transpilation, error mitigation) <migrate/migrate-tuning> 
-    Use Qiskit Runtime without primitives <migrate/migrate-setup>
+
 
 .. toctree::
    :maxdepth: 1
