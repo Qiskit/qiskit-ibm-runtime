@@ -1,0 +1,16 @@
+---
+deprecations:
+  - |
+    The deprecated arguments ``circuits``, ``parameters``, ``service``, and
+    ``skip_transpilation`` have been removed from :class:`~qiskit_ibm_runtime.Sampler`. 
+
+    Similarly, the deprecated arguments ``circuits``, ``observables``, ``parameters``, ``service``, and
+    ``skip_transpilation`` have been removed from :class:`~qiskit_ibm_runtime.Estimator`. 
+
+    In :class:`~qiskit_ibm_runtime.QiskitRuntimeService`, the ``auth`` parameter has been removed. Additionally, 
+    the ``instance``, ``job_tags``, and ``max_execution_time`` paramters have been removed from 
+    :meth:`qiskit_ibm_runtime.QiskitRuntimeService.run`. They can be passed in through 
+    :class:`~qiskit_ibm_runtime.RuntimeOptions` instead.
+
+    Within :class:`~qiskit_ibm_runtime.RuntimeOptions`, ``backend_name`` is no longer supported. Please use
+    ``backend`` instead.
