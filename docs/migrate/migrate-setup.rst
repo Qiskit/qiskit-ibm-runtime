@@ -78,6 +78,7 @@ Use the updated code to work with accounts.
 
 **Updated - Save accounts**
 The new syntax accepts credentials for Qiskit Runtime on IBM Cloud or IBM Quantum Platform. For more information on retrieving account credentials, see the `getting started guide <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/getting_started.html>`_.
+
 .. code-block:: python
 
     # IBM cloud channel
@@ -88,6 +89,7 @@ The new syntax accepts credentials for Qiskit Runtime on IBM Cloud or IBM Quantu
 
 **Updated - Name saved credentials**
 You can now name your saved credentials and load the credentials by name.  Example:
+
 .. code-block:: python
 
     # Save different accounts for open and premium access
