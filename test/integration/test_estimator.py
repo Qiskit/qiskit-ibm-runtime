@@ -354,7 +354,7 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
 
     @run_integration_test
     def test_estimator_error_messages(self, service):
-        """ Test that the correct error message is displayed """
+        """Test that the correct error message is displayed"""
         circuit = QuantumCircuit(2, 2)
         circuit.h(0)
         with Session(service, self.backend) as session:
