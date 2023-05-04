@@ -9,18 +9,19 @@ a job exceeds this time limit, it is forcibly cancelled. This is represented in 
 status as `Cancelled - Ran too long`. The maximum execution time is the
 smaller of 1) the system limit and 2) the ``max_execution_time`` defined by the program.
 
-The maximum execution time for the Sampler primitive is 10000 seconds (2.78 hours). The maximum execution time for the Estimator primitive is 18000 seconds (5 hours).
+System limit
+--------------
 
 The system limit is defined as follows:
 
 Qiskit Runtime on IBM Cloud
----------------------------
+***************************
 
 The system limit on the job execution time is 3 hours for a job running on a simulator
 and 8 hours for a job running on a physical system.
 
 Qiskit Runtime on IBM Quantum
------------------------------
+*****************************
 
 The system limit on the job execution time is described in the following table:
 
@@ -36,8 +37,13 @@ The system limit on the job execution time is described in the following table:
 
 Note that a *premium user* here means a user who has access to backends in providers other than ibm-q/open/main.
 
+Max execution time
+------------------
+
+There are several factors that impact the program's maximum execution time. In addition to the ``max_execution_time`` parameter, there are time limits on programs and sessions.
+
 Sessions
---------
+********
 
 When a session is started, it is assigned a maximum session timeout value.  After the maximum session timeout is reached, the session is permanently closed. The maximum session timeout value is set on the ``max_time`` parameter, which can be greater than the program’s ``max_execution_time``. By default, it is set to the initial job's maximum execution time and is the smaller of these values:
    *  The system limit
@@ -46,23 +52,15 @@ When a session is started, it is assigned a maximum session timeout value.  Afte
   Additionally, there is a 5 minute *interactive* timeout value. If there are no session jobs queued within that window, the session is temporarily deactivated and normal job selection resumes. After the new session becomes inactive, if the job scheduler gets a job from the original session and its maximum timeout value has not been reached, the session is reactivated until its maximum timeout value is reached.
   
   .. note:: The timer for ``max_time`` is not paused during any temporary deactivation periods. 
-Additional time limits
------------------------
 
-There are time limits on programs, systems, and sessions.
+Program time limits
+**********************
+
+Different types of programs have their own time limits:
 
 * **Primitives:** The maximum execution time for the Sampler primitive is 10000 seconds (2.78 hours). The maximum execution time for the Estimator primitive is 18000 seconds (5 hours).
 * **Programs:** The maximum execution time for a program is set on its ``max_execution_time`` parameter.
 * **Prototype programs:** The maximum execution time is listed on the [Prototype programs page](https://quantum-computing.ibm.com/services/programs/prototypes).
-* **Systems:** The system limit on the job execution time is 3 hours for a job that is running on a simulator and 8 hours for a job running on a physical system.
-* **Sessions:** When a session is started, it is assigned a maximum session timeout value.  After the maximum session timeout is reached, the session is permanently closed. The maximum session timeout value is set on the ``max_time`` parameter, which can be greater than the program’s ``max_execution_time``. By default, it is set to the initial job's maximum execution time and is the smaller of these values:
-   *  The system limit
-   *  The ``max_execution_time`` defined by the program
-
-  Additionally, there is a 5 minute *interactive* timeout value. If there are no session jobs queued within that window, the session is temporarily deactivated and normal job selection resumes. After the new session becomes inactive, if the job scheduler gets a job from the original session and its maximum timeout value has not been reached, the session is reactivated until its maximum timeout value is reached.
-  
-  The timer for ``max_time`` is not paused during any temporary deactivation periods due to interactive timeouts.
-  {: note}
 
 
 Other limitations
