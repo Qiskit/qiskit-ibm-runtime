@@ -286,3 +286,19 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
             self.assertEqual(len(job_ids), 1)
             self.assertEqual(job.job_id(), job_ids.pop())
             session.close()
+
+
+    @run_integration_test
+    def test_sampler_error_messages(self, service):
+        from qiskit import QuantumCircuit
+        from qiskit_ibm_runtime import Sampler
+        qc = QuantumCircuit(2, 2)
+        qc.h(0)
+        with Session(service, self.backend) as session:
+            sampler = Sampler(session=session)
+            job = sampler.run(circuits=qc)
+            with self.assertRaises(RuntimeJobFailureError) as err:
+                job.result()
+            self.assertIn("NO COUNTS FOR EXPERIMENT", str(err.exception))
+            self.assertFalse("python -m uvicorn server.main" in err.exception.message)
+
