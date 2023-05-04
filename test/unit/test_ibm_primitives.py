@@ -70,32 +70,6 @@ class TestPrimitives(IBMTestCase):
         super().tearDown()
         session_pkg._DEFAULT_SESSION.set(None)
 
-    def test_skip_transpilation(self):
-        """Test skip_transpilation is hornored."""
-        primitives = [Sampler, Estimator]
-        for cls in primitives:
-            with self.subTest(primitive=cls):
-                inst = cls(session=MagicMock(spec=MockSession), skip_transpilation=True)
-                self.assertTrue(
-                    inst.options.get("transpilation").get("skip_transpilation")
-                )
-
-    def test_skip_transpilation_overwrite(self):
-        """Test overwriting skip_transpilation."""
-        options = Options()
-        options.transpilation.skip_transpilation = False
-        primitives = [Sampler, Estimator]
-        for cls in primitives:
-            with self.subTest(primitive=cls):
-                inst = cls(
-                    session=MagicMock(spec=MockSession),
-                    options=options,
-                    skip_transpilation=True,
-                )
-                self.assertFalse(
-                    inst.options.get("transpilation").get("skip_transpilation")
-                )
-
     def test_dict_options(self):
         """Test passing a dictionary as options."""
         options_vars = [
@@ -131,35 +105,13 @@ class TestPrimitives(IBMTestCase):
                     options = {"backend": backend}
                     with warnings.catch_warnings(record=True) as warn:
                         warnings.simplefilter("always")
-                        inst = cls(service=MagicMock(), options=options)
-                        # We'll get 2 deprecation warnings - one for service and one for backend.
-                        # We need service otherwise backend will get ignored.
-                        self.assertEqual(len(warn), 2)
+                        cls(session=MagicMock(spec=MockSession), options=options)
                         self.assertTrue(
                             all(
                                 issubclass(one_warn.category, DeprecationWarning)
                                 for one_warn in warn
                             )
                         )
-                    self.assertEqual(inst.session.backend(), backend_name)
-
-    def test_old_options(self):
-        """Test specifying old runtime options."""
-        primitives = [Sampler, Estimator]
-        session = MagicMock(spec=MockSession)
-        options = [{"log_level": "WARNING"}, {"image": "foo:bar"}]
-
-        for cls in primitives:
-            for opt in options:
-                with self.subTest(primitive=cls, options=opt):
-                    inst = cls(session=session, options=opt)
-                    inst.run(self.qx, observables=self.obs)
-                    _, kwargs = session.run.call_args
-                    run_options = kwargs["options"]
-                    for key, val in opt.items():
-                        self.assertEqual(run_options[key], val)
-                    inputs = kwargs["inputs"]
-                    self.assertTrue(all(key not in inputs.keys() for key in opt))
 
     def test_runtime_options(self):
         """Test RuntimeOptions specified as primitive options."""
@@ -211,12 +163,10 @@ class TestPrimitives(IBMTestCase):
 
     def test_default_session_after_close(self):
         """Test a new default session is open after previous is closed."""
-        service = MagicMock()
-        sampler = Sampler(service=service)
+        sampler = Sampler(session=MagicMock(spec=MockSession))
         sampler.session.close()
-        estimator = Estimator(service=service)
+        estimator = Estimator(session=MagicMock(spec=MockSession))
         self.assertIsNotNone(estimator.session)
-        self.assertTrue(estimator.session._active)
         self.assertNotEqual(estimator.session, sampler.session)
 
     @patch("qiskit_ibm_runtime.session.Session")
