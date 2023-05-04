@@ -47,29 +47,16 @@ from .hub_group_project import HubGroupProject  # pylint: disable=cyclic-import
 from .program.result_decoder import ResultDecoder
 from .runtime_job import RuntimeJob
 from .runtime_program import RuntimeProgram, ParameterNamespace
-from .runtime_session import RuntimeSession  # pylint: disable=cyclic-import
 from .utils import RuntimeDecoder, to_base64_string, to_python_identifier
 from .utils.backend_decoder import configuration_from_server_data
 from .utils.hgp import to_instance_format, from_instance_format
 from .api.client_parameters import ClientParameters
 from .runtime_options import RuntimeOptions
 from .ibm_backend import IBMBackend
-from .utils.deprecation import (
-    deprecate_function,
-    deprecate_arguments,
-)
 
 logger = logging.getLogger(__name__)
 
 SERVICE_NAME = "runtime"
-
-DEPRECATED_PROGRAMS = [
-    "torch-train",
-    "torch-infer",
-    "sample-expval",
-    "quantum_kernal_alignment",
-    "sample-program",
-]
 
 
 class QiskitRuntimeService(Provider):
@@ -133,7 +120,6 @@ class QiskitRuntimeService(Provider):
     def __init__(
         self,
         channel: Optional[ChannelType] = None,
-        auth: Optional[AccountType] = None,
         token: Optional[str] = None,
         url: Optional[str] = None,
         filename: Optional[str] = None,
@@ -158,7 +144,6 @@ class QiskitRuntimeService(Provider):
 
         Args:
             channel: Channel type. ``ibm_cloud`` or ``ibm_quantum``.
-            auth: (DEPRECATED, use `channel` instead) Authentication type. ``cloud`` or ``legacy``.
             token: IBM Cloud API key or IBM Quantum API token.
             url: The API URL.
                 Defaults to https://cloud.ibm.com (ibm_cloud) or
@@ -184,15 +169,11 @@ class QiskitRuntimeService(Provider):
         """
         super().__init__()
 
-        if auth:
-            self._auth_warning()
-
         self._account = self._discover_account(
             token=token,
             url=url,
             instance=instance,
             channel=channel,
-            auth=auth,
             filename=filename,
             name=name,
             proxies=ProxyConfiguration(**proxies) if proxies else None,
@@ -235,17 +216,6 @@ class QiskitRuntimeService(Provider):
         # TODO - it'd be nice to allow some kind of autocomplete, but `service.ibmq_foo`
         # just seems wrong since backends are not runtime service instances.
         # self._discover_backends()
-
-    @staticmethod
-    def _auth_warning() -> None:
-        warnings.warn(
-            "Use of `auth` parameter is deprecated and will "
-            "be removed in a future release. "
-            "You can now use channel='ibm_cloud' or "
-            "channel='ibm_quantum' instead.",
-            DeprecationWarning,
-            stacklevel=3,
-        )
 
     def _discover_account(
         self,
@@ -690,7 +660,6 @@ class QiskitRuntimeService(Provider):
     def delete_account(
         filename: Optional[str] = None,
         name: Optional[str] = None,
-        auth: Optional[str] = None,
         channel: Optional[ChannelType] = None,
     ) -> bool:
         """Delete a saved account from disk.
@@ -698,8 +667,6 @@ class QiskitRuntimeService(Provider):
         Args:
             filename: Name of file from which to delete the account.
             name: Name of the saved account to delete.
-            auth: (DEPRECATED, use `channel` instead) Authentication type of the default
-                account to delete. Ignored if account name is provided.
             channel: Channel type of the default account to delete.
                 Ignored if account name is provided.
 
@@ -707,10 +674,6 @@ class QiskitRuntimeService(Provider):
             True if the account was deleted.
             False if no account was found.
         """
-        if auth:
-            QiskitRuntimeService._auth_warning()
-            channel = channel or QiskitRuntimeService._get_channel_for_auth(auth=auth)
-
         return AccountManager.delete(filename=filename, name=name, channel=channel)
 
     @staticmethod
@@ -726,7 +689,6 @@ class QiskitRuntimeService(Provider):
         url: Optional[str] = None,
         instance: Optional[str] = None,
         channel: Optional[ChannelType] = None,
-        auth: Optional[AccountType] = None,
         filename: Optional[str] = None,
         name: Optional[str] = None,
         proxies: Optional[dict] = None,
@@ -742,7 +704,6 @@ class QiskitRuntimeService(Provider):
                 https://auth.quantum-computing.ibm.com/api (ibm_quantum).
             instance: The CRN (ibm_cloud) or hub/group/project (ibm_quantum).
             channel: Channel type. `ibm_cloud` or `ibm_quantum`.
-            auth: (DEPRECATED, use `channel` instead) Authentication type. `cloud` or `legacy`.
             filename: Full path of the file where the account is saved.
             name: Name of the account to save.
             proxies: Proxy configuration. Supported optional keys are
@@ -753,9 +714,6 @@ class QiskitRuntimeService(Provider):
             verify: Verify the server's TLS certificate.
             overwrite: ``True`` if the existing account is to be overwritten.
         """
-        if auth:
-            QiskitRuntimeService._auth_warning()
-            channel = channel or QiskitRuntimeService._get_channel_for_auth(auth)
 
         AccountManager.save(
             token=token,
@@ -772,7 +730,6 @@ class QiskitRuntimeService(Provider):
     @staticmethod
     def saved_accounts(
         default: Optional[bool] = None,
-        auth: Optional[str] = None,
         channel: Optional[ChannelType] = None,
         filename: Optional[str] = None,
         name: Optional[str] = None,
@@ -781,8 +738,6 @@ class QiskitRuntimeService(Provider):
 
         Args:
             default: If set to True, only default accounts are returned.
-            auth: (DEPRECATED, use `channel` instead) If set, only accounts with the given
-                authentication type are returned.
             channel: Channel type. `ibm_cloud` or `ibm_quantum`.
             filename: Name of file whose accounts are returned.
             name: If set, only accounts with the given name are returned.
@@ -793,9 +748,6 @@ class QiskitRuntimeService(Provider):
         Raises:
             ValueError: If an invalid account is found on disk.
         """
-        if auth:
-            QiskitRuntimeService._auth_warning()
-            channel = channel or QiskitRuntimeService._get_channel_for_auth(auth)
         return dict(
             map(
                 lambda kv: (kv[0], Account.to_saved_format(kv[1])),
@@ -993,10 +945,7 @@ class QiskitRuntimeService(Provider):
         result_decoder: Optional[
             Union[Type[ResultDecoder], Sequence[Type[ResultDecoder]]]
         ] = None,
-        instance: Optional[str] = None,
         session_id: Optional[str] = None,
-        job_tags: Optional[List[str]] = None,
-        max_execution_time: Optional[int] = None,
         start_session: Optional[bool] = False,
     ) -> RuntimeJob:
         """Execute the runtime program.
@@ -1018,13 +967,7 @@ class QiskitRuntimeService(Provider):
                 If more than one decoder is specified, the first is used for interim results and
                 the second final results. If not specified, a program-specific decoder or the default
                 ``ResultDecoder`` is used.
-            instance: (DEPRECATED) This is only supported for ``ibm_quantum`` runtime and is in the
-                hub/group/project format.
             session_id: Job ID of the first job in a runtime session.
-            job_tags: (DEPRECATED) Tags to be assigned to the job. The tags can subsequently be used
-                as a filter in the :meth:`jobs()` function call.
-            max_execution_time: (DEPRECATED) Maximum execution time in seconds. This overrides
-                the max_execution_time of the program.
             start_session: Set to True to explicitly start a runtime session. Defaults to False.
 
         Returns:
@@ -1035,33 +978,12 @@ class QiskitRuntimeService(Provider):
             RuntimeProgramNotFound: If the program cannot be found.
             IBMRuntimeError: An error occurred running the program.
         """
-        if program_id in DEPRECATED_PROGRAMS:
-            warnings.warn(
-                f"The {program_id} program has been deprecated as of qiskit-ibm-runtime 0.7 \
-                and will be removed no sooner than 1 month after the release date.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
 
         qrt_options: RuntimeOptions = options
         if options is None:
             qrt_options = RuntimeOptions()
         elif isinstance(options, Dict):
             qrt_options = RuntimeOptions(**options)
-
-        deprecated = {
-            "instance": instance,
-            "job_tags": job_tags,
-            "max_execution_time": max_execution_time,
-        }
-        for name, param in deprecated.items():
-            if param is not None:
-                deprecate_arguments(
-                    deprecated=name,
-                    version="0.7",
-                    remedy=f'Please specify "{name}" inside "options".',
-                )
-                setattr(qrt_options, name, param)
 
         # If using params object, extract as dictionary
         if isinstance(inputs, ParameterNamespace):
@@ -1114,33 +1036,6 @@ class QiskitRuntimeService(Provider):
             service=self,
         )
         return job
-
-    @deprecate_function(
-        "QiskitRuntimeService.open",
-        "0.7",
-        "Instead, use the qiskit_ibm_runtime.Session class to create a runtime session.",
-    )
-    def open(
-        self,
-        program_id: str,
-        inputs: Union[Dict, ParameterNamespace],
-        options: Optional[Union[RuntimeOptions, Dict]] = None,
-    ) -> RuntimeSession:
-        """Open a new runtime session.
-
-        Args:
-            program_id: Program ID.
-            inputs: Initial program input parameters. These input values are
-                persistent throughout the session.
-            options: Runtime options that control the execution environment. See
-                :class:`RuntimeOptions` for all available options.
-
-        Returns:
-            Runtime session.
-        """
-        return RuntimeSession(
-            service=self, program_id=program_id, inputs=inputs, options=options
-        )
 
     def upload_program(
         self, data: str, metadata: Optional[Union[Dict, str]] = None
@@ -1611,7 +1506,6 @@ class QiskitRuntimeService(Provider):
         Returns:
             The authentication type used.
         """
-        self._auth_warning()
         return "cloud" if self._channel == "ibm_cloud" else "legacy"
 
     @property
