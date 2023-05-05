@@ -45,13 +45,11 @@ There are several factors that impact the program's maximum execution time. In a
 Sessions
 ********
 
-When a session is started, it is assigned a maximum session timeout value.  After the maximum session timeout is reached, the session is permanently closed. The maximum session timeout value is set on the ``max_time`` parameter, which can be greater than the program’s ``max_execution_time``. By default, it is set to the initial job's maximum execution time and is the smaller of these values:
-   *  The system limit
-   *  The ``max_execution_time`` defined by the program
+When a session is started, it is assigned a maximum session timeout value.  After the maximum session timeout is reached, the session is permanently closed. The maximum session timeout value is set on the ``max_time`` parameter, which can be greater than the program’s ``max_execution_time``. By default, it is set to the  system limit.
 
-  Additionally, there is a 5 minute *interactive* timeout value. If there are no session jobs queued within that window, the session is temporarily deactivated and normal job selection resumes. After the new session becomes inactive, if the job scheduler gets a job from the original session and its maximum timeout value has not been reached, the session is reactivated until its maximum timeout value is reached.
+Additionally, there is a 5 minute *interactive* timeout value. If there are no session jobs queued within that window, the session is temporarily deactivated and normal job selection resumes. After the new session becomes inactive, if the job scheduler gets a job from the original session and its maximum timeout value has not been reached, the session is reactivated until its maximum timeout value is reached.
   
-  .. note:: The timer for ``max_time`` is not paused during any temporary deactivation periods. 
+.. note:: The timer for ``max_time`` is not paused during any temporary deactivation periods. 
 
 Program time limits
 **********************
