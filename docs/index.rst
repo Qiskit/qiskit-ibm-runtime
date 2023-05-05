@@ -53,8 +53,6 @@ Next steps
     Getting Started <getting_started>
     backend.run vs. Qiskit Runtime <compare>
     Introduction to primitives <primitives>
-    Migration guide from qiskit-ibmq-provider <migrate_from_ibmq>
-
 
 .. toctree::
    :maxdepth: 1
@@ -79,11 +77,26 @@ Next steps
 
     Run a session <how_to/run_session>
     Run on quantum backends <how_to/backends>
+    Retrieve job results <how_to/retrieve_results>
     Configure primitive options <how_to/options>
     Configure error mitigation options <how_to/error-mitigation>
     Configure error suppression <how_to/error-suppression>
     Manage your account <how_to/account-management>
     Run noisy simulations <how_to/noisy_simulators>
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+   :caption: Migrate
+
+    Migrate to using Qiskit Runtime primitives <migrate/migrate-guide>
+    Migrate your setup from ``qiskit-ibmq-provider`` <migrate/migrate-setup>
+    Use Estimator to design an algorithm <migrate/migrate-estimator>
+    Use Sampler to design an algorithm <migrate/migrate-sampler>
+    Update parameter values while running <migrate/migrate-update-parm>
+    Work with updated Qiskit algorithms <migrate/migrate-qiskit-alg>
+    Algorithm tuning options (shots, transpilation, error mitigation) <migrate/migrate-tuning> 
+
 
 .. toctree::
    :maxdepth: 1
@@ -108,7 +121,9 @@ Next steps
 
     API Reference <apidocs/ibm-runtime>
     Swagger API for building applications that use Qiskit Runtime <https://us-east.quantum-computing.cloud.ibm.com/openapi/>
+    API error codes <errors>
     FAQs <faqs>
+    Retired systems <retired>
     Release Notes <release_notes>
     GitHub <https://github.com/Qiskit/qiskit-ibm-runtime>
 

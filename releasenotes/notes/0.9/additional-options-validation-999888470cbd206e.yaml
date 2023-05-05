@@ -1,0 +1,4 @@
+---
+features:
+  - |
+    Added methods to validate input options to ``transpilation`` and ``environment`` options.
