@@ -24,6 +24,10 @@ from qiskit.providers.backend import BackendV1 as Backend
 from qiskit.providers.provider import ProviderV1 as Provider
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.providerutils import filter_backends
+from qiskit.providers.models import (
+    PulseBackendConfiguration,
+    QasmBackendConfiguration,
+)
 
 from qiskit_ibm_runtime import ibm_backend
 from .accounts import AccountManager, Account, AccountType, ChannelType
@@ -43,31 +47,16 @@ from .hub_group_project import HubGroupProject  # pylint: disable=cyclic-import
 from .program.result_decoder import ResultDecoder
 from .runtime_job import RuntimeJob
 from .runtime_program import RuntimeProgram, ParameterNamespace
-from .runtime_session import RuntimeSession  # pylint: disable=cyclic-import
 from .utils import RuntimeDecoder, to_base64_string, to_python_identifier
 from .utils.backend_decoder import configuration_from_server_data
 from .utils.hgp import to_instance_format, from_instance_format
 from .api.client_parameters import ClientParameters
 from .runtime_options import RuntimeOptions
-from .utils.deprecation import (
-    deprecate_function,
-    issue_deprecation_msg,
-    deprecate_arguments,
-)
+from .ibm_backend import IBMBackend
 
 logger = logging.getLogger(__name__)
 
 SERVICE_NAME = "runtime"
-
-DEPRECATED_PROGRAMS = [
-    "torch-train",
-    "torch-infer",
-    "sample-expval",
-    "quantum_kernal_alignment",
-    "sample-program",
-]
-
-_JOB_DEPRECATION_ISSUED = False
 
 
 class QiskitRuntimeService(Provider):
@@ -131,7 +120,6 @@ class QiskitRuntimeService(Provider):
     def __init__(
         self,
         channel: Optional[ChannelType] = None,
-        auth: Optional[AccountType] = None,
         token: Optional[str] = None,
         url: Optional[str] = None,
         filename: Optional[str] = None,
@@ -156,7 +144,6 @@ class QiskitRuntimeService(Provider):
 
         Args:
             channel: Channel type. ``ibm_cloud`` or ``ibm_quantum``.
-            auth: (DEPRECATED, use `channel` instead) Authentication type. ``cloud`` or ``legacy``.
             token: IBM Cloud API key or IBM Quantum API token.
             url: The API URL.
                 Defaults to https://cloud.ibm.com (ibm_cloud) or
@@ -182,15 +169,11 @@ class QiskitRuntimeService(Provider):
         """
         super().__init__()
 
-        if auth:
-            self._auth_warning()
-
         self._account = self._discover_account(
             token=token,
             url=url,
             instance=instance,
             channel=channel,
-            auth=auth,
             filename=filename,
             name=name,
             proxies=ProxyConfiguration(**proxies) if proxies else None,
@@ -209,6 +192,7 @@ class QiskitRuntimeService(Provider):
         self._channel = self._account.channel
         self._programs: Dict[str, RuntimeProgram] = {}
         self._backends: Dict[str, "ibm_backend.IBMBackend"] = {}
+        self._backend_configs: Dict[str, Any] = {}
 
         if self._channel == "ibm_cloud":
             self._api_client = RuntimeClient(self._client_params)
@@ -225,24 +209,13 @@ class QiskitRuntimeService(Provider):
             self._api_client = RuntimeClient(self._client_params)
             self._hgps = self._initialize_hgps(auth_client)
             for hgp in self._hgps.values():
-                for backend_name, backend in hgp.backends.items():
+                for backend_name in hgp.backends:
                     if backend_name not in self._backends:
-                        self._backends[backend_name] = backend
+                        self._backends[backend_name] = None
 
         # TODO - it'd be nice to allow some kind of autocomplete, but `service.ibmq_foo`
         # just seems wrong since backends are not runtime service instances.
         # self._discover_backends()
-
-    @staticmethod
-    def _auth_warning() -> None:
-        warnings.warn(
-            "Use of `auth` parameter is deprecated and will "
-            "be removed in a future release. "
-            "You can now use channel='ibm_cloud' or "
-            "channel='ibm_quantum' instead.",
-            DeprecationWarning,
-            stacklevel=3,
-        )
 
     def _discover_account(
         self,
@@ -408,7 +381,7 @@ class QiskitRuntimeService(Provider):
             hgp_params = ClientParameters(
                 channel=self._account.channel,
                 token=auth_client.current_access_token(),
-                url=service_urls["http"],
+                url=service_urls["services"]["runtime"],
                 instance=to_instance_format(
                     hub_info["hub"], hub_info["group"], hub_info["project"]
                 ),
@@ -493,7 +466,7 @@ class QiskitRuntimeService(Provider):
                     f"Hub/group/project {instance} "
                     "could not be found for this account."
                 )
-            if backend_name and not self._hgps[instance].backend(backend_name):
+            if backend_name and not self._hgps[instance].has_backend(backend_name):
                 raise QiskitBackendNotFoundError(
                     f"Backend {backend_name} cannot be found in "
                     f"hub/group/project {instance}"
@@ -504,7 +477,7 @@ class QiskitRuntimeService(Provider):
             return list(self._hgps.values())[0]
 
         for hgp in self._hgps.values():
-            if hgp.backend(backend_name):
+            if hgp.has_backend(backend_name):
                 return hgp
 
         error_message = (
@@ -573,13 +546,45 @@ class QiskitRuntimeService(Provider):
 
         Raises:
             IBMInputValueError: If an input is invalid.
+            QiskitBackendNotFoundError: If the backend is not in any instance.
         """
         # TODO filter out input_allowed not having runtime
+        backends: List[IBMBackend] = []
         if self._channel == "ibm_quantum":
-            if instance:
-                backends = list(self._get_hgp(instance=instance).backends.values())
+            if name:
+                if name not in self._backends:
+                    raise QiskitBackendNotFoundError("No backend matches the criteria.")
+                if (
+                    not self._backends[name]
+                    or instance != self._backends[name]._instance
+                ):
+                    self._set_backend_config(name)
+                    self._backends[name] = self._create_backend_obj(
+                        self._backend_configs[name],
+                        instance,
+                    )
+                backends.append(self._backends[name])
+            elif instance:
+                hgp = self._get_hgp(instance=instance)
+                for backend_name in hgp.backends:
+                    if (
+                        not self._backends[backend_name]
+                        or instance != self._backends[backend_name]._instance
+                    ):
+                        self._set_backend_config(backend_name, instance)
+                        self._backends[backend_name] = self._create_backend_obj(
+                            self._backend_configs[backend_name], instance
+                        )
+                    backends.append(self._backends[backend_name])
             else:
-                backends = list(self._backends.values())
+                for backend_name, backend_config in self._backends.items():
+                    if not backend_config:
+                        self._set_backend_config(backend_name)
+                        self._backends[backend_name] = self._create_backend_obj(
+                            self._backend_configs[backend_name]
+                        )
+                    backends.append(self._backends[backend_name])
+
         else:
             if instance:
                 raise IBMInputValueError(
@@ -595,6 +600,54 @@ class QiskitRuntimeService(Provider):
             )
         return filter_backends(backends, filters=filters, **kwargs)
 
+    def _set_backend_config(
+        self, backend_name: str, instance: Optional[str] = None
+    ) -> None:
+        """Retrieve backend configuration and add to backend_configs.
+        Args:
+            backend_name: backend name that will be returned.
+            instance: the current h/g/p.
+        """
+        if backend_name not in self._backend_configs:
+            raw_config = self._api_client.backend_configuration(backend_name)
+            config = configuration_from_server_data(
+                raw_config=raw_config, instance=instance
+            )
+            self._backend_configs[backend_name] = config
+
+    def _create_backend_obj(
+        self,
+        config: Union[QasmBackendConfiguration, PulseBackendConfiguration],
+        instance: Optional[str] = None,
+    ) -> IBMBackend:
+        """Given a backend configuration return the backend object.
+        Args:
+            config: backend configuration.
+            instance: the current h/g/p.
+        Returns:
+            A backend object.
+        Raises:
+            QiskitBackendNotFoundError: if the backend is not in the hgp passed in.
+        """
+        if not instance:
+            for hgp in list(self._hgps.values()):
+                if config.backend_name in hgp.backends:
+                    instance = to_instance_format(hgp._hub, hgp._group, hgp._project)
+                    break
+
+        elif config.backend_name not in self._get_hgp(instance=instance).backends:
+            raise QiskitBackendNotFoundError(
+                f"Backend {config.backend_name} is not in "
+                f"{instance}: please try a different hub/group/project."
+            )
+
+        return ibm_backend.IBMBackend(
+            instance=instance,
+            configuration=config,
+            service=self,
+            api_client=self._api_client,
+        )
+
     def active_account(self) -> Optional[Dict[str, str]]:
         """Return the IBM Quantum account currently in use for the session.
 
@@ -607,7 +660,6 @@ class QiskitRuntimeService(Provider):
     def delete_account(
         filename: Optional[str] = None,
         name: Optional[str] = None,
-        auth: Optional[str] = None,
         channel: Optional[ChannelType] = None,
     ) -> bool:
         """Delete a saved account from disk.
@@ -615,8 +667,6 @@ class QiskitRuntimeService(Provider):
         Args:
             filename: Name of file from which to delete the account.
             name: Name of the saved account to delete.
-            auth: (DEPRECATED, use `channel` instead) Authentication type of the default
-                account to delete. Ignored if account name is provided.
             channel: Channel type of the default account to delete.
                 Ignored if account name is provided.
 
@@ -624,10 +674,6 @@ class QiskitRuntimeService(Provider):
             True if the account was deleted.
             False if no account was found.
         """
-        if auth:
-            QiskitRuntimeService._auth_warning()
-            channel = channel or QiskitRuntimeService._get_channel_for_auth(auth=auth)
-
         return AccountManager.delete(filename=filename, name=name, channel=channel)
 
     @staticmethod
@@ -643,7 +689,6 @@ class QiskitRuntimeService(Provider):
         url: Optional[str] = None,
         instance: Optional[str] = None,
         channel: Optional[ChannelType] = None,
-        auth: Optional[AccountType] = None,
         filename: Optional[str] = None,
         name: Optional[str] = None,
         proxies: Optional[dict] = None,
@@ -659,7 +704,6 @@ class QiskitRuntimeService(Provider):
                 https://auth.quantum-computing.ibm.com/api (ibm_quantum).
             instance: The CRN (ibm_cloud) or hub/group/project (ibm_quantum).
             channel: Channel type. `ibm_cloud` or `ibm_quantum`.
-            auth: (DEPRECATED, use `channel` instead) Authentication type. `cloud` or `legacy`.
             filename: Full path of the file where the account is saved.
             name: Name of the account to save.
             proxies: Proxy configuration. Supported optional keys are
@@ -670,9 +714,6 @@ class QiskitRuntimeService(Provider):
             verify: Verify the server's TLS certificate.
             overwrite: ``True`` if the existing account is to be overwritten.
         """
-        if auth:
-            QiskitRuntimeService._auth_warning()
-            channel = channel or QiskitRuntimeService._get_channel_for_auth(auth)
 
         AccountManager.save(
             token=token,
@@ -689,7 +730,6 @@ class QiskitRuntimeService(Provider):
     @staticmethod
     def saved_accounts(
         default: Optional[bool] = None,
-        auth: Optional[str] = None,
         channel: Optional[ChannelType] = None,
         filename: Optional[str] = None,
         name: Optional[str] = None,
@@ -698,8 +738,6 @@ class QiskitRuntimeService(Provider):
 
         Args:
             default: If set to True, only default accounts are returned.
-            auth: (DEPRECATED, use `channel` instead) If set, only accounts with the given
-                authentication type are returned.
             channel: Channel type. `ibm_cloud` or `ibm_quantum`.
             filename: Name of file whose accounts are returned.
             name: If set, only accounts with the given name are returned.
@@ -710,9 +748,6 @@ class QiskitRuntimeService(Provider):
         Raises:
             ValueError: If an invalid account is found on disk.
         """
-        if auth:
-            QiskitRuntimeService._auth_warning()
-            channel = channel or QiskitRuntimeService._get_channel_for_auth(auth)
         return dict(
             map(
                 lambda kv: (kv[0], Account.to_saved_format(kv[1])),
@@ -910,10 +945,7 @@ class QiskitRuntimeService(Provider):
         result_decoder: Optional[
             Union[Type[ResultDecoder], Sequence[Type[ResultDecoder]]]
         ] = None,
-        instance: Optional[str] = None,
         session_id: Optional[str] = None,
-        job_tags: Optional[List[str]] = None,
-        max_execution_time: Optional[int] = None,
         start_session: Optional[bool] = False,
     ) -> RuntimeJob:
         """Execute the runtime program.
@@ -935,13 +967,7 @@ class QiskitRuntimeService(Provider):
                 If more than one decoder is specified, the first is used for interim results and
                 the second final results. If not specified, a program-specific decoder or the default
                 ``ResultDecoder`` is used.
-            instance: (DEPRECATED) This is only supported for ``ibm_quantum`` runtime and is in the
-                hub/group/project format.
             session_id: Job ID of the first job in a runtime session.
-            job_tags: (DEPRECATED) Tags to be assigned to the job. The tags can subsequently be used
-                as a filter in the :meth:`jobs()` function call.
-            max_execution_time: (DEPRECATED) Maximum execution time in seconds. This overrides
-                the max_execution_time of the program.
             start_session: Set to True to explicitly start a runtime session. Defaults to False.
 
         Returns:
@@ -952,33 +978,12 @@ class QiskitRuntimeService(Provider):
             RuntimeProgramNotFound: If the program cannot be found.
             IBMRuntimeError: An error occurred running the program.
         """
-        if program_id in DEPRECATED_PROGRAMS:
-            warnings.warn(
-                f"The {program_id} program has been deprecated as of qiskit-ibm-runtime 0.7 \
-                and will be removed no sooner than 1 month after the release date.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
 
         qrt_options: RuntimeOptions = options
         if options is None:
             qrt_options = RuntimeOptions()
         elif isinstance(options, Dict):
             qrt_options = RuntimeOptions(**options)
-
-        deprecated = {
-            "instance": instance,
-            "job_tags": job_tags,
-            "max_execution_time": max_execution_time,
-        }
-        for name, param in deprecated.items():
-            if param is not None:
-                deprecate_arguments(
-                    deprecated=name,
-                    version="0.7",
-                    remedy=f'Please specify "{name}" inside "options".',
-                )
-                setattr(qrt_options, name, param)
 
         # If using params object, extract as dictionary
         if isinstance(inputs, ParameterNamespace):
@@ -987,14 +992,12 @@ class QiskitRuntimeService(Provider):
 
         qrt_options.validate(channel=self.channel)
 
-        backend = None
         hgp_name = None
         if self._channel == "ibm_quantum":
             # Find the right hgp
             hgp = self._get_hgp(
                 instance=qrt_options.instance, backend_name=qrt_options.backend
             )
-            backend = hgp.backend(qrt_options.backend)
             hgp_name = hgp.name
 
         try:
@@ -1018,20 +1021,7 @@ class QiskitRuntimeService(Provider):
                 ) from None
             raise IBMRuntimeError(f"Failed to run program: {ex}") from None
 
-        if not backend:
-            backend = self.backend(name=response["backend"])
-
-        global _JOB_DEPRECATION_ISSUED  # pylint: disable=global-statement
-        if not (start_session or session_id) and not _JOB_DEPRECATION_ISSUED:
-            # No need to issue warning if session is used since the old style session
-            # didn't return a job, and new style returns new job.
-            _JOB_DEPRECATION_ISSUED = True
-            issue_deprecation_msg(
-                msg="Note that the 'job_id' and 'backend' attributes of "
-                "a runtime job have been deprecated",
-                version="0.7",
-                remedy="Please use the job_id() and backend() methods instead.",
-            )
+        backend = self.backend(name=response["backend"], instance=hgp_name)
 
         job = RuntimeJob(
             backend=backend,
@@ -1043,35 +1033,9 @@ class QiskitRuntimeService(Provider):
             user_callback=callback,
             result_decoder=result_decoder,
             image=qrt_options.image,
+            service=self,
         )
         return job
-
-    @deprecate_function(
-        "QiskitRuntimeService.open",
-        "0.7",
-        "Instead, use the qiskit_ibm_runtime.Session class to create a runtime session.",
-    )
-    def open(
-        self,
-        program_id: str,
-        inputs: Union[Dict, ParameterNamespace],
-        options: Optional[Union[RuntimeOptions, Dict]] = None,
-    ) -> RuntimeSession:
-        """Open a new runtime session.
-
-        Args:
-            program_id: Program ID.
-            inputs: Initial program input parameters. These input values are
-                persistent throughout the session.
-            options: Runtime options that control the execution environment. See
-                :class:`RuntimeOptions` for all available options.
-
-        Returns:
-            Runtime session.
-        """
-        return RuntimeSession(
-            service=self, program_id=program_id, inputs=inputs, options=options
-        )
 
     def upload_program(
         self, data: str, metadata: Optional[Union[Dict, str]] = None
@@ -1465,7 +1429,10 @@ class QiskitRuntimeService(Provider):
                 instance = to_instance_format(hub, group, project)
         # Try to find the right backend
         try:
-            backend = self.backend(raw_data["backend"], instance=instance)
+            if "backend" in raw_data:
+                backend = self.backend(raw_data["backend"], instance=instance)
+            else:
+                backend = None
         except QiskitBackendNotFoundError:
             backend = ibm_backend.IBMRetiredBackend.from_name(
                 backend_name=raw_data["backend"],
@@ -1486,6 +1453,7 @@ class QiskitRuntimeService(Provider):
             backend=backend,
             api_client=self._api_client,
             client_params=self._client_params,
+            service=self,
             job_id=raw_data["id"],
             program_id=raw_data.get("program", {}).get("id", ""),
             params=decoded,
@@ -1538,7 +1506,6 @@ class QiskitRuntimeService(Provider):
         Returns:
             The authentication type used.
         """
-        self._auth_warning()
         return "cloud" if self._channel == "ibm_cloud" else "legacy"
 
     @property

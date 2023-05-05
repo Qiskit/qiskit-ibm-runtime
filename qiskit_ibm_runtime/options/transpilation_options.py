@@ -14,8 +14,23 @@
 
 from typing import Optional, List, Union
 from dataclasses import dataclass
+from typing_extensions import Literal, get_args
 
 from .utils import _flexible
+
+LayoutMethodType = Literal[
+    "trivial",
+    "dense",
+    "noise_adaptive",
+    "sabre",
+]
+RoutingMethodType = Literal[
+    "basic",
+    "lookahead",
+    "stochastic",
+    "sabre",
+    "none",
+]
 
 
 @_flexible
@@ -45,3 +60,32 @@ class TranspilationOptions:
     layout_method: Optional[str] = None
     routing_method: Optional[str] = None
     approximation_degree: Optional[float] = None
+
+    @staticmethod
+    def validate_transpilation_options(transpilation_options: dict) -> None:
+        """Validate that transpilation options are legal.
+        Raises:
+            ValueError: if layout_method is not in LayoutMethodType or None.
+            ValueError: if routing_method is not in RoutingMethodType or None.
+            ValueError: if approximation_degree in not None or in the range 0.0 to 1.0.
+        """
+        layout_method = transpilation_options.get("layout_method")
+        if not (layout_method in get_args(LayoutMethodType) or layout_method is None):
+            raise ValueError(
+                f"Unsupported value {layout_method} for layout_method. "
+                f"Supported values are {get_args(LayoutMethodType)} and None"
+            )
+        routing_method = transpilation_options.get("routing_method")
+        if not (
+            routing_method in get_args(RoutingMethodType) or routing_method is None
+        ):
+            raise ValueError(
+                f"Unsupported value {routing_method} for routing_method. "
+                f"Supported values are {get_args(RoutingMethodType)} and None"
+            )
+        approximation_degree = transpilation_options.get("approximation_degree")
+        if not (approximation_degree is None or 0.0 <= approximation_degree <= 1.0):
+            raise ValueError(
+                "approximation_degree must be between 0.0 (maximal approximation) "
+                "and 1.0 (no approximation)"
+            )

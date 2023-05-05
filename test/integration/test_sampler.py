@@ -37,24 +37,6 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
         self.backend = "ibmq_qasm_simulator"
 
     @run_integration_test
-    def test_sampler_non_parameterized_single_circuit(self, service):
-        """Verify if sampler primitive returns expected results for non-parameterized circuits."""
-
-        # Execute a Bell circuit
-        with Session(service, self.backend) as session:
-            sampler = Sampler(session=session)
-            self.assertIsInstance(sampler, BaseSampler)
-            job = sampler.run(circuits=self.bell)
-            result = job.result()
-            self.assertIsInstance(result, SamplerResult)
-            self.assertEqual(len(result.quasi_dists), 1)
-            self.assertEqual(len(result.metadata), 1)
-            self.assertAlmostEqual(result.quasi_dists[0][3], 0.5, delta=0.1)
-            self.assertAlmostEqual(result.quasi_dists[0][0], 0.5, delta=0.1)
-            self.assertTrue(session.session_id)
-            session.close()
-
-    @run_integration_test
     def test_sampler_non_parameterized_circuits(self, service):
         """Test sampler with multiple non-parameterized circuits."""
         # Execute three Bell circuits
@@ -229,36 +211,6 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
             self.assertAlmostEqual(result.quasi_dists[0][3], 0.5, delta=0.1)
             self.assertAlmostEqual(result.quasi_dists[0][0], 0.5, delta=0.1)
             session.close()
-
-    @run_integration_test
-    def test_sampler_primitive_as_session(self, service):
-        """Verify Sampler as a session still works."""
-
-        # parameterized circuit
-        pqc = RealAmplitudes(num_qubits=2, reps=2)
-        pqc.measure_all()
-        pqc2 = RealAmplitudes(num_qubits=2, reps=3)
-        pqc2.measure_all()
-
-        theta1 = [0, 1, 1, 2, 3, 5]
-        theta2 = [1, 2, 3, 4, 5, 6]
-        theta3 = [0, 1, 2, 3, 4, 5, 6, 7]
-
-        with Sampler(
-            circuits=[pqc, pqc2],
-            service=service,
-            options={"backend": "ibmq_qasm_simulator"},
-        ) as sampler:
-            self.assertIsInstance(sampler, BaseSampler)
-
-            circuits0 = [pqc, pqc, pqc2]
-            result = sampler(
-                circuits=circuits0,
-                parameter_values=[theta1, theta2, theta3],
-            )
-            self.assertIsInstance(result, SamplerResult)
-            self.assertEqual(len(result.quasi_dists), len(circuits0))
-            self.assertEqual(len(result.metadata), len(circuits0))
 
     @run_integration_test
     def test_sampler_callback(self, service):

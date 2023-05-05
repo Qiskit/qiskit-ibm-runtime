@@ -1,0 +1,10 @@
+---
+upgrade:
+  - |
+    Added error messages in case the user defines unsupported values 
+    for 'optimization_level' or for 'resilience_level'.
+    Added validation checking for options given as input to ``resilience``.
+    Previously, this validation was done on the server side. By adding them
+    on the client side, response will be much faster upon failure.
+    The environment variable ``QISKIT_RUNTIME_SKIP_OPTIONS_VALIDATION``
+    is used to control validation. If set, validation will be skipped.

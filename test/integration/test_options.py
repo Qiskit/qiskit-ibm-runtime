@@ -29,7 +29,7 @@ class TestIntegrationOptions(IBMIntegrationTestCase):
     @run_integration_test
     def test_noise_model(self, service):
         """Test running with noise model."""
-        backend = service.backends(simulator=True)[0]
+        backend = service.get_backend("ibmq_qasm_simulator")
         self.log.info(f"Using backend {backend.name}")
 
         fake_backend = FakeManila()
@@ -100,30 +100,16 @@ class TestIntegrationOptions(IBMIntegrationTestCase):
                     # self.assertIn("TranspilerError", err.exception.message)
 
     @run_integration_test
-    def test_optimization_and_resilience_levels(self, service):
-        """Test various definitions for optimization_level."""
-
+    def test_unsupported_input_combinations(self, service):
+        """Test that when resilience_level==3, and backend is a simulator,
+        a coupling map is required."""
+        circ = QuantumCircuit(1)
+        obs = SparsePauliOp.from_list([("I", 1)])
+        options = Options()
+        options.resilience_level = 3
         backend = service.backends(simulator=True)[0]
-        noise_model = NoiseModel.from_backend(FakeManila())
-        default_options = Options()
-        noisy_options = Options()
-        noisy_options.simulator.noise_model = noise_model
-        primitives = [Sampler, Estimator]
-
-        with Session(service=service, backend=backend):
-            for cls in primitives:
-                cls_no_noise = cls(options=default_options)
-                self.assertTrue(cls_no_noise.options.optimization_level == 1)
-                self.assertTrue(cls_no_noise.options.resilience_level == 0)
-
-                cls_with_noise = cls(options=noisy_options)
-                self.assertTrue(cls_with_noise.options.optimization_level == 3)
-                self.assertTrue(cls_with_noise.options.resilience_level == 1)
-
-                user_given_options = Options()
-                for opt_level in [0, 1, 2, 3, 99]:
-                    user_given_options.optimization_level = opt_level
-                    user_given_options.resilience_level = opt_level
-                    cls_default = cls(options=user_given_options)
-                    self.assertTrue(cls_default.options.optimization_level == opt_level)
-                    self.assertTrue(cls_default.options.resilience_level == opt_level)
+        with Session(service=service, backend=backend) as session:
+            with self.assertRaises(ValueError) as exc:
+                inst = Estimator(session=session, options=options)
+                inst.run(circ, observables=obs)
+            self.assertIn("a coupling map is required.", str(exc.exception))

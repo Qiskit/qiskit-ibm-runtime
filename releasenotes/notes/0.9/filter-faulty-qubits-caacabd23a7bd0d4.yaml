@@ -1,0 +1,5 @@
+---
+upgrade:
+  - |
+    When constructing a backend :class:`qiskit.transpiler.Target`, faulty qubits and gates from the backend
+    configuration will be filtered out. 

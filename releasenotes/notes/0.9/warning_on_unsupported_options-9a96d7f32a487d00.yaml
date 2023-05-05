@@ -1,0 +1,5 @@
+---
+upgrade:
+  - |
+    Added a user warning when the user passes an option that is not supported
+    in Options.
