@@ -88,7 +88,9 @@ The new syntax accepts credentials for Qiskit Runtime on IBM Cloud or IBM Quantu
     QiskitRuntimeService.save_account(channel="ibm_quantum", token="<IQP_TOKEN>", overwrite=True)
 
 **Updated - Name saved credentials**
-You can now name your saved credentials and load the credentials by name.  Example:
+You can now name your saved credentials and load the credentials by name.  
+
+**Example:**
 
 .. code-block:: python
 
