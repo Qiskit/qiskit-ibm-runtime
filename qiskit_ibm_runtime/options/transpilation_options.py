@@ -12,9 +12,8 @@
 
 """Transpilation options."""
 
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Literal, get_args
 from dataclasses import dataclass
-from typing_extensions import Literal, get_args
 
 from .utils import _flexible
 
