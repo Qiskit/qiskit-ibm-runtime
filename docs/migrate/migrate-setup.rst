@@ -10,6 +10,10 @@ The classes related to Qiskit Runtime that used to be included in ``qiskit-ibmq-
 
 The module from which the classes are imported has changed. The following table contains example access patterns in ``qiskit.providers.ibmq.runtime`` and their new form in ``qiskit_ibm_runtime``:
 
+..
+   I had to take the `` formatting and the :class: formatting out of the following table because it was too wide for the page and was writing on top of the right-hand navigation menu when everything was in tags.  When I took off the tags, sphinx put it in a scrollable table that didn't overrun the right-hand navigation. I tried to make the column padding smaller, but couldn't figure out how.  Even if I could, it only looked OK in full-screen.  I then tried to force scroll bars to come up while keeping the tags, but that wasn't working either, so I pulled the formatting tags. 
+
+
 .. list-table:: Migrate from ``qiskit.providers.ibmq.runtime`` in ``qiskit-ibmq-provider`` to ``qiskit-ibm-runtime`` 
    :header-rows: 1
 
@@ -40,13 +44,12 @@ The module from which the classes are imported has changed. The following table 
    * - ``qiskit.providers.ibmq.runtime.RuntimeDecoder``
      - :class:`qiskit_ibm_runtime.RuntimeDecoder`
      - 
-   * - qiskit.providers.ibmq.runtime.ParameterNamespace
-     - qiskit_ibm_runtime.ParameterNamespace
+   * - ``qiskit.providers.ibmq.runtime.ParameterNamespace``
+     - ``qiskit_ibm_runtime.ParameterNamespace``
      - 
    * - ``qiskit.providers.ibmq.runtime.RuntimeOptions``
      - :class:`qiskit_ibm_runtime.RuntimeOptions`
      - 
-
 
 Import path
 -------------
