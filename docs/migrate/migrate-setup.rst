@@ -1,4 +1,4 @@
-Migrate setup from ``qiskit-ibmq-provider``
+Migrate setup from qiskit-ibmq-provider
 ==============================================
 
 This guide describes how to migrate code from the legacy IBMQ provider (`qiskit-ibmq-provider`) package to use Qiskit Runtime (`qiskit-ibm-runtime`). This guide includes instructions to migrate legacy runtime programs to the new syntax. However, the ability to use custom uploaded programs is pending deprecation, so these should be migrated to use primitives instead.  
@@ -18,7 +18,7 @@ The module from which the classes are imported has changed. The following table 
      - Notes
    * - ``qiskit.providers.ibmq.runtime.IBMRuntimeService``
      - :class:`qiskit_ibm_runtime.QiskitRuntimeService`
-     - ``IBMRuntimeService`` class was removed from ``qiskit-ibm-runtime`` 0.6 and replaced by :class:`qiskit_ibm_runtime.QiskitRuntimeService`.
+     - ``IBMRuntimeService`` class was removed from ``qiskit-ibm-runtime`` 0.6 and replaced by the new class in ``qiskit-ibm-runtime``.
    * - ``qiskit.providers.ibmq.runtime.RuntimeJob``
      - :class:`qiskit_ibm_runtime.RuntimeJob`
      -  
