@@ -1,4 +1,4 @@
-Migrate setup from qiskit-ibmq-provider
+Migrate setup from ``qiskit-ibmq-provider``
 ==============================================
 
 This guide describes how to migrate code from the legacy IBMQ provider (`qiskit-ibmq-provider`) package to use Qiskit Runtime (`qiskit-ibm-runtime`). This guide includes instructions to migrate legacy runtime programs to the new syntax. However, the ability to use custom uploaded programs is pending deprecation, so these should be migrated to use primitives instead.  
@@ -40,8 +40,8 @@ The module from which the classes are imported has changed. The following table 
    * - ``qiskit.providers.ibmq.runtime.RuntimeDecoder``
      - :class:`qiskit_ibm_runtime.RuntimeDecoder`
      - 
-   * - ``qiskit.providers.ibmq.runtime.ParameterNamespace``
-     - :class:`qiskit_ibm_runtime.ParameterNamespace`
+   * - qiskit.providers.ibmq.runtime.ParameterNamespace
+     - qiskit_ibm_runtime.ParameterNamespace
      - 
    * - ``qiskit.providers.ibmq.runtime.RuntimeOptions``
      - :class:`qiskit_ibm_runtime.RuntimeOptions`
