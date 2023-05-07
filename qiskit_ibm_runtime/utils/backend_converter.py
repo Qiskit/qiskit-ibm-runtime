@@ -78,6 +78,10 @@ def convert_to_target(
                 gates[name] = {}
 
             qubits = tuple(gate.qubits)
+            if any(not properties.is_qubit_operational(qubit) for qubit in qubits):
+                continue
+            if not properties.is_gate_operational(name, gate.qubits):
+                continue
             gate_props = {}
             for param in gate.parameters:
                 if param.name == "gate_error":
@@ -94,6 +98,8 @@ def convert_to_target(
         # Create measurement instructions:
         measure_props = {}
         for qubit, _ in enumerate(properties.qubits):
+            if not properties.is_qubit_operational(qubit):
+                continue
             measure_props[(qubit,)] = InstructionProperties(
                 duration=properties.readout_length(qubit),
                 error=properties.readout_error(qubit),
@@ -128,6 +134,9 @@ def convert_to_target(
         )
     # If pulse defaults exists use that as the source of truth
     if defaults is not None:
+        faulty_qubits = set()
+        if properties is not None:
+            faulty_qubits = set(properties.faulty_qubits())
         inst_map = defaults.instruction_schedule_map
         for inst in inst_map.instructions:
             for qarg in inst_map.qubits_with_instruction(inst):
@@ -139,12 +148,21 @@ def convert_to_target(
                         qarg = (qarg,)
                     if inst == "measure":
                         for qubit in qarg:
+                            if qubit in faulty_qubits:
+                                continue
                             target[inst][(qubit,)].calibration = sched
                     else:
+                        if any(qubit in faulty_qubits for qubit in qarg):
+                            continue
                         target[inst][qarg].calibration = sched
     if "delay" not in target:
         target.add_instruction(
-            Delay(Parameter("t")), {(bit,): None for bit in range(target.num_qubits)}
+            Delay(Parameter("t")),
+            {
+                (bit,): None
+                for bit in range(target.num_qubits)
+                if bit not in faulty_qubits
+            },
         )
     return target
 
