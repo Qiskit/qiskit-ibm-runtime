@@ -13,11 +13,10 @@
 """Account related classes and functions."""
 
 import logging
-from typing import Optional
+from typing import Optional, Literal
 from urllib.parse import urlparse
 
 from requests.auth import AuthBase
-from typing_extensions import Literal
 
 from .exceptions import InvalidAccountError, CloudResourceNameResolutionError
 from ..api.auth import QuantumAuth, CloudAuth
