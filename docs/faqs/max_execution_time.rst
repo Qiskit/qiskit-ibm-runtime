@@ -39,7 +39,7 @@ The system limit on the Qiskit Runtime job execution time is described in the fo
 Note that a *premium user* here means a user who has access to backends in providers other than ibm-q/open/main.
 
 Program time limits
-------------------------
+***************************
 
 In addition to the ``max_execution_time`` parameter, different types of programs have their own time limits:
 
@@ -48,7 +48,7 @@ In addition to the ``max_execution_time`` parameter, different types of programs
 * **Private Programs:** The maximum execution time (in seconds) for a program is set on the job options with the ``max_execution_time`` parameter. 
 
 Job max execution time
-----------------------------
+***************************
 
 Set the maximum execution time (in seconds) on the job options by using one of the following methods.  The value must be **300 or higher**:
 
@@ -63,7 +63,7 @@ Set the maximum execution time (in seconds) on the job options by using one of t
    options = {"max_execution_time": 360}
 
 Session time limits
------------------------
+***************************
 
 When a session is started, it is assigned a maximum session timeout value (by default, it is set to the system limit).  After the maximum session timeout is reached, the session is permanently closed. The maximum session timeout value is set on the ``max_time`` parameter, which can be greater than the program’s ``max_execution_time``. 
 
@@ -73,7 +73,7 @@ Additionally, there is a 5 minute *interactive* timeout value. If there are no s
 
 
 Other limitations
------------------
+***************************
 
 - Programs cannot exceed 750KB in size.
 - Inputs to jobs cannot exceed 64MB in size.
