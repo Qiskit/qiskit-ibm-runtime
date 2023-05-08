@@ -90,7 +90,7 @@ Next steps
    :caption: Migrate
 
     Migrate to using Qiskit Runtime primitives <migrate/migrate-guide>
-    Migrate your setup from ``qiskit-ibmq-provider`` <migrate/migrate-setup>
+    Migrate your setup from qiskit-ibmq-provider <migrate/migrate-setup>
     Use Estimator to design an algorithm <migrate/migrate-estimator>
     Use Sampler to design an algorithm <migrate/migrate-sampler>
     Update parameter values while running <migrate/migrate-update-parm>

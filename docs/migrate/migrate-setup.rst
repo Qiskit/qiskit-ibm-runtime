@@ -10,6 +10,10 @@ The classes related to Qiskit Runtime that used to be included in ``qiskit-ibmq-
 
 The module from which the classes are imported has changed. The following table contains example access patterns in ``qiskit.providers.ibmq.runtime`` and their new form in ``qiskit_ibm_runtime``:
 
+..
+   I had to take the :class: formatting out of the following table because it was too wide for the page and was writing on top of the right-hand navigation menu when everything was in tags.  When I took off one tag, sphinx put it in a scrollable table that didn't overrun the right-hand navigation, so I took them all out for consistency
+
+
 .. list-table:: Migrate from ``qiskit.providers.ibmq.runtime`` in ``qiskit-ibmq-provider`` to ``qiskit-ibm-runtime`` 
    :header-rows: 1
 
@@ -17,36 +21,35 @@ The module from which the classes are imported has changed. The following table 
      - class in ``qiskit-ibm-runtime``
      - Notes
    * - ``qiskit.providers.ibmq.runtime.IBMRuntimeService``
-     - :class:`qiskit_ibm_runtime.QiskitRuntimeService`
-     - ``IBMRuntimeService`` class was removed from ``qiskit-ibm-runtime`` 0.6 and replaced by :class:`qiskit_ibm_runtime.QiskitRuntimeService`.
+     - ``qiskit_ibm_runtime.QiskitRuntimeService```
+     - ``IBMRuntimeService`` class was removed from ``qiskit-ibm-runtime`` 0.6 and replaced by the new class in ``qiskit-ibm-runtime``.
    * - ``qiskit.providers.ibmq.runtime.RuntimeJob``
-     - :class:`qiskit_ibm_runtime.RuntimeJob`
+     - ``qiskit_ibm_runtime.RuntimeJob``
      -  
    * - ``qiskit.providers.ibmq.runtime.RuntimeProgram``
-     - :class:`qiskit_ibm_runtime.RuntimeProgram`
+     - ``qiskit_ibm_runtime.RuntimeProgram``
      - 
    * - ``qiskit.providers.ibmq.runtime.UserMessenger``
-     - :class:`qiskit_ibm_runtime.program.UserMessenger`
+     - ``qiskit_ibm_runtime.program.UserMessenger``
      - Notice the new location, in ``qiskit_ibm_runtime.program``
    * - ``qiskit.providers.ibmq.runtime.ProgramBackend``
-     - :class:`qiskit_ibm_runtime.program.ProgramBackend`
+     - ``qiskit_ibm_runtime.program.ProgramBackend``
      - Notice the new location, in ``qiskit_ibm_runtime.program``
    * - ``qiskit.providers.ibmq.runtime.ResultDecoder``
-     - :class:`qiskit_ibm_runtime.program.ResultDecoder`
+     - ``qiskit_ibm_runtime.program.ResultDecoder``
      - Notice the new location, in ``qiskit_ibm_runtime.program``
    * - ``qiskit.providers.ibmq.runtime.RuntimeEncoder``
-     - :class:`qiskit_ibm_runtime.RuntimeEncoder`
+     - ``qiskit_ibm_runtime.RuntimeEncoder``
      - 
    * - ``qiskit.providers.ibmq.runtime.RuntimeDecoder``
-     - :class:`qiskit_ibm_runtime.RuntimeDecoder`
+     - ``qiskit_ibm_runtime.RuntimeDecoder``
      - 
    * - ``qiskit.providers.ibmq.runtime.ParameterNamespace``
-     - :class:`qiskit_ibm_runtime.ParameterNamespace`
+     - ``qiskit_ibm_runtime.ParameterNamespace``
      - 
    * - ``qiskit.providers.ibmq.runtime.RuntimeOptions``
-     - :class:`qiskit_ibm_runtime.RuntimeOptions`
+     - ``qiskit_ibm_runtime.RuntimeOptions``
      - 
-
 
 Import path
 -------------
@@ -78,6 +81,7 @@ Use the updated code to work with accounts.
 
 **Updated - Save accounts**
 The new syntax accepts credentials for Qiskit Runtime on IBM Cloud or IBM Quantum Platform. For more information on retrieving account credentials, see the `getting started guide <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/getting_started.html>`_.
+
 .. code-block:: python
 
     # IBM cloud channel
@@ -87,7 +91,10 @@ The new syntax accepts credentials for Qiskit Runtime on IBM Cloud or IBM Quantu
     QiskitRuntimeService.save_account(channel="ibm_quantum", token="<IQP_TOKEN>", overwrite=True)
 
 **Updated - Name saved credentials**
-You can now name your saved credentials and load the credentials by name.  Example:
+You can now name your saved credentials and load the credentials by name.  
+
+**Example:**
+
 .. code-block:: python
 
     # Save different accounts for open and premium access
