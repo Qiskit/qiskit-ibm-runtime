@@ -44,7 +44,7 @@ Program time limits
 In addition to the ``max_execution_time`` parameter, different types of programs have their own time limits:
 
 * **Primitives:** The maximum execution time for the Sampler primitive is 10000 seconds (2.78 hours). The maximum execution time for the Estimator primitive is 18000 seconds (5 hours).
-* **Prototype programs:** The maximum execution time is listed on the [Prototype programs page](https://quantum-computing.ibm.com/services/programs/prototypes).
+* **Prototype programs:** The maximum execution time is listed on the `Prototype programs page <https://quantum-computing.ibm.com/services/programs/prototypes>`__. 
 * **Private Programs:** The maximum execution time (in seconds) for a program is set on the job options with the ``max_execution_time`` parameter. 
 
 Job max execution time
