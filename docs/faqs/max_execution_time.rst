@@ -45,7 +45,7 @@ In addition to the ``max_execution_time`` parameter, different types of programs
 
 * **Primitives:** The maximum execution time for the Sampler primitive is 10000 seconds (2.78 hours). The maximum execution time for the Estimator primitive is 18000 seconds (5 hours).
 * **Prototype programs:** The maximum execution time is listed on the [Prototype programs page](https://quantum-computing.ibm.com/services/programs/prototypes).
-* **Private Programs:** The maximum execution time for a program is set on its ``max_execution_time`` parameter. 
+* **Private Programs:** The maximum execution time (in seconds) for a program is set on the job options with the ``max_execution_time`` parameter. 
 
 Job max execution time
 ----------------------------
@@ -65,7 +65,7 @@ Set the maximum execution time (in seconds) on the job options by using one of t
 Session time limits
 -----------------------
 
-When a session is started, it is assigned a maximum session timeout value.  After the maximum session timeout is reached, the session is permanently closed. The maximum session timeout value is set on the ``max_time`` parameter, which can be greater than the program’s ``max_execution_time``. By default, it is set to the system limit.
+When a session is started, it is assigned a maximum session timeout value (by default, it is set to the system limit).  After the maximum session timeout is reached, the session is permanently closed. The maximum session timeout value is set on the ``max_time`` parameter, which can be greater than the program’s ``max_execution_time``. 
 
 Additionally, there is a 5 minute *interactive* timeout value. If there are no session jobs queued within that window, the session is temporarily deactivated and normal job selection resumes. During job selection, if the job scheduler gets a new job from the session and its maximum timeout value has not been reached, the session is reactivated until its maximum timeout value is reached.
   
