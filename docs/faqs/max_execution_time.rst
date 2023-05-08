@@ -50,7 +50,7 @@ In addition to the ``max_execution_time`` parameter, different types of programs
 Job max execution time
 ----------------------------
 
-Set the maximum execution time (in seconds) on the job options by using one of the following methods.  **The value must be 300 or higher**:
+Set the maximum execution time (in seconds) on the job options by using one of the following methods.  The value must be **300 or higher**:
 
 .. code-block:: python
 
