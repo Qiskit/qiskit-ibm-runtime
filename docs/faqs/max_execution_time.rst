@@ -46,17 +46,11 @@ In addition to the ``max_execution_time`` parameter, different types of programs
 * **Primitives:** The maximum execution time for the Sampler primitive is 10000 seconds (2.78 hours). The maximum execution time for the Estimator primitive is 18000 seconds (5 hours).
 * **Prototype programs:** The maximum execution time is listed on the [Prototype programs page](https://quantum-computing.ibm.com/services/programs/prototypes).
 * **Private Programs:** The maximum execution time for a program is set on its ``max_execution_time`` parameter. 
-  .. note:: max_execution_time cannot be set lower than 300 seconds.
-
-Job time limits
-------------------
-
-The job's maximum execution time can be set on the ``max_execution_time`` parameter, and there are also time limits on sessions.
 
 Job max execution time
-**********************
+----------------------------
 
-Set the maximum execution time (in seconds) on the job options by using one of the following methods.  The value must be 300 or higher:
+Set the maximum execution time (in seconds) on the job options by using one of the following methods.  **The value must be 300 or higher**:
 
 .. code-block:: python
 
@@ -69,7 +63,7 @@ Set the maximum execution time (in seconds) on the job options by using one of t
    options = {"max_execution_time": 360}
 
 Session time limits
-*****************************
+-----------------------
 
 When a session is started, it is assigned a maximum session timeout value.  After the maximum session timeout is reached, the session is permanently closed. The maximum session timeout value is set on the ``max_time`` parameter, which can be greater than the program’s ``max_execution_time``. By default, it is set to the system limit.
 
