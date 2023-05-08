@@ -21,7 +21,7 @@ IBM Cloud system limit
 The system limit on the Qiskit Runtime job execution time is 3 hours for a job running on a simulator
 and 8 hours for a job running on a physical system.
 
- IBM Quantum system limit
+IBM Quantum system limit
 *****************************
 
 The system limit on the Qiskit Runtime job execution time is described in the following table:
