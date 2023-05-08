@@ -12,9 +12,8 @@
 
 """Options related to the execution environment."""
 
-from typing import Optional, Callable, List
+from typing import Optional, Callable, List, Literal, get_args
 from dataclasses import dataclass, field
-from typing_extensions import Literal, get_args
 
 from .utils import _flexible
 
