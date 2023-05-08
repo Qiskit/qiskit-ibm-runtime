@@ -24,16 +24,16 @@ Primitives are core functions that provide a simplified interface for defining n
 **Estimator**
 
 The estimator primitive allows users to efficiently calculate and interpret expectation
-values of quantum operators required for many algorithms. Users specify a list of circuits
-and observables, then tell the program how to selectively group between the lists to
-efficiently evaluate expectation values and variances for a given parameter input.
+values of quantum operators required for many algorithms. Users specify circuits that
+prepare quantum states and then Pauli-basis observables to measure on those states. The
+estimator can use advanced error mitigation capabilities to improve the accuracy of the
+returned expectation values.
 
 **Sampler**
 
-This primitive takes a user circuit as an input and generates an error-mitigated
-readout of quasiprobabilities. This provides users a way to better evaluate shot results
-using error mitigation and enables them to more efficiently evaluate the possibility of
-multiple relevant data points in the context of destructive interference.
+This primitive takes a user circuit as input and returns a quasiprobability distribution
+over the measurement outcomes. This generalizes histograms from quantum circuits to allow
+for error mitigation of readout.
 
 
 
