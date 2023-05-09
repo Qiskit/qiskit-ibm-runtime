@@ -1,3 +1,5 @@
+.. _migrate to primitives:
+
 Migrate to using Qiskit Runtime primitives
 ============================================
 
