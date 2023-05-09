@@ -15,25 +15,18 @@
 from __future__ import annotations
 import os
 import copy
-from typing import Iterable, Optional, Dict, Sequence, Any, Union
+from typing import Optional, Dict, Sequence, Any, Union
 import logging
 from dataclasses import asdict
 
-from qiskit.circuit import QuantumCircuit, Parameter
-from qiskit.quantum_info import SparsePauliOp
+from qiskit.circuit import QuantumCircuit
 from qiskit.opflow import PauliSumOp
 from qiskit.quantum_info.operators.base_operator import BaseOperator
 from qiskit.providers.options import Options as TerraOptions
 from qiskit.primitives import BaseEstimator, EstimatorResult
 
 # TODO import _circuit_key from terra once 0.23 is released
-from .qiskit_runtime_service import QiskitRuntimeService
 from .runtime_job import RuntimeJob
-from .utils.deprecation import (
-    deprecate_arguments,
-    issue_deprecation_msg,
-    deprecate_function,
-)
 from .ibm_backend import IBMBackend
 from .session import get_default_session
 from .options import Options
@@ -99,32 +92,12 @@ class Estimator(BaseEstimator):
 
     def __init__(
         self,
-        circuits: Optional[Union[QuantumCircuit, Iterable[QuantumCircuit]]] = None,
-        observables: Optional[Iterable[SparsePauliOp]] = None,
-        parameters: Optional[Iterable[Iterable[Parameter]]] = None,
-        service: Optional[QiskitRuntimeService] = None,
         session: Optional[Union[Session, str, IBMBackend]] = None,
         options: Optional[Union[Dict, Options]] = None,
-        skip_transpilation: Optional[bool] = False,
     ):
         """Initializes the Estimator primitive.
 
         Args:
-            circuits: (DEPRECATED) A (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
-                a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
-
-            observables: (DEPRECATED) A list of :class:`~qiskit.quantum_info.SparsePauliOp`
-
-            parameters: (DEPRECATED) A list of parameters of the quantum circuits.
-                (:class:`~qiskit.circuit.parametertable.ParameterView` or
-                a list of :class:`~qiskit.circuit.Parameter`) specifying the order
-                in which parameter values will be bound.
-
-            service: (DEPRECATED) Optional instance of
-                :class:`qiskit_ibm_runtime.QiskitRuntimeService` class,
-                defaults to `QiskitRuntimeService()` which tries to initialize your default
-                saved account.
-
             session: Session in which to call the primitive.
 
                 * If an instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
@@ -138,30 +111,12 @@ class Estimator(BaseEstimator):
 
             options: Primitive options, see :class:`Options` for detailed description.
                 The ``backend`` keyword is still supported but is deprecated.
-
-            skip_transpilation: (DEPRECATED) Transpilation is skipped if set to True. False by default.
-                Ignored ``skip_transpilation`` is also specified in ``options``.
         """
         # `self._options` in this class is a Dict.
         # The base class, however, uses a `_run_options` which is an instance of
         # qiskit.providers.Options. We largely ignore this _run_options because we use
         # a nested dictionary to categorize options.
-        super().__init__(
-            circuits=circuits,
-            observables=observables,
-            parameters=parameters,
-        )
-
-        if skip_transpilation:
-            deprecate_arguments(
-                "skip_transpilation",
-                "0.7",
-                "Instead, use the skip_transpilation keyword argument in transpilation_settings.",
-            )
-        if service:
-            deprecate_arguments(
-                "service", "0.7", "Please use the session parameter instead."
-            )
+        super().__init__()
 
         backend = None
         self._session: Session = None
@@ -169,40 +124,17 @@ class Estimator(BaseEstimator):
         if options is None:
             self._options = asdict(Options())
         elif isinstance(options, Options):
-            skip_transpilation = (
-                options.transpilation.skip_transpilation  # type: ignore[union-attr]
-            )
             self._options = asdict(copy.deepcopy(options))
         else:
             options_copy = copy.deepcopy(options)
-            backend = options_copy.pop("backend", None)
-            if backend is not None:
-                issue_deprecation_msg(
-                    msg="The 'backend' key in 'options' has been deprecated",
-                    version="0.7",
-                    remedy="Please pass the backend when opening a session.",
-                )
             default_options = asdict(Options())
             self._options = Options._merge_options(default_options, options_copy)
-            skip_transpilation = self._options.get("transpilation", {}).get(
-                "skip_transpilation", False
-            )
-
-        self._options["transpilation"][
-            "skip_transpilation"
-        ] = skip_transpilation  # type: ignore[union-attr]
-
-        self._initial_inputs = {
-            "circuits": circuits,
-            "observables": observables,
-            "parameters": parameters,
-        }
 
         if isinstance(session, Session):
             self._session = session
         else:
             backend = session or backend
-            self._session = get_default_session(service, backend)
+            self._session = get_default_session(None, backend)
 
         # self._first_run = True
         # self._circuits_map = {}
@@ -385,17 +317,6 @@ class Estimator(BaseEstimator):
             options=Options._get_runtime_options(combined),
             result_decoder=DEFAULT_DECODERS.get(self._PROGRAM_ID),
         ).result()
-
-    @deprecate_function(
-        deprecated="close",
-        version="0.7",
-        remedy="Use qiskit_ibm_runtime.Session.close() instead",
-    )
-    def close(self) -> None:
-        """Close the session and free resources.
-        Close the session only if all jobs are finished
-        and you don't need to run more in the session."""
-        self._session.close()
 
     @property
     def session(self) -> Session:

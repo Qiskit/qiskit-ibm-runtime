@@ -38,6 +38,7 @@ from .exceptions import (
     RuntimeJobMaxTimeoutError,
 )
 from .program.result_decoder import ResultDecoder
+from .utils import RuntimeDecoder
 from .api.clients import RuntimeClient, RuntimeWebsocketClient, WebsocketClientCloseCode
 from .exceptions import IBMError
 from .api.exceptions import RequestsApiError
@@ -578,7 +579,10 @@ class RuntimeJob(Job):
         """
         if not self._params:
             response = self._api_client.job_get(job_id=self.job_id())
-            self._params = response.get("params", {})
+            params = response.get("params", {})
+            if not isinstance(params, str):
+                params = json.dumps(params)
+            self._params = json.loads(str(params), cls=RuntimeDecoder)
         return self._params
 
     @property

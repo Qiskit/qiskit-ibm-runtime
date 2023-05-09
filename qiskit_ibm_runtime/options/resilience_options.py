@@ -12,9 +12,8 @@
 
 """Resilience options."""
 
-from typing import Sequence
+from typing import Sequence, Literal, get_args
 from dataclasses import dataclass
-from typing_extensions import Literal, get_args
 
 from .utils import _flexible
 
