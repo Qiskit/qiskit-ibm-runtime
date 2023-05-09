@@ -65,7 +65,7 @@ Set the maximum execution time (in seconds) on the job options by using one of t
 Session time limits
 ***************************
 
-When a session is started, it is assigned a maximum session timeout value (by default, it is set to the system limit).  After the maximum session timeout is reached, the session is permanently closed. The maximum session timeout value is set on the ``max_time`` parameter, which can be greater than the program’s ``max_execution_time``. 
+When a session is started, it is assigned a maximum session timeout value (by default, it is set to the system limit).  After the maximum session timeout is reached, the session is permanently closed  and any queued jobs that remain in the session are put into a ``failed`` state. The maximum session timeout value is set on the ``max_time`` parameter, which can be greater than the program’s ``max_execution_time``. 
 
 Additionally, there is a 5 minute *interactive* timeout value. If there are no session jobs queued within that window, the session is temporarily deactivated and normal job selection resumes. During job selection, if the job scheduler gets a new job from the session and its maximum timeout value has not been reached, the session is reactivated until its maximum timeout value is reached.
   
