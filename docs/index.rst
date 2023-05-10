@@ -53,6 +53,7 @@ Next steps
     Getting Started <getting_started>
     backend.run vs. Qiskit Runtime <compare>
     Introduction to primitives <primitives>
+    Introduction to sessions <sessions>
 
 .. toctree::
    :maxdepth: 1
