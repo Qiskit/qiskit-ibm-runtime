@@ -10,7 +10,6 @@ nbformat>=4.4.0
 nbconvert>=5.3.1
 qiskit-aer>=0.11
 websockets>=8
-scikit-quant;platform_system != 'Windows'
 black==22.3.0
 coverage>=6.3
 pylatexenc
