@@ -13,7 +13,6 @@
 """Binary IO for any value objects, such as numbers, string, parameters."""
 
 import struct
-from typing import Any
 import uuid
 
 import numpy as np
@@ -93,7 +92,7 @@ def _read_parameter(file_obj):  # type: ignore[no-untyped-def]
     param_uuid = uuid.UUID(bytes=data.uuid)
     name = file_obj.read(data.name_size).decode(common.ENCODE)
     param = Parameter.__new__(Parameter, name, uuid=param_uuid)
-    param.__init__(name)
+    param.__init__(name)  # pylint: disable=unnecessary-dunder-call
     return param
 
 
@@ -114,7 +113,9 @@ def _read_parameter_vec(file_obj, vectors):  # type: ignore[no-untyped-def]
         vector._params[data.index] = ParameterVectorElement.__new__(
             ParameterVectorElement, vector, data.index, uuid=param_uuid
         )
-        vector._params[data.index].__init__(vector, data.index)
+        vector._params[data.index].__init__(  # pylint: disable=unnecessary-dunder-call
+            vector, data.index
+        )
     return vector[data.index]
 
 

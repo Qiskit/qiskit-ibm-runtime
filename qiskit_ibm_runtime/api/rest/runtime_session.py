@@ -12,7 +12,6 @@
 
 """Runtime Session REST adapter."""
 
-from typing import Any
 
 from .base import RestAdapterBase
 from ..session import RetrySession

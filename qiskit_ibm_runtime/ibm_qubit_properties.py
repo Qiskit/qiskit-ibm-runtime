@@ -18,7 +18,7 @@ from qiskit.providers.backend import QubitProperties
 class IBMQubitProperties(QubitProperties):
     """A representation of the properties of a qubit on an IBM backend."""
 
-    __slots__ = (
+    __slots__ = (  # pylint: disable=redefined-slots-in-subclass
         "t1",
         "t2",
         "frequency",
