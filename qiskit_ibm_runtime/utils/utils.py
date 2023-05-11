@@ -23,8 +23,10 @@ from typing import List, Optional, Any, Dict, Union, Tuple, Type
 from urllib.parse import urlparse
 
 import requests
-from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
-from ibm_platform_services import ResourceControllerV2
+from ibm_cloud_sdk_core.authenticators import (  # pylint: disable=import-error
+    IAMAuthenticator,
+)
+from ibm_platform_services import ResourceControllerV2  # pylint: disable=import-error
 
 
 def validate_job_tags(
