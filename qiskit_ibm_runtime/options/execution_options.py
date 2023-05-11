@@ -12,7 +12,6 @@
 
 """Execution options."""
 
-from typing import Optional, List
 from dataclasses import dataclass
 
 from .utils import _flexible
