@@ -65,6 +65,82 @@ When you start a session, you can specify session options, such as the backend t
       ...
 
 
+Specify the session length
+--------------------------
+
+When a session is started, it is assigned a maximum session timeout value. Once the session has been open the specified amount of time, the session expires and is forcefully closed. You can no longer submit jobs to that session.
+
+You can configure the maximum session timeout value through the `max_time` parameter, which can be specified as seconds (int) or a string, like "2h 30m 40s".  This value has to be greater then the `max_execution_time` of the job  and less than the system’s `max_time`. The default value is the system’s `max_time` (see table below).  For example, if you run five jobs within a session and each job is estimated to be five minutes long, the maximum time for you session should at least 25 min. 
+
+.. code-block:: python
+  with Session(service=service, backend=backend, max_time="25m"):
+    ...   
+
+There is also an interactive timeout value (5 minutes), which is not configurable.  If no session jobs are queued within that window, the session is temporarily deactivated. For more details about session length and timeout, see `sessions <../sessions.html>`__. 
+
+Close a session
+---------------
+
+When jobs are all done, we recommend to use session.close() to close the session. This allows the scheduler to run the next job without waiting for the session timeout. (therefore making it easy for everyone).  You cannot submit more jobs to a closed session.  
+
+       Note:  A session should only be closed when all session jobs FINISHES, not just when one is done submitting. Otherwise jobs will be converted to fairshare and likely time out. 
+
+.. code-block:: python
+  with Session(service=service, backend=backend) as session:
+  ... 
+  estimator = Estimator()
+  job = estimator.run(...)
+  # do not close here, the job might not be completed
+  result = job.result()
+  # reaching this line will mean that the job is finished
+  session.close()
+
+Retrieve job results
+--------------------
+
+You can review job results  immediately after the job completes by calling the the appropriate command:
+
+*  `job.result()` - Review job results immediately after the job completes. 
+* job.job_id() - Get the ID of the job 
+* job.status() - Check the status of the job
+* job = service.job(job_id) - Calling `job.job_id()` returns the job ID, which uniquely identifies that particular job. You can call `service.job(<job ID>)` to retrieve a job you previously submitted. Since the job ID is required in this call, it is recommended that you save the IDs of jobs you may want to retrieve later. If you don't have the job ID, or if you want to retrieve multiple jobs at once, you can call `service.jobs()` with optional filters instead. 
+
+  Jobs are also listed on the Jobs page for your quantum service channel:
+
+
+  * If you are using the IBM Cloud channel, from the IBM Cloud console quantum [Instances page](https://cloud.ibm.com/quantum/instances), click the name of your instance, then click the Jobs tab. To see the status of your job, click the refresh arrow in the upper right corner.
+  * If you are using the IBM Quantum channel, in IBM Quantum platform, open the [Jobs page](https://quantum-computing.ibm.com/jobs).
+
+Full example
+------------
+
+starts a session, runs an Estimator job, and outputs the result:
+
+.. code-block:: python
+  from qiskit.circuit.random import random_circuit
+  from qiskit.quantum_info import SparsePauliOp
+  from qiskit_ibm_runtime import QiskitRuntimeService, Session, Estimator, Options
+
+  circuit = random_circuit(2, 2, seed=1).decompose(reps=1)
+  observable = SparsePauliOp("IY")
+
+  options = Options()
+  options.optimization_level = 2
+  options.resilience_level = 2
+
+  service = QiskitRuntimeService()
+  with Session(service=service, backend="ibmq_qasm_simulator") as session:
+      estimator = Estimator(options=options)
+      job = estimator.run(circuit, observable)
+      result = job.result()
+      # Close the session only if all jobs are finished, and you don't need to run more in the session
+      session.close()
+
+  display(circuit.draw("mpl"))
+  print(f" > Observable: {observable.paulis}")
+  print(f" > Expectation value: {result.values[0]}")
+  print(f" > Metadata: {result.metadata[0]}")
+
 Run a job in a session
 -------------------------------
 
@@ -128,27 +204,3 @@ This example starts a session, runs an Estimator job, and outputs the result:
   print(f" > Metadata: {result.metadata[0]}")
 
 
-How long a session stays active
---------------------------------
-
-When a session is started, it is assigned a maximum session timeout value.  You can set this value by using the ``max_time`` parameter, which can be greater than the program's ``max_execution_time``.
-
-
-If you do not specify a timeout value, it is set to the initial job's maximum execution time and is the smaller of these values:
-
-   * The system limit (8 hours for physical systems).
-   * The ``max_execution_time`` defined by the program.
-
-After this time limit is reached, the session is permanently closed and any queued jobs are put into an error state.
-
-Additionally, there is an *interactive* timeout value. If there are no session jobs queued within that window, the session is temporarily deactivated and normal job selection resumes. After a session is deactivated, a subsequent job could start an additional session.  Jobs for the new session would then take priority until the new session deactivates or is closed. After the new session becomes inactive, if the job scheduler gets a job from the original session and its maximum timeout value has not been reached, the session is reactivated until its maximum timeout value is reached.
-
-When you are done submitting jobs, you are encouraged to use ``session.close()`` to close the session. This allows the scheduler to run the next job without waiting for the session timeout. Remember, however, that you cannot submit more jobs to a closed session.
-
-How session jobs fit into the job queue
-------------------------------------------
-
-For each backend, the first job in the session waits its turn in the queue normally, but while the session is active, subsequent jobs within the same session take priority over any other queued jobs. If there are no jobs that are part of a session, the next job from the regular fair-share queue is run. Jobs still run one at a time. Therefore, jobs that belong to a session still queue up if you already have one running, but you do not have to wait for them to complete before submitting more jobs.
-
-.. note::
-  Do not start a session inside of a reservation. If you use a session inside a reservation and not all of the session jobs finish during the reservation window, the pending jobs outside of the window might fail.   
