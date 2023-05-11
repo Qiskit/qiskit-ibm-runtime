@@ -186,6 +186,7 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
         with self.assertLogs("qiskit_ibm_runtime", level="WARNING") as err_cm:
             job = self._run_program(
                 service,
+                backend="ibmq_qasm_simulator",
                 inputs=inputs,
                 interim_results="foo",
                 callback=result_callback,
