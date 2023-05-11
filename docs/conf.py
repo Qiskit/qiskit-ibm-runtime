@@ -70,12 +70,10 @@ extensions = [
     'reno.sphinxext',
     'nbsphinx',
     'sphinx_design',
-    "sphinxcontrib.jquery",  # Remove when changing html_theme to qiskit_ecosystem.
+    "qiskit_sphinx_theme",
 ]
 html_static_path = ['_static']
 templates_path = ['_templates']
-
-html_css_files = ['style.css', 'gallery.css']
 
 nbsphinx_timeout = 300
 nbsphinx_execute = "never"
