@@ -1,18 +1,69 @@
 Run a primitive in a session
 =================================
 
-A Qiskit Runtime session allows you to group a collection of iterative calls to the quantum computer. A session is started when the first job within the session is started. Provided that the session is active, subsequent jobs within the session are prioritized by the scheduler to minimize artificial delay within an iterative algorithm. Data used within a session, such as transpiled circuits, is also cached to avoid unnecessary overhead.
-As a result, sessions allow you to more efficiently run programs that require iterative calls between classical and quantum resources while giving you the flexibility to deploy your programs remotely on cloud or on-premises classical resources (including your laptop).
+There are several ways to set up and use sessions. The following information should not be considered mandatory steps to follow. Choose the configuration that best suits your needs. 
 
-Before you begin
-----------------
-Before starting a session, you must `Set up Qiskit Runtime <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/getting_started.html>`__ and initialize it as a service:
+Prerequisites
+--------------
+
+Runtime sessions only work with Qiskit Runtime `primitives <../primitives.html>`__. Before starting a session, you must `Set up Qiskit Runtime <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/getting_started.html>`__ and initialize it as a service:
 
 .. code-block:: python
   
   from qiskit_ibm_runtime import QiskitRuntimeService
 
   service = QiskitRuntimeService()
+
+Open a session
+-----------------
+
+You can set up a runtime session by using the context manager  with Session(…) , which automatically opens the session for you. A session is started when the first primitive job in this context manager starts. 
+
+Session class
+*************
+
+A session can be created by initializing the Session class, which can then be passed to the desired primitives. Example:
+
+.. code-block:: python
+  
+  session= Session(service=service, backend="ibmq_qasm_simulator")
+  estimator = Estimator(session=session)
+  sampler = Sampler(session=session)
+
+Context manager
+****************
+
+If you use the context manager, primitives created in that context will automatically use that session. Example:
+
+.. code-block:: python
+  
+  with Session(service=service, backend="ibmq_qasm_simulator"):
+    estimator = Estimator()
+    sampler = Sampler()
+
+
+Specify a backend
+-----------------
+
+When you start a session, you can specify session options, such as the backend to run on. A backend is required if you are using the IBM Quantum premium channel, but optional if you are using the IBM Pay-go Cloud channel. Once specified, you cannot change the backend used for a session, you would have to open a new one. There are two ways to specify a backend in a session.
+
+.. note::
+  You cannot have multiple backends within the session.
+
+* Directly specify a string with the backend name. Example: 
+ 
+  .. code-block:: python
+    backend = "ibmq_qasm_simulator"
+    with Session(service=service, backend=backend):
+      ...
+
+* Pass the backend object. Example: 
+
+  .. code-block:: python
+    backend = service.get_backend("ibmq_qasm_simulator")
+    with Session(service=service, backend=backend):
+      ...
+
 
 Run a job in a session
 -------------------------------
