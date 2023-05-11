@@ -47,6 +47,7 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
         iterations = 3
         job = self._run_program(
             service,
+            backend="ibmq_qasm_simulator",
             iterations=iterations,
             interim_results=int_res,
             callback=result_callback,
@@ -79,6 +80,7 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
         iterations = 3
         job = self._run_program(
             service,
+            backend="ibmq_qasm_simulator",
             iterations=iterations,
             interim_results=int_res,
             callback=result_callback,
@@ -107,7 +109,12 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
         final_it = 0
         callback_err = []
         iterations = 3
-        job = self._run_program(service, iterations=iterations, interim_results=int_res)
+        job = self._run_program(
+            service,
+            backend="ibmq_qasm_simulator",
+            iterations=iterations,
+            interim_results=int_res,
+        )
         job.stream_results(result_callback)
         job.wait_for_final_state()
         self.assertEqual(iterations - 1, final_it)
@@ -125,7 +132,10 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
 
         called_back_count = 0
         job = self._run_program(
-            service, interim_results="foobar", sleep_per_iteration=10
+            service,
+            backend="ibmq_qasm_simulator",
+            interim_results="foobar",
+            sleep_per_iteration=10,
         )
         job.wait_for_final_state()
         job._status = JobStatus.RUNNING  # Allow stream_results()
@@ -230,7 +240,12 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
         callback_called = False
 
         with use_proxies(service, MockProxyServer.VALID_PROXIES):
-            job = self._run_program(service, iterations=10, callback=result_callback)
+            job = self._run_program(
+                service,
+                backend="ibmq_qasm_simulator",
+                iterations=10,
+                callback=result_callback,
+            )
             job.wait_for_final_state()
 
         self.assertTrue(callback_called)

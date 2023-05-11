@@ -91,6 +91,7 @@ class TestIBMBackend(IBMIntegrationTestCase):
                 raise SkipTest("Skip since simulator does not have qubit properties.")
             self.assertIsNotNone(backend.qubit_properties(0))
 
+    @production_only
     def test_backend_simulator(self):
         """Test if a configuration attribute (ex: simulator) is available as backend attribute."""
         backend = self.backend
