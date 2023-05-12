@@ -31,14 +31,14 @@ There are several benefits to using sessions:
 The mechanics of sessions (queuing)
 ----------------------------------------
 
-For each backend, the first job in the session waits its turn in the queue normally, but while the session is active, subsequent jobs within the same session take priority over any other queued jobs. If there are no jobs that are part of the active session ready, the session is deactivated (paused), and the next job from the regular fair-share queue is run. See :ref:`ttl` for more information.
+For each backend, the first job in the session waits its turn in the queue normally, but while the session is active, subsequent jobs within the same session take priority over any other queued jobs. If no jobs that are part of the active session are ready, the session is deactivated (paused), and the next job from the regular fair-share queue is run. See :ref:`ttl` for more information.
 
 Session jobs still run one at a time. Therefore, jobs that belong to a session still queue up while one is running, but you do not have to wait for it to complete before submitting more jobs and they do not go through the fair-share queue.  
 
 .. note:: 
     * Systems jobs such as calibration have priority over session jobs.
 
-Iterations vs Batching 
+Iterations and batching 
 --------------------------
 
 Sessions can be used in iterations or by batching. 
@@ -46,7 +46,7 @@ Sessions can be used in iterations or by batching.
 Iterative sessions
 +++++++++++++++++++++
 
-Any session job submitted within the five minute interactive timeout (TTL) is processed immediately. This allows some time for variational algorithms, such as VQE, to perform classical post processing. 
+Any session job submitted within the five-minute interactive timeout (TTL) is processed immediately. This allows some time for variational algorithms, such as VQE, to perform classical post-processing. 
 
 - The quantum device is locked to the session user unless the TTL is reached. 
 - Post-processing could be done anywhere, such as a personal computer, cloud service, or an HPC environment.
@@ -98,7 +98,7 @@ See `What is the maximum execution time for a Qiskit Runtime job? <faqs/max_exec
 Interactive timeout value
 +++++++++++++++++++++++++++++
 
-Every session has an *interactive timeout value* (TTL) of 5 minutes, which cannot be changed. If there are no session jobs queued within the TTL window, the session is temporarily deactivated and normal job selection resumes. A deactivated session can be resumed if its maximum timeout value has not been reached. The session is resumed when a subsequent sesssion job starts. Once a session is deactivated, its next job waits in the queue like other jobs. 
+Every session has an *interactive timeout value* (TTL) of five minutes, which cannot be changed. If there are no session jobs queued within the TTL window, the session is temporarily deactivated and normal job selection resumes. A deactivated session can be resumed if it has not reached its maximum timeout value. The session is resumed when a subsequent sesssion job starts. Once a session is deactivated, its next job waits in the queue like other jobs. 
 
 After a session is deactivated, the next job in the queue is selected to run. This newly selected job (which can belong to a different user) can run as a singleton, but it can also start a different session. In other words, a deactivated session does not block the creation of other sessions. Jobs from this new session would then take priority until it is deactivated or closed, at which point normal job selection resumes. 
 

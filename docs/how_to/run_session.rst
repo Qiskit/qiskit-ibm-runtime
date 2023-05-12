@@ -46,7 +46,7 @@ The context manager automatically opens a session for you. A session is started 
 Specify a backend
 -----------------
 
-When you start a session, you can specify session options, such as the backend to run on. A backend is required if you are using the IBM Quantum premium channel, but optional if you are using the IBM Cloud channel. Once specified, you cannot change the backend used for a session and you cannot specify multiple backends within a session.  To use a different backend, you have to open a new session. 
+When you start a session, you can specify session options, such as the backend to run on. A backend is required if you are using the IBM Quantum channel, but optional if you are using the IBM Cloud channel. Once specified, you cannot change the backend used for a session and you cannot specify multiple backends within a session.  To use a different backend, open a new session. 
 
 There are two ways to specify a backend in a session:
 
@@ -91,7 +91,7 @@ Close a session
 When jobs are all done, it is recommended that you use `session.close()` to close the session. This allows the scheduler to run the next job without waiting for the session timeout,  therefore making it easier for everyone.  You cannot submit jobs to a closed session.  
 
 .. warning::  
-  Close a session only after all session jobs **complete**; rather than immediately after they have all been submitted. Jobs that are not yet queued are converted to fair-share and will likely time out.  Jobs that are queued but not completed will fail.  
+  Close a session only after all session jobs **complete**, rather than immediately after they have all been submitted. Jobs that are not yet queued are converted to fair-share and will likely time out.  Jobs that are queued but not completed will fail.  
 
 .. code-block:: python
 
@@ -117,7 +117,7 @@ You can review job results immediately after the job completes by calling the th
     - Get the job ID.
   * - job.status() 
     - Check the job status.
-  * - job = service.job(job_id) 
+  * - job = service.job(<job_id>) 
     - Calling `job.job_id()` returns the job ID, which uniquely identifies that job. You can call `service.job(<job ID>)` to retrieve a job you previously submitted. Since the job ID is required in this call, it is recommended that you save the IDs of jobs you might want to retrieve later. If you don't have the job ID, or if you want to retrieve multiple jobs at once, you can call `service.jobs()` with optional filters instead.
 
 Jobs are also listed on the Jobs page for your quantum service channel:
