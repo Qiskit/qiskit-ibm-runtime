@@ -1,7 +1,7 @@
 Introduction to sessions 
 =============================
 
-A session is a contract between the user and the Qiskit Runtime service that ensures that a collection of jobs can be grouped and jointly prioritized by the quantum computer’s job scheduler. This eliminates artificial delays caused by other users’ jobs running on your same quantum device during the session time.
+A session is a contract between the user and the Qiskit Runtime service that ensures that a collection of jobs can be grouped and jointly prioritized by the quantum computer’s job scheduler. This eliminates artificial delays caused by other users’ jobs running on the same quantum device during the session time.
 
 .. image:: images/session-overview.png 
 
@@ -9,17 +9,21 @@ In simple terms, once your session is active, jobs submitted within the session 
 
 Compared with jobs that use the `fair share scheduler <https://quantum-computing.ibm.com/lab/docs/iql/manage/systems/queue>`__, sessions become particularly beneficial when running programs that require iterative calls between classical and quantum resources, where a large number of jobs are submitted sequentially. This is the case, for example, when training a variational algorithm such as VQE or QAOA, or in device characterization experiments.
 
-Note : see details on the Faire-share scheduler - https://quantum-computing.ibm.com/lab/docs/iql/manage/systems/queue
-
 Benefits of using sessions
 ---------------------------
 
-* Jobs belonging to a single algorithm run will be run together without interruptions, increasing efficiency if your program submits multiple sequential jobs. 
-   Note: the queuing time does not decrease for a single job submitted within a session.
-* When using sessions, the uncertainty around queuing time is significantly reduced. This allows for a better estimation of a workload’s total runtime, and better resource management.
+* Jobs that belong to a single algorithm run are run together without interruptions, increasing efficiency if your program submits multiple sequential jobs. 
+
+   .. note:: 
+    The queuing time does not decrease for a single job submitted within a session.
+
+* When using sessions, the uncertainty around queuing time is significantly reduced. This allows better estimation of a workload's total runtime and better resource management.
 * In a device characterization context, being able to run experiments closely together helps prevent device drifts and provide more accurate results.
-* As long as the session is active, you can submit different jobs, inspect job results and re-submit new jobs without having to open a new session every time. 
-  Note:  Sessions have an interactive timeout value. If no jobs are sent within this time, the session is deactivated until a new job is sent, and the device will allow other user’s jobs to run in the meantime, see TTL section for further information.
+* As long as the session is active, you can submit different jobs, inspect job results, and re-submit new jobs without having to open a new session every time. 
+
+  .. note::   
+    Sessions have an interactive timeout value. If no jobs are sent within this time, the session is deactivated until a new job is sent, and the device allows other users' jobs to run in the meantime, see :ref:`ttl` for more information.
+
 * You maintain the flexibility to deploy your programs either remotely (cloud/on-premise) or locally (your laptop).
 
 The mechanics of sessions (queuing)
@@ -98,6 +102,8 @@ After this time limit is reached, the following occurs:
 * Any queued jobs are put into an error state.
 * Any jobs that are not yet queued are moved to the regular fair share queue.
 * No further jobs can be submitted to the session.
+
+.. _ttl:
 
 Interactive timeout value
 +++++++++++++++++++++++++++++

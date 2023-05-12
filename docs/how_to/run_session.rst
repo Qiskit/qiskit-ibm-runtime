@@ -53,6 +53,7 @@ When you start a session, you can specify session options, such as the backend t
 * Directly specify a string with the backend name. Example: 
  
   .. code-block:: python
+
     backend = "ibmq_qasm_simulator"
     with Session(service=service, backend=backend):
       ...
@@ -60,6 +61,7 @@ When you start a session, you can specify session options, such as the backend t
 * Pass the backend object. Example: 
 
   .. code-block:: python
+
     backend = service.get_backend("ibmq_qasm_simulator")
     with Session(service=service, backend=backend):
       ...
@@ -73,6 +75,7 @@ When a session is started, it is assigned a maximum session timeout value. Once 
 You can configure the maximum session timeout value through the `max_time` parameter, which can be specified as seconds (int) or a string, like "2h 30m 40s".  This value has to be greater then the `max_execution_time` of the job  and less than the system’s `max_time`. The default value is the system’s `max_time` (see table below).  For example, if you run five jobs within a session and each job is estimated to be five minutes long, the maximum time for you session should at least 25 min. 
 
 .. code-block:: python
+
   with Session(service=service, backend=backend, max_time="25m"):
     ...   
 
@@ -86,6 +89,7 @@ When jobs are all done, we recommend to use session.close() to close the session
        Note:  A session should only be closed when all session jobs FINISHES, not just when one is done submitting. Otherwise jobs will be converted to fairshare and likely time out. 
 
 .. code-block:: python
+  
   with Session(service=service, backend=backend) as session:
   ... 
   estimator = Estimator()
@@ -117,6 +121,7 @@ Full example
 starts a session, runs an Estimator job, and outputs the result:
 
 .. code-block:: python
+  
   from qiskit.circuit.random import random_circuit
   from qiskit.quantum_info import SparsePauliOp
   from qiskit_ibm_runtime import QiskitRuntimeService, Session, Estimator, Options
@@ -140,6 +145,8 @@ starts a session, runs an Estimator job, and outputs the result:
   print(f" > Observable: {observable.paulis}")
   print(f" > Expectation value: {result.values[0]}")
   print(f" > Metadata: {result.metadata[0]}")
+
+*************************************************************************************
 
 Run a job in a session
 -------------------------------
