@@ -43,10 +43,9 @@ The context manager automatically opens a session for you. A session is started 
 Specify a backend
 -----------------
 
-When you start a session, you can specify session options, such as the backend to run on. A backend is required if you are using the IBM Quantum premium channel, but optional if you are using the IBM Pay-go Cloud channel. Once specified, you cannot change the backend used for a session, you would have to open a new one. There are two ways to specify a backend in a session.
+When you start a session, you can specify session options, such as the backend to run on. A backend is required if you are using the IBM Quantum premium channel, but optional if you are using the IBM Cloud channel. Once specified, you cannot change the backend used for a session and you cannot specify multiple backends within a session.  To use a different backend, you have to open a new session. 
 
-.. note::
-  You cannot have multiple backends within a session.
+There are two ways to specify a backend in a session:
 
 **Directly specify a string with the backend name.** Example: 
  
@@ -68,16 +67,18 @@ When you start a session, you can specify session options, such as the backend t
 Specify the session length
 --------------------------
 
-When a session is started, it is assigned a maximum session timeout value. Once the session has been open the specified amount of time, the session expires and is forcefully closed. You can no longer submit jobs to that session.
+When a session is started, it is assigned a maximum session timeout value. After the session has been open the specified amount of time, the session expires and is forcefully closed. You can no longer submit jobs to that session.  See `What happens when a session ends <../sessions#ends.html>`__ for further details.
 
-You can configure the maximum session timeout value through the `max_time` parameter, which can be specified as seconds (int) or a string, like "2h 30m 40s".  This value has to be greater then the `max_execution_time` of the job  and less than the system’s `max_time`. The default value is the system’s `max_time` (see table below).  For example, if you run five jobs within a session and each job is estimated to be five minutes long, the maximum time for you session should at least 25 min. 
+You can configure the maximum session timeout value through the `max_time` parameter, which can be specified as seconds (int) or a string, like "2h 30m 40s".  This value has to be greater then the `max_execution_time` of the job and less than the system’s `max_time`. The default value is the system’s `max_time`. See `What is the maximum execution time for a Qiskit Runtime job? <faqs/max_execution_time.html>`__ to determine the system's `max_time`.
+
+When setting the session length, consider how long each job within the session might take. For example, if you run five jobs within a session and each job is estimated to be five minutes long, the maximum time for the session should at least 25 min. 
 
 .. code-block:: python
 
   with Session(service=service, backend=backend, max_time="25m"):
     ...   
 
-There is also an interactive timeout value (5 minutes), which is not configurable.  If no session jobs are queued within that window, the session is temporarily deactivated. For more details about session length and timeout, see `sessions <../sessions.html>`__. 
+There is also an interactive timeout value (5 minutes), which is not configurable.  If no session jobs are queued within that window, the session is temporarily deactivated. For more details about session length and timeout, see `How long a session stays active <../sessions#active.html>`__. 
 
 .. _close session:
   

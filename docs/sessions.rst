@@ -73,6 +73,8 @@ If you are an IBM Quantum Premium user, you get access to both reservations and 
 
 .. image:: images/jobs-failing.png 
 
+.. _active:
+
 How long a session stays active
 --------------------------------
 
@@ -97,6 +99,8 @@ Interactive timeout value
 Every session has an *interactive timeout value* (TTL) of 5 minutes, which cannot be changed. If there are no session jobs queued within the TTL window, the session is temporarily deactivated and normal job selection resumes. A deactivated session can be resumed if its maximum timeout value has not been reached. The session is resumed when a subsequent sesssion job starts. Once a session is deactivated, its next job waits in the queue like other jobs. 
 
 After a session is deactivated, the next job in the queue is selected to run. This newly selected job (which can belong to a different user) can run as a singleton, but it can also start a different session. In other words, a deactivated session does not block the creation of other sessions. Jobs from this new session would then take priority until it is deactivated or closed, at which point normal job selection resumes. 
+
+.. _ends:
 
 What happens when a session ends
 -------------------------------------
