@@ -17,14 +17,14 @@ Runtime sessions only work with Qiskit Runtime `primitives <../primitives.html>`
 Open a session
 -----------------
 
-You can open a runtime session by using the context manager `with Session(…)` or by initializing the `Session` class. When you start a session, you can specify options, such as the backend to run on. This topic describes the most commonly used options.  For the full list, see the `Sessions API documentation <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/stubs/qiskit_ibm_runtime.Session.html#qiskit_ibm_runtime.Session>`__
+You can open a runtime session by using the context manager `with Session(…)` or by initializing the `Session` class. When you start a session, you can specify options, such as the backend to run on. This topic describes the most commonly used options.  For the full list, see the `Sessions API documentation <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/stubs/qiskit_ibm_runtime.Session.html#qiskit_ibm_runtime.Session>`__.
 
 .. important:: 
   Data from the first session job is cached and used by subsequent jobs.  Therefore, if the first job is cancelled, subsequent session jobs will all fail.
 
 **Session class**
 
-A session can be created by initializing the Session class, which can then be passed to the desired primitives. Example:
+A session can be created by initializing the `Session` class, which can then be passed to the desired primitives. Example:
 
 .. code-block:: python
   
@@ -70,7 +70,7 @@ There are two ways to specify a backend in a session:
 Specify the session length
 --------------------------
 
-When a session is started, it is assigned a maximum session timeout value. After the session has been open the specified amount of time, the session expires and is forcefully closed. You can no longer submit jobs to that session.  See `What happens when a session ends <../sessions#ends.html>`__ for further details.
+When a session is started, it is assigned a maximum session timeout value. After the session has been open the specified amount of time, the session expires and is forcefully closed. You can no longer submit jobs to that session.  See `What happens when a session ends <../sessions.html#ends>`__ for further details.
 
 You can configure the maximum session timeout value through the `max_time` parameter, which can be specified as seconds (int) or a string, like "2h 30m 40s".  This value has to be greater then the `max_execution_time` of the job and less than the system’s `max_time`. The default value is the system’s `max_time`. See `What is the maximum execution time for a Qiskit Runtime job? <faqs/max_execution_time.html>`__ to determine the system's `max_time`.
 
@@ -81,7 +81,7 @@ When setting the session length, consider how long each job within the session m
   with Session(service=service, backend=backend, max_time="25m"):
     ...   
 
-There is also an interactive timeout value (5 minutes), which is not configurable.  If no session jobs are queued within that window, the session is temporarily deactivated. For more details about session length and timeout, see `How long a session stays active <../sessions#active.html>`__. 
+There is also an interactive timeout value (5 minutes), which is not configurable.  If no session jobs are queued within that window, the session is temporarily deactivated. For more details about session length and timeout, see `How long a session stays active <../sessions.html#active>`__. 
 
 .. _close session:
   

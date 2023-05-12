@@ -6,7 +6,7 @@ A session is a contract between the user and the Qiskit Runtime service that ens
 .. image:: images/session-overview.png 
   :width: 400
 
-In simple terms, once your session is active, jobs submitted within the session will not be interrupted by other users’ jobs.     
+In simple terms, once your session is active, jobs submitted within the session are not interrupted by other users’ jobs.     
 
 Compared with jobs that use the `fair-share scheduler <https://quantum-computing.ibm.com/lab/docs/iql/manage/systems/queue>`__, sessions become particularly beneficial when running programs that require iterative calls between classical and quantum resources, where a large number of jobs are submitted sequentially. This is the case, for example, when training a variational algorithm such as VQE or QAOA, or in device characterization experiments.
 
@@ -25,7 +25,7 @@ There are several benefits to using sessions:
 
 * When using sessions, the uncertainty around queuing time is significantly reduced. This allows better estimation of a workload's total runtime and better resource management.
 * In a device characterization context, being able to run experiments closely together helps prevent device drifts and provide more accurate results.
-* As long as the session is active, you can submit different jobs, inspect job results, and re-submit new jobs without having to open a new session every time. 
+* As long as the session is active, you can submit different jobs, inspect job results, and re-submit new jobs without opening a new session. 
 * You maintain the flexibility to deploy your programs either remotely (cloud / on-premise) or locally (your laptop).
 
 The mechanics of sessions (queuing)
@@ -36,7 +36,7 @@ For each backend, the first job in the session waits its turn in the queue norma
 Session jobs still run one at a time. Therefore, jobs that belong to a session still queue up while one is running, but you do not have to wait for it to complete before submitting more jobs and they do not go through the fair-share queue.  
 
 .. note:: 
-    Systems jobs such as calibration have priority over session jobs.
+    * Systems jobs such as calibration have priority over session jobs.
 
 Iterations vs Batching 
 --------------------------
@@ -69,7 +69,7 @@ Ideal for running experiments closely together to avoid device drifts, that is, 
 Sessions and reservations 
 -------------------------
 
-If you are an IBM Quantum Premium user, you get access to both reservations and sessions on specific backends. You should plan ahead and decide whether to use a session or a reservation. You can use a session within a reservation.  However, if you use a session within a reservation and some session jobs don’t finish during the reservation window, the remaining pending jobs might fail. If you use session inside a reservation we recommend that you set a realistic `max_execution` time.
+IBM Quantum Premium users can access both reservations and sessions on specific backends. Such users should plan ahead and decide whether to use a session or a reservation. You *can* use a session within a reservation.  However, if you use a session within a reservation and some session jobs don’t finish during the reservation window, the remaining pending jobs might fail. If you use session inside a reservation we recommend that you set a realistic `max_execution` time.
 
 .. image:: images/jobs-failing.png 
 
@@ -78,18 +78,20 @@ If you are an IBM Quantum Premium user, you get access to both reservations and 
 How long a session stays active
 --------------------------------
 
-The length of time a session is active is controlled by the *maximum session timeout* (`max_time`) value and the *interactive* timeout value* (TTL). The `max_time` timer starts when the session becomes active.  That is, when the first job runs, not when it is queued. It does not stop if a session becomes inactive. The TTL timer starts each time a session job finishes. 
+The length of time a session is active is controlled by the *maximum session timeout* (`max_time`) value and the *interactive* timeout value (TTL). The `max_time` timer starts when the session becomes active.  That is, when the first job runs, not when it is queued. It does not stop if a session becomes inactive. The TTL timer starts each time a session job finishes. 
 
 Maximum session timeout
 ++++++++++++++++++++++++++++
 
-When a session is started, it is assigned a *maximum session timeout* value.  You can set this value by using the ``max_time`` parameter, which can be greater than the program's ``max_execution_time``. For details, see `Run a primitive in a session <how_to/run_session.html>`__.
+When a session is started, it is assigned a *maximum session timeout* value.  You can set this value by using the ``max_time`` parameter, which can be greater than the program's ``max_execution_time``. For instructions, see `Run a primitive in a session <how_to/run_session.html>`__.
 
 
 If you do not specify a timeout value, it is set to the initial job's maximum execution time and is the smaller of these values:
 
-   * The system limit (see `What is the maximum execution time for a Qiskit Runtime job? <faqs/max_execution_time.html>`__).
-   * The ``max_execution_time`` defined by the program.
+   * The system limit 
+   * The ``max_execution_time`` defined by the program
+
+See `What is the maximum execution time for a Qiskit Runtime job? <faqs/max_execution_time.html>`__ to determine the system limit and the ``max_execution_time`` for primitive programs. 
 
 .. _ttl:
 
@@ -105,7 +107,7 @@ After a session is deactivated, the next job in the queue is selected to run. Th
 What happens when a session ends
 -------------------------------------
 
-A session ends by reaching its maximum timeout value or when it is manually closed by the user.  Do not close a session until all jobs **complete**. See `Close a session <how_to/run_session#close session.html>`__ for details. After a session is closed, the following occurs:
+A session ends by reaching its maximum timeout value or when it is manually closed by the user.  Do not close a session until all jobs **complete**. See `Close a session <how_to/run_session.html#close session>`__ for details. After a session is closed, the following occurs:
 
 * Any queued jobs remaining in the session are put into a failed state.
 * Any session jobs that are not yet queued are moved to the regular fair-share queue, and they might fail if the cache job's data is expired.
