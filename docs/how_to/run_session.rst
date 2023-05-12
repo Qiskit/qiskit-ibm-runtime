@@ -1,7 +1,7 @@
 Run a primitive in a session
 =================================
 
-There are several ways to set up and use sessions. The following information should not be considered mandatory steps to follow. Choose the configuration that best suits your needs. To learn more about sessions, see `Introduction to sessions <../sessions.html>`__.
+There are several ways to set up and use sessions. The following information should not be considered mandatory steps to follow. Instead, choose the configuration that best suits your needs. To learn more about sessions, see `Introduction to sessions <../sessions.html>`__.
 
 Prerequisites
 --------------
@@ -17,7 +17,7 @@ Runtime sessions only work with Qiskit Runtime `primitives <../primitives.html>`
 Open a session
 -----------------
 
-You can set up a runtime session by using the context manager  with Session(…) , which automatically opens the session for you. A session is started when the first primitive job in this context manager starts. 
+You can open a runtime session by using the context manager `with Session(…)` or by initializing the `Session` class.
 
 Session class
 *************
@@ -33,7 +33,7 @@ A session can be created by initializing the Session class, which can then be pa
 Context manager
 ****************
 
-If you use the context manager, primitives created in that context will automatically use that session. Example:
+The context manager automatically opens a session for you. A session is started when the first primitive job in this context manager starts (not when it is queued).  Primitives created in the context automatically use that session. Example:
 
 .. code-block:: python
   
