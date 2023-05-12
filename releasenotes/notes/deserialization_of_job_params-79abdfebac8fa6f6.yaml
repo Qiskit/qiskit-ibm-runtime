@@ -1,0 +1,7 @@
+---
+fixes:
+  - |
+    Added deserialization of the params of RuntimeJob.inputs. Previously,
+    the circuits were returned in serialized format. Fixes issue
+    `#829 <https://github.com/Qiskit/qiskit-ibm-runtime/issues/829>`_.
+

@@ -13,11 +13,11 @@
 """Binary IO for any value objects, such as numbers, string, parameters."""
 
 import struct
-from typing import Any
 import uuid
 
 import numpy as np
 
+from qiskit.circuit import CASE_DEFAULT
 from qiskit.circuit.parameter import Parameter
 from qiskit.circuit.parameterexpression import ParameterExpression
 from qiskit.circuit.parametervector import ParameterVector, ParameterVectorElement
@@ -92,7 +92,7 @@ def _read_parameter(file_obj):  # type: ignore[no-untyped-def]
     param_uuid = uuid.UUID(bytes=data.uuid)
     name = file_obj.read(data.name_size).decode(common.ENCODE)
     param = Parameter.__new__(Parameter, name, uuid=param_uuid)
-    param.__init__(name)
+    param.__init__(name)  # pylint: disable=unnecessary-dunder-call
     return param
 
 
@@ -113,7 +113,9 @@ def _read_parameter_vec(file_obj, vectors):  # type: ignore[no-untyped-def]
         vector._params[data.index] = ParameterVectorElement.__new__(
             ParameterVectorElement, vector, data.index, uuid=param_uuid
         )
-        vector._params[data.index].__init__(vector, data.index)
+        vector._params[data.index].__init__(  # pylint: disable=unnecessary-dunder-call
+            vector, data.index
+        )
     return vector[data.index]
 
 
@@ -245,7 +247,7 @@ def dumps_value(obj):  # type: ignore[no-untyped-def]
         binary_data = common.data_to_binary(obj, np.save)
     elif type_key == type_keys.Value.STRING:
         binary_data = obj.encode(common.ENCODE)
-    elif type_key == type_keys.Value.NULL:
+    elif type_key in (type_keys.Value.NULL, type_keys.Value.CASE_DEFAULT):
         binary_data = b""
     elif type_key == type_keys.Value.PARAMETER_VECTOR:
         binary_data = common.data_to_binary(obj, _write_parameter_vec)
@@ -302,6 +304,8 @@ def loads_value(type_key, binary_data, version, vectors):  # type: ignore[no-unt
         return binary_data.decode(common.ENCODE)
     if type_key == type_keys.Value.NULL:
         return None
+    if type_key == type_keys.Value.CASE_DEFAULT:
+        return CASE_DEFAULT
     if type_key == type_keys.Value.PARAMETER_VECTOR:
         return common.data_from_binary(
             binary_data, _read_parameter_vec, vectors=vectors

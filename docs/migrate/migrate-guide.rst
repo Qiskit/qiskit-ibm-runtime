@@ -1,5 +1,7 @@
-Migration guide
-================
+.. _migrate to primitives:
+
+Migrate to using Qiskit Runtime primitives
+============================================
 
 This guide describes key patterns of behavior and use cases with code examples to help you migrate code from
 the legacy ``qiskit-ibmq-provider`` package to use the Qiskit Runtime primitives. 
@@ -8,9 +10,6 @@ Primitives are the recommended tool to write quantum algorithms, as they encapsu
 seen in application packages and allow for managed performance through the Qiskit Runtime service.
 However, if your algorithm requires more granular information, such as pre-shot measurements, the primitives might
 not provide the desired abstraction level. 
-
-- Refer to the restructured ``qiskit-ibm-provider`` package and its corresponding `migration guide <https://qiskit.org/documentation/partners/qiskit_ibm_provider/tutorials/Migration_Guide_from_qiskit-ibmq-provider.html>`_ for further information about alternatives to the Qiskit Runtime primitives.
-- For instructions to migrate your setup to use Qiskit Runtime, see `Migrate setup from ``qiskit-ibmq-provider`` <migrate-setup.html>`__.
 
 The Qiskit Runtime primitives implement the reference ``Sampler`` and ``Estimator`` interfaces found in
 `qiskit.primitives <https://qiskit.org/documentation/apidoc/primitives.html>`_. These interfaces let you 
@@ -72,16 +71,6 @@ The following topics are use cases with code migration examples:
 Why use Qiskit Runtime?
 --------------------------------------------
 
-.. figure:: ../images/table.png
-   :alt: table comparing backend.run to Qiskit Runtime primitives
-
-Key:
-
-- :octicon:`x` Not supported
-- :octicon:`check` Full support
-- :octicon:`clock` Future support
-
-
 .. list-table::
   :header-rows: 1
 
@@ -116,6 +105,12 @@ Key:
   * - SAAS enablement
     - :octicon:`x`
     - :octicon:`clock`
+
+Key:
+
+- :octicon:`x` Not supported
+- :octicon:`check` Full support
+- :octicon:`clock` Future support
 
 
 **Benefits of using Qiskit Runtime**:
@@ -223,3 +218,4 @@ Related links
 
 * `Get started with Estimator <../tutorials/how-to-getting-started-with-estimator>`__
 * `Get started with Sampler <../tutorials/how-to-getting-started-with-sampler>`__
+* `Tutorial: Migrate from qiskit-ibmq-provider to qiskit-ibm-provider <https://qiskit.org/documentation/partners/qiskit_ibm_provider/tutorials/Migration_Guide_from_qiskit-ibmq-provider.html>`__

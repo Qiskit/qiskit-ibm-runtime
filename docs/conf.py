@@ -46,7 +46,7 @@ author = 'Qiskit Development Team'
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = '0.9.4'
+release = '0.9.5'
 
 # -- General configuration ---------------------------------------------------
 
@@ -69,12 +69,11 @@ extensions = [
     'sphinx_autodoc_typehints',
     'reno.sphinxext',
     'nbsphinx',
-    'sphinx_design'
+    'sphinx_design',
+    "qiskit_sphinx_theme",
 ]
 html_static_path = ['_static']
 templates_path = ['_templates']
-
-html_css_files = ['style.css', 'gallery.css']
 
 nbsphinx_timeout = 300
 nbsphinx_execute = "never"
@@ -157,13 +156,9 @@ modindex_common_prefix = ['qiskit.']
 
 # -- Options for HTML output -------------------------------------------------
 
-# The theme to use for HTML and HTML Help pages.  See the documentation for
-# a list of builtin themes.
-#
-html_theme = 'qiskit_sphinx_theme'  # use the theme in subdir 'theme'
+html_theme = 'qiskit_sphinx_theme'
 
 html_logo = 'images/logo.png'
-#html_sidebars = {'**': ['globaltoc.html']}
 html_last_updated_fmt = '%Y/%m/%d'
 
 html_theme_options = {

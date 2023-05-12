@@ -19,6 +19,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   code-quality:
+    if: github.repository_owner == 'Qiskit'
     name: Run code quality checks
     runs-on: ubuntu-latest
     steps:
@@ -41,6 +42,7 @@ jobs:
       - name: Run mypy
         run: make mypy
   documentation:
+    if: github.repository_owner == 'Qiskit'
     name: Build documentation
     runs-on: ubuntu-latest
     steps:
@@ -73,13 +75,14 @@ jobs:
           name: html_docs
           path: docs/_build/html
   unit-tests:
+    if: github.repository_owner == 'Qiskit'
     # only kick-off test cases when basic code quality checks succeed
     needs: [ "code-quality" , "documentation" ]
     name: Run unit tests - python${{ matrix.python-version }}-${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: [ 3.7, 3.8, 3.9, '3.10' ]
+        python-version: [3.8, 3.9, '3.10', '3.11']
         os: [ "macOS-latest", "ubuntu-latest", "windows-latest" ]
     env:
       LOG_LEVEL: DEBUG
@@ -108,7 +111,7 @@ jobs:
           parallel: true
           path-to-lcov: coverage.lcov
   integration-tests:
-    if: ${{ github.event_name == 'push' }}
+    if: github.event_name == 'push' && github.repository_owner == 'Qiskit'
     # only kick-off resource intensive integration tests if unit tests and all basic checks succeeded
     needs: [ "unit-tests"  ]
     name: Run integration tests - ${{ matrix.environment }}
@@ -144,6 +147,7 @@ jobs:
       - name: Run integration tests
         run: make integration-test
   tests-finished:
+    if: github.repository_owner == 'Qiskit'
     name: Submit code coverage metrics
     needs: [ unit-tests ]
     runs-on: ubuntu-latest

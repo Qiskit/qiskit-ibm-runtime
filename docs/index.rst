@@ -24,16 +24,16 @@ Primitives are core functions that provide a simplified interface for defining n
 **Estimator**
 
 The estimator primitive allows users to efficiently calculate and interpret expectation
-values of quantum operators required for many algorithms. Users specify a list of circuits
-and observables, then tell the program how to selectively group between the lists to
-efficiently evaluate expectation values and variances for a given parameter input.
+values of quantum operators required for many algorithms. Users specify circuits that
+prepare quantum states and then Pauli-basis observables to measure on those states. The
+estimator can use advanced error mitigation capabilities to improve the accuracy of the
+returned expectation values.
 
 **Sampler**
 
-This primitive takes a user circuit as an input and generates an error-mitigated
-readout of quasiprobabilities. This provides users a way to better evaluate shot results
-using error mitigation and enables them to more efficiently evaluate the possibility of
-multiple relevant data points in the context of destructive interference.
+This primitive takes a user circuit as input and returns a quasiprobability distribution
+over the measurement outcomes. This generalizes histograms from quantum circuits to allow
+for error mitigation of readout.
 
 
 
@@ -53,8 +53,6 @@ Next steps
     Getting Started <getting_started>
     backend.run vs. Qiskit Runtime <compare>
     Introduction to primitives <primitives>
-    Migration guide from qiskit-ibmq-provider <migrate_from_ibmq>
-
 
 .. toctree::
    :maxdepth: 1
@@ -92,12 +90,13 @@ Next steps
    :caption: Migrate
 
     Migrate to using Qiskit Runtime primitives <migrate/migrate-guide>
+    Migrate your setup from qiskit-ibmq-provider <migrate/migrate-setup>
     Use Estimator to design an algorithm <migrate/migrate-estimator>
     Use Sampler to design an algorithm <migrate/migrate-sampler>
     Update parameter values while running <migrate/migrate-update-parm>
     Work with updated Qiskit algorithms <migrate/migrate-qiskit-alg>
     Algorithm tuning options (shots, transpilation, error mitigation) <migrate/migrate-tuning> 
-    Use Qiskit Runtime without primitives <migrate/migrate-setup>
+
 
 .. toctree::
    :maxdepth: 1

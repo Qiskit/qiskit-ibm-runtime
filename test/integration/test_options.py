@@ -29,8 +29,8 @@ class TestIntegrationOptions(IBMIntegrationTestCase):
     @run_integration_test
     def test_noise_model(self, service):
         """Test running with noise model."""
-        backend = service.backends(simulator=True)[0]
-        self.log.info(f"Using backend {backend.name}")
+        backend = service.get_backend("ibmq_qasm_simulator")
+        self.log.info("Using backend %s", backend.name)
 
         fake_backend = FakeManila()
         noise_model = NoiseModel.from_backend(fake_backend)
@@ -69,7 +69,7 @@ class TestIntegrationOptions(IBMIntegrationTestCase):
     def test_simulator_transpile(self, service):
         """Test simulator transpile options."""
         backend = service.backends(simulator=True)[0]
-        self.log.info(f"Using backend {backend.name}")
+        self.log.info("Using backend %s", backend.name)
 
         circ = QuantumCircuit(2, 2)
         circ.cx(0, 1)
