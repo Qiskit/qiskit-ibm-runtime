@@ -19,8 +19,7 @@ Open a session
 
 You can open a runtime session by using the context manager `with Session(…)` or by initializing the `Session` class.
 
-Session class
-*************
+**Session class**
 
 A session can be created by initializing the Session class, which can then be passed to the desired primitives. Example:
 
@@ -30,8 +29,7 @@ A session can be created by initializing the Session class, which can then be pa
   estimator = Estimator(session=session)
   sampler = Sampler(session=session)
 
-Context manager
-****************
+**Context manager**
 
 The context manager automatically opens a session for you. A session is started when the first primitive job in this context manager starts (not when it is queued).  Primitives created in the context automatically use that session. Example:
 
@@ -48,9 +46,9 @@ Specify a backend
 When you start a session, you can specify session options, such as the backend to run on. A backend is required if you are using the IBM Quantum premium channel, but optional if you are using the IBM Pay-go Cloud channel. Once specified, you cannot change the backend used for a session, you would have to open a new one. There are two ways to specify a backend in a session.
 
 .. note::
-  You specify have multiple backends within a session.
+  You cannot have multiple backends within a session.
 
-* Directly specify a string with the backend name. Example: 
+**Directly specify a string with the backend name.** Example: 
  
   .. code-block:: python
 
@@ -58,7 +56,7 @@ When you start a session, you can specify session options, such as the backend t
     with Session(service=service, backend=backend):
       ...
 
-* Pass the backend object. Example: 
+**Pass the backend object.** Example: 
 
   .. code-block:: python
 
