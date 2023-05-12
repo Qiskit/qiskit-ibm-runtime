@@ -112,7 +112,6 @@ You can review job results immediately after the job completes by calling the th
 .. list-table:: Job commands
    :widths: 25 75
 
-
   * - `job.result()`
     - Review job results immediately after the job completes. 
   * - `job.job_id()`  
@@ -122,10 +121,10 @@ You can review job results immediately after the job completes by calling the th
   * - job = service.job(job_id) 
     - Calling `job.job_id()` returns the job ID, which uniquely identifies that job. You can call `service.job(<job ID>)` to retrieve a job you previously submitted. Since the job ID is required in this call, it is recommended that you save the IDs of jobs you might want to retrieve later. If you don't have the job ID, or if you want to retrieve multiple jobs at once, you can call `service.jobs()` with optional filters instead.
 
-  Jobs are also listed on the Jobs page for your quantum service channel:
+Jobs are also listed on the Jobs page for your quantum service channel:
 
-  * For the IBM Cloud channel, from the IBM Cloud console quantum `Instances page <https://cloud.ibm.com/quantum/instances>`__, click the name of your instance, then click the Jobs tab. To see the status of your job, click the refresh arrow in the upper right corner.
-  * For the IBM Quantum channel, in IBM Quantum platform, open the `Jobs page <https://quantum-computing.ibm.com/jobs>`__.
+* For the IBM Cloud channel, from the IBM Cloud console quantum `Instances page <https://cloud.ibm.com/quantum/instances>`__, click the name of your instance, then click the Jobs tab. To see the status of your job, click the refresh arrow in the upper right corner.
+* For the IBM Quantum channel, in IBM Quantum platform, open the `Jobs page <https://quantum-computing.ibm.com/jobs>`__.
 
 Full example
 ------------
