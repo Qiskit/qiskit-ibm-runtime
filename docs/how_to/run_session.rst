@@ -88,10 +88,10 @@ There is also an interactive timeout value (5 minutes), which is not configurabl
 Close a session
 ---------------
 
-When jobs are all done, it is recommended that you use `session.close()` to close the session. This allows the scheduler to run the next job without waiting for the session timeout,  therefore making it easier for everyone.  You cannot submit more jobs to a closed session.  
+When jobs are all done, it is recommended that you use `session.close()` to close the session. This allows the scheduler to run the next job without waiting for the session timeout,  therefore making it easier for everyone.  You cannot submit jobs to a closed session.  
 
 .. warning::  
-  Only close a session after all session jobs **complete**; rather than immediately after they have all been submitted. Jobs that are not yet queued are converted to fair-share and will likely time out.  Jobs that are queued but not completed will fail.  
+  Close a session only after all session jobs **complete**; rather than immediately after they have all been submitted. Jobs that are not yet queued are converted to fair-share and will likely time out.  Jobs that are queued but not completed will fail.  
 
 .. code-block:: python
 
@@ -110,11 +110,10 @@ Retrieve job results
 You can review job results immediately after the job completes by calling the the appropriate command:
 
 .. list-table:: Job commands
-   :widths: 25 75
 
-  * - `job.result()`
+  * - job.result()
     - Review job results immediately after the job completes. 
-  * - `job.job_id()`  
+  * - job.job_id()
     - Get the job ID.
   * - job.status() 
     - Check the job status.
