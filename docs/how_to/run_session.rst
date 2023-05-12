@@ -1,7 +1,7 @@
 Run a primitive in a session
 =================================
 
-There are several ways to set up and use sessions. The following information should not be considered mandatory steps to follow. Choose the configuration that best suits your needs. 
+There are several ways to set up and use sessions. The following information should not be considered mandatory steps to follow. Choose the configuration that best suits your needs. To learn more about sessions, see `Introduction to sessions <../sessions.html>`__.
 
 Prerequisites
 --------------
@@ -48,7 +48,7 @@ Specify a backend
 When you start a session, you can specify session options, such as the backend to run on. A backend is required if you are using the IBM Quantum premium channel, but optional if you are using the IBM Pay-go Cloud channel. Once specified, you cannot change the backend used for a session, you would have to open a new one. There are two ways to specify a backend in a session.
 
 .. note::
-  You cannot have multiple backends within the session.
+  You specify have multiple backends within a session.
 
 * Directly specify a string with the backend name. Example: 
  
@@ -88,7 +88,9 @@ Close a session
 
 When jobs are all done, we recommend to use session.close() to close the session. This allows the scheduler to run the next job without waiting for the session timeout. (therefore making it easy for everyone).  You cannot submit more jobs to a closed session.  
 
-       Note:  A session should only be closed when all session jobs FINISHES, not just when one is done submitting. Otherwise jobs will be converted to fairshare and likely time out. 
+       .. warning::  A session should only be closed when all session jobs FINISHES, not just when one is done submitting. Otherwise jobs will be converted to fairshare and likely time out. 
+
+       Note: Since data from the first session job is cached and used by subsequent jobs, if the first job is cancelled, subsequent session jobs will all fail. 
 
 .. code-block:: python
 
@@ -114,8 +116,8 @@ You can review job results  immediately after the job completes by calling the t
   Jobs are also listed on the Jobs page for your quantum service channel:
 
 
-  * If you are using the IBM Cloud channel, from the IBM Cloud console quantum [Instances page](https://cloud.ibm.com/quantum/instances), click the name of your instance, then click the Jobs tab. To see the status of your job, click the refresh arrow in the upper right corner.
-  * If you are using the IBM Quantum channel, in IBM Quantum platform, open the [Jobs page](https://quantum-computing.ibm.com/jobs).
+  * If you are using the IBM Cloud channel, from the IBM Cloud console quantum `Instances page <https://cloud.ibm.com/quantum/instances>`__, click the name of your instance, then click the Jobs tab. To see the status of your job, click the refresh arrow in the upper right corner.
+  * If you are using the IBM Quantum channel, in IBM Quantum platform, open the `Jobs page <https://quantum-computing.ibm.com/jobs>`__.
 
 Full example
 ------------
