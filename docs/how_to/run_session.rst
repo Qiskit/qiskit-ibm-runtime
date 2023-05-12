@@ -81,6 +81,8 @@ You can configure the maximum session timeout value through the `max_time` param
 
 There is also an interactive timeout value (5 minutes), which is not configurable.  If no session jobs are queued within that window, the session is temporarily deactivated. For more details about session length and timeout, see `sessions <../sessions.html>`__. 
 
+.. _close session:
+  
 Close a session
 ---------------
 
@@ -89,7 +91,7 @@ When jobs are all done, we recommend to use session.close() to close the session
        Note:  A session should only be closed when all session jobs FINISHES, not just when one is done submitting. Otherwise jobs will be converted to fairshare and likely time out. 
 
 .. code-block:: python
-  
+
   with Session(service=service, backend=backend) as session:
   ... 
   estimator = Estimator()
@@ -148,21 +150,7 @@ starts a session, runs an Estimator job, and outputs the result:
 
 *************************************************************************************
 
-Run a job in a session
--------------------------------
 
-You can set up a runtime session by using the context manager (``with ...:``), which automatically opens the session for you. A session is started when the first primitive job in this context manager starts. For example, the following code creates an Estimator instance inside a Session context manager.
-
-Start by loading the options into a primitive constructor, then pass in circuits, parameters, and observables:
-
-.. code-block:: python
-  
-  with Session(service) as session:
-      estimator = Estimator(session=session, options=options) #primitive constructor
-      estimator.run(circuit, parameters, observable) #job call
-      job.result()
-      # Close the session only if all jobs are finished, and you don't need to run more in the session
-      session.close() 
 
 Session options
 -----------------
