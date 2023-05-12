@@ -17,7 +17,10 @@ Runtime sessions only work with Qiskit Runtime `primitives <../primitives.html>`
 Open a session
 -----------------
 
-You can open a runtime session by using the context manager `with Session(…)` or by initializing the `Session` class.
+You can open a runtime session by using the context manager `with Session(…)` or by initializing the `Session` class. When you start a session, you can specify options, such as the backend to run on. This topic describes the most commonly used options.  For the full list, see the `Sessions API documentation <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/stubs/qiskit_ibm_runtime.Session.html#qiskit_ibm_runtime.Session>`__
+
+.. important:: 
+  Data from the first session job is cached and used by subsequent jobs.  Therefore, if the first job is cancelled, subsequent session jobs will all fail.
 
 **Session class**
 
@@ -85,11 +88,10 @@ There is also an interactive timeout value (5 minutes), which is not configurabl
 Close a session
 ---------------
 
-When jobs are all done, we recommend to use session.close() to close the session. This allows the scheduler to run the next job without waiting for the session timeout. (therefore making it easy for everyone).  You cannot submit more jobs to a closed session.  
+When jobs are all done, it is recommended that you use `session.close()` to close the session. This allows the scheduler to run the next job without waiting for the session timeout,  therefore making it easier for everyone.  You cannot submit more jobs to a closed session.  
 
-       .. warning::  A session should only be closed when all session jobs FINISHES, not just when one is done submitting. Otherwise jobs will be converted to fairshare and likely time out. 
-
-       Note: Since data from the first session job is cached and used by subsequent jobs, if the first job is cancelled, subsequent session jobs will all fail. 
+.. warning::  
+  Only close a session after all session jobs **complete**; rather than immediately after they have all been submitted. Jobs that are not yet queued are converted to fair-share and will likely time out.  Jobs that are queued but not completed will fail.  
 
 .. code-block:: python
 
@@ -97,31 +99,37 @@ When jobs are all done, we recommend to use session.close() to close the session
   ... 
   estimator = Estimator()
   job = estimator.run(...)
-  # do not close here, the job might not be completed
+  # Do not close here, the job might not be completed!
   result = job.result()
-  # reaching this line will mean that the job is finished
+  # Reaching this line means that the job is finished.
   session.close()
 
 Retrieve job results
 --------------------
 
-You can review job results  immediately after the job completes by calling the the appropriate command:
+You can review job results immediately after the job completes by calling the the appropriate command:
 
-*  `job.result()` - Review job results immediately after the job completes. 
-* job.job_id() - Get the ID of the job 
-* job.status() - Check the status of the job
-* job = service.job(job_id) - Calling `job.job_id()` returns the job ID, which uniquely identifies that particular job. You can call `service.job(<job ID>)` to retrieve a job you previously submitted. Since the job ID is required in this call, it is recommended that you save the IDs of jobs you may want to retrieve later. If you don't have the job ID, or if you want to retrieve multiple jobs at once, you can call `service.jobs()` with optional filters instead. 
+.. list-table:: Title
+   :widths: 25 75
+
+* - `job.result()`
+  - Review job results immediately after the job completes. 
+* - `job.job_id()`  
+  - Get the job ID.
+* - job.status() 
+  - Check the job status.
+* - job = service.job(job_id) 
+  - Calling `job.job_id()` returns the job ID, which uniquely identifies that job. You can call `service.job(<job ID>)` to retrieve a job you previously submitted. Since the job ID is required in this call, it is recommended that you save the IDs of jobs you might want to retrieve later. If you don't have the job ID, or if you want to retrieve multiple jobs at once, you can call `service.jobs()` with optional filters instead.
 
   Jobs are also listed on the Jobs page for your quantum service channel:
 
-
-  * If you are using the IBM Cloud channel, from the IBM Cloud console quantum `Instances page <https://cloud.ibm.com/quantum/instances>`__, click the name of your instance, then click the Jobs tab. To see the status of your job, click the refresh arrow in the upper right corner.
-  * If you are using the IBM Quantum channel, in IBM Quantum platform, open the `Jobs page <https://quantum-computing.ibm.com/jobs>`__.
+  * For the IBM Cloud channel, from the IBM Cloud console quantum `Instances page <https://cloud.ibm.com/quantum/instances>`__, click the name of your instance, then click the Jobs tab. To see the status of your job, click the refresh arrow in the upper right corner.
+  * For the IBM Quantum channel, in IBM Quantum platform, open the `Jobs page <https://quantum-computing.ibm.com/jobs>`__.
 
 Full example
 ------------
 
-starts a session, runs an Estimator job, and outputs the result:
+In this example, we start a session, run an Estimator job, and output the result:
 
 .. code-block:: python
   
@@ -148,55 +156,3 @@ starts a session, runs an Estimator job, and outputs the result:
   print(f" > Observable: {observable.paulis}")
   print(f" > Expectation value: {result.values[0]}")
   print(f" > Metadata: {result.metadata[0]}")
-
-*************************************************************************************
-
-
-
-Session options
------------------
-
-When you start your session, you can specify options, such as the backend to run on.  For the full list of options, see the `Sessions API documentation <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/stubs/qiskit_ibm_runtime.Session.html#qiskit_ibm_runtime.Session>`__
-
-**Example:**
-
-.. code-block:: python
-
-  with Session(service=service, backend="ibmq_qasm_simulator"):
-      estimator = Estimator(options=options)
-    
-.. note::
-  When running in IBM Cloud, if you don't specify a backend, the least busy backend is used. 
-
-Full example
-------------
-
-This example starts a session, runs an Estimator job, and outputs the result:
-
-.. code-block:: python
-
-  from qiskit.circuit.random import random_circuit
-  from qiskit.quantum_info import SparsePauliOp
-  from qiskit_ibm_runtime import QiskitRuntimeService, Session, Estimator, Options
-
-  circuit = random_circuit(2, 2, seed=1).decompose(reps=1)
-  observable = SparsePauliOp("IY")
-
-  options = Options()
-  options.optimization_level = 2
-  options.resilience_level = 2
-
-  service = QiskitRuntimeService()
-  with Session(service=service, backend="ibmq_qasm_simulator") as session:
-      estimator = Estimator(session=session, options=options)
-      job = estimator.run(circuit, observable)
-      result = job.result()
-      # Close the session only if all jobs are finished, and you don't need to run more in the session
-      session.close()
-
-  display(circuit.draw("mpl"))
-  print(f" > Observable: {observable.paulis}")
-  print(f" > Expectation value: {result.values[0]}")
-  print(f" > Metadata: {result.metadata[0]}")
-
-
