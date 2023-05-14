@@ -325,4 +325,3 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
                 job.result()
             self.assertIn("REGISTER NAME", str(err.exception))
             self.assertFalse("python -m uvicorn server.main" in str(err.exception))
-
