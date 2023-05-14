@@ -20,7 +20,6 @@ import warnings
 
 import numpy as np
 
-from qiskit.exceptions import QiskitError
 from qiskit.pulse import library, channels, instructions
 from qiskit.pulse.schedule import ScheduleBlock
 from qiskit.utils import optionals as _optional
@@ -435,9 +434,6 @@ def read_schedule_block(file_obj, version, metadata_deserializer=None):  # type:
         TypeError: If any of the instructions is invalid data format.
         QiskitError: QPY version is earlier than block support.
     """
-
-    if version < 5:
-        QiskitError(f"QPY version {version} does not support ScheduleBlock.")
 
     data = formats.SCHEDULE_BLOCK_HEADER._make(
         struct.unpack(

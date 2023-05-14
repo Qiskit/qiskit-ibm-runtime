@@ -312,3 +312,17 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
                 circuits=[circuit], observables=observable, parameter_values=rand_param
             ).result()
             self.assertTrue(result.values[0] == 1)
+
+    @run_integration_test
+    def test_estimator_error_messages(self, service):
+        """Test that the correct error message is displayed"""
+        circuit = QuantumCircuit(2, 2)
+        circuit.h(0)
+        with Session(service, self.backend) as session:
+            estimator = Estimator(session=session)
+            job = estimator.run(circuits=circuit, observables="II")
+            with self.assertRaises(RuntimeJobFailureError) as err:
+                job.result()
+            self.assertIn("REGISTER NAME", str(err.exception))
+            self.assertFalse("python -m uvicorn server.main" in str(err.exception))
+
