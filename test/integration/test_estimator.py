@@ -289,7 +289,9 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
     def test_composed_circuit(self, service):
         """Test proper binding of parameter in composed circuit."""
 
-        def add_unit(circuit: QuantumCircuit, qubit, params):
+        def add_unit(
+            circuit: QuantumCircuit, qubit: int, params: ParameterVector
+        ) -> None:
             sub_circ = QuantumCircuit(1, name="Sub")
             sub_circ.rz(params[0], 0)
             circuit.compose(sub_circ.to_instruction(), [qubit], inplace=True)
