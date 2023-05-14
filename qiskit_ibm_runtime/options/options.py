@@ -181,14 +181,15 @@ class Options:
             options.get("transpilation")
         )
         execution_time = options.get("max_execution_time")
-        if (
-            execution_time < Options._MIN_EXECUTION_TIME
-            or execution_time > Options._MAX_EXECUTION_TIME
-        ):
-            raise ValueError(
-                f"max_execution_time must be between "
-                f"{Options._MIN_EXECUTION_TIME} and {Options._MAX_EXECUTION_TIME} seconds."
-            )
+        if not execution_time is None:
+            if (
+                execution_time < Options._MIN_EXECUTION_TIME
+                or execution_time > Options._MAX_EXECUTION_TIME
+            ):
+                raise ValueError(
+                    f"max_execution_time must be between "
+                    f"{Options._MIN_EXECUTION_TIME} and {Options._MAX_EXECUTION_TIME} seconds."
+                )
 
         EnvironmentOptions.validate_environment_options(options.get("environment"))
 
