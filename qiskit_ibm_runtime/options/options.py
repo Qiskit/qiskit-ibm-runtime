@@ -30,7 +30,7 @@ from ..utils.deprecation import issue_deprecation_msg
 @_flexible
 @dataclass
 class Options:
-    """Options for the primitive programs.
+    """Options for the primitives.
 
     Args:
         optimization_level: How much optimization to perform on the circuits.
@@ -118,7 +118,7 @@ class Options:
         """Convert the input options to program compatible inputs.
 
         Returns:
-            Inputs acceptable by primitive programs.
+            Inputs acceptable by primitives.
         """
         sim_options = options.get("simulator", {})
         inputs = {}

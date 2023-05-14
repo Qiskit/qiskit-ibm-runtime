@@ -112,13 +112,13 @@ session. You are encouraged to start a session as a context manager, to ensure t
 
 ## Primitives
 
-**Primitives** are prebuilt programs that provide a simplified interface for defining near-time quantum-classical workloads required to efficiently build and customize applications. The initial release of Qiskit Runtime includes two primitives: ``Estimator`` and ``Sampler``. They perform foundational quantum computing tasks and act as an entry point to the Qiskit Runtime service.
+**Primitives** are a simplified interface for defining near-time quantum-classical workloads required to efficiently build and customize applications. The initial release of Qiskit Runtime includes two primitives: ``Estimator`` and ``Sampler``. They perform foundational quantum computing tasks and act as an entry point to the Qiskit Runtime service.
 
-There are several different options you can specify when calling the primitive programs. See [`qiskit_ibm_runtime.Options`](https://github.com/Qiskit/qiskit-ibm-runtime/blob/main/qiskit_ibm_runtime/options.py#L103) class for more information.
+There are several different options you can specify when calling the primitives. See [`qiskit_ibm_runtime.Options`](https://github.com/Qiskit/qiskit-ibm-runtime/blob/main/qiskit_ibm_runtime/options.py#L103) class for more information.
 
 ### Sampler
 
-This is a program that takes a list of user circuits as an input and generates an error-mitigated readout of quasi-probabilities. This provides users a way to better evaluate shot results using error mitigation and enables them to more efficiently evaluate the possibility of multiple relevant data points in the context of destructive interference.
+This is a primitive that takes a list of user circuits as an input and generates an error-mitigated readout of quasi-probabilities. This provides users a way to better evaluate shot results using error mitigation and enables them to more efficiently evaluate the possibility of multiple relevant data points in the context of destructive interference.
 
 To invoke the `Sampler` primitive within a session:
 
@@ -146,7 +146,7 @@ with Session(service=service, backend="ibmq_qasm_simulator") as session:
 
 ### Estimator
 
-This is a program that takes circuits and observables to evaluate expectation values and variances for a given parameter input. This primitive allows users to efficiently calculate and interpret expectation values of quantum operators required for many algorithms.
+This is a primitive that takes circuits and observables to evaluate expectation values and variances for a given parameter input. This primitive allows users to efficiently calculate and interpret expectation values of quantum operators required for many algorithms.
 
 To invoke the `Estimator` primitive within a session:
 
