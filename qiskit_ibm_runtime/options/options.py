@@ -89,6 +89,8 @@ class Options:
     _MAX_OPTIMIZATION_LEVEL = 3
     _MAX_RESILIENCE_LEVEL_ESTIMATOR = 3
     _MAX_RESILIENCE_LEVEL_SAMPLER = 1
+    _MIN_EXECUTION_TIME = 300
+    _MAX_EXECUTION_TIME = 8 * 60 * 60  # 8 hours for real device
 
     optimization_level: Optional[int] = None
     resilience_level: Optional[int] = None
@@ -165,6 +167,7 @@ class Options:
         """Validate that program inputs (options) are valid
         Raises:
             ValueError: if optimization_level is out of the allowed range.
+            ValueError: if max_execution_time is out of the allowed range.
         """
         if not options.get("optimization_level") in list(
             range(Options._MAX_OPTIMIZATION_LEVEL + 1)
@@ -177,6 +180,16 @@ class Options:
         TranspilationOptions.validate_transpilation_options(
             options.get("transpilation")
         )
+        execution_time = options.get("max_execution_time")
+        if (
+            execution_time < Options._MIN_EXECUTION_TIME
+            or execution_time > Options._MAX_EXECUTION_TIME
+        ):
+            raise ValueError(
+                f"max_execution_time must be between "
+                f"{Options._MIN_EXECUTION_TIME} and {Options._MAX_EXECUTION_TIME} seconds."
+            )
+
         EnvironmentOptions.validate_environment_options(options.get("environment"))
 
     @staticmethod
