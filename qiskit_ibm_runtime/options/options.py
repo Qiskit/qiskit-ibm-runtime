@@ -166,8 +166,8 @@ class Options:
     def validate_options(options: dict) -> None:
         """Validate that program inputs (options) are valid
         Raises:
-            ValueError: if optimization_level is out of the allowed range.
-            ValueError: if max_execution_time is out of the allowed range.
+            ValueError: if optimization_level is outside the allowed range.
+            ValueError: if max_execution_time is outside the allowed range.
         """
         if not options.get("optimization_level") in list(
             range(Options._MAX_OPTIMIZATION_LEVEL + 1)
