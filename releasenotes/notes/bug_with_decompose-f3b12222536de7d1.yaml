@@ -1,0 +1,5 @@
+---
+fixes:
+  - |
+    Added `decompose` to circuits, to resolve bug where composed circuits are not decomposed to the 
+    correct level. See `#809 <https://github.com/Qiskit/qiskit-ibm-runtime/issues/809>_.`

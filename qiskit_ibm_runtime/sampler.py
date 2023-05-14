@@ -197,7 +197,7 @@ class Sampler(BaseSampler):
         #     "parameter_values": parameter_values,
         # }
         inputs = {
-            "circuits": circuits,
+            "circuits": [c.decompose(reps=2) for c in circuits],
             "parameters": [circ.parameters for circ in circuits],
             "circuit_indices": list(range(len(circuits))),
             "parameter_values": parameter_values,
