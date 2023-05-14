@@ -112,7 +112,7 @@ session. You are encouraged to start a session as a context manager, to ensure t
 
 ## Primitives
 
-**Primitives** are a simplified interface for defining near-time quantum-classical workloads required to efficiently build and customize applications. The initial release of Qiskit Runtime includes two primitives: ``Estimator`` and ``Sampler``. They perform foundational quantum computing tasks and act as an entry point to the Qiskit Runtime service.
+**Primitives** are a simplified interface for defining `near-time quantum-classical workloads <https://research.ibm.com/blog/near-real-time-quantum-compute>`_ required to efficiently build and customize applications. The initial release of Qiskit Runtime includes two primitives: ``Estimator`` and ``Sampler``. They perform foundational quantum computing tasks and act as an entry point to the Qiskit Runtime service.
 
 There are several different options you can specify when calling the primitives. See [`qiskit_ibm_runtime.Options`](https://github.com/Qiskit/qiskit-ibm-runtime/blob/main/qiskit_ibm_runtime/options.py#L103) class for more information.
 
