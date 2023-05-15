@@ -216,6 +216,6 @@ often occurs in optimization problems or chemistry applications.  For example, w
 Related links
 -------------
 
-* `Get started with Estimator <../tutorials/how-to-getting-started-with-estimator>`__
-* `Get started with Sampler <../tutorials/how-to-getting-started-with-sampler>`__
+* `Get started with Estimator <../tutorials/how-to-getting-started-with-estimator.ipynb>`__
+* `Get started with Sampler <../tutorials/how-to-getting-started-with-sampler.ipynb>`__
 * `Tutorial: Migrate from qiskit-ibmq-provider to qiskit-ibm-provider <https://qiskit.org/documentation/partners/qiskit_ibm_provider/tutorials/Migration_Guide_from_qiskit-ibmq-provider.html>`__
