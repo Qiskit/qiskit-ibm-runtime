@@ -5,10 +5,11 @@ Qiskit Runtime overview
 Overview
 ==============
 
-Qiskit Runtime is a quantum computing service and programming model that allows users to
-optimize workloads and efficiently execute them on quantum systems at scale. The
-programming model extends the existing interface in Qiskit with a set of new primitive
-programs.
+Qiskit Runtime is a quantum computing service and programming model that streamlines quantum computations. It is designed to use classical compute resources to execute quantum circuits with more efficiency on quantum processors. It improves efficiency by giving you access to *primitives*, which are designed to run in *sessions*.
+
+Primitives are a simplified interface for defining `near-time quantum-classical workloads <https://research.ibm.com/blog/near-real-time-quantum-compute>`_ required to efficiently build and customize applications. They are designed to be run in sessions, which essentially bind the backend to your session jobs for a period of time so they are not interrupted by other users’ jobs.
+
+The following figure illustrates how the Qiskit Runtime program jobs are run when using sessions and primitives.  The first job waits through the regular fair-share queue.  When it starts to run, the session is started.  After the first session job is finished processing, the next job in the session is run.  This process continues until the session is paused (due to a lack of queued session jobs) or closed. 
 
 .. figure:: images/runtime-architecture.png
     :align: center
@@ -35,6 +36,10 @@ This primitive takes a user circuit as input and returns a quasiprobability dist
 over the measurement outcomes. This generalizes histograms from quantum circuits to allow
 for error mitigation of readout.
 
+**Session**
+
+A session is a contract between the user and the Qiskit Runtime service that ensures that a collection of jobs can be grouped and jointly prioritized by the quantum computer’s job scheduler. This eliminates artificial delays caused by other users’ jobs running on the same quantum device during the session time.
+
 
 
 Next steps
@@ -53,6 +58,7 @@ Next steps
     Getting Started <getting_started>
     backend.run vs. Qiskit Runtime <compare>
     Introduction to primitives <primitives>
+    Introduction to sessions <sessions>
 
 .. toctree::
    :maxdepth: 1
@@ -75,7 +81,7 @@ Next steps
    :hidden:
    :caption: How to
 
-    Run a session <how_to/run_session>
+    Run a primitive in a session <how_to/run_session>
     Run on quantum backends <how_to/backends>
     Retrieve job results <how_to/retrieve_results>
     Configure primitive options <how_to/options>
