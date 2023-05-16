@@ -63,6 +63,7 @@ def _get_client_header() -> str:
         "qiskit_machine_learning",
         "qiskit_optimization",
         "qiskit_finance",
+        "circuit_knitting_toolbox",
     ]
 
     pkg_versions = {"qiskit_ibm_runtime": f"qiskit_ibm_runtime-{ibm_runtime_version}"}
@@ -274,7 +275,7 @@ class RetrySession(Session):
         headers.update({"X-Qx-Client-Application": f"{CLIENT_APPLICATION}/qiskit"})
 
         # Use PurePath in order to support arbitrary path formats
-        callers = {PurePath("qiskit/"), "qiskit_"}
+        callers = {PurePath("qiskit/"), "qiskit_", "circuit_knitting_toolbox"}
 
         stack = inspect.stack()
         stack.reverse()
