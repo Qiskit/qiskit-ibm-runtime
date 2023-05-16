@@ -14,7 +14,7 @@ not provide the desired abstraction level.
 The Qiskit Runtime primitives implement the reference ``Sampler`` and ``Estimator`` interfaces found in
 `qiskit.primitives <https://qiskit.org/documentation/apidoc/primitives.html>`_. These interfaces let you 
 switch between primitive implementations with minimal code changes. Different primitive implementations
-can be found in the ``qiskit``, ``qiskit_aer``, and ``qiskit_ibm_runtime`` library.
+can be found in the ``qiskit``, ``qiskit_aer``, and ``qiskit_ibm_runtime`` libraries.
 Each implementation serves a specific purpose:
 
 * The primitives in ``qiskit`` can perform local state vector simulations - useful for quickly prototyping algorithms. 
@@ -196,7 +196,7 @@ users to modify amplitude estimators or any other Qiskit Terra algorithms.
 
 When choosing which primitive to use, you first need to understand
 whether the algorithm uses a **quasi-probability distribution** sampled from a quantum state (a list of
-quasi-probabilities), or an **expectation value*** of a certain observable
+quasi-probabilities), or an **expectation value** of a certain observable
 with respect to a quantum state (a real number).
 
 A probability distribution is often of interest in optimization problems
