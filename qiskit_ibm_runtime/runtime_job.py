@@ -171,7 +171,7 @@ class RuntimeJob(Job):
             result_url_json = json.loads(response)
             if "url" in result_url_json:
                 url = result_url_json["url"]
-                result_response = requests.get(url)
+                result_response = requests.get(url, timeout=10)
                 return result_response.content
             return response
         except json.JSONDecodeError:
@@ -221,7 +221,7 @@ class RuntimeJob(Job):
         if self._results is None or (_decoder != self._final_result_decoder):
             self.wait_for_final_state(timeout=timeout)
             if self._status == JobStatus.ERROR:
-                error_message = self.error_message()
+                error_message = self._reason if self._reason else self._error_message
                 if self._reason == "RAN TOO LONG":
                     raise RuntimeJobMaxTimeoutError(error_message)
                 raise RuntimeJobFailureError(
@@ -540,7 +540,7 @@ class RuntimeJob(Job):
                 user_callback(self.job_id(), _decoder.decode(response))
             except Exception:  # pylint: disable=broad-except
                 logger.warning(
-                    "An error occurred while streaming results " "for job %s:\n%s",
+                    "An error occurred while streaming results for job %s:\n%s",
                     self.job_id(),
                     traceback.format_exc(),
                 )

@@ -125,7 +125,9 @@ def integration_test_setup(
 
             channel, token, url, instance = _get_integration_test_config()
             if not all([channel, token, url]):
-                raise Exception("Configuration Issue")
+                raise Exception(  # pylint: disable=broad-exception-raised
+                    "Configuration Issue"
+                )
 
             if channel not in _supported_channel:
                 raise SkipTest(

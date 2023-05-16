@@ -19,7 +19,7 @@ Key concepts
 
 **Primitives**
 
-Primitives are core functions that provide a simplified interface for defining near-time quantum-classical workloads required to efficiently build and customize applications. The initial release of Qiskit Runtime includes two primitives: Estimator and Sampler. They perform foundational quantum computing tasks and act as an entry point to the Qiskit Runtime service.
+Primitives are core functions that provide a simplified interface for defining `near-time quantum-classical workloads <https://research.ibm.com/blog/near-real-time-quantum-compute>`_  required to efficiently build and customize applications. The initial release of Qiskit Runtime includes two primitives: Estimator and Sampler. They perform foundational quantum computing tasks and act as an entry point to the Qiskit Runtime service.
 
 
 **Estimator**

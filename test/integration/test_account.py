@@ -13,8 +13,10 @@
 """Integration tests for account management."""
 
 import requests
-from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
-from ibm_platform_services import ResourceControllerV2
+from ibm_cloud_sdk_core.authenticators import (  # pylint: disable=import-error
+    IAMAuthenticator,
+)
+from ibm_platform_services import ResourceControllerV2  # pylint: disable=import-error
 
 from qiskit_ibm_runtime import QiskitRuntimeService
 from qiskit_ibm_runtime.accounts import CloudResourceNameResolutionError

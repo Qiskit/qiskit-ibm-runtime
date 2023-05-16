@@ -122,7 +122,7 @@ Key:
 
 **Simplified interface**:
 
-Use primitive programs to write code more efficiently.  For details, see the examples topics, such as `Using Estimator to design an algorithm <migrate-estimator>`__.
+Use primitives to write code more efficiently.  For details, see the examples topics, such as `Using Estimator to design an algorithm <migrate-estimator>`__.
 
   .. figure:: ../images/compare-code.png
    :scale: 50 %

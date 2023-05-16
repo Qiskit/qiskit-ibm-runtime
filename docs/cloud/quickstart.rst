@@ -32,7 +32,7 @@ If you already created a Qiskit Runtime service instance or were invited to one 
 Install or update Qiskit packages
 -----------------------------------
 
-Install or update the following packages in your development environment. They let you create circuits and work with primitive programs with Qiskit Runtime. For detailed instructions, refer to the `Qiskit textbook <https://qiskit.org/textbook/ch-appendix/qiskit.html>`__. Periodically check the `Qiskit release notes <https://qiskit.org/documentation/release_notes.html>`__ (or rerun these commands) so that you always have the latest version.
+Install or update the following packages in your development environment. They let you create circuits and work with primitives with Qiskit Runtime. For detailed instructions, refer to the `Qiskit textbook <https://qiskit.org/textbook/ch-appendix/qiskit.html>`__. Periodically check the `Qiskit release notes <https://qiskit.org/documentation/release_notes.html>`__ (or rerun these commands) so that you always have the latest version.
 
  .. note::
 
@@ -92,45 +92,12 @@ If you save your credentials to disk, you can use ``QiskitRuntimeService()`` in 
 
 If you need to update your saved credentials, run ``save_account`` again, passing in ``overwrite=True``  and the updated credentials. For more information about managing your account, see the `account management topic <../how_to/account-management.html>`__.
 
-Test your setup
--------------------
 
-Run the Hello World program to ensure that your environment is set up properly.
-
-.. note::
-   If you are running on real backends, Hello World incurs a cost. See `Manage costs <cost.html>`__ for cost information.
-
-If you did not save your credentials to disk, specify ``QiskitRuntimeService(channel="ibm_cloud", token=<IBM Cloud API key>, instance=<IBM Cloud CRN>)``
-instead of ``QiskitRuntimeService()`` in the following code.
-
-.. code-block:: python
-
-   from qiskit_ibm_runtime import QiskitRuntimeService
-
-   service = QiskitRuntimeService()
-   program_inputs = {'iterations': 1}
-   options = {"backend": ""}
-   job = service.run(program_id="hello-world",
-                  options=options,
-                  inputs=program_inputs
-                 )
-   print(f"job id: {job.job_id()}")
-   result = job.result()
-   print(result)
+Choose a primitive to run
+-------------------------
 
 
-Result:
-
-.. code-block::
-
-       Hello world!
-
-
-Choose a program to run
-----------------------------------
-
-
-Qiskit Runtime uses primitive programs to interface with quantum computers. The following programs are publicly available. Choose the appropriate link to continue learning how to run a program.
+Qiskit Runtime uses primitives to interface with quantum computers and they are publicly available. Choose the appropriate link to continue learning how to run a primitive.
 
 `Getting started with Sampler <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/tutorials/how-to-getting-started-with-sampler.html>`__
 
