@@ -41,9 +41,9 @@ A quantum processor still executes one job at a time. Therefore, jobs that belon
 Iterations and batching 
 --------------------------
 
-Sessions can be used in iterations or by batching. 
+Sessions can be used for iterative or batch execution. 
 
-Iterative sessions
+Iterative
 +++++++++++++++++++++
 
 Any session job submitted within the five-minute interactive timeout (TTL) is processed immediately. This allows some time for variational algorithms, such as VQE, to perform classical post-processing. 
@@ -53,7 +53,7 @@ Any session job submitted within the five-minute interactive timeout (TTL) is pr
 
 .. image:: images/iterative.png 
 
-Batch sessions
+Batch
 +++++++++++++++++++++
 
 Ideal for running experiments closely together to avoid device drifts, that is, to maintain device characterzation.
