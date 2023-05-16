@@ -10,7 +10,7 @@ In simple terms, once your session is active, jobs submitted within the session 
 
 Compared with jobs that use the `fair-share scheduler <https://quantum-computing.ibm.com/lab/docs/iql/manage/systems/queue>`__, sessions become particularly beneficial when running programs that require iterative calls between classical and quantum resources, where a large number of jobs are submitted sequentially. This is the case, for example, when training a variational algorithm such as VQE or QAOA, or in device characterization experiments.
 
-Runtime sessions only work with Qiskit Runtime primitives. Primitive program interfaces vary based on the type of task that you want to run on the quantum computer and the corresponding data that you want returned as a result. After identifying the appropriate primitive for your program, you can use Qiskit to prepare inputs, such as circuits, observables (for Estimator), and customizable options to optimize your job. For more information, see the `Primitives <primitives.html>`__ topic.
+Runtime sessions can be used in conjunction with Qiskit Runtime primitives. Primitive program interfaces vary based on the type of task that you want to run on the quantum computer and the corresponding data that you want returned as a result. After identifying the appropriate primitive for your program, you can use Qiskit to prepare inputs, such as circuits, observables (for Estimator), and customizable options to optimize your job. For more information, see the `Primitives <primitives.html>`__ topic.
 
 Benefits of using sessions
 ---------------------------
@@ -20,7 +20,7 @@ There are several benefits to using sessions:
 * Jobs that belong to a single algorithm run are run together without interruptions, increasing efficiency if your program submits multiple sequential jobs. 
 
    .. note:: 
-    * The queuing time does not decrease for a single job submitted within a session.
+    * The queuing time does not decrease for the first job submitted within a session. Therefore, a session does not provide any benefits if you only need to run a single job.
     * Since data from the first session job is cached and used by subsequent jobs, if the first job is cancelled, subsequent session jobs will all fail. 
 
 * When using sessions, the uncertainty around queuing time is significantly reduced. This allows better estimation of a workload's total runtime and better resource management.
@@ -33,7 +33,7 @@ The mechanics of sessions (queuing)
 
 For each backend, the first job in the session waits its turn in the queue normally, but while the session is active, subsequent jobs within the same session take priority over any other queued jobs. If no jobs that are part of the active session are ready, the session is deactivated (paused), and the next job from the regular fair-share queue is run. See :ref:`ttl` for more information.
 
-Session jobs still run one at a time. Therefore, jobs that belong to a session still queue up while one is running, but you do not have to wait for it to complete before submitting more jobs and they do not go through the fair-share queue.  
+A quantum processor still executes one job at a time. Therefore, jobs that belong to a session still need to wait for their turn if one is already running.  
 
 .. note:: 
     * Systems jobs such as calibration have priority over session jobs.
@@ -66,13 +66,6 @@ Ideal for running experiments closely together to avoid device drifts, that is, 
 
 .. image:: images/batch.png 
 
-Sessions and reservations 
--------------------------
-
-IBM Quantum Premium users can access both reservations and sessions on specific backends. Such users should plan ahead and decide whether to use a session or a reservation. You *can* use a session within a reservation.  However, if you use a session within a reservation and some session jobs don’t finish during the reservation window, the remaining pending jobs might fail. If you use session inside a reservation we recommend that you set a realistic `max_execution` time.
-
-.. image:: images/jobs-failing.png 
-
 .. _active:
 
 How long a session stays active
@@ -86,7 +79,7 @@ Maximum session timeout
 When a session is started, it is assigned a *maximum session timeout* value.  You can set this value by using the ``max_time`` parameter, which can be greater than the program's ``max_execution_time``. For instructions, see `Run a primitive in a session <how_to/run_session.html>`__.
 
 
-If you do not specify a timeout value, it is set to the initial job's maximum execution time and is the smaller of these values:
+If you do not specify a timeout value, it is the smaller of these values:
 
    * The system limit 
    * The ``max_execution_time`` defined by the program
@@ -109,10 +102,16 @@ What happens when a session ends
 
 A session ends by reaching its maximum timeout value or when it is manually closed by the user.  Do not close a session until all jobs **complete**. See `Close a session <how_to/run_session.html#close session>`__ for details. After a session is closed, the following occurs:
 
-* Any queued jobs remaining in the session are put into a failed state.
-* Any session jobs that are not yet queued are moved to the regular fair-share queue, and they might fail if the cache job's data is expired.
+* Any queued jobs remaining in the session (whether they are queued or not) are put into a failed state.
 * No further jobs can be submitted to the session.
 * The session cannot be reopened. 
+
+Sessions and reservations 
+-------------------------
+
+IBM Quantum Premium users can access both reservations and sessions on specific backends. Such users should plan ahead and decide whether to use a session or a reservation. You *can* use a session within a reservation.  However, if you use a session within a reservation and some session jobs don’t finish during the reservation window, the remaining pending jobs might fail. If you use session inside a reservation we recommend that you set a realistic `max_time` value.
+
+.. image:: images/jobs-failing.png 
 
 
 Next steps

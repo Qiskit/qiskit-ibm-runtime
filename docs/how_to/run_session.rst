@@ -1,12 +1,12 @@
 Run a primitive in a session
 =================================
 
-There are several ways to set up and use sessions. The following information should not be considered mandatory steps to follow. Instead, choose the configuration that best suits your needs. To learn more about sessions, see `Introduction to sessions <../sessions.html>`__.
+There are several ways to set up and use sessions. The following information should not be considered mandatory steps to follow. Instead, choose the configuration that best suits your needs. To learn more about sessions, see `Introduction to sessions <../sessions.html>`__. This information assumes that you are using Qiskit Runtime `primitives <../primitives.html>`__.  
 
 Prerequisites
 --------------
 
-Runtime sessions only work with Qiskit Runtime `primitives <../primitives.html>`__. Before starting a session, you must `Set up Qiskit Runtime <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/getting_started.html>`__ and initialize it as a service:
+Before starting a session, you must `Set up Qiskit Runtime <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/getting_started.html>`__ and initialize it as a service:
 
 .. code-block:: python
   
@@ -55,7 +55,7 @@ There are two ways to specify a backend in a session:
   .. code-block:: python
 
     backend = "ibmq_qasm_simulator"
-    with Session(service=service, backend=backend):
+    with Session(backend=backend):
       ...
 
 **Pass the backend object.** Example: 
@@ -63,7 +63,7 @@ There are two ways to specify a backend in a session:
   .. code-block:: python
 
     backend = service.get_backend("ibmq_qasm_simulator")
-    with Session(service=service, backend=backend):
+    with Session(backend=backend):
       ...
 
 
@@ -72,7 +72,7 @@ Specify the session length
 
 When a session is started, it is assigned a maximum session timeout value. After the session has been open the specified amount of time, the session expires and is forcefully closed. You can no longer submit jobs to that session.  See `What happens when a session ends <../sessions.html#ends>`__ for further details.
 
-You can configure the maximum session timeout value through the `max_time` parameter, which can be specified as seconds (int) or a string, like "2h 30m 40s".  This value has to be greater then the `max_execution_time` of the job and less than the system’s `max_time`. The default value is the system’s `max_time`. See `What is the maximum execution time for a Qiskit Runtime job? <faqs/max_execution_time.html>`__ to determine the system's `max_time`.
+You can configure the maximum session timeout value through the `max_time` parameter, which can be specified as seconds (int) or a string, like "2h 30m 40s".  This value has to be greater than the `max_execution_time` of the job and less than the system’s `max_time`. The default value is the system’s `max_time`. See `What is the maximum execution time for a Qiskit Runtime job? <faqs/max_execution_time.html>`__ to determine the system limit.
 
 When setting the session length, consider how long each job within the session might take. For example, if you run five jobs within a session and each job is estimated to be five minutes long, the maximum time for the session should at least 25 min. 
 
@@ -91,7 +91,7 @@ Close a session
 When jobs are all done, it is recommended that you use `session.close()` to close the session. This allows the scheduler to run the next job without waiting for the session timeout,  therefore making it easier for everyone.  You cannot submit jobs to a closed session.  
 
 .. warning::  
-  Close a session only after all session jobs **complete**, rather than immediately after they have all been submitted. Jobs that are not yet queued are converted to fair-share and will likely time out.  Jobs that are queued but not completed will fail.  
+  Close a session only after all session jobs **complete**, rather than immediately after they have all been submitted. Session jobs that are not completed will fail.  
 
 .. code-block:: python
 
@@ -103,27 +103,6 @@ When jobs are all done, it is recommended that you use `session.close()` to clos
   result = job.result()
   # Reaching this line means that the job is finished.
   session.close()
-
-Retrieve job results
---------------------
-
-You can review job results immediately after the job completes by calling the the appropriate command:
-
-.. list-table:: Job commands
-
-  * - job.result()
-    - Review job results immediately after the job completes. 
-  * - job.job_id()
-    - Get the job ID.
-  * - job.status() 
-    - Check the job status.
-  * - job = service.job(<job_id>) 
-    - Calling `job.job_id()` returns the job ID, which uniquely identifies that job. You can call `service.job(<job ID>)` to retrieve a job you previously submitted. Since the job ID is required in this call, it is recommended that you save the IDs of jobs you might want to retrieve later. If you don't have the job ID, or if you want to retrieve multiple jobs at once, you can call `service.jobs()` with optional filters instead.
-
-Jobs are also listed on the Jobs page for your quantum service channel:
-
-* For the IBM Cloud channel, from the IBM Cloud console quantum `Instances page <https://cloud.ibm.com/quantum/instances>`__, click the name of your instance, then click the Jobs tab. To see the status of your job, click the refresh arrow in the upper right corner.
-* For the IBM Quantum channel, in IBM Quantum platform, open the `Jobs page <https://quantum-computing.ibm.com/jobs>`__.
 
 Full example
 ------------
