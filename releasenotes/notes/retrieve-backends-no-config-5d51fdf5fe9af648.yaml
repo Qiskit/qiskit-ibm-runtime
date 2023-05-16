@@ -1,0 +1,5 @@
+---
+fixes:
+  - |
+    Allow for users to retrieve all backends even if one of the backends has a missing 
+    configuration. The backend without a configuration will not be returned. 
