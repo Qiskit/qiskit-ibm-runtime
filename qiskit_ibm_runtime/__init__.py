@@ -26,7 +26,7 @@ execute significantly faster within its improved hybrid quantum/classical proces
 Primitives and sessions
 -----------------------
 
-Qiskit Runtime has two predefined primitive programs: ``Sampler`` and ``Estimator``.
+Qiskit Runtime has two predefined primitives: ``Sampler`` and ``Estimator``.
 These primitives provide a simplified interface for performing foundational quantum
 computing tasks while also accounting for the latest developments in
 quantum hardware and software.
@@ -97,7 +97,7 @@ Supplementary Information
    :animate: fade-in-slide-down
 
     When you use the ``run()`` method of the :class:`Sampler` or :class:`Estimator`
-    to invoke the primitive program, a
+    to invoke the primitive, a
     :class:`RuntimeJob` instance is returned. This class has all the basic job
     methods, such as :meth:`RuntimeJob.status`, :meth:`RuntimeJob.result`, and
     :meth:`RuntimeJob.cancel`.
