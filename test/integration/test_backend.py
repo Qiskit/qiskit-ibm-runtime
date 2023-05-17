@@ -38,6 +38,21 @@ class TestIntegrationBackend(IBMIntegrationTestCase):
         )
 
     @run_integration_test
+    def test_backends_no_config(self, service):
+        """Test retrieving backends when a config is missing."""
+        service._backend_configs = {}
+        instance = service._account.instance
+        backends = service.backends(instance=instance)
+        configs = service._backend_configs
+        configs["test_backend"] = None
+        backend_names = [backend.name for backend in backends]
+
+        for config in configs.values():
+            backend = service._create_backend_obj(config, instance=instance)
+            if backend:
+                self.assertTrue(backend.name in backend_names)
+
+    @run_integration_test
     def test_get_backend(self, service):
         """Test getting a backend."""
         backends = service.backends()
