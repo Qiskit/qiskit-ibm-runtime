@@ -19,7 +19,7 @@ from qiskit.transpiler.target import Target
 from qiskit_ibm_runtime import QiskitRuntimeService
 
 from ..ibm_test_case import IBMIntegrationTestCase
-from ..decorators import run_integration_test, production_only
+from ..decorators import run_integration_test, production_only, quantum_only
 
 
 class TestIntegrationBackend(IBMIntegrationTestCase):
@@ -38,6 +38,7 @@ class TestIntegrationBackend(IBMIntegrationTestCase):
         )
 
     @run_integration_test
+    @quantum_only
     def test_backends_no_config(self, service):
         """Test retrieving backends when a config is missing."""
         service._backend_configs = {}
