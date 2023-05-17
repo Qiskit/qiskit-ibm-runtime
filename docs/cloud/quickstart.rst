@@ -90,7 +90,7 @@ If you save your credentials to disk, you can use ``QiskitRuntimeService()`` in 
    service = QiskitRuntimeService()
 
 
-If you need to update your saved credentials, run ``save_account`` again, passing in ``overwrite=True``  and the updated credentials. For more information about managing your account, see the `account management topic <how_to/account-management.html>`__.
+If you need to update your saved credentials, run ``save_account`` again, passing in ``overwrite=True``  and the updated credentials. For more information about managing your account, see the `account management topic <../how_to/account-management.html>`__.
 
 
 Choose a primitive to run
