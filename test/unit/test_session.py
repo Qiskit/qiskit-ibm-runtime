@@ -17,7 +17,6 @@ from unittest.mock import MagicMock, patch
 from qiskit_ibm_runtime import Session
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.session import get_default_session
-from qiskit_ibm_runtime.exceptions import IBMInputValueError
 import qiskit_ibm_runtime.session as session_pkg
 from ..ibm_test_case import IBMTestCase
 
