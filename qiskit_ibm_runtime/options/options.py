@@ -145,7 +145,8 @@ class Options:
         for deprecated in ["translation_method", "timing_constraints"]:
             if deprecated in inputs["transpilation_settings"]:
                 raise ValueError(
-                    f"The transpilation option '{deprecated}' is not supported")
+                    f"The transpilation option '{deprecated}' is not supported"
+                )
 
         known_keys = list(Options.__dataclass_fields__.keys())
         known_keys.append("image")
@@ -166,9 +167,7 @@ class Options:
             ValueError: if max_execution_time is outside the allowed range.
         """
         if options.get("backend"):
-            raise ValueError(
-                "'backend' is not supported in input options"
-            )
+            raise ValueError("'backend' is not supported in input options")
         if not options.get("optimization_level") in list(
             range(Options._MAX_OPTIMIZATION_LEVEL + 1)
         ):

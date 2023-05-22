@@ -26,6 +26,7 @@ from .program.result_decoder import ResultDecoder
 from .ibm_backend import IBMBackend
 from .utils.converters import hms_to_seconds
 
+
 def _active_session(func):  # type: ignore
     """Decorator used to ensure the session is active."""
 
