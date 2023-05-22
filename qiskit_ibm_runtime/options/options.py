@@ -24,7 +24,6 @@ from .simulator_options import SimulatorOptions
 from .transpilation_options import TranspilationOptions
 from .resilience_options import ResilienceOptions
 from ..runtime_options import RuntimeOptions
-from ..utils.deprecation import issue_deprecation_msg
 
 
 @_flexible
@@ -145,11 +144,8 @@ class Options:
 
         for deprecated in ["translation_method", "timing_constraints"]:
             if deprecated in inputs["transpilation_settings"]:
-                issue_deprecation_msg(
-                    msg=f"The {deprecated} transpilation option has been deprecated",
-                    version="0.8",
-                    remedy="",
-                )
+                raise ValueError(
+                    f"The transpilation option '{deprecated}' is not supported")
 
         known_keys = list(Options.__dataclass_fields__.keys())
         known_keys.append("image")

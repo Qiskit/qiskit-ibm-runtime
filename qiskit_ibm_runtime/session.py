@@ -25,7 +25,6 @@ from .runtime_program import ParameterNamespace
 from .program.result_decoder import ResultDecoder
 from .ibm_backend import IBMBackend
 from .utils.converters import hms_to_seconds
-from .utils.deprecation import issue_deprecation_msg
 from .exceptions import IBMInputValueError
 
 
