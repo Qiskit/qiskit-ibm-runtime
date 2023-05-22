@@ -46,7 +46,7 @@ class Sampler(BaseSampler):
     The :meth:`run` method can be used to submit circuits and parameters to the Sampler primitive.
 
     You are encouraged to use :class:`~qiskit_ibm_runtime.Session` to open a session,
-    during which you can invoke one or more primitive programs. Jobs submitted within a session
+    during which you can invoke one or more primitives. Jobs submitted within a session
     are prioritized by the scheduler, and data is cached for efficiency.
 
     Example::
@@ -134,7 +134,7 @@ class Sampler(BaseSampler):
         parameter_values: Sequence[float] | Sequence[Sequence[float]] | None = None,
         **kwargs: Any,
     ) -> RuntimeJob:
-        """Submit a request to the sampler primitive program.
+        """Submit a request to the sampler primitive.
 
         Args:
             circuits: A (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
@@ -164,7 +164,7 @@ class Sampler(BaseSampler):
         parameter_values: Sequence[Sequence[float]],
         **kwargs: Any,
     ) -> RuntimeJob:
-        """Submit a request to the sampler primitive program.
+        """Submit a request to the sampler primitive.
 
         Args:
             circuits: A (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or

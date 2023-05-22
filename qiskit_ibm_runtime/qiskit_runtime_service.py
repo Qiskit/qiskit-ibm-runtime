@@ -629,24 +629,28 @@ class QiskitRuntimeService(Provider):
         Raises:
             QiskitBackendNotFoundError: if the backend is not in the hgp passed in.
         """
-        if not instance:
-            for hgp in list(self._hgps.values()):
-                if config.backend_name in hgp.backends:
-                    instance = to_instance_format(hgp._hub, hgp._group, hgp._project)
-                    break
+        if config:
+            if not instance:
+                for hgp in list(self._hgps.values()):
+                    if config.backend_name in hgp.backends:
+                        instance = to_instance_format(
+                            hgp._hub, hgp._group, hgp._project
+                        )
+                        break
 
-        elif config.backend_name not in self._get_hgp(instance=instance).backends:
-            raise QiskitBackendNotFoundError(
-                f"Backend {config.backend_name} is not in "
-                f"{instance}: please try a different hub/group/project."
+            elif config.backend_name not in self._get_hgp(instance=instance).backends:
+                raise QiskitBackendNotFoundError(
+                    f"Backend {config.backend_name} is not in "
+                    f"{instance}: please try a different hub/group/project."
+                )
+
+            return ibm_backend.IBMBackend(
+                instance=instance,
+                configuration=config,
+                service=self,
+                api_client=self._api_client,
             )
-
-        return ibm_backend.IBMBackend(
-            instance=instance,
-            configuration=config,
-            service=self,
-            api_client=self._api_client,
-        )
+        return None
 
     def active_account(self) -> Optional[Dict[str, str]]:
         """Return the IBM Quantum account currently in use for the session.
