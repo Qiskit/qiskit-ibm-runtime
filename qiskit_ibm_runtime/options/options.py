@@ -165,6 +165,10 @@ class Options:
             ValueError: if optimization_level is outside the allowed range.
             ValueError: if max_execution_time is outside the allowed range.
         """
+        if options.get("backend"):
+            raise ValueError(
+                "'backend' is not supported in input options"
+            )
         if not options.get("optimization_level") in list(
             range(Options._MAX_OPTIMIZATION_LEVEL + 1)
         ):

@@ -25,8 +25,6 @@ from .runtime_program import ParameterNamespace
 from .program.result_decoder import ResultDecoder
 from .ibm_backend import IBMBackend
 from .utils.converters import hms_to_seconds
-from .exceptions import IBMInputValueError
-
 
 def _active_session(func):  # type: ignore
     """Decorator used to ensure the session is active."""
@@ -150,16 +148,14 @@ class Session:
             Submitted job.
 
         Raises:
-            IBMInputValueError: If a backend is passed in through options that does not match
-                the current session backend.
+            ValueError: If a backend is passed in through options.
         """
-
         options = options or {}
 
         if "instance" not in options:
             options["instance"] = self._instance
-        if "backend" in options:
-            raise ValueError('"backend" is not supported in options')
+        if "backend" in [options, inputs]:
+            raise ValueError("'backend' is not supported in input options")
 
         options["backend"] = self._backend
 

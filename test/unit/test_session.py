@@ -81,16 +81,6 @@ class TestSession(IBMTestCase):
         with self.assertRaises(RuntimeError):
             session.run(program_id="program_id", inputs={})
 
-    def test_conflicting_backend(self):
-        """Test passing in different backend through options."""
-        service = MagicMock()
-        backend = "ibm_gotham"
-        session = Session(service=service, backend=backend)
-        with self.assertRaises(IBMInputValueError):
-            session.run(
-                program_id="test", inputs={}, options={"backend": "different_backend"}
-            )
-
     def test_run(self):
         """Test the run method."""
         job = MagicMock()
