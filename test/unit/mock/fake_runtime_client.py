@@ -416,9 +416,9 @@ class BaseFakeRuntimeClient:
         self._get_program(program_id)
         del self._programs[program_id]
 
-    def job_get(self, job_id):
+    def job_get(self, job_id: str, exclude_params: bool = None) -> Any:
         """Get the specific job."""
-        return self._get_job(job_id).to_dict()
+        return self._get_job(job_id, exclude_params).to_dict()
 
     def jobs_get(
         self,
@@ -512,7 +512,8 @@ class BaseFakeRuntimeClient:
             raise RequestsApiError("Program not found", status_code=404)
         return self._programs[program_id]
 
-    def _get_job(self, job_id):
+    # pylint: disable=unused-argument
+    def _get_job(self, job_id: str, exclude_params: bool = None) -> Any:
         """Get job."""
         if job_id not in self._jobs:
             raise RequestsApiError("Job not found", status_code=404)
