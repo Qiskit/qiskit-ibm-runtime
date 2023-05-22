@@ -19,6 +19,7 @@ import uuid
 from typing import Any
 from unittest import skipIf
 
+from qiskit_ibm_provider.proxies import ProxyConfiguration
 from qiskit_ibm_runtime.accounts import (
     AccountManager,
     Account,
@@ -33,7 +34,6 @@ from qiskit_ibm_runtime.accounts.management import (
     _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM,
     _DEFAULT_ACCOUNT_NAME_IBM_CLOUD,
 )
-from qiskit_ibm_provider.proxies import ProxyConfiguration
 from .mock.fake_runtime_service import FakeRuntimeService
 from ..ibm_test_case import IBMTestCase
 from ..account import (

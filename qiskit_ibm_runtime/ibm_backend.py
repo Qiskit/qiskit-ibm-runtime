@@ -37,13 +37,12 @@ from qiskit.pulse.channels import (
 )
 from qiskit.transpiler.target import Target
 
-from qiskit_ibm_runtime import (  # pylint: disable=unused-import,cyclic-import
-    qiskit_runtime_service,
-)
-
 from qiskit_ibm_provider.utils.backend_decoder import (
     defaults_from_server_data,
     properties_from_server_data,
+)
+from qiskit_ibm_runtime import (  # pylint: disable=unused-import,cyclic-import
+    qiskit_runtime_service,
 )
 
 from .api.clients import RuntimeClient
