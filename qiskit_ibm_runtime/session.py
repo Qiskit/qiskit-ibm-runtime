@@ -25,6 +25,8 @@ from .runtime_program import ParameterNamespace
 from .program.result_decoder import ResultDecoder
 from .ibm_backend import IBMBackend
 from .utils.converters import hms_to_seconds
+from .utils.deprecation import issue_deprecation_msg
+from .exceptions import IBMInputValueError
 
 
 def _active_session(func):  # type: ignore
@@ -149,16 +151,28 @@ class Session:
             Submitted job.
 
         Raises:
-            ValueError: If a backend is passed in through options.
+            IBMInputValueError: If a backend is passed in through options that does not match
+                the current session backend.
         """
+
         options = options or {}
 
         if "instance" not in options:
             options["instance"] = self._instance
-        if "backend" in [options, inputs]:
-            raise ValueError("'backend' is not supported in input options")
-
-        options["backend"] = self._backend
+        if "backend" in options:
+            issue_deprecation_msg(
+                "'backend' is no longer a supported option within a session",
+                "0.9",
+                "Instead, specify a backend when creating a Session instance.",
+                3,
+            )
+            if self._backend and options["backend"] != self._backend:
+                raise IBMInputValueError(
+                    f"The backend '{options['backend']}' is different from",
+                    f"the session backend '{self._backend}'",
+                )
+        else:
+            options["backend"] = self._backend
 
         if not self._session_id:
             # TODO: What happens if session max time != first job max time?
