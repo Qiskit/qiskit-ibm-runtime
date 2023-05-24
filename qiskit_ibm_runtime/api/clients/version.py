@@ -13,9 +13,9 @@
 """Client for determining the version of an IBM Quantum service."""
 
 from typing import Dict, Union, Any
+from qiskit_ibm_provider.api.rest.root import Api
 
 from ..session import RetrySession
-from ..rest.root import Api
 
 from .base import BaseClient
 
