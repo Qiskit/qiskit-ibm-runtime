@@ -142,12 +142,6 @@ class Options:
             }
         )
 
-        for deprecated in ["translation_method", "timing_constraints"]:
-            if deprecated in inputs["transpilation_settings"]:
-                raise ValueError(
-                    f"The transpilation option '{deprecated}' is not supported"
-                )
-
         known_keys = list(Options.__dataclass_fields__.keys())
         known_keys.append("image")
         # Add additional unknown keys.
