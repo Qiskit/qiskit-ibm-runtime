@@ -13,7 +13,7 @@
 """Execution options."""
 
 from dataclasses import dataclass
-from typing import Literal
+from typing import Literal, get_args
 
 from .utils import _flexible
 
@@ -21,6 +21,7 @@ ExecutionSupportedOptions = Literal[
     "shots",
     "init_qubits",
 ]
+
 
 @_flexible
 @dataclass
@@ -45,6 +46,4 @@ class ExecutionOptions:
         """
         for opt in execution_options:
             if not opt in get_args(ExecutionSupportedOptions):
-                raise ValueError(
-                    f"Unsupported value '{opt}' for execution."
-                )
+                raise ValueError(f"Unsupported value '{opt}' for execution.")

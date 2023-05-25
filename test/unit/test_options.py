@@ -186,3 +186,26 @@ class TestOptions(IBMTestCase):
                 self.assertTrue(
                     dict_keys_equal(asdict(Options()), options), f"options={options}"
                 )
+
+    def test_unsupported_options(self):
+        """Test error on unsupported second level options"""
+        # defining minimal dict of options
+        options = {
+            "optimization_level": 1,
+            "resilience_level": 2,
+            "transpilation": {"initial_layout": [1, 2], "skip_transpilation": True},
+            "execution": {"shots": 100},
+            "environment": {"log_level": "DEBUG"},
+            "simulator": {"noise_model": "model"},
+            "resilience": {
+                "noise_amplifier": "GlobalFoldingAmplifier",
+                "extrapolator": "LinearExtrapolator",
+            },
+        }
+        Options.validate_options(options)
+        for opt in ["resilience", "simulator", "transpilation", "execution"]:
+            temp_options = options.copy()
+            temp_options[opt] = {"aaa": "bbb"}
+            with self.assertRaises(ValueError) as exc:
+                Options.validate_options(temp_options)
+            self.assertIn(f"Unsupported value 'aaa' for {opt}.", str(exc.exception))

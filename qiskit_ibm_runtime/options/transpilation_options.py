@@ -78,9 +78,7 @@ class TranspilationOptions:
         """
         for opt in transpilation_options:
             if not opt in get_args(TranspilationSupportedOptions):
-                raise ValueError(
-                    f"Unsupported value '{opt}' for transpilation."
-                )
+                raise ValueError(f"Unsupported value '{opt}' for transpilation.")
         layout_method = transpilation_options.get("layout_method")
         if not (layout_method in get_args(LayoutMethodType) or layout_method is None):
             raise ValueError(

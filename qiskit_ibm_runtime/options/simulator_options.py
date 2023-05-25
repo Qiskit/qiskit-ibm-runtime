@@ -12,7 +12,7 @@
 
 """Simulator options."""
 
-from typing import Optional, List, Union, TYPE_CHECKING, Literal
+from typing import Optional, List, Union, TYPE_CHECKING, Literal, get_args
 from dataclasses import dataclass
 
 from .utils import _flexible
@@ -25,8 +25,9 @@ SimulatorSupportedOptions = Literal[
     "seed_simulator",
     "coupling_map",
     "basis_gates",
-
 ]
+
+
 @_flexible
 @dataclass()
 class SimulatorOptions:
@@ -62,6 +63,4 @@ class SimulatorOptions:
         """
         for opt in simulator_options:
             if not opt in get_args(SimulatorSupportedOptions):
-                raise ValueError(
-                    f"Unsupported value '{opt}' for simulator."
-                )
+                raise ValueError(f"Unsupported value '{opt}' for simulator.")

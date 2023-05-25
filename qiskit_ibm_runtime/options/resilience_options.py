@@ -76,9 +76,7 @@ class ResilienceOptions:
         """
         for opt in resilience_options:
             if not opt in get_args(ResilienceSupportedOptions):
-                raise ValueError(
-                    f"Unsupported value '{opt}' for resilience."
-                )
+                raise ValueError(f"Unsupported value '{opt}' for resilience.")
         noise_amplifier = resilience_options.get("noise_amplifier")
         if not noise_amplifier in get_args(NoiseAmplifierType):
             raise ValueError(
