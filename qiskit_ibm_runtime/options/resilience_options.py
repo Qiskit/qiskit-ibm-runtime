@@ -17,6 +17,11 @@ from dataclasses import dataclass
 
 from .utils import _flexible
 
+ResilienceSupportedOptions = Literal[
+    "noise_amplifier",
+    "noise_factors",
+    "extrapolator",
+]
 NoiseAmplifierType = Literal[
     "TwoQubitAmplifier",
     "GlobalFoldingAmplifier",
@@ -63,11 +68,17 @@ class ResilienceOptions:
     def validate_resilience_options(resilience_options: dict) -> None:
         """Validate that resilience options are legal.
         Raises:
+            ValueError: if any resilience option is not supported
             ValueError: if noise_amplifier is not in NoiseAmplifierType.
             ValueError: if extrapolator is not in ExtrapolatorType.
             ValueError: if extrapolator == "QuarticExtrapolator" and number of noise_factors < 5.
             ValueError: if extrapolator == "CubicExtrapolator" and number of noise_factors < 4.
         """
+        for opt in resilience_options:
+            if not opt in get_args(ResilienceSupportedOptions):
+                raise ValueError(
+                    f"Unsupported value '{opt}' for resilience."
+                )
         noise_amplifier = resilience_options.get("noise_amplifier")
         if not noise_amplifier in get_args(NoiseAmplifierType):
             raise ValueError(

@@ -13,9 +13,14 @@
 """Execution options."""
 
 from dataclasses import dataclass
+from typing import Literal
 
 from .utils import _flexible
 
+ExecutionSupportedOptions = Literal[
+    "shots",
+    "init_qubits",
+]
 
 @_flexible
 @dataclass
@@ -31,3 +36,15 @@ class ExecutionOptions:
 
     shots: int = 4000
     init_qubits: bool = True
+
+    @staticmethod
+    def validate_execution_options(execution_options: dict) -> None:
+        """Validate that execution options are legal.
+        Raises:
+            ValueError: if any execution option is not supported
+        """
+        for opt in execution_options:
+            if not opt in get_args(ExecutionSupportedOptions):
+                raise ValueError(
+                    f"Unsupported value '{opt}' for execution."
+                )

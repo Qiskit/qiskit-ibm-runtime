@@ -17,12 +17,12 @@ from dataclasses import dataclass
 
 from .utils import _flexible
 
-TranspilationOptions = Literal[
+TranspilationSupportedOptions = Literal[
     "skip_transpilation",
     "initial_layout",
     "layout_method",
     "routing_method",
-    "approximation_degree"
+    "approximation_degree",
 ]
 LayoutMethodType = Literal[
     "trivial",
@@ -71,13 +71,13 @@ class TranspilationOptions:
     def validate_transpilation_options(transpilation_options: dict) -> None:
         """Validate that transpilation options are legal.
         Raises:
-            ValueError: if any transpilation options is not supported
+            ValueError: if any transpilation option is not supported
             ValueError: if layout_method is not in LayoutMethodType or None.
             ValueError: if routing_method is not in RoutingMethodType or None.
             ValueError: if approximation_degree in not None or in the range 0.0 to 1.0.
         """
         for opt in transpilation_options:
-            if not opt in get_args(TranspilationOptions):
+            if not opt in get_args(TranspilationSupportedOptions):
                 raise ValueError(
                     f"Unsupported value '{opt}' for transpilation."
                 )

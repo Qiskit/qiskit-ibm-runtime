@@ -12,7 +12,7 @@
 
 """Simulator options."""
 
-from typing import Optional, List, Union, TYPE_CHECKING
+from typing import Optional, List, Union, TYPE_CHECKING, Literal
 from dataclasses import dataclass
 
 from .utils import _flexible
@@ -20,7 +20,13 @@ from .utils import _flexible
 if TYPE_CHECKING:
     import qiskit_aer
 
+SimulatorSupportedOptions = Literal[
+    "noise_model",
+    "seed_simulator",
+    "coupling_map",
+    "basis_gates",
 
+]
 @_flexible
 @dataclass()
 class SimulatorOptions:
@@ -47,3 +53,15 @@ class SimulatorOptions:
     seed_simulator: Optional[int] = None
     coupling_map: Optional[List[List[int]]] = None
     basis_gates: Optional[List[str]] = None
+
+    @staticmethod
+    def validate_simulator_options(simulator_options: dict) -> None:
+        """Validate that simulator options are legal.
+        Raises:
+            ValueError: if any simulator option is not supported
+        """
+        for opt in simulator_options:
+            if not opt in get_args(SimulatorSupportedOptions):
+                raise ValueError(
+                    f"Unsupported value '{opt}' for simulator."
+                )
