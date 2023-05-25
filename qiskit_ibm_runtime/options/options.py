@@ -183,6 +183,8 @@ class Options:
                 )
 
         EnvironmentOptions.validate_environment_options(options.get("environment"))
+        ExecutionOptions.validate_execution_options(options.get("execution"))
+        SimulatorOptions.validate_simulator_options(options.get("simulator"))
 
     @staticmethod
     def _get_runtime_options(options: dict) -> dict:
