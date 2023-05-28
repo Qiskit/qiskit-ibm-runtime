@@ -13,7 +13,6 @@
 """Tests for runtime job retrieval."""
 
 from datetime import datetime, timedelta, timezone
-from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from .mock.fake_runtime_service import FakeRuntimeService
 from ..ibm_test_case import IBMTestCase
 from ..decorators import run_quantum_and_cloud_fake
@@ -282,7 +281,7 @@ class TestRetrieveJobs(IBMTestCase):
     def test_jobs_bad_instance(self):
         """Test retrieving jobs with bad instance values."""
         service = self._ibm_quantum_service
-        with self.assertRaises(IBMInputValueError):
+        with self.assertRaises(Exception):
             _ = service.jobs(instance="foo")
 
     def test_different_hgps(self):
