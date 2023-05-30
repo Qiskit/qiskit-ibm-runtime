@@ -49,7 +49,7 @@ class Estimator(BaseEstimator):
     to the Estimator primitive.
 
     You are encouraged to use :class:`~qiskit_ibm_runtime.Session` to open a session,
-    during which you can invoke one or more primitive programs. Jobs submitted within a session
+    during which you can invoke one or more primitives. Jobs submitted within a session
     are prioritized by the scheduler, and data is cached for efficiency.
 
     Example::
@@ -154,7 +154,7 @@ class Estimator(BaseEstimator):
         parameter_values: Sequence[float] | Sequence[Sequence[float]] | None = None,
         **kwargs: Any,
     ) -> RuntimeJob:
-        """Submit a request to the estimator primitive program.
+        """Submit a request to the estimator primitive.
 
         Args:
             circuits: a (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
@@ -190,7 +190,7 @@ class Estimator(BaseEstimator):
         parameter_values: Sequence[Sequence[float]],
         **kwargs: Any,
     ) -> RuntimeJob:
-        """Submit a request to the estimator primitive program.
+        """Submit a request to the estimator primitive.
 
         Args:
             circuits: a (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or

@@ -680,6 +680,33 @@ class TestPrimitives(IBMTestCase):
                     list(opts_dict["transpilation"].keys())[0], str(exc.exception)
                 )
 
+    def test_max_execution_time_options(self):
+        """Test transpilation options."""
+        options_dicts = [
+            {"max_execution_time": Options._MIN_EXECUTION_TIME - 1},
+            {"max_execution_time": Options._MAX_EXECUTION_TIME + 1},
+        ]
+        session = MagicMock(spec=MockSession)
+        primitives = [Sampler, Estimator]
+
+        for cls in primitives:
+            for opts_dict in options_dicts:
+                # When this environment variable is set, validation is turned off
+                try:
+                    os.environ["QISKIT_RUNTIME_SKIP_OPTIONS_VALIDATION"] = "1"
+                    inst = cls(session=session, options=opts_dict)
+                    inst.run(self.qx, observables=self.obs)
+                finally:
+                    # Delete environment variable to validate input
+                    del os.environ["QISKIT_RUNTIME_SKIP_OPTIONS_VALIDATION"]
+                with self.assertRaises(ValueError) as exc:
+                    inst = cls(session=session, options=opts_dict)
+                    inst.run(self.qx, observables=self.obs)
+                self.assertIn(
+                    "max_execution_time must be between 300 and 28800 seconds",
+                    str(exc.exception),
+                )
+
     def test_raise_faulty_qubits(self):
         """Test faulty qubits is raised."""
         fake_backend = FakeManila()

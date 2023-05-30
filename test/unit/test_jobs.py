@@ -137,7 +137,7 @@ class TestRuntimeJob(IBMTestCase):
     def test_run_program_by_bad_hgp(self):
         """Test running a program with a bad hgp."""
         service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
-        with self.assertRaises(IBMInputValueError):
+        with self.assertRaises(Exception):
             _ = run_program(service=service, instance="foo")
 
     @run_quantum_and_cloud_fake

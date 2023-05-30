@@ -5,7 +5,7 @@ Getting started
 Install Qiskit packages
 ========================
 
-Install these packages. They let you create circuits and work with primitive programs
+Install these packages. They let you create circuits and work with primitives
 through Qiskit Runtime.
 
 .. code-block:: bash
@@ -21,6 +21,8 @@ You can access Qiskit Runtime from either IBM Quantum or IBM Cloud.
 
 **IBM Quantum**
 
+`Retrieve your IBM Quantum token <https://quantum-computing.ibm.com/account>`_, then save it so you can easily access your account later. 
+
 .. code-block:: python
 
     from qiskit_ibm_runtime import QiskitRuntimeService
@@ -28,10 +30,14 @@ You can access Qiskit Runtime from either IBM Quantum or IBM Cloud.
     # Save an IBM Quantum account.
     QiskitRuntimeService.save_account(channel="ibm_quantum", token="MY_IBM_QUANTUM_TOKEN")
 
-`Retrieve IBM Quantum token <https://quantum-computing.ibm.com/account>`_
 
 
 **IBM Cloud**
+
+Retrieve your IBM Cloud access credentials, then save them so you can easily access your account later.
+
+* `Retrieve your IBM Cloud token <https://cloud.ibm.com/iam/apikeys>`__
+* To retrieve your Cloud Resource Name (CRN), open the `Instances page <https://cloud.ibm.com/quantum/instances>`__ and click your instance. In the page that opens, click the icon to copy your CRN. 
 
 .. code-block:: python
 
@@ -39,8 +45,6 @@ You can access Qiskit Runtime from either IBM Quantum or IBM Cloud.
 
     # Save an IBM Cloud account.
     QiskitRuntimeService.save_account(channel="ibm_cloud", token="MY_IBM_CLOUD_API_KEY", instance="MY_IBM_CLOUD_CRN")
-
-`Retrieve IBM Cloud token <https://cloud.ibm.com/iam/apikeys>`__
 
 
 Test your setup

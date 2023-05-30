@@ -37,6 +37,10 @@ from qiskit.pulse.channels import (
 )
 from qiskit.transpiler.target import Target
 
+from qiskit_ibm_provider.utils.backend_decoder import (
+    defaults_from_server_data,
+    properties_from_server_data,
+)
 from qiskit_ibm_runtime import (  # pylint: disable=unused-import,cyclic-import
     qiskit_runtime_service,
 )
@@ -48,10 +52,6 @@ from .utils.backend_converter import (
     convert_to_target,
 )
 from .utils.converters import local_to_utc
-from .utils.backend_decoder import (
-    defaults_from_server_data,
-    properties_from_server_data,
-)
 
 logger = logging.getLogger(__name__)
 

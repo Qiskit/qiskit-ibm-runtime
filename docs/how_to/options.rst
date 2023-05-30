@@ -1,5 +1,5 @@
-Configure primitive program options
-========================================
+Configure primitive options
+===========================
 
 When calling the primitives, you can pass in options, as shown in the line ``estimator = Estimator(options=options)`` in the following code example:
 

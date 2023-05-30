@@ -36,7 +36,7 @@ from qiskit.providers.models import (
     PulseDefaults,
 )
 
-from ..ibm_qubit_properties import IBMQubitProperties
+from qiskit_ibm_provider.ibm_qubit_properties import IBMQubitProperties
 
 
 def convert_to_target(
