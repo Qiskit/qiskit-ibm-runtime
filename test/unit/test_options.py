@@ -191,11 +191,11 @@ class TestOptions(IBMTestCase):
     def test_coupling_map_options(self):
         """Check that coupling_map is processed correctly"""
         coupling_map = [[1, 0], [2, 1], [0, 1], [1, 2]]
-        options_dicts = [
+        options_types = [
             coupling_map,
             CouplingMap.from_line(3),
         ]
-        for opt in options_dicts:
+        for opt in options_types:
             with self.subTest(opts_dict=opt):
                 options = Options()
                 options.simulator.coupling_map = opt
