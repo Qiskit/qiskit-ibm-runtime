@@ -12,8 +12,12 @@
 
 """Simulator options."""
 
-from typing import Optional, List, Union, TYPE_CHECKING
 from dataclasses import dataclass
+from typing import TYPE_CHECKING, List, Optional, Union
+
+from qiskit.providers import BackendV1, BackendV2
+from qiskit.exceptions import MissingOptionalLibraryError
+from qiskit.utils import optionals
 
 from .utils import _flexible
 
@@ -47,3 +51,17 @@ class SimulatorOptions:
     seed_simulator: Optional[int] = None
     coupling_map: Optional[List[List[int]]] = None
     basis_gates: Optional[List[str]] = None
+
+    def from_backend(self, backend: Union[BackendV1, BackendV2]):
+        """TODO"""
+        if not optionals.HAS_AER:
+            raise MissingOptionalLibraryError(
+                "qiskit-aer", "Aer provider", "pip install qiskit-aer"
+            )
+
+        from qiskit_aer.noise import NoiseModel
+
+        self.noise_model = NoiseModel.from_backend(backend)
+        # TODO: support BackendV2
+        self.coupling_map = backend.configuration().coupling_map
+        self.basis_gates = backend.configuration().basis_gates
