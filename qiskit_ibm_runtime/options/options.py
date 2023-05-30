@@ -135,7 +135,9 @@ class Options:
             }
         )
         if isinstance(inputs["transpilation_settings"]["coupling_map"], CouplingMap):
-            inputs["transpilation_settings"]["coupling_map"] = eval(
+            inputs["transpilation_settings"][
+                "coupling_map"
+            ] = eval(  # pylint: disable=eval-used
                 str(inputs["transpilation_settings"]["coupling_map"])
             )
 
