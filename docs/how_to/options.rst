@@ -17,7 +17,7 @@ When calling the primitives, you can pass in options, as shown in the line ``est
     with Session(service=service, backend="ibmq_qasm_simulator"):
         estimator = Estimator(options=options)
 
-You can also overwrite options for individual job. In the following code example, the job will run with 4000 shots instead of 1000:
+You can also overwrite specific options for a job when calling ``run()``. In the following code example, the job will run with optimization level 1 and 4000 shots (instead of 1000):
 
 .. code-block:: python
 
@@ -26,11 +26,11 @@ You can also overwrite options for individual job. In the following code example
 
     service = QiskitRuntimeService()
     options = Options()
+    options.optimization_level = 1
     option.execution.shots = 1000
 
-    with Session(service=service, backend="ibmq_qasm_simulator"):
-        sampler = Sampler(options=options)
-        job = sampler.run(ReferenceCircuits.bell(), shots=4000)
+    sampler = Sampler("ibmq_qasm_simulator", options=options)
+    job = sampler.run(ReferenceCircuits.bell(), shots=4000)
 
 
 The most commonly used options are for error suppression and mitigation, which are described in this topic. For a full list of available options, see the `Options API reference <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/stubs/qiskit_ibm_runtime.options.Options.html#qiskit_ibm_runtime.options.Options>`__.
