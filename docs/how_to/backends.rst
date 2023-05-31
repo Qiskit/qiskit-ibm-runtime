@@ -42,7 +42,7 @@ Use the ``backends()`` method to list all backends you have access to. This meth
   <IBMBackend('simulator_stabilizer')>,
   <IBMBackend('simulator_mps')>,
   <IBMBackend('simulator_extended_stabilizer')>,
-  <IBMBackend('simulator_statevector')>]  
+  <IBMBackend('simulator_statevector')>]
 
 The ``backend()`` (note that this is singular: *backend*) method takes the name of the backend as the input parameter and returns an ``IBMBackend`` instance representing that particular backend:
 
@@ -52,7 +52,7 @@ The ``backend()`` (note that this is singular: *backend*) method takes the name 
 
 .. code-block::
 
-  <IBMBackend('ibmq_qasm_simulator')>  
+  <IBMBackend('ibmq_qasm_simulator')>
 
 
 Filter backends
@@ -76,34 +76,14 @@ A similar method is ``least_busy()``, which takes the same filters as ``backends
 
   service.least_busy(operational=True, min_num_qubits=5)
 
-Some programs also define the type of backends they need in the ``backend_requirements`` field of the program metadata.
-
-The hello-world program, for example, needs a backend that has at least 5 qubits:
-
-.. code-block:: python
-  
-  ibm_quantum_service = QiskitRuntimeService(channel="ibm_quantum")
-  program = ibm_quantum_service.program("hello-world")
-  print(program.backend_requirements)
-
-.. code-block::
-
-  {'min_num_qubits': 5}
-
-After determining the backend requirements, you can find backends that meet the criteria:
-
-.. code-block:: python
-
-  ibm_quantum_service.backends(min_num_qubits=5)
-
 
 Determine backend attributes
 -------------------------------------
 
-As mentioned previously, the ``IBMBackend`` class attributes provide information about the backend.  For example: 
+As mentioned previously, the ``IBMBackend`` class attributes provide information about the backend.  For example:
 
 .. code-block:: python
-  
+
   backend = service.backend("ibmq_qasm_simulator")
   backend.name #returns the backend's name
   backend.backend_version #returns the version number
@@ -112,7 +92,7 @@ As mentioned previously, the ``IBMBackend`` class attributes provide information
 
 .. vale IBMQuantum.Spelling = NO
 
-See the `IBMBackend class documentation <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/stubs/qiskit_ibm_runtime.IBMBackend.html#qiskit_ibm_runtime.IBMBackend>`__ for the full list of backend attributes.  
+See the `IBMBackend class documentation <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/stubs/qiskit_ibm_runtime.IBMBackend.html#qiskit_ibm_runtime.IBMBackend>`__ for the full list of backend attributes.
 
 .. vale IBMQuantum.Spelling = YES
 
@@ -121,12 +101,12 @@ Find backend information from other channels
 
 To find your available systems and simulators on **IBM Cloud**, view the `Compute resources page <https://cloud.ibm.com/quantum/resources/your-resources>`__. You must be logged in to see your available compute resources. You are shown a snapshot of each backend.  To see full details, click the backend name. You can also search for backends from this page.
 
-To find your available systems and simulators on **IBM Quantum Platform**, view the `Compute resources page <https://quantum-computing.ibm.com/services/resources>`__. You are shown a snapshot of each backend.  To see full details, click the backend name. You can also sort, filter, and search from this page. 
+To find your available systems and simulators on **IBM Quantum Platform**, view the `Compute resources page <https://quantum-computing.ibm.com/services/resources>`__. You are shown a snapshot of each backend.  To see full details, click the backend name. You can also sort, filter, and search from this page.
 
 Specify a backend when running a job
 ---------------------------------------
 
-To specify a backend when running a job, add the ``backend`` option when starting your session. For details about working with sessions, see `Run a primitive in a session <run_session.html>`__.
+If you are using a runtime session, add the ``backend`` option when starting your session. For details about working with sessions, see `Run a primitive in a session <run_session.html>`__.
 
 .. code-block:: python
 
@@ -148,6 +128,32 @@ To specify a backend when running a job, add the ``backend`` option when startin
        result = job.result()
        # Close the session only if all jobs are finished, and you don't need to run more in the session
        session.close() # Closes the session
+
+  display(circuit.draw("mpl"))
+  print(f" > Observable: {observable.paulis}")
+  print(f" > Expectation value: {result.values[0]}")
+  print(f" > Metadata: {result.metadata[0]}")
+
+
+If you are not using a runtime session, you can pass the backend when initializing the primitive class.
+
+.. code-block:: python
+
+  from qiskit.circuit.random import random_circuit
+  from qiskit.quantum_info import SparsePauliOp
+  from qiskit_ibm_runtime import QiskitRuntimeService, Session, Estimator, Options
+
+  circuit = random_circuit(2, 2, seed=1).decompose(reps=1)
+  observable = SparsePauliOp("IY")
+
+  options = Options()
+  options.optimization_level = 2
+  options.resilience_level = 2
+
+  service = QiskitRuntimeService()
+  estimator = Estimator("ibmq_qasm_simulator", options=options)
+  job = estimator.run(circuit, observable)
+  result = job.result()
 
   display(circuit.draw("mpl"))
   print(f" > Observable: {observable.paulis}")
