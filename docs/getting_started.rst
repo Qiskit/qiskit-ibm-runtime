@@ -21,7 +21,10 @@ You can access Qiskit Runtime from either IBM Quantum or IBM Cloud.
 
 **IBM Quantum**
 
-`Retrieve your IBM Quantum token <https://quantum-computing.ibm.com/account>`_, then save it so you can easily access your account later. 
+`Retrieve your IBM Quantum token <https://quantum-computing.ibm.com/account>`_, and optionally save it for easy access later.
+
+.. note::
+    Account credentials are saved in plain text, so only do so if you are using a trusted device.
 
 .. code-block:: python
 
@@ -34,10 +37,13 @@ You can access Qiskit Runtime from either IBM Quantum or IBM Cloud.
 
 **IBM Cloud**
 
-Retrieve your IBM Cloud access credentials, then save them so you can easily access your account later.
+Retrieve your IBM Cloud access credentials, and optionally save it for easy access later.
 
 * `Retrieve your IBM Cloud token <https://cloud.ibm.com/iam/apikeys>`__
-* To retrieve your Cloud Resource Name (CRN), open the `Instances page <https://cloud.ibm.com/quantum/instances>`__ and click your instance. In the page that opens, click the icon to copy your CRN. 
+* To retrieve your Cloud Resource Name (CRN), open the `Instances page <https://cloud.ibm.com/quantum/instances>`__ and click your instance. In the page that opens, click the icon to copy your CRN.
+
+.. note::
+    Account credentials are saved in plain text, so only do so if you are using a trusted device.
 
 .. code-block:: python
 
