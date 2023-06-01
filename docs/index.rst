@@ -5,7 +5,7 @@ Qiskit Runtime overview
 Overview
 ==============
 
-Qiskit Runtime is a cloud-based quantum computing service offered by IBM. It implements *primitives* to perform foundational quantum computing tasks and has built-in error suppression and mitigation. In addition, Qiskit Runtime has *sessions*, which allow you to run your circuits on a quantum computer without being interrupted by other users’ jobs. The combination of primitives, error suppression / mitigation, and sessions paves the way to efficiently build and execute scalable quantum applications.
+Qiskit Runtime is a cloud-based quantum computing service developed by IBM. It offers computational *primitives* to perform foundational quantum computing tasks and has built-in error suppression and mitigation. In addition, Qiskit Runtime has *sessions*, which allow you to run your circuits on a quantum computer without being interrupted by other users’ jobs. The combination of primitives, error suppression / mitigation, and sessions paves the way to efficiently build and execute scalable quantum applications.
 
 The following figure illustrates how one can use Qiskit Runtime sessions and primitives. The first session request (job) waits through the regular fair-share queue. When it starts to run, the session is started. After the first session job is finished processing, the next job in the session is run. This process continues until the session is paused (due to a lack of queued session jobs) or closed.
 
@@ -17,7 +17,7 @@ Key concepts
 
 **Primitives**
 
-Primitives are base level operations that serve as building blocks for many quantum algorithms and applications. The `base primitive interfaces <https://qiskit.org/documentation/apidoc/primitives.html>`__ are defined in Qiskit Terra, and many Qiskit algorithms use the primitives natively. This abstraction allows you to write the same code, using Qiskit algorithms or otherwise, that can run on different quantum hardware or simulators without having to explicitly manage some of the finer details. See `Introduction to primitives <primitives.html>`__ for further details.
+Primitives are base level operations that serve as building blocks for many quantum algorithms and applications. The `base primitive interfaces <https://qiskit.org/documentation/apidoc/primitives.html>`__ are defined in Qiskit Terra, and many Qiskit algorithms use the primitives natively. This abstraction allows you to write the same code, using Qiskit algorithms or otherwise, that can run on different quantum hardware or simulators without having to explicitly manage some of the finer details. The primitves offered by `qiskit_ibm_runtime <https://qiskit.org/ecosystem/ibm-runtime/apidocs/ibm-runtime.html>`__ add additional options specific to IBM's service. See `Introduction to primitives <primitives.html>`__ for further details.
 
 There are currently two primitives defined in Qiskit: Estimator and Sampler.
 
