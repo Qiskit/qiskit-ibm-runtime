@@ -17,6 +17,8 @@ from dataclasses import dataclass, fields, field
 import copy
 import warnings
 
+from qiskit.transpiler import CouplingMap
+
 from .utils import _flexible, Dict
 from .environment_options import EnvironmentOptions
 from .execution_options import ExecutionOptions
@@ -132,6 +134,12 @@ class Options:
                 "basis_gates": sim_options.get("basis_gates", None),
             }
         )
+        if isinstance(inputs["transpilation_settings"]["coupling_map"], CouplingMap):
+            inputs["transpilation_settings"][
+                "coupling_map"
+            ] = eval(  # pylint: disable=eval-used
+                str(inputs["transpilation_settings"]["coupling_map"])
+            )
 
         inputs["resilience_settings"] = options.get("resilience", {})
         inputs["resilience_settings"].update({"level": options.get("resilience_level")})
