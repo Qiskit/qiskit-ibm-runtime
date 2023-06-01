@@ -15,6 +15,8 @@
 from typing import Optional, List, Union, TYPE_CHECKING
 from dataclasses import dataclass
 
+from qiskit.transpiler import CouplingMap
+
 from .utils import _flexible
 
 if TYPE_CHECKING:
@@ -45,5 +47,5 @@ class SimulatorOptions:
 
     noise_model: Optional[Union[dict, "qiskit_aer.noise.noise_model.NoiseModel"]] = None
     seed_simulator: Optional[int] = None
-    coupling_map: Optional[List[List[int]]] = None
+    coupling_map: Optional[Union[List[List[int]], "CouplingMap"]] = None
     basis_gates: Optional[List[str]] = None

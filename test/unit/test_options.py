@@ -17,6 +17,7 @@ import warnings
 
 from qiskit_aer.noise import NoiseModel
 from qiskit.providers.fake_provider import FakeNairobiV2
+from qiskit.transpiler import CouplingMap
 
 from qiskit_ibm_runtime import Options, RuntimeOptions
 from ..ibm_test_case import IBMTestCase
@@ -185,4 +186,20 @@ class TestOptions(IBMTestCase):
                 # Make sure the structure didn't change.
                 self.assertTrue(
                     dict_keys_equal(asdict(Options()), options), f"options={options}"
+                )
+
+    def test_coupling_map_options(self):
+        """Check that coupling_map is processed correctly"""
+        coupling_map = [[1, 0], [2, 1], [0, 1], [1, 2]]
+        options_types = [
+            coupling_map,
+            CouplingMap.from_line(3),
+        ]
+        for opt in options_types:
+            with self.subTest(opts_dict=opt):
+                options = Options()
+                options.simulator.coupling_map = opt
+                inputs = Options._get_program_inputs(asdict(options))
+                self.assertEqual(
+                    inputs["transpilation_settings"]["coupling_map"], coupling_map
                 )
