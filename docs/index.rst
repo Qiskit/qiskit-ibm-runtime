@@ -5,11 +5,9 @@ Qiskit Runtime overview
 Overview
 ==============
 
-Qiskit Runtime is a quantum computing service and programming model that streamlines quantum computations. It is designed to use classical compute resources to execute quantum circuits with more efficiency on quantum processors. It improves efficiency by giving you access to *primitives*, which are designed to run in *sessions*.
+Qiskit Runtime is a cloud-based quantum computing service developed by IBM. It offers computational *primitives* to perform foundational quantum computing tasks and has built-in error suppression and mitigation. In addition, Qiskit Runtime has *sessions*, which allow you to run your circuits on a quantum computer without being interrupted by other users’ jobs. The combination of primitives, error suppression / mitigation, and sessions paves the way to efficiently build and execute scalable quantum applications.
 
-Primitives are a simplified interface for defining `near-time quantum-classical workloads <https://research.ibm.com/blog/near-real-time-quantum-compute>`_ required to efficiently build and customize applications. They are designed to be run in sessions, which essentially bind the backend to your session jobs for a period of time so they are not interrupted by other users’ jobs.
-
-The following figure illustrates how the Qiskit Runtime program jobs are run when using sessions and primitives.  The first job waits through the regular fair-share queue.  When it starts to run, the session is started.  After the first session job is finished processing, the next job in the session is run.  This process continues until the session is paused (due to a lack of queued session jobs) or closed.
+The following figure illustrates how one can use Qiskit Runtime sessions and primitives. The first session request (job) waits through the regular fair-share queue. When it starts to run, the session is started. After the first session job is finished processing, the next job in the session is run. This process continues until the session is paused (due to a lack of queued session jobs) or closed.
 
 .. figure:: images/runtime-architecture.png
     :align: center
@@ -19,26 +17,26 @@ Key concepts
 
 **Primitives**
 
-Primitives are core functions that provide a simplified interface for defining `near-time quantum-classical workloads <https://research.ibm.com/blog/near-real-time-quantum-compute>`_  required to efficiently build and customize applications. The initial release of Qiskit Runtime includes two primitives: Estimator and Sampler. They perform foundational quantum computing tasks and act as an entry point to the Qiskit Runtime service.
+Primitives are base level operations that serve as building blocks for many quantum algorithms and applications. The `base primitive interfaces <https://qiskit.org/documentation/apidoc/primitives.html>`__ are defined in Qiskit Terra, and many Qiskit algorithms use the primitives natively. This abstraction allows you to write the same code, using Qiskit algorithms or otherwise, that can run on different quantum hardware or simulators without having to explicitly manage some of the finer details. The primitves offered by `qiskit_ibm_runtime <https://qiskit.org/ecosystem/ibm-runtime/apidocs/ibm-runtime.html>`__ add additional options specific to IBM's service. See `Introduction to primitives <primitives.html>`__ for further details.
+
+There are currently two primitives defined in Qiskit: Estimator and Sampler.
 
 
 **Estimator**
 
-The estimator primitive allows users to efficiently calculate and interpret expectation
-values of quantum operators required for many algorithms. Users specify circuits that
-prepare quantum states and then Pauli-basis observables to measure on those states. The
-estimator can use advanced error mitigation capabilities to improve the accuracy of the
-returned expectation values.
+The estimator primitive allows you to efficiently calculate and interpret expectation values of quantum operators required for many algorithms. You specify circuits that prepare quantum states and then Pauli-basis observables to measure on those states. The estimator can use advanced error mitigation capabilities to improve the accuracy of the returned expectation values.
 
 **Sampler**
 
-This primitive takes a user circuit as input and returns a quasiprobability distribution
-over the measurement outcomes. This generalizes histograms from quantum circuits to allow
-for error mitigation of readout.
+This primitive takes circuits as input and returns a quasi-probability distribution over the measurement outcomes. This generalizes histograms from quantum circuits to allow for error mitigation of readout.
+
+**Error suppression / mitigation**
+
+Errors occur naturally in a computer, and building fault-tolerant quantum computation is our ultimate goal. While we continue to research how to build error-corrected qubits at scale, Qiskit Runtime offers a number of error suppression and mitigation techniques that alleviate the effect of noise.
 
 **Session**
 
-A session is a contract between the user and the Qiskit Runtime service that ensures that a collection of jobs can be grouped and jointly prioritized by the quantum computer’s job scheduler. This eliminates artificial delays caused by other users’ jobs running on the same quantum device during the session time.
+A session allows a collection of jobs to be grouped and jointly scheduled by the Qiskit Runtime service, facilitating iterative use of quantum computers without incurring queuing delays on each iteration. This eliminates artificial delays caused by other users’ jobs running on the same quantum device during the session. See `Introduction to sessions <sessions.html>`__ for further details.
 
 
 
