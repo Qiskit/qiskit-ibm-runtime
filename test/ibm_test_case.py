@@ -136,7 +136,7 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
         cls.program_ids = {}
         cls.sim_backends = {}
         service = cls.service
-        cls.program_ids[service.channel] = "hello-world"
+        cls.program_ids[service.channel] = "sampler"
         cls._find_sim_backends()
 
     @classmethod
