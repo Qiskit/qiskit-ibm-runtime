@@ -105,14 +105,16 @@ ibm_quantum_service = QiskitRuntimeService(channel="ibm_quantum", token="MY_IBM_
 
 ## Qiskit Runtime Session
 
-A Qiskit Runtime **session** allows you to group a collection of iterative calls to the quantum computer. A session is started when the first job within the session is started. Subsequent jobs within the session are prioritized by the scheduler to minimize artificial delay within an iterative algorithm. Data used within a session, such as transpiled circuits, is also cached to avoid unnecessary overhead.
+A Qiskit Runtime **session** allows a collection of jobs to be grouped and jointly scheduled by the Qiskit Runtime service, facilitating iterative use of quantum computers without incurring queuing delays on each iteration. A session is started when the first job within the session is started, and subsequent jobs within the session are prioritized by the scheduler.
 
 You can use the [`qiskit_ibm_runtime.Session`](https://github.com/Qiskit/qiskit-ibm-runtime/blob/main/qiskit_ibm_runtime/session.py) class to start a
-session. You are encouraged to start a session as a context manager, to ensure the session is automatically closed upon exit. There are some examples in the sections below.
+session. There are some examples in the sections below.
 
 ## Primitives
 
-**Primitives** are a simplified interface for defining `near-time quantum-classical workloads <https://research.ibm.com/blog/near-real-time-quantum-compute>`_ required to efficiently build and customize applications. The initial release of Qiskit Runtime includes two primitives: ``Estimator`` and ``Sampler``. They perform foundational quantum computing tasks and act as an entry point to the Qiskit Runtime service.
+**Primitives** are base level operations that serve as building blocks for many quantum algorithms and applications. The [primitive interfaces](https://qiskit.org/documentation/apidoc/primitives.html) are defined in Qiskit Terra, and many Qiskit algorithms use the primitives natively. This abstraction allows you to write the same code, using Qiskit algorithms or otherwise, that can run on different quantum hardware or simulators without having to explicitly manage some of the finer details.
+
+There are currently two primitives defined in Qiskit: `Estimator` and `Sampler`. Qiskit Runtime service offers these primitives with additional features, such as built-in error suppression and mitigation.
 
 There are several different options you can specify when calling the primitives. See [`qiskit_ibm_runtime.Options`](https://github.com/Qiskit/qiskit-ibm-runtime/blob/main/qiskit_ibm_runtime/options.py#L103) class for more information.
 
@@ -173,45 +175,6 @@ with Session(service=service, backend="ibmq_qasm_simulator") as session:
     print(f"Job result is {job.result()}")
 
     # You can make additional calls to Sampler and/or Estimator.
-```
-
-## Accessing Qiskit Runtime Programs
-
-In addition to the primitives, there are other Qiskit Runtime programs that you can call directly. These programs, however, don't have special class wrappers.
-
-### Finding available programs
-
-To list all available programs:
-
-```python
-from qiskit_ibm_runtime import QiskitRuntimeService
-service = QiskitRuntimeService()
-service.pprint_programs()
-```
-
-`pprint_programs()` prints the summary metadata of the first 20 programs visible to you. A program's metadata
-consists of its ID, name, description, input parameters, return values, interim results, and
-other information that helps you to know more about the program. `pprint_programs(detailed=True, limit=None)`
-will print all metadata for all programs visible to you.
-
-### Executing a Program
-
-To run a program, specify the program ID, input parameters, as well as any execution options:
-
-```python
-from qiskit_ibm_runtime import QiskitRuntimeService
-
-service = QiskitRuntimeService()
-program_inputs = {
-    'iterations': 1
-}
-options = {'backend': 'ibmq_qasm_simulator'}
-job = service.run(
-    program_id="hello-world",
-    options=options,
-    inputs=program_inputs)
-print(f"job ID: {job.job_id()}")
-result = job.result()
 ```
 
 ## Accessing your IBM Quantum backends
