@@ -53,7 +53,7 @@ Next steps
    :caption: Get started
 
     Overview <self>
-    Getting Started <getting_started>
+    Getting started <getting_started>
     backend.run vs. Qiskit Runtime <compare>
     Introduction to primitives <primitives>
     Introduction to sessions <sessions>
@@ -99,7 +99,7 @@ Next steps
     Use Sampler to design an algorithm <migrate/migrate-sampler>
     Update parameter values while running <migrate/migrate-update-parm>
     Work with updated Qiskit algorithms <migrate/migrate-qiskit-alg>
-    Algorithm tuning options (shots, transpilation, error mitigation) <migrate/migrate-tuning> 
+    Algorithm tuning options (shots, transpilation, error mitigation) <migrate/migrate-tuning>
 
 
 .. toctree::
