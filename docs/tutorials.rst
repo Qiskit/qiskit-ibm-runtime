@@ -24,6 +24,7 @@ Sampler
    tutorials/user-transpiled-circuits
    tutorials/sea_with_sampler
    tutorials/qpe_with_sampler
+   tutorials/qaoa_with_sampler
 
 
 .. Hiding - Indices and tables

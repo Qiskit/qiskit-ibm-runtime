@@ -9,7 +9,7 @@ Qiskit Runtime is a quantum computing service and programming model that streaml
 
 Primitives are a simplified interface for defining `near-time quantum-classical workloads <https://research.ibm.com/blog/near-real-time-quantum-compute>`_ required to efficiently build and customize applications. They are designed to be run in sessions, which essentially bind the backend to your session jobs for a period of time so they are not interrupted by other users’ jobs.
 
-The following figure illustrates how the Qiskit Runtime program jobs are run when using sessions and primitives.  The first job waits through the regular fair-share queue.  When it starts to run, the session is started.  After the first session job is finished processing, the next job in the session is run.  This process continues until the session is paused (due to a lack of queued session jobs) or closed. 
+The following figure illustrates how the Qiskit Runtime program jobs are run when using sessions and primitives.  The first job waits through the regular fair-share queue.  When it starts to run, the session is started.  After the first session job is finished processing, the next job in the session is run.  This process continues until the session is paused (due to a lack of queued session jobs) or closed.
 
 .. figure:: images/runtime-architecture.png
     :align: center
@@ -73,6 +73,7 @@ Next steps
     QPE with Sampler <tutorials/qpe_with_sampler>
     Grover with Sampler <tutorials/grover_with_sampler>
     SEA with Sampler <tutorials/sea_with_sampler>
+    QAOA with Sampler <tutorials/qaoa_with_sampler>
     Submit user-transpiled circuits using primitives <tutorials/user-transpiled-circuits>
     All tutorials <tutorials>
 
@@ -101,7 +102,7 @@ Next steps
     Use Sampler to design an algorithm <migrate/migrate-sampler>
     Update parameter values while running <migrate/migrate-update-parm>
     Work with updated Qiskit algorithms <migrate/migrate-qiskit-alg>
-    Algorithm tuning options (shots, transpilation, error mitigation) <migrate/migrate-tuning> 
+    Algorithm tuning options (shots, transpilation, error mitigation) <migrate/migrate-tuning>
 
 
 .. toctree::
