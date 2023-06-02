@@ -25,11 +25,12 @@ You can also overwrite specific options for a job when calling ``run()``. In the
     from qiskit_ibm_runtime import QiskitRuntimeService, Session, Sampler, Options
 
     service = QiskitRuntimeService()
+    backend = service.backend("ibmq_qasm_simulator")
     options = Options()
     options.optimization_level = 1
     option.execution.shots = 1000
 
-    sampler = Sampler("ibmq_qasm_simulator", options=options)
+    sampler = Sampler(backend, options=options)
     job = sampler.run(ReferenceCircuits.bell(), shots=4000)
 
 

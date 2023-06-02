@@ -136,12 +136,13 @@ Supplementary Information
         from qiskit_ibm_runtime import QiskitRuntimeService, Sampler
 
         service = QiskitRuntimeService()
+        backend = service.backend("ibmq_qasm_simulator")
 
         def result_callback(job_id, result):
             print(result)
 
         # Stream results as soon as the job starts running.
-        job = Sampler("ibmq_qasm_simulator").run(ReferenceCircuits.bell(), callback=result_callback)
+        job = Sampler(backend).run(ReferenceCircuits.bell(), callback=result_callback)
         print(job.result())
 
 .. dropdown:: Uploading a program

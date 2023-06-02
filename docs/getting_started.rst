@@ -63,7 +63,10 @@ Run a simple circuit using `Sampler` to ensure that your environment is set up p
     from qiskit.test.reference_circuits import ReferenceCircuits
     from qiskit_ibm_runtime import QiskitRuntimeService, Sampler
 
-    job = Sampler("ibmq_qasm_simulator").run(ReferenceCircuits.bell())
+    # You'll need to specify the credentials when initializing QiskitRuntimeService, if they are not previously saved.
+    service = QiskitRuntimeService()
+    backend = service.backend("ibmq_qasm_simulator")
+    job = Sampler(backend).run(ReferenceCircuits.bell())
     print(f"job id: {job.job_id()}")
     result = job.result()
     print(result)

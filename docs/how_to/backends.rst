@@ -151,7 +151,8 @@ If you are not using a runtime session, you can pass the backend when initializi
   options.resilience_level = 2
 
   service = QiskitRuntimeService()
-  estimator = Estimator("ibmq_qasm_simulator", options=options)
+  backend = service.backend("ibmq_qasm_simulator")
+  estimator = Estimator(backend, options=options)
   job = estimator.run(circuit, observable)
   result = job.result()
 

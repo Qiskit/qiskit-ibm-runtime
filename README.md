@@ -114,7 +114,7 @@ session. There are some examples in the sections below.
 
 **Primitives** are base level operations that serve as building blocks for many quantum algorithms and applications. The [primitive interfaces](https://qiskit.org/documentation/apidoc/primitives.html) are defined in Qiskit Terra, and many Qiskit algorithms use the primitives natively. This abstraction allows you to write the same code, using Qiskit algorithms or otherwise, that can run on different quantum hardware or simulators without having to explicitly manage some of the finer details.
 
-There are currently two primitives defined in Qiskit: `Estimator` and `Sampler`. Qiskit Runtime service exposes these primitives with additional features, such as built-in error suppression and mitigation.
+There are currently two primitives defined in Qiskit: `Estimator` and `Sampler`. Qiskit Runtime service offers these primitives with additional features, such as built-in error suppression and mitigation.
 
 There are several different options you can specify when calling the primitives. See [`qiskit_ibm_runtime.Options`](https://github.com/Qiskit/qiskit-ibm-runtime/blob/main/qiskit_ibm_runtime/options.py#L103) class for more information.
 
