@@ -71,6 +71,7 @@ Next steps
     QPE with Sampler <tutorials/qpe_with_sampler>
     Grover with Sampler <tutorials/grover_with_sampler>
     SEA with Sampler <tutorials/sea_with_sampler>
+    QAOA with Sampler <tutorials/qaoa_with_sampler>
     Submit user-transpiled circuits using primitives <tutorials/user-transpiled-circuits>
     All tutorials <tutorials>
 
