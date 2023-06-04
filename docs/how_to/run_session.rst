@@ -72,7 +72,7 @@ Specify the session length
 
 When a session is started, it is assigned a maximum session timeout value. After the session has been open the specified amount of time, the session expires and is forcefully closed. You can no longer submit jobs to that session.  See `What happens when a session ends <../sessions.html#ends>`__ for further details.
 
-You can configure the maximum session timeout value through the `max_time` parameter, which can be specified as seconds (int) or a string, like "2h 30m 40s".  This value has to be greater than the `max_execution_time` of the job and less than the system’s `max_time`. The default value is the system’s `max_time`. See `What is the maximum execution time for a Qiskit Runtime job? <faqs/max_execution_time.html>`__ to determine the system limit.
+You can configure the maximum session timeout value through the `max_time` parameter, which can be specified as seconds (int) or a string, like "2h 30m 40s".  This value has to be greater than the `max_execution_time` of the job and less than the system’s `max_time`. The default value is the system’s `max_time`. See `What is the maximum execution time for a Qiskit Runtime job? <../faqs/max_execution_time.html>`__ to determine the system limit.
 
 When setting the session length, consider how long each job within the session might take. For example, if you run five jobs within a session and each job is estimated to be five minutes long, the maximum time for the session should at least 25 min. 
 
