@@ -990,7 +990,7 @@ class QiskitRuntimeService(Provider):
         elif isinstance(options, Dict):
             qrt_options = RuntimeOptions(**options)
 
-        # If using params object, extract as dictionary
+        # If using params object, extract as dictionary.
         if isinstance(inputs, ParameterNamespace):
             inputs.validate()
             inputs = vars(inputs)
@@ -1004,6 +1004,10 @@ class QiskitRuntimeService(Provider):
                 instance=qrt_options.instance, backend_name=qrt_options.backend
             )
             hgp_name = hgp.name
+        backend = self.backend(name=qrt_options.backend, instance=hgp_name)
+        status = backend.status()
+        if status.operational is True and not status.status_msg == "active":
+            warnings.warn(f"The backend {backend.name} is currently paused.")
 
         try:
             response = self._api_client.program_run(
