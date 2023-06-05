@@ -128,6 +128,7 @@ class QiskitRuntimeService(Provider):
         instance: Optional[str] = None,
         proxies: Optional[dict] = None,
         verify: Optional[bool] = None,
+        runtime_url: Optional[str] = None,
     ) -> None:
         """QiskitRuntimeService constructor
 
@@ -161,6 +162,7 @@ class QiskitRuntimeService(Provider):
                 ``username_ntlm``, ``password_ntlm`` (username and password to enable NTLM user
                 authentication)
             verify: Whether to verify the server's TLS certificate.
+            runtime_url: IBM use only, allows overriding qiskit runtime URL for development purposes
 
         Returns:
             An instance of QiskitRuntimeService.
@@ -203,7 +205,7 @@ class QiskitRuntimeService(Provider):
         else:
             auth_client = self._authenticate_ibm_quantum_account(self._client_params)
             # Update client parameters to use authenticated values.
-            self._client_params.url = auth_client.current_service_urls()["services"][
+            self._client_params.url = runtime_url or auth_client.current_service_urls()["services"][
                 "runtime"
             ]
             self._client_params.token = auth_client.current_access_token()
