@@ -21,6 +21,7 @@ from contextlib import suppress
 from collections import defaultdict
 from typing import DefaultDict, Dict
 
+from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit_ibm_runtime import QISKIT_IBM_RUNTIME_LOGGER_NAME
 from qiskit_ibm_runtime import QiskitRuntimeService
 
@@ -136,7 +137,7 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
         cls.program_ids = {}
         cls.sim_backends = {}
         service = cls.service
-        cls.program_ids[service.channel] = "sampler"
+        cls.program_ids[service.channel] = "circuit-runner"
         cls._find_sim_backends()
 
     @classmethod
@@ -188,6 +189,7 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
                 "interim_results": interim_results or {},
                 "final_result": final_result or {},
                 "sleep_per_iteration": sleep_per_iteration,
+                "circuits": ReferenceCircuits.bell(),
             }
         )
         pid = program_id or self.program_ids[service.channel]
