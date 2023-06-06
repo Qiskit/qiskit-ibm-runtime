@@ -29,9 +29,12 @@ from qiskit.providers.models import (
     QasmBackendConfiguration,
 )
 
+from qiskit_ibm_provider.proxies import ProxyConfiguration
+from qiskit_ibm_provider.utils.hgp import to_instance_format, from_instance_format
+from qiskit_ibm_provider.utils.backend_decoder import configuration_from_server_data
 from qiskit_ibm_runtime import ibm_backend
+
 from .accounts import AccountManager, Account, AccountType, ChannelType
-from .proxies import ProxyConfiguration
 from .api.clients import AuthClient, VersionClient
 from .api.clients.runtime import RuntimeClient
 from .api.exceptions import RequestsApiError
@@ -48,8 +51,6 @@ from .program.result_decoder import ResultDecoder
 from .runtime_job import RuntimeJob
 from .runtime_program import RuntimeProgram, ParameterNamespace
 from .utils import RuntimeDecoder, to_base64_string, to_python_identifier
-from .utils.backend_decoder import configuration_from_server_data
-from .utils.hgp import to_instance_format, from_instance_format
 from .api.client_parameters import ClientParameters
 from .runtime_options import RuntimeOptions
 from .ibm_backend import IBMBackend
@@ -563,7 +564,8 @@ class QiskitRuntimeService(Provider):
                         self._backend_configs[name],
                         instance,
                     )
-                backends.append(self._backends[name])
+                if self._backends[name]:
+                    backends.append(self._backends[name])
             elif instance:
                 hgp = self._get_hgp(instance=instance)
                 for backend_name in hgp.backends:
@@ -575,7 +577,8 @@ class QiskitRuntimeService(Provider):
                         self._backends[backend_name] = self._create_backend_obj(
                             self._backend_configs[backend_name], instance
                         )
-                    backends.append(self._backends[backend_name])
+                    if self._backends[backend_name]:
+                        backends.append(self._backends[backend_name])
             else:
                 for backend_name, backend_config in self._backends.items():
                     if not backend_config:
@@ -583,7 +586,8 @@ class QiskitRuntimeService(Provider):
                         self._backends[backend_name] = self._create_backend_obj(
                             self._backend_configs[backend_name]
                         )
-                    backends.append(self._backends[backend_name])
+                    if self._backends[backend_name]:
+                        backends.append(self._backends[backend_name])
 
         else:
             if instance:

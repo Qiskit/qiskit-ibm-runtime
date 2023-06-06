@@ -1,0 +1,12 @@
+---
+features:
+  - |
+    Support input of type ``CouplingMap`` when given as simulator option.
+    Previously we supported, for example::
+    
+      options.simulator = {"coupling_map": [[0, 1], [1, 0]]}
+    
+    Now we also support the following::
+    
+      options.simulator = {"coupling_map": CouplingMap.from_line(10)}
+

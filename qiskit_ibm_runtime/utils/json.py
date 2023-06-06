@@ -56,7 +56,7 @@ from qiskit.circuit.parametertable import ParameterView
 from qiskit.result import Result
 from qiskit.version import __version__ as _terra_version_string
 
-from ..qpy import (
+from qiskit_ibm_provider.qpy import (
     _write_parameter,
     _write_parameter_expression,
     _read_parameter_expression,
@@ -65,7 +65,6 @@ from ..qpy import (
     dump,
     load,
 )
-
 
 _TERRA_VERSION = tuple(
     int(x)
