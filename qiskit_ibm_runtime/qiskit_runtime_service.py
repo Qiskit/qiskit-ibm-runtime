@@ -1006,7 +1006,7 @@ class QiskitRuntimeService(Provider):
             hgp_name = hgp.name
         backend = self.backend(name=qrt_options.backend, instance=hgp_name)
         status = backend.status()
-        if status.operational is True and not status.status_msg == "active":
+        if status.operational is True and status.status_msg != "active":
             warnings.warn(f"The backend {backend.name} is currently paused.")
 
         try:
