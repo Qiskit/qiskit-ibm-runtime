@@ -985,17 +985,10 @@ class QiskitRuntimeService(Provider):
         """
         # TODO: Remove this after 3 months
         if program_id in ["hello-world", "vqe", "qaoa"]:
-            if program_id == "hello-world":
-                msg = "Please use the sampler program instead."
-            elif program_id == "vqe":
-                msg = (
-                    "Please take a look at this tutorial "
-                    "https://qiskit.org/ecosystem/ibm-runtime/tutorials/vqe_with_estimator.html "
-                )
-            elif program_id == "qaoa":
-                msg = "Please take a look at this tutorial ..."
             raise IBMInputValueError(
-                f"Program {program_id} has been removed and is no longer supported. {msg}"
+                "The hello-world, vqe, and qaoa programs have been retired in the "
+                "Qiskit Runtime service. "
+                "Please visit https://qiskit.org/ecosystem/ibm-runtime for more information."
             )
 
         qrt_options: RuntimeOptions = options
