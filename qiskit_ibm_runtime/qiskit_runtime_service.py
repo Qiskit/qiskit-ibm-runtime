@@ -564,7 +564,8 @@ class QiskitRuntimeService(Provider):
                         self._backend_configs[name],
                         instance,
                     )
-                backends.append(self._backends[name])
+                if self._backends[name]:
+                    backends.append(self._backends[name])
             elif instance:
                 hgp = self._get_hgp(instance=instance)
                 for backend_name in hgp.backends:
@@ -576,7 +577,8 @@ class QiskitRuntimeService(Provider):
                         self._backends[backend_name] = self._create_backend_obj(
                             self._backend_configs[backend_name], instance
                         )
-                    backends.append(self._backends[backend_name])
+                    if self._backends[backend_name]:
+                        backends.append(self._backends[backend_name])
             else:
                 for backend_name, backend_config in self._backends.items():
                     if not backend_config:
@@ -584,7 +586,8 @@ class QiskitRuntimeService(Provider):
                         self._backends[backend_name] = self._create_backend_obj(
                             self._backend_configs[backend_name]
                         )
-                    backends.append(self._backends[backend_name])
+                    if self._backends[backend_name]:
+                        backends.append(self._backends[backend_name])
 
         else:
             if instance:
