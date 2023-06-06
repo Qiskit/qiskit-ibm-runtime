@@ -297,3 +297,30 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
                 job.result()
             self.assertIn("REGISTER NAME", str(err.exception))
             self.assertFalse("python -m uvicorn server.main" in str(err.exception))
+
+    @run_integration_test
+    def test_estimator_no_session(self, service):
+        """Test estimator primitive without a session."""
+
+        backend = service.backend(self.backend)
+
+        psi1 = RealAmplitudes(num_qubits=2, reps=2)
+
+        # pylint: disable=invalid-name
+        H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
+
+        estimator = Estimator(backend=backend)
+        self.assertIsInstance(estimator, BaseEstimator)
+        self.assertIsNone(estimator.session)
+
+        theta1 = [0, 1, 1, 2, 3, 5]
+        circuits1 = [psi1]
+        # calculate [ <psi1(theta1)|H1|psi1(theta1)> ]
+        job = estimator.run(
+            circuits=circuits1, observables=[H1], parameter_values=[theta1]
+        )
+        result1 = job.result()
+        self.assertIsInstance(result1, EstimatorResult)
+        self.assertEqual(len(result1.values), len(circuits1))
+        self.assertEqual(len(result1.metadata), len(circuits1))
+        self.assertIsNone(job.session_id)
