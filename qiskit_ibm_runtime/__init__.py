@@ -32,7 +32,7 @@ computing tasks while also accounting for the latest developments in
 quantum hardware and software.
 
 Qiskit Runtime also has the concept of a session. Jobs submitted within a session are
-prioritized by the scheduler, and parameter data is cached for reuse. A session
+prioritized by the scheduler. A session
 allows you to make iterative calls to the quantum computer more efficiently.
 
 Below is an example of using primitives within a session::
@@ -124,31 +124,6 @@ Supplementary Information
         import logging
         logging.getLogger('qiskit_ibm_runtime').setLevel(logging.WARNING)
 
-.. dropdown:: Invoking a non-primitive program
-   :animate: fade-in-slide-down
-
-    Qiskit Runtime has a handful of predefined programs in addition to the primitives.
-    Unlike the primitives, these programs don't have special classes defined and
-    can be invoked in a generic way. For example::
-
-        from qiskit_ibm_runtime import QiskitRuntimeService
-
-        # Initialize account.
-        service = QiskitRuntimeService()
-
-        # Configure backend options.
-        options = {"backend": "ibmq_qasm_simulator"}
-
-        # Prepare inputs.
-        runtime_inputs = {"iterations": 1}
-
-        # Invoke the "hello-world" program.
-        job = service.run(program_id="hello-world",
-                          options=options,
-                          inputs=runtime_inputs)
-        # Get runtime job result.
-        print(job.result())
-
 .. dropdown:: Interim and final results
    :animate: fade-in-slide-down
 
@@ -157,20 +132,17 @@ Supplementary Information
     program by passing in the ``callback`` parameter, or at a later time using
     the :meth:`RuntimeJob.stream_results` method. For example::
 
-        from qiskit_ibm_runtime import QiskitRuntimeService
+        from qiskit.test.reference_circuits import ReferenceCircuits
+        from qiskit_ibm_runtime import QiskitRuntimeService, Sampler
 
         service = QiskitRuntimeService()
-        options = {"backend": "ibmq_qasm_simulator"}
-        runtime_inputs = {"iterations": 2}
+        backend = service.backend("ibmq_qasm_simulator")
 
         def result_callback(job_id, result):
             print(result)
 
         # Stream results as soon as the job starts running.
-        job = service.run(program_id="hello-world",
-                          options=options,
-                          inputs=runtime_inputs,
-                          callback=result_callback)
+        job = Sampler(backend).run(ReferenceCircuits.bell(), callback=result_callback)
         print(job.result())
 
 .. dropdown:: Uploading a program
