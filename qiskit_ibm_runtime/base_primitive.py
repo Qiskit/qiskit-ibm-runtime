@@ -41,22 +41,24 @@ class BasePrimitive(ABC):
 
     def __init__(
         self,
-        session: Optional[Union[Session, str, IBMBackend]] = None,
         backend: Optional[Union[str, IBMBackend]] = None,
+        session: Optional[Union[Session, str, IBMBackend]] = None,
         options: Optional[Union[Dict, Options]] = None,
     ):
         """Initializes the primitive.
 
         Args:
-            session: Session in which to call the primitive.
 
             backend: Backend to run the primitive. This can be a backend name or an :class:`IBMBackend`
                 instance. If a name is specified, the default account (e.g. ``QiskitRuntimeService()``)
                 is used.
 
+            session: Session in which to call the primitive.
+
                 If both ``session`` and ``backend`` are specified, ``session`` takes precedence.
-                If neither is specified, and IBM Cloud channel is used, then
-                a default backend is selected.
+                If neither is specified, and the primitive is created inside a
+                :class:`qiskit_ibm_runtime.Session` context manager, then the session is used.
+                Otherwise if IBM Cloud channel is used, a default backend is selected.
 
             options: Primitive options, see :class:`Options` for detailed description.
                 The ``backend`` keyword is still supported but is deprecated.
@@ -104,6 +106,18 @@ class BasePrimitive(ABC):
             )
             self._service = QiskitRuntimeService()
             self._backend = self._service.backend(session)
+        elif isinstance(backend, Session):
+            issue_deprecation_msg(
+                msg="``session`` is no longer the first parameter when initializing "
+                "a Qiskit Runtime primitive",
+                version="0.10.0",
+                remedy="Please use ``session=session`` instead.",
+            )
+            self._session = backend
+            self._service = self._session.service
+            self._backend = self._service.backend(
+                name=self._session.backend(), instance=self._session._instance
+            )
         elif isinstance(backend, IBMBackend):
             self._service = backend.service
             self._backend = backend

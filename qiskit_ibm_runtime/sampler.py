@@ -57,6 +57,9 @@ class Sampler(BasePrimitive, BaseSampler):
             job = sampler.run(bell, shots=1024)
             print(f"Job ID: {job.job_id()}")
             print(f"Job result: {job.result()}")
+
+            # You can run more jobs inside the session
+
             # Close the session only if all jobs are finished
             # and you don't need to run more in the session.
             session.close()
@@ -64,22 +67,23 @@ class Sampler(BasePrimitive, BaseSampler):
 
     def __init__(
         self,
-        session: Optional[Union[Session, str, IBMBackend]] = None,
         backend: Optional[Union[str, IBMBackend]] = None,
+        session: Optional[Union[Session, str, IBMBackend]] = None,
         options: Optional[Union[Dict, Options]] = None,
     ):
         """Initializes the Sampler primitive.
 
         Args:
-            session: Session in which to call the primitive.
-
             backend: Backend to run the primitive. This can be a backend name or an :class:`IBMBackend`
                 instance. If a name is specified, the default account (e.g. ``QiskitRuntimeService()``)
                 is used.
 
+            session: Session in which to call the primitive.
+
                 If both ``session`` and ``backend`` are specified, ``session`` takes precedence.
-                If neither is specified, and IBM Cloud channel is used, then
-                a default backend is selected.
+                If neither is specified, and the primitive is created inside a
+                :class:`qiskit_ibm_runtime.Session` context manager, then the session is used.
+                Otherwise if IBM Cloud channel is used, a default backend is selected.
 
             options: Primitive options, see :class:`Options` for detailed description.
                 The ``backend`` keyword is still supported but is deprecated.
@@ -89,7 +93,7 @@ class Sampler(BasePrimitive, BaseSampler):
         # qiskit.providers.Options. We largely ignore this _run_options because we use
         # a nested dictionary to categorize options.
         BaseSampler.__init__(self)
-        BasePrimitive.__init__(self, session=session, backend=backend, options=options)
+        BasePrimitive.__init__(self, backend=backend, session=session, options=options)
 
     def run(  # pylint: disable=arguments-differ
         self,

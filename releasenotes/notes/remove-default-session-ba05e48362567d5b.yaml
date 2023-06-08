@@ -8,6 +8,10 @@ upgrade:
     ``backend`` parameter to pass a backend name or instance instead of
     the ``session`` parameter (which can continue to be used to pass a
     session).
+  - |
+    The first parameter of the :class:`qiskit_ibm_runtime.Sampler` and
+    :class:`qiskit_ibm_runtime.Estimator` constructors is now ``backend``
+    instead of ``session``.
 deprecations:
   - |
     Passing a backend name or backend instance to the ``session`` parameter
@@ -15,4 +19,3 @@ deprecations:
     :class:`qiskit_ibm_runtime.Estimator` has been deprecated. Please use
     the ``backend`` parameter instead. You can continue to pass a session
     using the ``session`` parameter.
-  
