@@ -159,10 +159,29 @@ class TestPrimitives(IBMTestCase):
                 "qiskit_ibm_runtime.base_primitive.QiskitRuntimeService"
             ) as mock_service:
                 mock_service.reset_mock()
+                mock_service_inst = MagicMock()
+                mock_service.return_value = mock_service_inst
+                mock_backend = MagicMock()
+                mock_backend.name = backend_name
+                mock_service_inst.backend.return_value = mock_backend
+
                 inst = cls(backend=backend_name)
                 mock_service.assert_called_once()
                 self.assertIsNone(inst.session)
+                inst.run(self.qx, observables=self.obs)
+                mock_service_inst.run.assert_called_once()
+                runtime_options = mock_service_inst.run.call_args.kwargs["options"]
+                self.assertEqual(runtime_options["backend"], backend_name)
 
+    def test_init_with_session_backend_str(self):
+        """Test initializing a primitive with a backend name using session."""
+        primitives = [Sampler, Estimator]
+        backend_name = "ibm_gotham"
+
+        for cls in primitives:
+            with self.subTest(primitive=cls), patch(
+                "qiskit_ibm_runtime.base_primitive.QiskitRuntimeService"
+            ) as mock_service:
                 with self.assertWarns(DeprecationWarning):
                     mock_service.reset_mock()
                     inst = cls(session=backend_name)

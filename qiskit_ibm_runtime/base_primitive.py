@@ -123,7 +123,7 @@ class BasePrimitive(ABC):
             self._backend = backend
         elif isinstance(backend, str):
             self._service = QiskitRuntimeService()
-            self._backend = self._service.backend(session)
+            self._backend = self._service.backend(backend)
         elif get_cm_session():
             self._session = get_cm_session()
             self._service = self._session.service

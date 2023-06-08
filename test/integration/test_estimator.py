@@ -301,8 +301,8 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
     @run_integration_test
     def test_estimator_no_session(self, service):
         """Test estimator primitive without a session."""
-
         backend = service.backend(self.backend)
+        circ_count = 3
 
         psi1 = RealAmplitudes(num_qubits=2, reps=2)
 
@@ -313,14 +313,16 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
         self.assertIsInstance(estimator, BaseEstimator)
         self.assertIsNone(estimator.session)
 
-        theta1 = [0, 1, 1, 2, 3, 5]
-        circuits1 = [psi1]
+        theta = [0, 1, 1, 2, 3, 5]
+        circuits = [psi1] * circ_count
         # calculate [ <psi1(theta1)|H1|psi1(theta1)> ]
         job = estimator.run(
-            circuits=circuits1, observables=[H1], parameter_values=[theta1]
+            circuits=circuits,
+            observables=[H1] * circ_count,
+            parameter_values=[theta] * circ_count,
         )
         result1 = job.result()
         self.assertIsInstance(result1, EstimatorResult)
-        self.assertEqual(len(result1.values), len(circuits1))
-        self.assertEqual(len(result1.metadata), len(circuits1))
+        self.assertEqual(len(result1.values), len(circuits))
+        self.assertEqual(len(result1.metadata), len(circuits))
         self.assertIsNone(job.session_id)
