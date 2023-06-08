@@ -1011,7 +1011,7 @@ class QiskitRuntimeService(Provider):
         status = backend.status()
         if status.operational is True and status.status_msg != "active":
             warnings.warn(
-                f"The backend {backend.name} is currently {status.status_msg}."
+                f"The backend {backend.name} currently has a status of {status.status_msg}."
             )
 
         try:
