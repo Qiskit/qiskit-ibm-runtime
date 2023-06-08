@@ -193,10 +193,7 @@ class TestOptions(IBMTestCase):
         coupling_map = [[1, 0], [2, 1], [0, 1], [1, 2]]
         coupling_map_set = {tuple(cp) for cp in coupling_map}
         line_coupling_map_set = {tuple(cp) for cp in CouplingMap.from_line(3)}
-        options_types = [
-            coupling_map_set,
-            line_coupling_map_set
-        ]
+        options_types = [coupling_map_set, line_coupling_map_set]
         for opt in options_types:
             with self.subTest(opts_dict=opt):
                 options = Options()
@@ -204,7 +201,4 @@ class TestOptions(IBMTestCase):
                 inputs = Options._get_program_inputs(asdict(options))
                 input_coupling_map = inputs["transpilation_settings"]["coupling_map"]
                 inputs_set = {tuple(input) for input in input_coupling_map}
-                self.assertEqual(
-                    inputs_set, opt
-                )
-
+                self.assertEqual(inputs_set, opt)
