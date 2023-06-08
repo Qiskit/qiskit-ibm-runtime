@@ -191,15 +191,20 @@ class TestOptions(IBMTestCase):
     def test_coupling_map_options(self):
         """Check that coupling_map is processed correctly"""
         coupling_map = [[1, 0], [2, 1], [0, 1], [1, 2]]
+        coupling_map_set = {tuple(cp) for cp in coupling_map}
+        line_coupling_map_set = {tuple(cp) for cp in CouplingMap.from_line(3)}
         options_types = [
-            coupling_map,
-            CouplingMap.from_line(3),
+            coupling_map_set,
+            line_coupling_map_set
         ]
         for opt in options_types:
             with self.subTest(opts_dict=opt):
                 options = Options()
                 options.simulator.coupling_map = opt
                 inputs = Options._get_program_inputs(asdict(options))
+                input_coupling_map = inputs["transpilation_settings"]["coupling_map"]
+                inputs_set = {tuple(input) for input in input_coupling_map}
                 self.assertEqual(
-                    inputs["transpilation_settings"]["coupling_map"], coupling_map
+                    inputs_set, opt
                 )
+
