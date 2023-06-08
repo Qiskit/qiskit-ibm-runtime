@@ -47,6 +47,8 @@ class TestIntegrationBackend(IBMIntegrationTestCase):
         configs = service._backend_configs
         configs["test_backend"] = None
         backend_names = [backend.name for backend in backends]
+        # check filters still work
+        service.backends(instance=instance, simulator=True)
 
         for config in configs.values():
             backend = service._create_backend_obj(config, instance=instance)
