@@ -42,13 +42,19 @@ class ProgramJob(RestAdapterBase):
         """
         super().__init__(session, "{}/jobs/{}".format(url_prefix, job_id))
 
-    def get(self) -> Dict:
+    def get(self, exclude_params: bool = None) -> Dict:
         """Return program job information.
+
+        Args:
+            exclude_params: If ``True``, the params will not be included in the response.
 
         Returns:
             JSON response.
         """
-        return self.session.get(self.get_url("self")).json()
+        payload = {}
+        if exclude_params:
+            payload["exclude_params"] = "true"
+        return self.session.get(self.get_url("self"), params=payload).json()
 
     def delete(self) -> None:
         """Delete program job."""

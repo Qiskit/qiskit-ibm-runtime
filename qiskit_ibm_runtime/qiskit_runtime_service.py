@@ -993,7 +993,7 @@ class QiskitRuntimeService(Provider):
         elif isinstance(options, Dict):
             qrt_options = RuntimeOptions(**options)
 
-        # If using params object, extract as dictionary
+        # If using params object, extract as dictionary.
         if isinstance(inputs, ParameterNamespace):
             inputs.validate()
             inputs = vars(inputs)
@@ -1007,6 +1007,12 @@ class QiskitRuntimeService(Provider):
                 instance=qrt_options.instance, backend_name=qrt_options.backend
             )
             hgp_name = hgp.name
+        backend = self.backend(name=qrt_options.backend, instance=hgp_name)
+        status = backend.status()
+        if status.operational is True and status.status_msg != "active":
+            warnings.warn(
+                f"The backend {backend.name} currently has a status of {status.status_msg}."
+            )
 
         try:
             response = self._api_client.program_run(
@@ -1299,7 +1305,7 @@ class QiskitRuntimeService(Provider):
             IBMRuntimeError: If the request failed.
         """
         try:
-            response = self._api_client.job_get(job_id)
+            response = self._api_client.job_get(job_id, exclude_params=True)
         except RequestsApiError as ex:
             if ex.status_code == 404:
                 raise RuntimeJobNotFound(f"Job not found: {ex.message}") from None
