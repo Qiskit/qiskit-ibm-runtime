@@ -56,6 +56,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         self.assertEqual(self.program_ids[service.channel], rjob.program_id)
 
     @run_integration_test
+    @quantum_only
     def test_lazy_loading_params(self, service):
         """Test lazy loading job params."""
         job = self._run_program(
@@ -148,7 +149,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
     @run_integration_test
     def test_retrieve_jobs_by_job_tags(self, service):
         """Test retrieving jobs by job_tags."""
-        job_tags = ["test_tag"]
+        job_tags = ["job_tag_test"]
         job = self._run_program(service, job_tags=job_tags)
         job.wait_for_final_state()
         rjobs = service.jobs(job_tags=job_tags)
