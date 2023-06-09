@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    When retrieving a job with :meth:`qiskit_ibm_runtime.IBMRuntimeService.job` the ``params``
+    will no longer be returned from the API. They will instead be loaded loazily when they are actually needed
+    in :meth:`qiskit_ibm_runtime.RuntimeJob.inputs`.

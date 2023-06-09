@@ -1305,7 +1305,7 @@ class QiskitRuntimeService(Provider):
             IBMRuntimeError: If the request failed.
         """
         try:
-            response = self._api_client.job_get(job_id)
+            response = self._api_client.job_get(job_id, exclude_params=True)
         except RequestsApiError as ex:
             if ex.status_code == 404:
                 raise RuntimeJobNotFound(f"Job not found: {ex.message}") from None
