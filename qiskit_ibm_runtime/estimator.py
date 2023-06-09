@@ -14,24 +14,19 @@
 
 from __future__ import annotations
 import os
-import copy
 from typing import Optional, Dict, Sequence, Any, Union
 import logging
-from dataclasses import asdict
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.opflow import PauliSumOp
 from qiskit.quantum_info.operators.base_operator import BaseOperator
-from qiskit.providers.options import Options as TerraOptions
-from qiskit.primitives import BaseEstimator, EstimatorResult
+from qiskit.primitives import BaseEstimator
 
 # TODO import _circuit_key from terra once 0.23 is released
 from .runtime_job import RuntimeJob
 from .ibm_backend import IBMBackend
-from .session import get_default_session
 from .options import Options
-from .options.utils import set_default_error_levels
-from .constants import DEFAULT_DECODERS
+from .base_primitive import BasePrimitive
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
@@ -39,7 +34,7 @@ from .session import Session
 logger = logging.getLogger(__name__)
 
 
-class Estimator(BaseEstimator):
+class Estimator(BasePrimitive, BaseEstimator):
     """Class for interacting with Qiskit Runtime Estimator primitive service.
 
     Qiskit Runtime Estimator primitive service estimates expectation values of quantum circuits and
@@ -92,22 +87,23 @@ class Estimator(BaseEstimator):
 
     def __init__(
         self,
+        backend: Optional[Union[str, IBMBackend]] = None,
         session: Optional[Union[Session, str, IBMBackend]] = None,
         options: Optional[Union[Dict, Options]] = None,
     ):
         """Initializes the Estimator primitive.
 
         Args:
+            backend: Backend to run the primitive. This can be a backend name or an :class:`IBMBackend`
+                instance. If a name is specified, the default account (e.g. ``QiskitRuntimeService()``)
+                is used.
+
             session: Session in which to call the primitive.
 
-                * If an instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
-                  string name of a backend is specified, a new session is created for
-                  that backend, unless a default session for the same backend
-                  and channel already exists.
-
-                * If ``None``, a new session is created using the default saved
-                  account and a default backend (IBM Cloud channel only), unless
-                  a default session already exists.
+                If both ``session`` and ``backend`` are specified, ``session`` takes precedence.
+                If neither is specified, and the primitive is created inside a
+                :class:`qiskit_ibm_runtime.Session` context manager, then the session is used.
+                Otherwise if IBM Cloud channel is used, a default backend is selected.
 
             options: Primitive options, see :class:`Options` for detailed description.
                 The ``backend`` keyword is still supported but is deprecated.
@@ -116,36 +112,8 @@ class Estimator(BaseEstimator):
         # The base class, however, uses a `_run_options` which is an instance of
         # qiskit.providers.Options. We largely ignore this _run_options because we use
         # a nested dictionary to categorize options.
-        super().__init__()
-
-        backend = None
-        self._session: Session = None
-
-        if options is None:
-            self._options = asdict(Options())
-        elif isinstance(options, Options):
-            self._options = asdict(copy.deepcopy(options))
-        else:
-            options_copy = copy.deepcopy(options)
-            default_options = asdict(Options())
-            self._options = Options._merge_options(default_options, options_copy)
-
-        if isinstance(session, Session):
-            self._session = session
-        else:
-            backend = session or backend
-            self._session = get_default_session(None, backend)
-
-        # self._first_run = True
-        # self._circuits_map = {}
-        # if self.circuits:
-        #     for circuit in self.circuits:
-        #         circuit_id = _hash(
-        #             json.dumps(_circuit_key(circuit), cls=RuntimeEncoder)
-        #         )
-        #         if circuit_id not in self._session._circuits_map:
-        #             self._circuits_map[circuit_id] = circuit
-        #             self._session._circuits_map[circuit_id] = circuit
+        BaseEstimator.__init__(self)
+        BasePrimitive.__init__(self, backend=backend, session=session, options=options)
 
     def run(  # pylint: disable=arguments-differ
         self,
@@ -236,113 +204,9 @@ class Estimator(BaseEstimator):
             "parameters": [circ.parameters for circ in circuits],
             "parameter_values": parameter_values,
         }
-
-        combined = Options._merge_options(self._options, kwargs.get("_user_kwargs", {}))
-
-        backend_obj: Optional[IBMBackend] = None
-        if self._session.backend():
-            backend_obj = self._session.service.backend(self._session.backend())
-            combined = set_default_error_levels(
-                combined,
-                backend_obj,
-                Options._DEFAULT_OPTIMIZATION_LEVEL,
-                Options._DEFAULT_RESILIENCE_LEVEL,
-            )
-        else:
-            combined["optimization_level"] = Options._DEFAULT_OPTIMIZATION_LEVEL
-            combined["resilience_level"] = Options._DEFAULT_RESILIENCE_LEVEL
-        logger.info("Submitting job using options %s", combined)
-        self._validate_options(combined)
-        inputs.update(Options._get_program_inputs(combined))
-
-        if backend_obj and combined["transpilation"]["skip_transpilation"]:
-            for circ in circuits:
-                backend_obj.check_faulty(circ)
-
-        return self._session.run(
-            program_id=self._PROGRAM_ID,
-            inputs=inputs,
-            options=Options._get_runtime_options(combined),
-            callback=combined.get("environment", {}).get("callback", None),
-            result_decoder=DEFAULT_DECODERS.get(self._PROGRAM_ID),
+        return self._run_primitive(
+            primitive_inputs=inputs, user_kwargs=kwargs.get("_user_kwargs", {})
         )
-
-    def _call(
-        self,
-        circuits: Sequence[int],
-        observables: Sequence[int],
-        parameter_values: Optional[
-            Union[Sequence[float], Sequence[Sequence[float]]]
-        ] = None,
-        **run_options: Any,
-    ) -> EstimatorResult:
-        """Estimates expectation values for given inputs in a runtime session.
-
-        Args:
-            circuits: A list of circuit indices.
-            observables: A list of observable indices.
-            parameter_values: An optional list of concrete parameters to be bound.
-            **run_options: A collection of kwargs passed to `backend.run()`.
-
-                shots: Number of repetitions of each circuit, for sampling.
-                qubit_lo_freq: List of default qubit LO frequencies in Hz.
-                meas_lo_freq: List of default measurement LO frequencies in Hz.
-                schedule_los: Experiment LO configurations, frequencies are given in Hz.
-                rep_delay: Delay between programs in seconds. Only supported on certain
-                    backends (if ``backend.configuration().dynamic_reprate_enabled=True``).
-                init_qubits: Whether to reset the qubits to the ground state for each shot.
-                use_measure_esp: Whether to use excited state promoted (ESP) readout for measurements
-                    which are the terminal instruction to a qubit. ESP readout can offer higher fidelity
-                    than standard measurement sequences.
-
-        Returns:
-            An instance of :class:`qiskit.primitives.EstimatorResult`.
-        """
-        inputs = {
-            "circuits": self._initial_inputs["circuits"],
-            "parameters": self._initial_inputs["parameters"],
-            "observables": self._initial_inputs["observables"],
-            "circuit_indices": circuits,
-            "parameter_values": parameter_values,
-            "observable_indices": observables,
-        }
-        combined = Options._merge_options(self._options, run_options)
-
-        self._validate_options(combined)
-        inputs.update(Options._get_program_inputs(combined))
-
-        return self._session.run(
-            program_id=self._PROGRAM_ID,
-            inputs=inputs,
-            options=Options._get_runtime_options(combined),
-            result_decoder=DEFAULT_DECODERS.get(self._PROGRAM_ID),
-        ).result()
-
-    @property
-    def session(self) -> Session:
-        """Return session used by this primitive.
-
-        Returns:
-            Session used by this primitive.
-        """
-        return self._session
-
-    @property
-    def options(self) -> TerraOptions:
-        """Return options values for the estimator.
-
-        Returns:
-            options
-        """
-        return TerraOptions(**self._options)
-
-    def set_options(self, **fields: Any) -> None:
-        """Set options values for the estimator.
-
-        Args:
-            **fields: The fields to update the options
-        """
-        self._options = Options._merge_options(self._options, fields)
 
     def _validate_options(self, options: dict) -> None:
         """Validate that program inputs (options) are valid
@@ -361,12 +225,19 @@ class Estimator(BaseEstimator):
                 f"{list(range(Options._MAX_RESILIENCE_LEVEL_ESTIMATOR + 1))} in Estimator"
             )
 
-        if options.get("resilience_level") == 3 and self._session.backend() in [
-            b.name for b in self._session.service.backends(simulator=True)
-        ]:
+        if (
+            options.get("resilience_level") == 3
+            and self._backend
+            and self._backend.configuration().simulator
+        ):
             if not options.get("simulator").get("coupling_map"):
                 raise ValueError(
                     "When the backend is a simulator and resilience_level == 3,"
                     "a coupling map is required."
                 )
         Options.validate_options(options)
+
+    @classmethod
+    def _program_id(cls) -> str:
+        """Return the program ID."""
+        return "estimator"
