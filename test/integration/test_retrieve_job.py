@@ -153,7 +153,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         job = self._run_program(service, job_tags=job_tags)
         job.wait_for_final_state()
         rjobs = service.jobs(job_tags=job_tags)
-        self.assertIn(job.job(), [j.job_id() for j in rjobs])
+        self.assertIn(job.job_id(), [j.job_id() for j in rjobs])
         rjobs = service.jobs(job_tags=["no_test_tag"])
         self.assertFalse(rjobs)
 
