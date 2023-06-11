@@ -1,0 +1,5 @@
+---
+fixes:
+  - |
+     Fixed infinite recursion when attempting to deepcopy an IBMBackend.
+
