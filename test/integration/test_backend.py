@@ -13,7 +13,7 @@
 """Tests for backend functions using real runtime service."""
 
 from unittest import SkipTest
-
+import copy
 
 from qiskit.transpiler.target import Target
 from qiskit_ibm_runtime import QiskitRuntimeService
@@ -163,3 +163,16 @@ class TestIBMBackend(IBMIntegrationTestCase):
         with self.subTest(backend=backend.name):
             with self.assertRaises(RuntimeError):
                 backend.run()
+
+    def test_backend_deepcopy(self):
+        """Test that deepcopy on IBMBackend works correctly"""
+        service = QiskitRuntimeService(channel="ibm_quantum")
+        sim_backend = service.get_backend("ibmq_qasm_simulator")
+        device_backend = service.get_backend("ibmq_lima")
+        for backend in [sim_backend, device_backend]:
+            with self.subTest(backend=backend.name):
+                backend_copy = copy.deepcopy(backend)
+                self.assertEqual(backend_copy.name, backend.name)
+                self.assertEqual(
+                    backend_copy.configuration().backend_name, backend.name
+                )

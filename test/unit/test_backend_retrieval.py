@@ -13,12 +13,9 @@
 """Backends Filtering Test."""
 
 import uuid
-import copy
 
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.fake_provider import FakeLima
-
-from qiskit_ibm_runtime import QiskitRuntimeService
 
 from .mock.fake_runtime_service import FakeRuntimeService
 from .mock.fake_api_backend import FakeApiBackendSpecs
@@ -253,11 +250,3 @@ class TestGetBackend(IBMTestCase):
         service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
         with self.assertRaises(QiskitBackendNotFoundError):
             _ = service.backend(backend_name, instance=hgp)
-
-    def test_backend_deepcopy(self):
-        """Test that deepcopy on IBMBackend works correctly"""
-        service = QiskitRuntimeService(channel="ibm_quantum")
-        backend = service.get_backend("ibmq_qasm_simulator")
-        backend_copy = copy.deepcopy(backend)
-        self.assertEqual(backend_copy.name, backend.name)
-        self.assertEqual(backend_copy.configuration().backend_name, backend.name)
