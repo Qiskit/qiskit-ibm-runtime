@@ -202,7 +202,7 @@ class RuntimeClient(BaseBackendClient):
                 spec=spec,
             )
 
-    def job_get(self, job_id: str) -> Dict:
+    def job_get(self, job_id: str, exclude_params: bool = None) -> Dict:
         """Get job data.
 
         Args:
@@ -211,7 +211,7 @@ class RuntimeClient(BaseBackendClient):
         Returns:
             JSON response.
         """
-        response = self._api.program_job(job_id).get()
+        response = self._api.program_job(job_id).get(exclude_params=exclude_params)
         logger.debug("Runtime job get response: %s", response)
         return response
 
