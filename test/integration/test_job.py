@@ -45,6 +45,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     def test_run_program(self, service):
         """Test running a program."""
         job = self._run_program(service)
+        job.wait_for_final_state()
         self.assertEqual(JobStatus.DONE, job.status())
         self.assertTrue(job.result())
 

@@ -987,11 +987,12 @@ class QiskitRuntimeService(Provider):
             IBMRuntimeError: An error occurred running the program.
         """
         # TODO: Remove this after 3 months
-        if program_id in ["hello-world", "vqe", "qaoa"]:
+        if program_id in ["vqe", "qaoa"]:
             raise IBMInputValueError(
-                "The hello-world, vqe, and qaoa programs have been retired in the "
-                "Qiskit Runtime service. "
-                "Please visit https://qiskit.org/ecosystem/ibm-runtime for more information."
+                "The vqe and qaoa programs have been retired in the "
+                "Qiskit Runtime service. Please visit https://qiskit.org/ecosystem/ibm-runtime "
+                "for an introduction on Sessions and Primitives, and to access "
+                "tutorials on how to execute VQE and QAOA using Qiskit Runtime Primitives."
             )
 
         qrt_options: RuntimeOptions = options
