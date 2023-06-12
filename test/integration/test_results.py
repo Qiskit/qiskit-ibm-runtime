@@ -13,7 +13,7 @@
 """Tests for job functions using real runtime service."""
 
 import time
-
+from unittest import skip
 from qiskit.providers.jobstatus import JobStatus
 
 from qiskit_ibm_runtime.exceptions import RuntimeJobTimeoutError
@@ -27,6 +27,7 @@ from ..utils import cancel_job_safe, wait_for_status
 class TestIntegrationResults(IBMIntegrationJobTestCase):
     """Integration tests for result callbacks."""
 
+    @skip("only supported in custom programs, not primitives")
     @run_integration_test
     def test_result_callback(self, service):
         """Test result callback."""
@@ -57,6 +58,7 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
         self.assertFalse(callback_err)
         self.assertIsNotNone(job._ws_client._server_close_code)
 
+    @skip("only supported in custom programs, not primitives")
     @run_integration_test
     def test_result_callback_with_job_result(self, service):
         """Test result callback along with job result."""
@@ -91,6 +93,7 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
         self.assertFalse(callback_err)
         self.assertIsNotNone(job._ws_client._server_close_code)
 
+    @skip("only supported in custom programs, not primitives")
     @run_integration_test
     def test_stream_results(self, service):
         """Test stream_results method."""
@@ -121,6 +124,7 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
         self.assertFalse(callback_err)
         self.assertIsNotNone(job._ws_client._server_close_code)
 
+    @skip("only supported in custom programs, not primitives")
     @run_integration_test
     def test_stream_results_done(self, service):
         """Test streaming results after job is done."""
@@ -145,6 +149,7 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
         self.assertEqual(2, called_back_count)
         self.assertIsNotNone(job._ws_client._server_close_code)
 
+    @skip("only supported in custom programs, not primitives")
     @run_integration_test
     def test_retrieve_interim_results(self, service):
         """Test retrieving interim results with API endpoint"""
@@ -168,6 +173,7 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
         with self.assertRaises(RuntimeJobTimeoutError):
             job.wait_for_final_state(0.1)
 
+    @skip("only supported in custom programs, not primitives")
     @run_integration_test
     def test_callback_error(self, service):
         """Test error in callback method."""
