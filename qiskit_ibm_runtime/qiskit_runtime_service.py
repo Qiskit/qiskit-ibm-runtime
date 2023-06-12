@@ -986,6 +986,14 @@ class QiskitRuntimeService(Provider):
             RuntimeProgramNotFound: If the program cannot be found.
             IBMRuntimeError: An error occurred running the program.
         """
+        # TODO: Remove this after 3 months
+        if program_id in ["vqe", "qaoa"]:
+            raise IBMInputValueError(
+                "The vqe and qaoa programs have been retired in the "
+                "Qiskit Runtime service. Please visit https://qiskit.org/ecosystem/ibm-runtime "
+                "for an introduction on Sessions and Primitives, and to access "
+                "tutorials on how to execute VQE and QAOA using Qiskit Runtime Primitives."
+            )
 
         qrt_options: RuntimeOptions = options
         if options is None:
@@ -1305,7 +1313,7 @@ class QiskitRuntimeService(Provider):
             IBMRuntimeError: If the request failed.
         """
         try:
-            response = self._api_client.job_get(job_id)
+            response = self._api_client.job_get(job_id, exclude_params=True)
         except RequestsApiError as ex:
             if ex.status_code == 404:
                 raise RuntimeJobNotFound(f"Job not found: {ex.message}") from None
