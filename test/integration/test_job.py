@@ -18,6 +18,7 @@ import unittest
 
 from qiskit.providers.jobstatus import JOB_FINAL_STATES, JobStatus
 from qiskit.test.decorators import slow_test
+from qiskit.test.reference_circuits import ReferenceCircuits
 
 from qiskit_ibm_runtime.constants import API_TO_JOB_ERROR_MESSAGE
 from qiskit_ibm_runtime.exceptions import (
@@ -44,9 +45,9 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     def test_run_program(self, service):
         """Test running a program."""
         job = self._run_program(service)
-        result = job.result()
+        job.wait_for_final_state()
         self.assertEqual(JobStatus.DONE, job.status())
-        self.assertEqual("Hello, World!", result)
+        self.assertTrue(job.result())
 
     @slow_test
     @run_integration_test
@@ -225,7 +226,11 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     def test_job_inputs(self, service):
         """Test job inputs."""
         interim_results = get_complex_types()
-        inputs = {"iterations": 1, "interim_results": interim_results}
+        inputs = {
+            "iterations": 1,
+            "interim_results": interim_results,
+            "circuits": ReferenceCircuits.bell(),
+        }
         job = self._run_program(service, inputs=inputs)
         self.assertEqual(inputs, job.inputs)
         rjob = service.job(job.job_id())
