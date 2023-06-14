@@ -397,8 +397,8 @@ class RuntimeJob(Job):
         try:
             issue_deprecation_msg(
                 msg="The 'bss.seconds' attribute is deprecated",
-                version="0.11",
-                remedy="Use 'usage.quantum_seconds' attribute instead.",
+                version="0.11.1",
+                remedy="Use the 'usage.quantum_seconds' attribute instead.",
             )
             metadata_str = self._api_client.job_metadata(self.job_id())
             return json.loads(metadata_str)
