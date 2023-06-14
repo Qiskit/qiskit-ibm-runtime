@@ -126,7 +126,6 @@ Use primitives to write code more efficiently.  For details, see the examples to
 
   .. figure:: ../images/compare-code.png
    :alt: Two code snippets, side by side
-   :target: migrate-prim-based
 
    Code without primitives, and the same code after being rewritten to use primitives.
 
