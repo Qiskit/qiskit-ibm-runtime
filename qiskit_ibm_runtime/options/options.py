@@ -135,10 +135,8 @@ class Options:
             }
         )
         if isinstance(inputs["transpilation_settings"]["coupling_map"], CouplingMap):
-            inputs["transpilation_settings"][
-                "coupling_map"
-            ] = eval(  # pylint: disable=eval-used
-                str(inputs["transpilation_settings"]["coupling_map"])
+            inputs["transpilation_settings"]["coupling_map"] = list(
+                map(list, inputs["transpilation_settings"]["coupling_map"].get_edges())
             )
 
         inputs["resilience_settings"] = options.get("resilience", {})

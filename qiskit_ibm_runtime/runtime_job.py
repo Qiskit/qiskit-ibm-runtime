@@ -45,6 +45,7 @@ from .api.exceptions import RequestsApiError
 from .utils.converters import utc_to_local
 from .api.client_parameters import ClientParameters
 from .utils.utils import CallableStr
+from .utils.deprecation import issue_deprecation_msg
 
 logger = logging.getLogger(__name__)
 
@@ -394,6 +395,11 @@ class RuntimeJob(Job):
             IBMRuntimeError: If a network error occurred.
         """
         try:
+            issue_deprecation_msg(
+                msg="The 'bss.seconds' attribute is deprecated",
+                version="0.11.1",
+                remedy="Use the 'usage.quantum_seconds' attribute instead.",
+            )
             metadata_str = self._api_client.job_metadata(self.job_id())
             return json.loads(metadata_str)
         except RequestsApiError as err:
