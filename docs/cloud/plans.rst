@@ -49,7 +49,7 @@ The Lite plan is free. The Standard plan is not free, although you are only char
 .. figure:: ../images/Runtime_Accounting_Diagram.png
    :alt: This diagram shows that everything before the program starts (such as queuing) is free. After the job starts, it costs $1.60 per second.
 
-   Quantum second accounting   
+   Quantum Runtime second accounting   
 
 The quantum and near-time classical compute times are grouped to deliver the best performance of quantum programs. The runtime environment uses near-time classical compute to host in-term hardware-dependent tasks like session management, circuit optimization, and (when supported) error mitigation to optimize the execution of quantum programs.
 
