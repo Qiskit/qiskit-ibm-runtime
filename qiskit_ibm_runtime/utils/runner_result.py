@@ -64,7 +64,9 @@ class RunnerResult(Result, ResultDecoder):
                 dict_list.append(out)
             else:
                 raise QiskitError(
-                    'No quasi-probability distribution for experiment "{}"'.format(repr(key))
+                    'No quasi-probability distribution for experiment "{}"'.format(
+                        repr(key)
+                    )
                 )
 
         # Return first item of dict_list if size is 1
