@@ -70,7 +70,6 @@ class SimulatorOptions:
 
         self.noise_model = NoiseModel.from_backend(backend)
 
-
         if isinstance(backend, BackendV1):
             self.coupling_map = backend.configuration().coupling_map
             self.basis_gates = backend.configuration().basis_gates
