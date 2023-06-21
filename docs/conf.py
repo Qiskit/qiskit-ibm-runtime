@@ -28,46 +28,46 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath("."))
+sys.path.insert(0, os.path.abspath('.'))
 
 # Set env flag so that we can doc functions that may otherwise not be loaded
 # see for example interactive visualizations in qiskit.visualization.
-os.environ["QISKIT_DOCS"] = "TRUE"
+os.environ['QISKIT_DOCS'] = 'TRUE'
 
 # -- Project information -----------------------------------------------------
-project = "Qiskit Runtime IBM Client"
-copyright = "2022, Qiskit Development Team"  # pylint: disable=redefined-builtin
-author = "Qiskit Development Team"
+project = 'Qiskit Runtime IBM Client'
+copyright = '2022, Qiskit Development Team'  # pylint: disable=redefined-builtin
+author = 'Qiskit Development Team'
 
 # The short X.Y version
-version = ""
+version = ''
 # The full version, including alpha/beta/rc tags
-release = "0.11.2"
+release = '0.11.2'
 
 docs_url_prefix = "ecosystem/ibm-runtime"
 
 # -- General configuration ---------------------------------------------------
 
 extensions = [
-    "sphinx.ext.napoleon",
-    "sphinx.ext.autodoc",
-    "sphinx.ext.autosummary",
-    "sphinx.ext.mathjax",
-    "sphinx.ext.viewcode",
-    "sphinx.ext.extlinks",
-    "sphinx_tabs.tabs",
-    "jupyter_sphinx",
-    "sphinx_autodoc_typehints",
-    "reno.sphinxext",
-    "nbsphinx",
-    "sphinx_design",
+    'sphinx.ext.napoleon',
+    'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
+    'sphinx.ext.mathjax',
+    'sphinx.ext.viewcode',
+    'sphinx.ext.extlinks',
+    'sphinx_tabs.tabs',
+    'jupyter_sphinx',
+    'sphinx_autodoc_typehints',
+    'reno.sphinxext',
+    'nbsphinx',
+    'sphinx_design',
     "qiskit_sphinx_theme",
 ]
-templates_path = ["_templates"]
+templates_path = ['_templates']
 
 nbsphinx_timeout = 300
 nbsphinx_execute = "never"
-nbsphinx_widgets_path = ""
+nbsphinx_widgets_path = ''
 
 nbsphinx_prolog = """
 {% set docname = env.doc2path(env.docname, base=None) %}
@@ -96,7 +96,7 @@ autosummary_generate = True
 # -----------------------------------------------------------------------------
 
 autodoc_default_options = {
-    "inherited-members": None,
+    'inherited-members': None,
 }
 
 
@@ -107,17 +107,19 @@ numfig = True
 # A dictionary mapping 'figure', 'table', 'code-block' and 'section' to
 # strings that are used for format of figure numbers. As a special character,
 # %s will be replaced to figure number.
-numfig_format = {"table": "Table %s"}
+numfig_format = {
+    'table': 'Table %s'
+}
 
 
 translations_list = [
-    ("en", "English"),
-    ("ja_JP", "Japanese"),
-    ("es_UN", "Spanish"),
+    ('en', 'English'),
+    ('ja_JP', 'Japanese'),
+    ('es_UN', 'Spanish'),
 ]
-language = "en"
-locale_dirs = ["locale/"]
-gettext_compact = False  # optional.
+language = 'en'
+locale_dirs = ['locale/']
+gettext_compact = False     # optional.
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -125,7 +127,7 @@ gettext_compact = False  # optional.
 exclude_patterns = ["**site-packages", "_build", "**.ipynb_checkpoints"]
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = "colorful"
+pygments_style = 'colorful'
 
 # A boolean that decides whether module names are prepended to all object names
 # (for object types where a “module” of some kind is defined), e.g. for
@@ -136,7 +138,7 @@ add_module_names = False
 # (e.g., if this is set to ['foo.'], then foo.bar is shown under B, not F).
 # This can be handy if you document a project that consists of a single
 # package. Works only for the HTML builder currently.
-modindex_common_prefix = ["qiskit."]
+modindex_common_prefix = ['qiskit.']
 
 # -- Configuration for extlinks extension ------------------------------------
 # Refer to https://www.sphinx-doc.org/en/master/usage/extensions/extlinks.html
@@ -144,18 +146,18 @@ modindex_common_prefix = ["qiskit."]
 
 # -- Options for HTML output -------------------------------------------------
 
-html_theme = "qiskit_sphinx_theme"
+html_theme = 'qiskit_sphinx_theme'
 
-html_logo = "images/logo.png"
-html_last_updated_fmt = "%Y/%m/%d"
+html_logo = 'images/logo.png'
+html_last_updated_fmt = '%Y/%m/%d'
 
 html_theme_options = {
-    "logo_only": True,
-    "display_version": True,
-    "prev_next_buttons_location": "bottom",
-    "style_external_links": True,
+    'logo_only': True,
+    'display_version': True,
+    'prev_next_buttons_location': 'bottom',
+    'style_external_links': True,
 }
 
-html_sourcelink_suffix = ""
+html_sourcelink_suffix = ''
 
-autoclass_content = "both"
+autoclass_content = 'both'

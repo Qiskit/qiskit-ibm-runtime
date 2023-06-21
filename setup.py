@@ -31,7 +31,9 @@ REQUIREMENTS = [
 ]
 
 # Handle version.
-VERSION_PATH = os.path.join(os.path.dirname(__file__), "qiskit_ibm_runtime", "VERSION.txt")
+VERSION_PATH = os.path.join(
+    os.path.dirname(__file__), "qiskit_ibm_runtime", "VERSION.txt"
+)
 with open(VERSION_PATH, "r") as version_file:
     VERSION = version_file.read().strip()
 
