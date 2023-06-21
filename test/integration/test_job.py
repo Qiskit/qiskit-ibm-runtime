@@ -106,9 +106,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         """Test a program that failed since it ran longer than maximum execution time."""
         max_execution_time = 60
         inputs = {"iterations": 1, "sleep_per_iteration": 61}
-        program_id = self._upload_program(
-            service, max_execution_time=max_execution_time
-        )
+        program_id = self._upload_program(service, max_execution_time=max_execution_time)
         job = self._run_program(service, program_id=program_id, inputs=inputs)
 
         job.wait_for_final_state()
@@ -129,16 +127,12 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         """Test that the program max execution time is overridden."""
         program_max_execution_time = 400
         job_max_execution_time = 350
-        program_id = self._upload_program(
-            service, max_execution_time=program_max_execution_time
-        )
+        program_id = self._upload_program(service, max_execution_time=program_max_execution_time)
         job = self._run_program(
             service, program_id=program_id, max_execution_time=job_max_execution_time
         )
         job.wait_for_final_state()
-        self.assertEqual(
-            job._api_client.job_get(job.job_id())["cost"], job_max_execution_time
-        )
+        self.assertEqual(job._api_client.job_get(job.job_id())["cost"], job_max_execution_time)
 
     @run_integration_test
     def test_invalid_max_execution_time_fails(self, service):

@@ -145,9 +145,7 @@ class TestPrimitives(IBMTestCase):
                 options.transpilation.skip_transpilation = True
                 inst = cls(session=MagicMock(spec=MockSession), options=options)
                 options.transpilation.skip_transpilation = False
-                self.assertTrue(
-                    inst.options.get("transpilation").get("skip_transpilation")
-                )
+                self.assertTrue(inst.options.get("transpilation").get("skip_transpilation"))
 
     def test_init_with_backend_str(self):
         """Test initializing a primitive with a backend name."""
@@ -192,9 +190,7 @@ class TestPrimitives(IBMTestCase):
         """Test initializing a primitive with a backend instance."""
         primitives = [Sampler, Estimator]
         service = MagicMock()
-        backend = IBMBackend(
-            configuration=MagicMock(), service=service, api_client=MagicMock()
-        )
+        backend = IBMBackend(configuration=MagicMock(), service=service, api_client=MagicMock())
         backend.name = "ibm_gotham"
 
         for cls in primitives:
@@ -356,9 +352,7 @@ class TestPrimitives(IBMTestCase):
                     inputs,
                     {
                         "resilience_settings": {"level": 1},
-                        "transpilation_settings": {
-                            "optimization_settings": {"level": 2}
-                        },
+                        "transpilation_settings": {"optimization_settings": {"level": 2}},
                         "run_options": {"shots": 99},
                     },
                 )
@@ -461,9 +455,7 @@ class TestPrimitives(IBMTestCase):
                 inst.run(self.qx, observables=self.obs, shots=200)
                 kwargs_list = session.run.call_args_list
                 for idx, shots in zip([0, 1], [100, 200]):
-                    self.assertEqual(
-                        kwargs_list[idx][1]["inputs"]["run_options"]["shots"], shots
-                    )
+                    self.assertEqual(kwargs_list[idx][1]["inputs"]["run_options"]["shots"], shots)
                 self.assertDictEqual(inst.options.__dict__, asdict(Options()))
 
     def test_run_same_session(self):
@@ -695,13 +687,9 @@ class TestPrimitives(IBMTestCase):
                 with self.assertRaises(ValueError) as exc:
                     inst = cls(session=session, options=opts_dict)
                     inst.run(self.qx, observables=self.obs)
-                self.assertIn(
-                    list(opts_dict["resilience"].values())[0], str(exc.exception)
-                )
+                self.assertIn(list(opts_dict["resilience"].values())[0], str(exc.exception))
                 if len(opts_dict["resilience"].keys()) > 1:
-                    self.assertIn(
-                        list(opts_dict["resilience"].keys())[1], str(exc.exception)
-                    )
+                    self.assertIn(list(opts_dict["resilience"].keys())[1], str(exc.exception))
 
     def test_environment_options(self):
         """Test environment options."""
@@ -724,9 +712,7 @@ class TestPrimitives(IBMTestCase):
                 with self.assertRaises(ValueError) as exc:
                     inst = cls(session=session, options=opts_dict)
                     inst.run(self.qx, observables=self.obs)
-                self.assertIn(
-                    list(opts_dict["environment"].values())[0], str(exc.exception)
-                )
+                self.assertIn(list(opts_dict["environment"].values())[0], str(exc.exception))
 
     def test_transpilation_options(self):
         """Test transpilation options."""
@@ -751,9 +737,7 @@ class TestPrimitives(IBMTestCase):
                 with self.assertRaises(ValueError) as exc:
                     inst = cls(session=session, options=opts_dict)
                     inst.run(self.qx, observables=self.obs)
-                self.assertIn(
-                    list(opts_dict["transpilation"].keys())[0], str(exc.exception)
-                )
+                self.assertIn(list(opts_dict["transpilation"].keys())[0], str(exc.exception))
 
     def test_max_execution_time_options(self):
         """Test transpilation options."""
@@ -848,9 +832,7 @@ class TestPrimitives(IBMTestCase):
         observable = SparsePauliOp("Z" * num_qubits)
 
         edge_qubits = [0, 1]
-        ibm_backend = create_faulty_backend(
-            fake_backend, faulty_edge=("cx", edge_qubits)
-        )
+        ibm_backend = create_faulty_backend(fake_backend, faulty_edge=("cx", edge_qubits))
         service = MagicMock()
         service.backend.return_value = ibm_backend
         session = Session(service=service, backend=fake_backend.name)
@@ -901,15 +883,11 @@ class TestPrimitives(IBMTestCase):
         circ = QuantumCircuit(2, 2)
         circ.cx(0, 1)
 
-        transpiled = transpile(
-            circ, backend=fake_backend, initial_layout=coupling_map[0]
-        )
+        transpiled = transpile(circ, backend=fake_backend, initial_layout=coupling_map[0])
         observable = SparsePauliOp("Z" * fake_backend.configuration().num_qubits)
 
         edge_qubits = coupling_map[-1]
-        ibm_backend = create_faulty_backend(
-            fake_backend, faulty_edge=("cx", edge_qubits)
-        )
+        ibm_backend = create_faulty_backend(fake_backend, faulty_edge=("cx", edge_qubits))
 
         service = MagicMock()
         service.backend.return_value = ibm_backend
