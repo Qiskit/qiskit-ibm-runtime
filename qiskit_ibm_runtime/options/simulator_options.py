@@ -66,7 +66,7 @@ class SimulatorOptions:
                 "qiskit-aer", "Aer provider", "pip install qiskit-aer"
             )
 
-        from qiskit_aer.noise import NoiseModel
+        from qiskit_aer.noise import NoiseModel  # pylint:disable=import-outside-toplevel
 
         self.noise_model = NoiseModel.from_backend(backend)
 
