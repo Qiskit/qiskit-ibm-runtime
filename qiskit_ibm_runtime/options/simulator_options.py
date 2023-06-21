@@ -75,5 +75,5 @@ class SimulatorOptions:
             self.coupling_map = backend.configuration().coupling_map
             self.basis_gates = backend.configuration().basis_gates
         elif isinstance(backend, BackendV2):
-            self.coupling_map = backend.coupling_map.get_edges()
+            self.coupling_map = backend.coupling_map
             self.basis_gates = backend.operation_names

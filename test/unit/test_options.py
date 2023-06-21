@@ -225,7 +225,7 @@ class TestOptions(IBMTestCase):
         coupling_map = (
             fake_backend.configuration().coupling_map
             if isinstance(fake_backend, BackendV1)
-            else fake_backend.coupling_map.get_edges()
+            else fake_backend.coupling_map
         )
 
         expected_options = Options()
