@@ -232,7 +232,7 @@ class BaseWebsocketClient(BaseClient, ABC):
             # Sleep then retry.
             backoff_time = self._backoff_time(backoff_factor, self._current_retry)
             logger.info(
-                "Retrying get_job_status via websocket after %s seconds: " "Attempt #%s",
+                "Retrying get_job_status via websocket after %s seconds: Attempt #%s",
                 backoff_time,
                 self._current_retry,
             )

@@ -495,7 +495,7 @@ class RuntimeJob(Job):
             self._ws_client.job_results()
         except Exception:  # pylint: disable=broad-except
             logger.warning(
-                "An error occurred while streaming results " "from the server for job %s:\n%s",
+                "An error occurred while streaming results from the server for job %s:\n%s",
                 self.job_id(),
                 traceback.format_exc(),
             )
