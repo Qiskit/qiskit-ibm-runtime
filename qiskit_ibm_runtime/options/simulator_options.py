@@ -19,6 +19,8 @@ from qiskit.exceptions import MissingOptionalLibraryError
 from qiskit.providers import BackendV1, BackendV2
 from qiskit.utils import optionals
 
+from qiskit.transpiler import CouplingMap
+
 from .utils import _flexible
 
 if TYPE_CHECKING:
@@ -49,7 +51,7 @@ class SimulatorOptions:
 
     noise_model: Optional[Union[dict, "qiskit_aer.noise.noise_model.NoiseModel"]] = None
     seed_simulator: Optional[int] = None
-    coupling_map: Optional[List[List[int]]] = None
+    coupling_map: Optional[Union[List[List[int]], "CouplingMap"]] = None
     basis_gates: Optional[List[str]] = None
 
     def set_backend(self, backend: Union[BackendV1, BackendV2]):

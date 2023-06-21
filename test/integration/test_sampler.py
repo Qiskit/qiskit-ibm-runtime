@@ -251,3 +251,21 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
                 job.result()
             self.assertIn("NO COUNTS FOR EXPERIMENT", str(err.exception))
             self.assertFalse("python -m uvicorn server.main" in err.exception.message)
+
+    @run_integration_test
+    def test_sampler_no_session(self, service):
+        """Test sampler without session."""
+        backend = service.backend(self.backend)
+        sampler = Sampler(backend=backend)
+        self.assertIsInstance(sampler, BaseSampler)
+
+        circuits = [self.bell] * 3
+        job = sampler.run(circuits=circuits)
+        result = job.result()
+        self.assertIsInstance(result, SamplerResult)
+        self.assertEqual(len(result.quasi_dists), len(circuits))
+        self.assertEqual(len(result.metadata), len(circuits))
+        for i in range(len(circuits)):
+            self.assertAlmostEqual(result.quasi_dists[i][3], 0.5, delta=0.1)
+            self.assertAlmostEqual(result.quasi_dists[i][0], 0.5, delta=0.1)
+        self.assertIsNone(job.session_id)

@@ -18,6 +18,7 @@ from dataclasses import asdict
 from ddt import data, ddt
 from qiskit.providers import BackendV1
 from qiskit.providers.fake_provider import FakeManila, FakeNairobiV2
+from qiskit.transpiler import CouplingMap
 from qiskit_aer.noise import NoiseModel
 
 from qiskit_ibm_runtime import Options, RuntimeOptions
@@ -190,6 +191,22 @@ class TestOptions(IBMTestCase):
                 self.assertTrue(
                     dict_keys_equal(asdict(Options()), options), f"options={options}"
                 )
+
+    def test_coupling_map_options(self):
+        """Check that coupling_map is processed correctly for various types"""
+        coupling_map = {(1, 0), (2, 1), (0, 1), (1, 2)}
+        coupling_maps = [
+            coupling_map,
+            list(map(list, coupling_map)),
+            CouplingMap(coupling_map),
+        ]
+        for variant in coupling_maps:
+            with self.subTest(opts_dict=variant):
+                options = Options()
+                options.simulator.coupling_map = variant
+                inputs = Options._get_program_inputs(asdict(options))
+                resulting_cmap = inputs["transpilation_settings"]["coupling_map"]
+                self.assertEqual(coupling_map, set(map(tuple, resulting_cmap)))
 
     @data(FakeManila(), FakeNairobiV2())
     def test_simulator_set_backend(self, fake_backend):

@@ -10,6 +10,8 @@ To retrieve job results from retired backends, use `QiskitRuntimeService.jobs <h
 +-------------------------------+----------------------+
 | System name                   | Qubit count          |
 +===============================+======================+
+| ibm_washington                | 127                  |
++-------------------------------+----------------------+
 | ibmq_oslo                     | 7                    |
 +-------------------------------+----------------------+
 | ibmq_geneva                   | 27                   |

@@ -88,7 +88,7 @@ class TestEstimator(IBMTestCase):
         """Test exception when options levels are not supported."""
         options_bad = [
             {"resilience_level": 4, "optimization_level": 3},
-            {"optimization_level": 4, "resilience_level": 3},
+            {"optimization_level": 4, "resilience_level": 2},
         ]
         with Session(
             service=FakeRuntimeService(channel="ibm_quantum", token="abc"),

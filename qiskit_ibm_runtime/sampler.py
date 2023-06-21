@@ -15,21 +15,15 @@
 from __future__ import annotations
 import os
 from typing import Dict, Optional, Sequence, Any, Union
-import copy
 import logging
-from dataclasses import asdict
 
 from qiskit.circuit import QuantumCircuit
-from qiskit.providers.options import Options as TerraOptions
-from qiskit.primitives import BaseSampler, SamplerResult
+from qiskit.primitives import BaseSampler
 
-# TODO import _circuit_key from terra once 0.23 released
 from .options import Options
-from .options.utils import set_default_error_levels
 from .runtime_job import RuntimeJob
 from .ibm_backend import IBMBackend
-from .session import get_default_session
-from .constants import DEFAULT_DECODERS
+from .base_primitive import BasePrimitive
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
@@ -37,7 +31,7 @@ from .session import Session
 logger = logging.getLogger(__name__)
 
 
-class Sampler(BaseSampler):
+class Sampler(BasePrimitive, BaseSampler):
     """Class for interacting with Qiskit Runtime Sampler primitive service.
 
     Qiskit Runtime Sampler primitive service calculates probabilities or quasi-probabilities
@@ -63,31 +57,33 @@ class Sampler(BaseSampler):
             job = sampler.run(bell, shots=1024)
             print(f"Job ID: {job.job_id()}")
             print(f"Job result: {job.result()}")
+
+            # You can run more jobs inside the session
+
             # Close the session only if all jobs are finished
             # and you don't need to run more in the session.
             session.close()
     """
 
-    _PROGRAM_ID = "sampler"
-
     def __init__(
         self,
+        backend: Optional[Union[str, IBMBackend]] = None,
         session: Optional[Union[Session, str, IBMBackend]] = None,
         options: Optional[Union[Dict, Options]] = None,
     ):
         """Initializes the Sampler primitive.
 
         Args:
+            backend: Backend to run the primitive. This can be a backend name or an :class:`IBMBackend`
+                instance. If a name is specified, the default account (e.g. ``QiskitRuntimeService()``)
+                is used.
+
             session: Session in which to call the primitive.
 
-                * If an instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
-                  string name of a backend is specified, a new session is created for
-                  that backend, unless a default session for the same backend
-                  and channel already exists.
-
-                * If ``None``, a new session is created using the default saved
-                  account and a default backend (IBM Cloud channel only), unless
-                  a default session already exists.
+                If both ``session`` and ``backend`` are specified, ``session`` takes precedence.
+                If neither is specified, and the primitive is created inside a
+                :class:`qiskit_ibm_runtime.Session` context manager, then the session is used.
+                Otherwise if IBM Cloud channel is used, a default backend is selected.
 
             options: Primitive options, see :class:`Options` for detailed description.
                 The ``backend`` keyword is still supported but is deprecated.
@@ -96,37 +92,8 @@ class Sampler(BaseSampler):
         # The base class, however, uses a `_run_options` which is an instance of
         # qiskit.providers.Options. We largely ignore this _run_options because we use
         # a nested dictionary to categorize options.
-
-        super().__init__()
-
-        backend = None
-        self._session: Session = None
-
-        if options is None:
-            self._options = asdict(Options())
-        elif isinstance(options, Options):
-            self._options = asdict(copy.deepcopy(options))
-        else:
-            options_copy = copy.deepcopy(options)
-            default_options = asdict(Options())
-            self._options = Options._merge_options(default_options, options_copy)
-
-        if isinstance(session, Session):
-            self._session = session
-        else:
-            backend = session or backend
-            self._session = get_default_session(None, backend)
-
-        # self._first_run = True
-        # self._circuits_map = {}
-        # if self.circuits:
-        #     for circuit in self.circuits:
-        #         circuit_id = _hash(
-        #             json.dumps(_circuit_key(circuit), cls=RuntimeEncoder)
-        #         )
-        #         if circuit_id not in self._session._circuits_map:
-        #             self._circuits_map[circuit_id] = circuit
-        #             self._session._circuits_map[circuit_id] = circuit
+        BaseSampler.__init__(self)
+        BasePrimitive.__init__(self, backend=backend, session=session, options=options)
 
     def run(  # pylint: disable=arguments-differ
         self,
@@ -202,112 +169,11 @@ class Sampler(BaseSampler):
             "circuit_indices": list(range(len(circuits))),
             "parameter_values": parameter_values,
         }
-        combined = Options._merge_options(self._options, kwargs.get("_user_kwargs", {}))
-
-        backend_obj: Optional[IBMBackend] = None
-        if self._session.backend():
-            backend_obj = self._session.service.backend(self._session.backend())
-            combined = set_default_error_levels(
-                combined,
-                backend_obj,
-                Options._DEFAULT_OPTIMIZATION_LEVEL,
-                Options._DEFAULT_RESILIENCE_LEVEL,
-            )
-        else:
-            combined["optimization_level"] = Options._DEFAULT_OPTIMIZATION_LEVEL
-            combined["resilience_level"] = Options._DEFAULT_RESILIENCE_LEVEL
-        logger.info("Submitting job using options %s", combined)
-        Sampler._validate_options(combined)
-        inputs.update(Options._get_program_inputs(combined))
-
-        if backend_obj and combined["transpilation"]["skip_transpilation"]:
-            for circ in circuits:
-                backend_obj.check_faulty(circ)
-
-        return self._session.run(
-            program_id=self._PROGRAM_ID,
-            inputs=inputs,
-            options=Options._get_runtime_options(combined),
-            callback=combined.get("environment", {}).get("callback", None),
-            result_decoder=DEFAULT_DECODERS.get(self._PROGRAM_ID),
+        return self._run_primitive(
+            primitive_inputs=inputs, user_kwargs=kwargs.get("_user_kwargs", {})
         )
 
-    def _call(
-        self,
-        circuits: Sequence[int],
-        parameter_values: Optional[
-            Union[Sequence[float], Sequence[Sequence[float]]]
-        ] = None,
-        **run_options: Any,
-    ) -> SamplerResult:
-        """Calculates probabilities or quasi-probabilities for given inputs in a runtime session.
-
-        Args:
-            circuits: A list of circuit indices.
-            parameter_values: An optional list of concrete parameters to be bound.
-            **run_options: A collection of kwargs passed to `backend.run()`.
-
-                shots: Number of repetitions of each circuit, for sampling.
-                qubit_lo_freq: List of default qubit LO frequencies in Hz.
-                meas_lo_freq: List of default measurement LO frequencies in Hz.
-                schedule_los: Experiment LO configurations, frequencies are given in Hz.
-                rep_delay: Delay between programs in seconds. Only supported on certain
-                    backends (if ``backend.configuration().dynamic_reprate_enabled=True``).
-                init_qubits: Whether to reset the qubits to the ground state for each shot.
-                use_measure_esp: Whether to use excited state promoted (ESP) readout for measurements
-                    which are the terminal instruction to a qubit. ESP readout can offer higher fidelity
-                    than standard measurement sequences.
-
-        Returns:
-            An instance of :class:`qiskit.primitives.SamplerResult`.
-        """
-
-        inputs = {
-            "circuits": self._initial_inputs["circuits"],
-            "parameters": self._initial_inputs["parameters"],
-            "circuit_indices": circuits,
-            "parameter_values": parameter_values,
-        }
-        combined = Options._merge_options(self._options, run_options)
-        Sampler._validate_options(combined)
-        inputs.update(Options._get_program_inputs(combined))
-
-        raw_result = self._session.run(
-            program_id=self._PROGRAM_ID,
-            inputs=inputs,
-            options=Options._get_runtime_options(combined),
-        ).result()
-
-        return raw_result
-
-    @property
-    def session(self) -> Session:
-        """Return session used by this primitive.
-
-        Returns:
-            Session used by this primitive.
-        """
-        return self._session
-
-    @property
-    def options(self) -> TerraOptions:
-        """Return options values for the sampler.
-
-        Returns:
-            options
-        """
-        return TerraOptions(**self._options)
-
-    def set_options(self, **fields: Any) -> None:
-        """Set options values for the sampler.
-
-        Args:
-            **fields: The fields to update the options
-        """
-        self._options = Options._merge_options(self._options, fields)
-
-    @staticmethod
-    def _validate_options(options: dict) -> None:
+    def _validate_options(self, options: dict) -> None:
         """Validate that program inputs (options) are valid
         Raises:
             ValueError: if resilience_level is out of the allowed range.
@@ -324,3 +190,8 @@ class Sampler(BaseSampler):
                 f"{list(range(Options._MAX_RESILIENCE_LEVEL_SAMPLER + 1))} in Sampler"
             )
         Options.validate_options(options)
+
+    @classmethod
+    def _program_id(cls) -> str:
+        """Return the program ID."""
+        return "sampler"
