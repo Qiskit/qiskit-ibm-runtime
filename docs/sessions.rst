@@ -17,7 +17,7 @@ Benefits of using sessions
 
 There are several benefits to using sessions:
 
-* Jobs that belong to a single algorithm run are run together without interruptions, increasing efficiency if your program submits multiple sequential jobs. 
+* Jobs that belong to a single algorithm run are run together without interruption, increasing efficiency if your program submits multiple sequential jobs. 
 
    .. note:: 
     * The queuing time does not decrease for the first job submitted within a session. Therefore, a session does not provide any benefits if you only need to run a single job.
@@ -36,7 +36,7 @@ For each backend, the first job in the session waits its turn in the queue norma
 A quantum processor still executes one job at a time. Therefore, jobs that belong to a session still need to wait for their turn if one is already running.  
 
 .. note:: 
-    * Systems jobs such as calibration have priority over session jobs.
+    * Internal systems jobs such as calibration have priority over session jobs.
 
 Iterations and batching 
 --------------------------
@@ -46,7 +46,7 @@ Sessions can be used for iterative or batch execution.
 Iterative
 +++++++++++++++++++++
 
-Any session job submitted within the five-minute interactive timeout (TTL) is processed immediately. This allows some time for variational algorithms, such as VQE, to perform classical post-processing. 
+Any session job submitted within the five-minute interactive timeout, also known as Time to live (TTL), is processed immediately. This allows some time for variational algorithms, such as VQE, to perform classical post-processing. 
 
 - The quantum device is locked to the session user unless the TTL is reached. 
 - Post-processing could be done anywhere, such as a personal computer, cloud service, or an HPC environment.
@@ -91,7 +91,7 @@ See `What is the maximum execution time for a Qiskit Runtime job? <faqs/max_exec
 Interactive timeout value
 +++++++++++++++++++++++++++++
 
-Every session has an *interactive timeout value* (TTL) of five minutes, which cannot be changed. If there are no session jobs queued within the TTL window, the session is temporarily deactivated and normal job selection resumes. A deactivated session can be resumed if it has not reached its maximum timeout value. The session is resumed when a subsequent sesssion job starts. Once a session is deactivated, its next job waits in the queue like other jobs. 
+Every session has an *interactive timeout value*, or time to live (TTL), of five minutes, which cannot be changed. If there are no session jobs queued within the TTL window, the session is temporarily deactivated and normal job selection resumes. A deactivated session can be resumed if it has not reached its maximum timeout value. The session is resumed when a subsequent sesssion job starts. Once a session is deactivated, its next job waits in the queue like other jobs. 
 
 After a session is deactivated, the next job in the queue is selected to run. This newly selected job (which can belong to a different user) can run as a singleton, but it can also start a different session. In other words, a deactivated session does not block the creation of other sessions. Jobs from this new session would then take priority until it is deactivated or closed, at which point normal job selection resumes. 
 
@@ -105,6 +105,7 @@ A session ends by reaching its maximum timeout value or when it is manually clos
 * Any queued jobs remaining in the session (whether they are queued or not) are put into a failed state.
 * No further jobs can be submitted to the session.
 * The session cannot be reopened. 
+
 
 Sessions and reservations 
 -------------------------
