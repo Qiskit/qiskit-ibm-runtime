@@ -643,6 +643,8 @@ class TestAccountManager(IBMTestCase):
 MOCK_PROXY_CONFIG_DICT = {
     "urls": {"https": "127.0.0.1", "username_ntlm": "", "password_ntlm": ""}
 }
+
+
 # NamedTemporaryFiles not supported in Windows
 @skipIf(os.name == "nt", "Test not supported in Windows")
 class TestEnableAccount(IBMTestCase):
