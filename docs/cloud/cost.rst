@@ -47,10 +47,10 @@ To determine how much has been billed to an instance during the current billing 
 
 These are the fields relevant to cost:
 
-- **Billing cycle QR usage**: The amount of quantum runtime used by this instance during the current billing cycle
-- **Billing cycle cost**: The total cost of running jobs during the current billing cycle
-- **Total QR usage**: The amount of quantum runtime used by this instance since it was created
-- **Total cost**: The total cost of running jobs on this instance since it was created (only administrators can set this value)
+- **Billing cycle QR usage**: Qiskit Runtime usage by this instance during the current billing cycle. This usage is the time counted by Qiskit Runtime to process a job, and is determined by the use of internal resources.
+- **Billing cycle cost**: The total cost of running jobs during the current billing cycle.
+- **Total QR usage**: Qiskit Runtime usage by this instance since it was created. This usage is the time counted by Qiskit Runtime to process a job, and is determined by the use of internal resources.
+- **Total cost**: The total cost of running jobs on this instance since it was created (only administrators can set this value).
 
 You can view your billing cycle on the `Billing and usage page <https://cloud.ibm.com/billing>`__.
 
@@ -61,7 +61,7 @@ To determine how much has been billed to each job associated with an instance, f
 
 These are the columns relevant to cost:
 
-- **QR usage**: The amount of quantum runtime used by this job
+- **QR usage**: Qiskit Runtime used by this job. This usage is the time counted by Qiskit Runtime to process a job, and is determined by the use of internal resources.
 - **Cost**: The total cost of running this job
 
 
