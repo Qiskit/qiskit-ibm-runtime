@@ -49,6 +49,7 @@ The Lite plan is free. The Standard plan charges you per *QR second* when runnin
 .. figure:: ../images/Runtime_Accounting_Diagram.png
    :alt: This diagram shows that everything before the program starts (such as queuing) is free. After the job starts, it costs $1.60 per second.
 
+
 Qiskit Runtime usage is the time counted by Qiskit Runtime to process a job, and is determined by the use of internal resources.
 
 Next steps
