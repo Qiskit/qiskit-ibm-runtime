@@ -64,13 +64,11 @@ Next steps
    :caption: Tutorials
 
     Get started with Estimator <tutorials/how-to-getting-started-with-estimator>
-    Get started with error suppression and error mitigation <tutorials/Error-Suppression-and-Error-Mitigation>
-    VQE with Estimator <tutorials/vqe_with_estimator>
-    CHSH with Estimator <tutorials/chsh_with_estimator>
     Get started with Sampler <tutorials/how-to-getting-started-with-sampler>
-    QPE with Sampler <tutorials/qpe_with_sampler>
+    Get started with error suppression and error mitigation <tutorials/Error-Suppression-and-Error-Mitigation>
+    CHSH with Estimator <tutorials/chsh_with_estimator>
+    VQE with Estimator <tutorials/vqe_with_estimator>
     Grover with Sampler <tutorials/grover_with_sampler>
-    SEA with Sampler <tutorials/sea_with_sampler>
     QAOA with Primitives <tutorials/qaoa_with_primitives>
     Submit user-transpiled circuits using primitives <tutorials/user-transpiled-circuits>
     All tutorials <tutorials>
