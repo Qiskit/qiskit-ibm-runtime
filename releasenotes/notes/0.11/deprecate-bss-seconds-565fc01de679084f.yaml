@@ -1,0 +1,5 @@
+---
+deprecations:
+  - |
+    In :meth:`qiskit_ibm_runtime.RuntimeJob.metrics`, the `bss` field will be replaced 
+    by `usage`.
