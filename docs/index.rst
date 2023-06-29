@@ -32,7 +32,7 @@ This primitive takes circuits as input and returns a quasi-probability distribut
 
 **Error suppression / mitigation**
 
-While building a fault-tolerant quantum computation is the ultimate goal, at present, calculations performed on near-term quantum computers are susceptible to noise.  Qiskit Runtime offers a number of methods for preventing errors before they occur, and dealing with those that do occur.  Techniques that fall into the categories of error suppression and error mitigation, respectively.
+While building a fault-tolerant quantum computation is the ultimate goal, at present, calculations performed on near-term quantum computers are susceptible to noise.  Qiskit Runtime offers a number of methods for preventing errors before they occur (error suppression techniques) and dealing with those that do occur (error mitigation techniques).  
 
 **Session**
 
