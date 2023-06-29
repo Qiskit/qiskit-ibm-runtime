@@ -37,21 +37,21 @@ The following primitives are available:
 |                       | values of quantum     |                                    |
 |                       | operators that are    |                                    |
 |                       | required for many     |                                    |
+|                       | near-term quantum     |                                    |
 |                       | algorithms.           |                                    |
 +-----------------------+-----------------------+------------------------------------+
-| Sampler               | Allows a user to      | .. image:: images/sampler.png      |
-|                       | input a circuit and   |                                    |
-|                       | then generate         |                                    |
-|                       | quasiprobabilities.   |                                    |
-|                       | This generation       |                                    |
-|                       | enables users to more |                                    |
-|                       | efficiently evaluate  |                                    |
-|                       | the possibility of    |                                    |
-|                       | multiple relevant     |                                    |
-|                       | data points in the    |                                    |
-|                       | context of            |                                    |
-|                       | destructive           |                                    |
-|                       | interference.         |                                    |
+| Sampler               | Generates             |                                    |
+|                       | quasiprobability      |                                    |
+|                       | distributions from    |                                    |
+|                       | input circuits.       |                                    |
+|                       | This enables the      |                                    |
+|                       | return of error       |                                    |
+|                       | mitigated samples,    |                                    |
+|                       | enhancing the output  |                                    |
+|                       | for sampling          |                                    |
+|                       | algorithms            |                                    |
+|                       | such as amplitude     |                                    |
+|                       | amplification.        |                                    |
 +-----------------------+-----------------------+------------------------------------+
 
 

@@ -1,46 +1,37 @@
-How does backend.run differ from Qiskit Runtime primitives?
-============================================================================
+How do Qiskit Runtime primitives differ from backend.run?
+=========================================================
 
-The existing Qiskit backend interface (``backend.run()``) was originally
-designed to accept a list of circuits and return shot counts for every
-job. As our users' needs changed, we realized that we would need a new,
-more flexible tool to address those needs, and Qiskit Runtime was born.
+There are two methods for accessing IBM Quantum systems.  First, the
+`qiskit-ibm-provider` package provides the ``backend.run()`` interface,
+allowing direct access to IBM Quantum systems with no pre- or post-processing
+involved. This level of access is suitable for those users who want precise
+control over circuit execution and result processing. This level of access
+is needed for those looking to work at the level Kernel developer developing,
+for example, circuit optimization routines, error mitigation techniques, or
+characterizing quantum systems.
 
+In contrast, Qiskit Runtime is designed to streamline algorithm and application construction
+by removing the need for users to understand
+technical hardware and low-level software details. Advanced processing techniques
+for error suppression and mitigation are automtically applied, giving users
+high-fidelity results without the burdeen of haivng to code these routines
+themselves. The inclusion of sessions within Qiskit Runtime allows users
+to run iterative algorithm circuits back to back, or batch collections of circuits
+without having to re-queue each job. This results in more efficient quantum processor utilization
+and reduces the total amount of time users spend running
+complex computations.
 
-Using Qiskit alone
-------------------
-
-Qiskit was originally designed to drive circuit execution directly.
-Qiskit users submit circuits and receive results from the jobs that are
-run on a quantum system. Often, these jobs are part of a larger
-algorithm that includes an iterative (variational) approach to optimize
-circuit parameters. In this sequence, queuing up each job results in
-longer processing times.
-
-Using Qiskit Runtime
---------------------
-
-Qiskit Runtime offers advantages in workload performance. Variational
-algorithms can run on classical compute resources that are colocated
-with the QPUs through the Estimator primitive. This allows users
-to run iterative algorithm circuits back to back. In addition, sessions
-can drive a sequence of jobs without having to re-queue each job,
-avoiding latencies of queue wait times after the session is actively
-running. As a result, Qiskit Runtime is much more efficient than its
-predecessors.
 
 +---------------------------------------------------------------------------------+-----------------------+---------------------------+
 | Function                                                                        | backend.run           | Qiskit Runtime Primitives |
 +=================================================================================+=======================+===========================+
-| Primitive interface as abstraction for circuits and variational workload        | No                    | Yes                       |
+| Abstracted interface for circuits and variational workloads                     | No                    | Yes                       |
 +---------------------------------------------------------------------------------+-----------------------+---------------------------+
 | Sessions to improve performance for a sequence of jobs                          | No                    | Yes                       |
 +---------------------------------------------------------------------------------+-----------------------+---------------------------+
-| Abstracted interface that allows for automated error suppression and mitigation | No                    | Yes                       |
+| Automated application of error suppression and mitigation techniques            | No                    | Yes                       |
 +---------------------------------------------------------------------------------+-----------------------+---------------------------+
 | Increased performance for variational algorithms                                | No                    | Yes                       |
-+---------------------------------------------------------------------------------+-----------------------+---------------------------+
-| Working examples of code developed by Qiskit community                          | Yes                   | Yes                       |
 +---------------------------------------------------------------------------------+-----------------------+---------------------------+
 | Pulse Gates                                                                     | Yes                   | Yes                       |
 +---------------------------------------------------------------------------------+-----------------------+---------------------------+
