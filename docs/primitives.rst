@@ -5,7 +5,7 @@ With Qiskit Runtime, we are introducing a new set of interfaces, in the form of 
 
 The existing Qiskit interface to backends (`backend.run()`) was originally designed to accept a list of circuits and return counts for every job. Over time, it became clear that users have diverse purposes for quantum computing, and therefore the ways in which they define the requirements for their computing jobs are expanding. Therefore, their results also look different.
 
-For example, an algorithm researcher and developer cares about information beyond counts; they are more focused on efficiently calculating quasiprobabilities and expectation values of observables.
+For example, an algorithm researcher and developer cares about information beyond counts; they are more focused on efficiently calculating quasi-probability distribution and expectation values of observables.
 
 Our primitives provide methods that make it easier to build modular algorithms and other higher-order programs. Rather than simply returning counts, they return more immediately meaningful information. Additionally, they provide a seamless way to access the latest optimizations in IBM Quantum hardware and software.
 
@@ -40,18 +40,20 @@ The following primitives are available:
 |                       | near-term quantum     |                                    |
 |                       | algorithms.           |                                    |
 +-----------------------+-----------------------+------------------------------------+
-| Sampler               | Generates             |                                    |
-|                       | quasiprobability      |                                    |
-|                       | distributions from    |                                    |
-|                       | input circuits.       |                                    |
-|                       | This enables the      |                                    |
-|                       | return of error       |                                    |
-|                       | mitigated samples,    |                                    |
-|                       | enhancing the output  |                                    |
-|                       | for sampling          |                                    |
-|                       | algorithms            |                                    |
-|                       | such as amplitude     |                                    |
-|                       | amplification.        |                                    |
+| Sampler               | Allows a user to      | .. image:: images/sampler.png      |
+|                       | input a circuit and   |                                    |
+|                       | then generate         |                                    |
+|                       | quasi-probability     |                                    |
+|                       | distribution.         |                                    |
+|                       | This generation       |                                    |
+|                       | enables users to more |                                    |
+|                       | efficiently evaluate  |                                    |
+|                       | the possibility of    |                                    |
+|                       | multiple relevant     |                                    |
+|                       | data points in the    |                                    |
+|                       | context of            |                                    |
+|                       | destructive           |                                    |
+|                       | interference.         |                                    |
 +-----------------------+-----------------------+------------------------------------+
 
 
