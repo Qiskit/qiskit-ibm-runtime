@@ -18,7 +18,7 @@ high-fidelity results without the burdeen of haivng to code these routines
 themselves.  The inclusion of sessions within Qiskit Runtime allows users
 to run iterative algorithm circuits back to back, or batch collections of circuits
 without having to re-queue each job.  This results in more efficient quantum processor utilization
-of the qunatum processor, and reduces the total amount of time users spend running
+ and reduces the total amount of time users spend running
 complex computations.
 
 
