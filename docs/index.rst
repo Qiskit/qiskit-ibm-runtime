@@ -5,7 +5,7 @@ Qiskit Runtime overview
 Overview
 ==============
 
-Qiskit Runtime is a cloud-based quantum computing service developed by IBM. It offers computational *primitives* to perform foundational quantum computing tasks utilizing built-in error suppression and mitigation techniques. Primitives can be executed inside of *sessions*, allowing collections of circuits to be jointly run on a quantum computer without being interrupted by other users’ jobs. The combination of primitives, error suppression / mitigation, and sessions paves the way to efficiently build and execute scalable quantum applications.
+Qiskit Runtime is a cloud-based quantum computing service developed by IBM. It offers computational *primitives* to perform foundational quantum computing tasks that utilize built-in error suppression and mitigation techniques. Primitives can be executed inside of *sessions*, allowing collections of circuits to be jointly run on a quantum computer without being interrupted by other users’ jobs. The combination of primitives, error suppression / mitigation, and sessions paves the way to efficiently build and execute scalable quantum applications.
 
 The following figure illustrates how one can use Qiskit Runtime sessions and primitives. The first session request (job) waits through the regular `fair-share queue <https://quantum-computing.ibm.com/admin/docs/admin/manage/systems/queue>`__. When it starts to run, the session is started. After the first session job is finished processing, the next job in the session is run. This process continues until the session is paused (due to a lack of queued session jobs) or closed.
 
