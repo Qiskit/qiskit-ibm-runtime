@@ -16,7 +16,7 @@ technical hardware and low-level software details.  Advanced processing techniqu
 for error suppression and mitigation are automtically applied, giving users
 high-fidelity results without the burdeen of haivng to code these routines
 themselves.  The inclusion of sessions within Qiskit Runtime allows users
-to run iterative algorithm circuits back to back, or batch collections of circuits,
+to run iterative algorithm circuits back to back, or batch collections of circuits
 without having to re-queue each job.  This results in more efficient utilization
 of the qunatum processor, and reduces the total amount of time users spend running
 complex computations.
