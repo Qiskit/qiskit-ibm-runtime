@@ -37,6 +37,7 @@ The following primitives are available:
 |                       | values of quantum     |                                    |
 |                       | operators that are    |                                    |
 |                       | required for many     |                                    |
+|                       | near-term quantum     |                                    |
 |                       | algorithms.           |                                    |
 +-----------------------+-----------------------+------------------------------------+
 | Sampler               | Allows a user to      | .. image:: images/sampler.png      |
