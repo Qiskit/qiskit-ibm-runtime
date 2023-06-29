@@ -10,7 +10,7 @@ is needed for those looking to work at the level Kernel developer developing,
 for example, circuit optimization routines, error mitigation techniques, or
 characterizing quantum systems.
 
-In contrast, the Qiskit Runtime is designed to streamline the construction
+In contrast, Qiskit Runtime is designed to streamline algorithm and application construction
 of algorithms and applications by removing the need for users to understand
 technical hardware and low-level software details.  Advanced processing techniques
 for error suppression and mitigation are automtically applied, giving users
