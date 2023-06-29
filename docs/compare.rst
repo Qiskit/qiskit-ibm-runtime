@@ -11,7 +11,7 @@ for example, circuit optimization routines, error mitigation techniques, or
 characterizing quantum systems.
 
 In contrast, Qiskit Runtime is designed to streamline algorithm and application construction
-of algorithms and applications by removing the need for users to understand
+ by removing the need for users to understand
 technical hardware and low-level software details.  Advanced processing techniques
 for error suppression and mitigation are automtically applied, giving users
 high-fidelity results without the burdeen of haivng to code these routines
