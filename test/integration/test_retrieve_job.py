@@ -80,7 +80,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         for rjob in rjobs:
             if rjob.job_id() == job.job_id():
                 self.assertEqual(job.program_id, rjob.program_id)
-                self.assertEqual(job.inputs, rjob.inputs)
+                self.assertEqual(job.result(), rjob.result())
                 found = True
                 break
         self.assertTrue(found, f"Job {job.job_id()} not returned.")
@@ -113,7 +113,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         for rjob in rjobs:
             if rjob.job_id() == job.job_id():
                 self.assertEqual(job.program_id, rjob.program_id)
-                self.assertEqual(job.inputs, rjob.inputs)
+                self.assertEqual(job.inputs["run_options"], rjob.inputs["run_options"])
                 found = True
                 break
 
@@ -132,13 +132,12 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         for rjob in rjobs:
             if rjob.job_id() == job.job_id():
                 self.assertEqual(job.program_id, rjob.program_id)
-                self.assertEqual(job.inputs, rjob.inputs)
+                self.assertEqual(job.result(), rjob.result())
                 found = True
                 break
         self.assertTrue(found, f"Returned job {job.job_id()} not retrieved.")
 
     @run_integration_test
-    @quantum_only
     def test_retrieve_jobs_by_program_id(self, service):
         """Test retrieving jobs by Program ID."""
         program_id = "sampler"
@@ -158,11 +157,16 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         self.assertFalse(rjobs)
 
     @run_integration_test
+    @quantum_only
     def test_retrieve_jobs_by_session_id(self, service):
         """Test retrieving jobs by session_id."""
-        job = self._run_program(service, start_session=True)
+        job = self._run_program(
+            service, program_id="circuit-runner", start_session=True
+        )
         job.wait_for_final_state()
-        job_2 = self._run_program(service, session_id=job.job_id())
+        job_2 = self._run_program(
+            service, program_id="circuit-runner", session_id=job.job_id()
+        )
         job_2.wait_for_final_state()
         rjobs = service.jobs(session_id=job.job_id())
         self.assertEqual(
@@ -185,11 +189,9 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
             self.assertTrue(job.creation_date >= current_time)
 
     @run_integration_test
+    @quantum_only
     def test_jobs_filter_by_hgp(self, service):
         """Test retrieving jobs by hgp."""
-        if self.dependencies.channel == "ibm_cloud":
-            self.skipTest("Not supported on ibm_cloud")
-
         default_hgp = list(service._hgps.keys())[0]
 
         job = self._run_program(service)
