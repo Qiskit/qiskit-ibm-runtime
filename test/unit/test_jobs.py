@@ -112,9 +112,7 @@ class TestRuntimeJob(IBMTestCase):
         service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
         backend = FakeRuntimeService.DEFAULT_COMMON_BACKEND
         non_default_hgp = list(service._hgps.keys())[1]
-        job = run_program(
-            service=service, backend_name=backend, instance=non_default_hgp
-        )
+        job = run_program(service=service, backend_name=backend, instance=non_default_hgp)
         self.assertEqual(job.backend().name, backend)
         self.assertEqual(job.backend()._instance, non_default_hgp)
 
@@ -125,9 +123,7 @@ class TestRuntimeJob(IBMTestCase):
         default_hgp = list(service._hgps.values())[0]
         self.assertNotIn(backend, default_hgp.backends)
         with self.assertRaises(QiskitBackendNotFoundError):
-            _ = run_program(
-                service=service, backend_name=backend, instance=default_hgp.name
-            )
+            _ = run_program(service=service, backend_name=backend, instance=default_hgp.name)
 
     def test_run_program_by_phantom_hgp(self):
         """Test running a program with a phantom hgp."""

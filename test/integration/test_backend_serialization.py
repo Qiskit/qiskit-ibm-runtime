@@ -28,12 +28,8 @@ class TestSerialization(IBMIntegrationTestCase):
     @run_integration_test
     def test_backend_configuration(self, service):
         """Test deserializing backend configuration."""
-        instance = (
-            self.dependencies.instance if service.channel == "ibm_quantum" else None
-        )
-        backends = service.backends(
-            operational=True, simulator=False, instance=instance
-        )
+        instance = self.dependencies.instance if service.channel == "ibm_quantum" else None
+        backends = service.backends(operational=True, simulator=False, instance=instance)
 
         # Known keys that look like a serialized complex number.
         good_keys = (
@@ -51,19 +47,13 @@ class TestSerialization(IBMIntegrationTestCase):
 
         for backend in backends:
             with self.subTest(backend=backend):
-                self._verify_data(
-                    backend.configuration().to_dict(), good_keys, good_keys_prefixes
-                )
+                self._verify_data(backend.configuration().to_dict(), good_keys, good_keys_prefixes)
 
     @run_integration_test
     def test_pulse_defaults(self, service):
         """Test deserializing backend configuration."""
-        instance = (
-            self.dependencies.instance if service.channel == "ibm_quantum" else None
-        )
-        backends = service.backends(
-            operational=True, open_pulse=True, instance=instance
-        )
+        instance = self.dependencies.instance if service.channel == "ibm_quantum" else None
+        backends = service.backends(operational=True, open_pulse=True, instance=instance)
         if not backends:
             self.skipTest("Need pulse backends.")
 
@@ -77,12 +67,8 @@ class TestSerialization(IBMIntegrationTestCase):
     @run_integration_test
     def test_backend_properties(self, service):
         """Test deserializing backend properties."""
-        instance = (
-            self.dependencies.instance if service.channel == "ibm_quantum" else None
-        )
-        backends = service.backends(
-            operational=True, simulator=False, instance=instance
-        )
+        instance = self.dependencies.instance if service.channel == "ibm_quantum" else None
+        backends = service.backends(operational=True, simulator=False, instance=instance)
 
         # Known keys that look like a serialized object.
         good_keys = ("gates.qubits", "qubits.name", "backend_version")
@@ -113,9 +99,7 @@ class TestSerialization(IBMIntegrationTestCase):
                 pass
         if good_key_prefixes:
             for gkey in good_key_prefixes:
-                suspect_keys = {
-                    ckey for ckey in suspect_keys if not ckey.startswith(gkey)
-                }
+                suspect_keys = {ckey for ckey in suspect_keys if not ckey.startswith(gkey)}
         self.assertFalse(suspect_keys)
 
 
@@ -141,11 +125,7 @@ def _find_potential_encoded(data: Any, c_key: str, tally: set) -> None:
 
 def _check_encoded(data):
     """Check if the input data is potentially in JSON serialized format."""
-    if (
-        isinstance(data, list)
-        and len(data) == 2
-        and all(isinstance(x, (float, int)) for x in data)
-    ):
+    if isinstance(data, list) and len(data) == 2 and all(isinstance(x, (float, int)) for x in data):
         return True
     elif isinstance(data, str):
         try:

@@ -67,9 +67,7 @@ def to_python_identifier(name: str) -> str:
         name = re.sub(pattern, "_", name)
 
     # Convert to snake case
-    name = re.sub(
-        "((?<=[a-z0-9])[A-Z]|(?!^)(?<!_)[A-Z](?=[a-z]))", r"_\1", name
-    ).lower()
+    name = re.sub("((?<=[a-z0-9])[A-Z]|(?!^)(?<!_)[A-Z](?=[a-z]))", r"_\1", name).lower()
 
     while keyword.iskeyword(name):
         name += "_"

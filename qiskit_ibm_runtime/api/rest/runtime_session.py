@@ -24,9 +24,7 @@ class RuntimeSession(RestAdapterBase):
         "close": "/close",
     }
 
-    def __init__(
-        self, session: RetrySession, session_id: str, url_prefix: str = ""
-    ) -> None:
+    def __init__(self, session: RetrySession, session_id: str, url_prefix: str = "") -> None:
         """Job constructor.
 
         Args:

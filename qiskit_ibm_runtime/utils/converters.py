@@ -155,8 +155,6 @@ def hms_to_seconds(hms: str, msg_prefix: str = "") -> int:
         hours = date_time.hour
         minutes = date_time.minute
         seconds = date_time.second
-        return int(
-            timedelta(hours=hours, minutes=minutes, seconds=seconds).total_seconds()
-        )
+        return int(timedelta(hours=hours, minutes=minutes, seconds=seconds).total_seconds())
     except parser.ParserError as parser_error:
         raise IBMInputValueError(msg_prefix + str(parser_error))
