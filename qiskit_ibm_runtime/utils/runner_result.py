@@ -36,13 +36,13 @@ class RunnerResult(Result, ResultDecoder):
         """Get quasiprobabilites associated with one or more experiments.
 
         Parameters:
-            experiment: Indices of experiments to grab quasiprobabilities from.
+            experiment: Indices of experiments to grab quasi-probability distribution from.
 
         Returns:
             A single distribution or a list of distributions.
 
         Raises:
-            QiskitError: If experiment result doesn't contain quasiprobabilities.
+            QiskitError: If experiment result doesn't contain quasi-probability distribution.
         """
         if experiment is None:
             exp_keys = range(len(self.results))
@@ -63,7 +63,9 @@ class RunnerResult(Result, ResultDecoder):
                 out.shots = shots
                 dict_list.append(out)
             else:
-                raise QiskitError('No quasiprobabilities for experiment "{}"'.format(repr(key)))
+                raise qiskiterror(
+                    'no quasi-probability distribution for experiment "{}"'.format(repr(key))
+                )
 
         # Return first item of dict_list if size is 1
         if len(dict_list) == 1:

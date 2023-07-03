@@ -209,6 +209,7 @@ class RuntimeJob(Job):
         Raises:
             RuntimeJobFailureError: If the job failed.
             RuntimeJobMaxTimeoutError: If the job does not complete within given timeout.
+            RuntimeInvalidStateError: If the job was cancelled, and attempting to retrieve result.
         """
         _decoder = decoder or self._final_result_decoder
         if self._results is None or (_decoder != self._final_result_decoder):
@@ -218,6 +219,11 @@ class RuntimeJob(Job):
                 if self._reason == "RAN TOO LONG":
                     raise RuntimeJobMaxTimeoutError(error_message)
                 raise RuntimeJobFailureError(f"Unable to retrieve job result. " f"{error_message}")
+            if self._status is JobStatus.CANCELLED:
+                raise RuntimeInvalidStateError(
+                    "Unable to retrieve result for job {}. "
+                    "Job was cancelled.".format(self.job_id())
+                )
 
             result_raw = self._download_external_result(
                 self._api_client.job_results(job_id=self.job_id())
@@ -382,7 +388,7 @@ class RuntimeJob(Job):
             issue_deprecation_msg(
                 msg="The 'bss.seconds' attribute is deprecated",
                 version="0.11.1",
-                remedy="Use the 'usage.quantum_seconds' attribute instead.",
+                remedy="Use the 'usage.seconds' attribute instead.",
             )
             metadata_str = self._api_client.job_metadata(self.job_id())
             return json.loads(metadata_str)

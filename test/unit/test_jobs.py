@@ -27,6 +27,7 @@ from qiskit_ibm_runtime.exceptions import (
     RuntimeJobMaxTimeoutError,
     RuntimeProgramNotFound,
     IBMInputValueError,
+    RuntimeInvalidStateError,
 )
 from .mock.fake_runtime_client import (
     FailedRuntimeJob,
@@ -208,6 +209,9 @@ class TestRuntimeJob(IBMTestCase):
         self.assertEqual(job.status(), JobStatus.CANCELLED)
         rjob = service.job(job.job_id())
         self.assertEqual(rjob.status(), JobStatus.CANCELLED)
+        with self.assertRaises(RuntimeInvalidStateError) as exc:
+            rjob.result()
+        self.assertIn("Job was cancelled", str(exc.exception))
 
     @run_quantum_and_cloud_fake
     def test_final_result(self, service):
