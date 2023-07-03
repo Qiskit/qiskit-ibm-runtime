@@ -63,8 +63,8 @@ class RunnerResult(Result, ResultDecoder):
                 out.shots = shots
                 dict_list.append(out)
             else:
-                raise qiskiterror(
-                    'no quasi-probability distribution for experiment "{}"'.format(repr(key))
+                raise QiskitError(
+                    'No quasi-probability distribution for experiment "{}"'.format(repr(key))
                 )
 
         # Return first item of dict_list if size is 1
