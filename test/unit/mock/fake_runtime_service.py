@@ -36,9 +36,7 @@ class FakeRuntimeService(QiskitRuntimeService):
     DEFAULT_COMMON_BACKEND = "common_backend"
     DEFAULT_UNIQUE_BACKEND_PREFIX = "unique_backend_"
 
-    def __init__(
-        self, *args, num_hgps=2, runtime_client=None, backend_specs=None, **kwargs
-    ):
+    def __init__(self, *args, num_hgps=2, runtime_client=None, backend_specs=None, **kwargs):
         self._test_num_hgps = num_hgps
         self._fake_runtime_client = runtime_client
         self._backend_specs = backend_specs
@@ -85,9 +83,7 @@ class FakeRuntimeService(QiskitRuntimeService):
                 url="some_url",
                 instance=hgp_name,
             )
-            hgp = HubGroupProject(
-                client_params=hgp_params, instance=hgp_name, service=self
-            )
+            hgp = HubGroupProject(client_params=hgp_params, instance=hgp_name, service=self)
 
             hgps[hgp_name] = hgp
 
@@ -109,9 +105,7 @@ class FakeRuntimeService(QiskitRuntimeService):
         if not self._fake_runtime_client:
             if not self._backend_specs:
                 self._backend_specs = [
-                    FakeApiBackendSpecs(
-                        backend_name=self.DEFAULT_COMMON_BACKEND, hgps=hgps
-                    )
+                    FakeApiBackendSpecs(backend_name=self.DEFAULT_COMMON_BACKEND, hgps=hgps)
                 ]
                 for idx, hgp in enumerate(hgps):
                     self._backend_specs.append(

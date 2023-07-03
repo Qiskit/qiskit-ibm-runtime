@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 class Sampler(BasePrimitive, BaseSampler):
     """Class for interacting with Qiskit Runtime Sampler primitive service.
 
-    Qiskit Runtime Sampler primitive service calculates probabilities or quasi-probabilities
+    Qiskit Runtime Sampler primitive service calculates quasi-probability distribution
     of bitstrings from quantum circuits.
 
     The :meth:`run` method can be used to submit circuits and parameters to the Sampler primitive.

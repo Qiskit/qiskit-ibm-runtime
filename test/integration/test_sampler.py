@@ -124,9 +124,7 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
 
     @unittest.skip("Skip until data caching is reenabled.")
     @run_integration_test
-    def test_sampler_non_parameterized_circuit_caching_with_transpilation_options(
-        self, service
-    ):
+    def test_sampler_non_parameterized_circuit_caching_with_transpilation_options(self, service):
         """Verify if circuit caching works in sampler primitive
         by passing correct and incorrect transpilation options."""
 
@@ -231,9 +229,7 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
             result = job.result()
 
             self.assertIsInstance(ws_result[-1], dict)
-            ws_result_quasi = [
-                QuasiDistribution(quasi) for quasi in ws_result[-1]["quasi_dists"]
-            ]
+            ws_result_quasi = [QuasiDistribution(quasi) for quasi in ws_result[-1]["quasi_dists"]]
             self.assertEqual(result.quasi_dists, ws_result_quasi)
             self.assertEqual(len(job_ids), 1)
             self.assertEqual(job.job_id(), job_ids.pop())

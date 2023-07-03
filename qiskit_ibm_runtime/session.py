@@ -100,9 +100,7 @@ class Session:
 
         if service is None:
             self._service = (
-                backend.service
-                if isinstance(backend, IBMBackend)
-                else QiskitRuntimeService()
+                backend.service if isinstance(backend, IBMBackend) else QiskitRuntimeService()
             )
         else:
             self._service = service
@@ -243,9 +241,7 @@ class Session:
 
 
 # Default session
-_DEFAULT_SESSION: ContextVar[Optional[Session]] = ContextVar(
-    "_DEFAULT_SESSION", default=None
-)
+_DEFAULT_SESSION: ContextVar[Optional[Session]] = ContextVar("_DEFAULT_SESSION", default=None)
 _IN_SESSION_CM: ContextVar[bool] = ContextVar("_IN_SESSION_CM", default=False)
 
 

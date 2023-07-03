@@ -28,9 +28,7 @@ class CloudBackend(RestAdapterBase):
         "status": "/status",
     }
 
-    def __init__(
-        self, session: RetrySession, backend_name: str, url_prefix: str = ""
-    ) -> None:
+    def __init__(self, session: RetrySession, backend_name: str, url_prefix: str = "") -> None:
         """Backend constructor.
 
         Args:
