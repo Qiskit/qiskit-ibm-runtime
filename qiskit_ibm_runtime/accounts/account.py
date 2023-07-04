@@ -180,9 +180,7 @@ class Account:
         try:
             urlparse(url)
         except:
-            raise InvalidAccountError(
-                f"Invalid `url` value. Failed to parse '{url}' as URL."
-            )
+            raise InvalidAccountError(f"Invalid `url` value. Failed to parse '{url}' as URL.")
 
     @staticmethod
     def _assert_valid_proxies(config: ProxyConfiguration) -> None:

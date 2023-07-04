@@ -44,13 +44,13 @@ A pay-as-you-go plan for accessing IBM Quantum systems. Build your own programs 
 Pricing overview
 ----------------
 
-The Lite plan is free. The Standard plan charges you per *runtime second* when running on physical systems. The following diagram illustrates what is included in a runtime second. For this service, one runtime second includes only quantum compute time. Any time spent waiting for results or in the queue for the quantum computer are excluded.
+The Lite plan is free. The Standard plan charges you per *QR second* when running on physical systems. The following diagram illustrates what is included in a QR second. Any time spent waiting for results or in the queue for the quantum computer are excluded.
 
 .. figure:: ../images/Runtime_Accounting_Diagram.png
    :alt: This diagram shows that everything before the program starts (such as queuing) is free. After the job starts, it costs $1.60 per second.
 
-   Runtime second accounting   
 
+Qiskit Runtime usage is the time counted by Qiskit Runtime to process a job, and is determined by the use of internal resources.
 
 Next steps
 ----------

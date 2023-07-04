@@ -72,26 +72,16 @@ class TestAccountClient(IBMTestCase):
         """Check custom client application header."""
 
         custom_header = "batman"
-        with custom_envs(
-            {"QISKIT_IBM_RUNTIME_CUSTOM_CLIENT_APP_HEADER": custom_header}
-        ):
+        with custom_envs({"QISKIT_IBM_RUNTIME_CUSTOM_CLIENT_APP_HEADER": custom_header}):
             client = self._get_client()
-            client._session.headers.update(
-                {"X-Qx-Client-Application": "qiskit-version-2/qiskit"}
-            )
+            client._session.headers.update({"X-Qx-Client-Application": "qiskit-version-2/qiskit"})
             client._session._set_custom_header()
-            self.assertIn(
-                custom_header, client._session.headers["X-Qx-Client-Application"]
-            )
+            self.assertIn(custom_header, client._session.headers["X-Qx-Client-Application"])
 
         # Make sure the header is re-initialized
         with no_envs(["QISKIT_IBM_RUNTIME_CUSTOM_CLIENT_APP_HEADER"]):
             client = self._get_client()
-            client._session.headers.update(
-                {"X-Qx-Client-Application": "qiskit-version-2/qiskit"}
-            )
+            client._session.headers.update({"X-Qx-Client-Application": "qiskit-version-2/qiskit"})
             client._session.custom_header = None
             client._session._set_custom_header()
-            self.assertNotIn(
-                custom_header, client._session.headers["X-Qx-Client-Application"]
-            )
+            self.assertNotIn(custom_header, client._session.headers["X-Qx-Client-Application"])

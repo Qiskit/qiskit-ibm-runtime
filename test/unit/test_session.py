@@ -68,9 +68,7 @@ class TestSession(IBMTestCase):
         ]
         for max_t, expected in max_times:
             with self.subTest(max_time=max_t):
-                session = Session(
-                    service=MagicMock(), backend="ibm_gotham", max_time=max_t
-                )
+                session = Session(service=MagicMock(), backend="ibm_gotham", max_time=max_t)
                 self.assertEqual(session._max_time, expected)
 
     def test_run_after_close(self):
@@ -86,9 +84,7 @@ class TestSession(IBMTestCase):
         backend = "ibm_gotham"
         session = Session(service=service, backend=backend)
         with self.assertRaises(IBMInputValueError):
-            session.run(
-                program_id="test", inputs={}, options={"backend": "different_backend"}
-            )
+            session.run(program_id="test", inputs={}, options={"backend": "different_backend"})
 
     def test_run(self):
         """Test the run method."""

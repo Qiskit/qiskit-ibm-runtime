@@ -222,9 +222,7 @@ class IBMBackend(Backend):
             return self._configuration.__getattribute__(name)
         except AttributeError:
             raise AttributeError(
-                "'{}' object has no attribute '{}'".format(
-                    self.__class__.__name__, name
-                )
+                "'{}' object has no attribute '{}'".format(self.__class__.__name__, name)
             )
 
     def _get_properties(self, datetime: Optional[python_datetime] = None) -> None:
@@ -232,18 +230,14 @@ class IBMBackend(Backend):
         if datetime:
             datetime = local_to_utc(datetime)
         if not self._properties:
-            api_properties = self._api_client.backend_properties(
-                self.name, datetime=datetime
-            )
+            api_properties = self._api_client.backend_properties(self.name, datetime=datetime)
             if api_properties:
                 backend_properties = properties_from_server_data(api_properties)
                 self._properties = backend_properties
 
     def _get_defaults(self) -> None:
         """Gets defaults if pulse backend and decodes it"""
-        if not self._defaults and isinstance(
-            self._configuration, PulseBackendConfiguration
-        ):
+        if not self._defaults and isinstance(self._configuration, PulseBackendConfiguration):
             api_defaults = self._api_client.backend_pulse_defaults(self.name)
             if api_defaults:
                 self._defaults = defaults_from_server_data(api_defaults)
@@ -382,14 +376,10 @@ class IBMBackend(Backend):
             if not isinstance(datetime, python_datetime):
                 raise TypeError("'{}' is not of type 'datetime'.")
             if isinstance(self._api_client, RuntimeClient):
-                raise NotImplementedError(
-                    "'datetime' is not supported by cloud runtime."
-                )
+                raise NotImplementedError("'datetime' is not supported by cloud runtime.")
             datetime = local_to_utc(datetime)
         if datetime or refresh or self._properties is None:
-            api_properties = self._api_client.backend_properties(
-                self.name, datetime=datetime
-            )
+            api_properties = self._api_client.backend_properties(self.name, datetime=datetime)
             if not api_properties:
                 return None
             backend_properties = properties_from_server_data(api_properties)
@@ -511,9 +501,7 @@ class IBMBackend(Backend):
     def run(self, *args: Any, **kwargs: Any) -> None:
         """Not supported method"""
         # pylint: disable=arguments-differ
-        raise RuntimeError(
-            "IBMBackend.run() is not supported in the Qiskit Runtime environment."
-        )
+        raise RuntimeError("IBMBackend.run() is not supported in the Qiskit Runtime environment.")
 
     def check_faulty(self, circuit: QuantumCircuit) -> None:
         """Check if the input circuit uses faulty qubits or edges.
@@ -529,9 +517,7 @@ class IBMBackend(Backend):
 
         faulty_qubits = self.properties().faulty_qubits()
         faulty_gates = self.properties().faulty_gates()
-        faulty_edges = [
-            tuple(gate.qubits) for gate in faulty_gates if len(gate.qubits) > 1
-        ]
+        faulty_edges = [tuple(gate.qubits) for gate in faulty_gates if len(gate.qubits) > 1]
 
         for instr in circuit.data:
             if instr.operation.name == "barrier":
@@ -600,9 +586,7 @@ class IBMRetiredBackend(IBMBackend):
         """Default runtime options."""
         return Options(shots=4000)
 
-    def properties(
-        self, refresh: bool = False, datetime: Optional[python_datetime] = None
-    ) -> None:
+    def properties(self, refresh: bool = False, datetime: Optional[python_datetime] = None) -> None:
         """Return the backend properties."""
         return None
 

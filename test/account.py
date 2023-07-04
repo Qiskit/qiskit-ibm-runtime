@@ -64,9 +64,7 @@ class no_envs(ContextDecorator):
     def __enter__(self):
         # Remove the original variables from `os.environ`.
         modified_environ = {
-            key: value
-            for key, value in os.environ.items()
-            if key not in self.vars_to_remove
+            key: value for key, value in os.environ.items() if key not in self.vars_to_remove
         }
         os.environ = modified_environ
 
@@ -105,9 +103,7 @@ class temporary_account_config_file(ContextDecorator):
 
     def __init__(self, contents=None, **kwargs):
         # Create a temporary file with the contents.
-        contents = (
-            contents if contents is not None else get_account_config_contents(**kwargs)
-        )
+        contents = contents if contents is not None else get_account_config_contents(**kwargs)
 
         self.tmp_file = NamedTemporaryFile(mode="w+")
         json.dump(contents, self.tmp_file)

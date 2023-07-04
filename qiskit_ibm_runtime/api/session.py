@@ -69,9 +69,7 @@ def _get_client_header() -> str:
     pkg_versions = {"qiskit_ibm_runtime": f"qiskit_ibm_runtime-{ibm_runtime_version}"}
     for pkg_name in qiskit_pkgs:
         try:
-            version_info = (
-                f"{pkg_name}-{pkg_resources.get_distribution(pkg_name).version}"
-            )
+            version_info = f"{pkg_name}-{pkg_resources.get_distribution(pkg_name).version}"
 
             if pkg_name in sys.modules:
                 version_info += "*"
@@ -128,9 +126,7 @@ class PostForcelistRetry(Retry):
             _stacktrace=_stacktrace,
         )
 
-    def is_retry(
-        self, method: str, status_code: int, has_retry_after: bool = False
-    ) -> bool:
+    def is_retry(self, method: str, status_code: int, has_retry_after: bool = False) -> bool:
         """Indicate whether the request should be retried.
 
         Args:
@@ -288,9 +284,7 @@ class RetrySession(Session):
                     caller_str = str(caller) + frame_path.split(str(caller), 1)[-1]
                     sanitized_caller_str = caller_str.replace("/", "~")
                     headers.update(
-                        {
-                            "X-Qx-Client-Application": f"{CLIENT_APPLICATION}/{sanitized_caller_str}"
-                        }
+                        {"X-Qx-Client-Application": f"{CLIENT_APPLICATION}/{sanitized_caller_str}"}
                     )
                     found_caller = True
                     break  # break out of the inner loop
@@ -329,9 +323,7 @@ class RetrySession(Session):
 
         return response
 
-    def _log_request_info(
-        self, url: str, method: str, request_data: Dict[str, Any]
-    ) -> None:
+    def _log_request_info(self, url: str, method: str, request_data: Dict[str, Any]) -> None:
         """Log the request data, filtering out specific information.
 
         Note:
@@ -361,9 +353,7 @@ class RetrySession(Session):
                     request_data_to_log = ""
                     if filtered_url in ("/devices/.../properties", "/Jobs"):
                         # Log filtered request data for these endpoints.
-                        request_data_to_log = "Request Data: {}.".format(
-                            filter_data(request_data)
-                        )
+                        request_data_to_log = "Request Data: {}.".format(filter_data(request_data))
                     logger.debug(
                         "Endpoint: %s. Method: %s. %s",
                         filtered_url,
@@ -372,9 +362,7 @@ class RetrySession(Session):
                     )
             except Exception as ex:  # pylint: disable=broad-except
                 # Catch general exception so as not to disturb the program if filtering fails.
-                logger.info(
-                    "Filtering failed when logging request information: %s", str(ex)
-                )
+                logger.info("Filtering failed when logging request information: %s", str(ex))
 
     def _is_worth_logging(self, endpoint_url: str) -> bool:
         """Returns whether the endpoint URL should be logged.
@@ -414,9 +402,7 @@ class RetrySession(Session):
         headers = self.headers.copy()  # type: ignore
         if self.custom_header:
             current = headers["X-Qx-Client-Application"]
-            headers.update(
-                {"X-Qx-Client-Application": f"{current}/{self.custom_header}"}
-            )
+            headers.update({"X-Qx-Client-Application": f"{current}/{self.custom_header}"})
             self.headers = headers
 
     def __getstate__(self) -> Dict:

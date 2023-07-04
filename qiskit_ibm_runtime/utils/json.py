@@ -67,8 +67,7 @@ from qiskit_ibm_provider.qpy import (
 )
 
 _TERRA_VERSION = tuple(
-    int(x)
-    for x in re.match(r"\d+\.\d+\.\d", _terra_version_string).group(0).split(".")[:3]
+    int(x) for x in re.match(r"\d+\.\d+\.\d", _terra_version_string).group(0).split(".")[:3]
 )
 
 
@@ -108,9 +107,7 @@ def _serialize_and_encode(
     return base64.standard_b64encode(serialized_data).decode("utf-8")
 
 
-def _decode_and_deserialize(
-    data: str, deserializer: Callable, decompress: bool = True
-) -> Any:
+def _decode_and_deserialize(data: str, deserializer: Callable, decompress: bool = True) -> Any:
     """Decode and deserialize input data.
 
     Args:
@@ -258,9 +255,7 @@ class RuntimeEncoder(json.JSONEncoder):
                 "__value__": _set_int_keys_flag(copy.deepcopy(obj.settings)),
             }
         if callable(obj):
-            warnings.warn(
-                f"Callable {obj} is not JSON serializable and will be set to None."
-            )
+            warnings.warn(f"Callable {obj} is not JSON serializable and will be set to None.")
             return None
         if HAS_SCIPY and isinstance(obj, scipy.sparse.spmatrix):
             value = _serialize_and_encode(obj, scipy.sparse.save_npz, compress=False)

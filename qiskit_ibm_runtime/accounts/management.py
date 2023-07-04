@@ -152,9 +152,7 @@ class AccountManager:
         if name:
             saved_account = read_config(filename=filename, name=name)
             if not saved_account:
-                raise AccountNotFoundError(
-                    f"Account with the name {name} does not exist on disk."
-                )
+                raise AccountNotFoundError(f"Account with the name {name} does not exist on disk.")
             return Account.from_saved_format(saved_account)
 
         channel_ = channel or os.getenv("QISKIT_IBM_CHANNEL") or _DEFAULT_CHANNEL_TYPE
@@ -289,6 +287,4 @@ class AccountManager:
             .to_saved_format(),
         )
         default_config = read_config(filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE)
-        return Account.from_saved_format(
-            default_config[_DEFAULT_ACCOUNT_NAME_IBM_QUANTUM]
-        )
+        return Account.from_saved_format(default_config[_DEFAULT_ACCOUNT_NAME_IBM_QUANTUM])
