@@ -16,7 +16,7 @@ import logging
 
 from typing import Iterable, Union, Optional, Any, List
 from datetime import datetime as python_datetime
-from copy import copy, deepcopy
+from copy import deepcopy
 
 from qiskit import QuantumCircuit
 from qiskit.qobj.utils import MeasLevel, MeasReturnType
@@ -537,7 +537,7 @@ class IBMBackend(Backend):
                     f"{instr} operating on a faulty edge {qubit_indices}"
                 )
 
-    def __deepcopy__(self, _memo=None):
+    def __deepcopy__(self, _memo: dict=None) -> IBMBackend:
         cpy = IBMBackend(
             configuration=deepcopy(self.configuration()),
             service=self._service,

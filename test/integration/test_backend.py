@@ -166,7 +166,6 @@ class TestIBMBackend(IBMIntegrationTestCase):
 
     def test_backend_deepcopy(self):
         """Test that deepcopy on IBMBackend works correctly"""
-        service = self.dependencies.service
         backend = self.backend
         with self.subTest(backend=backend.name):
             backend_copy = copy.deepcopy(backend)
