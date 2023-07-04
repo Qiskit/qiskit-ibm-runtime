@@ -166,13 +166,25 @@ class TestIBMBackend(IBMIntegrationTestCase):
 
     def test_backend_deepcopy(self):
         """Test that deepcopy on IBMBackend works correctly"""
-        service = QiskitRuntimeService(channel="ibm_quantum")
-        sim_backend = service.get_backend("ibmq_qasm_simulator")
-        device_backend = service.get_backend("ibmq_lima")
-        for backend in [sim_backend, device_backend]:
-            with self.subTest(backend=backend.name):
-                backend_copy = copy.deepcopy(backend)
-                self.assertEqual(backend_copy.name, backend.name)
-                self.assertEqual(
-                    backend_copy.configuration().backend_name, backend.name
-                )
+        service = self.dependencies.service
+        backend = self.backend
+        with self.subTest(backend=backend.name):
+            backend_copy = copy.deepcopy(backend)
+            self.assertEqual(backend_copy.name, backend.name)
+            self.assertEqual(
+                backend_copy.configuration().basis_gates,
+                backend.configuration().basis_gates,
+            )
+            self.assertEqual(
+                backend_copy.properties().last_update_date,
+                backend.properties().last_update_date,
+            )
+            self.assertEqual(backend_copy._instance, backend._instance)
+            self.assertEqual(
+                backend_copy._service._backends, backend._service._backends
+            )
+            self.assertEqual(backend_copy._get_defaults(), backend._get_defaults())
+            self.assertEqual(
+                backend_copy._api_client._session.base_url,
+                backend._api_client._session.base_url,
+            )
