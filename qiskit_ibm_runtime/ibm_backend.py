@@ -203,9 +203,7 @@ class IBMBackend(Backend):
         # Prevent recursion since these properties are accessed within __getattr__
         if name in ["_properties", "_defaults", "_target", "_configuration"]:
             raise AttributeError(
-                "'{}' object has no attribute '{}'".format(
-                    self.__class__.__name__, name
-                )
+                "'{}' object has no attribute '{}'".format(self.__class__.__name__, name)
             )
         # Lazy load properties and pulse defaults and construct the target object.
         self._get_properties()
@@ -537,7 +535,7 @@ class IBMBackend(Backend):
                     f"{instr} operating on a faulty edge {qubit_indices}"
                 )
 
-    def __deepcopy__(self, _memo: dict=None) -> IBMBackend:
+    def __deepcopy__(self, _memo: dict = None) -> IBMBackend:
         cpy = IBMBackend(
             configuration=deepcopy(self.configuration()),
             service=self._service,
