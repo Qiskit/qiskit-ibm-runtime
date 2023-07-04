@@ -54,7 +54,7 @@ class SimulatorOptions:
     coupling_map: Optional[Union[List[List[int]], "CouplingMap"]] = None
     basis_gates: Optional[List[str]] = None
 
-    def set_backend(self, backend: Union[BackendV1, BackendV2]):
+    def set_backend(self, backend: Union[BackendV1, BackendV2]) -> None:
         """Set backend for simulation.
         This method changes noise_model, coupling_map, basis_gates according to given backend.
 
