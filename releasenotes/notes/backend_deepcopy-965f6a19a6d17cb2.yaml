@@ -1,5 +1,6 @@
 ---
 fixes:
   - |
-     Fixed infinite recursion when attempting to deepcopy an IBMBackend.
+     Fixed infinite recursion when attempting to deepcopy an IBMBackend. Added
+     a method :meth:`qiskit_ibm_runtime.IBMBackend.deepcopy`.
 
