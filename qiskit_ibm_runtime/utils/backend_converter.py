@@ -62,9 +62,7 @@ def convert_to_target(
     # Parse from properties if it exists
     if properties is not None:
         qubit_properties = qubit_props_list_from_props(properties=properties)
-        target = Target(
-            num_qubits=configuration.n_qubits, qubit_properties=qubit_properties
-        )
+        target = Target(num_qubits=configuration.n_qubits, qubit_properties=qubit_properties)
         # Parse instructions
         gates: Dict[str, Any] = {}
         for gate in properties.gates:
@@ -129,9 +127,7 @@ def convert_to_target(
         target.granularity = configuration.timing_constraints.get("granularity")
         target.min_length = configuration.timing_constraints.get("min_length")
         target.pulse_alignment = configuration.timing_constraints.get("pulse_alignment")
-        target.aquire_alignment = configuration.timing_constraints.get(
-            "acquire_alignment"
-        )
+        target.aquire_alignment = configuration.timing_constraints.get("acquire_alignment")
     # If pulse defaults exists use that as the source of truth
     if defaults is not None:
         faulty_qubits = set()
@@ -158,11 +154,7 @@ def convert_to_target(
     if "delay" not in target:
         target.add_instruction(
             Delay(Parameter("t")),
-            {
-                (bit,): None
-                for bit in range(target.num_qubits)
-                if bit not in faulty_qubits
-            },
+            {(bit,): None for bit in range(target.num_qubits) if bit not in faulty_qubits},
         )
     return target
 

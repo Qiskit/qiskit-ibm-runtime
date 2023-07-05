@@ -40,9 +40,7 @@ def setup_test_logging(logger: logging.Logger, filename: str) -> None:
         filename: Name of the output file, if log to file is enabled.
     """
     # Set up formatter.
-    log_fmt = "{}.%(funcName)s:%(levelname)s:%(asctime)s:" " %(message)s".format(
-        logger.name
-    )
+    log_fmt = "{}.%(funcName)s:%(levelname)s:%(asctime)s:" " %(message)s".format(logger.name)
     formatter = logging.Formatter(log_fmt)
 
     if os.getenv("STREAM_LOG", "true").lower() == "true":
@@ -137,9 +135,7 @@ def get_real_device(service):
     """Get a real device for the service."""
     try:
         # TODO: Remove filters when ibmq_berlin is removed
-        return service.least_busy(
-            simulator=False, filters=lambda b: b.name != "ibmq_berlin"
-        ).name
+        return service.least_busy(simulator=False, filters=lambda b: b.name != "ibmq_berlin").name
     except QiskitBackendNotFoundError:
         raise unittest.SkipTest("No real device")  # cloud has no real device
 

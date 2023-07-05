@@ -68,9 +68,7 @@ class BaseWebsocketClient(BaseClient, ABC):
         """
         self._websocket_url = websocket_url.rstrip("/")
         self._proxy_params = (
-            client_params.proxies.to_ws_params(self._websocket_url)
-            if client_params.proxies
-            else {}
+            client_params.proxies.to_ws_params(self._websocket_url) if client_params.proxies else {}
         )
         self._access_token = client_params.token
         self._job_id = job_id
@@ -188,9 +186,7 @@ class BaseWebsocketClient(BaseClient, ABC):
                     self._proxy_params,
                 )
                 self._reset_state()
-                self._ws.run_forever(
-                    ping_interval=60, ping_timeout=10, **self._proxy_params
-                )
+                self._ws.run_forever(ping_interval=60, ping_timeout=10, **self._proxy_params)
                 self.connected = False
 
                 logger.debug("Websocket run_forever finished.")
@@ -223,7 +219,9 @@ class BaseWebsocketClient(BaseClient, ABC):
 
                 self._current_retry += 1
                 if self._current_retry > retries:
-                    error_message = "Max retries exceeded: Failed to establish a websocket connection."
+                    error_message = (
+                        "Max retries exceeded: Failed to establish a websocket connection."
+                    )
                     if self._error:
                         error_message += f" Error: {self._error}"
 
@@ -234,8 +232,7 @@ class BaseWebsocketClient(BaseClient, ABC):
             # Sleep then retry.
             backoff_time = self._backoff_time(backoff_factor, self._current_retry)
             logger.info(
-                "Retrying get_job_status via websocket after %s seconds: "
-                "Attempt #%s",
+                "Retrying get_job_status via websocket after %s seconds: Attempt #%s",
                 backoff_time,
                 self._current_retry,
             )
@@ -273,9 +270,7 @@ class BaseWebsocketClient(BaseClient, ABC):
 
     def disconnect(
         self,
-        close_code: Optional[
-            WebsocketClientCloseCode
-        ] = WebsocketClientCloseCode.NORMAL,
+        close_code: Optional[WebsocketClientCloseCode] = WebsocketClientCloseCode.NORMAL,
     ) -> None:
         """Close the websocket connection.
 
@@ -283,9 +278,7 @@ class BaseWebsocketClient(BaseClient, ABC):
             close_code: Disconnect status code.
         """
         if self._ws is not None:
-            logger.debug(
-                "Client closing websocket connection with code %s.", close_code
-            )
+            logger.debug("Client closing websocket connection with code %s.", close_code)
             self._client_close_code = close_code
             self._ws.close()
         if close_code == WebsocketClientCloseCode.CANCEL:
@@ -301,9 +294,7 @@ class BaseWebsocketClient(BaseClient, ABC):
             Formatted exception.
         """
         return "".join(
-            traceback.format_exception(
-                type(error), error, getattr(error, "__traceback__", "")
-            )
+            traceback.format_exception(type(error), error, getattr(error, "__traceback__", ""))
         )
 
     def _reset_state(self) -> None:

@@ -59,9 +59,7 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
 
             circuits1 = [psi1]
             # calculate [ <psi1(theta1)|H1|psi1(theta1)> ]
-            job = estimator.run(
-                circuits=circuits1, observables=[H1], parameter_values=[theta1]
-            )
+            job = estimator.run(circuits=circuits1, observables=[H1], parameter_values=[theta1])
             result1 = job.result()
             self.assertIsInstance(result1, EstimatorResult)
             self.assertEqual(len(result1.values), len(circuits1))
@@ -79,9 +77,7 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
 
             circuits3 = [psi2]
             # calculate [ <psi2(theta2)|H2|psi2(theta2)> ]
-            job = estimator.run(
-                circuits=circuits3, observables=[H2], parameter_values=[theta2]
-            )
+            job = estimator.run(circuits=circuits3, observables=[H2], parameter_values=[theta2])
             result3 = job.result()
             self.assertIsInstance(result3, EstimatorResult)
             self.assertEqual(len(result3.values), len(circuits3))
@@ -184,9 +180,7 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
             estimator = Estimator(session=session)
             # pass correct initial_layout
             transpilation = {"initial_layout": [0, 1]}
-            job = estimator.run(
-                circuits=[qc1], observables=[H], transpilation=transpilation
-            )
+            job = estimator.run(circuits=[qc1], observables=[H], transpilation=transpilation)
             result = job.result()
             self.assertEqual(len(result.values), 1)
             self.assertEqual(len(result.metadata), 1)
@@ -196,9 +190,7 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
             # since a new transpilation option is passed it should not use the
             # cached transpiled circuit from the first run above
             transpilation = {"initial_layout": [0]}
-            job = estimator.run(
-                circuits=[qc1], observables=[H], transpilation=transpilation
-            )
+            job = estimator.run(circuits=[qc1], observables=[H], transpilation=transpilation)
             with self.assertRaises(RuntimeJobFailureError):
                 job.result()
             session.close()
@@ -221,9 +213,7 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
 
         with Session(service, self.backend) as session:
             estimator = Estimator(session=session)
-            job = estimator.run(
-                circuits=[bell] * 60, observables=[obs] * 60, callback=_callback
-            )
+            job = estimator.run(circuits=[bell] * 60, observables=[obs] * 60, callback=_callback)
             result = job.result()
             self.assertIsInstance(ws_result[-1], dict)
             ws_result_values = np.asarray(ws_result[-1]["values"])

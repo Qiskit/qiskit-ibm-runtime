@@ -32,8 +32,7 @@ def save_config(filename: str, name: str, config: dict, overwrite: bool) -> None
 
     if data.get(name) and not overwrite:
         raise AccountAlreadyExistsError(
-            f"Named account ({name}) already exists. "
-            f"Set overwrite=True to overwrite."
+            f"Named account ({name}) already exists. " f"Set overwrite=True to overwrite."
         )
 
     with open(filename, mode="w", encoding="utf-8") as json_out:

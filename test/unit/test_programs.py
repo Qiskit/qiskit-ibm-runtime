@@ -212,9 +212,7 @@ class TestPrograms(IBMTestCase):
         try:
             for metadata in sub_tests:
                 with self.subTest(metadata_type=type(metadata)):
-                    program_id = service.upload_program(
-                        data=DEFAULT_DATA, metadata=metadata
-                    )
+                    program_id = service.upload_program(data=DEFAULT_DATA, metadata=metadata)
                     program = service.program(program_id)
                     service.delete_program(program_id)
                     self._validate_program(program)
@@ -239,21 +237,13 @@ class TestPrograms(IBMTestCase):
         """Validate a program."""
         self.assertEqual(DEFAULT_METADATA["name"], program.name)
         self.assertEqual(DEFAULT_METADATA["description"], program.description)
-        self.assertEqual(
-            DEFAULT_METADATA["max_execution_time"], program.max_execution_time
-        )
+        self.assertEqual(DEFAULT_METADATA["max_execution_time"], program.max_execution_time)
         self.assertTrue(program.creation_date)
         self.assertTrue(program.update_date)
         self.assertEqual(
             DEFAULT_METADATA["spec"]["backend_requirements"],
             program.backend_requirements,
         )
-        self.assertEqual(
-            DEFAULT_METADATA["spec"]["parameters"], program.parameters().metadata
-        )
-        self.assertEqual(
-            DEFAULT_METADATA["spec"]["return_values"], program.return_values
-        )
-        self.assertEqual(
-            DEFAULT_METADATA["spec"]["interim_results"], program.interim_results
-        )
+        self.assertEqual(DEFAULT_METADATA["spec"]["parameters"], program.parameters().metadata)
+        self.assertEqual(DEFAULT_METADATA["spec"]["return_values"], program.return_values)
+        self.assertEqual(DEFAULT_METADATA["spec"]["interim_results"], program.interim_results)
