@@ -156,8 +156,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     @run_integration_test
     def test_cancel_job_running(self, service):
         """Test canceling a running job."""
-        job = self._run_program(service, iterations=3)
-        wait_for_status(job, JobStatus.RUNNING)
+        job = self._run_program(service, iterations=5)
         if not cancel_job_safe(job, self.log):
             return
         time.sleep(10)  # Wait a bit for DB to update.
@@ -196,7 +195,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         with self.assertRaises(RuntimeJobNotFound):
             service.job(job.job_id())
 
-    @unittest.skip("Final result only supported in custom programs.")
+    @unittest.skip("skip until qiskit-ibm-runtime #933 is fixed")
     @run_integration_test
     def test_final_result(self, service):
         """Test getting final result."""

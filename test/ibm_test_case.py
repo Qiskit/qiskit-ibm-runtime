@@ -206,7 +206,7 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
             if max_execution_time:
                 options.max_execution_time = max_execution_time
             sampler = Sampler(backend=backend, options=options)
-            job = sampler.run(ReferenceCircuits.bell())
+            job = sampler.run(ReferenceCircuits.bell(), callback=callback)
         else:
             job = service.run(
                 program_id=pid,
