@@ -69,9 +69,7 @@ class TestBackendFilters(IBMTestCase):
             with self.subTest(service=service.channel):
                 filtered_backends = service.backends(n_qubits=n_qubits, local=False)
                 self.assertTrue(len(filtered_backends), 1)
-                self.assertEqual(
-                    n_qubits, filtered_backends[0].configuration().n_qubits
-                )
+                self.assertEqual(n_qubits, filtered_backends[0].configuration().n_qubits)
                 self.assertFalse(filtered_backends[0].configuration().local)
 
     def test_filter_status_dict(self):

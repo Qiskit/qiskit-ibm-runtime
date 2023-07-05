@@ -106,8 +106,7 @@ This results in a considerable reduction of the code complexity and a more compa
             backend = service.backend("ibmq_qasm_simulator") # cloud simulator
 
             # Define Estimator
-            # (see tutorials more more info on sessions)
-            estimator = Estimator(session=backend)
+            estimator = Estimator(backend=backend)
 
             # Run Expectation value calculation
             result = estimator.run(circuits, observables).result()
@@ -252,7 +251,7 @@ convenient tool for algorithm design.
     service = QiskitRuntimeService(channel="ibm_quantum")
     backend = service.backend("ibmq_qasm_simulator")
 
-    estimator = Estimator(session=backend)
+    estimator = Estimator(backend=backend)
 
     expectation_value = estimator.run(state, op).result().values
 
@@ -345,7 +344,7 @@ the simulation method has been updated to match the result from 3.a.
     >>> print("expectation: ", expectation_value)
     expectation:  [-1.06365335]
 
-For more information on using the Aer primitives, see the 
+For more information on using the Aer primitives, see the
 `VQE tutorial <https://qiskit.org/documentation/tutorials/algorithms/03_vqe_simulation_with_noise.html>`_ .
 
 For more information about running noisy simulations with the **Runtime primitives**, see this

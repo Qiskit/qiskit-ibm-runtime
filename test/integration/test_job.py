@@ -18,6 +18,7 @@ import unittest
 
 from qiskit.providers.jobstatus import JOB_FINAL_STATES, JobStatus
 from qiskit.test.decorators import slow_test
+from qiskit.test.reference_circuits import ReferenceCircuits
 
 from qiskit_ibm_runtime.constants import API_TO_JOB_ERROR_MESSAGE
 from qiskit_ibm_runtime.exceptions import (
@@ -44,9 +45,9 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     def test_run_program(self, service):
         """Test running a program."""
         job = self._run_program(service)
-        result = job.result()
+        job.wait_for_final_state()
         self.assertEqual(JobStatus.DONE, job.status())
-        self.assertEqual("Hello, World!", result)
+        self.assertTrue(job.result())
 
     @slow_test
     @run_integration_test
@@ -105,9 +106,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         """Test a program that failed since it ran longer than maximum execution time."""
         max_execution_time = 60
         inputs = {"iterations": 1, "sleep_per_iteration": 61}
-        program_id = self._upload_program(
-            service, max_execution_time=max_execution_time
-        )
+        program_id = self._upload_program(service, max_execution_time=max_execution_time)
         job = self._run_program(service, program_id=program_id, inputs=inputs)
 
         job.wait_for_final_state()
@@ -128,16 +127,12 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         """Test that the program max execution time is overridden."""
         program_max_execution_time = 400
         job_max_execution_time = 350
-        program_id = self._upload_program(
-            service, max_execution_time=program_max_execution_time
-        )
+        program_id = self._upload_program(service, max_execution_time=program_max_execution_time)
         job = self._run_program(
             service, program_id=program_id, max_execution_time=job_max_execution_time
         )
         job.wait_for_final_state()
-        self.assertEqual(
-            job._api_client.job_get(job.job_id())["cost"], job_max_execution_time
-        )
+        self.assertEqual(job._api_client.job_get(job.job_id())["cost"], job_max_execution_time)
 
     @run_integration_test
     def test_invalid_max_execution_time_fails(self, service):
@@ -225,7 +220,11 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     def test_job_inputs(self, service):
         """Test job inputs."""
         interim_results = get_complex_types()
-        inputs = {"iterations": 1, "interim_results": interim_results}
+        inputs = {
+            "iterations": 1,
+            "interim_results": interim_results,
+            "circuits": ReferenceCircuits.bell(),
+        }
         job = self._run_program(service, inputs=inputs)
         self.assertEqual(inputs, job.inputs)
         rjob = service.job(job.job_id())

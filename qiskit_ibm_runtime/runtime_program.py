@@ -96,9 +96,7 @@ class RuntimeProgram:
         def _format_common(schema: Dict) -> None:
             """Add title, description and property details to `formatted`."""
             if "description" in schema:
-                formatted.append(
-                    " " * 4 + "Description: {}".format(schema["description"])
-                )
+                formatted.append(" " * 4 + "Description: {}".format(schema["description"]))
             if "type" in schema:
                 formatted.append(" " * 4 + "Type: {}".format(str(schema["type"])))
             if "properties" in schema:
@@ -107,29 +105,22 @@ class RuntimeProgram:
                     formatted.append(" " * 8 + "- " + property_name + ":")
                     for key, value in property_value.items():
                         formatted.append(
-                            " " * 12
-                            + "{}: {}".format(camel_to_sentence_case(key), str(value))
+                            " " * 12 + "{}: {}".format(camel_to_sentence_case(key), str(value))
                         )
                     formatted.append(
-                        " " * 12
-                        + "Required: "
-                        + str(property_name in schema.get("required", []))
+                        " " * 12 + "Required: " + str(property_name in schema.get("required", []))
                     )
 
         def _format_backend_requirements(schema: Dict) -> None:
             """Add backend requirements details to `formatted`."""
             if "min_num_qubits" in schema:
                 formatted.append(
-                    " " * 4
-                    + "Minimum number of qubits: {}".format(
-                        str(schema["min_num_qubits"])
-                    )
+                    " " * 4 + "Minimum number of qubits: {}".format(str(schema["min_num_qubits"]))
                 )
             for key, value in schema.items():
                 if key not in ["min_num_qubits"]:
                     formatted.append(
-                        " " * 4
-                        + "{}: {}".format(snake_to_sentence_case(key), str(value))
+                        " " * 4 + "{}: {}".format(snake_to_sentence_case(key), str(value))
                     )
 
         def snake_to_sentence_case(snake_case_text: str) -> str:
@@ -334,18 +325,14 @@ class RuntimeProgram:
             response = self._api_client.program_get(self._id)
         except RequestsApiError as ex:
             if ex.status_code == 404:
-                raise RuntimeProgramNotFound(
-                    f"Program not found: {ex.message}"
-                ) from None
+                raise RuntimeProgramNotFound(f"Program not found: {ex.message}") from None
             raise IBMRuntimeError(f"Failed to get program: {ex}") from None
         self._backend_requirements = {}
         self._parameters = {}
         self._return_values = {}
         self._interim_results = {}
         if "spec" in response:
-            self._backend_requirements = response["spec"].get(
-                "backend_requirements", {}
-            )
+            self._backend_requirements = response["spec"].get("backend_requirements", {})
             self._parameters = response["spec"].get("parameters", {})
             self._return_values = response["spec"].get("return_values", {})
             self._interim_results = response["spec"].get("interim_results", {})
@@ -409,9 +396,7 @@ class ParameterNamespace(SimpleNamespace):
             value = getattr(self, parameter_name, None)
             # Check there exists a program parameter of that name.
             if value is None and parameter_name in self.metadata.get("required", []):
-                raise IBMInputValueError(
-                    "Param (%s) missing required value!" % parameter_name
-                )
+                raise IBMInputValueError("Param (%s) missing required value!" % parameter_name)
 
     def __str__(self) -> str:
         """Creates string representation of object"""

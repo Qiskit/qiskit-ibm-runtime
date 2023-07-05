@@ -91,13 +91,9 @@ class RuntimeOptions:
             )
 
         if self.instance and channel != "ibm_quantum":
-            raise IBMInputValueError(
-                '"instance" is only supported for "ibm_quantum" channel.'
-            )
+            raise IBMInputValueError('"instance" is only supported for "ibm_quantum" channel.')
 
-        if self.log_level and not isinstance(
-            logging.getLevelName(self.log_level.upper()), int
-        ):
+        if self.log_level and not isinstance(logging.getLevelName(self.log_level.upper()), int):
             raise IBMInputValueError(
                 f"{self.log_level} is not a valid log level. The valid log levels are: `DEBUG`, "
                 f"`INFO`, `WARNING`, `ERROR`, and `CRITICAL`."

@@ -97,16 +97,10 @@ class Options:
     optimization_level: Optional[int] = None
     resilience_level: Optional[int] = None
     max_execution_time: Optional[int] = None
-    transpilation: Union[TranspilationOptions, Dict] = field(
-        default_factory=TranspilationOptions
-    )
-    resilience: Union[ResilienceOptions, Dict] = field(
-        default_factory=ResilienceOptions
-    )
+    transpilation: Union[TranspilationOptions, Dict] = field(default_factory=TranspilationOptions)
+    resilience: Union[ResilienceOptions, Dict] = field(default_factory=ResilienceOptions)
     execution: Union[ExecutionOptions, Dict] = field(default_factory=ExecutionOptions)
-    environment: Union[EnvironmentOptions, Dict] = field(
-        default_factory=EnvironmentOptions
-    )
+    environment: Union[EnvironmentOptions, Dict] = field(default_factory=EnvironmentOptions)
     simulator: Union[SimulatorOptions, Dict] = field(default_factory=SimulatorOptions)
 
     _obj_fields: ClassVar[dict] = {
@@ -135,10 +129,8 @@ class Options:
             }
         )
         if isinstance(inputs["transpilation_settings"]["coupling_map"], CouplingMap):
-            inputs["transpilation_settings"][
-                "coupling_map"
-            ] = eval(  # pylint: disable=eval-used
-                str(inputs["transpilation_settings"]["coupling_map"])
+            inputs["transpilation_settings"]["coupling_map"] = list(
+                map(list, inputs["transpilation_settings"]["coupling_map"].get_edges())
             )
 
         inputs["resilience_settings"] = options.get("resilience", {})
@@ -164,9 +156,7 @@ class Options:
         # Add additional unknown keys.
         for key in options.keys():
             if key not in known_keys:
-                warnings.warn(
-                    f"Key '{key}' is an unrecognized option. It may be ignored."
-                )
+                warnings.warn(f"Key '{key}' is an unrecognized option. It may be ignored.")
                 inputs[key] = options[key]
         return inputs
 
@@ -185,9 +175,7 @@ class Options:
                 f"{list(range(Options._MAX_OPTIMIZATION_LEVEL + 1))}"
             )
         ResilienceOptions.validate_resilience_options(options.get("resilience"))
-        TranspilationOptions.validate_transpilation_options(
-            options.get("transpilation")
-        )
+        TranspilationOptions.validate_transpilation_options(options.get("transpilation"))
         execution_time = options.get("max_execution_time")
         if not execution_time is None:
             if (
@@ -231,9 +219,7 @@ class Options:
             Merged dictionary.
         """
 
-        def _update_options(
-            old: dict, new: dict, matched: Optional[dict] = None
-        ) -> None:
+        def _update_options(old: dict, new: dict, matched: Optional[dict] = None) -> None:
             if not new and not matched:
                 return
             matched = matched or {}

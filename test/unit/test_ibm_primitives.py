@@ -16,7 +16,7 @@ import sys
 import copy
 import json
 import os
-from unittest.mock import MagicMock, patch, ANY
+from unittest.mock import MagicMock, patch
 import warnings
 from dataclasses import asdict
 from typing import Dict
@@ -55,6 +55,7 @@ class MockSession(Session):
     """Mock for session class"""
 
     _circuits_map: Dict[str, QuantumCircuit] = {}
+    _instance = None
 
 
 class TestPrimitives(IBMTestCase):
@@ -144,55 +145,109 @@ class TestPrimitives(IBMTestCase):
                 options.transpilation.skip_transpilation = True
                 inst = cls(session=MagicMock(spec=MockSession), options=options)
                 options.transpilation.skip_transpilation = False
-                self.assertTrue(
-                    inst.options.get("transpilation").get("skip_transpilation")
-                )
+                self.assertTrue(inst.options.get("transpilation").get("skip_transpilation"))
 
-    @patch("qiskit_ibm_runtime.session.Session")
-    @patch("qiskit_ibm_runtime.session.QiskitRuntimeService")
-    def test_default_session(self, *_):
-        """Test a session is created if not passed in."""
-        try:
-            sampler = Sampler()
-            self.assertIsNotNone(sampler.session)
-            estimator = Estimator()
-            self.assertEqual(estimator.session, sampler.session)
-        finally:
-            # Ensure it's cleaned up or next test will fail.
-            session_pkg._DEFAULT_SESSION.set(None)
-
-    def test_default_session_after_close(self):
-        """Test a new default session is open after previous is closed."""
-        sampler = Sampler(session=MagicMock(spec=MockSession))
-        sampler.session.close()
-        estimator = Estimator(session=MagicMock(spec=MockSession))
-        self.assertIsNotNone(estimator.session)
-        self.assertNotEqual(estimator.session, sampler.session)
-
-    @patch("qiskit_ibm_runtime.session.Session")
-    @patch("qiskit_ibm_runtime.session.QiskitRuntimeService")
-    def test_backend_str_as_session(self, _, mock_session):
-        """Test specifying a backend name as session."""
+    def test_init_with_backend_str(self):
+        """Test initializing a primitive with a backend name."""
         primitives = [Sampler, Estimator]
         backend_name = "ibm_gotham"
 
         for cls in primitives:
-            with self.subTest(primitive=cls):
-                _ = cls(session=backend_name)
-                mock_session.assert_called_with(service=ANY, backend=backend_name)
+            with self.subTest(primitive=cls), patch(
+                "qiskit_ibm_runtime.base_primitive.QiskitRuntimeService"
+            ) as mock_service:
+                mock_service.reset_mock()
+                mock_service_inst = MagicMock()
+                mock_service.return_value = mock_service_inst
+                mock_backend = MagicMock()
+                mock_backend.name = backend_name
+                mock_service_inst.backend.return_value = mock_backend
 
-    def test_backend_as_session(self):
-        """Test specifying a backend as session."""
+                inst = cls(backend=backend_name)
+                mock_service.assert_called_once()
+                self.assertIsNone(inst.session)
+                inst.run(self.qx, observables=self.obs)
+                mock_service_inst.run.assert_called_once()
+                runtime_options = mock_service_inst.run.call_args.kwargs["options"]
+                self.assertEqual(runtime_options["backend"], backend_name)
+
+    def test_init_with_session_backend_str(self):
+        """Test initializing a primitive with a backend name using session."""
         primitives = [Sampler, Estimator]
-        backend = MagicMock(spec=IBMBackend)
-        backend._instance = None
+        backend_name = "ibm_gotham"
+
+        for cls in primitives:
+            with self.subTest(primitive=cls), patch(
+                "qiskit_ibm_runtime.base_primitive.QiskitRuntimeService"
+            ) as mock_service:
+                with self.assertWarns(DeprecationWarning):
+                    mock_service.reset_mock()
+                    inst = cls(session=backend_name)
+                    mock_service.assert_called_once()
+                    self.assertIsNone(inst.session)
+
+    def test_init_with_backend_instance(self):
+        """Test initializing a primitive with a backend instance."""
+        primitives = [Sampler, Estimator]
+        service = MagicMock()
+        backend = IBMBackend(configuration=MagicMock(), service=service, api_client=MagicMock())
         backend.name = "ibm_gotham"
-        backend.service = MagicMock()
 
         for cls in primitives:
             with self.subTest(primitive=cls):
-                inst = cls(session=backend)
-                self.assertEqual(inst.session.backend(), backend.name)
+                service.reset_mock()
+                inst = cls(backend=backend)
+                self.assertIsNone(inst.session)
+                inst.run(self.qx, observables=self.obs)
+                service.run.assert_called_once()
+                runtime_options = service.run.call_args.kwargs["options"]
+                self.assertEqual(runtime_options["backend"], backend.name)
+
+                with self.assertWarns(DeprecationWarning):
+                    inst = cls(session=backend)
+                    self.assertIsNone(inst.session)
+
+    def test_init_with_backend_session(self):
+        """Test initializing a primitive with both backend and session."""
+        primitives = [Sampler, Estimator]
+        session = MagicMock(spec=MockSession)
+        backend_name = "ibm_gotham"
+
+        for cls in primitives:
+            with self.subTest(primitive=cls):
+                session.reset_mock()
+                inst = cls(session=session, backend=backend_name)
+                self.assertIsNotNone(inst.session)
+                inst.run(self.qx, observables=self.obs)
+                session.run.assert_called_once()
+
+    def test_init_with_no_backend_session_cloud(self):
+        """Test initializing a primitive without backend or session for cloud channel."""
+        primitives = [Sampler, Estimator]
+
+        for cls in primitives:
+            with self.subTest(primitive=cls), patch(
+                "qiskit_ibm_runtime.base_primitive.QiskitRuntimeService"
+            ) as mock_service:
+                mock_service_inst = MagicMock()
+                mock_service_inst.channel = "ibm_cloud"
+                mock_service.return_value = mock_service_inst
+                mock_service.reset_mock()
+                inst = cls()
+                mock_service.assert_called_once()
+                self.assertIsNone(inst.session)
+
+    def test_init_with_no_backend_session_quantum(self):
+        """Test initializing a primitive without backend or session for quantum channel."""
+        primitives = [Sampler, Estimator]
+
+        for cls in primitives:
+            with self.subTest(primitive=cls), patch(
+                "qiskit_ibm_runtime.base_primitive.QiskitRuntimeService"
+            ) as mock_service:
+                mock_service.reset_mock()
+                with self.assertRaises(ValueError):
+                    _ = cls()
 
     def test_default_session_context_manager(self):
         """Test getting default session within context manager."""
@@ -209,26 +264,42 @@ class TestPrimitives(IBMTestCase):
 
     def test_default_session_cm_new_backend(self):
         """Test using a different backend within context manager."""
-        service = MagicMock()
-        backend = MagicMock(spec=IBMBackend)
-        backend._instance = None
-        backend.name = "ibm_gotham"
-        backend.service = service
         cm_backend = "ibm_metropolis"
         primitives = [Sampler, Estimator]
 
         for cls in primitives:
             with self.subTest(primitive=cls):
-                with Session(service=service, backend=cm_backend) as session:
-                    inst = cls(session=backend)
-                    self.assertNotEqual(inst.session, session)
-                    self.assertEqual(inst.session.backend(), backend.name)
-                    self.assertEqual(session.backend(), cm_backend)
-                    self.assertTrue(session._active)
-                    inst2 = cls()
-                    self.assertEqual(inst2.session, session)
-                    session.close()
-                self.assertFalse(session._active)
+                service = MagicMock()
+                backend = IBMBackend(
+                    configuration=MagicMock(), service=service, api_client=MagicMock()
+                )
+                backend.name = "ibm_gotham"
+
+                with Session(service=service, backend=cm_backend):
+                    inst = cls(backend=backend)
+                    self.assertIsNone(inst.session)
+                    inst.run(self.qx, observables=self.obs)
+                    service.run.assert_called_once()
+                    runtime_options = service.run.call_args.kwargs["options"]
+                    self.assertEqual(runtime_options["backend"], backend.name)
+
+    def test_no_session(self):
+        """Test running without session."""
+        primitives = [Sampler, Estimator]
+
+        for cls in primitives:
+            with self.subTest(primitive=cls):
+                service = MagicMock()
+                backend = IBMBackend(
+                    configuration=MagicMock(), service=service, api_client=MagicMock()
+                )
+                inst = cls(backend)
+                inst.run(self.qx, observables=self.obs)
+                self.assertIsNone(inst.session)
+                service.run.assert_called_once()
+                kwargs_list = service.run.call_args.kwargs
+                self.assertNotIn("session_id", kwargs_list)
+                self.assertNotIn("start_session", kwargs_list)
 
     def test_run_default_options(self):
         """Test run using default options."""
@@ -281,9 +352,7 @@ class TestPrimitives(IBMTestCase):
                     inputs,
                     {
                         "resilience_settings": {"level": 1},
-                        "transpilation_settings": {
-                            "optimization_settings": {"level": 2}
-                        },
+                        "transpilation_settings": {"optimization_settings": {"level": 2}},
                         "run_options": {"shots": 99},
                     },
                 )
@@ -386,9 +455,7 @@ class TestPrimitives(IBMTestCase):
                 inst.run(self.qx, observables=self.obs, shots=200)
                 kwargs_list = session.run.call_args_list
                 for idx, shots in zip([0, 1], [100, 200]):
-                    self.assertEqual(
-                        kwargs_list[idx][1]["inputs"]["run_options"]["shots"], shots
-                    )
+                    self.assertEqual(kwargs_list[idx][1]["inputs"]["run_options"]["shots"], shots)
                 self.assertDictEqual(inst.options.__dict__, asdict(Options()))
 
     def test_run_same_session(self):
@@ -620,13 +687,9 @@ class TestPrimitives(IBMTestCase):
                 with self.assertRaises(ValueError) as exc:
                     inst = cls(session=session, options=opts_dict)
                     inst.run(self.qx, observables=self.obs)
-                self.assertIn(
-                    list(opts_dict["resilience"].values())[0], str(exc.exception)
-                )
+                self.assertIn(list(opts_dict["resilience"].values())[0], str(exc.exception))
                 if len(opts_dict["resilience"].keys()) > 1:
-                    self.assertIn(
-                        list(opts_dict["resilience"].keys())[1], str(exc.exception)
-                    )
+                    self.assertIn(list(opts_dict["resilience"].keys())[1], str(exc.exception))
 
     def test_environment_options(self):
         """Test environment options."""
@@ -649,9 +712,7 @@ class TestPrimitives(IBMTestCase):
                 with self.assertRaises(ValueError) as exc:
                     inst = cls(session=session, options=opts_dict)
                     inst.run(self.qx, observables=self.obs)
-                self.assertIn(
-                    list(opts_dict["environment"].values())[0], str(exc.exception)
-                )
+                self.assertIn(list(opts_dict["environment"].values())[0], str(exc.exception))
 
     def test_transpilation_options(self):
         """Test transpilation options."""
@@ -676,9 +737,7 @@ class TestPrimitives(IBMTestCase):
                 with self.assertRaises(ValueError) as exc:
                     inst = cls(session=session, options=opts_dict)
                     inst.run(self.qx, observables=self.obs)
-                self.assertIn(
-                    list(opts_dict["transpilation"].keys())[0], str(exc.exception)
-                )
+                self.assertIn(list(opts_dict["transpilation"].keys())[0], str(exc.exception))
 
     def test_max_execution_time_options(self):
         """Test transpilation options."""
@@ -773,9 +832,7 @@ class TestPrimitives(IBMTestCase):
         observable = SparsePauliOp("Z" * num_qubits)
 
         edge_qubits = [0, 1]
-        ibm_backend = create_faulty_backend(
-            fake_backend, faulty_edge=("cx", edge_qubits)
-        )
+        ibm_backend = create_faulty_backend(fake_backend, faulty_edge=("cx", edge_qubits))
         service = MagicMock()
         service.backend.return_value = ibm_backend
         session = Session(service=service, backend=fake_backend.name)
@@ -826,15 +883,11 @@ class TestPrimitives(IBMTestCase):
         circ = QuantumCircuit(2, 2)
         circ.cx(0, 1)
 
-        transpiled = transpile(
-            circ, backend=fake_backend, initial_layout=coupling_map[0]
-        )
+        transpiled = transpile(circ, backend=fake_backend, initial_layout=coupling_map[0])
         observable = SparsePauliOp("Z" * fake_backend.configuration().num_qubits)
 
         edge_qubits = coupling_map[-1]
-        ibm_backend = create_faulty_backend(
-            fake_backend, faulty_edge=("cx", edge_qubits)
-        )
+        ibm_backend = create_faulty_backend(fake_backend, faulty_edge=("cx", edge_qubits))
 
         service = MagicMock()
         service.backend.return_value = ibm_backend

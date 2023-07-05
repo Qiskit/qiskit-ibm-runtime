@@ -45,6 +45,7 @@ from .api.exceptions import RequestsApiError
 from .utils.converters import utc_to_local
 from .api.client_parameters import ClientParameters
 from .utils.utils import CallableStr
+from .utils.deprecation import issue_deprecation_msg
 
 logger = logging.getLogger(__name__)
 
@@ -98,9 +99,7 @@ class RuntimeJob(Job):
         params: Optional[Dict] = None,
         creation_date: Optional[str] = None,
         user_callback: Optional[Callable] = None,
-        result_decoder: Optional[
-            Union[Type[ResultDecoder], Sequence[Type[ResultDecoder]]]
-        ] = None,
+        result_decoder: Optional[Union[Type[ResultDecoder], Sequence[Type[ResultDecoder]]]] = None,
         image: Optional[str] = "",
         session_id: Optional[str] = None,
         tags: Optional[List] = None,
@@ -138,9 +137,7 @@ class RuntimeJob(Job):
         self._session_id = session_id
         self._tags = tags
 
-        decoder = (
-            result_decoder or DEFAULT_DECODERS.get(program_id, None) or ResultDecoder
-        )
+        decoder = result_decoder or DEFAULT_DECODERS.get(program_id, None) or ResultDecoder
         if isinstance(decoder, Sequence):
             self._interim_result_decoder, self._final_result_decoder = decoder
         else:
@@ -150,9 +147,7 @@ class RuntimeJob(Job):
         self._ws_client_future = None  # type: Optional[futures.Future]
         self._result_queue = queue.Queue()  # type: queue.Queue
         self._ws_client = RuntimeWebsocketClient(
-            websocket_url=client_params.get_runtime_api_base_url().replace(
-                "https", "wss"
-            ),
+            websocket_url=client_params.get_runtime_api_base_url().replace("https", "wss"),
             client_params=client_params,
             job_id=job_id,
             message_queue=self._result_queue,
@@ -191,9 +186,7 @@ class RuntimeJob(Job):
         """
         if not self._final_interim_results:
             _decoder = decoder or self._interim_result_decoder
-            interim_results_raw = self._api_client.job_interim_results(
-                job_id=self.job_id()
-            )
+            interim_results_raw = self._api_client.job_interim_results(job_id=self.job_id())
             self._interim_results = _decoder.decode(interim_results_raw)
             if self.status() in JOB_FINAL_STATES:
                 self._final_interim_results = True
@@ -216,6 +209,7 @@ class RuntimeJob(Job):
         Raises:
             RuntimeJobFailureError: If the job failed.
             RuntimeJobMaxTimeoutError: If the job does not complete within given timeout.
+            RuntimeInvalidStateError: If the job was cancelled, and attempting to retrieve result.
         """
         _decoder = decoder or self._final_result_decoder
         if self._results is None or (_decoder != self._final_result_decoder):
@@ -224,8 +218,11 @@ class RuntimeJob(Job):
                 error_message = self._reason if self._reason else self._error_message
                 if self._reason == "RAN TOO LONG":
                     raise RuntimeJobMaxTimeoutError(error_message)
-                raise RuntimeJobFailureError(
-                    f"Unable to retrieve job result. " f"{error_message}"
+                raise RuntimeJobFailureError(f"Unable to retrieve job result. " f"{error_message}")
+            if self._status is JobStatus.CANCELLED:
+                raise RuntimeInvalidStateError(
+                    "Unable to retrieve result for job {}. "
+                    "Job was cancelled.".format(self.job_id())
                 )
 
             result_raw = self._download_external_result(
@@ -246,9 +243,7 @@ class RuntimeJob(Job):
             self._api_client.job_cancel(self.job_id())
         except RequestsApiError as ex:
             if ex.status_code == 409:
-                raise RuntimeInvalidStateError(
-                    f"Job cannot be cancelled: {ex}"
-                ) from None
+                raise RuntimeInvalidStateError(f"Job cannot be cancelled: {ex}") from None
             raise IBMRuntimeError(f"Failed to cancel job: {ex}") from None
         self.cancel_result_streaming()
         self._status = JobStatus.CANCELLED
@@ -304,9 +299,7 @@ class RuntimeJob(Job):
         try:
             start_time = time.time()
             if self._status not in JOB_FINAL_STATES and not self._is_streaming():
-                self._ws_client_future = self._executor.submit(
-                    self._start_websocket_client
-                )
+                self._ws_client_future = self._executor.submit(self._start_websocket_client)
             if self._is_streaming():
                 self._ws_client_future.result(timeout)
             # poll for status after stream has closed until status is final
@@ -346,9 +339,7 @@ class RuntimeJob(Job):
         if self._status in JOB_FINAL_STATES:
             raise RuntimeInvalidStateError("Job already finished.")
         if self._is_streaming():
-            raise RuntimeInvalidStateError(
-                "A callback function is already streaming results."
-            )
+            raise RuntimeInvalidStateError("A callback function is already streaming results.")
         self._ws_client_future = self._executor.submit(self._start_websocket_client)
         self._executor.submit(
             self._stream_results,
@@ -394,6 +385,11 @@ class RuntimeJob(Job):
             IBMRuntimeError: If a network error occurred.
         """
         try:
+            issue_deprecation_msg(
+                msg="The 'bss.seconds' attribute is deprecated",
+                version="0.11.1",
+                remedy="Use the 'usage.seconds' attribute instead.",
+            )
             metadata_str = self._api_client.job_metadata(self.job_id())
             return json.loads(metadata_str)
         except RequestsApiError as err:
@@ -505,8 +501,7 @@ class RuntimeJob(Job):
             self._ws_client.job_results()
         except Exception:  # pylint: disable=broad-except
             logger.warning(
-                "An error occurred while streaming results "
-                "from the server for job %s:\n%s",
+                "An error occurred while streaming results from the server for job %s:\n%s",
                 self.job_id(),
                 traceback.format_exc(),
             )

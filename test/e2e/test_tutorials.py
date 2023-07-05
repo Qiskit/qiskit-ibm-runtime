@@ -74,9 +74,7 @@ class TestTutorials(IBMIntegrationTestCase, metaclass=TutorialsTestCaseMeta):
 
     def _run_notebook(self, filename):
         if not _is_supported(self.dependencies.channel, filename):
-            self.skipTest(
-                f"Tutorial {filename} not supported on {self.dependencies.channel}"
-            )
+            self.skipTest(f"Tutorial {filename} not supported on {self.dependencies.channel}")
 
         # Create the preprocessor.
         execute_preprocessor = ExecutePreprocessor(timeout=6000, kernel_name="python3")

@@ -107,8 +107,7 @@ the **quasi-probability distribution** associated with them.
             backend = service.backend("ibmq_qasm_simulator") # Use a cloud simulator
 
             # Define Sampler
-            # (see tutorials more more info on sessions)
-            sampler = Sampler(session=backend)
+            sampler = Sampler(backend=backend)
 
             # Run Quasi-Probability calculation
             result = sampler.run(circuits).result()
@@ -180,7 +179,7 @@ The required steps to reach our goal with ``backend.run()`` are:
 .. raw:: html
 
     <br>
-    
+
 First, we run the circuit in a cloud simulator and output the result object:
 
 .. note::
@@ -240,7 +239,7 @@ Now we get the probability distribution from the output:
 2.b. [New] Use the ``Sampler`` Runtime primitive
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-While the user-side syntax of the ``Sampler`` is very similar to  ``backend.run()``, 
+While the user-side syntax of the ``Sampler`` is very similar to  ``backend.run()``,
 notice that the workflow is now simplified, as the quasi-probability distribution is returned
 **directly** (no need to perform post-processing), together with some key metadata.
 
@@ -256,7 +255,7 @@ notice that the workflow is now simplified, as the quasi-probability distributio
     service = QiskitRuntimeService(channel="ibm_quantum")
     backend = service.backend("ibmq_qasm_simulator")
 
-    sampler = Sampler(session=backend)
+    sampler = Sampler(backend=backend)
 
     result = sampler.run(circuit, shots=1024).result()
     quasi_dists = result.quasi_dists
@@ -273,7 +272,7 @@ notice that the workflow is now simplified, as the quasi-probability distributio
 .. attention::
 
     Be careful with the output format. With ``Sampler``, the states are no longer represented
-    by bit strings, for example, ``"11"``, 
+    by bit strings, for example, ``"11"``,
     but by integers, for example, ``3``. To convert the ``Sampler`` output to bit strings,
     you can use the |QuasiDistribution.binary_probabilities|_ method, as shown below.
 

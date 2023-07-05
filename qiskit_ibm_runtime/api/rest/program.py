@@ -32,9 +32,7 @@ class Program(RestAdapterBase):
 
     _executor = futures.ThreadPoolExecutor()
 
-    def __init__(
-        self, session: RetrySession, program_id: str, url_prefix: str = ""
-    ) -> None:
+    def __init__(self, session: RetrySession, program_id: str, url_prefix: str = "") -> None:
         """Job constructor.
 
         Args:

@@ -184,22 +184,20 @@ class TestOptions(IBMTestCase):
                 )
 
                 # Make sure the structure didn't change.
-                self.assertTrue(
-                    dict_keys_equal(asdict(Options()), options), f"options={options}"
-                )
+                self.assertTrue(dict_keys_equal(asdict(Options()), options), f"options={options}")
 
     def test_coupling_map_options(self):
-        """Check that coupling_map is processed correctly"""
-        coupling_map = [[1, 0], [2, 1], [0, 1], [1, 2]]
-        options_types = [
+        """Check that coupling_map is processed correctly for various types"""
+        coupling_map = {(1, 0), (2, 1), (0, 1), (1, 2)}
+        coupling_maps = [
             coupling_map,
-            CouplingMap.from_line(3),
+            list(map(list, coupling_map)),
+            CouplingMap(coupling_map),
         ]
-        for opt in options_types:
-            with self.subTest(opts_dict=opt):
+        for variant in coupling_maps:
+            with self.subTest(opts_dict=variant):
                 options = Options()
-                options.simulator.coupling_map = opt
+                options.simulator.coupling_map = variant
                 inputs = Options._get_program_inputs(asdict(options))
-                self.assertEqual(
-                    inputs["transpilation_settings"]["coupling_map"], coupling_map
-                )
+                resulting_cmap = inputs["transpilation_settings"]["coupling_map"]
+                self.assertEqual(coupling_map, set(map(tuple, resulting_cmap)))
