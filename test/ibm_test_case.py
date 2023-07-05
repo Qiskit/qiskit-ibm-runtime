@@ -203,6 +203,7 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
             "max_execution_time": max_execution_time,
         }
         if pid == "sampler":
+            backend = service.get_backend(backend_name)
             options = Options()
             if log_level:
                 options.environment.log_level = log_level
@@ -211,11 +212,7 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
             if max_execution_time:
                 options.max_execution_time = max_execution_time
             sampler = Sampler(backend=backend, options=options)
-            job = sampler.run(
-                ReferenceCircuits.bell(),
-                session_id=session_id,
-                start_session=start_session,
-            )
+            job = sampler.run(ReferenceCircuits.bell())
         else:
             job = service.run(
                 program_id=pid,
