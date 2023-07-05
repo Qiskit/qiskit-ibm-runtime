@@ -99,9 +99,7 @@ class TestLogger(IBMTestCase):
 
         for level_name, level_value in all_valid_log_levels.items():
             with self.subTest(level_name=level_name):
-                with mock.patch.dict(
-                    "os.environ", {QISKIT_IBM_RUNTIME_LOG_LEVEL: level_name}
-                ):
+                with mock.patch.dict("os.environ", {QISKIT_IBM_RUNTIME_LOG_LEVEL: level_name}):
                     setup_logger(logger)
                     self.assertEqual(
                         logger.level,
@@ -146,15 +144,9 @@ class TestLogger(IBMTestCase):
                 )
 
                 # Note that only messages >= `ERROR` will be logged.
-                logger.warning(
-                    "This is a warning message that should not be logged in the file."
-                )
-                logger.error(
-                    "This is an error message that should be logged in the file."
-                )
-                logger.critical(
-                    "This is a critical message that should be logged in the file."
-                )
+                logger.warning("This is a warning message that should not be logged in the file.")
+                logger.error("This is an error message that should be logged in the file.")
+                logger.critical("This is a critical message that should be logged in the file.")
 
                 # Assert the file exists.
                 log_file_name = os.environ[QISKIT_IBM_RUNTIME_LOG_FILE]

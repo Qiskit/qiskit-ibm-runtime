@@ -184,9 +184,7 @@ class TestOptions(IBMTestCase):
                 )
 
                 # Make sure the structure didn't change.
-                self.assertTrue(
-                    dict_keys_equal(asdict(Options()), options), f"options={options}"
-                )
+                self.assertTrue(dict_keys_equal(asdict(Options()), options), f"options={options}")
 
     def test_coupling_map_options(self):
         """Check that coupling_map is processed correctly for various types"""

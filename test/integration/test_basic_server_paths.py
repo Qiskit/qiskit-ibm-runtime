@@ -47,8 +47,7 @@ class TestBasicServerPaths(IBMTestCase):
                 )
                 if not pulse_backends:
                     raise self.skipTest(
-                        "Skipping pulse test since no pulse backend "
-                        'found for "{}"'.format(hgp)
+                        "Skipping pulse test since no pulse backend " 'found for "{}"'.format(hgp)
                     )
 
                 self.assertIsNotNone(pulse_backends[0].properties())
@@ -60,7 +59,5 @@ class TestBasicServerPaths(IBMTestCase):
 
         for hgp in self._get_hgps():
             with self.subTest(hgp=hgp):
-                backend = self.service.backends(
-                    simulator=False, operational=True, instance=hgp
-                )[0]
+                backend = self.service.backends(simulator=False, operational=True, instance=hgp)[0]
                 self.assertTrue(backend.status())

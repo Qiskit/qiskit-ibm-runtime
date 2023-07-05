@@ -63,9 +63,7 @@ class IBMTestCase(unittest.TestCase):
                     os.getenv("LOG_LEVEL"),
                     str(ex),
                 )
-        if not any(
-            isinstance(handler, logging.StreamHandler) for handler in logger.handlers
-        ):
+        if not any(isinstance(handler, logging.StreamHandler) for handler in logger.handlers):
             logger.addHandler(logging.StreamHandler())
             logger.propagate = False
 
@@ -158,9 +156,7 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
     @classmethod
     def _find_sim_backends(cls):
         """Find a simulator backend for each service."""
-        cls.sim_backends[cls.service.channel] = cls.service.backends(simulator=True)[
-            0
-        ].name
+        cls.sim_backends[cls.service.channel] = cls.service.backends(simulator=True)[0].name
 
     def _run_program(
         self,
@@ -193,9 +189,7 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
             }
         )
         pid = program_id or self.program_ids[service.channel]
-        backend_name = (
-            backend if backend is not None else self.sim_backends[service.channel]
-        )
+        backend_name = backend if backend is not None else self.sim_backends[service.channel]
         options = {
             "backend": backend_name,
             "log_level": log_level,

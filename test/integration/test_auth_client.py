@@ -75,9 +75,7 @@ class TestAuthClient(IBMTestCase):
         self.assertIsNotNone(user_hubs)
         for user_hub in user_hubs:
             with self.subTest(user_hub=user_hub):
-                self.assertTrue(
-                    "hub" in user_hub and "group" in user_hub and "project" in user_hub
-                )
+                self.assertTrue("hub" in user_hub and "group" in user_hub and "project" in user_hub)
 
     def _init_auth_client(self, token, url):
         """Return an AuthClient."""

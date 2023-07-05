@@ -42,7 +42,7 @@ class RuntimeClient(BaseBackendClient):
         self._session = RetrySession(
             base_url=params.get_runtime_api_base_url(),
             auth=params.get_auth_handler(),
-            **params.connection_parameters()
+            **params.connection_parameters(),
         )
         self._api = Runtime(self._session)
 
@@ -161,7 +161,7 @@ class RuntimeClient(BaseBackendClient):
             max_execution_time=max_execution_time,
             start_session=start_session,
             session_time=session_time,
-            **hgp_dict
+            **hgp_dict,
         )
 
     def program_delete(self, program_id: str) -> None:

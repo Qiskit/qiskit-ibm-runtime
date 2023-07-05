@@ -30,9 +30,7 @@ class ProgramJob(RestAdapterBase):
         "metrics": "/metrics",
     }
 
-    def __init__(
-        self, session: RetrySession, job_id: str, url_prefix: str = ""
-    ) -> None:
+    def __init__(self, session: RetrySession, job_id: str, url_prefix: str = "") -> None:
         """ProgramJob constructor.
 
         Args:
