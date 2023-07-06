@@ -23,7 +23,7 @@ from typing import DefaultDict, Dict
 
 from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit_ibm_runtime import QISKIT_IBM_RUNTIME_LOGGER_NAME
-from qiskit_ibm_runtime import QiskitRuntimeService
+from qiskit_ibm_runtime import QiskitRuntimeService, Sampler, Options
 
 from .utils import setup_test_logging
 from .decorators import IntegrationTestDependencies, integration_test_setup
@@ -135,7 +135,7 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
         cls.program_ids = {}
         cls.sim_backends = {}
         service = cls.service
-        cls.program_ids[service.channel] = "circuit-runner"
+        cls.program_ids[service.channel] = "sampler"
         cls._find_sim_backends()
 
     @classmethod
@@ -196,14 +196,26 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
             "job_tags": job_tags,
             "max_execution_time": max_execution_time,
         }
-        job = service.run(
-            program_id=pid,
-            inputs=inputs,
-            options=options,
-            session_id=session_id,
-            callback=callback,
-            start_session=start_session,
-        )
+        if pid == "sampler":
+            backend = service.get_backend(backend_name)
+            options = Options()
+            if log_level:
+                options.environment.log_level = log_level
+            if job_tags:
+                options.environment.job_tags = job_tags
+            if max_execution_time:
+                options.max_execution_time = max_execution_time
+            sampler = Sampler(backend=backend, options=options)
+            job = sampler.run(ReferenceCircuits.bell(), callback=callback)
+        else:
+            job = service.run(
+                program_id=pid,
+                inputs=inputs,
+                options=options,
+                session_id=session_id,
+                callback=callback,
+                start_session=start_session,
+            )
         self.log.info("Runtime job %s submitted.", job.job_id())
         self.to_cancel[service.channel].append(job)
         return job
