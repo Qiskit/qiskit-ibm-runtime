@@ -164,6 +164,7 @@ class TestIBMBackend(IBMIntegrationTestCase):
             with self.assertRaises(RuntimeError):
                 backend.run()
 
+    @quantum_only
     def test_backend_deepcopy(self):
         """Test that deepcopy on IBMBackend works correctly"""
         backend = self.backend
