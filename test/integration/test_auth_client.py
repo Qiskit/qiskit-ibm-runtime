@@ -14,10 +14,9 @@
 
 import re
 
+from qiskit_ibm_provider.api.exceptions import RequestsApiError
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 from qiskit_ibm_runtime.api.clients import AuthClient
-from qiskit_ibm_runtime.api.exceptions import ApiError
-from qiskit_ibm_runtime.exceptions import IBMNotAuthorizedError
 from ..ibm_test_case import IBMTestCase
 from ..decorators import integration_test_setup, IntegrationTestDependencies
 
@@ -35,21 +34,21 @@ class TestAuthClient(IBMTestCase):
     def test_url_404(self, dependencies: IntegrationTestDependencies) -> None:
         """Test login against a 404 URL"""
         url_404 = re.sub(r"/api.*$", "/api/TEST_404", dependencies.url)
-        with self.assertRaises(ApiError):
+        with self.assertRaises(RequestsApiError):
             _ = self._init_auth_client(dependencies.token, url_404)
 
     @integration_test_setup(supported_channel=["ibm_quantum"], init_service=False)
     def test_invalid_token(self, dependencies: IntegrationTestDependencies) -> None:
         """Test login using invalid token."""
         qe_token = "INVALID_TOKEN"
-        with self.assertRaises(IBMNotAuthorizedError):
+        with self.assertRaises(RequestsApiError):
             _ = self._init_auth_client(qe_token, dependencies.url)
 
     @integration_test_setup(supported_channel=["ibm_quantum"], init_service=False)
     def test_url_unreachable(self, dependencies: IntegrationTestDependencies) -> None:
         """Test login against an invalid (malformed) URL."""
         qe_url = "INVALID_URL"
-        with self.assertRaises(ApiError):
+        with self.assertRaises(RequestsApiError):
             _ = self._init_auth_client(dependencies.token, qe_url)
 
     @integration_test_setup(supported_channel=["ibm_quantum"], init_service=False)
