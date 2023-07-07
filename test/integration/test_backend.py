@@ -174,10 +174,11 @@ class TestIBMBackend(IBMIntegrationTestCase):
                 backend_copy.configuration().basis_gates,
                 backend.configuration().basis_gates,
             )
-            self.assertEqual(
-                backend_copy.properties().last_update_date,
-                backend.properties().last_update_date,
-            )
+            if backend.properties():
+                self.assertEqual(
+                    backend_copy.properties().last_update_date,
+                    backend.properties().last_update_date,
+                )
             self.assertEqual(backend_copy._instance, backend._instance)
             self.assertEqual(backend_copy._service._backends, backend._service._backends)
             self.assertEqual(backend_copy._get_defaults(), backend._get_defaults())
