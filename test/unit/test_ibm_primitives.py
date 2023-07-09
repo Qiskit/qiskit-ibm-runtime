@@ -191,7 +191,10 @@ class TestPrimitives(IBMTestCase):
         """Test initializing a primitive with a backend instance."""
         primitives = [Sampler, Estimator]
         service = MagicMock()
-        backend = IBMBackend(configuration=MagicMock(), service=service, api_client=MagicMock())
+        model_backend = FakeManila()
+        backend = IBMBackend(
+            configuration=model_backend.configuration(), service=service, api_client=MagicMock()
+        )
         backend.name = "ibm_gotham"
 
         for cls in primitives:
@@ -267,12 +270,14 @@ class TestPrimitives(IBMTestCase):
         """Test using a different backend within context manager."""
         cm_backend = "ibm_metropolis"
         primitives = [Sampler, Estimator]
-
+        model_backend = FakeManila()
         for cls in primitives:
             with self.subTest(primitive=cls):
                 service = MagicMock()
                 backend = IBMBackend(
-                    configuration=MagicMock(), service=service, api_client=MagicMock()
+                    configuration=model_backend.configuration(),
+                    service=service,
+                    api_client=MagicMock(),
                 )
                 backend.name = "ibm_gotham"
 
@@ -287,12 +292,14 @@ class TestPrimitives(IBMTestCase):
     def test_no_session(self):
         """Test running without session."""
         primitives = [Sampler, Estimator]
-
+        model_backend = FakeManila()
         for cls in primitives:
             with self.subTest(primitive=cls):
                 service = MagicMock()
                 backend = IBMBackend(
-                    configuration=MagicMock(), service=service, api_client=MagicMock()
+                    configuration=model_backend.configuration(),
+                    service=service,
+                    api_client=MagicMock(),
                 )
                 inst = cls(backend)
                 inst.run(self.qx, observables=self.obs)
