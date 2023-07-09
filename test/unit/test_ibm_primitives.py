@@ -964,8 +964,8 @@ class TestPrimitives(IBMTestCase):
             circs.append(self.qx)
             observables.append(self.obs)
         for cls in primitives:
-            with self.subTest(primitive=cls, backend=backend):
-                inst = cls(session=backend)
+            with self.subTest(primitive=cls):
+                inst = cls(backend=backend)
                 with self.assertRaises(IBMInputValueError) as err:
                     inst.run(circs, observables=observables)
         self.assertIn(
