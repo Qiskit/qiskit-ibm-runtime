@@ -390,8 +390,7 @@ class RuntimeJob(Job):
                 version="0.11.1",
                 remedy="Use the 'usage.seconds' attribute instead.",
             )
-            metadata_str = self._api_client.job_metadata(self.job_id())
-            return json.loads(metadata_str)
+            return self._api_client.job_metadata(self.job_id())
         except RequestsApiError as err:
             raise IBMRuntimeError(f"Failed to get job metadata: {err}") from None
 
@@ -574,10 +573,7 @@ class RuntimeJob(Job):
         """
         if not self._params:
             response = self._api_client.job_get(job_id=self.job_id())
-            params = response.get("params", {})
-            if not isinstance(params, str):
-                params = json.dumps(params)
-            self._params = json.loads(str(params), cls=RuntimeDecoder)
+            self._params = response.get("params", {})
         return self._params
 
     @property
