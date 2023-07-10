@@ -16,12 +16,13 @@ import logging
 from typing import Any, Dict, List, Optional
 from datetime import datetime as python_datetime
 
+from qiskit_ibm_provider.utils.hgp import from_instance_format
 from qiskit_ibm_runtime.api.session import RetrySession
 
 from .backend import BaseBackendClient
 from ..rest.runtime import Runtime
 from ..client_parameters import ClientParameters
-from ...utils.hgp import from_instance_format
+
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +42,7 @@ class RuntimeClient(BaseBackendClient):
         self._session = RetrySession(
             base_url=params.get_runtime_api_base_url(),
             auth=params.get_auth_handler(),
-            **params.connection_parameters()
+            **params.connection_parameters(),
         )
         self._api = Runtime(self._session)
 
@@ -160,7 +161,7 @@ class RuntimeClient(BaseBackendClient):
             max_execution_time=max_execution_time,
             start_session=start_session,
             session_time=session_time,
-            **hgp_dict
+            **hgp_dict,
         )
 
     def program_delete(self, program_id: str) -> None:
@@ -201,7 +202,7 @@ class RuntimeClient(BaseBackendClient):
                 spec=spec,
             )
 
-    def job_get(self, job_id: str) -> Dict:
+    def job_get(self, job_id: str, exclude_params: bool = None) -> Dict:
         """Get job data.
 
         Args:
@@ -210,7 +211,7 @@ class RuntimeClient(BaseBackendClient):
         Returns:
             JSON response.
         """
-        response = self._api.program_job(job_id).get()
+        response = self._api.program_job(job_id).get(exclude_params=exclude_params)
         logger.debug("Runtime job get response: %s", response)
         return response
 
@@ -321,7 +322,7 @@ class RuntimeClient(BaseBackendClient):
         """
         return self._api.program_job(job_id).logs()
 
-    def job_metadata(self, job_id: str) -> str:
+    def job_metadata(self, job_id: str) -> Dict[str, Any]:
         """Get job metadata.
 
         Args:
@@ -340,21 +341,19 @@ class RuntimeClient(BaseBackendClient):
         """
         self._api.runtime_session(session_id=session_id).close()
 
-    # IBM Cloud only functions
-
-    def list_backends(self) -> List[str]:
-        """Return IBM Cloud backends available for this service instance.
+    def list_backends(self, hgp: Optional[str] = None) -> List[str]:
+        """Return IBM backends available for this service instance.
 
         Returns:
-            IBM Cloud backends available for this service instance.
+            IBM backends available for this service instance.
         """
-        return self._api.backends()["devices"]
+        return self._api.backends(hgp=hgp)["devices"]
 
     def backend_configuration(self, backend_name: str) -> Dict[str, Any]:
-        """Return the configuration of the IBM Cloud backend.
+        """Return the configuration of the IBM backend.
 
         Args:
-            backend_name: The name of the IBM Cloud backend.
+            backend_name: The name of the IBM backend.
 
         Returns:
             Backend configuration.
@@ -362,10 +361,10 @@ class RuntimeClient(BaseBackendClient):
         return self._api.backend(backend_name).configuration()
 
     def backend_status(self, backend_name: str) -> Dict[str, Any]:
-        """Return the status of the IBM Cloud backend.
+        """Return the status of the IBM backend.
 
         Args:
-            backend_name: The name of the IBM Cloud backend.
+            backend_name: The name of the IBM backend.
 
         Returns:
             Backend status.
@@ -375,10 +374,10 @@ class RuntimeClient(BaseBackendClient):
     def backend_properties(
         self, backend_name: str, datetime: Optional[python_datetime] = None
     ) -> Dict[str, Any]:
-        """Return the properties of the IBM Cloud backend.
+        """Return the properties of the IBM backend.
 
         Args:
-            backend_name: The name of the IBM Cloud backend.
+            backend_name: The name of the IBM backend.
             datetime: Date and time for additional filtering of backend properties.
 
         Returns:
@@ -392,10 +391,10 @@ class RuntimeClient(BaseBackendClient):
         return self._api.backend(backend_name).properties()
 
     def backend_pulse_defaults(self, backend_name: str) -> Dict:
-        """Return the pulse defaults of the IBM Cloud backend.
+        """Return the pulse defaults of the IBM backend.
 
         Args:
-            backend_name: The name of the IBM Cloud backend.
+            backend_name: The name of the IBM backend.
 
         Returns:
             Backend pulse defaults.

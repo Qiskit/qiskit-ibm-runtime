@@ -13,8 +13,10 @@
 """Integration tests for account management."""
 
 import requests
-from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
-from ibm_platform_services import ResourceControllerV2
+from ibm_cloud_sdk_core.authenticators import (  # pylint: disable=import-error
+    IAMAuthenticator,
+)
+from ibm_platform_services import ResourceControllerV2  # pylint: disable=import-error
 
 from qiskit_ibm_runtime import QiskitRuntimeService
 from qiskit_ibm_runtime.accounts import CloudResourceNameResolutionError
@@ -34,16 +36,12 @@ def _get_service_instance_name_for_crn(
     Note: production code computes the inverse mapping. This function is needed for integration test
         purposes only.
     """
-    authenticator = IAMAuthenticator(
-        dependencies.token, url=get_iam_api_url(dependencies.url)
-    )
+    authenticator = IAMAuthenticator(dependencies.token, url=get_iam_api_url(dependencies.url))
     client = ResourceControllerV2(authenticator=authenticator)
     with requests.Session() as session:
         client.set_service_url(get_resource_controller_api_url(dependencies.url))
         client.set_http_client(session)
-        return client.get_resource_instance(id=dependencies.instance).get_result()[
-            "name"
-        ]
+        return client.get_resource_instance(id=dependencies.instance).get_result()["name"]
 
 
 class TestIntegrationAccount(IBMIntegrationTestCase):
@@ -66,9 +64,7 @@ class TestIntegrationAccount(IBMIntegrationTestCase):
                 instance=service_instance_name,
             )
             self.assertEqual(self.dependencies.instance, service._account.instance)
-            self.assertEqual(
-                self.dependencies.instance, service.active_account().get("instance")
-            )
+            self.assertEqual(self.dependencies.instance, service.active_account().get("instance"))
 
     def test_resolve_crn_for_invalid_service_instance_name(self):
         """Verify if CRN resolution fails for non-existing service instance name."""

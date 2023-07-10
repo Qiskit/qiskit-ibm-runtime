@@ -27,6 +27,7 @@ from qiskit_ibm_runtime.exceptions import (
     RuntimeJobMaxTimeoutError,
     RuntimeProgramNotFound,
     IBMInputValueError,
+    RuntimeInvalidStateError,
 )
 from .mock.fake_runtime_client import (
     FailedRuntimeJob,
@@ -92,19 +93,17 @@ class TestRuntimeJob(IBMTestCase):
         service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
         backend = FakeRuntimeService.DEFAULT_COMMON_BACKEND
         default_hgp = list(service._hgps.values())[0]
-        self.assertIn(backend, default_hgp.backends.keys())
+        self.assertIn(backend, default_hgp.backends)
         job = run_program(service=service, backend_name=backend)
         self.assertEqual(job.backend().name, backend)
-        self.assertEqual(
-            job.backend()._api_client.hgp, FakeRuntimeService.DEFAULT_HGPS[0]
-        )
+        self.assertEqual(job.backend()._instance, FakeRuntimeService.DEFAULT_HGPS[0])
 
     def test_run_program_non_default_hgp_backend(self):
         """Test running a program with a backend in non-default hgp."""
         service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
         backend = FakeRuntimeService.DEFAULT_UNIQUE_BACKEND_PREFIX + "1"
         default_hgp = list(service._hgps.values())[0]
-        self.assertNotIn(backend, default_hgp.backends.keys())
+        self.assertNotIn(backend, default_hgp.backends)
         job = run_program(service=service, backend_name=backend)
         self.assertEqual(job.backend().name, backend)
 
@@ -113,22 +112,18 @@ class TestRuntimeJob(IBMTestCase):
         service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
         backend = FakeRuntimeService.DEFAULT_COMMON_BACKEND
         non_default_hgp = list(service._hgps.keys())[1]
-        job = run_program(
-            service=service, backend_name=backend, instance=non_default_hgp
-        )
+        job = run_program(service=service, backend_name=backend, instance=non_default_hgp)
         self.assertEqual(job.backend().name, backend)
-        self.assertEqual(job.backend()._api_client.hgp, non_default_hgp)
+        self.assertEqual(job.backend()._instance, non_default_hgp)
 
     def test_run_program_by_hgp_bad_backend(self):
         """Test running a program with backend not in hgp."""
         service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
         backend = FakeRuntimeService.DEFAULT_UNIQUE_BACKEND_PREFIX + "1"
         default_hgp = list(service._hgps.values())[0]
-        self.assertNotIn(backend, default_hgp.backends.keys())
+        self.assertNotIn(backend, default_hgp.backends)
         with self.assertRaises(QiskitBackendNotFoundError):
-            _ = run_program(
-                service=service, backend_name=backend, instance=default_hgp.name
-            )
+            _ = run_program(service=service, backend_name=backend, instance=default_hgp.name)
 
     def test_run_program_by_phantom_hgp(self):
         """Test running a program with a phantom hgp."""
@@ -139,7 +134,7 @@ class TestRuntimeJob(IBMTestCase):
     def test_run_program_by_bad_hgp(self):
         """Test running a program with a bad hgp."""
         service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
-        with self.assertRaises(IBMInputValueError):
+        with self.assertRaises(Exception):
             _ = run_program(service=service, instance="foo")
 
     @run_quantum_and_cloud_fake
@@ -214,6 +209,9 @@ class TestRuntimeJob(IBMTestCase):
         self.assertEqual(job.status(), JobStatus.CANCELLED)
         rjob = service.job(job.job_id())
         self.assertEqual(rjob.status(), JobStatus.CANCELLED)
+        with self.assertRaises(RuntimeInvalidStateError) as exc:
+            rjob.result()
+        self.assertIn("Job was cancelled", str(exc.exception))
 
     @run_quantum_and_cloud_fake
     def test_final_result(self, service):

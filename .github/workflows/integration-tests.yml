@@ -18,6 +18,7 @@ on:
   workflow_dispatch:
 jobs:
   integration-tests:
+    if: github.repository_owner == 'Qiskit'
     name: Run integration tests - ${{ matrix.environment }}
     runs-on: ${{ matrix.os }}
     strategy:

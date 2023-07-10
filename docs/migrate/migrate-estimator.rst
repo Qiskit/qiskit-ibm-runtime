@@ -6,6 +6,9 @@ The Estimator primitive is used to design an algorithm that calculates expectati
 Background
 ----------
 
+..
+  vale IBMQuantum.Spelling = NO
+
 .. |qiskit.opflow| replace:: ``qiskit.opflow``
 .. _qiskit.opflow: https://qiskit.org/documentation/apidoc/opflow.html
 
@@ -103,8 +106,7 @@ This results in a considerable reduction of the code complexity and a more compa
             backend = service.backend("ibmq_qasm_simulator") # cloud simulator
 
             # Define Estimator
-            # (see tutorials more more info on sessions)
-            estimator = Estimator(session=backend)
+            estimator = Estimator(backend=backend)
 
             # Run Expectation value calculation
             result = estimator.run(circuits, observables).result()
@@ -249,7 +251,7 @@ convenient tool for algorithm design.
     service = QiskitRuntimeService(channel="ibm_quantum")
     backend = service.backend("ibmq_qasm_simulator")
 
-    estimator = Estimator(session=backend)
+    estimator = Estimator(backend=backend)
 
     expectation_value = estimator.run(state, op).result().values
 
@@ -272,7 +274,7 @@ to migrate from, but can help improve your performance and results. For more inf
 3. Other execution alternatives (non-Runtime)
 ----------------------------------------------
 
-This section describes how to use non-Runtime primitives to test an algorithm using local simulation.  Let's assume that we want to solve the problem defined above with a local statevector simulation.
+This section describes how to use non-Runtime primitives to test an algorithm using local simulation.  Let's assume that we want to solve the problem defined above with a local state vector simulation.
 
 3.a. [Legacy] Using the Qiskit Aer simulator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -342,7 +344,7 @@ the simulation method has been updated to match the result from 3.a.
     >>> print("expectation: ", expectation_value)
     expectation:  [-1.06365335]
 
-For more information on using the Aer primitives, see the 
+For more information on using the Aer primitives, see the
 `VQE tutorial <https://qiskit.org/documentation/tutorials/algorithms/03_vqe_simulation_with_noise.html>`_ .
 
 For more information about running noisy simulations with the **Runtime primitives**, see this

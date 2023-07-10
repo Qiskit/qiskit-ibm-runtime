@@ -13,16 +13,16 @@
 """Account related classes and functions."""
 
 import logging
-from typing import Optional
+from typing import Optional, Literal
 from urllib.parse import urlparse
 
 from requests.auth import AuthBase
-from typing_extensions import Literal
+from qiskit_ibm_provider.proxies import ProxyConfiguration
+from qiskit_ibm_provider.utils.hgp import from_instance_format
 
 from .exceptions import InvalidAccountError, CloudResourceNameResolutionError
 from ..api.auth import QuantumAuth, CloudAuth
-from ..proxies import ProxyConfiguration
-from ..utils.hgp import from_instance_format
+
 from ..utils import resolve_crn
 
 AccountType = Optional[Literal["cloud", "legacy"]]
@@ -180,9 +180,7 @@ class Account:
         try:
             urlparse(url)
         except:
-            raise InvalidAccountError(
-                f"Invalid `url` value. Failed to parse '{url}' as URL."
-            )
+            raise InvalidAccountError(f"Invalid `url` value. Failed to parse '{url}' as URL.")
 
     @staticmethod
     def _assert_valid_proxies(config: ProxyConfiguration) -> None:

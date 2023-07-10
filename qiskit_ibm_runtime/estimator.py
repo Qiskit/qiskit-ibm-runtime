@@ -13,31 +13,20 @@
 """Estimator primitive."""
 
 from __future__ import annotations
-import copy
-from typing import Iterable, Optional, Dict, Sequence, Any, Union
+import os
+from typing import Optional, Dict, Sequence, Any, Union
 import logging
-from dataclasses import asdict
 
-from qiskit.circuit import QuantumCircuit, Parameter
-from qiskit.quantum_info import SparsePauliOp
+from qiskit.circuit import QuantumCircuit
 from qiskit.opflow import PauliSumOp
 from qiskit.quantum_info.operators.base_operator import BaseOperator
-from qiskit.providers.options import Options as TerraOptions
-from qiskit.primitives import BaseEstimator, EstimatorResult
+from qiskit.primitives import BaseEstimator
 
 # TODO import _circuit_key from terra once 0.23 is released
-from .qiskit_runtime_service import QiskitRuntimeService
 from .runtime_job import RuntimeJob
-from .utils.deprecation import (
-    deprecate_arguments,
-    issue_deprecation_msg,
-    deprecate_function,
-)
 from .ibm_backend import IBMBackend
-from .session import get_default_session
 from .options import Options
-from .options.utils import set_default_error_levels
-from .constants import DEFAULT_DECODERS
+from .base_primitive import BasePrimitive
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
@@ -46,7 +35,7 @@ from .utils.qasm import parse_qasm_circuits, QuantumProgram
 logger = logging.getLogger(__name__)
 
 
-class Estimator(BaseEstimator):
+class Estimator(BasePrimitive, BaseEstimator):
     """Class for interacting with Qiskit Runtime Estimator primitive service.
 
     Qiskit Runtime Estimator primitive service estimates expectation values of quantum circuits and
@@ -56,7 +45,7 @@ class Estimator(BaseEstimator):
     to the Estimator primitive.
 
     You are encouraged to use :class:`~qiskit_ibm_runtime.Session` to open a session,
-    during which you can invoke one or more primitive programs. Jobs submitted within a session
+    during which you can invoke one or more primitives. Jobs submitted within a session
     are prioritized by the scheduler, and data is cached for efficiency.
 
     Example::
@@ -103,126 +92,33 @@ class Estimator(BaseEstimator):
         observables: Optional[Iterable[SparsePauliOp]] = None,
         parameters: Optional[Iterable[Iterable[Parameter]]] = None,
         service: Optional[QiskitRuntimeService] = None,
+        backend: Optional[Union[str, IBMBackend]] = None,
         session: Optional[Union[Session, str, IBMBackend]] = None,
         options: Optional[Union[Dict, Options]] = None,
-        skip_transpilation: Optional[bool] = False,
     ):
         """Initializes the Estimator primitive.
 
         Args:
-            circuits: (DEPRECATED) A (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
-                a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
-
-            observables: (DEPRECATED) A list of :class:`~qiskit.quantum_info.SparsePauliOp`
-
-            parameters: (DEPRECATED) A list of parameters of the quantum circuits.
-                (:class:`~qiskit.circuit.parametertable.ParameterView` or
-                a list of :class:`~qiskit.circuit.Parameter`) specifying the order
-                in which parameter values will be bound.
-
-            service: (DEPRECATED) Optional instance of
-                :class:`qiskit_ibm_runtime.QiskitRuntimeService` class,
-                defaults to `QiskitRuntimeService()` which tries to initialize your default
-                saved account.
+            backend: Backend to run the primitive. This can be a backend name or an :class:`IBMBackend`
+                instance. If a name is specified, the default account (e.g. ``QiskitRuntimeService()``)
+                is used.
 
             session: Session in which to call the primitive.
 
-                * If an instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
-                  string name of a backend is specified, a new session is created for
-                  that backend, unless a default session for the same backend
-                  and channel already exists.
-
-                * If ``None``, a new session is created using the default saved
-                  account and a default backend (IBM Cloud channel only), unless
-                  a default session already exists.
+                If both ``session`` and ``backend`` are specified, ``session`` takes precedence.
+                If neither is specified, and the primitive is created inside a
+                :class:`qiskit_ibm_runtime.Session` context manager, then the session is used.
+                Otherwise if IBM Cloud channel is used, a default backend is selected.
 
             options: Primitive options, see :class:`Options` for detailed description.
                 The ``backend`` keyword is still supported but is deprecated.
-
-            skip_transpilation: (DEPRECATED) Transpilation is skipped if set to True. False by default.
-                Ignored ``skip_transpilation`` is also specified in ``options``.
         """
-        # `_options` in this class is an instance of qiskit_ibm_runtime.Options class.
+        # `self._options` in this class is a Dict.
         # The base class, however, uses a `_run_options` which is an instance of
         # qiskit.providers.Options. We largely ignore this _run_options because we use
         # a nested dictionary to categorize options.
-        super().__init__(
-            circuits=circuits,
-            observables=observables,
-            parameters=parameters,
-        )
-
-        if skip_transpilation:
-            deprecate_arguments(
-                "skip_transpilation",
-                "0.7",
-                "Instead, use the skip_transpilation keyword argument in transpilation_settings.",
-            )
-        if service:
-            deprecate_arguments(
-                "service", "0.7", "Please use the session parameter instead."
-            )
-
-        backend = None
-        self._session: Session = None
-
-        if options is None:
-            _options = Options()
-        elif isinstance(options, Options):
-            _options = copy.deepcopy(options)
-            skip_transpilation = (
-                _options.transpilation.skip_transpilation  # type: ignore[union-attr]
-            )
-        else:
-            options_copy = copy.deepcopy(options)
-            backend = options_copy.pop("backend", None)
-            if backend is not None:
-                issue_deprecation_msg(
-                    msg="The 'backend' key in 'options' has been deprecated",
-                    version="0.7",
-                    remedy="Please pass the backend when opening a session.",
-                )
-            skip_transpilation = options.get("transpilation", {}).get(
-                "skip_transpilation", False
-            )
-            log_level = options_copy.pop("log_level", None)
-            _options = Options(**options_copy)
-            if log_level:
-                issue_deprecation_msg(
-                    msg="The 'log_level' option has been moved to the 'environment' category",
-                    version="0.7",
-                    remedy="Please specify 'environment':{'log_level': log_level} instead.",
-                )
-                _options.environment.log_level = log_level  # type: ignore[union-attr]
-
-        _options.transpilation.skip_transpilation = (  # type: ignore[union-attr]
-            skip_transpilation
-        )
-
-        self._options: dict = asdict(_options)
-
-        self._initial_inputs = {
-            "circuits": circuits,
-            "observables": observables,
-            "parameters": parameters,
-        }
-
-        if isinstance(session, Session):
-            self._session = session
-        else:
-            backend = session or backend
-            self._session = get_default_session(service, backend)
-
-        # self._first_run = True
-        # self._circuits_map = {}
-        # if self.circuits:
-        #     for circuit in self.circuits:
-        #         circuit_id = _hash(
-        #             json.dumps(_circuit_key(circuit), cls=RuntimeEncoder)
-        #         )
-        #         if circuit_id not in self._session._circuits_map:
-        #             self._circuits_map[circuit_id] = circuit
-        #             self._session._circuits_map[circuit_id] = circuit
+        BaseEstimator.__init__(self)
+        BasePrimitive.__init__(self, backend=backend, session=session, options=options)
 
     def run(  # pylint: disable=arguments-differ
         self,
@@ -231,7 +127,7 @@ class Estimator(BaseEstimator):
         parameter_values: Sequence[float] | Sequence[Sequence[float]] | None = None,
         **kwargs: Any,
     ) -> RuntimeJob:
-        """Submit a request to the estimator primitive program.
+        """Submit a request to the estimator primitive.
 
         Args:
             circuits: a (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
@@ -273,7 +169,7 @@ class Estimator(BaseEstimator):
         parameter_values: Sequence[Sequence[float]],
         **kwargs: Any,
     ) -> RuntimeJob:
-        """Submit a request to the estimator primitive program.
+        """Submit a request to the estimator primitive.
 
         Args:
             circuits: a (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
@@ -319,109 +215,40 @@ class Estimator(BaseEstimator):
             "parameters": [circ.parameters for circ in circuits],
             "parameter_values": parameter_values,
         }
-
-        combined = Options._merge_options(self._options, kwargs.get("_user_kwargs", {}))
-        if self._session.backend():
-            backend_obj = self._session.service.backend(self._session.backend())
-            combined = set_default_error_levels(
-                combined,
-                backend_obj,
-                Options._DEFAULT_OPTIMIZATION_LEVEL,
-                Options._DEFAULT_RESILIENCE_LEVEL,
-            )
-        logger.info("Submitting job using options %s", combined)
-        inputs.update(Options._get_program_inputs(combined))
-
-        return self._session.run(
-            program_id=self._PROGRAM_ID,
-            inputs=inputs,
-            options=Options._get_runtime_options(combined),
-            callback=combined.get("environment", {}).get("callback", None),
-            result_decoder=DEFAULT_DECODERS.get(self._PROGRAM_ID),
+        return self._run_primitive(
+            primitive_inputs=inputs, user_kwargs=kwargs.get("_user_kwargs", {})
         )
 
-    def _call(
-        self,
-        circuits: Sequence[int],
-        observables: Sequence[int],
-        parameter_values: Optional[
-            Union[Sequence[float], Sequence[Sequence[float]]]
-        ] = None,
-        **run_options: Any,
-    ) -> EstimatorResult:
-        """Estimates expectation values for given inputs in a runtime session.
-
-        Args:
-            circuits: A list of circuit indices.
-            observables: A list of observable indices.
-            parameter_values: An optional list of concrete parameters to be bound.
-            **run_options: A collection of kwargs passed to `backend.run()`.
-
-                shots: Number of repetitions of each circuit, for sampling.
-                qubit_lo_freq: List of default qubit LO frequencies in Hz.
-                meas_lo_freq: List of default measurement LO frequencies in Hz.
-                schedule_los: Experiment LO configurations, frequencies are given in Hz.
-                rep_delay: Delay between programs in seconds. Only supported on certain
-                    backends (if ``backend.configuration().dynamic_reprate_enabled=True``).
-                init_qubits: Whether to reset the qubits to the ground state for each shot.
-                use_measure_esp: Whether to use excited state promoted (ESP) readout for measurements
-                    which are the terminal instruction to a qubit. ESP readout can offer higher fidelity
-                    than standard measurement sequences.
-
-        Returns:
-            An instance of :class:`qiskit.primitives.EstimatorResult`.
+    def _validate_options(self, options: dict) -> None:
+        """Validate that program inputs (options) are valid
+        Raises:
+            ValueError: if resilience_level is out of the allowed range.
+            ValueError: if resilience_level==3, backend is simulator and no coupling map
         """
-        inputs = {
-            "circuits": self._initial_inputs["circuits"],
-            "parameters": self._initial_inputs["parameters"],
-            "observables": self._initial_inputs["observables"],
-            "circuit_indices": circuits,
-            "parameter_values": parameter_values,
-            "observable_indices": observables,
-        }
-        combined = Options._merge_options(self._options, run_options)
-        inputs.update(Options._get_program_inputs(combined))
+        if os.getenv("QISKIT_RUNTIME_SKIP_OPTIONS_VALIDATION"):
+            return
 
-        return self._session.run(
-            program_id=self._PROGRAM_ID,
-            inputs=inputs,
-            options=Options._get_runtime_options(combined),
-            result_decoder=DEFAULT_DECODERS.get(self._PROGRAM_ID),
-        ).result()
+        if not options.get("resilience_level") in list(
+            range(Options._MAX_RESILIENCE_LEVEL_ESTIMATOR + 1)
+        ):
+            raise ValueError(
+                f"resilience_level can only take the values "
+                f"{list(range(Options._MAX_RESILIENCE_LEVEL_ESTIMATOR + 1))} in Estimator"
+            )
 
-    @deprecate_function(
-        deprecated="close",
-        version="0.7",
-        remedy="Use qiskit_ibm_runtime.Session.close() instead",
-    )
-    def close(self) -> None:
-        """Close the session and free resources.
-        Close the session only if all jobs are finished
-        and you don't need to run more in the session."""
-        self._session.close()
+        if (
+            options.get("resilience_level") == 3
+            and self._backend
+            and self._backend.configuration().simulator
+        ):
+            if not options.get("simulator").get("coupling_map"):
+                raise ValueError(
+                    "When the backend is a simulator and resilience_level == 3,"
+                    "a coupling map is required."
+                )
+        Options.validate_options(options)
 
-    @property
-    def session(self) -> Session:
-        """Return session used by this primitive.
-
-        Returns:
-            Session used by this primitive.
-        """
-        return self._session
-
-    @property
-    def options(self) -> TerraOptions:
-        """Return options values for the estimator.
-
-        Returns:
-            options
-        """
-        return TerraOptions(**self._options)
-
-    def set_options(self, **fields: Any) -> None:
-        """Set options values for the estimator.
-
-        Args:
-            **fields: The fields to update the options
-        """
-        self._options = Options._merge_options(self._options, fields)
+    @classmethod
+    def _program_id(cls) -> str:
+        """Return the program ID."""
+        return "estimator"

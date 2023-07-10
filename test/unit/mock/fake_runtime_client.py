@@ -18,25 +18,13 @@ import time
 import uuid
 from datetime import timezone, datetime as python_datetime
 from concurrent.futures import ThreadPoolExecutor
-from functools import wraps
 from typing import Optional, Dict, Any, List
 
+from qiskit_ibm_provider.utils.hgp import from_instance_format
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
 from qiskit_ibm_runtime.utils import RuntimeEncoder
-from qiskit_ibm_runtime.utils.hgp import from_instance_format
-from .fake_account_client import BaseFakeAccountClient
 
-
-def cloud_only(func):
-    """Decorator that runs a test using only ibm_cloud services."""
-
-    @wraps(func)
-    def _wrapper(self, *args, **kwargs):
-        if self._channel != "ibm_cloud":
-            raise ValueError(f"Method {func} called by an ibm_quantum client!")
-        return func(self, *args, **kwargs)
-
-    return _wrapper
+from .fake_api_backend import FakeApiBackend, FakeApiBackendSpecs
 
 
 class BaseFakeProgram:
@@ -98,9 +86,7 @@ class BaseFakeRuntimeJob:
 
     _job_progress = ["QUEUED", "RUNNING", "COMPLETED"]
 
-    _executor = (
-        ThreadPoolExecutor()
-    )  # pylint: disable=bad-option-value,consider-using-with
+    _executor = ThreadPoolExecutor()  # pylint: disable=bad-option-value,consider-using-with
 
     def __init__(
         self,
@@ -262,20 +248,32 @@ class TimedRuntimeJob(BaseFakeRuntimeJob):
 class BaseFakeRuntimeClient:
     """Base class for faking the runtime client."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(
+        self,
+        job_classes=None,
+        final_status=None,
+        job_kwargs=None,
+        backend_client=None,
+        channel="ibm_quantum",
+        num_backends=2,
+        backend_specs=None,
+    ):
         """Initialize a fake runtime client."""
         # pylint: disable=unused-argument
-        test_options = kwargs.pop("test_options", {})
         self._programs = {}
         self._jobs = {}
-        self._job_classes = test_options.get("job_classes", [])
-        self._final_status = test_options.get("final_status")
-        self._job_kwargs = test_options.get("job_kwargs", {})
-        self._backend_client = test_options.get(
-            "backend_client", BaseFakeAccountClient()
-        )
-        self._channel = test_options.get("channel", "ibm_quantum")
+        self._job_classes = job_classes or []
+        self._final_status = final_status
+        self._job_kwargs = job_kwargs or {}
+        self._channel = channel
         self.session_time = 0
+
+        # Setup the available backends
+        if not backend_specs:
+            backend_specs = [
+                FakeApiBackendSpecs(backend_name=f"backend{idx}") for idx in range(num_backends)
+            ]
+        self._backends = [FakeApiBackend(specs) for specs in backend_specs]
 
     def set_job_classes(self, classes):
         """Set job classes to use."""
@@ -346,9 +344,7 @@ class BaseFakeRuntimeClient:
             )
             program._parameters = spec.get("parameters") or program._parameters
             program._return_values = spec.get("return_values") or program._return_values
-            program._interim_results = (
-                spec.get("interim_results") or program._interim_results
-            )
+            program._interim_results = spec.get("interim_results") or program._interim_results
 
     def program_get(self, program_id: str) -> Dict[str, Any]:
         """Return a specific program."""
@@ -373,11 +369,7 @@ class BaseFakeRuntimeClient:
         """Run the specified program."""
         _ = self._get_program(program_id)
         job_id = uuid.uuid4().hex
-        job_cls = (
-            self._job_classes.pop(0)
-            if len(self._job_classes) > 0
-            else BaseFakeRuntimeJob
-        )
+        job_cls = self._job_classes.pop(0) if len(self._job_classes) > 0 else BaseFakeRuntimeJob
         if hgp:
             hub, group, project = from_instance_format(hgp)
         else:
@@ -415,9 +407,9 @@ class BaseFakeRuntimeClient:
         self._get_program(program_id)
         del self._programs[program_id]
 
-    def job_get(self, job_id):
+    def job_get(self, job_id: str, exclude_params: bool = None) -> Any:
         """Get the specific job."""
-        return self._get_job(job_id).to_dict()
+        return self._get_job(job_id, exclude_params).to_dict()
 
     def jobs_get(
         self,
@@ -511,47 +503,37 @@ class BaseFakeRuntimeClient:
             raise RequestsApiError("Program not found", status_code=404)
         return self._programs[program_id]
 
-    def _get_job(self, job_id):
+    # pylint: disable=unused-argument
+    def _get_job(self, job_id: str, exclude_params: bool = None) -> Any:
         """Get job."""
         if job_id not in self._jobs:
             raise RequestsApiError("Job not found", status_code=404)
         return self._jobs[job_id]
 
-    @cloud_only
-    def list_backends(self):
-        """Return IBM Cloud backends"""
-        self._check_cloud_only()
-        return self._backend_client.backend_names
+    def list_backends(self, hgp: Optional[str] = None) -> List[str]:
+        """Return IBM backends available for this service instance."""
+        return [back.name for back in self._backends if back.has_access(hgp)]
 
-    @cloud_only
     def backend_configuration(self, backend_name: str) -> Dict[str, Any]:
-        """Return the configuration of the IBM Cloud backend."""
-        configs = self._backend_client.list_backends()
-        for conf in configs:
-            if conf["backend_name"] == backend_name:
-                return conf
-        raise ValueError(f"Backend {backend_name} not found.")
+        """Return the configuration a backend."""
+        return self._find_backend(backend_name).configuration
 
-    @cloud_only
     def backend_status(self, backend_name: str) -> Dict[str, Any]:
-        """Return the status of the IBM Cloud backend."""
-        return self._backend_client.backend_status(backend_name)
+        """Return the status of a backend."""
+        return self._find_backend(backend_name).status
 
-    @cloud_only
-    def backend_properties(
-        self, backend_name: str, datetime: Any = None
-    ) -> Dict[str, Any]:
-        """Return the properties of the IBM Cloud backend."""
+    def backend_properties(self, backend_name: str, datetime: Any = None) -> Dict[str, Any]:
+        """Return the properties of a backend."""
         if datetime:
-            raise NotImplementedError("'datetime' is not supported with cloud runtime.")
-        return self._backend_client.backend_properties(backend_name)
+            raise NotImplementedError("'datetime' is not supported.")
+        return self._find_backend(backend_name).properties
 
-    @cloud_only
     def backend_pulse_defaults(self, backend_name: str) -> Dict[str, Any]:
-        """Return the pulse defaults of the IBM Cloud backend."""
-        return self._backend_client.backend_pulse_defaults(backend_name)
+        """Return the pulse defaults of a backend."""
+        return self._find_backend(backend_name).defaults
 
-    @cloud_only
-    def _check_cloud_only(self):
-        if self._channel != "ibm_cloud":
-            raise ValueError("A backend method is called by an ibm_quantum client!")
+    def _find_backend(self, backend_name):
+        for back in self._backends:
+            if back.name == backend_name:
+                return back
+        raise ValueError(f"Backend {backend_name} not found")

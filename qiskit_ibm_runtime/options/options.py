@@ -17,6 +17,8 @@ from dataclasses import dataclass, fields, field
 import copy
 import warnings
 
+from qiskit.transpiler import CouplingMap
+
 from .utils import _flexible, Dict
 from .environment_options import EnvironmentOptions
 from .execution_options import ExecutionOptions
@@ -30,7 +32,7 @@ from ..utils.deprecation import issue_deprecation_msg
 @_flexible
 @dataclass
 class Options:
-    """Options for the primitive programs.
+    """Options for the primitives.
 
     Args:
         optimization_level: How much optimization to perform on the circuits.
@@ -86,19 +88,19 @@ class Options:
     # in Sampler/Estimator
     _DEFAULT_OPTIMIZATION_LEVEL = 3
     _DEFAULT_RESILIENCE_LEVEL = 1
+    _MAX_OPTIMIZATION_LEVEL = 3
+    _MAX_RESILIENCE_LEVEL_ESTIMATOR = 3
+    _MAX_RESILIENCE_LEVEL_SAMPLER = 1
+    _MIN_EXECUTION_TIME = 300
+    _MAX_EXECUTION_TIME = 8 * 60 * 60  # 8 hours for real device
+
     optimization_level: Optional[int] = None
     resilience_level: Optional[int] = None
     max_execution_time: Optional[int] = None
-    transpilation: Union[TranspilationOptions, Dict] = field(
-        default_factory=TranspilationOptions
-    )
-    resilience: Union[ResilienceOptions, Dict] = field(
-        default_factory=ResilienceOptions
-    )
+    transpilation: Union[TranspilationOptions, Dict] = field(default_factory=TranspilationOptions)
+    resilience: Union[ResilienceOptions, Dict] = field(default_factory=ResilienceOptions)
     execution: Union[ExecutionOptions, Dict] = field(default_factory=ExecutionOptions)
-    environment: Union[EnvironmentOptions, Dict] = field(
-        default_factory=EnvironmentOptions
-    )
+    environment: Union[EnvironmentOptions, Dict] = field(default_factory=EnvironmentOptions)
     simulator: Union[SimulatorOptions, Dict] = field(default_factory=SimulatorOptions)
 
     _obj_fields: ClassVar[dict] = {
@@ -106,6 +108,7 @@ class Options:
         "execution": ExecutionOptions,
         "environment": EnvironmentOptions,
         "simulator": SimulatorOptions,
+        "resilience": ResilienceOptions,
     }
 
     @staticmethod
@@ -113,7 +116,7 @@ class Options:
         """Convert the input options to program compatible inputs.
 
         Returns:
-            Inputs acceptable by primitive programs.
+            Inputs acceptable by primitives.
         """
         sim_options = options.get("simulator", {})
         inputs = {}
@@ -125,6 +128,10 @@ class Options:
                 "basis_gates": sim_options.get("basis_gates", None),
             }
         )
+        if isinstance(inputs["transpilation_settings"]["coupling_map"], CouplingMap):
+            inputs["transpilation_settings"]["coupling_map"] = list(
+                map(list, inputs["transpilation_settings"]["coupling_map"].get_edges())
+            )
 
         inputs["resilience_settings"] = options.get("resilience", {})
         inputs["resilience_settings"].update({"level": options.get("resilience_level")})
@@ -149,11 +156,38 @@ class Options:
         # Add additional unknown keys.
         for key in options.keys():
             if key not in known_keys:
-                warnings.warn(
-                    f"Key '{key}' is an unrecognized option. It may be ignored."
-                )
+                warnings.warn(f"Key '{key}' is an unrecognized option. It may be ignored.")
                 inputs[key] = options[key]
         return inputs
+
+    @staticmethod
+    def validate_options(options: dict) -> None:
+        """Validate that program inputs (options) are valid
+        Raises:
+            ValueError: if optimization_level is outside the allowed range.
+            ValueError: if max_execution_time is outside the allowed range.
+        """
+        if not options.get("optimization_level") in list(
+            range(Options._MAX_OPTIMIZATION_LEVEL + 1)
+        ):
+            raise ValueError(
+                f"optimization_level can only take the values "
+                f"{list(range(Options._MAX_OPTIMIZATION_LEVEL + 1))}"
+            )
+        ResilienceOptions.validate_resilience_options(options.get("resilience"))
+        TranspilationOptions.validate_transpilation_options(options.get("transpilation"))
+        execution_time = options.get("max_execution_time")
+        if not execution_time is None:
+            if (
+                execution_time < Options._MIN_EXECUTION_TIME
+                or execution_time > Options._MAX_EXECUTION_TIME
+            ):
+                raise ValueError(
+                    f"max_execution_time must be between "
+                    f"{Options._MIN_EXECUTION_TIME} and {Options._MAX_EXECUTION_TIME} seconds."
+                )
+
+        EnvironmentOptions.validate_environment_options(options.get("environment"))
 
     @staticmethod
     def _get_runtime_options(options: dict) -> dict:
@@ -185,9 +219,7 @@ class Options:
             Merged dictionary.
         """
 
-        def _update_options(
-            old: dict, new: dict, matched: Optional[dict] = None
-        ) -> None:
+        def _update_options(old: dict, new: dict, matched: Optional[dict] = None) -> None:
             if not new and not matched:
                 return
             matched = matched or {}

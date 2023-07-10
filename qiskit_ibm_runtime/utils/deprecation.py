@@ -17,9 +17,7 @@ import functools
 import warnings
 
 
-def deprecate_function(
-    deprecated: str, version: str, remedy: str, stacklevel: int = 2
-) -> Callable:
+def deprecate_function(deprecated: str, version: str, remedy: str, stacklevel: int = 2) -> Callable:
     """Emit a warning prior to calling decorated function.
     Args:
         deprecated: Function being deprecated.
@@ -47,9 +45,7 @@ def deprecate_function(
     return decorator
 
 
-def deprecate_arguments(
-    deprecated: str, version: str, remedy: str, stacklevel: int = 2
-) -> None:
+def deprecate_arguments(deprecated: str, version: str, remedy: str, stacklevel: int = 2) -> None:
     """Emit a warning about deprecated keyword arguments.
 
     Args:
@@ -66,9 +62,7 @@ def deprecate_arguments(
     )
 
 
-def issue_deprecation_msg(
-    msg: str, version: str, remedy: str, stacklevel: int = 2
-) -> None:
+def issue_deprecation_msg(msg: str, version: str, remedy: str, stacklevel: int = 2) -> None:
     """Emit a deprecation warning.
 
     Args:

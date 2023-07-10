@@ -52,12 +52,11 @@ from qiskit.circuit import (
     QuantumCircuit,
     QuantumRegister,
 )
-from qiskit.circuit.library import BlueprintCircuit
 from qiskit.circuit.parametertable import ParameterView
 from qiskit.result import Result
 from qiskit.version import __version__ as _terra_version_string
 
-from ..qpy import (
+from qiskit_ibm_provider.qpy import (
     _write_parameter,
     _write_parameter_expression,
     _read_parameter_expression,
@@ -67,10 +66,8 @@ from ..qpy import (
     load,
 )
 
-
 _TERRA_VERSION = tuple(
-    int(x)
-    for x in re.match(r"\d+\.\d+\.\d", _terra_version_string).group(0).split(".")[:3]
+    int(x) for x in re.match(r"\d+\.\d+\.\d", _terra_version_string).group(0).split(".")[:3]
 )
 
 
@@ -110,9 +107,7 @@ def _serialize_and_encode(
     return base64.standard_b64encode(serialized_data).decode("utf-8")
 
 
-def _decode_and_deserialize(
-    data: str, deserializer: Callable, decompress: bool = True
-) -> Any:
+def _decode_and_deserialize(data: str, deserializer: Callable, decompress: bool = True) -> Any:
     """Decode and deserialize input data.
 
     Args:
@@ -219,9 +214,6 @@ class RuntimeEncoder(json.JSONEncoder):
         if hasattr(obj, "to_json"):
             return {"__type__": "to_json", "__value__": obj.to_json()}
         if isinstance(obj, QuantumCircuit):
-            # TODO Remove the decompose when terra 6713 is released.
-            if isinstance(obj, BlueprintCircuit):
-                obj = obj.decompose()
             value = _serialize_and_encode(
                 data=obj,
                 serializer=lambda buff, data: dump(data, buff),  # type: ignore[no-untyped-call]
@@ -263,9 +255,7 @@ class RuntimeEncoder(json.JSONEncoder):
                 "__value__": _set_int_keys_flag(copy.deepcopy(obj.settings)),
             }
         if callable(obj):
-            warnings.warn(
-                f"Callable {obj} is not JSON serializable and will be set to None."
-            )
+            warnings.warn(f"Callable {obj} is not JSON serializable and will be set to None.")
             return None
         if HAS_SCIPY and isinstance(obj, scipy.sparse.spmatrix):
             value = _serialize_and_encode(obj, scipy.sparse.save_npz, compress=False)

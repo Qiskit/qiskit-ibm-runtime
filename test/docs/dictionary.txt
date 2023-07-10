@@ -2,6 +2,7 @@ Abelian
 Abhinav
 Aer
 Akira
+Alain
 Amyra
 Andersson
 Andriyash
@@ -70,6 +71,7 @@ Hoyer
 Hubregtsen
 Ijaz
 Iten
+Ising
 Izaac
 Jakob
 Jozsa
@@ -191,6 +193,7 @@ eigenstates
 endian
 exponentials
 expressibility
+extremal
 fanout
 fermionic
 fidelities
@@ -222,6 +225,7 @@ qutrits
 recalibrated
 reuploading
 satisfiability
+serverless
 simulability
 subfield
 subfields
