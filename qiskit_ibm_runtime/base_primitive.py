@@ -87,6 +87,7 @@ class BasePrimitive(ABC):
         if isinstance(session, Session):
             self._session = session
             self._service = self._session.service
+            print("service = "+ str(self._service))
             self._backend = self._service.backend(
                 name=self._session.backend(), instance=self._session._instance
             )
@@ -122,7 +123,10 @@ class BasePrimitive(ABC):
             self._service = backend.service
             self._backend = backend
         elif isinstance(backend, str):
-            self._service = QiskitRuntimeService()
+            if QiskitRuntimeService.global_service is None:
+                self._service = QiskitRuntimeService()
+            else:
+                self._service = QiskitRuntimeService.global_service
             self._backend = self._service.backend(backend)
         elif get_cm_session():
             self._session = get_cm_session()
@@ -131,7 +135,11 @@ class BasePrimitive(ABC):
                 name=self._session.backend(), instance=self._session._instance
             )
         else:
-            self._service = QiskitRuntimeService()
+            if QiskitRuntimeService.global_service is None:
+                self._service = QiskitRuntimeService()
+            else:
+                self._service = QiskitRuntimeService.global_service
+
             if self._service.channel != "ibm_cloud":
                 raise ValueError(
                     "A backend or session must be specified when not using ibm_cloud channel."
