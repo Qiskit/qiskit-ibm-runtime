@@ -18,6 +18,7 @@ from qiskit_ibm_runtime import Session
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 import qiskit_ibm_runtime.session as session_pkg
+from .mock.fake_runtime_service import FakeRuntimeService
 from ..ibm_test_case import IBMTestCase
 
 
@@ -147,3 +148,14 @@ class TestSession(IBMTestCase):
         session = Session(service=service)
         session.run(program_id="foo", inputs={})
         self.assertEqual(session.backend(), "ibm_gotham")
+
+    def test_global_service(self):
+        """Test that global service is used in Session"""
+        # pylint: disable=unused-variable
+        service1 = FakeRuntimeService(channel="ibm_quantum", token="abc")
+        session = Session(backend="ibmq_qasm_simulator")
+        assert isinstance(session._service, FakeRuntimeService)
+        self.assertEqual(session._service._account.token, "abc")
+        service2 = FakeRuntimeService(channel="ibm_quantum", token="xyz")
+        session = Session(backend="ibmq_qasm_simulator")
+        self.assertEqual(session._service._account.token, "xyz")

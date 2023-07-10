@@ -197,14 +197,11 @@ class QiskitRuntimeService(Provider):
         self._backends: Dict[str, "ibm_backend.IBMBackend"] = {}
         self._backend_configs: Dict[str, Any] = {}
 
-
         if self._channel == "ibm_cloud":
             self._api_client = RuntimeClient(self._client_params)
             # TODO: We can make the backend discovery lazy
             self._backends = self._discover_cloud_backends()
             QiskitRuntimeService.global_service = self
-            print(1)
-            print(QiskitRuntimeService.global_service)
             return
         else:
             auth_client = self._authenticate_ibm_quantum_account(self._client_params)
@@ -218,8 +215,6 @@ class QiskitRuntimeService(Provider):
                     if backend_name not in self._backends:
                         self._backends[backend_name] = None
         QiskitRuntimeService.global_service = self
-        print(2)
-        print(QiskitRuntimeService.global_service)
 
         # TODO - it'd be nice to allow some kind of autocomplete, but `service.ibmq_foo`
         # just seems wrong since backends are not runtime service instances.

@@ -30,13 +30,7 @@ from qiskit.quantum_info import SparsePauliOp
 from qiskit.primitives.utils import _circuit_key
 from qiskit.providers.fake_provider import FakeManila
 
-from qiskit_ibm_runtime import (
-    Sampler,
-    Estimator,
-    Options,
-    Session,
-    RuntimeEncoder,
-)
+from qiskit_ibm_runtime import Sampler, Estimator, Options, Session, RuntimeEncoder
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 import qiskit_ibm_runtime.session as session_pkg
 from qiskit_ibm_runtime.utils.utils import _hash
@@ -945,3 +939,17 @@ class TestPrimitives(IBMTestCase):
             dict_paritally_equal(dict1, dict2),
             f"{dict1} and {dict2} not partially equal.",
         )
+
+    def test_global_service(self):
+        """Test that global service is used in primitives"""
+        # pylint: disable=unused-variable
+        primitives = [Sampler, Estimator]
+        for cls in primitives:
+            with self.subTest(primitive=cls):
+                service1 = FakeRuntimeService(channel="ibm_quantum", token="abc")
+                inst = cls(backend="")
+                assert isinstance(inst._service, FakeRuntimeService)
+                self.assertEqual(inst._service._account.token, "abc")
+                service2 = FakeRuntimeService(channel="ibm_quantum", token="xyz")
+                inst = cls(backend="")
+                self.assertEqual(inst._service._account.token, "xyz")

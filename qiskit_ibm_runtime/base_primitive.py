@@ -87,7 +87,6 @@ class BasePrimitive(ABC):
         if isinstance(session, Session):
             self._session = session
             self._service = self._session.service
-            print("service = "+ str(self._service))
             self._backend = self._service.backend(
                 name=self._session.backend(), instance=self._session._instance
             )
@@ -105,7 +104,11 @@ class BasePrimitive(ABC):
                 version="0.10.0",
                 remedy="Please pass it as the ``backend`` parameter instead.",
             )
-            self._service = QiskitRuntimeService()
+            self._service = (
+                QiskitRuntimeService()
+                if QiskitRuntimeService.global_service is None
+                else QiskitRuntimeService.global_service
+            )
             self._backend = self._service.backend(session)
         elif isinstance(backend, Session):
             issue_deprecation_msg(
@@ -123,10 +126,11 @@ class BasePrimitive(ABC):
             self._service = backend.service
             self._backend = backend
         elif isinstance(backend, str):
-            if QiskitRuntimeService.global_service is None:
-                self._service = QiskitRuntimeService()
-            else:
-                self._service = QiskitRuntimeService.global_service
+            self._service = (
+                QiskitRuntimeService()
+                if QiskitRuntimeService.global_service is None
+                else QiskitRuntimeService.global_service
+            )
             self._backend = self._service.backend(backend)
         elif get_cm_session():
             self._session = get_cm_session()
@@ -135,10 +139,11 @@ class BasePrimitive(ABC):
                 name=self._session.backend(), instance=self._session._instance
             )
         else:
-            if QiskitRuntimeService.global_service is None:
-                self._service = QiskitRuntimeService()
-            else:
-                self._service = QiskitRuntimeService.global_service
+            self._service = (
+                QiskitRuntimeService()
+                if QiskitRuntimeService.global_service is None
+                else QiskitRuntimeService.global_service
+            )
 
             if self._service.channel != "ibm_cloud":
                 raise ValueError(
