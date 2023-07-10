@@ -1178,7 +1178,8 @@ class QiskitRuntimeService(Provider):
             max_execution_time=max_execution_time,
             spec=spec,
         )
-
+        print("in service")
+        print(combined_metadata)
         try:
             self._api_client.program_update(program_id, program_data=data, **combined_metadata)
         except RequestsApiError as ex:

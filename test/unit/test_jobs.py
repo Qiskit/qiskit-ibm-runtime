@@ -297,3 +297,12 @@ class TestRuntimeJob(IBMTestCase):
                     result = job.result()
 
         self.assertEqual(result, "content-from-external-url")
+
+    @run_quantum_and_cloud_fake
+    def test_resilience_level(self, service):
+        """Test that resilience_level was set correctly"""
+        job = run_program(service)
+        print(job.metadata)
+        # with mock_wait_for_final_state(service, job):
+        #     result = job.result()
+        #     self.assertTrue(result)
