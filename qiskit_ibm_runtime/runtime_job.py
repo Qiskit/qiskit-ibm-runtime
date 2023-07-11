@@ -461,7 +461,9 @@ class RuntimeJob(Job):
         index = job_result_raw.rfind("Traceback")
         if index != -1:
             job_result_raw = job_result_raw[index:]
-        error_msg = API_TO_JOB_ERROR_MESSAGE["FAILED"] + error_message + "\n"
+        error_msg = API_TO_JOB_ERROR_MESSAGE["FAILED"]
+        if not error_message is None:
+            error_msg += error_message + "\n"
         if status == "CANCELLED" and self._reason == "RAN TOO LONG":
             error_msg = API_TO_JOB_ERROR_MESSAGE["CANCELLED - RAN TOO LONG"]
         return error_msg.format(self.job_id(), job_result_raw)
