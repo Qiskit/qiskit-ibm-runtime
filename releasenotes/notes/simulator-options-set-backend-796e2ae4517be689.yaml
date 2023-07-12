@@ -1,0 +1,20 @@
+---
+features:
+  - |
+    A new method, :meth:`qiskit_ibm_runtime.options.SimulatorOptions.set_backend`, allows users
+    to more easily set simulator options for a backend. 
+
+    .. code-block::
+
+        from qiskit.providers.fake_provider import FakeManila
+        from qiskit_aer.noise import NoiseModel
+
+        # Make a noise model
+        fake_backend = FakeManila()
+
+        # Set options to include the noise model
+        options = Options()
+        options.simulator.set_backend(fake_backend)
+        options.simulator.seed_simulator = 42
+
+
