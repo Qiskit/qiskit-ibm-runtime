@@ -13,7 +13,7 @@
 """Runtime Session REST adapter."""
 
 
-from .base import RestAdapterBase
+from qiskit_ibm_provider.api.rest.base import RestAdapterBase
 from ..session import RetrySession
 
 
