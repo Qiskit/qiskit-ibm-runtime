@@ -220,7 +220,7 @@ class RuntimeJob(Job):
                 error_message = self._reason if self._reason else self._error_message
                 if self._reason == "RAN TOO LONG":
                     raise RuntimeJobMaxTimeoutError(error_message)
-                raise RuntimeJobFailureError(f"Unable to retrieve job result. " f"{error_message}")
+                raise RuntimeJobFailureError(f"Unable to retrieve job result. {error_message}")
             if self._status is JobStatus.CANCELLED:
                 raise RuntimeInvalidStateError(
                     "Unable to retrieve result for job {}. "
@@ -491,10 +491,12 @@ class RuntimeJob(Job):
         if index != -1:
             job_result_raw = job_result_raw[index:]
 
-        error_msg = API_TO_JOB_ERROR_MESSAGE["FAILED"]
         if status == "CANCELLED" and self._reason == "RAN TOO LONG":
             error_msg = API_TO_JOB_ERROR_MESSAGE["CANCELLED - RAN TOO LONG"]
-        return error_msg.format(self.job_id(), job_result_raw)
+            return error_msg.format(self.job_id(), job_result_raw)
+        else:
+            error_msg = API_TO_JOB_ERROR_MESSAGE["FAILED"]
+            return error_msg.format(self.job_id(), self._reason or job_result_raw)
 
     def _status_from_job_response(self, response: Dict) -> str:
         """Returns the job status from an API response.
