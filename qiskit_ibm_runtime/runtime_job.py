@@ -27,8 +27,8 @@ from qiskit.providers.jobstatus import JobStatus, JOB_FINAL_STATES
 from qiskit.providers.job import JobV1 as Job
 
 # pylint: disable=unused-import,cyclic-import
-from qiskit_ibm_runtime import qiskit_runtime_service
 from qiskit_ibm_provider.utils import validate_job_tags
+from qiskit_ibm_runtime import qiskit_runtime_service
 
 from .constants import API_TO_JOB_ERROR_MESSAGE, API_TO_JOB_STATUS, DEFAULT_DECODERS
 from .exceptions import (
