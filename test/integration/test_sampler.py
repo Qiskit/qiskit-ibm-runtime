@@ -247,6 +247,7 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
                 job.result()
             self.assertIn("NO COUNTS FOR EXPERIMENT", str(err.exception))
             self.assertFalse("python -m uvicorn server.main" in err.exception.message)
+            self.assertIn("NO COUNTS FOR EXPERIMENT", str(job.error_message()))
 
     @run_integration_test
     def test_sampler_no_session(self, service):
