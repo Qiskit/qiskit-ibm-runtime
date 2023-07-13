@@ -267,6 +267,26 @@ that the backend supports to have a more realistic noisy simulation.
     options.optimization_level = 0
     options.resilience_level = 0
 
+`set_backend <https://qiskit.org/ecosystem/ibm-runtime/stubs/qiskit_ibm_runtime.options.SimulatorOptions.html>`_ is the syntactic sugar for setting options.
+The following code is equivalent.
+
+.. code-block:: python
+
+    from qiskit.providers.fake_provider import FakeManila
+
+    # Make a noise model
+    fake_backend = FakeManila()
+
+    # Set options to include the noise model
+    options = Options()
+    options.simulator.set_backend(fake_backend)
+    options.simulator.seed_simulator = 42
+
+    # Set number of shots, optimization_level and resilience_level
+    options.execution.shots = 1000
+    options.optimization_level = 0
+    options.resilience_level = 0
+
 The ``ibmq_qasm_simulator`` allows for the activation of the
 ``resilience_levels`` offered by the Qiskit Runtime Service, and use of
 these levels on simulators is best demonstrated using the noisy
