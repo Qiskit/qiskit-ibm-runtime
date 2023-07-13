@@ -28,9 +28,11 @@ from qiskit.providers.job import JobV1 as Job
 
 # pylint: disable=unused-import,cyclic-import
 from qiskit_ibm_runtime import qiskit_runtime_service
+from qiskit_ibm_provider.utils import validate_job_tags
 
 from .constants import API_TO_JOB_ERROR_MESSAGE, API_TO_JOB_STATUS, DEFAULT_DECODERS
 from .exceptions import (
+    IBMApiError,
     RuntimeJobFailureError,
     RuntimeInvalidStateError,
     IBMRuntimeError,
@@ -407,6 +409,35 @@ class RuntimeJob(Job):
             "job.submit() is not supported. Please use "
             "QiskitRuntimeService.run() to submit a job."
         )
+
+    def update_tags(self, new_tags: List[str]) -> List[str]:
+        """Update the tags associated with this job.
+
+        Args:
+            new_tags: New tags to assign to the job.
+
+        Returns:
+            The new tags associated with this job.
+
+        Raises:
+            IBMApiError: If an unexpected error occurred when communicating
+                with the server or updating the job tags.
+        """
+        tags_to_update = set(new_tags)
+        validate_job_tags(new_tags, RuntimeInvalidStateError)
+
+        response = self._api_client.update_tags(job_id=self.job_id(), tags=list(tags_to_update))
+
+        if response.status_code == 204:
+            api_response = self._api_client.job_get(self.job_id())
+            self._tags = api_response.pop("tags", [])
+            return self._tags
+        else:
+            raise IBMApiError(
+                "An unexpected error occurred when updating the "
+                "tags for job {}. The tags were not updated for "
+                "the job.".format(self.job_id())
+            )
 
     def _set_status_and_error_message(self) -> None:
         """Fetch and set status and error message."""
