@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 import os
-from typing import Optional, Dict, Sequence, Any, Union
+from typing import Optional, Dict, Sequence, Any, Union, List
 import logging
 
 from qiskit.circuit import QuantumCircuit
@@ -30,7 +30,7 @@ from .base_primitive import BasePrimitive
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
-from .utils.qasm import parse_qasm_circuits, QuantumProgram
+from .utils.qasm import validate_qasm_circuits, QuantumProgram
 
 logger = logging.getLogger(__name__)
 
@@ -88,10 +88,6 @@ class Estimator(BasePrimitive, BaseEstimator):
 
     def __init__(
         self,
-        circuits: Optional[Union[QuantumProgram, Iterable[QuantumProgram]]] = None,
-        observables: Optional[Iterable[SparsePauliOp]] = None,
-        parameters: Optional[Iterable[Iterable[Parameter]]] = None,
-        service: Optional[QiskitRuntimeService] = None,
         backend: Optional[Union[str, IBMBackend]] = None,
         session: Optional[Union[Session, str, IBMBackend]] = None,
         options: Optional[Union[Dict, Options]] = None,
@@ -122,7 +118,7 @@ class Estimator(BasePrimitive, BaseEstimator):
 
     def run(  # pylint: disable=arguments-differ
         self,
-        circuits: QuantumCircuit | Sequence[QuantumCircuit],
+        circuits: QuantumProgram | List[QuantumProgram],
         observables: BaseOperator | PauliSumOp | Sequence[BaseOperator | PauliSumOp],
         parameter_values: Sequence[float] | Sequence[Sequence[float]] | None = None,
         **kwargs: Any,
@@ -149,18 +145,16 @@ class Estimator(BasePrimitive, BaseEstimator):
         """
         # To bypass base class merging of options.
         user_kwargs = {"_user_kwargs": kwargs}
+
+        quantum_circuits = validate_qasm_circuits(circuits)
+        super()._validate_circuits(quantum_circuits)
+
         return super().run(
-            circuits=circuits,
+            circuits=quantum_circuits,
             observables=observables,
             parameter_values=parameter_values,
             **user_kwargs,
         )
-
-    def _validate_circuits(
-        self, circuits: Union[Sequence[QuantumProgram], QuantumProgram]
-    ) -> tuple[QuantumCircuit, ...]:
-        quantum_circuits = parse_qasm_circuits(circuits)
-        return super()._validate_circuits(quantum_circuits)
 
     def _run(  # pylint: disable=arguments-differ
         self,

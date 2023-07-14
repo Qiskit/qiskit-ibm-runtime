@@ -10,11 +10,12 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Utility funcitions for OpenQASM support."""
+"""Utility functions for OpenQASM support."""
 import logging
 import re
 from typing import Dict, Iterable, Sequence, Union
 
+from qiskit import QiskitError
 from qiskit.circuit import QuantumCircuit
 from qiskit.qasm3 import loads as qasm3_loads
 
@@ -59,14 +60,13 @@ def str_to_quantum_circuit(program: str) -> QuantumCircuit:
 def parse_qasm_circuits(
     circuits: Union[Sequence[QuantumProgram], QuantumProgram]
 ) -> Iterable[QuantumCircuit]:
-    """Convert from QASM to QauntumCircuit, if needed."""
+    """Convert from QASM to QuantumCircuit, if needed."""
 
     if isinstance(circuits, str):
         circuits = [str_to_quantum_circuit(circuits)]
     elif isinstance(circuits, Dict):
         circuits = {
-            k: (str_to_quantum_circuit(v) if isinstance(v, str) else v)
-            for k, v in circuits.items()
+            k: (str_to_quantum_circuit(v) if isinstance(v, str) else v) for k, v in circuits.items()
         }
     elif isinstance(circuits, Iterable):
         circuits = [
@@ -74,3 +74,16 @@ def parse_qasm_circuits(
             for circuit in circuits
         ]
     return circuits
+
+
+def validate_qasm_circuits(
+    circuits: Union[Sequence[QuantumProgram], QuantumProgram]
+) -> Iterable[QuantumCircuit]:
+    """
+    Function to validate the input circuits
+    """
+    try:
+        return parse_qasm_circuits(circuits)
+    except Exception as error:  # pylint: disable=broad-except
+        message = getattr(error, "msg", "")
+        raise QiskitError(f"Invalid QASM circuit: {message}")

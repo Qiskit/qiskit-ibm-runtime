@@ -292,9 +292,7 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
         """
         with Session(service, self.backend) as session:
             estimator = Estimator(session=session)
-            job = estimator.run(
-                circuits=qasm2_program, observables=[SparsePauliOp("ZZZ")]
-            )
+            job = estimator.run(circuits=qasm2_program, observables=[SparsePauliOp("ZZZ")])
             result = job.result()
             self.assertEqual(len(result.values), 1)
             self.assertEqual(len(result.metadata), 1)
@@ -366,6 +364,36 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
             self.assertEqual(len(result.values), 1)
             self.assertEqual(len(result.metadata), 1)
             self.assertAlmostEqual(result.values[0], 0, delta=0.1)
+            self.assertTrue(session.session_id)
+            session.close()
+
+    @run_integration_test
+    def test_qasm2_qc_combined(self, service):
+        """Test a QASM2 program that doesn't take any params"""
+        qasm2_program = """
+             OPENQASM 2.0;
+             include "qelib1.inc";
+             qreg q[3];
+             creg c[3];
+             h q[0];
+             cz q[0],q[1];
+             cx q[0],q[2];
+             measure q[0] -> c[0];
+             measure q[1] -> c[1];
+             measure q[2] -> c[2];
+         """
+        circuit = QuantumCircuit(2, 2)
+        circuit.h(0)
+        with Session(service, self.backend) as session:
+            estimator = Estimator(session=session)
+            job = estimator.run(
+                circuits=[qasm2_program, circuit],
+                observables=[SparsePauliOp("ZZZ"), SparsePauliOp("ZZ")],
+            )
+            result = job.result()
+            self.assertEqual(len(result.values), 2)
+            self.assertEqual(len(result.metadata), 2)
+            self.assertAlmostEqual(result.values[0], 1, delta=0.1)
             self.assertTrue(session.session_id)
             session.close()
 
