@@ -1,5 +1,5 @@
 #########################################
-Qiskit Runtime 0.11.1 documentation
+Qiskit Runtime 0.11.2 documentation
 #########################################
 
 Overview
