@@ -177,7 +177,7 @@ In this example, we are using the H2 molecule and an arbitrary circuit as the qu
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 |qiskit.opflow|_ provided its own classes to represent both
-operators and quantum states, so the problem defined above would be wrapped as:
+operators and quantum states, so the problem defined previously would be wrapped as:
 
 .. code-block:: python
 
@@ -274,7 +274,7 @@ to migrate from, but can help improve your performance and results. For more inf
 3. Other execution alternatives (non-Runtime)
 ----------------------------------------------
 
-This section describes how to use non-Runtime primitives to test an algorithm using local simulation.  Let's assume that we want to solve the problem defined above with a local state vector simulation.
+This section describes how to use non-Runtime primitives to test an algorithm using local simulation.  Let's assume that we want to solve the problem defined previously with a local state vector simulation.
 
 3.a. [Legacy] Using the Qiskit Aer simulator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
