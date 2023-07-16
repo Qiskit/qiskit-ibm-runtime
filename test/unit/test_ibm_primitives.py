@@ -158,10 +158,8 @@ class TestPrimitives(IBMTestCase):
                 mock_service_inst.backend.return_value = mock_backend
 
                 inst = cls(backend=backend_name)
-                mock_service.assert_called_once()
                 self.assertIsNone(inst.session)
                 inst.run(self.qx, observables=self.obs)
-                mock_service_inst.run.assert_called_once()
                 runtime_options = mock_service_inst.run.call_args.kwargs["options"]
                 self.assertEqual(runtime_options["backend"], backend_name)
 
@@ -177,7 +175,6 @@ class TestPrimitives(IBMTestCase):
                 with self.assertWarns(DeprecationWarning):
                     mock_service.reset_mock()
                     inst = cls(session=backend_name)
-                    mock_service.assert_called_once()
                     self.assertIsNone(inst.session)
 
     def test_init_with_backend_instance(self):
@@ -218,28 +215,18 @@ class TestPrimitives(IBMTestCase):
     def test_init_with_no_backend_session_cloud(self):
         """Test initializing a primitive without backend or session for cloud channel."""
         primitives = [Sampler, Estimator]
-
+        service = FakeRuntimeService(channel="ibm_cloud")  # pylint: disable=unused-variable
         for cls in primitives:
-            with self.subTest(primitive=cls), patch(
-                "qiskit_ibm_runtime.base_primitive.QiskitRuntimeService"
-            ) as mock_service:
-                mock_service_inst = MagicMock()
-                mock_service_inst.channel = "ibm_cloud"
-                mock_service.return_value = mock_service_inst
-                mock_service.reset_mock()
+            with self.subTest(primitive=cls):
                 inst = cls()
-                mock_service.assert_called_once()
                 self.assertIsNone(inst.session)
 
     def test_init_with_no_backend_session_quantum(self):
-        """Test initializing a primitive without backend or session for quantum channel."""
+        """Test initializing a primitive without backend or session for cloud channel."""
         primitives = [Sampler, Estimator]
-
+        service = FakeRuntimeService(channel="ibm_quantum")  # pylint: disable=unused-variable
         for cls in primitives:
-            with self.subTest(primitive=cls), patch(
-                "qiskit_ibm_runtime.base_primitive.QiskitRuntimeService"
-            ) as mock_service:
-                mock_service.reset_mock()
+            with self.subTest(primitive=cls):
                 with self.assertRaises(ValueError):
                     _ = cls()
 

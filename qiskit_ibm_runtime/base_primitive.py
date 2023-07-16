@@ -144,7 +144,6 @@ class BasePrimitive(ABC):
                 if QiskitRuntimeService.global_service is None
                 else QiskitRuntimeService.global_service
             )
-
             if self._service.channel != "ibm_cloud":
                 raise ValueError(
                     "A backend or session must be specified when not using ibm_cloud channel."
