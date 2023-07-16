@@ -30,7 +30,9 @@ class TestSession(IBMTestCase):
         session_pkg._DEFAULT_SESSION.set(None)
 
     @patch("qiskit_ibm_runtime.session.QiskitRuntimeService", autospec=True)
-    def test_default_service(self, mock_service):  # pylint: disable=unused-variable, unused-argument
+    def test_default_service(
+        self, mock_service
+    ):  # pylint: disable=unused-variable, unused-argument
         """Test using default service."""
         session = Session(backend="ibm_gotham")
         self.assertIsNotNone(session.service)
@@ -150,10 +152,14 @@ class TestSession(IBMTestCase):
 
     def test_global_service(self):
         """Test that global service is used in Session"""
-        service1 = FakeRuntimeService(channel="ibm_quantum", token="abc")     # pylint: disable=unused-variable
+        service1 = FakeRuntimeService(
+            channel="ibm_quantum", token="abc"
+        )  # pylint: disable=unused-variable
         session = Session(backend="ibmq_qasm_simulator")
         assert isinstance(session._service, FakeRuntimeService)
         self.assertEqual(session._service._account.token, "abc")
-        service2 = FakeRuntimeService(channel="ibm_quantum", token="xyz")     # pylint: disable=unused-variable
+        service2 = FakeRuntimeService(
+            channel="ibm_quantum", token="xyz"
+        )  # pylint: disable=unused-variable
         session = Session(backend="ibmq_qasm_simulator")
         self.assertEqual(session._service._account.token, "xyz")
