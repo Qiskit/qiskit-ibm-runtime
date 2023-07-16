@@ -407,6 +407,7 @@ class RuntimeClient(BaseBackendClient):
 
         Args:
             job_id: The ID of the job.
+            tags: The new tags to be assigned to the job.
 
         Returns:
             API Response.
