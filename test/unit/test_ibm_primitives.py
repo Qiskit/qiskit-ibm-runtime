@@ -935,7 +935,7 @@ class TestPrimitives(IBMTestCase):
             with self.subTest(primitive=cls):
                 service1 = FakeRuntimeService(channel="ibm_quantum", token="abc")
                 inst = cls(backend="")
-                assert isinstance(inst._service, FakeRuntimeService)
+                self.assertTrue(isinstance(inst._service, FakeRuntimeService))
                 self.assertEqual(inst._service._account.token, "abc")
                 service2 = FakeRuntimeService(channel="ibm_quantum", token="xyz")
                 inst = cls(backend="")

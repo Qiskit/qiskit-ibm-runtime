@@ -152,14 +152,11 @@ class TestSession(IBMTestCase):
 
     def test_global_service(self):
         """Test that global service is used in Session"""
-        service1 = FakeRuntimeService(
-            channel="ibm_quantum", token="abc"
-        )  # pylint: disable=unused-variable
+        # pylint: disable=unused-variable
+        service1 = FakeRuntimeService(channel="ibm_quantum", token="abc")
         session = Session(backend="ibmq_qasm_simulator")
-        assert isinstance(session._service, FakeRuntimeService)
+        self.assertTrue(isinstance(session._service, FakeRuntimeService))
         self.assertEqual(session._service._account.token, "abc")
-        service2 = FakeRuntimeService(
-            channel="ibm_quantum", token="xyz"
-        )  # pylint: disable=unused-variable
+        service2 = FakeRuntimeService(channel="ibm_quantum", token="xyz")
         session = Session(backend="ibmq_qasm_simulator")
         self.assertEqual(session._service._account.token, "xyz")
