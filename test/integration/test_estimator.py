@@ -287,6 +287,7 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
                 job.result()
             self.assertIn("REGISTER NAME", str(err.exception))
             self.assertFalse("python -m uvicorn server.main" in str(err.exception))
+            self.assertIn("REGISTER NAME", str(job.error_message()))
 
     @run_integration_test
     def test_estimator_no_session(self, service):

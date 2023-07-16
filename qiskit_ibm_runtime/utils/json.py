@@ -216,7 +216,9 @@ class RuntimeEncoder(json.JSONEncoder):
         if isinstance(obj, QuantumCircuit):
             value = _serialize_and_encode(
                 data=obj,
-                serializer=lambda buff, data: dump(data, buff),  # type: ignore[no-untyped-call]
+                serializer=lambda buff, data: dump(
+                    data, buff, RuntimeEncoder
+                ),  # type: ignore[no-untyped-call]
             )
             return {"__type__": "QuantumCircuit", "__value__": value}
         if isinstance(obj, Parameter):
