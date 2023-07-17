@@ -302,3 +302,12 @@ if __name__ == '__main__':
                 )
                 result = job.result(decoder=decoder)
                 self.assertIsInstance(result["serializable_class"], SerializableClass)
+
+    def test_circuit_metadata(self):
+        """Test serializing circuit metadata."""
+
+        circ = QuantumCircuit(1)
+        circ.metadata = {"test": np.arange(0, 10)}
+        payload = {"circuits": [circ]}
+
+        self.assertTrue(json.dumps(payload, cls=RuntimeEncoder))
