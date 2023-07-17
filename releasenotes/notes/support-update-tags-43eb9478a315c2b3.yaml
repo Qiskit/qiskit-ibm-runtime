@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    There is a new method :meth:`~qiskit_ibm_runtime.RuntimeJob.update_tags` that can be used 
+    to update the ``job_tags`` of a job.
