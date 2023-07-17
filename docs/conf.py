@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
-
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2022.
+# (C) Copyright IBM 2022, 2023.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -86,14 +84,12 @@ link_str = f" https://github.com/Qiskit/qiskit-ibm-runtime/blob/stable/{vers[0]}
 nbsphinx_prolog += link_str + "{{ docname }}"
 
 # -----------------------------------------------------------------------------
-# Autosummary
+# Autosummary / autodoc
 # -----------------------------------------------------------------------------
 
 autosummary_generate = True
 
-# -----------------------------------------------------------------------------
-# Autodoc
-# -----------------------------------------------------------------------------
+autoclass_content = 'both'
 
 autodoc_default_options = {
     'inherited-members': None,
@@ -146,18 +142,9 @@ modindex_common_prefix = ['qiskit.']
 
 # -- Options for HTML output -------------------------------------------------
 
-html_theme = 'qiskit_sphinx_theme'
+html_theme = 'qiskit'
 
 html_logo = 'images/logo.png'
 html_last_updated_fmt = '%Y/%m/%d'
 
-html_theme_options = {
-    'logo_only': True,
-    'display_version': True,
-    'prev_next_buttons_location': 'bottom',
-    'style_external_links': True,
-}
-
 html_sourcelink_suffix = ''
-
-autoclass_content = 'both'
