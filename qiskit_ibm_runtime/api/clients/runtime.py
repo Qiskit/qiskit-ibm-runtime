@@ -331,8 +331,6 @@ class RuntimeClient(BaseBackendClient):
         Returns:
             Job metadata.
         """
-        print("metadata")
-        print(self._api.program_job(job_id).metadata())
         return self._api.program_job(job_id).metadata()
 
     def close_session(self, session_id: str) -> None:
