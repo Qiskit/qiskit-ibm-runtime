@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    A new option ``max_retries``, has been added to :class:`qiskit_ibm_runtime.Options`. This
+    option allows user to specify the maximum number of retries for a job if that job fails. 
+    For example, if ``max_retries`` is set to 3, then the job will be retried up to 3 times until
+    success or the final retry attempt still fails.
