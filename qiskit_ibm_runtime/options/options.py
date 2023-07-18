@@ -97,6 +97,7 @@ class Options:
     optimization_level: Optional[int] = None
     resilience_level: Optional[int] = None
     max_execution_time: Optional[int] = None
+    max_retries: Optional[int] = 0
     transpilation: Union[TranspilationOptions, Dict] = field(default_factory=TranspilationOptions)
     resilience: Union[ResilienceOptions, Dict] = field(default_factory=ResilienceOptions)
     execution: Union[ExecutionOptions, Dict] = field(default_factory=ExecutionOptions)
@@ -198,6 +199,7 @@ class Options:
         """
         environment = options.get("environment") or {}
         out = {"max_execution_time": options.get("max_execution_time", None)}
+        out["max_retries"] = options.get("max_retries", 0)
 
         for fld in fields(RuntimeOptions):
             if fld.name in environment:

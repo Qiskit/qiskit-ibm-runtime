@@ -30,6 +30,7 @@ from .session import get_cm_session
 from .constants import DEFAULT_DECODERS
 from .qiskit_runtime_service import QiskitRuntimeService
 from .utils.deprecation import issue_deprecation_msg
+from .exceptions import RuntimeJobFailureError
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
@@ -192,14 +193,38 @@ class BasePrimitive(ABC):
         logger.info("Submitting job using options %s", combined)
 
         runtime_options = Options._get_runtime_options(combined)
+        max_retries = runtime_options.get("max_retries", 0)
         if self._session:
-            return self._session.run(
-                program_id=self._program_id(),
-                inputs=primitive_inputs,
-                options=runtime_options,
-                callback=combined.get("environment", {}).get("callback", None),
-                result_decoder=DEFAULT_DECODERS.get(self._program_id()),
-            )
+            if max_retries:
+                attempt = 0
+                while attempt <= max_retries:
+                    try:
+                        job = self._session.run(
+                            program_id=self._program_id(),
+                            inputs=primitive_inputs,
+                            options=runtime_options,
+                            callback=combined.get("environment", {}).get("callback", None),
+                            result_decoder=DEFAULT_DECODERS.get(self._program_id()),
+                        )
+                        result = job.result()
+                        if result:
+                            return job
+                    except RuntimeJobFailureError as exception:
+                        logger.info(
+                            "Attempt %s, %s failed: %s", attempt + 1, job.job_id(), exception
+                        )
+                        attempt += 1
+                        continue
+                logger.info("Job %s failed after %s attempts", job.job_id(), max_retries + 1)
+
+            else:
+                return self._session.run(
+                    program_id=self._program_id(),
+                    inputs=primitive_inputs,
+                    options=runtime_options,
+                    callback=combined.get("environment", {}).get("callback", None),
+                    result_decoder=DEFAULT_DECODERS.get(self._program_id()),
+                )
 
         if self._backend:
             runtime_options["backend"] = self._backend.name
