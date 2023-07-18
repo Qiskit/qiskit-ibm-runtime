@@ -77,7 +77,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
                 job = self._run_program(service, log_level=level)
                 job.wait_for_final_state()
                 expect_info_msg = level == "INFO"
-                if job.logs():
+                if job.logs() and self.dependencies.channel == "ibm_quantum":
                     self.assertEqual(
                         "INFO Pass" in job.logs(),
                         expect_info_msg,
@@ -154,6 +154,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         self.assertEqual(rjob.status(), JobStatus.CANCELLED)
 
     @run_integration_test
+    @quantum_only
     def test_cancel_job_running(self, service):
         """Test canceling a running job."""
         job = self._run_program(service, iterations=5)
