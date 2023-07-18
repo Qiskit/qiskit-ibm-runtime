@@ -278,6 +278,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         with self.assertLogs("qiskit_ibm_runtime", "INFO"):
             job.logs()
         job.wait_for_final_state()
+        time.sleep(1)
         self.assertTrue(job.logs())
 
     @run_integration_test
