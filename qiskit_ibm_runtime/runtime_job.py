@@ -27,10 +27,12 @@ from qiskit.providers.jobstatus import JobStatus, JOB_FINAL_STATES
 from qiskit.providers.job import JobV1 as Job
 
 # pylint: disable=unused-import,cyclic-import
+from qiskit_ibm_provider.utils import validate_job_tags
 from qiskit_ibm_runtime import qiskit_runtime_service
 
 from .constants import API_TO_JOB_ERROR_MESSAGE, API_TO_JOB_STATUS, DEFAULT_DECODERS
 from .exceptions import (
+    IBMApiError,
     RuntimeJobFailureError,
     RuntimeInvalidStateError,
     IBMRuntimeError,
@@ -218,7 +220,7 @@ class RuntimeJob(Job):
                 error_message = self._reason if self._reason else self._error_message
                 if self._reason == "RAN TOO LONG":
                     raise RuntimeJobMaxTimeoutError(error_message)
-                raise RuntimeJobFailureError(f"Unable to retrieve job result. " f"{error_message}")
+                raise RuntimeJobFailureError(f"Unable to retrieve job result. {error_message}")
             if self._status is JobStatus.CANCELLED:
                 raise RuntimeInvalidStateError(
                     "Unable to retrieve result for job {}. "
@@ -408,6 +410,35 @@ class RuntimeJob(Job):
             "QiskitRuntimeService.run() to submit a job."
         )
 
+    def update_tags(self, new_tags: List[str]) -> List[str]:
+        """Update the tags associated with this job.
+
+        Args:
+            new_tags: New tags to assign to the job.
+
+        Returns:
+            The new tags associated with this job.
+
+        Raises:
+            IBMApiError: If an unexpected error occurred when communicating
+                with the server or updating the job tags.
+        """
+        tags_to_update = set(new_tags)
+        validate_job_tags(new_tags, RuntimeInvalidStateError)
+
+        response = self._api_client.update_tags(job_id=self.job_id(), tags=list(tags_to_update))
+
+        if response.status_code == 204:
+            api_response = self._api_client.job_get(self.job_id())
+            self._tags = api_response.pop("tags", [])
+            return self._tags
+        else:
+            raise IBMApiError(
+                "An unexpected error occurred when updating the "
+                "tags for job {}. The tags were not updated for "
+                "the job.".format(self.job_id())
+            )
+
     def _set_status_and_error_message(self) -> None:
         """Fetch and set status and error message."""
         if self._status not in JOB_FINAL_STATES:
@@ -460,10 +491,12 @@ class RuntimeJob(Job):
         if index != -1:
             job_result_raw = job_result_raw[index:]
 
-        error_msg = API_TO_JOB_ERROR_MESSAGE["FAILED"]
         if status == "CANCELLED" and self._reason == "RAN TOO LONG":
             error_msg = API_TO_JOB_ERROR_MESSAGE["CANCELLED - RAN TOO LONG"]
-        return error_msg.format(self.job_id(), job_result_raw)
+            return error_msg.format(self.job_id(), job_result_raw)
+        else:
+            error_msg = API_TO_JOB_ERROR_MESSAGE["FAILED"]
+            return error_msg.format(self.job_id(), self._reason or job_result_raw)
 
     def _status_from_job_response(self, response: Dict) -> str:
         """Returns the job status from an API response.

@@ -289,6 +289,15 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         self.assertIn("timestamps", metrics)
         self.assertIn("qiskit_version", metrics)
 
+    @run_integration_test
+    def test_updating_job_tags(self, service):
+        """Test job metrics."""
+        job = self._run_program(service, job_tags=["test_tag123"])
+        job.wait_for_final_state()
+        new_job_tag = ["new_test_tag"]
+        job.update_tags(new_job_tag)
+        self.assertTrue(job.tags, new_job_tag)
+
     def _assert_complex_types_equal(self, expected, received):
         """Verify the received data in complex types is expected."""
         if "serializable_class" in received:
