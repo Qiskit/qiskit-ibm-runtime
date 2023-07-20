@@ -73,4 +73,3 @@ def parse_qasm_circuits(
             for circuit in circuits
         ]
     return circuits
-
