@@ -127,7 +127,8 @@ class Estimator(BasePrimitive, BaseEstimator):
 
         Args:
             circuits: a (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
-                a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
+                a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
+                a string containing a QASM program.
 
             observables: Observable objects.
 
@@ -146,6 +147,8 @@ class Estimator(BasePrimitive, BaseEstimator):
         # To bypass base class merging of options.
         user_kwargs = {"_user_kwargs": kwargs}
 
+        self.validate_circuits(circuits=circuits)
+
         return super().run(
             circuits=circuits,
             observables=observables,
@@ -153,9 +156,10 @@ class Estimator(BasePrimitive, BaseEstimator):
             **user_kwargs,
         )
 
-    def _validate_circuits(
+    def validate_circuits(
         self, circuits: Union[Sequence[QuantumProgram], QuantumProgram]
     ) -> tuple[QuantumCircuit, ...]:
+        """Validation of the input circuits"""
         quantum_circuits = parse_qasm_circuits(circuits)
         return super()._validate_circuits(quantum_circuits)
 
