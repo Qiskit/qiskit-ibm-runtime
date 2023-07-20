@@ -15,7 +15,6 @@ import logging
 import re
 from typing import Dict, Iterable, Sequence, Union
 
-from qiskit import QiskitError
 from qiskit.circuit import QuantumCircuit
 from qiskit.qasm3 import loads as qasm3_loads
 
@@ -75,15 +74,3 @@ def parse_qasm_circuits(
         ]
     return circuits
 
-
-def validate_qasm_circuits(
-    circuits: Union[Sequence[QuantumProgram], QuantumProgram]
-) -> Iterable[QuantumCircuit]:
-    """
-    Function to validate the input circuits
-    """
-    try:
-        return parse_qasm_circuits(circuits)
-    except Exception as error:  # pylint: disable=broad-except
-        message = getattr(error, "msg", "")
-        raise QiskitError(f"Invalid QASM circuit: {message}")
