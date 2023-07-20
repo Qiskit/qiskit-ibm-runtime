@@ -14,7 +14,7 @@
 from typing import List, Dict
 from test.ibm_test_case import IBMTestCase
 
-from qiskit import QuantumCircuit, QiskitError
+from qiskit import QuantumCircuit
 from qiskit.qasm3 import QASM3ImporterError
 from qiskit_ibm_runtime.utils.qasm import (
     parse_qasm_circuits,
