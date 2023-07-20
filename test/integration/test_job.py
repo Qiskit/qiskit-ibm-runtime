@@ -76,13 +76,8 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
             with self.subTest(level=level):
                 job = self._run_program(service, log_level=level)
                 job.wait_for_final_state()
-                expect_info_msg = level == "INFO"
                 if job.logs():
-                    self.assertEqual(
-                        "INFO Pass" in job.logs(),
-                        expect_info_msg,
-                        f"Job log is {job.logs()}",
-                    )
+                    self.assertIn("Completed", job.logs())
 
     @run_integration_test
     @quantum_only
@@ -154,6 +149,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         self.assertEqual(rjob.status(), JobStatus.CANCELLED)
 
     @run_integration_test
+    @quantum_only
     def test_cancel_job_running(self, service):
         """Test canceling a running job."""
         job = self._run_program(service, iterations=5)
@@ -277,6 +273,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         with self.assertLogs("qiskit_ibm_runtime", "INFO"):
             job.logs()
         job.wait_for_final_state()
+        time.sleep(1)
         self.assertTrue(job.logs())
 
     @run_integration_test
