@@ -30,7 +30,13 @@ from qiskit.quantum_info import SparsePauliOp
 from qiskit.primitives.utils import _circuit_key
 from qiskit.providers.fake_provider import FakeManila
 
-from qiskit_ibm_runtime import Sampler, Estimator, Options, Session, RuntimeEncoder
+from qiskit_ibm_runtime import (
+    Sampler,
+    Estimator,
+    Options,
+    Session,
+    RuntimeEncoder,
+)
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 import qiskit_ibm_runtime.session as session_pkg
 from qiskit_ibm_runtime.utils.utils import _hash
@@ -159,8 +165,10 @@ class TestPrimitives(IBMTestCase):
                 mock_service_inst.backend.return_value = mock_backend
 
                 inst = cls(backend=backend_name)
+                mock_service.assert_called_once()
                 self.assertIsNone(inst.session)
                 inst.run(self.qx, observables=self.obs)
+                mock_service_inst.run.assert_called_once()
                 runtime_options = mock_service_inst.run.call_args.kwargs["options"]
                 self.assertEqual(runtime_options["backend"], backend_name)
 
@@ -176,6 +184,7 @@ class TestPrimitives(IBMTestCase):
                 with self.assertWarns(DeprecationWarning):
                     mock_service.reset_mock()
                     inst = cls(session=backend_name)
+                    mock_service.assert_called_once()
                     self.assertIsNone(inst.session)
 
     def test_init_with_backend_instance(self):
@@ -219,18 +228,28 @@ class TestPrimitives(IBMTestCase):
     def test_init_with_no_backend_session_cloud(self):
         """Test initializing a primitive without backend or session for cloud channel."""
         primitives = [Sampler, Estimator]
-        service = FakeRuntimeService(channel="ibm_cloud")  # pylint: disable=unused-variable
+
         for cls in primitives:
-            with self.subTest(primitive=cls):
+            with self.subTest(primitive=cls), patch(
+                "qiskit_ibm_runtime.base_primitive.QiskitRuntimeService"
+            ) as mock_service:
+                mock_service_inst = MagicMock()
+                mock_service_inst.channel = "ibm_cloud"
+                mock_service.return_value = mock_service_inst
+                mock_service.reset_mock()
                 inst = cls()
+                mock_service.assert_called_once()
                 self.assertIsNone(inst.session)
 
     def test_init_with_no_backend_session_quantum(self):
-        """Test initializing a primitive without backend or session for cloud channel."""
+        """Test initializing a primitive without backend or session for quantum channel."""
         primitives = [Sampler, Estimator]
-        service = FakeRuntimeService(channel="ibm_quantum")  # pylint: disable=unused-variable
+
         for cls in primitives:
-            with self.subTest(primitive=cls):
+            with self.subTest(primitive=cls), patch(
+                "qiskit_ibm_runtime.base_primitive.QiskitRuntimeService"
+            ) as mock_service:
+                mock_service.reset_mock()
                 with self.assertRaises(ValueError):
                     _ = cls()
 
@@ -935,20 +954,6 @@ class TestPrimitives(IBMTestCase):
             f"{dict1} and {dict2} not partially equal.",
         )
 
-    def test_global_service(self):
-        """Test that global service is used in primitives"""
-        # pylint: disable=unused-variable
-        primitives = [Sampler, Estimator]
-        for cls in primitives:
-            with self.subTest(primitive=cls):
-                service1 = FakeRuntimeService(channel="ibm_quantum", token="abc")
-                inst = cls(backend="")
-                self.assertTrue(isinstance(inst._service, FakeRuntimeService))
-                self.assertEqual(inst._service._account.token, "abc")
-                service2 = FakeRuntimeService(channel="ibm_quantum", token="xyz")
-                inst = cls(backend="")
-                self.assertEqual(inst._service._account.token, "xyz")
- 
     def test_too_many_circuits(self):
         """Test exception when number of circuits exceeds backend._max_circuits"""
         model_backend = FakeManila()
@@ -974,4 +979,3 @@ class TestPrimitives(IBMTestCase):
             f"Number of circuits, {max_circs + 1} exceeds the maximum for this backend, {max_circs}",
             str(err.exception),
         )
-
