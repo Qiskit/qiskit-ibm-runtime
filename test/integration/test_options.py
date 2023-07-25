@@ -113,3 +113,25 @@ class TestIntegrationOptions(IBMIntegrationTestCase):
                 inst = Estimator(session=session, options=options)
                 inst.run(circ, observables=obs)
             self.assertIn("a coupling map is required.", str(exc.exception))
+
+    @run_integration_test
+    def test_all_resilience_levels(self, service):
+        """Test that all resilience_levels are recognized correctly
+        by checking their values in the metadata"""
+        resilience_values = {
+            0: "variance",
+            1: "readout_mitigation_num_twirled_circuits",
+            2: "zne",
+            3: "standard_error",
+        }
+        circ = QuantumCircuit(1)
+        obs = SparsePauliOp.from_list([("I", 1)])
+        backend = service.backends(simulator=True)[0]
+        options = Options()
+        options.simulator.coupling_map = [[0, 1], [1, 0]]
+        for level, value in resilience_values.items():
+            options.resilience_level = level
+            inst = Estimator(backend=backend, options=options)
+            result = inst.run(circ, observables=obs).result()
+            metadata = result.metadata[0]
+            self.assertTrue(value in metadata)

@@ -235,6 +235,7 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
                 self.assertIsNotNone(job._ws_client._server_close_code)
                 self.assertLess(final_it, iterations)
 
+    @skip("skip until qiskit-ibm-runtime #933 is fixed")
     @run_integration_test
     def test_websocket_proxy(self, service):
         """Test connecting to websocket via proxy."""

@@ -34,6 +34,7 @@ from qiskit_ibm_runtime import Sampler, Estimator, Options, Session, RuntimeEnco
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 import qiskit_ibm_runtime.session as session_pkg
 from qiskit_ibm_runtime.utils.utils import _hash
+from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import (
@@ -181,7 +182,10 @@ class TestPrimitives(IBMTestCase):
         """Test initializing a primitive with a backend instance."""
         primitives = [Sampler, Estimator]
         service = MagicMock()
-        backend = IBMBackend(configuration=MagicMock(), service=service, api_client=MagicMock())
+        model_backend = FakeManila()
+        backend = IBMBackend(
+            configuration=model_backend.configuration(), service=service, api_client=MagicMock()
+        )
         backend.name = "ibm_gotham"
 
         for cls in primitives:
@@ -247,12 +251,14 @@ class TestPrimitives(IBMTestCase):
         """Test using a different backend within context manager."""
         cm_backend = "ibm_metropolis"
         primitives = [Sampler, Estimator]
-
+        model_backend = FakeManila()
         for cls in primitives:
             with self.subTest(primitive=cls):
                 service = MagicMock()
                 backend = IBMBackend(
-                    configuration=MagicMock(), service=service, api_client=MagicMock()
+                    configuration=model_backend.configuration(),
+                    service=service,
+                    api_client=MagicMock(),
                 )
                 backend.name = "ibm_gotham"
 
@@ -267,12 +273,14 @@ class TestPrimitives(IBMTestCase):
     def test_no_session(self):
         """Test running without session."""
         primitives = [Sampler, Estimator]
-
+        model_backend = FakeManila()
         for cls in primitives:
             with self.subTest(primitive=cls):
                 service = MagicMock()
                 backend = IBMBackend(
-                    configuration=MagicMock(), service=service, api_client=MagicMock()
+                    configuration=model_backend.configuration(),
+                    service=service,
+                    api_client=MagicMock(),
                 )
                 inst = cls(backend)
                 inst.run(self.qx, observables=self.obs)
@@ -940,3 +948,30 @@ class TestPrimitives(IBMTestCase):
                 service2 = FakeRuntimeService(channel="ibm_quantum", token="xyz")
                 inst = cls(backend="")
                 self.assertEqual(inst._service._account.token, "xyz")
+ 
+    def test_too_many_circuits(self):
+        """Test exception when number of circuits exceeds backend._max_circuits"""
+        model_backend = FakeManila()
+        backend = IBMBackend(
+            configuration=model_backend.configuration(),
+            service=MagicMock(),
+            api_client=None,
+            instance=None,
+        )
+        primitives = [Sampler, Estimator]
+        max_circs = backend.configuration().max_experiments
+        circs = []
+        observables = []
+        for _ in range(max_circs + 1):
+            circs.append(self.qx)
+            observables.append(self.obs)
+        for cls in primitives:
+            with self.subTest(primitive=cls):
+                inst = cls(backend=backend)
+                with self.assertRaises(IBMInputValueError) as err:
+                    inst.run(circs, observables=observables)
+        self.assertIn(
+            f"Number of circuits, {max_circs + 1} exceeds the maximum for this backend, {max_circs}",
+            str(err.exception),
+        )
+
