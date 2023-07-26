@@ -44,6 +44,7 @@ class Account:
         instance: Optional[str] = None,
         proxies: Optional[ProxyConfiguration] = None,
         verify: Optional[bool] = True,
+        data_tracking: Optional[bool] = True,
     ):
         """Account constructor.
 
@@ -54,6 +55,7 @@ class Account:
             instance: Service instance to use.
             proxies: Proxy configuration.
             verify: Whether to verify server's TLS certificate.
+            data_tracking: Set to ``False`` to disable data tracking.
         """
         resolved_url = url or (
             IBM_QUANTUM_API_URL if channel == "ibm_quantum" else IBM_CLOUD_API_URL
@@ -65,6 +67,7 @@ class Account:
         self.instance = instance
         self.proxies = proxies
         self.verify = verify
+        self.data_tracking = data_tracking
 
     def to_saved_format(self) -> dict:
         """Returns a dictionary that represents how the account is saved on disk."""

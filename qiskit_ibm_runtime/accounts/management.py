@@ -49,6 +49,7 @@ class AccountManager:
         proxies: Optional[ProxyConfiguration] = None,
         verify: Optional[bool] = None,
         overwrite: Optional[bool] = False,
+        data_tracking: Optional[bool] = True,
     ) -> None:
         """Save account on disk."""
         cls.migrate(filename=filename)
@@ -67,6 +68,7 @@ class AccountManager:
                 channel=channel,
                 proxies=proxies,
                 verify=verify,
+                data_tracking=data_tracking,
             )
             # avoid storing invalid accounts
             .validate().to_saved_format(),

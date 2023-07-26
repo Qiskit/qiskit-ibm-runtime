@@ -1,16 +1,7 @@
 ---
 features:
   - |
-    List new features here, or remove this section.  All of the list items in
-    this section are combined when the release notes are rendered, so the text
-    needs to be worded so that it does not depend on any information only
-    available in another section, such as the prelude. This may mean repeating
-    some details.
-fixes:
-  - |
-    Add normal bug fixes here, or remove this section.  All of the list items
-    in this section are combined when the release notes are rendered, so the
-    text needs to be worded so that it does not depend on any information only
-    available in another section, such as the prelude. This may mean repeating
-    some details.
-
+    A new environment variable, ``USAGE_DATA_OPT_OUT`` can be used to 
+    opt out of user module usage tracking. Users can also use the new parameter,
+    ``data_tracking`` in :meth:`qiskit_ibm_runtime.QiskitRuntimeService.save_account`
+    to opt out.
