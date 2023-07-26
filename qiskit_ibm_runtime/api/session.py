@@ -44,6 +44,8 @@ STATUS_FORCELIST = (
 )
 CUSTOM_HEADER_ENV_VAR = "QISKIT_IBM_RUNTIME_CUSTOM_CLIENT_APP_HEADER"
 QE_PROVIDER_HEADER_ENV_VAR = "QE_CUSTOM_CLIENT_APP_HEADER"
+USAGE_DATA_OPT_OUT_ENV_VAR = 'USAGE_DATA_OPT_OUT'
+
 logger = logging.getLogger(__name__)
 # Regex used to match the `/backends` endpoint, capturing the device name as group(2).
 # The number of letters for group(2) must be greater than 1, so it does not match
@@ -54,6 +56,9 @@ RE_BACKENDS_ENDPOINT = re.compile(r"^(.*/backends/)([^/}]{2,})(.*)$", re.IGNOREC
 
 def _get_client_header() -> str:
     """Return the client version."""
+
+    if os.getenv(USAGE_DATA_OPT_OUT_ENV_VAR):
+        return ''
 
     qiskit_pkgs = [
         "qiskit_terra",
@@ -270,39 +275,39 @@ class RetrySession(Session):
         # Set default caller
         headers.update({"X-Qx-Client-Application": f"{CLIENT_APPLICATION}/qiskit"})
 
-        # Use PurePath in order to support arbitrary path formats
-        callers = {
-            PurePath("qiskit/algorithms"),
-            PurePath("qiskit_ibm_runtime/sampler.py"),
-            PurePath("qiskit_ibm_runtime/estimator.py"),
-            "qiskit_machine_learning",
-            "qiskit_nature",
-            "qiskit_optimization",
-            "qiskit_experiments",
-            "qiskit_finance",
-            "circuit_knitting_toolbox",
-        }
-        stack = inspect.stack()
-        stack.reverse()
+        if not os.getenv(USAGE_DATA_OPT_OUT_ENV_VAR):
+            # Use PurePath in order to support arbitrary path formats
+            callers = {
+                PurePath("qiskit/algorithms"),
+                PurePath("qiskit_ibm_runtime/sampler.py"),
+                PurePath("qiskit_ibm_runtime/estimator.py"),
+                "qiskit_machine_learning",
+                "qiskit_nature",
+                "qiskit_optimization",
+                "qiskit_experiments",
+                "qiskit_finance",
+                "circuit_knitting_toolbox",
+            }
+            stack = inspect.stack()
+            stack.reverse()
 
-        found_caller = False
-        for frame in stack:
-            frame_path = str(PurePath(frame.filename))
-            for caller in callers:
-                if str(caller) in frame_path:
-                    caller_str = str(caller) + frame_path.split(str(caller), 1)[-1]
-                    if os.name == "nt":
-                        sanitized_caller_str = caller_str.replace("\\", "~")
-                    else:
-                        sanitized_caller_str = caller_str.replace("/", "~")
-                    headers.update(
-                        {"X-Qx-Client-Application": f"{CLIENT_APPLICATION}/{sanitized_caller_str}"}
-                    )
-                    found_caller = True
-                    break  # break out of the inner loop
-            if found_caller:
-                break  # break out of the outer loop
-
+            found_caller = False
+            for frame in stack:
+                frame_path = str(PurePath(frame.filename))
+                for caller in callers:
+                    if str(caller) in frame_path:
+                        caller_str = str(caller) + frame_path.split(str(caller), 1)[-1]
+                        if os.name == "nt":
+                            sanitized_caller_str = caller_str.replace("\\", "~")
+                        else:
+                            sanitized_caller_str = caller_str.replace("/", "~")
+                        headers.update(
+                            {"X-Qx-Client-Application": f"{CLIENT_APPLICATION}/{sanitized_caller_str}"}
+                        )
+                        found_caller = True
+                        break  # break out of the inner loop
+                if found_caller:
+                    break  # break out of the outer loop
         self.headers = headers
         self._set_custom_header()
 
