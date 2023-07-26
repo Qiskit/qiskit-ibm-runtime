@@ -44,7 +44,7 @@ STATUS_FORCELIST = (
 )
 CUSTOM_HEADER_ENV_VAR = "QISKIT_IBM_RUNTIME_CUSTOM_CLIENT_APP_HEADER"
 QE_PROVIDER_HEADER_ENV_VAR = "QE_CUSTOM_CLIENT_APP_HEADER"
-USAGE_DATA_OPT_OUT_ENV_VAR = 'USAGE_DATA_OPT_OUT'
+USAGE_DATA_OPT_OUT_ENV_VAR = "USAGE_DATA_OPT_OUT"
 
 logger = logging.getLogger(__name__)
 # Regex used to match the `/backends` endpoint, capturing the device name as group(2).
@@ -58,7 +58,7 @@ def _get_client_header() -> str:
     """Return the client version."""
 
     if os.getenv(USAGE_DATA_OPT_OUT_ENV_VAR):
-        return ''
+        return ""
 
     qiskit_pkgs = [
         "qiskit_terra",
@@ -302,7 +302,9 @@ class RetrySession(Session):
                         else:
                             sanitized_caller_str = caller_str.replace("/", "~")
                         headers.update(
-                            {"X-Qx-Client-Application": f"{CLIENT_APPLICATION}/{sanitized_caller_str}"}
+                            {
+                                "X-Qx-Client-Application": f"{CLIENT_APPLICATION}/{sanitized_caller_str}"
+                            }
                         )
                         found_caller = True
                         break  # break out of the inner loop
