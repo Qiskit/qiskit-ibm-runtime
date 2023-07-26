@@ -271,8 +271,17 @@ class RetrySession(Session):
         headers.update({"X-Qx-Client-Application": f"{CLIENT_APPLICATION}/qiskit"})
 
         # Use PurePath in order to support arbitrary path formats
-        callers = {PurePath("qiskit/"), "qiskit_", "circuit_knitting_toolbox"}
-
+        callers = {
+            PurePath("qiskit/algorithms"),
+            PurePath("qiskit_ibm_runtime/sampler.py"),
+            PurePath("qiskit_ibm_runtime/estimator.py"),
+            "qiskit_machine_learning",
+            "qiskit_nature",
+            "qiskit_optimization",
+            "qiskit_experiments",
+            "qiskit_finance",
+            "circuit_knitting_toolbox",
+        }
         stack = inspect.stack()
         stack.reverse()
 
@@ -282,7 +291,10 @@ class RetrySession(Session):
             for caller in callers:
                 if str(caller) in frame_path:
                     caller_str = str(caller) + frame_path.split(str(caller), 1)[-1]
-                    sanitized_caller_str = caller_str.replace("/", "~")
+                    if os.name == "nt":
+                        sanitized_caller_str = caller_str.replace("\\", "~")
+                    else:
+                        sanitized_caller_str = caller_str.replace("/", "~")
                     headers.update(
                         {"X-Qx-Client-Application": f"{CLIENT_APPLICATION}/{sanitized_caller_str}"}
                     )
