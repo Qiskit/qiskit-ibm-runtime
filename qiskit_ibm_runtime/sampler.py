@@ -121,19 +121,16 @@ class Sampler(BasePrimitive, BaseSampler):
         """
         # To bypass base class merging of options.
         user_kwargs = {"_user_kwargs": kwargs}
-        self.validate_circuits(circuits=circuits)
-        return super().run(
-            circuits=circuits,
-            parameter_values=parameter_values,
-            **user_kwargs,
-        )
-
-    def validate_circuits(
-        self, circuits: Union[Sequence[QuantumProgram], QuantumProgram]
-    ) -> tuple[QuantumCircuit, ...]:
-        """Validation of the input circuits"""
-        quantum_circuits = parse_qasm_circuits(circuits)
-        return super()._validate_circuits(circuits=quantum_circuits)
+        try:
+            quantum_circuits = parse_qasm_circuits(circuits)
+            super()._validate_circuits(quantum_circuits)
+            return super().run(
+                circuits=circuits,
+                parameter_values=parameter_values,
+                **user_kwargs,
+            )
+        except Exception as error:  # pylint: disable=broad-except
+            raise ValueError(f"The input circuits are not valid. {getattr(error, 'msg', '')}")
 
     def _run(  # pylint: disable=arguments-differ
         self,

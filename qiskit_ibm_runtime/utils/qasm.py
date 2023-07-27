@@ -58,7 +58,7 @@ def str_to_quantum_circuit(program: str) -> QuantumCircuit:
 
 def parse_qasm_circuits(
     circuits: Union[Sequence[QuantumProgram], QuantumProgram]
-) -> Iterable[QuantumCircuit]:
+) -> Sequence[QuantumCircuit]:
     """Convert from QASM to QuantumCircuit, if needed."""
 
     if isinstance(circuits, str):
