@@ -287,6 +287,14 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         self.assertIn("qiskit_version", metrics)
 
     @run_integration_test
+    def test_cost_estimation(self, service):
+        """Test job cost estimation"""
+        job = self._run_program(service)
+        job.wait_for_final_state()
+        self.assertTrue(job.cost_estimation["estimated_running_time_seconds"])
+        self.assertTrue(job.cost_estimation["estimated_max_running_time_seconds"])
+
+    @run_integration_test
     def test_updating_job_tags(self, service):
         """Test job metrics."""
         job = self._run_program(service, job_tags=["test_tag123"])
