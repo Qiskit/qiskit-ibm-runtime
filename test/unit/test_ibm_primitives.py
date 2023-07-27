@@ -239,6 +239,7 @@ class TestPrimitives(IBMTestCase):
                 mock_service_inst.channel = "ibm_cloud"
                 mock_service.return_value = mock_service_inst
                 mock_service.reset_mock()
+                mock_service.global_service = None
                 inst = cls()
                 mock_service.assert_called_once()
                 self.assertIsNone(inst.session)
