@@ -94,8 +94,5 @@ class ResilienceOptions:
             and len(resilience_options.get("noise_factors")) < 5
         ):
             raise ValueError("QuarticExtrapolator requires at least 5 noise_factors.")
-        if (
-            extrapolator == "CubicExtrapolator"
-            and len(resilience_options.get("noise_factors")) < 4
-        ):
+        if extrapolator == "CubicExtrapolator" and len(resilience_options.get("noise_factors")) < 4:
             raise ValueError("CubicExtrapolator requires at least 4 noise_factors.")

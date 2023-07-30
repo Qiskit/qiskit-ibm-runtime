@@ -84,7 +84,6 @@ def _flexible(cls):  # type: ignore
     """
 
     def __new__(cls, *_, **kwargs):  # type: ignore
-
         all_fields = []
         orig_field_names = set()
 

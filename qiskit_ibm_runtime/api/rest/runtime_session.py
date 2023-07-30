@@ -13,7 +13,7 @@
 """Runtime Session REST adapter."""
 
 
-from .base import RestAdapterBase
+from qiskit_ibm_provider.api.rest.base import RestAdapterBase
 from ..session import RetrySession
 
 
@@ -24,9 +24,7 @@ class RuntimeSession(RestAdapterBase):
         "close": "/close",
     }
 
-    def __init__(
-        self, session: RetrySession, session_id: str, url_prefix: str = ""
-    ) -> None:
+    def __init__(self, session: RetrySession, session_id: str, url_prefix: str = "") -> None:
         """Job constructor.
 
         Args:

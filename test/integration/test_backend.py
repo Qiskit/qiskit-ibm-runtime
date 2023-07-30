@@ -13,7 +13,7 @@
 """Tests for backend functions using real runtime service."""
 
 from unittest import SkipTest
-
+import copy
 
 from qiskit.transpiler.target import Target
 from qiskit_ibm_runtime import QiskitRuntimeService
@@ -47,6 +47,8 @@ class TestIntegrationBackend(IBMIntegrationTestCase):
         configs = service._backend_configs
         configs["test_backend"] = None
         backend_names = [backend.name for backend in backends]
+        # check filters still work
+        service.backends(instance=instance, simulator=True)
 
         for config in configs.values():
             backend = service._create_backend_obj(config, instance=instance)
@@ -161,3 +163,26 @@ class TestIBMBackend(IBMIntegrationTestCase):
         with self.subTest(backend=backend.name):
             with self.assertRaises(RuntimeError):
                 backend.run()
+
+    def test_backend_deepcopy(self):
+        """Test that deepcopy on IBMBackend works correctly"""
+        backend = self.backend
+        with self.subTest(backend=backend.name):
+            backend_copy = copy.deepcopy(backend)
+            self.assertEqual(backend_copy.name, backend.name)
+            self.assertEqual(
+                backend_copy.configuration().basis_gates,
+                backend.configuration().basis_gates,
+            )
+            if backend.properties():
+                self.assertEqual(
+                    backend_copy.properties().last_update_date,
+                    backend.properties().last_update_date,
+                )
+            self.assertEqual(backend_copy._instance, backend._instance)
+            self.assertEqual(backend_copy._service._backends, backend._service._backends)
+            self.assertEqual(backend_copy._get_defaults(), backend._get_defaults())
+            self.assertEqual(
+                backend_copy._api_client._session.base_url,
+                backend._api_client._session.base_url,
+            )

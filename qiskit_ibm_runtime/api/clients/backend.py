@@ -17,7 +17,7 @@ from typing import Dict, Any, Optional
 from datetime import datetime as python_datetime
 from abc import ABC, abstractmethod
 
-from .base import BaseClient
+from qiskit_ibm_provider.api.clients.base import BaseClient
 
 logger = logging.getLogger(__name__)
 

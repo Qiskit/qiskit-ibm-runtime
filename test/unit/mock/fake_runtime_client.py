@@ -86,9 +86,7 @@ class BaseFakeRuntimeJob:
 
     _job_progress = ["QUEUED", "RUNNING", "COMPLETED"]
 
-    _executor = (
-        ThreadPoolExecutor()
-    )  # pylint: disable=bad-option-value,consider-using-with
+    _executor = ThreadPoolExecutor()  # pylint: disable=bad-option-value,consider-using-with
 
     def __init__(
         self,
@@ -273,8 +271,7 @@ class BaseFakeRuntimeClient:
         # Setup the available backends
         if not backend_specs:
             backend_specs = [
-                FakeApiBackendSpecs(backend_name=f"backend{idx}")
-                for idx in range(num_backends)
+                FakeApiBackendSpecs(backend_name=f"backend{idx}") for idx in range(num_backends)
             ]
         self._backends = [FakeApiBackend(specs) for specs in backend_specs]
 
@@ -347,9 +344,7 @@ class BaseFakeRuntimeClient:
             )
             program._parameters = spec.get("parameters") or program._parameters
             program._return_values = spec.get("return_values") or program._return_values
-            program._interim_results = (
-                spec.get("interim_results") or program._interim_results
-            )
+            program._interim_results = spec.get("interim_results") or program._interim_results
 
     def program_get(self, program_id: str) -> Dict[str, Any]:
         """Return a specific program."""
@@ -374,11 +369,7 @@ class BaseFakeRuntimeClient:
         """Run the specified program."""
         _ = self._get_program(program_id)
         job_id = uuid.uuid4().hex
-        job_cls = (
-            self._job_classes.pop(0)
-            if len(self._job_classes) > 0
-            else BaseFakeRuntimeJob
-        )
+        job_cls = self._job_classes.pop(0) if len(self._job_classes) > 0 else BaseFakeRuntimeJob
         if hgp:
             hub, group, project = from_instance_format(hgp)
         else:
@@ -416,9 +407,9 @@ class BaseFakeRuntimeClient:
         self._get_program(program_id)
         del self._programs[program_id]
 
-    def job_get(self, job_id):
+    def job_get(self, job_id: str, exclude_params: bool = None) -> Any:
         """Get the specific job."""
-        return self._get_job(job_id).to_dict()
+        return self._get_job(job_id, exclude_params).to_dict()
 
     def jobs_get(
         self,
@@ -512,7 +503,8 @@ class BaseFakeRuntimeClient:
             raise RequestsApiError("Program not found", status_code=404)
         return self._programs[program_id]
 
-    def _get_job(self, job_id):
+    # pylint: disable=unused-argument
+    def _get_job(self, job_id: str, exclude_params: bool = None) -> Any:
         """Get job."""
         if job_id not in self._jobs:
             raise RequestsApiError("Job not found", status_code=404)
@@ -530,9 +522,7 @@ class BaseFakeRuntimeClient:
         """Return the status of a backend."""
         return self._find_backend(backend_name).status
 
-    def backend_properties(
-        self, backend_name: str, datetime: Any = None
-    ) -> Dict[str, Any]:
+    def backend_properties(self, backend_name: str, datetime: Any = None) -> Dict[str, Any]:
         """Return the properties of a backend."""
         if datetime:
             raise NotImplementedError("'datetime' is not supported.")

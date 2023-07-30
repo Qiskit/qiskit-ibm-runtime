@@ -15,6 +15,7 @@
 import logging
 from typing import Any, Dict, List, Optional
 from datetime import datetime as python_datetime
+from requests import Response
 
 from qiskit_ibm_provider.utils.hgp import from_instance_format
 from qiskit_ibm_runtime.api.session import RetrySession
@@ -42,7 +43,7 @@ class RuntimeClient(BaseBackendClient):
         self._session = RetrySession(
             base_url=params.get_runtime_api_base_url(),
             auth=params.get_auth_handler(),
-            **params.connection_parameters()
+            **params.connection_parameters(),
         )
         self._api = Runtime(self._session)
 
@@ -161,7 +162,7 @@ class RuntimeClient(BaseBackendClient):
             max_execution_time=max_execution_time,
             start_session=start_session,
             session_time=session_time,
-            **hgp_dict
+            **hgp_dict,
         )
 
     def program_delete(self, program_id: str) -> None:
@@ -202,7 +203,7 @@ class RuntimeClient(BaseBackendClient):
                 spec=spec,
             )
 
-    def job_get(self, job_id: str) -> Dict:
+    def job_get(self, job_id: str, exclude_params: bool = None) -> Dict:
         """Get job data.
 
         Args:
@@ -211,7 +212,7 @@ class RuntimeClient(BaseBackendClient):
         Returns:
             JSON response.
         """
-        response = self._api.program_job(job_id).get()
+        response = self._api.program_job(job_id).get(exclude_params=exclude_params)
         logger.debug("Runtime job get response: %s", response)
         return response
 
@@ -322,7 +323,7 @@ class RuntimeClient(BaseBackendClient):
         """
         return self._api.program_job(job_id).logs()
 
-    def job_metadata(self, job_id: str) -> str:
+    def job_metadata(self, job_id: str) -> Dict[str, Any]:
         """Get job metadata.
 
         Args:
@@ -400,3 +401,15 @@ class RuntimeClient(BaseBackendClient):
             Backend pulse defaults.
         """
         return self._api.backend(backend_name).pulse_defaults()
+
+    def update_tags(self, job_id: str, tags: list) -> Response:
+        """Update the tags of the job.
+
+        Args:
+            job_id: The ID of the job.
+            tags: The new tags to be assigned to the job.
+
+        Returns:
+            API Response.
+        """
+        return self._api.program_job(job_id).update_tags(tags)

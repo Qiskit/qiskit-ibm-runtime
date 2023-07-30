@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    If a job has been cancelled, and job.result() is requested, throw an exception
+    rather than returning None.

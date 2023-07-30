@@ -203,9 +203,7 @@ class QiskitRuntimeService(Provider):
         else:
             auth_client = self._authenticate_ibm_quantum_account(self._client_params)
             # Update client parameters to use authenticated values.
-            self._client_params.url = auth_client.current_service_urls()["services"][
-                "runtime"
-            ]
+            self._client_params.url = auth_client.current_service_urls()["services"]["runtime"]
             self._client_params.token = auth_client.current_access_token()
             self._api_client = RuntimeClient(self._client_params)
             self._hgps = self._initialize_hgps(auth_client)
@@ -267,12 +265,8 @@ class QiskitRuntimeService(Provider):
                 )
             else:
                 if url:
-                    logger.warning(
-                        "Loading default %s account. Input 'url' is ignored.", channel
-                    )
-                account = AccountManager.get(
-                    filename=filename, name=name, channel=channel
-                )
+                    logger.warning("Loading default %s account. Input 'url' is ignored.", channel)
+                account = AccountManager.get(filename=filename, name=name, channel=channel)
         elif any([token, url]):
             # Let's not infer based on these attributes as they may change in the future.
             raise ValueError(
@@ -307,9 +301,7 @@ class QiskitRuntimeService(Provider):
         ret = OrderedDict()  # type: ignore[var-annotated]
         backends_list = self._api_client.list_backends()
         for backend_name in backends_list:
-            raw_config = self._api_client.backend_configuration(
-                backend_name=backend_name
-            )
+            raw_config = self._api_client.backend_configuration(backend_name=backend_name)
             config = configuration_from_server_data(
                 raw_config=raw_config, instance=self._account.instance
             )
@@ -325,9 +317,7 @@ class QiskitRuntimeService(Provider):
     def _resolve_crn(self, account: Account) -> None:
         account.resolve_crn()
 
-    def _authenticate_ibm_quantum_account(
-        self, client_params: ClientParameters
-    ) -> AuthClient:
+    def _authenticate_ibm_quantum_account(self, client_params: ClientParameters) -> AuthClient:
         """Authenticate against IBM Quantum and populate the hub/group/projects.
 
         Args:
@@ -464,13 +454,11 @@ class QiskitRuntimeService(Provider):
             _ = from_instance_format(instance)  # Verify format
             if instance not in self._hgps:
                 raise IBMInputValueError(
-                    f"Hub/group/project {instance} "
-                    "could not be found for this account."
+                    f"Hub/group/project {instance} " "could not be found for this account."
                 )
             if backend_name and not self._hgps[instance].has_backend(backend_name):
                 raise QiskitBackendNotFoundError(
-                    f"Backend {backend_name} cannot be found in "
-                    f"hub/group/project {instance}"
+                    f"Backend {backend_name} cannot be found in " f"hub/group/project {instance}"
                 )
             return self._hgps[instance]
 
@@ -482,8 +470,7 @@ class QiskitRuntimeService(Provider):
                 return hgp
 
         error_message = (
-            f"Backend {backend_name} cannot be found in any "
-            f"hub/group/project for this account."
+            f"Backend {backend_name} cannot be found in any " f"hub/group/project for this account."
         )
         if not isinstance(backend_name, str):
             error_message += (
@@ -555,16 +542,14 @@ class QiskitRuntimeService(Provider):
             if name:
                 if name not in self._backends:
                     raise QiskitBackendNotFoundError("No backend matches the criteria.")
-                if (
-                    not self._backends[name]
-                    or instance != self._backends[name]._instance
-                ):
+                if not self._backends[name] or instance != self._backends[name]._instance:
                     self._set_backend_config(name)
                     self._backends[name] = self._create_backend_obj(
                         self._backend_configs[name],
                         instance,
                     )
-                backends.append(self._backends[name])
+                if self._backends[name]:
+                    backends.append(self._backends[name])
             elif instance:
                 hgp = self._get_hgp(instance=instance)
                 for backend_name in hgp.backends:
@@ -576,7 +561,8 @@ class QiskitRuntimeService(Provider):
                         self._backends[backend_name] = self._create_backend_obj(
                             self._backend_configs[backend_name], instance
                         )
-                    backends.append(self._backends[backend_name])
+                    if self._backends[backend_name]:
+                        backends.append(self._backends[backend_name])
             else:
                 for backend_name, backend_config in self._backends.items():
                     if not backend_config:
@@ -584,7 +570,8 @@ class QiskitRuntimeService(Provider):
                         self._backends[backend_name] = self._create_backend_obj(
                             self._backend_configs[backend_name]
                         )
-                    backends.append(self._backends[backend_name])
+                    if self._backends[backend_name]:
+                        backends.append(self._backends[backend_name])
 
         else:
             if instance:
@@ -601,9 +588,7 @@ class QiskitRuntimeService(Provider):
             )
         return filter_backends(backends, filters=filters, **kwargs)
 
-    def _set_backend_config(
-        self, backend_name: str, instance: Optional[str] = None
-    ) -> None:
+    def _set_backend_config(self, backend_name: str, instance: Optional[str] = None) -> None:
         """Retrieve backend configuration and add to backend_configs.
         Args:
             backend_name: backend name that will be returned.
@@ -611,9 +596,7 @@ class QiskitRuntimeService(Provider):
         """
         if backend_name not in self._backend_configs:
             raw_config = self._api_client.backend_configuration(backend_name)
-            config = configuration_from_server_data(
-                raw_config=raw_config, instance=instance
-            )
+            config = configuration_from_server_data(raw_config=raw_config, instance=instance)
             self._backend_configs[backend_name] = config
 
     def _create_backend_obj(
@@ -634,9 +617,7 @@ class QiskitRuntimeService(Provider):
             if not instance:
                 for hgp in list(self._hgps.values()):
                     if config.backend_name in hgp.backends:
-                        instance = to_instance_format(
-                            hgp._hub, hgp._group, hgp._project
-                        )
+                        instance = to_instance_format(hgp._hub, hgp._group, hgp._project)
                         break
 
             elif config.backend_name not in self._get_hgp(instance=instance).backends:
@@ -791,9 +772,7 @@ class QiskitRuntimeService(Provider):
                     " Learn more about available backends here "
                     "https://cloud.ibm.com/docs/quantum-computing?topic=quantum-computing-choose-backend "
                 )
-            raise QiskitBackendNotFoundError(
-                "No backend matches the criteria." + cloud_msg_url
-            )
+            raise QiskitBackendNotFoundError("No backend matches the criteria." + cloud_msg_url)
         return backends[0]
 
     def get_backend(self, name: str = None, **kwargs: Any) -> Backend:
@@ -851,9 +830,7 @@ class QiskitRuntimeService(Provider):
             current_page_limit = 20
             offset = 0
             while True:
-                response = self._api_client.list_programs(
-                    limit=current_page_limit, skip=offset
-                )
+                response = self._api_client.list_programs(limit=current_page_limit, skip=offset)
                 program_page = response.get("programs", [])
                 # count is the total number of programs that would be returned if
                 # there was no limit or skip
@@ -864,9 +841,7 @@ class QiskitRuntimeService(Provider):
                     program = self._to_program(prog_dict)
                     self._programs[program.program_id] = program
                 num_cached_programs = len(self._programs)
-                if num_cached_programs == count or num_cached_programs >= (
-                    limit + skip
-                ):
+                if num_cached_programs == count or num_cached_programs >= (limit + skip):
                     # Stop if there are no more programs returned by the server or
                     # if the number of cached programs is greater than the sum of limit and skip
                     break
@@ -897,9 +872,7 @@ class QiskitRuntimeService(Provider):
                 response = self._api_client.program_get(program_id)
             except RequestsApiError as ex:
                 if ex.status_code == 404:
-                    raise RuntimeProgramNotFound(
-                        f"Program not found: {ex.message}"
-                    ) from None
+                    raise RuntimeProgramNotFound(f"Program not found: {ex.message}") from None
                 raise IBMRuntimeError(f"Failed to get program: {ex}") from None
 
             self._programs[program_id] = self._to_program(response)
@@ -947,9 +920,7 @@ class QiskitRuntimeService(Provider):
         inputs: Union[Dict, ParameterNamespace],
         options: Optional[Union[RuntimeOptions, Dict]] = None,
         callback: Optional[Callable] = None,
-        result_decoder: Optional[
-            Union[Type[ResultDecoder], Sequence[Type[ResultDecoder]]]
-        ] = None,
+        result_decoder: Optional[Union[Type[ResultDecoder], Sequence[Type[ResultDecoder]]]] = None,
         session_id: Optional[str] = None,
         start_session: Optional[bool] = False,
     ) -> RuntimeJob:
@@ -983,6 +954,14 @@ class QiskitRuntimeService(Provider):
             RuntimeProgramNotFound: If the program cannot be found.
             IBMRuntimeError: An error occurred running the program.
         """
+        # TODO: Remove this after 3 months
+        if program_id in ["hello-world", "vqe", "qaoa"]:
+            raise IBMInputValueError(
+                "The hello-world, vqe, and qaoa programs have been retired in the "
+                "Qiskit Runtime service. Please visit https://qiskit.org/ecosystem/ibm-runtime "
+                "for an introduction on Sessions and Primitives, and to access "
+                "tutorials on how to execute VQE and QAOA using Qiskit Runtime Primitives."
+            )
 
         qrt_options: RuntimeOptions = options
         if options is None:
@@ -990,7 +969,7 @@ class QiskitRuntimeService(Provider):
         elif isinstance(options, Dict):
             qrt_options = RuntimeOptions(**options)
 
-        # If using params object, extract as dictionary
+        # If using params object, extract as dictionary.
         if isinstance(inputs, ParameterNamespace):
             inputs.validate()
             inputs = vars(inputs)
@@ -1000,10 +979,14 @@ class QiskitRuntimeService(Provider):
         hgp_name = None
         if self._channel == "ibm_quantum":
             # Find the right hgp
-            hgp = self._get_hgp(
-                instance=qrt_options.instance, backend_name=qrt_options.backend
-            )
+            hgp = self._get_hgp(instance=qrt_options.instance, backend_name=qrt_options.backend)
             hgp_name = hgp.name
+        backend = self.backend(name=qrt_options.backend, instance=hgp_name)
+        status = backend.status()
+        if status.operational is True and status.status_msg != "active":
+            warnings.warn(
+                f"The backend {backend.name} currently has a status of {status.status_msg}."
+            )
 
         try:
             response = self._api_client.program_run(
@@ -1021,9 +1004,7 @@ class QiskitRuntimeService(Provider):
             )
         except RequestsApiError as ex:
             if ex.status_code == 404:
-                raise RuntimeProgramNotFound(
-                    f"Program not found: {ex.message}"
-                ) from None
+                raise RuntimeProgramNotFound(f"Program not found: {ex.message}") from None
             raise IBMRuntimeError(f"Failed to run program: {ex}") from None
 
         backend = self.backend(name=response["backend"], instance=hgp_name)
@@ -1042,9 +1023,7 @@ class QiskitRuntimeService(Provider):
         )
         return job
 
-    def upload_program(
-        self, data: str, metadata: Optional[Union[Dict, str]] = None
-    ) -> str:
+    def upload_program(self, data: str, metadata: Optional[Union[Dict, str]] = None) -> str:
         """Upload a runtime program.
 
         In addition to program data, the following program metadata is also
@@ -1114,9 +1093,7 @@ class QiskitRuntimeService(Provider):
                     "Program with the same name already exists."
                 ) from None
             if ex.status_code == 403:
-                raise IBMNotAuthorizedError(
-                    "You are not authorized to upload programs."
-                ) from None
+                raise IBMNotAuthorizedError("You are not authorized to upload programs.") from None
             raise IBMRuntimeError(f"Failed to create program: {ex}") from None
         return response["id"]
 
@@ -1203,14 +1180,10 @@ class QiskitRuntimeService(Provider):
         )
 
         try:
-            self._api_client.program_update(
-                program_id, program_data=data, **combined_metadata
-            )
+            self._api_client.program_update(program_id, program_data=data, **combined_metadata)
         except RequestsApiError as ex:
             if ex.status_code == 404:
-                raise RuntimeProgramNotFound(
-                    f"Program not found: {ex.message}"
-                ) from None
+                raise RuntimeProgramNotFound(f"Program not found: {ex.message}") from None
             raise IBMRuntimeError(f"Failed to update program: {ex}") from None
 
         if program_id in self._programs:
@@ -1249,9 +1222,7 @@ class QiskitRuntimeService(Provider):
             self._api_client.program_delete(program_id=program_id)
         except RequestsApiError as ex:
             if ex.status_code == 404:
-                raise RuntimeProgramNotFound(
-                    f"Program not found: {ex.message}"
-                ) from None
+                raise RuntimeProgramNotFound(f"Program not found: {ex.message}") from None
             raise IBMRuntimeError(f"Failed to delete program: {ex}") from None
 
         if program_id in self._programs:
@@ -1273,9 +1244,7 @@ class QiskitRuntimeService(Provider):
             self._api_client.set_program_visibility(program_id, public)
         except RequestsApiError as ex:
             if ex.status_code == 404:
-                raise RuntimeProgramNotFound(
-                    f"Program not found: {ex.message}"
-                ) from None
+                raise RuntimeProgramNotFound(f"Program not found: {ex.message}") from None
             raise IBMRuntimeError(f"Failed to set program visibility: {ex}") from None
 
         if program_id in self._programs:
@@ -1296,7 +1265,7 @@ class QiskitRuntimeService(Provider):
             IBMRuntimeError: If the request failed.
         """
         try:
-            response = self._api_client.job_get(job_id)
+            response = self._api_client.job_get(job_id, exclude_params=True)
         except RequestsApiError as ex:
             if ex.status_code == 404:
                 raise RuntimeJobNotFound(f"Job not found: {ex.message}") from None

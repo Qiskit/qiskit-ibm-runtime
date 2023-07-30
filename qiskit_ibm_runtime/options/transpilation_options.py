@@ -86,9 +86,7 @@ class TranspilationOptions:
                 f"Supported values are {get_args(LayoutMethodType)} and None"
             )
         routing_method = transpilation_options.get("routing_method")
-        if not (
-            routing_method in get_args(RoutingMethodType) or routing_method is None
-        ):
+        if not (routing_method in get_args(RoutingMethodType) or routing_method is None):
             raise ValueError(
                 f"Unsupported value {routing_method} for routing_method. "
                 f"Supported values are {get_args(RoutingMethodType)} and None"

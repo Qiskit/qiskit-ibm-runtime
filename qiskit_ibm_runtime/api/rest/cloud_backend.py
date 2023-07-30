@@ -14,7 +14,7 @@
 
 from typing import Dict, Any
 
-from .base import RestAdapterBase
+from qiskit_ibm_provider.api.rest.base import RestAdapterBase
 from ..session import RetrySession
 
 
@@ -28,9 +28,7 @@ class CloudBackend(RestAdapterBase):
         "status": "/status",
     }
 
-    def __init__(
-        self, session: RetrySession, backend_name: str, url_prefix: str = ""
-    ) -> None:
+    def __init__(self, session: RetrySession, backend_name: str, url_prefix: str = "") -> None:
         """Backend constructor.
 
         Args:

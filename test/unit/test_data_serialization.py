@@ -120,9 +120,7 @@ class TestDataSerialization(IBMTestCase):
                 decoded = json.loads(encoded, cls=RuntimeDecoder)
                 if not isinstance(circ, list):
                     decoded = [decoded]
-                self.assertTrue(
-                    all(isinstance(item, QuantumCircuit) for item in decoded)
-                )
+                self.assertTrue(all(isinstance(item, QuantumCircuit) for item in decoded))
 
     def test_coder_operators(self):
         """Test runtime encoder and decoder for operators."""
@@ -144,9 +142,7 @@ class TestDataSerialization(IBMTestCase):
             PauliSumOp(SparsePauliOp(Pauli("XYZX"), coeffs=[2]), coeff=3),
             PauliSumOp(SparsePauliOp(Pauli("XYZX"), coeffs=[1]), coeff=coeff_y),
             PauliSumOp(SparsePauliOp(Pauli("XYZX"), coeffs=[1 + 2j]), coeff=3 - 2j),
-            PauliSumOp.from_list(
-                [("II", -1.052373245772859), ("IZ", 0.39793742484318045)]
-            ),
+            PauliSumOp.from_list([("II", -1.052373245772859), ("IZ", 0.39793742484318045)]),
             MatrixOp(primitive=np.array([[0, -1j], [1j, 0]]), coeff=coeff_x),
             PauliOp(primitive=Pauli("Y"), coeff=coeff_x),
             CircuitOp(quantum_circuit, coeff=coeff_x),
@@ -294,9 +290,7 @@ if __name__ == '__main__':
         custom_result = get_complex_types()
         job_cls = CustomResultRuntimeJob
         job_cls.custom_result = custom_result
-        ibm_quantum_service = FakeRuntimeService(
-            channel="ibm_quantum", token="some_token"
-        )
+        ibm_quantum_service = FakeRuntimeService(channel="ibm_quantum", token="some_token")
 
         sub_tests = [(SerializableClassDecoder, None), (None, SerializableClassDecoder)]
         for result_decoder, decoder in sub_tests:
@@ -308,3 +302,12 @@ if __name__ == '__main__':
                 )
                 result = job.result(decoder=decoder)
                 self.assertIsInstance(result["serializable_class"], SerializableClass)
+
+    def test_circuit_metadata(self):
+        """Test serializing circuit metadata."""
+
+        circ = QuantumCircuit(1)
+        circ.metadata = {"test": np.arange(0, 10)}
+        payload = {"circuits": [circ]}
+
+        self.assertTrue(json.dumps(payload, cls=RuntimeEncoder))

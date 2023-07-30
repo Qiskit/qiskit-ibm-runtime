@@ -18,10 +18,10 @@ import unittest
 
 from qiskit.providers.jobstatus import JOB_FINAL_STATES, JobStatus
 from qiskit.test.decorators import slow_test
+from qiskit.test.reference_circuits import ReferenceCircuits
 
 from qiskit_ibm_runtime.constants import API_TO_JOB_ERROR_MESSAGE
 from qiskit_ibm_runtime.exceptions import (
-    IBMRuntimeError,
     RuntimeJobFailureError,
     RuntimeInvalidStateError,
     RuntimeJobNotFound,
@@ -44,9 +44,9 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     def test_run_program(self, service):
         """Test running a program."""
         job = self._run_program(service)
-        result = job.result()
+        job.wait_for_final_state()
         self.assertEqual(JobStatus.DONE, job.status())
-        self.assertEqual("Hello, World!", result)
+        self.assertTrue(job.result())
 
     @slow_test
     @run_integration_test
@@ -76,13 +76,8 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
             with self.subTest(level=level):
                 job = self._run_program(service, log_level=level)
                 job.wait_for_final_state()
-                expect_info_msg = level == "INFO"
                 if job.logs():
-                    self.assertEqual(
-                        "INFO Pass" in job.logs(),
-                        expect_info_msg,
-                        f"Job log is {job.logs()}",
-                    )
+                    self.assertIn("Completed", job.logs())
 
     @run_integration_test
     @quantum_only
@@ -105,9 +100,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         """Test a program that failed since it ran longer than maximum execution time."""
         max_execution_time = 60
         inputs = {"iterations": 1, "sleep_per_iteration": 61}
-        program_id = self._upload_program(
-            service, max_execution_time=max_execution_time
-        )
+        program_id = self._upload_program(service, max_execution_time=max_execution_time)
         job = self._run_program(service, program_id=program_id, inputs=inputs)
 
         job.wait_for_final_state()
@@ -128,21 +121,17 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         """Test that the program max execution time is overridden."""
         program_max_execution_time = 400
         job_max_execution_time = 350
-        program_id = self._upload_program(
-            service, max_execution_time=program_max_execution_time
-        )
+        program_id = self._upload_program(service, max_execution_time=program_max_execution_time)
         job = self._run_program(
             service, program_id=program_id, max_execution_time=job_max_execution_time
         )
         job.wait_for_final_state()
-        self.assertEqual(
-            job._api_client.job_get(job.job_id())["cost"], job_max_execution_time
-        )
+        self.assertEqual(job._api_client.job_get(job.job_id())["cost"], job_max_execution_time)
 
     @run_integration_test
     def test_invalid_max_execution_time_fails(self, service):
         """Test that program fails when max_execution_time is less than 300."""
-        with self.assertRaises(IBMRuntimeError):
+        with self.assertRaises(ValueError):
             self._run_program(service, max_execution_time=299)
 
     @run_integration_test
@@ -160,10 +149,10 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         self.assertEqual(rjob.status(), JobStatus.CANCELLED)
 
     @run_integration_test
+    @quantum_only
     def test_cancel_job_running(self, service):
         """Test canceling a running job."""
-        job = self._run_program(service, iterations=3)
-        wait_for_status(job, JobStatus.RUNNING)
+        job = self._run_program(service, iterations=5)
         if not cancel_job_safe(job, self.log):
             return
         time.sleep(10)  # Wait a bit for DB to update.
@@ -202,7 +191,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         with self.assertRaises(RuntimeJobNotFound):
             service.job(job.job_id())
 
-    @unittest.skip("Final result only supported in custom programs.")
+    @unittest.skip("skip until qiskit-ibm-runtime #933 is fixed")
     @run_integration_test
     def test_final_result(self, service):
         """Test getting final result."""
@@ -222,11 +211,16 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         self.assertTrue(job.status())
 
     @run_integration_test
+    @quantum_only
     def test_job_inputs(self, service):
         """Test job inputs."""
         interim_results = get_complex_types()
-        inputs = {"iterations": 1, "interim_results": interim_results}
-        job = self._run_program(service, inputs=inputs)
+        inputs = {
+            "iterations": 1,
+            "interim_results": interim_results,
+            "circuits": ReferenceCircuits.bell(),
+        }
+        job = self._run_program(service, inputs=inputs, program_id="circuit-runner")
         self.assertEqual(inputs, job.inputs)
         rjob = service.job(job.job_id())
         rinterim_results = rjob.inputs["interim_results"]
@@ -276,12 +270,11 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     def test_job_logs(self, service):
         """Test job logs."""
         job = self._run_program(service)
-        with self.assertLogs("qiskit_ibm_runtime", "WARN"):
+        with self.assertLogs("qiskit_ibm_runtime", "INFO"):
             job.logs()
         job.wait_for_final_state()
-        job_logs = job.logs()
-        if job_logs:
-            self.assertIn("INFO Pass", job_logs)
+        time.sleep(1)
+        self.assertTrue(job.logs())
 
     @run_integration_test
     def test_job_metrics(self, service):
@@ -292,6 +285,15 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         self.assertTrue(metrics)
         self.assertIn("timestamps", metrics)
         self.assertIn("qiskit_version", metrics)
+
+    @run_integration_test
+    def test_updating_job_tags(self, service):
+        """Test job metrics."""
+        job = self._run_program(service, job_tags=["test_tag123"])
+        job.wait_for_final_state()
+        new_job_tag = ["new_test_tag"]
+        job.update_tags(new_job_tag)
+        self.assertTrue(job.tags, new_job_tag)
 
     def _assert_complex_types_equal(self, expected, received):
         """Verify the received data in complex types is expected."""
