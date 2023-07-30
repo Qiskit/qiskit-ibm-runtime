@@ -538,6 +538,7 @@ class QiskitRuntimeService(Provider):
         """
         # TODO filter out input_allowed not having runtime
         backends: List[IBMBackend] = []
+        instance_filter = instance if instance else self._account.instance
         if self._channel == "ibm_quantum":
             if name:
                 if name not in self._backends:
@@ -550,16 +551,16 @@ class QiskitRuntimeService(Provider):
                     )
                 if self._backends[name]:
                     backends.append(self._backends[name])
-            elif instance:
-                hgp = self._get_hgp(instance=instance)
+            elif instance_filter is not None:
+                hgp = self._get_hgp(instance=instance_filter)
                 for backend_name in hgp.backends:
                     if (
                         not self._backends[backend_name]
-                        or instance != self._backends[backend_name]._instance
+                        or instance_filter != self._backends[backend_name]._instance
                     ):
-                        self._set_backend_config(backend_name, instance)
+                        self._set_backend_config(backend_name, instance_filter)
                         self._backends[backend_name] = self._create_backend_obj(
-                            self._backend_configs[backend_name], instance
+                            self._backend_configs[backend_name], instance_filter
                         )
                     if self._backends[backend_name]:
                         backends.append(self._backends[backend_name])
