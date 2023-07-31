@@ -16,7 +16,7 @@ import uuid
 
 from requests_ntlm import HttpNtlmAuth
 
-from qiskit_ibm_runtime.proxies import ProxyConfiguration
+from qiskit_ibm_provider.proxies import ProxyConfiguration
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 from qiskit_ibm_runtime.api.auth import CloudAuth, QuantumAuth
 
@@ -81,9 +81,7 @@ class TestClientParameters(IBMTestCase):
         for spec in test_specs:
             channel, instance, url, expected = spec
             with self.subTest(instance=instance, url=url):
-                params = self._get_client_params(
-                    channel=channel, instance=instance, url=url
-                )
+                params = self._get_client_params(channel=channel, instance=instance, url=url)
                 self.assertEqual(params.get_runtime_api_base_url(), expected)
 
     def test_proxies_param_with_ntlm(self) -> None:
@@ -141,9 +139,7 @@ class TestClientParameters(IBMTestCase):
         """Test getting cloud auth handler."""
         token = uuid.uuid4().hex
         instance = uuid.uuid4().hex
-        params = self._get_client_params(
-            channel="ibm_cloud", token=token, instance=instance
-        )
+        params = self._get_client_params(channel="ibm_cloud", token=token, instance=instance)
         handler = params.get_auth_handler()
         self.assertIsInstance(handler, CloudAuth)
         self.assertIn(f"apikey {token}", handler.get_headers().values())

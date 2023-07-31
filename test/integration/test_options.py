@@ -29,8 +29,8 @@ class TestIntegrationOptions(IBMIntegrationTestCase):
     @run_integration_test
     def test_noise_model(self, service):
         """Test running with noise model."""
-        backend = service.backends(simulator=True)[0]
-        self.log.info(f"Using backend {backend.name}")
+        backend = service.get_backend("ibmq_qasm_simulator")
+        self.log.info("Using backend %s", backend.name)
 
         fake_backend = FakeManila()
         noise_model = NoiseModel.from_backend(fake_backend)
@@ -69,7 +69,7 @@ class TestIntegrationOptions(IBMIntegrationTestCase):
     def test_simulator_transpile(self, service):
         """Test simulator transpile options."""
         backend = service.backends(simulator=True)[0]
-        self.log.info(f"Using backend {backend.name}")
+        self.log.info("Using backend %s", backend.name)
 
         circ = QuantumCircuit(2, 2)
         circ.cx(0, 1)
@@ -98,3 +98,40 @@ class TestIntegrationOptions(IBMIntegrationTestCase):
                         job2.result()
                     # TODO: Re-enable when ntc-1651 is fixed
                     # self.assertIn("TranspilerError", err.exception.message)
+
+    @run_integration_test
+    def test_unsupported_input_combinations(self, service):
+        """Test that when resilience_level==3, and backend is a simulator,
+        a coupling map is required."""
+        circ = QuantumCircuit(1)
+        obs = SparsePauliOp.from_list([("I", 1)])
+        options = Options()
+        options.resilience_level = 3
+        backend = service.backends(simulator=True)[0]
+        with Session(service=service, backend=backend) as session:
+            with self.assertRaises(ValueError) as exc:
+                inst = Estimator(session=session, options=options)
+                inst.run(circ, observables=obs)
+            self.assertIn("a coupling map is required.", str(exc.exception))
+
+    @run_integration_test
+    def test_all_resilience_levels(self, service):
+        """Test that all resilience_levels are recognized correctly
+        by checking their values in the metadata"""
+        resilience_values = {
+            0: "variance",
+            1: "readout_mitigation_num_twirled_circuits",
+            2: "zne",
+            3: "standard_error",
+        }
+        circ = QuantumCircuit(1)
+        obs = SparsePauliOp.from_list([("I", 1)])
+        backend = service.backends(simulator=True)[0]
+        options = Options()
+        options.simulator.coupling_map = [[0, 1], [1, 0]]
+        for level, value in resilience_values.items():
+            options.resilience_level = level
+            inst = Estimator(backend=backend, options=options)
+            result = inst.run(circ, observables=obs).result()
+            metadata = result.metadata[0]
+            self.assertTrue(value in metadata)

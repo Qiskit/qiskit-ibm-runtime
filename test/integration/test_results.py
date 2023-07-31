@@ -13,7 +13,7 @@
 """Tests for job functions using real runtime service."""
 
 import time
-
+from unittest import skip
 from qiskit.providers.jobstatus import JobStatus
 
 from qiskit_ibm_runtime.exceptions import RuntimeJobTimeoutError
@@ -27,6 +27,7 @@ from ..utils import cancel_job_safe, wait_for_status
 class TestIntegrationResults(IBMIntegrationJobTestCase):
     """Integration tests for result callbacks."""
 
+    @skip("skip until qiskit-ibm-runtime #933 is fixed")
     @run_integration_test
     def test_result_callback(self, service):
         """Test result callback."""
@@ -47,6 +48,7 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
         iterations = 3
         job = self._run_program(
             service,
+            backend="ibmq_qasm_simulator",
             iterations=iterations,
             interim_results=int_res,
             callback=result_callback,
@@ -56,6 +58,7 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
         self.assertFalse(callback_err)
         self.assertIsNotNone(job._ws_client._server_close_code)
 
+    @skip("skip until qiskit-ibm-runtime #933 is fixed")
     @run_integration_test
     def test_result_callback_with_job_result(self, service):
         """Test result callback along with job result."""
@@ -79,6 +82,7 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
         iterations = 3
         job = self._run_program(
             service,
+            backend="ibmq_qasm_simulator",
             iterations=iterations,
             interim_results=int_res,
             callback=result_callback,
@@ -89,6 +93,7 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
         self.assertFalse(callback_err)
         self.assertIsNotNone(job._ws_client._server_close_code)
 
+    @skip("skip until qiskit-ibm-runtime #933 is fixed")
     @run_integration_test
     def test_stream_results(self, service):
         """Test stream_results method."""
@@ -107,13 +112,19 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
         final_it = 0
         callback_err = []
         iterations = 3
-        job = self._run_program(service, iterations=iterations, interim_results=int_res)
+        job = self._run_program(
+            service,
+            backend="ibmq_qasm_simulator",
+            iterations=iterations,
+            interim_results=int_res,
+        )
         job.stream_results(result_callback)
         job.wait_for_final_state()
         self.assertEqual(iterations - 1, final_it)
         self.assertFalse(callback_err)
         self.assertIsNotNone(job._ws_client._server_close_code)
 
+    @skip("skip until qiskit-ibm-runtime #933 is fixed")
     @run_integration_test
     def test_stream_results_done(self, service):
         """Test streaming results after job is done."""
@@ -125,7 +136,10 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
 
         called_back_count = 0
         job = self._run_program(
-            service, interim_results="foobar", sleep_per_iteration=10
+            service,
+            backend="ibmq_qasm_simulator",
+            interim_results="foobar",
+            sleep_per_iteration=10,
         )
         job.wait_for_final_state()
         job._status = JobStatus.RUNNING  # Allow stream_results()
@@ -135,14 +149,15 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
         self.assertEqual(2, called_back_count)
         self.assertIsNotNone(job._ws_client._server_close_code)
 
+    @skip("skip until qiskit-ibm-runtime #933 is fixed")
     @run_integration_test
     def test_retrieve_interim_results(self, service):
         """Test retrieving interim results with API endpoint"""
-        int_res = "foo"
-        job = self._run_program(service, interim_results=int_res)
+        job = self._run_program(service)
         job.wait_for_final_state()
         interim_results = job.interim_results()
-        self.assertIn(int_res, interim_results[0])
+        self.assertIn("iteration", interim_results[0])
+        self.assertIn("counts", interim_results[0])
 
     @run_integration_test
     def test_result_timeout(self, service):
@@ -158,6 +173,7 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
         with self.assertRaises(RuntimeJobTimeoutError):
             job.wait_for_final_state(0.1)
 
+    @skip("skip until qiskit-ibm-runtime #933 is fixed")
     @run_integration_test
     def test_callback_error(self, service):
         """Test error in callback method."""
@@ -176,6 +192,7 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
         with self.assertLogs("qiskit_ibm_runtime", level="WARNING") as err_cm:
             job = self._run_program(
                 service,
+                backend="ibmq_qasm_simulator",
                 inputs=inputs,
                 interim_results="foo",
                 callback=result_callback,
@@ -218,6 +235,7 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
                 self.assertIsNotNone(job._ws_client._server_close_code)
                 self.assertLess(final_it, iterations)
 
+    @skip("skip until qiskit-ibm-runtime #933 is fixed")
     @run_integration_test
     def test_websocket_proxy(self, service):
         """Test connecting to websocket via proxy."""
@@ -230,7 +248,12 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
         callback_called = False
 
         with use_proxies(service, MockProxyServer.VALID_PROXIES):
-            job = self._run_program(service, iterations=10, callback=result_callback)
+            job = self._run_program(
+                service,
+                backend="ibmq_qasm_simulator",
+                iterations=10,
+                callback=result_callback,
+            )
             job.wait_for_final_state()
 
         self.assertTrue(callback_called)

@@ -100,9 +100,7 @@ class Session:
 
         if service is None:
             self._service = (
-                backend.service
-                if isinstance(backend, IBMBackend)
-                else QiskitRuntimeService()
+                backend.service if isinstance(backend, IBMBackend) else QiskitRuntimeService()
             )
         else:
             self._service = service
@@ -243,9 +241,7 @@ class Session:
 
 
 # Default session
-_DEFAULT_SESSION: ContextVar[Optional[Session]] = ContextVar(
-    "_DEFAULT_SESSION", default=None
-)
+_DEFAULT_SESSION: ContextVar[Optional[Session]] = ContextVar("_DEFAULT_SESSION", default=None)
 _IN_SESSION_CM: ContextVar[bool] = ContextVar("_IN_SESSION_CM", default=False)
 
 
@@ -255,36 +251,6 @@ def set_cm_session(session: Optional[Session]) -> None:
     _IN_SESSION_CM.set(session is not None)
 
 
-def get_default_session(
-    service: Optional[QiskitRuntimeService] = None,
-    backend: Optional[Union[str, IBMBackend]] = None,
-) -> Session:
-    """Return the default session.
-
-    Args:
-        service: Service to use to create a default session.
-        backend: Backend for the default session.
-    """
-    backend_name = backend.name if isinstance(backend, IBMBackend) else backend
-
-    session = _DEFAULT_SESSION.get()
-    if (  # pylint: disable=too-many-boolean-expressions
-        session is None
-        or not session._active
-        or (backend_name is not None and session._backend != backend_name)
-        or (service is not None and session.service.channel != service.channel)
-    ):
-        # Create a new session if one doesn't exist, or if the user wants to switch backend/channel.
-        # Close the session only if all jobs are finished and you don't need to run more in the session.
-        if session and not _IN_SESSION_CM.get() and session._active:
-            session.close()
-        if service is None:
-            service = (
-                backend.service
-                if isinstance(backend, IBMBackend)
-                else QiskitRuntimeService()
-            )
-        session = Session(service=service, backend=backend)
-        if not _IN_SESSION_CM.get():
-            _DEFAULT_SESSION.set(session)
-    return session
+def get_cm_session() -> Session:
+    """Return the context managed session."""
+    return _DEFAULT_SESSION.get()

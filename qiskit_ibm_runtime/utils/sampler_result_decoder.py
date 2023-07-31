@@ -39,9 +39,7 @@ class SamplerResultDecoder(ResultDecoder):
             # QuasiDistribution stddev_upper_bound is gamma / sqrt(shots)
             # https://github.com/Qiskit/qiskit-terra/blob/ff267b5de8b83aef86e2c9ac6c7f918f58500505/qiskit/result/mitigation/local_readout_mitigator.py#L288
             stddev = sqrt(overhead / shots)
-            quasi_dists.append(
-                QuasiDistribution(quasi, shots=shots, stddev_upper_bound=stddev)
-            )
+            quasi_dists.append(QuasiDistribution(quasi, shots=shots, stddev_upper_bound=stddev))
         return SamplerResult(
             quasi_dists=quasi_dists,
             metadata=decoded["metadata"],

@@ -12,17 +12,22 @@
 
 """Tests for Options class."""
 
-from dataclasses import asdict
 import warnings
+from dataclasses import asdict
 
+from ddt import data, ddt
+from qiskit.providers import BackendV1
+from qiskit.providers.fake_provider import FakeManila, FakeNairobiV2
+from qiskit.transpiler import CouplingMap
 from qiskit_aer.noise import NoiseModel
-from qiskit.providers.fake_provider import FakeNairobiV2
 
 from qiskit_ibm_runtime import Options, RuntimeOptions
+
 from ..ibm_test_case import IBMTestCase
-from ..utils import dict_paritally_equal, flat_dict_partially_equal, dict_keys_equal
+from ..utils import dict_keys_equal, dict_paritally_equal, flat_dict_partially_equal
 
 
+@ddt
 class TestOptions(IBMTestCase):
     """Class for testing the Sampler class."""
 
@@ -170,6 +175,8 @@ class TestOptions(IBMTestCase):
                 "transpilation": {"initial_layout": [1, 2], "layout_method": "trivial"},
                 "execution": {"shots": 100},
             },
+            {"resilience": {"noise_amplifier": "GlobalFoldingAmplifier"}},
+            {"environment": {"log_level": "ERROR"}},
         ]
 
         for opts_dict in options_dicts:
@@ -181,6 +188,49 @@ class TestOptions(IBMTestCase):
                 )
 
                 # Make sure the structure didn't change.
-                self.assertTrue(
-                    dict_keys_equal(asdict(Options()), options), f"options={options}"
-                )
+                self.assertTrue(dict_keys_equal(asdict(Options()), options), f"options={options}")
+
+    def test_coupling_map_options(self):
+        """Check that coupling_map is processed correctly for various types"""
+        coupling_map = {(1, 0), (2, 1), (0, 1), (1, 2)}
+        coupling_maps = [
+            coupling_map,
+            list(map(list, coupling_map)),
+            CouplingMap(coupling_map),
+        ]
+        for variant in coupling_maps:
+            with self.subTest(opts_dict=variant):
+                options = Options()
+                options.simulator.coupling_map = variant
+                inputs = Options._get_program_inputs(asdict(options))
+                resulting_cmap = inputs["transpilation_settings"]["coupling_map"]
+                self.assertEqual(coupling_map, set(map(tuple, resulting_cmap)))
+
+    @data(FakeManila(), FakeNairobiV2())
+    def test_simulator_set_backend(self, fake_backend):
+        """Test Options.simulator.set_backend method."""
+
+        options = Options()
+        options.simulator.seed_simulator = 42
+        options.simulator.set_backend(fake_backend)
+
+        noise_model = NoiseModel.from_backend(fake_backend)
+        basis_gates = (
+            fake_backend.configuration().basis_gates
+            if isinstance(fake_backend, BackendV1)
+            else fake_backend.operation_names
+        )
+        coupling_map = (
+            fake_backend.configuration().coupling_map
+            if isinstance(fake_backend, BackendV1)
+            else fake_backend.coupling_map
+        )
+
+        expected_options = Options()
+        expected_options.simulator = {
+            "noise_model": noise_model,
+            "basis_gates": basis_gates,
+            "coupling_map": coupling_map,
+            "seed_simulator": 42,
+        }
+        self.assertDictEqual(asdict(options), asdict(expected_options))

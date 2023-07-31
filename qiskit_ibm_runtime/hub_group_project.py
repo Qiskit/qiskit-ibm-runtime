@@ -13,18 +13,16 @@
 """A hub, group and project in an IBM Quantum account."""
 
 import logging
-from collections import OrderedDict
-from typing import Any, Dict, Optional
+from typing import Any, List
 
+from qiskit_ibm_provider.utils.hgp import from_instance_format
 from qiskit_ibm_runtime import (  # pylint: disable=unused-import
     ibm_backend,
     qiskit_runtime_service,
 )
 
-from .api.clients import AccountClient
-from .utils.backend_decoder import configuration_from_server_data
 from .api.client_parameters import ClientParameters
-from .utils.hgp import from_instance_format
+from .api.clients import RuntimeClient
 
 logger = logging.getLogger(__name__)
 
@@ -45,24 +43,25 @@ class HubGroupProject:
             instance: Hub/group/project.
         """
         self._service = service
-        self._api_client = AccountClient(client_params)
+        self._runtime_client = RuntimeClient(client_params)
         # Initialize the internal list of backends.
-        self._backends: Dict[str, "ibm_backend.IBMBackend"] = {}
+        # self._backends: Dict[str, "ibm_backend.IBMBackend"] = {}
+        self._backends: List[str] = []
         self._hub, self._group, self._project = from_instance_format(instance)
 
     @property
-    def backends(self) -> Dict[str, "ibm_backend.IBMBackend"]:
-        """Gets the backends for the hub/group/project, if not loaded.
+    def backends(self) -> List[str]:
+        """Gets the backends for the hub/group/project.
 
         Returns:
-            Dict[str, IBMBackend]: the backends
+            A list of backend names.
         """
         if not self._backends:
             self._backends = self._discover_remote_backends()
         return self._backends
 
     @backends.setter
-    def backends(self, value: Dict[str, "ibm_backend.IBMBackend"]) -> None:
+    def backends(self, value: List[str]) -> None:
         """Sets the value for the hub/group/project's backends.
 
         Args:
@@ -70,31 +69,18 @@ class HubGroupProject:
         """
         self._backends = value
 
-    def _discover_remote_backends(self) -> Dict[str, "ibm_backend.IBMBackend"]:
+    def _discover_remote_backends(self) -> List[str]:
         """Return the remote backends available for this hub/group/project.
 
         Returns:
-            A dict of the remote backend instances, keyed by backend name.
+            A list of backends.
         """
-        ret = OrderedDict()
-        configs_list = self._api_client.list_backends()
-        for raw_config in configs_list:
-            config = configuration_from_server_data(
-                raw_config=raw_config, instance=self.name
-            )
-            if not config:
-                continue
-            ret[config.backend_name] = ibm_backend.IBMBackend(
-                instance=self.name,
-                configuration=config,
-                service=self._service,
-                api_client=self._api_client,
-            )
-        return ret
+        backends = self._runtime_client.list_backends(self.name)
+        return backends or []
 
-    def backend(self, name: str) -> Optional["ibm_backend.IBMBackend"]:
-        """Get backend by name."""
-        return self._backends.get(name, None)
+    def has_backend(self, name: str) -> bool:
+        """Determine if the hgp can access the backend."""
+        return name in self._backends
 
     @property
     def name(self) -> str:

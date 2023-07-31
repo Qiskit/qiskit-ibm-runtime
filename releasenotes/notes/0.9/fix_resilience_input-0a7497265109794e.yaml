@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    When creating an Option object and passing an input option to ``resilience_options``, this option was
+    included in ``resilience_options``, but the other, default options were removed. 
+    This was fixed, so now inputs are handled correctly, like other option types.

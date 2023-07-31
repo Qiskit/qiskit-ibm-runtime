@@ -19,21 +19,19 @@ import os
 import setuptools
 
 REQUIREMENTS = [
-    "qiskit-terra>=0.23.1",
+    "qiskit-terra>=0.24.0",
     "requests>=2.19",
     "requests-ntlm>=1.1.0",
-    "numpy<1.24",
+    "numpy>=1.13",
     "urllib3>=1.21.1",
     "python-dateutil>=2.8.0",
     "websocket-client>=1.5.1",
-    "typing-extensions>=4.0.0",  # remove when support for Python 3.7 is dropped (use "from typing import" instead)
     "ibm-platform-services>=0.22.6",
+    "qiskit-ibm-provider>=0.6.1",
 ]
 
 # Handle version.
-VERSION_PATH = os.path.join(
-    os.path.dirname(__file__), "qiskit_ibm_runtime", "VERSION.txt"
-)
+VERSION_PATH = os.path.join(os.path.dirname(__file__), "qiskit_ibm_runtime", "VERSION.txt")
 with open(VERSION_PATH, "r") as version_file:
     VERSION = version_file.read().strip()
 
@@ -62,17 +60,17 @@ setuptools.setup(
         "Operating System :: MacOS",
         "Operating System :: POSIX :: Linux",
         "Programming Language :: Python :: 3 :: Only",
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
         "Topic :: Scientific/Engineering",
     ],
     keywords="qiskit sdk quantum api runtime ibm",
     packages=setuptools.find_packages(exclude=["test*"]),
     install_requires=REQUIREMENTS,
     include_package_data=True,
-    python_requires=">=3.7",
+    python_requires=">=3.8",
     zip_safe=False,
     project_urls={
         "Bug Tracker": "https://github.com/Qiskit/qiskit-ibm-runtime/issues",

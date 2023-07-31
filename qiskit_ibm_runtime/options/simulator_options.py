@@ -12,8 +12,14 @@
 
 """Simulator options."""
 
-from typing import Optional, List, Union, TYPE_CHECKING
 from dataclasses import dataclass
+from typing import TYPE_CHECKING, List, Optional, Union
+
+from qiskit.exceptions import MissingOptionalLibraryError
+from qiskit.providers import BackendV1, BackendV2
+from qiskit.utils import optionals
+
+from qiskit.transpiler import CouplingMap
 
 from .utils import _flexible
 
@@ -45,5 +51,28 @@ class SimulatorOptions:
 
     noise_model: Optional[Union[dict, "qiskit_aer.noise.noise_model.NoiseModel"]] = None
     seed_simulator: Optional[int] = None
-    coupling_map: Optional[List[List[int]]] = None
+    coupling_map: Optional[Union[List[List[int]], "CouplingMap"]] = None
     basis_gates: Optional[List[str]] = None
+
+    def set_backend(self, backend: Union[BackendV1, BackendV2]) -> None:
+        """Set backend for simulation.
+        This method changes noise_model, coupling_map, basis_gates according to given backend.
+
+        Args:
+            backend: backend to be set.
+        """
+        if not optionals.HAS_AER:
+            raise MissingOptionalLibraryError(
+                "qiskit-aer", "Aer provider", "pip install qiskit-aer"
+            )
+
+        from qiskit_aer.noise import NoiseModel  # pylint:disable=import-outside-toplevel
+
+        self.noise_model = NoiseModel.from_backend(backend)
+
+        if isinstance(backend, BackendV1):
+            self.coupling_map = backend.configuration().coupling_map
+            self.basis_gates = backend.configuration().basis_gates
+        elif isinstance(backend, BackendV2):
+            self.coupling_map = backend.coupling_map
+            self.basis_gates = backend.operation_names

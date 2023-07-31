@@ -96,9 +96,7 @@ class TestIntegrationProgram(IBMIntegrationTestCase):
     def test_upload_program(self, service):
         """Test uploading a program."""
         max_execution_time = 3000
-        program_id = self._upload_program(
-            service, max_execution_time=max_execution_time
-        )
+        program_id = self._upload_program(service, max_execution_time=max_execution_time)
         self.assertTrue(program_id)
         program = service.program(program_id)
         self.assertTrue(program)
@@ -202,9 +200,7 @@ def main(backend, user_messenger, **kwargs):
             "name": PROGRAM_PREFIX,
             "description": "test_update_program_metadata",
             "max_execution_time": original.max_execution_time + 100,
-            "spec": {
-                "return_values": {"type": "object", "description": "Some return value"}
-            },
+            "spec": {"return_values": {"type": "object", "description": "Some return value"}},
         }
         service.update_program(program_id=program_id, metadata=new_metadata)
         updated = service.program(program_id, refresh=True)

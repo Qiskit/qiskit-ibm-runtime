@@ -23,13 +23,13 @@ from typing import List, Optional, Any, Dict, Union, Tuple, Type
 from urllib.parse import urlparse
 
 import requests
-from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
-from ibm_platform_services import ResourceControllerV2
+from ibm_cloud_sdk_core.authenticators import (  # pylint: disable=import-error
+    IAMAuthenticator,
+)
+from ibm_platform_services import ResourceControllerV2  # pylint: disable=import-error
 
 
-def validate_job_tags(
-    job_tags: Optional[List[str]], exception: Type[Exception]
-) -> None:
+def validate_job_tags(job_tags: Optional[List[str]], exception: Type[Exception]) -> None:
     """Validates input job tags.
 
     Args:
@@ -40,8 +40,7 @@ def validate_job_tags(
         Exception: If the job tags are invalid.
     """
     if job_tags and (
-        not isinstance(job_tags, list)
-        or not all(isinstance(tag, str) for tag in job_tags)
+        not isinstance(job_tags, list) or not all(isinstance(tag, str) for tag in job_tags)
     ):
         raise exception("job_tags needs to be a list of strings.")
 
@@ -158,9 +157,7 @@ def to_python_identifier(name: str) -> str:
         name = re.sub(pattern, "_", name)
 
     # Convert to snake case
-    name = re.sub(
-        "((?<=[a-z0-9])[A-Z]|(?!^)(?<!_)[A-Z](?=[a-z]))", r"_\1", name
-    ).lower()
+    name = re.sub("((?<=[a-z0-9])[A-Z]|(?!^)(?<!_)[A-Z](?=[a-z]))", r"_\1", name).lower()
 
     while keyword.iskeyword(name):
         name += "_"
@@ -240,9 +237,7 @@ def filter_data(data: Dict[str, Any]) -> Dict[str, Any]:
     return data_to_filter
 
 
-def _filter_value(
-    data: Dict[str, Any], filter_keys: List[Union[str, Tuple[str, str]]]
-) -> None:
+def _filter_value(data: Dict[str, Any], filter_keys: List[Union[str, Tuple[str, str]]]) -> None:
     """Recursive function to filter out the values of the input keys.
 
     Args:

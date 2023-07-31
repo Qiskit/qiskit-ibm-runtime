@@ -29,9 +29,7 @@ def production_only(func):
     @wraps(func)
     def _wrapper(self, *args, **kwargs):
         if "dev" in self.dependencies.url:
-            raise SkipTest(
-                f"Skipping integration test. {self} is not supported on staging."
-            )
+            raise SkipTest(f"Skipping integration test. {self} is not supported on staging.")
         func(self, *args, **kwargs)
 
     return _wrapper
@@ -78,9 +76,7 @@ def _get_integration_test_config():
         os.getenv("QISKIT_IBM_URL"),
         os.getenv("QISKIT_IBM_INSTANCE"),
     )
-    channel: Any = (
-        "ibm_quantum" if url.find("quantum-computing.ibm.com") >= 0 else "ibm_cloud"
-    )
+    channel: Any = "ibm_quantum" if url.find("quantum-computing.ibm.com") >= 0 else "ibm_cloud"
     return channel, token, url, instance
 
 
@@ -118,14 +114,12 @@ def integration_test_setup(
         @wraps(func)
         def _wrapper(self, *args, **kwargs):
             _supported_channel = (
-                ["ibm_cloud", "ibm_quantum"]
-                if supported_channel is None
-                else supported_channel
+                ["ibm_cloud", "ibm_quantum"] if supported_channel is None else supported_channel
             )
 
             channel, token, url, instance = _get_integration_test_config()
             if not all([channel, token, url]):
-                raise Exception("Configuration Issue")
+                raise Exception("Configuration Issue")  # pylint: disable=broad-exception-raised
 
             if channel not in _supported_channel:
                 raise SkipTest(

@@ -39,14 +39,10 @@ DEFAULT_METADATA = {
         "return_values": {
             "type": "object",
             "description": "Return values",
-            "properties": {
-                "ret_val": {"description": "Some return value.", "type": "string"}
-            },
+            "properties": {"ret_val": {"description": "Some return value.", "type": "string"}},
         },
         "interim_results": {
-            "properties": {
-                "int_res": {"description": "Some interim result", "type": "string"}
-            }
+            "properties": {"int_res": {"description": "Some interim result", "type": "string"}}
         },
     },
 }

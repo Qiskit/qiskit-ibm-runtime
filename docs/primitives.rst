@@ -5,7 +5,7 @@ With Qiskit Runtime, we are introducing a new set of interfaces, in the form of 
 
 The existing Qiskit interface to backends (`backend.run()`) was originally designed to accept a list of circuits and return counts for every job. Over time, it became clear that users have diverse purposes for quantum computing, and therefore the ways in which they define the requirements for their computing jobs are expanding. Therefore, their results also look different.
 
-For example, an algorithm researcher and developer cares about information beyond counts; they are more focused on efficiently calculating quasiprobabilities and expectation values of observables.
+For example, an algorithm researcher and developer cares about information beyond counts; they are more focused on efficiently calculating quasi-probability distribution and expectation values of observables.
 
 Our primitives provide methods that make it easier to build modular algorithms and other higher-order programs. Rather than simply returning counts, they return more immediately meaningful information. Additionally, they provide a seamless way to access the latest optimizations in IBM Quantum hardware and software.
 
@@ -37,12 +37,14 @@ The following primitives are available:
 |                       | values of quantum     |                                    |
 |                       | operators that are    |                                    |
 |                       | required for many     |                                    |
+|                       | near-term quantum     |                                    |
 |                       | algorithms.           |                                    |
 +-----------------------+-----------------------+------------------------------------+
 | Sampler               | Allows a user to      | .. image:: images/sampler.png      |
 |                       | input a circuit and   |                                    |
 |                       | then generate         |                                    |
-|                       | quasiprobabilities.   |                                    |
+|                       | quasi-probability     |                                    |
+|                       | distribution.         |                                    |
 |                       | This generation       |                                    |
 |                       | enables users to more |                                    |
 |                       | efficiently evaluate  |                                    |
@@ -58,7 +60,8 @@ The following primitives are available:
 How to use primitives
 ---------------------
 
-Primitive program interfaces vary based on the type of task that you want to run on the quantum computer and the corresponding data that you want returned as a result. After identifying the appropriate primitive for your program, you can use Qiskit to prepare inputs, such as circuits, observables (for Estimator), and customizable options to optimize your job. For more information, see the appropriate topic:
+Primitive interfaces vary based on the type of task that you want to run on the quantum computer and the corresponding data that you want returned as a result. After identifying the appropriate primitive for your program, you can use Qiskit to prepare inputs, such as circuits, observables (for Estimator), and customizable options to optimize your job. For more information, see the appropriate topic:
 
-* `Getting started with Estimator <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/tutorials/how-to-getting-started-with-estimator.html>`__
-* `Getting started with Sampler <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/tutorials/how-to-getting-started-with-sampler.html>`__
+* `Getting started with Estimator <./tutorials/how-to-getting-started-with-estimator.ipynb>`__
+* `Getting started with Sampler <./tutorials/how-to-getting-started-with-sampler.ipynb>`__
+* :ref:`Migrate from qiskit-ibmq-provider to qiskit-ibm-runtime <migrate to primitives>`

@@ -17,10 +17,7 @@ import logging
 from dataclasses import dataclass
 from typing import Optional, List
 
-from qiskit.utils.deprecation import deprecate_arguments
-
 from .exceptions import IBMInputValueError
-from .utils.deprecation import issue_deprecation_msg
 from .utils.utils import validate_job_tags
 
 
@@ -36,7 +33,6 @@ class RuntimeOptions:
     max_execution_time: Optional[int] = None
     session_time: Optional[int] = None
 
-    @deprecate_arguments({"backend_name": "backend"})
     def __init__(
         self,
         backend: Optional[str] = None,
@@ -95,13 +91,9 @@ class RuntimeOptions:
             )
 
         if self.instance and channel != "ibm_quantum":
-            raise IBMInputValueError(
-                '"instance" is only supported for "ibm_quantum" channel.'
-            )
+            raise IBMInputValueError('"instance" is only supported for "ibm_quantum" channel.')
 
-        if self.log_level and not isinstance(
-            logging.getLevelName(self.log_level.upper()), int
-        ):
+        if self.log_level and not isinstance(logging.getLevelName(self.log_level.upper()), int):
             raise IBMInputValueError(
                 f"{self.log_level} is not a valid log level. The valid log levels are: `DEBUG`, "
                 f"`INFO`, `WARNING`, `ERROR`, and `CRITICAL`."
@@ -109,26 +101,3 @@ class RuntimeOptions:
 
         if self.job_tags:
             validate_job_tags(self.job_tags, IBMInputValueError)
-
-    @property
-    def backend_name(self) -> str:
-        """Return backend.
-
-        Returns:
-            Backend name.
-        """
-        return self.backend
-
-    @backend_name.setter
-    def backend_name(self, name: str) -> None:
-        """Set backend name.
-
-        Args:
-            name: Backend to use.
-        """
-        issue_deprecation_msg(
-            msg="The 'backend_name' attribute is deprecated",
-            version="0.7",
-            remedy="Please use 'backend' instead.",
-        )
-        self._backend = name

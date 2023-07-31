@@ -16,7 +16,9 @@ import logging
 
 from typing import Iterable, Union, Optional, Any, List
 from datetime import datetime as python_datetime
+from copy import deepcopy
 
+from qiskit import QuantumCircuit
 from qiskit.qobj.utils import MeasLevel, MeasReturnType
 from qiskit.providers.backend import BackendV2 as Backend
 from qiskit.providers.options import Options
@@ -36,21 +38,21 @@ from qiskit.pulse.channels import (
 )
 from qiskit.transpiler.target import Target
 
+from qiskit_ibm_provider.utils.backend_decoder import (
+    defaults_from_server_data,
+    properties_from_server_data,
+)
 from qiskit_ibm_runtime import (  # pylint: disable=unused-import,cyclic-import
     qiskit_runtime_service,
 )
 
-from .api.clients import AccountClient, RuntimeClient
+from .api.clients import RuntimeClient
 from .api.clients.backend import BaseBackendClient
 from .exceptions import IBMBackendApiProtocolError
 from .utils.backend_converter import (
     convert_to_target,
 )
 from .utils.converters import local_to_utc
-from .utils.backend_decoder import (
-    defaults_from_server_data,
-    properties_from_server_data,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -177,7 +179,11 @@ class IBMBackend(Backend):
         self._defaults = None
         self._target = None
         self._max_circuits = configuration.max_experiments
-        if not self._configuration.simulator:
+        if (
+            not self._configuration.simulator
+            and hasattr(self.options, "noise_model")
+            and hasattr(self.options, "seed_simulator")
+        ):
             self.options.set_validator("noise_model", type(None))
             self.options.set_validator("seed_simulator", type(None))
         if hasattr(configuration, "max_shots"):
@@ -194,6 +200,11 @@ class IBMBackend(Backend):
         This magic method executes when user accesses an attribute that
         does not yet exist on IBMBackend class.
         """
+        # Prevent recursion since these properties are accessed within __getattr__
+        if name in ["_properties", "_defaults", "_target", "_configuration"]:
+            raise AttributeError(
+                "'{}' object has no attribute '{}'".format(self.__class__.__name__, name)
+            )
         # Lazy load properties and pulse defaults and construct the target object.
         self._get_properties()
         self._get_defaults()
@@ -209,9 +220,7 @@ class IBMBackend(Backend):
             return self._configuration.__getattribute__(name)
         except AttributeError:
             raise AttributeError(
-                "'{}' object has no attribute '{}'".format(
-                    self.__class__.__name__, name
-                )
+                "'{}' object has no attribute '{}'".format(self.__class__.__name__, name)
             )
 
     def _get_properties(self, datetime: Optional[python_datetime] = None) -> None:
@@ -219,18 +228,14 @@ class IBMBackend(Backend):
         if datetime:
             datetime = local_to_utc(datetime)
         if not self._properties:
-            api_properties = self._api_client.backend_properties(
-                self.name, datetime=datetime
-            )
+            api_properties = self._api_client.backend_properties(self.name, datetime=datetime)
             if api_properties:
                 backend_properties = properties_from_server_data(api_properties)
                 self._properties = backend_properties
 
     def _get_defaults(self) -> None:
         """Gets defaults if pulse backend and decodes it"""
-        if not self._defaults and isinstance(
-            self._configuration, PulseBackendConfiguration
-        ):
+        if not self._defaults and isinstance(self._configuration, PulseBackendConfiguration):
             api_defaults = self._api_client.backend_pulse_defaults(self.name)
             if api_defaults:
                 self._defaults = defaults_from_server_data(api_defaults)
@@ -369,14 +374,10 @@ class IBMBackend(Backend):
             if not isinstance(datetime, python_datetime):
                 raise TypeError("'{}' is not of type 'datetime'.")
             if isinstance(self._api_client, RuntimeClient):
-                raise NotImplementedError(
-                    "'datetime' is not supported by cloud runtime."
-                )
+                raise NotImplementedError("'datetime' is not supported by cloud runtime.")
             datetime = local_to_utc(datetime)
         if datetime or refresh or self._properties is None:
-            api_properties = self._api_client.backend_properties(
-                self.name, datetime=datetime
-            )
+            api_properties = self._api_client.backend_properties(self.name, datetime=datetime)
             if not api_properties:
                 return None
             backend_properties = properties_from_server_data(api_properties)
@@ -498,9 +499,59 @@ class IBMBackend(Backend):
     def run(self, *args: Any, **kwargs: Any) -> None:
         """Not supported method"""
         # pylint: disable=arguments-differ
-        raise RuntimeError(
-            "IBMBackend.run() is not supported in the Qiskit Runtime environment."
+        raise RuntimeError("IBMBackend.run() is not supported in the Qiskit Runtime environment.")
+
+    def check_faulty(self, circuit: QuantumCircuit) -> None:
+        """Check if the input circuit uses faulty qubits or edges.
+
+        Args:
+            circuit: Circuit to check.
+
+        Raises:
+            ValueError: If an instruction operating on a faulty qubit or edge is found.
+        """
+        if not self.properties():
+            return
+
+        faulty_qubits = self.properties().faulty_qubits()
+        faulty_gates = self.properties().faulty_gates()
+        faulty_edges = [tuple(gate.qubits) for gate in faulty_gates if len(gate.qubits) > 1]
+
+        for instr in circuit.data:
+            if instr.operation.name == "barrier":
+                continue
+            qubit_indices = tuple(circuit.find_bit(x).index for x in instr.qubits)
+
+            for circ_qubit in qubit_indices:
+                if circ_qubit in faulty_qubits:
+                    raise ValueError(
+                        f"Circuit {circuit.name} contains instruction "
+                        f"{instr} operating on a faulty qubit {circ_qubit}."
+                    )
+
+            if len(qubit_indices) == 2 and qubit_indices in faulty_edges:
+                raise ValueError(
+                    f"Circuit {circuit.name} contains instruction "
+                    f"{instr} operating on a faulty edge {qubit_indices}"
+                )
+
+    def __deepcopy__(self, _memo: dict = None) -> "IBMBackend":
+        cpy = IBMBackend(
+            configuration=deepcopy(self.configuration()),
+            service=self._service,
+            api_client=deepcopy(self._api_client),
+            instance=self._instance,
         )
+        cpy.name = self.name
+        cpy.description = self.description
+        cpy.online_date = self.online_date
+        cpy.backend_version = self.backend_version
+        cpy._coupling_map = self._coupling_map
+        cpy._defaults = deepcopy(self._defaults, _memo)
+        cpy._target = deepcopy(self._target, _memo)
+        cpy._max_circuits = self._max_circuits
+        cpy._options = deepcopy(self._options, _memo)
+        return cpy
 
 
 class IBMRetiredBackend(IBMBackend):
@@ -510,7 +561,7 @@ class IBMRetiredBackend(IBMBackend):
         self,
         configuration: Union[QasmBackendConfiguration, PulseBackendConfiguration],
         service: "qiskit_runtime_service.QiskitRuntimeService",
-        api_client: Optional[AccountClient] = None,
+        api_client: Optional[RuntimeClient] = None,
     ) -> None:
         """IBMRetiredBackend constructor.
 
@@ -533,9 +584,7 @@ class IBMRetiredBackend(IBMBackend):
         """Default runtime options."""
         return Options(shots=4000)
 
-    def properties(
-        self, refresh: bool = False, datetime: Optional[python_datetime] = None
-    ) -> None:
+    def properties(self, refresh: bool = False, datetime: Optional[python_datetime] = None) -> None:
         """Return the backend properties."""
         return None
 
@@ -551,7 +600,7 @@ class IBMRetiredBackend(IBMBackend):
     def from_name(
         cls,
         backend_name: str,
-        api: Optional[AccountClient] = None,
+        api: Optional[RuntimeClient] = None,
     ) -> "IBMRetiredBackend":
         """Return a retired backend from its name."""
         configuration = QasmBackendConfiguration(

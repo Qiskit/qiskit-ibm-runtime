@@ -17,10 +17,10 @@ Primitive options (:mod:`qiskit_ibm_runtime.options`)
 
 .. currentmodule:: qiskit_ibm_runtime.options
 
-Options that can be passed to the primitive programs.
+Options that can be passed to the primitives.
 
 The :class:`Options` class encapsulates all the options you can specify
-when invoking a primitive program. It includes frequestly used options,
+when invoking a primitive. It includes frequestly used options,
 such as ``optimization_level`` and ``resilience_level`` as well as
 sub-categories, such as ``transpilation`` and ``execution``.
 You can use auto-complete to easily find the options inside each
