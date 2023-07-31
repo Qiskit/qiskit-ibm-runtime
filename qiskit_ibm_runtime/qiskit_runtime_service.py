@@ -358,6 +358,7 @@ class QiskitRuntimeService(Provider):
         Raises:
             IBMInputValueError: If the URL specified is not a valid IBM Quantum authentication URL.
             IBMAccountError: If no hub/group/project could be found for this account.
+            IBMInputValueError: If instance parameter is not found in hgps.
 
         Returns:
             The hub/group/projects for this account.
