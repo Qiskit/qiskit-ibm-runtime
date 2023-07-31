@@ -127,7 +127,7 @@ def integration_test_setup(
             service = None
             if init_service:
                 service = QiskitRuntimeService(
-                    channel=channel, token=token, url=url, instance=instance
+                    channel=channel, token=token, url=url,
                 )
             dependencies = IntegrationTestDependencies(
                 channel=channel,
