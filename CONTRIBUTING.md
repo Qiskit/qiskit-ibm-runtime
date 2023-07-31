@@ -13,15 +13,8 @@ https://qiskit.org/documentation/contributing_to_qiskit.html
 In addition to the general guidelines there are specific details for
 contributing to qiskit-ibm-runtime, these are documented below.
 
-### Initial Steps
 
-1. Fork your own copy of qiskit-ibm-runtime repository, then clone it locally.
-2. Setup a virtual environment based on the requirements.txt and requirements-dev.txt 
-   files.
-3. Create a new branch and then make your contributions on it.
-
-
-### Pushing a new branch
+### Pull request checklist
 
 Before pushing your contribution please ensure that:
 
@@ -36,10 +29,8 @@ Before pushing your contribution please ensure that:
 
 ### Pull request creation
 
-When submitting a pull request and you feel it is ready for review,
-if your change has an end user facing impact (new feature, deprecation, removal 
-etc) please ensure that you add a reno release note and that the PR is tagged 
-for the changelog.
+When submitting a pull request and your updates have end user facing impact (new feature, deprecation, removal 
+etc), please ensure that you add a release note.
 
 ### Changelog generation
 
@@ -241,9 +232,7 @@ $ make e2e-test
 
 ###### Configuration
 
-Integration and E2E tests require an environment configuration and can either be
-run against IBM Quantum APIs ("ibm_quantum") or IBM Cloud ("ibm_cloud") Quantum 
-Service APIs.
+Integration and E2E tests require an environment configuration and can be run agains both IBM Quantum APIs (`ibm_quantum`, and `ibm_cloud`).
 
 Sample configuration for IBM Quantum
 ```bash
