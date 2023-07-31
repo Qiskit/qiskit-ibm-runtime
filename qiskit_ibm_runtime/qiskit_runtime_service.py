@@ -169,6 +169,7 @@ class QiskitRuntimeService(Provider):
             IBMInputValueError: If an input is invalid.
         """
         super().__init__()
+
         self._account = self._discover_account(
             token=token,
             url=url,
@@ -550,7 +551,7 @@ class QiskitRuntimeService(Provider):
                     )
                 if self._backends[name]:
                     backends.append(self._backends[name])
-            elif instance_filter is not None:
+            elif instance_filter:
                 hgp = self._get_hgp(instance=instance_filter)
                 for backend_name in hgp.backends:
                     if (
