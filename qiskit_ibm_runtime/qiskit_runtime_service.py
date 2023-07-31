@@ -169,7 +169,6 @@ class QiskitRuntimeService(Provider):
             IBMInputValueError: If an input is invalid.
         """
         super().__init__()
-
         self._account = self._discover_account(
             token=token,
             url=url,
@@ -409,9 +408,8 @@ class QiskitRuntimeService(Provider):
                 # Move user selected hgp to front of the list
                 hgps.move_to_end(default_hgp, last=False)
             else:
-                warnings.warn(
-                    f"Default hub/group/project {default_hgp} not "
-                    "found for the account and is ignored."
+                raise IBMInputValueError(
+                    f"Hub/group/project {default_hgp} could not be found for this account."
                 )
         return hgps
 
