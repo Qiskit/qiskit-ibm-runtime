@@ -138,7 +138,7 @@ class RuntimeJob(Job):
         self._service = service
         self._session_id = session_id
         self._tags = tags
-        self._cost_estimation: Dict[str, Any] = {}
+        self._usage_estimation: Dict[str, Any] = {}
 
         decoder = result_decoder or DEFAULT_DECODERS.get(program_id, None) or ResultDecoder
         if isinstance(decoder, Sequence):
@@ -658,22 +658,17 @@ class RuntimeJob(Job):
         return self._tags
 
     @property
-    def cost_estimation(self) -> Dict[str, Any]:
-        """Return cost estimation infromation for this job.
+    def usage_estimation(self) -> Dict[str, Any]:
+        """Return the usage estimation infromation for this job.
 
         Returns:
-            Cost estimation information in dictionary format, with the estimated
-            running time and estimated max running time in seconds.
+            ``quantum_seconds`` which is the estimated running
+            time of the job in seconds.
         """
-        if not self._cost_estimation:
+        if not self._usage_estimation:
             response = self._api_client.job_get(job_id=self.job_id())
-            self._cost_estimation = {
-                "estimated_running_time_seconds": response.pop(
-                    "estimated_running_time_seconds", None
-                ),
-                "estimated_max_running_time_seconds": response.pop(
-                    "estimated_max_running_time_seconds", None
-                ),
+            self._usage_estimation = {
+                "quantum_seconds": response.pop("estimated_running_time_seconds", None),
             }
 
-        return self._cost_estimation
+        return self._usage_estimation

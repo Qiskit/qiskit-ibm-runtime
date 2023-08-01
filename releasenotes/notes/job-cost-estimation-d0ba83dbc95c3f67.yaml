@@ -1,6 +1,5 @@
 ---
 features:
   - |
-    Added a new property, :meth:`~qiskit_ibm_runtime.RuntimeJob.cost_estimation`
-    that returns the estimated running time and the estimated max running time, 
-    both in seconds.
+    Added a new property, :meth:`~qiskit_ibm_runtime.RuntimeJob.usage_estimation`
+    that returns the estimated running time, ``quantum_seconds``.
