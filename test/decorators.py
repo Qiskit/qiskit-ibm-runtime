@@ -54,9 +54,7 @@ def run_quantum_and_cloud_fake(func):
 
     @wraps(func)
     def _wrapper(self, *args, **kwargs):
-        ibm_quantum_service = FakeRuntimeService(
-            channel="ibm_quantum", token="my_token", instance="h/g/p"
-        )
+        ibm_quantum_service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
         cloud_service = FakeRuntimeService(
             channel="ibm_cloud",
             token="my_token",
@@ -129,7 +127,9 @@ def integration_test_setup(
             service = None
             if init_service:
                 service = QiskitRuntimeService(
-                    channel=channel, token=token, url=url, instance=instance
+                    channel=channel,
+                    token=token,
+                    url=url,
                 )
             dependencies = IntegrationTestDependencies(
                 channel=channel,
