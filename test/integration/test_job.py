@@ -292,7 +292,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         job = self._run_program(service)
         job.wait_for_final_state()
         self.assertTrue(job.usage_estimation)
-        self.assertIn('quantum_seconds', job.usage_estimation)
+        self.assertIn("quantum_seconds", job.usage_estimation)
 
     @run_integration_test
     def test_updating_job_tags(self, service):
