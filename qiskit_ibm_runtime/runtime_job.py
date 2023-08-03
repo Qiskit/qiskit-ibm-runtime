@@ -248,13 +248,14 @@ class RuntimeJob(Job):
         self.cancel_result_streaming()
         self._status = JobStatus.CANCELLED
 
-    def backend(self) -> Optional[Backend]:
+    def backend(self, timeout: Optional[float] = None) -> Optional[Backend]:
         """Return the backend where this job was executed. Retrieve data again if backend is None.
 
         Raises:
             IBMRuntimeError: If a network error occurred.
         """
         if not self._backend:  # type: ignore
+            self.wait_for_final_state(timeout=timeout)
             try:
                 raw_data = self._api_client.job_get(self.job_id())
                 if raw_data.get("backend"):

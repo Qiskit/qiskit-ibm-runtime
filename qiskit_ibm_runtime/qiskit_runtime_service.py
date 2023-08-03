@@ -1006,8 +1006,11 @@ class QiskitRuntimeService(Provider):
             if ex.status_code == 404:
                 raise RuntimeProgramNotFound(f"Program not found: {ex.message}") from None
             raise IBMRuntimeError(f"Failed to run program: {ex}") from None
-
-        backend = self.backend(name=response["backend"], instance=hgp_name)
+        backend = (
+            self.backend(name=response["backend"], instance=hgp_name)
+            if response["backend"]
+            else qrt_options.backend
+        )
 
         job = RuntimeJob(
             backend=backend,
