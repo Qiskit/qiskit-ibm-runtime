@@ -662,8 +662,9 @@ class RuntimeJob(Job):
         """Return the usage estimation infromation for this job.
 
         Returns:
-            ``quantum_seconds`` which is the estimated running
-            time of the job in seconds.
+            ``quantum_seconds`` which is the estimated quantum time 
+            of the job in seconds. Quantum time represents the time that 
+            the QPU complex is occupied exclusively by the job.
         """
         if not self._usage_estimation:
             response = self._api_client.job_get(job_id=self.job_id())
