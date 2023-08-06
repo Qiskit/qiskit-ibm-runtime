@@ -15,6 +15,7 @@
 import logging
 from typing import Any, Dict, List, Optional
 from datetime import datetime as python_datetime
+from requests import Response
 
 from qiskit_ibm_provider.utils.hgp import from_instance_format
 from qiskit_ibm_runtime.api.session import RetrySession
@@ -322,7 +323,7 @@ class RuntimeClient(BaseBackendClient):
         """
         return self._api.program_job(job_id).logs()
 
-    def job_metadata(self, job_id: str) -> str:
+    def job_metadata(self, job_id: str) -> Dict[str, Any]:
         """Get job metadata.
 
         Args:
@@ -400,3 +401,15 @@ class RuntimeClient(BaseBackendClient):
             Backend pulse defaults.
         """
         return self._api.backend(backend_name).pulse_defaults()
+
+    def update_tags(self, job_id: str, tags: list) -> Response:
+        """Update the tags of the job.
+
+        Args:
+            job_id: The ID of the job.
+            tags: The new tags to be assigned to the job.
+
+        Returns:
+            API Response.
+        """
+        return self._api.program_job(job_id).update_tags(tags)

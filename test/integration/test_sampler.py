@@ -12,7 +12,6 @@
 
 """Integration tests for Sampler primitive."""
 
-import unittest
 from math import sqrt
 
 from qiskit.circuit import QuantumCircuit, Gate
@@ -71,84 +70,6 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
             for i in range(len(circuits3)):
                 self.assertAlmostEqual(result3.quasi_dists[i][3], 0.5, delta=0.1)
                 self.assertAlmostEqual(result3.quasi_dists[i][0], 0.5, delta=0.1)
-            session.close()
-
-    @unittest.skip("Skip until data caching is reenabled.")
-    @run_integration_test
-    def test_sampler_non_parameterized_circuit_caching(self, service):
-        """Verify if circuit caching works in sampler primitive
-        and returns expected results for non-parameterized circuits."""
-
-        qc1 = QuantumCircuit(2)
-        qc1.x(range(2))
-        qc1.measure_all()
-        qc2 = QuantumCircuit(3)
-        qc2.x(range(3))
-        qc2.measure_all()
-        qc3 = QuantumCircuit(4)
-        qc3.x(range(4))
-        qc3.measure_all()
-        qc4 = QuantumCircuit(5)
-        qc4.x(range(5))
-        qc4.measure_all()
-
-        with Session(service, self.backend) as session:
-            sampler = Sampler(session=session)
-            self.assertIsInstance(sampler, BaseSampler)
-            job = sampler.run(circuits=[qc1, qc2])
-            result = job.result()
-            self.assertEqual(len(result.quasi_dists), 2)
-            self.assertEqual(len(result.metadata), 2)
-            self.assertEqual(result.quasi_dists[0][3], 1)
-            self.assertEqual(result.quasi_dists[1][7], 1)
-
-            job = sampler.run(circuits=[qc1])
-            result = job.result()
-            self.assertEqual(len(result.quasi_dists), 1)
-            self.assertEqual(len(result.metadata), 1)
-            self.assertEqual(result.quasi_dists[0][3], 1)
-
-            job = sampler.run(circuits=[qc3])
-            result = job.result()
-            self.assertEqual(len(result.quasi_dists), 1)
-            self.assertEqual(len(result.metadata), 1)
-            self.assertEqual(result.quasi_dists[0][15], 1)
-
-            job = sampler.run(circuits=[qc1, qc4])
-            result = job.result()
-            self.assertEqual(len(result.quasi_dists), 2)
-            self.assertEqual(len(result.metadata), 2)
-            self.assertEqual(result.quasi_dists[0][3], 1)
-            self.assertEqual(result.quasi_dists[1][31], 1)
-            session.close()
-
-    @unittest.skip("Skip until data caching is reenabled.")
-    @run_integration_test
-    def test_sampler_non_parameterized_circuit_caching_with_transpilation_options(self, service):
-        """Verify if circuit caching works in sampler primitive
-        by passing correct and incorrect transpilation options."""
-
-        qc1 = QuantumCircuit(2)
-        qc1.x(range(2))
-        qc1.measure_all()
-
-        with Session(service, self.backend) as session:
-            sampler = Sampler(session=session)
-            # pass correct initial_layout
-            transpilation = {"initial_layout": [0, 1]}
-            job = sampler.run(circuits=[qc1], transpilation=transpilation)
-            result = job.result()
-            self.assertEqual(len(result.quasi_dists), 1)
-            self.assertEqual(len(result.metadata), 1)
-            self.assertEqual(result.quasi_dists[0][3], 1)
-
-            # pass incorrect initial_layout
-            # since a new transpilation option is passed it should not use the
-            # cached transpiled circuit from the first run above
-            transpilation = {"initial_layout": [0]}
-            job = sampler.run(circuits=[qc1], transpilation=transpilation)
-            with self.assertRaises(RuntimeJobFailureError):
-                job.result()
             session.close()
 
     @run_integration_test
@@ -247,6 +168,7 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
                 job.result()
             self.assertIn("NO COUNTS FOR EXPERIMENT", str(err.exception))
             self.assertFalse("python -m uvicorn server.main" in err.exception.message)
+            self.assertIn("NO COUNTS FOR EXPERIMENT", str(job.error_message()))
 
     @run_integration_test
     def test_sampler_no_session(self, service):

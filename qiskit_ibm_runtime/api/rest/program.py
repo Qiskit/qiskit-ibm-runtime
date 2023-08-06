@@ -15,7 +15,7 @@
 from typing import Dict, Any, Optional
 from concurrent import futures
 
-from .base import RestAdapterBase
+from qiskit_ibm_provider.api.rest.base import RestAdapterBase
 from ..session import RetrySession
 
 
