@@ -12,8 +12,6 @@
 
 """Integration tests for Estimator primitive."""
 
-import unittest
-
 import numpy as np
 
 from qiskit.circuit import QuantumCircuit, Parameter
@@ -109,92 +107,6 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
             self.assertEqual(len(result5.metadata), len(circuits5))
             session.close()
 
-    @unittest.skip("Skip until data caching is reenabled.")
-    @run_integration_test
-    def test_estimator_session_circuit_caching(self, service):
-        """Verify if estimator primitive circuit caching works"""
-
-        backend = "ibmq_qasm_simulator"
-
-        qc1 = QuantumCircuit(2)
-        qc1.x(range(2))
-        qc1.measure_all()
-        qc2 = QuantumCircuit(2)
-        qc2.measure_all()
-        qc3 = QuantumCircuit(2)
-        qc3.h(range(2))
-        qc3.measure_all()
-
-        # pylint: disable=invalid-name
-        H = SparsePauliOp.from_list([("IZ", 1)])
-
-        with Session(service, backend) as session:
-            estimator = Estimator(session=session)
-
-            job = estimator.run(
-                circuits=[qc1, qc2],
-                observables=[H, H],
-            )
-            result = job.result()
-            self.assertEqual(len(result.values), 2)
-            self.assertEqual(len(result.metadata), 2)
-            self.assertEqual(result.values[0], -1)
-            self.assertEqual(result.values[1], 1)
-
-            job = estimator.run(
-                circuits=[qc3],
-                observables=[H],
-            )
-            result = job.result()
-            self.assertEqual(len(result.values), 1)
-            self.assertEqual(len(result.metadata), 1)
-            self.assertNotEqual(result.values[0], -1)
-            self.assertNotEqual(result.values[0], 1)
-
-            job = estimator.run(
-                circuits=[qc1, qc3],
-                observables=[H, H],
-            )
-            result = job.result()
-            self.assertEqual(len(result.values), 2)
-            self.assertEqual(len(result.metadata), 2)
-            self.assertEqual(result.values[0], -1)
-            self.assertNotEqual(result.values[1], -1)
-            self.assertNotEqual(result.values[1], 1)
-            session.close()
-
-    @unittest.skip("Skip until data caching is reenabled.")
-    @run_integration_test
-    def test_estimator_circuit_caching_with_transpilation_options(self, service):
-        """Verify if circuit caching works in estimator primitive
-        by passing correct and incorrect transpilation options."""
-
-        qc1 = QuantumCircuit(2)
-        qc1.x(range(2))
-        qc1.measure_all()
-
-        # pylint: disable=invalid-name
-        H = SparsePauliOp.from_list([("IZ", 1)])
-
-        with Session(service, self.backend) as session:
-            estimator = Estimator(session=session)
-            # pass correct initial_layout
-            transpilation = {"initial_layout": [0, 1]}
-            job = estimator.run(circuits=[qc1], observables=[H], transpilation=transpilation)
-            result = job.result()
-            self.assertEqual(len(result.values), 1)
-            self.assertEqual(len(result.metadata), 1)
-            self.assertEqual(result.values[0], -1)
-
-            # pass incorrect initial_layout
-            # since a new transpilation option is passed it should not use the
-            # cached transpiled circuit from the first run above
-            transpilation = {"initial_layout": [0]}
-            job = estimator.run(circuits=[qc1], observables=[H], transpilation=transpilation)
-            with self.assertRaises(RuntimeJobFailureError):
-                job.result()
-            session.close()
-
     @run_integration_test
     def test_estimator_callback(self, service):
         """Test Estimator callback function."""
@@ -287,6 +199,7 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
                 job.result()
             self.assertIn("REGISTER NAME", str(err.exception))
             self.assertFalse("python -m uvicorn server.main" in str(err.exception))
+            self.assertIn("REGISTER NAME", str(job.error_message()))
 
     @run_integration_test
     def test_estimator_no_session(self, service):

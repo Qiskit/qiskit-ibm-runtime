@@ -16,6 +16,7 @@ import logging
 
 from typing import Iterable, Union, Optional, Any, List
 from datetime import datetime as python_datetime
+from copy import deepcopy
 
 from qiskit import QuantumCircuit
 from qiskit.qobj.utils import MeasLevel, MeasReturnType
@@ -199,6 +200,11 @@ class IBMBackend(Backend):
         This magic method executes when user accesses an attribute that
         does not yet exist on IBMBackend class.
         """
+        # Prevent recursion since these properties are accessed within __getattr__
+        if name in ["_properties", "_defaults", "_target", "_configuration"]:
+            raise AttributeError(
+                "'{}' object has no attribute '{}'".format(self.__class__.__name__, name)
+            )
         # Lazy load properties and pulse defaults and construct the target object.
         self._get_properties()
         self._get_defaults()
@@ -528,6 +534,24 @@ class IBMBackend(Backend):
                     f"Circuit {circuit.name} contains instruction "
                     f"{instr} operating on a faulty edge {qubit_indices}"
                 )
+
+    def __deepcopy__(self, _memo: dict = None) -> "IBMBackend":
+        cpy = IBMBackend(
+            configuration=deepcopy(self.configuration()),
+            service=self._service,
+            api_client=deepcopy(self._api_client),
+            instance=self._instance,
+        )
+        cpy.name = self.name
+        cpy.description = self.description
+        cpy.online_date = self.online_date
+        cpy.backend_version = self.backend_version
+        cpy._coupling_map = self._coupling_map
+        cpy._defaults = deepcopy(self._defaults, _memo)
+        cpy._target = deepcopy(self._target, _memo)
+        cpy._max_circuits = self._max_circuits
+        cpy._options = deepcopy(self._options, _memo)
+        return cpy
 
 
 class IBMRetiredBackend(IBMBackend):
