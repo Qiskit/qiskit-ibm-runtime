@@ -250,6 +250,17 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         self.assertEqual(JobStatus.DONE, job.status())
 
     @run_integration_test
+    def test_run_program_missing_backend_ibm_cloud(self, service):
+        """Test running an ibm_cloud program with no backend."""
+        if self.dependencies.channel == "ibm_quantum":
+            self.skipTest("Not supported on ibm_quantum")
+        with self.subTest():
+            job = self._run_program(service=service, backend="")
+            self.assertFalse(job.backend())
+            _ = job.status()
+            self.assertTrue(job.backend())
+
+    @run_integration_test
     def test_wait_for_final_state_after_job_status(self, service):
         """Test wait for final state on a completed job when the status is updated first."""
         job = self._run_program(service, backend="ibmq_qasm_simulator")
