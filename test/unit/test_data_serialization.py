@@ -70,6 +70,7 @@ from ..serialization import (
     SerializableClassDecoder,
     get_complex_types,
 )
+from ..utils import mock_wait_for_final_state
 
 
 class TestDataSerialization(IBMTestCase):
@@ -300,7 +301,8 @@ if __name__ == '__main__':
                     job_classes=job_cls,
                     decoder=result_decoder,
                 )
-                result = job.result(decoder=decoder)
+                with mock_wait_for_final_state(ibm_quantum_service, job):
+                    result = job.result(decoder=decoder)
                 self.assertIsInstance(result["serializable_class"], SerializableClass)
 
     def test_circuit_metadata(self):
