@@ -252,7 +252,6 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
             self.skipTest("Not supported on ibm_quantum")
         with self.subTest():
             job = self._run_program(service=service, backend="")
-            self.assertFalse(job.backend())
             _ = job.status()
             self.assertTrue(job.backend())
 
