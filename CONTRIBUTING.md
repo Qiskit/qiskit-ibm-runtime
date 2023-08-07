@@ -7,28 +7,30 @@ included in the qiskit documentation:
 https://qiskit.org/documentation/contributing_to_qiskit.html
 
 
-Contributing to qiskit-ibm-runtime
+## Contributing to qiskit-ibm-runtime
 -----------------------------------
 
 In addition to the general guidelines there are specific details for
 contributing to qiskit-ibm-runtime, these are documented below.
 
+
 ### Pull request checklist
 
-When submitting a pull request and you feel it is ready for review,
-please ensure that:
+Before pushing your contribution please ensure that:
 
-1. The code follows the code style of the project and successfully
-   passes the tests. For convenience, you can execute `tox` locally,
-   which will run these checks and report any issues.
-2. The documentation has been updated accordingly. In particular, if a
-   function or class has been modified during the PR, please update the
-   *docstring* accordingly.
-3. If it makes sense for your change that you have added new tests that
-   cover the changes.
-4. Ensure that if your change has an end user facing impact (new feature,
-   deprecation, removal etc) that you have added a reno release note for that
-   change and that the PR is tagged for the changelog.
+1. The code follows the code style of this project. For convenience, you can 
+   check [Style guide](#style-guide)
+2. If it makes sense, add tests that cover the new changes.
+3. All tests pass. For convenience, you can verify the [Test Types](#test).
+4. The documentation has been updated accordingly. In particular, if a
+   function or class has been modified during your contribution, please update
+   the *docstring* accordingly. For convenience, you can check [Building the 
+   Documentation Locally](#building-documentation-locally).
+
+### Pull request creation
+
+When submitting a pull request and your updates have end user facing impact (new feature, deprecation, removal 
+etc), please ensure that you add a release note.
 
 ### Changelog generation
 
@@ -61,7 +63,7 @@ expectation is that if your code contribution has user facing changes that you
 will write the release documentation for these changes. This documentation must
 explain what was changed, why it was changed, and how users can either use or
 adapt to the change. The idea behind release documentation is that when a naive
-user with limited internal knowledege of the project is upgrading from the
+user with limited internal knowledge of the project is upgrading from the
 previous release to the new one, they should be able to read the release notes,
 understand if they need to update their program which uses qiskit, and how they
 would go about doing that. It ideally should explain why they need to make
@@ -144,7 +146,7 @@ After you've finished writing your release notes you'll want to add the note
 file to your commit with `git add` and commit them to your PR branch to make
 sure they're included with the code in your PR.
 
-##### Linking to issues
+#### Linking to issues
 
 If you need to link to an issue or other github artifact as part of the release
 note this should be done using an inline link with the text being the issue
@@ -181,7 +183,7 @@ release and the output will be submitted as a pull request to the documentation
 repository's [release notes file](
 https://github.com/Qiskit/qiskit/blob/master/docs/release_notes.rst)
 
-#### Building release notes locally
+### Building documentation locally
 
 Building The release notes are part of the standard qiskit-ibm
 documentation builds. To check what the rendered html output of the release
@@ -190,26 +192,27 @@ notes will look like for the current state of the repo you can run:
 and the release notes in particular will be located at
 `docs/_build/html/release_notes.html`
 
-## Installing Qiskit IBM Provider from source
-Please see the [Installing IBM Quantum Provider from
-Source](https://qiskit.org/documentation/contributing_to_qiskit.html#installing-ibm-quantum-provider-from-source)
-section of the Qiskit documentation.
-
-
 ### Test
 
 #### Test Types
-There are three different types of tests in `qiskit-ibm-runtime`. The implementation is based upon the well-documented [unittest](https://docs.python.org/3/library/unittest.html) Unit testing framework.
+There are three different types of tests in `qiskit-ibm-runtime`. The 
+implementation is based upon the well-documented [unittest](https://docs.python.org/3/library/unittest.html) 
+Unit testing framework.
 
 ##### 1. Unit tests
-Run locally without connecting to an external system. They are short-running, stable and give a basic level of confidence during development.
+Run locally without connecting to an external system. They are short-running, 
+stable and give a basic level of confidence during development.
 
 To execute all unit tests, run:
 ``` {.bash}
 $ make unit-test
 ```
+
 ##### 2. Integration tests
-Executed against an external system configured via a (token, instance, url) tuple. Detailed coverage of happy and non-happy paths. They are long-running and unstable at times. A successful test run gives a high level of confidence that client and APIs work well together.
+Executed against an external system configured via a (token, instance, url) 
+tuple. Detailed coverage of happy and non-happy paths. They are long-running and
+unstable at times. A successful test run gives a high level of confidence that 
+client and APIs work well together.
 
 To execute all integration tests, run
 ``` {.bash}
@@ -218,17 +221,18 @@ $ make integration-test
 
 ##### 3. E2E tests
 
-Executed against an external system configured via a (token, instance, url) tuple. Basic coverage of most important user-facing happy paths. Test suite runs faster than integration but slower than unit tests and is stable.
+Executed against an external system configured via a (token, instance, url) 
+tuple. Basic coverage of most important user-facing happy paths. Test suite runs
+faster than integration but slower than unit tests and is stable.
 
 To execute all e2e tests, run
 ``` {.bash}
 $ make e2e-test
 ```
 
-#### Configuration
+###### Configuration
 
-Integration and E2E tests require an environment configuration and can either be run against IBM Quantum APIs ("ibm_quantum") or IBM Cloud ("ibm_cloud") Quantum Service APIs.
-
+Integration and E2E tests require an environment configuration and can be run agains both IBM Quantum APIs (`ibm_quantum`, and `ibm_cloud`).
 
 Sample configuration for IBM Quantum
 ```bash
@@ -261,13 +265,10 @@ conventions in order to keep it as readable as possible. We use:
 To ensure your changes respect the style guidelines, you can run the following
 commands:
 
-All platforms:
-
 ``` {.sh}
-$> cd out
-out$> make lint
-out$> make style
-out$> make mypy
+make lint
+make style
+make mypy
 ```
 
 If you edit any documentation, refer to [IBM Quantum's writing style
@@ -317,12 +318,11 @@ When it is time to release a new minor version of qiskit-ibm we will:
 The release automation processes will be triggered by the new tag and perform
 the following steps:
 
-1.  Create a stable branch for the new minor version from the release tag
+1. Create a stable branch for the new minor version from the release tag
     on the `main` branch
-2.  Build and upload binary wheels to pypi
-3.  Create a github release page with a generated changelog
-4.  Generate a PR on the meta-repository to bump the Qiskit IBM Provider version and
-    meta-package version.
+2. Build and upload binary wheels to pypi
+3. Create a github release page with a generated changelog
+4. Generate a PR on the meta-repository to bump the Qiskit IBM Provider version
+   and meta-package version.
 
-The `stable/*` branches should only receive changes in the form of bug
-fixes.
+The `stable/*` branches should only receive changes in the form of bug fixes.
