@@ -150,7 +150,7 @@ print(f"Job result is {job.result()}")
 
 ### Estimator
 
-This is a primitive that takes a circuits and observables to evaluate expectation values and variances for a given parameter input. This primitive allows users to efficiently calculate and interpret expectation values of quantum operators required for many algorithms.
+This is a primitive that takes circuits and observables to evaluate expectation values and variances for a given parameter input. This primitive allows users to efficiently calculate and interpret expectation values of quantum operators required for many algorithms.
 
 To invoke the `Estimator` primitive:
 
