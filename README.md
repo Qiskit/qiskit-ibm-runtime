@@ -114,7 +114,7 @@ All quantum applications and algorithms at the fundamental level are built using
 
 **Primitives** are base level functions that serve as building blocks for many quantum algorithms and applications. The [primitive interfaces](https://qiskit.org/documentation/apidoc/primitives.html) are defined in Qiskit Terra.
 
-The IBM runtime service offers these primitives with additional features, such as built-in error suppression and mitigation.
+The IBM Runtime Service offers these primitives with additional features, such as built-in error suppression and mitigation.
 
 There are several different options you can specify when calling the primitives. See [`qiskit_ibm_runtime.Options`](https://github.com/Qiskit/qiskit-ibm-runtime/blob/main/qiskit_ibm_runtime/options.py#L103) class for more information.
 
