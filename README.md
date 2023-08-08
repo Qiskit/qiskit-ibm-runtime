@@ -112,7 +112,7 @@ All quantum applications and algorithms at the fundamental level are built using
 4. Execute the quantum circuits using a primitive functions (estimator or sampler). 
 
 
-**Primitives** are base level functions that serve as building blocks for many quantum algorithms and applications. The [primitive interfaces](https://qiskit.org/documentation/apidoc/primitives.html) are defined in Qiskit Terra.
+**Primitives** are base-level functions that serve as building blocks for many quantum algorithms and applications. The [primitive interfaces](https://qiskit.org/documentation/apidoc/primitives.html) are defined in Qiskit Terra.
 
 The IBM Runtime Service offers these primitives with additional features, such as built-in error suppression and mitigation.
 
