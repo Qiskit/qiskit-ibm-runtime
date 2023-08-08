@@ -31,7 +31,7 @@ pip install qiskit-ibm-runtime
 
 ### Qiskit Runtime Service on IBM Quantum Platform
 
-The default method for using the runtime service is the IBM Quantum Platform. 
+The default method for using the runtime service is IBM Quantum Platform. 
 
 You will need your IBM Quantum API token to authenticate with the runtime service:
 
