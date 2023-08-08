@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd ./tutorials
+cd ../../tutorials
 
 vale .
 
