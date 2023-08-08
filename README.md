@@ -108,7 +108,7 @@ ibm_quantum_service = QiskitRuntimeService(channel="ibm_quantum", token="MY_IBM_
 
 All quantum applications and algorithms at the fundamental level are built using three steps
 1. Choose a quantum circuit to encode the quantum state.
-2. Define the obserable to be measured or the classical  register to be measured
+2. Define the observable to be measured or the classical register to be measured
 4. Execute the quantum circuits using a primitive functions (estimator or sampler). 
 
 
@@ -140,7 +140,7 @@ bell.cx(0, 1)
 # 2. Map the qubits to a classical register in ascending order
 bell.measure_all()
 
-# 3. Execute using the Sample primitive 
+# 3. Execute using the Sampler primitive 
 backend = service.get_backend('ibmq_qasm_simulator')
 sampler = Sampler(backend=backend, options=options)
 job = sampler.run(circuits=bell)
@@ -197,7 +197,7 @@ This code batches together 50 parameters to be executed in a single job and if a
 In many algorithms and applications an estimator needs to be called iteratively without incurring queuing delays on each iteration. To solved this the IBM Runtime Service provides a **Session**. A session is started when the first job within the session is started, and subsequent jobs within the session are prioritized by the scheduler.
 
 You can use the [`qiskit_ibm_runtime.Session`](https://github.com/Qiskit/qiskit-ibm-runtime/blob/main/qiskit_ibm_runtime/session.py) class to start a
-session. Considering the same example about and trying to find the optimal `theta` the following example uses the [golden search method](https://en.wikipedia.org/wiki/Golden-section_search) to iteratively find the optimial theta which maximizes the observable. 
+session. Considering the same example above and trying to find the optimal `theta` the following example uses the [golden search method](https://en.wikipedia.org/wiki/Golden-section_search) to iteratively find the optimial theta which maximizes the observable. 
 
 To invoke the `Estimator` primitive within a session:
 
