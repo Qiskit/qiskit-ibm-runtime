@@ -21,7 +21,7 @@ mypy:
 	mypy --module qiskit_ibm_runtime --package test
 
 style:
-	black --check qiskit_ibm_runtime setup.py test docs/tutorials program_source
+	black --check qiskit_ibm_runtime setup.py test tutorials program_source
 
 unit-test:
 	python -m unittest discover --verbose --top-level-directory . --start-directory test/unit
@@ -40,4 +40,4 @@ unit-test-coverage:
 	coverage lcov
 
 black:
-	black qiskit_ibm_runtime setup.py test docs/tutorials program_source
+	black qiskit_ibm_runtime setup.py test tutorials program_source
