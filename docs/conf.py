@@ -27,6 +27,9 @@
 #
 import os
 import sys
+import shutil
+import warnings
+from distutils.dir_util import copy_tree
 
 sys.path.insert(0, os.path.abspath('.'))
 
@@ -161,3 +164,20 @@ html_theme_options = {
 html_sourcelink_suffix = ''
 
 autoclass_content = 'both'
+
+def load_tutorials(app):
+    dest_dir = os.path.join(app.srcdir, 'tutorials')
+    source_dir = os.path.dirname(app.srcdir)+'/tutorials'
+
+    try:
+        copy_tree(source_dir, dest_dir)
+    except FileNotFoundError:
+        warnings.warn('Copy tutorials failed.', RuntimeWarning)
+
+def clean_tutorials(app, exc):
+    tutorials_dir = os.path.join(app.srcdir, 'tutorials')
+    shutil.rmtree(tutorials_dir)
+
+def setup(app):
+    load_tutorials(app)
+    app.connect('build-finished', clean_tutorials)
