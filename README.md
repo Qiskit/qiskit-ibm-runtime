@@ -251,7 +251,7 @@ with Session(service=service, backend="ibmq_qasm_simulator") as session:
     print(f"Final Job ID is {job.job_id()}")
     print(f"Job result is {job.result().values} at theta = {theta_mid}")
 ```
-This code returns `Job result is [4.] at theta = 1.575674623307102` using only 9 iterations. This is a very powerful extensions to the primitives however beware as using too much code between itertive calls can lock the QPU and use exsesived QPU time which is expensive. We recomend only using the session when needed. The sampler can also be used within a session however there are not any well define examples for this. 
+This code returns `Job result is [4.] at theta = 1.575674623307102` using only 9 iterations. This is a very powerful extensions to the primitives however beware as using too much code between itertive calls can lock the QPU and use excessive QPU time which is expensive. We recomend only using the session when needed. The sampler can also be used within a session however there are not any well define examples for this. 
 
 
 ## Accessing your IBM Quantum backends
