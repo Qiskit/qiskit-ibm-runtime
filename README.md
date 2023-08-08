@@ -154,7 +154,6 @@ To invoke the `Estimator` primitive within a session:
 
 ```python
 from qiskit_ibm_runtime import QiskitRuntimeService, Session, Options, Estimator
-from qiskit import QuantumCircuit
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.quantum_info import SparsePauliOp
 
