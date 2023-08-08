@@ -29,7 +29,7 @@ pip install qiskit-ibm-runtime
 
 ## Account Setup
 
-### Qiskit Runtime Service on IBM Quantum Platform
+### Qiskit Runtime service on IBM Quantum Platform
 
 The default method for using the runtime service is IBM Quantum Platform. 
 
