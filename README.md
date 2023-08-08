@@ -189,7 +189,7 @@ print(f"Job ID is {job.job_id()}")
 print(f"Job result is {job.result().values}")
 ```
 
-This code batches together 50 parameters to be executed in a single job and if a user wanted to find the `theta` which optimized the observable they could plot and observed it occurs at `theta=np.pi/2`. For speed we recomend batching results together but depending on your access there will be limits in the number of cirucits, objects and parameters that can be sent.
+This code batches together 50 parameters to be executed in a single job. If a user wanted to find the `theta` that optimized the observable, they could plot and observe it occurs at `theta=np.pi/2`. For speed we recommend batching results together (note that depending on your access, there may be limits on the number of circuits, objects, and parameters that you can send.
 
 
 ## Session
