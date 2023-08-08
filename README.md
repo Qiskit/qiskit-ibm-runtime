@@ -42,7 +42,7 @@ You will need your IBM Quantum API token to authenticate with the runtime servic
 
 ### Qiskit Runtime Service on IBM Cloud
 
-The runtime services is now part of the IBM Quantum Services on IBM Cloud. To use this service, you'll
+The runtime service is now part of the IBM Quantum Services on IBM Cloud. To use this service, you'll
 need to create an IBM Cloud account and a quantum service instance.
 [This guide](https://cloud.ibm.com/docs/quantum-computing?topic=quantum-computing-get-started)
 contains step-by-step instructions on setting this up, including directions to find your
