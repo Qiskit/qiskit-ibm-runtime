@@ -108,7 +108,7 @@ ibm_quantum_service = QiskitRuntimeService(channel="ibm_quantum", token="MY_IBM_
 
 All quantum applications and algorithms at the fundamental level are built using three steps
 1. Choose a quantum circuit to encode the quantum state.
-2. Define the observable to be measured or the classical register to be measured
+2. Define the observable or the classical register to be measured.
 4. Execute the quantum circuits using a primitive functions (estimator or sampler). 
 
 
