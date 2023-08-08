@@ -13,7 +13,7 @@
 implementations of the Qiskit primitives `sampler` and `estimator` for IBM Quantum hardware. It is designed to use additional classical compute resources 
 to execute quantum circuits with more efficiency on quantum processors by including near-time computations such as such as error supression and error mitigation. Examples of error suppression include dynamical decoupling, noise-aware compilation, error mitigation including readout mitigation, zero noise extrapolation (ZNE) and probabilistic error cancellation (PEC).  
 
-Using the runtime service, for example, a research team at IBM Quantum was able to achieve 120x speed
+Using the runtime service, for example, a research team at IBM Quantum was able to achieve a 120x speedup
 up in their lithium hydride simulation. For more information, see the
 [IBM Research blog](https://research.ibm.com/blog/120x-quantum-speedup).
 
