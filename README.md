@@ -11,7 +11,7 @@
 
 **Qiskit IBM Runtime** is a new environment offered by IBM Quantum that streamlines quantum computations and provides optimal 
 implementations of the Qiskit Primitives `sampler` and `estimator` for IBM Quantum Hardware. It is designed to use additional classical compute resources 
-to execute quantum circuits with more efficiency on quantum processors by including near-time computations such as such as error supression and error mitigation. Examples of error suppression include dynamical decoupling and noise-aware compilation and error mitigation includes readout mitigation, zero noise extrapolation (ZNE) and probabilistic error cancellation (PEC).  
+to execute quantum circuits with more efficiency on quantum processors by including near-time computations such as such as error supression and error mitigation. Examples of error suppression include dynamical decoupling, noise-aware compilation, error mitigation including readout mitigation, zero noise extrapolation (ZNE) and probabilistic error cancellation (PEC).  
 
 Using the runtime service, for example, a research team at IBM Quantum was able to achieve 120x speed
 up in their lithium hydride simulation. For more information, see the
