@@ -17,7 +17,7 @@ Using the runtime service, for example, a research team at IBM Quantum was able 
 in their lithium hydride simulation. For more information, see the
 [IBM Research blog](https://research.ibm.com/blog/120x-quantum-speedup).
 
-This module provides the interface to access Qiskit Runtime Service on the IBM Quantum Platform or the IBM Cloud.
+This module provides the interface to access the Qiskit Runtime service on IBM Quantum Platform or IBM Cloud.
 
 ## Installation
 
