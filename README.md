@@ -244,7 +244,7 @@ with Session(service=service, backend="ibmq_qasm_simulator") as session:
         thetac = thetab - (thetab - thetaa) / gr
         thetad = thetaa + (thetab - thetaa) / gr
         
-    # Final Job to evaluate estimator at mid point found using golden search method 
+    # Final job to evaluate estimator at midpoint found using golden search method 
     theta_mid = (thetab + thetaa) / 2
     job = estimator.run(circuits=qc_example, observables=M1, parameter_values=theta_mid)
     print(f"Session ID is {session.session_id}")
