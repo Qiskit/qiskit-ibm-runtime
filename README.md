@@ -197,7 +197,7 @@ This code batches together 50 parameters to be executed in a single job and if a
 In many algorithms and applications an estimator needs to be called iteratively without incurring queuing delays on each iteration. To solve this the IBM Runtime Service provides a **Session**. A session is started when the first job within the session is started, and subsequent jobs within the session are prioritized by the scheduler.
 
 You can use the [`qiskit_ibm_runtime.Session`](https://github.com/Qiskit/qiskit-ibm-runtime/blob/main/qiskit_ibm_runtime/session.py) class to start a
-session. Considering the same example above and trying to find the optimal `theta` the following example uses the [golden search method](https://en.wikipedia.org/wiki/Golden-section_search) to iteratively find the optimial theta which maximizes the observable. 
+session. Considering the same example above and trying to find the optimal `theta` the following example uses the [golden search method](https://en.wikipedia.org/wiki/Golden-section_search) to iteratively find the optimal theta which maximizes the observable. 
 
 To invoke the `Estimator` primitive within a session:
 
