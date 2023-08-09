@@ -10,8 +10,7 @@
 **Qiskit** is an open-source SDK for working with quantum computers at the level of extended quantum circuits, operators, and primitives.
 
 **Qiskit IBM Runtime** is a new environment offered by IBM Quantum that streamlines quantum computations and provides optimal 
-implementations of the Qiskit primitives `sampler` and `estimator` for IBM Quantum hardware. It is designed to use additional classical compute resources 
-to execute quantum circuits with more efficiency on quantum processors by including near-time computations such as such as error supression and error mitigation. Examples of error suppression include dynamical decoupling, noise-aware compilation, error mitigation including readout mitigation, zero noise extrapolation (ZNE) and probabilistic error cancellation (PEC).  
+implementations of the Qiskit primitives `sampler` and `estimator` for IBM Quantum hardware. It is designed to use additional classical compute resources to execute quantum circuits with more efficiency on quantum processors, by including near-time computations such as error suppression and error mitigation. Examples of error suppression include dynamical decoupling, noise-aware compilation, error mitigation including readout mitigation, zero-noise extrapolation (ZNE), and probabilistic error cancellation (PEC).  
 
 Using the runtime service, for example, a research team at IBM Quantum was able to achieve a 120x speedup
 in their lithium hydride simulation. For more information, see the
@@ -27,11 +26,11 @@ You can install this package using pip:
 pip install qiskit-ibm-runtime
 ```
 
-## Account Setup
+## Account setup
 
 ### Qiskit Runtime service on IBM Quantum Platform
 
-The default method for using the runtime service is IBM Quantum Platform. 
+The default method for using the runtime service is IBM Quantum Platform.
 
 You will need your IBM Quantum API token to authenticate with the runtime service:
 
@@ -49,7 +48,7 @@ contains step-by-step instructions, including how to find your
 IBM Cloud API key and Cloud Resource Name (CRN), which you will need for authentication.
 
 
-### Saving Account on Disk
+### Save your account on disk
 
 Once you have the account credentials, you can save them on disk, so you won't have to input
 them each time. The credentials are saved in the `$HOME/.qiskit/qiskit-ibm.json` file, where `$HOME` is your home directory.
@@ -74,7 +73,7 @@ from qiskit_ibm_runtime import QiskitRuntimeService
 service = QiskitRuntimeService()
 ```
 
-### Loading Account from Environment Variables
+### Loading account from environment variables
 
 Alternatively, the service can discover credentials from environment variables:
 ```bash
@@ -89,7 +88,7 @@ from qiskit_ibm_runtime import QiskitRuntimeService
 service = QiskitRuntimeService()
 ```
 
-### Enabling Account for Current Python Session
+### Enabling account for current Python session
 
 As another alternative, you can also enable an account just for the current session by instantiating the
 service with your credentials.
@@ -109,18 +108,17 @@ ibm_quantum_service = QiskitRuntimeService(channel="ibm_quantum", token="MY_IBM_
 All quantum applications and algorithms at the fundamental level are built using three steps:
 1. Choose a quantum circuit to encode the quantum state.
 2. Define the observable or the classical register to be measured.
-4. Execute the quantum circuits by using a primitive (Estimator or Sampler). 
+4. Execute the quantum circuits by using a primitive (Estimator or Sampler).
 
+**Primitives** are base-level functions that serve as building blocks for many quantum algorithms and applications. The [primitive interfaces](https://qiskit.org/documentation/apidoc/primitives.html) are defined in Qiskit.
 
-**Primitives** are base-level functions that serve as building blocks for many quantum algorithms and applications. The [primitive interfaces](https://qiskit.org/documentation/apidoc/primitives.html) are defined in Qiskit Terra.
-
-The IBM Runtime Service offers these primitives with additional features, such as built-in error suppression and mitigation.
+The IBM Runtime service offers these primitives with additional features, such as built-in error suppression and mitigation.
 
 There are several different options you can specify when calling the primitives. See [`qiskit_ibm_runtime.Options`](https://github.com/Qiskit/qiskit-ibm-runtime/blob/main/qiskit_ibm_runtime/options.py#L103) class for more information.
 
 ### Sampler
 
-This is a primitive that takes a list of user circuits (including measurements) as an input and generates an error-mitigated readout of quasi-probability distributions. This provides users a way to better evaluate shot results using error mitigation and enables them to more efficiently evaluate the possibility of multiple relevant data points in the context of destructive interference.
+This is a primitive that takes a list of user circuits (including measurements) as an input and generates an error-mitigated readout of quasi-probability distributions. This provides users a way to better evaluate shot results using error mitigation, and enables them to more efficiently evaluate the possibility of multiple relevant data points in the context of destructive interference.
 
 To invoke the `Sampler` primitive
 
@@ -189,15 +187,15 @@ print(f"Job ID is {job.job_id()}")
 print(f"Job result is {job.result().values}")
 ```
 
-This code batches together 50 parameters to be executed in a single job. If a user wanted to find the `theta` that optimized the observable, they could plot and observe it occurs at `theta=np.pi/2`. For speed we recommend batching results together (note that depending on your access, there may be limits on the number of circuits, objects, and parameters that you can send.
+This code batches together 50 parameters to be executed in a single job. If a user wanted to find the `theta` that optimized the observable, they could plot and observe it occurs at `theta=np.pi/2`. For speed we recommend batching results together (note that depending on your access, there may be limits on the number of circuits, objects, and parameters that you can send).
 
 
 ## Session
 
-In many algorithms and applications an estimator needs to be called iteratively without incurring queuing delays on each iteration. To solve this the IBM Runtime Service provides a **Session**. A session is started when the first job within the session is started, and subsequent jobs within the session are prioritized by the scheduler.
+In many algorithms and applications, an Estimator needs to be called iteratively without incurring queuing delays on each iteration. To solve this, the IBM Runtime service provides a **Session**. A session starts when the first job within the session is started, and subsequent jobs within the session are prioritized by the scheduler.
 
 You can use the [`qiskit_ibm_runtime.Session`](https://github.com/Qiskit/qiskit-ibm-runtime/blob/main/qiskit_ibm_runtime/session.py) class to start a
-session. Considering the same example above and trying to find the optimal `theta` the following example uses the [golden search method](https://en.wikipedia.org/wiki/Golden-section_search) to iteratively find the optimal theta which maximizes the observable. 
+session. Consider the same example above and try to find the optimal `theta`. The following example uses the [golden search method](https://en.wikipedia.org/wiki/Golden-section_search) to iteratively find the optimal theta that maximizes the observable. 
 
 To invoke the `Estimator` primitive within a session:
 
@@ -244,17 +242,17 @@ with Session(service=service, backend="ibmq_qasm_simulator") as session:
         thetac = thetab - (thetab - thetaa) / gr
         thetad = thetaa + (thetab - thetaa) / gr
         
-    # Final job to evaluate estimator at midpoint found using golden search method 
+    # Final job to evaluate Estimator at midpoint found using golden search method 
     theta_mid = (thetab + thetaa) / 2
     job = estimator.run(circuits=qc_example, observables=M1, parameter_values=theta_mid)
     print(f"Session ID is {session.session_id}")
     print(f"Final Job ID is {job.job_id()}")
     print(f"Job result is {job.result().values} at theta = {theta_mid}")
 ```
-This code returns `Job result is [4.] at theta = 1.575674623307102` using only nine iterations. This is a very powerful extension to the primitives. However, using too much code between iterative calls can lock the QPU and use excessive QPU time, which is expensive. We recommend only using sessions when needed. The Sampler can also be used within a session. However, there are not any well define examples for this. 
 
+This code returns `Job result is [4.] at theta = 1.575674623307102` using only nine iterations. This is a very powerful extension to the primitives. However, using too much code between iterative calls can lock the QPU and use excessive QPU time, which is expensive. We recommend only using sessions when needed. The Sampler can also be used within a session, but there are not any well-defined examples for this.
 
-## Accessing your IBM Quantum backends
+## Access your IBM Quantum backends
 
 A **backend** is a quantum device or simulator capable of running quantum circuits or pulse schedules.
 
@@ -279,7 +277,7 @@ print(backend.coupling_map)
 
 Now you're set up and ready to check out some of the [tutorials].
 
-## Contribution Guidelines
+## Contribution guidelines
 
 If you'd like to contribute to qiskit-ibm-runtime, please take a look at our
 [contribution guidelines]. This project adheres to Qiskit's [code of conduct].
