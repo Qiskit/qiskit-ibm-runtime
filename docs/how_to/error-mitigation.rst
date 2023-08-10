@@ -144,7 +144,8 @@ The Estimator interface lets users seamlessly work with the variety of error mit
       session.close() 
 
 .. note::
-    As you increase the resilience level, you will be able to use additional methods to improve the accuracy of your result. However, because the methods become more advanced with each level, they require additional sampling overhead (time) to generate more accurate expectation values.     
+    As you increase the resilience level, you will be able to use additional methods to improve the accuracy of your result. However, because the methods become more advanced with each level, they require additional sampling overhead (time) to generate more accurate expectation values.
+   Note that higher resilience levels do not guarantee better quality. Higher levels only mean greater overhead. Each method has its strengths and weaknesses. For example, TREX is good for shallow circuits since it's readout error mitigation whereas ZNE for deeper circuits. PEC can mitigate arbitrary errors but may not work in practice because of its large overhead.
 
 Configure Sampler with resilience levels 
 -----------------------------------------
