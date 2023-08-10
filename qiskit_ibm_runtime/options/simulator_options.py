@@ -13,9 +13,8 @@
 """Simulator options."""
 
 
-from typing import Optional, List, Union, TYPE_CHECKING, Literal, get_args
+from typing import Optional, List, Union, Literal, get_args, TYPE_CHECKING
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, List, Optional, Union
 
 from qiskit.exceptions import MissingOptionalLibraryError
 from qiskit.providers import BackendV1, BackendV2
