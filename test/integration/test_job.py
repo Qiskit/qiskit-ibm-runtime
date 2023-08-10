@@ -246,6 +246,16 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         self.assertEqual(JobStatus.DONE, job.status())
 
     @run_integration_test
+    def test_run_program_missing_backend_ibm_cloud(self, service):
+        """Test running an ibm_cloud program with no backend."""
+        if self.dependencies.channel == "ibm_quantum":
+            self.skipTest("Not supported on ibm_quantum")
+        with self.subTest():
+            job = self._run_program(service=service, backend="")
+            _ = job.status()
+            self.assertTrue(job.backend())
+
+    @run_integration_test
     def test_wait_for_final_state_after_job_status(self, service):
         """Test wait for final state on a completed job when the status is updated first."""
         job = self._run_program(service, backend="ibmq_qasm_simulator")
@@ -285,6 +295,14 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         self.assertTrue(metrics)
         self.assertIn("timestamps", metrics)
         self.assertIn("qiskit_version", metrics)
+
+    @run_integration_test
+    def test_usage_estimation(self, service):
+        """Test job usage estimation"""
+        job = self._run_program(service)
+        job.wait_for_final_state()
+        self.assertTrue(job.usage_estimation)
+        self.assertIn("quantum_seconds", job.usage_estimation)
 
     @run_integration_test
     def test_updating_job_tags(self, service):

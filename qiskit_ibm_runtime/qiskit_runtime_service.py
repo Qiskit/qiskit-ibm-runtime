@@ -363,6 +363,7 @@ class QiskitRuntimeService(Provider):
         Raises:
             IBMInputValueError: If the URL specified is not a valid IBM Quantum authentication URL.
             IBMAccountError: If no hub/group/project could be found for this account.
+            IBMInputValueError: If instance parameter is not found in hgps.
 
         Returns:
             The hub/group/projects for this account.
@@ -413,9 +414,8 @@ class QiskitRuntimeService(Provider):
                 # Move user selected hgp to front of the list
                 hgps.move_to_end(default_hgp, last=False)
             else:
-                warnings.warn(
-                    f"Default hub/group/project {default_hgp} not "
-                    "found for the account and is ignored."
+                raise IBMInputValueError(
+                    f"Hub/group/project {default_hgp} could not be found for this account."
                 )
         return hgps
 
@@ -542,6 +542,7 @@ class QiskitRuntimeService(Provider):
         """
         # TODO filter out input_allowed not having runtime
         backends: List[IBMBackend] = []
+        instance_filter = instance if instance else self._account.instance
         if self._channel == "ibm_quantum":
             if name:
                 if name not in self._backends:
@@ -554,16 +555,16 @@ class QiskitRuntimeService(Provider):
                     )
                 if self._backends[name]:
                     backends.append(self._backends[name])
-            elif instance:
-                hgp = self._get_hgp(instance=instance)
+            elif instance_filter:
+                hgp = self._get_hgp(instance=instance_filter)
                 for backend_name in hgp.backends:
                     if (
                         not self._backends[backend_name]
-                        or instance != self._backends[backend_name]._instance
+                        or instance_filter != self._backends[backend_name]._instance
                     ):
-                        self._set_backend_config(backend_name, instance)
+                        self._set_backend_config(backend_name, instance_filter)
                         self._backends[backend_name] = self._create_backend_obj(
-                            self._backend_configs[backend_name], instance
+                            self._backend_configs[backend_name], instance_filter
                         )
                     if self._backends[backend_name]:
                         backends.append(self._backends[backend_name])
@@ -1010,8 +1011,11 @@ class QiskitRuntimeService(Provider):
             if ex.status_code == 404:
                 raise RuntimeProgramNotFound(f"Program not found: {ex.message}") from None
             raise IBMRuntimeError(f"Failed to run program: {ex}") from None
-
-        backend = self.backend(name=response["backend"], instance=hgp_name)
+        backend = (
+            self.backend(name=response["backend"], instance=hgp_name)
+            if response["backend"]
+            else qrt_options.backend
+        )
 
         job = RuntimeJob(
             backend=backend,
