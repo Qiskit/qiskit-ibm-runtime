@@ -283,9 +283,19 @@ class RetrySession(Session):
                 if str(caller) in frame_path:
                     caller_str = str(caller) + frame_path.split(str(caller), 1)[-1]
                     sanitized_caller_str = caller_str.replace("/", "~")
-                    headers.update(
-                        {"X-Qx-Client-Application": f"{CLIENT_APPLICATION}/{sanitized_caller_str}"}
-                    )
+                    if self.custom_header:
+                        headers.update(
+                            {
+                                "X-Qx-Client-Application": f"{CLIENT_APPLICATION}/"
+                                f"{sanitized_caller_str}/{self.custom_header}"
+                            }
+                        )
+                    else:
+                        headers.update(
+                            {
+                                "X-Qx-Client-Application": f"{CLIENT_APPLICATION}/{sanitized_caller_str}"
+                            }
+                        )
                     found_caller = True
                     break  # break out of the inner loop
             if found_caller:
