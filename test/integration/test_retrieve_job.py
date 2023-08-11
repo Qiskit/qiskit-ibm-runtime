@@ -30,8 +30,8 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
     def test_retrieve_job_queued(self, service):
         """Test retrieving a queued job."""
         real_device = get_real_device(service)
-        _ = self._run_program(service, iterations=10, backend=real_device)
-        job = self._run_program(service, iterations=2, backend=real_device)
+        _ = self._run_program(service, backend=real_device)
+        job = self._run_program(service, backend=real_device)
         wait_for_status(job, JobStatus.QUEUED)
         rjob = service.job(job.job_id())
         self.assertEqual(job.job_id(), rjob.job_id())
@@ -40,7 +40,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
     @run_integration_test
     def test_retrieve_job_running(self, service):
         """Test retrieving a running job."""
-        job = self._run_program(service, iterations=10)
+        job = self._run_program(service)
         wait_for_status(job, JobStatus.RUNNING)
         rjob = service.job(job.job_id())
         self.assertEqual(job.job_id(), rjob.job_id())
@@ -101,7 +101,8 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
     @run_integration_test
     def test_retrieve_pending_jobs(self, service):
         """Test retrieving pending jobs (QUEUED, RUNNING)."""
-        job = self._run_program(service, iterations=20)
+        circuits = [ReferenceCircuits.bell()] * 5
+        job = self._run_program(service, circuits=circuits)
         wait_for_status(job, JobStatus.RUNNING)
         rjobs = service.jobs(pending=True)
         after_status = job.status()
