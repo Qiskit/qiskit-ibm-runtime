@@ -155,7 +155,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         job = self._run_program(service, iterations=5)
         if not cancel_job_safe(job, self.log):
             return
-        time.sleep(10)  # Wait a bit for DB to update.
+        time.sleep(5)  # Wait a bit for DB to update.
         rjob = service.job(job.job_id())
         self.assertEqual(rjob.status(), JobStatus.CANCELLED)
 
