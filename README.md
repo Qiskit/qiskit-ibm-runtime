@@ -118,7 +118,7 @@ There are several different options you can specify when calling the primitives.
 
 ### Sampler
 
-This is a primitive that takes a list of user circuits (including measurements) as an input and generates an error-mitigated readout of quasi-probability distributions. This provides users a way to better evaluate shot results using error mitigation, and enables them to more efficiently evaluate the possibility of multiple relevant data points in the context of destructive interference.
+This primitive takes a list of user circuits (including measurements) as input and generates an error-mitigated readout of quasi-probability distributions. This provides users a way to better evaluate shot results using error mitigation, and enables them to more efficiently evaluate the possibility of multiple relevant data points in the context of destructive interference.
 
 To invoke the `Sampler` primitive
 
