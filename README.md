@@ -166,7 +166,7 @@ options.execution.shots = 1024  # Options can be set using auto-complete.
 # 1. A quantum circuit for preparing the quantum state (|000> + e^{itheta} |111>)/rt{2}
 theta = Parameter('θ')
 qc_example = QuantumCircuit(3)
-qc_example.h(0) # generate superpostion
+qc_example.h(0) # generate superposition
 qc_example.p(theta, 0) # add quantum phase
 qc_example.cx(0, 1) # condition 1st qubit on 0th qubit
 qc_example.cx(0, 2) # condition 2nd qubit on 0th qubit
