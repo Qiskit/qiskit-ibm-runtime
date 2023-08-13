@@ -155,7 +155,9 @@ To invoke the `Estimator` primitive:
 ```python
 from qiskit_ibm_runtime import QiskitRuntimeService, Options, Estimator
 from qiskit.quantum_info import SparsePauliOp
+from qiskit import QuantumCircuit
 from qiskit.circuit import Parameter
+import numpy as np
 
 service = QiskitRuntimeService()
 options = Options(optimization_level=1)
