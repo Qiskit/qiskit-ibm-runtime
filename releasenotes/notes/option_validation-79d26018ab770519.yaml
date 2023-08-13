@@ -1,0 +1,8 @@
+---
+features:
+  - |
+    Added validations for options on the second level of the dict,
+    i.e., for each of resilience, simulator, execution, and 
+    transpilation, check that their options are supported. 
+    Otherwise throw an exception.
+
