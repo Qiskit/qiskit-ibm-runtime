@@ -213,8 +213,8 @@ theta = Parameter('θ')
 qc_example = QuantumCircuit(3)
 qc_example.h(0) # generate superpostion
 qc_example.p(theta,0) # add quantum phase
-qc_example.cx(0,1) # condition 1st qubit on 0th qubit
-qc_example.cx(0,2) # condition 2nd qubit on 0th qubit
+qc_example.cx(0, 1) # condition 1st qubit on 0th qubit
+qc_example.cx(0, 2) # condition 2nd qubit on 0th qubit
 
 # 2. the observable to be measured
 M1 = SparsePauliOp.from_list([("XXY", 1), ("XYX", 1), ("YXX", 1), ("YYY", -1)])
