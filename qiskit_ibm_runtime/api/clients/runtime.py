@@ -128,6 +128,7 @@ class RuntimeClient(BaseBackendClient):
         max_execution_time: Optional[int] = None,
         start_session: Optional[bool] = False,
         session_time: Optional[int] = None,
+        channel_strategy: Optional[str] = None,
     ) -> Dict:
         """Run the specified program.
 
@@ -143,6 +144,7 @@ class RuntimeClient(BaseBackendClient):
             max_execution_time: Maximum execution time in seconds.
             start_session: Set to True to explicitly start a runtime session. Defaults to False.
             session_time: Length of session in seconds.
+            channel_strategy: Error mitigation strategy.
 
         Returns:
             JSON response.
@@ -162,6 +164,7 @@ class RuntimeClient(BaseBackendClient):
             max_execution_time=max_execution_time,
             start_session=start_session,
             session_time=session_time,
+            channel_strategy=channel_strategy,
             **hgp_dict,
         )
 

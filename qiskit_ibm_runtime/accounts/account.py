@@ -44,6 +44,7 @@ class Account:
         instance: Optional[str] = None,
         proxies: Optional[ProxyConfiguration] = None,
         verify: Optional[bool] = True,
+        channel_strategy: Optional[str] = None,
     ):
         """Account constructor.
 
@@ -54,17 +55,18 @@ class Account:
             instance: Service instance to use.
             proxies: Proxy configuration.
             verify: Whether to verify server's TLS certificate.
+            channel_strategy: Error mitigation strategy.
         """
         resolved_url = url or (
             IBM_QUANTUM_API_URL if channel == "ibm_quantum" else IBM_CLOUD_API_URL
         )
-
         self.channel = channel
         self.token = token
         self.url = resolved_url
         self.instance = instance
         self.proxies = proxies
         self.verify = verify
+        self.channel_strategy = channel_strategy
 
     def to_saved_format(self) -> dict:
         """Returns a dictionary that represents how the account is saved on disk."""
@@ -84,6 +86,7 @@ class Account:
             instance=data.get("instance"),
             proxies=ProxyConfiguration(**proxies) if proxies else None,
             verify=data.get("verify", True),
+            channel_strategy=data.get("channel_strategy"),
         )
 
     def resolve_crn(self) -> None:
@@ -155,7 +158,18 @@ class Account:
         self._assert_valid_url(self.url)
         self._assert_valid_instance(self.channel, self.instance)
         self._assert_valid_proxies(self.proxies)
+        self._assert_valid_channel_strategy(self.channel_strategy)
         return self
+
+    @staticmethod
+    def _assert_valid_channel_strategy(channel_strategy: str) -> None:
+        """Assert that the channel strategy is valid."""
+        # add more strategies as they are implemented
+        if channel_strategy and channel_strategy not in ["q-ctrl"]:
+            raise InvalidAccountError(
+                f"Invalid `channel_strategy` value. Expected one of "
+                f"{['q-ctrl']}, got '{channel_strategy}'."
+            )
 
     @staticmethod
     def _assert_valid_channel(channel: ChannelType) -> None:

@@ -138,6 +138,7 @@ class Runtime(RestAdapterBase):
         max_execution_time: Optional[int] = None,
         start_session: Optional[bool] = False,
         session_time: Optional[int] = None,
+        channel_strategy: Optional[str] = None,
     ) -> Dict:
         """Execute the program.
 
@@ -155,6 +156,7 @@ class Runtime(RestAdapterBase):
             max_execution_time: Maximum execution time in seconds.
             start_session: Set to True to explicitly start a runtime session. Defaults to False.
             session_time: Length of session in seconds.
+            channel_strategy: Error mitigation strategy.
 
         Returns:
             JSON response.
@@ -183,6 +185,9 @@ class Runtime(RestAdapterBase):
             payload["hub"] = hub
             payload["group"] = group
             payload["project"] = project
+        if channel_strategy:
+            # TODO this will be changed to "channel_strategy"
+            payload["performance_strategy"] = channel_strategy
         data = json.dumps(payload, cls=RuntimeEncoder)
         return self.session.post(url, data=data, timeout=900).json()
 
