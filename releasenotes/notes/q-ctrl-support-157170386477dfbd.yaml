@@ -1,0 +1,9 @@
+---
+features:
+  - |
+    There is a new parameter, ``channel_strategy`` that can be set in the initialization of 
+    :class:`qiskit_ibm_runtime.QiskitRuntimeService` or saved in 
+    :meth:`qiskit_ibm_runtime.QiskitRuntimeService.save_account`. If ``channel_strategy`` 
+    is set to ``q-ctrl``, all jobs within the service will use
+    the Q-CTRL error mitigation strategy.
+
