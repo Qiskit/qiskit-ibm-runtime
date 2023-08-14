@@ -112,7 +112,7 @@ The ``skip_transpilation`` option is an advanced transpilation option, set as fo
 3. Error mitigation
 ~~~~~~~~~~~~~~~~~~~
 
-You might want to leverage different error mitigation methods and see how these affect the performance of your
+You might want to use different error mitigation methods and see how these affect the performance of your
 algorithm. These can also be set through the ``resilience_level`` option. The method selected for each level is
 different for ``Sampler`` and ``Estimator``. You can find more information in the 
 `Configure error mitigation topic <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/how_to/error-mitigation.html>`_.

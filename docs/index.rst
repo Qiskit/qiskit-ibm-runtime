@@ -5,7 +5,7 @@ Qiskit Runtime 0.11.3 documentation
 Overview
 ==============
 
-Qiskit Runtime is a cloud-based quantum computing service developed by IBM. It offers computational *primitives* to perform foundational quantum computing tasks that utilize built-in error suppression and mitigation techniques. Primitives can be executed inside of *sessions*, allowing collections of circuits to be jointly run on a quantum computer without being interrupted by other users’ jobs. The combination of primitives, error suppression / mitigation, and sessions paves the way to efficiently build and execute scalable quantum applications.
+Qiskit Runtime is a cloud-based quantum computing service developed by IBM. It offers computational *primitives* to perform foundational quantum computing tasks that use built-in error suppression and mitigation techniques. Primitives can be executed inside of *sessions*, allowing collections of circuits to be jointly run on a quantum computer without being interrupted by other users’ jobs. The combination of primitives, error suppression / mitigation, and sessions paves the way to efficiently build and execute scalable quantum applications.
 
 The following figure illustrates how one can use Qiskit Runtime sessions and primitives. The first session request (job) waits through the regular `fair-share queue <https://quantum-computing.ibm.com/admin/docs/admin/manage/systems/queue>`__. When it starts to run, the session is started. After the first session job is finished processing, the next job in the session is run. This process continues until the session is paused (due to a lack of queued session jobs) or closed.
 
@@ -17,7 +17,11 @@ Key concepts
 
 **Primitives**
 
+.. vale IBMQuantum.Spelling = NO
+
 Primitives are base level operations that serve as building blocks for many quantum algorithms and applications. Through these primitives, users can obtain high-fidelity results, without needing detailed hardware knowledge.  This abstraction allows you to write code, using Qiskit algorithms or otherwise, that can run on different quantum hardware or simulators without having to explicitly manage aspects such as compilation, optimization, and error suppression / mitigation. The primitives offered by `qiskit_ibm_runtime <https://qiskit.org/ecosystem/ibm-runtime/apidocs/ibm-runtime.html>`__ add additional options specific to IBM services. See `Introduction to primitives <primitives.html>`__ for further details.
+
+.. vale IBMQuantum.Spelling = YES
 
 There are currently two primitives defined in Qiskit: Estimator and Sampler.
 
@@ -32,7 +36,7 @@ This primitive takes circuits as input and returns a quasi-probability distribut
 
 **Error suppression / mitigation**
 
-While building a fault-tolerant quantum computation is the ultimate goal, at present, calculations performed on near-term quantum computers are susceptible to noise.  Qiskit Runtime offers a number of methods for preventing errors before they occur (error suppression techniques) and dealing with those that do occur (error mitigation techniques).  
+While building a fault-tolerant quantum computation is the ultimate goal, at present, calculations performed on near-term quantum computers are susceptible to noise.  Qiskit Runtime offers several methods for preventing errors before they occur (error suppression techniques) and dealing with those that do occur (error mitigation techniques).  
 
 **Session**
 
