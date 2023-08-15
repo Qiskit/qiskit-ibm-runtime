@@ -186,8 +186,7 @@ class Runtime(RestAdapterBase):
             payload["group"] = group
             payload["project"] = project
         if channel_strategy:
-            # TODO this will be changed to "channel_strategy"
-            payload["performance_strategy"] = channel_strategy
+            payload["channel_strategy"] = channel_strategy
         data = json.dumps(payload, cls=RuntimeEncoder)
         return self.session.post(url, data=data, timeout=900).json()
 
