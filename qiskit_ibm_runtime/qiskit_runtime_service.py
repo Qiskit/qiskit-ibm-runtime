@@ -237,9 +237,9 @@ class QiskitRuntimeService(Provider):
         verify_ = verify or True
         if channel_strategy:
             if channel_strategy not in ["q-ctrl"]:
-                raise IBMInputValueError(f"{channel_strategy} is not a valid channel strategy.")
+                raise ValueError(f"{channel_strategy} is not a valid channel strategy.")
             if channel and channel != "ibm_cloud":
-                raise IBMInputValueError(
+                raise ValueError(
                     f"The channel strategy {channel_strategy} is "
                     "only supported on the ibm_cloud channel."
                 )
