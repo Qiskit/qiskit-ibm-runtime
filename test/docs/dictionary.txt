@@ -247,3 +247,4 @@ transpiling
 tridiagonal
 trits
 unitaries
+Watrous
