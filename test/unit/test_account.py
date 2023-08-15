@@ -175,6 +175,19 @@ class TestAccount(IBMTestCase):
                     ).validate()
                 self.assertIn("Invalid proxy configuration", str(err.exception))
 
+    def test_default_channel(self):
+        """Test that if QISKIT_DEFAULT_CHANNEL is set in the environment, this channel will be used"""
+        service = FakeRuntimeService()
+        self.assertEqual(service.channel, "ibm_cloud")
+        channel_envs = [
+            {"QISKIT_DEFAULT_CHANNEL": "ibm_quantum"},
+            {"QISKIT_DEFAULT_CHANNEL": "ibm_cloud"},
+        ]
+        for channel_env in channel_envs:
+            with custom_envs(channel_env):
+                service = FakeRuntimeService()
+                self.assertEqual(service.channel, channel_env["QISKIT_DEFAULT_CHANNEL"])
+
 
 # NamedTemporaryFiles not supported in Windows
 @skipIf(os.name == "nt", "Test not supported in Windows")

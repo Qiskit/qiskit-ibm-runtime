@@ -12,6 +12,7 @@
 
 """Qiskit runtime service."""
 
+import os
 import json
 import logging
 import traceback
@@ -231,6 +232,7 @@ class QiskitRuntimeService(Provider):
         """Discover account."""
         account = None
         verify_ = verify or True
+        default_channel = os.getenv("QISKIT_DEFAULT_CHANNEL")
         if name:
             if filename:
                 if any([auth, channel, token, url]):
@@ -253,7 +255,7 @@ class QiskitRuntimeService(Provider):
                 raise ValueError("'auth' can only be 'cloud' or 'legacy'")
             if channel and channel not in ["ibm_cloud", "ibm_quantum"]:
                 raise ValueError("'channel' can only be 'ibm_cloud' or 'ibm_quantum'")
-            channel = channel or self._get_channel_for_auth(auth=auth)
+            channel = channel or default_channel or self._get_channel_for_auth(auth=auth)
             if token:
                 account = Account(
                     channel=channel,
@@ -274,7 +276,7 @@ class QiskitRuntimeService(Provider):
             )
 
         if account is None:
-            account = AccountManager.get(filename=filename)
+            account = AccountManager.get(filename=filename, channel=default_channel)
 
         if instance:
             account.instance = instance
