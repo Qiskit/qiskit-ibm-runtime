@@ -17,11 +17,7 @@ Key concepts
 
 **Primitives**
 
-.. vale IBMQuantum.Spelling = NO
-
-Primitives are base level operations that serve as building blocks for many quantum algorithms and applications. Through these primitives, users can obtain high-fidelity results, without needing detailed hardware knowledge.  This abstraction allows you to write code, using Qiskit algorithms or otherwise, that can run on different quantum hardware or simulators without having to explicitly manage aspects such as compilation, optimization, and error suppression / mitigation. The primitives offered by `qiskit_ibm_runtime <https://qiskit.org/ecosystem/ibm-runtime/apidocs/ibm-runtime.html>`__ add additional options specific to IBM services. See `Introduction to primitives <primitives.html>`__ for further details.
-
-.. vale IBMQuantum.Spelling = YES
+Primitives are base level operations that serve as building blocks for many quantum algorithms and applications. Through these primitives, users can obtain high-fidelity results, without needing detailed hardware knowledge.  This abstraction allows you to write code, using Qiskit algorithms or otherwise, that can run on different quantum hardware or simulators without having to explicitly manage aspects such as compilation, optimization, and error suppression / mitigation. The primitives offered by :mod:`qiskit_ibm_runtime` add additional options specific to IBM services. See `Introduction to primitives <primitives.html>`__ for further details.
 
 There are currently two primitives defined in Qiskit: Estimator and Sampler.
 
