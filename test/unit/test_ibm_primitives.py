@@ -14,20 +14,16 @@
 
 import sys
 import copy
-import json
 import os
 from unittest.mock import MagicMock, patch
 import warnings
 from dataclasses import asdict
 from typing import Dict
-import unittest
 
 from qiskit import transpile
 from qiskit.circuit import QuantumCircuit
-from qiskit.circuit.library import RealAmplitudes
 from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit.quantum_info import SparsePauliOp
-from qiskit.primitives.utils import _circuit_key
 from qiskit.providers.fake_provider import FakeManila
 
 from qiskit_ibm_runtime import (
@@ -35,11 +31,9 @@ from qiskit_ibm_runtime import (
     Estimator,
     Options,
     Session,
-    RuntimeEncoder,
 )
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 import qiskit_ibm_runtime.session as session_pkg
-from qiskit_ibm_runtime.utils.utils import _hash
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 from ..ibm_test_case import IBMTestCase
@@ -49,7 +43,6 @@ from ..utils import (
     dict_keys_equal,
     create_faulty_backend,
 )
-from .mock.fake_runtime_service import FakeRuntimeService
 
 
 class MockSession(Session):
@@ -162,6 +155,7 @@ class TestPrimitives(IBMTestCase):
                 mock_service.return_value = mock_service_inst
                 mock_backend = MagicMock()
                 mock_backend.name = backend_name
+                mock_service.global_service = None
                 mock_service_inst.backend.return_value = mock_backend
 
                 inst = cls(backend=backend_name)
@@ -183,6 +177,7 @@ class TestPrimitives(IBMTestCase):
             ) as mock_service:
                 with self.assertWarns(DeprecationWarning):
                     mock_service.reset_mock()
+                    mock_service.global_service = None
                     inst = cls(session=backend_name)
                     mock_service.assert_called_once()
                     self.assertIsNone(inst.session)
@@ -237,6 +232,7 @@ class TestPrimitives(IBMTestCase):
                 mock_service_inst.channel = "ibm_cloud"
                 mock_service.return_value = mock_service_inst
                 mock_service.reset_mock()
+                mock_service.global_service = None
                 inst = cls()
                 mock_service.assert_called_once()
                 self.assertIsNone(inst.session)
@@ -476,62 +472,6 @@ class TestPrimitives(IBMTestCase):
             inst = cls(session=session)
             inst.run(self.qx, observables=self.obs)
         self.assertEqual(session.run.call_count, num_runs)
-
-    @unittest.skip("Skip until data caching is reenabled.")
-    def test_primitives_circuit_caching(self):
-        """Test circuit caching in Estimator and Sampler classes"""
-        psi1 = RealAmplitudes(num_qubits=2, reps=2)
-        psi1.measure_all()
-        psi2 = RealAmplitudes(num_qubits=2, reps=3)
-        psi2.measure_all()
-        psi3 = RealAmplitudes(num_qubits=2, reps=2)
-        psi3.measure_all()
-        psi4 = RealAmplitudes(num_qubits=2, reps=3)
-        psi4.measure_all()
-        psi1_id = _hash(json.dumps(_circuit_key(psi1), cls=RuntimeEncoder))
-        psi2_id = _hash(json.dumps(_circuit_key(psi2), cls=RuntimeEncoder))
-        psi3_id = _hash(json.dumps(_circuit_key(psi3), cls=RuntimeEncoder))
-        psi4_id = _hash(json.dumps(_circuit_key(psi4), cls=RuntimeEncoder))
-
-        # pylint: disable=invalid-name
-        H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
-        H2 = SparsePauliOp.from_list([("IZ", 1)])
-
-        with Session(
-            service=FakeRuntimeService(channel="ibm_quantum", token="abc"),
-            backend="ibmq_qasm_simulator",
-        ) as session:
-            estimator = Estimator(session=session)
-
-            # calculate [ <psi1(theta1)|H1|psi1(theta1)> ]
-            with patch.object(estimator._session, "run") as mock_run:
-                estimator.run([psi1, psi2], [H1, H2], [[1] * 6, [1] * 8])
-                _, kwargs = mock_run.call_args
-                inputs = kwargs["inputs"]
-                self.assertDictEqual(inputs["circuits"], {psi1_id: psi1, psi2_id: psi2})
-                self.assertEqual(inputs["circuit_ids"], [psi1_id, psi2_id])
-
-            sampler = Sampler(session=session)
-            with patch.object(sampler._session, "run") as mock_run:
-                sampler.run([psi1, psi2], [[1] * 6, [1] * 8])
-                _, kwargs = mock_run.call_args
-                inputs = kwargs["inputs"]
-                self.assertDictEqual(inputs["circuits"], {})
-                self.assertEqual(inputs["circuit_ids"], [psi1_id, psi2_id])
-
-            with patch.object(estimator._session, "run") as mock_run:
-                estimator.run([psi3], [H1], [[1] * 6])
-                _, kwargs = mock_run.call_args
-                inputs = kwargs["inputs"]
-                self.assertDictEqual(inputs["circuits"], {psi3_id: psi3})
-                self.assertEqual(inputs["circuit_ids"], [psi3_id])
-
-            with patch.object(sampler._session, "run") as mock_run:
-                sampler.run([psi4, psi1], [[1] * 8, [1] * 6])
-                _, kwargs = mock_run.call_args
-                inputs = kwargs["inputs"]
-                self.assertDictEqual(inputs["circuits"], {psi4_id: psi4})
-                self.assertEqual(inputs["circuit_ids"], [psi4_id, psi1_id])
 
     def test_set_options(self):
         """Test set options."""

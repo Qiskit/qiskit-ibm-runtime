@@ -1,6 +1,0 @@
----
-features:
-  - |
-    Raise an exception if the number of circuits passed to BasePrimitive._run_primitive()
-    exceeds the number of circuits supported on the backend. 
-

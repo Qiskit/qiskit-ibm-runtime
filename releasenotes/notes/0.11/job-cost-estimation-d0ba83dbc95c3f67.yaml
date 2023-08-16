@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    Added a new property, :meth:`~qiskit_ibm_runtime.RuntimeJob.usage_estimation`
+    that returns the estimated running time, ``quantum_seconds``. Quantum time 
+    represents the time that the QPU complex is occupied exclusively by the job.
