@@ -126,7 +126,7 @@ class RuntimeJob(Job):
         self._api_client = api_client
         self._results: Optional[Any] = None
         self._interim_results: Optional[Any] = None
-        self._params: Dict[str, Any] = None
+        self._params: Dict[str, Any] = {}
         self._creation_date = creation_date
         self._program_id = program_id
         self._status = JobStatus.INITIALIZING
