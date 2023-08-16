@@ -155,6 +155,7 @@ class TestPrimitives(IBMTestCase):
                 mock_service.return_value = mock_service_inst
                 mock_backend = MagicMock()
                 mock_backend.name = backend_name
+                mock_service.global_service = None
                 mock_service_inst.backend.return_value = mock_backend
 
                 inst = cls(backend=backend_name)
@@ -176,6 +177,7 @@ class TestPrimitives(IBMTestCase):
             ) as mock_service:
                 with self.assertWarns(DeprecationWarning):
                     mock_service.reset_mock()
+                    mock_service.global_service = None
                     inst = cls(session=backend_name)
                     mock_service.assert_called_once()
                     self.assertIsNone(inst.session)
@@ -230,6 +232,7 @@ class TestPrimitives(IBMTestCase):
                 mock_service_inst.channel = "ibm_cloud"
                 mock_service.return_value = mock_service_inst
                 mock_service.reset_mock()
+                mock_service.global_service = None
                 inst = cls()
                 mock_service.assert_called_once()
                 self.assertIsNone(inst.session)
