@@ -101,7 +101,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
     @run_integration_test
     def test_retrieve_pending_jobs(self, service):
         """Test retrieving pending jobs (QUEUED, RUNNING)."""
-        circuits = [ReferenceCircuits.bell()] * 5
+        circuits = [ReferenceCircuits.bell()] * 20
         job = self._run_program(service, circuits=circuits)
         wait_for_status(job, JobStatus.RUNNING)
         rjobs = service.jobs(pending=True)
