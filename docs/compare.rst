@@ -13,8 +13,8 @@ characterizing quantum systems.
 In contrast, Qiskit Runtime is designed to streamline algorithm and application construction
 by removing the need for users to understand
 technical hardware and low-level software details. Advanced processing techniques
-for error suppression and mitigation are automtically applied, giving users
-high-fidelity results without the burdeen of haivng to code these routines
+for error suppression and mitigation are automatically applied, giving users
+high-fidelity results without the burden of having to code these routines
 themselves. The inclusion of sessions within Qiskit Runtime allows users
 to run iterative algorithm circuits back to back, or batch collections of circuits
 without having to re-queue each job. This results in more efficient quantum processor utilization
