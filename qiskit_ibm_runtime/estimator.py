@@ -174,28 +174,6 @@ class Estimator(BasePrimitive, BaseEstimator):
         Returns:
             Submitted job
         """
-        # TODO: Re-enable data caching when ntc 1748 is fixed
-        # circuits_map = {}
-        # circuit_ids = []
-        # for circuit in circuits:
-        #     circuit_id = _hash(json.dumps(_circuit_key(circuit), cls=RuntimeEncoder))
-        #     circuit_ids.append(circuit_id)
-        #     if circuit_id in self._session._circuits_map:
-        #         continue
-        #     self._session._circuits_map[circuit_id] = circuit
-        #     circuits_map[circuit_id] = circuit
-
-        # if self._first_run:
-        #     self._first_run = False
-        #     circuits_map.update(self._circuits_map)
-
-        # inputs = {
-        #     "circuits": circuits_map,
-        #     "circuit_ids": circuit_ids,
-        #     "observables": observables,
-        #     "observable_indices": list(range(len(observables))),
-        #     "parameter_values": parameter_values,
-        # }
         inputs = {
             "circuits": circuits,
             "circuit_indices": list(range(len(circuits))),

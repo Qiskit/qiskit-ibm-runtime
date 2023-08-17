@@ -4,6 +4,6 @@ link: 'https://github.com/IBM/ibm-quantum-style-guide/issues/16'
 ignorecase: true
 level: error
 tokens:
-  - please
+  - 'please(?!\swait)'
   - thanks
   - thank you

@@ -297,19 +297,44 @@ class RetrySession(Session):
                 for caller in callers:
                     if str(caller) in frame_path:
                         caller_str = str(caller) + frame_path.split(str(caller), 1)[-1]
-                        if os.name == "nt":
-                            sanitized_caller_str = caller_str.replace("\\", "~")
+                        sanitized_caller_str = caller_str.replace("/", "~")
+                        if self.custom_header:
+                            headers.update(
+                                {
+                                    "X-Qx-Client-Application": f"{CLIENT_APPLICATION}/"
+                                    f"{sanitized_caller_str}/{self.custom_header}"
+                                }
+                            )
                         else:
-                            sanitized_caller_str = caller_str.replace("/", "~")
-                        headers.update(
-                            {
-                                "X-Qx-Client-Application": f"{CLIENT_APPLICATION}/{sanitized_caller_str}"
-                            }
-                        )
+                            headers.update(
+                                {
+                                    "X-Qx-Client-Application": f"{CLIENT_APPLICATION}/{sanitized_caller_str}"
+                                }
+                            )
                         found_caller = True
                         break  # break out of the inner loop
                 if found_caller:
                     break  # break out of the outer loop
+
+                found_caller = False
+                for frame in stack:
+                    frame_path = str(PurePath(frame.filename))
+                    for caller in callers:
+                        if str(caller) in frame_path:
+                            caller_str = str(caller) + frame_path.split(str(caller), 1)[-1]
+                            if os.name == "nt":
+                                sanitized_caller_str = caller_str.replace("\\", "~")
+                            else:
+                                sanitized_caller_str = caller_str.replace("/", "~")
+                            headers.update(
+                                {
+                                    "X-Qx-Client-Application": f"{CLIENT_APPLICATION}/{sanitized_caller_str}"
+                                }
+                            )
+                            found_caller = True
+                            break  # break out of the inner loop
+                    if found_caller:
+                        break  # break out of the outer loop
         self.headers = headers
         self._set_custom_header()
 
