@@ -86,7 +86,7 @@ Why use Qiskit Runtime?
     - :octicon:`check`
     - :octicon:`check`
 
-  * - Elasic compute integration
+  * - Elastic compute integration
     - :octicon:`check`
     - :octicon:`check`
 
