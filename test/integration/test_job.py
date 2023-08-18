@@ -68,6 +68,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         job = self._run_program(service, backend="")
         self.assertTrue(job.backend(), f"Job {job.job_id()} has no backend.")
 
+    @production_only
     @run_integration_test
     def test_run_program_log_level(self, service):
         """Test running with a custom log level."""

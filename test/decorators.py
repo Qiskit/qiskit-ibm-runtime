@@ -28,7 +28,7 @@ def production_only(func):
 
     @wraps(func)
     def _wrapper(self, *args, **kwargs):
-        if "dev" in self.dependencies.url:
+        if "dev" in self.dependencies.url or "test" in self.dependencies.url:
             raise SkipTest(f"Skipping integration test. {self} is not supported on staging.")
         func(self, *args, **kwargs)
 
@@ -127,6 +127,7 @@ def integration_test_setup(
             service = None
             if init_service:
                 service = QiskitRuntimeService(
+                    instance=instance,
                     channel=channel,
                     token=token,
                     url=url,
