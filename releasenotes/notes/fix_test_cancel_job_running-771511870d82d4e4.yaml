@@ -1,0 +1,7 @@
+fixes:
+  - |
+    Fixes a race condition in the function `test_cancel_running_job()` in `test_job()`. 
+    Modified the `cancel()` method in `runtime_job.py` to handle status 204 as case 
+    where job cancellation cannot be performed due to specific conditions.  
+    Refer to #1019 <https://github.com/Qiskit/qiskit-ibm-runtime/issues/1019>_ for
+    more details.
