@@ -161,6 +161,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
             service,
             circuits=[ReferenceCircuits.bell()] * 10,
         )
+        wait_for_status(job, JobStatus.CANCELLED)
         if not cancel_job_safe(job, self.log):
             return
         time.sleep(10)  # Wait a bit for DB to update.
