@@ -245,7 +245,7 @@ class RuntimeJob(Job):
         try:
             self._api_client.job_cancel(self.job_id())
         except RequestsApiError as ex:
-            if ex.status_code == 409:
+            if ex.status_code == 409 or ex.status_code == 204:
                 raise RuntimeInvalidStateError(f"Job cannot be cancelled: {ex}") from None
             raise IBMRuntimeError(f"Failed to cancel job: {ex}") from None
         self.cancel_result_streaming()
