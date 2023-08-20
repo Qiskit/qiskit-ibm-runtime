@@ -1,6 +1,6 @@
 fixes:
   - |
-    Fixes a race condition in the function `test_cancel_running_job()` in `test_job()` 
-    where job cancellation cannot be performed. 
+    Fixes a race condition in the function `test_cancel_running_job()` in `test_job.py` 
+    where job cancellation could not be performed. 
     Refer to #1019 <https://github.com/Qiskit/qiskit-ibm-runtime/issues/1019>_ for
     more details.
