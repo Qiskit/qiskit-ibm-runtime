@@ -90,11 +90,10 @@ As mentioned previously, the ``IBMBackend`` class attributes provide information
   backend.simulator #returns True or False, depending on whether it is a simulator
   backend.num_qubits #returns the number of qubits the backend has
 
-.. vale IBMQuantum.Spelling = NO
+See the |IBMBackend_documentation|_ for the full list of backend attributes.
 
-See the `IBMBackend class documentation <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/stubs/qiskit_ibm_runtime.IBMBackend.html#qiskit_ibm_runtime.IBMBackend>`__ for the full list of backend attributes.
-
-.. vale IBMQuantum.Spelling = YES
+.. |IBMBackend_documentation| replace:: ``IBMBackend`` class documentation
+.. _IBMBackend_documentation: https://qiskit.org/documentation/partners/qiskit_ibm_runtime/stubs/qiskit_ibm_runtime.IBMBackend.html#qiskit_ibm_runtime.IBMBackend
 
 Find backend information from other channels
 --------------------------------------------------

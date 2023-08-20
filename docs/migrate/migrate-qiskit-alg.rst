@@ -12,7 +12,7 @@ Work with updated Qiskit algorithms
 .. |qiskit.quantum_info| replace:: ``qiskit.quantum_info``
 .. _qiskit.quantum_info: https://qiskit.org/documentation/apidoc/quantum_info.html
 
-The |qiskit.algorithms|_ module has been updated to leverage the primitives in all of its classes.
+The |qiskit.algorithms|_ module has been updated to use the primitives in all of its classes.
 In practice, this means that:
 
 1. All algorithms now take in a primitive instead of a ``Backend`` or |QuantumInstance|_
