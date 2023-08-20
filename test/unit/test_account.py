@@ -181,15 +181,14 @@ class TestAccount(IBMTestCase):
         with temporary_account_config_file(token=token):
             service = FakeRuntimeService()
         self.assertEqual(service.channel, "ibm_cloud")
-        channel_envs = [
-            {"QISKIT_DEFAULT_CHANNEL": "ibm_quantum"},
-            {"QISKIT_DEFAULT_CHANNEL": "ibm_cloud"},
-        ]
-        for channel_env in channel_envs:
+
+        subtests = ["ibm_cloud", "ibm_quantum"]
+        for channel in subtests:
+            channel_env = {"QISKIT_DEFAULT_CHANNEL": channel}
             with custom_envs(channel_env):
-                with temporary_account_config_file(token=token):
+                with temporary_account_config_file(channel=channel, token=token):
                     service = FakeRuntimeService()
-                    self.assertEqual(service.channel, channel_env["QISKIT_DEFAULT_CHANNEL"])
+                    self.assertEqual(service.channel, channel)
 
 
 # NamedTemporaryFiles not supported in Windows
