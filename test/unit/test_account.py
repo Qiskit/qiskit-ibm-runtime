@@ -754,10 +754,7 @@ class TestEnableAccount(IBMTestCase):
                     "QISKIT_IBM_INSTANCE": "h/g/p" if channel == "ibm_quantum" else "crn:12",
                 }
                 with custom_envs(envs):
-                    with temporary_account_config_file(contents=contents), no_envs(
-                        ["QISKIT_IBM_TOKEN"]
-                    ):
-                        service = FakeRuntimeService(channel=channel)
+                    service = FakeRuntimeService(channel=channel)
 
                 self.assertTrue(service._account)
                 self.assertEqual(service._account.token, token)
