@@ -177,7 +177,9 @@ class TestAccount(IBMTestCase):
 
     def test_default_channel(self):
         """Test that if QISKIT_DEFAULT_CHANNEL is set in the environment, this channel will be used"""
-        service = FakeRuntimeService()
+        token = uuid.uuid4().hex
+        with temporary_account_config_file(token=token):
+            service = FakeRuntimeService()
         self.assertEqual(service.channel, "ibm_cloud")
         channel_envs = [
             {"QISKIT_DEFAULT_CHANNEL": "ibm_quantum"},
@@ -185,8 +187,9 @@ class TestAccount(IBMTestCase):
         ]
         for channel_env in channel_envs:
             with custom_envs(channel_env):
-                service = FakeRuntimeService()
-                self.assertEqual(service.channel, channel_env["QISKIT_DEFAULT_CHANNEL"])
+                with temporary_account_config_file(token=token):
+                    service = FakeRuntimeService()
+                    self.assertEqual(service.channel, channel_env["QISKIT_DEFAULT_CHANNEL"])
 
 
 # NamedTemporaryFiles not supported in Windows
@@ -751,7 +754,10 @@ class TestEnableAccount(IBMTestCase):
                     "QISKIT_IBM_INSTANCE": "h/g/p" if channel == "ibm_quantum" else "crn:12",
                 }
                 with custom_envs(envs):
-                    service = FakeRuntimeService(channel=channel)
+                    with temporary_account_config_file(contents=contents), no_envs(
+                        ["QISKIT_IBM_TOKEN"]
+                    ):
+                        service = FakeRuntimeService(channel=channel)
 
                 self.assertTrue(service._account)
                 self.assertEqual(service._account.token, token)
