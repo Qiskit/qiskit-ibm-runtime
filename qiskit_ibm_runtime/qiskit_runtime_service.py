@@ -193,6 +193,7 @@ class QiskitRuntimeService(Provider):
         )
 
         self._channel = self._account.channel
+        self._channel_strategy = self._account.channel_strategy
         self._programs: Dict[str, RuntimeProgram] = {}
         self._backends: Dict[str, "ibm_backend.IBMBackend"] = {}
         self._backend_configs: Dict[str, Any] = {}
@@ -1498,6 +1499,15 @@ class QiskitRuntimeService(Provider):
             The channel type used.
         """
         return self._channel
+
+    @property
+    def channel_strategy(self) -> str:
+        """Return the channel strategy type used.
+
+        Returns:
+            The channel strategy type used.
+        """
+        return self._channel_strategy
 
     @property
     def runtime(self):  # type:ignore

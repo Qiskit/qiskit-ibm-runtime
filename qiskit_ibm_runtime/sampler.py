@@ -27,6 +27,7 @@ from .base_primitive import BasePrimitive
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
+from .utils.qctrl import validate_qctrl_options
 
 logger = logging.getLogger(__name__)
 
@@ -160,6 +161,9 @@ class Sampler(BasePrimitive, BaseSampler):
         """
         if os.getenv("QISKIT_RUNTIME_SKIP_OPTIONS_VALIDATION"):
             return
+
+        if self._service.channel_strategy == "q-ctrl":
+            return validate_qctrl_options(options)
 
         if options.get("resilience_level") and not options.get("resilience_level") in [
             0,
