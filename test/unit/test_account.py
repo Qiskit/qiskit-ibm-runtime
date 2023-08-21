@@ -175,21 +175,6 @@ class TestAccount(IBMTestCase):
                     ).validate()
                 self.assertIn("Invalid proxy configuration", str(err.exception))
 
-    def test_default_channel(self):
-        """Test that if QISKIT_DEFAULT_CHANNEL is set in the environment, this channel will be used"""
-        token = uuid.uuid4().hex
-        with temporary_account_config_file(token=token):
-            service = FakeRuntimeService()
-        self.assertEqual(service.channel, "ibm_cloud")
-
-        subtests = ["ibm_cloud", "ibm_quantum"]
-        for channel in subtests:
-            channel_env = {"QISKIT_DEFAULT_CHANNEL": channel}
-            with custom_envs(channel_env):
-                with temporary_account_config_file(channel=channel, token=token):
-                    service = FakeRuntimeService()
-                    self.assertEqual(service.channel, channel)
-
 
 # NamedTemporaryFiles not supported in Windows
 @skipIf(os.name == "nt", "Test not supported in Windows")
@@ -603,6 +588,22 @@ class TestAccountManager(IBMTestCase):
             channel="ibm_quantum", filename=user_filename, name=account_name
         )
         self.assertEqual(account.token, dummy_token)
+
+    @temporary_account_config_file()
+    def test_default_channel(self):
+        """Test that if QISKIT_DEFAULT_CHANNEL is set in the environment, this channel will be used"""
+        token = uuid.uuid4().hex
+        with temporary_account_config_file(token=token):
+            service = FakeRuntimeService()
+        self.assertEqual(service.channel, "ibm_cloud")
+
+        subtests = ["ibm_cloud", "ibm_quantum"]
+        for channel in subtests:
+            channel_env = {"QISKIT_DEFAULT_CHANNEL": channel}
+            with custom_envs(channel_env):
+                with temporary_account_config_file(channel=channel, token=token):
+                    service = FakeRuntimeService()
+                    self.assertEqual(service.channel, channel)
 
     def tearDown(self) -> None:
         """Test level tear down."""
