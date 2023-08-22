@@ -192,7 +192,7 @@ class QiskitRuntimeService(Provider):
             verify=self._account.verify,
         )
 
-        self._channel_strategy = channel_strategy
+        self._channel_strategy = channel_strategy or self._account.channel_strategy
         self._channel = self._account.channel
         self._programs: Dict[str, RuntimeProgram] = {}
         self._backends: Dict[str, "ibm_backend.IBMBackend"] = {}
@@ -1018,7 +1018,7 @@ class QiskitRuntimeService(Provider):
                 max_execution_time=qrt_options.max_execution_time,
                 start_session=start_session,
                 session_time=qrt_options.session_time,
-                channel_strategy=self._channel_strategy or self._account.channel_strategy,
+                channel_strategy=self._channel_strategy,
             )
         except RequestsApiError as ex:
             if ex.status_code == 404:
