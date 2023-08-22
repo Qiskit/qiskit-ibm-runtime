@@ -43,7 +43,7 @@ class SerializableClass:
         return cls(**json.loads(json_str))
 
     def __eq__(self, other):
-        return self.value == other.value
+        return self.value == self.from_json(other).value
 
 
 class SerializableClassDecoder(ResultDecoder):
