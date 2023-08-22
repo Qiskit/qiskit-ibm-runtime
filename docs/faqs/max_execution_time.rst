@@ -4,21 +4,21 @@
 What is the maximum execution time for a Qiskit Runtime job or session?
 =======================================================================
 
-Job max execution time
+Job maximum execution time
 ***************************
 
-To ensure fairness, and as a way for you to control cost, there is a
+To ensure fairness, and as a way to help control cost, there is a
 maximum execution time for each Qiskit Runtime job. If
-a job exceeds this time limit, it is forcibly cancelled, and a ``RuntimeJobMaxTimeoutError``
+a job exceeds this time limit, it is forcibly cancelled and a ``RuntimeJobMaxTimeoutError``
 exception is raised.
 
 .. note::
    As of ``qiskit-ibm-runtime`` 0.12.0, the ``max_execution_time`` value is based on quantum
    time instead of wall clock time. Quantum time represents the time that the QPU
-   complex (including control software, control electronics, QPU, etc) is engaged in
+   complex (including control software, control electronics, QPU, and so on) is engaged in
    processing the job.
 
-   Simulator jobs will continue to use wall clock time since they do not have quantum time.
+   Simulator jobs continue to use wall clock time because they do not have quantum time.
 
 You can set the maximum execution time (in seconds) on the job options by using one of the following methods:
 
@@ -41,7 +41,7 @@ You can also find quantum time used by previously completed jobs by using:
 
 In addition, the system calculates an appropriate job timeout value based on the
 input circuits and options. This system-calculated timeout is currently capped
-at 3 hours to ensure fair usage of the devices. If a ``max_execution_time`` is
+at 3 hours to ensure fair device usage. If a ``max_execution_time`` is
 also specified for the job, the lesser of the two values is used.
 
 For example, if you specify ``max_execution_time=5000``, but the system determines
