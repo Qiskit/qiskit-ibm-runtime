@@ -1,0 +1,5 @@
+---
+upgrade:
+  - |
+    Circuits will no longer be automatically stored in runtime jobs. They can still be retrieved
+    normally with :meth:`qiskit_ibm_runtime.RuntimeJob.inputs`.
