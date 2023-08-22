@@ -1,74 +1,85 @@
 .. _faqs/max_execution_time:
 
-============================================================
-What is the maximum execution time for a Qiskit Runtime job?
-============================================================
-
-To ensure fairness, there is a maximum execution time for each Qiskit Runtime job. If
-a job exceeds this time limit, it is forcibly cancelled. This is represented in the job
-status as `Cancelled - Ran too long`. The maximum execution time is the
-smaller of these values: 
-
-- The system limit 
-- The ``max_execution_time`` defined by the program
-- The ``max_execution_time`` defined by the job itself
-
-The system limit depends on the channel you're using and is defined as follows:
-
-IBM Cloud system limit
-***************************
-
-The system limit on the Qiskit Runtime job execution time is 3 hours for a job running on a simulator
-and 8 hours for a job running on a physical system.
-
-IBM Quantum system limit
-*****************************
-
-The system limit on the Qiskit Runtime job execution time is described in the following table:
-
-+------------------+--------------+------------------+--------------+-----------+
-|                  | Primitive programs              | Private programs         |
-+==================+==============+==================+==============+===========+
-|                  | Premium User | Open User        | Premium User | Open User |
-+------------------+--------------+------------------+--------------+-----------+
-| Simulated Device | 3h           | 1h               | 3h           | N/A       |
-+------------------+--------------+------------------+--------------+-----------+
-| Real Device      | 8h           | 4h               | 8h           | N/A       |
-+------------------+--------------+------------------+--------------+-----------+
-
-Note that a *premium user* here means a user who has access to backends in providers other than ibm-q/open/main.
-
-Program time limits
-***************************
-
-Different types of programs have their own time limits:
-
-* **Primitives:** The maximum execution time for the Sampler primitive is 10000 seconds (2.78 hours). The maximum execution time for the Estimator primitive is 18000 seconds (5 hours).
-* **Private Programs:** The maximum execution time (in seconds) for a program is set on the job options with the ``max_execution_time`` parameter. 
+=======================================================================
+What is the maximum execution time for a Qiskit Runtime job or session?
+=======================================================================
 
 Job max execution time
 ***************************
 
-Set the maximum execution time (in seconds) on the job options by using one of the following methods.  The value must be **300 or higher**:
+To ensure fairness, and as a way for you to control cost, there is a
+maximum execution time for each Qiskit Runtime job. If
+a job exceeds this time limit, it is forcibly cancelled, and a ``RuntimeJobMaxTimeoutError``
+exception is raiesd.
+
+.. note::
+   As of ``qiskit-ibm-runtime`` 0.12.0, the ``max_execution_time`` value is based on quantum
+   time instead of wall clock time. Quantum time represents the time that the QPU
+   complex (including control software, control electronics, QPU, ect) is engagned in
+   processing the job.
+
+   Simulator jobs will continue to use wall clock time since they do not have quantum time.
+
+You can set the maximum execution time (in seconds) on the job options by using one of the following methods:
 
 .. code-block:: python
 
-   # Initiate the Options class with parameters 
+   # Initiate the Options class with parameters
    options = Options(max_execution_time=360)
 
 .. code-block:: python
 
-   # Create the options object with attributes and values 
+   # Create the options object with attributes and values
    options = {"max_execution_time": 360}
+
+You can also find quantum time used by previously completed jobs by using:
+
+.. code-block:: python
+
+   # Find quantum time used by the job
+   print(f"Quantum time used by job {job.job_id()} was {job.metrics()['usage']['quantum_seconds']} seconds")
+
+In addition, the system calculates an appropriate job timeout value based on the
+input circuits and options. This system-calculated timeout is currently capped
+at 3 hours to ensure fair usage of the devices. If a ``max_execution_time`` is
+also specified for the job, the lesser of the two values is used.
+
+For example, if you specify ``max_execution_time=5000``, but the system determines
+it should not take more than 5 minutes (300 seconds) to execute the job, then the job will be
+cancelled after 5 minutes.
 
 Session time limits
 ***************************
 
-When a session is started, it is assigned a maximum session timeout value (by default, it is set to the system limit).  After the maximum session timeout is reached, the session is permanently closed  and any queued jobs that remain in the session are put into a ``failed`` state. The maximum session timeout value is set on the ``max_time`` parameter, which can be greater than the program’s ``max_execution_time``. 
+When a session is started, it is assigned a maximum session timeout value.
+After this timeout is reached, the session is terminated and any queued jobs that remain in the session are put into a ``failed`` state.
+You can set the maximum session timeout value using the ``max_time`` parameter:
+
+.. code-block:: python
+
+   # Set the session max time
+   with Session(max_time="1h"):
+       ...
+
+If you don't specify a session `max_time`, the system defaults are used:
+
++--------------+------------------+--------------+-----------+
+| Primitive programs              | Private programs         |
++==============+==================+==============+===========+
+| Premium User | Open User        | Premium User | Open User |
++--------------+------------------+--------------+-----------+
+| 8h           | 4h               | 8h           | N/A       |
++--------------+------------------+--------------+-----------+
+
+Note that a *premium user* here means a user who has access to backends in providers other than ``ibm-q/open/main``.
+
+.. note::
+   Session `max_time` is based on wall clock time, not quantum time.
+
 
 Additionally, there is a 5 minute *interactive* timeout value. If there are no session jobs queued within that window, the session is temporarily deactivated and normal job selection resumes. During job selection, if the job scheduler gets a new job from the session and its maximum timeout value has not been reached, the session is reactivated until its maximum timeout value is reached.
-  
-.. note:: The timer for the session's ``max_time`` is not paused during any temporary deactivation periods. 
+
+.. note:: The timer for the session's ``max_time`` is not paused during any temporary deactivation periods.
 
 
 Other limitations
