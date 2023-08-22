@@ -10,12 +10,12 @@ Job max execution time
 To ensure fairness, and as a way for you to control cost, there is a
 maximum execution time for each Qiskit Runtime job. If
 a job exceeds this time limit, it is forcibly cancelled, and a ``RuntimeJobMaxTimeoutError``
-exception is raiesd.
+exception is raised.
 
 .. note::
    As of ``qiskit-ibm-runtime`` 0.12.0, the ``max_execution_time`` value is based on quantum
    time instead of wall clock time. Quantum time represents the time that the QPU
-   complex (including control software, control electronics, QPU, ect) is engagned in
+   complex (including control software, control electronics, QPU, etc) is engaged in
    processing the job.
 
    Simulator jobs will continue to use wall clock time since they do not have quantum time.
@@ -61,7 +61,7 @@ You can set the maximum session timeout value using the ``max_time`` parameter:
    with Session(max_time="1h"):
        ...
 
-If you don't specify a session `max_time`, the system defaults are used:
+If you don't specify a session ``max_time``, the system defaults are used:
 
 +--------------+------------------+--------------+-----------+
 | Primitive programs              | Private programs         |
@@ -74,7 +74,7 @@ If you don't specify a session `max_time`, the system defaults are used:
 Note that a *premium user* here means a user who has access to backends in providers other than ``ibm-q/open/main``.
 
 .. note::
-   Session `max_time` is based on wall clock time, not quantum time.
+   Session ``max_time`` is based on wall clock time, not quantum time.
 
 
 Additionally, there is a 5 minute *interactive* timeout value. If there are no session jobs queued within that window, the session is temporarily deactivated and normal job selection resumes. During job selection, if the job scheduler gets a new job from the session and its maximum timeout value has not been reached, the session is reactivated until its maximum timeout value is reached.
