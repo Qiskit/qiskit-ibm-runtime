@@ -308,7 +308,8 @@ class RetrySession(Session):
                         else:
                             headers.update(
                                 {
-                                    "X-Qx-Client-Application": f"{CLIENT_APPLICATION}/{sanitized_caller_str}"
+                                    "X-Qx-Client-Application": f"{CLIENT_APPLICATION}"
+                                    f"/{sanitized_caller_str}"
                                 }
                             )
                         found_caller = True
@@ -328,7 +329,8 @@ class RetrySession(Session):
                                 sanitized_caller_str = caller_str.replace("/", "~")
                             headers.update(
                                 {
-                                    "X-Qx-Client-Application": f"{CLIENT_APPLICATION}/{sanitized_caller_str}"
+                                    "X-Qx-Client-Application": f"{CLIENT_APPLICATION}"
+                                    f"/{sanitized_caller_str}"
                                 }
                             )
                             found_caller = True
