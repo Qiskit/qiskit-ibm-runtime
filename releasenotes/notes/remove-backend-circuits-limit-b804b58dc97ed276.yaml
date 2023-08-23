@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    Previously we added validation when jobs were run to make sure the number 
+    of circuits was not greater than the maximum for that backend, ``backend.max_circuits``. 
+    This limit isn't actually necessary for primtives run from within a session. 

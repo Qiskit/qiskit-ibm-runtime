@@ -1026,7 +1026,6 @@ class QiskitRuntimeService(Provider):
             client_params=self._client_params,
             job_id=response["id"],
             program_id=program_id,
-            params=inputs,
             user_callback=callback,
             result_decoder=result_decoder,
             image=qrt_options.image,
