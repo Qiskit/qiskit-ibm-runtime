@@ -43,6 +43,8 @@ class SerializableClass:
         return cls(**json.loads(json_str))
 
     def __eq__(self, other):
+        if isinstance(other, str):
+            return self.value == self.from_json(other).value
         return self.value == other.value
 
 
