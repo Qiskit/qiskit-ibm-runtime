@@ -58,7 +58,7 @@ This guide has examples for two basic types of users:
    
 * Algorithm users that refer to Qiskit algorithms but do not directly use primitives.  These users now need to pass in a primitive instead of a backend to the updated Qiskit algorithms.  Refer to this topic for details:
 
-   * `Work with updated Qiskit algorithms <migrate-qiskit-alg.html>`__
+   * `Work with updated Qiskit algorithms <https://qiskit.org/ecosystem/algorithms>`__
 
 The following topics are use cases with code migration examples:
 
