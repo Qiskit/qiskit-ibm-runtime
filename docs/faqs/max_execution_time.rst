@@ -52,7 +52,7 @@ Session time limits
 ***************************
 
 When a session is started, it is assigned a maximum session timeout value.
-After this timeout is reached, the session is terminated and any queued jobs that remain in the session are put into a ``failed`` state.
+After this timeout is reached, the session is terminated, any jobs that are already running continue running, and any queued jobs that remain in the session are put into a ``failed`` state.
 You can set the maximum session timeout value using the ``max_time`` parameter:
 
 .. code-block:: python
