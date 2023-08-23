@@ -118,6 +118,8 @@ class QiskitRuntimeService(Provider):
     canceling job.
     """
 
+    global_service = None
+
     def __init__(
         self,
         channel: Optional[ChannelType] = None,
@@ -202,6 +204,7 @@ class QiskitRuntimeService(Provider):
             self._api_client = RuntimeClient(self._client_params)
             # TODO: We can make the backend discovery lazy
             self._backends = self._discover_cloud_backends()
+            QiskitRuntimeService.global_service = self
             return
         else:
             auth_client = self._authenticate_ibm_quantum_account(self._client_params)
@@ -214,6 +217,7 @@ class QiskitRuntimeService(Provider):
                 for backend_name in hgp.backends:
                     if backend_name not in self._backends:
                         self._backends[backend_name] = None
+        QiskitRuntimeService.global_service = self
 
         # TODO - it'd be nice to allow some kind of autocomplete, but `service.ibmq_foo`
         # just seems wrong since backends are not runtime service instances.
@@ -1036,7 +1040,6 @@ class QiskitRuntimeService(Provider):
             client_params=self._client_params,
             job_id=response["id"],
             program_id=program_id,
-            params=inputs,
             user_callback=callback,
             result_decoder=result_decoder,
             image=qrt_options.image,

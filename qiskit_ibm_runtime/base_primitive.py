@@ -21,7 +21,6 @@ from dataclasses import asdict
 
 from qiskit.providers.options import Options as TerraOptions
 
-from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from .options import Options
 from .options.utils import set_default_error_levels
 from .runtime_job import RuntimeJob
@@ -105,7 +104,11 @@ class BasePrimitive(ABC):
                 version="0.10.0",
                 remedy="Please pass it as the ``backend`` parameter instead.",
             )
-            self._service = QiskitRuntimeService()
+            self._service = (
+                QiskitRuntimeService()
+                if QiskitRuntimeService.global_service is None
+                else QiskitRuntimeService.global_service
+            )
             self._backend = self._service.backend(session)
         elif isinstance(backend, Session):
             issue_deprecation_msg(
@@ -123,7 +126,11 @@ class BasePrimitive(ABC):
             self._service = backend.service
             self._backend = backend
         elif isinstance(backend, str):
-            self._service = QiskitRuntimeService()
+            self._service = (
+                QiskitRuntimeService()
+                if QiskitRuntimeService.global_service is None
+                else QiskitRuntimeService.global_service
+            )
             self._backend = self._service.backend(backend)
         elif get_cm_session():
             self._session = get_cm_session()
@@ -132,7 +139,11 @@ class BasePrimitive(ABC):
                 name=self._session.backend(), instance=self._session._instance
             )
         else:
-            self._service = QiskitRuntimeService()
+            self._service = (
+                QiskitRuntimeService()
+                if QiskitRuntimeService.global_service is None
+                else QiskitRuntimeService.global_service
+            )
             if self._service.channel != "ibm_cloud":
                 raise ValueError(
                     "A backend or session must be specified when not using ibm_cloud channel."
@@ -174,19 +185,8 @@ class BasePrimitive(ABC):
         self._validate_options(combined)
         primitive_inputs.update(Options._get_program_inputs(combined))
 
-        circuits = primitive_inputs["circuits"]
-        if (
-            self._backend
-            and isinstance(self._backend, IBMBackend)
-            and len(circuits) > self._backend.max_circuits
-        ):
-            raise IBMInputValueError(
-                f"Number of circuits, {len(circuits)} exceeds the "
-                f"maximum for this backend, {self._backend.max_circuits})"
-            )
-
         if self._backend and combined["transpilation"]["skip_transpilation"]:
-            for circ in circuits:
+            for circ in primitive_inputs["circuits"]:
                 self._backend.check_faulty(circ)
 
         logger.info("Submitting job using options %s", combined)

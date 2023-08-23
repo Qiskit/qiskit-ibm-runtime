@@ -34,7 +34,6 @@ from qiskit_ibm_runtime import (
 )
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 import qiskit_ibm_runtime.session as session_pkg
-from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import (
@@ -155,6 +154,7 @@ class TestPrimitives(IBMTestCase):
                 mock_service.return_value = mock_service_inst
                 mock_backend = MagicMock()
                 mock_backend.name = backend_name
+                mock_service.global_service = None
                 mock_service_inst.backend.return_value = mock_backend
 
                 inst = cls(backend=backend_name)
@@ -176,6 +176,7 @@ class TestPrimitives(IBMTestCase):
             ) as mock_service:
                 with self.assertWarns(DeprecationWarning):
                     mock_service.reset_mock()
+                    mock_service.global_service = None
                     inst = cls(session=backend_name)
                     mock_service.assert_called_once()
                     self.assertIsNone(inst.session)
@@ -230,6 +231,7 @@ class TestPrimitives(IBMTestCase):
                 mock_service_inst.channel = "ibm_cloud"
                 mock_service.return_value = mock_service_inst
                 mock_service.reset_mock()
+                mock_service.global_service = None
                 inst = cls()
                 mock_service.assert_called_once()
                 self.assertIsNone(inst.session)
@@ -889,30 +891,4 @@ class TestPrimitives(IBMTestCase):
         self.assertTrue(
             dict_paritally_equal(dict1, dict2),
             f"{dict1} and {dict2} not partially equal.",
-        )
-
-    def test_too_many_circuits(self):
-        """Test exception when number of circuits exceeds backend._max_circuits"""
-        model_backend = FakeManila()
-        backend = IBMBackend(
-            configuration=model_backend.configuration(),
-            service=MagicMock(),
-            api_client=None,
-            instance=None,
-        )
-        primitives = [Sampler, Estimator]
-        max_circs = backend.configuration().max_experiments
-        circs = []
-        observables = []
-        for _ in range(max_circs + 1):
-            circs.append(self.qx)
-            observables.append(self.obs)
-        for cls in primitives:
-            with self.subTest(primitive=cls):
-                inst = cls(backend=backend)
-                with self.assertRaises(IBMInputValueError) as err:
-                    inst.run(circs, observables=observables)
-        self.assertIn(
-            f"Number of circuits, {max_circs + 1} exceeds the maximum for this backend, {max_circs}",
-            str(err.exception),
         )

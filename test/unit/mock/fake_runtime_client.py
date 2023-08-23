@@ -150,7 +150,7 @@ class BaseFakeRuntimeJob:
             "project": self._project,
             "backend": self._backend_name,
             "state": {"status": self._status, "reason": self._reason},
-            "params": [self._params],
+            "params": self._params,
             "program": {"id": self._program_id},
             "image": self._image,
         }
