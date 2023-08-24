@@ -44,6 +44,7 @@ class TestOptions(IBMTestCase):
                 "transpilation": {"layout_method": "trivial"},
                 "log_level": "INFO",
             },
+            {"max_retries": 3},
         ]
         for new_ops in options_vars:
             with self.subTest(new_ops=new_ops):
@@ -115,6 +116,7 @@ class TestOptions(IBMTestCase):
             instance="h/g/p",
             job_tags=["foo", "bar"],
             max_execution_time=600,
+            max_retries=3,
         )
         partial_options = RuntimeOptions(backend="foo", log_level="DEBUG")
 

@@ -20,6 +20,7 @@ import logging
 from dataclasses import asdict
 
 from qiskit.providers.options import Options as TerraOptions
+from qiskit.providers.jobstatus import JobStatus
 
 from .options import Options
 from .options.utils import set_default_error_levels
@@ -206,17 +207,24 @@ class BasePrimitive(ABC):
                             callback=combined.get("environment", {}).get("callback", None),
                             result_decoder=DEFAULT_DECODERS.get(self._program_id()),
                         )
-                        result = job.result()
-                        if result:
+                        job.wait_for_final_state()
+                        if job.status() in [JobStatus.DONE, JobStatus.CANCELLED]:
                             return job
-                    except RuntimeJobFailureError as exception:
-                        logger.info(
-                            "Attempt %s, %s failed: %s", attempt + 1, job.job_id(), exception
+                        logger.warning(
+                            "Attempt %s, %s failed: %s",
+                            attempt + 1,
+                            job.job_id(),
+                            job.error_message(),
                         )
                         attempt += 1
                         continue
-                logger.info("Job %s failed after %s attempts", job.job_id(), max_retries + 1)
-
+                    except RuntimeJobFailureError as exception:
+                        logger.warning(
+                            "Attempt %s, %s failed: %s", attempt + 1, job.job_id(), exception
+                        )
+                        attempt += 1
+                logger.warning("Job %s failed after %s attempts", job.job_id(), max_retries + 1)
+                return job
             else:
                 return self._session.run(
                     program_id=self._program_id(),

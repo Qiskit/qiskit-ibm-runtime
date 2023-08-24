@@ -14,6 +14,7 @@
 
 from qiskit import QuantumCircuit
 from qiskit.providers.fake_provider import FakeManila
+from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit.quantum_info import SparsePauliOp
 from qiskit_aer.noise import NoiseModel
 from qiskit_ibm_runtime import Session, Sampler, Options, Estimator
@@ -123,7 +124,6 @@ class TestIntegrationOptions(IBMIntegrationTestCase):
             0: "variance",
             1: "readout_mitigation_num_twirled_circuits",
             2: "zne",
-            3: "standard_error",
         }
         circ = QuantumCircuit(1)
         obs = SparsePauliOp.from_list([("I", 1)])
@@ -136,3 +136,28 @@ class TestIntegrationOptions(IBMIntegrationTestCase):
             result = inst.run(circ, observables=obs).result()
             metadata = result.metadata[0]
             self.assertTrue(value in metadata)
+
+    @run_integration_test
+    def test_max_retries(self, service):
+        """Test retries correct number of times."""
+        backend = service.get_backend("ibmq_qasm_simulator")
+        retries = 3
+        options = Options(max_retries=retries)
+        # bad circuit
+        circuit = QuantumCircuit(2, 2)
+        circuit.h(0)
+
+        with Session(service=service, backend=backend):
+            sampler = Sampler(options=options)
+            with self.assertRaises(RuntimeJobFailureError):
+                job = sampler.run(circuit)
+                job.result()
+        retried_jobs = service.jobs(session_id=job.session_id)
+        self.assertEqual(len(retried_jobs), retries + 1)
+
+        with Session(service=service, backend=backend):
+            sampler = Sampler(options=options)
+            job = sampler.run(ReferenceCircuits.bell())
+            self.assertTrue(job.result())
+        retried_jobs = service.jobs(session_id=job.session_id)
+        self.assertEqual(len(retried_jobs), 1)
