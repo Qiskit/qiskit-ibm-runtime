@@ -14,6 +14,7 @@
 
 from qiskit import QuantumCircuit
 from qiskit.providers.fake_provider import FakeManila
+from qiskit.providers.jobstatus import JobStatus
 from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit.quantum_info import SparsePauliOp
 from qiskit_aer.noise import NoiseModel
@@ -124,6 +125,7 @@ class TestIntegrationOptions(IBMIntegrationTestCase):
             0: "variance",
             1: "readout_mitigation_num_twirled_circuits",
             2: "zne",
+            3: "standard_error",
         }
         circ = QuantumCircuit(1)
         obs = SparsePauliOp.from_list([("I", 1)])
@@ -139,7 +141,7 @@ class TestIntegrationOptions(IBMIntegrationTestCase):
 
     @run_integration_test
     def test_max_retries(self, service):
-        """Test retries correct number of times."""
+        """Test if job is retried the correct number of times."""
         backend = service.get_backend("ibmq_qasm_simulator")
         retries = 3
         options = Options(max_retries=retries)
@@ -147,6 +149,7 @@ class TestIntegrationOptions(IBMIntegrationTestCase):
         circuit = QuantumCircuit(2, 2)
         circuit.h(0)
 
+        # test retrying with errored job
         with Session(service=service, backend=backend):
             sampler = Sampler(options=options)
             with self.assertRaises(RuntimeJobFailureError):
@@ -155,9 +158,20 @@ class TestIntegrationOptions(IBMIntegrationTestCase):
         retried_jobs = service.jobs(session_id=job.session_id)
         self.assertEqual(len(retried_jobs), retries + 1)
 
+        # test completed job is not retried
         with Session(service=service, backend=backend):
             sampler = Sampler(options=options)
             job = sampler.run(ReferenceCircuits.bell())
             self.assertTrue(job.result())
         retried_jobs = service.jobs(session_id=job.session_id)
         self.assertEqual(len(retried_jobs), 1)
+
+        # test both errored and completed jobs
+        with Session(service=service, backend=backend):
+            sampler = Sampler(options=options)
+            error_job = sampler.run(circuit)
+            completed_job = sampler.run(ReferenceCircuits.bell())
+            self.assertEqual(error_job.status(), JobStatus.ERROR)
+            self.assertTrue(completed_job.result())
+        total_jobs = service.jobs(session_id=error_job.session_id)
+        self.assertEqual(len(total_jobs), retries + 2)
