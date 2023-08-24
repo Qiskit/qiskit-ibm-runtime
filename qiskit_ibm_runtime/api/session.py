@@ -57,7 +57,7 @@ RE_BACKENDS_ENDPOINT = re.compile(r"^(.*/backends/)([^/}]{2,})(.*)$", re.IGNOREC
 def _get_client_header() -> str:
     """Return the client version."""
 
-    if os.getenv(USAGE_DATA_OPT_OUT_ENV_VAR):
+    if os.getenv(USAGE_DATA_OPT_OUT_ENV_VAR, "False") == "True":
         return ""
 
     qiskit_pkgs = [
@@ -275,7 +275,7 @@ class RetrySession(Session):
         # Set default caller
         headers.update({"X-Qx-Client-Application": f"{CLIENT_APPLICATION}/qiskit"})
 
-        if not os.getenv(USAGE_DATA_OPT_OUT_ENV_VAR):
+        if not os.getenv(USAGE_DATA_OPT_OUT_ENV_VAR, "False") == "True":
             # Use PurePath in order to support arbitrary path formats
             callers = {
                 PurePath("qiskit/algorithms"),

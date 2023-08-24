@@ -1,7 +1,7 @@
 ---
 features:
   - |
-    A new environment variable, ``USAGE_DATA_OPT_OUT`` can be used to 
-    opt out of user module usage tracking. Users can also use the new parameter,
-    ``data_tracking`` in :meth:`qiskit_ibm_runtime.QiskitRuntimeService.save_account`
-    to opt out.
+    Users can use a new environment variable, ``USAGE_DATA_OPT_OUT`` to 
+    opt out of user module usage tracking by setting this value to ``True``. 
+    Additionally, only certain qiskit modules will be tracked instead of 
+    all modules that begin with `qiskit` or `qiskit_`.

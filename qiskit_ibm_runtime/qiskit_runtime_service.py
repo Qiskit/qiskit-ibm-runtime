@@ -685,7 +685,6 @@ class QiskitRuntimeService(Provider):
         proxies: Optional[dict] = None,
         verify: Optional[bool] = None,
         overwrite: Optional[bool] = False,
-        data_tracking: Optional[bool] = True,
     ) -> None:
         """Save the account to disk for future use.
 
@@ -705,7 +704,6 @@ class QiskitRuntimeService(Provider):
                 authentication)
             verify: Verify the server's TLS certificate.
             overwrite: ``True`` if the existing account is to be overwritten.
-            data_tracking: Set to ``False`` to disable data tracking.
         """
 
         AccountManager.save(
@@ -718,7 +716,6 @@ class QiskitRuntimeService(Provider):
             proxies=ProxyConfiguration(**proxies) if proxies else None,
             verify=verify,
             overwrite=overwrite,
-            data_tracking=data_tracking,
         )
 
     @staticmethod
