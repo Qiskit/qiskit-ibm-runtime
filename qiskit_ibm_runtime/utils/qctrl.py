@@ -30,7 +30,7 @@ def _validate_qctrl_options(
         skip_transpilation is False,
         description="Q-CTRL Primitives cannot skip transpilation.",
         arguments={},
-        )
+    )
 
     # transpilation_settings
     if transpilation_settings is not None:
@@ -61,7 +61,7 @@ def _validate_qctrl_options(
             resilience_level == 1,
             description="Q-CTRL Primitives do not support custom resilience level",
             arguments={"level": resilience_level},
-            )
+        )
         # Error on extra resilience options
         unsupported_resilience_settings = {
             "noise_amplifier",
