@@ -247,3 +247,11 @@ def create_faulty_backend(
     )
     out_backend.properties = lambda: BackendProperties.from_dict(properties)  # type: ignore
     return out_backend
+
+
+def get_mocked_backend(name: str = "ibm_gotham"):
+    """Return a mock backend."""
+    mock_backend = mock.MagicMock(spec=IBMBackend)
+    mock_backend.name = name
+    mock_backend._instance = None
+    return mock_backend
