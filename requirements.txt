@@ -1,4 +1,4 @@
-qiskit>=0.25.1
+qiskit>=0.44.1
 requests~=2.27
 requests_ntlm>=1.1.0
 numpy>=1.13
