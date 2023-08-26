@@ -77,8 +77,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
             with self.subTest(level=level):
                 job = self._run_program(service, log_level=level)
                 job.wait_for_final_state()
-                if job.logs():
-                    self.assertIn("Completed", job.logs())
+                self.assertTrue(job.logs())
 
     @run_integration_test
     @quantum_only
