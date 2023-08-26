@@ -153,7 +153,6 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         self.assertEqual(rjob.status(), JobStatus.CANCELLED)
 
     @run_integration_test
-    @quantum_only
     def test_cancel_job_running(self, service):
         """Test canceling a running job."""
         job = self._run_program(
@@ -162,7 +161,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         )
         if not cancel_job_safe(job, self.log):
             return
-        time.sleep(10)  # Wait a bit for DB to update.
+        time.sleep(5)  # Wait a bit for DB to update.
         rjob = service.job(job.job_id())
         self.assertEqual(rjob.status(), JobStatus.CANCELLED)
 

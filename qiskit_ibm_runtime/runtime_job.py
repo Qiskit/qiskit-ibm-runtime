@@ -249,7 +249,12 @@ class RuntimeJob(Job):
                 raise RuntimeInvalidStateError(f"Job cannot be cancelled: {ex}") from None
             raise IBMRuntimeError(f"Failed to cancel job: {ex}") from None
         self.cancel_result_streaming()
-        self._status = JobStatus.CANCELLED
+        time.sleep(2)  # wait for job status to update
+        self.status()
+        if self._status != JobStatus.CANCELLED:
+            raise RuntimeInvalidStateError(
+                f"Failed to cancel job: {self._job_id} has status {self._status}"
+            )
 
     def backend(self, timeout: Optional[float] = None) -> Optional[Backend]:
         """Return the backend where this job was executed. Retrieve data again if backend is None.
