@@ -21,7 +21,6 @@ from dataclasses import asdict
 
 from qiskit.providers.options import Options as TerraOptions
 
-from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from .options import Options
 from .options.utils import set_default_error_levels
 from .runtime_job import RuntimeJob
@@ -186,19 +185,8 @@ class BasePrimitive(ABC):
         self._validate_options(combined)
         primitive_inputs.update(Options._get_program_inputs(combined))
 
-        circuits = primitive_inputs["circuits"]
-        if (
-            self._backend
-            and isinstance(self._backend, IBMBackend)
-            and len(circuits) > self._backend.max_circuits
-        ):
-            raise IBMInputValueError(
-                f"Number of circuits, {len(circuits)} exceeds the "
-                f"maximum for this backend, {self._backend.max_circuits})"
-            )
-
         if self._backend and combined["transpilation"]["skip_transpilation"]:
-            for circ in circuits:
+            for circ in primitive_inputs["circuits"]:
                 self._backend.check_faulty(circ)
 
         logger.info("Submitting job using options %s", combined)
