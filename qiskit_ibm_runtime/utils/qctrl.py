@@ -6,10 +6,19 @@ logger = logging.getLogger(__name__)
 
 
 def validate(options: dict[str, Any]) -> None:
+    transpilation_settings = {}
+    transpilation_settings.update(options.get('transpilation'))
+    transpilation_settings['optimization_level'] = options.get('optimization_level')
+
+    resilience_settings = {}
+    resilience_settings.update(options.get('resilience'))
+    resilience_settings['level'] = options.get('resilience_level')
+
     return _validate_qctrl_options(
-        skip_transpilation=options.get('skip_transpilation', False),
-        transpilation_settings=options.get('transpilation_settings'),
-        resilience_settings=options.get('resilience_settings'))
+        skip_transpilation=transpilation_settings.get('skip_transpilation', False),
+        transpilation_settings=transpilation_settings,
+        resilience_settings=resilience_settings,
+    )
 
 
 def _validate_qctrl_options(
