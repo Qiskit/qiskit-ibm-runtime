@@ -17,7 +17,7 @@ import logging
 import time
 import unittest
 from unittest import mock
-from typing import Dict, Optional
+from typing import Dict, Optional, Any
 from datetime import datetime
 
 from qiskit.circuit import QuantumCircuit
@@ -249,7 +249,7 @@ def create_faulty_backend(
     return out_backend
 
 
-def get_mocked_backend(name: str = "ibm_gotham"):
+def get_mocked_backend(name: str = "ibm_gotham") -> Any:
     """Return a mock backend."""
     mock_backend = mock.MagicMock(spec=IBMBackend)
     mock_backend.name = name
