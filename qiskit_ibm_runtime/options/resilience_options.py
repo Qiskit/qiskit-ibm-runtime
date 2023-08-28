@@ -80,7 +80,7 @@ class ResilienceOptions:
                 msg="The 'noise_amplifier' resilience option is deprecated",
                 version="0.12.0",
                 period="1 month",
-                remedy="After the deprecation period, only local folding amplification will be support. "
+                remedy="After the deprecation period, only local folding amplification will be supported. "
                 "Refer to https://github.com/qiskit-community/prototype-zne "
                 "for global folding amplification in ZNE.",
             )
