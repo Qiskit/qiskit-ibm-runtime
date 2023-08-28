@@ -320,6 +320,14 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         job.update_tags(new_job_tag)
         self.assertTrue(job.tags, new_job_tag)
 
+    @run_integration_test
+    def test_circuit_params_not_stored(self, service):
+        """Test that circuits are not automatically stored in the job params."""
+        job = self._run_program(service)
+        job.wait_for_final_state()
+        self.assertFalse(job._params)
+        self.assertTrue(job.inputs)
+
     def _assert_complex_types_equal(self, expected, received):
         """Verify the received data in complex types is expected."""
         if "serializable_class" in received:
