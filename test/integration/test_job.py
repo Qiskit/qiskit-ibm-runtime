@@ -77,8 +77,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
             with self.subTest(level=level):
                 job = self._run_program(service, log_level=level)
                 job.wait_for_final_state()
-                if job.logs():
-                    self.assertIn("Completed", job.logs())
+                self.assertTrue(job.logs())
 
     @run_integration_test
     @quantum_only
@@ -154,17 +153,16 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         self.assertEqual(rjob.status(), JobStatus.CANCELLED)
 
     @run_integration_test
-    @quantum_only
     def test_cancel_job_running(self, service):
         """Test canceling a running job."""
         job = self._run_program(
             service,
             circuits=[ReferenceCircuits.bell()] * 10,
         )
-        if not cancel_job_safe(job, self.log):
-            return
-        time.sleep(10)  # Wait a bit for DB to update.
         rjob = service.job(job.job_id())
+        if not cancel_job_safe(rjob, self.log):
+            return
+        time.sleep(5)
         self.assertEqual(rjob.status(), JobStatus.CANCELLED)
 
     @run_integration_test
@@ -319,6 +317,14 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         new_job_tag = ["new_test_tag"]
         job.update_tags(new_job_tag)
         self.assertTrue(job.tags, new_job_tag)
+
+    @run_integration_test
+    def test_circuit_params_not_stored(self, service):
+        """Test that circuits are not automatically stored in the job params."""
+        job = self._run_program(service)
+        job.wait_for_final_state()
+        self.assertFalse(job._params)
+        self.assertTrue(job.inputs)
 
     def _assert_complex_types_equal(self, expected, received):
         """Verify the received data in complex types is expected."""
