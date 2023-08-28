@@ -1498,6 +1498,16 @@ class QiskitRuntimeService(Provider):
             raise QiskitBackendNotFoundError("No backend matches the criteria.")
         return min(candidates, key=lambda b: b.status().pending_jobs)
 
+    def instances(self) -> List[str]:
+        """Return the IBM Quantum instances list currently in use for the session.
+
+        Returns:
+            A list with instances currently in the session.
+        """
+        if self._channel == "ibm_quantum":
+            return list(self._hgps.keys())
+        return []
+
     @property
     def auth(self) -> str:
         """Return the authentication type used.
