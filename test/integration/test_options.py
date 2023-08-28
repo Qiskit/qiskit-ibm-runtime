@@ -14,6 +14,8 @@
 
 from qiskit import QuantumCircuit
 from qiskit.providers.fake_provider import FakeManila
+
+from qiskit.circuit.library import RealAmplitudes
 from qiskit.quantum_info import SparsePauliOp
 from qiskit_aer.noise import NoiseModel
 from qiskit_ibm_runtime import Session, Sampler, Options, Estimator
@@ -125,14 +127,19 @@ class TestIntegrationOptions(IBMIntegrationTestCase):
             2: "zne",
             3: "standard_error",
         }
-        circ = QuantumCircuit(1)
-        obs = SparsePauliOp.from_list([("I", 1)])
+        psi1 = RealAmplitudes(num_qubits=2, reps=2)
+        h_1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
+
         backend = service.backends(simulator=True)[0]
         options = Options()
         options.simulator.coupling_map = [[0, 1], [1, 0]]
+
         for level, value in resilience_values.items():
             options.resilience_level = level
             inst = Estimator(backend=backend, options=options)
-            result = inst.run(circ, observables=obs).result()
+            theta1 = [0, 1, 1, 2, 3, 5]
+            result = inst.run(
+                circuits=[psi1], observables=[h_1], parameter_values=[theta1]
+            ).result()
             metadata = result.metadata[0]
             self.assertTrue(value in metadata)
