@@ -775,7 +775,7 @@ class QiskitRuntimeService(Provider):
             name: Name of the backend.
             instance: This is only supported for ``ibm_quantum`` runtime and is in the
                 hub/group/project format. If an instance is not given, among the providers
-                with access to the backend, a premium provider will be priotized.
+                with access to the backend, a premium provider will be prioritized.
                 For users without access to a premium provider, the default open provider will be used.
 
         Returns:

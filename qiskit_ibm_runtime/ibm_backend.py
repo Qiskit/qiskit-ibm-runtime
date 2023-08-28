@@ -359,7 +359,7 @@ class IBMBackend(Backend):
 
         Raises:
             TypeError: If an input argument is not of the correct type.
-            NotImplementedError: If `datetime` is specified when cloud rutime is used.
+            NotImplementedError: If `datetime` is specified when cloud runtime is used.
         """
         # pylint: disable=arguments-differ
         if self._configuration.simulator:
