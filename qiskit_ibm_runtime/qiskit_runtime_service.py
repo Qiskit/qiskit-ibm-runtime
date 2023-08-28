@@ -164,6 +164,7 @@ class QiskitRuntimeService(Provider):
                 ``username_ntlm``, ``password_ntlm`` (username and password to enable NTLM user
                 authentication)
             verify: Whether to verify the server's TLS certificate.
+            channel_strategy: Error mitigation strategy.
 
         Returns:
             An instance of QiskitRuntimeService.
