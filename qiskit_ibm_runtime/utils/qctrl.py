@@ -1,24 +1,48 @@
 import logging
 from typing import Any, Optional, Dict
 
+from ..options import Options
+from ..options import EnvironmentOptions, ExecutionOptions, TranspilationOptions, SimulatorOptions
 
 logger = logging.getLogger(__name__)
 
 
 def validate(options: dict[str, Any]) -> None:
-    transpilation_settings = {}
-    transpilation_settings.update(options.get('transpilation'))
+    transpilation_settings = _copy_keys_with_values(options.get('transpilation', {}))
     transpilation_settings['optimization_level'] = options.get('optimization_level')
 
-    resilience_settings = {}
-    resilience_settings.update(options.get('resilience'))
+    resilience_settings = _copy_keys_with_values(options.get('resilience'))
     resilience_settings['level'] = options.get('resilience_level')
 
-    return _validate_qctrl_options(
+    _validate_qctrl_options(
         skip_transpilation=transpilation_settings.get('skip_transpilation', False),
         transpilation_settings=transpilation_settings,
         resilience_settings=resilience_settings,
     )
+
+    # Default validation otherwise
+    TranspilationOptions.validate_transpilation_options(options.get("transpilation"))
+    execution_time = options.get("max_execution_time")
+    if not execution_time is None:
+        if (
+                execution_time < Options._MIN_EXECUTION_TIME
+                or execution_time > Options._MAX_EXECUTION_TIME
+        ):
+            raise ValueError(
+                f"max_execution_time must be between "
+                f"{Options._MIN_EXECUTION_TIME} and {Options._MAX_EXECUTION_TIME} seconds."
+            )
+
+    EnvironmentOptions.validate_environment_options(options.get("environment"))
+    ExecutionOptions.validate_execution_options(options.get("execution"))
+    SimulatorOptions.validate_simulator_options(options.get("simulator"))
+
+
+def _copy_keys_with_values(settings: dict[str, Any]) -> dict[str, Any]:
+    return {
+        key: value
+        for key,value in settings.items() if value
+    }
 
 
 def _validate_qctrl_options(
@@ -83,7 +107,7 @@ def _validate_qctrl_options(
         _check_argument(
             found_unsupported_keys == [],
             description="Q-CTRL Primitives do not support certain resilience settings",
-            arguments={"unsupported_settings": ','.join(found_unsupported_keys)},
+            arguments={"unsupported_settings": ','.join(sorted(found_unsupported_keys))},
         )
 
 

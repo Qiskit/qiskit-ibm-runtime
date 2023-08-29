@@ -29,8 +29,8 @@ class TestSampler(IBMTestCase):
             {"optimization_level": 4, "resilience_level": 1},
         ]
         with Session(
-            service=FakeRuntimeService(channel="ibm_quantum", token="abc"),
-            backend="common_backend",
+                service=FakeRuntimeService(channel="ibm_quantum", token="abc"),
+                backend="common_backend",
         ) as session:
             circuit = QuantumCircuit(1, 1)
             for bad_opt in options_bad:
@@ -38,3 +38,4 @@ class TestSampler(IBMTestCase):
                 with self.assertRaises(ValueError) as exc:
                     _ = inst.run(circuit, **bad_opt)
                 self.assertIn(list(bad_opt.keys())[0], str(exc.exception))
+

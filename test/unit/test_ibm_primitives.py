@@ -15,7 +15,7 @@
 import sys
 import copy
 import os
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, PropertyMock
 import warnings
 from dataclasses import asdict
 from typing import Dict
@@ -891,3 +891,63 @@ class TestPrimitives(IBMTestCase):
             dict_paritally_equal(dict1, dict2),
             f"{dict1} and {dict2} not partially equal.",
         )
+
+    def test_qctrl_supported_values_for_options(self):
+        """Test exception when options levels not supported."""
+        no_resilience_options = {
+            'noise_factors': None,
+            'extrapolator': None,
+        }
+
+        options_good = [
+            # No warnings
+            {"resilience_level": 1, 'resilience': no_resilience_options, 'optimization_level': 3},
+            # Arbitrary optimization level
+           {"resilience_level": 1, 'resilience': no_resilience_options, 'optimization_level': 3},
+            # Arbitrary(issues warning) approximation degree
+            {"resilience_level": 1, 'resilience': no_resilience_options, 'approximation_degree': 1},
+        ]
+        session = MagicMock(spec=MockSession)
+        session.service._channel_strategy = 'q-ctrl'
+        primitives = [Sampler, Estimator]
+        for cls in primitives:
+            for options in options_good:
+                inst = cls(session=session)
+                if isinstance(inst, Estimator):
+                    _ = inst.run(self.qx, observables=self.obs, **options)
+                else:
+                    _ = inst.run(self.qx, **options)
+
+    def test_qctrl_unsupported_values_for_options(self):
+        """Test exception when options levels are not supported."""
+        no_resilience_options = {
+            'noise_factors': None,
+            'extrapolator': None,
+        }
+        options_bad = [
+            # Bad default resilience option (level = 0)
+            ({}, 'resilience level'),
+            # Bad resilience levels
+            ({"resilience_level": 2}, "resilience level"),
+            ({"resilience_level": 0}, "resilience level"),
+            # No transpilation
+            ({"skip_transpilation": True}, "skip transpilation"),
+            # Unsupported default resilience options
+            ({"resilience_level": 1}, ",".join(sorted(no_resilience_options.keys()))),
+            # Extra resilience option
+            ({"resilience_level": 1, "resilience": {"noise_amplifier": "LinearExtrapolator"}}, "noise_amplifier"),
+        ]
+        session = MagicMock(spec=MockSession)
+        session.service._channel_strategy = 'q-ctrl'
+        primitives = [Sampler, Estimator]
+        for cls in primitives:
+            for bad_opt, expected_message in options_bad:
+                inst = cls(session=session)
+                with self.assertRaises(ValueError) as exc:
+                    if isinstance(inst, Sampler):
+                        _ = inst.run(self.qx, **bad_opt)
+                    else:
+                        _ = inst.run(self.qx, observables=self.obs, **bad_opt)
+
+                self.assertIn(expected_message, str(exc.exception))
+
