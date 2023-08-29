@@ -260,7 +260,8 @@ class QiskitRuntimeService(Provider):
             if channel and channel not in ["ibm_cloud", "ibm_quantum"]:
                 raise ValueError("'channel' can only be 'ibm_cloud' or 'ibm_quantum'")
             channel = channel or default_channel or self._get_channel_for_auth(auth=auth)
-            if token:
+            print(channel)
+            if channel and token:
                 account = Account(
                     channel=channel,
                     token=token,
@@ -281,6 +282,7 @@ class QiskitRuntimeService(Provider):
 
         if account is None:
             account = AccountManager.get(filename=filename, channel=default_channel)
+        print("account.channel = " + str(account.channel))
 
         if instance:
             account.instance = instance
@@ -687,6 +689,7 @@ class QiskitRuntimeService(Provider):
         proxies: Optional[dict] = None,
         verify: Optional[bool] = None,
         overwrite: Optional[bool] = False,
+        set_default: Optional[bool] = True,
     ) -> None:
         """Save the account to disk for future use.
 
@@ -706,6 +709,7 @@ class QiskitRuntimeService(Provider):
                 authentication)
             verify: Verify the server's TLS certificate.
             overwrite: ``True`` if the existing account is to be overwritten.
+            set_default: If ``True``, the channel is saved as the default channel to use.
         """
 
         AccountManager.save(
@@ -718,6 +722,7 @@ class QiskitRuntimeService(Provider):
             proxies=ProxyConfiguration(**proxies) if proxies else None,
             verify=verify,
             overwrite=overwrite,
+            set_default=set_default,
         )
 
     @staticmethod

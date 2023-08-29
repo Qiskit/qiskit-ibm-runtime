@@ -49,8 +49,10 @@ class AccountManager:
         proxies: Optional[ProxyConfiguration] = None,
         verify: Optional[bool] = None,
         overwrite: Optional[bool] = False,
+        set_default: Optional[bool] = True,
     ) -> None:
         """Save account on disk."""
+        default_channel =  channel if set_default else None
         cls.migrate(filename=filename)
         channel = channel or os.getenv("QISKIT_IBM_CHANNEL") or _DEFAULT_CHANNEL_TYPE
         name = name or cls._get_default_account_name(channel)
@@ -70,6 +72,7 @@ class AccountManager:
             )
             # avoid storing invalid accounts
             .validate().to_saved_format(),
+            default_channel=default_channel,
         )
 
     @staticmethod
@@ -155,16 +158,28 @@ class AccountManager:
                 raise AccountNotFoundError(f"Account with the name {name} does not exist on disk.")
             return Account.from_saved_format(saved_account)
 
-        channel_ = channel or os.getenv("QISKIT_IBM_CHANNEL") or _DEFAULT_CHANNEL_TYPE
+        default_channel = None
+        print("filename= "+str(_DEFAULT_ACCOUNT_CONFIG_JSON_FILE))
+        if os.path.isfile(_DEFAULT_ACCOUNT_CONFIG_JSON_FILE):
+            print("***")
+            qiskitrc_data = read_config(_DEFAULT_ACCOUNT_CONFIG_JSON_FILE)
+            default_channel = qiskitrc_data.get("default_channel")
+            print("default_channel= " + str(default_channel))
+            print("channel input = "+str(channel))
+        channel_ = channel or os.getenv("QISKIT_IBM_CHANNEL") or default_channel or _DEFAULT_CHANNEL_TYPE
+        print("channel_ = " + str(channel_))
         env_account = cls._from_env_variables(channel_)
+        print(env_account)
         if env_account is not None:
             return env_account
 
+        channel = channel or default_channel #check this line
         if channel:
             saved_account = read_config(
                 filename=filename,
                 name=cls._get_default_account_name(channel=channel),
             )
+            print("saved_account = "+str(saved_account))
             if saved_account is None:
                 if os.path.isfile(_QISKITRC_CONFIG_FILE):
                     return cls._from_qiskitrc_file()

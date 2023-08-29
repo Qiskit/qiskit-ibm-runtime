@@ -590,7 +590,7 @@ class TestAccountManager(IBMTestCase):
         self.assertEqual(account.token, dummy_token)
 
     @temporary_account_config_file()
-    def test_default_channel(self):
+    def test_default_env_channel(self):
         """Test that if QISKIT_DEFAULT_CHANNEL is set in the environment, this channel will be used"""
         token = uuid.uuid4().hex
         with temporary_account_config_file(token=token):
@@ -604,6 +604,26 @@ class TestAccountManager(IBMTestCase):
                 with temporary_account_config_file(channel=channel, token=token):
                     service = FakeRuntimeService()
                     self.assertEqual(service.channel, channel)
+
+    @temporary_account_config_file()
+    def test_default_save_channel(self):
+        """Test that if a default_channel is defined in the qiskit-ibm.json file,
+        this channel will be used"""
+        token = uuid.uuid4().hex
+        # with temporary_account_config_file(token=token):
+        #     service = FakeRuntimeService()
+        # self.assertEqual(service.channel, "ibm_cloud")
+
+        subtests = ["ibm_quantum"]
+        print("starting")
+        for channel in subtests:
+            with temporary_account_config_file(contents={"default_channel": channel}, token=token):
+                service = FakeRuntimeService()
+                print("channel = " + str(channel))
+                self.assertEqual(service.channel, channel)
+            # with temporary_account_config_file(token=token, set_default=True):
+            #     service = FakeRuntimeService()
+            #     self.assertEqual(service.channel, "ibm_cloud")
 
     def tearDown(self) -> None:
         """Test level tear down."""
