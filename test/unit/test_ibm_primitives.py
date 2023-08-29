@@ -511,7 +511,7 @@ class TestPrimitives(IBMTestCase):
             {"shots": 10},
             {"seed_simulator": 123},
             {"skip_transpilation": True, "log_level": "ERROR"},
-            {"initial_layout": [1, 2], "shots": 100, "noise_amplifier": "CxAmplifier"},
+            {"initial_layout": [1, 2], "shots": 100, "noise_factors": (0, 2, 4)},
         ]
 
         expected_list = [Options(), Options(), Options(), Options(), Options()]
@@ -521,7 +521,7 @@ class TestPrimitives(IBMTestCase):
         expected_list[3].environment.log_level = "ERROR"
         expected_list[4].transpilation.initial_layout = [1, 2]
         expected_list[4].execution.shots = 100
-        expected_list[4].resilience.noise_amplifier = "CxAmplifier"
+        expected_list[4].resilience.noise_factors = (0, 2, 4)
 
         session = MagicMock(spec=MockSession)
         primitives = [Sampler, Estimator]
@@ -603,7 +603,6 @@ class TestPrimitives(IBMTestCase):
     def test_resilience_options(self):
         """Test resilience options."""
         options_dicts = [
-            {"resilience": {"noise_amplifier": "NoAmplifier"}},
             {"resilience": {"extrapolator": "NoExtrapolator"}},
             {
                 "resilience": {

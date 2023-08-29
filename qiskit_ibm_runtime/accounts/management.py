@@ -49,6 +49,7 @@ class AccountManager:
         proxies: Optional[ProxyConfiguration] = None,
         verify: Optional[bool] = None,
         overwrite: Optional[bool] = False,
+        channel_strategy: Optional[str] = None,
         set_default: Optional[bool] = True,
     ) -> None:
         """Save account on disk."""
@@ -69,6 +70,7 @@ class AccountManager:
                 channel=channel,
                 proxies=proxies,
                 verify=verify,
+                channel_strategy=channel_strategy,
             )
             # avoid storing invalid accounts
             .validate().to_saved_format(),
