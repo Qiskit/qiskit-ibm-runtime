@@ -62,7 +62,9 @@ def deprecate_arguments(deprecated: str, version: str, remedy: str, stacklevel: 
     )
 
 
-def issue_deprecation_msg(msg: str, version: str, remedy: str, stacklevel: int = 2) -> None:
+def issue_deprecation_msg(
+    msg: str, version: str, remedy: str, stacklevel: int = 2, period: str = "3 months"
+) -> None:
     """Emit a deprecation warning.
 
     Args:
@@ -70,10 +72,11 @@ def issue_deprecation_msg(msg: str, version: str, remedy: str, stacklevel: int =
         version: First release the function is deprecated.
         remedy: User action to take.
         stacklevel: The warning stackevel to use.
+        period: Deprecation period.
     """
     warnings.warn(
         f"{msg} as of qiskit-ibm-runtime {version} "
-        f"and will be removed no sooner than 3 months after the release date. {remedy}",
+        f"and will be removed no sooner than {period} after the release date. {remedy}",
         DeprecationWarning,
         stacklevel=stacklevel + 1,  # Increment to account for this function.
     )
