@@ -104,6 +104,7 @@ class BaseFakeRuntimeJob:
         session_id=None,
         max_execution_time=None,
         start_session=None,
+        channel_strategy=None,
     ):
         """Initialize a fake job."""
         self._job_id = job_id
@@ -129,6 +130,7 @@ class BaseFakeRuntimeJob:
         elif final_status == "COMPLETED":
             self._result = json.dumps("foo")
         self._final_status = final_status
+        self._channel_strategy = channel_strategy
 
     def _auto_progress(self):
         """Automatically update job status."""
@@ -365,6 +367,7 @@ class BaseFakeRuntimeClient:
         max_execution_time: Optional[int] = None,
         start_session: Optional[bool] = None,
         session_time: Optional[int] = None,
+        channel_strategy: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Run the specified program."""
         _ = self._get_program(program_id)
@@ -396,6 +399,7 @@ class BaseFakeRuntimeClient:
             job_tags=job_tags,
             max_execution_time=max_execution_time,
             start_session=start_session,
+            channel_strategy=channel_strategy,
             **self._job_kwargs,
         )
         self.session_time = session_time
