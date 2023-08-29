@@ -49,10 +49,10 @@ class AccountManager:
         proxies: Optional[ProxyConfiguration] = None,
         verify: Optional[bool] = None,
         overwrite: Optional[bool] = False,
-        set_default: Optional[bool] = True,
+        set_default_channel: Optional[bool] = True,
     ) -> None:
         """Save account on disk."""
-        default_channel = channel if set_default else None
+        default_channel = channel if set_default_channel else None
         cls.migrate(filename=filename)
         channel = channel or os.getenv("QISKIT_IBM_CHANNEL") or _DEFAULT_CHANNEL_TYPE
         name = name or cls._get_default_account_name(channel)
