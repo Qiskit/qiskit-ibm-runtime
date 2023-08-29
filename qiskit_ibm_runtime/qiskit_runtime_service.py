@@ -259,8 +259,7 @@ class QiskitRuntimeService(Provider):
                 raise ValueError("'auth' can only be 'cloud' or 'legacy'")
             if channel and channel not in ["ibm_cloud", "ibm_quantum"]:
                 raise ValueError("'channel' can only be 'ibm_cloud' or 'ibm_quantum'")
-            channel = channel or default_channel or self._get_channel_for_auth(auth=auth)
-            print(channel)
+            channel = channel or default_channel or os.getenv("QISKIT_DEFAULT_CHANNEL") or self._get_channel_for_auth(auth=auth)
             if channel and token:
                 account = Account(
                     channel=channel,
@@ -281,8 +280,7 @@ class QiskitRuntimeService(Provider):
             )
 
         if account is None:
-            account = AccountManager.get(filename=filename, channel=default_channel)
-        print("account.channel = " + str(account.channel))
+            account = AccountManager.get(filename=filename)
 
         if instance:
             account.instance = instance

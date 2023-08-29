@@ -22,13 +22,10 @@ from .exceptions import AccountAlreadyExistsError
 logger = logging.getLogger(__name__)
 
 
-def save_config(filename: str,
-                name: str,
-                config: dict,
-                overwrite: bool,
-                default_channel:Optional[str]=None) -> None:
+def save_config(
+    filename: str, name: str, config: dict, overwrite: bool, default_channel: Optional[str] = None
+) -> None:
     """Save configuration data in a JSON file under the given name."""
-    print("config = "+str(config))
     logger.debug("Save configuration data for '%s' in '%s'", name, filename)
     _ensure_file_exists(filename)
 
@@ -39,7 +36,7 @@ def save_config(filename: str,
         raise AccountAlreadyExistsError(
             f"Named account ({name}) already exists. " f"Set overwrite=True to overwrite."
         )
-    if data.get("default_channel") and not overwrite:
+    if data.get("default_channel") != default_channel and not overwrite:
         raise AccountAlreadyExistsError(
             f"default_channel ({name}) already exists. " f"Set overwrite=True to overwrite."
         )

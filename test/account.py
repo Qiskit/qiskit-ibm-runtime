@@ -107,8 +107,6 @@ class temporary_account_config_file(ContextDecorator):
 
         self.tmp_file = NamedTemporaryFile(mode="w+")
         json.dump(contents, self.tmp_file)
-        # print("file:")
-        # print(contents)
         self.tmp_file.flush()
         self.account_config_json_backup = management._DEFAULT_ACCOUNT_CONFIG_JSON_FILE
 
@@ -154,7 +152,7 @@ def get_account_config_contents(
     instance=None,
     verify=None,
     proxies=None,
-    set_default=None
+    set_default=None,
 ):
     """Generate qiskitrc content"""
     if instance is None:

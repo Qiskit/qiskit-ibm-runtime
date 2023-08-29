@@ -52,7 +52,7 @@ class AccountManager:
         set_default: Optional[bool] = True,
     ) -> None:
         """Save account on disk."""
-        default_channel =  channel if set_default else None
+        default_channel = channel if set_default else None
         cls.migrate(filename=filename)
         channel = channel or os.getenv("QISKIT_IBM_CHANNEL") or _DEFAULT_CHANNEL_TYPE
         name = name or cls._get_default_account_name(channel)
@@ -106,13 +106,17 @@ class AccountManager:
             else:
                 return account_name in default_accounts
 
+        account_dict = read_config(filename=filename)
+        if "default_channel" in account_dict:
+            del account_dict["default_channel"]
+
         # load all accounts
         all_accounts = map(
             lambda kv: (
                 kv[0],
                 Account.from_saved_format(kv[1]),
             ),
-            read_config(filename=filename).items(),
+            account_dict.items(),
         )
 
         # filter based on input parameters
@@ -159,27 +163,25 @@ class AccountManager:
             return Account.from_saved_format(saved_account)
 
         default_channel = None
-        print("filename= "+str(_DEFAULT_ACCOUNT_CONFIG_JSON_FILE))
         if os.path.isfile(_DEFAULT_ACCOUNT_CONFIG_JSON_FILE):
-            print("***")
-            qiskitrc_data = read_config(_DEFAULT_ACCOUNT_CONFIG_JSON_FILE)
-            default_channel = qiskitrc_data.get("default_channel")
-            print("default_channel= " + str(default_channel))
-            print("channel input = "+str(channel))
-        channel_ = channel or os.getenv("QISKIT_IBM_CHANNEL") or default_channel or _DEFAULT_CHANNEL_TYPE
-        print("channel_ = " + str(channel_))
+            qiskit_json_data = read_config(_DEFAULT_ACCOUNT_CONFIG_JSON_FILE)
+            default_channel = qiskit_json_data.get("default_channel")
+        channel_ = (
+            channel
+            or os.getenv("QISKIT_IBM_CHANNEL")
+            or default_channel
+            or os.getenv("QISKIT_DEFAULT_CHANNEL")
+            or _DEFAULT_CHANNEL_TYPE
+        )
         env_account = cls._from_env_variables(channel_)
-        print(env_account)
         if env_account is not None:
             return env_account
 
-        channel = channel or default_channel #check this line
         if channel:
             saved_account = read_config(
                 filename=filename,
                 name=cls._get_default_account_name(channel=channel),
             )
-            print("saved_account = "+str(saved_account))
             if saved_account is None:
                 if os.path.isfile(_QISKITRC_CONFIG_FILE):
                     return cls._from_qiskitrc_file()
