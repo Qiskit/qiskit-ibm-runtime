@@ -900,6 +900,8 @@ class TestPrimitives(IBMTestCase):
         }
 
         options_good = [
+            # Minium working settings, ideally we would not need to setup resilience options
+            {"resilience_level": 1, 'resilience': no_resilience_options},
             # No warnings
             {"resilience_level": 1, 'resilience': no_resilience_options, 'optimization_level': 3},
             # Arbitrary optimization level
