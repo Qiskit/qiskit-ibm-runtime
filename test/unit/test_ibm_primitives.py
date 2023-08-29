@@ -15,7 +15,7 @@
 import sys
 import copy
 import os
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, patch
 import warnings
 from dataclasses import asdict
 from typing import Dict
