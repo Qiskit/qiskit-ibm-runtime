@@ -41,10 +41,7 @@ Next, you will replace this call with the respective primitive call, as shown in
    Add this in later when it's done and we have the link
    For instructions to migrate code based on ``QuantumInstance``, refer to the `Quantum Instance migration guide <http://qisk.it/qi_migration>`__.
    
-
-This guide has examples for the following types of users:
-
-* Algorithm developers who need to refactor algorithms to use primitives instead of `backend.run` should refer to these topics:
+Algorithm developers who need to refactor algorithms to use primitives instead of `backend.run` should refer to these topics:
 
    * `Update code that performs circuit sampling <migrate-sampler.html>`__
    * `Update code that calculates expectation values <migrate-estimator.html>`__
