@@ -21,7 +21,7 @@ from ..options import EnvironmentOptions, ExecutionOptions, TranspilationOptions
 logger = logging.getLogger(__name__)
 
 
-def validate(options: dict[str, Any]) -> None:
+def validate(options: Dict[str, Any]) -> None:
     """Validates the runtime options for qctrl"""
     transpilation_settings = _copy_keys_with_values(options.get("transpilation", {}))
     transpilation_settings["optimization_level"] = options.get("optimization_level")
@@ -54,22 +54,22 @@ def validate(options: dict[str, Any]) -> None:
     SimulatorOptions.validate_simulator_options(options.get("simulator"))
 
 
-def _copy_keys_with_values(settings: dict[str, Any]) -> dict[str, Any]:
+def _copy_keys_with_values(settings: Dict[str, Any]) -> Dict[str, Any]:
     return {key: value for key, value in settings.items() if value}
 
 
 def _validate_qctrl_options(
     skip_transpilation: bool,
-    transpilation_settings: Optional[dict[str, Any]] = None,
-    resilience_settings: Optional[dict[str, Any]] = None,
+    transpilation_settings: Optional[Dict[str, Any]] = None,
+    resilience_settings: Optional[Dict[str, Any]] = None,
 ) -> None:
     """
     Validate options passed into the program.
     skip_transpilation : bool
         Whether transpilation should be skipped.
-    transpilation_settings : Optional[dict[str, Any]], optional
+    transpilation_settings : Optional[Dict[str, Any]], optional
         The transpilation settings, by default None.
-    resilience_settings : Optional[dict[str, Any]], optional
+    resilience_settings : Optional[Dict[str, Any]], optional
         The resilience settings, by default None.
     """
     _check_argument(
