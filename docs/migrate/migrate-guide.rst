@@ -43,8 +43,8 @@ Next, you will replace this call with the respective primitive call, as shown in
    
 Algorithm developers who need to refactor algorithms to use primitives instead of `backend.run` should refer to these topics:
 
-   * `Update code that performs circuit sampling <migrate-sampler.html>`__
-   * `Update code that calculates expectation values <migrate-estimator.html>`__
+* `Update code that performs circuit sampling <migrate-sampler.html>`__
+* `Update code that calculates expectation values <migrate-estimator.html>`__
 
 The following topics are use cases with code migration examples:
 
