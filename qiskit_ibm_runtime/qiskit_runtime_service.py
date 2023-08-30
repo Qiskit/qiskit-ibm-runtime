@@ -130,6 +130,7 @@ class QiskitRuntimeService(Provider):
         instance: Optional[str] = None,
         proxies: Optional[dict] = None,
         verify: Optional[bool] = None,
+        channel_strategy: Optional[str] = None,
     ) -> None:
         """QiskitRuntimeService constructor
 
@@ -163,6 +164,7 @@ class QiskitRuntimeService(Provider):
                 ``username_ntlm``, ``password_ntlm`` (username and password to enable NTLM user
                 authentication)
             verify: Whether to verify the server's TLS certificate.
+            channel_strategy: Error mitigation strategy.
 
         Returns:
             An instance of QiskitRuntimeService.
@@ -181,6 +183,7 @@ class QiskitRuntimeService(Provider):
             name=name,
             proxies=ProxyConfiguration(**proxies) if proxies else None,
             verify=verify,
+            channel_strategy=channel_strategy,
         )
 
         self._client_params = ClientParameters(
@@ -192,6 +195,7 @@ class QiskitRuntimeService(Provider):
             verify=self._account.verify,
         )
 
+        self._channel_strategy = channel_strategy or self._account.channel_strategy
         self._channel = self._account.channel
         self._programs: Dict[str, RuntimeProgram] = {}
         self._backends: Dict[str, "ibm_backend.IBMBackend"] = {}
@@ -231,10 +235,19 @@ class QiskitRuntimeService(Provider):
         name: Optional[str] = None,
         proxies: Optional[ProxyConfiguration] = None,
         verify: Optional[bool] = None,
+        channel_strategy: Optional[str] = None,
     ) -> Account:
         """Discover account."""
         account = None
         verify_ = verify or True
+        if channel_strategy:
+            if channel_strategy not in ["q-ctrl"]:
+                raise ValueError(f"{channel_strategy} is not a valid channel strategy.")
+            if channel and channel != "ibm_cloud":
+                raise ValueError(
+                    f"The channel strategy {channel_strategy} is "
+                    "only supported on the ibm_cloud channel."
+                )
         if name:
             if filename:
                 if any([auth, channel, token, url]):
@@ -266,6 +279,7 @@ class QiskitRuntimeService(Provider):
                     instance=instance,
                     proxies=proxies,
                     verify=verify_,
+                    channel_strategy=channel_strategy,
                 )
             else:
                 if url:
@@ -685,6 +699,7 @@ class QiskitRuntimeService(Provider):
         proxies: Optional[dict] = None,
         verify: Optional[bool] = None,
         overwrite: Optional[bool] = False,
+        channel_strategy: Optional[str] = None,
     ) -> None:
         """Save the account to disk for future use.
 
@@ -704,6 +719,7 @@ class QiskitRuntimeService(Provider):
                 authentication)
             verify: Verify the server's TLS certificate.
             overwrite: ``True`` if the existing account is to be overwritten.
+            channel_strategy: Error mitigation strategy.
         """
 
         AccountManager.save(
@@ -716,6 +732,7 @@ class QiskitRuntimeService(Provider):
             proxies=ProxyConfiguration(**proxies) if proxies else None,
             verify=verify,
             overwrite=overwrite,
+            channel_strategy=channel_strategy,
         )
 
     @staticmethod
@@ -759,7 +776,7 @@ class QiskitRuntimeService(Provider):
             name: Name of the backend.
             instance: This is only supported for ``ibm_quantum`` runtime and is in the
                 hub/group/project format. If an instance is not given, among the providers
-                with access to the backend, a premium provider will be priotized.
+                with access to the backend, a premium provider will be prioritized.
                 For users without access to a premium provider, the default open provider will be used.
 
         Returns:
@@ -1006,6 +1023,7 @@ class QiskitRuntimeService(Provider):
                 max_execution_time=qrt_options.max_execution_time,
                 start_session=start_session,
                 session_time=qrt_options.session_time,
+                channel_strategy=self._channel_strategy,
             )
         except RequestsApiError as ex:
             if ex.status_code == 404:
@@ -1479,6 +1497,16 @@ class QiskitRuntimeService(Provider):
         if not candidates:
             raise QiskitBackendNotFoundError("No backend matches the criteria.")
         return min(candidates, key=lambda b: b.status().pending_jobs)
+
+    def instances(self) -> List[str]:
+        """Return the IBM Quantum instances list currently in use for the session.
+
+        Returns:
+            A list with instances currently in the session.
+        """
+        if self._channel == "ibm_quantum":
+            return list(self._hgps.keys())
+        return []
 
     @property
     def auth(self) -> str:

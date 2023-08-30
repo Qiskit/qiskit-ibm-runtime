@@ -12,17 +12,25 @@
 
 """Tests for estimator class."""
 
+import warnings
+
 from qiskit import QuantumCircuit
 from qiskit.quantum_info import SparsePauliOp
 
-from qiskit_ibm_runtime import Estimator, Session
+from qiskit_ibm_runtime import Estimator, Session, Options
 
 from ..ibm_test_case import IBMTestCase
+from ..utils import get_mocked_backend
 from .mock.fake_runtime_service import FakeRuntimeService
 
 
 class TestEstimator(IBMTestCase):
     """Class for testing the Estimator class."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.circuit = QuantumCircuit(1, 1)
+        self.observables = SparsePauliOp.from_list([("I", 1)])
 
     def test_unsupported_values_for_estimator_options(self):
         """Test exception when options levels are not supported."""
@@ -34,10 +42,30 @@ class TestEstimator(IBMTestCase):
             service=FakeRuntimeService(channel="ibm_quantum", token="abc"),
             backend="common_backend",
         ) as session:
-            circuit = QuantumCircuit(1, 1)
-            obs = SparsePauliOp.from_list([("I", 1)])
             for bad_opt in options_bad:
                 inst = Estimator(session=session)
                 with self.assertRaises(ValueError) as exc:
-                    _ = inst.run(circuit, observables=obs, **bad_opt)
+                    _ = inst.run(self.circuit, observables=self.observables, **bad_opt)
                 self.assertIn(list(bad_opt.keys())[0], str(exc.exception))
+
+    def test_deprecated_noise_amplifier(self):
+        """Test noise_amplifier deprecation."""
+        opt = Options()
+        opt.resilience.noise_amplifier = "GlobalFoldingAmplifier"
+
+        with warnings.catch_warnings(record=True) as warn:
+            warnings.simplefilter("always")
+            estimator = Estimator(backend=get_mocked_backend(), options=opt)
+            estimator.run(self.circuit, self.observables)
+            self.assertEqual(len(warn), 1, "Deprecation warning not found.")
+            self.assertIn("noise_amplifier", str(warn[-1].message))
+
+    def test_deprecated_noise_amplifier_run(self):
+        """Test noise_amplifier deprecation in run."""
+
+        with warnings.catch_warnings(record=True) as warn:
+            warnings.simplefilter("always")
+            estimator = Estimator(backend=get_mocked_backend())
+            estimator.run(self.circuit, self.observables, noise_amplifier="GlobalFoldingAmplifier")
+            self.assertEqual(len(warn), 1, "Deprecation warning not found.")
+            self.assertIn("noise_amplifier", str(warn[-1].message))

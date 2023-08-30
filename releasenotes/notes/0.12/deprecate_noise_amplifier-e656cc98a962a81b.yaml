@@ -1,0 +1,7 @@
+---
+deprecations:
+  - |
+    The ``noise_amplifier`` resilience options is deprecated.
+    After the deprecation period, only local folding amplification will be supported.
+    Refer to https://github.com/qiskit-community/prototype-zne for global folding
+    amplification.
