@@ -198,6 +198,7 @@ class Estimator(BasePrimitive, BaseEstimator):
 
         if self._service._channel_strategy == "q-ctrl":
             qctrl_validate(options)
+            return
 
         if not options.get("resilience_level") in list(
             range(Options._MAX_RESILIENCE_LEVEL_ESTIMATOR + 1)
