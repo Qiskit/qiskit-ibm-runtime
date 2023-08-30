@@ -170,9 +170,8 @@ class AccountManager:
             default_channel = qiskit_json_data.get("default_channel")
         channel_ = (
             channel
-            or os.getenv("QISKIT_IBM_CHANNEL")
             or default_channel
-            or os.getenv("QISKIT_DEFAULT_CHANNEL")
+            or os.getenv("QISKIT_IBM_CHANNEL")
             or _DEFAULT_CHANNEL_TYPE
         )
         env_account = cls._from_env_variables(channel_)
@@ -191,6 +190,14 @@ class AccountManager:
             return Account.from_saved_format(saved_account)
 
         all_config = read_config(filename=filename)
+        default_channel = default_channel or os.getenv("QISKIT_IBM_CHANNEL") or _DEFAULT_CHANNEL_TYPE
+
+        # check for an account with the default channel
+        account_name = cls._get_default_account_name(channel=default_channel)
+        if account_name in all_config:
+            return Account.from_saved_format(all_config[account_name])
+
+        # check for any account
         for channel_type in _CHANNEL_TYPES:
             account_name = cls._get_default_account_name(channel=channel_type)
             if account_name in all_config:
