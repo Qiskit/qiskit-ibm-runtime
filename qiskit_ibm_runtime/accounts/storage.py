@@ -36,7 +36,11 @@ def save_config(
         raise AccountAlreadyExistsError(
             f"Named account ({name}) already exists. " f"Set overwrite=True to overwrite."
         )
-    if data.get("default_channel") != default_channel and not overwrite:
+    if (
+        data.get("default_channel")
+        and data.get("default_channel") != default_channel
+        and not overwrite
+    ):
         raise AccountAlreadyExistsError(
             f"default_channel ({name}) already exists. " f"Set overwrite=True to overwrite."
         )

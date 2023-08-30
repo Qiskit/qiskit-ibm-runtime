@@ -580,7 +580,7 @@ class TestAccountManager(IBMTestCase):
     def test_delete_filename(self):
         """Test delete accounts with filename parameter."""
 
-        filename = "~/account_to_delete.json"
+        filename = _TEST_FILENAME
         name = "key1"
         channel = "ibm_quantum"
         AccountManager.save(channel=channel, filename=filename, name=name, token="temp_token")
