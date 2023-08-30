@@ -137,7 +137,7 @@ class TestOptions(IBMTestCase):
             execution={"shots": 100},
             environment={"log_level": "DEBUG"},
             simulator={"noise_model": noise_model},
-            resilience={"noise_amplifier": "GlobalFoldingAmplifier"},
+            resilience={"noise_factors": (0, 2, 4)},
             foo="foo",
             bar="bar",
         )
@@ -156,7 +156,7 @@ class TestOptions(IBMTestCase):
             },
             "resilience_settings": {
                 "level": 2,
-                "noise_amplifier": "GlobalFoldingAmplifier",
+                "noise_factors": (0, 2, 4),
             },
             "foo": "foo",
         }
@@ -177,7 +177,7 @@ class TestOptions(IBMTestCase):
                 "transpilation": {"initial_layout": [1, 2], "layout_method": "trivial"},
                 "execution": {"shots": 100},
             },
-            {"resilience": {"noise_amplifier": "GlobalFoldingAmplifier"}},
+            {"resilience": {"noise_factors": (0, 2, 4)}},
             {"environment": {"log_level": "ERROR"}},
         ]
 
@@ -203,7 +203,7 @@ class TestOptions(IBMTestCase):
             "environment": {"log_level": "DEBUG"},
             "simulator": {"noise_model": "model"},
             "resilience": {
-                "noise_amplifier": "GlobalFoldingAmplifier",
+                "noise_factors": (0, 2, 4),
                 "extrapolator": "LinearExtrapolator",
             },
         }

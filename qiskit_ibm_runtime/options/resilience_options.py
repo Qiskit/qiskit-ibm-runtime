@@ -16,6 +16,7 @@ from typing import Sequence, Literal, get_args
 from dataclasses import dataclass
 
 from .utils import _flexible
+from ..utils.deprecation import issue_deprecation_msg
 
 ResilienceSupportedOptions = Literal[
     "noise_amplifier",
@@ -47,7 +48,7 @@ class ResilienceOptions:
             Only applicable for ``resilience_level=2``.
             Default: (1, 3, 5).
 
-        noise_amplifier: A noise amplification strategy. One of ``"TwoQubitAmplifier"``,
+        noise_amplifier (DEPRECATED): A noise amplification strategy. One of ``"TwoQubitAmplifier"``,
             ``"GlobalFoldingAmplifier"``, ``"LocalFoldingAmplifier"``, ``"CxAmplifier"``.
             Only applicable for ``resilience_level=2``.
             Default: "TwoQubitAmplifier".
@@ -60,7 +61,7 @@ class ResilienceOptions:
             Default: "LinearExtrapolator".
     """
 
-    noise_amplifier: NoiseAmplifierType = "TwoQubitAmplifier"
+    noise_amplifier: NoiseAmplifierType = None
     noise_factors: Sequence[float] = (1, 3, 5)
     extrapolator: ExtrapolatorType = "LinearExtrapolator"
 
@@ -74,10 +75,21 @@ class ResilienceOptions:
             ValueError: if extrapolator == "QuarticExtrapolator" and number of noise_factors < 5.
             ValueError: if extrapolator == "CubicExtrapolator" and number of noise_factors < 4.
         """
+        if resilience_options.get("noise_amplifier", None) is not None:
+            issue_deprecation_msg(
+                msg="The 'noise_amplifier' resilience option is deprecated",
+                version="0.12.0",
+                period="1 month",
+                remedy="After the deprecation period, only local folding amplification "
+                "will be supported. "
+                "Refer to https://github.com/qiskit-community/prototype-zne "
+                "for global folding amplification in ZNE.",
+            )
+
         for opt in resilience_options:
             if not opt in get_args(ResilienceSupportedOptions):
                 raise ValueError(f"Unsupported value '{opt}' for resilience.")
-        noise_amplifier = resilience_options.get("noise_amplifier")
+        noise_amplifier = resilience_options.get("noise_amplifier") or "TwoQubitAmplifier"
         if not noise_amplifier in get_args(NoiseAmplifierType):
             raise ValueError(
                 f"Unsupported value {noise_amplifier} for noise_amplifier. "
