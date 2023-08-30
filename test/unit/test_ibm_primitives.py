@@ -895,22 +895,22 @@ class TestPrimitives(IBMTestCase):
     def test_qctrl_supported_values_for_options(self):
         """Test exception when options levels not supported."""
         no_resilience_options = {
-            'noise_factors': None,
-            'extrapolator': None,
+            "noise_factors": None,
+            "extrapolator": None,
         }
 
         options_good = [
             # Minium working settings, ideally we would not need to setup resilience options
-            {"resilience_level": 1, 'resilience': no_resilience_options},
+            {"resilience_level": 1, "resilience": no_resilience_options},
             # No warnings
-            {"resilience_level": 1, 'resilience': no_resilience_options, 'optimization_level': 3},
+            {"resilience_level": 1, "resilience": no_resilience_options, "optimization_level": 3},
             # Arbitrary optimization level
-           {"resilience_level": 1, 'resilience': no_resilience_options, 'optimization_level': 3},
+            {"resilience_level": 1, "resilience": no_resilience_options, "optimization_level": 3},
             # Arbitrary(issues warning) approximation degree
-            {"resilience_level": 1, 'resilience': no_resilience_options, 'approximation_degree': 1},
+            {"resilience_level": 1, "resilience": no_resilience_options, "approximation_degree": 1},
         ]
         session = MagicMock(spec=MockSession)
-        session.service._channel_strategy = 'q-ctrl'
+        session.service._channel_strategy = "q-ctrl"
         primitives = [Sampler, Estimator]
         for cls in primitives:
             for options in options_good:
@@ -923,12 +923,12 @@ class TestPrimitives(IBMTestCase):
     def test_qctrl_unsupported_values_for_options(self):
         """Test exception when options levels are not supported."""
         no_resilience_options = {
-            'noise_factors': None,
-            'extrapolator': None,
+            "noise_factors": None,
+            "extrapolator": None,
         }
         options_bad = [
             # Bad default resilience option (level = 0)
-            ({}, 'resilience level'),
+            ({}, "resilience level"),
             # Bad resilience levels
             ({"resilience_level": 2}, "resilience level"),
             ({"resilience_level": 0}, "resilience level"),
@@ -937,10 +937,13 @@ class TestPrimitives(IBMTestCase):
             # Unsupported default resilience options
             ({"resilience_level": 1}, ",".join(sorted(no_resilience_options.keys()))),
             # Extra resilience option
-            ({"resilience_level": 1, "resilience": {"noise_amplifier": "LinearExtrapolator"}}, "noise_amplifier"),
+            (
+                {"resilience_level": 1, "resilience": {"noise_amplifier": "LinearExtrapolator"}},
+                "noise_amplifier",
+            ),
         ]
         session = MagicMock(spec=MockSession)
-        session.service._channel_strategy = 'q-ctrl'
+        session.service._channel_strategy = "q-ctrl"
         primitives = [Sampler, Estimator]
         for cls in primitives:
             for bad_opt, expected_message in options_bad:
@@ -952,4 +955,3 @@ class TestPrimitives(IBMTestCase):
                         _ = inst.run(self.qx, observables=self.obs, **bad_opt)
 
                 self.assertIn(expected_message, str(exc.exception))
-

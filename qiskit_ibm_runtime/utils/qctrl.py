@@ -8,14 +8,14 @@ logger = logging.getLogger(__name__)
 
 
 def validate(options: dict[str, Any]) -> None:
-    transpilation_settings = _copy_keys_with_values(options.get('transpilation', {}))
-    transpilation_settings['optimization_level'] = options.get('optimization_level')
+    transpilation_settings = _copy_keys_with_values(options.get("transpilation", {}))
+    transpilation_settings["optimization_level"] = options.get("optimization_level")
 
-    resilience_settings = _copy_keys_with_values(options.get('resilience'))
-    resilience_settings['level'] = options.get('resilience_level')
+    resilience_settings = _copy_keys_with_values(options.get("resilience"))
+    resilience_settings["level"] = options.get("resilience_level")
 
     _validate_qctrl_options(
-        skip_transpilation=transpilation_settings.get('skip_transpilation', False),
+        skip_transpilation=transpilation_settings.get("skip_transpilation", False),
         transpilation_settings=transpilation_settings,
         resilience_settings=resilience_settings,
     )
@@ -25,8 +25,8 @@ def validate(options: dict[str, Any]) -> None:
     execution_time = options.get("max_execution_time")
     if not execution_time is None:
         if (
-                execution_time < Options._MIN_EXECUTION_TIME
-                or execution_time > Options._MAX_EXECUTION_TIME
+            execution_time < Options._MIN_EXECUTION_TIME
+            or execution_time > Options._MAX_EXECUTION_TIME
         ):
             raise ValueError(
                 f"max_execution_time must be between "
@@ -39,16 +39,13 @@ def validate(options: dict[str, Any]) -> None:
 
 
 def _copy_keys_with_values(settings: dict[str, Any]) -> dict[str, Any]:
-    return {
-        key: value
-        for key,value in settings.items() if value
-    }
+    return {key: value for key, value in settings.items() if value}
 
 
 def _validate_qctrl_options(
-        skip_transpilation: bool,
-        transpilation_settings: Optional[dict[str, Any]] = None,
-        resilience_settings: Optional[dict[str, Any]] = None,
+    skip_transpilation: bool,
+    transpilation_settings: Optional[dict[str, Any]] = None,
+    resilience_settings: Optional[dict[str, Any]] = None,
 ) -> None:
     """
     Validate options passed into the program.
@@ -79,8 +76,7 @@ def _validate_qctrl_options(
 
         if different_keys:
             logger.warning(
-                "The following settings cannot be customized "
-                "and will be overwritten: %s",
+                "The following settings cannot be customized " "and will be overwritten: %s",
                 different_keys,
             )
 
@@ -107,16 +103,15 @@ def _validate_qctrl_options(
         _check_argument(
             found_unsupported_keys == [],
             description="Q-CTRL Primitives do not support certain resilience settings",
-            arguments={"unsupported_settings": ','.join(sorted(found_unsupported_keys))},
+            arguments={"unsupported_settings": ",".join(sorted(found_unsupported_keys))},
         )
 
 
 def _check_argument(
-        condition: bool,
-        description: str,
-        arguments: Dict[str, str],
+    condition: bool,
+    description: str,
+    arguments: Dict[str, str],
 ) -> None:
     if not condition:
-        error_str = f'{description} arguments={arguments}'
+        error_str = f"{description} arguments={arguments}"
         raise ValueError(error_str)
-
