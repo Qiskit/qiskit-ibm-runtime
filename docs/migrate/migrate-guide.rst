@@ -36,29 +36,18 @@ unit of information your algorithm is based on:
 After determining which primitive to use, identify where the algorithm accesses the backend. Look for the call to
 ``backend.run()``.
 Next, you will replace this call with the respective primitive call, as shown in the following examples.
-
-
-.. note::
-
-   Some qiskit libraries provide their own ``backend.run()`` wrappers, for example: ``QuantumInstance``,
-   formerly used in ``qiskit.algorithms``. To migrate code that has such dependencies, replace the execution
-   method with the corresponding primitive. 
    
 ..
    Add this in later when it's done and we have the link
    For instructions to migrate code based on ``QuantumInstance``, refer to the `Quantum Instance migration guide <http://qisk.it/qi_migration>`__.
    
 
-This guide has examples for two basic types of users:
+This guide has examples for the following types of users:
 
 * Algorithm developers who need to refactor algorithms to use primitives instead of `backend.run` should refer to these topics:
 
    * `Update code that performs circuit sampling <migrate-sampler.html>`__
    * `Update code that calculates expectation values <migrate-estimator.html>`__
-   
-* Algorithm users that refer to Qiskit algorithms but do not directly use primitives.  These users now need to pass in a primitive instead of a backend to the updated Qiskit algorithms.  Refer to this topic for details:
-
-   * `Work with updated Qiskit algorithms <https://qiskit.org/ecosystem/algorithms>`__
 
 The following topics are use cases with code migration examples:
 
