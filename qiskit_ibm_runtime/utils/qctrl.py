@@ -1,3 +1,17 @@
+# This code is part of Qiskit.
+#
+# (C) Copyright IBM 2023.
+#
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE.txt file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
+
+"""Qctrl validation functions and helpers."""
+
 import logging
 from typing import Any, Optional, Dict
 
@@ -8,19 +22,21 @@ logger = logging.getLogger(__name__)
 
 
 def validate(options: dict[str, Any]) -> None:
+    """Validates the runtime options for qctrl"""
     transpilation_settings = _copy_keys_with_values(options.get("transpilation", {}))
     transpilation_settings["optimization_level"] = options.get("optimization_level")
 
     resilience_settings = _copy_keys_with_values(options.get("resilience"))
     resilience_settings["level"] = options.get("resilience_level")
 
+    # Validate the options with qctrl logic first.
     _validate_qctrl_options(
         skip_transpilation=transpilation_settings.get("skip_transpilation", False),
         transpilation_settings=transpilation_settings,
         resilience_settings=resilience_settings,
     )
 
-    # Default validation otherwise
+    # Default validation otherwise.
     TranspilationOptions.validate_transpilation_options(options.get("transpilation"))
     execution_time = options.get("max_execution_time")
     if not execution_time is None:
@@ -76,7 +92,7 @@ def _validate_qctrl_options(
 
         if different_keys:
             logger.warning(
-                "The following settings cannot be customized " "and will be overwritten: %s",
+                "The following settings cannot be customized and will be overwritten: %s",
                 different_keys,
             )
 

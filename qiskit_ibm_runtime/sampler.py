@@ -163,7 +163,7 @@ class Sampler(BasePrimitive, BaseSampler):
             return
 
         if self._service._channel_strategy == "q-ctrl":
-            return qctrl_validate(options)
+            qctrl_validate(options)
 
         if options.get("resilience_level") and not options.get("resilience_level") in [
             0,
