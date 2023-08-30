@@ -155,6 +155,7 @@ class AccountManager:
         Raises:
             AccountNotFoundError: If the input value cannot be found on disk.
         """
+        # pylint: disable=too-many-return-statements
         filename = filename if filename else _DEFAULT_ACCOUNT_CONFIG_JSON_FILE
         filename = os.path.expanduser(filename)
         cls.migrate(filename)
@@ -169,10 +170,7 @@ class AccountManager:
             qiskit_json_data = read_config(_DEFAULT_ACCOUNT_CONFIG_JSON_FILE)
             default_channel = qiskit_json_data.get("default_channel")
         channel_ = (
-            channel
-            or default_channel
-            or os.getenv("QISKIT_IBM_CHANNEL")
-            or _DEFAULT_CHANNEL_TYPE
+            channel or default_channel or os.getenv("QISKIT_IBM_CHANNEL") or _DEFAULT_CHANNEL_TYPE
         )
         env_account = cls._from_env_variables(channel_)
         if env_account is not None:
@@ -190,7 +188,9 @@ class AccountManager:
             return Account.from_saved_format(saved_account)
 
         all_config = read_config(filename=filename)
-        default_channel = default_channel or os.getenv("QISKIT_IBM_CHANNEL") or _DEFAULT_CHANNEL_TYPE
+        default_channel = (
+            default_channel or os.getenv("QISKIT_IBM_CHANNEL") or _DEFAULT_CHANNEL_TYPE
+        )
 
         # check for an account with the default channel
         account_name = cls._get_default_account_name(channel=default_channel)

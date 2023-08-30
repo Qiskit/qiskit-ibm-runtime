@@ -12,7 +12,6 @@
 
 """Qiskit runtime service."""
 
-import os
 import json
 import logging
 import traceback
