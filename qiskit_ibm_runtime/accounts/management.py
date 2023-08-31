@@ -188,12 +188,9 @@ class AccountManager:
             return Account.from_saved_format(saved_account)
 
         all_config = read_config(filename=filename)
-        default_channel = (
-            default_channel or os.getenv("QISKIT_IBM_CHANNEL") or _DEFAULT_CHANNEL_TYPE
-        )
 
-        # check for an account with the default channel
-        account_name = cls._get_default_account_name(channel=default_channel)
+        # When 'channel' parameter is not defined, check for an account with the default channel
+        account_name = cls._get_default_account_name(channel=channel_)
         if account_name in all_config:
             return Account.from_saved_format(all_config[account_name])
 

@@ -291,6 +291,7 @@ class QiskitRuntimeService(Provider):
                 "'channel' or 'auth' is required if 'token', or 'url' is specified but 'name' is not."
             )
 
+        # channel is not defined yet, get it from the AccountManager
         if account is None:
             account = AccountManager.get(filename=filename)
 
