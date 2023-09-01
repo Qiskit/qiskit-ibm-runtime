@@ -13,7 +13,7 @@
 """Qctrl validation functions and helpers."""
 
 import logging
-from typing import Any, Optional, Dict
+from typing import Any, Optional, Dict, List
 
 from ..options import Options
 from ..options import EnvironmentOptions, ExecutionOptions, TranspilationOptions, SimulatorOptions
@@ -22,19 +22,12 @@ logger = logging.getLogger(__name__)
 
 
 def validate(options: Dict[str, Any]) -> None:
-    """Validates the runtime options for qctrl"""
-    transpilation_settings = _copy_keys_with_values(options.get("transpilation", {}))
-    transpilation_settings["optimization_level"] = options.get("optimization_level")
+    """Validates the options for qctrl"""
 
-    resilience_settings = _copy_keys_with_values(options.get("resilience"))
-    resilience_settings["level"] = options.get("resilience_level")
-
-    # Validate the options with qctrl logic first.
-    _validate_qctrl_options(
-        skip_transpilation=transpilation_settings.get("skip_transpilation", False),
-        transpilation_settings=transpilation_settings,
-        resilience_settings=resilience_settings,
-    )
+    # Raise error on bad options.
+    _raise_if_error_in_options(options)
+    # Override options and warn.
+    _warn_and_clean_options(options)
 
     # Default validation otherwise.
     TranspilationOptions.validate_transpilation_options(options.get("transpilation"))
@@ -54,73 +47,90 @@ def validate(options: Dict[str, Any]) -> None:
     SimulatorOptions.validate_simulator_options(options.get("simulator"))
 
 
-def _copy_keys_with_values(settings: Dict[str, Any]) -> Dict[str, Any]:
-    return {key: value for key, value in settings.items() if value}
+def _raise_if_error_in_options(options: Dict[str, Any]) -> None:
+    """Checks for settings that produce errors and raise a ValueError"""
 
-
-def _validate_qctrl_options(
-    skip_transpilation: bool,
-    transpilation_settings: Optional[Dict[str, Any]] = None,
-    resilience_settings: Optional[Dict[str, Any]] = None,
-) -> None:
-    """
-    Validate options passed into the program.
-    skip_transpilation : bool
-        Whether transpilation should be skipped.
-    transpilation_settings : Optional[Dict[str, Any]], optional
-        The transpilation settings, by default None.
-    resilience_settings : Optional[Dict[str, Any]], optional
-        The resilience settings, by default None.
-    """
+    # Fail on resilience_level set to 0
+    resilience_level = options.get("resilience_level", 1)
     _check_argument(
-        skip_transpilation is False,
-        description="Q-CTRL Primitives cannot skip transpilation.",
+        resilience_level > 0,
+        description="Q-CTRL Primitives do not support resilience level 0. Please\
+        set resilience_level to 1 and re-try",
         arguments={},
     )
 
-    # transpilation_settings
-    if transpilation_settings is not None:
-        default_transpilation_values = {
-            "optimization_level": 3,
-            "approximation_degree": 0,
-        }
-        different_keys = [
-            key
-            for key, value in default_transpilation_values.items()
-            if key in transpilation_settings and value != transpilation_settings[key]
-        ]
+    # Fail on skipping transpilation
+    skip_transpilation = options.get("transpilation", {}).get("skip_transpilation", False)
+    _check_argument(
+        skip_transpilation is False,
+        description="Q-CTRL Primitives skipping transpilation. Please\
+        set skip_transpilation to False and re-try",
+        arguments={},
+    )
 
-        if different_keys:
-            logger.warning(
-                "The following settings cannot be customized and will be overwritten: %s",
-                different_keys,
+
+def _warn_and_clean_options(options: Dict[str, Any]) -> None:
+    """
+    Validate and update transpilation settings
+    """
+    # Issue a warning and override if any of these setting is not None
+    # or a different value than the default below
+    expected_options = {
+        "optimization_level": 3,
+        "transpilation": {"approximation_degree": 0},
+        "resilience_level": 1,
+        "resilience": {
+            "noise_amplifier": None,
+            "noise_factors": None,
+            "extrapolator": None,
+        },
+    }
+
+    # Collect keys with miss-matching values
+    different_keys = _validate_values(expected_options, options)
+    # Override options
+    _update_values(expected_options, options)
+    if different_keys:
+        logger.warning(
+            "The following settings cannot be customized and will be overwritten: %s",
+            ",".join(sorted(different_keys)),
+        )
+
+
+def _validate_values(
+    expected_options: Dict[str, Any], current_options: Optional[Dict[str, Any]]
+) -> List[str]:
+    """Validates expected_options and current_options have the same values if the
+    keys of expected_options are present in current_options"""
+
+    if current_options is None:
+        return []
+
+    different_keys = []
+    for expected_key, expected_value in expected_options.items():
+        if isinstance(expected_value, dict):
+            different_keys.extend(
+                _validate_values(expected_value, current_options.get(expected_key, None))
             )
+        else:
+            current_value = current_options.get(expected_key, None)
+            if current_value is not None and expected_value != current_value:
+                different_keys.append(expected_key)
+    return different_keys
 
-        transpilation_settings.update(default_transpilation_values)
 
-    if resilience_settings is not None:
-        # Error when resilience_level different than 1
-        resilience_level = resilience_settings.get("level", 1)
+def _update_values(
+    expected_options: Dict[str, Any], current_options: Optional[Dict[str, Any]]
+) -> None:
 
-        _check_argument(
-            resilience_level == 1,
-            description="Q-CTRL Primitives do not support custom resilience level",
-            arguments={"level": resilience_level},
-        )
-        # Error on extra resilience options
-        unsupported_resilience_settings = {
-            "noise_amplifier",
-            "noise_factors",
-            "extrapolator",
-        }
-        found_unsupported_keys = [
-            key for key in unsupported_resilience_settings if key in resilience_settings
-        ]
-        _check_argument(
-            found_unsupported_keys == [],
-            description="Q-CTRL Primitives do not support certain resilience settings",
-            arguments={"unsupported_settings": ",".join(sorted(found_unsupported_keys))},
-        )
+    if current_options is None:
+        return
+
+    for expected_key, expected_value in expected_options.items():
+        if isinstance(expected_value, dict):
+            _update_values(expected_value, current_options.get(expected_key, None))
+        else:
+            current_options[expected_key] = expected_value
 
 
 def _check_argument(
