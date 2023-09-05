@@ -122,9 +122,6 @@ class Session:
 
         self._session_id: Optional[str] = None
         self._active = True
-
-        self._circuits_map: Dict[str, QuantumCircuit] = {}
-
         self._max_time = (
             max_time
             if max_time is None or isinstance(max_time, int)
