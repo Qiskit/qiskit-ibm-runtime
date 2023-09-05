@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    Raise an exception if the number of circuits passed to
+    :meth:`~qiskit_ibm_runtime.BasePrimitive._run_primitive`
+    exceeds the number of circuits supported on the backend. 
+

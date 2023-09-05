@@ -56,8 +56,12 @@ class TestBasicServerPaths(IBMTestCase):
     def test_device_status(self):
         """Test device status."""
         self._require_2_hgps()
-
         for hgp in self._get_hgps():
             with self.subTest(hgp=hgp):
-                backend = self.service.backends(simulator=False, operational=True, instance=hgp)[0]
-                self.assertTrue(backend.status())
+                # check if hgp contains non simulator backends
+                backends = self.service.backends(simulator=False, operational=True, instance=hgp)
+                if backends:
+                    backend = self.service.backends(
+                        simulator=False, operational=True, instance=hgp
+                    )[0]
+                    self.assertTrue(backend.status())

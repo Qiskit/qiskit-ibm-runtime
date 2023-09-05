@@ -45,7 +45,7 @@ We want to assign the following parameter values to the circuit:
 
 Legacy
 ---------
-Previously, the parameter values had to be bound to their respective circuit parameters prior to calling `backend.run()`.
+Previously, the parameter values had to be bound to their respective circuit parameters before calling `backend.run()`.
 
 .. code-block:: python
 

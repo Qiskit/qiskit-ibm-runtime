@@ -80,7 +80,7 @@ Use the updated code to work with accounts.
     IBMQ.save_account("<IQX_TOKEN>", overwrite=True)
 
 **Updated - Save accounts**
-The new syntax accepts credentials for Qiskit Runtime on IBM Cloud or IBM Quantum Platform. For more information on retrieving account credentials, see the `getting started guide <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/getting_started.html>`_.
+The new syntax accepts credentials for Qiskit Runtime on IBM Cloud or IBM Quantum Platform. For more information about retrieving account credentials, see the `getting started guide <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/getting_started.html>`_.
 
 .. code-block:: python
 

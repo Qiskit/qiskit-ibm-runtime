@@ -49,7 +49,6 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
         job = self._run_program(
             service,
             backend="ibmq_qasm_simulator",
-            iterations=iterations,
             interim_results=int_res,
             callback=result_callback,
         )
@@ -83,7 +82,6 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
         job = self._run_program(
             service,
             backend="ibmq_qasm_simulator",
-            iterations=iterations,
             interim_results=int_res,
             callback=result_callback,
         )
@@ -115,7 +113,6 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
         job = self._run_program(
             service,
             backend="ibmq_qasm_simulator",
-            iterations=iterations,
             interim_results=int_res,
         )
         job.stream_results(result_callback)
@@ -139,7 +136,6 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
             service,
             backend="ibmq_qasm_simulator",
             interim_results="foobar",
-            sleep_per_iteration=10,
         )
         job.wait_for_final_state()
         job._status = JobStatus.RUNNING  # Allow stream_results()
@@ -220,11 +216,10 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
         for status in sub_tests:
             with self.subTest(status=status):
                 if status == JobStatus.QUEUED:
-                    _ = self._run_program(service, iterations=10)
+                    _ = self._run_program(service)
 
                 job = self._run_program(
                     service=service,
-                    iterations=iterations,
                     interim_results="foo",
                     callback=result_callback,
                 )
@@ -235,6 +230,7 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
                 self.assertIsNotNone(job._ws_client._server_close_code)
                 self.assertLess(final_it, iterations)
 
+    @skip("skip until qiskit-ibm-runtime #933 is fixed")
     @run_integration_test
     def test_websocket_proxy(self, service):
         """Test connecting to websocket via proxy."""
@@ -250,7 +246,6 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
             job = self._run_program(
                 service,
                 backend="ibmq_qasm_simulator",
-                iterations=10,
                 callback=result_callback,
             )
             job.wait_for_final_state()
@@ -274,6 +269,6 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
         # TODO - verify WebsocketError in output log. For some reason self.assertLogs
         # doesn't always work even when the error is clearly logged.
         with use_proxies(service, invalid_proxy):
-            job = self._run_program(service, iterations=2, callback=result_callback)
+            job = self._run_program(service, callback=result_callback)
             job.wait_for_final_state()
         self.assertFalse(callback_called)

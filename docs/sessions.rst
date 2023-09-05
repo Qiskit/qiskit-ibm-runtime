@@ -25,8 +25,8 @@ There are several benefits to using sessions:
 
 * When using sessions, the uncertainty around queuing time is significantly reduced. This allows better estimation of a workload's total runtime and better resource management.
 * In a device characterization context, being able to run experiments closely together helps prevent device drifts and provide more accurate results.
-* As long as the session is active, you can submit different jobs, inspect job results, and re-submit new jobs without opening a new session. 
-* You maintain the flexibility to deploy your programs either remotely (cloud / on-premise) or locally (your laptop).
+* While the session is active, you can submit different jobs, inspect job results, and re-submit new jobs without opening a new session. 
+* You maintain the flexibility to deploy your programs either remotely (cloud / on-premises) or locally (your laptop).
 
 The mechanics of sessions (queuing)
 ----------------------------------------
@@ -56,7 +56,7 @@ Any session job submitted within the five-minute interactive timeout, also known
 Batch
 +++++++++++++++++++++
 
-Ideal for running experiments closely together to avoid device drifts, that is, to maintain device characterzation.
+Ideal for running experiments closely together to avoid device drifts, that is, to maintain device characterization.
 
 - Suitable for batching many jobs together. 
 - Jobs that fit within the maximum session time run back-to-back on hardware.
@@ -71,7 +71,7 @@ Ideal for running experiments closely together to avoid device drifts, that is, 
 How long a session stays active
 --------------------------------
 
-The length of time a session is active is controlled by the *maximum session timeout* (`max_time`) value and the *interactive* timeout value (TTL). The `max_time` timer starts when the session becomes active.  That is, when the first job runs, not when it is queued. It does not stop if a session becomes inactive. The TTL timer starts each time a session job finishes. 
+The length of time a session is active is controlled by the *maximum session timeout* (``max_time``) value and the *interactive* timeout value (TTL). The ``max_time`` timer starts when the session becomes active.  That is, when the first job runs, not when it is queued. It does not stop if a session becomes inactive. The TTL timer starts each time a session job finishes. 
 
 Maximum session timeout
 ++++++++++++++++++++++++++++
@@ -91,7 +91,7 @@ See `What is the maximum execution time for a Qiskit Runtime job? <faqs/max_exec
 Interactive timeout value
 +++++++++++++++++++++++++++++
 
-Every session has an *interactive timeout value*, or time to live (TTL), of five minutes, which cannot be changed. If there are no session jobs queued within the TTL window, the session is temporarily deactivated and normal job selection resumes. A deactivated session can be resumed if it has not reached its maximum timeout value. The session is resumed when a subsequent sesssion job starts. Once a session is deactivated, its next job waits in the queue like other jobs. 
+Every session has an *interactive timeout value*, or time to live (TTL), of five minutes, which cannot be changed. If there are no session jobs queued within the TTL window, the session is temporarily deactivated and normal job selection resumes. A deactivated session can be resumed if it has not reached its maximum timeout value. The session is resumed when a subsequent session job starts. Once a session is deactivated, its next job waits in the queue like other jobs. 
 
 After a session is deactivated, the next job in the queue is selected to run. This newly selected job (which can belong to a different user) can run as a singleton, but it can also start a different session. In other words, a deactivated session does not block the creation of other sessions. Jobs from this new session would then take priority until it is deactivated or closed, at which point normal job selection resumes. 
 
@@ -110,7 +110,7 @@ A session ends by reaching its maximum timeout value or when it is manually clos
 Sessions and reservations 
 -------------------------
 
-IBM Quantum Premium users can access both reservations and sessions on specific backends. Such users should plan ahead and decide whether to use a session or a reservation. You *can* use a session within a reservation.  However, if you use a session within a reservation and some session jobs don’t finish during the reservation window, the remaining pending jobs might fail. If you use session inside a reservation we recommend that you set a realistic `max_time` value.
+IBM Quantum Premium users can access both reservations and sessions on specific backends. Such users should plan ahead and decide whether to use a session or a reservation. You *can* use a session within a reservation.  However, if you use a session within a reservation and some session jobs don’t finish during the reservation window, the remaining pending jobs might fail. If you use session inside a reservation, we suggest you set a realistic ``max_time`` value.
 
 .. image:: images/jobs-failing.png 
 

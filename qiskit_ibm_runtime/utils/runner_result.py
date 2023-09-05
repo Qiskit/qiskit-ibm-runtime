@@ -20,6 +20,7 @@ from qiskit.result.postprocess import _hex_to_bin
 from qiskit.exceptions import QiskitError
 
 from ..program import ResultDecoder
+from .json import RuntimeDecoder
 
 
 class RunnerResult(Result, ResultDecoder):
@@ -28,7 +29,7 @@ class RunnerResult(Result, ResultDecoder):
     @classmethod
     def decode(cls, data: str) -> "RunnerResult":
         """Decoding for results from Qiskit runtime jobs."""
-        return cls.from_dict(json.loads(data))
+        return cls.from_dict(json.loads(data, cls=RuntimeDecoder))
 
     def get_quasiprobabilities(
         self, experiment: Union[int, List] = None

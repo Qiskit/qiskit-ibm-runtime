@@ -19,12 +19,12 @@ API error codes
 
       **1000**
     - API Internal error.
-    - Try the action again. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`_ for help.
+    - Try the action again. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`_ for help.
 
   * - .. _error1001:
 
       **1001**
-    - qObject is larger than the maximum size.
+    - ``qObject`` is larger than the maximum size.
     - Run a small Job. Split the circuits in smaller jobs.
 
   * - .. _error1002:
@@ -56,7 +56,7 @@ API error codes
 
       **1006**
     - Error during call to converter microservice.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
   * - .. _error1007:
 
@@ -68,7 +68,7 @@ API error codes
 
       **1008**
     - Error during the validation process of a job.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
   * - .. _error1009:
 
@@ -80,13 +80,13 @@ API error codes
 
       **1010**
     - Error returned at backend level.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
   * - .. _error1011:
 
       **1011**
     - Error publishing job at the backend queue.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
   * - .. _error1012:
 
@@ -97,44 +97,44 @@ API error codes
   * - .. _error1101:
 
       **1101**
-    - Qobj does not conform to the schema.
-    - Verify the Qobj for your job conforms to the Qobj schema.
+    - ``Qobj`` does not conform to the schema.
+    - Verify the ``Qobj`` for your job conforms to the ``Qobj`` schema.
 
   * - .. _error1102:
 
       **1102**
-    - The number of experiments in the Qobj is higher than the number of experiments supported by the backend.
+    - The number of experiments in the ``Qobj`` is higher than the number of experiments supported by the backend.
     - Split the experiments into multiple jobs. The maximum number of experiments the backend supports can be found in its configuration data.
 
   * - .. _error1103:
 
       **1103**
-    - The number of shots in the Qobj is higher than the number of shots supported by the backend.
+    - The number of shots in the ``Qobj`` is higher than the number of shots supported by the backend.
     - Use fewer shots. The maximum number of shots the backend supports can be found in its configuration data.
 
   * - .. _error1104:
 
       **1104**
-    - The Qobj requests memory measurement, but the backend does not support memory.
+    - The ``Qobj`` requests memory measurement, but the backend does not support memory.
     - Run the job on a backend that supports memory or don't request memory measurement. Whether a backend supports memory measurement can be found in its configuration data.
 
   * - .. _error1105:
 
       **1105**
-    - The number of qubits used in the Qobj is higher than the number of quantum registers defined in the Qobj.
+    - The number of qubits used in the ``Qobj`` is higher than the number of quantum registers defined in the ``Qobj``.
     - Correct your program and try again.
 
 
   * - .. _error1106:
 
       **1106**
-    - The Qobj uses gates that are not among the backend's basis gates.
+    - The ``Qobj`` uses gates that are not among the backend's basis gates.
     - Correct your program and try again. Transpiling your program will convert high level gates to basis gates. The basis gates for a backend can be found in its configuration data.
 
   * - .. _error1107:
 
       **1107**
-    - The Qobj includes an instruction that assumes a coupling map that is different from the backend's coupling map.
+    - The ``Qobj`` includes an instruction that assumes a coupling map that is different from the backend's coupling map.
     - Correct your program and try again. Transpiling your program will map instructions to the correct qubits based on the backend's coupling map. The coupling map for a backend can be found in its configuration data.
 
   * - .. _error1108:
@@ -146,7 +146,7 @@ API error codes
   * - .. _error1109:
 
       **1109**
-    - The number of qubits used in the Qobj is more than the number of qubits supported by the backend.
+    - The number of qubits used in the ``Qobj`` is more than the number of qubits supported by the backend.
     - Run the job on a backend that supports sufficient number of qubits for the job. The number of qubits a backend supports can be found in its configuration data.
 
   * - .. _error1999:
@@ -189,7 +189,7 @@ API error codes
 
       **2100**
     - Invalid URL to Upload to Bluemix.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
   * - .. _error2200:
 
@@ -244,7 +244,7 @@ API error codes
 
       **2301**
     - Code not updated.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
   * - .. _error2302:
 
@@ -274,14 +274,14 @@ API error codes
   * - .. _error2307:
 
       **2307**
-    - The Qobj requests memory measurement, but the backend does not support memory.
+    - The ``Qobj`` requests memory measurement, but the backend does not support memory.
     - Check the code data, maybe it is wrong.
 
   * - .. _error2308:
 
       **2308**
     - User role not found.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
 
   * - .. _error2309:
@@ -295,13 +295,13 @@ API error codes
 
       **2310**
     - Failed to export.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
   * - .. _error2311:
 
       **2311**
     - Image wrong.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
   * - .. _error2313:
 
@@ -313,7 +313,7 @@ API error codes
 
       **2400**
     - Error wrong data received.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
   * - .. _error2402:
 
@@ -332,13 +332,13 @@ API error codes
 
       **2404**
     - Model not found in database.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
   * - .. _error2405:
 
       **2405**
     - Error saving new data.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
   * - .. _error2407:
 
@@ -374,7 +374,7 @@ API error codes
 
       **2412**
     - Error retrieving data from database.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
   * - .. _error2600:
 
@@ -392,14 +392,14 @@ API error codes
 
       **2603**
     - Error getting topology attributes.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
 
   * - .. _error2604:
 
       **2604**
     - Error getting topology queues.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
   * - .. _error2609:
 
@@ -447,25 +447,25 @@ API error codes
 
       **2900**
     - An error occur getting the hub.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
   * - .. _error2901:
 
       **2901**
     - Error checking hub or group administrators.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
   * - .. _error2902:
 
       **2902**
     - Error checking systems in the Hub.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
   * - .. _error2903:
 
       **2903**
     - Hub info not found.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
 
   * - .. _error2904:
@@ -478,7 +478,7 @@ API error codes
 
       **2905**
     - Invalid parameters to configure for booking.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
   * - .. _error2906:
 
@@ -496,7 +496,7 @@ API error codes
 
       **2908**
     - Error checking user in the Hub.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
   * - .. _error2909:
 
@@ -554,20 +554,20 @@ API error codes
   * - .. _error3202:
 
       **3202**
-    - Cannot get presigned download url.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Cannot get presigned download URL.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
   * - .. _error3203:
 
       **3203**
-    - Cannot get presigned upload url.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Cannot get presigned upload URL.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
   * - .. _error3204:
 
       **3204**
     - Error during call to converter microservice.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
 
   * - .. _error3207:
@@ -580,7 +580,7 @@ API error codes
 
       **3208**
     - Job not cancelled.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
   * - .. _error3209:
 
@@ -592,7 +592,7 @@ API error codes
 
       **3210**
     - Job not saved.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
   * - .. _error3211:
 
@@ -604,24 +604,24 @@ API error codes
 
       **3212**
     - Job not validated.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
   * - .. _error3213:
 
       **3213**
-    - Job satus not valid.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Job status not valid.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
   * - .. _error3214:
 
       **3214**
     - Job transition not valid.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
   * - .. _error3215:
 
       **3215**
-    - Job without code identificator.
+    - Job without code identifier.
     - Check the Job sent, maybe it is wrong.
 
 
@@ -679,19 +679,19 @@ API error codes
 
       **3233**
     - The job can't be created.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
   * - .. _error3234:
 
       **3234**
     - The job can't be validated.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
   * - .. _error3235:
 
       **3235**
     - Job cost cannot be calculated.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
 
   * - .. _error3236:
@@ -710,7 +710,7 @@ API error codes
 
       **3239**
     - Number of registers exceed the number of qubits.
-    - Define the same creg as qreg.
+    - Define the same ``creg`` as ``qreg``.
 
   * - .. _error3242:
 
@@ -758,7 +758,7 @@ API error codes
 
       **3251**
     - Job not uploaded to object storage.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
 
   * - .. _error3252:
@@ -771,7 +771,7 @@ API error codes
 
       **3253**
     - Timeout getting the result.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
   * - .. _error3254:
 
@@ -789,7 +789,7 @@ API error codes
 
       **3259**
     - This system can only be used for running jobs.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
   * - .. _error3265:
 
@@ -801,13 +801,13 @@ API error codes
 
       **3300**
     - Cannot download job data.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
   * - .. _error3301:
 
       **3301**
     - Cannot upload job data.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
   * - .. _error3302:
 
@@ -831,7 +831,7 @@ API error codes
 
       **3405**
     - Codes not deleted.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
 
   * - .. _error3407:
@@ -844,19 +844,19 @@ API error codes
 
       **3409**
     - Error deleting entities from user.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
   * - .. _error3410:
 
       **3410**
     - Error deleting user relations.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
   * - .. _error3418:
 
       **3418**
     - Failed to create the token for the user.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
   * - .. _error3422:
 
@@ -874,13 +874,13 @@ API error codes
 
       **3424**
     - Retrieving last version licenses, including future ones.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
   * - .. _error3425:
 
       **3425**
     - Retrieving last version licenses.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
   * - .. _error3440:
 
@@ -892,7 +892,7 @@ API error codes
 
       **3443**
     - Failed to check login.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
   * - .. _error3444:
 
@@ -947,13 +947,13 @@ API error codes
 
       **3467**
     - Failed to create or renew API token.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
   * - .. _error3468:
 
       **3468**
     - Failed to get API token.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
   * - .. _error3500:
 
@@ -965,7 +965,7 @@ API error codes
 
       **3704**
     - Error getting status from the queue.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
   * - .. _error3811:
 
@@ -977,19 +977,19 @@ API error codes
 
       **3900**
     - Empty response from the stats micro-service.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
   * - .. _error3901:
 
       **3901**
     - Error parsing stats.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
   * - .. _error3902:
 
       **3902**
     - Error retrieving stats.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
   * - .. _error3903:
 
@@ -1043,19 +1043,19 @@ API error codes
 
       **3911**
     - Stats micro-service is not available.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
   * - .. _error3912:
 
       **3912**
     - Stats not found.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
   * - .. _error3913:
 
       **3913**
     - Analytics stats not found.
-    - Retry the action. If it happens again, contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Retry the action. If it happens again, contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.
 
   * - .. _error3914:
 
@@ -1066,7 +1066,7 @@ API error codes
   * - .. _error3915:
 
       **3915**
-    - Missing start/end dates; allTime not set to true for analytics stats.
+    - Missing start/end dates; ``allTime`` not set to true for analytics stats.
     - Set start and end date in the query.
 
 4XXX
@@ -1172,7 +1172,7 @@ API error codes
   * - .. _error7000:
 
       **7000**
-    - Instruction not in basis gates:<br>instruction: {}, qubits: {}, params: {}
+    - Instruction not in basis gates:<br>instruction: {}, qubits: {}, ``params``: {}
     - Instruction not supported by backend. Remove the instruction shown in the error message.
 
   * - .. _error7001:
@@ -1261,7 +1261,7 @@ API error codes
   * - .. _error8007:
 
       **8007**
-    - Qasm gate not understood: {}.
+    - QASM gate not understood: {}.
     - This instruction is not understood. Make sure it is found within the `Operations glossary <https://quantum-computing.ibm.com/composer/docs/iqx/operations_glossary#operations-glossary>`__.
 
   * - .. _error8008:
@@ -1383,7 +1383,7 @@ API error codes
   * - .. _error8033:
 
       **8033**
-    - Qobj ``type`` not provided in ``config``.
+    - ``Qobj`` ``type`` not provided in ``config``.
     - Add ``type`` to ``qobj['config']``.
 
   * - .. _error8035:
@@ -1419,7 +1419,7 @@ API error codes
   * - .. _error8042:
 
       **8042**
-    - The input pulse had some parameters which were not validated. This can be because certain parameters are expected to be real, while others are complex. It may also be due to the amplitude or duration of the pulse exceeding a limit, or other invalid combinations of parameters (e.g., a Gaussian square pulse with a flat-top width greater than the pulse's total duration).
+    - The input pulse had some parameters which were not validated. This can be because certain parameters are expected to be real, while others are complex. It may also be due to the amplitude or duration of the pulse exceeding a limit, or other invalid combinations of parameters (for example, a Gaussian square pulse with a flat-top width greater than the pulse's total duration).
     - Verify the pulse input parameters.
 
   * - .. _error8044:
@@ -1443,4 +1443,4 @@ API error codes
 
       **9999**
     - Internal error.
-    - Contact IBM Quantum via `Slack <https://ibm.co/joinqiskitslack>`__ for help.
+    - Contact IBM Quantum through `Slack <https://ibm.co/joinqiskitslack>`__ for help.

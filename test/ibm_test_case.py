@@ -162,10 +162,9 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
         self,
         service,
         program_id=None,
-        iterations=1,
         inputs=None,
         interim_results=None,
-        final_result=None,
+        circuits=None,
         callback=None,
         backend=None,
         log_level=None,
@@ -173,7 +172,6 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
         max_execution_time=None,
         session_id=None,
         start_session=False,
-        sleep_per_iteration=0,
     ):
         """Run a program."""
         self.log.debug("Running program on %s", service.channel)
@@ -181,11 +179,8 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
             inputs
             if inputs is not None
             else {
-                "iterations": iterations,
                 "interim_results": interim_results or {},
-                "final_result": final_result or {},
-                "sleep_per_iteration": sleep_per_iteration,
-                "circuits": ReferenceCircuits.bell(),
+                "circuits": circuits or ReferenceCircuits.bell(),
             }
         )
         pid = program_id or self.program_ids[service.channel]
@@ -206,7 +201,7 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
             if max_execution_time:
                 options.max_execution_time = max_execution_time
             sampler = Sampler(backend=backend, options=options)
-            job = sampler.run(ReferenceCircuits.bell(), callback=callback)
+            job = sampler.run(circuits or ReferenceCircuits.bell(), callback=callback)
         else:
             job = service.run(
                 program_id=pid,

@@ -14,13 +14,15 @@
 
 from qiskit import QuantumCircuit
 from qiskit.providers.fake_provider import FakeManila
+
+from qiskit.circuit.library import RealAmplitudes
 from qiskit.quantum_info import SparsePauliOp
 from qiskit_aer.noise import NoiseModel
 from qiskit_ibm_runtime import Session, Sampler, Options, Estimator
 from qiskit_ibm_runtime.exceptions import RuntimeJobFailureError
 
 from ..ibm_test_case import IBMIntegrationTestCase
-from ..decorators import run_integration_test
+from ..decorators import run_integration_test, production_only
 
 
 class TestIntegrationOptions(IBMIntegrationTestCase):
@@ -113,3 +115,31 @@ class TestIntegrationOptions(IBMIntegrationTestCase):
                 inst = Estimator(session=session, options=options)
                 inst.run(circ, observables=obs)
             self.assertIn("a coupling map is required.", str(exc.exception))
+
+    @production_only
+    @run_integration_test
+    def test_all_resilience_levels(self, service):
+        """Test that all resilience_levels are recognized correctly
+        by checking their values in the metadata"""
+        resilience_values = {
+            0: "variance",
+            1: "readout_mitigation_num_twirled_circuits",
+            2: "zne",
+            3: "standard_error",
+        }
+        psi1 = RealAmplitudes(num_qubits=2, reps=2)
+        h_1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
+
+        backend = service.backends(simulator=True)[0]
+        options = Options()
+        options.simulator.coupling_map = [[0, 1], [1, 0]]
+
+        for level, value in resilience_values.items():
+            options.resilience_level = level
+            inst = Estimator(backend=backend, options=options)
+            theta1 = [0, 1, 1, 2, 3, 5]
+            result = inst.run(
+                circuits=[psi1], observables=[h_1], parameter_values=[theta1]
+            ).result()
+            metadata = result.metadata[0]
+            self.assertTrue(value in metadata)

@@ -267,7 +267,7 @@ that the backend supports to have a more realistic noisy simulation.
     options.optimization_level = 0
     options.resilience_level = 0
 
-`set_backend <https://qiskit.org/ecosystem/ibm-runtime/stubs/qiskit_ibm_runtime.options.SimulatorOptions.html>`_ is the syntactic sugar for setting options.
+:meth:`~.options.SimulatorOptions.set_backend` is the syntactic sugar for setting options.
 The following code is equivalent.
 
 .. code-block:: python

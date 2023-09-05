@@ -8,7 +8,7 @@ After submitting your job, a `RuntimeJob <https://qiskit.org/documentation/partn
   * - job.result()
     - Review job results immediately after the job completes. Job results are available after the job completes.  Therefore, `job.result()` is a blocking call until the job completes.
   * - job.job_id()
-    - Return the ID that uniquely identifies that job. Retrieving the job results at a ltar time requires the job ID. Therefore, it is recommended that you save the IDs of jobs you might want to retrieve later.
+    - Return the ID that uniquely identifies that job. Retrieving the job results at a later time requires the job ID. Therefore, it is recommended that you save the IDs of jobs you might want to retrieve later.
   * - job.status()
     - Check the job status.
   * - job = service.job(<job_id>)

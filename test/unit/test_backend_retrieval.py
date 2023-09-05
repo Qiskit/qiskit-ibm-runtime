@@ -55,6 +55,17 @@ class TestBackendFilters(IBMTestCase):
                 for back in backends:
                     self.assertEqual(back._instance, hgp)
 
+    def test_filter_by_service_instance_ibm_quantum(self):
+        """Test filtering by QiskitRuntimeService._account.instance (works only on ibm_quantum)."""
+        for hgp in FakeRuntimeService.DEFAULT_HGPS:
+            service = FakeRuntimeService(channel="ibm_quantum", token="my_token", instance=hgp)
+            with self.subTest(hgp=hgp):
+                backends = service.backends()
+                backend_name = [back.name for back in backends]
+                self.assertEqual(len(backend_name), 2)
+                for back in backends:
+                    self.assertEqual(back._instance, hgp)
+
     def test_filter_config_properties(self):
         """Test filtering by configuration properties."""
         n_qubits = 5
@@ -192,7 +203,6 @@ class TestBackendFilters(IBMTestCase):
         ibm_quantum_service = FakeRuntimeService(
             channel="ibm_quantum",
             token="my_token",
-            instance="h/g/p",
             backend_specs=fake_backend_specs,
         )
         cloud_service = FakeRuntimeService(

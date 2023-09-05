@@ -1,0 +1,11 @@
+---
+features:
+  - |
+    Added a ``global_service``, so that if the user defines a `QiskitRuntimeService`, it will
+    be used by the primitives, even if the service is not passed to them explicitly.
+    For example::
+    
+      from qiskit_ibm_runtime import QiskitRuntimeService, Sampler
+      service = QiskitRuntimeService(channel="ibm_quantum")
+      # Sampler._service field will be initialized to ``service``
+      sampler = Sampler(backend="ibmq_qasm_simulator")

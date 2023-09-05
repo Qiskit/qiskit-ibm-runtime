@@ -99,9 +99,15 @@ class Session:
         """
 
         if service is None:
-            self._service = (
-                backend.service if isinstance(backend, IBMBackend) else QiskitRuntimeService()
-            )
+            if isinstance(backend, IBMBackend):
+                self._service = backend.service
+            else:
+                self._service = (
+                    QiskitRuntimeService()
+                    if QiskitRuntimeService.global_service is None
+                    else QiskitRuntimeService.global_service
+                )
+
         else:
             self._service = service
 

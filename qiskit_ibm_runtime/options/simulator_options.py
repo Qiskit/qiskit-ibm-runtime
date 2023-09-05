@@ -12,8 +12,9 @@
 
 """Simulator options."""
 
+
+from typing import Optional, List, Union, Literal, get_args, TYPE_CHECKING
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, List, Optional, Union
 
 from qiskit.exceptions import MissingOptionalLibraryError
 from qiskit.providers import BackendV1, BackendV2
@@ -25,6 +26,13 @@ from .utils import _flexible
 
 if TYPE_CHECKING:
     import qiskit_aer
+
+SimulatorSupportedOptions = Literal[
+    "noise_model",
+    "seed_simulator",
+    "coupling_map",
+    "basis_gates",
+]
 
 
 @_flexible
@@ -53,6 +61,16 @@ class SimulatorOptions:
     seed_simulator: Optional[int] = None
     coupling_map: Optional[Union[List[List[int]], "CouplingMap"]] = None
     basis_gates: Optional[List[str]] = None
+
+    @staticmethod
+    def validate_simulator_options(simulator_options: dict) -> None:
+        """Validate that simulator options are legal.
+        Raises:
+            ValueError: if any simulator option is not supported
+        """
+        for opt in simulator_options:
+            if not opt in get_args(SimulatorSupportedOptions):
+                raise ValueError(f"Unsupported value '{opt}' for simulator.")
 
     def set_backend(self, backend: Union[BackendV1, BackendV2]) -> None:
         """Set backend for simulation.

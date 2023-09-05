@@ -138,6 +138,7 @@ class RuntimeJob(Job):
         self._service = service
         self._session_id = session_id
         self._tags = tags
+        self._usage_estimation: Dict[str, Any] = {}
 
         decoder = result_decoder or DEFAULT_DECODERS.get(program_id, None) or ResultDecoder
         if isinstance(decoder, Sequence):
@@ -250,13 +251,14 @@ class RuntimeJob(Job):
         self.cancel_result_streaming()
         self._status = JobStatus.CANCELLED
 
-    def backend(self) -> Optional[Backend]:
+    def backend(self, timeout: Optional[float] = None) -> Optional[Backend]:
         """Return the backend where this job was executed. Retrieve data again if backend is None.
 
         Raises:
             IBMRuntimeError: If a network error occurred.
         """
         if not self._backend:  # type: ignore
+            self.wait_for_final_state(timeout=timeout)
             try:
                 raw_data = self._api_client.job_get(self.job_id())
                 if raw_data.get("backend"):
@@ -655,3 +657,20 @@ class RuntimeJob(Job):
             Tags assigned to the job that can be used for filtering.
         """
         return self._tags
+
+    @property
+    def usage_estimation(self) -> Dict[str, Any]:
+        """Return the usage estimation infromation for this job.
+
+        Returns:
+            ``quantum_seconds`` which is the estimated quantum time
+            of the job in seconds. Quantum time represents the time that
+            the QPU complex is occupied exclusively by the job.
+        """
+        if not self._usage_estimation:
+            response = self._api_client.job_get(job_id=self.job_id())
+            self._usage_estimation = {
+                "quantum_seconds": response.pop("estimated_running_time_seconds", None),
+            }
+
+        return self._usage_estimation

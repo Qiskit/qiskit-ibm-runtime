@@ -18,11 +18,12 @@ from qiskit_ibm_runtime import Session
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 import qiskit_ibm_runtime.session as session_pkg
+from .mock.fake_runtime_service import FakeRuntimeService
 from ..ibm_test_case import IBMTestCase
 
 
 class TestSession(IBMTestCase):
-    """Class for testing the Session classession."""
+    """Class for testing the Session class."""
 
     def tearDown(self) -> None:
         super().tearDown()
@@ -31,6 +32,7 @@ class TestSession(IBMTestCase):
     @patch("qiskit_ibm_runtime.session.QiskitRuntimeService", autospec=True)
     def test_default_service(self, mock_service):
         """Test using default service."""
+        mock_service.global_service = None
         session = Session(backend="ibm_gotham")
         self.assertIsNotNone(session.service)
         mock_service.assert_called_once()
@@ -147,3 +149,17 @@ class TestSession(IBMTestCase):
         session = Session(service=service)
         session.run(program_id="foo", inputs={})
         self.assertEqual(session.backend(), "ibm_gotham")
+
+    def test_global_service(self):
+        """Test that global service is used in Session"""
+        _ = FakeRuntimeService(channel="ibm_quantum", token="abc")
+        session = Session(backend="ibmq_qasm_simulator")
+        self.assertTrue(isinstance(session._service, FakeRuntimeService))
+        self.assertEqual(session._service._account.token, "abc")
+        _ = FakeRuntimeService(channel="ibm_quantum", token="xyz")
+        session = Session(backend="ibmq_qasm_simulator")
+        self.assertEqual(session._service._account.token, "xyz")
+        with Session(
+            service=FakeRuntimeService(channel="ibm_quantum", token="uvw"), backend="ibm_gotham"
+        ) as session:
+            self.assertEqual(session._service._account.token, "uvw")

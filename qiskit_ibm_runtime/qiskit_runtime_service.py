@@ -118,6 +118,8 @@ class QiskitRuntimeService(Provider):
     canceling job.
     """
 
+    global_service = None
+
     def __init__(
         self,
         channel: Optional[ChannelType] = None,
@@ -128,6 +130,7 @@ class QiskitRuntimeService(Provider):
         instance: Optional[str] = None,
         proxies: Optional[dict] = None,
         verify: Optional[bool] = None,
+        channel_strategy: Optional[str] = None,
     ) -> None:
         """QiskitRuntimeService constructor
 
@@ -161,6 +164,7 @@ class QiskitRuntimeService(Provider):
                 ``username_ntlm``, ``password_ntlm`` (username and password to enable NTLM user
                 authentication)
             verify: Whether to verify the server's TLS certificate.
+            channel_strategy: Error mitigation strategy.
 
         Returns:
             An instance of QiskitRuntimeService.
@@ -179,6 +183,7 @@ class QiskitRuntimeService(Provider):
             name=name,
             proxies=ProxyConfiguration(**proxies) if proxies else None,
             verify=verify,
+            channel_strategy=channel_strategy,
         )
 
         self._client_params = ClientParameters(
@@ -190,6 +195,7 @@ class QiskitRuntimeService(Provider):
             verify=self._account.verify,
         )
 
+        self._channel_strategy = channel_strategy or self._account.channel_strategy
         self._channel = self._account.channel
         self._programs: Dict[str, RuntimeProgram] = {}
         self._backends: Dict[str, "ibm_backend.IBMBackend"] = {}
@@ -199,6 +205,7 @@ class QiskitRuntimeService(Provider):
             self._api_client = RuntimeClient(self._client_params)
             # TODO: We can make the backend discovery lazy
             self._backends = self._discover_cloud_backends()
+            QiskitRuntimeService.global_service = self
             return
         else:
             auth_client = self._authenticate_ibm_quantum_account(self._client_params)
@@ -211,6 +218,7 @@ class QiskitRuntimeService(Provider):
                 for backend_name in hgp.backends:
                     if backend_name not in self._backends:
                         self._backends[backend_name] = None
+        QiskitRuntimeService.global_service = self
 
         # TODO - it'd be nice to allow some kind of autocomplete, but `service.ibmq_foo`
         # just seems wrong since backends are not runtime service instances.
@@ -227,10 +235,19 @@ class QiskitRuntimeService(Provider):
         name: Optional[str] = None,
         proxies: Optional[ProxyConfiguration] = None,
         verify: Optional[bool] = None,
+        channel_strategy: Optional[str] = None,
     ) -> Account:
         """Discover account."""
         account = None
         verify_ = verify or True
+        if channel_strategy:
+            if channel_strategy not in ["q-ctrl"]:
+                raise ValueError(f"{channel_strategy} is not a valid channel strategy.")
+            if channel and channel != "ibm_cloud":
+                raise ValueError(
+                    f"The channel strategy {channel_strategy} is "
+                    "only supported on the ibm_cloud channel."
+                )
         if name:
             if filename:
                 if any([auth, channel, token, url]):
@@ -262,6 +279,7 @@ class QiskitRuntimeService(Provider):
                     instance=instance,
                     proxies=proxies,
                     verify=verify_,
+                    channel_strategy=channel_strategy,
                 )
             else:
                 if url:
@@ -359,6 +377,7 @@ class QiskitRuntimeService(Provider):
         Raises:
             IBMInputValueError: If the URL specified is not a valid IBM Quantum authentication URL.
             IBMAccountError: If no hub/group/project could be found for this account.
+            IBMInputValueError: If instance parameter is not found in hgps.
 
         Returns:
             The hub/group/projects for this account.
@@ -409,9 +428,8 @@ class QiskitRuntimeService(Provider):
                 # Move user selected hgp to front of the list
                 hgps.move_to_end(default_hgp, last=False)
             else:
-                warnings.warn(
-                    f"Default hub/group/project {default_hgp} not "
-                    "found for the account and is ignored."
+                raise IBMInputValueError(
+                    f"Hub/group/project {default_hgp} could not be found for this account."
                 )
         return hgps
 
@@ -538,6 +556,7 @@ class QiskitRuntimeService(Provider):
         """
         # TODO filter out input_allowed not having runtime
         backends: List[IBMBackend] = []
+        instance_filter = instance if instance else self._account.instance
         if self._channel == "ibm_quantum":
             if name:
                 if name not in self._backends:
@@ -550,16 +569,16 @@ class QiskitRuntimeService(Provider):
                     )
                 if self._backends[name]:
                     backends.append(self._backends[name])
-            elif instance:
-                hgp = self._get_hgp(instance=instance)
+            elif instance_filter:
+                hgp = self._get_hgp(instance=instance_filter)
                 for backend_name in hgp.backends:
                     if (
                         not self._backends[backend_name]
-                        or instance != self._backends[backend_name]._instance
+                        or instance_filter != self._backends[backend_name]._instance
                     ):
-                        self._set_backend_config(backend_name, instance)
+                        self._set_backend_config(backend_name, instance_filter)
                         self._backends[backend_name] = self._create_backend_obj(
-                            self._backend_configs[backend_name], instance
+                            self._backend_configs[backend_name], instance_filter
                         )
                     if self._backends[backend_name]:
                         backends.append(self._backends[backend_name])
@@ -680,6 +699,7 @@ class QiskitRuntimeService(Provider):
         proxies: Optional[dict] = None,
         verify: Optional[bool] = None,
         overwrite: Optional[bool] = False,
+        channel_strategy: Optional[str] = None,
     ) -> None:
         """Save the account to disk for future use.
 
@@ -699,6 +719,7 @@ class QiskitRuntimeService(Provider):
                 authentication)
             verify: Verify the server's TLS certificate.
             overwrite: ``True`` if the existing account is to be overwritten.
+            channel_strategy: Error mitigation strategy.
         """
 
         AccountManager.save(
@@ -711,6 +732,7 @@ class QiskitRuntimeService(Provider):
             proxies=ProxyConfiguration(**proxies) if proxies else None,
             verify=verify,
             overwrite=overwrite,
+            channel_strategy=channel_strategy,
         )
 
     @staticmethod
@@ -754,7 +776,7 @@ class QiskitRuntimeService(Provider):
             name: Name of the backend.
             instance: This is only supported for ``ibm_quantum`` runtime and is in the
                 hub/group/project format. If an instance is not given, among the providers
-                with access to the backend, a premium provider will be priotized.
+                with access to the backend, a premium provider will be prioritized.
                 For users without access to a premium provider, the default open provider will be used.
 
         Returns:
@@ -1001,13 +1023,17 @@ class QiskitRuntimeService(Provider):
                 max_execution_time=qrt_options.max_execution_time,
                 start_session=start_session,
                 session_time=qrt_options.session_time,
+                channel_strategy=self._channel_strategy,
             )
         except RequestsApiError as ex:
             if ex.status_code == 404:
                 raise RuntimeProgramNotFound(f"Program not found: {ex.message}") from None
             raise IBMRuntimeError(f"Failed to run program: {ex}") from None
-
-        backend = self.backend(name=response["backend"], instance=hgp_name)
+        backend = (
+            self.backend(name=response["backend"], instance=hgp_name)
+            if response["backend"]
+            else qrt_options.backend
+        )
 
         job = RuntimeJob(
             backend=backend,
@@ -1015,7 +1041,6 @@ class QiskitRuntimeService(Provider):
             client_params=self._client_params,
             job_id=response["id"],
             program_id=program_id,
-            params=inputs,
             user_callback=callback,
             result_decoder=result_decoder,
             image=qrt_options.image,
@@ -1472,6 +1497,16 @@ class QiskitRuntimeService(Provider):
         if not candidates:
             raise QiskitBackendNotFoundError("No backend matches the criteria.")
         return min(candidates, key=lambda b: b.status().pending_jobs)
+
+    def instances(self) -> List[str]:
+        """Return the IBM Quantum instances list currently in use for the session.
+
+        Returns:
+            A list with instances currently in the session.
+        """
+        if self._channel == "ibm_quantum":
+            return list(self._hgps.keys())
+        return []
 
     @property
     def auth(self) -> str:

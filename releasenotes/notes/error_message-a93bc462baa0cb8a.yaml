@@ -1,6 +1,0 @@
----
-
-features:
-  - |
-    Added reason for failure when invoking the method ''job.error_message()''.
-

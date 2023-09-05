@@ -1,0 +1,10 @@
+---
+fixes:
+  - |
+    When running on channel "ibm_cloud", it is possible not to specify
+    the backend. In this case, the system selects one of the available
+    backends for this service. Issue 
+    `#625 https://github.com/Qiskit/qiskit-ibm-runtime/issues/625`
+    reported that the the backend returned by ``job.backend()`` was not
+    always the actual backend on which the job was run. This PR fixes
+    this bug.

@@ -1,0 +1,8 @@
+---
+features:
+  - |
+    If ``instance`` is provided as parameter to 
+    :class:`qiskit_ibm_runtime.QiskitRuntimeService`,
+    then this is used as a filter in :meth:`QiskitRuntimeService.backends()`.
+    If ``instance`` is not recognized as one of the provider instances,
+    an exception will be raised. Previously, we only issued a warning.
