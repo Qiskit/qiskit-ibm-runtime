@@ -19,10 +19,10 @@ import json
 
 from qiskit_ibm_provider.api.rest.base import RestAdapterBase
 from qiskit_ibm_provider.api.rest.program_job import ProgramJob
+from qiskit_ibm_provider.api.rest.runtime_session import RuntimeSession
 from qiskit_ibm_provider.utils import local_to_utc
 
 from .program import Program
-from .runtime_session import RuntimeSession
 from ...utils import RuntimeEncoder
 from .cloud_backend import CloudBackend
 
