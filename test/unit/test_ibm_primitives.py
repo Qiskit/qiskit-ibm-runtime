@@ -901,24 +901,28 @@ class TestPrimitives(IBMTestCase):
 
         options_good = [
             # Minium working settings
-            {"resilience_level": 1},
+            {},
             # No warnings, we need resilience options here because by default they are getting populated.
-            {"resilience_level": 1, "resilience": no_resilience_options, "optimization_level": 3},
-            # Arbitrary optimization level(issues warning)
-            {"resilience_level": 1, "resilience": no_resilience_options, "optimization_level": 0},
-            # Arbitrary(issues warning) approximation degree
-            {"resilience_level": 1, "resilience": no_resilience_options, "approximation_degree": 1},
+            {"resilience": no_resilience_options},
+            # Arbitrary approximation degree (issues warning)
+            {"approximation_degree": 1},
             # Arbitrary resilience options(issue warning)
             {
                 "resilience_level": 1,
                 "resilience": {"noise_factors": (1, 1, 3)},
                 "approximation_degree": 1,
             },
-            # Resilience level > 1
-            {"resilience_level": 2, "resilience": no_resilience_options, "optimization_level": 3},
+            # Resilience level > 1 (issue warning)
+            {"resilience_level": 2},
+            # Optimization level = 1,2 (issue warning)
+            {"optimization_level": 1},
+            {"optimization_level": 2},
+            # Skip transpilation level(issue warning)
+            {"skip_transpilation": True},
         ]
         session = MagicMock(spec=MockSession)
         session.service._channel_strategy = "q-ctrl"
+        session.service.backend().configuration().simulator = False
         primitives = [Sampler, Estimator]
         for cls in primitives:
             for options in options_good:
@@ -933,13 +937,13 @@ class TestPrimitives(IBMTestCase):
         """Test exception when options levels are not supported."""
         options_bad = [
             # Bad resilience levels
-            ({}, "resilience level"),
             ({"resilience_level": 0}, "resilience level"),
-            # No transpilation
-            ({"skip_transpilation": True}, "skip transpilation"),
+            # Bad optimization level
+            ({"optimization_level": 0}, "optimization level"),
         ]
         session = MagicMock(spec=MockSession)
         session.service._channel_strategy = "q-ctrl"
+        session.service.backend().configuration().simulator = False
         primitives = [Sampler, Estimator]
         for cls in primitives:
             for bad_opt, expected_message in options_bad:

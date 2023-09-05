@@ -268,9 +268,8 @@ class TestOptions(IBMTestCase):
                     "transpilation": {"approximation_degree": 1},
                     "resilience_level": 3,
                     "resilience": {
-                        "noise_amplifier": None,
                         "noise_factors": (1, 3, 5),
-                        "extrapolator": None,
+                        "extrapolator": "Linear",
                     },
                 },
                 {
@@ -278,7 +277,6 @@ class TestOptions(IBMTestCase):
                     "transpilation": {"approximation_degree": 0},
                     "resilience_level": 1,
                     "resilience": {
-                        "noise_amplifier": None,
                         "noise_factors": None,
                         "extrapolator": None,
                     },
@@ -287,12 +285,24 @@ class TestOptions(IBMTestCase):
             (
                 {
                     "optimization_level": 0,
-                    "transpilation": {"approximation_degree": 1},
+                    "transpilation": {"approximation_degree": 1, "skip_transpilation": True},
                     "resilience_level": 1,
                 },
                 {
                     "optimization_level": 3,
-                    "transpilation": {"approximation_degree": 0},
+                    "transpilation": {"approximation_degree": 0, "skip_transpilation": False},
+                    "resilience_level": 1,
+                },
+            ),
+            (
+                {
+                    "optimization_level": 0,
+                    "transpilation": {"skip_transpilation": True},
+                    "resilience_level": 1,
+                },
+                {
+                    "optimization_level": 3,
+                    "transpilation": {"skip_transpilation": False},
                     "resilience_level": 1,
                 },
             ),

@@ -59,12 +59,11 @@ def _raise_if_error_in_options(options: Dict[str, Any]) -> None:
         arguments={},
     )
 
-    # Fail on skipping transpilation
-    skip_transpilation = options.get("transpilation", {}).get("skip_transpilation", False)
+    resilience_level = options.get("optimization_level", 1)
     _check_argument(
-        skip_transpilation is False,
-        description="Q-CTRL Primitives skipping transpilation. Please\
-        set skip_transpilation to False and re-try",
+        resilience_level > 0,
+        description="Q-CTRL Primitives do not support optimization level 0. Please\
+        set optimization_level to 3 and re-try",
         arguments={},
     )
 
@@ -77,8 +76,8 @@ def _warn_and_clean_options(options: Dict[str, Any]) -> None:
     # or a different value than the default below
     expected_options = {
         "optimization_level": 3,
-        "transpilation": {"approximation_degree": 0},
         "resilience_level": 1,
+        "transpilation": {"approximation_degree": 0, "skip_transpilation": False},
         "resilience": {
             "noise_amplifier": None,
             "noise_factors": None,
@@ -130,7 +129,8 @@ def _update_values(
         if isinstance(expected_value, dict):
             _update_values(expected_value, current_options.get(expected_key, None))
         else:
-            current_options[expected_key] = expected_value
+            if expected_key in current_options:
+                current_options[expected_key] = expected_value
 
 
 def _check_argument(
