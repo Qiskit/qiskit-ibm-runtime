@@ -18,13 +18,13 @@ from functools import wraps
 from contextvars import ContextVar
 
 from qiskit.circuit import QuantumCircuit
+from qiskit_ibm_provider.utils.converters import hms_to_seconds
 
 from qiskit_ibm_runtime import QiskitRuntimeService
 from .runtime_job import RuntimeJob
 from .runtime_program import ParameterNamespace
 from .program.result_decoder import ResultDecoder
 from .ibm_backend import IBMBackend
-from .utils.converters import hms_to_seconds
 from .utils.deprecation import issue_deprecation_msg
 from .exceptions import IBMInputValueError
 
