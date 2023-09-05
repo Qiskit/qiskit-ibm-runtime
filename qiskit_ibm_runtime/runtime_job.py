@@ -460,7 +460,7 @@ class RuntimeJob(Job):
         try:
             reason = job_response["state"].get("reason")
             if reason:
-                self._reason = job_response["state"]["reason"].upper()
+                self._reason = job_response["state"]["reason"]
             self._status = self._status_from_job_response(job_response)
         except KeyError:
             raise IBMError(f"Unknown status: {job_response['state']['status']}")
@@ -493,7 +493,7 @@ class RuntimeJob(Job):
         if index != -1:
             job_result_raw = job_result_raw[index:]
 
-        if status == "CANCELLED" and self._reason == "RAN TOO LONG":
+        if status == "CANCELLED" and self._reason.upper() == "RAN TOO LONG":
             error_msg = API_TO_JOB_ERROR_MESSAGE["CANCELLED - RAN TOO LONG"]
             return error_msg.format(self.job_id(), job_result_raw)
         else:
@@ -510,7 +510,7 @@ class RuntimeJob(Job):
             Job status.
         """
         mapped_job_status = API_TO_JOB_STATUS[response["state"]["status"].upper()]
-        if mapped_job_status == JobStatus.CANCELLED and self._reason == "RAN TOO LONG":
+        if mapped_job_status == JobStatus.CANCELLED and self._reason.upper() == "RAN TOO LONG":
             mapped_job_status = JobStatus.ERROR
         return mapped_job_status
 
