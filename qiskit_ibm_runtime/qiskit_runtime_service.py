@@ -242,7 +242,7 @@ class QiskitRuntimeService(Provider):
         account = None
         verify_ = verify or True
         if channel_strategy:
-            if channel_strategy not in ["q-ctrl"]:
+            if channel_strategy not in ["q-ctrl", "default"]:
                 raise ValueError(f"{channel_strategy} is not a valid channel strategy.")
             if channel and channel != "ibm_cloud":
                 raise ValueError(
@@ -1029,7 +1029,9 @@ class QiskitRuntimeService(Provider):
                 max_execution_time=qrt_options.max_execution_time,
                 start_session=start_session,
                 session_time=qrt_options.session_time,
-                channel_strategy=self._channel_strategy,
+                channel_strategy=None
+                if self._channel_strategy == "default"
+                else self._channel_strategy,
             )
         except RequestsApiError as ex:
             if ex.status_code == 404:
