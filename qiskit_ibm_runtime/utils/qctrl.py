@@ -54,8 +54,10 @@ def _raise_if_error_in_options(options: Dict[str, Any]) -> None:
     resilience_level = options.get("resilience_level", 1)
     _check_argument(
         resilience_level > 0,
-        description="Q-CTRL Primitives do not support resilience level 0. Please\
-        set resilience_level to 1 and re-try",
+        description=(
+            "Q-CTRL Primitives do not support resilience level 0. Please "
+            "set resilience_level to 1 and re-try"
+        ),
         arguments={},
     )
 
