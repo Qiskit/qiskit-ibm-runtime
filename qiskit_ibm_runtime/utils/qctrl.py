@@ -61,9 +61,9 @@ def _raise_if_error_in_options(options: Dict[str, Any]) -> None:
         arguments={},
     )
 
-    resilience_level = options.get("optimization_level", 1)
+    optimization_level = options.get("optimization_level", 1)
     _check_argument(
-        resilience_level > 0,
+        optimization_level > 0,
         description="Q-CTRL Primitives do not support optimization level 0. Please\
         set optimization_level to 3 and re-try",
         arguments={},
