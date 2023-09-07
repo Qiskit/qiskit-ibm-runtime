@@ -71,7 +71,6 @@ class Account:
     @classmethod
     def from_saved_format(cls, data: dict) -> "Account":
         """Creates an account instance from data saved on disk."""
-        print(data)
         channel = data.get("channel")
         proxies = data.get("proxies")
         proxies = ProxyConfiguration(**proxies) if proxies else None
@@ -101,6 +100,7 @@ class Account:
         verify: Optional[bool] = True,
         channel_strategy: Optional[str] = None,
     ) -> "Account":
+        """Creates an account for a specific channel."""
         if channel == "ibm_quantum":
             return QuantumAccount(
                 url=url,
@@ -127,6 +127,9 @@ class Account:
 
     @abstractmethod
     def resolve_crn(self) -> None:
+        """Resolves the corresponding unique Cloud Resource Name (CRN) for the given non-unique service
+        instance name and updates the ``instance`` attribute accordingly.
+        Relevant for "ibm_cloud" channel only."""
         pass
 
     def __eq__(self, other: object) -> bool:
@@ -156,7 +159,7 @@ class Account:
         self._assert_valid_channel(self.channel)
         self._assert_valid_token(self.token)
         self._assert_valid_url(self.url)
-        self._assert_valid_instance(self.channel, self.instance)
+        self._assert_valid_instance(self.instance)
         self._assert_valid_proxies(self.proxies)
         self._assert_valid_channel_strategy(self.channel_strategy)
         return self
@@ -237,7 +240,7 @@ class QuantumAccount(Account):
         return QuantumAuth(access_token=self.token)
 
     @staticmethod
-    def _assert_valid_instance(channel: ChannelType, instance: str) -> None:
+    def _assert_valid_instance(instance: str) -> None:
         """Assert that the instance name is valid for the given account type."""
         if instance is not None:
             try:
@@ -246,6 +249,12 @@ class QuantumAccount(Account):
                 raise InvalidAccountError(
                     f"Invalid `instance` value. Expected hub/group/project format, got {instance}"
                 )
+
+    def resolve_crn(self) -> None:
+        """Resolves the corresponding unique Cloud Resource Name (CRN) for the given non-unique service
+        instance name and updates the ``instance`` attribute accordingly.
+        Relevant for "ibm_cloud" channel only."""
+        pass
 
 
 class CloudAccount(Account):
@@ -312,7 +321,7 @@ class CloudAccount(Account):
         self.instance = crn[0]
 
     @staticmethod
-    def _assert_valid_instance(channel: ChannelType, instance: str) -> None:
+    def _assert_valid_instance(instance: str) -> None:
         """Assert that the instance name is valid for the given account type."""
         if not (isinstance(instance, str) and len(instance) > 0):
             raise InvalidAccountError(
