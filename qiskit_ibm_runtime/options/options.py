@@ -61,7 +61,7 @@ class Options:
             <https://qiskit.org/documentation/partners/qiskit_ibm_runtime>`_.
             for more information about the error mitigation methods used at each level.
 
-        max_execution_time: Maximum execution time in seconds which is based
+        max_execution_time: Maximum execution time in seconds, which is based
             on quantum time instead of wall clock time. Quantum time represents the time that
             the QPU complex (including control software, control electronics, QPU, and so on)
             is engaged in processing the job. If a job exceeds this time limit, it is forcibly cancelled.
