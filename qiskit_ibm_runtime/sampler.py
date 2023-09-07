@@ -27,6 +27,7 @@ from .base_primitive import BasePrimitive
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
+from .utils.qctrl import validate as qctrl_validate
 
 logger = logging.getLogger(__name__)
 
@@ -159,6 +160,10 @@ class Sampler(BasePrimitive, BaseSampler):
             ValueError: if resilience_level is out of the allowed range.
         """
         if os.getenv("QISKIT_RUNTIME_SKIP_OPTIONS_VALIDATION"):
+            return
+
+        if self._service._channel_strategy == "q-ctrl":
+            qctrl_validate(options)
             return
 
         if options.get("resilience_level") and not options.get("resilience_level") in [
