@@ -208,8 +208,8 @@ class Account:
         if config is not None:
             config.validate()
 
-    @abstractmethod
     @staticmethod
+    @abstractmethod
     def _assert_valid_instance(instance: str) -> None:
         """Assert that the instance name is valid for the given account type."""
         pass
