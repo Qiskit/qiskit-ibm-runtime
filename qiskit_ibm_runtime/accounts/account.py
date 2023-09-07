@@ -55,6 +55,8 @@ class Account:
             verify: Whether to verify server's TLS certificate.
             channel_strategy: Error mitigation strategy.
         """
+        self.channel: str = None
+        self.url: str = None
         self.token = token
         self.instance = instance
         self.proxies = proxies
@@ -206,6 +208,12 @@ class Account:
         if config is not None:
             config.validate()
 
+    @abstractmethod
+    @staticmethod
+    def _assert_valid_instance(instance: str) -> None:
+        """Assert that the instance name is valid for the given account type."""
+        pass
+
 
 class QuantumAccount(Account):
     """Class that represents an account with channel 'ibm_quantum."""
@@ -230,10 +238,10 @@ class QuantumAccount(Account):
             verify: Whether to verify server's TLS certificate.
             channel_strategy: Error mitigation strategy.
         """
+        super().__init__(token, instance, proxies, verify, channel_strategy)
         resolved_url = url or IBM_QUANTUM_API_URL
         self.channel = "ibm_quantum"
         self.url = resolved_url
-        super().__init__(token, instance, proxies, verify, channel_strategy)
 
     def get_auth_handler(self) -> AuthBase:
         """Returns the Quantum authentication handler."""
@@ -279,10 +287,10 @@ class CloudAccount(Account):
             verify: Whether to verify server's TLS certificate.
             channel_strategy: Error mitigation strategy.
         """
+        super().__init__(token, instance, proxies, verify, channel_strategy)
         resolved_url = url or IBM_CLOUD_API_URL
         self.channel = "ibm_cloud"
         self.url = resolved_url
-        super().__init__(token, instance, proxies, verify, channel_strategy)
 
     def get_auth_handler(self) -> AuthBase:
         """Returns the Cloud authentication handler."""
