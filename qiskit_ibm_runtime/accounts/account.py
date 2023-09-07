@@ -12,6 +12,7 @@
 
 """Account related classes and functions."""
 
+from abc import abstractmethod
 import logging
 from typing import Optional, Literal
 from urllib.parse import urlparse
@@ -22,7 +23,6 @@ from qiskit_ibm_provider.utils.hgp import from_instance_format
 
 from .exceptions import InvalidAccountError, CloudResourceNameResolutionError
 from ..api.auth import QuantumAuth, CloudAuth
-
 from ..utils import resolve_crn
 
 AccountType = Optional[Literal["cloud", "legacy"]]
@@ -38,9 +38,7 @@ class Account:
 
     def __init__(
         self,
-        channel: ChannelType,
         token: str,
-        url: Optional[str] = None,
         instance: Optional[str] = None,
         proxies: Optional[ProxyConfiguration] = None,
         verify: Optional[bool] = True,
@@ -57,12 +55,7 @@ class Account:
             verify: Whether to verify server's TLS certificate.
             channel_strategy: Error mitigation strategy.
         """
-        resolved_url = url or (
-            IBM_QUANTUM_API_URL if channel == "ibm_quantum" else IBM_CLOUD_API_URL
-        )
-        self.channel = channel
         self.token = token
-        self.url = resolved_url
         self.instance = instance
         self.proxies = proxies
         self.verify = verify
@@ -78,56 +71,63 @@ class Account:
     @classmethod
     def from_saved_format(cls, data: dict) -> "Account":
         """Creates an account instance from data saved on disk."""
+        print(data)
+        channel = data.get("channel")
         proxies = data.get("proxies")
-        return cls(
-            channel=data.get("channel"),
-            url=data.get("url"),
-            token=data.get("token"),
-            instance=data.get("instance"),
-            proxies=ProxyConfiguration(**proxies) if proxies else None,
-            verify=data.get("verify", True),
-            channel_strategy=data.get("channel_strategy"),
+        proxies = ProxyConfiguration(**proxies) if proxies else None
+        url = data.get("url")
+        token = data.get("token")
+        instance = data.get("instance")
+        verify = data.get("verify", True)
+        channel_strategy = data.get("channel_strategy")
+        return cls.create_account(
+            channel=channel,
+            url=url,
+            token=token,
+            instance=instance,
+            proxies=proxies,
+            verify=verify,
+            channel_strategy=channel_strategy,
         )
 
-    def resolve_crn(self) -> None:
-        """Resolves the corresponding unique Cloud Resource Name (CRN) for the given non-unique service
-        instance name and updates the ``instance`` attribute accordingly.
-
-        No-op if ``channel`` attribute is set to ``ibm_quantum``.
-        No-op if ``instance`` attribute is set to a Cloud Resource Name (CRN).
-
-        Raises:
-            CloudResourceNameResolutionError: if CRN value cannot be resolved.
-        """
-        if self.channel == "ibm_cloud":
-            crn = resolve_crn(
-                channel=self.channel,
-                url=self.url,
-                token=self.token,
-                instance=self.instance,
+    @classmethod
+    def create_account(
+        cls,
+        channel: str,
+        token: str,
+        url: Optional[str] = None,
+        instance: Optional[str] = None,
+        proxies: Optional[ProxyConfiguration] = None,
+        verify: Optional[bool] = True,
+        channel_strategy: Optional[str] = None,
+    ) -> "Account":
+        if channel == "ibm_quantum":
+            return QuantumAccount(
+                url=url,
+                token=token,
+                instance=instance,
+                proxies=proxies,
+                verify=verify,
+                channel_strategy=channel_strategy,
             )
-            if len(crn) == 0:
-                raise CloudResourceNameResolutionError(
-                    f"Failed to resolve CRN value for the provided service name {self.instance}."
-                )
-            if len(crn) > 1:
-                # handle edge-case where multiple service instances with the same name exist
-                logger.warning(
-                    "Multiple CRN values found for service name %s: %s. Using %s.",
-                    self.instance,
-                    crn,
-                    crn[0],
-                )
+        elif channel == "ibm_cloud":
+            return CloudAccount(
+                url=url,
+                token=token,
+                instance=instance,
+                proxies=proxies,
+                verify=verify,
+                channel_strategy=channel_strategy,
+            )
+        else:
+            raise InvalidAccountError(
+                f"Invalid `channel` value. Expected one of "
+                f"{['ibm_cloud', 'ibm_quantum']}, got '{channel}'."
+            )
 
-            # overwrite with CRN value
-            self.instance = crn[0]
-
-    def get_auth_handler(self) -> AuthBase:
-        """Returns the respective authentication handler."""
-        if self.channel == "ibm_cloud":
-            return CloudAuth(api_key=self.token, crn=self.instance)
-
-        return QuantumAuth(access_token=self.token)
+    @abstractmethod
+    def resolve_crn(self) -> None:
+        pass
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Account):
@@ -203,19 +203,118 @@ class Account:
         if config is not None:
             config.validate()
 
+
+class QuantumAccount(Account):
+    """Class that represents an account with channel 'ibm_quantum."""
+
+    def __init__(
+        self,
+        token: str,
+        url: Optional[str] = None,
+        instance: Optional[str] = None,
+        proxies: Optional[ProxyConfiguration] = None,
+        verify: Optional[bool] = True,
+        channel_strategy: Optional[str] = None,
+    ):
+        """Account constructor.
+
+        Args:
+            channel: Channel type, ``ibm_cloud`` or ``ibm_quantum``.
+            token: Account token to use.
+            url: Authentication URL.
+            instance: Service instance to use.
+            proxies: Proxy configuration.
+            verify: Whether to verify server's TLS certificate.
+            channel_strategy: Error mitigation strategy.
+        """
+        resolved_url = url or IBM_QUANTUM_API_URL
+        self.channel = "ibm_quantum"
+        self.url = resolved_url
+        super().__init__(token, instance, proxies, verify, channel_strategy)
+
+    def get_auth_handler(self) -> AuthBase:
+        """Returns the Quantum authentication handler."""
+        return QuantumAuth(access_token=self.token)
+
     @staticmethod
     def _assert_valid_instance(channel: ChannelType, instance: str) -> None:
         """Assert that the instance name is valid for the given account type."""
-        if channel == "ibm_cloud":
-            if not (isinstance(instance, str) and len(instance) > 0):
+        if instance is not None:
+            try:
+                from_instance_format(instance)
+            except:
                 raise InvalidAccountError(
-                    f"Invalid `instance` value. Expected a non-empty string, got '{instance}'."
+                    f"Invalid `instance` value. Expected hub/group/project format, got {instance}"
                 )
-        if channel == "ibm_quantum":
-            if instance is not None:
-                try:
-                    from_instance_format(instance)
-                except:
-                    raise InvalidAccountError(
-                        f"Invalid `instance` value. Expected hub/group/project format, got {instance}"
-                    )
+
+
+class CloudAccount(Account):
+    """Class that represents an account."""
+
+    def __init__(
+        self,
+        token: str,
+        url: Optional[str] = None,
+        instance: Optional[str] = None,
+        proxies: Optional[ProxyConfiguration] = None,
+        verify: Optional[bool] = True,
+        channel_strategy: Optional[str] = None,
+    ):
+        """Account constructor.
+
+        Args:
+            token: Account token to use.
+            url: Authentication URL.
+            instance: Service instance to use.
+            proxies: Proxy configuration.
+            verify: Whether to verify server's TLS certificate.
+            channel_strategy: Error mitigation strategy.
+        """
+        resolved_url = url or IBM_CLOUD_API_URL
+        self.channel = "ibm_cloud"
+        self.url = resolved_url
+        super().__init__(token, instance, proxies, verify, channel_strategy)
+
+    def get_auth_handler(self) -> AuthBase:
+        """Returns the Cloud authentication handler."""
+        return CloudAuth(api_key=self.token, crn=self.instance)
+
+    def resolve_crn(self) -> None:
+        """Resolves the corresponding unique Cloud Resource Name (CRN) for the given non-unique service
+        instance name and updates the ``instance`` attribute accordingly.
+
+        No-op if ``channel`` attribute is set to ``ibm_quantum``.
+        No-op if ``instance`` attribute is set to a Cloud Resource Name (CRN).
+
+        Raises:
+            CloudResourceNameResolutionError: if CRN value cannot be resolved.
+        """
+        crn = resolve_crn(
+            channel=self.channel,
+            url=self.url,
+            token=self.token,
+            instance=self.instance,
+        )
+        if len(crn) == 0:
+            raise CloudResourceNameResolutionError(
+                f"Failed to resolve CRN value for the provided service name {self.instance}."
+            )
+        if len(crn) > 1:
+            # handle edge-case where multiple service instances with the same name exist
+            logger.warning(
+                "Multiple CRN values found for service name %s: %s. Using %s.",
+                self.instance,
+                crn,
+                crn[0],
+            )
+
+        # overwrite with CRN value
+        self.instance = crn[0]
+
+    @staticmethod
+    def _assert_valid_instance(channel: ChannelType, instance: str) -> None:
+        """Assert that the instance name is valid for the given account type."""
+        if not (isinstance(instance, str) and len(instance) > 0):
+            raise InvalidAccountError(
+                f"Invalid `instance` value. Expected a non-empty string, got '{instance}'."
+            )

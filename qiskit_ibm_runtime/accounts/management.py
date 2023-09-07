@@ -57,19 +57,20 @@ class AccountManager:
         name = name or cls._get_default_account_name(channel)
         filename = filename if filename else _DEFAULT_ACCOUNT_CONFIG_JSON_FILE
         filename = os.path.expanduser(filename)
+        config = Account.create_account(
+            channel=channel,
+            token=token,
+            url=url,
+            instance=instance,
+            proxies=proxies,
+            verify=verify,
+            channel_strategy=channel_strategy,
+        )
         return save_config(
             filename=filename,
             name=name,
             overwrite=overwrite,
-            config=Account(
-                token=token,
-                url=url,
-                instance=instance,
-                channel=channel,
-                proxies=proxies,
-                verify=verify,
-                channel_strategy=channel_strategy,
-            )
+            config=config
             # avoid storing invalid accounts
             .validate().to_saved_format(),
         )
@@ -249,7 +250,7 @@ class AccountManager:
         url = os.getenv("QISKIT_IBM_URL")
         if not (token and url):
             return None
-        return Account(
+        return Account.create_account(
             token=token,
             url=url,
             instance=os.getenv("QISKIT_IBM_INSTANCE"),
@@ -277,7 +278,7 @@ class AccountManager:
             filename=_DEFAULT_ACCOUNT_CONFIG_JSON_FILE,
             name=_DEFAULT_ACCOUNT_NAME_IBM_QUANTUM,
             overwrite=False,
-            config=Account(
+            config=Account.create_account(
                 token=qiskitrc_data.get("token", None),
                 url=qiskitrc_data.get("url", None),
                 instance=qiskitrc_data.get("default_provider", None),
