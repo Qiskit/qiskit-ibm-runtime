@@ -27,6 +27,7 @@ from .runtime_job import RuntimeJob
 from .ibm_backend import IBMBackend
 from .options import Options
 from .base_primitive import BasePrimitive
+from .utils.qctrl import validate as qctrl_validate
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
@@ -193,6 +194,10 @@ class Estimator(BasePrimitive, BaseEstimator):
             ValueError: if resilience_level==3, backend is simulator and no coupling map
         """
         if os.getenv("QISKIT_RUNTIME_SKIP_OPTIONS_VALIDATION"):
+            return
+
+        if self._service._channel_strategy == "q-ctrl":
+            qctrl_validate(options)
             return
 
         if not options.get("resilience_level") in list(
