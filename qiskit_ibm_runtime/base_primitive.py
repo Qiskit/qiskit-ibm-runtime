@@ -183,6 +183,12 @@ class BasePrimitive(ABC):
             combined["resilience_level"] = Options._DEFAULT_RESILIENCE_LEVEL
 
         self._validate_options(combined)
+        if combined["resilience_level"] == 2:
+            if not combined["resilience"]["noise_factors"]:
+                combined["resilience"]["noise_factors"] = (1, 3, 5)
+            if not combined["resilience"]["extrapolator"]:
+                combined["resilience"]["extrapolator"] = "LinearExtrapolator"
+
         primitive_inputs.update(Options._get_program_inputs(combined))
 
         if self._backend and combined["transpilation"]["skip_transpilation"]:
