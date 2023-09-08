@@ -62,8 +62,8 @@ class ResilienceOptions:
     """
 
     noise_amplifier: NoiseAmplifierType = None
-    noise_factors: Sequence[float] = (1, 3, 5)
-    extrapolator: ExtrapolatorType = "LinearExtrapolator"
+    noise_factors: Sequence[float] = None
+    extrapolator: ExtrapolatorType = None
 
     @staticmethod
     def validate_resilience_options(resilience_options: dict) -> None:
@@ -96,11 +96,6 @@ class ResilienceOptions:
                 f"Supported values are {get_args(NoiseAmplifierType)}"
             )
         extrapolator = resilience_options.get("extrapolator")
-        if not extrapolator in get_args(ExtrapolatorType):
-            raise ValueError(
-                f"Unsupported value {extrapolator} for extrapolator. "
-                f"Supported values are {get_args(ExtrapolatorType)}"
-            )
         if (
             extrapolator == "QuarticExtrapolator"
             and len(resilience_options.get("noise_factors")) < 5
