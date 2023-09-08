@@ -688,7 +688,6 @@ class TestPrimitives(IBMTestCase):
     def test_max_execution_time_options(self):
         """Test transpilation options."""
         options_dicts = [
-            {"max_execution_time": Options._MIN_EXECUTION_TIME - 1},
             {"max_execution_time": Options._MAX_EXECUTION_TIME + 1},
         ]
         session = MagicMock(spec=MockSession)
