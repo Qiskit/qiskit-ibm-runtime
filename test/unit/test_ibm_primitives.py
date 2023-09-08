@@ -707,7 +707,7 @@ class TestPrimitives(IBMTestCase):
                     inst = cls(session=session, options=opts_dict)
                     inst.run(self.qx, observables=self.obs)
                 self.assertIn(
-                    "max_execution_time must be between 300 and 28800 seconds",
+                    "max_execution_time must be below 28800 seconds",
                     str(exc.exception),
                 )
 
