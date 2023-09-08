@@ -25,6 +25,7 @@ from .execution_options import ExecutionOptions
 from .simulator_options import SimulatorOptions
 from .transpilation_options import TranspilationOptions
 from .resilience_options import ResilienceOptions
+from .twirling_options import TwirlingOptions
 from ..runtime_options import RuntimeOptions
 
 
@@ -101,6 +102,7 @@ class Options:
     execution: Union[ExecutionOptions, Dict] = field(default_factory=ExecutionOptions)
     environment: Union[EnvironmentOptions, Dict] = field(default_factory=EnvironmentOptions)
     simulator: Union[SimulatorOptions, Dict] = field(default_factory=SimulatorOptions)
+    twirling: Union[TwirlingOptions, Dict] = field(default_factory=TwirlingOptions)
 
     _obj_fields: ClassVar[dict] = {
         "transpilation": TranspilationOptions,
@@ -108,6 +110,7 @@ class Options:
         "environment": EnvironmentOptions,
         "simulator": SimulatorOptions,
         "resilience": ResilienceOptions,
+        "twirling": TwirlingOptions,
     }
 
     @staticmethod
@@ -119,23 +122,25 @@ class Options:
         """
         sim_options = options.get("simulator", {})
         inputs = {}
-        inputs["transpilation_settings"] = options.get("transpilation", {})
-        inputs["transpilation_settings"].update(
+        inputs["transpilation"] = copy.copy(options.get("transpilation", {}))
+        inputs["skip_transpilation"] = inputs["transpilation"].pop("skip_transpilation")
+        coupling_map = sim_options.get("coupling_map", None)
+        if isinstance(coupling_map, CouplingMap):
+            coupling_map = list(map(list, coupling_map.get_edges()))
+        inputs["transpilation"].update(
             {
-                "optimization_settings": {"level": options.get("optimization_level")},
-                "coupling_map": sim_options.get("coupling_map", None),
+                "optimization_level": options.get("optimization_level"),
+                "coupling_map": coupling_map,
                 "basis_gates": sim_options.get("basis_gates", None),
             }
         )
-        if isinstance(inputs["transpilation_settings"]["coupling_map"], CouplingMap):
-            inputs["transpilation_settings"]["coupling_map"] = list(
-                map(list, inputs["transpilation_settings"]["coupling_map"].get_edges())
-            )
 
-        inputs["resilience_settings"] = options.get("resilience", {})
-        inputs["resilience_settings"].update({"level": options.get("resilience_level")})
-        inputs["run_options"] = options.get("execution")
-        inputs["run_options"].update(
+        inputs["resilience_level"] = options.get("resilience_level")
+        inputs["resilience"] = options.get("resilience", {})
+        inputs["twirling"] = options.get("twirling", {})
+
+        inputs["execution"] = options.get("execution")
+        inputs["execution"].update(
             {
                 "noise_model": sim_options.get("noise_model", None),
                 "seed_simulator": sim_options.get("seed_simulator", None),

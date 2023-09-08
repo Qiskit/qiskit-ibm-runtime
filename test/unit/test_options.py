@@ -147,14 +147,14 @@ class TestOptions(IBMTestCase):
             self.assertEqual(len(warn), 2)
 
         expected = {
-            "run_options": {"shots": 100, "noise_model": noise_model},
-            "transpilation_settings": {
-                "optimization_settings": {"level": 1},
-                "skip_transpilation": True,
+            "execution": {"shots": 100, "noise_model": noise_model},
+            "skip_transpilation": True,
+            "transpilation": {
+                "optimization_level": 1,
                 "initial_layout": [1, 2],
             },
-            "resilience_settings": {
-                "level": 2,
+            "resilience_level": 2,
+            "resilience": {
                 "noise_factors": (0, 2, 4),
             },
             "foo": "foo",
@@ -207,7 +207,7 @@ class TestOptions(IBMTestCase):
             },
         }
         Options.validate_options(options)
-        for opt in ["resilience", "simulator", "transpilation", "execution"]:
+        for opt in ["simulator", "transpilation", "execution"]:
             temp_options = options.copy()
             temp_options[opt] = {"aaa": "bbb"}
             with self.assertRaises(ValueError) as exc:
@@ -227,7 +227,7 @@ class TestOptions(IBMTestCase):
                 options = Options()
                 options.simulator.coupling_map = variant
                 inputs = Options._get_program_inputs(asdict(options))
-                resulting_cmap = inputs["transpilation_settings"]["coupling_map"]
+                resulting_cmap = inputs["transpilation"]["coupling_map"]
                 self.assertEqual(coupling_map, set(map(tuple, resulting_cmap)))
 
     @data(FakeManila(), FakeNairobiV2())
