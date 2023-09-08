@@ -90,12 +90,17 @@ class ResilienceOptions:
             if not opt in get_args(ResilienceSupportedOptions):
                 raise ValueError(f"Unsupported value '{opt}' for resilience.")
         noise_amplifier = resilience_options.get("noise_amplifier") or "TwoQubitAmplifier"
-        if not noise_amplifier in get_args(NoiseAmplifierType):
+        if noise_amplifier not in get_args(NoiseAmplifierType):
             raise ValueError(
                 f"Unsupported value {noise_amplifier} for noise_amplifier. "
                 f"Supported values are {get_args(NoiseAmplifierType)}"
             )
         extrapolator = resilience_options.get("extrapolator")
+        if extrapolator and extrapolator not in get_args(ExtrapolatorType):
+            raise ValueError(
+                f"Unsupported value {extrapolator} for extrapolator. "
+                f"Supported values are {get_args(ExtrapolatorType)}"
+            )
         if (
             extrapolator == "QuarticExtrapolator"
             and len(resilience_options.get("noise_factors")) < 5
