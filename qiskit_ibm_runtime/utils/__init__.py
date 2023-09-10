@@ -35,7 +35,7 @@ Misc Functions
     to_python_identifier
 """
 
-from .converters import (
+from qiskit_ibm_provider.utils.converters import (
     utc_to_local,
     local_to_utc,
     seconds_to_duration,
