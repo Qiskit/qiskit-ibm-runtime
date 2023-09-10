@@ -17,14 +17,13 @@ from types import TracebackType
 from functools import wraps
 from contextvars import ContextVar
 
-from qiskit.circuit import QuantumCircuit
+from qiskit_ibm_provider.utils.converters import hms_to_seconds
 
 from qiskit_ibm_runtime import QiskitRuntimeService
 from .runtime_job import RuntimeJob
 from .runtime_program import ParameterNamespace
 from .program.result_decoder import ResultDecoder
 from .ibm_backend import IBMBackend
-from .utils.converters import hms_to_seconds
 from .utils.deprecation import issue_deprecation_msg
 from .exceptions import IBMInputValueError
 
@@ -62,12 +61,13 @@ class Session:
 
         with Session(backend="ibmq_qasm_simulator") as session:
             sampler = Sampler(session=session, options=options)
-            job = sampler.run(circ)
+            job = sampler.run(ReferenceCircuits.bell())
             print(f"Sampler job ID: {job.job_id()}")
-            print(f"Sampler job result:" {job.result()})
+            print(f"Sampler job result: {job.result()}")
             # Close the session only if all jobs are finished and
             # you don't need to run more in the session.
             session.close()
+
     """
 
     def __init__(
@@ -122,9 +122,6 @@ class Session:
 
         self._session_id: Optional[str] = None
         self._active = True
-
-        self._circuits_map: Dict[str, QuantumCircuit] = {}
-
         self._max_time = (
             max_time
             if max_time is None or isinstance(max_time, int)

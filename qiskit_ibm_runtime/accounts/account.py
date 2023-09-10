@@ -165,10 +165,11 @@ class Account:
     def _assert_valid_channel_strategy(channel_strategy: str) -> None:
         """Assert that the channel strategy is valid."""
         # add more strategies as they are implemented
-        if channel_strategy and channel_strategy not in ["q-ctrl"]:
+        strategies = ["q-ctrl", "default"]
+        if channel_strategy and channel_strategy not in strategies:
             raise InvalidAccountError(
                 f"Invalid `channel_strategy` value. Expected one of "
-                f"{['q-ctrl']}, got '{channel_strategy}'."
+                f"{strategies}, got '{channel_strategy}'."
             )
 
     @staticmethod
