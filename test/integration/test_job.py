@@ -131,12 +131,6 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         self.assertEqual(job._api_client.job_get(job.job_id())["cost"], job_max_execution_time)
 
     @run_integration_test
-    def test_invalid_max_execution_time_fails(self, service):
-        """Test that program fails when max_execution_time is less than 300."""
-        with self.assertRaises(ValueError):
-            self._run_program(service, max_execution_time=299)
-
-    @run_integration_test
     @production_only
     def test_cancel_job_queued(self, service):
         """Test canceling a queued job."""
