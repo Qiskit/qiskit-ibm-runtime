@@ -272,7 +272,7 @@ class QiskitRuntimeService(Provider):
             if channel and channel not in ["ibm_cloud", "ibm_quantum"]:
                 raise ValueError("'channel' can only be 'ibm_cloud' or 'ibm_quantum'")
             channel = channel or self._get_channel_for_auth(auth=auth)
-            if channel and token:
+            if token:
                 account = Account(
                     channel=channel,
                     token=token,
