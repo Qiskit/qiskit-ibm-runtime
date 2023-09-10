@@ -215,7 +215,7 @@ class Account:
 
 
 class QuantumAccount(Account):
-    """Class that represents an account with channel 'ibm_quantum.' """
+    """Class that represents an account with channel 'ibm_quantum.'"""
 
     def __init__(
         self,
@@ -255,6 +255,7 @@ class QuantumAccount(Account):
                 raise InvalidAccountError(
                     f"Invalid `instance` value. Expected hub/group/project format, got {instance}"
                 )
+
 
 class CloudAccount(Account):
     """Class that represents an account with channel 'ibm_cloud'."""
