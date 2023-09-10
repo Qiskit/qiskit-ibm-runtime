@@ -127,7 +127,6 @@ class Account:
                 f"{['ibm_cloud', 'ibm_quantum']}, got '{channel}'."
             )
 
-    @abstractmethod
     def resolve_crn(self) -> None:
         """Resolves the corresponding unique Cloud Resource Name (CRN) for the given non-unique service
         instance name and updates the ``instance`` attribute accordingly.
@@ -230,7 +229,6 @@ class QuantumAccount(Account):
         """Account constructor.
 
         Args:
-            channel: Channel type, ``ibm_cloud`` or ``ibm_quantum``.
             token: Account token to use.
             url: Authentication URL.
             instance: Service instance to use.
@@ -257,13 +255,6 @@ class QuantumAccount(Account):
                 raise InvalidAccountError(
                     f"Invalid `instance` value. Expected hub/group/project format, got {instance}"
                 )
-
-    def resolve_crn(self) -> None:
-        """Resolves the corresponding unique Cloud Resource Name (CRN) for the given non-unique service
-        instance name and updates the ``instance`` attribute accordingly.
-        Relevant for "ibm_cloud" channel only."""
-        pass
-
 
 class CloudAccount(Account):
     """Class that represents an account."""
@@ -300,14 +291,13 @@ class CloudAccount(Account):
         """Resolves the corresponding unique Cloud Resource Name (CRN) for the given non-unique service
         instance name and updates the ``instance`` attribute accordingly.
 
-        No-op if ``channel`` attribute is set to ``ibm_quantum``.
         No-op if ``instance`` attribute is set to a Cloud Resource Name (CRN).
 
         Raises:
             CloudResourceNameResolutionError: if CRN value cannot be resolved.
         """
         crn = resolve_crn(
-            channel=self.channel,
+            channel="ibm_cloud",
             url=self.url,
             token=self.token,
             instance=self.instance,

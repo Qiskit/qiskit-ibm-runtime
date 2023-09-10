@@ -302,7 +302,6 @@ class QiskitRuntimeService(Provider):
             account.verify = verify
 
         # resolve CRN if needed
-        # if account.channel == "ibm_cloud":
         self._resolve_crn(account)
 
         # ensure account is valid, fail early if not
