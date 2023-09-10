@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 
 
 class Account:
-    """Class that represents an account."""
+    """Class that represents an account. This is an abstract class."""
 
     def __init__(
         self,
@@ -215,7 +215,7 @@ class Account:
 
 
 class QuantumAccount(Account):
-    """Class that represents an account with channel 'ibm_quantum."""
+    """Class that represents an account with channel 'ibm_quantum.' """
 
     def __init__(
         self,
@@ -257,7 +257,7 @@ class QuantumAccount(Account):
                 )
 
 class CloudAccount(Account):
-    """Class that represents an account."""
+    """Class that represents an account with channel 'ibm_cloud'."""
 
     def __init__(
         self,
