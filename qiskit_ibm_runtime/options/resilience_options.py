@@ -67,8 +67,8 @@ class ResilienceOptions:
             Only applicable for ``resilience_level=2``.
             Default: "LinearExtrapolator".
 
-        trex_mitigation: Whether to enable T-REX error mitigation method.
-            By default, T-REX is enabled for resilience level 1, 2, and 3.
+        measure_noise_mitigation: Whether to enable measurement error mitigation method.
+            By default, this is enabled for resilience level 1, 2, and 3 (when applicable).
 
         zne_mitigation: Whether to turn on Zero Noise Extrapolation error mitigation method.
             By default, ZNE is enabled for resilience level 2.
@@ -90,8 +90,8 @@ class ResilienceOptions:
     noise_factors: Sequence[float] = None
     extrapolator: ExtrapolatorType = None
 
-    # TREX
-    trex_mitigation: Optional[bool] = None
+    # Measurement error mitigation
+    measure_noise_mitigation: Optional[bool] = None
 
     # ZNE
     zne_mitigation: Optional[bool] = None
