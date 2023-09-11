@@ -59,7 +59,7 @@ class RuntimeOptions:
             job_tags: Tags to be assigned to the job. The tags can subsequently be used
                 as a filter in the :meth:`jobs()` function call.
             max_execution_time: Maximum execution time in seconds, which is based
-                on quantum time instead of wall clock time. Quantum time represents the time that
+                on quantum time (not wall clock time). Quantum time is the time that
                 the QPU complex (including control software, control electronics, QPU, and so on)
                 is engaged in processing the job. If a job exceeds this time limit, it is forcibly
                 cancelled. Simulator jobs continue to use wall clock time because they do not have
