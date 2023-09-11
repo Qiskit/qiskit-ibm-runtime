@@ -256,9 +256,6 @@ class IBMBackend(Backend):
         return Options(
             shots=4000,
             memory=False,
-            qubit_lo_freq=None,
-            meas_lo_freq=None,
-            schedule_los=None,
             meas_level=MeasLevel.CLASSIFIED,
             meas_return=MeasReturnType.AVERAGE,
             memory_slots=None,
