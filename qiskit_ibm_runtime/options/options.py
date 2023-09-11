@@ -61,12 +61,16 @@ class Options:
             <https://qiskit.org/documentation/partners/qiskit_ibm_runtime>`_.
             for more information about the error mitigation methods used at each level.
 
-        max_execution_time: Maximum execution time in seconds. If
-            a job exceeds this time limit, it is forcibly cancelled. If ``None``, the
-            maximum execution time of the primitive is used.
-            This value must be in between 300 seconds and the
-            `system imposed maximum
-            <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/faqs/max_execution_time.html>`_.
+        max_execution_time: Maximum execution time in seconds, which is based
+            on quantum time (not wall clock time). Quantum time is the time that
+            the QPU complex (including control software, control electronics, QPU, and so on)
+            is engaged in processing the job. If a job exceeds this time limit, it is forcibly cancelled.
+            Simulator jobs continue to use wall clock time because they do not have quantum time.
+
+            Refer to the
+            `Max execution time documentation
+            <https://docs.quantum-computing.ibm.com/run/max-execution-time#maximum-execution-time>`_.
+            for more information.
 
         transpilation: Transpilation options. See :class:`TranspilationOptions` for all
             available options.
