@@ -96,7 +96,7 @@ class ResilienceOptions:
     # ZNE
     zne_mitigation: Optional[bool] = None
     zne_noise_factors: Sequence[float] = (1, 3, 5)
-    zne_extrapolator: Optional[Union[ExtrapolatorType, Sequence[ExtrapolatorType]]] = field(
+    zne_extrapolator: Optional[Union[ZneExtrapolatorType, Sequence[ZneExtrapolatorType]]] = field(
         default_factory=lambda: ["linear", "multi_exponential"]
     )
 
