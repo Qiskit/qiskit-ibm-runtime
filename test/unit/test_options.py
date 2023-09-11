@@ -22,6 +22,7 @@ from qiskit.transpiler import CouplingMap
 from qiskit_aer.noise import NoiseModel
 
 from qiskit_ibm_runtime import Options, RuntimeOptions
+from qiskit_ibm_runtime.utils.qctrl import _warn_and_clean_options
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import dict_keys_equal, dict_paritally_equal, flat_dict_partially_equal
@@ -259,3 +260,56 @@ class TestOptions(IBMTestCase):
             "seed_simulator": 42,
         }
         self.assertDictEqual(asdict(options), asdict(expected_options))
+
+    def test_qctrl_overrides(self):
+        """Test override of options"""
+        all_test_options = [
+            (
+                {
+                    "optimization_level": 2,
+                    "transpilation": {"approximation_degree": 1},
+                    "resilience_level": 3,
+                    "resilience": {
+                        "noise_factors": (1, 3, 5),
+                        "extrapolator": "Linear",
+                    },
+                },
+                {
+                    "optimization_level": 3,
+                    "transpilation": {"approximation_degree": 0},
+                    "resilience_level": 1,
+                    "resilience": {
+                        "noise_factors": None,
+                        "extrapolator": None,
+                    },
+                },
+            ),
+            (
+                {
+                    "optimization_level": 0,
+                    "transpilation": {"approximation_degree": 1, "skip_transpilation": True},
+                    "resilience_level": 1,
+                },
+                {
+                    "optimization_level": 3,
+                    "transpilation": {"approximation_degree": 0, "skip_transpilation": False},
+                    "resilience_level": 1,
+                },
+            ),
+            (
+                {
+                    "optimization_level": 0,
+                    "transpilation": {"skip_transpilation": True},
+                    "resilience_level": 1,
+                },
+                {
+                    "optimization_level": 3,
+                    "transpilation": {"skip_transpilation": False},
+                    "resilience_level": 1,
+                },
+            ),
+        ]
+        for option, expected_ in all_test_options:
+            with self.subTest(msg=f"{option}"):
+                _warn_and_clean_options(option)
+                self.assertEqual(expected_, option)

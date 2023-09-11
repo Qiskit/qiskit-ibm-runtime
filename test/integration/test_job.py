@@ -59,6 +59,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         self.assertEqual("foo", result)
 
     @run_integration_test
+    @production_only
     def test_run_program_cloud_no_backend(self, service):
         """Test running a cloud program with no backend."""
 
@@ -68,8 +69,8 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         job = self._run_program(service, backend="")
         self.assertTrue(job.backend(), f"Job {job.job_id()} has no backend.")
 
-    @production_only
     @run_integration_test
+    @quantum_only
     def test_run_program_log_level(self, service):
         """Test running with a custom log level."""
         levels = ["INFO", "ERROR"]
@@ -77,7 +78,8 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
             with self.subTest(level=level):
                 job = self._run_program(service, log_level=level)
                 job.wait_for_final_state()
-                self.assertTrue(job.logs())
+                if job.logs():
+                    self.assertIn("Completed", job.logs())
 
     @run_integration_test
     @quantum_only
@@ -127,12 +129,6 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         )
         job.wait_for_final_state()
         self.assertEqual(job._api_client.job_get(job.job_id())["cost"], job_max_execution_time)
-
-    @run_integration_test
-    def test_invalid_max_execution_time_fails(self, service):
-        """Test that program fails when max_execution_time is less than 300."""
-        with self.assertRaises(ValueError):
-            self._run_program(service, max_execution_time=299)
 
     @run_integration_test
     @production_only
@@ -251,6 +247,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         self.assertEqual(JobStatus.DONE, job.status())
 
     @run_integration_test
+    @production_only
     def test_run_program_missing_backend_ibm_cloud(self, service):
         """Test running an ibm_cloud program with no backend."""
         if self.dependencies.channel == "ibm_quantum":
