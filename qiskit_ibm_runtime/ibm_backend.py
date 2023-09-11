@@ -371,8 +371,6 @@ class IBMBackend(Backend):
         if datetime:
             if not isinstance(datetime, python_datetime):
                 raise TypeError("'{}' is not of type 'datetime'.")
-            if isinstance(self._api_client, RuntimeClient):
-                raise NotImplementedError("'datetime' is not supported by cloud runtime.")
             datetime = local_to_utc(datetime)
         if datetime or refresh or self._properties is None:
             api_properties = self._api_client.backend_properties(self.name, datetime=datetime)
