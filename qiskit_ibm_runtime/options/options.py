@@ -69,7 +69,7 @@ class Options:
 
             Refer to the
             `Max execution time documentation
-            <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/faqs/max_execution_time.html>`_.
+            <https://docs.quantum-computing.ibm.com/run/max-execution-time#maximum-execution-time>`_.
             for more information.
 
         transpilation: Transpilation options. See :class:`TranspilationOptions` for all
