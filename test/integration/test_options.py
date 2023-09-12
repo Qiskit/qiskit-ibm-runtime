@@ -135,8 +135,8 @@ class TestIntegrationOptions(IBMIntegrationTestCase):
         with Session(service=service, backend=backend) as session:
             inst = Estimator(session=session, options=options)
             job = inst.run(circ, observables=obs)
-            self.assertIsNone(job.inputs["resilience_settings"]["noise_factors"])
-            self.assertIsNone(job.inputs["resilience_settings"]["extrapolator"])
+            self.assertNotIn("noise_factors", job.inputs["resilience_settings"])
+            self.assertNotIn("extrapolator", job.inputs["resilience_settings"])
 
     @production_only
     @run_integration_test
