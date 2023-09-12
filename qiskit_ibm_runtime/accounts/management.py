@@ -50,7 +50,6 @@ class AccountManager:
         channel_strategy: Optional[str] = None,
     ) -> None:
         """Save account on disk."""
-        cls.migrate(filename=filename)
         channel = channel or os.getenv("QISKIT_IBM_CHANNEL") or _DEFAULT_CHANNEL_TYPE
         name = name or cls._get_default_account_name(channel)
         filename = filename if filename else _DEFAULT_ACCOUNT_CONFIG_JSON_FILE
@@ -82,7 +81,6 @@ class AccountManager:
         """List all accounts in a given filename, or in the default account file."""
         filename = filename if filename else _DEFAULT_ACCOUNT_CONFIG_JSON_FILE
         filename = os.path.expanduser(filename)
-        AccountManager.migrate(filename)
 
         def _matching_name(account_name: str) -> bool:
             return name is None or name == account_name
@@ -148,7 +146,6 @@ class AccountManager:
         """
         filename = filename if filename else _DEFAULT_ACCOUNT_CONFIG_JSON_FILE
         filename = os.path.expanduser(filename)
-        cls.migrate(filename)
         if name:
             saved_account = read_config(filename=filename, name=name)
             if not saved_account:
@@ -192,7 +189,6 @@ class AccountManager:
         """Delete account from disk."""
         filename = filename if filename else _DEFAULT_ACCOUNT_CONFIG_JSON_FILE
         filename = os.path.expanduser(filename)
-        cls.migrate(filename=filename)
         name = name or cls._get_default_account_name(channel)
         return delete_config(
             filename=filename,
