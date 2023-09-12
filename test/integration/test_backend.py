@@ -131,8 +131,11 @@ class TestIBMBackend(IBMIntegrationTestCase):
         with self.subTest(backend=backend.name):
             if backend.simulator:
                 raise SkipTest("Skip since simulator does not have properties.")
-            self.assertIsNotNone(backend.properties())
-            self.assertIsNotNone(backend.properties(datetime=datetime.today()))
+            properties = backend.properties()
+            properties_today = backend.properties(datetime=datetime.today())
+            self.assertIsNotNone(properties)
+            self.assertIsNotNone(properties_today)
+            self.assertEqual(properties, properties_today)
 
     @production_only
     def test_backend_pulse_defaults(self):
