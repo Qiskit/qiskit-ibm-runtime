@@ -183,6 +183,10 @@ class BasePrimitive(ABC):
             combined["resilience_level"] = Options._DEFAULT_RESILIENCE_LEVEL
 
         self._validate_options(combined)
+
+        combined = Options._set_default_resilience_options(combined)
+        combined = Options._remove_none_values(combined)
+
         primitive_inputs.update(Options._get_program_inputs(combined))
 
         if self._backend and combined["transpilation"]["skip_transpilation"]:

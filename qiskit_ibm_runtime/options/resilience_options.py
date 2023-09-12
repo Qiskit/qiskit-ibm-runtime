@@ -46,7 +46,7 @@ class ResilienceOptions:
         noise_factors: An list of real valued noise factors that determine by what amount the
             circuits' noise is amplified.
             Only applicable for ``resilience_level=2``.
-            Default: (1, 3, 5).
+            Default: ``None``, and (1, 3, 5) if resilience level is 2.
 
         noise_amplifier (DEPRECATED): A noise amplification strategy. One of ``"TwoQubitAmplifier"``,
             ``"GlobalFoldingAmplifier"``, ``"LocalFoldingAmplifier"``, ``"CxAmplifier"``.
@@ -58,12 +58,12 @@ class ResilienceOptions:
             Note that ``"CubicExtrapolator"`` and ``"QuarticExtrapolator"`` require more
             noise factors than the default.
             Only applicable for ``resilience_level=2``.
-            Default: "LinearExtrapolator".
+            Default: ``None``, and ``LinearExtrapolator`` if resilience level is 2.
     """
 
     noise_amplifier: NoiseAmplifierType = None
-    noise_factors: Sequence[float] = (1, 3, 5)
-    extrapolator: ExtrapolatorType = "LinearExtrapolator"
+    noise_factors: Sequence[float] = None
+    extrapolator: ExtrapolatorType = None
 
     @staticmethod
     def validate_resilience_options(resilience_options: dict) -> None:
@@ -90,13 +90,13 @@ class ResilienceOptions:
             if not opt in get_args(ResilienceSupportedOptions):
                 raise ValueError(f"Unsupported value '{opt}' for resilience.")
         noise_amplifier = resilience_options.get("noise_amplifier") or "TwoQubitAmplifier"
-        if not noise_amplifier in get_args(NoiseAmplifierType):
+        if noise_amplifier not in get_args(NoiseAmplifierType):
             raise ValueError(
                 f"Unsupported value {noise_amplifier} for noise_amplifier. "
                 f"Supported values are {get_args(NoiseAmplifierType)}"
             )
         extrapolator = resilience_options.get("extrapolator")
-        if not extrapolator in get_args(ExtrapolatorType):
+        if extrapolator and extrapolator not in get_args(ExtrapolatorType):
             raise ValueError(
                 f"Unsupported value {extrapolator} for extrapolator. "
                 f"Supported values are {get_args(ExtrapolatorType)}"

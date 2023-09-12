@@ -116,6 +116,28 @@ class TestIntegrationOptions(IBMIntegrationTestCase):
                 inst.run(circ, observables=obs)
             self.assertIn("a coupling map is required.", str(exc.exception))
 
+    @run_integration_test
+    def test_default_resilience_settings(self, service):
+        """Test that correct default resilience settings are used."""
+        circ = QuantumCircuit(1)
+        obs = SparsePauliOp.from_list([("I", 1)])
+        options = Options(resilience_level=2)
+        backend = service.backends(simulator=True)[0]
+        with Session(service=service, backend=backend) as session:
+            inst = Estimator(session=session, options=options)
+            job = inst.run(circ, observables=obs)
+            self.assertEqual(job.inputs["resilience_settings"]["noise_factors"], [1, 3, 5])
+            self.assertEqual(
+                job.inputs["resilience_settings"]["extrapolator"], "LinearExtrapolator"
+            )
+
+        options = Options(resilience_level=1)
+        with Session(service=service, backend=backend) as session:
+            inst = Estimator(session=session, options=options)
+            job = inst.run(circ, observables=obs)
+            self.assertIsNone(job.inputs["resilience_settings"]["noise_factors"])
+            self.assertIsNone(job.inputs["resilience_settings"]["extrapolator"])
+
     @production_only
     @run_integration_test
     def test_all_resilience_levels(self, service):
