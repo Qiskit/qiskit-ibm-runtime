@@ -358,7 +358,6 @@ class TestAccountManager(IBMTestCase):
 
             self.assertTrue(len(AccountManager.list()) == 0)
 
-
     def test_delete_filename(self):
         """Test delete accounts with filename parameter."""
 
