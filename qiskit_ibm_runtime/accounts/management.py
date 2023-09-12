@@ -26,8 +26,6 @@ _DEFAULT_ACCOUNT_CONFIG_JSON_FILE = os.path.join(
 )
 _QISKITRC_CONFIG_FILE = os.path.join(os.path.expanduser("~"), ".qiskit", "qiskitrc")
 _DEFAULT_ACCOUNT_NAME = "default"
-_DEFAULT_ACCOUNT_NAME_LEGACY = "default-legacy"
-_DEFAULT_ACCOUNT_NAME_CLOUD = "default-cloud"
 _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM = "default-ibm-quantum"
 _DEFAULT_ACCOUNT_NAME_IBM_CLOUD = "default-ibm-cloud"
 _DEFAULT_CHANNEL_TYPE: ChannelType = "ibm_cloud"
@@ -139,7 +137,7 @@ class AccountManager:
 
         Args:
             filename: Full path of the file from which to get the account.
-            name: Account name. Takes precedence if `auth` is also specified.
+            name: Account name.
             channel: Channel type.
 
         Returns:
@@ -200,47 +198,6 @@ class AccountManager:
             filename=filename,
             name=name,
         )
-
-    @classmethod
-    def migrate(cls, filename: Optional[str] = None) -> None:
-        """Migrate accounts on disk by removing `auth` and adding `channel`."""
-        filename = filename if filename else _DEFAULT_ACCOUNT_CONFIG_JSON_FILE
-        filename = os.path.expanduser(filename)
-        data = read_config(filename=filename)
-        for key, value in data.items():
-            if key == _DEFAULT_ACCOUNT_NAME_CLOUD:
-                value.pop("auth", None)
-                value.update(channel="ibm_cloud")
-                delete_config(filename=filename, name=key)
-                save_config(
-                    filename=filename,
-                    name=_DEFAULT_ACCOUNT_NAME_IBM_CLOUD,
-                    config=value,
-                    overwrite=False,
-                )
-            elif key == _DEFAULT_ACCOUNT_NAME_LEGACY:
-                value.pop("auth", None)
-                value.update(channel="ibm_quantum")
-                delete_config(filename=filename, name=key)
-                save_config(
-                    filename=filename,
-                    name=_DEFAULT_ACCOUNT_NAME_IBM_QUANTUM,
-                    config=value,
-                    overwrite=False,
-                )
-            else:
-                if isinstance(value, dict) and "auth" in value:
-                    if value["auth"] == "cloud":
-                        value.update(channel="ibm_cloud")
-                    elif value["auth"] == "legacy":
-                        value.update(channel="ibm_quantum")
-                    value.pop("auth", None)
-                    save_config(
-                        filename=filename,
-                        name=key,
-                        config=value,
-                        overwrite=True,
-                    )
 
     @classmethod
     def _from_env_variables(cls, channel: Optional[ChannelType]) -> Optional[Account]:
