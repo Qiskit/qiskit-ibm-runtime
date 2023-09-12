@@ -61,12 +61,16 @@ class Options:
             <https://qiskit.org/documentation/partners/qiskit_ibm_runtime>`_.
             for more information about the error mitigation methods used at each level.
 
-        max_execution_time: Maximum execution time in seconds. If
-            a job exceeds this time limit, it is forcibly cancelled. If ``None``, the
-            maximum execution time of the primitive is used.
-            This value must be in between 300 seconds and the
-            `system imposed maximum
-            <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/faqs/max_execution_time.html>`_.
+        max_execution_time: Maximum execution time in seconds, which is based
+            on quantum time (not wall clock time). Quantum time is the time that
+            the QPU complex (including control software, control electronics, QPU, and so on)
+            is engaged in processing the job. If a job exceeds this time limit, it is forcibly cancelled.
+            Simulator jobs continue to use wall clock time because they do not have quantum time.
+
+            Refer to the
+            `Max execution time documentation
+            <https://docs.quantum-computing.ibm.com/run/max-execution-time#maximum-execution-time>`_.
+            for more information.
 
         transpilation: Transpilation options. See :class:`TranspilationOptions` for all
             available options.
@@ -90,7 +94,6 @@ class Options:
     _MAX_OPTIMIZATION_LEVEL = 3
     _MAX_RESILIENCE_LEVEL_ESTIMATOR = 3
     _MAX_RESILIENCE_LEVEL_SAMPLER = 1
-    _MIN_EXECUTION_TIME = 300
     _MAX_EXECUTION_TIME = 8 * 60 * 60  # 8 hours for real device
 
     optimization_level: Optional[int] = None
@@ -168,14 +171,10 @@ class Options:
         ResilienceOptions.validate_resilience_options(options.get("resilience"))
         TranspilationOptions.validate_transpilation_options(options.get("transpilation"))
         execution_time = options.get("max_execution_time")
-        if not execution_time is None:
-            if (
-                execution_time < Options._MIN_EXECUTION_TIME
-                or execution_time > Options._MAX_EXECUTION_TIME
-            ):
+        if execution_time is not None:
+            if execution_time > Options._MAX_EXECUTION_TIME:
                 raise ValueError(
-                    f"max_execution_time must be between "
-                    f"{Options._MIN_EXECUTION_TIME} and {Options._MAX_EXECUTION_TIME} seconds."
+                    f"max_execution_time must be below " f"{Options._MAX_EXECUTION_TIME} seconds."
                 )
 
         EnvironmentOptions.validate_environment_options(options.get("environment"))

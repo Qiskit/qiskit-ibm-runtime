@@ -390,9 +390,7 @@ class RuntimeClient(BaseBackendClient):
         Raises:
             NotImplementedError: If `datetime` is specified.
         """
-        if datetime:
-            raise NotImplementedError("'datetime' is not supported with cloud runtime.")
-        return self._api.backend(backend_name).properties()
+        return self._api.backend(backend_name).properties(datetime=datetime)
 
     def backend_pulse_defaults(self, backend_name: str) -> Dict:
         """Return the pulse defaults of the IBM backend.
