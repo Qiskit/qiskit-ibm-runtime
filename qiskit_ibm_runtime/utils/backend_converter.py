@@ -127,7 +127,7 @@ def convert_to_target(
         target.granularity = configuration.timing_constraints.get("granularity")
         target.min_length = configuration.timing_constraints.get("min_length")
         target.pulse_alignment = configuration.timing_constraints.get("pulse_alignment")
-        target.aquire_alignment = configuration.timing_constraints.get("acquire_alignment")
+        target.acquire_alignment = configuration.timing_constraints.get("acquire_alignment")
     # If pulse defaults exists use that as the source of truth
     if defaults is not None:
         faulty_qubits = set()
