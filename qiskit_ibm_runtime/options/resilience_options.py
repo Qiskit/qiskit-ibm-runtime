@@ -57,7 +57,7 @@ class ResilienceOptions:
         noise_factors (DEPRECATED): An list of real valued noise factors that determine
             by what amount the circuits' noise is amplified.
             Only applicable for ``resilience_level=2``.
-            Default: (1, 3, 5).
+            Default: ``None``, and (1, 3, 5) if resilience level is 2.
 
         noise_amplifier (DEPRECATED): A noise amplification strategy. One of ``"TwoQubitAmplifier"``,
             ``"GlobalFoldingAmplifier"``, ``"LocalFoldingAmplifier"``, ``"CxAmplifier"``.
@@ -69,7 +69,7 @@ class ResilienceOptions:
             Note that ``"CubicExtrapolator"`` and ``"QuarticExtrapolator"`` require more
             noise factors than the default.
             Only applicable for ``resilience_level=2``.
-            Default: "LinearExtrapolator".
+            Default: ``None``, and ``LinearExtrapolator`` if resilience level is 2.
 
         measure_noise_mitigation: Whether to enable measurement error mitigation method.
             By default, this is enabled for resilience level 1, 2, and 3 (when applicable).
@@ -166,6 +166,7 @@ class ResilienceOptions:
                 f"Supported values are {get_args(NoiseAmplifierType)}"
             )
         extrapolator = resilience_options.get("extrapolator")
+        if extrapolator and extrapolator not in get_args(ExtrapolatorType):
         if extrapolator and extrapolator not in get_args(ExtrapolatorType):
             raise ValueError(
                 f"Unsupported value {extrapolator} for extrapolator. "
