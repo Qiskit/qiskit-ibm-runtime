@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 def save_config(
-    filename: str, name: str, config: dict, overwrite: bool, default_channel: Optional[str] = None
+    filename: str, name: str, config: dict, overwrite: bool, set_as_default: Optional[bool] = True
 ) -> None:
     """Save configuration data in a JSON file under the given name."""
     logger.debug("Save configuration data for '%s' in '%s'", name, filename)
@@ -36,19 +36,23 @@ def save_config(
         raise AccountAlreadyExistsError(
             f"Named account ({name}) already exists. " f"Set overwrite=True to overwrite."
         )
-    if (
-        data.get("default_channel")
-        and data.get("default_channel") != default_channel
-        and not overwrite
-    ):
-        raise AccountAlreadyExistsError(
-            f"default_channel ({name}) already exists. " f"Set overwrite=True to overwrite."
-        )
+
+    data[name] = config
+
+    # if set_as_default, but another account is defined as default, user must specify overwrite to change
+    # the default account.
+    if set_as_default:
+        data[name]["is_default_account"] = True
+        for account in data:
+            if account.get("name") != name and account.get("is_default_account"):
+                if overwrite:
+                    del account["is_default_account"]
+                else:
+                    raise AccountAlreadyExistsError(
+                    f"default_account ({name}) already exists. " f"Set overwrite=True to overwrite."
+                    )
 
     with open(filename, mode="w", encoding="utf-8") as json_out:
-        data[name] = config
-        if default_channel:
-            data["default_channel"] = default_channel
         json.dump(data, json_out, sort_keys=True, indent=4)
 
 

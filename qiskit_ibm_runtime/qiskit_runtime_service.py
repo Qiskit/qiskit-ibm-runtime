@@ -702,7 +702,7 @@ class QiskitRuntimeService(Provider):
         verify: Optional[bool] = None,
         overwrite: Optional[bool] = False,
         channel_strategy: Optional[str] = None,
-        set_default_channel: Optional[bool] = True,
+        set_as_default: Optional[bool] = True,
     ) -> None:
         """Save the account to disk for future use.
 
@@ -738,7 +738,7 @@ class QiskitRuntimeService(Provider):
             verify=verify,
             overwrite=overwrite,
             channel_strategy=channel_strategy,
-            set_default_channel=set_default_channel,
+            set_as_default=set_as_default,
         )
 
     @staticmethod

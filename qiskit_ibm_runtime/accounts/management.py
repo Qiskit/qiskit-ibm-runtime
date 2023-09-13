@@ -50,10 +50,10 @@ class AccountManager:
         verify: Optional[bool] = None,
         overwrite: Optional[bool] = False,
         channel_strategy: Optional[str] = None,
-        set_default_channel: Optional[bool] = True,
+        set_as_default: Optional[bool] = True,
     ) -> None:
         """Save account on disk."""
-        default_channel = channel if set_default_channel else None
+        default_channel = channel if set_as_default else None # *** check this line
         cls.migrate(filename=filename)
         channel = channel or os.getenv("QISKIT_IBM_CHANNEL") or _DEFAULT_CHANNEL_TYPE
         name = name or cls._get_default_account_name(channel)
@@ -74,7 +74,7 @@ class AccountManager:
             )
             # avoid storing invalid accounts
             .validate().to_saved_format(),
-            default_channel=default_channel,
+            set_as_default=set_as_default,
         )
 
     @staticmethod
@@ -109,8 +109,6 @@ class AccountManager:
                 return account_name in default_accounts
 
         account_dict = read_config(filename=filename)
-        if "default_channel" in account_dict:
-            del account_dict["default_channel"]
 
         # load all accounts
         all_accounts = map(

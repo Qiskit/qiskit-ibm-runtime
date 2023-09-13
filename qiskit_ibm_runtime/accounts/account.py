@@ -45,6 +45,7 @@ class Account:
         proxies: Optional[ProxyConfiguration] = None,
         verify: Optional[bool] = True,
         channel_strategy: Optional[str] = None,
+        set_as_default: Optional[str] = True
     ):
         """Account constructor.
 
@@ -67,6 +68,7 @@ class Account:
         self.proxies = proxies
         self.verify = verify
         self.channel_strategy = channel_strategy
+        self.is_default = set_as_default == True
 
     def to_saved_format(self) -> dict:
         """Returns a dictionary that represents how the account is saved on disk."""
