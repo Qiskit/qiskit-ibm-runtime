@@ -111,12 +111,34 @@ class TestIntegrationOptions(IBMIntegrationTestCase):
         obs = SparsePauliOp.from_list([("I", 1)])
         options = Options()
         options.resilience_level = 3
-        backend = service.backends(simulator=True)[0]
+        backend = service.backend("ibmq_qasm_simulator")
         with Session(service=service, backend=backend) as session:
             with self.assertRaises(ValueError) as exc:
                 inst = Estimator(session=session, options=options)
                 inst.run(circ, observables=obs)
             self.assertIn("a coupling map is required.", str(exc.exception))
+
+    @run_integration_test
+    def test_default_resilience_settings(self, service):
+        """Test that correct default resilience settings are used."""
+        circ = QuantumCircuit(1)
+        obs = SparsePauliOp.from_list([("I", 1)])
+        options = Options(resilience_level=2)
+        backend = service.backend("ibmq_qasm_simulator")
+        with Session(service=service, backend=backend) as session:
+            inst = Estimator(session=session, options=options)
+            job = inst.run(circ, observables=obs)
+            self.assertEqual(job.inputs["resilience_settings"]["noise_factors"], [1, 3, 5])
+            self.assertEqual(
+                job.inputs["resilience_settings"]["extrapolator"], "LinearExtrapolator"
+            )
+
+        options = Options(resilience_level=1)
+        with Session(service=service, backend=backend) as session:
+            inst = Estimator(session=session, options=options)
+            job = inst.run(circ, observables=obs)
+            self.assertNotIn("noise_factors", job.inputs["resilience_settings"])
+            self.assertNotIn("extrapolator", job.inputs["resilience_settings"])
 
     @production_only
     @run_integration_test
@@ -132,7 +154,7 @@ class TestIntegrationOptions(IBMIntegrationTestCase):
         psi1 = RealAmplitudes(num_qubits=2, reps=2)
         h_1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
 
-        backend = service.backends(simulator=True)[0]
+        backend = service.backend("ibmq_qasm_simulator")
         options = Options()
         options.simulator.coupling_map = [[0, 1], [1, 0]]
 
