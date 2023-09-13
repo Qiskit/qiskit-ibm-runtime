@@ -458,12 +458,15 @@ class RuntimeJob(Job):
         """
         try:
             reason = job_response["state"].get("reason")
+            reason_code = job_response["state"].get("reason_code")
             if reason:
                 # TODO remove this in https://github.com/Qiskit/qiskit-ibm-runtime/issues/989
                 if reason.upper() == "RAN TOO LONG":
                     self._reason = reason.upper()
                 else:
                     self._reason = reason
+                if reason_code:
+                    self._reason = f"Error code {reason_code}; {self._reason}"
             self._status = self._status_from_job_response(job_response)
         except KeyError:
             raise IBMError(f"Unknown status: {job_response['state']['status']}")
@@ -489,6 +492,7 @@ class RuntimeJob(Job):
             Error message.
         """
         status = response["state"]["status"].upper()
+
         job_result_raw = self._download_external_result(
             self._api_client.job_results(job_id=self.job_id())
         )
