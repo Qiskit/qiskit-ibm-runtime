@@ -170,6 +170,7 @@ class Options:
                 f"optimization_level can only take the values "
                 f"{list(range(Options._MAX_OPTIMIZATION_LEVEL + 1))}"
             )
+        TwirlingOptions.validate_twirling_options(options.get("twirling"))
         ResilienceOptions.validate_resilience_options(options.get("resilience"))
         TranspilationOptions.validate_transpilation_options(options.get("transpilation"))
         execution_time = options.get("max_execution_time")
