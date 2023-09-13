@@ -182,6 +182,34 @@ class Options:
         SimulatorOptions.validate_simulator_options(options.get("simulator"))
 
     @staticmethod
+    def _remove_none_values(options: dict) -> dict:
+        """Remove `None` values from the options dictionary."""
+        new_options = {}
+        for key, value in options.items():
+            if value is not None:
+                if isinstance(value, dict):
+                    new_suboptions = {}
+                    for subkey, subvalue in value.items():
+                        if subvalue is not None:
+                            new_suboptions[subkey] = subvalue
+                    new_options[key] = new_suboptions
+                else:
+                    new_options[key] = value
+
+        return new_options
+
+    @staticmethod
+    def _set_default_resilience_options(options: dict) -> dict:
+        """Set default resilience options for resilience level 2."""
+        if options["resilience_level"] == 2:
+            if not options["resilience"]["noise_factors"]:
+                options["resilience"]["noise_factors"] = (1, 3, 5)
+            if not options["resilience"]["extrapolator"]:
+                options["resilience"]["extrapolator"] = "LinearExtrapolator"
+
+        return options
+
+    @staticmethod
     def _get_runtime_options(options: dict) -> dict:
         """Extract runtime options.
 
