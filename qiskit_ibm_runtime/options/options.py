@@ -154,6 +154,8 @@ class Options:
             if key not in known_keys:
                 warnings.warn(f"Key '{key}' is an unrecognized option. It may be ignored.")
                 inputs[key] = options[key]
+
+        inputs["_experimental"] = True
         return inputs
 
     @staticmethod
