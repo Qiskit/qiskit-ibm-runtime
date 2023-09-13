@@ -12,7 +12,7 @@
 
 """Primitive options."""
 
-from typing import Optional, Union, ClassVar
+from typing import Optional, Union, ClassVar, Literal, get_args
 from dataclasses import dataclass, fields, field
 import copy
 import warnings
@@ -27,6 +27,9 @@ from .transpilation_options import TranspilationOptions
 from .resilience_options import ResilienceOptions
 from .twirling_options import TwirlingOptions
 from ..runtime_options import RuntimeOptions
+from .resilience_level_defaults import _default_resilience_options
+
+DDSequenceType = Literal["XX", "XpXm", "XY4"]
 
 
 @_flexible
@@ -69,6 +72,10 @@ class Options:
             `system imposed maximum
             <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/faqs/max_execution_time.html>`_.
 
+        dynamical_decoupling: Optional, specify a dynamical decoupling sequence to use.
+            Allowed values are ``"XX"``, ``"XpXm"``, ``"XY4"``.
+            Default: None
+
         transpilation: Transpilation options. See :class:`TranspilationOptions` for all
             available options.
 
@@ -97,6 +104,7 @@ class Options:
     optimization_level: Optional[int] = None
     resilience_level: Optional[int] = None
     max_execution_time: Optional[int] = None
+    dynamical_decoupling: Optional[DDSequenceType] = None
     transpilation: Union[TranspilationOptions, Dict] = field(default_factory=TranspilationOptions)
     resilience: Union[ResilienceOptions, Dict] = field(default_factory=ResilienceOptions)
     execution: Union[ExecutionOptions, Dict] = field(default_factory=ExecutionOptions)
@@ -172,6 +180,14 @@ class Options:
                 f"optimization_level can only take the values "
                 f"{list(range(Options._MAX_OPTIMIZATION_LEVEL + 1))}"
             )
+
+        dd = options.get("dynamical_decoupling")
+        if dd not in get_args(DDSequenceType):
+            raise ValueError(
+                f"Unsupported value '{dd}' for dynamical_decoupling. Allowed values are {get_args(DDSequenceType)}"
+            )
+
+        TwirlingOptions.validate_twirling_options(options.get("twirling"))
         ResilienceOptions.validate_resilience_options(options.get("resilience"))
         TranspilationOptions.validate_transpilation_options(options.get("transpilation"))
         execution_time = options.get("max_execution_time")
@@ -241,7 +257,14 @@ class Options:
         if not new_options:
             return combined
         new_options_copy = copy.deepcopy(new_options)
+        if "resilience_level" in new_options:
+            # Initialize resilience level defaults before setting any other options
+            res_defaults = _default_resilience_options(new_options["resilience_level"])
+            _update_options(combined, res_defaults)
+            combined.update(res_defaults)
 
+        # Set remaining options that override default ones
+        # for resilience levels
         # First update values of the same key.
         _update_options(combined, new_options_copy)
 
