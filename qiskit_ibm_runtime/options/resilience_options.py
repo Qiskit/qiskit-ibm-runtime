@@ -37,10 +37,14 @@ ExtrapolatorType = Literal[
 ]
 
 ZneExtrapolatorType = Literal[
-    "multi_exponential",
-    "single_exponential",
+    None,
+    "exponential",
     "double_exponential",
     "linear",
+    "polynomial_degree_1",
+    "polynomial_degree_2",
+    "polynomial_degree_3",
+    "polynomial_degree_4",
 ]
 
 
@@ -72,18 +76,33 @@ class ResilienceOptions:
 
         zne_mitigation: Whether to turn on Zero Noise Extrapolation error mitigation method.
             By default, ZNE is enabled for resilience level 2.
+
         zne_noise_factors: An list of real valued noise factors that determine by what amount the
             circuits' noise is amplified.
             Only applicable if ZNE is enabled.
             Default: (1, 3, 5).
+
         zne_extrapolator: An extrapolation strategy. One or more of ``"multi_exponential"``,
             ``"single_exponential"``, ``"double_exponential"``, ``"linear"``.
             Only applicable if ZNE is enabled.
-            Default: "linear" and "multi_exponential"
+            Default: ``("exponential, "linear")``
+        
+        zne_stderr_threshold: A standard error threshold for accepting the ZNE result of Pauli basis
+            expectation values when using ZNE mitigation. Any extrapolator model resulting an larger
+            standard error than this value, or mean that is outside of the allowed range and threshold
+            will be rejected. If all models are rejected the result for the lowest noise factor is
+            used for that basis term.
+            Default: 0.25
 
         pec_mitigation: Whether to turn on Probabilistic Error Cancellation error mitigation method.
             By default, PEC is enabled for resilience level 3.
 
+        pec_max_overhead: Specify a maximum sampling overhead for the PEC sampling noise model.
+            If None the full learned model will be sampled from, otherwise if the learned noise
+            model has a sampling overhead greater than this value it will be scaled down to
+            implement partial PEC with a scaled noise model corresponding to the maximum
+            sampling overhead.
+            Default: 100
     """
 
     noise_amplifier: NoiseAmplifierType = None
@@ -91,17 +110,17 @@ class ResilienceOptions:
     extrapolator: ExtrapolatorType = None
 
     # Measurement error mitigation
-    measure_noise_mitigation: Optional[bool] = None
+    measure_noise_mitigation: bool = False
 
     # ZNE
-    zne_mitigation: Optional[bool] = None
+    zne_mitigation: bool = False
     zne_noise_factors: Sequence[float] = (1, 3, 5)
-    zne_extrapolator: Optional[Union[ZneExtrapolatorType, Sequence[ZneExtrapolatorType]]] = field(
-        default_factory=lambda: ["linear", "multi_exponential"]
-    )
+    zne_extrapolator: Union[ZneExtrapolatorType, Sequence[ZneExtrapolatorType]] = ("exponential", "linear")
+    zne_stderr_threshold: float = 0.25
 
     # PEC
-    pec_mitigation: Optional[bool] = None
+    pec_mitigation: bool = False
+    pec_max_overhead: Optional[float] = 100
 
     @staticmethod
     def validate_resilience_options(resilience_options: dict) -> None:
@@ -156,3 +175,60 @@ class ResilienceOptions:
             raise ValueError("QuarticExtrapolator requires at least 5 noise_factors.")
         if extrapolator == "CubicExtrapolator" and len(resilience_options.get("noise_factors")) < 4:
             raise ValueError("CubicExtrapolator requires at least 4 noise_factors.")
+
+        # Validation of new ZNE options
+        if resilience_options.get("zne_mitigation"):
+            # Validate extrapolator
+            extrapolator = resilience_options.get("zne_extrapolator")
+            if isinstance(extrapolator, str):
+                extrapolator = (extrapolator,)
+            if extrapolator is not None:
+                for extrap in extrapolator:
+                    if extrap not in get_args(ExtrapolatorType):
+                        raise ValueError(
+                            f"Unsupported value {extrapolator} for zne_extrapolator. "
+                            f"Supported values are {get_args(ExtrapolatorType)}"
+                        )
+
+            # Validation of noise factors
+            factors = resilience_options.get("zne_noise_factors")
+            if not isinstance(factors, (list, tuple)):
+                raise TypeError(
+                    f"zne_noise_factors option value must be a sequence, not {type(factors)}"
+                )
+            if any(i <= 0 for i in factors):
+                raise ValueError(
+                    "zne_noise_factors` option value must all be non-negative"
+                )
+            if len(factors) < 1:
+                raise ValueError(f"zne_noise_factors cannot be empty")
+            if extrapolator is not None:
+                required_factors = {
+                    "exponential": 2,
+                    "double_exponential": 4,
+                    "linear": 2,
+                    "polynomial_degree_1": 2,
+                    "polynomial_degree_2": 3,
+                    "polynomial_degree_3": 4,
+                    "polynomial_degree_4": 5,
+                }
+                for extrap in extrapolator:
+                    if len(factors) < required_factors[extrap]:
+                        raise ValueError(f"{extrap} requires at least {required_factors[extrap]} zne_noise_factors")
+            
+
+            # Validation of threshold
+            threshold= resilience_options.get("zne_stderr_threshold")
+            if threshold is not None and threshold <= 0:
+                raise ValueError(
+                    "Invalid zne_stderr_threshold option value must be > 0"
+                )
+
+        if resilience_options.get("pec_mitigation"):
+            if resilience_options.get("pec_mitigation"):
+                raise ValueError(
+                    "pec_mitigation and zne_mitigation`options cannot be simultaneously enabled. Set one of them to False."
+                )
+            max_overhead = resilience_options.get("pec_max_overhead")
+            if max_overhead is not None and max_overhead < 1:
+                raise ValueError("pec_max_overhead must be None or >= 1")
