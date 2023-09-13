@@ -21,6 +21,9 @@ from .utils import _flexible
 ExecutionSupportedOptions = Literal[
     "shots",
     "init_qubits",
+    "samples",
+    "shots_per_sample",
+    "interleave_samples",
 ]
 
 
@@ -34,19 +37,19 @@ class ExecutionOptions:
 
         init_qubits: Whether to reset the qubits to the ground state for each shot.
             Default: ``True``.
-            
+
         samples: The number of samples of each measurement circuit to run. This
             is used when twirling or resilience levels 1, 2, 3. If None it will
             be calculated automatically based on the ``shots`` and
             ``shots_per_sample`` (if specified).
             Default: None
-        
+
         shots_per_sample: The number of shots per sample of each measurement
             circuit to run. This is used when twirling or resilience levels 1, 2, 3.
             If None it will be calculated automatically based on the ``shots`` and
             ``samples`` (if specified).
             Default: None
-            
+
         interleave_samples: If True interleave samples from different measurement
             circuits when running. If False run all samples from each measurement
             circuit in order.
@@ -72,8 +75,15 @@ class ExecutionOptions:
         shots = execution_options.get("shots")
         samples = execution_options.get("samples")
         shots_per_sample = execution_options.get("shots_per_sample")
-        if shots is not None and samples is not None and shots_per_sample is not None and shots != samples * shots_per_sample:
-            raise ValueError(f"If shots ({shots}) != samples ({samples}) * shots_per_sample ({shots_per_sample})")
+        if (
+            shots is not None
+            and samples is not None
+            and shots_per_sample is not None
+            and shots != samples * shots_per_sample
+        ):
+            raise ValueError(
+                f"If shots ({shots}) != samples ({samples}) * shots_per_sample ({shots_per_sample})"
+            )
         if shots is not None:
             if not isinstance(shots, Integral):
                 raise ValueError(f"shots must be None or an integer, not {type(shots)}")
@@ -86,6 +96,8 @@ class ExecutionOptions:
                 raise ValueError("samples must be None or >= 1")
         if shots_per_sample is not None:
             if not isinstance(shots_per_sample, Integral):
-                raise ValueError(f"shots_per_sample must be None or an integer, not {type(shots_per_sample)}")
+                raise ValueError(
+                    f"shots_per_sample must be None or an integer, not {type(shots_per_sample)}"
+                )
             if shots_per_sample < 1:
                 raise ValueError("shots_per_sample must be None or >= 1")

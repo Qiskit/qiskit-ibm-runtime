@@ -26,6 +26,7 @@ TwirlingStrategyType = Literal[
     "all",
 ]
 
+
 @_flexible
 @dataclass
 class TwirlingOptions:
@@ -50,10 +51,11 @@ class TwirlingOptions:
             - If ``"all"`` all qubits in the input circuit will be twirled in each
               twirled layer.
             - If None twirling will be disabled.
-            
+
             Default: ``"active-accum"`` for resilience levels 0, 1, 2. ``"active"`` for
                      resilience level 3.
     """
+
     gates: Optional[bool] = None
     measure: Optional[bool] = None
     strategy: TwirlingStrategyType = "active-accum"

@@ -86,7 +86,7 @@ class ResilienceOptions:
             ``"single_exponential"``, ``"double_exponential"``, ``"linear"``.
             Only applicable if ZNE is enabled.
             Default: ``("exponential, "linear")``
-        
+
         zne_stderr_threshold: A standard error threshold for accepting the ZNE result of Pauli basis
             expectation values when using ZNE mitigation. Any extrapolator model resulting an larger
             standard error than this value, or mean that is outside of the allowed range and threshold
@@ -115,7 +115,10 @@ class ResilienceOptions:
     # ZNE
     zne_mitigation: bool = False
     zne_noise_factors: Sequence[float] = (1, 3, 5)
-    zne_extrapolator: Union[ZneExtrapolatorType, Sequence[ZneExtrapolatorType]] = ("exponential", "linear")
+    zne_extrapolator: Union[ZneExtrapolatorType, Sequence[ZneExtrapolatorType]] = (
+        "exponential",
+        "linear",
+    )
     zne_stderr_threshold: float = 0.25
 
     # PEC
@@ -197,9 +200,7 @@ class ResilienceOptions:
                     f"zne_noise_factors option value must be a sequence, not {type(factors)}"
                 )
             if any(i <= 0 for i in factors):
-                raise ValueError(
-                    "zne_noise_factors` option value must all be non-negative"
-                )
+                raise ValueError("zne_noise_factors` option value must all be non-negative")
             if len(factors) < 1:
                 raise ValueError(f"zne_noise_factors cannot be empty")
             if extrapolator is not None:
@@ -214,15 +215,14 @@ class ResilienceOptions:
                 }
                 for extrap in extrapolator:
                     if len(factors) < required_factors[extrap]:
-                        raise ValueError(f"{extrap} requires at least {required_factors[extrap]} zne_noise_factors")
-            
+                        raise ValueError(
+                            f"{extrap} requires at least {required_factors[extrap]} zne_noise_factors"
+                        )
 
             # Validation of threshold
-            threshold= resilience_options.get("zne_stderr_threshold")
+            threshold = resilience_options.get("zne_stderr_threshold")
             if threshold is not None and threshold <= 0:
-                raise ValueError(
-                    "Invalid zne_stderr_threshold option value must be > 0"
-                )
+                raise ValueError("Invalid zne_stderr_threshold option value must be > 0")
 
         if resilience_options.get("pec_mitigation"):
             if resilience_options.get("pec_mitigation"):
