@@ -256,6 +256,35 @@ with Session(service=service, backend="ibmq_qasm_simulator") as session:
 
 This code returns `Job result is [4.] at theta = 1.575674623307102` using only nine iterations. This is a very powerful extension to the primitives. However, using too much code between iterative calls can lock the QPU and use excessive QPU time, which is expensive. We recommend only using sessions when needed. The Sampler can also be used within a session, but there are not any well-defined examples for this.
 
+## Instances
+
+Access to IBM Quantum Platform services is controlled by the instances (previously called providers) to which you are assigned. An instance is defined by a hierarchical organization of hub, group, and project. A hub is the top level of a given hierarchy (organization) and contains within it one or more groups. These groups are in turn populated with projects. The combination of hub/group/project is called an instance. Users can belong to more than one instance at any time. 
+
+> **_NOTE:_** IBM Cloud instances are different from IBM Quantum Platform instances.  IBM Cloud does not use the hub/group/project structure for user management. To view and create IBM Cloud instances, visit the [IBM Cloud Quantum Instances page](https://cloud.ibm.com/quantum/instances).
+
+To view a list of your instances, visit your [account settings page](https://www-dev.quantum-computing.ibm.com/account) or use the `instances()` method.
+
+You can specify an instance when initializing the service or provider, or when picking a backend: 
+
+```python
+ 
+# Optional: Specify the instance at service level. This becomes the default unless overwritten.
+service = QiskitRuntimeService(channel='ibm_quantum', instance="hub1/group1/project1")
+backend1 = service.backend("ibmq_manila")
+ 
+# Optional: Specify the instance at the backend level, which overwrites the service-level specification when this backend is used. 
+backend2 = service.backend("ibmq_manila", instance="hub2/group2/project2")
+ 
+sampler1 = Sampler(backend=backend1)    # this will use hub1/group1/project1
+sampler2 = Sampler(backend=backend2)    # this will use hub2/group2/project2
+```
+
+If you do not specify an instance, then the code will select one in the following order:
+
+1. If your account only has access to one instance, it is selected by default.
+2. If your account has access to multiple instances, but only one can access the requested backend, the instance with access is selected.
+3. In all other cases, the code selects the first instance other than ibm-q/open/main that has access to the backend.
+
 ## Access your IBM Quantum backends
 
 A **backend** is a quantum device or simulator capable of running quantum circuits or pulse schedules.
