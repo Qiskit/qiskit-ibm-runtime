@@ -262,7 +262,7 @@ Access to IBM Quantum Platform services is controlled by the instances (previous
 
 > **_NOTE:_** IBM Cloud instances are different from IBM Quantum Platform instances.  IBM Cloud does not use the hub/group/project structure for user management. To view and create IBM Cloud instances, visit the [IBM Cloud Quantum Instances page](https://cloud.ibm.com/quantum/instances).
 
-To view a list of your instances, visit your [account settings page](https://www-dev.quantum-computing.ibm.com/account) or use the `backends()` method.
+To view a list of your instances, visit your [account settings page](https://www-dev.quantum-computing.ibm.com/account) or use the `instances()` method.
 
 You can specify an instance when initializing the service or provider, or when picking a backend: 
 
