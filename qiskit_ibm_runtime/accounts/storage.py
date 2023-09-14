@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 def save_config(
-    filename: str, name: str, config: dict, overwrite: bool, set_as_default: Optional[bool] = True
+    filename: str, name: str, config: dict, overwrite: bool, set_as_default: Optional[bool] = None
 ) -> None:
     """Save configuration data in a JSON file under the given name."""
     logger.debug("Save configuration data for '%s' in '%s'", name, filename)
@@ -43,13 +43,15 @@ def save_config(
     # the default account.
     if set_as_default:
         data[name]["is_default_account"] = True
-        for account in data:
-            if account.get("name") != name and account.get("is_default_account"):
+        for account_name in data:
+            account = data[account_name]
+            if account_name != name and account.get("is_default_account"):
                 if overwrite:
                     del account["is_default_account"]
                 else:
                     raise AccountAlreadyExistsError(
-                    f"default_account ({name}) already exists. " f"Set overwrite=True to overwrite."
+                        f"default_account ({name}) already exists. "
+                        f"Set overwrite=True to overwrite."
                     )
 
     with open(filename, mode="w", encoding="utf-8") as json_out:

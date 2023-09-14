@@ -702,7 +702,7 @@ class QiskitRuntimeService(Provider):
         verify: Optional[bool] = None,
         overwrite: Optional[bool] = False,
         channel_strategy: Optional[str] = None,
-        set_as_default: Optional[bool] = True,
+        set_as_default: Optional[bool] = None,
     ) -> None:
         """Save the account to disk for future use.
 
@@ -723,8 +723,8 @@ class QiskitRuntimeService(Provider):
             verify: Verify the server's TLS certificate.
             overwrite: ``True`` if the existing account is to be overwritten.
             channel_strategy: Error mitigation strategy.
-            set_default_channel: If ``True``, the channel parameter is saved in filename,
-                as the default channel to use.
+            set_as_default: If ``True``, the account is saved in filename,
+                as the default account.
         """
 
         AccountManager.save(

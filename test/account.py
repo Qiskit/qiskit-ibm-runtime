@@ -179,5 +179,5 @@ def get_account_config_contents(
     if proxies is not None:
         out[name]["proxies"] = proxies
     if set_default:
-        out["default_channel"] = channel
+        out[name]["is_default_account"] = True
     return out
