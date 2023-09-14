@@ -57,7 +57,7 @@ def _raise_if_error_in_options(options: Dict[str, Any]) -> None:
         arguments={},
     )
 
-    optimization_level = options.get("optimization_level", 1)
+    optimization_level = options.get("optimization_level", 3)
     _check_argument(
         optimization_level > 0,
         description="Q-CTRL Primitives do not support optimization level 0. Please\
