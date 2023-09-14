@@ -151,8 +151,12 @@ class AccountManager:
             3. If the channel parameter is defined,
                a. get the account of this channel type defined as "is_default_account"
                b. get the account of this channel type with default name
-            4. If a default account is defined in the json file, get that account
-            5. Get the default account that corresponds to the default channel, if it exists
+               c. get any account of this channel type
+            4. If the channel is defined in "QISKIT_IBM_CHANNEL"
+               a. get the account of this channel type defined as "is_default_account"
+               b. get the account of this channel type with default name
+               c. get any account of this channel type
+            5. If a default account is defined in the json file, get that account
             6. Get any account that is defined in the json file
 
         Returns:
