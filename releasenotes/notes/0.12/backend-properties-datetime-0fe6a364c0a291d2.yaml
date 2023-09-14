@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    Retrieving backend properties with :meth:`~qiskit_ibm_runtime.IBMBackend.properties`
+    now supports passing a ``datetime`` parameter to retrieve properties from a past date.
+

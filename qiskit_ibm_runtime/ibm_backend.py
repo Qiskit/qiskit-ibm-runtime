@@ -256,9 +256,6 @@ class IBMBackend(Backend):
         return Options(
             shots=4000,
             memory=False,
-            qubit_lo_freq=None,
-            meas_lo_freq=None,
-            schedule_los=None,
             meas_level=MeasLevel.CLASSIFIED,
             meas_return=MeasReturnType.AVERAGE,
             memory_slots=None,
@@ -374,8 +371,6 @@ class IBMBackend(Backend):
         if datetime:
             if not isinstance(datetime, python_datetime):
                 raise TypeError("'{}' is not of type 'datetime'.")
-            if isinstance(self._api_client, RuntimeClient):
-                raise NotImplementedError("'datetime' is not supported by cloud runtime.")
             datetime = local_to_utc(datetime)
         if datetime or refresh or self._properties is None:
             api_properties = self._api_client.backend_properties(self.name, datetime=datetime)

@@ -688,7 +688,6 @@ class TestPrimitives(IBMTestCase):
     def test_max_execution_time_options(self):
         """Test transpilation options."""
         options_dicts = [
-            {"max_execution_time": Options._MIN_EXECUTION_TIME - 1},
             {"max_execution_time": Options._MAX_EXECUTION_TIME + 1},
         ]
         session = MagicMock(spec=MockSession)
@@ -708,7 +707,7 @@ class TestPrimitives(IBMTestCase):
                     inst = cls(session=session, options=opts_dict)
                     inst.run(self.qx, observables=self.obs)
                 self.assertIn(
-                    "max_execution_time must be between 300 and 28800 seconds",
+                    "max_execution_time must be below 28800 seconds",
                     str(exc.exception),
                 )
 

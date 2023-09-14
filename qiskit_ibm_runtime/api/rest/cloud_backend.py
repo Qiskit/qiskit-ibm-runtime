@@ -12,7 +12,8 @@
 
 """IBM Cloud Backend REST adapter."""
 
-from typing import Dict, Any
+from typing import Dict, Any, Optional
+from datetime import datetime as python_datetime
 
 from qiskit_ibm_provider.api.rest.base import RestAdapterBase
 from ..session import RetrySession
@@ -48,14 +49,19 @@ class CloudBackend(RestAdapterBase):
         url = self.get_url("configuration")
         return self.session.get(url).json()
 
-    def properties(self) -> Dict[str, Any]:
+    def properties(self, datetime: Optional[python_datetime] = None) -> Dict[str, Any]:
         """Return backend properties.
 
         Returns:
             JSON response of backend properties.
         """
         url = self.get_url("properties")
-        response = self.session.get(url).json()
+
+        params = {}
+        if datetime:
+            params["updated_before"] = datetime.isoformat()
+
+        response = self.session.get(url, params=params).json()
         # Adjust name of the backend.
         if response:
             response["backend_name"] = self.backend_name
