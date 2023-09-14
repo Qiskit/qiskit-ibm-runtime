@@ -636,7 +636,7 @@ class TestAccountManager(IBMTestCase):
             instance=_TEST_IBM_CLOUD_ACCOUNT.instance,
             channel="ibm_cloud",
             overwrite=True,
-            set_as_default=True
+            set_as_default=True,
         )
         AccountManager.save(
             filename=_TEST_FILENAME,
@@ -661,8 +661,8 @@ class TestAccountManager(IBMTestCase):
             instance=_TEST_IBM_QUANTUM_ACCOUNT.instance,
             channel="ibm_quantum",
             overwrite=True,
-            set_as_default=True
-    )
+            set_as_default=True,
+        )
         with no_envs("QISKIT_IBM_CHANNEL"), no_envs("QISKIT_IBM_TOKEN"):
             account = AccountManager.get(filename=_TEST_FILENAME)
         self.assertEqual(account.channel, "ibm_quantum")
@@ -708,7 +708,9 @@ class TestAccountManager(IBMTestCase):
             self.assertEqual(service._account.token, any_token)
 
         # No name or channel params, no env vars, get the account specified as "is_default_account"
-        with temporary_account_config_file(contents=contents), no_envs("QISKIT_IBM_CHANNEL"), no_envs("QISKIT_IBM_TOKEN"):
+        with temporary_account_config_file(contents=contents), no_envs(
+            "QISKIT_IBM_CHANNEL"
+        ), no_envs("QISKIT_IBM_TOKEN"):
             service = FakeRuntimeService()
             self.assertEqual(service.channel, "ibm_quantum")
             self.assertEqual(service._account.token, preferred_token)
@@ -733,7 +735,7 @@ class TestAccountManager(IBMTestCase):
 
         # any account for this channel
         del contents["default-ibm-quantum"]
-        #channel_env = {"QISKIT_IBM_CHANNEL": "ibm_quantum"}
+        # channel_env = {"QISKIT_IBM_CHANNEL": "ibm_quantum"}
         with temporary_account_config_file(contents=contents), custom_envs(channel_env), no_envs(
             "QISKIT_IBM_TOKEN"
         ):
@@ -754,9 +756,9 @@ class TestAccountManager(IBMTestCase):
         # no channel param, account with default name for the channel from env
         del contents["preferred-ibm-quantum"]["is_default_account"]
         contents["default-ibm-quantum"] = {
-                "channel": "ibm_quantum",
-                "token": default_token,
-            }
+            "channel": "ibm_quantum",
+            "token": default_token,
+        }
         channel_env = {"QISKIT_IBM_CHANNEL": "ibm_quantum"}
         with temporary_account_config_file(contents=contents), custom_envs(channel_env), no_envs(
             "QISKIT_IBM_TOKEN"

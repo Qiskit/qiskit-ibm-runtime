@@ -275,7 +275,7 @@ class AccountManager:
     @classmethod
     def _get_default_account(
         cls, all_config: dict, channel: Optional[str] = None
-    ) -> Optional[Account]:
+    ) -> Optional[dict]:
         default_channel_account = None
         any_channel_account = None
 
@@ -284,7 +284,9 @@ class AccountManager:
             if channel:
                 if account.get("channel") == channel and account.get("is_default_account"):
                     return account
-                if account.get("channel") == channel and account_name == cls._get_default_account_name(channel):
+                if account.get(
+                    "channel"
+                ) == channel and account_name == cls._get_default_account_name(channel):
                     default_channel_account = account
                 if account.get("channel") == channel:
                     any_channel_account = account
