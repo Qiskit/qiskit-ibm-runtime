@@ -57,19 +57,19 @@ class ResilienceOptions:
         noise_factors (DEPRECATED): An list of real valued noise factors that determine
             by what amount the circuits' noise is amplified.
             Only applicable for ``resilience_level=2``.
-            Default: ``None``, and (1, 3, 5) if resilience level is 2.
+            Default: (1, 3, 5) if resilience level is 2. Otherwise ``None``.
 
         noise_amplifier (DEPRECATED): A noise amplification strategy. One of ``"TwoQubitAmplifier"``,
             ``"GlobalFoldingAmplifier"``, ``"LocalFoldingAmplifier"``, ``"CxAmplifier"``.
             Only applicable for ``resilience_level=2``.
-            Default: "TwoQubitAmplifier".
+            Default: "TwoQubitAmplifier" if resilience level is 2. Otherwise ``None``.
 
         extrapolator (DEPRECATED): An extrapolation strategy. One of ``"LinearExtrapolator"``,
             ``"QuadraticExtrapolator"``, ``"CubicExtrapolator"``, ``"QuarticExtrapolator"``.
             Note that ``"CubicExtrapolator"`` and ``"QuarticExtrapolator"`` require more
             noise factors than the default.
             Only applicable for ``resilience_level=2``.
-            Default: ``None``, and ``LinearExtrapolator`` if resilience level is 2.
+            Default: ``LinearExtrapolator`` if resilience level is 2. Otherwise ``None``.
 
         measure_noise_mitigation: Whether to enable measurement error mitigation method.
             By default, this is enabled for resilience level 1, 2, and 3 (when applicable).
@@ -92,6 +92,7 @@ class ResilienceOptions:
             standard error than this value, or mean that is outside of the allowed range and threshold
             will be rejected. If all models are rejected the result for the lowest noise factor is
             used for that basis term.
+            Only applicable if ZNE is enabled.
             Default: 0.25
 
         pec_mitigation: Whether to turn on Probabilistic Error Cancellation error mitigation method.
@@ -102,6 +103,7 @@ class ResilienceOptions:
             model has a sampling overhead greater than this value it will be scaled down to
             implement partial PEC with a scaled noise model corresponding to the maximum
             sampling overhead.
+            Only applicable if PEC is enabled.
             Default: 100
     """
 
@@ -110,20 +112,17 @@ class ResilienceOptions:
     extrapolator: ExtrapolatorType = None
 
     # Measurement error mitigation
-    measure_noise_mitigation: bool = False
+    measure_noise_mitigation: bool = None
 
     # ZNE
-    zne_mitigation: bool = False
-    zne_noise_factors: Sequence[float] = (1, 3, 5)
-    zne_extrapolator: Union[ZneExtrapolatorType, Sequence[ZneExtrapolatorType]] = (
-        "exponential",
-        "linear",
-    )
-    zne_stderr_threshold: float = 0.25
+    zne_mitigation: bool = None
+    zne_noise_factors: Sequence[float] = None
+    zne_extrapolator: Union[ZneExtrapolatorType, Sequence[ZneExtrapolatorType]] = None
+    zne_stderr_threshold: float = None
 
     # PEC
-    pec_mitigation: bool = False
-    pec_max_overhead: Optional[float] = 100
+    pec_mitigation: bool = None
+    pec_max_overhead: float = None
 
     @staticmethod
     def validate_resilience_options(resilience_options: dict) -> None:
@@ -136,7 +135,8 @@ class ResilienceOptions:
             ValueError: if extrapolator == "QuarticExtrapolator" and number of noise_factors < 5.
             ValueError: if extrapolator == "CubicExtrapolator" and number of noise_factors < 4.
         """
-        if resilience_options.get("noise_amplifier", None) is not None:
+        noise_amplifier = resilience_options.get("noise_amplifier")
+        if noise_amplifier is not None:
             issue_deprecation_msg(
                 msg="The 'noise_amplifier' resilience option is deprecated",
                 version="0.12.0",
@@ -146,32 +146,32 @@ class ResilienceOptions:
                 "Refer to https://github.com/qiskit-community/prototype-zne "
                 "for global folding amplification in ZNE.",
             )
+            if noise_amplifier not in get_args(NoiseAmplifierType):
+                raise ValueError(
+                    f"Unsupported value {noise_amplifier} for noise_amplifier. "
+                    f"Supported values are {get_args(NoiseAmplifierType)}"
+                )
+
         if resilience_options.get("noise_factors", None) is not None:
             deprecate_arguments(
                 deprecated="noise_factors",
                 version="0.13.0",
                 remedy="Please use 'zne_noise_factors' instead.",
             )
-        if resilience_options.get("extrapolator", None) is not None:
+
+        extrapolator = resilience_options.get("extrapolator")
+        if extrapolator is not None:
             deprecate_arguments(
                 deprecated="extrapolator",
                 version="0.13.0",
                 remedy="Please use 'zne_extrapolator' instead.",
             )
+            if extrapolator not in get_args(ExtrapolatorType):
+                raise ValueError(
+                    f"Unsupported value {extrapolator} for extrapolator. "
+                    f"Supported values are {get_args(ExtrapolatorType)}"
+                )
 
-        noise_amplifier = resilience_options.get("noise_amplifier")
-        if noise_amplifier and noise_amplifier not in get_args(NoiseAmplifierType):
-            raise ValueError(
-                f"Unsupported value {noise_amplifier} for noise_amplifier. "
-                f"Supported values are {get_args(NoiseAmplifierType)}"
-            )
-        extrapolator = resilience_options.get("extrapolator")
-        if extrapolator and extrapolator not in get_args(ExtrapolatorType):
-        if extrapolator and extrapolator not in get_args(ExtrapolatorType):
-            raise ValueError(
-                f"Unsupported value {extrapolator} for extrapolator. "
-                f"Supported values are {get_args(ExtrapolatorType)}"
-            )
         if (
             extrapolator == "QuarticExtrapolator"
             and len(resilience_options.get("noise_factors")) < 5
@@ -233,3 +233,20 @@ class ResilienceOptions:
             max_overhead = resilience_options.get("pec_max_overhead")
             if max_overhead is not None and max_overhead < 1:
                 raise ValueError("pec_max_overhead must be None or >= 1")
+
+
+@dataclass(frozen=True)
+class _ZneOptions:
+    zne_mitigation: bool = True
+    zne_noise_factors: Sequence[float] = (1, 3, 5)
+    zne_extrapolator: Union[ZneExtrapolatorType, Sequence[ZneExtrapolatorType]] = (
+        "exponential",
+        "linear",
+    )
+    zne_stderr_threshold: float = 0.25
+
+
+@dataclass(frozen=True)
+class _PecOptions:
+    pec_mitigation: bool = True
+    pec_max_overhead: float = 100

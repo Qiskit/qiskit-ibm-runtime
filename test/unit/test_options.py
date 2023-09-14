@@ -23,6 +23,7 @@ from qiskit_aer.noise import NoiseModel
 
 from qiskit_ibm_runtime import Options, RuntimeOptions
 from qiskit_ibm_runtime.utils.qctrl import _warn_and_clean_options
+from qiskit_ibm_runtime.options.options import _DEFAULT_RESILIENCE_LEVEL_OPTIONS
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import dict_keys_equal, dict_paritally_equal, flat_dict_partially_equal
@@ -197,6 +198,7 @@ class TestOptions(IBMTestCase):
         options = {
             "optimization_level": 1,
             "resilience_level": 2,
+            "dynamical_decoupling": "XX",
             "transpilation": {"initial_layout": [1, 2], "skip_transpilation": True},
             "execution": {"shots": 100},
             "environment": {"log_level": "DEBUG"},
@@ -205,6 +207,7 @@ class TestOptions(IBMTestCase):
                 "noise_factors": (0, 2, 4),
                 "extrapolator": "LinearExtrapolator",
             },
+            "twirling": {}
         }
         Options.validate_options(options)
         for opt in ["simulator", "transpilation", "execution"]:
@@ -311,3 +314,22 @@ class TestOptions(IBMTestCase):
             with self.subTest(msg=f"{option}"):
                 _warn_and_clean_options(option)
                 self.assertEqual(expected_, option)
+
+    def test_final_options_res0(self):
+        """Test final options with resilience 0."""
+        all_options = [
+            ({"twirling": {"measure": True}}, {}, {"twirling": {"measure": True}}),
+            ({}, {"twirling": {"measure": True}}, {"twirling": {"measure": True}}),
+            ({"twirling": {"measure": True}}, {"twirling": {"measure": False}}, {"twirling": {"measure": False}})
+        ]
+
+        for old, new, expected in all_options:
+            with self.subTest(old=old, new=new):
+                old["resilience_level"] = 0
+                final = Options._finalize_options(old, new)
+                self.assertTrue(dict_paritally_equal(final, expected))
+                self.assertEqual(final["resilience_level"], 0)
+                res_dict = final["resilience"]
+                self.assertFalse(res_dict["measure_noise_mitigation"])
+                self.assertFalse(res_dict["zne_mitigation"])
+                self.assertFalse(res_dict["pec_mitigation"])

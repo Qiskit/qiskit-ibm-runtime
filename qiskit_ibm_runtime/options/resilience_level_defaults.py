@@ -12,6 +12,8 @@
 
 """Resilience level default option values."""
 
+from dataclasses import dataclass, fields, field
+
 
 def _default_resilience_options(level: int) -> dict:
     """Return default options for resilience level 0"""

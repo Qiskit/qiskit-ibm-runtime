@@ -13,18 +13,18 @@
 """Primitive options."""
 
 from typing import Optional, Union, ClassVar, Literal, get_args
-from dataclasses import dataclass, fields, field
+from dataclasses import dataclass, fields, field, asdict
 import copy
 import warnings
 
 from qiskit.transpiler import CouplingMap
 
-from .utils import _flexible, Dict
+from .utils import _flexible, Dict, _remove_dict_none_values
 from .environment_options import EnvironmentOptions
 from .execution_options import ExecutionOptions
 from .simulator_options import SimulatorOptions
 from .transpilation_options import TranspilationOptions
-from .resilience_options import ResilienceOptions
+from .resilience_options import ResilienceOptions, _ZneOptions, _PecOptions
 from .twirling_options import TwirlingOptions
 from ..runtime_options import RuntimeOptions
 from .resilience_level_defaults import _default_resilience_options
@@ -94,7 +94,9 @@ class Options:
     # Defaults for optimization_level and for resilience_level will be assigned
     # in Sampler/Estimator
     _DEFAULT_OPTIMIZATION_LEVEL = 3
+    _DEFAULT_NOISELESS_OPTIMIZATION_LEVEL = 1
     _DEFAULT_RESILIENCE_LEVEL = 1
+    _DEFAULT_NOISELESS_RESILIENCE_LEVEL = 0
     _MAX_OPTIMIZATION_LEVEL = 3
     _MAX_RESILIENCE_LEVEL_ESTIMATOR = 3
     _MAX_RESILIENCE_LEVEL_SAMPLER = 1
@@ -104,7 +106,7 @@ class Options:
     optimization_level: Optional[int] = None
     resilience_level: Optional[int] = None
     max_execution_time: Optional[int] = None
-    dynamical_decoupling: Optional[DDSequenceType] = None
+    dynamical_decoupling: Optional[DDSequenceType] = "XX"
     transpilation: Union[TranspilationOptions, Dict] = field(default_factory=TranspilationOptions)
     resilience: Union[ResilienceOptions, Dict] = field(default_factory=ResilienceOptions)
     execution: Union[ExecutionOptions, Dict] = field(default_factory=ExecutionOptions)
@@ -273,9 +275,13 @@ class Options:
                     matched = new.pop(key, {})
                     _update_options(val, new, matched)
                 elif key in new.keys():
-                    old[key] = new.pop(key)
+                    new_val = new.pop(key)
+                    if new_val is not None:
+                        old[key] = new_val
                 elif key in matched.keys():
-                    old[key] = matched.pop(key)
+                    new_val = matched.pop(key)
+                    if new_val is not None:
+                        old[key] = new_val
 
             # Add new keys.
             for key, val in matched.items():
@@ -285,14 +291,7 @@ class Options:
         if not new_options:
             return combined
         new_options_copy = copy.deepcopy(new_options)
-        if "resilience_level" in new_options:
-            # Initialize resilience level defaults before setting any other options
-            res_defaults = _default_resilience_options(new_options["resilience_level"])
-            _update_options(combined, res_defaults)
-            combined.update(res_defaults)
 
-        # Set remaining options that override default ones
-        # for resilience levels
         # First update values of the same key.
         _update_options(combined, new_options_copy)
 
@@ -300,3 +299,72 @@ class Options:
         combined.update(new_options_copy)
 
         return combined
+
+    @classmethod
+    def _finalize_options(cls, primitive_options: dict, overwrite_options: Optional[dict] = None, is_simulator: bool = False):
+
+        def _get_merged_value(name, first: dict = None, second: dict = None):
+            first = first or overwrite_options
+            second = second or primitive_options
+            return first.get(name) or second.get(name)
+
+        # 1. Determine optimization and resilience levels
+        optimization_level = _get_merged_value("optimization_level")
+        resilience_level = _get_merged_value("resilience_level")
+        noise_model = _get_merged_value("noise_model", first=overwrite_options.get("simulator", {}), second=primitive_options.get("simulator", {}))
+        if optimization_level is None:
+            optimization_level = cls._DEFAULT_NOISELESS_OPTIMIZATION_LEVEL if (is_simulator and noise_model is None) else cls._DEFAULT_OPTIMIZATION_LEVEL
+        if resilience_level is None:
+            resilience_level = cls._DEFAULT_NOISELESS_RESILIENCE_LEVEL if (is_simulator and not noise_model is None) else cls._DEFAULT_RESILIENCE_LEVEL
+
+        # 2. Determine the default resilience options
+        default_options = asdict(_DEFAULT_RESILIENCE_LEVEL_OPTIONS[resilience_level])
+        default_options["optimization_level"] = optimization_level
+
+        # 3. Merge in primitive options.
+        final_options = Options._merge_options(default_options, primitive_options)
+
+        # 4. Merge in overwrites.
+        final_options = Options._merge_options(final_options, overwrite_options)
+
+        # 5. Remove Nones
+        _remove_dict_none_values(final_options)
+
+        return final_options
+
+
+
+@dataclass(frozen=True)
+class _ResilienceLevel0Options:
+    resilience_level: int = 0
+    resilience: ResilienceOptions = field(default=ResilienceOptions(measure_noise_mitigation=False, zne_mitigation=False, pec_mitigation=False))
+    twirling: TwirlingOptions = field(default=TwirlingOptions(gates=False, measure=False))
+
+
+@dataclass(frozen=True)
+class _ResilienceLevel1Options:
+    resilience_level: int = 1
+    resilience: ResilienceOptions = field(default=ResilienceOptions(measure_noise_mitigation=True, zne_mitigation=False, pec_mitigation=False))
+    twirling: TwirlingOptions = field(default=TwirlingOptions(gates=True, measure=True, strategy="active-accum"))
+
+
+@dataclass(frozen=True)
+class _ResilienceLevel2Options:
+    resilience_level: int = 2
+    resilience: ResilienceOptions = field(default=ResilienceOptions(measure_noise_mitigation=True, pec_mitigation=False, **asdict(_ZneOptions())))
+    twirling: TwirlingOptions = field(default=TwirlingOptions(gates=True, measure=True, strategy="active-accum"))
+
+
+@dataclass(frozen=True)
+class _ResilienceLevel3Options:
+    resilience_level: int = 3
+    resilience: ResilienceOptions = field(default=ResilienceOptions(measure_noise_mitigation=True, zne_mitigation=False, **asdict(_PecOptions())))
+    twirling: TwirlingOptions = field(default=TwirlingOptions(gates=True, measure=True, strategy="active"))
+
+
+_DEFAULT_RESILIENCE_LEVEL_OPTIONS = {
+    0: _ResilienceLevel0Options(),
+    1: _ResilienceLevel1Options(),
+    2: _ResilienceLevel2Options(),
+    3: _ResilienceLevel3Options()
+}

@@ -169,23 +169,9 @@ class BasePrimitive(ABC):
         Returns:
             Submitted job.
         """
-        combined = Options._merge_options(self._options, user_kwargs)
-
-        if self._backend:
-            combined = set_default_error_levels(
-                combined,
-                self._backend,
-                Options._DEFAULT_OPTIMIZATION_LEVEL,
-                Options._DEFAULT_RESILIENCE_LEVEL,
-            )
-        else:
-            combined["optimization_level"] = Options._DEFAULT_OPTIMIZATION_LEVEL
-            combined["resilience_level"] = Options._DEFAULT_RESILIENCE_LEVEL
-
+        is_simulator = self._backend.configuration().simulator if self._backend else False
+        combined = Options._finalize_options(self._options, user_kwargs, is_simulator)
         self._validate_options(combined)
-
-        combined = Options._set_default_resilience_options(combined)
-        combined = Options._remove_none_values(combined)
 
         primitive_inputs.update(Options._get_program_inputs(combined))
 

@@ -56,9 +56,9 @@ class TwirlingOptions:
                      resilience level 3.
     """
 
-    gates: Optional[bool] = None
-    measure: Optional[bool] = None
-    strategy: TwirlingStrategyType = "active-accum"
+    gates: bool = None
+    measure: bool = None
+    strategy: TwirlingStrategyType = None
 
     @staticmethod
     def validate_twirling_options(twirling_options: dict) -> None:
