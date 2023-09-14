@@ -157,7 +157,9 @@ class AccountManager:
                b. get the account of this channel type with default name
                c. get any account of this channel type
             5. If a default account is defined in the json file, get that account
-            6. Get any account that is defined in the json file
+            6. Get any account that is defined in the json file with
+               preference for _DEFAULT_CHANNEL_TYPE.
+
 
         Returns:
             Account information.
