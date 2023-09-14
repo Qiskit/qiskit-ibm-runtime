@@ -107,15 +107,13 @@ class AccountManager:
             else:
                 return account_name in default_accounts
 
-        account_dict = read_config(filename=filename)
-
         # load all accounts
         all_accounts = map(
             lambda kv: (
                 kv[0],
                 Account.from_saved_format(kv[1]),
             ),
-            account_dict.items(),
+            read_config(filename=filename).items(),
         )
 
         # filter based on input parameters
@@ -167,7 +165,6 @@ class AccountManager:
         Raises:
             AccountNotFoundError: If the input value cannot be found on disk.
         """
-        # pylint: disable=too-many-return-statements
         filename = filename if filename else _DEFAULT_ACCOUNT_CONFIG_JSON_FILE
         filename = os.path.expanduser(filename)
         cls.migrate(filename)
