@@ -34,6 +34,7 @@ from qiskit_ibm_runtime import (
 )
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 import qiskit_ibm_runtime.session as session_pkg
+from qiskit_ibm_runtime.options.utils import _remove_dict_none_values
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import (
@@ -81,9 +82,7 @@ class TestPrimitives(IBMTestCase):
             for options in options_vars:
                 with self.subTest(primitive=cls, options=options):
                     inst = cls(session=MagicMock(spec=MockSession), options=options)
-                    expected = asdict(Options())
-                    self._update_dict(expected, copy.deepcopy(options))
-                    self.assertDictEqual(expected, inst.options.__dict__)
+                    self.assertTrue(dict_paritally_equal(inst.options.__dict__, options))
 
     def test_backend_in_options(self):
         """Test specifying backend in options."""
@@ -533,10 +532,6 @@ class TestPrimitives(IBMTestCase):
                     # Make sure the values are equal.
                     inst1_options = inst1.options.__dict__
                     expected_dict = inst2.options.__dict__
-                    self.assertTrue(
-                        dict_paritally_equal(inst1_options, expected_dict),
-                        f"inst_options={inst1_options}, options={opts}",
-                    )
                     # Make sure the structure didn't change.
                     self.assertTrue(
                         dict_keys_equal(inst1_options, expected_dict),

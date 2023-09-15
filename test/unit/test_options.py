@@ -207,7 +207,7 @@ class TestOptions(IBMTestCase):
                 "noise_factors": (0, 2, 4),
                 "extrapolator": "LinearExtrapolator",
             },
-            "twirling": {}
+            "twirling": {},
         }
         Options.validate_options(options)
         for opt in ["simulator", "transpilation", "execution"]:
@@ -315,21 +315,60 @@ class TestOptions(IBMTestCase):
                 _warn_and_clean_options(option)
                 self.assertEqual(expected_, option)
 
-    def test_final_options_res0(self):
-        """Test final options with resilience 0."""
+    def test_merge_with_defaults_overwrite(self):
+        """Test merge_with_defaults with different overwrite."""
+        expected = {"twirling": {"measure": True}}
         all_options = [
-            ({"twirling": {"measure": True}}, {}, {"twirling": {"measure": True}}),
-            ({}, {"twirling": {"measure": True}}, {"twirling": {"measure": True}}),
-            ({"twirling": {"measure": True}}, {"twirling": {"measure": False}}, {"twirling": {"measure": False}})
+            ({"twirling": {"measure": True}}, {}),
+            ({}, {"twirling": {"measure": True}}),
+            ({"twirling": {"measure": False}}, {"twirling": {"measure": True}}),
         ]
 
-        for old, new, expected in all_options:
+        for old, new in all_options:
             with self.subTest(old=old, new=new):
                 old["resilience_level"] = 0
-                final = Options._finalize_options(old, new)
+                final = Options._merge_options_with_defaults(old, new)
                 self.assertTrue(dict_paritally_equal(final, expected))
                 self.assertEqual(final["resilience_level"], 0)
                 res_dict = final["resilience"]
                 self.assertFalse(res_dict["measure_noise_mitigation"])
                 self.assertFalse(res_dict["zne_mitigation"])
                 self.assertFalse(res_dict["pec_mitigation"])
+
+    def test_merge_with_defaults_different_level(self):
+        """Test merge_with_defaults with different resilience level."""
+
+        old = {"resilience_level": 0}
+        new = {"resilience_level": 3, "measure_noise_mitigation": False}
+        final = Options._merge_options_with_defaults(old, new)
+        self.assertEqual(final["resilience_level"], 3)
+        res_dict = final["resilience"]
+        self.assertFalse(res_dict["measure_noise_mitigation"])
+        self.assertFalse(res_dict["zne_mitigation"])
+        self.assertTrue(res_dict["pec_mitigation"])
+
+    def test_merge_with_defaults_noiseless_simulator(self):
+        """Test merge_with_defaults with noiseless simulator."""
+
+        new = {"measure_noise_mitigation": True}
+        final = Options._merge_options_with_defaults({}, new, is_simulator=True)
+        self.assertEqual(final["resilience_level"], 0)
+        self.assertEqual(final["optimization_level"], 1)
+        res_dict = final["resilience"]
+        self.assertTrue(res_dict["measure_noise_mitigation"])
+        self.assertFalse(res_dict["zne_mitigation"])
+        self.assertFalse(res_dict["pec_mitigation"])
+
+    def test_merge_with_defaults_noisy_simulator(self):
+        """Test merge_with_defaults with noisy simulator."""
+
+        new = {"measure_noise_mitigation": False}
+        final = Options._merge_options_with_defaults(
+            {"simulator": {"noise_model": "foo"}}, new, is_simulator=True
+        )
+        self.assertEqual(final["resilience_level"], 1)
+        self.assertEqual(final["optimization_level"], 3)
+        res_dict = final["resilience"]
+        self.assertFalse(res_dict["measure_noise_mitigation"])
+        self.assertFalse(res_dict["zne_mitigation"])
+        self.assertFalse(res_dict["pec_mitigation"])
