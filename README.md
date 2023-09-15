@@ -114,7 +114,7 @@ All quantum applications and algorithms level are fundamentally built using thre
 
 The IBM Runtime service offers these primitives with additional features, such as built-in error suppression and mitigation.
 
-There are several different options you can specify when calling the primitives. See [`qiskit_ibm_runtime.Options`](https://github.com/Qiskit/qiskit-ibm-runtime/blob/main/qiskit_ibm_runtime/options.py#L103) class for more information.
+There are several different options you can specify when calling the primitives. See [`qiskit_ibm_runtime.Options`](https://github.com/Qiskit/qiskit-ibm-runtime/blob/main/qiskit_ibm_runtime/options/options.py#L33) class for more information.
 
 ### Sampler
 
