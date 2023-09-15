@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2021, 2023.
+# (C) Copyright IBM 2021.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -92,6 +92,50 @@ class TestDataSerialization(IBMTestCase):
                 if not isinstance(circ, list):
                     decoded = [decoded]
                 self.assertTrue(all(isinstance(item, QuantumCircuit) for item in decoded))
+
+    def test_coder_operators(self):
+        """Test runtime encoder and decoder for operators."""
+
+        # filter warnings triggered by opflow imports
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore", category=DeprecationWarning, module=r"qiskit\.opflow\."
+            )
+            from qiskit.opflow import PauliSumOp
+
+        # catch warnings triggered by opflow use
+        with warnings.catch_warnings(record=True) as w:
+            deprecated_op = PauliSumOp(SparsePauliOp(Pauli("XYZX"), coeffs=[2]))
+            self.assertTrue(len(w) > 0)
+
+        coeff_x = Parameter("x")
+        coeff_y = coeff_x + 1
+
+        subtests = (
+            SparsePauliOp(Pauli("XYZX"), coeffs=[2]),
+            SparsePauliOp(Pauli("XYZX"), coeffs=[coeff_y]),
+            SparsePauliOp(Pauli("XYZX"), coeffs=[1 + 2j]),
+            deprecated_op,
+        )
+
+        for operator in subtests:
+            with self.subTest(operator=operator):
+                encoded = json.dumps(operator, cls=RuntimeEncoder)
+                self.assertIsInstance(encoded, str)
+
+                with warnings.catch_warnings():
+                    # filter warnings triggered by opflow imports
+                    # in L146 of utils/json.py
+                    warnings.filterwarnings(
+                        "ignore", category=DeprecationWarning, module=r"qiskit\.opflow\."
+                    )
+                    warnings.filterwarnings(
+                        "ignore",
+                        category=DeprecationWarning,
+                        module=r"qiskit_ibm_runtime\.utils\.json",
+                    )
+                    decoded = json.loads(encoded, cls=RuntimeDecoder)
+                    self.assertEqual(operator, decoded)
 
     def test_coder_noise_model(self):
         """Test encoding and decoding a noise model."""
