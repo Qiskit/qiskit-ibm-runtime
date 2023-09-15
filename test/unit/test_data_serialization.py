@@ -101,12 +101,12 @@ class TestDataSerialization(IBMTestCase):
             warnings.filterwarnings(
                 "ignore", category=DeprecationWarning, module=r"qiskit\.opflow\."
             )
-            from qiskit.opflow import PauliSumOp
+            from qiskit.opflow import PauliSumOp # pylint: disable=import-outside-toplevel
 
         # catch warnings triggered by opflow use
-        with warnings.catch_warnings(record=True) as w:
+        with warnings.catch_warnings(record=True) as w_log:
             deprecated_op = PauliSumOp(SparsePauliOp(Pauli("XYZX"), coeffs=[2]))
-            self.assertTrue(len(w) > 0)
+            self.assertTrue(len(w_log) > 0)
 
         coeff_x = Parameter("x")
         coeff_y = coeff_x + 1
