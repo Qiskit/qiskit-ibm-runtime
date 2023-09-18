@@ -315,7 +315,6 @@ class Options:
         default_options = asdict(_DEFAULT_RESILIENCE_LEVEL_OPTIONS[resilience_level])
         default_options["optimization_level"] = optimization_level
 
-        
         # HACK: To allow certain values to be explicitly updated with None
         none_keys = {"shots", "samples", "shots_per_sample", "zne_extrapolator", "pec_max_overhead"}
 

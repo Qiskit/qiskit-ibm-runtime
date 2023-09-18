@@ -52,6 +52,7 @@ def set_default_error_levels(
             options["resilience_level"] = default_resilience_level
     return options
 
+
 def _remove_dict_none_values(in_dict: dict, allowed_none_keys: set = None):
     allowed_none_keys = allowed_none_keys or {}
     for key, val in list(in_dict.items()):
