@@ -13,7 +13,6 @@
 """Tests for primitive classes."""
 
 import sys
-import copy
 import os
 from unittest.mock import MagicMock, patch
 import warnings
@@ -34,7 +33,6 @@ from qiskit_ibm_runtime import (
 )
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 import qiskit_ibm_runtime.session as session_pkg
-from qiskit_ibm_runtime.options.utils import _remove_dict_none_values
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import (

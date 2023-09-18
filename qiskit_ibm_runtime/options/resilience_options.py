@@ -12,8 +12,8 @@
 
 """Resilience options."""
 
-from typing import Sequence, Literal, get_args, Optional, Union
-from dataclasses import dataclass, field
+from typing import Sequence, Literal, get_args, Union
+from dataclasses import dataclass
 
 from .utils import _flexible
 from ..utils.deprecation import issue_deprecation_msg, deprecate_arguments
@@ -134,6 +134,7 @@ class ResilienceOptions:
             ValueError: if extrapolator is not in ExtrapolatorType.
             ValueError: if extrapolator == "QuarticExtrapolator" and number of noise_factors < 5.
             ValueError: if extrapolator == "CubicExtrapolator" and number of noise_factors < 4.
+            TypeError: if an input value has an invalid type.
         """
         noise_amplifier = resilience_options.get("noise_amplifier")
         if noise_amplifier is not None:
@@ -203,7 +204,7 @@ class ResilienceOptions:
             if any(i <= 0 for i in factors):
                 raise ValueError("zne_noise_factors` option value must all be non-negative")
             if len(factors) < 1:
-                raise ValueError(f"zne_noise_factors cannot be empty")
+                raise ValueError("zne_noise_factors cannot be empty")
             if extrapolator is not None:
                 required_factors = {
                     "exponential": 2,
@@ -228,7 +229,8 @@ class ResilienceOptions:
         if resilience_options.get("pec_mitigation"):
             if resilience_options.get("zne_mitigation"):
                 raise ValueError(
-                    "pec_mitigation and zne_mitigation`options cannot be simultaneously enabled. Set one of them to False."
+                    "pec_mitigation and zne_mitigation`options cannot be "
+                    "simultaneously enabled. Set one of them to False."
                 )
             max_overhead = resilience_options.get("pec_max_overhead")
             if max_overhead is not None and max_overhead < 1:
