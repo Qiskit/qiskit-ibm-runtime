@@ -189,10 +189,10 @@ class ResilienceOptions:
                 extrapolator = (extrapolator,)
             if extrapolator is not None:
                 for extrap in extrapolator:
-                    if extrap not in get_args(ExtrapolatorType):
+                    if extrap not in get_args(ZneExtrapolatorType):
                         raise ValueError(
                             f"Unsupported value {extrapolator} for zne_extrapolator. "
-                            f"Supported values are {get_args(ExtrapolatorType)}"
+                            f"Supported values are {get_args(ZneExtrapolatorType)}"
                         )
 
             # Validation of noise factors
