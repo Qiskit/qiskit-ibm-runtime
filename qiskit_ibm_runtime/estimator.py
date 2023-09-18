@@ -252,7 +252,7 @@ class Estimator(BasePrimitive, BaseEstimator):
     def _validate_observables(
         observables: Sequence[ObservablesArrayLike] | ObservablesArrayLike,
     ) -> Sequence[ObservablesArrayLike]:
-        def _check_and_init(obs):
+        def _check_and_init(obs: Any) -> Any:
             if isinstance(obs, str):
                 pass
                 if not all(basis in Estimator._ALLOWED_BASIS for basis in obs):
@@ -287,7 +287,7 @@ class Estimator(BasePrimitive, BaseEstimator):
     def _validate_parameter_values(
         parameter_values: BindingsArrayLike | Sequence[BindingsArrayLike] | None,
         default: Sequence[Sequence[float]] | Sequence[float] | None = None,
-    ) -> Sequence[BindingsArrayLike]:
+    ) -> Sequence:
 
         # Allow optional (if default)
         if parameter_values is None:

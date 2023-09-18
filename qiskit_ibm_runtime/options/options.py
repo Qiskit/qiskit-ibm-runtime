@@ -12,7 +12,7 @@
 
 """Primitive options."""
 
-from typing import Optional, Union, ClassVar, Literal, get_args
+from typing import Optional, Union, ClassVar, Literal, get_args, Any
 from dataclasses import dataclass, fields, field, asdict
 import copy
 import warnings
@@ -278,8 +278,8 @@ class Options:
         primitive_options: dict,
         overwrite_options: Optional[dict] = None,
         is_simulator: bool = False,
-    ):
-        def _get_merged_value(name, first: dict = None, second: dict = None):
+    ) -> dict:
+        def _get_merged_value(name: str, first: dict = None, second: dict = None) -> Any:
             first = first or overwrite_options
             second = second or primitive_options
             return first.get(name) or second.get(name)

@@ -53,7 +53,7 @@ def set_default_error_levels(
     return options
 
 
-def _remove_dict_none_values(in_dict: dict):
+def _remove_dict_none_values(in_dict: dict) -> None:
     for key, val in list(in_dict.items()):
         if val is None:
             del in_dict[key]
