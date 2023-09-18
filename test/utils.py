@@ -254,4 +254,8 @@ def get_mocked_backend(name: str = "ibm_gotham") -> Any:
     mock_backend = mock.MagicMock(spec=IBMBackend)
     mock_backend.name = name
     mock_backend._instance = None
+
+    mock_service = mock.MagicMock()
+    mock_backend.service = mock_service
+
     return mock_backend

@@ -185,7 +185,8 @@ class Options:
         dd = options.get("dynamical_decoupling")
         if dd not in get_args(DDSequenceType):
             raise ValueError(
-                f"Unsupported value '{dd}' for dynamical_decoupling. Allowed values are {get_args(DDSequenceType)}"
+                f"Unsupported value '{dd}' for dynamical_decoupling. "
+                f"Allowed values are {get_args(DDSequenceType)}"
             )
 
         TwirlingOptions.validate_twirling_options(options.get("twirling"))
@@ -305,7 +306,7 @@ class Options:
             )
 
         # 2. Determine the default resilience options
-        if resilience_level not in _DEFAULT_RESILIENCE_LEVEL_OPTIONS.keys():
+        if resilience_level not in _DEFAULT_RESILIENCE_LEVEL_OPTIONS:
             raise ValueError(f"resilience_level {resilience_level} is not a valid value.")
         default_options = asdict(_DEFAULT_RESILIENCE_LEVEL_OPTIONS[resilience_level])
         default_options["optimization_level"] = optimization_level

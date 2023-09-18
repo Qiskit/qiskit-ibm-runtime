@@ -226,7 +226,7 @@ class ResilienceOptions:
                 raise ValueError("Invalid zne_stderr_threshold option value must be > 0")
 
         if resilience_options.get("pec_mitigation"):
-            if resilience_options.get("pec_mitigation"):
+            if resilience_options.get("zne_mitigation"):
                 raise ValueError(
                     "pec_mitigation and zne_mitigation`options cannot be simultaneously enabled. Set one of them to False."
                 )

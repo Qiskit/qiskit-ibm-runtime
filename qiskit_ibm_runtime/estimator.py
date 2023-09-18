@@ -14,13 +14,19 @@
 
 from __future__ import annotations
 import os
-from typing import Optional, Dict, Sequence, Any, Union
+from typing import Optional, Dict, Sequence, Any, Union, Mapping
 import logging
 
+import numpy as np
+from numpy.typing import ArrayLike
+
 from qiskit.circuit import QuantumCircuit
-from qiskit.opflow import PauliSumOp
 from qiskit.quantum_info.operators.base_operator import BaseOperator
 from qiskit.primitives import BaseEstimator
+from qiskit.primitives.base.base_primitive import _isreal
+from qiskit.quantum_info import SparsePauliOp, Pauli
+from qiskit.primitives.utils import init_observable
+from qiskit.circuit import Parameter
 
 # TODO import _circuit_key from terra once 0.23 is released
 from .runtime_job import RuntimeJob
@@ -28,11 +34,29 @@ from .ibm_backend import IBMBackend
 from .options import Options
 from .base_primitive import BasePrimitive
 from .utils.qctrl import validate as qctrl_validate
+from .utils.deprecation import issue_deprecation_msg
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
 
 logger = logging.getLogger(__name__)
+
+
+BasisObservableLike = Union[str, Pauli, SparsePauliOp, Mapping[Union[str, Pauli], complex]]
+"""Types that can be natively used to construct a :const:`BasisObservable`."""
+
+ObservablesArrayLike = Union[ArrayLike, Sequence[BasisObservableLike], BasisObservableLike]
+
+ParameterMappingLike = Mapping[
+    Parameter, Union[float, np.ndarray, Sequence[float], Sequence[Sequence[float]]]
+]
+BindingsArrayLike = Union[
+    float,
+    np.ndarray,
+    ParameterMappingLike,
+    Sequence[Union[float, Sequence[float], np.ndarray, ParameterMappingLike]],
+]
+"""Parameter types that can be bound to a single circuit."""
 
 
 class Estimator(BasePrimitive, BaseEstimator):
@@ -85,6 +109,7 @@ class Estimator(BasePrimitive, BaseEstimator):
     """
 
     _PROGRAM_ID = "estimator"
+    _ALLOWED_BASIS: str = "IXYZ"
 
     def __init__(
         self,
@@ -119,8 +144,11 @@ class Estimator(BasePrimitive, BaseEstimator):
     def run(  # pylint: disable=arguments-differ
         self,
         circuits: QuantumCircuit | Sequence[QuantumCircuit],
-        observables: BaseOperator | PauliSumOp | Sequence[BaseOperator | PauliSumOp],
-        parameter_values: Sequence[float] | Sequence[Sequence[float]] | None = None,
+        observables: Sequence[ObservablesArrayLike]
+        | ObservablesArrayLike
+        | Sequence[BaseOperator]
+        | BaseOperator,
+        parameter_values: BindingsArrayLike | Sequence[BindingsArrayLike] | None = None,
         **kwargs: Any,
     ) -> RuntimeJob:
         """Submit a request to the estimator primitive.
@@ -155,7 +183,7 @@ class Estimator(BasePrimitive, BaseEstimator):
     def _run(  # pylint: disable=arguments-differ
         self,
         circuits: Sequence[QuantumCircuit],
-        observables: Sequence[BaseOperator | PauliSumOp],
+        observables: Sequence[ObservablesArrayLike],
         parameter_values: Sequence[Sequence[float]],
         **kwargs: Any,
     ) -> RuntimeJob:
@@ -219,6 +247,91 @@ class Estimator(BasePrimitive, BaseEstimator):
                     "a coupling map is required."
                 )
         Options.validate_options(options)
+
+    def _validate_observables(
+        self,
+        observables: Sequence[ObservablesArrayLike] | ObservablesArrayLike,
+    ) -> Sequence[ObservablesArrayLike]:
+        def _check_and_init(obs):
+            if isinstance(obs, str):
+                if not all(basis in self._ALLOWED_BASIS for basis in obs):
+                    raise ValueError(
+                        f"Invalid character(s) found in observable string. "
+                        f"Allowed basis are {self._ALLOWED_BASIS}."
+                    )
+            elif isinstance(obs, Sequence):
+                return tuple(_check_and_init(obs_) for obs_ in obs)
+            elif not isinstance(obs, (Pauli, SparsePauliOp)) and isinstance(obs, BaseOperator):
+                issue_deprecation_msg(
+                    msg="Only Pauli and SparsePauliOp operators can be used as observables.",
+                    version=0.13,
+                    remedy="",
+                )
+                return init_observable(obs)
+            elif isinstance(obs, Mapping):
+                for key in obs.keys():
+                    _check_and_init(key)
+
+            return obs
+
+        if isinstance(observables, str) or not isinstance(observables, Sequence):
+            observables = (observables,)
+
+        if len(observables) == 0:
+            raise ValueError("No observables were provided.")
+
+        return tuple(_check_and_init(obs_array) for obs_array in observables)
+
+    def _validate_parameter_values(
+        self,
+        parameter_values: BindingsArrayLike | Sequence[BindingsArrayLike] | None,
+        default: Sequence[Sequence[float]] | Sequence[float] | None = None,
+    ) -> tuple[tuple[float, ...], ...]:
+
+        # Allow optional (if default)
+        if parameter_values is None:
+            if default is None:
+                raise ValueError("No default `parameter_values`, optional input disallowed.")
+            parameter_values = default
+
+        # Support numpy ndarray
+        if isinstance(parameter_values, np.ndarray):
+            parameter_values = parameter_values.tolist()
+        elif isinstance(parameter_values, Sequence):
+            parameter_values = tuple(
+                vector.tolist() if isinstance(vector, np.ndarray) else vector
+                for vector in parameter_values
+            )
+
+        # Allow single value
+        if _isreal(parameter_values):
+            parameter_values = ((parameter_values,),)
+        elif isinstance(parameter_values, Sequence) and not any(
+            isinstance(vector, (Sequence, Mapping)) for vector in parameter_values
+        ):
+            parameter_values = (parameter_values,)
+        elif isinstance(parameter_values, Mapping):
+            parameter_values = (parameter_values,)
+
+        return parameter_values
+
+    def _cross_validate_circuits_parameter_values(
+        self, circuits: tuple[QuantumCircuit, ...], parameter_values: tuple[tuple[float, ...], ...]
+    ) -> None:
+        if len(circuits) != len(parameter_values):
+            raise ValueError(
+                f"The number of circuits ({len(circuits)}) does not match "
+                f"the number of parameter value sets ({len(parameter_values)})."
+            )
+
+    def _cross_validate_circuits_observables(
+        self, circuits: tuple[QuantumCircuit, ...], observables: tuple[ObservablesArrayLike, ...]
+    ) -> None:
+        if len(circuits) != len(observables):
+            raise ValueError(
+                f"The number of circuits ({len(circuits)}) does not match "
+                f"the number of observables ({len(observables)})."
+            )
 
     @classmethod
     def _program_id(cls) -> str:

@@ -22,7 +22,6 @@ from dataclasses import asdict
 from qiskit.providers.options import Options as TerraOptions
 
 from .options import Options
-from .options.utils import set_default_error_levels
 from .runtime_job import RuntimeJob
 from .ibm_backend import IBMBackend
 from .session import get_cm_session
