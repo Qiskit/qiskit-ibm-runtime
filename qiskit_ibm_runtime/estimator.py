@@ -16,9 +16,9 @@ from __future__ import annotations
 import os
 from typing import Optional, Dict, Sequence, Any, Union
 import logging
+import typing
 
 from qiskit.circuit import QuantumCircuit
-from qiskit.opflow import PauliSumOp
 from qiskit.quantum_info.operators.base_operator import BaseOperator
 from qiskit.primitives import BaseEstimator
 
@@ -31,6 +31,9 @@ from .utils.qctrl import validate as qctrl_validate
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
+
+if typing.TYPE_CHECKING:
+    from qiskit.opflow import PauliSumOp
 
 logger = logging.getLogger(__name__)
 
