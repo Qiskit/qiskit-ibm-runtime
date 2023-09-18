@@ -52,13 +52,13 @@ def set_default_error_levels(
             options["resilience_level"] = default_resilience_level
     return options
 
-
-def _remove_dict_none_values(in_dict: dict) -> None:
+def _remove_dict_none_values(in_dict: dict, allowed_none_keys: set = None):
+    allowed_none_keys = allowed_none_keys or {}
     for key, val in list(in_dict.items()):
-        if val is None:
+        if val is None and key not in allowed_none_keys:
             del in_dict[key]
         elif isinstance(val, dict):
-            _remove_dict_none_values(val)
+            _remove_dict_none_values(val, allowed_none_keys=allowed_none_keys)
 
 
 def _to_obj(cls_, data):  # type: ignore

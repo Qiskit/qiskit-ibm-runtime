@@ -226,8 +226,11 @@ class Options:
 
         return out
 
-    @staticmethod
-    def _merge_options(old_options: dict, new_options: Optional[dict] = None) -> dict:
+    def _merge_options(
+        old_options: dict,
+        new_options: Optional[dict] = None,
+        allowed_none_keys: Optional[set] = None,
+    ) -> dict:
         """Merge current options with the new ones.
 
         Args:
@@ -236,6 +239,7 @@ class Options:
         Returns:
             Merged dictionary.
         """
+        allowed_none_keys = allowed_none_keys or {}
 
         def _update_options(old: dict, new: dict, matched: Optional[dict] = None) -> None:
             if not new and not matched:
@@ -248,11 +252,11 @@ class Options:
                     _update_options(val, new, matched)
                 elif key in new.keys():
                     new_val = new.pop(key)
-                    if new_val is not None:
+                    if new_val is not None or key in allowed_none_keys:
                         old[key] = new_val
                 elif key in matched.keys():
                     new_val = matched.pop(key)
-                    if new_val is not None:
+                    if new_val is not None or key in allowed_none_keys:
                         old[key] = new_val
 
             # Add new keys.
@@ -311,14 +315,22 @@ class Options:
         default_options = asdict(_DEFAULT_RESILIENCE_LEVEL_OPTIONS[resilience_level])
         default_options["optimization_level"] = optimization_level
 
+        
+        # HACK: To allow certain values to be explicitly updated with None
+        none_keys = {"shots", "samples", "shots_per_sample", "zne_extrapolator", "pec_max_overhead"}
+
         # 3. Merge in primitive options.
-        final_options = Options._merge_options(default_options, primitive_options)
+        final_options = Options._merge_options(
+            default_options, primitive_options, allowed_none_keys=none_keys
+        )
 
         # 4. Merge in overwrites.
-        final_options = Options._merge_options(final_options, overwrite_options)
+        final_options = Options._merge_options(
+            final_options, overwrite_options, allowed_none_keys=none_keys
+        )
 
         # 5. Remove Nones
-        _remove_dict_none_values(final_options)
+        _remove_dict_none_values(final_options, allowed_none_keys=none_keys)
 
         return final_options
 
