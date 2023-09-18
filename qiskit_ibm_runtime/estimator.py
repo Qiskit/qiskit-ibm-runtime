@@ -15,6 +15,7 @@
 from __future__ import annotations
 import os
 from typing import Optional, Dict, Sequence, Any, Union, Mapping
+from numbers import Integral
 import logging
 
 import numpy as np
@@ -109,7 +110,7 @@ class Estimator(BasePrimitive, BaseEstimator):
     """
 
     _PROGRAM_ID = "estimator"
-    _ALLOWED_BASIS: str = "IXYZ"
+    _ALLOWED_BASIS: str = "IXYZ01+-rl"
 
     def __init__(
         self,
@@ -295,26 +296,16 @@ class Estimator(BasePrimitive, BaseEstimator):
                 raise ValueError("No default `parameter_values`, optional input disallowed.")
             parameter_values = default
 
-        # Support numpy ndarray
-        if isinstance(parameter_values, np.ndarray):
-            parameter_values = parameter_values.tolist()
-        elif isinstance(parameter_values, Sequence):
-            parameter_values = tuple(
-                vector.tolist() if isinstance(vector, np.ndarray) else vector
-                for vector in parameter_values
-            )
-
-        # Allow single value
-        if _isreal(parameter_values):
-            parameter_values = ((parameter_values,),)
-        elif isinstance(parameter_values, Sequence) and not any(
-            isinstance(vector, (Sequence, Mapping)) for vector in parameter_values
-        ):
-            parameter_values = (parameter_values,)
+        # Convert single input types to length-1 lists
+        if isinstance(parameter_values, Integral):
+            parameter_values = [[parameter_values]]
         elif isinstance(parameter_values, Mapping):
-            parameter_values = (parameter_values,)
-
-        return parameter_values
+            parameter_values = [parameter_values]
+        elif isinstance(parameter_values, Sequence) and all(
+            isinstance(item, Integral) for item in parameter_values
+        ):
+            parameter_values = [parameter_values]
+        return tuple(parameter_values)
 
     @staticmethod
     def _cross_validate_circuits_parameter_values(
