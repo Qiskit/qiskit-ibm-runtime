@@ -100,11 +100,11 @@ class TestEstimator(IBMTestCase):
             [random_pauli_list(2, 2)],
         ]
 
-        qc = QuantumCircuit(2)
+        circuit = QuantumCircuit(2)
         estimator = Estimator(backend=get_mocked_backend())
         for obs in all_obs:
             with self.subTest(obs=obs):
-                estimator.run(circuits=qc, observables=obs)
+                estimator.run(circuits=circuit, observables=obs)
 
     def test_observable_types_multi_circuits(self):
         """Test different observable types for multiple circuits."""
@@ -129,11 +129,11 @@ class TestEstimator(IBMTestCase):
             [random_pauli_list(2, 2)] * num_qx,
         ]
 
-        qc = QuantumCircuit(2)
+        circuit = QuantumCircuit(2)
         estimator = Estimator(backend=get_mocked_backend())
         for obs in all_obs:
             with self.subTest(obs=obs):
-                estimator.run(circuits=[qc] * num_qx, observables=obs)
+                estimator.run(circuits=[circuit] * num_qx, observables=obs)
 
     def test_invalid_basis(self):
         """Test observable containing invalid basis."""
@@ -149,18 +149,18 @@ class TestEstimator(IBMTestCase):
             ],
         ]
 
-        qc = QuantumCircuit(2)
+        circuit = QuantumCircuit(2)
         estimator = Estimator(backend=get_mocked_backend())
         for obs in all_obs:
             with self.subTest(obs=obs):
                 with self.assertRaises(ValueError):
-                    estimator.run(circuits=qc, observables=obs)
+                    estimator.run(circuits=circuit, observables=obs)
 
     def test_single_parameter_single_circuit(self):
         """Test single parameter for a single cirucit."""
         theta = Parameter("θ")
-        qc = QuantumCircuit(2)
-        qc.rz(theta, 0)
+        circuit = QuantumCircuit(2)
+        circuit.rz(theta, 0)
 
         param_vals = [
             np.pi,
@@ -177,13 +177,13 @@ class TestEstimator(IBMTestCase):
         estimator = Estimator(backend=get_mocked_backend())
         for val in param_vals:
             with self.subTest(val=val):
-                estimator.run(circuits=qc, observables="ZZ", parameter_values=val)
+                estimator.run(circuits=circuit, observables="ZZ", parameter_values=val)
 
     def test_multiple_parameters_single_circuit(self):
         """Test multiple parameters for a single circuit."""
         theta = Parameter("θ")
-        qc = QuantumCircuit(2)
-        qc.rz(theta, [0, 1])
+        circuit = QuantumCircuit(2)
+        circuit.rz(theta, [0, 1])
 
         param_vals = [
             [np.pi, np.pi],
@@ -200,13 +200,13 @@ class TestEstimator(IBMTestCase):
         estimator = Estimator(backend=get_mocked_backend())
         for val in param_vals:
             with self.subTest(val=val):
-                estimator.run(circuits=qc, observables="ZZ", parameter_values=val)
+                estimator.run(circuits=circuit, observables="ZZ", parameter_values=val)
 
     def test_multiple_parameters_multiple_circuits(self):
         """Test multiple parameters for multiple circuits."""
         theta = Parameter("θ")
-        qc = QuantumCircuit(2)
-        qc.rz(theta, [0, 1])
+        circuit = QuantumCircuit(2)
+        circuit.rz(theta, [0, 1])
 
         param_vals = [
             [[np.pi, np.pi], [0.5, 0.5]],
@@ -218,4 +218,4 @@ class TestEstimator(IBMTestCase):
         estimator = Estimator(backend=get_mocked_backend())
         for val in param_vals:
             with self.subTest(val=val):
-                estimator.run(circuits=[qc] * 2, observables=["ZZ"] * 2, parameter_values=val)
+                estimator.run(circuits=[circuit] * 2, observables=["ZZ"] * 2, parameter_values=val)

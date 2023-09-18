@@ -182,10 +182,10 @@ class Options:
                 f"{list(range(Options._MAX_OPTIMIZATION_LEVEL + 1))}"
             )
 
-        dd = options.get("dynamical_decoupling")
-        if dd not in get_args(DDSequenceType):
+        dd_seq = options.get("dynamical_decoupling")
+        if dd_seq not in get_args(DDSequenceType):
             raise ValueError(
-                f"Unsupported value '{dd}' for dynamical_decoupling. "
+                f"Unsupported value '{dd_seq}' for dynamical_decoupling. "
                 f"Allowed values are {get_args(DDSequenceType)}"
             )
 

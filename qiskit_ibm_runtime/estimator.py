@@ -248,16 +248,17 @@ class Estimator(BasePrimitive, BaseEstimator):
                 )
         Options.validate_options(options)
 
+    @staticmethod
     def _validate_observables(
-        self,
         observables: Sequence[ObservablesArrayLike] | ObservablesArrayLike,
     ) -> Sequence[ObservablesArrayLike]:
         def _check_and_init(obs):
             if isinstance(obs, str):
-                if not all(basis in self._ALLOWED_BASIS for basis in obs):
+                pass
+                if not all(basis in Estimator._ALLOWED_BASIS for basis in obs):
                     raise ValueError(
                         f"Invalid character(s) found in observable string. "
-                        f"Allowed basis are {self._ALLOWED_BASIS}."
+                        f"Allowed basis are {Estimator._ALLOWED_BASIS}."
                     )
             elif isinstance(obs, Sequence):
                 return tuple(_check_and_init(obs_) for obs_ in obs)
@@ -282,11 +283,11 @@ class Estimator(BasePrimitive, BaseEstimator):
 
         return tuple(_check_and_init(obs_array) for obs_array in observables)
 
+    @staticmethod
     def _validate_parameter_values(
-        self,
         parameter_values: BindingsArrayLike | Sequence[BindingsArrayLike] | None,
         default: Sequence[Sequence[float]] | Sequence[float] | None = None,
-    ) -> tuple[tuple[float, ...], ...]:
+    ) -> Sequence[BindingsArrayLike]:
 
         # Allow optional (if default)
         if parameter_values is None:
@@ -315,8 +316,9 @@ class Estimator(BasePrimitive, BaseEstimator):
 
         return parameter_values
 
+    @staticmethod
     def _cross_validate_circuits_parameter_values(
-        self, circuits: tuple[QuantumCircuit, ...], parameter_values: tuple[tuple[float, ...], ...]
+        circuits: tuple[QuantumCircuit, ...], parameter_values: tuple[tuple[float, ...], ...]
     ) -> None:
         if len(circuits) != len(parameter_values):
             raise ValueError(
@@ -324,8 +326,9 @@ class Estimator(BasePrimitive, BaseEstimator):
                 f"the number of parameter value sets ({len(parameter_values)})."
             )
 
+    @staticmethod
     def _cross_validate_circuits_observables(
-        self, circuits: tuple[QuantumCircuit, ...], observables: tuple[ObservablesArrayLike, ...]
+        circuits: tuple[QuantumCircuit, ...], observables: tuple[ObservablesArrayLike, ...]
     ) -> None:
         if len(circuits) != len(observables):
             raise ValueError(

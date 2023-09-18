@@ -23,7 +23,6 @@ from qiskit_aer.noise import NoiseModel
 
 from qiskit_ibm_runtime import Options, RuntimeOptions
 from qiskit_ibm_runtime.utils.qctrl import _warn_and_clean_options
-from qiskit_ibm_runtime.options.options import _DEFAULT_RESILIENCE_LEVEL_OPTIONS
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import dict_keys_equal, dict_paritally_equal, flat_dict_partially_equal

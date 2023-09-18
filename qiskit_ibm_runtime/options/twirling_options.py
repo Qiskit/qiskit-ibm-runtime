@@ -12,7 +12,7 @@
 
 """Twirling options."""
 
-from typing import Optional, Literal, get_args
+from typing import Literal, get_args
 from dataclasses import dataclass
 
 from .utils import _flexible
