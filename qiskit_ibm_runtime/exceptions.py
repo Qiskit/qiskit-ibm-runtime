@@ -15,6 +15,7 @@
 from qiskit.exceptions import QiskitError
 from qiskit.providers.exceptions import JobTimeoutError
 
+
 class IBMError(QiskitError):
     """Base class for errors raised by the runtime service modules."""
 
