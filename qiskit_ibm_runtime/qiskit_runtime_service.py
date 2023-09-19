@@ -139,6 +139,7 @@ class QiskitRuntimeService(Provider):
             - Account with the input `name`, if specified.
             - Default account for the `channel` type, if `channel` is specified but `token` is not.
             - Account defined by the input `channel` and `token`, if specified.
+            - Account defined by the `default_channel` if defined in filename
             - Account defined by the environment variables, if defined.
             - Default account for the ``ibm_cloud`` account, if one is available.
             - Default account for the ``ibm_quantum`` account, if one is available.
@@ -287,6 +288,7 @@ class QiskitRuntimeService(Provider):
                 "'channel' is required if 'token', or 'url' is specified but 'name' is not."
             )
 
+        # channel is not defined yet, get it from the AccountManager
         if account is None:
             account = AccountManager.get(filename=filename)
 
@@ -689,6 +691,7 @@ class QiskitRuntimeService(Provider):
         verify: Optional[bool] = None,
         overwrite: Optional[bool] = False,
         channel_strategy: Optional[str] = None,
+        set_as_default: Optional[bool] = None,
     ) -> None:
         """Save the account to disk for future use.
 
@@ -709,6 +712,8 @@ class QiskitRuntimeService(Provider):
             verify: Verify the server's TLS certificate.
             overwrite: ``True`` if the existing account is to be overwritten.
             channel_strategy: Error mitigation strategy.
+            set_as_default: If ``True``, the account is saved in filename,
+                as the default account.
         """
 
         AccountManager.save(
@@ -722,6 +727,7 @@ class QiskitRuntimeService(Provider):
             verify=verify,
             overwrite=overwrite,
             channel_strategy=channel_strategy,
+            set_as_default=set_as_default,
         )
 
     @staticmethod
