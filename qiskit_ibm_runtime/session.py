@@ -75,7 +75,7 @@ class Session:
         service: Optional[QiskitRuntimeService] = None,
         backend: Optional[Union[str, IBMBackend]] = None,
         max_time: Optional[Union[int, str]] = None,
-        session_id: Optional[str] = None
+        session_id: Optional[str] = None,
     ):  # pylint: disable=line-too-long
         """Session constructor.
 
