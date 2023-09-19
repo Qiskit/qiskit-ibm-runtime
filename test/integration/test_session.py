@@ -84,3 +84,17 @@ class TestIntegrationSession(IBMIntegrationTestCase):
             job = sampler.run(ReferenceCircuits.bell(), shots=400)
             self.assertEqual(instance, backend._instance)
             self.assertEqual(instance, job.backend()._instance)
+
+    @run_integration_test
+    def test_set_session_id(self, service):
+        """Test calling both estimator and sampler."""
+        for session_id in ["123"]:
+            with Session(service, backend="ibmq_qasm_simulator", session_id=session_id) as session:
+                sampler = Sampler(session=session)
+                job1 = sampler.run(circuits=ReferenceCircuits.bell())
+                job2 = sampler.run(ReferenceCircuits.bell())
+                if session_id:
+                    self.assertFalse(job1._session_id == job1.job_id())
+                else:
+                    self.assertEqual(job1._session_id, job1.job_id())
+                self.assertFalse(job2._session_id == job2.job_id())

@@ -75,6 +75,7 @@ class Session:
         service: Optional[QiskitRuntimeService] = None,
         backend: Optional[Union[str, IBMBackend]] = None,
         max_time: Optional[Union[int, str]] = None,
+        session_id: Optional[str] = None
     ):  # pylint: disable=line-too-long
         """Session constructor.
 
@@ -120,7 +121,8 @@ class Session:
             backend = backend.name
         self._backend = backend
 
-        self._session_id: Optional[str] = None
+        self._session_id = session_id
+        self._new_session = True
         self._active = True
         self._max_time = (
             max_time
@@ -179,19 +181,18 @@ class Session:
             # TODO: What happens if session max time != first job max time?
             # Use session max time if this is first job.
             options["session_time"] = self._max_time
-
         job = self._service.run(
             program_id=program_id,
             options=options,
             inputs=inputs,
             session_id=self._session_id,
-            start_session=self._session_id is None,
+            start_session=self._new_session,
             callback=callback,
             result_decoder=result_decoder,
         )
-
         if self._session_id is None:
             self._session_id = job.job_id()
+            self._new_session = False
 
         if self._backend is None:
             self._backend = job.backend().name
