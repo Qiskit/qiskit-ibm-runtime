@@ -13,6 +13,7 @@
 """Tests for backend functions using real runtime service."""
 
 from unittest import SkipTest
+from datetime import datetime
 import copy
 
 from qiskit.transpiler.target import Target
@@ -130,7 +131,11 @@ class TestIBMBackend(IBMIntegrationTestCase):
         with self.subTest(backend=backend.name):
             if backend.simulator:
                 raise SkipTest("Skip since simulator does not have properties.")
-            self.assertIsNotNone(backend.properties())
+            properties = backend.properties()
+            properties_today = backend.properties(datetime=datetime.today())
+            self.assertIsNotNone(properties)
+            self.assertIsNotNone(properties_today)
+            self.assertEqual(properties, properties_today)
 
     @production_only
     def test_backend_pulse_defaults(self):

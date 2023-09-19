@@ -16,7 +16,6 @@ import logging
 from typing import Union, List, Dict
 from abc import abstractmethod, ABC
 
-from qiskit.pulse import Schedule
 from qiskit.providers.backend import BackendV1 as Backend
 from qiskit.providers.job import JobV1 as Job
 from qiskit.circuit import QuantumCircuit
@@ -35,7 +34,7 @@ class ProgramBackend(Backend, ABC):
     @abstractmethod
     def run(
         self,
-        circuits: Union[QuantumCircuit, Schedule, List[Union[QuantumCircuit, Schedule]]],
+        circuits: Union[QuantumCircuit, List[QuantumCircuit]],
         **run_config: Dict,
     ) -> Job:
         """Run on the backend.
@@ -47,8 +46,8 @@ class ProgramBackend(Backend, ABC):
 
         Args:
             circuits: An individual or a
-                list of :class:`~qiskit.circuits.QuantumCircuit` or
-                :class:`~qiskit.pulse.Schedule` objects to run on the backend.
+                list of :class:`~qiskit.circuits.QuantumCircuit`
+                to run on the backend.
             **run_config: Extra arguments used to configure the run.
 
         Returns:
