@@ -357,7 +357,7 @@ class _ResilienceLevel1Options:
         )
     )
     twirling: TwirlingOptions = field(
-        default_factory=lambda: TwirlingOptions(gates=True, measure=True, strategy="active-accum")
+        default_factory=lambda: TwirlingOptions(gates=False, measure=True, strategy="active-accum")
     )
 
 
