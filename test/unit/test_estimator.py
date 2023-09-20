@@ -186,9 +186,7 @@ class TestEstimator(IBMTestCase):
         circuit.rz(theta, [0, 1])
 
         param_vals = [
-            [np.pi, np.pi],
             [[np.pi, np.pi]],
-            np.array([np.pi, np.pi]),
             np.array([[np.pi, np.pi]]),
             [np.array([np.pi, np.pi])],
             [[[np.pi, np.pi], [np.pi / 2, np.pi / 2]]],

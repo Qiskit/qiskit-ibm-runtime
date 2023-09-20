@@ -15,7 +15,6 @@
 from __future__ import annotations
 import os
 from typing import Optional, Dict, Sequence, Any, Union, Mapping
-from numbers import Integral
 import logging
 
 import numpy as np
@@ -27,6 +26,7 @@ from qiskit.primitives import BaseEstimator
 from qiskit.quantum_info import SparsePauliOp, Pauli
 from qiskit.primitives.utils import init_observable
 from qiskit.circuit import Parameter
+from qiskit.primitives.base.base_primitive import _isreal
 
 # TODO import _circuit_key from terra once 0.23 is released
 from .runtime_job import RuntimeJob
@@ -296,12 +296,12 @@ class Estimator(BasePrimitive, BaseEstimator):
             parameter_values = default
 
         # Convert single input types to length-1 lists
-        if isinstance(parameter_values, Integral):
+        if _isreal(parameter_values):
             parameter_values = [[parameter_values]]
         elif isinstance(parameter_values, Mapping):
             parameter_values = [parameter_values]
         elif isinstance(parameter_values, Sequence) and all(
-            isinstance(item, Integral) for item in parameter_values
+            _isreal(item) for item in parameter_values
         ):
             parameter_values = [parameter_values]
         return tuple(parameter_values)  # type: ignore[arg-type]
