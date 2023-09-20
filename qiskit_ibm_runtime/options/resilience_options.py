@@ -117,7 +117,10 @@ class ResilienceOptions:
     # ZNE
     zne_mitigation: bool = None
     zne_noise_factors: Sequence[float] = None
-    zne_extrapolator: Union[ZneExtrapolatorType, Sequence[ZneExtrapolatorType]] = ("exponential", "linear")
+    zne_extrapolator: Union[ZneExtrapolatorType, Sequence[ZneExtrapolatorType]] = (
+        "exponential",
+        "linear",
+    )
     zne_stderr_threshold: float = None
 
     # PEC
