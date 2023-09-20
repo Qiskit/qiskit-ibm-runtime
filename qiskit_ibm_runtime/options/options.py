@@ -129,43 +129,80 @@ class Options:
         Returns:
             Inputs acceptable by primitives.
         """
-        sim_options = options.get("simulator", {})
-        inputs = {}
-        inputs["transpilation"] = copy.copy(options.get("transpilation", {}))
-        inputs["skip_transpilation"] = inputs["transpilation"].pop("skip_transpilation")
-        coupling_map = sim_options.get("coupling_map", None)
-        if isinstance(coupling_map, CouplingMap):
-            coupling_map = list(map(list, coupling_map.get_edges()))
-        inputs["transpilation"].update(
-            {
-                "optimization_level": options.get("optimization_level"),
-                "coupling_map": coupling_map,
-                "basis_gates": sim_options.get("basis_gates", None),
-            }
-        )
 
-        inputs["resilience_level"] = options.get("resilience_level")
-        inputs["resilience"] = options.get("resilience", {})
-        inputs["twirling"] = options.get("twirling", {})
+        if not options.get("_experimental", True):
+            sim_options = options.get("simulator", {})
+            inputs = {}
+            inputs["transpilation_settings"] = options.get("transpilation", {})
+            inputs["transpilation_settings"].update(
+                {
+                    "optimization_settings": {"level": options.get("optimization_level")},
+                    "coupling_map": sim_options.get("coupling_map", None),
+                    "basis_gates": sim_options.get("basis_gates", None),
+                }
+            )
+            if isinstance(inputs["transpilation_settings"]["coupling_map"], CouplingMap):
+                inputs["transpilation_settings"]["coupling_map"] = list(
+                    map(list, inputs["transpilation_settings"]["coupling_map"].get_edges())
+                )
 
-        inputs["execution"] = options.get("execution")
-        inputs["execution"].update(
-            {
-                "noise_model": sim_options.get("noise_model", None),
-                "seed_simulator": sim_options.get("seed_simulator", None),
-            }
-        )
+            inputs["resilience_settings"] = options.get("resilience", {})
+            inputs["resilience_settings"].update({"level": options.get("resilience_level")})
+            inputs["run_options"] = options.get("execution")
+            inputs["run_options"].update(
+                {
+                    "noise_model": sim_options.get("noise_model", None),
+                    "seed_simulator": sim_options.get("seed_simulator", None),
+                }
+            )
 
-        known_keys = list(Options.__dataclass_fields__.keys())
-        known_keys.append("image")
-        # Add additional unknown keys.
-        for key in options.keys():
-            if key not in known_keys:
-                warnings.warn(f"Key '{key}' is an unrecognized option. It may be ignored.")
-                inputs[key] = options[key]
+            known_keys = list(Options.__dataclass_fields__.keys())
+            known_keys.append("image")
+            # Add additional unknown keys.
+            for key in options.keys():
+                if key not in known_keys:
+                    warnings.warn(f"Key '{key}' is an unrecognized option. It may be ignored.")
+                    inputs[key] = options[key]
+            inputs["_experimental"] = False
+            return inputs
+        else:
+            sim_options = options.get("simulator", {})
+            inputs = {}
+            inputs["transpilation"] = copy.copy(options.get("transpilation", {}))
+            inputs["skip_transpilation"] = inputs["transpilation"].pop("skip_transpilation")
+            coupling_map = sim_options.get("coupling_map", None)
+            if isinstance(coupling_map, CouplingMap):
+                coupling_map = list(map(list, coupling_map.get_edges()))
+            inputs["transpilation"].update(
+                {
+                    "optimization_level": options.get("optimization_level"),
+                    "coupling_map": coupling_map,
+                    "basis_gates": sim_options.get("basis_gates", None),
+                }
+            )
 
-        inputs["_experimental"] = True
-        return inputs
+            inputs["resilience_level"] = options.get("resilience_level")
+            inputs["resilience"] = options.get("resilience", {})
+            inputs["twirling"] = options.get("twirling", {})
+
+            inputs["execution"] = options.get("execution")
+            inputs["execution"].update(
+                {
+                    "noise_model": sim_options.get("noise_model", None),
+                    "seed_simulator": sim_options.get("seed_simulator", None),
+                }
+            )
+
+            known_keys = list(Options.__dataclass_fields__.keys())
+            known_keys.append("image")
+            # Add additional unknown keys.
+            for key in options.keys():
+                if key not in known_keys:
+                    warnings.warn(f"Key '{key}' is an unrecognized option. It may be ignored.")
+                    inputs[key] = options[key]
+
+            inputs["_experimental"] = True
+            return inputs
 
     @staticmethod
     def validate_options(options: dict) -> None:
