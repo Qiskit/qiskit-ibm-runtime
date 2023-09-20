@@ -12,7 +12,9 @@
 
 """Utility functions for options."""
 
+from typing import Optional
 from dataclasses import fields, field, make_dataclass
+
 from ..ibm_backend import IBMBackend
 
 
@@ -53,8 +55,8 @@ def set_default_error_levels(
     return options
 
 
-def _remove_dict_none_values(in_dict: dict, allowed_none_keys: set = None):
-    allowed_none_keys = allowed_none_keys or {}
+def _remove_dict_none_values(in_dict: dict, allowed_none_keys: Optional[set] = None) -> None:
+    allowed_none_keys = allowed_none_keys or set()
     for key, val in list(in_dict.items()):
         if val is None and key not in allowed_none_keys:
             del in_dict[key]

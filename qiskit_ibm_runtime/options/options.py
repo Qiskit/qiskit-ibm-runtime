@@ -240,7 +240,7 @@ class Options:
         Returns:
             Merged dictionary.
         """
-        allowed_none_keys = allowed_none_keys or {}
+        allowed_none_keys = allowed_none_keys or set()
 
         def _update_options(old: dict, new: dict, matched: Optional[dict] = None) -> None:
             if not new and not matched:

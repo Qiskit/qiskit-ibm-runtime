@@ -265,7 +265,7 @@ class Estimator(BasePrimitive, BaseEstimator):
             elif not isinstance(obs, (Pauli, SparsePauliOp)) and isinstance(obs, BaseOperator):
                 issue_deprecation_msg(
                     msg="Only Pauli and SparsePauliOp operators can be used as observables.",
-                    version=0.13,
+                    version="0.13",
                     remedy="",
                 )
                 return init_observable(obs)
@@ -304,7 +304,7 @@ class Estimator(BasePrimitive, BaseEstimator):
             isinstance(item, Integral) for item in parameter_values
         ):
             parameter_values = [parameter_values]
-        return tuple(parameter_values)
+        return tuple(parameter_values)  # pylint: disable=arg-type
 
     @staticmethod
     def _cross_validate_circuits_parameter_values(
