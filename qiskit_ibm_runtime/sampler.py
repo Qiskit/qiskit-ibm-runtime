@@ -166,13 +166,11 @@ class Sampler(BasePrimitive, BaseSampler):
             qctrl_validate(options)
             return
 
-        if options.get("resilience_level") and not options.get("resilience_level") in [
-            0,
-            1,
-        ]:
+        valid_levels = list(range(Options._MAX_RESILIENCE_LEVEL_SAMPLER + 1))
+        if options.get("resilience_level") and not options.get("resilience_level") in valid_levels:
             raise ValueError(
-                f"resilience_level can only take the values "
-                f"{list(range(Options._MAX_RESILIENCE_LEVEL_SAMPLER + 1))} in Sampler"
+                f"resilience_level {options.get('resilience_level')} is not a valid value."
+                f"It can only take the values {valid_levels} in Sampler."
             )
         Options.validate_options(options)
 

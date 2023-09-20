@@ -49,6 +49,7 @@ Classes
    ExecutionOptions
    EnvironmentOptions
    SimulatorOptions
+   TwirlingOptions
 
 """
 
@@ -58,3 +59,4 @@ from .options import Options
 from .simulator_options import SimulatorOptions
 from .transpilation_options import TranspilationOptions
 from .resilience_options import ResilienceOptions
+from .twirling_options import TwirlingOptions

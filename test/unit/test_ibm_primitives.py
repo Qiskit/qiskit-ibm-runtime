@@ -13,7 +13,6 @@
 """Tests for primitive classes."""
 
 import sys
-import copy
 import os
 from unittest.mock import MagicMock, patch
 import warnings
@@ -81,9 +80,7 @@ class TestPrimitives(IBMTestCase):
             for options in options_vars:
                 with self.subTest(primitive=cls, options=options):
                     inst = cls(session=MagicMock(spec=MockSession), options=options)
-                    expected = asdict(Options())
-                    self._update_dict(expected, copy.deepcopy(options))
-                    self.assertDictEqual(expected, inst.options.__dict__)
+                    self.assertTrue(dict_paritally_equal(inst.options.__dict__, options))
 
     def test_backend_in_options(self):
         """Test specifying backend in options."""
@@ -308,10 +305,10 @@ class TestPrimitives(IBMTestCase):
         """Test run using default options."""
         session = MagicMock(spec=MockSession)
         options_vars = [
-            (Options(resilience_level=1), {"resilience_settings": {"level": 1}}),
+            (Options(resilience_level=1), {"resilience_level": 1}),
             (
                 Options(optimization_level=3),
-                {"transpilation_settings": {"optimization_settings": {"level": 3}}},
+                {"transpilation": {"optimization_level": 3}},
             ),
             (
                 {
@@ -319,8 +316,8 @@ class TestPrimitives(IBMTestCase):
                     "execution": {"shots": 100},
                 },
                 {
-                    "transpilation_settings": {"initial_layout": [1, 2]},
-                    "run_options": {"shots": 100},
+                    "transpilation": {"initial_layout": [1, 2]},
+                    "execution": {"shots": 100},
                 },
             ),
         ]
@@ -354,9 +351,9 @@ class TestPrimitives(IBMTestCase):
                 self._assert_dict_partially_equal(
                     inputs,
                     {
-                        "resilience_settings": {"level": 1},
-                        "transpilation_settings": {"optimization_settings": {"level": 2}},
-                        "run_options": {"shots": 99},
+                        "resilience_level": 1,
+                        "transpilation": {"optimization_level": 2},
+                        "execution": {"shots": 99},
                     },
                 )
 
@@ -364,17 +361,17 @@ class TestPrimitives(IBMTestCase):
         """Test run using overwritten options."""
         session = MagicMock(spec=MockSession)
         options_vars = [
-            ({"resilience_level": 1}, {"resilience_settings": {"level": 1}}),
-            ({"shots": 200}, {"run_options": {"shots": 200}}),
+            ({"resilience_level": 1}, {"resilience_level": 1}),
+            ({"shots": 200}, {"execution": {"shots": 200}}),
             (
                 {"optimization_level": 3},
-                {"transpilation_settings": {"optimization_settings": {"level": 3}}},
+                {"transpilation": {"optimization_level": 3}},
             ),
             (
                 {"initial_layout": [1, 2], "optimization_level": 2},
                 {
-                    "transpilation_settings": {
-                        "optimization_settings": {"level": 2},
+                    "transpilation": {
+                        "optimization_level": 2,
                         "initial_layout": [1, 2],
                     }
                 },
@@ -458,7 +455,7 @@ class TestPrimitives(IBMTestCase):
                 inst.run(self.qx, observables=self.obs, shots=200)
                 kwargs_list = session.run.call_args_list
                 for idx, shots in zip([0, 1], [100, 200]):
-                    self.assertEqual(kwargs_list[idx][1]["inputs"]["run_options"]["shots"], shots)
+                    self.assertEqual(kwargs_list[idx][1]["inputs"]["execution"]["shots"], shots)
                 self.assertDictEqual(inst.options.__dict__, asdict(Options()))
 
     def test_run_same_session(self):
@@ -533,10 +530,6 @@ class TestPrimitives(IBMTestCase):
                     # Make sure the values are equal.
                     inst1_options = inst1.options.__dict__
                     expected_dict = inst2.options.__dict__
-                    self.assertTrue(
-                        dict_paritally_equal(inst1_options, expected_dict),
-                        f"inst_options={inst1_options}, options={opts}",
-                    )
                     # Make sure the structure didn't change.
                     self.assertTrue(
                         dict_keys_equal(inst1_options, expected_dict),
@@ -561,11 +554,11 @@ class TestPrimitives(IBMTestCase):
                     _, kwargs = session.run.call_args
                     inputs = kwargs["inputs"]
                 self.assertEqual(
-                    inputs["transpilation_settings"]["optimization_settings"]["level"],
+                    inputs["transpilation"]["optimization_level"],
                     Options._DEFAULT_OPTIMIZATION_LEVEL,
                 )
                 self.assertEqual(
-                    inputs["resilience_settings"]["level"],
+                    inputs["resilience_level"],
                     Options._DEFAULT_RESILIENCE_LEVEL,
                 )
 
@@ -578,11 +571,11 @@ class TestPrimitives(IBMTestCase):
                     _, kwargs = session.run.call_args
                     inputs = kwargs["inputs"]
                 self.assertEqual(
-                    inputs["transpilation_settings"]["optimization_settings"]["level"],
+                    inputs["transpilation"]["optimization_level"],
                     Options._DEFAULT_OPTIMIZATION_LEVEL,
                 )
                 self.assertEqual(
-                    inputs["resilience_settings"]["level"],
+                    inputs["resilience_level"],
                     Options._DEFAULT_RESILIENCE_LEVEL,
                 )
 
@@ -595,10 +588,10 @@ class TestPrimitives(IBMTestCase):
                     _, kwargs = session.run.call_args
                     inputs = kwargs["inputs"]
                 self.assertEqual(
-                    inputs["transpilation_settings"]["optimization_settings"]["level"],
+                    inputs["transpilation"]["optimization_level"],
                     1,
                 )
-                self.assertEqual(inputs["resilience_settings"]["level"], 0)
+                self.assertEqual(inputs["resilience_level"], 0)
 
     def test_resilience_options(self):
         """Test resilience options."""

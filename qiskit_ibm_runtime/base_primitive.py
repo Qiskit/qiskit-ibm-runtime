@@ -22,7 +22,6 @@ from dataclasses import asdict
 from qiskit.providers.options import Options as TerraOptions
 
 from .options import Options
-from .options.utils import set_default_error_levels
 from .runtime_job import RuntimeJob
 from .ibm_backend import IBMBackend
 from .session import get_cm_session
@@ -74,15 +73,6 @@ class BasePrimitive(ABC):
         self._session: Optional[Session] = None
         self._service: QiskitRuntimeService = None
         self._backend: Optional[IBMBackend] = None
-
-        if options is None:
-            self._options = asdict(Options())
-        elif isinstance(options, Options):
-            self._options = asdict(copy.deepcopy(options))
-        else:
-            options_copy = copy.deepcopy(options)
-            default_options = asdict(Options())
-            self._options = Options._merge_options(default_options, options_copy)
 
         if isinstance(session, Session):
             self._session = session
@@ -148,6 +138,21 @@ class BasePrimitive(ABC):
                 raise ValueError(
                     "A backend or session must be specified when not using ibm_cloud channel."
                 )
+        self._simulator_backend = (
+            self._backend.configuration().simulator if self._backend else False
+        )
+
+        if options is None:
+            self._options = asdict(Options())
+        elif isinstance(options, Options):
+            self._options = asdict(copy.deepcopy(options))
+        else:
+            options_copy = copy.deepcopy(options)
+            default_options = asdict(Options())
+            self._options = Options._merge_options_with_defaults(
+                default_options, options_copy, is_simulator=self._simulator_backend
+            )
+
         # self._first_run = True
         # self._circuits_map = {}
         # if self.circuits:
@@ -169,20 +174,11 @@ class BasePrimitive(ABC):
         Returns:
             Submitted job.
         """
-        combined = Options._merge_options(self._options, user_kwargs)
-
-        if self._backend:
-            combined = set_default_error_levels(
-                combined,
-                self._backend,
-                Options._DEFAULT_OPTIMIZATION_LEVEL,
-                Options._DEFAULT_RESILIENCE_LEVEL,
-            )
-        else:
-            combined["optimization_level"] = Options._DEFAULT_OPTIMIZATION_LEVEL
-            combined["resilience_level"] = Options._DEFAULT_RESILIENCE_LEVEL
-
+        combined = Options._merge_options_with_defaults(
+            self._options, user_kwargs, self._simulator_backend
+        )
         self._validate_options(combined)
+
         primitive_inputs.update(Options._get_program_inputs(combined))
 
         if self._backend and combined["transpilation"]["skip_transpilation"]:
@@ -238,7 +234,9 @@ class BasePrimitive(ABC):
         Args:
             **fields: The fields to update the options
         """
-        self._options = Options._merge_options(self._options, fields)
+        self._options = Options._merge_options_with_defaults(
+            self._options, fields, self._simulator_backend
+        )
 
     @abstractmethod
     def _validate_options(self, options: dict) -> None:

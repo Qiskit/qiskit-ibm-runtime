@@ -12,20 +12,23 @@
 
 """Primitive options."""
 
-from typing import Optional, Union, ClassVar
-from dataclasses import dataclass, fields, field
+from typing import Optional, Union, ClassVar, Literal, get_args, Any
+from dataclasses import dataclass, fields, field, asdict
 import copy
 import warnings
 
 from qiskit.transpiler import CouplingMap
 
-from .utils import _flexible, Dict
+from .utils import _flexible, Dict, _remove_dict_none_values
 from .environment_options import EnvironmentOptions
 from .execution_options import ExecutionOptions
 from .simulator_options import SimulatorOptions
 from .transpilation_options import TranspilationOptions
-from .resilience_options import ResilienceOptions
+from .resilience_options import ResilienceOptions, _ZneOptions, _PecOptions
+from .twirling_options import TwirlingOptions
 from ..runtime_options import RuntimeOptions
+
+DDSequenceType = Literal[None, "XX", "XpXm", "XY4"]
 
 
 @_flexible
@@ -68,6 +71,10 @@ class Options:
             `system imposed maximum
             <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/faqs/max_execution_time.html>`_.
 
+        dynamical_decoupling: Optional, specify a dynamical decoupling sequence to use.
+            Allowed values are ``"XX"``, ``"XpXm"``, ``"XY4"``.
+            Default: None
+
         transpilation: Transpilation options. See :class:`TranspilationOptions` for all
             available options.
 
@@ -86,7 +93,9 @@ class Options:
     # Defaults for optimization_level and for resilience_level will be assigned
     # in Sampler/Estimator
     _DEFAULT_OPTIMIZATION_LEVEL = 3
+    _DEFAULT_NOISELESS_OPTIMIZATION_LEVEL = 1
     _DEFAULT_RESILIENCE_LEVEL = 1
+    _DEFAULT_NOISELESS_RESILIENCE_LEVEL = 0
     _MAX_OPTIMIZATION_LEVEL = 3
     _MAX_RESILIENCE_LEVEL_ESTIMATOR = 3
     _MAX_RESILIENCE_LEVEL_SAMPLER = 1
@@ -96,11 +105,13 @@ class Options:
     optimization_level: Optional[int] = None
     resilience_level: Optional[int] = None
     max_execution_time: Optional[int] = None
+    dynamical_decoupling: Optional[DDSequenceType] = None
     transpilation: Union[TranspilationOptions, Dict] = field(default_factory=TranspilationOptions)
     resilience: Union[ResilienceOptions, Dict] = field(default_factory=ResilienceOptions)
     execution: Union[ExecutionOptions, Dict] = field(default_factory=ExecutionOptions)
     environment: Union[EnvironmentOptions, Dict] = field(default_factory=EnvironmentOptions)
     simulator: Union[SimulatorOptions, Dict] = field(default_factory=SimulatorOptions)
+    twirling: Union[TwirlingOptions, Dict] = field(default_factory=TwirlingOptions)
 
     _obj_fields: ClassVar[dict] = {
         "transpilation": TranspilationOptions,
@@ -108,6 +119,7 @@ class Options:
         "environment": EnvironmentOptions,
         "simulator": SimulatorOptions,
         "resilience": ResilienceOptions,
+        "twirling": TwirlingOptions,
     }
 
     @staticmethod
@@ -117,39 +129,80 @@ class Options:
         Returns:
             Inputs acceptable by primitives.
         """
-        sim_options = options.get("simulator", {})
-        inputs = {}
-        inputs["transpilation_settings"] = options.get("transpilation", {})
-        inputs["transpilation_settings"].update(
-            {
-                "optimization_settings": {"level": options.get("optimization_level")},
-                "coupling_map": sim_options.get("coupling_map", None),
-                "basis_gates": sim_options.get("basis_gates", None),
-            }
-        )
-        if isinstance(inputs["transpilation_settings"]["coupling_map"], CouplingMap):
-            inputs["transpilation_settings"]["coupling_map"] = list(
-                map(list, inputs["transpilation_settings"]["coupling_map"].get_edges())
+
+        if not options.get("_experimental", True):
+            sim_options = options.get("simulator", {})
+            inputs = {}
+            inputs["transpilation_settings"] = options.get("transpilation", {})
+            inputs["transpilation_settings"].update(
+                {
+                    "optimization_settings": {"level": options.get("optimization_level")},
+                    "coupling_map": sim_options.get("coupling_map", None),
+                    "basis_gates": sim_options.get("basis_gates", None),
+                }
+            )
+            if isinstance(inputs["transpilation_settings"]["coupling_map"], CouplingMap):
+                inputs["transpilation_settings"]["coupling_map"] = list(
+                    map(list, inputs["transpilation_settings"]["coupling_map"].get_edges())
+                )
+
+            inputs["resilience_settings"] = options.get("resilience", {})
+            inputs["resilience_settings"].update({"level": options.get("resilience_level")})
+            inputs["run_options"] = options.get("execution")
+            inputs["run_options"].update(
+                {
+                    "noise_model": sim_options.get("noise_model", None),
+                    "seed_simulator": sim_options.get("seed_simulator", None),
+                }
             )
 
-        inputs["resilience_settings"] = options.get("resilience", {})
-        inputs["resilience_settings"].update({"level": options.get("resilience_level")})
-        inputs["run_options"] = options.get("execution")
-        inputs["run_options"].update(
-            {
-                "noise_model": sim_options.get("noise_model", None),
-                "seed_simulator": sim_options.get("seed_simulator", None),
-            }
-        )
+            known_keys = list(Options.__dataclass_fields__.keys())
+            known_keys.append("image")
+            # Add additional unknown keys.
+            for key in options.keys():
+                if key not in known_keys:
+                    warnings.warn(f"Key '{key}' is an unrecognized option. It may be ignored.")
+                    inputs[key] = options[key]
+            inputs["_experimental"] = False
+            return inputs
+        else:
+            sim_options = options.get("simulator", {})
+            inputs = {}
+            inputs["transpilation"] = copy.copy(options.get("transpilation", {}))
+            inputs["skip_transpilation"] = inputs["transpilation"].pop("skip_transpilation")
+            coupling_map = sim_options.get("coupling_map", None)
+            if isinstance(coupling_map, CouplingMap):
+                coupling_map = list(map(list, coupling_map.get_edges()))
+            inputs["transpilation"].update(
+                {
+                    "optimization_level": options.get("optimization_level"),
+                    "coupling_map": coupling_map,
+                    "basis_gates": sim_options.get("basis_gates", None),
+                }
+            )
 
-        known_keys = list(Options.__dataclass_fields__.keys())
-        known_keys.append("image")
-        # Add additional unknown keys.
-        for key in options.keys():
-            if key not in known_keys:
-                warnings.warn(f"Key '{key}' is an unrecognized option. It may be ignored.")
-                inputs[key] = options[key]
-        return inputs
+            inputs["resilience_level"] = options.get("resilience_level")
+            inputs["resilience"] = options.get("resilience", {})
+            inputs["twirling"] = options.get("twirling", {})
+
+            inputs["execution"] = options.get("execution")
+            inputs["execution"].update(
+                {
+                    "noise_model": sim_options.get("noise_model", None),
+                    "seed_simulator": sim_options.get("seed_simulator", None),
+                }
+            )
+
+            known_keys = list(Options.__dataclass_fields__.keys())
+            known_keys.append("image")
+            # Add additional unknown keys.
+            for key in options.keys():
+                if key not in known_keys:
+                    warnings.warn(f"Key '{key}' is an unrecognized option. It may be ignored.")
+                    inputs[key] = options[key]
+
+            inputs["_experimental"] = True
+            return inputs
 
     @staticmethod
     def validate_options(options: dict) -> None:
@@ -165,6 +218,15 @@ class Options:
                 f"optimization_level can only take the values "
                 f"{list(range(Options._MAX_OPTIMIZATION_LEVEL + 1))}"
             )
+
+        dd_seq = options.get("dynamical_decoupling")
+        if dd_seq not in get_args(DDSequenceType):
+            raise ValueError(
+                f"Unsupported value '{dd_seq}' for dynamical_decoupling. "
+                f"Allowed values are {get_args(DDSequenceType)}"
+            )
+
+        TwirlingOptions.validate_twirling_options(options.get("twirling"))
         ResilienceOptions.validate_resilience_options(options.get("resilience"))
         TranspilationOptions.validate_transpilation_options(options.get("transpilation"))
         execution_time = options.get("max_execution_time")
@@ -202,7 +264,11 @@ class Options:
         return out
 
     @staticmethod
-    def _merge_options(old_options: dict, new_options: Optional[dict] = None) -> dict:
+    def _merge_options(
+        old_options: dict,
+        new_options: Optional[dict] = None,
+        allowed_none_keys: Optional[set] = None,
+    ) -> dict:
         """Merge current options with the new ones.
 
         Args:
@@ -211,6 +277,7 @@ class Options:
         Returns:
             Merged dictionary.
         """
+        allowed_none_keys = allowed_none_keys or set()
 
         def _update_options(old: dict, new: dict, matched: Optional[dict] = None) -> None:
             if not new and not matched:
@@ -222,9 +289,13 @@ class Options:
                     matched = new.pop(key, {})
                     _update_options(val, new, matched)
                 elif key in new.keys():
-                    old[key] = new.pop(key)
+                    new_val = new.pop(key)
+                    if new_val is not None or key in allowed_none_keys:
+                        old[key] = new_val
                 elif key in matched.keys():
-                    old[key] = matched.pop(key)
+                    new_val = matched.pop(key)
+                    if new_val is not None or key in allowed_none_keys:
+                        old[key] = new_val
 
             # Add new keys.
             for key, val in matched.items():
@@ -242,3 +313,120 @@ class Options:
         combined.update(new_options_copy)
 
         return combined
+
+    @classmethod
+    def _merge_options_with_defaults(
+        cls,
+        primitive_options: dict,
+        overwrite_options: Optional[dict] = None,
+        is_simulator: bool = False,
+    ) -> dict:
+        def _get_merged_value(name: str, first: dict = None, second: dict = None) -> Any:
+            first = first or overwrite_options
+            second = second or primitive_options
+            return first.get(name) or second.get(name)
+
+        # 1. Determine optimization and resilience levels
+        optimization_level = _get_merged_value("optimization_level")
+        resilience_level = _get_merged_value("resilience_level")
+        noise_model = _get_merged_value(
+            "noise_model",
+            first=overwrite_options.get("simulator", {}),
+            second=primitive_options.get("simulator", {}),
+        )
+        if optimization_level is None:
+            optimization_level = (
+                cls._DEFAULT_NOISELESS_OPTIMIZATION_LEVEL
+                if (is_simulator and noise_model is None)
+                else cls._DEFAULT_OPTIMIZATION_LEVEL
+            )
+        if resilience_level is None:
+            resilience_level = (
+                cls._DEFAULT_NOISELESS_RESILIENCE_LEVEL
+                if (is_simulator and noise_model is None)
+                else cls._DEFAULT_RESILIENCE_LEVEL
+            )
+
+        # 2. Determine the default resilience options
+        if resilience_level not in _DEFAULT_RESILIENCE_LEVEL_OPTIONS:
+            raise ValueError(f"resilience_level {resilience_level} is not a valid value.")
+        default_options = asdict(_DEFAULT_RESILIENCE_LEVEL_OPTIONS[resilience_level])
+        default_options["optimization_level"] = optimization_level
+
+        # HACK: To allow certain values to be explicitly updated with None
+        none_keys = {"shots", "samples", "shots_per_sample", "zne_extrapolator", "pec_max_overhead"}
+
+        # 3. Merge in primitive options.
+        final_options = Options._merge_options(
+            default_options, primitive_options, allowed_none_keys=none_keys
+        )
+
+        # 4. Merge in overwrites.
+        final_options = Options._merge_options(
+            final_options, overwrite_options, allowed_none_keys=none_keys
+        )
+
+        # 5. Remove Nones
+        _remove_dict_none_values(final_options, allowed_none_keys=none_keys)
+
+        return final_options
+
+
+@dataclass(frozen=True)
+class _ResilienceLevel0Options:
+    resilience_level: int = 0
+    resilience: ResilienceOptions = field(
+        default_factory=lambda: ResilienceOptions(
+            measure_noise_mitigation=False, zne_mitigation=False, pec_mitigation=False
+        )
+    )
+    twirling: TwirlingOptions = field(
+        default_factory=lambda: TwirlingOptions(gates=False, measure=False)
+    )
+
+
+@dataclass(frozen=True)
+class _ResilienceLevel1Options:
+    resilience_level: int = 1
+    resilience: ResilienceOptions = field(
+        default_factory=lambda: ResilienceOptions(
+            measure_noise_mitigation=True, zne_mitigation=False, pec_mitigation=False
+        )
+    )
+    twirling: TwirlingOptions = field(
+        default_factory=lambda: TwirlingOptions(gates=False, measure=True, strategy="active-accum")
+    )
+
+
+@dataclass(frozen=True)
+class _ResilienceLevel2Options:
+    resilience_level: int = 2
+    resilience: ResilienceOptions = field(
+        default_factory=lambda: ResilienceOptions(
+            measure_noise_mitigation=True, pec_mitigation=False, **asdict(_ZneOptions())
+        )
+    )
+    twirling: TwirlingOptions = field(
+        default_factory=lambda: TwirlingOptions(gates=True, measure=True, strategy="active-accum")
+    )
+
+
+@dataclass(frozen=True)
+class _ResilienceLevel3Options:
+    resilience_level: int = 3
+    resilience: ResilienceOptions = field(
+        default_factory=lambda: ResilienceOptions(
+            measure_noise_mitigation=True, zne_mitigation=False, **asdict(_PecOptions())
+        )
+    )
+    twirling: TwirlingOptions = field(
+        default_factory=lambda: TwirlingOptions(gates=True, measure=True, strategy="active")
+    )
+
+
+_DEFAULT_RESILIENCE_LEVEL_OPTIONS = {
+    0: _ResilienceLevel0Options(),
+    1: _ResilienceLevel1Options(),
+    2: _ResilienceLevel2Options(),
+    3: _ResilienceLevel3Options(),
+}

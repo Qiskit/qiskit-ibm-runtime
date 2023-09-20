@@ -147,14 +147,14 @@ class TestOptions(IBMTestCase):
             self.assertEqual(len(warn), 2)
 
         expected = {
-            "run_options": {"shots": 100, "noise_model": noise_model},
-            "transpilation_settings": {
-                "optimization_settings": {"level": 1},
-                "skip_transpilation": True,
+            "execution": {"shots": 100, "noise_model": noise_model},
+            "skip_transpilation": True,
+            "transpilation": {
+                "optimization_level": 1,
                 "initial_layout": [1, 2],
             },
-            "resilience_settings": {
-                "level": 2,
+            "resilience_level": 2,
+            "resilience": {
                 "noise_factors": (0, 2, 4),
             },
             "foo": "foo",
@@ -197,6 +197,7 @@ class TestOptions(IBMTestCase):
         options = {
             "optimization_level": 1,
             "resilience_level": 2,
+            "dynamical_decoupling": "XX",
             "transpilation": {"initial_layout": [1, 2], "skip_transpilation": True},
             "execution": {"shots": 100},
             "environment": {"log_level": "DEBUG"},
@@ -205,9 +206,10 @@ class TestOptions(IBMTestCase):
                 "noise_factors": (0, 2, 4),
                 "extrapolator": "LinearExtrapolator",
             },
+            "twirling": {},
         }
         Options.validate_options(options)
-        for opt in ["resilience", "simulator", "transpilation", "execution"]:
+        for opt in ["simulator", "transpilation", "execution"]:
             temp_options = options.copy()
             temp_options[opt] = {"aaa": "bbb"}
             with self.assertRaises(ValueError) as exc:
@@ -227,7 +229,7 @@ class TestOptions(IBMTestCase):
                 options = Options()
                 options.simulator.coupling_map = variant
                 inputs = Options._get_program_inputs(asdict(options))
-                resulting_cmap = inputs["transpilation_settings"]["coupling_map"]
+                resulting_cmap = inputs["transpilation"]["coupling_map"]
                 self.assertEqual(coupling_map, set(map(tuple, resulting_cmap)))
 
     @data(FakeManila(), FakeNairobiV2())
@@ -311,3 +313,61 @@ class TestOptions(IBMTestCase):
             with self.subTest(msg=f"{option}"):
                 _warn_and_clean_options(option)
                 self.assertEqual(expected_, option)
+
+    def test_merge_with_defaults_overwrite(self):
+        """Test merge_with_defaults with different overwrite."""
+        expected = {"twirling": {"measure": True}}
+        all_options = [
+            ({"twirling": {"measure": True}}, {}),
+            ({}, {"twirling": {"measure": True}}),
+            ({"twirling": {"measure": False}}, {"twirling": {"measure": True}}),
+        ]
+
+        for old, new in all_options:
+            with self.subTest(old=old, new=new):
+                old["resilience_level"] = 0
+                final = Options._merge_options_with_defaults(old, new)
+                self.assertTrue(dict_paritally_equal(final, expected))
+                self.assertEqual(final["resilience_level"], 0)
+                res_dict = final["resilience"]
+                self.assertFalse(res_dict["measure_noise_mitigation"])
+                self.assertFalse(res_dict["zne_mitigation"])
+                self.assertFalse(res_dict["pec_mitigation"])
+
+    def test_merge_with_defaults_different_level(self):
+        """Test merge_with_defaults with different resilience level."""
+
+        old = {"resilience_level": 0}
+        new = {"resilience_level": 3, "measure_noise_mitigation": False}
+        final = Options._merge_options_with_defaults(old, new)
+        self.assertEqual(final["resilience_level"], 3)
+        res_dict = final["resilience"]
+        self.assertFalse(res_dict["measure_noise_mitigation"])
+        self.assertFalse(res_dict["zne_mitigation"])
+        self.assertTrue(res_dict["pec_mitigation"])
+
+    def test_merge_with_defaults_noiseless_simulator(self):
+        """Test merge_with_defaults with noiseless simulator."""
+
+        new = {"measure_noise_mitigation": True}
+        final = Options._merge_options_with_defaults({}, new, is_simulator=True)
+        self.assertEqual(final["resilience_level"], 0)
+        self.assertEqual(final["optimization_level"], 1)
+        res_dict = final["resilience"]
+        self.assertTrue(res_dict["measure_noise_mitigation"])
+        self.assertFalse(res_dict["zne_mitigation"])
+        self.assertFalse(res_dict["pec_mitigation"])
+
+    def test_merge_with_defaults_noisy_simulator(self):
+        """Test merge_with_defaults with noisy simulator."""
+
+        new = {"measure_noise_mitigation": False}
+        final = Options._merge_options_with_defaults(
+            {"simulator": {"noise_model": "foo"}}, new, is_simulator=True
+        )
+        self.assertEqual(final["resilience_level"], 1)
+        self.assertEqual(final["optimization_level"], 3)
+        res_dict = final["resilience"]
+        self.assertFalse(res_dict["measure_noise_mitigation"])
+        self.assertFalse(res_dict["zne_mitigation"])
+        self.assertFalse(res_dict["pec_mitigation"])
