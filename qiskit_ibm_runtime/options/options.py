@@ -226,6 +226,7 @@ class Options:
 
         return out
 
+    @staticmethod
     def _merge_options(
         old_options: dict,
         new_options: Optional[dict] = None,

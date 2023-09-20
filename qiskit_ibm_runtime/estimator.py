@@ -24,7 +24,6 @@ from numpy.typing import ArrayLike
 from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info.operators.base_operator import BaseOperator
 from qiskit.primitives import BaseEstimator
-from qiskit.primitives.base.base_primitive import _isreal
 from qiskit.quantum_info import SparsePauliOp, Pauli
 from qiskit.primitives.utils import init_observable
 from qiskit.circuit import Parameter
