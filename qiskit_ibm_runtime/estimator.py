@@ -304,7 +304,7 @@ class Estimator(BasePrimitive, BaseEstimator):
             isinstance(item, Integral) for item in parameter_values
         ):
             parameter_values = [parameter_values]
-        return tuple(parameter_values)  # pylint: disable=arg-type
+        return tuple(parameter_values)  # type: ignore[arg-type]
 
     @staticmethod
     def _cross_validate_circuits_parameter_values(
