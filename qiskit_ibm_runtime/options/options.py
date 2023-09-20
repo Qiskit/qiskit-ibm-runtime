@@ -339,23 +339,25 @@ class Options:
 class _ResilienceLevel0Options:
     resilience_level: int = 0
     resilience: ResilienceOptions = field(
-        default=ResilienceOptions(
+        default_factory=lambda: ResilienceOptions(
             measure_noise_mitigation=False, zne_mitigation=False, pec_mitigation=False
         )
     )
-    twirling: TwirlingOptions = field(default=TwirlingOptions(gates=False, measure=False))
+    twirling: TwirlingOptions = field(
+        default_factory=lambda: TwirlingOptions(gates=False, measure=False)
+    )
 
 
 @dataclass(frozen=True)
 class _ResilienceLevel1Options:
     resilience_level: int = 1
     resilience: ResilienceOptions = field(
-        default=ResilienceOptions(
+        default_factory=lambda: ResilienceOptions(
             measure_noise_mitigation=True, zne_mitigation=False, pec_mitigation=False
         )
     )
     twirling: TwirlingOptions = field(
-        default=TwirlingOptions(gates=True, measure=True, strategy="active-accum")
+        default_factory=lambda: TwirlingOptions(gates=True, measure=True, strategy="active-accum")
     )
 
 
@@ -363,12 +365,12 @@ class _ResilienceLevel1Options:
 class _ResilienceLevel2Options:
     resilience_level: int = 2
     resilience: ResilienceOptions = field(
-        default=ResilienceOptions(
+        default_factory=lambda: ResilienceOptions(
             measure_noise_mitigation=True, pec_mitigation=False, **asdict(_ZneOptions())
         )
     )
     twirling: TwirlingOptions = field(
-        default=TwirlingOptions(gates=True, measure=True, strategy="active-accum")
+        default_factory=lambda: TwirlingOptions(gates=True, measure=True, strategy="active-accum")
     )
 
 
@@ -376,12 +378,12 @@ class _ResilienceLevel2Options:
 class _ResilienceLevel3Options:
     resilience_level: int = 3
     resilience: ResilienceOptions = field(
-        default=ResilienceOptions(
+        default_factory=lambda: ResilienceOptions(
             measure_noise_mitigation=True, zne_mitigation=False, **asdict(_PecOptions())
         )
     )
     twirling: TwirlingOptions = field(
-        default=TwirlingOptions(gates=True, measure=True, strategy="active")
+        default_factory=lambda: TwirlingOptions(gates=True, measure=True, strategy="active")
     )
 
 
