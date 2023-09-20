@@ -131,6 +131,7 @@ class RuntimeJob(Job):
         self._program_id = program_id
         self._status = JobStatus.INITIALIZING
         self._reason: Optional[str] = None
+        self._reason_code: Optional[int] = None
         self._error_message: Optional[str] = None
         self._image = image
         self._final_interim_results = False
@@ -218,7 +219,7 @@ class RuntimeJob(Job):
             self.wait_for_final_state(timeout=timeout)
             if self._status == JobStatus.ERROR:
                 error_message = self._reason if self._reason else self._error_message
-                if self._reason == "RAN TOO LONG":
+                if self._reason_code == 1305:
                     raise RuntimeJobMaxTimeoutError(error_message)
                 raise RuntimeJobFailureError(f"Unable to retrieve job result. {error_message}")
             if self._status is JobStatus.CANCELLED:
@@ -457,16 +458,11 @@ class RuntimeJob(Job):
             IBMError: If an unknown status is returned from the server.
         """
         try:
-            reason = job_response["state"].get("reason")
-            reason_code = job_response["state"].get("reason_code")
-            if reason:
-                # TODO remove this in https://github.com/Qiskit/qiskit-ibm-runtime/issues/989
-                if reason.upper() == "RAN TOO LONG":
-                    self._reason = reason.upper()
-                else:
-                    self._reason = reason
-                if reason_code:
-                    self._reason = f"Error code {reason_code}; {self._reason}"
+            self._reason = job_response["state"].get("reason")
+            self._reason_code = job_response["state"].get("reason_code")
+
+            if self._reason and self._reason_code:
+                self._reason = f"Error code {self._reason_code}; {self._reason}"
             self._status = self._status_from_job_response(job_response)
         except KeyError:
             raise IBMError(f"Unknown status: {job_response['state']['status']}")
@@ -500,7 +496,7 @@ class RuntimeJob(Job):
         if index != -1:
             job_result_raw = job_result_raw[index:]
 
-        if status == "CANCELLED" and self._reason == "RAN TOO LONG":
+        if status == "CANCELLED" and self._reason_code == 1305:
             error_msg = API_TO_JOB_ERROR_MESSAGE["CANCELLED - RAN TOO LONG"]
             return error_msg.format(self.job_id(), job_result_raw)
         else:
@@ -517,7 +513,7 @@ class RuntimeJob(Job):
             Job status.
         """
         mapped_job_status = API_TO_JOB_STATUS[response["state"]["status"].upper()]
-        if mapped_job_status == JobStatus.CANCELLED and self._reason == "RAN TOO LONG":
+        if mapped_job_status == JobStatus.CANCELLED and self._reason_code == 1305:
             mapped_job_status = JobStatus.ERROR
         return mapped_job_status
 
