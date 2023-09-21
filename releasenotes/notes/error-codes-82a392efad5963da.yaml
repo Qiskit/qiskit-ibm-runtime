@@ -1,0 +1,5 @@
+---
+upgrade:
+  - |
+    Job error messages now include the error code. Error codes can be found in
+    https://docs.quantum-computing.ibm.com/errors.

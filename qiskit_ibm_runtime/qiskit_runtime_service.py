@@ -34,7 +34,7 @@ from qiskit_ibm_provider.utils.hgp import to_instance_format, from_instance_form
 from qiskit_ibm_provider.utils.backend_decoder import configuration_from_server_data
 from qiskit_ibm_runtime import ibm_backend
 
-from .accounts import AccountManager, Account, AccountType, ChannelType
+from .accounts import AccountManager, Account, ChannelType
 from .api.clients import AuthClient, VersionClient
 from .api.clients.runtime import RuntimeClient
 from .api.exceptions import RequestsApiError
@@ -139,6 +139,7 @@ class QiskitRuntimeService(Provider):
             - Account with the input `name`, if specified.
             - Default account for the `channel` type, if `channel` is specified but `token` is not.
             - Account defined by the input `channel` and `token`, if specified.
+            - Account defined by the `default_channel` if defined in filename
             - Account defined by the environment variables, if defined.
             - Default account for the ``ibm_cloud`` account, if one is available.
             - Default account for the ``ibm_quantum`` account, if one is available.
@@ -230,7 +231,6 @@ class QiskitRuntimeService(Provider):
         url: Optional[str] = None,
         instance: Optional[str] = None,
         channel: Optional[ChannelType] = None,
-        auth: Optional[AccountType] = None,
         filename: Optional[str] = None,
         name: Optional[str] = None,
         proxies: Optional[ProxyConfiguration] = None,
@@ -250,27 +250,24 @@ class QiskitRuntimeService(Provider):
                 )
         if name:
             if filename:
-                if any([auth, channel, token, url]):
+                if any([channel, token, url]):
                     logger.warning(
-                        "Loading account from file %s with name %s. Any input 'auth', "
+                        "Loading account from file %s with name %s. Any input "
                         "'channel', 'token' or 'url' are ignored.",
                         filename,
                         name,
                     )
             else:
-                if any([auth, channel, token, url]):
+                if any([channel, token, url]):
                     logger.warning(
-                        "Loading account with name %s. Any input 'auth', "
+                        "Loading account with name %s. Any input "
                         "'channel', 'token' or 'url' are ignored.",
                         name,
                     )
             account = AccountManager.get(filename=filename, name=name)
-        elif auth or channel:
-            if auth and auth not in ["legacy", "cloud"]:
-                raise ValueError("'auth' can only be 'cloud' or 'legacy'")
+        elif channel:
             if channel and channel not in ["ibm_cloud", "ibm_quantum"]:
                 raise ValueError("'channel' can only be 'ibm_cloud' or 'ibm_quantum'")
-            channel = channel or self._get_channel_for_auth(auth=auth)
             if token:
                 account = Account(
                     channel=channel,
@@ -288,9 +285,10 @@ class QiskitRuntimeService(Provider):
         elif any([token, url]):
             # Let's not infer based on these attributes as they may change in the future.
             raise ValueError(
-                "'channel' or 'auth' is required if 'token', or 'url' is specified but 'name' is not."
+                "'channel' is required if 'token', or 'url' is specified but 'name' is not."
             )
 
+        # channel is not defined yet, get it from the AccountManager
         if account is None:
             account = AccountManager.get(filename=filename)
 
@@ -682,13 +680,6 @@ class QiskitRuntimeService(Provider):
         return AccountManager.delete(filename=filename, name=name, channel=channel)
 
     @staticmethod
-    def _get_channel_for_auth(auth: str) -> str:
-        """Returns channel type based on auth"""
-        if auth == "legacy":
-            return "ibm_quantum"
-        return "ibm_cloud"
-
-    @staticmethod
     def save_account(
         token: Optional[str] = None,
         url: Optional[str] = None,
@@ -700,6 +691,7 @@ class QiskitRuntimeService(Provider):
         verify: Optional[bool] = None,
         overwrite: Optional[bool] = False,
         channel_strategy: Optional[str] = None,
+        set_as_default: Optional[bool] = None,
     ) -> None:
         """Save the account to disk for future use.
 
@@ -720,6 +712,8 @@ class QiskitRuntimeService(Provider):
             verify: Verify the server's TLS certificate.
             overwrite: ``True`` if the existing account is to be overwritten.
             channel_strategy: Error mitigation strategy.
+            set_as_default: If ``True``, the account is saved in filename,
+                as the default account.
         """
 
         AccountManager.save(
@@ -733,6 +727,7 @@ class QiskitRuntimeService(Provider):
             verify=verify,
             overwrite=overwrite,
             channel_strategy=channel_strategy,
+            set_as_default=set_as_default,
         )
 
     @staticmethod
@@ -1509,15 +1504,6 @@ class QiskitRuntimeService(Provider):
         if self._channel == "ibm_quantum":
             return list(self._hgps.keys())
         return []
-
-    @property
-    def auth(self) -> str:
-        """Return the authentication type used.
-
-        Returns:
-            The authentication type used.
-        """
-        return "cloud" if self._channel == "ibm_cloud" else "legacy"
 
     @property
     def channel(self) -> str:

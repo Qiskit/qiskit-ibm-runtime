@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    Added the option to define a default account in the account json file.
+    The select an account as default, define ``set_as_default=True`` in 
+    ``QiskitRuntimeService.save_account()``.
