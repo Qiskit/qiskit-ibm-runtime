@@ -554,7 +554,12 @@ class TestPrimitives(IBMTestCase):
                     simulator={"noise_model": "foo"},
                 )
                 inst = cls(session=session, options=options)
-                inst.run(self.qx, observables=self.obs)
+
+                if isinstance(inst, Estimator):
+                    inst.run(self.qx, observables=self.obs)
+                else:
+                    inst.run(self.qx)
+
                 if sys.version_info >= (3, 8):
                     inputs = session.run.call_args.kwargs["inputs"]
                 else:
