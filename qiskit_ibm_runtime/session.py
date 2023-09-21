@@ -90,7 +90,7 @@ class Session:
             max_time: (EXPERIMENTAL setting, can break between releases without warning)
                 Maximum amount of time, a runtime session can be open before being
                 forcibly closed. Can be specified as seconds (int) or a string like "2h 30m 40s".
-                This value must be in between 300 seconds and the
+                This value must be less than the
                 `system imposed maximum
                 <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/faqs/max_execution_time.html>`_.
 
