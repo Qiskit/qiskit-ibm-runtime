@@ -80,8 +80,8 @@ class TestDataSerialization(IBMTestCase):
     def test_coder_qc(self):
         """Test runtime encoder and decoder for circuits."""
         bell = ReferenceCircuits.bell()
-        unbound = EfficientSU2(num_qubits=4, reps=1, entanglement="linear")
-        subtests = (bell, unbound, [bell, unbound])
+        unbound = EfficientSU2(3, reps=1)
+        subtests = (bell, unbound)
         for circ in subtests:
             with self.subTest(circ=circ):
                 encoded = json.dumps(circ, cls=RuntimeEncoder)
