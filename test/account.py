@@ -152,6 +152,7 @@ def get_account_config_contents(
     instance=None,
     verify=None,
     proxies=None,
+    set_default=None,
 ):
     """Generate qiskitrc content"""
     if instance is None:
@@ -177,4 +178,6 @@ def get_account_config_contents(
         out[name]["verify"] = verify
     if proxies is not None:
         out[name]["proxies"] = proxies
+    if set_default:
+        out[name]["is_default_account"] = True
     return out
