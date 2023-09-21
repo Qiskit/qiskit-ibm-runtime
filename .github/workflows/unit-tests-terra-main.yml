@@ -13,10 +13,11 @@
 name: Unit Tests
 on:
   schedule:
-    - cron: "0 5 * * *"
+    - cron: '0 5 * * *'
   workflow_dispatch:
 jobs:
   unit-tests-latest-qiskit-terra:
+    if: github.repository_owner == 'Qiskit'
     name: Run unit tests with latest code of qiskit-terra
     runs-on: "ubuntu-latest"
     env:
