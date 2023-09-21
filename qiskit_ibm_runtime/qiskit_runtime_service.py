@@ -1022,6 +1022,11 @@ class QiskitRuntimeService(Provider):
                 if self._channel_strategy == "default"
                 else self._channel_strategy,
             )
+            messages = response.get("messages")
+            if messages:
+                warning_message = messages[0].get("data")
+                warnings.warn(warning_message)
+
         except RequestsApiError as ex:
             if ex.status_code == 404:
                 raise RuntimeProgramNotFound(f"Program not found: {ex.message}") from None
