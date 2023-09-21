@@ -730,11 +730,12 @@ class TestPrimitives(IBMTestCase):
         estimator = Estimator(session=session)
 
         with self.assertRaises(ValueError) as err:
-            sampler.run(transpiled, skip_transpilation=True)
+            estimator.run(transpiled, observable, skip_transpilation=True)
         self.assertIn(f"faulty qubit {faulty_qubit}", str(err.exception))
 
+        transpiled.measure_all()
         with self.assertRaises(ValueError) as err:
-            estimator.run(transpiled, observable, skip_transpilation=True)
+            sampler.run(transpiled, skip_transpilation=True)
         self.assertIn(f"faulty qubit {faulty_qubit}", str(err.exception))
 
     def test_raise_faulty_qubits_many(self):
@@ -759,11 +760,14 @@ class TestPrimitives(IBMTestCase):
         estimator = Estimator(session=session)
 
         with self.assertRaises(ValueError) as err:
-            sampler.run(transpiled, skip_transpilation=True)
+            estimator.run(transpiled, [observable, observable], skip_transpilation=True)
         self.assertIn(f"faulty qubit {faulty_qubit}", str(err.exception))
 
+        for circ in transpiled:
+            circ.measure_all()
+
         with self.assertRaises(ValueError) as err:
-            estimator.run(transpiled, [observable, observable], skip_transpilation=True)
+            sampler.run(transpiled, skip_transpilation=True)
         self.assertIn(f"faulty qubit {faulty_qubit}", str(err.exception))
 
     def test_raise_faulty_edge(self):
@@ -785,12 +789,13 @@ class TestPrimitives(IBMTestCase):
         estimator = Estimator(session=session)
 
         with self.assertRaises(ValueError) as err:
-            sampler.run(transpiled, skip_transpilation=True)
+            estimator.run(transpiled, observable, skip_transpilation=True)
         self.assertIn("cx", str(err.exception))
         self.assertIn(f"faulty edge {tuple(edge_qubits)}", str(err.exception))
 
+        transpiled.measure_all()
         with self.assertRaises(ValueError) as err:
-            estimator.run(transpiled, observable, skip_transpilation=True)
+            sampler.run(transpiled, skip_transpilation=True)
         self.assertIn("cx", str(err.exception))
         self.assertIn(f"faulty edge {tuple(edge_qubits)}", str(err.exception))
 
@@ -813,11 +818,12 @@ class TestPrimitives(IBMTestCase):
         estimator = Estimator(session=session)
 
         with patch.object(Session, "run") as mock_run:
-            sampler.run(transpiled, skip_transpilation=True)
+            estimator.run(transpiled, observable, skip_transpilation=True)
         mock_run.assert_called_once()
 
+        transpiled.measure_active()
         with patch.object(Session, "run") as mock_run:
-            estimator.run(transpiled, observable, skip_transpilation=True)
+            sampler.run(transpiled, skip_transpilation=True)
         mock_run.assert_called_once()
 
     def test_faulty_edge_not_used(self):
@@ -841,11 +847,12 @@ class TestPrimitives(IBMTestCase):
         estimator = Estimator(session=session)
 
         with patch.object(Session, "run") as mock_run:
-            sampler.run(transpiled, skip_transpilation=True)
+            estimator.run(transpiled, observable, skip_transpilation=True)
         mock_run.assert_called_once()
 
+        transpiled.measure_all()
         with patch.object(Session, "run") as mock_run:
-            estimator.run(transpiled, observable, skip_transpilation=True)
+            sampler.run(transpiled, skip_transpilation=True)
         mock_run.assert_called_once()
 
     def test_no_raise_skip_transpilation(self):
@@ -870,11 +877,12 @@ class TestPrimitives(IBMTestCase):
         estimator = Estimator(session=session)
 
         with patch.object(Session, "run") as mock_run:
-            sampler.run(transpiled)
+            estimator.run(transpiled, observable)
         mock_run.assert_called_once()
 
+        transpiled.measure_all()
         with patch.object(Session, "run") as mock_run:
-            estimator.run(transpiled, observable)
+            sampler.run(transpiled)
         mock_run.assert_called_once()
 
     def _update_dict(self, dict1, dict2):
