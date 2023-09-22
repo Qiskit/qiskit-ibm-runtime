@@ -345,13 +345,19 @@ class RuntimeClient(BaseBackendClient):
         """
         self._api.runtime_session(session_id=session_id).close()
 
-    def list_backends(self, hgp: Optional[str] = None) -> List[str]:
+    def list_backends(
+        self, hgp: Optional[str] = None, channel_strategy: Optional[str] = None
+    ) -> List[str]:
         """Return IBM backends available for this service instance.
+
+        Args:
+            hgp: Filter by hub/group/project.
+            channel_strategy: Filter by channel strategy.
 
         Returns:
             IBM backends available for this service instance.
         """
-        return self._api.backends(hgp=hgp)["devices"]
+        return self._api.backends(hgp=hgp, channel_strategy=channel_strategy)["devices"]
 
     def backend_configuration(self, backend_name: str) -> Dict[str, Any]:
         """Return the configuration of the IBM backend.
