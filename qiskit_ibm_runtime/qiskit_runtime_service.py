@@ -314,7 +314,7 @@ class QiskitRuntimeService(Provider):
             A dict of the remote backend instances, keyed by backend name.
         """
         ret = OrderedDict()  # type: ignore[var-annotated]
-        backends_list = self._api_client.list_backends()
+        backends_list = self._api_client.list_backends(channel_strategy=self._channel_strategy)
         for backend_name in backends_list:
             raw_config = self._api_client.backend_configuration(backend_name=backend_name)
             config = configuration_from_server_data(

@@ -278,6 +278,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         for rjob in rjobs:
             self.assertTrue(rjob.creation_date)
 
+    @unittest.skip("Skipping until primitives add more logging")
     @run_integration_test
     def test_job_logs(self, service):
         """Test job logs."""
