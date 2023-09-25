@@ -31,7 +31,7 @@ You can set the maximum execution time (in seconds) on the job options by using 
    # Create the options object with attributes and values
    options = {"max_execution_time": 360}
 
-You can also find the usage for previously completed jobs by using:
+You can also find the job execution time for previously completed jobs by using:
 
 .. code-block:: python
 
