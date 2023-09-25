@@ -35,7 +35,7 @@ You can also find the job execution time for previously completed jobs by using:
 
 .. code-block:: python
 
-   # Find the job usage
+   # Find the job execution time
    print(f"Job {job.job_id()} usage was {job.metrics()['usage']['quantum_seconds']} seconds")
 
 In addition, the system calculates an appropriate job timeout value based on the
