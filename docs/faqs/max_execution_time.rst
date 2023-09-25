@@ -13,7 +13,7 @@ a job exceeds this time limit, it is forcibly cancelled and a ``RuntimeJobMaxTim
 exception is raised.
 
 .. note::
-   As of August 7, 2023, the ``max_execution_time`` value is based on usage, which is the time that the QPU
+   As of August 7, 2023, the ``max_execution_time`` value is based on job execution time, which is the time that the QPU
    complex (including control software, control electronics, QPU, and so on) is engaged in
    processing the job, instead of wall clock time.
 
