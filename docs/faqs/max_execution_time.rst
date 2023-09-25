@@ -60,26 +60,26 @@ You can set the maximum session timeout value using the ``max_time`` parameter:
    with Session(max_time="1h"):
        ...
 
-If you don't specify a session ``max_time``, the system defaults are used:
-
-+--------------+------------------+--------------+-----------+
-| Primitive programs              | Private programs         |
-+==============+==================+==============+===========+
-| Premium User | Open User        | Premium User | Open User |
-+--------------+------------------+--------------+-----------+
-| 8h           | 15m              | 8h           | N/A       |
-+--------------+------------------+--------------+-----------+
-
-Note that a *premium user* here means a user who has access to backends in providers other than ``ibm-q/open/main``.
-
-.. note::
-   Session ``max_time`` is based on wall clock time.
-
+If you don't specify a session ``max_time``, the system defaults are used.
 
 Additionally, there is an *interactive* timeout value. If there are no session jobs queued within that window, the session is temporarily deactivated and normal job selection resumes. During job selection, if the job scheduler gets a new job from the session and its maximum timeout value has not been reached, the session is reactivated until its maximum timeout value is reached. The interactive timeout value is five minutes for premium users and two seconds for open users.
 
 .. note:: The timer for the session's ``max_time`` is not paused during any temporary deactivation periods.
 
++---------------------+--------------------------+--------------------------+
+|                     | Primitive programs       | Private programs         |
++=====================+==============+===========+==============+===========+
+|                     | Premium user | Open user | Premium user | Open user |
++---------------------+--------------+-----------+--------------+-----------+
+| Max time defaults   | 8h           | 15m       | 8h           | N/A       |
++---------------------+--------------+-----------+--------------+-----------+
+| Interactive timeout | 5m           | 2s        | 5m           | N/A       |
++---------------------+--------------+-----------+--------------+-----------+
+
+Note that a *premium user* here means a user who has access to backends in providers other than ``ibm-q/open/main``.
+
+.. note::
+   Session ``max_time`` is based on wall clock time.
 
 Other limitations
 ***************************
@@ -88,4 +88,4 @@ Other limitations
 - Inputs to jobs cannot exceed 64MB in size.
 - Open users are limited to 10 minutes of job execution time per month.  This is the time that the QPU
    complex (including control software, control electronics, QPU, and so on) is engaged in
-   processing the job. 
+   processing the job. Open plan users can track current progress toward the limit on the `Platform dashboard, <https://quantum-computing.ibm.com/>`__ `Jobs, <https://quantum-computing.ibm.com/jobs>`__ and `Account, <https://quantum-computing.ibm.com/account>`__ pages.
