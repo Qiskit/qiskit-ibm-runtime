@@ -73,6 +73,9 @@ How long a session stays active
 
 The length of time a session is active is controlled by the *maximum session timeout* (``max_time``) value and the *interactive* timeout value (TTL). The ``max_time`` timer starts when the session becomes active.  That is, when the first job runs, not when it is queued. It does not stop if a session becomes inactive. The TTL timer starts each time a session job finishes. 
 
+.. note::  
+    When running jobs through the Open Plan, the maximum session timeout is 15 minutes.    
+
 Maximum session timeout
 ++++++++++++++++++++++++++++
 
@@ -93,7 +96,10 @@ Interactive timeout value
 
 Every session has an *interactive timeout value*, or time to live (TTL), of five minutes, which cannot be changed. If there are no session jobs queued within the TTL window, the session is temporarily deactivated and normal job selection resumes. A deactivated session can be resumed if it has not reached its maximum timeout value. The session is resumed when a subsequent session job starts. Once a session is deactivated, its next job waits in the queue like other jobs. 
 
-After a session is deactivated, the next job in the queue is selected to run. This newly selected job (which can belong to a different user) can run as a singleton, but it can also start a different session. In other words, a deactivated session does not block the creation of other sessions. Jobs from this new session would then take priority until it is deactivated or closed, at which point normal job selection resumes. 
+After a session is deactivated, the next job in the queue is selected to run. This newly selected job (which can belong to a different user) can run as a singleton, but it can also start a different session. In other words, a deactivated session does not block the creation of other sessions. Jobs from this new session would then take priority until it is deactivated or closed, at which point normal job selection resumes.
+
+.. note::  
+    When running jobs through the Open Plan, the interactive timeout value is two seconds.     
 
 .. _ends:
 

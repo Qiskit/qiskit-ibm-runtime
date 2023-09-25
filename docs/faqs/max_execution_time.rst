@@ -13,12 +13,11 @@ a job exceeds this time limit, it is forcibly cancelled and a ``RuntimeJobMaxTim
 exception is raised.
 
 .. note::
-   As of August 7, 2023, the ``max_execution_time`` value is based on quantum
-   time instead of wall clock time. Quantum time represents the time that the QPU
+   As of August 7, 2023, the ``max_execution_time`` value is based on usage, which is the time that the QPU
    complex (including control software, control electronics, QPU, and so on) is engaged in
-   processing the job.
+   processing the job instead of wall clock time.
 
-   Simulator jobs continue to use wall clock time because they do not have quantum time.
+   Simulator jobs continue to use wall clock time.
 
 You can set the maximum execution time (in seconds) on the job options by using one of the following methods:
 
@@ -32,12 +31,12 @@ You can set the maximum execution time (in seconds) on the job options by using 
    # Create the options object with attributes and values
    options = {"max_execution_time": 360}
 
-You can also find quantum time used by previously completed jobs by using:
+You can also find the usage for previously completed jobs by using:
 
 .. code-block:: python
 
-   # Find quantum time used by the job
-   print(f"Quantum time used by job {job.job_id()} was {job.metrics()['usage']['quantum_seconds']} seconds")
+   # Find the job usage
+   print(f"Job {job.job_id()} usage was {job.metrics()['usage']['quantum_seconds']} seconds")
 
 In addition, the system calculates an appropriate job timeout value based on the
 input circuits and options. This system-calculated timeout is currently capped
@@ -68,16 +67,16 @@ If you don't specify a session ``max_time``, the system defaults are used:
 +==============+==================+==============+===========+
 | Premium User | Open User        | Premium User | Open User |
 +--------------+------------------+--------------+-----------+
-| 8h           | 4h               | 8h           | N/A       |
+| 8h           | 15m              | 8h           | N/A       |
 +--------------+------------------+--------------+-----------+
 
 Note that a *premium user* here means a user who has access to backends in providers other than ``ibm-q/open/main``.
 
 .. note::
-   Session ``max_time`` is based on wall clock time, not quantum time.
+   Session ``max_time`` is based on wall clock time.
 
 
-Additionally, there is a 5 minute *interactive* timeout value. If there are no session jobs queued within that window, the session is temporarily deactivated and normal job selection resumes. During job selection, if the job scheduler gets a new job from the session and its maximum timeout value has not been reached, the session is reactivated until its maximum timeout value is reached.
+Additionally, there is an *interactive* timeout value. If there are no session jobs queued within that window, the session is temporarily deactivated and normal job selection resumes. During job selection, if the job scheduler gets a new job from the session and its maximum timeout value has not been reached, the session is reactivated until its maximum timeout value is reached. The interactive timeout value is five minutes for premium users and two seconds for open users.
 
 .. note:: The timer for the session's ``max_time`` is not paused during any temporary deactivation periods.
 
@@ -87,3 +86,6 @@ Other limitations
 
 - Programs cannot exceed 750KB in size.
 - Inputs to jobs cannot exceed 64MB in size.
+- Open users are limited to 10 minutes of usage per month.  This is the time that the QPU
+   complex (including control software, control electronics, QPU, and so on) is engaged in
+   processing the job. 
