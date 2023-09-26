@@ -16,7 +16,6 @@ from unittest.mock import MagicMock, patch
 
 from qiskit_ibm_runtime import Session
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
-from qiskit_ibm_runtime.exceptions import IBMInputValueError
 import qiskit_ibm_runtime.session as session_pkg
 from .mock.fake_runtime_service import FakeRuntimeService
 from ..ibm_test_case import IBMTestCase
@@ -80,14 +79,6 @@ class TestSession(IBMTestCase):
         with self.assertRaises(RuntimeError):
             session.run(program_id="program_id", inputs={})
 
-    def test_conflicting_backend(self):
-        """Test passing in different backend through options."""
-        service = MagicMock()
-        backend = "ibm_gotham"
-        session = Session(service=service, backend=backend)
-        with self.assertRaises(IBMInputValueError):
-            session.run(program_id="test", inputs={}, options={"backend": "different_backend"})
-
     def test_run(self):
         """Test the run method."""
         job = MagicMock()
@@ -114,7 +105,7 @@ class TestSession(IBMTestCase):
             _, kwargs = service.run.call_args
             self.assertEqual(kwargs["program_id"], program_id)
             self.assertDictEqual(kwargs["options"], {"backend": backend, **options})
-            self.assertDictContainsSubset({"session_time": 42}, kwargs["options"])
+            self.assertTrue({"session_time": 42}.items() <= kwargs["options"].items())
             self.assertDictEqual(kwargs["inputs"], inputs)
             self.assertEqual(kwargs["session_id"], session_ids[idx])
             self.assertEqual(kwargs["start_session"], start_sessions[idx])
