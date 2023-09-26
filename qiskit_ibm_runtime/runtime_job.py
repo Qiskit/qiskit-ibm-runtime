@@ -664,7 +664,7 @@ class RuntimeJob(Job):
         """Return the usage estimation infromation for this job.
 
         Returns:
-            ``quantum_seconds`` which is the estimated quantum time
+            ``quantum_seconds`` which is the estimated job execution time
             of the job in seconds. Quantum time represents the time that
             the system is dedicated to processing your job.
         """
