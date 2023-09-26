@@ -86,6 +86,6 @@ Other limitations
 
 - Programs cannot exceed 750KB in size.
 - Inputs to jobs cannot exceed 64MB in size.
-- Open users are limited to 10 minutes of job execution time per month.  This is the time that the QPU
+- Open plan users are limited to 10 minutes of job execution time per month.  This is the time that the QPU
    complex (including control software, control electronics, QPU, and so on) is engaged in
    processing the job. Open plan users can track current progress toward the limit on the `Platform dashboard, <https://quantum-computing.ibm.com/>`__ `Jobs, <https://quantum-computing.ibm.com/jobs>`__ and `Account, <https://quantum-computing.ibm.com/account>`__ pages.
