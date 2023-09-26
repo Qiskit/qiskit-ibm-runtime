@@ -42,14 +42,14 @@ from ..account import (
     custom_envs,
 )
 
-_TEST_IBM_QUANTUM_ACCOUNT = Account(
+_TEST_IBM_QUANTUM_ACCOUNT = Account.create_account(
     channel="ibm_quantum",
     token="token-x",
     url="https://auth.quantum-computing.ibm.com/api",
     instance="ibm-q/open/main",
 )
 
-_TEST_IBM_CLOUD_ACCOUNT = Account(
+_TEST_IBM_CLOUD_ACCOUNT = Account.create_account(
     channel="ibm_cloud",
     token="token-y",
     url="https://cloud.ibm.com",
@@ -80,7 +80,7 @@ class TestAccount(IBMTestCase):
 
         with self.assertRaises(InvalidAccountError) as err:
             invalid_channel: Any = "phantom"
-            Account(
+            Account.create_account(
                 channel=invalid_channel,
                 token=self.dummy_token,
                 url=self.dummy_ibm_cloud_url,
@@ -94,7 +94,7 @@ class TestAccount(IBMTestCase):
         for token in invalid_tokens:
             with self.subTest(token=token):
                 with self.assertRaises(InvalidAccountError) as err:
-                    Account(
+                    Account.create_account(
                         channel="ibm_cloud",
                         token=token,
                         url=self.dummy_ibm_cloud_url,
@@ -110,7 +110,7 @@ class TestAccount(IBMTestCase):
         for params in subtests:
             with self.subTest(params=params):
                 with self.assertRaises(InvalidAccountError) as err:
-                    Account(**params, token=self.dummy_token).validate()
+                    Account.create_account(**params, token=self.dummy_token).validate()
                 self.assertIn("Invalid `url` value.", str(err.exception))
 
     def test_invalid_instance(self):
@@ -124,7 +124,7 @@ class TestAccount(IBMTestCase):
         for params in subtests:
             with self.subTest(params=params):
                 with self.assertRaises(InvalidAccountError) as err:
-                    Account(
+                    Account.create_account(
                         **params, token=self.dummy_token, url=self.dummy_ibm_cloud_url
                     ).validate()
                 self.assertIn("Invalid `instance` value.", str(err.exception))
@@ -137,7 +137,7 @@ class TestAccount(IBMTestCase):
         for params in subtests:
             with self.subTest(params=params):
                 with self.assertRaises(InvalidAccountError) as err:
-                    Account(
+                    Account.create_account(
                         **params,
                         token=self.dummy_token,
                         url=self.dummy_ibm_cloud_url,
@@ -162,7 +162,7 @@ class TestAccount(IBMTestCase):
         for params in subtests:
             with self.subTest(params=params):
                 with self.assertRaises(ValueError) as err:
-                    Account(
+                    Account.create_account(
                         **params,
                         channel="ibm_quantum",
                         token=self.dummy_token,
@@ -308,11 +308,11 @@ class TestAccountManager(IBMTestCase):
             contents={
                 "key1": _TEST_IBM_CLOUD_ACCOUNT.to_saved_format(),
                 "key2": _TEST_IBM_QUANTUM_ACCOUNT.to_saved_format(),
-                _DEFAULT_ACCOUNT_NAME_IBM_CLOUD: Account(
-                    "ibm_cloud", "token-ibm-cloud", instance="crn:123"
+                _DEFAULT_ACCOUNT_NAME_IBM_CLOUD: Account.create_account(
+                    channel="ibm_cloud", token="token-ibm-cloud", instance="crn:123"
                 ).to_saved_format(),
-                _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM: Account(
-                    "ibm_quantum", "token-ibm-quantum"
+                _DEFAULT_ACCOUNT_NAME_IBM_QUANTUM: Account.create_account(
+                    channel="ibm_quantum", token="token-ibm-quantum"
                 ).to_saved_format(),
             }
         ), self.subTest("filtered list of accounts"):

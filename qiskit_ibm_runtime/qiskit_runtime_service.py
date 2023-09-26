@@ -269,7 +269,7 @@ class QiskitRuntimeService(Provider):
             if channel and channel not in ["ibm_cloud", "ibm_quantum"]:
                 raise ValueError("'channel' can only be 'ibm_cloud' or 'ibm_quantum'")
             if token:
-                account = Account(
+                account = Account.create_account(
                     channel=channel,
                     token=token,
                     url=url,
@@ -300,8 +300,7 @@ class QiskitRuntimeService(Provider):
             account.verify = verify
 
         # resolve CRN if needed
-        if account.channel == "ibm_cloud":
-            self._resolve_crn(account)
+        self._resolve_crn(account)
 
         # ensure account is valid, fail early if not
         account.validate()
