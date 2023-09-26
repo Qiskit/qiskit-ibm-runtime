@@ -60,7 +60,7 @@ You can set the maximum session timeout value using the ``max_time`` parameter:
    with Session(max_time="1h"):
        ...
 
-If you don't specify a session ``max_time``, the system defaults are used.
+If you don't specify a session ``max_time``, the system defaults are used (see table below).
 
 Additionally, there is an *interactive* timeout value. If there are no session jobs queued within that window, the session is temporarily deactivated and normal job selection resumes. During job selection, if the job scheduler gets a new job from the session and its maximum timeout value has not been reached, the session is reactivated until its maximum timeout value is reached. The interactive timeout value is five minutes for premium users and two seconds for open users.
 
