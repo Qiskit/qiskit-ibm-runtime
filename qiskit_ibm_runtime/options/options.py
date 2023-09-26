@@ -62,7 +62,7 @@ class Options:
             for more information about the error mitigation methods used at each level.
 
         max_execution_time: Maximum execution time in seconds, which is based
-            on job execution time (not wall clock time). Job execution time is the time that
+            on job execution time (not wall clock time). Job execution time is 
             the amount of time that the system is dedicated to processing your job. 
             If a job exceeds this time limit, it is forcibly cancelled.
             Simulator jobs continue to use wall clock time.
