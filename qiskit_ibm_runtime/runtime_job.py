@@ -46,7 +46,6 @@ from .exceptions import IBMError
 from .api.exceptions import RequestsApiError
 from .api.client_parameters import ClientParameters
 from .utils.utils import CallableStr
-from .utils.deprecation import issue_deprecation_msg
 
 logger = logging.getLogger(__name__)
 
@@ -388,11 +387,6 @@ class RuntimeJob(Job):
             IBMRuntimeError: If a network error occurred.
         """
         try:
-            issue_deprecation_msg(
-                msg="The 'bss.seconds' attribute is deprecated",
-                version="0.11.1",
-                remedy="Use the 'usage.seconds' attribute instead.",
-            )
             return self._api_client.job_metadata(self.job_id())
         except RequestsApiError as err:
             raise IBMRuntimeError(f"Failed to get job metadata: {err}") from None
