@@ -2,5 +2,5 @@
 features:
   - |
     Added a new property, :meth:`~qiskit_ibm_runtime.RuntimeJob.usage_estimation`
-    that returns the estimated running time, ``quantum_seconds``. Quantum time 
+    that returns the estimated job execution time, ``quantum_seconds``. Job execution time 
     represents the amount of time that the system is dedicated to processing your job.
