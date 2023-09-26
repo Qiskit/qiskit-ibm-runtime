@@ -74,7 +74,7 @@ How long a session stays active
 The length of time a session is active is controlled by the *maximum session timeout* (``max_time``) value and the *interactive* timeout value (TTL). The ``max_time`` timer starts when the session becomes active.  That is, when the first job runs, not when it is queued. It does not stop if a session becomes inactive. The TTL timer starts each time a session job finishes. 
 
 .. note::  
-    When running jobs through the Open Plan, the maximum session timeout is 15 minutes.    
+    For an Open plan user, the maximum session timeout is 15 minutes.    
 
 Maximum session timeout
 ++++++++++++++++++++++++++++
