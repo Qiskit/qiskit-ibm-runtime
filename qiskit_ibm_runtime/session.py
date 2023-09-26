@@ -24,8 +24,6 @@ from .runtime_job import RuntimeJob
 from .runtime_program import ParameterNamespace
 from .program.result_decoder import ResultDecoder
 from .ibm_backend import IBMBackend
-from .utils.deprecation import issue_deprecation_msg
-from .exceptions import IBMInputValueError
 
 
 def _active_session(func):  # type: ignore
@@ -90,7 +88,7 @@ class Session:
             max_time: (EXPERIMENTAL setting, can break between releases without warning)
                 Maximum amount of time, a runtime session can be open before being
                 forcibly closed. Can be specified as seconds (int) or a string like "2h 30m 40s".
-                This value must be in between 300 seconds and the
+                This value must be less than the
                 `system imposed maximum
                 <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/faqs/max_execution_time.html>`_.
 
@@ -144,36 +142,19 @@ class Session:
             inputs: Program input parameters. These input values are passed
                 to the runtime program.
             options: Runtime options that control the execution environment.
-                See :class:`qiskit_ibm_runtime.RuntimeOptions` for all available options,
-                EXCEPT ``backend``, which should be specified during session initialization.
+                See :class:`qiskit_ibm_runtime.RuntimeOptions` for all available options.
             callback: Callback function to be invoked for any interim results and final result.
 
         Returns:
             Submitted job.
-
-        Raises:
-            IBMInputValueError: If a backend is passed in through options that does not match
-                the current session backend.
         """
 
         options = options or {}
 
         if "instance" not in options:
             options["instance"] = self._instance
-        if "backend" in options:
-            issue_deprecation_msg(
-                "'backend' is no longer a supported option within a session",
-                "0.9",
-                "Instead, specify a backend when creating a Session instance.",
-                3,
-            )
-            if self._backend and options["backend"] != self._backend:
-                raise IBMInputValueError(
-                    f"The backend '{options['backend']}' is different from",
-                    f"the session backend '{self._backend}'",
-                )
-        else:
-            options["backend"] = self._backend
+
+        options["backend"] = self._backend
 
         if not self._session_id:
             # TODO: What happens if session max time != first job max time?

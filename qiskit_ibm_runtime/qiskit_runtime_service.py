@@ -269,7 +269,7 @@ class QiskitRuntimeService(Provider):
             if channel and channel not in ["ibm_cloud", "ibm_quantum"]:
                 raise ValueError("'channel' can only be 'ibm_cloud' or 'ibm_quantum'")
             if token:
-                account = Account(
+                account = Account.create_account(
                     channel=channel,
                     token=token,
                     url=url,
@@ -300,8 +300,7 @@ class QiskitRuntimeService(Provider):
             account.verify = verify
 
         # resolve CRN if needed
-        if account.channel == "ibm_cloud":
-            self._resolve_crn(account)
+        self._resolve_crn(account)
 
         # ensure account is valid, fail early if not
         account.validate()
@@ -315,7 +314,7 @@ class QiskitRuntimeService(Provider):
             A dict of the remote backend instances, keyed by backend name.
         """
         ret = OrderedDict()  # type: ignore[var-annotated]
-        backends_list = self._api_client.list_backends()
+        backends_list = self._api_client.list_backends(channel_strategy=self._channel_strategy)
         for backend_name in backends_list:
             raw_config = self._api_client.backend_configuration(backend_name=backend_name)
             config = configuration_from_server_data(
