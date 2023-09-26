@@ -86,4 +86,4 @@ Other limitations
 
 - Programs cannot exceed 750KB in size.
 - Inputs to jobs cannot exceed 64MB in size.
-- Open plan users get 10 minutes of job execution time per month (reset on the first day of the month).  Job execution time is the amount of time that the system is dedicated to processing your job. You can track your monthly usage on the `Platform dashboard, <https://quantum-computing.ibm.com/>`__ `Jobs, <https://quantum-computing.ibm.com/jobs>`__ and `Account, <https://quantum-computing.ibm.com/account>`__ pages.
+- Open plan users can use up to 10 minutes of job execution time per month (reset on the first day of the month, UTC).  Job execution time is the amount of time that the system is dedicated to processing your job. You can track your monthly usage on the `Platform dashboard, <https://quantum-computing.ibm.com/>`__ `Jobs, <https://quantum-computing.ibm.com/jobs>`__ and `Account, <https://quantum-computing.ibm.com/account>`__ pages.
