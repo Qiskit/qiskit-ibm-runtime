@@ -84,6 +84,11 @@ class BasePrimitive(ABC):
             default_options = asdict(Options())
             self._options = Options._merge_options(default_options, options_copy)
 
+        known_keys = list(Options.__dataclass_fields__.keys())
+        for key in self._options.keys():
+            if key not in known_keys:
+                raise ValueError(f"Option '{key}' is not supported.")
+
         if isinstance(session, Session):
             self._session = session
             self._service = self._session.service
@@ -148,6 +153,7 @@ class BasePrimitive(ABC):
                 raise ValueError(
                     "A backend or session must be specified when not using ibm_cloud channel."
                 )
+
         # self._first_run = True
         # self._circuits_map = {}
         # if self.circuits:

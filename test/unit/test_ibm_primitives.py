@@ -16,7 +16,6 @@ import sys
 import copy
 import os
 from unittest.mock import MagicMock, patch
-import warnings
 from dataclasses import asdict
 from typing import Dict
 
@@ -97,15 +96,9 @@ class TestPrimitives(IBMTestCase):
             for backend in backends:
                 with self.subTest(primitive=cls, backend=backend):
                     options = {"backend": backend}
-                    with warnings.catch_warnings(record=True) as warn:
-                        warnings.simplefilter("always")
-                        cls(session=MagicMock(spec=MockSession), options=options)
-                        self.assertTrue(
-                            all(
-                                issubclass(one_warn.category, DeprecationWarning)
-                                for one_warn in warn
-                            )
-                        )
+                    with self.assertRaises(ValueError) as exc:
+                        _ = cls(backend=backend, options=options)
+                    self.assertIn("Option 'backend' is not supported.", str(exc.exception))
 
     def test_runtime_options(self):
         """Test RuntimeOptions specified as primitive options."""
@@ -423,14 +416,9 @@ class TestPrimitives(IBMTestCase):
         for cls in primitives:
             with self.subTest(primitive=cls):
                 options = Options(foo="foo")  # pylint: disable=unexpected-keyword-arg
-                inst = cls(session=session, options=options)
-                inst.run(self.qx, observables=self.obs)
-                if sys.version_info >= (3, 8):
-                    inputs = session.run.call_args.kwargs["inputs"]
-                else:
-                    _, kwargs = session.run.call_args
-                    inputs = kwargs["inputs"]
-                self.assertEqual(inputs.get("foo"), "foo")
+                with self.assertRaises(ValueError) as exc:
+                    _ = cls(session=session, options=options)
+                self.assertIn("Option 'foo' is not supported.", str(exc.exception))
 
     def test_run_kwarg_options(self):
         """Test specifying arbitrary options in run."""
