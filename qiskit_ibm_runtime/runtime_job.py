@@ -666,7 +666,7 @@ class RuntimeJob(Job):
         Returns:
             ``quantum_seconds`` which is the estimated quantum time
             of the job in seconds. Quantum time represents the time that
-            the QPU complex is occupied exclusively by the job.
+            the system is dedicated to processing your job.
         """
         if not self._usage_estimation:
             response = self._api_client.job_get(job_id=self.job_id())

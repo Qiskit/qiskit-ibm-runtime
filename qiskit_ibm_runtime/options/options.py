@@ -62,10 +62,10 @@ class Options:
             for more information about the error mitigation methods used at each level.
 
         max_execution_time: Maximum execution time in seconds, which is based
-            on quantum time (not wall clock time). Quantum time is the time that
-            the QPU complex (including control software, control electronics, QPU, and so on)
-            is engaged in processing the job. If a job exceeds this time limit, it is forcibly cancelled.
-            Simulator jobs continue to use wall clock time because they do not have quantum time.
+            on job execution time (not wall clock time). Job execution time is the time that
+            the amount of time that the system is dedicated to processing your job. 
+            If a job exceeds this time limit, it is forcibly cancelled.
+            Simulator jobs continue to use wall clock time.
 
             Refer to the
             `Max execution time documentation
