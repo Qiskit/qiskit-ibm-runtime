@@ -211,6 +211,19 @@ class Session:
         """
         return self._service
 
+    @classmethod
+    def from_id(
+        cls,
+        session_id: str,
+        service: Optional[QiskitRuntimeService] = None,
+        backend: Optional[Union[str, IBMBackend]] = None,
+        max_time: Optional[Union[int, str]] = None,
+    ) -> "Session":
+        """Construct a Session object with a given session_id"""
+        session = cls(service, backend, max_time)
+        session._session_id = session_id
+        return session
+
     def __enter__(self) -> "Session":
         set_cm_session(self)
         return self
