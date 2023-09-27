@@ -1,0 +1,25 @@
+lessons:
+  - path: error-suppression-and-error-mitigation
+    idStaging: 7e6b09d2-58d5-4892-9c70-4a4d662acd22
+    idProduction: fde8bbfe-d9ca-4afd-b0d5-8317568fd9e1
+  - path: chsh-with-estimator
+    idStaging: 0229e597-ac0d-4641-98c8-cb9d6bf10617
+    idProduction: d4861fee-1dc1-41b2-a5ba-671bc54b747b
+  - path: grover-with-sampler
+    idStaging: 9b9b8eec-549a-4f20-822d-c984d0ee7b3d
+    idProduction: 84dbbc7c-16b5-4aec-b142-9c349bf7a89b
+  - path: how-to-getting-started-with-estimator
+    idStaging: 7467fd2c-4a69-4b1b-bef7-b3efe068984e
+    idProduction: d8ee4662-7c6f-4446-a8a3-5fe79fa71c48
+  - path: how-to-getting-started-with-sampler
+    idStaging: cadf4f4f-c662-434f-828b-e25dc48ee57e
+    idProduction: f0cc58e1-789f-4b57-b1b7-693b84b32290
+  - path: qaoa-with-primitives
+    idStaging: 63dd4f57-dda7-4a07-a9f3-c6ea4560f214
+    idProduction: 20ef1afa-e86f-414d-bb40-f8f1490d531c
+  - path: user-transpiled-circuits
+    idStaging: 7e6b09d2-58d5-4892-9c70-4a4d662acd22
+    idProduction: 47dad7bd-4e08-4d22-a528-02d963df9e42
+  - path: vqe-with-estimator
+    idStaging: d1059d99-95c8-41e5-ba7c-9f0827d479ce
+    idProduction: 62a189e9-44cc-482b-90e8-30a479f23bac

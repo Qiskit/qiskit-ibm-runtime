@@ -1,0 +1,36 @@
+# This code is part of Qiskit.
+#
+# (C) Copyright IBM 2021.
+#
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE.txt file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
+
+name: Publish tutorials to staging website
+
+on:
+  push:
+    branches:
+      - "main"
+
+jobs:
+  publish-tutorials:
+    runs-on: ubuntu-latest
+    strategy:
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.11
+      - name: Push tutorials to learning.www-dev.quantum-computing.ibm.com
+        env:
+          LEARNING_API_TOKEN: ${{ secrets.LEARNING_API_TOKEN_STAGING }}
+          LEARNING_API_ENVIRONMENT: staging
+        run: |
+          pip install git+https://github.com/frankharkins/learning-content-tools.git@7295b8441ee937119d22845de33dc62cac782ab2#subdirectory=iql-lesson-sync
+          cd docs/tutorials
+          sync-lessons
