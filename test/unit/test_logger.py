@@ -108,7 +108,6 @@ class TestLogger(IBMTestCase):
                         "be {}.".format(logger.level, level_value),
                     )
 
-    # TODO: NamedTemporaryFiles do not support name in Windows
     @skipIf(os.name == "nt", "Test not supported in Windows")
     def test_log_file(self):
         """Test setting up a logger by specifying a file and log level."""
