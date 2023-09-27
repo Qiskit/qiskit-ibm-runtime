@@ -1021,10 +1021,11 @@ class QiskitRuntimeService(Provider):
                 if self._channel_strategy == "default"
                 else self._channel_strategy,
             )
-            messages = response.get("messages")
-            if messages:
-                warning_message = messages[0].get("data")
-                warnings.warn(warning_message)
+            if self._channel == "ibm_quantum":
+                messages = response.get("messages")
+                if messages:
+                    warning_message = messages[0].get("data")
+                    warnings.warn(warning_message)
 
         except RequestsApiError as ex:
             if ex.status_code == 404:

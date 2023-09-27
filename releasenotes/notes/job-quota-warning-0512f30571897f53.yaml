@@ -2,5 +2,6 @@
 features:
   - |
     There will now be a warning if a user submits a job that is predicted to 
-    exceed their monthly quota. If the job does end up exceeding the quota, 
+    exceed their monthly quota. This only applies to jobs run on real hardware 
+    in the instance ``ibm-q/open/main``. If the job does end up exceeding the quota, 
     it will be canceled.
