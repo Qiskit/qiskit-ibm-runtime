@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    Added new method ``Session.from_id`` which creates a new session with a given id.
+
+
