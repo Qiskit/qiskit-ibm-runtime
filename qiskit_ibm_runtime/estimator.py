@@ -22,7 +22,6 @@ from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info.operators.base_operator import BaseOperator
 from qiskit.primitives import BaseEstimator
 
-# TODO import _circuit_key from terra once 0.23 is released
 from .runtime_job import RuntimeJob
 from .ibm_backend import IBMBackend
 from .options import Options

@@ -173,13 +173,11 @@ class TestPrimitives(IBMTestCase):
         for cls in primitives:
             with self.subTest(primitive=cls), patch(
                 "qiskit_ibm_runtime.base_primitive.QiskitRuntimeService"
-            ) as mock_service:
-                with self.assertWarns(DeprecationWarning):
-                    mock_service.reset_mock()
-                    mock_service.global_service = None
+            ):
+                with self.assertRaises(ValueError) as exc:
                     inst = cls(session=backend_name)
-                    mock_service.assert_called_once()
                     self.assertIsNone(inst.session)
+                self.assertIn("session must be of type Session or None", str(exc.exception))
 
     def test_init_with_backend_instance(self):
         """Test initializing a primitive with a backend instance."""
@@ -201,9 +199,10 @@ class TestPrimitives(IBMTestCase):
                 runtime_options = service.run.call_args.kwargs["options"]
                 self.assertEqual(runtime_options["backend"], backend.name)
 
-                with self.assertWarns(DeprecationWarning):
+                with self.assertRaises(ValueError) as exc:
                     inst = cls(session=backend)
                     self.assertIsNone(inst.session)
+                self.assertIn("session must be of type Session or None", str(exc.exception))
 
     def test_init_with_backend_session(self):
         """Test initializing a primitive with both backend and session."""

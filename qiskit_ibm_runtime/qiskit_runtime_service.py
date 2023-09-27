@@ -970,15 +970,6 @@ class QiskitRuntimeService(Provider):
             RuntimeProgramNotFound: If the program cannot be found.
             IBMRuntimeError: An error occurred running the program.
         """
-        # TODO: Remove this after 3 months
-        if program_id in ["hello-world", "vqe", "qaoa"]:
-            raise IBMInputValueError(
-                "The hello-world, vqe, and qaoa programs have been retired in the "
-                "Qiskit Runtime service. Please visit https://qiskit.org/ecosystem/ibm-runtime "
-                "for an introduction on Sessions and Primitives, and to access "
-                "tutorials on how to execute VQE and QAOA using Qiskit Runtime Primitives."
-            )
-
         qrt_options: RuntimeOptions = options
         if options is None:
             qrt_options = RuntimeOptions()
@@ -1021,6 +1012,12 @@ class QiskitRuntimeService(Provider):
                 if self._channel_strategy == "default"
                 else self._channel_strategy,
             )
+            if self._channel == "ibm_quantum":
+                messages = response.get("messages")
+                if messages:
+                    warning_message = messages[0].get("data")
+                    warnings.warn(warning_message)
+
         except RequestsApiError as ex:
             if ex.status_code == 404:
                 raise RuntimeProgramNotFound(f"Program not found: {ex.message}") from None
