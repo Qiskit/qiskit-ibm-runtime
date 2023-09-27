@@ -40,6 +40,7 @@ jobs:
 
   publish-tutorials:
     runs-on: ubuntu-latest
+    if: "!contains(github.event.release.name, 'rc')"
     steps:
     - uses: actions/setup-python@v2
         with:
