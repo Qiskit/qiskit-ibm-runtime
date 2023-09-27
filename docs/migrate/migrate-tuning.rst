@@ -95,7 +95,7 @@ For more information, and a complete list of advanced transpilation options, see
 Finally, you might want to specify settings that are not available through the primitives interface,
 or use custom transpiler passes. In these cases, you can set ``skip_transpilation=True`` to submit
 user-transpiled circuits. To learn how this is done, refer to the 
-`Submitting user-transpiled circuits using primitives tutorial <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/tutorials/user-transpiled-circuits.html>`_.
+`Submitting user-transpiled circuits using primitives tutorial <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/tutorials/user-transpiled-circuits/index.html>`_.
 
 The ``skip_transpilation`` option is an advanced transpilation option, set as follows:
 

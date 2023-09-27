@@ -286,7 +286,7 @@ notice that the workflow is now simplified, as the quasi-probability distributio
 The ``Sampler`` Runtime primitive offers several features and tuning options that do not have a legacy alternative
 to migrate from, but can help improve your performance and results. For more information, refer to the following:
 
-- `Error mitigation tutorial <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/tutorials/Error-Suppression-and-Error-Mitigation.html>`_
+- `Error mitigation tutorial <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/tutorials/error-suppression-and-error-mitigation/index.html>`-
 - `Setting execution options topic <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/how_to/options.html>`_
 - `How to run a session topic <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/how_to/run_session.html>`_
 

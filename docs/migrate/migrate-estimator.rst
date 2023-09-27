@@ -265,7 +265,7 @@ Note that the Estimator returns a list of values, as it can perform batched eval
 The ``Estimator`` Runtime primitive offers a series of features and tuning options that do not have a legacy alternative
 to migrate from, but can help improve your performance and results. For more information, refer to the following:
 
-- `Error mitigation tutorial <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/tutorials/Error-Suppression-and-Error-Mitigation.html>`_
+- `Error mitigation tutorial <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/tutorials/error-suppression-and-error-mitigation/index.html>`_
 - `Setting execution options topic <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/how_to/options.html>`_
 - `Primitive execution options API reference <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/stubs/qiskit_ibm_runtime.options.Options.html#qiskit_ibm_runtime.options.Options>`_
 - `How to run a session topic <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/how_to/run_session.html>`_

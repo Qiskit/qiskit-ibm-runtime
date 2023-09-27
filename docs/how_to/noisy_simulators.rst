@@ -108,7 +108,7 @@ distribution using the `Sampler primitive
 to do the same. To learn how to use the ``Sampler`` primitive and how to
 get started using Qiskit Runtime Sessions, you can check this tutorial:
 `Get started with the Sampler
-primitive <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/tutorials/how-to-getting-started-with-sampler.html>`__.
+primitive <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/tutorials/how-to-getting-started-with-sampler/index.html>`__.
 
 .. code-block:: python
 
@@ -151,7 +151,7 @@ Run the circuits on Estimator
 
 To learn how to start a session for Estimator, you may check this
 tutorial: `Get started with the Estimator
-primitive <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/tutorials/how-to-getting-started-with-estimator.html>`__.
+primitive <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/tutorials/how-to-getting-started-with-estimator/index.html>`__.
 
 The Estimator will bind single-qubit rotations to get Hamiltonians
 before it returns expectation values of quantum operators. Therefore,
@@ -420,7 +420,7 @@ explore additional options offered by them. If you want to learn more
 about activating features like *Digital-ZNE*, *PEC* in addition to *M3*
 and *T-REx* as shown in the previous examples, check out this tutorial:
 `Error suppression and error mitigation with Qiskit
-Runtime <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/tutorials/Error-Suppression-and-Error-Mitigation.html>`__.
+Runtime <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/tutorials/error-suppression-and-error-mitigation/index.html>`__.
 
 .. code-block:: python
 

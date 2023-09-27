@@ -63,14 +63,14 @@ Next steps
    :hidden:
    :caption: Tutorials
 
-    Get started with Estimator <tutorials/how-to-getting-started-with-estimator>
-    Get started with Sampler <tutorials/how-to-getting-started-with-sampler>
-    Get started with error suppression and error mitigation <tutorials/Error-Suppression-and-Error-Mitigation>
-    CHSH with Estimator <tutorials/chsh_with_estimator>
-    VQE with Estimator <tutorials/vqe_with_estimator>
-    Grover with Sampler <tutorials/grover_with_sampler>
-    QAOA with Primitives <tutorials/qaoa_with_primitives>
-    Submit user-transpiled circuits using primitives <tutorials/user-transpiled-circuits>
+    Get started with Estimator <tutorials/how-to-getting-started-with-estimator/index>
+    Get started with Sampler <tutorials/how-to-getting-started-with-sampler/index>
+    Get started with error suppression and error mitigation <tutorials/error-suppression-and-error-mitigation/index>
+    CHSH with Estimator <tutorials/chsh-with-estimator/index>
+    VQE with Estimator <tutorials/vqe-with-estimator/index>
+    Grover with Sampler <tutorials/grover-with-sampler/index>
+    QAOA with Primitives <tutorials/qaoa-with-primitives/index>
+    Submit user-transpiled circuits using primitives <tutorials/user-transpiled-circuits/index>
     All tutorials <tutorials>
 
 .. toctree::
