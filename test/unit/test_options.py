@@ -12,7 +12,6 @@
 
 """Tests for Options class."""
 
-import warnings
 from dataclasses import asdict
 
 from ddt import data, ddt
@@ -142,7 +141,7 @@ class TestOptions(IBMTestCase):
     def test_kwargs_options(self):
         """Test specifying arbitrary options."""
         with self.assertRaises(TypeError) as exc:
-            _ = Options(foo="foo")
+            _ = Options(foo="foo")   # pylint: disable=unexpected-keyword-arg
         self.assertIn(
             "Options.__init__() got an unexpected keyword argument 'foo'",
             str(exc.exception),
@@ -157,10 +156,10 @@ class TestOptions(IBMTestCase):
         backends = [backend_name, backend]
         for backend in backends:
             with self.assertRaises(TypeError) as exc:
-                _ = Options(backend=backend)
+                _ = Options(backend=backend)   # pylint: disable=unexpected-keyword-arg
             self.assertIn(
                 "Options.__init__() got an unexpected keyword argument 'backend'",
-                str(exc.exception)
+                str(exc.exception),
             )
 
     def test_unsupported_options(self):

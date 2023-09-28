@@ -12,7 +12,7 @@
 
 """Utility functions for options."""
 
-from dataclasses import fields, field, make_dataclass
+from dataclasses import fields, make_dataclass
 from ..ibm_backend import IBMBackend
 
 
@@ -73,6 +73,7 @@ def _post_init(self):  # type: ignore
         if hasattr(self, key):
             orig_val = getattr(self, key)
             setattr(self, key, _to_obj(obj_fields[key], orig_val))
+
 
 def _flexible(cls):  # type: ignore
     """Decorator used to allow a flexible dataclass.

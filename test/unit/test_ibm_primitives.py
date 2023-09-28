@@ -438,7 +438,7 @@ class TestPrimitives(IBMTestCase):
         options = Options(optimization_level=1, execution={"shots": 100})
         new_options = [
             ({"optimization_level": 2}, Options()),
-            ({"optimization_level": 3, "shots": 200}, Options())
+            ({"optimization_level": 3, "shots": 200}, Options()),
         ]
 
         session = MagicMock(spec=MockSession)
