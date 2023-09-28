@@ -74,7 +74,6 @@ def _post_init(self):  # type: ignore
             orig_val = getattr(self, key)
             setattr(self, key, _to_obj(obj_fields[key], orig_val))
 
-
 def _flexible(cls):  # type: ignore
     """Decorator used to allow a flexible dataclass.
 
@@ -92,8 +91,8 @@ def _flexible(cls):  # type: ignore
             orig_field_names.add(fld.name)
 
         for key, val in kwargs.items():
-            if key not in orig_field_names:
-                all_fields.append((key, type(val), field(default=None)))
+            if key in dir(cls):
+                setattr(cls, key, val)
 
         new_cls = make_dataclass(
             cls.__name__,
