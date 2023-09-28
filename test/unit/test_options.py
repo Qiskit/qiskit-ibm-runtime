@@ -143,7 +143,7 @@ class TestOptions(IBMTestCase):
         with self.assertRaises(TypeError) as exc:
             _ = Options(foo="foo")  # pylint: disable=unexpected-keyword-arg
         self.assertIn(
-            "Options.__init__() got an unexpected keyword argument 'foo'",
+            "__init__() got an unexpected keyword argument 'foo'",
             str(exc.exception),
         )
 
@@ -158,7 +158,7 @@ class TestOptions(IBMTestCase):
             with self.assertRaises(TypeError) as exc:
                 _ = Options(backend=backend)  # pylint: disable=unexpected-keyword-arg
             self.assertIn(
-                "Options.__init__() got an unexpected keyword argument 'backend'",
+                "__init__() got an unexpected keyword argument 'backend'",
                 str(exc.exception),
             )
 
