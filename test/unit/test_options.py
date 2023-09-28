@@ -139,7 +139,7 @@ class TestOptions(IBMTestCase):
                 # Make sure the structure didn't change.
                 self.assertTrue(dict_keys_equal(asdict(Options()), options), f"options={options}")
 
-    def test_kwarg_options(self):
+    def test_kwargs_options(self):
         """Test specifying arbitrary options."""
         with self.assertRaises(TypeError) as exc:
             _ = Options(foo="foo")
