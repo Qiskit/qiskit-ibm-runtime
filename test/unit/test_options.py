@@ -139,6 +139,30 @@ class TestOptions(IBMTestCase):
                 # Make sure the structure didn't change.
                 self.assertTrue(dict_keys_equal(asdict(Options()), options), f"options={options}")
 
+    def test_kwarg_options(self):
+        """Test specifying arbitrary options."""
+        with self.assertRaises(TypeError) as exc:
+            _ = Options(foo="foo")
+        self.assertIn(
+            "Options.__init__() got an unexpected keyword argument 'foo'",
+            str(exc.exception),
+        )
+
+    def test_backend_in_options(self):
+        """Test specifying backend in options."""
+        backend_name = "ibm_gotham"
+        backend = FakeManila()
+        backend._instance = None
+        backend.name = backend_name
+        backends = [backend_name, backend]
+        for backend in backends:
+            with self.assertRaises(TypeError) as exc:
+                _ = Options(backend=backend)
+            self.assertIn(
+                "Options.__init__() got an unexpected keyword argument 'backend'",
+                str(exc.exception)
+            )
+
     def test_unsupported_options(self):
         """Test error on unsupported second level options"""
         # defining minimal dict of options

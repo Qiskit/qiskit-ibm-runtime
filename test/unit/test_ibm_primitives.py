@@ -84,24 +84,6 @@ class TestPrimitives(IBMTestCase):
                     self._update_dict(expected, copy.deepcopy(options))
                     self.assertDictEqual(expected, inst.options.__dict__)
 
-    def test_backend_in_options(self):
-        """Test specifying backend in options."""
-        primitives = [Sampler, Estimator]
-        backend_name = "ibm_gotham"
-        backend = MagicMock(spec=IBMBackend)
-        backend._instance = None
-        backend.name = backend_name
-        backends = [backend_name, backend]
-        for cls in primitives:
-            for backend in backends:
-                with self.subTest(primitive=cls, backend=backend):
-                    with self.assertRaises(TypeError) as exc:
-                        _ = Options(backend=backend)
-                    self.assertIn(
-                        "Options.__init__() got an unexpected keyword argument 'backend'",
-                        str(exc.exception)
-                    )
-
     def test_runtime_options(self):
         """Test RuntimeOptions specified as primitive options."""
         session = MagicMock(spec=MockSession)
@@ -410,19 +392,6 @@ class TestPrimitives(IBMTestCase):
                         _, kwargs = session.run.call_args
                         rt_options = kwargs["options"]
                     self._assert_dict_partially_equal(rt_options, options)
-
-    def test_kwarg_options(self):
-        """Test specifying arbitrary options."""
-        session = MagicMock(spec=MockSession)
-        primitives = [Sampler, Estimator]
-        for cls in primitives:
-            with self.subTest(primitive=cls):
-                with self.assertRaises(TypeError) as exc:
-                    _ = Options(foo="foo")  # pylint: disable=unexpected-keyword-arg
-                self.assertIn(
-                    "Options.__init__() got an unexpected keyword argument 'foo'",
-                    str(exc.exception),
-                )
 
     def test_run_kwarg_options(self):
         """Test specifying arbitrary options in run."""
