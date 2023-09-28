@@ -13,7 +13,7 @@ a job exceeds this time limit, it is forcibly cancelled and a ``RuntimeJobMaxTim
 exception is raised.
 
 .. note::
-   As of August 7, 2023, the ``max_execution_time`` value is based on job execution time, which is the time that the QPU
+   As of August 7, 2023, the ``max_execution_time`` value is based on system execution time, which is the time that the QPU
    complex (including control software, control electronics, QPU, and so on) is engaged in
    processing the job, instead of wall clock time.
 
@@ -31,12 +31,12 @@ You can set the maximum execution time (in seconds) on the job options by using 
    # Create the options object with attributes and values
    options = {"max_execution_time": 360}
 
-You can also find the job execution time for previously completed jobs by using:
+You can also find the system execution time for previously completed jobs by using:
 
 .. code-block:: python
 
-   # Find the job execution time
-   print(f"Job {job.job_id()} job execution time was {job.metrics()['usage']['seconds']} seconds")
+   # Find the system execution time
+   print(f"Job {job.job_id()} system execution time was {job.metrics()['usage']['seconds']} seconds")
 
 In addition, the system calculates an appropriate job timeout value based on the
 input circuits and options. This system-calculated timeout is currently capped
@@ -86,6 +86,4 @@ Other limitations
 
 - Programs cannot exceed 750KB in size.
 - Inputs to jobs cannot exceed 64MB in size.
-- Open plan users are limited to 10 minutes of job execution time per month.  This is the time that the QPU
-   complex (including control software, control electronics, QPU, and so on) is engaged in
-   processing the job. Open plan users can track current progress toward the limit on the `Platform dashboard, <https://quantum-computing.ibm.com/>`__ `Jobs, <https://quantum-computing.ibm.com/jobs>`__ and `Account, <https://quantum-computing.ibm.com/account>`__ pages.
+- Open plan users can use up to 10 minutes of system execution time per month (resets at 00:00 UTC on the first of each month). System execution time is the amount of time that the system is dedicated to processing your job. You can track your monthly usage on the `Platform dashboard, <https://quantum-computing.ibm.com/>`__ `Jobs, <https://quantum-computing.ibm.com/jobs>`__ and `Account <https://quantum-computing.ibm.com/account>`__ pages.
