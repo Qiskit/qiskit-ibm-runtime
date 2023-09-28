@@ -62,51 +62,6 @@ class TestOptions(IBMTestCase):
                     f"options={options}, combined={combined}",
                 )
 
-    def test_merge_options_extra_fields(self):
-        """Test merging options with extra fields."""
-        options_vars = [
-            (
-                {
-                    "initial_layout": [2, 3],
-                    "transpilation": {"layout_method": "trivial"},
-                    "foo": "foo",
-                },
-                Options(foo="foo"),  # pylint: disable=unexpected-keyword-arg
-            ),
-            (
-                {
-                    "initial_layout": [3, 4],
-                    "transpilation": {"layout_method": "dense", "bar": "bar"},
-                },
-                Options(transpilation={"bar": "bar"}),
-            ),
-            (
-                {
-                    "initial_layout": [1, 2],
-                    "foo": "foo",
-                    "transpilation": {"layout_method": "dense", "foo": "foo"},
-                },
-                Options(  # pylint: disable=unexpected-keyword-arg
-                    foo="foo", transpilation={"foo": "foo"}
-                ),
-            ),
-        ]
-        for new_ops, expected in options_vars:
-            with self.subTest(new_ops=new_ops):
-                options = Options()
-                combined = Options._merge_options(asdict(options), new_ops)
-
-                # Make sure the values are equal.
-                self.assertTrue(
-                    flat_dict_partially_equal(combined, new_ops),
-                    f"new_ops={new_ops}, combined={combined}",
-                )
-                # Make sure the structure didn't change.
-                self.assertTrue(
-                    dict_keys_equal(combined, asdict(expected)),
-                    f"expected={expected}, combined={combined}",
-                )
-
     def test_runtime_options(self):
         """Test converting runtime options."""
         full_options = RuntimeOptions(
@@ -137,14 +92,8 @@ class TestOptions(IBMTestCase):
             environment={"log_level": "DEBUG"},
             simulator={"noise_model": noise_model},
             resilience={"noise_factors": (0, 2, 4)},
-            foo="foo",
-            bar="bar",
         )
-
-        with warnings.catch_warnings(record=True) as warn:
-            warnings.simplefilter("always")
-            inputs = Options._get_program_inputs(asdict(options))
-            self.assertEqual(len(warn), 2)
+        inputs = Options._get_program_inputs(asdict(options))
 
         expected = {
             "run_options": {"shots": 100, "noise_model": noise_model},
@@ -157,7 +106,6 @@ class TestOptions(IBMTestCase):
                 "level": 2,
                 "noise_factors": (0, 2, 4),
             },
-            "foo": "foo",
         }
         self.assertTrue(
             dict_paritally_equal(inputs, expected),

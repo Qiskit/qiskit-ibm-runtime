@@ -95,10 +95,12 @@ class TestPrimitives(IBMTestCase):
         for cls in primitives:
             for backend in backends:
                 with self.subTest(primitive=cls, backend=backend):
-                    options = {"backend": backend}
-                    with self.assertRaises(ValueError) as exc:
-                        _ = cls(backend=backend, options=options)
-                    self.assertIn("Option 'backend' is not supported.", str(exc.exception))
+                    with self.assertRaises(TypeError) as exc:
+                        _ = Options(backend=backend)
+                    self.assertIn(
+                        "Options.__init__() got an unexpected keyword argument 'backend'",
+                        str(exc.exception)
+                    )
 
     def test_runtime_options(self):
         """Test RuntimeOptions specified as primitive options."""
@@ -415,10 +417,12 @@ class TestPrimitives(IBMTestCase):
         primitives = [Sampler, Estimator]
         for cls in primitives:
             with self.subTest(primitive=cls):
-                options = Options(foo="foo")  # pylint: disable=unexpected-keyword-arg
-                with self.assertRaises(ValueError) as exc:
-                    _ = cls(session=session, options=options)
-                self.assertIn("Option 'foo' is not supported.", str(exc.exception))
+                with self.assertRaises(TypeError) as exc:
+                    _ = Options(foo="foo")  # pylint: disable=unexpected-keyword-arg
+                self.assertIn(
+                    "Options.__init__() got an unexpected keyword argument 'foo'",
+                    str(exc.exception),
+                )
 
     def test_run_kwarg_options(self):
         """Test specifying arbitrary options in run."""
@@ -465,11 +469,7 @@ class TestPrimitives(IBMTestCase):
         options = Options(optimization_level=1, execution={"shots": 100})
         new_options = [
             ({"optimization_level": 2}, Options()),
-            ({"optimization_level": 3, "shots": 200}, Options()),
-            (
-                {"shots": 300, "foo": "foo"},
-                Options(foo="foo"),  # pylint: disable=unexpected-keyword-arg
-            ),
+            ({"optimization_level": 3, "shots": 200}, Options())
         ]
 
         session = MagicMock(spec=MockSession)
