@@ -148,7 +148,6 @@ class BasePrimitive(ABC):
                 raise ValueError(
                     "A backend or session must be specified when not using ibm_cloud channel."
                 )
-
         # self._first_run = True
         # self._circuits_map = {}
         # if self.circuits:
