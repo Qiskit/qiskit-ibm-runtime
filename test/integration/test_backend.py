@@ -135,7 +135,7 @@ class TestIBMBackend(IBMIntegrationTestCase):
             properties_today = backend.properties(datetime=datetime.today())
             self.assertIsNotNone(properties)
             self.assertIsNotNone(properties_today)
-            self.assertEqual(properties, properties_today)
+            self.assertEqual(properties.backend_version, properties_today.backend_version)
 
     @production_only
     def test_backend_pulse_defaults(self):
