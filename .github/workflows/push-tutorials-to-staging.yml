@@ -31,6 +31,6 @@ jobs:
           LEARNING_API_TOKEN: ${{ secrets.LEARNING_API_TOKEN_STAGING }}
           LEARNING_API_ENVIRONMENT: staging
         run: |
-          pip install git+https://github.com/frankharkins/learning-content-tools.git@7295b8441ee937119d22845de33dc62cac782ab2#subdirectory=iql-lesson-sync
+          pip install git+https://github.com/frankharkins/learning-content-tools.git@12a71a904b0283b2ee44b63cd04ab8fe96e0df6f#subdirectory=iql-lesson-sync
           cd docs/tutorials
           sync-lessons
