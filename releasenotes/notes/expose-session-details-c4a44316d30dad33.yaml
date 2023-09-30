@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    Added a new method, :meth:`~qiskit_ibm_runtime.Session.details` that returns information
+    about a session, including: maximum session time, active time remaining, the current state, 
+    and whether or not the session is accepting jobs.
+
