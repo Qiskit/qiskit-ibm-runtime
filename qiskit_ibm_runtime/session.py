@@ -12,7 +12,7 @@
 
 """Qiskit Runtime flexible session."""
 
-from typing import Dict, Optional, Type, Union, Callable
+from typing import Dict, Optional, Type, Union, Callable, Any
 from types import TracebackType
 from functools import wraps
 from contextvars import ContextVar
@@ -192,6 +192,12 @@ class Session:
             Backend for this session. None if unknown.
         """
         return self._backend
+
+    def details(self) -> Optional[Dict[str, Any]]:
+        """Return session details."""
+        if self._session_id:
+            return self._service._api_client.session_details(self._session_id)
+        return None
 
     @property
     def session_id(self) -> str:
