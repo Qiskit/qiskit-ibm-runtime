@@ -13,7 +13,7 @@
 """Runtime Session REST adapter."""
 
 from typing import Dict, Any
-from qiskit_ibm_provider.api.rest.base import RestAdapterBase
+from .base import RestAdapterBase
 from ..session import RetrySession
 
 
@@ -43,7 +43,11 @@ class RuntimeSession(RestAdapterBase):
     def details(self) -> Dict[str, Any]:
         """Return the details of this session."""
         try:
-            return self.session.get(self.get_url("self")).json()
+            if "cloud" in self.session.base_url:
+                return self.session.get(self.get_url("self")).json()
+            else:
+                # TODO: remove this once "v2" is removed from the url path
+                return self.session.get(self.get_prefixed_url("/v2", "self")).json()
         # return None if API is not supported
         except:  # pylint: disable=bare-except
             return None
