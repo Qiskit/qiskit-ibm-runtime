@@ -16,6 +16,7 @@ from typing import Dict, Optional, Type, Union, Callable, Any
 from types import TracebackType
 from functools import wraps
 from contextvars import ContextVar
+from enum import Enum
 
 from qiskit_ibm_provider.utils.converters import hms_to_seconds
 
@@ -36,6 +37,17 @@ def _active_session(func):  # type: ignore
         return func(self, *args, **kwargs)
 
     return _wrapper
+
+
+class SessionStatus(Enum):
+    """Session status."""
+
+    OPEN = "Session is open, no jobs have been dequeued."
+    ACTIVE = "Session is active, jobs are being dequeued."
+    INACTIVE = (
+        "Session is inactive, the interactive_timeout expired before more jobs were available."
+    )
+    CLOSED = "Session is closed, the max_time expired or the session was explicitly closed."
 
 
 class Session:
@@ -195,12 +207,13 @@ class Session:
 
     def status(self) -> Optional[str]:
         """Return current session status."""
-        # TODO Check/match statuses with IQP, return enum
         details = self.details()
         if details:
-            return (
-                f"Current status: {details['state']}, accepting jobs: {details['accepting_jobs']}"
+            status = (
+                f"{SessionStatus[details['state'].upper()].value} "
+                f"Session is {'not' if not details['accepting_jobs'] else ''}accepting jobs."
             )
+            return status
         return None
 
     def details(self) -> Optional[Dict[str, Any]]:
@@ -214,7 +227,7 @@ class Session:
                     "interactive_timeout": response.get("interactive_ttl")
                     or response.get("interactiveSessionTTL"),
                     "max_time": response.get("max_ttl") or response.get("maxSessionTTL"),
-                    "active_ttl": response.get("active_ttl") or response.get("activeTTL"),
+                    "active_time": response.get("active_ttl") or response.get("activeTTL"),
                     "state": response.get("state"),
                     "accepting_jobs": response.get("accepting_jobs")
                     or response.get("acceptingJobs"),
