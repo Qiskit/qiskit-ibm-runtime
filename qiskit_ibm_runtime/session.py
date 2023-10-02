@@ -193,10 +193,40 @@ class Session:
         """
         return self._backend
 
+    def status(self) -> Optional[str]:
+        """Return current session status."""
+        # TODO Check/match statuses with IQP, return enum
+        details = self.details()
+        if details:
+            return (
+                f"Current status: {details['state']}, accepting jobs: {details['accepting_jobs']}"
+            )
+        return None
+
     def details(self) -> Optional[Dict[str, Any]]:
         """Return session details."""
         if self._session_id:
-            return self._service._api_client.session_details(self._session_id)
+            response = self._service._api_client.session_details(self._session_id)
+            if response:
+                return {
+                    "id": response.get("id"),
+                    "backend_name": response.get("backend_name") or response.get("backend"),
+                    "interactive_timeout": response.get("interactive_ttl")
+                    or response.get("interactiveSessionTTL"),
+                    "max_time": response.get("max_ttl") or response.get("maxSessionTTL"),
+                    "active_ttl": response.get("active_ttl") or response.get("activeTTL"),
+                    "state": response.get("state"),
+                    "accepting_jobs": response.get("accepting_jobs")
+                    or response.get("acceptingJobs"),
+                    # Note the following fields are only returned in the quantum channel
+                    "root_job": response.get("rootJob"),
+                    "root_job_started": response.get("rootJobStarted"),
+                    "last_job": response.get("lastJob"),
+                    "last_job_started": response.get("lastJobStarted"),
+                    "last_job_completed": response.get("lastJobCompleted"),
+                    "activated_at": response.get("activatedAt"),
+                    "closed_at": response.get("closedAt"),
+                }
         return None
 
     @property
