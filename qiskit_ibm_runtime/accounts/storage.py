@@ -16,7 +16,6 @@ import json
 import logging
 import os
 from typing import Optional, Dict
-from configparser import ConfigParser
 from .exceptions import AccountAlreadyExistsError
 
 logger = logging.getLogger(__name__)
@@ -56,6 +55,7 @@ def save_config(
 
     with open(filename, mode="w", encoding="utf-8") as json_out:
         json.dump(data, json_out, sort_keys=True, indent=4)
+
 
 def read_config(
     filename: str,

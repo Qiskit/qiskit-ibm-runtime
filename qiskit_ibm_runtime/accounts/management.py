@@ -13,7 +13,6 @@
 """Account management related classes and functions."""
 
 import os
-import ast
 from typing import Optional, Dict
 from qiskit_ibm_provider.proxies import ProxyConfiguration
 
