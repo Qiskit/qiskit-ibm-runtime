@@ -16,7 +16,6 @@ from typing import Dict, Optional, Type, Union, Callable, Any
 from types import TracebackType
 from functools import wraps
 from contextvars import ContextVar
-from enum import Enum
 
 from qiskit_ibm_provider.utils.converters import hms_to_seconds
 
@@ -37,17 +36,6 @@ def _active_session(func):  # type: ignore
         return func(self, *args, **kwargs)
 
     return _wrapper
-
-
-class SessionStatus(Enum):
-    """Session status."""
-
-    OPEN = "Session is open, no jobs have been dequeued."
-    ACTIVE = "Session is active, jobs are being dequeued."
-    INACTIVE = (
-        "Session is inactive, the interactive_timeout expired before more jobs were available."
-    )
-    CLOSED = "Session is closed, the max_time expired or the session was explicitly closed."
 
 
 class Session:
@@ -207,14 +195,8 @@ class Session:
 
     def status(self) -> Optional[str]:
         """Return current session status."""
-        details = self.details()
-        if details:
-            status = (
-                f"{SessionStatus[details['state'].upper()].value} "
-                f"Session is {'not' if not details['accepting_jobs'] else ''}accepting jobs."
-            )
-            return status
-        return None
+        # TODO implement this when API changes are done
+        pass
 
     def details(self) -> Optional[Dict[str, Any]]:
         """Return session details."""
@@ -227,18 +209,19 @@ class Session:
                     "interactive_timeout": response.get("interactive_ttl")
                     or response.get("interactiveSessionTTL"),
                     "max_time": response.get("max_ttl") or response.get("maxSessionTTL"),
-                    "active_time": response.get("active_ttl") or response.get("activeTTL"),
+                    "active_ttl": response.get("active_ttl") or response.get("activeTTL"),
                     "state": response.get("state"),
                     "accepting_jobs": response.get("accepting_jobs")
                     or response.get("acceptingJobs"),
-                    # Note the following fields are only returned in the quantum channel
                     "root_job": response.get("rootJob"),
                     "root_job_started": response.get("rootJobStarted"),
                     "last_job": response.get("lastJob"),
-                    "last_job_started": response.get("lastJobStarted"),
-                    "last_job_completed": response.get("lastJobCompleted"),
-                    "activated_at": response.get("activatedAt"),
-                    "closed_at": response.get("closedAt"),
+                    "last_job_started": response.get("lastJobStarted")
+                    or response.get("last_job_started"),
+                    "last_job_completed": response.get("lastJobCompleted")
+                    or response.get("last_job_completed"),
+                    "activated_at": response.get("activatedAt") or response.get("started_at"),
+                    "closed_at": response.get("closedAt") or response.get("closed_at"),
                 }
         return None
 
