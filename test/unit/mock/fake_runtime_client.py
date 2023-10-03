@@ -20,6 +20,8 @@ from datetime import timezone, datetime as python_datetime
 from concurrent.futures import ThreadPoolExecutor
 from typing import Optional, Dict, Any, List
 
+from qiskit.providers.exceptions import QiskitBackendNotFoundError
+
 from qiskit_ibm_provider.utils.hgp import from_instance_format
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
 from qiskit_ibm_runtime.utils import RuntimeEncoder
@@ -543,4 +545,4 @@ class BaseFakeRuntimeClient:
         for back in self._backends:
             if back.name == backend_name:
                 return back
-        raise ValueError(f"Backend {backend_name} not found")
+        raise QiskitBackendNotFoundError(f"Backend {backend_name} not found")
