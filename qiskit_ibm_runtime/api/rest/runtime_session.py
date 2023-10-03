@@ -40,6 +40,12 @@ class RuntimeSession(RestAdapterBase):
         url = self.get_url("close")
         self.session.delete(url)
 
+    def update(self, accepting_jobs: bool) -> None:
+        """Set accepting_jobs flag"""
+        payload = {"accepting_jobs": accepting_jobs}
+        url = self.get_url("self")
+        self.session.patch(url, json=payload)
+
     def details(self) -> Dict[str, Any]:
         """Return the details of this session."""
         try:
