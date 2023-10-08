@@ -337,17 +337,17 @@ class RuntimeClient(BaseBackendClient):
         """
         return self._api.program_job(job_id).metadata()
 
-    def close_session(self, session_id: str) -> None:
-        """Close the runtime session.
+    def cancel_session(self, session_id: str) -> None:
+        """Close all jobs in the runtime session.
 
         Args:
             session_id: Session ID.
         """
-        self._api.runtime_session(session_id=session_id).close()
+        self._api.runtime_session(session_id=session_id).cancel()
 
-    def update_session(self, session_id: str) -> None:
-        """Update session"""
-        self._api.runtime_session(session_id=session_id).update()
+    def close_session(self, session_id: str) -> None:
+        """Update session so jobs can no longer be submitted."""
+        self._api.runtime_session(session_id=session_id).close()
 
     def list_backends(
         self, hgp: Optional[str] = None, channel_strategy: Optional[str] = None

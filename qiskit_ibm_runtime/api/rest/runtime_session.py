@@ -34,13 +34,13 @@ class RuntimeSession(RestAdapterBase):
         """
         super().__init__(session, "{}/sessions/{}".format(url_prefix, session_id))
 
-    def close(self) -> None:
-        """Close this session."""
+    def cancel(self) -> None:
+        """Cancel all jobs in the session."""
         url = self.get_url("close")
         self.session.delete(url)
 
-    def update(self) -> None:
-        """Set accepting_jobs flag"""
+    def close(self) -> None:
+        """Set accepting_jobs flag to false, so no more jobs can be submitted."""
         payload = {"accepting_jobs": False}
         url = self.get_url("self")
         self.session.patch(url, json=payload)

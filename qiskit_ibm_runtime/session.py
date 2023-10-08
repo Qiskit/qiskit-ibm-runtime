@@ -179,9 +179,16 @@ class Session:
 
         return job
 
-    def close(self) -> None:
-        """Close the session."""
+    def cancel(self) -> None:
+        """Cancel all jobs in a session."""
         self._active = False
+        if self._session_id:
+            self._service._api_client.cancel_session(self._session_id)
+
+    def close(self) -> None:
+        """Update the session so new jobs will not be accepted, but existing
+        queued or running jobs will run to completion. The session will be closed when there
+        are no more jobs to run."""
         if self._session_id:
             self._service._api_client.close_session(self._session_id)
 
@@ -192,12 +199,6 @@ class Session:
             Backend for this session. None if unknown.
         """
         return self._backend
-
-    # rename this, just testing
-    def update(self) -> None:
-        """update session"""
-        if self._session_id:
-            self._service._api_client.update_session(self._session_id)
 
     @property
     def session_id(self) -> str:
