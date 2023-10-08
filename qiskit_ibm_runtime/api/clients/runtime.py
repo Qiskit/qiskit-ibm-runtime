@@ -345,6 +345,10 @@ class RuntimeClient(BaseBackendClient):
         """
         self._api.runtime_session(session_id=session_id).close()
 
+    def update_session(self, session_id: str) -> None:
+        """Update session"""
+        self._api.runtime_session(session_id=session_id).update()
+
     def session_details(self, session_id: str) -> Dict[str, Any]:
         """Get session details.
 

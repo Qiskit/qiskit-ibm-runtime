@@ -40,9 +40,9 @@ class RuntimeSession(RestAdapterBase):
         url = self.get_url("close")
         self.session.delete(url)
 
-    def update(self, accepting_jobs: bool) -> None:
+    def update(self) -> None:
         """Set accepting_jobs flag"""
-        payload = {"accepting_jobs": accepting_jobs}
+        payload = {"accepting_jobs": False}
         url = self.get_url("self")
         self.session.patch(url, json=payload)
 

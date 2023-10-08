@@ -216,6 +216,12 @@ class Session:
             return status
         return None
 
+    # rename this, just testing
+    def update(self) -> None:
+        """update session"""
+        if self._session_id:
+            self._service._api_client.update_session(self._session_id)
+
     def details(self) -> Optional[Dict[str, Any]]:
         """Return session details."""
         if self._session_id:
