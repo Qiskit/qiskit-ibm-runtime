@@ -12,11 +12,10 @@
 
 """Qiskit Runtime flexible session."""
 
-from typing import Dict, Optional, Type, Union, Callable, Any
+from typing import Dict, Optional, Type, Union, Callable
 from types import TracebackType
 from functools import wraps
 from contextvars import ContextVar
-from enum import Enum
 
 from qiskit_ibm_provider.utils.converters import hms_to_seconds
 
@@ -37,17 +36,6 @@ def _active_session(func):  # type: ignore
         return func(self, *args, **kwargs)
 
     return _wrapper
-
-
-class SessionStatus(Enum):
-    """Session status."""
-
-    OPEN = "Session is open, no jobs have been dequeued."
-    ACTIVE = "Session is active, jobs are being dequeued."
-    INACTIVE = (
-        "Session is inactive, the interactive_timeout expired before more jobs were available."
-    )
-    CLOSED = "Session is closed, the max_time expired or the session was explicitly closed."
 
 
 class Session:
@@ -205,48 +193,11 @@ class Session:
         """
         return self._backend
 
-    def status(self) -> Optional[str]:
-        """Return current session status."""
-        details = self.details()
-        if details:
-            status = (
-                f"{SessionStatus[details['state'].upper()].value} "
-                f"Session is {'not' if not details['accepting_jobs'] else ''}accepting jobs."
-            )
-            return status
-        return None
-
     # rename this, just testing
     def update(self) -> None:
         """update session"""
         if self._session_id:
             self._service._api_client.update_session(self._session_id)
-
-    def details(self) -> Optional[Dict[str, Any]]:
-        """Return session details."""
-        if self._session_id:
-            response = self._service._api_client.session_details(self._session_id)
-            if response:
-                return {
-                    "id": response.get("id"),
-                    "backend_name": response.get("backend_name") or response.get("backend"),
-                    "interactive_timeout": response.get("interactive_ttl")
-                    or response.get("interactiveSessionTTL"),
-                    "max_time": response.get("max_ttl") or response.get("maxSessionTTL"),
-                    "active_time": response.get("active_ttl") or response.get("activeTTL"),
-                    "state": response.get("state"),
-                    "accepting_jobs": response.get("accepting_jobs")
-                    or response.get("acceptingJobs"),
-                    # Note the following fields are only returned in the quantum channel
-                    "root_job": response.get("rootJob"),
-                    "root_job_started": response.get("rootJobStarted"),
-                    "last_job": response.get("lastJob"),
-                    "last_job_started": response.get("lastJobStarted"),
-                    "last_job_completed": response.get("lastJobCompleted"),
-                    "activated_at": response.get("activatedAt"),
-                    "closed_at": response.get("closedAt"),
-                }
-        return None
 
     @property
     def session_id(self) -> str:

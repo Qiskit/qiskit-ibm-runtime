@@ -12,7 +12,6 @@
 
 """Runtime Session REST adapter."""
 
-from typing import Dict, Any
 from .base import RestAdapterBase
 from ..session import RetrySession
 
@@ -45,15 +44,3 @@ class RuntimeSession(RestAdapterBase):
         payload = {"accepting_jobs": False}
         url = self.get_url("self")
         self.session.patch(url, json=payload)
-
-    def details(self) -> Dict[str, Any]:
-        """Return the details of this session."""
-        try:
-            if "cloud" in self.session.base_url:
-                return self.session.get(self.get_url("self")).json()
-            else:
-                # TODO: remove this once "v2" is removed from the url path
-                return self.session.get(self.get_prefixed_url("/v2", "self")).json()
-        # return None if API is not supported
-        except:  # pylint: disable=bare-except
-            return None
