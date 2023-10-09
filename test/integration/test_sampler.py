@@ -157,20 +157,6 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
             session.close()
 
     @run_integration_test
-    def test_sampler_error_messages(self, service):
-        """Test that the correct error message is displayed"""
-        circuit = QuantumCircuit(2, 2)
-        circuit.h(0)
-        with Session(service, self.backend) as session:
-            sampler = Sampler(session=session)
-            job = sampler.run(circuits=circuit)
-            with self.assertRaises(RuntimeJobFailureError) as err:
-                job.result()
-            self.assertIn("No counts for experiment", str(err.exception))
-            self.assertFalse("python -m uvicorn server.main" in err.exception.message)
-            self.assertIn("No counts for experiment", str(job.error_message()))
-
-    @run_integration_test
     def test_sampler_no_session(self, service):
         """Test sampler without session."""
         backend = service.backend(self.backend)

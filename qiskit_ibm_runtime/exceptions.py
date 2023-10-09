@@ -13,7 +13,7 @@
 """Exceptions related to the IBM Runtime service."""
 
 from qiskit.exceptions import QiskitError
-from qiskit.providers.exceptions import JobTimeoutError
+from qiskit.providers.exceptions import JobTimeoutError, JobError
 
 
 class IBMError(QiskitError):
@@ -70,7 +70,7 @@ class RuntimeProgramNotFound(IBMRuntimeError):
     pass
 
 
-class RuntimeJobFailureError(IBMRuntimeError):
+class RuntimeJobFailureError(JobError):
     """Error raised when a runtime job failed."""
 
     pass

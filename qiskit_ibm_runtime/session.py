@@ -249,10 +249,21 @@ class Session:
         session_id: str,
         service: Optional[QiskitRuntimeService] = None,
         backend: Optional[Union[str, IBMBackend]] = None,
-        max_time: Optional[Union[int, str]] = None,
     ) -> "Session":
-        """Construct a Session object with a given session_id"""
-        session = cls(service, backend, max_time)
+        """Construct a Session object with a given session_id
+
+        Args:
+            session_id: the id of the session to be created. This can be an already
+                existing session id.
+            service: instance of the ``QiskitRuntimeService`` class.
+            backend: instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
+                string name of backend.
+
+        Returns:
+            A new Session with the given ``session_id``
+
+        """
+        session = cls(service, backend)
         session._session_id = session_id
         return session
 
