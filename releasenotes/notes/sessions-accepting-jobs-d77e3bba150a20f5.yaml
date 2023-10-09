@@ -1,0 +1,14 @@
+---
+upgrade:
+  - |
+    :meth:`qiskit_ibm_runtime.Session.close` has been updated to mark a ``Session`` as no longer
+    accepting new jobs. The session won't accept more jobs but it will continue to run any 
+    queued jobs until they are done or the max time expires. This will also happen
+    automatically when the session context manager is exited. When a session that is not accepting 
+    jobs has run out of jobs to run, it's immediately closed, freeing up the backend to run more jobs rather 
+    than wait for the interactive timeout.
+
+    The old close method behaviour has been moved to a new method, 
+    :meth:`qiskit_ibm_runtime.Session.cancel`, where all jobs within a session are 
+    cancelled and terminated. 
+

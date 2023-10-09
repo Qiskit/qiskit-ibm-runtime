@@ -190,7 +190,7 @@ class Session:
         queued or running jobs will run to completion. The session will be closed when there
         are no more jobs to run."""
         backend = self._service.backend(self._backend)
-        # There is a 500 internal error on IQP when the backend is a simulator
+        # There is a 500 internal error on IQP if the backend is a simulator
         if not backend.simulator and self._session_id:
             self._service._api_client.close_session(self._session_id)
 
