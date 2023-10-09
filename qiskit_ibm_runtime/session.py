@@ -205,23 +205,16 @@ class Session:
             if response:
                 return {
                     "id": response.get("id"),
-                    "backend_name": response.get("backend_name") or response.get("backend"),
-                    "interactive_timeout": response.get("interactive_ttl")
-                    or response.get("interactiveSessionTTL"),
-                    "max_time": response.get("max_ttl") or response.get("maxSessionTTL"),
-                    "active_ttl": response.get("active_ttl") or response.get("activeTTL"),
+                    "backend_name": response.get("backend_name"),
+                    "interactive_timeout": response.get("interactive_ttl"),
+                    "max_time": response.get("max_ttl"),
+                    "active_ttl": response.get("active_ttl"),
                     "state": response.get("state"),
-                    "accepting_jobs": response.get("accepting_jobs")
-                    or response.get("acceptingJobs"),
-                    "root_job": response.get("rootJob"),
-                    "root_job_started": response.get("rootJobStarted"),
-                    "last_job": response.get("lastJob"),
-                    "last_job_started": response.get("lastJobStarted")
-                    or response.get("last_job_started"),
-                    "last_job_completed": response.get("lastJobCompleted")
-                    or response.get("last_job_completed"),
-                    "activated_at": response.get("activatedAt") or response.get("started_at"),
-                    "closed_at": response.get("closedAt") or response.get("closed_at"),
+                    "accepting_jobs": response.get("accepting_jobs"),
+                    "last_job_started": response.get("last_job_started"),
+                    "last_job_completed": response.get("last_job_completed"),
+                    "started_at": response.get("started_at"),
+                    "closed_at": response.get("closed_at"),
                 }
         return None
 
