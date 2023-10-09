@@ -17,11 +17,10 @@ import warnings
 from qiskit import QuantumCircuit
 from qiskit.quantum_info import SparsePauliOp
 
-from qiskit_ibm_runtime import Estimator, Session, Options
+from qiskit_ibm_runtime import Estimator, Options
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import get_mocked_backend
-from .mock.fake_runtime_service import FakeRuntimeService
 
 
 class TestEstimator(IBMTestCase):
@@ -38,15 +37,12 @@ class TestEstimator(IBMTestCase):
             {"resilience_level": 4, "optimization_level": 3},
             {"optimization_level": 4, "resilience_level": 2},
         ]
-        with Session(
-            service=FakeRuntimeService(channel="ibm_quantum", token="abc"),
-            backend="common_backend",
-        ) as session:
-            for bad_opt in options_bad:
-                inst = Estimator(session=session)
-                with self.assertRaises(ValueError) as exc:
-                    _ = inst.run(self.circuit, observables=self.observables, **bad_opt)
-                self.assertIn(list(bad_opt.keys())[0], str(exc.exception))
+
+        for bad_opt in options_bad:
+            estimator = Estimator(backend=get_mocked_backend(), options=bad_opt)
+            with self.assertRaises(ValueError) as exc:
+                _ = estimator.run(self.circuit, observables=self.observables, **bad_opt)
+            self.assertIn(list(bad_opt.keys())[0], str(exc.exception))
 
     def test_deprecated_noise_amplifier(self):
         """Test noise_amplifier deprecation."""

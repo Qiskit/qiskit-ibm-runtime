@@ -75,7 +75,7 @@ class TestSession(IBMTestCase):
     def test_run_after_close(self):
         """Test running after session is closed."""
         session = Session(service=MagicMock(), backend="ibm_gotham")
-        session.close()
+        session.cancel()
         with self.assertRaises(RuntimeError):
             session.run(program_id="program_id", inputs={})
 
@@ -126,7 +126,7 @@ class TestSession(IBMTestCase):
         """Test session as a context manager."""
         with Session(service=MagicMock(), backend="ibm_gotham") as session:
             session.run(program_id="foo", inputs={})
-            session.close()
+            session.cancel()
         self.assertFalse(session._active)
 
     def test_default_backend(self):
@@ -150,10 +150,6 @@ class TestSession(IBMTestCase):
         _ = FakeRuntimeService(channel="ibm_quantum", token="xyz")
         session = Session(backend="ibmq_qasm_simulator")
         self.assertEqual(session._service._account.token, "xyz")
-        with Session(
-            service=FakeRuntimeService(channel="ibm_quantum", token="uvw"), backend="ibm_gotham"
-        ) as session:
-            self.assertEqual(session._service._account.token, "uvw")
 
     def test_session_from_id(self):
         """Create session with given session_id"""

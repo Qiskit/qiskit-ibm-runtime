@@ -62,9 +62,6 @@ class Session:
             job = sampler.run(ReferenceCircuits.bell())
             print(f"Sampler job ID: {job.job_id()}")
             print(f"Sampler job result: {job.result()}")
-            # Close the session only if all jobs are finished and
-            # you don't need to run more in the session.
-            session.close()
 
     """
 
@@ -179,10 +176,19 @@ class Session:
 
         return job
 
-    def close(self) -> None:
-        """Close the session."""
+    def cancel(self) -> None:
+        """Cancel all jobs in a session."""
         self._active = False
         if self._session_id:
+            self._service._api_client.cancel_session(self._session_id)
+
+    def close(self) -> None:
+        """Update the session so new jobs will not be accepted, but existing
+        queued or running jobs will run to completion. The session will be closed when there
+        are no more jobs to run."""
+        backend = self._service.backend(self._backend)
+        # There is a 500 internal error on IQP if the backend is a simulator
+        if not backend.simulator and self._session_id:
             self._service._api_client.close_session(self._session_id)
 
     def backend(self) -> Optional[str]:
@@ -217,21 +223,10 @@ class Session:
         session_id: str,
         service: Optional[QiskitRuntimeService] = None,
         backend: Optional[Union[str, IBMBackend]] = None,
+        max_time: Optional[Union[int, str]] = None,
     ) -> "Session":
-        """Construct a Session object with a given session_id
-
-        Args:
-            session_id: the id of the session to be created. This can be an already
-                existing session id.
-            service: instance of the ``QiskitRuntimeService`` class.
-            backend: instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
-                string name of backend.
-
-        Returns:
-            A new Session with the given ``session_id``
-
-        """
-        session = cls(service, backend)
+        """Construct a Session object with a given session_id"""
+        session = cls(service, backend, max_time)
         session._session_id = session_id
         return session
 
@@ -246,6 +241,7 @@ class Session:
         exc_tb: Optional[TracebackType],
     ) -> None:
         set_cm_session(None)
+        self.close()
 
 
 # Default session

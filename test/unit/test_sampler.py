@@ -13,10 +13,10 @@
 """Tests for sampler class."""
 
 from qiskit.test.reference_circuits import ReferenceCircuits
-from qiskit_ibm_runtime import Sampler, Session
+from qiskit_ibm_runtime import Sampler
 
 from ..ibm_test_case import IBMTestCase
-from .mock.fake_runtime_service import FakeRuntimeService
+from ..utils import get_mocked_backend
 
 
 class TestSampler(IBMTestCase):
@@ -28,13 +28,10 @@ class TestSampler(IBMTestCase):
             {"resilience_level": 2, "optimization_level": 3},
             {"optimization_level": 4, "resilience_level": 1},
         ]
-        with Session(
-            service=FakeRuntimeService(channel="ibm_quantum", token="abc"),
-            backend="common_backend",
-        ) as session:
-            circuit = ReferenceCircuits.bell()
-            for bad_opt in options_bad:
-                inst = Sampler(session=session)
-                with self.assertRaises(ValueError) as exc:
-                    _ = inst.run(circuit, **bad_opt)
-                self.assertIn(list(bad_opt.keys())[0], str(exc.exception))
+
+        circuit = ReferenceCircuits.bell()
+        for bad_opt in options_bad:
+            inst = Sampler(backend=get_mocked_backend())
+            with self.assertRaises(ValueError) as exc:
+                _ = inst.run(circuit, **bad_opt)
+            self.assertIn(list(bad_opt.keys())[0], str(exc.exception))
