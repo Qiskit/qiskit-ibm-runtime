@@ -14,7 +14,7 @@
 
 import logging
 
-from typing import Iterable, Union, Optional, Any, List, Sequence, Dict
+from typing import Iterable, Union, Optional, Any, List, Dict
 from datetime import datetime as python_datetime
 from copy import deepcopy
 from dataclasses import asdict
@@ -51,6 +51,10 @@ from qiskit_ibm_provider.utils.options import QASM2Options, QASM3Options
 from qiskit_ibm_provider.exceptions import IBMBackendValueError, IBMBackendApiError
 from qiskit_ibm_provider.api.exceptions import RequestsApiError
 
+# temporary until we unite the 2 Session classes
+from qiskit_ibm_provider.session import (
+    Session as ProviderSession,
+)  # temporary until we unite the 2 Session classes
 
 from qiskit_ibm_runtime import (  # pylint: disable=unused-import,cyclic-import
     qiskit_runtime_service,
@@ -68,6 +72,7 @@ logger = logging.getLogger(__name__)
 
 QOBJRUNNERPROGRAMID = "circuit-runner"
 QASM3RUNNERPROGRAMID = "qasm3-runner"
+
 
 class IBMBackend(Backend):
     """Backend class interfacing with an IBM Quantum backend.
@@ -191,8 +196,7 @@ class IBMBackend(Backend):
         self._defaults = None
         self._target = None
         self._max_circuits = configuration.max_experiments
-        self._session = None   # temporarily
-        self._client_params = None  # temporarily
+        self._session: ProviderSession = None
         if (
             not self._configuration.simulator
             and hasattr(self.options, "noise_model")
@@ -671,10 +675,7 @@ class IBMBackend(Backend):
             circuits = [circuits]
         self._check_circuits_attributes(circuits)
 
-        if (
-            use_measure_esp
-            and getattr(self.configuration(), "measure_esp_enabled", False) is False
-        ):
+        if use_measure_esp and getattr(self.configuration(), "measure_esp_enabled", False) is False:
             raise IBMBackendValueError(
                 "ESP readout not supported on this device. Please make sure the flag "
                 "'use_measure_esp' is unset or set to 'False'."
@@ -686,9 +687,7 @@ class IBMBackend(Backend):
             )
         dynamic = dynamic or actually_dynamic
 
-        if dynamic and "qasm3" not in getattr(
-            self.configuration(), "supported_features", []
-        ):
+        if dynamic and "qasm3" not in getattr(self.configuration(), "supported_features", []):
             warnings.warn(f"The backend {self.name} does not support dynamic circuits.")
 
         status = self.status()
@@ -735,8 +734,6 @@ class IBMBackend(Backend):
             seed_simulator=seed_simulator,
             **run_config,
         )
-        print("run_config = ")
-        print(run_config_dict)
 
         run_config_dict["circuits"] = circuits
         if not program_id.startswith(QASM3RUNNERPROGRAMID):
@@ -767,7 +764,7 @@ class IBMBackend(Backend):
         if session:
             if not session.active:
                 raise RuntimeError(f"The session {session.session_id} is closed.")
-            session_id = session.session_id
+            session_id = session.session_id or None
             max_execution_time = session._max_time
             start_session = session_id is None
         else:
@@ -775,14 +772,14 @@ class IBMBackend(Backend):
             max_execution_time = None
             start_session = False
 
-        log_level = getattr(self.options, "log_level", None)  #temporary
+        log_level = getattr(self.options, "log_level", None)  # temporary
         try:
             response = self._api_client.program_run(
                 program_id=program_id,
                 backend_name=backend_name,
                 params=inputs,
                 hgp=hgp_name,
-                log_level = log_level,
+                log_level=log_level,
                 job_tags=job_tags,
                 session_id=session_id,
                 start_session=start_session,
@@ -802,7 +799,7 @@ class IBMBackend(Backend):
                 job_id=response["id"],
                 program_id=program_id,
                 session_id=session_id,
-                service=self.service
+                service=self.service,
             )
             logger.debug("Job %s was successfully submitted.", job.job_id())
         except TypeError as err:
@@ -823,7 +820,6 @@ class IBMBackend(Backend):
         else:
             fields = asdict(QASM2Options()).keys()
             run_config_dict = QASM2Options().to_transport_dict()
-
         backend_options = self._options.__dict__
         for key, val in kwargs.items():
             if val is not None:
@@ -836,6 +832,24 @@ class IBMBackend(Backend):
             elif backend_options.get(key) is not None and key in fields:
                 run_config_dict[key] = backend_options[key]
         return run_config_dict
+
+    def open_session(self, max_time: Optional[Union[int, str]] = None) -> ProviderSession:
+        """Open session"""
+        self._session = ProviderSession(max_time)
+        return self._session
+
+    @property
+    def session(self) -> ProviderSession:
+        """Return session"""
+        return self._session
+
+    def cancel_session(self) -> None:
+        """Cancel session. All pending jobs will be cancelled."""
+        if self._session:
+            self._session.cancel()
+            if self._session.session_id:
+                self.provider._runtime_client.close_session(self._session.session_id)
+        self._session = None
 
 
 class IBMRetiredBackend(IBMBackend):
