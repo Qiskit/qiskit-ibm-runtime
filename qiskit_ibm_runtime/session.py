@@ -62,9 +62,6 @@ class Session:
             job = sampler.run(ReferenceCircuits.bell())
             print(f"Sampler job ID: {job.job_id()}")
             print(f"Sampler job result: {job.result()}")
-            # Close the session only if all jobs are finished and
-            # you don't need to run more in the session.
-            session.close()
 
     """
 

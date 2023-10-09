@@ -88,20 +88,17 @@ There is also an interactive timeout value (5 minutes), which is not configurabl
 Close a session
 ---------------
 
-When jobs are all done, it is recommended that you use `session.close()` to close the session. This allows the scheduler to run the next job without waiting for the session timeout,  therefore making it easier for everyone.  You cannot submit jobs to a closed session.
+When the context manager exits or when `session.close()` is explicity called, the session won't accept any more jobs. Any queued jobs will run until completion or until the max time expires.
 
-.. warning::
-  Close a session only after all session jobs **complete**, rather than immediately after they have all been submitted. Session jobs that are not completed will fail.
+When a session that is not accepting jobs has run out of jobs to run, it is immediately closed.
 
 .. code-block:: python
 
   with Session(service=service, backend=backend) as session:
       estimator = Estimator()
       job = estimator.run(...)
-      # Do not close here, the job might not be completed!
+      # results can also be retrieved after the context manager exits
       result = job.result()
-      # job.result() is blocking, so this job is now finished and the session can be safely closed.
-      session.close()
 
 Full example
 ------------
@@ -126,8 +123,6 @@ In this example, we start a session, run an Estimator job, and output the result
       estimator = Estimator(options=options)
       job = estimator.run(circuit, observable)
       result = job.result()
-      # Close the session only if all jobs are finished, and you don't need to run more in the session
-      session.close()
 
   display(circuit.draw("mpl"))
   print(f" > Observable: {observable.paulis}")
