@@ -195,8 +195,19 @@ class Session:
 
     def status(self) -> Optional[str]:
         """Return current session status."""
-        # TODO implement this when API changes are done
-        pass
+        details = self.details()
+        if details:
+            state = details["state"]
+            accepting_jobs = details["accepting_jobs"]
+            if state == "open":
+                return "Pending"
+            if state == "active" and accepting_jobs:
+                return "In progress, accepting new jobs"
+            if state == "active" and not accepting_jobs:
+                return "In progress, not accepting new jobs"
+            return state.capitalize()
+
+        return None
 
     def details(self) -> Optional[Dict[str, Any]]:
         """Return session details."""
@@ -208,7 +219,7 @@ class Session:
                     "backend_name": response.get("backend_name"),
                     "interactive_timeout": response.get("interactive_ttl"),
                     "max_time": response.get("max_ttl"),
-                    "active_ttl": response.get("active_ttl"),
+                    "active_timeout": response.get("active_ttl"),
                     "state": response.get("state"),
                     "accepting_jobs": response.get("accepting_jobs"),
                     "last_job_started": response.get("last_job_started"),
