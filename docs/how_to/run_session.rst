@@ -88,7 +88,7 @@ There is also an interactive timeout value (5 minutes), which is not configurabl
 Close a session
 ---------------
 
-When the context manager exits or when `session.close()` is explicity called, the session won't accept any more jobs. Any queued jobs will run until completion or until the max time expires.
+When the context manager exits or when `session.close()` is explicitly called, the session won't accept any more jobs. Any queued jobs will run until completion or until the max time expires.
 
 When a session that is not accepting jobs has run out of jobs to run, it is immediately closed.
 
