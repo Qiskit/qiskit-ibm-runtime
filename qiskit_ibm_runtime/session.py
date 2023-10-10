@@ -194,7 +194,11 @@ class Session:
         return self._backend
 
     def status(self) -> Optional[str]:
-        """Return current session status."""
+        """Return current session status.
+
+        Returns:
+            A string describing the current status of the session.
+        """
         details = self.details()
         if details:
             state = details["state"]
@@ -210,7 +214,11 @@ class Session:
         return None
 
     def details(self) -> Optional[Dict[str, Any]]:
-        """Return session details."""
+        """Return session details.
+
+        Returns:
+            A dictionary with information about the session.
+        """
         if self._session_id:
             response = self._service._api_client.session_details(self._session_id)
             if response:

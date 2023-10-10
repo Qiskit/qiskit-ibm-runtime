@@ -5,3 +5,6 @@ features:
     about a session, including: maximum session time, active time remaining, the current state, 
     and whether or not the session is accepting jobs.
 
+    Also added :meth:`~qiskit_ibm_runtime.Session.status`, which returns the current status of 
+    the session.
+
