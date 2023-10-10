@@ -12,6 +12,7 @@
 
 """Runtime Session REST adapter."""
 
+from typing import Dict, Any
 from .base import RestAdapterBase
 from ..session import RetrySession
 
@@ -44,3 +45,11 @@ class RuntimeSession(RestAdapterBase):
         payload = {"accepting_jobs": False}
         url = self.get_url("self")
         self.session.patch(url, json=payload)
+
+    def details(self) -> Dict[str, Any]:
+        """Return the details of this session."""
+        try:
+            return self.session.get(self.get_url("self")).json()
+        # return None if API is not supported
+        except:  # pylint: disable=bare-except
+            return None

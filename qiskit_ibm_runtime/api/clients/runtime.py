@@ -349,6 +349,17 @@ class RuntimeClient(BaseBackendClient):
         """Update session so jobs can no longer be submitted."""
         self._api.runtime_session(session_id=session_id).close()
 
+    def session_details(self, session_id: str) -> Dict[str, Any]:
+        """Get session details.
+
+        Args:
+            session_id: Session ID.
+
+        Returns:
+            Session details.
+        """
+        return self._api.runtime_session(session_id=session_id).details()
+
     def list_backends(
         self, hgp: Optional[str] = None, channel_strategy: Optional[str] = None
     ) -> List[str]:

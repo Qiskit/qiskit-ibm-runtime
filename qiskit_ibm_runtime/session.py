@@ -12,7 +12,7 @@
 
 """Qiskit Runtime flexible session."""
 
-from typing import Dict, Optional, Type, Union, Callable
+from typing import Dict, Optional, Type, Union, Callable, Any
 from types import TracebackType
 from functools import wraps
 from contextvars import ContextVar
@@ -198,6 +198,68 @@ class Session:
             Backend for this session. None if unknown.
         """
         return self._backend
+
+    def status(self) -> Optional[str]:
+        """Return current session status.
+
+        Returns:
+            The current status of the session, including:
+            Pending: Session is created but not active.
+            It will become active when the next job of this session is dequeued.
+            In progress, accepting new jobs: session is active and accepting new jobs.
+            In progress, not accepting new jobs: session is active and not accepting new jobs.
+            Closed: max_time expired or session was explicitly closed.
+            None: status details are not available.
+        """
+        details = self.details()
+        if details:
+            state = details["state"]
+            accepting_jobs = details["accepting_jobs"]
+            if state in ["open", "inactive"]:
+                return "Pending"
+            if state == "active" and accepting_jobs:
+                return "In progress, accepting new jobs"
+            if state == "active" and not accepting_jobs:
+                return "In progress, not accepting new jobs"
+            return state.capitalize()
+
+        return None
+
+    def details(self) -> Optional[Dict[str, Any]]:
+        """Return session details.
+
+        Returns:
+            A dictionary with the sessions details, including:
+            id: id of the session.
+            backend_name: backend used for the session.
+            interactive_timeout: The maximum idle time (in seconds) between jobs that
+            is allowed to occur before the session is deactivated.
+            max_time: Maximum allowed time (in seconds) for the session, subject to plan limits.
+            active_timeout: The maximum time (in seconds) a session can stay active.
+            state: State of the session - open, active, inactive, or closed.
+            accepting_jobs: Whether or not the session is accepting jobs.
+            last_job_started: Timestamp of when the last job in the session started.
+            last_job_completed: Timestamp of when the last job in the session completed.
+            started_at: Timestamp of when the session was started.
+            closed_at: Timestamp of when the session was closed.
+        """
+        if self._session_id:
+            response = self._service._api_client.session_details(self._session_id)
+            if response:
+                return {
+                    "id": response.get("id"),
+                    "backend_name": response.get("backend_name"),
+                    "interactive_timeout": response.get("interactive_ttl"),
+                    "max_time": response.get("max_ttl"),
+                    "active_timeout": response.get("active_ttl"),
+                    "state": response.get("state"),
+                    "accepting_jobs": response.get("accepting_jobs"),
+                    "last_job_started": response.get("last_job_started"),
+                    "last_job_completed": response.get("last_job_completed"),
+                    "started_at": response.get("started_at"),
+                    "closed_at": response.get("closed_at"),
+                }
+        return None
 
     @property
     def session_id(self) -> str:
