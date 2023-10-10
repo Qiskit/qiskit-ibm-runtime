@@ -66,17 +66,18 @@ Additionally, there is an *interactive* timeout value. If there are no session j
 
 .. note:: The timer for the session's ``max_time`` is not paused during any temporary deactivation periods.
 
-+---------------------+--------------------------+--------------------------+
-|                     | Primitive programs       | Private programs         |
-+=====================+==============+===========+==============+===========+
-|                     | Premium user | Open user | Premium user | Open user |
-+---------------------+--------------+-----------+--------------+-----------+
-| Max time defaults   | 8h           | 15m       | 8h           | N/A       |
-+---------------------+--------------+-----------+--------------+-----------+
-| Interactive timeout | 5m           | 2s        | 5m           | N/A       |
-+---------------------+--------------+-----------+--------------+-----------+
++---------------------+-----------------------------------+--------------------------+
+|                     | Primitive programs                | Private programs         |
++=====================+=======================+===========+==============+===========+
+|                     | Premium or Cloud user | Open user | Premium user | Open user |
++---------------------+-----------------------+-----------+--------------+-----------+
+| Max time defaults   | 8h                    | 15m       | 8h           | N/A       |
++---------------------+-----------------------+-----------+--------------+-----------+
+| Interactive timeout | 5m                    | 2s        | 5m           | N/A       |
++---------------------+-----------------------+-----------+--------------+-----------+
 
-Note that a *premium user* here means a user who has access to backends in providers other than ``ibm-q/open/main``.
+Note that a *premium user* here means an IBM Quantum channel user who has access to backends in instances other than ``ibm-q/open/main``.
+A *Cloud user* here means an IBM Qiskit Runtime Cloud Standard plan user. 
 
 .. note::
    Session ``max_time`` is based on wall clock time.
