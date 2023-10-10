@@ -385,7 +385,6 @@ class BaseFakeAPI:
         time.sleep(0.2)
         return VALID_JOB_RESPONSE
 
-
     @classmethod
     def job_submit(cls, *_args, **_kwargs):
         """Submit the job."""
