@@ -197,13 +197,19 @@ class Session:
         """Return current session status.
 
         Returns:
-            A string describing the current status of the session.
+            The current status of the session, including:
+                Pending: Session is created but no jobs have been dequeued, or
+                    the ``interactive_timeout`` expired before more jobs were available
+                In progress, accepting new jobs: session is active and accepting new jobs
+                In progress, not accepting new jobs: session is active and not accepting new jobs
+                Closed: ``max_time`` expired or session was explicitly closed
+                None: status details are not available
         """
         details = self.details()
         if details:
             state = details["state"]
             accepting_jobs = details["accepting_jobs"]
-            if state == "open":
+            if state in ["open", "inactive"]:
                 return "Pending"
             if state == "active" and accepting_jobs:
                 return "In progress, accepting new jobs"
@@ -217,7 +223,21 @@ class Session:
         """Return session details.
 
         Returns:
-            A dictionary with information about the session.
+            A dictionary with session details, including:
+                id: id of the session
+                backned_name: backend used for the session
+                interactive_timeout: The max time (in seconds) between jobs that
+                    is allowed to occur to keep the session active
+                max_time: Max allowed time for the session to run in seconds, subject to plan limits
+                active_timeout: The remaining time (in seconds) for the session to
+                    be in the active state whilst jobs are running
+                state: State of the session - open, active, inactive, or closed
+                accepting_jobs: Whether or not the session is accepting jobs
+                last_job_started: Timestamp of when the last job in the session started
+                last_job_completed: Timestamp of when the last job in the session completed
+                started_at: Timestamp of when the session was started
+                closed_at: Timestamp of when the session was closed
+
         """
         if self._session_id:
             response = self._service._api_client.session_details(self._session_id)
