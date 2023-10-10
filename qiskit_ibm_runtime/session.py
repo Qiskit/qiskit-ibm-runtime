@@ -177,15 +177,15 @@ class Session:
         return job
 
     def cancel(self) -> None:
-        """Cancel all jobs in a session."""
+        """Cancel all pending jobs in a session."""
         self._active = False
         if self._session_id:
             self._service._api_client.cancel_session(self._session_id)
 
     def close(self) -> None:
-        """Update the session so new jobs will not be accepted, but existing
-        queued or running jobs will run to completion. The session will be closed when there
-        are no more jobs to run."""
+        """Close the session so new jobs will no longer be accepted, but existing
+        queued or running jobs will run to completion. The session will be terminated once there
+        are no more pending."""
         backend = self._service.backend(self._backend)
         # There is a 500 internal error on IQP if the backend is a simulator
         if not backend.simulator and self._session_id:

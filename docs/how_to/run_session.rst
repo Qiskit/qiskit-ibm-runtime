@@ -94,7 +94,7 @@ When a session that is not accepting jobs has run out of jobs to run, it is imme
 
 .. code-block:: python
 
-  with Session(service=service, backend=backend) as session:
+  with Session(service=service, backend=backend):
       estimator = Estimator()
       job = estimator.run(...)
       # results can also be retrieved after the context manager exits
@@ -119,7 +119,7 @@ In this example, we start a session, run an Estimator job, and output the result
   options.resilience_level = 2
 
   service = QiskitRuntimeService()
-  with Session(service=service, backend="ibmq_qasm_simulator") as session:
+  with Session(service=service, backend="ibmq_qasm_simulator"):
       estimator = Estimator(options=options)
       job = estimator.run(circuit, observable)
       result = job.result()

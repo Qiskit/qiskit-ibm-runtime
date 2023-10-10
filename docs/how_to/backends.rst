@@ -122,9 +122,9 @@ If you are using a runtime session, add the ``backend`` option when starting you
 
   service = QiskitRuntimeService()
   with Session(service=service, backend="ibmq_qasm_simulator") as session:
-       estimator = Estimator(session=session, options=options)
-       job = estimator.run(circuit, observable)
-  result = job.result()
+      estimator = Estimator(session=session, options=options)
+      job = estimator.run(circuit, observable)
+      result = job.result()
 
   display(circuit.draw("mpl"))
   print(f" > Observable: {observable.paulis}")
