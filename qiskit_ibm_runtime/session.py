@@ -197,7 +197,7 @@ class Session:
         """Return current session status.
 
         Returns:
-            The current status of the session, including:
+            The current status of the session, including the following.
             Pending: Session is created but not active. It will become active when
                 the next job of this session is dequeued.
             In progress, accepting new jobs: session is active and accepting new jobs.
@@ -223,7 +223,7 @@ class Session:
         """Return session details.
 
         Returns:
-            A dictionary with session details, including:
+            A dictionary with the following sessions details.
             id: id of the session.
             backend_name: backend used for the session.
             interactive_timeout: The maximum idle time (in seconds) between jobs that
