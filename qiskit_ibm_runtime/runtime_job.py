@@ -157,8 +157,7 @@ class RuntimeJob(Job):
         if user_callback is not None:
             self.stream_results(user_callback)
 
-    @staticmethod
-    def _download_external_result(response: Any) -> Any:
+    def _download_external_result(self, response: Any) -> Any:
         """Download result from external URL.
 
         Args:
