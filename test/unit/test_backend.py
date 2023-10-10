@@ -12,7 +12,6 @@
 
 """Tests for the backend functions."""
 import copy
-from datetime import datetime
 from unittest import mock
 import warnings
 
@@ -29,6 +28,7 @@ from ..utils import (
     create_faulty_backend,
 )
 
+
 class TestBackend(IBMTestCase):
     """Tests for IBMBackend class."""
 
@@ -42,9 +42,7 @@ class TestBackend(IBMTestCase):
 
         transpiled = transpile(circ, backend=fake_backend)
         faulty_qubit = 4
-        ibm_backend = create_faulty_backend(
-            fake_backend, faulty_qubit=faulty_qubit
-        )
+        ibm_backend = create_faulty_backend(fake_backend, faulty_qubit=faulty_qubit)
 
         with self.assertRaises(ValueError) as err:
             ibm_backend.run(transpiled)
@@ -64,9 +62,7 @@ class TestBackend(IBMTestCase):
 
         transpiled = transpile([circ1, circ2], backend=fake_backend)
         faulty_qubit = 4
-        ibm_backend = create_faulty_backend(
-            fake_backend, faulty_qubit=faulty_qubit
-        )
+        ibm_backend = create_faulty_backend(fake_backend, faulty_qubit=faulty_qubit)
 
         with self.assertRaises(ValueError) as err:
             ibm_backend.run(transpiled)
@@ -83,9 +79,7 @@ class TestBackend(IBMTestCase):
 
         transpiled = transpile(circ, backend=fake_backend)
         edge_qubits = [0, 1]
-        ibm_backend = create_faulty_backend(
-            fake_backend, faulty_edge=("cx", edge_qubits)
-        )
+        ibm_backend = create_faulty_backend(fake_backend, faulty_edge=("cx", edge_qubits))
 
         with self.assertRaises(ValueError) as err:
             ibm_backend.run(transpiled)
@@ -102,9 +96,7 @@ class TestBackend(IBMTestCase):
 
         transpiled = transpile(circ, backend=fake_backend, initial_layout=[0, 1])
         faulty_qubit = 4
-        ibm_backend = create_faulty_backend(
-            fake_backend, faulty_qubit=faulty_qubit
-        )
+        ibm_backend = create_faulty_backend(fake_backend, faulty_qubit=faulty_qubit)
         print(ibm_backend)
 
         with mock.patch.object(IBMBackend, "_runtime_run") as mock_run:
@@ -121,13 +113,9 @@ class TestBackend(IBMTestCase):
         circ = QuantumCircuit(2, 2)
         circ.cx(0, 1)
 
-        transpiled = transpile(
-            circ, backend=fake_backend, initial_layout=coupling_map[0]
-        )
+        transpiled = transpile(circ, backend=fake_backend, initial_layout=coupling_map[0])
         edge_qubits = coupling_map[-1]
-        ibm_backend = create_faulty_backend(
-            fake_backend, faulty_edge=("cx", edge_qubits)
-        )
+        ibm_backend = create_faulty_backend(fake_backend, faulty_edge=("cx", edge_qubits))
 
         with mock.patch.object(IBMBackend, "_runtime_run") as mock_run:
             ibm_backend.run(circuits=transpiled)
@@ -170,8 +158,7 @@ class TestBackend(IBMTestCase):
                 with mock.patch.object(IBMBackend, "_runtime_run"):
                     backend.run(circuits=circuit, dynamic=False)
             self.assertIn(
-                "Parameter 'dynamic' is False, but the circuit "
-                "contains dynamic constructs.",
+                "Parameter 'dynamic' is False, but the circuit " "contains dynamic constructs.",
                 str(warn[0].message),
             )
             self.assertIn(

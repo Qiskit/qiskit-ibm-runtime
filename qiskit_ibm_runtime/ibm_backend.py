@@ -855,9 +855,7 @@ class IBMBackend(Backend):
                 self.provider._runtime_client.close_session(self._session.session_id)
         self._session = None
 
-    def _deprecate_id_instruction(
-        self, circuits: List[QuantumCircuit]
-    ) -> List[QuantumCircuit]:
+    def _deprecate_id_instruction(self, circuits: List[QuantumCircuit]) -> List[QuantumCircuit]:
         """Raise a DeprecationWarning if any circuit contains an 'id' instruction.
 
         Additionally, if 'delay' is a 'supported_instruction', replace each 'id'
@@ -874,9 +872,7 @@ class IBMBackend(Backend):
         """
 
         id_support = "id" in getattr(self.configuration(), "basis_gates", [])
-        delay_support = "delay" in getattr(
-            self.configuration(), "supported_instructions", []
-        )
+        delay_support = "delay" in getattr(self.configuration(), "supported_instructions", [])
 
         if not delay_support:
             return circuits
@@ -914,9 +910,7 @@ class IBMBackend(Backend):
         # Make sure we don't mutate user's input circuits
         circuits = copy.deepcopy(circuits)
         # Convert id gates to delays.
-        pm = PassManager(  # pylint: disable=invalid-name
-            ConvertIdToDelay(self.target.durations())
-        )
+        pm = PassManager(ConvertIdToDelay(self.target.durations()))  # pylint: disable=invalid-name
         circuits = pm.run(circuits)
 
         return circuits
