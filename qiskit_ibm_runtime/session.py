@@ -198,8 +198,8 @@ class Session:
 
         Returns:
             The current status of the session, including the following.
-            Pending: Session is created but not active. It will become active when
-                the next job of this session is dequeued.
+            Pending: Session is created but not active.
+                It will become active when the next job of this session is dequeued.
             In progress, accepting new jobs: session is active and accepting new jobs.
             In progress, not accepting new jobs: session is active and not accepting new jobs.
             Closed: max_time expired or session was explicitly closed.
