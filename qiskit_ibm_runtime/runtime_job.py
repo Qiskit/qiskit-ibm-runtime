@@ -157,7 +157,8 @@ class RuntimeJob(Job):
         if user_callback is not None:
             self.stream_results(user_callback)
 
-    def _download_external_result(self, response: Any) -> Any:
+    @staticmethod
+    def _download_external_result(response: Any) -> Any:
         """Download result from external URL.
 
         Args:
@@ -575,7 +576,8 @@ class RuntimeJob(Job):
                     traceback.format_exc(),
                 )
 
-    def _empty_result_queue(self, result_queue: queue.Queue) -> None:
+    @staticmethod
+    def _empty_result_queue(result_queue: queue.Queue) -> None:
         """Empty the result queue.
 
         Args:

@@ -379,12 +379,15 @@ class BaseFakeAPI:
             raise ApiIBMProtocolError("Api Error")
         return {key: value for key, value in complete_response.items() if key in summary_fields}
 
-    def program_run(self, *_args, **_kwargs):
+    @staticmethod
+    def program_run(*_args, **_kwargs):
         """Submit the job."""
         time.sleep(0.2)
         return VALID_JOB_RESPONSE
 
-    def job_submit(self, *_args, **_kwargs):
+
+    @classmethod
+    def job_submit(cls, *_args, **_kwargs):
         """Submit the job."""
         time.sleep(0.2)
         return VALID_JOB_RESPONSE
@@ -427,7 +430,8 @@ class BaseFakeAPI:
             raise self.NoMoreStatesError()
         self._state += 1
 
-    def backend_status(self, backend_name: str) -> Dict[str, Any]:
+    @staticmethod
+    def backend_status(backend_name: str) -> Dict[str, Any]:
         """Return the status of the backend."""
         return {
             "backend_name": backend_name,
@@ -437,10 +441,12 @@ class BaseFakeAPI:
             "status_msg": "active",
         }
 
-    def backend_properties(self, *args, **kwargs):  # pylint: disable=unused-argument
+    @staticmethod
+    def backend_properties(*args, **kwargs):  # pylint: disable=unused-argument
         return None
 
-    def job_type(self, job_id: str) -> str:
+    @staticmethod
+    def job_type(job_id: str) -> str:
         if job_id[0] != "c" and len(job_id) == 24:
             return "IQX"
         return "RUNTIME"
@@ -497,14 +503,16 @@ class QueuedAPI(BaseFakeAPI):
 class RejectingJobAPI(BaseFakeAPI):
     """Class for emulating an API unable of initializing."""
 
-    def job_submit(self, *_args, **_kwargs):
+    @classmethod
+    def job_submit(cls, *_args, **_kwargs):
         return {"error": "invalid qobj"}
 
 
 class UnavailableRunAPI(BaseFakeAPI):
     """Class for emulating an API throwing before even initializing."""
 
-    def program_run(self, *_args, **_kwargs):
+    @staticmethod
+    def program_run(*_args, **_kwargs):
         time.sleep(0.2)
         raise ApiError("Api Error")
 
@@ -584,11 +592,13 @@ class NoKindJobAPI(BaseFakeAPI):
     no_kind_response = copy.deepcopy(VALID_JOB_RESPONSE)
     del no_kind_response["kind"]
 
-    def job_submit(self, *_args, **_kwargs):
-        return self.no_kind_response
+    @classmethod
+    def job_submit(cls, *_args, **_kwargs):
+        return cls.no_kind_response
 
-    def job_result(self, job_id, *_args, **_kwargs):
-        return self.no_kind_response
+    @classmethod
+    def job_result(cls, job_id, *_args, **_kwargs):
+        return cls.no_kind_response
 
 
 class TranspilingStatusAPI(BaseFakeAPI):

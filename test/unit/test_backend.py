@@ -17,7 +17,7 @@ import warnings
 
 from qiskit import transpile, qasm3, QuantumCircuit
 from qiskit.providers.fake_provider import FakeManila
-from qiskit.providers.models import BackendStatus, BackendProperties
+from qiskit.providers.models import BackendStatus
 
 from qiskit_ibm_provider.exceptions import IBMBackendValueError
 
@@ -87,7 +87,8 @@ class TestBackend(IBMTestCase):
         self.assertIn("cx", str(err.exception))
         self.assertIn(f"faulty edge {tuple(edge_qubits)}", str(err.exception))
 
-    def test_faulty_qubit_not_used(self):
+    @staticmethod
+    def test_faulty_qubit_not_used():
         """Test faulty qubit is not raise if not used."""
         fake_backend = FakeManila()
         circ = QuantumCircuit(2, 2)
@@ -97,14 +98,14 @@ class TestBackend(IBMTestCase):
         transpiled = transpile(circ, backend=fake_backend, initial_layout=[0, 1])
         faulty_qubit = 4
         ibm_backend = create_faulty_backend(fake_backend, faulty_qubit=faulty_qubit)
-        print(ibm_backend)
 
         with mock.patch.object(IBMBackend, "_runtime_run") as mock_run:
             ibm_backend.run(circuits=transpiled)
 
         mock_run.assert_called_once()
 
-    def test_faulty_edge_not_used(self):
+    @staticmethod
+    def test_faulty_edge_not_used():
         """Test faulty edge is not raised if not used."""
 
         fake_backend = FakeManila()
@@ -158,7 +159,7 @@ class TestBackend(IBMTestCase):
                 with mock.patch.object(IBMBackend, "_runtime_run"):
                     backend.run(circuits=circuit, dynamic=False)
             self.assertIn(
-                "Parameter 'dynamic' is False, but the circuit " "contains dynamic constructs.",
+                "Parameter 'dynamic' is False, but the circuit contains dynamic constructs.",
                 str(warn[0].message),
             )
             self.assertIn(
@@ -166,7 +167,8 @@ class TestBackend(IBMTestCase):
                 str(warn[1].message),
             )
 
-    def _create_dc_test_backend(self):
+    @staticmethod
+    def _create_dc_test_backend():
         """Create a test backend with an IfElseOp enables."""
         model_backend = FakeManila()
         properties = model_backend.properties()
