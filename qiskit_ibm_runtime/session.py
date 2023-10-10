@@ -225,7 +225,7 @@ class Session:
         Returns:
             A dictionary with session details, including:
             id: id of the session.
-            backned_name: backend used for the session.
+            backend_name: backend used for the session.
             interactive_timeout: The maximum idle time (in seconds) between jobs that
                 is allowed to occur before the session is deactivated.
             max_time: Maximum allowed time (in seconds) for the session, subject to plan limits.
@@ -236,7 +236,6 @@ class Session:
             last_job_completed: Timestamp of when the last job in the session completed.
             started_at: Timestamp of when the session was started.
             closed_at: Timestamp of when the session was closed.
-
         """
         if self._session_id:
             response = self._service._api_client.session_details(self._session_id)
