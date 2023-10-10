@@ -24,8 +24,6 @@ from .runtime_job import RuntimeJob
 from .runtime_program import ParameterNamespace
 from .program.result_decoder import ResultDecoder
 from .ibm_backend import IBMBackend
-from .utils.deprecation import issue_deprecation_msg
-from .exceptions import IBMInputValueError
 
 
 def _active_session(func):  # type: ignore
@@ -144,36 +142,19 @@ class Session:
             inputs: Program input parameters. These input values are passed
                 to the runtime program.
             options: Runtime options that control the execution environment.
-                See :class:`qiskit_ibm_runtime.RuntimeOptions` for all available options,
-                EXCEPT ``backend``, which should be specified during session initialization.
+                See :class:`qiskit_ibm_runtime.RuntimeOptions` for all available options.
             callback: Callback function to be invoked for any interim results and final result.
 
         Returns:
             Submitted job.
-
-        Raises:
-            IBMInputValueError: If a backend is passed in through options that does not match
-                the current session backend.
         """
 
         options = options or {}
 
         if "instance" not in options:
             options["instance"] = self._instance
-        if "backend" in options:
-            issue_deprecation_msg(
-                "'backend' is no longer a supported option within a session",
-                "0.9",
-                "Instead, specify a backend when creating a Session instance.",
-                3,
-            )
-            if self._backend and options["backend"] != self._backend:
-                raise IBMInputValueError(
-                    f"The backend '{options['backend']}' is different from",
-                    f"the session backend '{self._backend}'",
-                )
-        else:
-            options["backend"] = self._backend
+
+        options["backend"] = self._backend
 
         if not self._session_id:
             # TODO: What happens if session max time != first job max time?
@@ -229,6 +210,30 @@ class Session:
             :class:`qiskit_ibm_runtime.QiskitRuntimeService` associated with this session.
         """
         return self._service
+
+    @classmethod
+    def from_id(
+        cls,
+        session_id: str,
+        service: Optional[QiskitRuntimeService] = None,
+        backend: Optional[Union[str, IBMBackend]] = None,
+    ) -> "Session":
+        """Construct a Session object with a given session_id
+
+        Args:
+            session_id: the id of the session to be created. This can be an already
+                existing session id.
+            service: instance of the ``QiskitRuntimeService`` class.
+            backend: instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
+                string name of backend.
+
+        Returns:
+            A new Session with the given ``session_id``
+
+        """
+        session = cls(service, backend)
+        session._session_id = session_id
+        return session
 
     def __enter__(self) -> "Session":
         set_cm_session(self)

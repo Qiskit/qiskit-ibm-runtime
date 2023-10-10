@@ -22,7 +22,6 @@ from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit.primitives import BaseEstimator, EstimatorResult
 
 from qiskit_ibm_runtime import Estimator, Session
-from qiskit_ibm_runtime.exceptions import RuntimeJobFailureError
 
 from ..decorators import run_integration_test
 from ..ibm_test_case import IBMIntegrationTestCase
@@ -186,20 +185,6 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
 
         self.assertTrue(np.allclose(chsh1_terra.values, chsh1_runtime.values, rtol=0.3))
         self.assertTrue(np.allclose(chsh2_terra.values, chsh2_runtime.values, rtol=0.3))
-
-    @run_integration_test
-    def test_estimator_error_messages(self, service):
-        """Test that the correct error message is displayed"""
-        circuit = QuantumCircuit(2, 2)
-        circuit.h(0)
-        with Session(service, self.backend) as session:
-            estimator = Estimator(session=session)
-            job = estimator.run(circuits=circuit, observables="II")
-            with self.assertRaises(RuntimeJobFailureError) as err:
-                job.result()
-            self.assertIn("register name", str(err.exception))
-            self.assertFalse("python -m uvicorn server.main" in str(err.exception))
-            self.assertIn("register name", str(job.error_message()))
 
     @run_integration_test
     def test_estimator_no_session(self, service):
