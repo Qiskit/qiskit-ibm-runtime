@@ -14,7 +14,7 @@
 
 from unittest import SkipTest, mock
 from unittest.mock import patch
-from datetime import datetime
+from datetime import datetime, timedelta
 import copy
 
 from qiskit.transpiler.target import Target
@@ -104,6 +104,14 @@ class TestIBMBackend(IBMIntegrationTestCase):
         with self.subTest(backend=backend.name):
             self.assertIsNotNone(backend.target)
             self.assertIsInstance(backend.target, Target)
+
+    @production_only
+    def test_backend_target_history(self):
+        """Check retrieving backend target_history."""
+        backend = self.backend
+        with self.subTest(backend=backend.name):
+            self.assertIsNotNone(backend.target_history())
+            self.assertIsNotNone(backend.target_history(datetime=datetime.now() - timedelta(30)))
 
     def test_backend_max_circuits(self):
         """Check if the max_circuits property is set."""
