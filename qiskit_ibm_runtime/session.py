@@ -186,9 +186,7 @@ class Session:
         """Close the session so new jobs will no longer be accepted, but existing
         queued or running jobs will run to completion. The session will be terminated once there
         are no more pending."""
-        backend = self._service.backend(self._backend)
-        # There is a 500 internal error on IQP if the backend is a simulator
-        if not backend.simulator and self._session_id:
+        if self._session_id:
             self._service._api_client.close_session(self._session_id)
 
     def backend(self) -> Optional[str]:

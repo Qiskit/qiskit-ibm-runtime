@@ -150,6 +150,10 @@ class TestSession(IBMTestCase):
         _ = FakeRuntimeService(channel="ibm_quantum", token="xyz")
         session = Session(backend="ibmq_qasm_simulator")
         self.assertEqual(session._service._account.token, "xyz")
+        with Session(
+            service=FakeRuntimeService(channel="ibm_quantum", token="uvw"), backend="ibm_gotham"
+        ) as session:
+            self.assertEqual(session._service._account.token, "uvw")
 
     def test_session_from_id(self):
         """Create session with given session_id"""

@@ -15,6 +15,8 @@
 from typing import Dict, Any
 from .base import RestAdapterBase
 from ..session import RetrySession
+from ..exceptions import RequestsApiError
+from ...exceptions import IBMRuntimeError
 
 
 class RuntimeSession(RestAdapterBase):
@@ -44,7 +46,13 @@ class RuntimeSession(RestAdapterBase):
         """Set accepting_jobs flag to false, so no more jobs can be submitted."""
         payload = {"accepting_jobs": False}
         url = self.get_url("self")
-        self.session.patch(url, json=payload)
+        try:
+            self.session.patch(url, json=payload)
+        except RequestsApiError as ex:
+            # TODO change this to 404
+            if ex.status_code == 500:
+                pass
+            raise IBMRuntimeError(f"Error closing session: {ex}")
 
     def details(self) -> Dict[str, Any]:
         """Return the details of this session."""
