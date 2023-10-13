@@ -49,10 +49,10 @@ class RuntimeSession(RestAdapterBase):
         try:
             self.session.patch(url, json=payload)
         except RequestsApiError as ex:
-            # TODO change this to 404
-            if ex.status_code == 500:
+            if ex.status_code == 404:
                 pass
-            raise IBMRuntimeError(f"Error closing session: {ex}")
+            else:
+                raise IBMRuntimeError(f"Error closing session: {ex}")
 
     def details(self) -> Dict[str, Any]:
         """Return the details of this session."""
