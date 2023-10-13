@@ -186,6 +186,7 @@ class Session:
         """Close the session so new jobs will no longer be accepted, but existing
         queued or running jobs will run to completion. The session will be terminated once there
         are no more pending jobs."""
+        self._active = False
         if self._session_id:
             self._service._api_client.close_session(self._session_id)
 
