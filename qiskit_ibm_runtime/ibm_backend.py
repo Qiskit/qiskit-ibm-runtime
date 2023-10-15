@@ -248,7 +248,7 @@ class IBMBackend(Backend):
         """Gets backend properties and decodes it"""
         if datetime:
             datetime = local_to_utc(datetime)
-        if not self._properties:
+        if datetime or not self._properties:
             api_properties = self._api_client.backend_properties(self.name, datetime=datetime)
             if api_properties:
                 backend_properties = properties_from_server_data(api_properties)
@@ -261,9 +261,9 @@ class IBMBackend(Backend):
             if api_defaults:
                 self._defaults = defaults_from_server_data(api_defaults)
 
-    def _convert_to_target(self) -> None:
+    def _convert_to_target(self, refresh: bool = False) -> None:
         """Converts backend configuration, properties and defaults to Target object"""
-        if not self._target:
+        if refresh or not self._target:
             self._target = convert_to_target(
                 configuration=self._configuration,
                 properties=self._properties,
@@ -347,7 +347,7 @@ class IBMBackend(Backend):
         """
         self._get_properties(datetime=datetime)
         self._get_defaults()
-        self._convert_to_target()
+        self._convert_to_target(refresh=True)
         return self._target
 
     def properties(
