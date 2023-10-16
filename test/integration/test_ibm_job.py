@@ -290,7 +290,6 @@ class TestIBMJob(IBMTestCase):
         )
         self.assertNotIn(job.job_id(), [rjob.job_id() for rjob in oldest_jobs])
 
-
     @skip("how do we support refresh")
     def test_refresh_job_result(self):
         """Test re-retrieving job result via refresh."""
@@ -418,11 +417,11 @@ class TestIBMJob(IBMTestCase):
         """Test job circuits."""
         self.assertEqual(str(self.bell), str(self.sim_job.inputs["circuits"][0]))
 
-    def test_job_backend_options(self):
-        """Test job backend options."""
+    def test_job_options(self):
+        """Test job options."""
         run_config = {"shots": 2048, "memory": True}
         job = self.sim_backend.run(self.bell, **run_config)
-        self.assertLessEqual(run_config.items(), job.backend_options().items())
+        self.assertLessEqual(run_config.items(), job.inputs.items())
 
     def test_job_header(self):
         """Test job header."""
