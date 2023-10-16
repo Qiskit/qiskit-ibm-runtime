@@ -219,8 +219,10 @@ class QiskitRuntimeService(Provider):
                 for backend_name in hgp.backends:
                     if backend_name not in self._backends:
                         self._backends[backend_name] = None
-            if not self._account.instance:
-                logger.info(f"Default Instance: {self._get_hgp().name}")
+            self._default_instance = self._account.instance
+            if not self._default_instance:
+                self._default_instance = self._get_hgp().name
+                logger.info("Default instance: %s", self._default_instance)
         QiskitRuntimeService.global_service = self
 
         # TODO - it'd be nice to allow some kind of autocomplete, but `service.ibmq_foo`
@@ -990,8 +992,9 @@ class QiskitRuntimeService(Provider):
             # Find the right hgp
             hgp = self._get_hgp(instance=qrt_options.instance, backend_name=qrt_options.backend)
             hgp_name = hgp.name
-            if hgp_name != self._get_hgp().name:
-                logger.info(f"Instance selected: {hgp_name}")
+            if hgp_name != self._default_instance:
+                self._default_instance = hgp_name
+                logger.info("Instance selected: %s", self._default_instance)
         backend = self.backend(name=qrt_options.backend, instance=hgp_name)
         status = backend.status()
         if status.operational is True and status.status_msg != "active":
