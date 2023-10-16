@@ -29,7 +29,7 @@ from qiskit_ibm_provider.exceptions import IBMBackendApiError
 
 from qiskit_ibm_runtime import IBMBackend, RuntimeJob
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
-from qiskit_ibm_runtime.exceptions import RuntimeJobTimeoutError
+from qiskit_ibm_runtime.exceptions import RuntimeJobTimeoutError, RuntimeJobNotFound
 from ..decorators import (
     IntegrationTestDependencies,
     integration_test_setup_with_backend,
@@ -185,7 +185,7 @@ class TestIBMJob(IBMTestCase):
 
     def test_retrieve_job_error(self):
         """Test retrieving an invalid job."""
-        self.assertRaises(IBMBackendApiError, self.service.job, "BAD_JOB_ID")
+        self.assertRaises(RuntimeJobNotFound, self.service.job, "BAD_JOB_ID")
 
     def test_retrieve_jobs_status(self):
         """Test retrieving jobs filtered by status."""
