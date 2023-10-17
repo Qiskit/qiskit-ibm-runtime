@@ -83,6 +83,9 @@ class TestIntegrationAccount(IBMIntegrationTestCase):
 
     def test_logging_instance_at_init(self):
         """Test instance is logged at initialization if instance not passed in."""
+        if self.dependencies.channel == "ibm_cloud":
+            self.skipTest("Not supported on ibm_cloud")
+
         with self.assertLogs("qiskit_ibm_runtime", "INFO") as logs:
             QiskitRuntimeService(
                 channel="ibm_quantum",
