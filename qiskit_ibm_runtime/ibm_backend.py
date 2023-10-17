@@ -851,7 +851,8 @@ class IBMBackend(Backend):
         if self._session:
             self._session.cancel()
             if self._session.session_id:
-                self.provider._runtime_client.close_session(self._session.session_id)
+                self._api_client.close_session(self._session.session_id)
+
         self._session = None
 
     def _deprecate_id_instruction(self, circuits: List[QuantumCircuit]) -> List[QuantumCircuit]:
