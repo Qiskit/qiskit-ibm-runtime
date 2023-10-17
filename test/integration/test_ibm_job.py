@@ -57,7 +57,7 @@ class TestIBMJob(IBMIntegrationTestCase):
     def setUpClass(cls, backend: IBMBackend, dependencies: IntegrationTestDependencies) -> None:
         """Initial class level setup."""
         # pylint: disable=arguments-differ
-        super().setUpClass()
+        super().setUpClass(dependencies=dependencies)
         cls.sim_backend = dependencies.service.backend(
             "ibmq_qasm_simulator", instance=dependencies.instance
         )
