@@ -35,7 +35,7 @@ from ..decorators import (
     integration_test_setup_with_backend,
 )
 from ..fake_account_client import BaseFakeAccountClient, CancelableFakeJob
-from ..ibm_test_case import IBMTestCase
+from ..ibm_test_case import IBMIntegrationTestCase
 from ..utils import (
     most_busy_backend,
     cancel_job_safe,
@@ -43,7 +43,7 @@ from ..utils import (
 )
 
 
-class TestIBMJob(IBMTestCase):
+class TestIBMJob(IBMIntegrationTestCase):
     """Test ibm_job module."""
 
     sim_backend: IBMBackend
@@ -58,12 +58,10 @@ class TestIBMJob(IBMTestCase):
         """Initial class level setup."""
         # pylint: disable=arguments-differ
         super().setUpClass()
-        cls.service = dependencies.service
         cls.sim_backend = dependencies.service.backend(
             "ibmq_qasm_simulator", instance=dependencies.instance
         )
         cls.real_device_backend = backend
-        cls.dependencies = dependencies
         cls.bell = transpile(ReferenceCircuits.bell(), cls.sim_backend)
         cls.sim_job = cls.sim_backend.run(cls.bell)
         cls.last_month = datetime.now() - timedelta(days=30)

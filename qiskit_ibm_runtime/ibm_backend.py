@@ -698,13 +698,10 @@ class IBMBackend(Backend):
             warnings.warn(f"The backend {self.name} is currently paused.")
 
         program_id = str(run_config.get("program_id", ""))
-        if not program_id:
-            if dynamic:
-                program_id = QASM3RUNNERPROGRAMID
-            else:
-                program_id = QOBJRUNNERPROGRAMID
-        else:
+        if program_id:
             run_config.pop("program_id", None)
+        else:
+            program_id = QASM3RUNNERPROGRAMID if dynamic else QOBJRUNNERPROGRAMID
 
         image: Optional[str] = run_config.get("image", None)  # type: ignore
         if image is not None:

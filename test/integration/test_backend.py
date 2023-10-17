@@ -82,7 +82,6 @@ class TestIBMBackend(IBMIntegrationTestCase):
         # pylint: disable=arguments-differ
         # pylint: disable=no-value-for-parameter
         super().setUpClass()
-        cls.service = cls.dependencies.service
         if cls.dependencies.channel == "ibm_cloud":
             # TODO use real device when cloud supports it
             cls.backend = cls.dependencies.service.least_busy(min_num_qubits=5)

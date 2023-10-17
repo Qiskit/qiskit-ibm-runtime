@@ -183,7 +183,6 @@ def integration_test_setup_with_backend(
         @integration_test_setup()
         def _wrapper(self, *args, **kwargs):
             dependencies: IntegrationTestDependencies = kwargs["dependencies"]
-            # provider: IBMProvider = dependencies.provider
             service = dependencies.service
             if not staging:
                 raise SkipTest("Tests not supported on staging.")
