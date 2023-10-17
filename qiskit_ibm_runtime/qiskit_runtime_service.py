@@ -54,6 +54,7 @@ from .utils import RuntimeDecoder, to_base64_string, to_python_identifier
 from .api.client_parameters import ClientParameters
 from .runtime_options import RuntimeOptions
 from .ibm_backend import IBMBackend
+from .utils.deprecation import issue_deprecation_msg
 
 logger = logging.getLogger(__name__)
 
@@ -815,6 +816,12 @@ class QiskitRuntimeService(Provider):
                 value of 20.
             skip: The number of programs to skip.
         """
+        issue_deprecation_msg(
+            msg="Custom programs are being deprecated",
+            version="0.13.1",
+            remedy="Please use the provided primitives instead.",
+            period="1 month",
+        )
         programs = self.programs(refresh, limit, skip)
         for prog in programs:
             print("=" * 50)
@@ -843,6 +850,12 @@ class QiskitRuntimeService(Provider):
         Returns:
             A list of runtime programs.
         """
+        issue_deprecation_msg(
+            msg="Custom programs are being deprecated",
+            version="0.13.1",
+            remedy="Please use the provided primitives instead.",
+            period="1 month",
+        )
         if skip is None:
             skip = 0
         if not self._programs or refresh:
@@ -1096,6 +1109,12 @@ class QiskitRuntimeService(Provider):
             IBMNotAuthorizedError: If you are not authorized to upload programs.
             IBMRuntimeError: If the upload failed.
         """
+        issue_deprecation_msg(
+            msg="Custom programs are being deprecated",
+            version="0.13.1",
+            remedy="Please use the provided primitives instead.",
+            period="1 month",
+        )
         program_metadata = self._read_metadata(metadata=metadata)
 
         for req in ["name", "max_execution_time"]:
@@ -1179,6 +1198,12 @@ class QiskitRuntimeService(Provider):
             RuntimeProgramNotFound: If the program doesn't exist.
             IBMRuntimeError: If the request failed.
         """
+        issue_deprecation_msg(
+            msg="Custom programs are being deprecated",
+            version="0.13.1",
+            remedy="Please use the provided primitives instead.",
+            period="1 month",
+        )
         if not any([data, metadata, name, description, max_execution_time, spec]):
             warnings.warn(
                 "None of the 'data', 'metadata', 'name', 'description', "
@@ -1243,6 +1268,12 @@ class QiskitRuntimeService(Provider):
             RuntimeProgramNotFound: If the program doesn't exist.
             IBMRuntimeError: If the request failed.
         """
+        issue_deprecation_msg(
+            msg="Custom programs are being deprecated",
+            version="0.13.1",
+            remedy="Please use the provided primitives instead.",
+            period="1 month",
+        )
         try:
             self._api_client.program_delete(program_id=program_id)
         except RequestsApiError as ex:
@@ -1265,6 +1296,12 @@ class QiskitRuntimeService(Provider):
             RuntimeProgramNotFound: if program not found (404)
             IBMRuntimeError: if update failed (401, 403)
         """
+        issue_deprecation_msg(
+            msg="Custom programs are being deprecated",
+            version="0.13.1",
+            remedy="Please use the provided primitives instead.",
+            period="1 month",
+        )
         try:
             self._api_client.set_program_visibility(program_id, public)
         except RequestsApiError as ex:
