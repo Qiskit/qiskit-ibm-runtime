@@ -80,3 +80,13 @@ class TestIntegrationAccount(IBMIntegrationTestCase):
                 token=self.dependencies.token,
                 instance=service_instance_name,
             )
+
+    def test_logging_instance_at_init(self):
+        """Test instance is logged at initialization if instance not passed in."""
+        with self.assertLogs("qiskit_ibm_runtime", "INFO") as logs:
+            QiskitRuntimeService(
+                channel="ibm_quantum",
+                url=self.dependencies.url,
+                token=self.dependencies.token,
+            )
+        self.assertIn("instance", logs.output[0])
