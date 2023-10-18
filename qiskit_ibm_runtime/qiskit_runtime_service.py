@@ -987,13 +987,13 @@ class QiskitRuntimeService(Provider):
             RuntimeProgramNotFound: If the program cannot be found.
             IBMRuntimeError: An error occurred running the program.
         """
-        if program_id not in ['sampler', 'estimator', 'circuit-runner', 'qasm3-runner']:
+        if program_id not in ["sampler", "estimator", "circuit-runner", "qasm3-runner"]:
             issue_deprecation_msg(
-            msg="Custom programs are being deprecated",
-            version="0.13.1",
-            remedy="Please use the provided primitives instead.",
-            period="1 month",
-        )
+                msg="Custom programs are being deprecated",
+                version="0.13.1",
+                remedy="Please use the provided primitives instead.",
+                period="1 month",
+            )
         qrt_options: RuntimeOptions = options
         if options is None:
             qrt_options = RuntimeOptions()
