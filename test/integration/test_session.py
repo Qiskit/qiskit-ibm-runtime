@@ -93,7 +93,6 @@ class TestIntegrationSession(IBMIntegrationTestCase):
             sampler = Sampler(session=session)
             job = sampler.run(ReferenceCircuits.bell(), shots=400)
             session_id = job.session_id
-            session.close()
         new_session = Session.from_id(backend=backend, session_id=session_id)
         sampler = Sampler(session=new_session)
         job = sampler.run(ReferenceCircuits.bell(), shots=400)
