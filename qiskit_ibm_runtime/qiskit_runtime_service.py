@@ -900,6 +900,12 @@ class QiskitRuntimeService(Provider):
             RuntimeProgramNotFound: If the program does not exist.
             IBMRuntimeError: If the request failed.
         """
+        issue_deprecation_msg(
+            msg="Custom programs are being deprecated",
+            version="0.13.1",
+            remedy="Please use the provided primitives instead.",
+            period="1 month",
+        )
         if program_id not in self._programs or refresh:
             try:
                 response = self._api_client.program_get(program_id)
