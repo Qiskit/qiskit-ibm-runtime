@@ -18,8 +18,8 @@ from qiskit.quantum_info import SparsePauliOp
 
 from qiskit_ibm_runtime import Estimator, Session
 
-from ..ibm_test_case import IBMTestCase
 from .mock.fake_runtime_service import FakeRuntimeService
+from ..ibm_test_case import IBMTestCase
 
 
 class TestEstimator(IBMTestCase):
@@ -36,6 +36,7 @@ class TestEstimator(IBMTestCase):
             {"resilience_level": 4, "optimization_level": 3},
             {"optimization_level": 4, "resilience_level": 2},
         ]
+
         with Session(
             service=FakeRuntimeService(channel="ibm_quantum", token="abc"),
             backend="common_backend",
