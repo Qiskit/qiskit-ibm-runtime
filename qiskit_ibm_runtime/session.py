@@ -24,6 +24,7 @@ from .runtime_job import RuntimeJob
 from .runtime_program import ParameterNamespace
 from .program.result_decoder import ResultDecoder
 from .ibm_backend import IBMBackend
+from .exceptions import IBMInputValueError
 
 
 def _active_session(func):  # type: ignore
@@ -279,28 +280,28 @@ class Session:
         return self._service
 
     @classmethod
-    def from_id(
-        cls,
-        session_id: str,
-        service: Optional[QiskitRuntimeService] = None,
-        backend: Optional[Union[str, IBMBackend]] = None,
-    ) -> "Session":
+    def from_id(cls, session_id: str, service: QiskitRuntimeService) -> "Session":
         """Construct a Session object with a given session_id
 
         Args:
-            session_id: the id of the session to be created. This can be an already
+            session_id: the id of the session to be created. This must be an already
                 existing session id.
             service: instance of the ``QiskitRuntimeService`` class.
-            backend: instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
-                string name of backend.
+
+        Raises:
+            IBMInputValueError: If given `session_id` does not exist.
 
         Returns:
             A new Session with the given ``session_id``
-
         """
-        session = cls(service, backend)
-        session._session_id = session_id
-        return session
+        response = service._api_client.session_details(session_id)
+        if response:
+            backend = response.get("backend_name")
+            session = cls(service, backend)
+            session._session_id = session_id
+            return session
+
+        raise IBMInputValueError(f"The session_id {session_id} does not exist.")
 
     def __enter__(self) -> "Session":
         set_cm_session(self)
