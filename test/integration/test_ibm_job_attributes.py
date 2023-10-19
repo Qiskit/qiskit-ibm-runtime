@@ -35,7 +35,6 @@ from ..decorators import (
     IntegrationTestDependencies,
     integration_test_setup,
 )
-from ..fake_account_client import BaseFakeAccountClient
 from ..ibm_test_case import IBMTestCase
 from ..utils import (
     most_busy_backend,
@@ -228,50 +227,37 @@ class TestIBMJobAttributes(IBMTestCase):
 
     def test_esp_readout_not_enabled(self):
         """Test that an error is thrown is ESP readout is used and the backend does not support it."""
-        saved_api = self.sim_backend._api_client
-        try:
-            self.sim_backend._api_client = BaseFakeAccountClient()
-            # sim backend does not have ``measure_esp_enabled`` flag: defaults to ``False``
-            with self.assertRaises(IBMBackendValueError) as context_manager:
-                self.sim_backend.run(self.bell, use_measure_esp=True)
-            self.assertIn(
-                "ESP readout not supported on this device. Please make sure the flag "
-                "'use_measure_esp' is unset or set to 'False'.",
-                context_manager.exception.message,
-            )
-        finally:
-            self.sim_backend._api_client = saved_api
+        # sim backend does not have ``measure_esp_enabled`` flag: defaults to ``False``
+        with self.assertRaises(IBMBackendValueError) as context_manager:
+            self.sim_backend.run(self.bell, use_measure_esp=True)
+        self.assertIn(
+            "ESP readout not supported on this device. Please make sure the flag "
+            "'use_measure_esp' is unset or set to 'False'.",
+            context_manager.exception.message,
+        )
 
-    @skip("not supported by api")
     def test_esp_readout_enabled(self):
         """Test that ESP readout can be used when the backend supports it."""
-        saved_api = self.sim_backend._api_client
         try:
-            self.sim_backend._api_client = BaseFakeAccountClient()
             setattr(self.sim_backend._configuration, "measure_esp_enabled", True)
             job = self.sim_backend.run(self.bell, use_measure_esp=True)
             self.assertEqual(job.inputs["use_measure_esp"], True)
         finally:
             delattr(self.sim_backend._configuration, "measure_esp_enabled")
-            self.sim_backend._api_client = saved_api
 
-    @skip("not supported by api")
     def test_esp_readout_default_value(self):
         """Test that ESP readout is set to backend support value if not specified."""
-        saved_api = self.sim_backend._api_client
         try:
-            self.sim_backend._api_client = BaseFakeAccountClient()
             # ESP readout not enabled on backend
             setattr(self.sim_backend._configuration, "measure_esp_enabled", False)
             job = self.sim_backend.run(self.bell)
-            self.assertEqual(job.inputs["use_measure_esp"], False)
+            self.assertIsNone(getattr(job.inputs, "use_measure_esp", None))
             # ESP readout enabled on backend
             setattr(self.sim_backend._configuration, "measure_esp_enabled", True)
-            job = self.sim_backend.run(self.bell)
+            job = self.sim_backend.run(self.bell, use_measure_esp=True)
             self.assertEqual(job.inputs["use_measure_esp"], True)
         finally:
             delattr(self.sim_backend._configuration, "measure_esp_enabled")
-            self.sim_backend._api_client = saved_api
 
     def test_job_tags(self):
         """Test using job tags."""

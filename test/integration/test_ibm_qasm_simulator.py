@@ -34,9 +34,7 @@ class TestIBMQasmSimulator(IBMIntegrationTestCase):
     """Test IBM Quantum QASM Simulator."""
 
     @integration_test_setup_with_backend(simulator=False)
-    def setUp(
-        self, backend: IBMBackend, dependencies: IntegrationTestDependencies
-    ) -> None:
+    def setUp(self, backend: IBMBackend, dependencies: IntegrationTestDependencies) -> None:
         """Initial test setup."""
         # pylint: disable=arguments-differ
         super().setUp()
@@ -49,9 +47,7 @@ class TestIBMQasmSimulator(IBMIntegrationTestCase):
         """Test execute_one_circuit_simulator_online."""
         quantum_register = QuantumRegister(1)
         classical_register = ClassicalRegister(1)
-        quantum_circuit = QuantumCircuit(
-            quantum_register, classical_register, name="qc"
-        )
+        quantum_circuit = QuantumCircuit(quantum_register, classical_register, name="qc")
         quantum_circuit.h(quantum_register[0])
         quantum_circuit.measure(quantum_register[0], classical_register[0])
         circs = transpile(quantum_circuit, backend=self.sim_backend)
@@ -145,9 +141,7 @@ class TestIBMQasmSimulator(IBMIntegrationTestCase):
 
         def _new_submit(qobj, *args, **kwargs):
             # pylint: disable=unused-argument
-            self.assertEqual(
-                qobj.config.method, "my_method", f"qobj header={qobj.header}"
-            )
+            self.assertEqual(qobj.config.method, "my_method", f"qobj header={qobj.header}")
             return mock.MagicMock()
 
         backend = self.sim_backend
