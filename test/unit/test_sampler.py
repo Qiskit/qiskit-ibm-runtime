@@ -28,6 +28,7 @@ class TestSampler(IBMTestCase):
             {"resilience_level": 2, "optimization_level": 3},
             {"optimization_level": 4, "resilience_level": 1},
         ]
+
         with Session(
             service=FakeRuntimeService(channel="ibm_quantum", token="abc"),
             backend="common_backend",

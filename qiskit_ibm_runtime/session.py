@@ -62,9 +62,6 @@ class Session:
             job = sampler.run(ReferenceCircuits.bell())
             print(f"Sampler job ID: {job.job_id()}")
             print(f"Sampler job result: {job.result()}")
-            # Close the session only if all jobs are finished and
-            # you don't need to run more in the session.
-            session.close()
 
     """
 
@@ -179,8 +176,16 @@ class Session:
 
         return job
 
+    def cancel(self) -> None:
+        """Cancel all pending jobs in a session."""
+        self._active = False
+        if self._session_id:
+            self._service._api_client.cancel_session(self._session_id)
+
     def close(self) -> None:
-        """Close the session."""
+        """Close the session so new jobs will no longer be accepted, but existing
+        queued or running jobs will run to completion. The session will be terminated once there
+        are no more pending jobs."""
         self._active = False
         if self._session_id:
             self._service._api_client.close_session(self._session_id)
@@ -308,6 +313,7 @@ class Session:
         exc_tb: Optional[TracebackType],
     ) -> None:
         set_cm_session(None)
+        self.close()
 
 
 # Default session

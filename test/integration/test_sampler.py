@@ -70,7 +70,6 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
             for i in range(len(circuits3)):
                 self.assertAlmostEqual(result3.quasi_dists[i][3], 0.5, delta=0.1)
                 self.assertAlmostEqual(result3.quasi_dists[i][0], 0.5, delta=0.1)
-            session.close()
 
     @run_integration_test
     def test_sampler_primitive_parameterized_circuits(self, service):
@@ -98,7 +97,6 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
             self.assertIsInstance(result, SamplerResult)
             self.assertEqual(len(result.quasi_dists), len(circuits0))
             self.assertEqual(len(result.metadata), len(circuits0))
-            session.close()
 
     @run_integration_test
     def test_sampler_skip_transpile(self, service):
@@ -114,7 +112,6 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
                 sampler.run(circuits=circ, skip_transpilation=True).result()
                 # If transpilation not skipped the error would be something about cannot expand.
                 self.assertIn("invalid instructions", err.exception.message)
-                session.close()
 
     @run_integration_test
     def test_sampler_optimization_level(self, service):
@@ -129,7 +126,6 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
             )
             self.assertAlmostEqual(result.quasi_dists[0][3], 0.5, delta=0.1)
             self.assertAlmostEqual(result.quasi_dists[0][0], 0.5, delta=0.1)
-            session.close()
 
     @run_integration_test
     def test_sampler_callback(self, service):
@@ -154,7 +150,6 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
             self.assertEqual(result.quasi_dists, ws_result_quasi)
             self.assertEqual(len(job_ids), 1)
             self.assertEqual(job.job_id(), job_ids.pop())
-            session.close()
 
     @run_integration_test
     def test_sampler_no_session(self, service):
