@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    At initialization, if not passed in directly, the default ``instance`` selected by the provider 
+    will be logged at the "INFO" level. When running a job, if the backend selected is not in 
+    the default instance but in a different instance the user also has access to, that instance 
+    will also be logged. 
