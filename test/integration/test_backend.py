@@ -236,36 +236,6 @@ class TestIBMBackend(IBMIntegrationTestCase):
         with self.assertWarns(Warning):
             backend.run(ReferenceCircuits.bell())
 
-    def test_deprecate_id_instruction(self):
-        """Test replacement of 'id' Instructions with 'Delay' instructions."""
-        circuit_with_id = QuantumCircuit(2)
-        circuit_with_id.id(0)
-        circuit_with_id.id(0)
-        circuit_with_id.id(1)
-
-        config = QasmBackendConfiguration(
-            basis_gates=["id"],
-            supported_instructions=["delay"],
-            dt=0.25,
-            backend_name="test",
-            backend_version="0.0",
-            n_qubits=1,
-            gates=[],
-            local=False,
-            simulator=False,
-            conditional=False,
-            open_pulse=False,
-            memory=False,
-            max_shots=1,
-            coupling_map=[],
-        )
-
-        with patch.object(self.backend, "configuration", return_value=config):
-            with self.assertWarnsRegex(DeprecationWarning, r"'id' instruction"):
-                mutated_circuit = self.backend._deprecate_id_instruction([circuit_with_id])
-            self.assertEqual(mutated_circuit[0].count_ops(), {"delay": 3})
-            self.assertEqual(circuit_with_id.count_ops(), {"id": 3})
-
     def test_backend_wrong_instance(self):
         """Test that an error is raised when retrieving a backend not in the instance."""
         backends = self.service.backends()

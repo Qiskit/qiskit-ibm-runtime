@@ -715,8 +715,6 @@ class IBMBackend(Backend):
 
         if isinstance(shots, float):
             shots = int(shots)
-        if not self.configuration().simulator:
-            circuits = self._deprecate_id_instruction(circuits)
 
         run_config_dict = self._get_run_config(
             program_id=program_id,
@@ -851,66 +849,6 @@ class IBMBackend(Backend):
                 self._api_client.close_session(self._session.session_id)
 
         self._session = None
-
-    def _deprecate_id_instruction(self, circuits: List[QuantumCircuit]) -> List[QuantumCircuit]:
-        """Raise a DeprecationWarning if any circuit contains an 'id' instruction.
-
-        Additionally, if 'delay' is a 'supported_instruction', replace each 'id'
-        instruction (in-place) with the equivalent ('sx'-length) 'delay' instruction.
-
-        Args:
-            circuits: The individual or list of :class:`~qiskit.circuits.QuantumCircuit`
-                 passed to :meth:`IBMBackend.run()<IBMBackend.run>`. Modified in-place.
-
-        Returns:
-            A modified copy of the original circuit where 'id' instructions are replaced with
-            'delay' instructions. A copy is used so the original circuit is not modified.
-            If there are no 'id' instructions or 'delay' is not supported, return the original circuit.
-        """
-
-        id_support = "id" in getattr(self.configuration(), "basis_gates", [])
-        delay_support = "delay" in getattr(self.configuration(), "supported_instructions", [])
-
-        if not delay_support:
-            return circuits
-
-        circuit_has_id = any(
-            instr.name == "id"
-            for circuit in circuits
-            if isinstance(circuit, QuantumCircuit)
-            for instr, qargs, cargs in circuit.data
-        )
-        if not circuit_has_id:
-            return circuits
-        if not self.id_warning_issued:
-            if id_support and delay_support:
-                warnings.warn(
-                    "Support for the 'id' instruction has been deprecated "
-                    "from IBM hardware backends. Any 'id' instructions "
-                    "will be replaced with their equivalent 'delay' instruction. "
-                    "Please use the 'delay' instruction instead.",
-                    DeprecationWarning,
-                    stacklevel=4,
-                )
-            else:
-                warnings.warn(
-                    "Support for the 'id' instruction has been removed "
-                    "from IBM hardware backends. Any 'id' instructions "
-                    "will be replaced with their equivalent 'delay' instruction. "
-                    "Please use the 'delay' instruction instead.",
-                    DeprecationWarning,
-                    stacklevel=4,
-                )
-
-            self.id_warning_issued = True
-
-        # Make sure we don't mutate user's input circuits
-        circuits = copy.deepcopy(circuits)
-        # Convert id gates to delays.
-        pm = PassManager(ConvertIdToDelay(self.target.durations()))  # pylint: disable=invalid-name
-        circuits = pm.run(circuits)
-
-        return circuits
 
 
 class IBMRetiredBackend(IBMBackend):
