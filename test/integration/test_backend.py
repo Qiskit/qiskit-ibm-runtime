@@ -13,13 +13,11 @@
 """Tests for backend functions using real runtime service."""
 
 from unittest import SkipTest, mock
-from unittest.mock import patch
 from datetime import datetime, timedelta
 import copy
 
 from qiskit.transpiler.target import Target
 from qiskit import QuantumCircuit
-from qiskit.providers.models import QasmBackendConfiguration
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.test.reference_circuits import ReferenceCircuits
 

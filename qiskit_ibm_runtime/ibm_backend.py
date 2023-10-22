@@ -12,7 +12,6 @@
 
 """Module for interfacing with an IBM Quantum Backend."""
 
-import copy
 import logging
 from typing import Iterable, Union, Optional, Any, List, Dict
 from datetime import datetime as python_datetime
@@ -23,7 +22,6 @@ import warnings
 from qiskit import QuantumCircuit
 from qiskit.qobj.utils import MeasLevel, MeasReturnType
 from qiskit.tools.events.pubsub import Publisher
-from qiskit.transpiler.passmanager import PassManager
 
 from qiskit.providers.backend import BackendV2 as Backend
 from qiskit.providers.options import Options
@@ -69,7 +67,6 @@ from .exceptions import IBMBackendApiProtocolError
 from .utils.backend_converter import (
     convert_to_target,
 )
-from .transpiler.passes.basis.convert_id_to_delay import ConvertIdToDelay
 
 logger = logging.getLogger(__name__)
 
