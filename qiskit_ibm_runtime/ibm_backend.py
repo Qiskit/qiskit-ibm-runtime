@@ -243,7 +243,7 @@ class IBMBackend(Backend):
 
     def _convert_to_target(self, refresh: bool = False) -> None:
         """Converts backend configuration, properties and defaults to Target object"""
-        if refresh or not self._target:
+        if (refresh or not self._target) and self.name.split("_")[-1] != "stabilizer":
             self._target = convert_to_target(
                 configuration=self._configuration,
                 properties=self._properties,
