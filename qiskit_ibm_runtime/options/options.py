@@ -116,7 +116,7 @@ class Options:
     def __post_init__(self):  # type: ignore
         """Convert dictionary fields to object."""
         obj_fields = getattr(self, "_obj_fields", {})
-        for key in obj_fields.items():
+        for key in obj_fields.keys():
             if hasattr(self, key):
                 orig_val = getattr(self, key)
                 setattr(self, key, _to_obj(obj_fields[key], orig_val))
