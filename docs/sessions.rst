@@ -106,7 +106,7 @@ After a session is deactivated, the next job in the queue is selected to run. Th
 What happens when a session ends
 -------------------------------------
 
-A session ends by reaching its maximum timeout value or when it is manually closed by the user.  Do not close a session until all jobs **complete**. See `Close a session <how_to/run_session.html#close session>`__ for details. After a session is closed, the following occurs:
+A session ends by reaching its maximum timeout value or when it is manually closed by the user.  Do not close a session until all jobs **complete**. See `Close a session <how_to/run_session.html#close-a-session>`__ for details. After a session is closed, the following occurs:
 
 * Any queued jobs remaining in the session (whether they are queued or not) are put into a failed state.
 * No further jobs can be submitted to the session.

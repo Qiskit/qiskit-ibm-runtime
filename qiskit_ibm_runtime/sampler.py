@@ -60,10 +60,6 @@ class Sampler(BasePrimitive, BaseSampler):
             print(f"Job result: {job.result()}")
 
             # You can run more jobs inside the session
-
-            # Close the session only if all jobs are finished
-            # and you don't need to run more in the session.
-            session.close()
     """
 
     def __init__(

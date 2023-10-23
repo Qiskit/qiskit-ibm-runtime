@@ -42,7 +42,7 @@ author = 'Qiskit Development Team'
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = '0.12.2'
+release = '0.13.1'
 
 docs_url_prefix = "ecosystem/ibm-runtime"
 
@@ -146,17 +146,10 @@ modindex_common_prefix = ['qiskit.']
 
 # -- Options for HTML output -------------------------------------------------
 
-html_theme = 'qiskit_sphinx_theme'
+html_theme = "qiskit-ecosystem"
+html_title = f"{project} {release}"
 
-html_logo = 'images/logo.png'
 html_last_updated_fmt = '%Y/%m/%d'
-
-html_theme_options = {
-    'logo_only': True,
-    'display_version': True,
-    'prev_next_buttons_location': 'bottom',
-    'style_external_links': True,
-}
 
 html_sourcelink_suffix = ''
 
