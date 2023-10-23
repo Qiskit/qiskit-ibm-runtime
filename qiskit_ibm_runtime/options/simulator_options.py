@@ -19,6 +19,7 @@ from dataclasses import dataclass
 from qiskit.exceptions import MissingOptionalLibraryError
 from qiskit.providers import BackendV1, BackendV2
 from qiskit.utils import optionals
+from qiskit.transpiler import CouplingMap  # pylint: disable=unused-import
 
 if TYPE_CHECKING:
     import qiskit_aer
