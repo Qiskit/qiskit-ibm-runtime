@@ -81,9 +81,6 @@ class Estimator(BasePrimitive, BaseEstimator):
                 parameter_values=[theta1]*2
             )
             print(psi1_H23.result())
-            # Close the session only if all jobs are finished
-            # and you don't need to run more in the session
-            session.close()
     """
 
     _PROGRAM_ID = "estimator"
