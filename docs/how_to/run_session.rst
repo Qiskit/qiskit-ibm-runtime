@@ -82,7 +82,7 @@ When setting the session length, consider how long each job within the session m
   with Session(service=service, backend=backend, max_time="25m"):
     ...
 
-There is also an interactive timeout value (ITTL) that cannot be configured.  If no session jobs are queued within that window, the session is temporarily deactivated. For more details about session length and timeout, see `How long a session stays active <../sessions.html#active>`__. To determine a session's ITTL, follow the instructions in `Determine session details <#session-details>`__ and look for the `interactive_timeout` value.
+There is also an interactive timeout value (ITTL) that cannot be configured.  If no session jobs are queued within that window, the session is temporarily deactivated. For more details about session length and timeout, see `How long a session stays active <../sessions.html#active>`__. To determine a session's ITTL, follow the instructions in `Determine session details <#session-details>`__ and look for the ``interactive_timeout`` value.
 
 
 .. _close_session:
