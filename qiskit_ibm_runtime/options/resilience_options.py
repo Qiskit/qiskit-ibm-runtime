@@ -15,7 +15,6 @@
 from typing import Sequence, Literal, get_args
 from dataclasses import dataclass
 
-from .utils import _flexible
 from ..utils.deprecation import issue_deprecation_msg
 
 ResilienceSupportedOptions = Literal[
@@ -37,7 +36,6 @@ ExtrapolatorType = Literal[
 ]
 
 
-@_flexible
 @dataclass
 class ResilienceOptions:
     """Resilience options.

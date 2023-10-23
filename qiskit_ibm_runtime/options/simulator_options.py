@@ -20,10 +20,6 @@ from qiskit.exceptions import MissingOptionalLibraryError
 from qiskit.providers import BackendV1, BackendV2
 from qiskit.utils import optionals
 
-from qiskit.transpiler import CouplingMap
-
-from .utils import _flexible
-
 if TYPE_CHECKING:
     import qiskit_aer
 
@@ -35,7 +31,6 @@ SimulatorSupportedOptions = Literal[
 ]
 
 
-@_flexible
 @dataclass()
 class SimulatorOptions:
     """Simulator options.
@@ -78,6 +73,9 @@ class SimulatorOptions:
 
         Args:
             backend: backend to be set.
+
+        Raises:
+            MissingOptionalLibraryError if qiskit-aer is not found.
         """
         if not optionals.HAS_AER:
             raise MissingOptionalLibraryError(
