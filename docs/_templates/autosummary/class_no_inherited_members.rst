@@ -13,7 +13,6 @@
    :no-members:
    :no-inherited-members:
    :no-special-members:
-   :show-inheritance:
 
 {% block attributes_summary %}
    {% if attributes %}
