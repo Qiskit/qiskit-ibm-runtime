@@ -151,7 +151,7 @@ Summary
 - Jobs within an active session take priority over other queued jobs.
 - A session becomes active when its first job starts running.
 - A session stays active until one of the following happens:
-  - Its maximum timeout value is reached. In this case all queued jobs are cancelled, but running jobs will finish. 
+  - Its maximum timeout value is reached. In this case all queued jobs are canceled, but running jobs will finish. 
   - Its interactive timeout value is reached. In this case the session is deactivated but can be resumed if another session job starts running. 
   - The session is closed or cancelled. This can be done using the corresponding methods or upon exiting a session context.
 - Sessions can be used for iterative or batch execution.
