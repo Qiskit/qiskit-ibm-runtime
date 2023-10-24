@@ -54,7 +54,6 @@ from .utils import RuntimeDecoder, to_base64_string, to_python_identifier
 from .api.client_parameters import ClientParameters
 from .runtime_options import RuntimeOptions
 from .ibm_backend import IBMBackend
-from .utils.deprecation import issue_deprecation_msg
 
 logger = logging.getLogger(__name__)
 
@@ -813,11 +812,17 @@ class QiskitRuntimeService(Provider):
                 value of 20.
             skip: The number of programs to skip.
         """
-        issue_deprecation_msg(
-            msg="Custom programs are being deprecated",
-            version="0.13.1",
-            remedy="Please use the provided primitives instead.",
-            period="1 month",
+        warnings.warn(
+            (
+                "Custom programs are being deprecated as of qiskit-ibm-runtime 0.14.0 and will "
+                "be removed on November 27, 2023. You can instead convert your custom programs "
+                "to use Qiskit Runtime primitives with Quantum Serverless. Refer to the migration "
+                "guide for instructions: "
+                "https://qiskit-extensions.github.io/quantum-serverless/migration"
+                "/migration_from_qiskit_runtime_programs.html"
+            ),
+            DeprecationWarning,
+            stacklevel=2,
         )
         programs = self.programs(refresh, limit, skip)
         for prog in programs:
@@ -847,11 +852,17 @@ class QiskitRuntimeService(Provider):
         Returns:
             A list of runtime programs.
         """
-        issue_deprecation_msg(
-            msg="Custom programs are being deprecated",
-            version="0.13.1",
-            remedy="Please use the provided primitives instead.",
-            period="1 month",
+        warnings.warn(
+            (
+                "Custom programs are being deprecated as of qiskit-ibm-runtime 0.14.0 and will "
+                "be removed on November 27, 2023. You can instead convert your custom programs "
+                "to use Qiskit Runtime primitives with Quantum Serverless. Refer to the migration "
+                "guide for instructions: "
+                "https://qiskit-extensions.github.io/quantum-serverless/migration"
+                "/migration_from_qiskit_runtime_programs.html"
+            ),
+            DeprecationWarning,
+            stacklevel=2,
         )
         if skip is None:
             skip = 0
@@ -897,11 +908,17 @@ class QiskitRuntimeService(Provider):
             RuntimeProgramNotFound: If the program does not exist.
             IBMRuntimeError: If the request failed.
         """
-        issue_deprecation_msg(
-            msg="Custom programs are being deprecated",
-            version="0.13.1",
-            remedy="Please use the provided primitives instead.",
-            period="1 month",
+        warnings.warn(
+            (
+                "Custom programs are being deprecated as of qiskit-ibm-runtime 0.14.0 and will "
+                "be removed on November 27, 2023. You can instead convert your custom programs "
+                "to use Qiskit Runtime primitives with Quantum Serverless. Refer to the migration "
+                "guide for instructions: "
+                "https://qiskit-extensions.github.io/quantum-serverless/migration"
+                "/migration_from_qiskit_runtime_programs.html"
+            ),
+            DeprecationWarning,
+            stacklevel=2,
         )
         if program_id not in self._programs or refresh:
             try:
@@ -991,11 +1008,17 @@ class QiskitRuntimeService(Provider):
             IBMRuntimeError: An error occurred running the program.
         """
         if program_id not in ["sampler", "estimator", "circuit-runner", "qasm3-runner"]:
-            issue_deprecation_msg(
-                msg="Custom programs are being deprecated",
-                version="0.13.1",
-                remedy="Please use the provided primitives instead.",
-                period="1 month",
+            warnings.warn(
+                (
+                    "Custom programs are being deprecated as of qiskit-ibm-runtime 0.14.0 and will "
+                    "be removed on November 27, 2023. You can instead convert your custom programs "
+                    "to use Qiskit Runtime primitives with Quantum Serverless. Refer to the migration "
+                    "guide for instructions: "
+                    "https://qiskit-extensions.github.io/quantum-serverless/migration"
+                    "/migration_from_qiskit_runtime_programs.html"
+                ),
+                DeprecationWarning,
+                stacklevel=2,
             )
         qrt_options: RuntimeOptions = options
         if options is None:
@@ -1119,11 +1142,17 @@ class QiskitRuntimeService(Provider):
             IBMNotAuthorizedError: If you are not authorized to upload programs.
             IBMRuntimeError: If the upload failed.
         """
-        issue_deprecation_msg(
-            msg="Custom programs are being deprecated",
-            version="0.13.1",
-            remedy="Please use the provided primitives instead.",
-            period="1 month",
+        warnings.warn(
+            (
+                "Custom programs are being deprecated as of qiskit-ibm-runtime 0.14.0 and will "
+                "be removed on November 27, 2023. You can instead convert your custom programs "
+                "to use Qiskit Runtime primitives with Quantum Serverless. Refer to the migration "
+                "guide for instructions: "
+                "https://qiskit-extensions.github.io/quantum-serverless/migration"
+                "/migration_from_qiskit_runtime_programs.html"
+            ),
+            DeprecationWarning,
+            stacklevel=2,
         )
         program_metadata = self._read_metadata(metadata=metadata)
 
@@ -1208,11 +1237,17 @@ class QiskitRuntimeService(Provider):
             RuntimeProgramNotFound: If the program doesn't exist.
             IBMRuntimeError: If the request failed.
         """
-        issue_deprecation_msg(
-            msg="Custom programs are being deprecated",
-            version="0.13.1",
-            remedy="Please use the provided primitives instead.",
-            period="1 month",
+        warnings.warn(
+            (
+                "Custom programs are being deprecated as of qiskit-ibm-runtime 0.14.0 and will "
+                "be removed on November 27, 2023. You can instead convert your custom programs "
+                "to use Qiskit Runtime primitives with Quantum Serverless. Refer to the migration "
+                "guide for instructions: "
+                "https://qiskit-extensions.github.io/quantum-serverless/migration"
+                "/migration_from_qiskit_runtime_programs.html"
+            ),
+            DeprecationWarning,
+            stacklevel=2,
         )
         if not any([data, metadata, name, description, max_execution_time, spec]):
             warnings.warn(
@@ -1278,11 +1313,17 @@ class QiskitRuntimeService(Provider):
             RuntimeProgramNotFound: If the program doesn't exist.
             IBMRuntimeError: If the request failed.
         """
-        issue_deprecation_msg(
-            msg="Custom programs are being deprecated",
-            version="0.13.1",
-            remedy="Please use the provided primitives instead.",
-            period="1 month",
+        warnings.warn(
+            (
+                "Custom programs are being deprecated as of qiskit-ibm-runtime 0.14.0 and will "
+                "be removed on November 27, 2023. You can instead convert your custom programs "
+                "to use Qiskit Runtime primitives with Quantum Serverless. Refer to the migration "
+                "guide for instructions: "
+                "https://qiskit-extensions.github.io/quantum-serverless/migration"
+                "/migration_from_qiskit_runtime_programs.html"
+            ),
+            DeprecationWarning,
+            stacklevel=2,
         )
         try:
             self._api_client.program_delete(program_id=program_id)
@@ -1306,11 +1347,17 @@ class QiskitRuntimeService(Provider):
             RuntimeProgramNotFound: if program not found (404)
             IBMRuntimeError: if update failed (401, 403)
         """
-        issue_deprecation_msg(
-            msg="Custom programs are being deprecated",
-            version="0.13.1",
-            remedy="Please use the provided primitives instead.",
-            period="1 month",
+        warnings.warn(
+            (
+                "Custom programs are being deprecated as of qiskit-ibm-runtime 0.14.0 and will "
+                "be removed on November 27, 2023. You can instead convert your custom programs "
+                "to use Qiskit Runtime primitives with Quantum Serverless. Refer to the migration "
+                "guide for instructions: "
+                "https://qiskit-extensions.github.io/quantum-serverless/migration"
+                "/migration_from_qiskit_runtime_programs.html"
+            ),
+            DeprecationWarning,
+            stacklevel=2,
         )
         try:
             self._api_client.set_program_visibility(program_id, public)
