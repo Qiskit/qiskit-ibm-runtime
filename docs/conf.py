@@ -146,17 +146,19 @@ modindex_common_prefix = ['qiskit.']
 
 # -- Options for HTML output -------------------------------------------------
 
-html_theme = 'qiskit_sphinx_theme'
+html_theme = "qiskit-ecosystem"
+html_title = f"{project} {release}"
 
-html_logo = 'images/logo.png'
-html_last_updated_fmt = '%Y/%m/%d'
+html_logo = "images/ibm-quantum-logo.png"
 
 html_theme_options = {
-    'logo_only': True,
-    'display_version': True,
-    'prev_next_buttons_location': 'bottom',
-    'style_external_links': True,
+    # Because this is an IBM-focused project, we use a blue color scheme.
+    "light_css_variables": {
+        "color-brand-primary": "var(--qiskit-color-blue)",
+    },
 }
+
+html_last_updated_fmt = '%Y/%m/%d'
 
 html_sourcelink_suffix = ''
 
