@@ -24,6 +24,7 @@ from .runtime_job import RuntimeJob
 from .runtime_program import ParameterNamespace
 from .program.result_decoder import ResultDecoder
 from .ibm_backend import IBMBackend
+from .exceptions import RuntimeJobTimeoutError
 
 
 def _active_session(func):  # type: ignore
@@ -172,7 +173,10 @@ class Session:
             self._session_id = job.job_id()
 
         if self._backend is None:
-            self._backend = job.backend().name
+            try:
+                self._backend = job.backend(0).name
+            except RuntimeJobTimeoutError:
+                self._backend = None
 
         return job
 
