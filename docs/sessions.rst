@@ -92,7 +92,7 @@ If the maximum timeout value has not been reached:
 - When using `qiskit-ibm-runtime` 0.13 or later releases:
     - If a session is closed:
         - Session status becomes "In progress, not accepting new jobs".
-        - New job submissions to the session is rejected.
+        - New job submissions to the session are rejected.
         - Queued or running jobs continue to run.
         - The session cannot be reopened.
     - If a session is canceled:
