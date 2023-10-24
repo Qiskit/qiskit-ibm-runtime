@@ -46,7 +46,7 @@ instructions, see `Run a primitive in a session <how_to/run_session.html>`__.
 
 If you do not specify a timeout value, it is set to the system limit.
 
-To find the maximum session timeout value for a session, follow the instructions in `Determine session details <how_to/run_session#session_details.html>`__.
+To find the maximum session timeout value for a session, follow the instructions in `Determine session details <how_to/run_session#determine-session-details.html>`__.
 
 
 .. _ttl:
@@ -68,7 +68,7 @@ words, a deactivated session does not block the creation of other
 sessions. Jobs from this new session would then take priority until it
 is deactivated or closed, at which point normal job selection resumes.
 
-To find the interactive timeout value for a session, follow the instructions in `Determine session details <how_to/run_session#session_details.html>`__.   
+To find the interactive timeout value for a session, follow the instructions in `Determine session details <how_to/run_session#determine-session-details.html>`__.   
 
 .. _ends:
 
