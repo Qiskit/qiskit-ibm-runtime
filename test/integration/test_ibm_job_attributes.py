@@ -60,9 +60,7 @@ class TestIBMJobAttributes(IBMTestCase):
         super().setUpClass()
         cls.dependencies = dependencies
         cls.service = dependencies.service
-        cls.sim_backend = dependencies.service.backend(
-            "ibmq_qasm_simulator", instance=dependencies.instance
-        )
+        cls.sim_backend = dependencies.service.backend("ibmq_qasm_simulator")
         cls.bell = transpile(ReferenceCircuits.bell(), cls.sim_backend)
         cls.sim_job = cls.sim_backend.run(cls.bell)
         cls.last_week = datetime.now() - timedelta(days=7)

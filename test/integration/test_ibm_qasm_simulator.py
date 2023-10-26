@@ -38,9 +38,7 @@ class TestIBMQasmSimulator(IBMIntegrationTestCase):
         """Initial test setup."""
         # pylint: disable=arguments-differ
         super().setUp()
-        self.sim_backend = self.service.backend(
-            "ibmq_qasm_simulator", instance=dependencies.instance
-        )
+        self.sim_backend = self.service.backend("ibmq_qasm_simulator")
         self.real_device_backend = backend
 
     def test_execute_one_circuit_simulator_online(self):
