@@ -154,9 +154,7 @@ class BaseDynamicCircuitAnalysis(TransformationPass):
             new_dag = circuit_to_dag(block)
             inner_wire_map = {
                 inner: outer
-                for outer, inner in zip(
-                    self._map_wires(node), new_dag.qubits + new_dag.clbits
-                )
+                for outer, inner in zip(self._map_wires(node), new_dag.qubits + new_dag.clbits)
             }
             node_block_dags.append(new_dag)
             self._visit_block(new_dag, inner_wire_map)
@@ -226,9 +224,7 @@ class BaseDynamicCircuitAnalysis(TransformationPass):
                 f"of {node.op.name} on qubits {indices} is not bounded."
             )
         if duration is None:
-            raise TranspilerError(
-                f"Duration of {node.op.name} on qubits {indices} is not found."
-            )
+            raise TranspilerError(f"Duration of {node.op.name} on qubits {indices} is not found.")
 
         return duration
 
@@ -266,9 +262,7 @@ class BaseDynamicCircuitAnalysis(TransformationPass):
 
     def _current_block_measure_qargs(self) -> Set[Qubit]:
         return set(
-            qarg
-            for measure in self._current_block_measures
-            for qarg in self._map_qubits(measure)
+            qarg for measure in self._current_block_measures for qarg in self._map_qubits(measure)
         )
 
     def _check_flush_measures(self, node: DAGNode) -> None:
@@ -381,10 +375,7 @@ class ASAPScheduleAnalysis(BaseDynamicCircuitAnalysis):
             t0q = max(  # pylint: disable=invalid-name
                 itertools.chain(
                     [t0q],
-                    (
-                        self._node_start_time[measure][1]
-                        for measure in self._current_block_measures
-                    ),
+                    (self._node_start_time[measure][1] for measure in self._current_block_measures),
                 )
             )
 
@@ -393,9 +384,7 @@ class ASAPScheduleAnalysis(BaseDynamicCircuitAnalysis):
 
         for measure in self._current_block_measures:
             t0 = t0q  # pylint: disable=invalid-name
-            bit_indices = {
-                bit: index for index, bit in enumerate(self._block_dag.qubits)
-            }
+            bit_indices = {bit: index for index, bit in enumerate(self._block_dag.qubits)}
             measure_duration = self._durations.get(
                 Measure(),
                 [bit_indices[qarg] for qarg in self._map_qubits(measure)],
@@ -514,10 +503,7 @@ class ALAPScheduleAnalysis(BaseDynamicCircuitAnalysis):
             t0q = max(  # pylint: disable=invalid-name
                 itertools.chain(
                     [t0q],
-                    (
-                        self._node_start_time[measure][1]
-                        for measure in self._current_block_measures
-                    ),
+                    (self._node_start_time[measure][1] for measure in self._current_block_measures),
                 )
             )
 
@@ -526,9 +512,7 @@ class ALAPScheduleAnalysis(BaseDynamicCircuitAnalysis):
 
         for measure in self._current_block_measures:
             t0 = t0q  # pylint: disable=invalid-name
-            bit_indices = {
-                bit: index for index, bit in enumerate(self._block_dag.qubits)
-            }
+            bit_indices = {bit: index for index, bit in enumerate(self._block_dag.qubits)}
             measure_duration = self._durations.get(
                 Measure(),
                 [bit_indices[qarg] for qarg in self._map_qubits(measure)],
@@ -580,9 +564,7 @@ class ALAPScheduleAnalysis(BaseDynamicCircuitAnalysis):
         # Iterated nodes starting at the first, from the node with the
         # last time, preferring barriers over non-barriers
 
-        def order_ops(
-            item: Tuple[DAGNode, Tuple[int, int]]
-        ) -> Tuple[int, int, bool, int]:
+        def order_ops(item: Tuple[DAGNode, Tuple[int, int]]) -> Tuple[int, int, bool, int]:
             """Iterated nodes ordering by channel, time and preferring that barriers are processed
             first."""
             return (
@@ -600,9 +582,7 @@ class ALAPScheduleAnalysis(BaseDynamicCircuitAnalysis):
         def _calculate_new_times(
             block: int, node: DAGNode, block_bit_times: Dict[int, Dict[Qubit, int]]
         ) -> int:
-            max_block_time = min(
-                block_bit_times[block][bit] for bit in self._map_qubits(node)
-            )
+            max_block_time = min(block_bit_times[block][bit] for bit in self._map_qubits(node))
 
             t0 = self._node_start_time[node][1]  # pylint: disable=invalid-name
             t1 = self._node_stop_time[node][1]  # pylint: disable=invalid-name
@@ -640,9 +620,7 @@ class ALAPScheduleAnalysis(BaseDynamicCircuitAnalysis):
                 continue
             # Start with last time as the time to push to
             if block not in block_bit_times:
-                block_bit_times[block] = {
-                    q: self._max_block_t1[block] for q in self._dag.wires
-                }
+                block_bit_times[block] = {q: self._max_block_t1[block] for q in self._dag.wires}
 
             # Calculate the latest available time to push to collectively for tied nodes
             tied_nodes = self._node_tied_to.get(node, None)

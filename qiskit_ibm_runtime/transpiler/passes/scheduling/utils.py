@@ -214,9 +214,7 @@ class DynamicCircuitInstructionDurations(InstructionDurations):
         if unit != "dt":
             raise TranspilerError('Can currently only patch durations of "dt".')
         odd_cycle_correction = self._get_odd_cycle_correction()
-        self._patch_key(
-            key, prev_duration + self.MEASURE_PATCH_CYCLES + odd_cycle_correction, unit
-        )
+        self._patch_key(key, prev_duration + self.MEASURE_PATCH_CYCLES + odd_cycle_correction, unit)
         # Enforce patching of reset on measurement update
         self._patch_reset(("reset", key[1], key[2]))
 
