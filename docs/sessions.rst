@@ -19,7 +19,7 @@ There are several benefits to using sessions:
 
    .. note:: 
     * The queuing time does not decrease for the first job submitted within a session. Therefore, a session does not provide any benefits if you only need to run a single job.
-    * Since data from the first session job is cached and used by subsequent jobs, if the first job is cancelled, subsequent session jobs will all fail. 
+    * If the first session job is cancelled, subsequent session jobs will all fail. 
 
 * When using sessions, the uncertainty around queuing time is significantly reduced. This allows better estimation of a workload's total runtime and better resource management.
 * In a device characterization context, being able to run experiments closely together helps prevent device drifts and provide more accurate results.
@@ -117,7 +117,7 @@ Iterative
 
 Any session job submitted within the five-minute interactive timeout, also known as interactive time to live (ITTL), is processed immediately. This allows some time for variational algorithms, such as VQE, to perform classical post-processing. 
 
-- The quantum device is locked to the session user unless the TTL is reached. 
+- When a session is active, its jobs get priority until ITTL or max timeout is reached.
 - Post-processing could be done anywhere, such as a personal computer, cloud service, or an HPC environment.
 
 .. image:: images/iterative.png 
@@ -125,18 +125,55 @@ Any session job submitted within the five-minute interactive timeout, also known
 .. note::
     There might be a limit imposed on the ITTL value depending on whether your hub is Premium, Open, and so on. 
 
+This is an example of running an iterative workload that uses the classical Scipy optimizer to minimize a cost function. In this model, Scipy uses the output of the cost function to calculate its next input. 
+
+.. code-block:: python
+    
+    def cost_func(params, ansatz, hamiltonian, estimator):
+        # Return estimate of energy from estimator
+
+        energy = estimator.run(ansatz, hamiltonian, parameter_values=params).result().values[0]
+        return energy
+
+    x0 = 2 * np.pi * np.random.random(num_params)
+
+    session = Session(backend=backend)
+
+    estimator = Estimator(session=session, options={"shots": int(1e4)})
+    res = minimize(cost_func, x0, args=(ansatz, hamiltonian, estimator), method="cobyla")
+
+    # Close the session because we didn't use a context manager.
+    session.close()
+  
+
 Batch
 +++++++++++++++++++++
 
 Ideal for running experiments closely together to avoid device drifts, that is, to maintain device characterization.
 
 - Suitable for batching many jobs together. 
-- Jobs that fit within the maximum session time run back-to-back on hardware.
+- The parts of the jobs that are processed classically run in parallel, and the quantum pieces run sequentially on hardware, which saves you time.
+
 
 .. note::  
     When batching, jobs are not guaranteed to run in the order they are submitted.    
 
 .. image:: images/batch.png 
+
+The following example shows how you can divide up a long list of circuits into multiple jobs and run them as a batch to take advantage of the parallel processing.
+
+.. code-block:: python
+
+    backend = service.backend("ibm_sherbrooke")
+
+    with Session(backend=backend):
+        estimator = Estimator()
+        start_idx = 0
+        jobs = []
+        while start_idx < len(circuits):
+            end_idx = start_idx + backend.max_circuits
+            jobs.append(estimator.run(circuits[start_idx:end_idx], obs[start_idx:end_idx], params[start_idx:end_idx]))
+            start_idx = end_idx
 
 Sessions and reservations 
 -------------------------
