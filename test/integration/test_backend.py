@@ -234,6 +234,7 @@ class TestIBMBackend(IBMIntegrationTestCase):
         with self.assertWarns(Warning):
             backend.run(ReferenceCircuits.bell())
 
+    @quantum_only
     def test_backend_wrong_instance(self):
         """Test that an error is raised when retrieving a backend not in the instance."""
         backends = self.service.backends()
