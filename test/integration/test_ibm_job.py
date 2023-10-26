@@ -117,7 +117,7 @@ class TestIBMJob(IBMIntegrationTestCase):
     def test_cancel(self):
         """Test job cancellation."""
         # Find the most busy backend
-        backend = most_busy_backend(self.service, instance=self.dependencies.instance)
+        backend = most_busy_backend(self.service)
         submit_and_cancel(backend, self.log)
 
     def test_retrieve_jobs(self):
@@ -371,7 +371,7 @@ class TestIBMJob(IBMIntegrationTestCase):
 
     def test_wait_for_final_state_timeout(self):
         """Test waiting for job to reach final state times out."""
-        backend = most_busy_backend(TestIBMJob.service, instance=self.dependencies.instance)
+        backend = most_busy_backend(TestIBMJob.service)
         job = backend.run(transpile(ReferenceCircuits.bell(), backend=backend))
         try:
             self.assertRaises(RuntimeJobTimeoutError, job.wait_for_final_state, timeout=0.1)
