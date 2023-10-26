@@ -125,7 +125,7 @@ Any session job submitted within the five-minute interactive timeout, also known
 .. note::
     There might be a limit imposed on the ITTL value depending on whether your hub is Premium, Open, and so on. 
 
-This is an example of running an iterative workload that uses the classical Scipy optimizer to minimize a cost function. In this model, Scipy uses the output of the cost function to calculate its next input. 
+This is an example of running an iterative workload that uses the classical SciPy optimizer to minimize a cost function. In this model, SciPy uses the output of the cost function to calculate its next input. 
 
 .. code-block:: python
     
