@@ -19,7 +19,8 @@ import warnings
 
 from qiskit.transpiler import CouplingMap
 
-from .utils import _flexible, Dict
+from .utils import Dict, _to_obj
+
 from .environment_options import EnvironmentOptions
 from .execution_options import ExecutionOptions
 from .simulator_options import SimulatorOptions
@@ -28,7 +29,6 @@ from .resilience_options import ResilienceOptions
 from ..runtime_options import RuntimeOptions
 
 
-@_flexible
 @dataclass
 class Options:
     """Options for the primitives.
@@ -112,6 +112,14 @@ class Options:
         "simulator": SimulatorOptions,
         "resilience": ResilienceOptions,
     }
+
+    def __post_init__(self):  # type: ignore
+        """Convert dictionary fields to object."""
+        obj_fields = getattr(self, "_obj_fields", {})
+        for key in list(obj_fields):
+            if hasattr(self, key):
+                orig_val = getattr(self, key)
+                setattr(self, key, _to_obj(obj_fields[key], orig_val))
 
     @staticmethod
     def _get_program_inputs(options: dict) -> dict:

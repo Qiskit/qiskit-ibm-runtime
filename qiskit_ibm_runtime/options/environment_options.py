@@ -15,8 +15,6 @@
 from typing import Optional, Callable, List, Literal, get_args
 from dataclasses import dataclass, field
 
-from .utils import _flexible
-
 LogLevelType = Literal[
     "DEBUG",
     "INFO",
@@ -26,7 +24,6 @@ LogLevelType = Literal[
 ]
 
 
-@_flexible
 @dataclass
 class EnvironmentOptions:
     """Options related to the execution environment.
