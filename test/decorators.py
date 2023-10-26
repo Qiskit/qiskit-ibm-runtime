@@ -187,12 +187,11 @@ def integration_test_setup_with_backend(
             if not staging:
                 raise SkipTest("Tests not supported on staging.")
             if backend_name:
-                _backend = service.backend(name=backend_name, instance=dependencies.instance)
+                _backend = service.backend(name=backend_name)
             else:
                 _backend = service.least_busy(
                     min_num_qubits=min_num_qubits,
                     simulator=simulator,
-                    instance=dependencies.instance,
                 )
             if not _backend:
                 # pylint: disable=broad-exception-raised
