@@ -36,6 +36,7 @@ class TestIBMQasmSimulator(IBMIntegrationTestCase):
     @integration_test_setup_with_backend(simulator=False)
     def setUp(self, backend: IBMBackend, dependencies: IntegrationTestDependencies) -> None:
         """Initial test setup."""
+        # pylint: disable=unused-argument
         # pylint: disable=arguments-differ
         super().setUp()
         self.sim_backend = self.service.backend("ibmq_qasm_simulator")
