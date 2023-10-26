@@ -15,8 +15,6 @@
 from typing import Sequence, Literal, get_args
 from dataclasses import dataclass
 
-from .utils import _flexible
-
 ResilienceSupportedOptions = Literal[
     "noise_amplifier",
     "noise_factors",
@@ -33,7 +31,6 @@ ExtrapolatorType = Literal[
 ]
 
 
-@_flexible
 @dataclass
 class ResilienceOptions:
     """Resilience options.
