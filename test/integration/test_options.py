@@ -70,7 +70,7 @@ class TestIntegrationOptions(IBMIntegrationTestCase):
     @run_integration_test
     def test_simulator_transpile(self, service):
         """Test simulator transpile options."""
-        backend = service.backends(simulator=True)[0]
+        backend = service.backend("ibmq_qasm_simulator")
         self.log.info("Using backend %s", backend.name)
 
         circ = QuantumCircuit(2, 2)

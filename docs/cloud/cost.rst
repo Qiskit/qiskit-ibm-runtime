@@ -8,7 +8,7 @@ Time limits on programs
 
 The maximum execution time for the Sampler primitive is 10000 seconds (2.78 hours). The maximum execution time for the Estimator primitive is 18000 seconds (5 hours).
 
-Additionally, the system limit on the job execution time is 3 hours for a job that is running on a simulator and 8 hours for a job running on a physical system.
+Additionally, the system limit on the system execution time is 3 hours for a job that is running on a simulator and 8 hours for a job running on a physical system.
 
 How to limit your cost
 ***********************

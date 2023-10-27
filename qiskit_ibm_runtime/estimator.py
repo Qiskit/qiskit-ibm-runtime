@@ -22,7 +22,6 @@ from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info.operators.base_operator import BaseOperator
 from qiskit.primitives import BaseEstimator
 
-# TODO import _circuit_key from terra once 0.23 is released
 from .runtime_job import RuntimeJob
 from .ibm_backend import IBMBackend
 from .options import Options
@@ -82,9 +81,6 @@ class Estimator(BasePrimitive, BaseEstimator):
                 parameter_values=[theta1]*2
             )
             print(psi1_H23.result())
-            # Close the session only if all jobs are finished
-            # and you don't need to run more in the session
-            session.close()
     """
 
     _PROGRAM_ID = "estimator"
