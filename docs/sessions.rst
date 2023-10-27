@@ -152,7 +152,7 @@ Batch
 Ideal for running experiments closely together to avoid device drifts, that is, to maintain device characterization.
 
 - Suitable for batching many jobs together. 
-- The parts of the jobs that are processed classically run in parallel, and the quantum pieces run sequentially on hardware, which saves you time.
+- The classical computation, such as compilation, of the jobs is run in parallel. This means running multiple jobs in a batch would be significantly faster than running them serially.
 
 
 .. note::  
