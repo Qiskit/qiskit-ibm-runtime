@@ -124,6 +124,7 @@ Schmitt
 Schroeter
 Schuld
 Schwarz
+SciPy
 Shadbolt
 Shen
 Shende

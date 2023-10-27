@@ -7,6 +7,11 @@ action:
   name: replace
 # swap maps tokens in form of bad: good
 swap:
+  # Quantum-specific: See https://github.com/IBM/ibm-quantum-style-guide/issues?q=is%3Aissue+label%3Arequest
+  'quasi(?:-)?probabilities': quasi-probability distribution
+  quasi-distribution: quasi-probability distribution
+
+  # General IBM: See https://ibmdocs-test.dcs.ibm.com/docs/en/ibm-style?topic=word-usage
   'backward(?:-)?compatible': compatible with earlier versions  
   'mash(?: )?up': create  
   'pop-up (?:blocker|killer)': software to block pop-up ad windows  
@@ -49,6 +54,7 @@ swap:
   gzipped: archive|compressed file  
   hard drive: hard disk|hard disk drive  
   hard file: hard disk|hard disk drive  
+  IBM's: IBM
   i-fix: interim fix  
   ifix: interim fix  
   inactivate: deactivate  

@@ -11,5 +11,5 @@ swap:
   '\b(?:ie|i\.e\.)[\s,]': that is
   '\betc\.': and so on
   '\bvs\.': compared to
-  via: through
-  versus: compared to
+  '\bvia\b': through
+  '\bversus\b': compared to
