@@ -186,6 +186,13 @@ class TestDataSerialization(IBMTestCase):
             decoded = json.loads(encoded, cls=RuntimeDecoder)
             self.assertEqual(decoded, obj)
 
+    def test_encoder_np_number(self):
+        """Test encoding and decoding instructions"""
+        encoded = json.dumps(np.int64(100), cls=RuntimeEncoder)
+        self.assertIsInstance(encoded, str)
+        decoded = json.loads(encoded, cls=RuntimeDecoder)
+        self.assertEqual(decoded, 100)
+
     def test_encoder_callable(self):
         """Test encoding a callable."""
         with warnings.catch_warnings(record=True) as warn_cm:

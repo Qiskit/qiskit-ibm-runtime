@@ -140,8 +140,6 @@ The Estimator interface lets users seamlessly work with the variety of error mit
       estimator = Estimator(session=session, options=options)
       job = estimator.run(circuits=[psi1], observables=[H1], parameter_values=[theta1])
       psi1_H1 = job.result() 
-      # Close the session only if all jobs are finished, and you don't need to run more in the session
-      session.close() 
 
 .. note::
     As you increase the resilience level, you will be able to use additional methods to improve the accuracy of your result. However, because the methods become more advanced with each level, they require additional sampling overhead (time) to generate more accurate expectation values.
@@ -191,17 +189,8 @@ As a part of the beta release of the resilience options, users will be able conf
 +---------------------------------------------------------------+----------------------------------+--------------------------------------------------------+
 | Options                                                       | Inputs                           | Description                                            |
 +===============================================================+==================================+========================================================+
-| options.resilience.noise_amplifier(Optional[str])             | ``TwoQubitAmplifier`` [Default]  | Amplifies noise of all two qubit gates by performing   |
-|                                                               |                                  | local gate folding.                                    |
-| select your amplification strategy                            +----------------------------------+--------------------------------------------------------+
-|                                                               | ``CxAmplifier``                  | Amplifies noise of all CNOT gates by performing local  |
-|                                                               |                                  | gate folding.                                          |
-|                                                               +----------------------------------+--------------------------------------------------------+
-|                                                               | ``LocalFoldingAmplifier``        | Amplifies noise of all gates by performing local       |
-|                                                               |                                  | gate folding.                                          |
-|                                                               +----------------------------------+--------------------------------------------------------+
-|                                                               | ``GlobalFoldingAmplifier``       | Amplifies noise of the input circuit by performing     |
-|                                                               |                                  | global folding of the entire input circuit.            |
+|  options.resilience.noise_amplifier(Optional[str])            | ``LocalFoldingAmplifier``        | Amplifies noise of all gates by performing local       |
+|  (currently only one available option)                        |                                  | gate folding.                                          |
 +---------------------------------------------------------------+----------------------------------+--------------------------------------------------------+
 | options.resilience.noise_factors((Optional[Sequence[float]])  | (1, 3, 5) [Default]              | Noise amplification factors, where `1` represents the  |
 |                                                               |                                  | baseline noise. They all need to be greater than or    |
@@ -228,7 +217,7 @@ Example of adding ``resilience_options`` into your estimator session
     options.optimization_level = 3
     options.resilience_level = 2
     options.resilience.noise_factors = (1, 2, 3, 4)
-    options.resilience.noise_amplifier = 'CxAmplifier'
+    options.resilience.noise_amplifier = 'LocalFoldingAmplifier'
     options.resilience.extrapolator = 'QuadraticExtrapolator'
 
 
@@ -236,6 +225,4 @@ Example of adding ``resilience_options`` into your estimator session
         estimator = Estimator(session=session, options=options)
         job = estimator.run(circuits=[psi1], observables=[H1], parameter_values=[theta1])
         psi1_H1 = job.result()
-        # Close the session only if all jobs are finished, and you don't need to run more in the session
-        session.close()
 
