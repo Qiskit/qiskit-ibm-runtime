@@ -752,7 +752,9 @@ class IBMBackend(Backend):
         image: Optional[str] = None,
     ) -> RuntimeJob:
         """Runs the runtime program and returns the corresponding job object"""
-        hgp_name = self._instance or self._service._get_hgp().name
+        hgp_name = None
+        if self._service._channel == "ibm_quantum":
+            hgp_name = self._instance or self._service._get_hgp().name
 
         session = self._session
 
