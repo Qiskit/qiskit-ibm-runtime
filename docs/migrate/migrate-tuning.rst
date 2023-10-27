@@ -59,8 +59,8 @@ By default, the Qiskit Runtime primitives perform circuit transpilation. The opt
 To learn about each optimization level, view the Optimization level table in the 
 `Error suppression topic <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/how_to/error-suppression.html#setting-the-optimization-level>`__.
 
-..note::
-    When using primitives, optimization levels 2 and 3 behave like level 1. If you want to use more advanced optimization, use the Qiskit transpiler locally and then pass the transpiled circuits to the primitives. For instructions see the `Submitting user-transpiled circuits using primitives<https://learning.quantum-computing.ibm.com/tutorial/submitting-user-transpiled-circuits-using-primitives>`__ tutorial.
+.. note::
+    When using primitives, optimization levels 2 and 3 behave like level 1. If you want to use more advanced optimization, use the Qiskit transpiler locally and then pass the transpiled circuits to the primitives. For instructions see the `Submitting user-transpiled circuits using primitives <https://learning.quantum-computing.ibm.com/tutorial/submitting-user-transpiled-circuits-using-primitives>`__ tutorial.
 
 The optimization level option is a "first level option", and can be set as follows:
 
