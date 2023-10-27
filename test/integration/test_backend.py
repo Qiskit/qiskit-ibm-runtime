@@ -13,6 +13,7 @@
 """Tests for backend functions using real runtime service."""
 
 from unittest import SkipTest
+from datetime import datetime, timedelta
 import copy
 
 from qiskit.transpiler.target import Target
@@ -94,6 +95,14 @@ class TestIBMBackend(IBMIntegrationTestCase):
             self.assertIsNotNone(backend.target)
             self.assertIsInstance(backend.target, Target)
 
+    @production_only
+    def test_backend_target_history(self):
+        """Check retrieving backend target_history."""
+        backend = self.backend
+        with self.subTest(backend=backend.name):
+            self.assertIsNotNone(backend.target_history())
+            self.assertIsNotNone(backend.target_history(datetime=datetime.now() - timedelta(30)))
+
     def test_backend_max_circuits(self):
         """Check if the max_circuits property is set."""
         backend = self.backend
@@ -130,7 +139,11 @@ class TestIBMBackend(IBMIntegrationTestCase):
         with self.subTest(backend=backend.name):
             if backend.simulator:
                 raise SkipTest("Skip since simulator does not have properties.")
-            self.assertIsNotNone(backend.properties())
+            properties = backend.properties()
+            properties_today = backend.properties(datetime=datetime.today())
+            self.assertIsNotNone(properties)
+            self.assertIsNotNone(properties_today)
+            self.assertEqual(properties.backend_version, properties_today.backend_version)
 
     @production_only
     def test_backend_pulse_defaults(self):

@@ -13,12 +13,11 @@ a job exceeds this time limit, it is forcibly cancelled and a ``RuntimeJobMaxTim
 exception is raised.
 
 .. note::
-   As of August 7, 2023, the ``max_execution_time`` value is based on quantum
-   time instead of wall clock time. Quantum time represents the time that the QPU
+   As of August 7, 2023, the ``max_execution_time`` value is based on system execution time, which is the time that the QPU
    complex (including control software, control electronics, QPU, and so on) is engaged in
-   processing the job.
+   processing the job, instead of wall clock time.
 
-   Simulator jobs continue to use wall clock time because they do not have quantum time.
+   Simulator jobs continue to use wall clock time.
 
 You can set the maximum execution time (in seconds) on the job options by using one of the following methods:
 
@@ -32,12 +31,12 @@ You can set the maximum execution time (in seconds) on the job options by using 
    # Create the options object with attributes and values
    options = {"max_execution_time": 360}
 
-You can also find quantum time used by previously completed jobs by using:
+You can also find the system execution time for previously completed jobs by using:
 
 .. code-block:: python
 
-   # Find quantum time used by the job
-   print(f"Quantum time used by job {job.job_id()} was {job.metrics()['usage']['quantum_seconds']} seconds")
+   # Find the system execution time
+   print(f"Job {job.job_id()} system execution time was {job.metrics()['usage']['seconds']} seconds")
 
 In addition, the system calculates an appropriate job timeout value based on the
 input circuits and options. This system-calculated timeout is currently capped
@@ -48,38 +47,10 @@ For example, if you specify ``max_execution_time=5000``, but the system determin
 it should not take more than 5 minutes (300 seconds) to execute the job, then the job will be
 cancelled after 5 minutes.
 
-Session time limits
-***************************
+Session maximum execution time
+*******************************
 
-When a session is started, it is assigned a maximum session timeout value.
-After this timeout is reached, the session is terminated, any jobs that are already running continue running, and any queued jobs that remain in the session are put into a ``failed`` state.
-You can set the maximum session timeout value using the ``max_time`` parameter:
-
-.. code-block:: python
-
-   # Set the session max time
-   with Session(max_time="1h"):
-       ...
-
-If you don't specify a session ``max_time``, the system defaults are used:
-
-+--------------+------------------+--------------+-----------+
-| Primitive programs              | Private programs         |
-+==============+==================+==============+===========+
-| Premium User | Open User        | Premium User | Open User |
-+--------------+------------------+--------------+-----------+
-| 8h           | 4h               | 8h           | N/A       |
-+--------------+------------------+--------------+-----------+
-
-Note that a *premium user* here means a user who has access to backends in providers other than ``ibm-q/open/main``.
-
-.. note::
-   Session ``max_time`` is based on wall clock time, not quantum time.
-
-
-Additionally, there is a 5 minute *interactive* timeout value. If there are no session jobs queued within that window, the session is temporarily deactivated and normal job selection resumes. During job selection, if the job scheduler gets a new job from the session and its maximum timeout value has not been reached, the session is reactivated until its maximum timeout value is reached.
-
-.. note:: The timer for the session's ``max_time`` is not paused during any temporary deactivation periods.
+When a session is started, it is assigned a maximum session timeout value. After this timeout is reached, the session is terminated, any jobs that are already running continue running, and any queued jobs that remain in the session are put into a failed state.  For instructions to set the session maximum time, see `Specify the session length <../how_to/run_session#session_length.html>`__.
 
 
 Other limitations
@@ -87,3 +58,4 @@ Other limitations
 
 - Programs cannot exceed 750KB in size.
 - Inputs to jobs cannot exceed 64MB in size.
+- Open plan users can use up to 10 minutes of system execution time per month (resets at 00:00 UTC on the first of each month). System execution time is the amount of time that the system is dedicated to processing your job. You can track your monthly usage on the `Platform dashboard, <https://quantum-computing.ibm.com/>`__ `Jobs, <https://quantum-computing.ibm.com/jobs>`__ and `Account <https://quantum-computing.ibm.com/account>`__ page.

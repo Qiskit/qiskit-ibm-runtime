@@ -16,6 +16,7 @@ from __future__ import annotations
 import os
 from typing import Optional, Dict, Sequence, Any, Union, Mapping
 import logging
+import typing
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -28,7 +29,6 @@ from qiskit.primitives.utils import init_observable
 from qiskit.circuit import Parameter
 from qiskit.primitives.base.base_primitive import _isreal
 
-# TODO import _circuit_key from terra once 0.23 is released
 from .runtime_job import RuntimeJob
 from .ibm_backend import IBMBackend
 from .options import Options
@@ -38,6 +38,9 @@ from .utils.deprecation import issue_deprecation_msg
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
+
+if typing.TYPE_CHECKING:
+    from qiskit.opflow import PauliSumOp
 
 logger = logging.getLogger(__name__)
 
@@ -103,9 +106,6 @@ class Estimator(BasePrimitive, BaseEstimator):
                 parameter_values=[theta1]*2
             )
             print(psi1_H23.result())
-            # Close the session only if all jobs are finished
-            # and you don't need to run more in the session
-            session.close()
     """
 
     _PROGRAM_ID = "estimator"

@@ -15,8 +15,7 @@
 from typing import Sequence, Literal, get_args, Union
 from dataclasses import dataclass
 
-from .utils import _flexible
-from ..utils.deprecation import issue_deprecation_msg, deprecate_arguments
+from ..utils.deprecation import issue_deprecation_msg
 
 ResilienceSupportedOptions = Literal[
     "noise_amplifier",
@@ -24,10 +23,7 @@ ResilienceSupportedOptions = Literal[
     "extrapolator",
 ]
 NoiseAmplifierType = Literal[
-    "TwoQubitAmplifier",
-    "GlobalFoldingAmplifier",
     "LocalFoldingAmplifier",
-    "CxAmplifier",
 ]
 ExtrapolatorType = Literal[
     "LinearExtrapolator",
@@ -35,6 +31,8 @@ ExtrapolatorType = Literal[
     "CubicExtrapolator",
     "QuarticExtrapolator",
 ]
+
+
 
 ZneExtrapolatorType = Literal[
     None,
@@ -47,8 +45,6 @@ ZneExtrapolatorType = Literal[
     "polynomial_degree_4",
 ]
 
-
-@_flexible
 @dataclass
 class ResilienceOptions:
     """Resilience options.

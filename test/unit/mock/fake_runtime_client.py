@@ -20,6 +20,8 @@ from datetime import timezone, datetime as python_datetime
 from concurrent.futures import ThreadPoolExecutor
 from typing import Optional, Dict, Any, List
 
+from qiskit.providers.exceptions import QiskitBackendNotFoundError
+
 from qiskit_ibm_provider.utils.hgp import from_instance_format
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
 from qiskit_ibm_runtime.utils import RuntimeEncoder
@@ -514,7 +516,10 @@ class BaseFakeRuntimeClient:
             raise RequestsApiError("Job not found", status_code=404)
         return self._jobs[job_id]
 
-    def list_backends(self, hgp: Optional[str] = None) -> List[str]:
+    # pylint: disable=unused-argument
+    def list_backends(
+        self, hgp: Optional[str] = None, channel_strategy: Optional[str] = None
+    ) -> List[str]:
         """Return IBM backends available for this service instance."""
         return [back.name for back in self._backends if back.has_access(hgp)]
 
@@ -540,4 +545,4 @@ class BaseFakeRuntimeClient:
         for back in self._backends:
             if back.name == backend_name:
                 return back
-        raise ValueError(f"Backend {backend_name} not found")
+        raise QiskitBackendNotFoundError(f"Backend {backend_name} not found")

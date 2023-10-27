@@ -84,3 +84,16 @@ class TestIntegrationSession(IBMIntegrationTestCase):
             job = sampler.run(ReferenceCircuits.bell(), shots=400)
             self.assertEqual(instance, backend._instance)
             self.assertEqual(instance, job.backend()._instance)
+
+    @run_integration_test
+    def test_session_from_id(self, service):
+        """Test creating a session from a given id"""
+        backend = service.backend("ibmq_qasm_simulator")
+        with Session(service, backend=backend) as session:
+            sampler = Sampler(session=session)
+            job = sampler.run(ReferenceCircuits.bell(), shots=400)
+            session_id = job.session_id
+        new_session = Session.from_id(backend=backend, session_id=session_id)
+        sampler = Sampler(session=new_session)
+        job = sampler.run(ReferenceCircuits.bell(), shots=400)
+        self.assertEqual(session_id, job.session_id)

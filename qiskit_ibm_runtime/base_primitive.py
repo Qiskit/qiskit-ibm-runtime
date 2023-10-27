@@ -27,7 +27,6 @@ from .ibm_backend import IBMBackend
 from .session import get_cm_session
 from .constants import DEFAULT_DECODERS
 from .qiskit_runtime_service import QiskitRuntimeService
-from .utils.deprecation import issue_deprecation_msg
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
@@ -69,7 +68,6 @@ class BasePrimitive(ABC):
         # The base class, however, uses a `_run_options` which is an instance of
         # qiskit.providers.Options. We largely ignore this _run_options because we use
         # a nested dictionary to categorize options.
-
         self._session: Optional[Session] = None
         self._service: QiskitRuntimeService = None
         self._backend: Optional[IBMBackend] = None
@@ -80,39 +78,11 @@ class BasePrimitive(ABC):
             self._backend = self._service.backend(
                 name=self._session.backend(), instance=self._session._instance
             )
-        elif isinstance(session, IBMBackend):
-            issue_deprecation_msg(
-                msg="Passing a backend instance as the ``session`` parameter is deprecated",
-                version="0.10.0",
-                remedy="Please pass it as the ``backend`` parameter instead.",
-            )
-            self._service = session.service
-            self._backend = session
-        elif isinstance(session, str):
-            issue_deprecation_msg(
-                msg="Passing a backend name as the ``session`` parameter is deprecated",
-                version="0.10.0",
-                remedy="Please pass it as the ``backend`` parameter instead.",
-            )
-            self._service = (
-                QiskitRuntimeService()
-                if QiskitRuntimeService.global_service is None
-                else QiskitRuntimeService.global_service
-            )
-            self._backend = self._service.backend(session)
-        elif isinstance(backend, Session):
-            issue_deprecation_msg(
-                msg="``session`` is no longer the first parameter when initializing "
-                "a Qiskit Runtime primitive",
-                version="0.10.0",
-                remedy="Please use ``session=session`` instead.",
-            )
-            self._session = backend
-            self._service = self._session.service
-            self._backend = self._service.backend(
-                name=self._session.backend(), instance=self._session._instance
-            )
-        elif isinstance(backend, IBMBackend):
+            return
+        elif session is not None:
+            raise ValueError("session must be of type Session or None")
+
+        if isinstance(backend, IBMBackend):
             self._service = backend.service
             self._backend = backend
         elif isinstance(backend, str):

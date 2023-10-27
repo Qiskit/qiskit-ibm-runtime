@@ -34,7 +34,7 @@ from qiskit_ibm_provider.utils.hgp import to_instance_format, from_instance_form
 from qiskit_ibm_provider.utils.backend_decoder import configuration_from_server_data
 from qiskit_ibm_runtime import ibm_backend
 
-from .accounts import AccountManager, Account, AccountType, ChannelType
+from .accounts import AccountManager, Account, ChannelType
 from .api.clients import AuthClient, VersionClient
 from .api.clients.runtime import RuntimeClient
 from .api.exceptions import RequestsApiError
@@ -99,9 +99,6 @@ class QiskitRuntimeService(Provider):
                 circuits=[psi], observables=[H1], parameter_values=[theta]
             )
             print(f"Estimator results: {job.result()}")
-            # Close the session only if all jobs are finished
-            # and you don't need to run more in the session.
-            session.close()
 
     The example above uses the dedicated :class:`~qiskit_ibm_runtime.Sampler`
     and :class:`~qiskit_ibm_runtime.Estimator` classes. You can also
@@ -139,6 +136,7 @@ class QiskitRuntimeService(Provider):
             - Account with the input `name`, if specified.
             - Default account for the `channel` type, if `channel` is specified but `token` is not.
             - Account defined by the input `channel` and `token`, if specified.
+            - Account defined by the `default_channel` if defined in filename
             - Account defined by the environment variables, if defined.
             - Default account for the ``ibm_cloud`` account, if one is available.
             - Default account for the ``ibm_quantum`` account, if one is available.
@@ -218,6 +216,10 @@ class QiskitRuntimeService(Provider):
                 for backend_name in hgp.backends:
                     if backend_name not in self._backends:
                         self._backends[backend_name] = None
+            self._current_instance = self._account.instance
+            if not self._current_instance:
+                self._current_instance = self._get_hgp().name
+                logger.info("Default instance: %s", self._current_instance)
         QiskitRuntimeService.global_service = self
 
         # TODO - it'd be nice to allow some kind of autocomplete, but `service.ibmq_foo`
@@ -230,7 +232,6 @@ class QiskitRuntimeService(Provider):
         url: Optional[str] = None,
         instance: Optional[str] = None,
         channel: Optional[ChannelType] = None,
-        auth: Optional[AccountType] = None,
         filename: Optional[str] = None,
         name: Optional[str] = None,
         proxies: Optional[ProxyConfiguration] = None,
@@ -250,29 +251,26 @@ class QiskitRuntimeService(Provider):
                 )
         if name:
             if filename:
-                if any([auth, channel, token, url]):
+                if any([channel, token, url]):
                     logger.warning(
-                        "Loading account from file %s with name %s. Any input 'auth', "
+                        "Loading account from file %s with name %s. Any input "
                         "'channel', 'token' or 'url' are ignored.",
                         filename,
                         name,
                     )
             else:
-                if any([auth, channel, token, url]):
+                if any([channel, token, url]):
                     logger.warning(
-                        "Loading account with name %s. Any input 'auth', "
+                        "Loading account with name %s. Any input "
                         "'channel', 'token' or 'url' are ignored.",
                         name,
                     )
             account = AccountManager.get(filename=filename, name=name)
-        elif auth or channel:
-            if auth and auth not in ["legacy", "cloud"]:
-                raise ValueError("'auth' can only be 'cloud' or 'legacy'")
+        elif channel:
             if channel and channel not in ["ibm_cloud", "ibm_quantum"]:
                 raise ValueError("'channel' can only be 'ibm_cloud' or 'ibm_quantum'")
-            channel = channel or self._get_channel_for_auth(auth=auth)
             if token:
-                account = Account(
+                account = Account.create_account(
                     channel=channel,
                     token=token,
                     url=url,
@@ -288,9 +286,10 @@ class QiskitRuntimeService(Provider):
         elif any([token, url]):
             # Let's not infer based on these attributes as they may change in the future.
             raise ValueError(
-                "'channel' or 'auth' is required if 'token', or 'url' is specified but 'name' is not."
+                "'channel' is required if 'token', or 'url' is specified but 'name' is not."
             )
 
+        # channel is not defined yet, get it from the AccountManager
         if account is None:
             account = AccountManager.get(filename=filename)
 
@@ -302,8 +301,7 @@ class QiskitRuntimeService(Provider):
             account.verify = verify
 
         # resolve CRN if needed
-        if account.channel == "ibm_cloud":
-            self._resolve_crn(account)
+        self._resolve_crn(account)
 
         # ensure account is valid, fail early if not
         account.validate()
@@ -317,7 +315,7 @@ class QiskitRuntimeService(Provider):
             A dict of the remote backend instances, keyed by backend name.
         """
         ret = OrderedDict()  # type: ignore[var-annotated]
-        backends_list = self._api_client.list_backends()
+        backends_list = self._api_client.list_backends(channel_strategy=self._channel_strategy)
         for backend_name in backends_list:
             raw_config = self._api_client.backend_configuration(backend_name=backend_name)
             config = configuration_from_server_data(
@@ -682,13 +680,6 @@ class QiskitRuntimeService(Provider):
         return AccountManager.delete(filename=filename, name=name, channel=channel)
 
     @staticmethod
-    def _get_channel_for_auth(auth: str) -> str:
-        """Returns channel type based on auth"""
-        if auth == "legacy":
-            return "ibm_quantum"
-        return "ibm_cloud"
-
-    @staticmethod
     def save_account(
         token: Optional[str] = None,
         url: Optional[str] = None,
@@ -700,6 +691,7 @@ class QiskitRuntimeService(Provider):
         verify: Optional[bool] = None,
         overwrite: Optional[bool] = False,
         channel_strategy: Optional[str] = None,
+        set_as_default: Optional[bool] = None,
     ) -> None:
         """Save the account to disk for future use.
 
@@ -720,6 +712,8 @@ class QiskitRuntimeService(Provider):
             verify: Verify the server's TLS certificate.
             overwrite: ``True`` if the existing account is to be overwritten.
             channel_strategy: Error mitigation strategy.
+            set_as_default: If ``True``, the account is saved in filename,
+                as the default account.
         """
 
         AccountManager.save(
@@ -733,6 +727,7 @@ class QiskitRuntimeService(Provider):
             verify=verify,
             overwrite=overwrite,
             channel_strategy=channel_strategy,
+            set_as_default=set_as_default,
         )
 
     @staticmethod
@@ -976,15 +971,6 @@ class QiskitRuntimeService(Provider):
             RuntimeProgramNotFound: If the program cannot be found.
             IBMRuntimeError: An error occurred running the program.
         """
-        # TODO: Remove this after 3 months
-        if program_id in ["hello-world", "vqe", "qaoa"]:
-            raise IBMInputValueError(
-                "The hello-world, vqe, and qaoa programs have been retired in the "
-                "Qiskit Runtime service. Please visit https://qiskit.org/ecosystem/ibm-runtime "
-                "for an introduction on Sessions and Primitives, and to access "
-                "tutorials on how to execute VQE and QAOA using Qiskit Runtime Primitives."
-            )
-
         qrt_options: RuntimeOptions = options
         if options is None:
             qrt_options = RuntimeOptions()
@@ -1003,6 +989,9 @@ class QiskitRuntimeService(Provider):
             # Find the right hgp
             hgp = self._get_hgp(instance=qrt_options.instance, backend_name=qrt_options.backend)
             hgp_name = hgp.name
+            if hgp_name != self._current_instance:
+                self._current_instance = hgp_name
+                logger.info("Instance selected: %s", self._current_instance)
         backend = self.backend(name=qrt_options.backend, instance=hgp_name)
         status = backend.status()
         if status.operational is True and status.status_msg != "active":
@@ -1027,6 +1016,12 @@ class QiskitRuntimeService(Provider):
                 if self._channel_strategy == "default"
                 else self._channel_strategy,
             )
+            if self._channel == "ibm_quantum":
+                messages = response.get("messages")
+                if messages:
+                    warning_message = messages[0].get("data")
+                    warnings.warn(warning_message)
+
         except RequestsApiError as ex:
             if ex.status_code == 404:
                 raise RuntimeProgramNotFound(f"Program not found: {ex.message}") from None
@@ -1509,15 +1504,6 @@ class QiskitRuntimeService(Provider):
         if self._channel == "ibm_quantum":
             return list(self._hgps.keys())
         return []
-
-    @property
-    def auth(self) -> str:
-        """Return the authentication type used.
-
-        Returns:
-            The authentication type used.
-        """
-        return "cloud" if self._channel == "ibm_cloud" else "legacy"
 
     @property
     def channel(self) -> str:

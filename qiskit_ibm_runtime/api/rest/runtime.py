@@ -19,8 +19,8 @@ import json
 
 from qiskit_ibm_provider.api.rest.base import RestAdapterBase
 from qiskit_ibm_provider.api.rest.program_job import ProgramJob
-from qiskit_ibm_provider.api.rest.runtime_session import RuntimeSession
 from qiskit_ibm_provider.utils import local_to_utc
+from .runtime_session import RuntimeSession
 
 from .program import Program
 from ...utils import RuntimeEncoder
@@ -271,17 +271,25 @@ class Runtime(RestAdapterBase):
         return CloudBackend(self.session, backend_name)
 
     def backends(
-        self, hgp: Optional[str] = None, timeout: Optional[float] = None
+        self,
+        hgp: Optional[str] = None,
+        timeout: Optional[float] = None,
+        channel_strategy: Optional[str] = None,
     ) -> Dict[str, List[str]]:
         """Return a list of IBM backends.
 
         Args:
+            hgp: The service instance to use, only for ``ibm_quantum`` channel, in h/g/p format.
             timeout: Number of seconds to wait for the request.
+            channel_strategy: Error mitigation strategy.
 
         Returns:
             JSON response.
         """
         url = self.get_url("backends")
+        params = {}
         if hgp:
-            return self.session.get(url, params={"provider": hgp}).json()
-        return self.session.get(url, timeout=timeout).json()
+            params["provider"] = hgp
+        if channel_strategy:
+            params["channel_strategy"] = channel_strategy
+        return self.session.get(url, params=params, timeout=timeout).json()

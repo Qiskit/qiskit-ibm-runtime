@@ -32,14 +32,10 @@ def validate(options: Dict[str, Any]) -> None:
     # Default validation otherwise.
     TranspilationOptions.validate_transpilation_options(options.get("transpilation"))
     execution_time = options.get("max_execution_time")
-    if not execution_time is None:
-        if (
-            execution_time < Options._MIN_EXECUTION_TIME
-            or execution_time > Options._MAX_EXECUTION_TIME
-        ):
+    if execution_time is not None:
+        if execution_time > Options._MAX_EXECUTION_TIME:
             raise ValueError(
-                f"max_execution_time must be between "
-                f"{Options._MIN_EXECUTION_TIME} and {Options._MAX_EXECUTION_TIME} seconds."
+                f"max_execution_time must be below " f"{Options._MAX_EXECUTION_TIME} seconds."
             )
 
     EnvironmentOptions.validate_environment_options(options.get("environment"))
@@ -61,7 +57,7 @@ def _raise_if_error_in_options(options: Dict[str, Any]) -> None:
         arguments={},
     )
 
-    optimization_level = options.get("optimization_level", 1)
+    optimization_level = options.get("optimization_level", 3)
     _check_argument(
         optimization_level > 0,
         description="Q-CTRL Primitives do not support optimization level 0. Please\
