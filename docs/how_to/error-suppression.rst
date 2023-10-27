@@ -35,7 +35,7 @@ The ``optimization_level`` setting specifies how much optimization to perform on
 +--------------------+---------------------------------------------------------------------------------------------------+
 
 ..note::
-    If you want to use more advanced optimization, use the Qiskit transpiler locally and then pass the transpiled circuits to the primitives. For instructions see the `Submitting user-transpiled circuits using primitives<https://learning.quantum-computing.ibm.com/tutorial/submitting-user-transpiled-circuits-using-primitives>`__ tutorial.
+    If you want to use more advanced optimization, use the Qiskit transpiler locally and then pass the transpiled circuits to the primitives. For instructions see the `Submitting user-transpiled circuits using primitives <https://learning.quantum-computing.ibm.com/tutorial/submitting-user-transpiled-circuits-using-primitives>`__ tutorial.
 
 Example: configure Estimator with optimization levels
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
