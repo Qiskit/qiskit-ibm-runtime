@@ -1,6 +1,6 @@
 extends: substitution
 message: "Use '%s' instead of '%s'."
-link: 'https://www.ibm.com/developerworks/library/styleguidelines/index.html#wordlist'
+link: 'https://ibmdocs-test.dcs.ibm.com/docs/en/ibm-style?topic=word-usage'
 ignorecase: true
 level: error
 nonword: true
@@ -10,4 +10,6 @@ swap:
   '\b(?:eg|e\.g\.)[\s,]': for example
   '\b(?:ie|i\.e\.)[\s,]': that is
   '\betc\.': and so on
-  '\bvs\.': versus
+  '\bvs\.': compared to
+  via: through
+  versus: compared to

@@ -157,6 +157,7 @@ Vion
 Vivek
 Vojtech
 Volkoff
+Watrous
 Weedbrook
 Wierichs
 Woerner
@@ -251,3 +252,4 @@ transpiling
 tridiagonal
 trits
 unitaries
+untrusted
