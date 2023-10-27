@@ -78,11 +78,9 @@ class BasePrimitive(ABC):
             self._backend = self._service.backend(
                 name=self._session.backend(), instance=self._session._instance
             )
-            return
         elif session is not None:
             raise ValueError("session must be of type Session or None")
-
-        if isinstance(backend, IBMBackend):
+        elif isinstance(backend, IBMBackend):
             self._service = backend.service
             self._backend = backend
         elif isinstance(backend, str):
