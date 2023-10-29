@@ -521,13 +521,12 @@ class IBMBackend(Backend):
                 f"maximum for this backend, {self._max_circuits})"
             )
         for circ in circuits:
-            if isinstance(circ, QuantumCircuit):
-                if circ.num_qubits > self._configuration.num_qubits:
-                    raise IBMBackendValueError(
-                        f"Circuit contains {circ.num_qubits} qubits, "
-                        f"but backend has only {self.num_qubits}."
-                    )
-                self.check_faulty(circ)
+            if circ.num_qubits > self._configuration.num_qubits:
+                raise IBMBackendValueError(
+                    f"Circuit contains {circ.num_qubits} qubits, "
+                    f"but backend has only {self.num_qubits}."
+                )
+            self.check_faulty(circ)
 
     def check_faulty(self, circuit: QuantumCircuit) -> None:
         """Check if the input circuit uses faulty qubits or edges.
