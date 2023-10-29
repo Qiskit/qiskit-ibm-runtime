@@ -23,21 +23,10 @@ from .utils.runner_result import RunnerResult
 QISKIT_IBM_RUNTIME_API_URL = "https://auth.quantum-computing.ibm.com/api"
 
 API_TO_JOB_STATUS = {
-    "CREATING": JobStatus.INITIALIZING,
-    "CREATED": JobStatus.INITIALIZING,
-    "TRANSPILING": JobStatus.INITIALIZING,
-    "TRANSPILED": JobStatus.INITIALIZING,
-    "VALIDATING": JobStatus.VALIDATING,
-    "VALIDATED": JobStatus.VALIDATING,
     "QUEUED": JobStatus.QUEUED,
-    "PENDING_IN_QUEUE": JobStatus.QUEUED,
     "RUNNING": JobStatus.RUNNING,
     "COMPLETED": JobStatus.DONE,
     "FAILED": JobStatus.ERROR,
-    "ERROR_CREATING_JOB": JobStatus.ERROR,
-    "ERROR_VALIDATING_JOB": JobStatus.ERROR,
-    "ERROR_RUNNING_JOB": JobStatus.ERROR,
-    "ERROR_TRANSPILING_JOB": JobStatus.ERROR,
     "CANCELLED": JobStatus.CANCELLED,
 }
 
