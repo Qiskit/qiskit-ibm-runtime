@@ -30,12 +30,11 @@ from qiskit.providers.models import (
 )
 
 from qiskit_ibm_provider.proxies import ProxyConfiguration
-from qiskit_ibm_provider.utils import validate_job_tags
 from qiskit_ibm_provider.utils.hgp import to_instance_format, from_instance_format
 from qiskit_ibm_provider.utils.backend_decoder import configuration_from_server_data
-from qiskit_ibm_provider.exceptions import IBMBackendValueError
 from qiskit_ibm_runtime import ibm_backend
 
+from .utils.utils import validate_job_tags
 from .accounts import AccountManager, Account, ChannelType
 from .api.clients import AuthClient, VersionClient
 from .api.clients.runtime import RuntimeClient
@@ -1347,7 +1346,7 @@ class QiskitRuntimeService(Provider):
                 )
             hub, group, project = from_instance_format(instance)
         if job_tags:
-            validate_job_tags(job_tags, IBMBackendValueError)
+            validate_job_tags(job_tags)
 
         job_responses = []  # type: List[Dict[str, Any]]
         current_page_limit = limit or 20

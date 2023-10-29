@@ -45,8 +45,7 @@ from qiskit_ibm_provider.utils.backend_decoder import (
     defaults_from_server_data,
     properties_from_server_data,
 )
-from qiskit_ibm_provider.utils import local_to_utc
-from qiskit_ibm_provider.utils import validate_job_tags, are_circuits_dynamic
+from qiskit_ibm_provider.utils import local_to_utc, are_circuits_dynamic
 from qiskit_ibm_provider.utils.options import QASM2Options, QASM3Options
 from qiskit_ibm_provider.exceptions import IBMBackendValueError, IBMBackendApiError
 from qiskit_ibm_provider.api.exceptions import RequestsApiError
@@ -56,9 +55,8 @@ from qiskit_ibm_provider.session import (
     Session as ProviderSession,
 )  # temporary until we unite the 2 Session classes
 
-from qiskit_ibm_runtime import (  # pylint: disable=unused-import,cyclic-import
-    qiskit_runtime_service,
-)
+from .utils.utils import validate_job_tags
+from . import qiskit_runtime_service  # pylint: disable=unused-import,cyclic-import
 from .runtime_job import RuntimeJob
 
 from .api.clients import RuntimeClient
@@ -669,7 +667,7 @@ class IBMBackend(Backend):
                 - If ESP readout is used and the backend does not support this.
         """
         # pylint: disable=arguments-differ
-        validate_job_tags(job_tags, IBMBackendValueError)
+        validate_job_tags(job_tags)
         if not isinstance(circuits, List):
             circuits = [circuits]
         self._check_circuits_attributes(circuits)
