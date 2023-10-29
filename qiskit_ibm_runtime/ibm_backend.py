@@ -507,7 +507,7 @@ class IBMBackend(Backend):
         # For backward compatibility only, can be removed later.
         return self
 
-    def _check_circuits_attributes(self, circuits: List[QuantumCircuit]) -> None:
+    def _check_circuits_attributes(self, circuits: Union[List[QuantumCircuit], str]) -> None:
         """Check that circuits can be executed on backend.
         Raises:
             IBMBackendValueError:
@@ -519,12 +519,13 @@ class IBMBackend(Backend):
                 f"maximum for this backend, {self._max_circuits})"
             )
         for circ in circuits:
-            if circ.num_qubits > self._configuration.num_qubits:
-                raise IBMBackendValueError(
-                    f"Circuit contains {circ.num_qubits} qubits, "
-                    f"but backend has only {self.num_qubits}."
-                )
-            self.check_faulty(circ)
+            if isinstance(circ, QuantumCircuit):
+                if circ.num_qubits > self._configuration.num_qubits:
+                    raise IBMBackendValueError(
+                        f"Circuit contains {circ.num_qubits} qubits, "
+                        f"but backend has only {self.num_qubits}."
+                    )
+                self.check_faulty(circ)
 
     def check_faulty(self, circuit: QuantumCircuit) -> None:
         """Check if the input circuit uses faulty qubits or edges.
