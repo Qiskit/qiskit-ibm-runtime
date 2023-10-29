@@ -82,7 +82,7 @@ class TestIBMBackend(IBMIntegrationTestCase):
         super().setUpClass()
         if cls.dependencies.channel == "ibm_cloud":
             # TODO use real device when cloud supports it
-            cls.backend = cls.dependencies.service.least_busy(min_num_qubits=5)
+            cls.backend = cls.dependencies.service.least_busy(simulator=False, min_num_qubits=5)
         if cls.dependencies.channel == "ibm_quantum":
             cls.backend = cls.dependencies.service.least_busy(
                 simulator=False, min_num_qubits=5, instance=cls.dependencies.instance
@@ -234,9 +234,11 @@ class TestIBMBackend(IBMIntegrationTestCase):
         with self.assertWarns(Warning):
             backend.run(ReferenceCircuits.bell())
 
-    @quantum_only
     def test_backend_wrong_instance(self):
         """Test that an error is raised when retrieving a backend not in the instance."""
+        if self.dependencies.channel == "ibm_cloud":
+            raise SkipTest("Cloud channel does not have instance.")
+
         backends = self.service.backends()
         hgps = self.service._hgps.values()
         if len(hgps) >= 2:

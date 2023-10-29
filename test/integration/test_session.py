@@ -120,6 +120,7 @@ class TestBackendRunInSession(IBMIntegrationTestCase):
         backend = self.service.backend("ibmq_qasm_simulator")
         backend.open_session()
         result = backend.run(circuits=ReferenceCircuits.bell(), shots=shots).result()
+        backend.cancel_session()
         self.assertIsInstance(result, Result)
         self.assertEqual(result.results[0].shots, shots)
         self.assertAlmostEqual(
