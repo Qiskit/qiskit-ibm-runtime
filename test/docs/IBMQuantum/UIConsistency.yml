@@ -1,0 +1,29 @@
+extends: substitution
+message: Use '%s' rather than '%s' if writing about user interfaces.
+link: 'https://ibmdocs-test.dcs.ibm.com/docs/en/ibm-style?topic=word-usage'
+level: warning
+ignorecase: true
+action:
+  name: replace
+# swap maps tokens in form of bad: good
+swap:
+  '(?:Ctrl|control)-click': press Ctrl and click
+  blink: flash
+  breadcrumbing: breadcrumb trail
+  context menu: menu|pop-up menu
+  contextual help: help|context-sensitive help
+  depress: press|type
+  drag and drop: drag (verb) | drag-and-drop (adjective)
+  drill up: navigate
+  fill in: complete|enter|specify
+  launch: start|open
+  left-hand: left
+  mouse over: point to|move the mouse pointer over|Mouse|mouse over
+  right double-click: double right-click
+  right-hand: right
+  selection button: left mouse button
+  shift-click: press Shift and click
+  switch off: turn off | power off
+  switch on: turn on | power on
+  uncheck: clear
+  unselect: clear|deselect
