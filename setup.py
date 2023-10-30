@@ -28,6 +28,7 @@ REQUIREMENTS = [
     "websocket-client>=1.5.1",
     "ibm-platform-services>=0.22.6",
     "qiskit-ibm-provider>=0.7.0",
+    "pydantic",
 ]
 
 # Handle version.

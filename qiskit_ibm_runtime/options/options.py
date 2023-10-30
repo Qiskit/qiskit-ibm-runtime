@@ -18,6 +18,8 @@ import copy
 import warnings
 
 from qiskit.transpiler import CouplingMap
+from pydantic.dataclasses import dataclass as pydantic_dataclass
+from pydantic import Field
 
 from .utils import Dict, _to_obj, _remove_dict_none_values
 from .environment_options import EnvironmentOptions
@@ -29,6 +31,34 @@ from .twirling_options import TwirlingOptions
 from ..runtime_options import RuntimeOptions
 
 DDSequenceType = Literal[None, "XX", "XpXm", "XY4"]
+
+
+@pydantic_dataclass
+class PrimitiveOptions:
+    """Base primitive options.
+
+    Args:
+        max_execution_time: Maximum execution time in seconds, which is based
+            on system execution time (not wall clock time). System execution time is
+            the amount of time that the system is dedicated to processing your job.
+            If a job exceeds this time limit, it is forcibly cancelled.
+            Simulator jobs continue to use wall clock time.
+
+            Refer to the
+            `Max execution time documentation
+            <https://docs.quantum-computing.ibm.com/run/max-execution-time#maximum-execution-time>`_.
+            for more information.
+
+        environment: Options related to the execution environment. See
+            :class:`EnvironmentOptions` for all available options.
+
+        simulator: Simulator options. See
+            :class:`SimulatorOptions` for all available options.
+    """
+
+    max_execution_time: Optional[int] = None
+    environment: Union[EnvironmentOptions, Dict] = Field(default_factory=EnvironmentOptions)
+    simulator: Union[SimulatorOptions, Dict] = Field(default_factory=SimulatorOptions)
 
 
 @dataclass
