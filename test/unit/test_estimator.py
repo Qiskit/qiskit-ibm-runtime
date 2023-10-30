@@ -24,7 +24,6 @@ from qiskit_ibm_runtime import Estimator, Session
 from .mock.fake_runtime_service import FakeRuntimeService
 from ..ibm_test_case import IBMTestCase
 from ..utils import get_mocked_backend
-from .mock.fake_runtime_service import FakeRuntimeService
 
 
 class TestEstimator(IBMTestCase):

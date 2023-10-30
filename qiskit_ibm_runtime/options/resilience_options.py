@@ -15,8 +15,6 @@
 from typing import Sequence, Literal, get_args, Union
 from dataclasses import dataclass
 
-from ..utils.deprecation import issue_deprecation_msg
-
 ResilienceSupportedOptions = Literal[
     "noise_amplifier",
     "noise_factors",

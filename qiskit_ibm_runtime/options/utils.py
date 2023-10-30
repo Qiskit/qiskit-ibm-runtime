@@ -13,7 +13,6 @@
 """Utility functions for options."""
 
 from typing import Optional
-from dataclasses import fields, field, make_dataclass
 
 from ..ibm_backend import IBMBackend
 
