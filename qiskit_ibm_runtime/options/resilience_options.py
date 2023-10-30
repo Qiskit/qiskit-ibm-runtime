@@ -43,6 +43,7 @@ ZneExtrapolatorType = Literal[
     "polynomial_degree_4",
 ]
 
+
 @dataclass
 class ResilienceOptions:
     """Resilience options.
@@ -137,7 +138,7 @@ class ResilienceOptions:
             raise ValueError(
                 f"Unsupported value {noise_amplifier} for noise_amplifier. "
                 f"Supported values are {get_args(NoiseAmplifierType)}"
-                )
+            )
 
         extrapolator = resilience_options.get("extrapolator")
         if extrapolator and extrapolator not in get_args(ExtrapolatorType):
