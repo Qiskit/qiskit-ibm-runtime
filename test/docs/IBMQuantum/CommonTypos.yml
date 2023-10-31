@@ -1,0 +1,12 @@
+# For words that are probably typos (in quantum computing), but aren't caught
+# by the spell check
+extends: substitution
+message: "Did you mean '%s' instead of '%s'?"
+ignorecase: true
+level: warning
+action:
+  name: replace
+swap:
+  Shore: Shor
+  Grove: Grover
+  open source: open-source

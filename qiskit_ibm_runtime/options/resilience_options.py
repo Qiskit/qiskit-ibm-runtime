@@ -17,7 +17,6 @@ from pydantic import Field, ConfigDict
 from pydantic.functional_validators import model_validator, field_validator
 from pydantic.dataclasses import dataclass as pydantic_dataclass
 
-
 ResilienceSupportedOptions = Literal[
     "noise_amplifier",
     "noise_factors",
@@ -36,7 +35,6 @@ ExtrapolatorType = Literal[
 
 @pydantic_dataclass(
     config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid")
-)
 class ResilienceOptions:
     """Resilience options.
 

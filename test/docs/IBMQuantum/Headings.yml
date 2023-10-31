@@ -1,6 +1,6 @@
 extends: capitalization
 message: "'%s' should use sentence-style capitalization."
-link: 'https://www.ibm.com/developerworks/library/styleguidelines/index.html#N1030C'
+link: 'https://ibmdocs-test.dcs.ibm.com/docs/en/ibm-style?topic=grammar-capitalization#headings-titles-and-banners'
 level: warning
 scope: heading
 match: $sentence

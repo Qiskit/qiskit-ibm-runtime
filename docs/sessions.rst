@@ -1,12 +1,10 @@
 Introduction to sessions 
 =============================
 
-A session is a contract between the user and the Qiskit Runtime service that ensures that a collection of jobs can be grouped and jointly prioritized by the quantum computer’s job scheduler. This eliminates artificial delays caused by other users’ jobs running on the same quantum device during the session time.
+A session allows a collection of jobs to be grouped and jointly scheduled by the Qiskit Runtime service, facilitating iterative use of quantum computers without incurring queuing delays on each iteration. This eliminates artificial delays caused by other users’ jobs running on the same quantum device during the session.
 
 .. image:: images/session-overview.png 
   :width: 400
-
-In simple terms, once your session is active, jobs submitted within the session are not interrupted by other users’ jobs.     
 
 Compared with jobs that use the `fair-share scheduler <https://quantum-computing.ibm.com/lab/docs/iql/manage/systems/queue>`__, sessions become particularly beneficial when running programs that require iterative calls between classical and quantum resources, where a large number of jobs are submitted sequentially. This is the case, for example, when training a variational algorithm such as VQE or QAOA, or in device characterization experiments.
 
@@ -21,7 +19,7 @@ There are several benefits to using sessions:
 
    .. note:: 
     * The queuing time does not decrease for the first job submitted within a session. Therefore, a session does not provide any benefits if you only need to run a single job.
-    * Since data from the first session job is cached and used by subsequent jobs, if the first job is cancelled, subsequent session jobs will all fail. 
+    * If the first session job is cancelled, subsequent session jobs will all fail. 
 
 * When using sessions, the uncertainty around queuing time is significantly reduced. This allows better estimation of a workload's total runtime and better resource management.
 * In a device characterization context, being able to run experiments closely together helps prevent device drifts and provide more accurate results.
@@ -38,20 +36,115 @@ A quantum processor still executes one job at a time. Therefore, jobs that belon
 .. note:: 
     * Internal systems jobs such as calibration have priority over session jobs.
 
-Iterations and batching 
---------------------------
+Maximum session timeout
+++++++++++++++++++++++++++++
+
+When a session is started, it is assigned a *maximum session timeout*
+value. You can set this value by using the ``max_time`` parameter, which
+can be greater than the program's ``max_execution_time``. For
+instructions, see `Run a primitive in a session <how_to/run_session.html>`__.
+
+If you do not specify a timeout value, it is set to the system limit.
+
+To find the maximum session timeout value for a session, follow the instructions in `Determine session details <how_to/run_session#determine-session-details.html>`__.
+
+
+.. _ttl:
+
+Interactive timeout value
++++++++++++++++++++++++++++++
+
+Every session has an *interactive timeout value* (ITTL, or interactive time to live). If there are no session jobs queued within the
+ITTL window, the session is temporarily deactivated and normal job
+selection resumes. A deactivated session can be resumed if it has not
+reached its maximum timeout value. The session is resumed when a
+subsequent session job starts. Once a session is deactivated, its next
+job waits in the queue like other jobs.
+
+After a session is deactivated, the next job in the queue is selected to
+run. This newly selected job (which can belong to a different user) can
+run as a singleton, but it can also start a different session. In other
+words, a deactivated session does not block the creation of other
+sessions. Jobs from this new session would then take priority until it
+is deactivated or closed, at which point normal job selection resumes.
+
+To find the interactive timeout value for a session, follow the instructions in `Determine session details <how_to/run_session#determine-session-details.html>`__.   
+
+.. _ends:
+
+What happens when a session ends
+-------------------------------------
+
+A session ends by reaching its maximum timeout value,  when it is `closed <how_to/run_session#close_session.html>`__, or when it is canceled by using the `session.cancel()` method. What happens to unfinished session jobs when the session ends depends on how it ended:
+
+
+.. note::  
+        Previously, `session.close()` **canceled** the session.  Starting with `qiskit-ibm-runtime` 0.13, `session.close()` **closes** the session. The `session.cancel()` method was added in `qiskit-ibm-runtime` 0.13.
+  
+If the maximum timeout value was reached:
+    -   Any jobs that are already running continue to run.
+    -   Any queued jobs remaining in the session are put into a failed state.
+    -   No further jobs can be submitted to the session.
+    -   The session cannot be reopened.
+
+If the maximum timeout value has not been reached:    
+
+- When using `qiskit-ibm-runtime` 0.13 or later releases:
+    - If a session is closed:
+        - Session status becomes "In progress, not accepting new jobs".
+        - New job submissions to the session are rejected.
+        - Queued or running jobs continue to run.
+        - The session cannot be reopened.
+    - If a session is canceled:
+        - Session status becomes "Closed."
+        - Running jobs continue to run.
+        - Queued jobs are put into a failed state.
+        - The session cannot be reopened.
+
+- When using Qiskit Runtime releases before 0.13:
+    -   Any jobs that are already running continue to run.
+    -   Any queued jobs remaining in the session are put into a failed state.
+    -   No further jobs can be submitted to the session.
+    -   The session cannot be reopened.
+
+Different ways of using sessions
+----------------------------------
 
 Sessions can be used for iterative or batch execution. 
 
 Iterative
 +++++++++++++++++++++
 
-Any session job submitted within the five-minute interactive timeout, also known as Time to live (TTL), is processed immediately. This allows some time for variational algorithms, such as VQE, to perform classical post-processing. 
+Any session job submitted within the five-minute interactive timeout, also known as interactive time to live (ITTL), is processed immediately. This allows some time for variational algorithms, such as VQE, to perform classical post-processing. 
 
-- The quantum device is locked to the session user unless the TTL is reached. 
+- When a session is active, its jobs get priority until ITTL or max timeout is reached.
 - Post-processing could be done anywhere, such as a personal computer, cloud service, or an HPC environment.
 
 .. image:: images/iterative.png 
+
+.. note::
+    There might be a limit imposed on the ITTL value depending on whether your hub is Premium, Open, and so on. 
+
+This is an example of running an iterative workload that uses the classical SciPy optimizer to minimize a cost function. In this model, SciPy uses the output of the cost function to calculate its next input. 
+
+.. code-block:: python
+    
+    def cost_func(params, ansatz, hamiltonian, estimator):
+        # Return estimate of energy from estimator
+
+        energy = estimator.run(ansatz, hamiltonian, parameter_values=params).result().values[0]
+        return energy
+
+    x0 = 2 * np.pi * np.random.random(num_params)
+
+    session = Session(backend=backend)
+
+    estimator = Estimator(session=session, options={"shots": int(1e4)})
+    res = minimize(cost_func, x0, args=(ansatz, hamiltonian, estimator), method="cobyla")
+
+    # Close the session because we didn't use a context manager.
+    session.close()
+  
 
 Batch
 +++++++++++++++++++++
@@ -59,59 +152,28 @@ Batch
 Ideal for running experiments closely together to avoid device drifts, that is, to maintain device characterization.
 
 - Suitable for batching many jobs together. 
-- Jobs that fit within the maximum session time run back-to-back on hardware.
+- The classical computation, such as compilation, of the jobs is run in parallel. This means running multiple jobs in a batch would be significantly faster than running them serially.
+
 
 .. note::  
     When batching, jobs are not guaranteed to run in the order they are submitted.    
 
 .. image:: images/batch.png 
 
-.. _active:
+The following example shows how you can divide up a long list of circuits into multiple jobs and run them as a batch to take advantage of the parallel processing.
 
-How long a session stays active
---------------------------------
+.. code-block:: python
 
-The length of time a session is active is controlled by the *maximum session timeout* (``max_time``) value and the *interactive* timeout value (TTL). The ``max_time`` timer starts when the session becomes active.  That is, when the first job runs, not when it is queued. It does not stop if a session becomes inactive. The TTL timer starts each time a session job finishes. 
+    backend = service.backend("ibm_sherbrooke")
 
-.. note::  
-    For an Open plan user, the maximum session timeout is 15 minutes.    
-
-Maximum session timeout
-++++++++++++++++++++++++++++
-
-When a session is started, it is assigned a *maximum session timeout* value.  You can set this value by using the ``max_time`` parameter, which can be greater than the program's ``max_execution_time``. For instructions, see `Run a primitive in a session <how_to/run_session.html>`__.
-
-
-If you do not specify a timeout value, it is the smaller of these values:
-
-   * The system limit 
-   * The ``max_execution_time`` defined by the program
-
-See `What is the maximum execution time for a Qiskit Runtime job? <faqs/max_execution_time.html>`__ to determine the system limit and the ``max_execution_time`` for primitive programs. 
-
-.. _ttl:
-
-Interactive timeout value
-+++++++++++++++++++++++++++++
-
-Every session has an *interactive timeout value*, or time to live (TTL), of five minutes, which cannot be changed. If there are no session jobs queued within the TTL window, the session is temporarily deactivated and normal job selection resumes. A deactivated session can be resumed if it has not reached its maximum timeout value. The session is resumed when a subsequent session job starts. Once a session is deactivated, its next job waits in the queue like other jobs. 
-
-After a session is deactivated, the next job in the queue is selected to run. This newly selected job (which can belong to a different user) can run as a singleton, but it can also start a different session. In other words, a deactivated session does not block the creation of other sessions. Jobs from this new session would then take priority until it is deactivated or closed, at which point normal job selection resumes.
-
-.. note::  
-    When running jobs through the Open Plan, the interactive timeout value is two seconds.     
-
-.. _ends:
-
-What happens when a session ends
--------------------------------------
-
-A session ends by reaching its maximum timeout value or when it is manually closed by the user.  Do not close a session until all jobs **complete**. See `Close a session <how_to/run_session.html#close-a-session>`__ for details. After a session is closed, the following occurs:
-
-* Any queued jobs remaining in the session (whether they are queued or not) are put into a failed state.
-* No further jobs can be submitted to the session.
-* The session cannot be reopened. 
-
+    with Session(backend=backend):
+        estimator = Estimator()
+        start_idx = 0
+        jobs = []
+        while start_idx < len(circuits):
+            end_idx = start_idx + backend.max_circuits
+            jobs.append(estimator.run(circuits[start_idx:end_idx], obs[start_idx:end_idx], params[start_idx:end_idx]))
+            start_idx = end_idx
 
 Sessions and reservations 
 -------------------------
@@ -120,6 +182,16 @@ IBM Quantum Premium users can access both reservations and sessions on specific 
 
 .. image:: images/jobs-failing.png 
 
+Summary
+---------
+
+- Jobs within an active session take priority over other queued jobs.
+- A session becomes active when its first job starts running.
+- A session stays active until one of the following happens:
+  - Its maximum timeout value is reached. In this case all queued jobs are canceled, but running jobs will finish. 
+  - Its interactive timeout value is reached. In this case the session is deactivated but can be resumed if another session job starts running. 
+  - The session is closed or cancelled. This can be done using the corresponding methods or upon exiting a session context.
+- Sessions can be used for iterative or batch execution.
 
 Next steps
 ------------
