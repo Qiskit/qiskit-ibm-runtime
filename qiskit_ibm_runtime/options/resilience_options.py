@@ -41,10 +41,6 @@ class ResilienceOptions:
             Only applicable for ``resilience_level=2``.
             Default: ``None``, and (1, 3, 5) if resilience level is 2.
 
-        noise_amplifier (DEPRECATED): A noise amplification strategy. Currently only
-        ``"LocalFoldingAmplifier"`` is supported Only applicable for ``resilience_level=2``.
-            Default: "LocalFoldingAmplifier".
-
         extrapolator: An extrapolation strategy. One of ``"LinearExtrapolator"``,
             ``"QuadraticExtrapolator"``, ``"CubicExtrapolator"``, ``"QuarticExtrapolator"``.
             Note that ``"CubicExtrapolator"`` and ``"QuarticExtrapolator"`` require more
@@ -53,7 +49,7 @@ class ResilienceOptions:
             Default: ``None``, and ``LinearExtrapolator`` if resilience level is 2.
     """
 
-    noise_amplifier: NoiseAmplifierType = None
+    noise_amplifier: NoiseAmplifierType = "LocalFoldingAmplifier"
     noise_factors: Sequence[float] = None
     extrapolator: ExtrapolatorType = None
 
@@ -62,7 +58,6 @@ class ResilienceOptions:
         """Validate that resilience options are legal.
         Raises:
             ValueError: if any resilience option is not supported
-            ValueError: if noise_amplifier is not in NoiseAmplifierType.
             ValueError: if extrapolator is not in ExtrapolatorType.
             ValueError: if extrapolator == "QuarticExtrapolator" and number of noise_factors < 5.
             ValueError: if extrapolator == "CubicExtrapolator" and number of noise_factors < 4.
@@ -70,12 +65,7 @@ class ResilienceOptions:
         for opt in resilience_options:
             if not opt in get_args(ResilienceSupportedOptions):
                 raise ValueError(f"Unsupported value '{opt}' for resilience.")
-        noise_amplifier = resilience_options.get("noise_amplifier") or "LocalFoldingAmplifier"
-        if noise_amplifier not in get_args(NoiseAmplifierType):
-            raise ValueError(
-                f"Unsupported value {noise_amplifier} for noise_amplifier. "
-                f"Supported values are {get_args(NoiseAmplifierType)}"
-            )
+
         extrapolator = resilience_options.get("extrapolator")
         if extrapolator and extrapolator not in get_args(ExtrapolatorType):
             raise ValueError(
