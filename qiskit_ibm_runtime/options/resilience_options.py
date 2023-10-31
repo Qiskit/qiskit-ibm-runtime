@@ -15,8 +15,6 @@
 from typing import Sequence, Literal, get_args, Union
 from dataclasses import dataclass
 
-from ..utils.deprecation import issue_deprecation_msg
-
 ResilienceSupportedOptions = Literal[
     "noise_amplifier",
     "noise_factors",
@@ -42,6 +40,7 @@ ZneExtrapolatorType = Literal[
     "polynomial_degree_3",
     "polynomial_degree_4",
 ]
+
 
 @dataclass
 class ResilienceOptions:
@@ -137,7 +136,7 @@ class ResilienceOptions:
             raise ValueError(
                 f"Unsupported value {noise_amplifier} for noise_amplifier. "
                 f"Supported values are {get_args(NoiseAmplifierType)}"
-                )
+            )
 
         extrapolator = resilience_options.get("extrapolator")
         if extrapolator and extrapolator not in get_args(ExtrapolatorType):
