@@ -507,7 +507,7 @@ class IBMBackend(Backend):
         # For backward compatibility only, can be removed later.
         return self
 
-    def _check_circuits_attributes(self, circuits: Union[List[QuantumCircuit], str]) -> None:
+    def _check_circuits_attributes(self, circuits: List[Union[QuantumCircuit, str]]) -> None:
         """Check that circuits can be executed on backend.
         Raises:
             IBMBackendValueError:
