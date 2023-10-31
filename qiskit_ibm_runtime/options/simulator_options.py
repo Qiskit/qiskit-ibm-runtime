@@ -62,16 +62,6 @@ class SimulatorOptions:
     coupling_map: Optional[Union[List[List[int]], "CouplingMap"]] = None
     basis_gates: Optional[List[str]] = None
 
-    @staticmethod
-    def validate_simulator_options(simulator_options: dict) -> None:
-        """Validate that simulator options are legal.
-        Raises:
-            ValueError: if any simulator option is not supported
-        """
-        for opt in simulator_options:
-            if not opt in get_args(SimulatorSupportedOptions):
-                raise ValueError(f"Unsupported value '{opt}' for simulator.")
-
     def set_backend(self, backend: Union[BackendV1, BackendV2]) -> None:
         """Set backend for simulation.
         This method changes noise_model, coupling_map, basis_gates according to given backend.

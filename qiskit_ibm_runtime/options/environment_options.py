@@ -64,3 +64,4 @@ class EnvironmentOptions:
                 f"Unsupported value {log_level} for log_level. "
                 f"Supported values are {get_args(LogLevelType)}"
             )
+        return self

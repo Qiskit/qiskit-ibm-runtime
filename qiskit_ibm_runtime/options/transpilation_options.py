@@ -71,11 +71,6 @@ class TranspilationOptions:
 
     @model_validator(mode="after")
     def _validate_model(self):
-        print("in validate transpilation")
-        # for opt in transpilation_options:
-        #     if not opt in get_args(TranspilationSupportedOptions):
-        #         raise ValueError(f"Unsupported value '{opt}' for transpilation.")
-
         layout_method = self.layout_method
         if not (layout_method in get_args(LayoutMethodType) or layout_method is None):
             raise ValueError(

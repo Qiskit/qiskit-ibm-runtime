@@ -119,11 +119,8 @@ class Options:
 
     def __post_init__(self):  # type: ignore
         """Convert dictionary fields to object."""
-        print("in post_init")
         obj_fields = getattr(self, "_obj_fields", {})
-        print("obj_fields = " + str(obj_fields))
         for key in list(obj_fields):
-            print("key = " + str(key))
             if hasattr(self, key):
                 orig_val = getattr(self, key)
                 setattr(self, key, _to_obj(obj_fields[key], orig_val))
@@ -168,22 +165,6 @@ class Options:
                 warnings.warn(f"Key '{key}' is an unrecognized option. It may be ignored.")
                 inputs[key] = options[key]
         return inputs
-
-    @model_validator(mode="after")
-    def _validate_model(self):
-
-        """Validate that program inputs (options) are valid
-        Raises:
-            ValueError: if optimization_level is outside the allowed range.
-            ValueError: if max_execution_time is outside the allowed range.
-        """
-        print("in validate_options")
-        # ResilienceOptions.validate_resilience_options(self.resilience)
-        # TranspilationOptions.validate_transpilation_options(self.transpilation)
-
-        # EnvironmentOptions.validate_environment_options(self.environment)
-        # ExecutionOptions.validate_execution_options(self.execution)
-        # SimulatorOptions.validate_simulator_options(self.simulator)
 
     @staticmethod
     def _remove_none_values(options: dict) -> dict:

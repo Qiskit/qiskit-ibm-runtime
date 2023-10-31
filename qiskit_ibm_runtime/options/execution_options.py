@@ -38,16 +38,3 @@ class ExecutionOptions:
 
     shots: int = 4000
     init_qubits: bool = True
-
-
-    # @model_validator(mode="after")
-    # def _validate_model(
-    #         self,
-    # ):
-    #     """Validate that execution options are legal.
-    #     Raises:
-    #         ValueError: if any execution option is not supported
-    #     """
-    #     for opt in execution_options:
-    #         if not opt in get_args(ExecutionSupportedOptions):
-    #             raise ValueError(f"Unsupported value '{opt}' for execution.")

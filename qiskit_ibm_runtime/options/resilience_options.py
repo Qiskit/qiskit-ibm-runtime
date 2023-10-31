@@ -63,22 +63,7 @@ class ResilienceOptions:
     extrapolator: ExtrapolatorType = None
 
     @model_validator(mode="after")
-    def _validate_model(
-            self,
-    ):
-
-        print("in validate resilience")
-        """
-        Raises:
-            ValueError: if any resilience option is not supported
-            ValueError: if noise_amplifier is not in NoiseAmplifierType.
-            ValueError: if extrapolator is not in ExtrapolatorType.
-            ValueError: if extrapolator == "QuarticExtrapolator" and number of noise_factors < 5.
-            ValueError: if extrapolator == "CubicExtrapolator" and number of noise_factors < 4.
-        """
-        # for opt in resilience_options:
-        #     if not opt in get_args(ResilienceSupportedOptions):
-        #         raise ValueError(f"Unsupported value '{opt}' for resilience.")
+    def _validate_model(self):
         noise_amplifier = self.noise_amplifier or "LocalFoldingAmplifier"
         if noise_amplifier not in get_args(NoiseAmplifierType):
             raise ValueError(
@@ -95,3 +80,4 @@ class ResilienceOptions:
             raise ValueError("QuarticExtrapolator requires at least 5 noise_factors.")
         if extrapolator == "CubicExtrapolator" and len(self.noise_factors) < 4:
             raise ValueError("CubicExtrapolator requires at least 4 noise_factors.")
+        return self
