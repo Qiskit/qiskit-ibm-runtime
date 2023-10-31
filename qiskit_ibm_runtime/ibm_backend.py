@@ -772,7 +772,7 @@ class IBMBackend(Backend):
             )
         except RequestsApiError as ex:
             raise IBMBackendApiError("Error submitting job: {}".format(str(ex))) from ex
-        session_id = response.get("session_id")
+        session_id = response.get("session_id", None)
         if self._session:
             self._session._session_id = session_id
         try:
