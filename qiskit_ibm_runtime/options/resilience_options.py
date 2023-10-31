@@ -15,19 +15,13 @@
 from typing import Sequence, Literal, get_args, Union
 from dataclasses import dataclass
 
-from .utils import _flexible
-from ..utils.deprecation import issue_deprecation_msg, deprecate_arguments
-
 ResilienceSupportedOptions = Literal[
     "noise_amplifier",
     "noise_factors",
     "extrapolator",
 ]
 NoiseAmplifierType = Literal[
-    "TwoQubitAmplifier",
-    "GlobalFoldingAmplifier",
     "LocalFoldingAmplifier",
-    "CxAmplifier",
 ]
 ExtrapolatorType = Literal[
     "LinearExtrapolator",
@@ -48,7 +42,6 @@ ZneExtrapolatorType = Literal[
 ]
 
 
-@_flexible
 @dataclass
 class ResilienceOptions:
     """Resilience options.
@@ -59,10 +52,9 @@ class ResilienceOptions:
             Only applicable for ``resilience_level=2``.
             Default: (1, 3, 5) if resilience level is 2. Otherwise ``None``.
 
-        noise_amplifier (DEPRECATED): A noise amplification strategy. One of ``"TwoQubitAmplifier"``,
-            ``"GlobalFoldingAmplifier"``, ``"LocalFoldingAmplifier"``, ``"CxAmplifier"``.
-            Only applicable for ``resilience_level=2``.
-            Default: "TwoQubitAmplifier" if resilience level is 2. Otherwise ``None``.
+        noise_amplifier (DEPRECATED): A noise amplification strategy. Currently only
+        ``"LocalFoldingAmplifier"`` is supported Only applicable for ``resilience_level=2``.
+            Default: "LocalFoldingAmplifier".
 
         extrapolator (DEPRECATED): An extrapolation strategy. One of ``"LinearExtrapolator"``,
             ``"QuadraticExtrapolator"``, ``"CubicExtrapolator"``, ``"QuarticExtrapolator"``.
@@ -139,42 +131,19 @@ class ResilienceOptions:
             ValueError: if extrapolator == "CubicExtrapolator" and number of noise_factors < 4.
             TypeError: if an input value has an invalid type.
         """
-        noise_amplifier = resilience_options.get("noise_amplifier")
-        if noise_amplifier is not None:
-            issue_deprecation_msg(
-                msg="The 'noise_amplifier' resilience option is deprecated",
-                version="0.12.0",
-                period="1 month",
-                remedy="After the deprecation period, only local folding amplification "
-                "will be supported. "
-                "Refer to https://github.com/qiskit-community/prototype-zne "
-                "for global folding amplification in ZNE.",
-            )
-            if noise_amplifier not in get_args(NoiseAmplifierType):
-                raise ValueError(
-                    f"Unsupported value {noise_amplifier} for noise_amplifier. "
-                    f"Supported values are {get_args(NoiseAmplifierType)}"
-                )
-
-        if resilience_options.get("noise_factors", None) is not None:
-            deprecate_arguments(
-                deprecated="noise_factors",
-                version="0.13.0",
-                remedy="Please use 'zne_noise_factors' instead.",
+        noise_amplifier = resilience_options.get("noise_amplifier") or "LocalFoldingAmplifier"
+        if noise_amplifier not in get_args(NoiseAmplifierType):
+            raise ValueError(
+                f"Unsupported value {noise_amplifier} for noise_amplifier. "
+                f"Supported values are {get_args(NoiseAmplifierType)}"
             )
 
         extrapolator = resilience_options.get("extrapolator")
-        if extrapolator is not None:
-            deprecate_arguments(
-                deprecated="extrapolator",
-                version="0.13.0",
-                remedy="Please use 'zne_extrapolator' instead.",
+        if extrapolator and extrapolator not in get_args(ExtrapolatorType):
+            raise ValueError(
+                f"Unsupported value {extrapolator} for extrapolator. "
+                f"Supported values are {get_args(ExtrapolatorType)}"
             )
-            if extrapolator not in get_args(ExtrapolatorType):
-                raise ValueError(
-                    f"Unsupported value {extrapolator} for extrapolator. "
-                    f"Supported values are {get_args(ExtrapolatorType)}"
-                )
 
         if (
             extrapolator == "QuarticExtrapolator"

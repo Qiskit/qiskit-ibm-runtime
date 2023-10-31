@@ -19,7 +19,7 @@ import warnings
 
 from qiskit.transpiler import CouplingMap
 
-from .utils import _flexible, Dict, _remove_dict_none_values
+from .utils import Dict, _to_obj, _remove_dict_none_values
 from .environment_options import EnvironmentOptions
 from .execution_options import ExecutionOptions
 from .simulator_options import SimulatorOptions
@@ -31,7 +31,6 @@ from ..runtime_options import RuntimeOptions
 DDSequenceType = Literal[None, "XX", "XpXm", "XY4"]
 
 
-@_flexible
 @dataclass
 class Options:
     """Options for the primitives.
@@ -64,12 +63,16 @@ class Options:
             <https://qiskit.org/documentation/partners/qiskit_ibm_runtime>`_.
             for more information about the error mitigation methods used at each level.
 
-        max_execution_time: Maximum execution time in seconds. If
-            a job exceeds this time limit, it is forcibly cancelled. If ``None``, the
-            maximum execution time of the primitive is used.
-            This value must be in between 300 seconds and the
-            `system imposed maximum
-            <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/faqs/max_execution_time.html>`_.
+        max_execution_time: Maximum execution time in seconds, which is based
+            on system execution time (not wall clock time). System execution time is
+            the amount of time that the system is dedicated to processing your job.
+            If a job exceeds this time limit, it is forcibly cancelled.
+            Simulator jobs continue to use wall clock time.
+
+            Refer to the
+            `Max execution time documentation
+            <https://docs.quantum-computing.ibm.com/run/max-execution-time#maximum-execution-time>`_.
+            for more information.
 
         dynamical_decoupling: Optional, specify a dynamical decoupling sequence to use.
             Allowed values are ``"XX"``, ``"XpXm"``, ``"XY4"``.
@@ -99,7 +102,6 @@ class Options:
     _MAX_OPTIMIZATION_LEVEL = 3
     _MAX_RESILIENCE_LEVEL_ESTIMATOR = 3
     _MAX_RESILIENCE_LEVEL_SAMPLER = 1
-    _MIN_EXECUTION_TIME = 300
     _MAX_EXECUTION_TIME = 8 * 60 * 60  # 8 hours for real device
 
     optimization_level: Optional[int] = None
@@ -121,6 +123,14 @@ class Options:
         "resilience": ResilienceOptions,
         "twirling": TwirlingOptions,
     }
+
+    def __post_init__(self):  # type: ignore
+        """Convert dictionary fields to object."""
+        obj_fields = getattr(self, "_obj_fields", {})
+        for key in list(obj_fields):
+            if hasattr(self, key):
+                orig_val = getattr(self, key)
+                setattr(self, key, _to_obj(obj_fields[key], orig_val))
 
     @staticmethod
     def _get_program_inputs(options: dict) -> dict:
@@ -230,19 +240,43 @@ class Options:
         ResilienceOptions.validate_resilience_options(options.get("resilience"))
         TranspilationOptions.validate_transpilation_options(options.get("transpilation"))
         execution_time = options.get("max_execution_time")
-        if not execution_time is None:
-            if (
-                execution_time < Options._MIN_EXECUTION_TIME
-                or execution_time > Options._MAX_EXECUTION_TIME
-            ):
+        if execution_time is not None:
+            if execution_time > Options._MAX_EXECUTION_TIME:
                 raise ValueError(
-                    f"max_execution_time must be between "
-                    f"{Options._MIN_EXECUTION_TIME} and {Options._MAX_EXECUTION_TIME} seconds."
+                    f"max_execution_time must be below " f"{Options._MAX_EXECUTION_TIME} seconds."
                 )
 
         EnvironmentOptions.validate_environment_options(options.get("environment"))
         ExecutionOptions.validate_execution_options(options.get("execution"))
         SimulatorOptions.validate_simulator_options(options.get("simulator"))
+
+    @staticmethod
+    def _remove_none_values(options: dict) -> dict:
+        """Remove `None` values from the options dictionary."""
+        new_options = {}
+        for key, value in options.items():
+            if value is not None:
+                if isinstance(value, dict):
+                    new_suboptions = {}
+                    for subkey, subvalue in value.items():
+                        if subvalue is not None:
+                            new_suboptions[subkey] = subvalue
+                    new_options[key] = new_suboptions
+                else:
+                    new_options[key] = value
+
+        return new_options
+
+    @staticmethod
+    def _set_default_resilience_options(options: dict) -> dict:
+        """Set default resilience options for resilience level 2."""
+        if options["resilience_level"] == 2:
+            if not options["resilience"]["noise_factors"]:
+                options["resilience"]["noise_factors"] = (1, 3, 5)
+            if not options["resilience"]["extrapolator"]:
+                options["resilience"]["extrapolator"] = "LinearExtrapolator"
+
+        return options
 
     @staticmethod
     def _get_runtime_options(options: dict) -> dict:

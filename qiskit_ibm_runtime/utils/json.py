@@ -207,6 +207,8 @@ class RuntimeEncoder(json.JSONEncoder):
                 return {"__type__": "ndarray", "__value__": obj.tolist()}
             value = _serialize_and_encode(obj, np.save, allow_pickle=False)
             return {"__type__": "ndarray", "__value__": value}
+        if isinstance(obj, np.int64):
+            return obj.item()
         if isinstance(obj, set):
             return {"__type__": "set", "__value__": list(obj)}
         if isinstance(obj, Result):

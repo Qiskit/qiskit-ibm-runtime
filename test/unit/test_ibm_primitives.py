@@ -15,7 +15,6 @@
 import sys
 import os
 from unittest.mock import MagicMock, patch
-import warnings
 from dataclasses import asdict
 from typing import Dict
 
@@ -81,28 +80,6 @@ class TestPrimitives(IBMTestCase):
                 with self.subTest(primitive=cls, options=options):
                     inst = cls(session=MagicMock(spec=MockSession), options=options)
                     self.assertTrue(dict_paritally_equal(inst.options.__dict__, options))
-
-    def test_backend_in_options(self):
-        """Test specifying backend in options."""
-        primitives = [Sampler, Estimator]
-        backend_name = "ibm_gotham"
-        backend = MagicMock(spec=IBMBackend)
-        backend._instance = None
-        backend.name = backend_name
-        backends = [backend_name, backend]
-        for cls in primitives:
-            for backend in backends:
-                with self.subTest(primitive=cls, backend=backend):
-                    options = {"backend": backend}
-                    with warnings.catch_warnings(record=True) as warn:
-                        warnings.simplefilter("always")
-                        cls(session=MagicMock(spec=MockSession), options=options)
-                        self.assertTrue(
-                            all(
-                                issubclass(one_warn.category, DeprecationWarning)
-                                for one_warn in warn
-                            )
-                        )
 
     def test_runtime_options(self):
         """Test RuntimeOptions specified as primitive options."""
@@ -170,13 +147,11 @@ class TestPrimitives(IBMTestCase):
         for cls in primitives:
             with self.subTest(primitive=cls), patch(
                 "qiskit_ibm_runtime.base_primitive.QiskitRuntimeService"
-            ) as mock_service:
-                with self.assertWarns(DeprecationWarning):
-                    mock_service.reset_mock()
-                    mock_service.global_service = None
+            ):
+                with self.assertRaises(ValueError) as exc:
                     inst = cls(session=backend_name)
-                    mock_service.assert_called_once()
                     self.assertIsNone(inst.session)
+                self.assertIn("session must be of type Session or None", str(exc.exception))
 
     def test_init_with_backend_instance(self):
         """Test initializing a primitive with a backend instance."""
@@ -198,9 +173,10 @@ class TestPrimitives(IBMTestCase):
                 runtime_options = service.run.call_args.kwargs["options"]
                 self.assertEqual(runtime_options["backend"], backend.name)
 
-                with self.assertWarns(DeprecationWarning):
+                with self.assertRaises(ValueError) as exc:
                     inst = cls(session=backend)
                     self.assertIsNone(inst.session)
+                self.assertIn("session must be of type Session or None", str(exc.exception))
 
     def test_init_with_backend_session(self):
         """Test initializing a primitive with both backend and session."""
@@ -413,22 +389,6 @@ class TestPrimitives(IBMTestCase):
                         rt_options = kwargs["options"]
                     self._assert_dict_partially_equal(rt_options, options)
 
-    def test_kwarg_options(self):
-        """Test specifying arbitrary options."""
-        session = MagicMock(spec=MockSession)
-        primitives = [Sampler, Estimator]
-        for cls in primitives:
-            with self.subTest(primitive=cls):
-                options = Options(foo="foo")  # pylint: disable=unexpected-keyword-arg
-                inst = cls(session=session, options=options)
-                inst.run(self.qx, observables=self.obs)
-                if sys.version_info >= (3, 8):
-                    inputs = session.run.call_args.kwargs["inputs"]
-                else:
-                    _, kwargs = session.run.call_args
-                    inputs = kwargs["inputs"]
-                self.assertEqual(inputs.get("foo"), "foo")
-
     def test_run_kwarg_options(self):
         """Test specifying arbitrary options in run."""
         session = MagicMock(spec=MockSession)
@@ -475,10 +435,6 @@ class TestPrimitives(IBMTestCase):
         new_options = [
             ({"optimization_level": 2}, Options()),
             ({"optimization_level": 3, "shots": 200}, Options()),
-            (
-                {"shots": 300, "foo": "foo"},
-                Options(foo="foo"),  # pylint: disable=unexpected-keyword-arg
-            ),
         ]
 
         session = MagicMock(spec=MockSession)
@@ -547,7 +503,12 @@ class TestPrimitives(IBMTestCase):
                     simulator={"noise_model": "foo"},
                 )
                 inst = cls(session=session, options=options)
-                inst.run(self.qx, observables=self.obs)
+
+                if isinstance(inst, Estimator):
+                    inst.run(self.qx, observables=self.obs)
+                else:
+                    inst.run(self.qx)
+
                 if sys.version_info >= (3, 8):
                     inputs = session.run.call_args.kwargs["inputs"]
                 else:
@@ -681,7 +642,6 @@ class TestPrimitives(IBMTestCase):
     def test_max_execution_time_options(self):
         """Test transpilation options."""
         options_dicts = [
-            {"max_execution_time": Options._MIN_EXECUTION_TIME - 1},
             {"max_execution_time": Options._MAX_EXECUTION_TIME + 1},
         ]
         session = MagicMock(spec=MockSession)
@@ -701,7 +661,7 @@ class TestPrimitives(IBMTestCase):
                     inst = cls(session=session, options=opts_dict)
                     inst.run(self.qx, observables=self.obs)
                 self.assertIn(
-                    "max_execution_time must be between 300 and 28800 seconds",
+                    "max_execution_time must be below 28800 seconds",
                     str(exc.exception),
                 )
 
@@ -724,11 +684,12 @@ class TestPrimitives(IBMTestCase):
         estimator = Estimator(session=session)
 
         with self.assertRaises(ValueError) as err:
-            sampler.run(transpiled, skip_transpilation=True)
+            estimator.run(transpiled, observable, skip_transpilation=True)
         self.assertIn(f"faulty qubit {faulty_qubit}", str(err.exception))
 
+        transpiled.measure_all()
         with self.assertRaises(ValueError) as err:
-            estimator.run(transpiled, observable, skip_transpilation=True)
+            sampler.run(transpiled, skip_transpilation=True)
         self.assertIn(f"faulty qubit {faulty_qubit}", str(err.exception))
 
     def test_raise_faulty_qubits_many(self):
@@ -753,11 +714,14 @@ class TestPrimitives(IBMTestCase):
         estimator = Estimator(session=session)
 
         with self.assertRaises(ValueError) as err:
-            sampler.run(transpiled, skip_transpilation=True)
+            estimator.run(transpiled, [observable, observable], skip_transpilation=True)
         self.assertIn(f"faulty qubit {faulty_qubit}", str(err.exception))
 
+        for circ in transpiled:
+            circ.measure_all()
+
         with self.assertRaises(ValueError) as err:
-            estimator.run(transpiled, [observable, observable], skip_transpilation=True)
+            sampler.run(transpiled, skip_transpilation=True)
         self.assertIn(f"faulty qubit {faulty_qubit}", str(err.exception))
 
     def test_raise_faulty_edge(self):
@@ -779,12 +743,13 @@ class TestPrimitives(IBMTestCase):
         estimator = Estimator(session=session)
 
         with self.assertRaises(ValueError) as err:
-            sampler.run(transpiled, skip_transpilation=True)
+            estimator.run(transpiled, observable, skip_transpilation=True)
         self.assertIn("cx", str(err.exception))
         self.assertIn(f"faulty edge {tuple(edge_qubits)}", str(err.exception))
 
+        transpiled.measure_all()
         with self.assertRaises(ValueError) as err:
-            estimator.run(transpiled, observable, skip_transpilation=True)
+            sampler.run(transpiled, skip_transpilation=True)
         self.assertIn("cx", str(err.exception))
         self.assertIn(f"faulty edge {tuple(edge_qubits)}", str(err.exception))
 
@@ -807,11 +772,12 @@ class TestPrimitives(IBMTestCase):
         estimator = Estimator(session=session)
 
         with patch.object(Session, "run") as mock_run:
-            sampler.run(transpiled, skip_transpilation=True)
+            estimator.run(transpiled, observable, skip_transpilation=True)
         mock_run.assert_called_once()
 
+        transpiled.measure_active()
         with patch.object(Session, "run") as mock_run:
-            estimator.run(transpiled, observable, skip_transpilation=True)
+            sampler.run(transpiled, skip_transpilation=True)
         mock_run.assert_called_once()
 
     def test_faulty_edge_not_used(self):
@@ -835,11 +801,12 @@ class TestPrimitives(IBMTestCase):
         estimator = Estimator(session=session)
 
         with patch.object(Session, "run") as mock_run:
-            sampler.run(transpiled, skip_transpilation=True)
+            estimator.run(transpiled, observable, skip_transpilation=True)
         mock_run.assert_called_once()
 
+        transpiled.measure_all()
         with patch.object(Session, "run") as mock_run:
-            estimator.run(transpiled, observable, skip_transpilation=True)
+            sampler.run(transpiled, skip_transpilation=True)
         mock_run.assert_called_once()
 
     def test_no_raise_skip_transpilation(self):
@@ -864,11 +831,12 @@ class TestPrimitives(IBMTestCase):
         estimator = Estimator(session=session)
 
         with patch.object(Session, "run") as mock_run:
-            sampler.run(transpiled)
+            estimator.run(transpiled, observable)
         mock_run.assert_called_once()
 
+        transpiled.measure_all()
         with patch.object(Session, "run") as mock_run:
-            estimator.run(transpiled, observable)
+            sampler.run(transpiled)
         mock_run.assert_called_once()
 
     def _update_dict(self, dict1, dict2):

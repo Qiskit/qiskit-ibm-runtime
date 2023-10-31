@@ -16,7 +16,6 @@ from unittest.mock import MagicMock, patch
 
 from qiskit_ibm_runtime import Session
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
-from qiskit_ibm_runtime.exceptions import IBMInputValueError
 import qiskit_ibm_runtime.session as session_pkg
 from .mock.fake_runtime_service import FakeRuntimeService
 from ..ibm_test_case import IBMTestCase
@@ -76,17 +75,9 @@ class TestSession(IBMTestCase):
     def test_run_after_close(self):
         """Test running after session is closed."""
         session = Session(service=MagicMock(), backend="ibm_gotham")
-        session.close()
+        session.cancel()
         with self.assertRaises(RuntimeError):
             session.run(program_id="program_id", inputs={})
-
-    def test_conflicting_backend(self):
-        """Test passing in different backend through options."""
-        service = MagicMock()
-        backend = "ibm_gotham"
-        session = Session(service=service, backend=backend)
-        with self.assertRaises(IBMInputValueError):
-            session.run(program_id="test", inputs={}, options={"backend": "different_backend"})
 
     def test_run(self):
         """Test the run method."""
@@ -114,7 +105,7 @@ class TestSession(IBMTestCase):
             _, kwargs = service.run.call_args
             self.assertEqual(kwargs["program_id"], program_id)
             self.assertDictEqual(kwargs["options"], {"backend": backend, **options})
-            self.assertDictContainsSubset({"session_time": 42}, kwargs["options"])
+            self.assertTrue({"session_time": 42}.items() <= kwargs["options"].items())
             self.assertDictEqual(kwargs["inputs"], inputs)
             self.assertEqual(kwargs["session_id"], session_ids[idx])
             self.assertEqual(kwargs["start_session"], start_sessions[idx])
@@ -135,7 +126,7 @@ class TestSession(IBMTestCase):
         """Test session as a context manager."""
         with Session(service=MagicMock(), backend="ibm_gotham") as session:
             session.run(program_id="foo", inputs={})
-            session.close()
+            session.cancel()
         self.assertFalse(session._active)
 
     def test_default_backend(self):
@@ -163,3 +154,11 @@ class TestSession(IBMTestCase):
             service=FakeRuntimeService(channel="ibm_quantum", token="uvw"), backend="ibm_gotham"
         ) as session:
             self.assertEqual(session._service._account.token, "uvw")
+
+    def test_session_from_id(self):
+        """Create session with given session_id"""
+        service = MagicMock()
+        session_id = "123"
+        session = Session.from_id(session_id=session_id, service=service)
+        session.run(program_id="foo", inputs={})
+        self.assertEqual(session.session_id, session_id)

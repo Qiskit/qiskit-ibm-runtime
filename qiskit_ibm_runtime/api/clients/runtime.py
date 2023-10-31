@@ -337,21 +337,42 @@ class RuntimeClient(BaseBackendClient):
         """
         return self._api.program_job(job_id).metadata()
 
-    def close_session(self, session_id: str) -> None:
-        """Close the runtime session.
+    def cancel_session(self, session_id: str) -> None:
+        """Close all jobs in the runtime session.
 
         Args:
             session_id: Session ID.
         """
+        self._api.runtime_session(session_id=session_id).cancel()
+
+    def close_session(self, session_id: str) -> None:
+        """Update session so jobs can no longer be submitted."""
         self._api.runtime_session(session_id=session_id).close()
 
-    def list_backends(self, hgp: Optional[str] = None) -> List[str]:
+    def session_details(self, session_id: str) -> Dict[str, Any]:
+        """Get session details.
+
+        Args:
+            session_id: Session ID.
+
+        Returns:
+            Session details.
+        """
+        return self._api.runtime_session(session_id=session_id).details()
+
+    def list_backends(
+        self, hgp: Optional[str] = None, channel_strategy: Optional[str] = None
+    ) -> List[str]:
         """Return IBM backends available for this service instance.
+
+        Args:
+            hgp: Filter by hub/group/project.
+            channel_strategy: Filter by channel strategy.
 
         Returns:
             IBM backends available for this service instance.
         """
-        return self._api.backends(hgp=hgp)["devices"]
+        return self._api.backends(hgp=hgp, channel_strategy=channel_strategy)["devices"]
 
     def backend_configuration(self, backend_name: str) -> Dict[str, Any]:
         """Return the configuration of the IBM backend.
@@ -390,9 +411,7 @@ class RuntimeClient(BaseBackendClient):
         Raises:
             NotImplementedError: If `datetime` is specified.
         """
-        if datetime:
-            raise NotImplementedError("'datetime' is not supported with cloud runtime.")
-        return self._api.backend(backend_name).properties()
+        return self._api.backend(backend_name).properties(datetime=datetime)
 
     def backend_pulse_defaults(self, backend_name: str) -> Dict:
         """Return the pulse defaults of the IBM backend.

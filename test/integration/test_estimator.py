@@ -22,7 +22,6 @@ from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit.primitives import BaseEstimator, EstimatorResult
 
 from qiskit_ibm_runtime import Estimator, Session
-from qiskit_ibm_runtime.exceptions import RuntimeJobFailureError
 
 from ..decorators import run_integration_test
 from ..ibm_test_case import IBMIntegrationTestCase
@@ -105,7 +104,6 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
             self.assertIsInstance(result5, EstimatorResult)
             self.assertEqual(len(result5.values), len(circuits5))
             self.assertEqual(len(result5.metadata), len(circuits5))
-            session.close()
 
     @run_integration_test
     def test_estimator_callback(self, service):
@@ -132,7 +130,6 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
             self.assertTrue((result.values == ws_result_values).all())
             self.assertEqual(len(job_ids), 1)
             self.assertEqual(job.job_id(), job_ids.pop())
-            session.close()
 
     @run_integration_test
     def test_estimator_coeffs(self, service):
@@ -182,24 +179,9 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
 
             chsh1_runtime = job1.result()
             chsh2_runtime = job2.result()
-            session.close()
 
         self.assertTrue(np.allclose(chsh1_terra.values, chsh1_runtime.values, rtol=0.3))
         self.assertTrue(np.allclose(chsh2_terra.values, chsh2_runtime.values, rtol=0.3))
-
-    @run_integration_test
-    def test_estimator_error_messages(self, service):
-        """Test that the correct error message is displayed"""
-        circuit = QuantumCircuit(2, 2)
-        circuit.h(0)
-        with Session(service, self.backend) as session:
-            estimator = Estimator(session=session)
-            job = estimator.run(circuits=circuit, observables="II")
-            with self.assertRaises(RuntimeJobFailureError) as err:
-                job.result()
-            self.assertIn("register name", str(err.exception))
-            self.assertFalse("python -m uvicorn server.main" in str(err.exception))
-            self.assertIn("register name", str(job.error_message()))
 
     @run_integration_test
     def test_estimator_no_session(self, service):

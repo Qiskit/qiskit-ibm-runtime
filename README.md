@@ -9,8 +9,8 @@
 
 **Qiskit** is an open-source SDK for working with quantum computers at the level of extended quantum circuits, operators, and primitives.
 
-**Qiskit IBM Runtime** is a new environment offered by IBM Quantum that streamlines quantum computations and provides optimal 
-implementations of the Qiskit primitives `sampler` and `estimator` for IBM Quantum hardware. It is designed to use additional classical compute resources to execute quantum circuits with more efficiency on quantum processors, by including near-time computations such as error suppression and error mitigation. Examples of error suppression include dynamical decoupling, noise-aware compilation, error mitigation including readout mitigation, zero-noise extrapolation (ZNE), and probabilistic error cancellation (PEC).  
+**Qiskit IBM Runtime** is a new environment offered by IBM Quantum that streamlines quantum computations and provides optimal
+implementations of the Qiskit primitives `sampler` and `estimator` for IBM Quantum hardware. It is designed to use additional classical compute resources to execute quantum circuits with more efficiency on quantum processors, by including near-time computations such as error suppression and error mitigation. Examples of error suppression include dynamical decoupling, noise-aware compilation, error mitigation including readout mitigation, zero-noise extrapolation (ZNE), and probabilistic error cancellation (PEC).
 
 Using the runtime service, a research team at IBM Quantum was able to achieve a 120x speedup
 in their lithium hydride simulation. For more information, see the
@@ -29,8 +29,6 @@ pip install qiskit-ibm-runtime
 ## Account setup
 
 ### Qiskit Runtime service on IBM Quantum Platform
-
-The default method for using the runtime service is IBM Quantum Platform.
 
 You will need your IBM Quantum API token to authenticate with the runtime service:
 
@@ -114,7 +112,7 @@ All quantum applications and algorithms level are fundamentally built using thre
 
 The IBM Runtime service offers these primitives with additional features, such as built-in error suppression and mitigation.
 
-There are several different options you can specify when calling the primitives. See [`qiskit_ibm_runtime.Options`](https://github.com/Qiskit/qiskit-ibm-runtime/blob/main/qiskit_ibm_runtime/options.py#L103) class for more information.
+There are several different options you can specify when calling the primitives. See [`qiskit_ibm_runtime.Options`](https://github.com/Qiskit/qiskit-ibm-runtime/blob/main/qiskit_ibm_runtime/options/options.py#L33) class for more information.
 
 ### Sampler
 
@@ -138,7 +136,7 @@ bell.cx(0, 1)
 # 2. Map the qubits to a classical register in ascending order
 bell.measure_all()
 
-# 3. Execute using the Sampler primitive 
+# 3. Execute using the Sampler primitive
 backend = service.get_backend('ibmq_qasm_simulator')
 sampler = Sampler(backend=backend, options=options)
 job = sampler.run(circuits=bell)
@@ -174,14 +172,14 @@ qc_example.cx(0, 2) # condition 2nd qubit on 0th qubit
 # 2. the observable to be measured
 M1 = SparsePauliOp.from_list([("XXY", 1), ("XYX", 1), ("YXX", 1), ("YYY", -1)])
 
-# batch of theta parameters to be executed 
+# batch of theta parameters to be executed
 points = 50
 theta1 = []
 for x in range(points):
     theta = [x*2.0*np.pi/50]
     theta1.append(theta)
 
-# 3. Execute using the Estimator primitive 
+# 3. Execute using the Estimator primitive
 backend = service.get_backend('ibmq_qasm_simulator')
 estimator = Estimator(backend, options=options)
 job = estimator.run(circuits=[qc_example]*points, observables=[M1]*points, parameter_values=theta1)
@@ -197,7 +195,7 @@ This code batches together 50 parameters to be executed in a single job. If a us
 In many algorithms and applications, an Estimator needs to be called iteratively without incurring queuing delays on each iteration. To solve this, the IBM Runtime service provides a **Session**. A session starts when the first job within the session is started, and subsequent jobs within the session are prioritized by the scheduler.
 
 You can use the [`qiskit_ibm_runtime.Session`](https://github.com/Qiskit/qiskit-ibm-runtime/blob/main/qiskit_ibm_runtime/session.py) class to start a
-session. Consider the same example above and try to find the optimal `theta`. The following example uses the [golden search method](https://en.wikipedia.org/wiki/Golden-section_search) to iteratively find the optimal theta that maximizes the observable. 
+session. Consider the same example above and try to find the optimal `theta`. The following example uses the [golden search method](https://en.wikipedia.org/wiki/Golden-section_search) to iteratively find the optimal theta that maximizes the observable.
 
 To invoke the `Estimator` primitive within a session:
 
@@ -224,15 +222,15 @@ qc_example.cx(0, 2) # condition 2nd qubit on 0th qubit
 M1 = SparsePauliOp.from_list([("XXY", 1), ("XYX", 1), ("YXX", 1), ("YYY", -1)])
 
 
-gr = (np.sqrt(5) + 1) / 2 # golden ratio   
+gr = (np.sqrt(5) + 1) / 2 # golden ratio
 thetaa = 0 # lower range of theta
 thetab = 2*np.pi # upper range of theta
-tol = 1e-1 # tol 
+tol = 1e-1 # tol
 
-# 3. Execute iteratively using the Estimator primitive 
+# 3. Execute iteratively using the Estimator primitive
 with Session(service=service, backend="ibmq_qasm_simulator") as session:
     estimator = Estimator(session=session, options=options)
-    #next test range 
+    #next test range
     thetac = thetab - (thetab - thetaa) / gr
     thetad = thetaa + (thetab - thetaa) / gr
     while abs(thetab - thetaa) > tol:
@@ -245,8 +243,8 @@ with Session(service=service, backend="ibmq_qasm_simulator") as session:
             thetaa = thetac
         thetac = thetab - (thetab - thetaa) / gr
         thetad = thetaa + (thetab - thetaa) / gr
-        
-    # Final job to evaluate Estimator at midpoint found using golden search method 
+
+    # Final job to evaluate Estimator at midpoint found using golden search method
     theta_mid = (thetab + thetaa) / 2
     job = estimator.run(circuits=qc_example, observables=M1, parameter_values=theta_mid)
     print(f"Session ID is {session.session_id}")
@@ -255,6 +253,38 @@ with Session(service=service, backend="ibmq_qasm_simulator") as session:
 ```
 
 This code returns `Job result is [4.] at theta = 1.575674623307102` using only nine iterations. This is a very powerful extension to the primitives. However, using too much code between iterative calls can lock the QPU and use excessive QPU time, which is expensive. We recommend only using sessions when needed. The Sampler can also be used within a session, but there are not any well-defined examples for this.
+
+## Instances
+
+Access to IBM Quantum Platform channel is controlled by the instances (previously called providers) to which you are assigned. An instance is defined by a hierarchical organization of hub, group, and project. A hub is the top level of a given hierarchy (organization) and contains within it one or more groups. These groups are in turn populated with projects. The combination of hub/group/project is called an instance. Users can belong to more than one instance at any time.
+
+> **_NOTE:_** IBM Cloud instances are different from IBM Quantum Platform instances.  IBM Cloud does not use the hub/group/project structure for user management. To view and create IBM Cloud instances, visit the [IBM Cloud Quantum Instances page](https://cloud.ibm.com/quantum/instances).
+
+To view a list of your instances, visit your [account settings page](https://www.quantum-computing.ibm.com/account) or use the `instances()` method.
+
+You can specify an instance when initializing the service or provider, or when picking a backend:
+
+```python
+# Optional: List all the instances you can access.
+service = QiskitRuntimeService(channel='ibm_quantum')
+print(service.instances())
+
+# Optional: Specify the instance at service level. This becomes the default unless overwritten.
+service = QiskitRuntimeService(channel='ibm_quantum', instance="hub1/group1/project1")
+backend1 = service.backend("ibmq_manila")
+
+# Optional: Specify the instance at the backend level, which overwrites the service-level specification when this backend is used.
+backend2 = service.backend("ibmq_manila", instance="hub2/group2/project2")
+
+sampler1 = Sampler(backend=backend1)    # this will use hub1/group1/project1
+sampler2 = Sampler(backend=backend2)    # this will use hub2/group2/project2
+```
+
+If you do not specify an instance, then the code will select one in the following order:
+
+1. If your account only has access to one instance, it is selected by default.
+2. If your account has access to multiple instances, but only one can access the requested backend, the instance with access is selected.
+3. In all other cases, the code selects the first instance other than ibm-q/open/main that has access to the backend.
 
 ## Access your IBM Quantum backends
 

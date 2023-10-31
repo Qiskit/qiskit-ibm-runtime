@@ -20,46 +20,14 @@ import warnings
 from datetime import datetime
 
 import numpy as np
-import scipy.sparse
-from qiskit.algorithms.optimizers import (
-    ADAM,
-    GSLS,
-    SPSA,
-    QNSPSA,
-    L_BFGS_B,
-    NELDER_MEAD,
-)
+
 from qiskit.circuit import Parameter, QuantumCircuit
 from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit.circuit.library import EfficientSU2, CXGate, PhaseGate, U2Gate
-from qiskit.opflow import (
-    PauliSumOp,
-    MatrixOp,
-    PauliOp,
-    CircuitOp,
-    EvolvedOp,
-    TaperedPauliSumOp,
-    Z2Symmetries,
-    I,
-    X,
-    Y,
-    Z,
-    StateFn,
-    CircuitStateFn,
-    DictStateFn,
-    VectorStateFn,
-    OperatorStateFn,
-    SparseVectorStateFn,
-    CVaRMeasurement,
-    ComposedOp,
-    SummedOp,
-    TensoredOp,
-)
 from qiskit.providers.fake_provider import FakeNairobi
 from qiskit.quantum_info import SparsePauliOp, Pauli, Statevector
 from qiskit.result import Result
 from qiskit_aer.noise import NoiseModel
-
 from qiskit_ibm_runtime.utils import RuntimeEncoder, RuntimeDecoder
 from .mock.fake_runtime_client import CustomResultRuntimeJob
 from .mock.fake_runtime_service import FakeRuntimeService
@@ -125,73 +93,47 @@ class TestDataSerialization(IBMTestCase):
 
     def test_coder_operators(self):
         """Test runtime encoder and decoder for operators."""
+
+        # filter warnings triggered by opflow imports
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore", category=DeprecationWarning, module=r"qiskit\.opflow\."
+            )
+            from qiskit.opflow import PauliSumOp  # pylint: disable=import-outside-toplevel
+
+        # catch warnings triggered by opflow use
+        with warnings.catch_warnings(record=True) as w_log:
+            deprecated_op = PauliSumOp(SparsePauliOp(Pauli("XYZX"), coeffs=[2]))
+            self.assertTrue(len(w_log) > 0)
+
         coeff_x = Parameter("x")
         coeff_y = coeff_x + 1
-        quantum_circuit = QuantumCircuit(1)
-        quantum_circuit.h(0)
-        operator = 2.0 * I ^ I
-        z2_symmetries = Z2Symmetries(
-            [Pauli("IIZI"), Pauli("ZIII")],
-            [Pauli("IIXI"), Pauli("XIII")],
-            [1, 3],
-            [-1, 1],
-        )
-        isqrt2 = 1 / np.sqrt(2)
-        sparse = scipy.sparse.csr_matrix([[0, isqrt2, 0, isqrt2]])
 
         subtests = (
-            PauliSumOp(SparsePauliOp(Pauli("XYZX"), coeffs=[2]), coeff=3),
-            PauliSumOp(SparsePauliOp(Pauli("XYZX"), coeffs=[1]), coeff=coeff_y),
-            PauliSumOp(SparsePauliOp(Pauli("XYZX"), coeffs=[1 + 2j]), coeff=3 - 2j),
-            PauliSumOp.from_list([("II", -1.052373245772859), ("IZ", 0.39793742484318045)]),
-            MatrixOp(primitive=np.array([[0, -1j], [1j, 0]]), coeff=coeff_x),
-            PauliOp(primitive=Pauli("Y"), coeff=coeff_x),
-            CircuitOp(quantum_circuit, coeff=coeff_x),
-            EvolvedOp(operator, coeff=coeff_x),
-            TaperedPauliSumOp(SparsePauliOp(Pauli("XYZX"), coeffs=[2]), z2_symmetries),
-            StateFn(quantum_circuit, coeff=coeff_x),
-            CircuitStateFn(quantum_circuit, is_measurement=True),
-            DictStateFn("1" * 3, is_measurement=True),
-            VectorStateFn(np.ones(2**3, dtype=complex)),
-            OperatorStateFn(CircuitOp(QuantumCircuit(1))),
-            SparseVectorStateFn(sparse),
-            Statevector([1, 0]),
-            CVaRMeasurement(Z, 0.2),
-            ComposedOp([(X ^ Y ^ Z), (Z ^ X ^ Y ^ Z).to_matrix_op()]),
-            SummedOp([X ^ X * 2, Y ^ Y], 2),
-            TensoredOp([(X ^ Y), (Z ^ I)]),
-            (Z ^ Z) ^ (I ^ 2),
+            SparsePauliOp(Pauli("XYZX"), coeffs=[2]),
+            SparsePauliOp(Pauli("XYZX"), coeffs=[coeff_y]),
+            SparsePauliOp(Pauli("XYZX"), coeffs=[1 + 2j]),
+            deprecated_op,
         )
+
         for operator in subtests:
             with self.subTest(operator=operator):
                 encoded = json.dumps(operator, cls=RuntimeEncoder)
                 self.assertIsInstance(encoded, str)
-                decoded = json.loads(encoded, cls=RuntimeDecoder)
-                self.assertEqual(operator, decoded)
 
-    def test_coder_optimizers(self):
-        """Test runtime encoder and decoder for optimizers."""
-        subtests = (
-            (ADAM, {"maxiter": 100, "amsgrad": True}),
-            (GSLS, {"maxiter": 50, "min_step_size": 0.01}),
-            (SPSA, {"maxiter": 10, "learning_rate": 0.01, "perturbation": 0.1}),
-            (QNSPSA, {"fidelity": 123, "maxiter": 25, "resamplings": {1: 100, 2: 50}}),
-            # some SciPy optimizers only work with default arguments due to Qiskit/qiskit-terra#6682
-            (L_BFGS_B, {}),
-            (NELDER_MEAD, {}),
-            # Enable when https://github.com/scikit-quant/scikit-quant/issues/24 is fixed
-            # (IMFIL, {"maxiter": 20}),
-            # (SNOBFIT, {"maxiter": 200, "maxfail": 20}),
-        )
-        for opt_cls, settings in subtests:
-            with self.subTest(opt_cls=opt_cls):
-                optimizer = opt_cls(**settings)
-                encoded = json.dumps(optimizer, cls=RuntimeEncoder)
-                self.assertIsInstance(encoded, str)
-                decoded = json.loads(encoded, cls=RuntimeDecoder)
-                self.assertTrue(isinstance(decoded, opt_cls))
-                for key, value in settings.items():
-                    self.assertEqual(decoded.settings[key], value)
+                with warnings.catch_warnings():
+                    # filter warnings triggered by opflow imports
+                    # in L146 of utils/json.py
+                    warnings.filterwarnings(
+                        "ignore", category=DeprecationWarning, module=r"qiskit\.opflow\."
+                    )
+                    warnings.filterwarnings(
+                        "ignore",
+                        category=DeprecationWarning,
+                        module=r"qiskit_ibm_runtime\.utils\.json",
+                    )
+                    decoded = json.loads(encoded, cls=RuntimeDecoder)
+                    self.assertEqual(operator, decoded)
 
     def test_coder_noise_model(self):
         """Test encoding and decoding a noise model."""
@@ -244,6 +186,13 @@ class TestDataSerialization(IBMTestCase):
             decoded = json.loads(encoded, cls=RuntimeDecoder)
             self.assertEqual(decoded, obj)
 
+    def test_encoder_np_number(self):
+        """Test encoding and decoding instructions"""
+        encoded = json.dumps(np.int64(100), cls=RuntimeEncoder)
+        self.assertIsInstance(encoded, str)
+        decoded = json.loads(encoded, cls=RuntimeDecoder)
+        self.assertEqual(decoded, 100)
+
     def test_encoder_callable(self):
         """Test encoding a callable."""
         with warnings.catch_warnings(record=True) as warn_cm:
@@ -268,8 +217,7 @@ if __name__ == '__main__':
         temp_fp.close()
 
         subtests = (
-            PauliSumOp(SparsePauliOp(Pauli("XYZX"), coeffs=[2]), coeff=3),
-            DictStateFn("1" * 3, is_measurement=True),
+            SparsePauliOp(Pauli("XYZX"), coeffs=[2]),
             Statevector([1, 0]),
         )
         for operator in subtests:

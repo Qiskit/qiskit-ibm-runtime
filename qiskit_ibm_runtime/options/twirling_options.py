@@ -15,8 +15,6 @@
 from typing import Literal, get_args
 from dataclasses import dataclass
 
-from .utils import _flexible
-
 
 TwirlingStrategyType = Literal[
     None,
@@ -27,7 +25,6 @@ TwirlingStrategyType = Literal[
 ]
 
 
-@_flexible
 @dataclass
 class TwirlingOptions:
     """Twirling options.

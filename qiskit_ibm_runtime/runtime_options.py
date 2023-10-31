@@ -58,8 +58,11 @@ class RuntimeOptions:
                 access to the target backend is randomly selected.
             job_tags: Tags to be assigned to the job. The tags can subsequently be used
                 as a filter in the :meth:`jobs()` function call.
-            max_execution_time: Maximum execution time in seconds. If
-                a job exceeds this time limit, it is forcibly cancelled.
+            max_execution_time: Maximum execution time in seconds, which is based
+                on system execution time (not wall clock time). System execution time is the
+                amount of time that the system is dedicated to processing your job. If a job exceeds
+                this time limit, it is forcibly cancelled. Simulator jobs continue to use wall
+                clock time.
             session_time: Length of session in seconds.
         """
         self.backend = backend
