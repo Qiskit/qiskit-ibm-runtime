@@ -755,17 +755,10 @@ class IBMBackend(Backend):
             hgp_name = self._instance or self._service._get_hgp().name
 
         session = self._session
-
-        if session:
-            if not session.active:
-                raise RuntimeError(f"The session {session.session_id} is closed.")
-            session_id = session.session_id or None
-            max_execution_time = session._max_time
-            start_session = session_id is None
-        else:
-            session_id = None
-            max_execution_time = None
-            start_session = False
+        if session and not session.active:
+            raise RuntimeError(f"The session {session.session_id} is closed.")
+        session_id = session.session_id if session else None
+        start_session = session_id is None
 
         log_level = getattr(self.options, "log_level", None)  # temporary
         try:
@@ -778,7 +771,6 @@ class IBMBackend(Backend):
                 job_tags=job_tags,
                 session_id=session_id,
                 start_session=start_session,
-                max_execution_time=max_execution_time,
                 image=image,
             )
         except RequestsApiError as ex:
