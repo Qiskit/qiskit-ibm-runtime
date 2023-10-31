@@ -171,14 +171,14 @@ class TestOptions(IBMTestCase):
             "transpilation": {"initial_layout": [1, 2], "skip_transpilation": True},
             "execution": {"shots": 100},
             "environment": {"log_level": "DEBUG"},
-            #"simulator": {"noise_model": "model"},
+            # "simulator": {"noise_model": "model"},
             "resilience": {
                 "noise_factors": (0, 2, 4),
                 "extrapolator": "LinearExtrapolator",
             },
         }
         _ = Options()
-        #_ = Options(options)
+        # _ = Options(options)
         for opt in ["resilience", "simulator", "transpilation", "execution"]:
             temp_options = options.copy()
             temp_options[opt] = {"aaa": "bbb"}

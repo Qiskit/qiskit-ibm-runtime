@@ -27,7 +27,7 @@ LogLevelType = Literal[
 
 
 @pydantic_dataclass(
-config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid")
+    config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid")
 )
 class EnvironmentOptions:
     """Options related to the execution environment.
