@@ -79,8 +79,8 @@ setuptools.setup(
     },
     entry_points={
         "qiskit.transpiler.translation": [
-            "ibm_backend = qiskit_ibm_provider.transpiler.plugin:IBMTranslationPlugin",
-            "ibm_dynamic_circuits = qiskit_ibm_provider.transpiler.plugin:IBMDynamicTranslationPlugin",
+            "ibm_backend = qiskit_ibm_runtime.transpiler.plugin:IBMTranslationPlugin",
+            "ibm_dynamic_circuits = qiskit_ibm_runtime.transpiler.plugin:IBMDynamicTranslationPlugin",
         ]
     },
 )
