@@ -170,7 +170,6 @@ class Sampler(BasePrimitive, BaseSampler):
                 f"resilience_level can only take the values "
                 f"{list(range(Options._MAX_RESILIENCE_LEVEL_SAMPLER + 1))} in Sampler"
             )
-        Options.validate_options(options)
 
     @classmethod
     def _program_id(cls) -> str:

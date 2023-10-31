@@ -217,7 +217,6 @@ class Estimator(BasePrimitive, BaseEstimator):
                     "When the backend is a simulator and resilience_level == 3,"
                     "a coupling map is required."
                 )
-        Options.validate_options(options)
 
     @classmethod
     def _program_id(cls) -> str:
