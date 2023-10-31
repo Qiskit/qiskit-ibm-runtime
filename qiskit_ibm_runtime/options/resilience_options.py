@@ -15,19 +15,13 @@
 from typing import Sequence, Literal, get_args
 from dataclasses import dataclass
 
-from .utils import _flexible
-from ..utils.deprecation import issue_deprecation_msg
-
 ResilienceSupportedOptions = Literal[
     "noise_amplifier",
     "noise_factors",
     "extrapolator",
 ]
 NoiseAmplifierType = Literal[
-    "TwoQubitAmplifier",
-    "GlobalFoldingAmplifier",
     "LocalFoldingAmplifier",
-    "CxAmplifier",
 ]
 ExtrapolatorType = Literal[
     "LinearExtrapolator",
@@ -37,7 +31,6 @@ ExtrapolatorType = Literal[
 ]
 
 
-@_flexible
 @dataclass
 class ResilienceOptions:
     """Resilience options.
@@ -48,10 +41,9 @@ class ResilienceOptions:
             Only applicable for ``resilience_level=2``.
             Default: ``None``, and (1, 3, 5) if resilience level is 2.
 
-        noise_amplifier (DEPRECATED): A noise amplification strategy. One of ``"TwoQubitAmplifier"``,
-            ``"GlobalFoldingAmplifier"``, ``"LocalFoldingAmplifier"``, ``"CxAmplifier"``.
-            Only applicable for ``resilience_level=2``.
-            Default: "TwoQubitAmplifier".
+        noise_amplifier (DEPRECATED): A noise amplification strategy. Currently only
+        ``"LocalFoldingAmplifier"`` is supported Only applicable for ``resilience_level=2``.
+            Default: "LocalFoldingAmplifier".
 
         extrapolator: An extrapolation strategy. One of ``"LinearExtrapolator"``,
             ``"QuadraticExtrapolator"``, ``"CubicExtrapolator"``, ``"QuarticExtrapolator"``.
@@ -75,21 +67,10 @@ class ResilienceOptions:
             ValueError: if extrapolator == "QuarticExtrapolator" and number of noise_factors < 5.
             ValueError: if extrapolator == "CubicExtrapolator" and number of noise_factors < 4.
         """
-        if resilience_options.get("noise_amplifier", None) is not None:
-            issue_deprecation_msg(
-                msg="The 'noise_amplifier' resilience option is deprecated",
-                version="0.12.0",
-                period="1 month",
-                remedy="After the deprecation period, only local folding amplification "
-                "will be supported. "
-                "Refer to https://github.com/qiskit-community/prototype-zne "
-                "for global folding amplification in ZNE.",
-            )
-
         for opt in resilience_options:
             if not opt in get_args(ResilienceSupportedOptions):
                 raise ValueError(f"Unsupported value '{opt}' for resilience.")
-        noise_amplifier = resilience_options.get("noise_amplifier") or "TwoQubitAmplifier"
+        noise_amplifier = resilience_options.get("noise_amplifier") or "LocalFoldingAmplifier"
         if noise_amplifier not in get_args(NoiseAmplifierType):
             raise ValueError(
                 f"Unsupported value {noise_amplifier} for noise_amplifier. "

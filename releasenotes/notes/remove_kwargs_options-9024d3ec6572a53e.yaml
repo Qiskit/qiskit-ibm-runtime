@@ -1,0 +1,4 @@
+---
+features:
+  - |
+    Arbitrary keys and values are no longer allowed in ``Options``.
