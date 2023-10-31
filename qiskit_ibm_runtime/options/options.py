@@ -13,7 +13,9 @@
 """Primitive options."""
 
 from typing import Optional, Union, ClassVar
-from dataclasses import dataclass, fields, field
+from pydantic import Field, ConfigDict
+from pydantic.functional_validators import model_validator, field_validator
+from pydantic.dataclasses import dataclass as pydantic_dataclass
 import copy
 import warnings
 
@@ -29,7 +31,7 @@ from .resilience_options import ResilienceOptions
 from ..runtime_options import RuntimeOptions
 
 
-@dataclass
+@pydantic_dataclass(config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True))
 class Options:
     """Options for the primitives.
 
@@ -99,11 +101,11 @@ class Options:
     optimization_level: Optional[int] = None
     resilience_level: Optional[int] = None
     max_execution_time: Optional[int] = None
-    transpilation: Union[TranspilationOptions, Dict] = field(default_factory=TranspilationOptions)
-    resilience: Union[ResilienceOptions, Dict] = field(default_factory=ResilienceOptions)
-    execution: Union[ExecutionOptions, Dict] = field(default_factory=ExecutionOptions)
-    environment: Union[EnvironmentOptions, Dict] = field(default_factory=EnvironmentOptions)
-    simulator: Union[SimulatorOptions, Dict] = field(default_factory=SimulatorOptions)
+    transpilation: Union[TranspilationOptions, Dict] = Field(default_factory=TranspilationOptions)
+    resilience: Union[ResilienceOptions, Dict] = Field(default_factory=ResilienceOptions)
+    execution: Union[ExecutionOptions, Dict] = Field(default_factory=ExecutionOptions)
+    environment: Union[EnvironmentOptions, Dict] = Field(default_factory=EnvironmentOptions)
+    simulator: Union[SimulatorOptions, Dict] = Field(default_factory=SimulatorOptions)
 
     _obj_fields: ClassVar[dict] = {
         "transpilation": TranspilationOptions,
@@ -115,8 +117,11 @@ class Options:
 
     def __post_init__(self):  # type: ignore
         """Convert dictionary fields to object."""
+        print("in post_init")
         obj_fields = getattr(self, "_obj_fields", {})
+        print("obj_fields = " + str(obj_fields))
         for key in list(obj_fields):
+            print("key = " + str(key))
             if hasattr(self, key):
                 orig_val = getattr(self, key)
                 setattr(self, key, _to_obj(obj_fields[key], orig_val))
@@ -162,32 +167,34 @@ class Options:
                 inputs[key] = options[key]
         return inputs
 
-    @staticmethod
-    def validate_options(options: dict) -> None:
+    @model_validator(mode="after")
+    def _validate_model(self):
+
         """Validate that program inputs (options) are valid
         Raises:
             ValueError: if optimization_level is outside the allowed range.
             ValueError: if max_execution_time is outside the allowed range.
         """
-        if not options.get("optimization_level") in list(
+        print("in validate_options")
+        if not self.optimization_level in list(
             range(Options._MAX_OPTIMIZATION_LEVEL + 1)
         ):
             raise ValueError(
                 f"optimization_level can only take the values "
                 f"{list(range(Options._MAX_OPTIMIZATION_LEVEL + 1))}"
             )
-        ResilienceOptions.validate_resilience_options(options.get("resilience"))
-        TranspilationOptions.validate_transpilation_options(options.get("transpilation"))
-        execution_time = options.get("max_execution_time")
+        # ResilienceOptions.validate_resilience_options(self.resilience)
+        # TranspilationOptions.validate_transpilation_options(self.transpilation)
+        execution_time = self.max_execution_time
         if execution_time is not None:
             if execution_time > Options._MAX_EXECUTION_TIME:
                 raise ValueError(
                     f"max_execution_time must be below " f"{Options._MAX_EXECUTION_TIME} seconds."
                 )
 
-        EnvironmentOptions.validate_environment_options(options.get("environment"))
-        ExecutionOptions.validate_execution_options(options.get("execution"))
-        SimulatorOptions.validate_simulator_options(options.get("simulator"))
+        # EnvironmentOptions.validate_environment_options(self.environment)
+        # ExecutionOptions.validate_execution_options(self.execution)
+        # SimulatorOptions.validate_simulator_options(self.simulator)
 
     @staticmethod
     def _remove_none_values(options: dict) -> dict:

@@ -12,9 +12,10 @@
 
 """Execution options."""
 
-from dataclasses import dataclass
 from typing import Literal, get_args
-
+from pydantic import Field, ConfigDict
+from pydantic.functional_validators import model_validator, field_validator
+from pydantic.dataclasses import dataclass as pydantic_dataclass
 
 ExecutionSupportedOptions = Literal[
     "shots",
@@ -22,7 +23,7 @@ ExecutionSupportedOptions = Literal[
 ]
 
 
-@dataclass
+@pydantic_dataclass
 class ExecutionOptions:
     """Execution options.
 
@@ -36,12 +37,15 @@ class ExecutionOptions:
     shots: int = 4000
     init_qubits: bool = True
 
-    @staticmethod
-    def validate_execution_options(execution_options: dict) -> None:
-        """Validate that execution options are legal.
-        Raises:
-            ValueError: if any execution option is not supported
-        """
-        for opt in execution_options:
-            if not opt in get_args(ExecutionSupportedOptions):
-                raise ValueError(f"Unsupported value '{opt}' for execution.")
+
+    # @model_validator(mode="after")
+    # def _validate_model(
+    #         self,
+    # ):
+    #     """Validate that execution options are legal.
+    #     Raises:
+    #         ValueError: if any execution option is not supported
+    #     """
+    #     for opt in execution_options:
+    #         if not opt in get_args(ExecutionSupportedOptions):
+    #             raise ValueError(f"Unsupported value '{opt}' for execution.")

@@ -53,7 +53,7 @@ class SimulatorOptions:
             ``['u1', 'u2', 'u3', 'cx']``. If ``None``, do not unroll.
     """
 
-    noise_model: Optional[Union[dict, "qiskit_aer.noise.noise_model.NoiseModel"]] = None
+    #noise_model: Optional[Union[dict, "qiskit_aer.noise.noise_model.NoiseModel"]] = None
     seed_simulator: Optional[int] = None
     coupling_map: Optional[Union[List[List[int]], "CouplingMap"]] = None
     basis_gates: Optional[List[str]] = None

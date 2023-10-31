@@ -13,7 +13,9 @@
 """Transpilation options."""
 
 from typing import Optional, List, Union, Literal, get_args
-from dataclasses import dataclass
+from pydantic import Field, ConfigDict
+from pydantic.functional_validators import model_validator, field_validator
+from pydantic.dataclasses import dataclass as pydantic_dataclass
 
 
 TranspilationSupportedOptions = Literal[
@@ -38,7 +40,7 @@ RoutingMethodType = Literal[
 ]
 
 
-@dataclass
+@pydantic_dataclass(config=ConfigDict(validate_assignment=True))
 class TranspilationOptions:
     """Transpilation options.
 
@@ -65,33 +67,29 @@ class TranspilationOptions:
     routing_method: Optional[str] = None
     approximation_degree: Optional[float] = None
 
-    @staticmethod
-    def validate_transpilation_options(transpilation_options: dict) -> None:
-        """Validate that transpilation options are legal.
-        Raises:
-            ValueError: if any transpilation option is not supported
-            ValueError: if layout_method is not in LayoutMethodType or None.
-            ValueError: if routing_method is not in RoutingMethodType or None.
-            ValueError: if approximation_degree in not None or in the range 0.0 to 1.0.
-        """
-        for opt in transpilation_options:
-            if not opt in get_args(TranspilationSupportedOptions):
-                raise ValueError(f"Unsupported value '{opt}' for transpilation.")
-        layout_method = transpilation_options.get("layout_method")
+    @model_validator(mode="after")
+    def _validate_model(self):
+        print("in validate transpilation")
+        # for opt in transpilation_options:
+        #     if not opt in get_args(TranspilationSupportedOptions):
+        #         raise ValueError(f"Unsupported value '{opt}' for transpilation.")
+
+        layout_method = self.layout_method
         if not (layout_method in get_args(LayoutMethodType) or layout_method is None):
             raise ValueError(
-                f"Unsupported value {layout_method} for layout_method. "
+                f"Unsupported value '{layout_method}' for layout_method. "
                 f"Supported values are {get_args(LayoutMethodType)} and None"
             )
-        routing_method = transpilation_options.get("routing_method")
+        routing_method = self.routing_method
         if not (routing_method in get_args(RoutingMethodType) or routing_method is None):
             raise ValueError(
                 f"Unsupported value {routing_method} for routing_method. "
                 f"Supported values are {get_args(RoutingMethodType)} and None"
             )
-        approximation_degree = transpilation_options.get("approximation_degree")
+        approximation_degree = self.approximation_degree
         if not (approximation_degree is None or 0.0 <= approximation_degree <= 1.0):
             raise ValueError(
                 "approximation_degree must be between 0.0 (maximal approximation) "
                 "and 1.0 (no approximation)"
             )
+        return self

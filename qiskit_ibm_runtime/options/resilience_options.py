@@ -13,7 +13,10 @@
 """Resilience options."""
 
 from typing import Sequence, Literal, get_args
-from dataclasses import dataclass
+from pydantic import Field, ConfigDict
+from pydantic.functional_validators import model_validator, field_validator
+from pydantic.dataclasses import dataclass as pydantic_dataclass
+
 
 ResilienceSupportedOptions = Literal[
     "noise_amplifier",
@@ -31,7 +34,7 @@ ExtrapolatorType = Literal[
 ]
 
 
-@dataclass
+@pydantic_dataclass
 class ResilienceOptions:
     """Resilience options.
 
@@ -57,9 +60,13 @@ class ResilienceOptions:
     noise_factors: Sequence[float] = None
     extrapolator: ExtrapolatorType = None
 
-    @staticmethod
-    def validate_resilience_options(resilience_options: dict) -> None:
-        """Validate that resilience options are legal.
+    @model_validator(mode="after")
+    def _validate_model(
+            self,
+    ):
+
+        print("in validate resilience")
+        """
         Raises:
             ValueError: if any resilience option is not supported
             ValueError: if noise_amplifier is not in NoiseAmplifierType.
@@ -67,25 +74,22 @@ class ResilienceOptions:
             ValueError: if extrapolator == "QuarticExtrapolator" and number of noise_factors < 5.
             ValueError: if extrapolator == "CubicExtrapolator" and number of noise_factors < 4.
         """
-        for opt in resilience_options:
-            if not opt in get_args(ResilienceSupportedOptions):
-                raise ValueError(f"Unsupported value '{opt}' for resilience.")
-        noise_amplifier = resilience_options.get("noise_amplifier") or "LocalFoldingAmplifier"
+        # for opt in resilience_options:
+        #     if not opt in get_args(ResilienceSupportedOptions):
+        #         raise ValueError(f"Unsupported value '{opt}' for resilience.")
+        noise_amplifier = self.noise_amplifier or "LocalFoldingAmplifier"
         if noise_amplifier not in get_args(NoiseAmplifierType):
             raise ValueError(
                 f"Unsupported value {noise_amplifier} for noise_amplifier. "
                 f"Supported values are {get_args(NoiseAmplifierType)}"
             )
-        extrapolator = resilience_options.get("extrapolator")
+        extrapolator = self.extrapolator
         if extrapolator and extrapolator not in get_args(ExtrapolatorType):
             raise ValueError(
                 f"Unsupported value {extrapolator} for extrapolator. "
                 f"Supported values are {get_args(ExtrapolatorType)}"
             )
-        if (
-            extrapolator == "QuarticExtrapolator"
-            and len(resilience_options.get("noise_factors")) < 5
-        ):
+        if extrapolator == "QuarticExtrapolator" and len(self.noise_factors) < 5:
             raise ValueError("QuarticExtrapolator requires at least 5 noise_factors.")
-        if extrapolator == "CubicExtrapolator" and len(resilience_options.get("noise_factors")) < 4:
+        if extrapolator == "CubicExtrapolator" and len(self.noise_factors) < 4:
             raise ValueError("CubicExtrapolator requires at least 4 noise_factors.")
