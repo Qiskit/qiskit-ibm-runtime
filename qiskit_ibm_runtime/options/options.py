@@ -13,7 +13,7 @@
 """Primitive options."""
 
 from typing import Optional, Union, ClassVar
-from pydantic import Field, ConfigDict
+from pydantic import Field, ConfigDict, Fields
 from pydantic.functional_validators import model_validator, field_validator
 from pydantic.dataclasses import dataclass as pydantic_dataclass
 import copy
@@ -98,9 +98,9 @@ class Options:
     _MAX_RESILIENCE_LEVEL_SAMPLER = 1
     _MAX_EXECUTION_TIME = 8 * 60 * 60  # 8 hours for real device
 
-    optimization_level: Optional[int] = None
-    resilience_level: Optional[int] = None
-    max_execution_time: Optional[int] = None
+    optimization_level: Optional[int] = Field(1, ge=0, le=3)
+    resilience_level: Optional[int] = Field(1, ge=0, le=3)
+    max_execution_time: Optional[int] = Field(le=_MAX_EXECUTION_TIME)
     transpilation: Union[TranspilationOptions, Dict] = Field(default_factory=TranspilationOptions)
     resilience: Union[ResilienceOptions, Dict] = Field(default_factory=ResilienceOptions)
     execution: Union[ExecutionOptions, Dict] = Field(default_factory=ExecutionOptions)
@@ -176,21 +176,8 @@ class Options:
             ValueError: if max_execution_time is outside the allowed range.
         """
         print("in validate_options")
-        if not self.optimization_level in list(
-            range(Options._MAX_OPTIMIZATION_LEVEL + 1)
-        ):
-            raise ValueError(
-                f"optimization_level can only take the values "
-                f"{list(range(Options._MAX_OPTIMIZATION_LEVEL + 1))}"
-            )
         # ResilienceOptions.validate_resilience_options(self.resilience)
         # TranspilationOptions.validate_transpilation_options(self.transpilation)
-        execution_time = self.max_execution_time
-        if execution_time is not None:
-            if execution_time > Options._MAX_EXECUTION_TIME:
-                raise ValueError(
-                    f"max_execution_time must be below " f"{Options._MAX_EXECUTION_TIME} seconds."
-                )
 
         # EnvironmentOptions.validate_environment_options(self.environment)
         # ExecutionOptions.validate_execution_options(self.execution)
@@ -234,7 +221,7 @@ class Options:
         environment = options.get("environment") or {}
         out = {"max_execution_time": options.get("max_execution_time", None)}
 
-        for fld in fields(RuntimeOptions):
+        for fld in Fields(RuntimeOptions):
             if fld.name in environment:
                 out[fld.name] = environment[fld.name]
 
