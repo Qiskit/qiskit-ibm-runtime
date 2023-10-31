@@ -13,6 +13,7 @@
 """Primitive options."""
 
 from typing import Optional, Union, ClassVar
+from dataclasses import fields
 from pydantic import Field, ConfigDict
 from pydantic.functional_validators import model_validator, field_validator
 from pydantic.dataclasses import dataclass as pydantic_dataclass
@@ -102,7 +103,7 @@ class Options:
 
     optimization_level: Optional[int] = Field(1, ge=0, le=3)
     resilience_level: Optional[int] = Field(1, ge=0, le=3)
-    max_execution_time: Optional[int] = Field(le=_MAX_EXECUTION_TIME)
+    max_execution_time: Optional[int] = Field(_MAX_EXECUTION_TIME, le=_MAX_EXECUTION_TIME)
     transpilation: Union[TranspilationOptions, Dict] = Field(default_factory=TranspilationOptions)
     resilience: Union[ResilienceOptions, Dict] = Field(default_factory=ResilienceOptions)
     execution: Union[ExecutionOptions, Dict] = Field(default_factory=ExecutionOptions)
