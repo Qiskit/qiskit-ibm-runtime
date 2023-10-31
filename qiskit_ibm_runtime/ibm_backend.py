@@ -729,9 +729,6 @@ class IBMBackend(Backend):
         )
 
         run_config_dict["circuits"] = circuits
-        if not program_id.startswith(QASM3RUNNERPROGRAMID):
-            # Transpiling in circuit-runner is deprecated.
-            run_config_dict["skip_transpilation"] = True
 
         return self._runtime_run(
             program_id=program_id,
