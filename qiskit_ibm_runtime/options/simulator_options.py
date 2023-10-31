@@ -58,6 +58,7 @@ class SimulatorOptions:
     """
 
     #noise_model: Optional[Union[dict, "qiskit_aer.noise.noise_model.NoiseModel"]] = None
+    noise_model: Optional[str] = None # until we fix the qiskit_aer problem
     seed_simulator: Optional[int] = None
     coupling_map: Optional[Union[List[List[int]], "CouplingMap"]] = None
     basis_gates: Optional[List[str]] = None
