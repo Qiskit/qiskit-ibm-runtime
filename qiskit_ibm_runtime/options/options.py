@@ -13,7 +13,7 @@
 """Primitive options."""
 
 from typing import Optional, Union, ClassVar
-from pydantic import Field, ConfigDict, Fields
+from pydantic import Field, ConfigDict
 from pydantic.functional_validators import model_validator, field_validator
 from pydantic.dataclasses import dataclass as pydantic_dataclass
 import copy
@@ -31,7 +31,9 @@ from .resilience_options import ResilienceOptions
 from ..runtime_options import RuntimeOptions
 
 
-@pydantic_dataclass(config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True))
+@pydantic_dataclass(
+    config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid")
+)
 class Options:
     """Options for the primitives.
 
@@ -221,7 +223,7 @@ class Options:
         environment = options.get("environment") or {}
         out = {"max_execution_time": options.get("max_execution_time", None)}
 
-        for fld in Fields(RuntimeOptions):
+        for fld in fields(RuntimeOptions):
             if fld.name in environment:
                 out[fld.name] = environment[fld.name]
 

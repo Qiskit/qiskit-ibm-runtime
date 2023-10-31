@@ -34,7 +34,9 @@ ExtrapolatorType = Literal[
 ]
 
 
-@pydantic_dataclass
+@pydantic_dataclass(
+    config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid")
+)
 class ResilienceOptions:
     """Resilience options.
 

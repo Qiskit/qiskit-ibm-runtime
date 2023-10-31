@@ -14,7 +14,9 @@
 
 
 from typing import Optional, List, Union, Literal, get_args, TYPE_CHECKING
-from dataclasses import dataclass
+from pydantic import Field, ConfigDict
+from pydantic.functional_validators import model_validator, field_validator
+from pydantic.dataclasses import dataclass as pydantic_dataclass
 
 from qiskit.exceptions import MissingOptionalLibraryError
 from qiskit.providers import BackendV1, BackendV2
@@ -32,7 +34,9 @@ SimulatorSupportedOptions = Literal[
 ]
 
 
-@dataclass()
+@pydantic_dataclass(
+    config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid")
+)
 class SimulatorOptions:
     """Simulator options.
 
