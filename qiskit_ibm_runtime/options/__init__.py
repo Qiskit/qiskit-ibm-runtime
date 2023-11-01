@@ -50,13 +50,15 @@ Classes
    EnvironmentOptions
    SimulatorOptions
    TwirlingOptions
+   EstimatorOptions
 
 """
 
 from .environment_options import EnvironmentOptions
-from .execution_options import ExecutionOptions
-from .options import Options
+from .execution_options import ExecutionOptionsV1 as ExecutionOptions
+from .options import Options, BaseOptions
 from .simulator_options import SimulatorOptions
 from .transpilation_options import TranspilationOptions
-from .resilience_options import ResilienceOptions
+from .resilience_options import ResilienceOptionsV1 as ResilienceOptions
 from .twirling_options import TwirlingOptions
+from .estimator_options import EstimatorOptionsV2 as EstimatorOptions

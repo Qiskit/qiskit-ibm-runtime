@@ -12,8 +12,10 @@
 
 """Options related to the execution environment."""
 
-from typing import Optional, Callable, List, Literal, get_args
-from dataclasses import dataclass, field
+from typing import Optional, Callable, List, Literal
+
+from pydantic.dataclasses import dataclass as pydantic_dataclass
+from pydantic import ConfigDict
 
 LogLevelType = Literal[
     "DEBUG",
@@ -24,7 +26,7 @@ LogLevelType = Literal[
 ]
 
 
-@dataclass
+@pydantic_dataclass(config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid"))
 class EnvironmentOptions:
     """Options related to the execution environment.
 
@@ -44,19 +46,6 @@ class EnvironmentOptions:
             function call.
     """
 
-    log_level: str = "WARNING"
+    log_level: LogLevelType = "WARNING"
     callback: Optional[Callable] = None
-    job_tags: Optional[List] = field(default_factory=list)
-
-    @staticmethod
-    def validate_environment_options(environment_options: dict) -> None:
-        """Validate that environment options are legal.
-        Raises:
-            ValueError: if log_level is not in LogLevelType.
-        """
-        log_level = environment_options.get("log_level")
-        if not log_level in get_args(LogLevelType):
-            raise ValueError(
-                f"Unsupported value {log_level} for log_level. "
-                f"Supported values are {get_args(LogLevelType)}"
-            )
+    job_tags: Optional[List] = None

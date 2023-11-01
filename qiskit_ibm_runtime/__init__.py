@@ -161,6 +161,7 @@ Classes
 
    QiskitRuntimeService
    Estimator
+   EstimatorV2
    Sampler
    Session
    IBMBackend
@@ -187,8 +188,8 @@ from .exceptions import *
 from .utils.utils import setup_logger
 from .version import __version__
 
-from .estimator import Estimator
-from .sampler import Sampler
+from .estimator import EstimatorV1 as Estimator, EstimatorV2
+from .sampler import SamplerV1 as Sampler
 from .options import Options
 
 # Setup the logger for the IBM Quantum Provider package.

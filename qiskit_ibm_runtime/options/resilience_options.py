@@ -12,8 +12,13 @@
 
 """Resilience options."""
 
-from typing import Sequence, Literal, get_args, Union
-from dataclasses import dataclass
+from typing import Sequence, Literal, get_args, Union, Optional
+from dataclasses import dataclass, fields
+
+from pydantic.dataclasses import dataclass as pydantic_dataclass
+from pydantic import Field, ConfigDict, field_validator, model_validator
+
+from .utils import Dict, Unset, UnsetType
 
 ResilienceSupportedOptions = Literal[
     "noise_amplifier",
@@ -31,7 +36,6 @@ ExtrapolatorType = Literal[
 ]
 
 ZneExtrapolatorType = Literal[
-    None,
     "exponential",
     "double_exponential",
     "linear",
@@ -42,27 +46,11 @@ ZneExtrapolatorType = Literal[
 ]
 
 
-@dataclass
-class ResilienceOptions:
+@pydantic_dataclass(config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid"))
+class ResilienceOptionsV2:
     """Resilience options.
 
     Args:
-        noise_factors (DEPRECATED): An list of real valued noise factors that determine
-            by what amount the circuits' noise is amplified.
-            Only applicable for ``resilience_level=2``.
-            Default: (1, 3, 5) if resilience level is 2. Otherwise ``None``.
-
-        noise_amplifier (DEPRECATED): A noise amplification strategy. Currently only
-        ``"LocalFoldingAmplifier"`` is supported Only applicable for ``resilience_level=2``.
-            Default: "LocalFoldingAmplifier".
-
-        extrapolator (DEPRECATED): An extrapolation strategy. One of ``"LinearExtrapolator"``,
-            ``"QuadraticExtrapolator"``, ``"CubicExtrapolator"``, ``"QuarticExtrapolator"``.
-            Note that ``"CubicExtrapolator"`` and ``"QuarticExtrapolator"`` require more
-            noise factors than the default.
-            Only applicable for ``resilience_level=2``.
-            Default: ``LinearExtrapolator`` if resilience level is 2. Otherwise ``None``.
-
         measure_noise_mitigation: Whether to enable measurement error mitigation method.
             By default, this is enabled for resilience level 1, 2, and 3 (when applicable).
 
@@ -72,7 +60,6 @@ class ResilienceOptions:
         zne_noise_factors: An list of real valued noise factors that determine by what amount the
             circuits' noise is amplified.
             Only applicable if ZNE is enabled.
-            Default: (1, 3, 5).
 
         zne_extrapolator: An extrapolation strategy. One or more of ``"multi_exponential"``,
             ``"single_exponential"``, ``"double_exponential"``, ``"linear"``.
@@ -85,7 +72,6 @@ class ResilienceOptions:
             will be rejected. If all models are rejected the result for the lowest noise factor is
             used for that basis term.
             Only applicable if ZNE is enabled.
-            Default: 0.25
 
         pec_mitigation: Whether to turn on Probabilistic Error Cancellation error mitigation method.
             By default, PEC is enabled for resilience level 3.
@@ -96,88 +82,56 @@ class ResilienceOptions:
             implement partial PEC with a scaled noise model corresponding to the maximum
             sampling overhead.
             Only applicable if PEC is enabled.
-            Default: 100
     """
 
-    noise_amplifier: NoiseAmplifierType = None
-    noise_factors: Sequence[float] = None
-    extrapolator: ExtrapolatorType = None
-
-    # Measurement error mitigation
-    measure_noise_mitigation: bool = None
+    # TREX
+    measure_noise_mitigation: Union[UnsetType, bool] = Unset
+    # TODO: measure_noise_local_model
 
     # ZNE
-    zne_mitigation: bool = None
-    zne_noise_factors: Sequence[float] = None
-    zne_extrapolator: Union[ZneExtrapolatorType, Sequence[ZneExtrapolatorType]] = (
+    zne_mitigation: Union[UnsetType, bool] = Unset
+    zne_noise_factors: Union[UnsetType, Sequence[float]] = Unset
+    zne_extrapolator: Union[UnsetType, ZneExtrapolatorType, Sequence[ZneExtrapolatorType]] = (
         "exponential",
         "linear",
     )
-    zne_stderr_threshold: float = None
+    zne_stderr_threshold: Union[UnsetType, float] = Unset
 
     # PEC
-    pec_mitigation: bool = None
-    pec_max_overhead: float = None
+    pec_mitigation: Union[UnsetType, bool] = Unset
+    pec_max_overhead: Union[UnsetType, float] = Unset
 
-    @staticmethod
-    def validate_resilience_options(resilience_options: dict) -> None:
-        """Validate that resilience options are legal.
+    @field_validator("zne_noise_factors")
+    @classmethod
+    def _validate_zne_noise_factors(cls, factors: Union[UnsetType, Sequence[float]]):
+        """Validate zne_noise_factors."""
+        if isinstance(factors, Sequence) and any(i <= 0 for i in factors):
+            raise ValueError("zne_noise_factors` option value must all be non-negative")
+        return factors
 
-        Raises:
-            ValueError: if any resilience option is not supported
-            ValueError: if noise_amplifier is not in NoiseAmplifierType.
-            ValueError: if extrapolator is not in ExtrapolatorType.
-            ValueError: if extrapolator == "QuarticExtrapolator" and number of noise_factors < 5.
-            ValueError: if extrapolator == "CubicExtrapolator" and number of noise_factors < 4.
-            TypeError: if an input value has an invalid type.
-        """
-        noise_amplifier = resilience_options.get("noise_amplifier") or "LocalFoldingAmplifier"
-        if noise_amplifier not in get_args(NoiseAmplifierType):
-            raise ValueError(
-                f"Unsupported value {noise_amplifier} for noise_amplifier. "
-                f"Supported values are {get_args(NoiseAmplifierType)}"
-            )
+    @field_validator("zne_stderr_threshold")
+    @classmethod
+    def _validate_zne_stderr_threshold(cls, threshold: Union[UnsetType, float]):
+        """Validate zne_stderr_threshold."""
+        if isinstance(threshold, float) and threshold <= 0:
+            raise ValueError("Invalid zne_stderr_threshold option value must be > 0")
+        return threshold
 
-        extrapolator = resilience_options.get("extrapolator")
-        if extrapolator and extrapolator not in get_args(ExtrapolatorType):
-            raise ValueError(
-                f"Unsupported value {extrapolator} for extrapolator. "
-                f"Supported values are {get_args(ExtrapolatorType)}"
-            )
+    @field_validator("pec_max_overhead")
+    @classmethod
+    def _validate_pec_max_overhead(cls, overhead: Union[UnsetType, float]):
+        """Validate pec_max_overhead."""
+        if isinstance(overhead, float) and overhead < 1:
+            raise ValueError("pec_max_overhead must be None or >= 1")
+        return overhead
 
-        if (
-            extrapolator == "QuarticExtrapolator"
-            and len(resilience_options.get("noise_factors")) < 5
-        ):
-            raise ValueError("QuarticExtrapolator requires at least 5 noise_factors.")
-        if extrapolator == "CubicExtrapolator" and len(resilience_options.get("noise_factors")) < 4:
-            raise ValueError("CubicExtrapolator requires at least 4 noise_factors.")
-
-        # Validation of new ZNE options
-        if resilience_options.get("zne_mitigation"):
-            # Validate extrapolator
-            extrapolator = resilience_options.get("zne_extrapolator")
-            if isinstance(extrapolator, str):
-                extrapolator = (extrapolator,)
-            if extrapolator is not None:
-                for extrap in extrapolator:
-                    if extrap not in get_args(ZneExtrapolatorType):
-                        raise ValueError(
-                            f"Unsupported value {extrapolator} for zne_extrapolator. "
-                            f"Supported values are {get_args(ZneExtrapolatorType)}"
-                        )
-
-            # Validation of noise factors
-            factors = resilience_options.get("zne_noise_factors")
-            if not isinstance(factors, (list, tuple)):
-                raise TypeError(
-                    f"zne_noise_factors option value must be a sequence, not {type(factors)}"
-                )
-            if any(i <= 0 for i in factors):
-                raise ValueError("zne_noise_factors` option value must all be non-negative")
-            if len(factors) < 1:
-                raise ValueError("zne_noise_factors cannot be empty")
-            if extrapolator is not None:
+    @model_validator(mode='after')
+    def _validate_options(self):
+        """Validate the model."""
+        # Validate ZNE options
+        if self.zne_mitigation is True:
+            # Validate noise factors + extrapolator combination
+            if all(not isinstance(fld, UnsetType) for fld in [self.zne_noise_factors, self.zne_extrapolator]):
                 required_factors = {
                     "exponential": 2,
                     "double_exponential": 4,
@@ -187,40 +141,79 @@ class ResilienceOptions:
                     "polynomial_degree_3": 4,
                     "polynomial_degree_4": 5,
                 }
-                for extrap in extrapolator:
-                    if len(factors) < required_factors[extrap]:
+                for extrap in self.zne_extrapolator:
+                    if len(self.zne_noise_factors) < required_factors[extrap]:
                         raise ValueError(
                             f"{extrap} requires at least {required_factors[extrap]} zne_noise_factors"
                         )
-
-            # Validation of threshold
-            threshold = resilience_options.get("zne_stderr_threshold")
-            if threshold is not None and threshold <= 0:
-                raise ValueError("Invalid zne_stderr_threshold option value must be > 0")
-
-        if resilience_options.get("pec_mitigation"):
-            if resilience_options.get("zne_mitigation"):
+            # Validate not ZNE+PEC
+            if self.pec_mitigation:
                 raise ValueError(
                     "pec_mitigation and zne_mitigation`options cannot be "
                     "simultaneously enabled. Set one of them to False."
                 )
-            max_overhead = resilience_options.get("pec_max_overhead")
-            if max_overhead is not None and max_overhead < 1:
-                raise ValueError("pec_max_overhead must be None or >= 1")
+
+        return self
 
 
-@dataclass(frozen=True)
-class _ZneOptions:
-    zne_mitigation: bool = True
-    zne_noise_factors: Sequence[float] = (1, 3, 5)
-    zne_extrapolator: Union[ZneExtrapolatorType, Sequence[ZneExtrapolatorType]] = (
-        "exponential",
-        "linear",
-    )
-    zne_stderr_threshold: float = 0.25
+# @dataclass(frozen=True)
+# class _ZneOptions:
+#     zne_mitigation: bool = True
+#     zne_noise_factors: Sequence[float] = (1, 3, 5)
+#     zne_extrapolator: Union[ZneExtrapolatorType, Sequence[ZneExtrapolatorType]] = (
+#         "exponential",
+#         "linear",
+#     )
+#     zne_stderr_threshold: float = 0.25
 
 
-@dataclass(frozen=True)
-class _PecOptions:
-    pec_mitigation: bool = True
-    pec_max_overhead: float = 100
+# @dataclass(frozen=True)
+# class _PecOptions:
+#     pec_mitigation: bool = True
+#     pec_max_overhead: float = 100
+
+
+@pydantic_dataclass(config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid"))
+class ResilienceOptionsV1:
+    """Resilience options.
+
+    Args:
+        noise_factors: An list of real valued noise factors that determine by what amount the
+            circuits' noise is amplified.
+            Only applicable for ``resilience_level=2``.
+            Default: ``None``, and (1, 3, 5) if resilience level is 2.
+
+        noise_amplifier: A noise amplification strategy. Currently only
+        ``"LocalFoldingAmplifier"`` is supported Only applicable for ``resilience_level=2``.
+            Default: "LocalFoldingAmplifier".
+
+        extrapolator: An extrapolation strategy. One of ``"LinearExtrapolator"``,
+            ``"QuadraticExtrapolator"``, ``"CubicExtrapolator"``, ``"QuarticExtrapolator"``.
+            Note that ``"CubicExtrapolator"`` and ``"QuarticExtrapolator"`` require more
+            noise factors than the default.
+            Only applicable for ``resilience_level=2``.
+            Default: ``None``, and ``LinearExtrapolator`` if resilience level is 2.
+    """
+
+    noise_amplifier: Optional[NoiseAmplifierType] = None
+    noise_factors: Optional[Sequence[float]] = None
+    extrapolator: Optional[ExtrapolatorType] = None
+
+    @staticmethod
+    def validate_resilience_options(resilience_options: dict) -> None:
+        """Validate that resilience options are legal.
+        Raises:
+            ValueError: if any resilience option is not supported
+            ValueError: if noise_amplifier is not in NoiseAmplifierType.
+            ValueError: if extrapolator is not in ExtrapolatorType.
+            ValueError: if extrapolator == "QuarticExtrapolator" and number of noise_factors < 5.
+            ValueError: if extrapolator == "CubicExtrapolator" and number of noise_factors < 4.
+        """
+        extrapolator = resilience_options.get("extrapolator")
+        if (
+            extrapolator == "QuarticExtrapolator"
+            and len(resilience_options.get("noise_factors")) < 5
+        ):
+            raise ValueError("QuarticExtrapolator requires at least 5 noise_factors.")
+        if extrapolator == "CubicExtrapolator" and len(resilience_options.get("noise_factors")) < 4:
+            raise ValueError("CubicExtrapolator requires at least 4 noise_factors.")

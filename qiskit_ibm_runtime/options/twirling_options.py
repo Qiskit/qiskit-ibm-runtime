@@ -12,12 +12,15 @@
 
 """Twirling options."""
 
-from typing import Literal, get_args
-from dataclasses import dataclass
+from typing import Literal, Union
+
+from pydantic.dataclasses import dataclass as pydantic_dataclass
+from pydantic import model_validator, ConfigDict
+
+from .utils import Unset, UnsetType
 
 
 TwirlingStrategyType = Literal[
-    None,
     "active",
     "active-accum",
     "active-circuit",
@@ -25,7 +28,7 @@ TwirlingStrategyType = Literal[
 ]
 
 
-@dataclass
+@pydantic_dataclass(config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid"))
 class TwirlingOptions:
     """Twirling options.
 
@@ -53,25 +56,14 @@ class TwirlingOptions:
                      resilience level 3.
     """
 
-    gates: bool = None
-    measure: bool = None
-    strategy: TwirlingStrategyType = None
+    gates: Union[UnsetType, bool] = Unset
+    measure: Union[UnsetType, bool] = Unset
+    strategy: Union[UnsetType, TwirlingStrategyType] = Unset
 
-    @staticmethod
-    def validate_twirling_options(twirling_options: dict) -> None:
-        """Validate that twirling options are legal.
+    # @model_validator(mode='after')
+    # def _validate_options(self):
+    #     """Validate the model."""
+    #     if self.gates is not True:
+    #         self.strategy = Unset
 
-        Raises:
-            ValueError: if any resilience option is not supported
-            ValueError: if noise_amplifier is not in NoiseAmplifierType.
-            ValueError: if extrapolator is not in ExtrapolatorType.
-            ValueError: if extrapolator == "QuarticExtrapolator" and number of noise_factors < 5.
-            ValueError: if extrapolator == "CubicExtrapolator" and number of noise_factors < 4.
-        """
-        if twirling_options.get("gates"):
-            strategy = twirling_options.get("strategy")
-            if strategy not in get_args(TwirlingStrategyType):
-                raise ValueError(
-                    f"Unsupported value {strategy} for twirling strategy. "
-                    f"Supported values are {get_args(TwirlingStrategyType)}"
-                )
+    #     return self

@@ -12,26 +12,20 @@
 
 """Execution options."""
 
-from dataclasses import dataclass
-from typing import Literal, get_args, Optional
-from numbers import Integral
+from typing import Union
+
+from pydantic.dataclasses import dataclass as pydantic_dataclass
+from pydantic import Field, ConfigDict, model_validator, field_validator, ValidationInfo
+
+from .utils import Unset, UnsetType
 
 
-ExecutionSupportedOptions = Literal[
-    "shots",
-    "init_qubits",
-    "samples",
-    "shots_per_sample",
-    "interleave_samples",
-]
-
-
-@dataclass
-class ExecutionOptions:
+@pydantic_dataclass(config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid"))
+class ExecutionOptionsV2:
     """Execution options.
 
     Args:
-        shots: Number of repetitions of each circuit, for sampling. Default: 4096.
+        shots: Number of repetitions of each circuit, for sampling.
 
         init_qubits: Whether to reset the qubits to the ground state for each shot.
             Default: ``True``.
@@ -40,62 +34,53 @@ class ExecutionOptions:
             is used when twirling or resilience levels 1, 2, 3. If None it will
             be calculated automatically based on the ``shots`` and
             ``shots_per_sample`` (if specified).
-            Default: None
+            Default: Unset
 
         shots_per_sample: The number of shots per sample of each measurement
             circuit to run. This is used when twirling or resilience levels 1, 2, 3.
             If None it will be calculated automatically based on the ``shots`` and
             ``samples`` (if specified).
-            Default: None
+            Default: Unset
 
         interleave_samples: If True interleave samples from different measurement
             circuits when running. If False run all samples from each measurement
             circuit in order.
             Default: False
     """
-
-    shots: int = 4096
+    shots: Union[UnsetType, int] = Unset
     init_qubits: bool = True
-    samples: Optional[int] = None
-    shots_per_sample: Optional[int] = None
+    samples: Union[UnsetType, int] = Unset
+    shots_per_sample: Union[UnsetType, int] = Unset
     interleave_samples: bool = False
 
-    @staticmethod
-    def validate_execution_options(execution_options: dict) -> None:
-        """Validate that execution options are legal.
-        Raises:
-            ValueError: if any execution option is not supported
-        """
-        for opt in execution_options:
-            if not opt in get_args(ExecutionSupportedOptions):
-                raise ValueError(f"Unsupported value '{opt}' for execution.")
+    @field_validator("shots", "samples", "shots_per_sample")
+    @classmethod
+    def _validate_positive_integer(cls, fld: Union[UnsetType, int], info: ValidationInfo):
+        """Validate zne_stderr_threshold."""
+        if isinstance(fld, int) and fld < 1:
+            raise ValueError(f"{info.field_name} must be >= 1")
+        return fld
 
-        shots = execution_options.get("shots")
-        samples = execution_options.get("samples")
-        shots_per_sample = execution_options.get("shots_per_sample")
-        if (
-            shots is not None
-            and samples is not None
-            and shots_per_sample is not None
-            and shots != samples * shots_per_sample
-        ):
+    @model_validator(mode='after')
+    def _validate_options(self):
+        """Validate the model."""
+        if all(not isinstance(fld, UnsetType) for fld in [self.shots, self.samples, self.shots_per_sample]) and self.shots != self.samples * self.shots_per_sample:
             raise ValueError(
-                f"If shots ({shots}) != samples ({samples}) * shots_per_sample ({shots_per_sample})"
+                f"Shots ({self.shots}) != samples ({self.samples}) * shots_per_sample ({self.shots_per_sample})"
             )
-        if shots is not None:
-            if not isinstance(shots, Integral):
-                raise ValueError(f"shots must be None or an integer, not {type(shots)}")
-            if shots < 1:
-                raise ValueError("shots must be None or >= 1")
-        if samples is not None:
-            if not isinstance(samples, Integral):
-                raise ValueError(f"samples must be None or an integer, not {type(samples)}")
-            if samples < 1:
-                raise ValueError("samples must be None or >= 1")
-        if shots_per_sample is not None:
-            if not isinstance(shots_per_sample, Integral):
-                raise ValueError(
-                    f"shots_per_sample must be None or an integer, not {type(shots_per_sample)}"
-                )
-            if shots_per_sample < 1:
-                raise ValueError("shots_per_sample must be None or >= 1")
+        return self
+
+
+@pydantic_dataclass(config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid"))
+class ExecutionOptionsV1:
+    """Execution options.
+
+    Args:
+        shots: Number of repetitions of each circuit, for sampling. Default: 4000.
+
+        init_qubits: Whether to reset the qubits to the ground state for each shot.
+            Default: ``True``.
+    """
+
+    shots: int = 4000
+    init_qubits: bool = True

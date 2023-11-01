@@ -12,7 +12,6 @@
 
 """Simulator options."""
 
-
 from typing import Optional, List, Union, Literal, get_args, TYPE_CHECKING
 from dataclasses import dataclass
 
@@ -21,18 +20,20 @@ from qiskit.providers import BackendV1, BackendV2
 from qiskit.utils import optionals
 from qiskit.transpiler import CouplingMap  # pylint: disable=unused-import
 
-if TYPE_CHECKING:
+from pydantic.dataclasses import dataclass as pydantic_dataclass
+from pydantic import Field, ConfigDict, model_validator
+
+try:
     import qiskit_aer
 
-SimulatorSupportedOptions = Literal[
-    "noise_model",
-    "seed_simulator",
-    "coupling_map",
-    "basis_gates",
-]
+    NoiseModel = qiskit_aer.noise.NoiseModel
+
+except ImportError:
+    class NoiseModel:
+        pass
 
 
-@dataclass()
+@pydantic_dataclass(config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid"))
 class SimulatorOptions:
     """Simulator options.
 
@@ -53,20 +54,10 @@ class SimulatorOptions:
             ``['u1', 'u2', 'u3', 'cx']``. If ``None``, do not unroll.
     """
 
-    noise_model: Optional[Union[dict, "qiskit_aer.noise.noise_model.NoiseModel"]] = None
+    noise_model: Optional[Union[dict, NoiseModel]] = None
     seed_simulator: Optional[int] = None
-    coupling_map: Optional[Union[List[List[int]], "CouplingMap"]] = None
+    coupling_map: Optional[Union[List[List[int]], CouplingMap]] = None
     basis_gates: Optional[List[str]] = None
-
-    @staticmethod
-    def validate_simulator_options(simulator_options: dict) -> None:
-        """Validate that simulator options are legal.
-        Raises:
-            ValueError: if any simulator option is not supported
-        """
-        for opt in simulator_options:
-            if not opt in get_args(SimulatorSupportedOptions):
-                raise ValueError(f"Unsupported value '{opt}' for simulator.")
 
     def set_backend(self, backend: Union[BackendV1, BackendV2]) -> None:
         """Set backend for simulation.

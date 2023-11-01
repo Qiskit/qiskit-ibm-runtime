@@ -17,11 +17,12 @@ from abc import ABC, abstractmethod
 from typing import Dict, Optional, Any, Union
 import copy
 import logging
-from dataclasses import asdict
+from dataclasses import asdict, replace
 
 from qiskit.providers.options import Options as TerraOptions
 
-from .options import Options
+from .options import BaseOptions
+from .options.utils import merge_options
 from .runtime_job import RuntimeJob
 from .ibm_backend import IBMBackend
 from .session import get_cm_session
@@ -37,11 +38,14 @@ logger = logging.getLogger(__name__)
 class BasePrimitive(ABC):
     """Base class for Qiskit Runtime primitives."""
 
+    _OPTIONS_CLASS: BaseOptions = None
+    version = 0
+
     def __init__(
         self,
         backend: Optional[Union[str, IBMBackend]] = None,
         session: Optional[Union[Session, str, IBMBackend]] = None,
-        options: Optional[Union[Dict, Options]] = None,
+        options: Optional[Union[Dict, BaseOptions]] = None,
     ):
         """Initializes the primitive.
 
@@ -72,15 +76,19 @@ class BasePrimitive(ABC):
         self._service: QiskitRuntimeService = None
         self._backend: Optional[IBMBackend] = None
 
+        self._initialize_options(options=options)
+
         if isinstance(session, Session):
             self._session = session
             self._service = self._session.service
             self._backend = self._service.backend(
                 name=self._session.backend(), instance=self._session._instance
             )
+            return
         elif session is not None:
             raise ValueError("session must be of type Session or None")
-        elif isinstance(backend, IBMBackend):
+
+        if isinstance(backend, IBMBackend):
             self._service = backend.service
             self._backend = backend
         elif isinstance(backend, str):
@@ -106,31 +114,6 @@ class BasePrimitive(ABC):
                 raise ValueError(
                     "A backend or session must be specified when not using ibm_cloud channel."
                 )
-        self._simulator_backend = (
-            self._backend.configuration().simulator if self._backend else False
-        )
-
-        if options is None:
-            self._options = asdict(Options())
-        elif isinstance(options, Options):
-            self._options = asdict(copy.deepcopy(options))
-        else:
-            options_copy = copy.deepcopy(options)
-            default_options = asdict(Options())
-            self._options = Options._merge_options_with_defaults(
-                default_options, options_copy, is_simulator=self._simulator_backend
-            )
-
-        # self._first_run = True
-        # self._circuits_map = {}
-        # if self.circuits:
-        #     for circuit in self.circuits:
-        #         circuit_id = _hash(
-        #             json.dumps(_circuit_key(circuit), cls=RuntimeEncoder)
-        #         )
-        #         if circuit_id not in self._session._circuits_map:
-        #             self._circuits_map[circuit_id] = circuit
-        #             self._session._circuits_map[circuit_id] = circuit
 
     def _run_primitive(self, primitive_inputs: Dict, user_kwargs: Dict) -> RuntimeJob:
         """Run the primitive.
@@ -142,12 +125,11 @@ class BasePrimitive(ABC):
         Returns:
             Submitted job.
         """
-        combined = Options._merge_options_with_defaults(
-            self._options, user_kwargs, self._simulator_backend
-        )
+        my_options = self._options if self.version == 1 else self.options
+        combined = merge_options(my_options, user_kwargs)
         self._validate_options(combined)
 
-        primitive_inputs.update(Options._get_program_inputs(combined))
+        primitive_inputs.update(my_options._get_program_inputs(combined))
 
         if self._backend and combined["transpilation"]["skip_transpilation"]:
             for circ in primitive_inputs["circuits"]:
@@ -155,7 +137,7 @@ class BasePrimitive(ABC):
 
         logger.info("Submitting job using options %s", combined)
 
-        runtime_options = Options._get_runtime_options(combined)
+        runtime_options = my_options._get_runtime_options(combined)
         if self._session:
             return self._session.run(
                 program_id=self._program_id(),
@@ -187,24 +169,44 @@ class BasePrimitive(ABC):
         """
         return self._session
 
-    @property
-    def options(self) -> TerraOptions:
-        """Return options values for the sampler.
-
-        Returns:
-            options
-        """
-        return TerraOptions(**self._options)
-
     def set_options(self, **fields: Any) -> None:
         """Set options values for the sampler.
 
         Args:
             **fields: The fields to update the options
         """
-        self._options = Options._merge_options_with_defaults(
-            self._options, fields, self._simulator_backend
-        )
+        if self.version == 1:
+            self._options = merge_options(self._options, fields)
+        else:
+            self.options = self._OPTIONS_CLASS(**merge_options(self.options, fields))
+
+    def _initialize_options(self, options: Optional[Union[Dict, BaseOptions]] = None):
+        """Initialize the options."""
+        opt_cls = self._OPTIONS_CLASS
+
+        if self.version == 1:
+            if options is None:
+                self._options = asdict(opt_cls())
+            elif isinstance(options, opt_cls):
+                self._options = asdict(copy.deepcopy(options))
+            elif isinstance(options, dict):
+                options_copy = copy.deepcopy(options)
+                default_options = asdict(opt_cls())
+                self._options = merge_options(default_options, options_copy)
+            else:
+                raise ValueError(f"Invalid 'options' type. It can only be a dictionary of {opt_cls}")
+        elif self.version == 2:
+            if options is None:
+                self.options = opt_cls()
+            elif isinstance(options, opt_cls):
+                self.options = replace(options)
+            elif isinstance(options, dict):
+                default_options = opt_cls()
+                self.options = opt_cls(**merge_options(default_options, options))
+            else:
+                raise ValueError(f"Invalid 'options' type. It can only be a dictionary of {opt_cls}")
+        else:
+            raise ValueError(f"Invalid primitive version {self.version}")
 
     @abstractmethod
     def _validate_options(self, options: dict) -> None:

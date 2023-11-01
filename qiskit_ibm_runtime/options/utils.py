@@ -12,7 +12,9 @@
 
 """Utility functions for options."""
 
-from typing import Optional
+from typing import Optional, Union
+import copy
+from dataclasses import is_dataclass, asdict
 
 from ..ibm_backend import IBMBackend
 
@@ -63,6 +65,15 @@ def _remove_dict_none_values(in_dict: dict, allowed_none_keys: Optional[set] = N
             _remove_dict_none_values(val, allowed_none_keys=allowed_none_keys)
 
 
+def _remove_dict_unset_values(in_dict: dict) -> None:
+    """Remove Unset values."""
+    for key, val in list(in_dict.items()):
+        if isinstance(val, Unset):
+            del in_dict[key]
+        elif isinstance(val, dict):
+            _remove_dict_unset_values(val)
+
+
 def _to_obj(cls_, data):  # type: ignore
     if data is None:
         return cls_()
@@ -75,6 +86,48 @@ def _to_obj(cls_, data):  # type: ignore
     )
 
 
+def merge_options(old_options: Union[dict, "BaseOptions"], new_options: Optional[dict] = None) -> dict:
+    """Merge current options with the new ones.
+
+    Args:
+        new_options: New options to merge.
+
+    Returns:
+        Merged dictionary.
+    """
+
+    def _update_options(old: dict, new: dict, matched: Optional[dict] = None) -> None:
+        if not new and not matched:
+            return
+        matched = matched or {}
+
+        for key, val in old.items():
+            if isinstance(val, dict):
+                matched = new.pop(key, {})
+                _update_options(val, new, matched)
+            elif key in new.keys():
+                old[key] = new.pop(key)
+            elif key in matched.keys():
+                old[key] = matched.pop(key)
+
+        # Add new keys.
+        for key, val in matched.items():
+            old[key] = val
+
+    combined = asdict(old_options) if is_dataclass(old_options) else copy.deepcopy(old_options)
+    if not new_options:
+        return combined
+    new_options_copy = copy.deepcopy(new_options)
+
+    # First update values of the same key.
+    _update_options(combined, new_options_copy)
+
+    # Add new keys.
+    combined.update(new_options_copy)
+
+    return combined
+
+
 class Dict:
     """Fake Dict type.
 
@@ -83,3 +136,11 @@ class Dict:
     """
 
     pass
+
+
+class UnsetType:
+    """Class used to represent an unset field."""
+    pass
+
+
+Unset: UnsetType = UnsetType()

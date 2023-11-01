@@ -19,6 +19,7 @@ import logging
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.primitives import BaseSampler
+from qiskit.providers.options import Options as TerraOptions
 
 from .options import Options
 from .runtime_job import RuntimeJob
@@ -33,6 +34,12 @@ logger = logging.getLogger(__name__)
 
 
 class Sampler(BasePrimitive, BaseSampler):
+    """Base type for Sampelr."""
+
+    version = 0
+
+
+class SamplerV1(Sampler):
     """Class for interacting with Qiskit Runtime Sampler primitive service.
 
     Qiskit Runtime Sampler primitive service calculates quasi-probability distribution
@@ -61,6 +68,8 @@ class Sampler(BasePrimitive, BaseSampler):
 
             # You can run more jobs inside the session
     """
+
+    _OPTIONS_CLASS = Options
 
     def __init__(
         self,
@@ -169,6 +178,15 @@ class Sampler(BasePrimitive, BaseSampler):
                 f"It can only take the values {valid_levels} in Sampler."
             )
         Options.validate_options(options)
+
+    @property
+    def options(self) -> TerraOptions:
+        """Return options values for the sampler.
+
+        Returns:
+            options
+        """
+        return TerraOptions(**self._options)
 
     @classmethod
     def _program_id(cls) -> str:

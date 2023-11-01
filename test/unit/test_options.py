@@ -21,6 +21,8 @@ from qiskit.transpiler import CouplingMap
 from qiskit_aer.noise import NoiseModel
 
 from qiskit_ibm_runtime import Options, RuntimeOptions
+from qiskit_ibm_runtime.options.utils import merge_options
+from qiskit_ibm_runtime.options import EstimatorOptions
 from qiskit_ibm_runtime.utils.qctrl import _warn_and_clean_options
 
 from ..ibm_test_case import IBMTestCase
@@ -31,7 +33,8 @@ from ..utils import dict_keys_equal, dict_paritally_equal, flat_dict_partially_e
 class TestOptions(IBMTestCase):
     """Class for testing the Sampler class."""
 
-    def test_merge_options(self):
+    @data(Options, EstimatorOptions)
+    def test_merge_options(self, opt_cls):
         """Test merging options."""
         options_vars = [
             {},
@@ -47,8 +50,8 @@ class TestOptions(IBMTestCase):
         ]
         for new_ops in options_vars:
             with self.subTest(new_ops=new_ops):
-                options = Options()
-                combined = Options._merge_options(asdict(options), new_ops)
+                options = opt_cls()
+                combined = merge_options(asdict(options), new_ops)
 
                 # Make sure the values are equal.
                 self.assertTrue(
@@ -106,6 +109,8 @@ class TestOptions(IBMTestCase):
                 "noise_factors": (0, 2, 4),
             },
         }
+        import pprint
+        pprint.pprint(inputs)
         self.assertTrue(
             dict_paritally_equal(inputs, expected),
             f"inputs={inputs}, expected={expected}",
