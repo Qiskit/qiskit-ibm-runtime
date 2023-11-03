@@ -251,8 +251,10 @@ class Options(BaseOptions):
         if execution_time is not None:
             if execution_time > Options._MAX_EXECUTION_TIME:
                 raise ValueError(
-                    f"max_execution_time must be below " f"{Options._MAX_EXECUTION_TIME} seconds."
-                    f"max_execution_time must be below " f"{Options._MAX_EXECUTION_TIME} seconds."
+                    f"max_execution_time must be below "
+                    f"{Options._MAX_EXECUTION_TIME} seconds."
+                    f"max_execution_time must be below "
+                    f"{Options._MAX_EXECUTION_TIME} seconds."
                 )
 
         EnvironmentOptions(**options.get("environment", {}))

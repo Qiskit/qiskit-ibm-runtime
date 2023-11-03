@@ -192,7 +192,8 @@ class BasePrimitive(ABC):
             self._options = merge_options(self._options, fields)
         else:
             self.options = self._OPTIONS_CLASS(  # pylint: disable=attribute-defined-outside-init
-                **merge_options(self.options, fields))
+                **merge_options(self.options, fields)
+            )
 
     def _initialize_options(self, options: Optional[Union[Dict, BaseOptions]] = None):
         """Initialize the options."""
