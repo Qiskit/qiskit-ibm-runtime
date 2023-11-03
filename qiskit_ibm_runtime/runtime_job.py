@@ -39,7 +39,7 @@ from .exceptions import (
     RuntimeJobTimeoutError,
     RuntimeJobMaxTimeoutError,
 )
-from .program.result_decoder import ResultDecoder
+from .utils.result_decoder import ResultDecoder
 from .utils import RuntimeDecoder
 from .api.clients import RuntimeClient, RuntimeWebsocketClient, WebsocketClientCloseCode
 from .exceptions import IBMError

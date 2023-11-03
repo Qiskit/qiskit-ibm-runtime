@@ -46,7 +46,7 @@ from .exceptions import (
     RuntimeJobNotFound,
 )
 from .hub_group_project import HubGroupProject  # pylint: disable=cyclic-import
-from .program.result_decoder import ResultDecoder
+from .utils.result_decoder import ResultDecoder
 from .runtime_job import RuntimeJob
 from .utils import RuntimeDecoder, to_python_identifier
 from .api.client_parameters import ClientParameters

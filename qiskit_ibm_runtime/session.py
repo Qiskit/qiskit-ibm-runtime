@@ -21,7 +21,7 @@ from qiskit_ibm_provider.utils.converters import hms_to_seconds
 
 from qiskit_ibm_runtime import QiskitRuntimeService
 from .runtime_job import RuntimeJob
-from .program.result_decoder import ResultDecoder
+from .utils.result_decoder import ResultDecoder
 from .ibm_backend import IBMBackend
 
 

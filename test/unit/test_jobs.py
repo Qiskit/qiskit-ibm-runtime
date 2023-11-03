@@ -25,7 +25,6 @@ from qiskit_ibm_runtime.exceptions import (
     RuntimeJobFailureError,
     RuntimeJobNotFound,
     RuntimeJobMaxTimeoutError,
-    RuntimeProgramNotFound,
     IBMInputValueError,
     RuntimeInvalidStateError,
 )
@@ -59,12 +58,6 @@ class TestRuntimeJob(IBMTestCase):
             job.wait_for_final_state()
             self.assertEqual(job.status(), JobStatus.DONE)
             self.assertTrue(job.result())
-
-    @run_quantum_and_cloud_fake
-    def test_run_phantom_program(self, service):
-        """Test running a phantom program."""
-        with self.assertRaises(RuntimeProgramNotFound):
-            _ = run_program(service=service, program_id="phantom_program")
 
     @run_quantum_and_cloud_fake
     def test_run_program_phantom_backend(self, service):
