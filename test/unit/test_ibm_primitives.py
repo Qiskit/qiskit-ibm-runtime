@@ -13,6 +13,7 @@
 """Tests for primitive classes."""
 
 import sys
+import copy
 import os
 from unittest.mock import MagicMock, patch
 from dataclasses import asdict
@@ -80,7 +81,9 @@ class TestPrimitives(IBMTestCase):
             for options in options_vars:
                 with self.subTest(primitive=cls, options=options):
                     inst = cls(session=MagicMock(spec=MockSession), options=options)
-                    self.assertTrue(dict_paritally_equal(inst.options.__dict__, options))
+                    expected = asdict(Options())
+                    self._update_dict(expected, copy.deepcopy(options))
+                    self.assertDictEqual(expected, inst.options.__dict__)
 
     def test_runtime_options(self):
         """Test RuntimeOptions specified as primitive options."""
@@ -483,6 +486,10 @@ class TestPrimitives(IBMTestCase):
                     # Make sure the values are equal.
                     inst1_options = inst1.options.__dict__
                     expected_dict = inst2.options.__dict__
+                    self.assertTrue(
+                        dict_paritally_equal(inst1_options, expected_dict),
+                        f"inst_options={inst1_options}, options={opts}",
+                    )
                     # Make sure the structure didn't change.
                     self.assertTrue(
                         dict_keys_equal(inst1_options, expected_dict),

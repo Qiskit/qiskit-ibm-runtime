@@ -19,6 +19,20 @@ from pydantic import ConfigDict, field_validator
 
 from .utils import Unset, UnsetType, skip_unset_validation
 
+LayoutMethodType = Literal[
+    "trivial",
+    "dense",
+    "noise_adaptive",
+    "sabre",
+]
+RoutingMethodType = Literal[
+    "basic",
+    "lookahead",
+    "stochastic",
+    "sabre",
+    "none",
+]
+
 
 @pydantic_dataclass(
     config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid")
@@ -45,10 +59,8 @@ class TranspilationOptions:
 
     skip_transpilation: bool = False
     initial_layout: Union[UnsetType, dict, List] = Unset  # TODO: Support Layout
-    layout_method: Union[UnsetType, Literal["trivial", "dense", "noise_adaptive", "sabre"]] = Unset
-    routing_method: Union[
-        UnsetType, Literal["basic", "lookahead", "stochastic", "sabre", "none"]
-    ] = Unset
+    layout_method: Union[UnsetType, LayoutMethodType] = Unset
+    routing_method: Union[UnsetType, RoutingMethodType] = Unset
     approximation_degree: Union[UnsetType, float] = Unset
 
     @field_validator("approximation_degree")

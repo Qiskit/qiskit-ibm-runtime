@@ -38,9 +38,10 @@ from ..qiskit.primitives import BasePrimitiveOptions
 class BaseOptions(ABC, BasePrimitiveOptions):
     """Base options class."""
 
-    @abstractmethod
     @staticmethod
+    @abstractmethod
     def _get_program_inputs(options: dict) -> dict:
+        """Convert the input options to program compatible inputs."""
         raise NotImplementedError()
 
     @staticmethod
@@ -71,7 +72,7 @@ class BaseOptions(ABC, BasePrimitiveOptions):
     config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid")
 )
 class OptionsV2(BaseOptions):
-    """Base primitive options.
+    """Base primitive options, used by v2 primitives.
 
     Args:
         max_execution_time: Maximum execution time in seconds, which is based
@@ -99,7 +100,7 @@ class OptionsV2(BaseOptions):
 
 @dataclass
 class Options(BaseOptions):
-    """Options for the primitives.
+    """Options for the primitives, used by v1 primitives.
 
     Args:
         optimization_level: How much optimization to perform on the circuits.
@@ -257,6 +258,34 @@ class Options(BaseOptions):
         EnvironmentOptions(**options.get("environment", {}))
         ExecutionOptions(**options.get("execution", {}))
         SimulatorOptions(**options.get("simulator", {}))
+
+    @staticmethod
+    def _remove_none_values(options: dict) -> dict:
+        """Remove `None` values from the options dictionary."""
+        new_options = {}
+        for key, value in options.items():
+            if value is not None:
+                if isinstance(value, dict):
+                    new_suboptions = {}
+                    for subkey, subvalue in value.items():
+                        if subvalue is not None:
+                            new_suboptions[subkey] = subvalue
+                    new_options[key] = new_suboptions
+                else:
+                    new_options[key] = value
+
+        return new_options
+
+    @staticmethod
+    def _set_default_resilience_options(options: dict) -> dict:
+        """Set default resilience options for resilience level 2."""
+        if options["resilience_level"] == 2:
+            if not options["resilience"]["noise_factors"]:
+                options["resilience"]["noise_factors"] = (1, 3, 5)
+            if not options["resilience"]["extrapolator"]:
+                options["resilience"]["extrapolator"] = "LinearExtrapolator"
+
+        return options
 
     @staticmethod
     def _merge_options(old_options: dict, new_options: Optional[dict] = None) -> dict:

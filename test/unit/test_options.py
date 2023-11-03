@@ -130,6 +130,7 @@ class TestOptions(IBMTestCase):
             {"resilience": {"noise_factors": (0, 2, 4)}},
             {"environment": {"log_level": "ERROR"}},
         ]
+
         for opts_dict in options_dicts:
             with self.subTest(opts_dict=opts_dict):
                 options = asdict(Options(**opts_dict))

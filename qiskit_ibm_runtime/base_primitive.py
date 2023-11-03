@@ -69,7 +69,6 @@ class BasePrimitive(ABC):
         self._session: Optional[Session] = None
         self._service: QiskitRuntimeService = None
         self._backend: Optional[IBMBackend] = None
-        self._options: dict = {}  # Only used by v1
 
         self._initialize_options(options=options)
 

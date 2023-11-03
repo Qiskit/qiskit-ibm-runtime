@@ -22,6 +22,10 @@ from qiskit.transpiler import CouplingMap  # pylint: disable=unused-import
 from pydantic.dataclasses import dataclass as pydantic_dataclass
 from pydantic import ConfigDict
 
+class NoiseModel:
+    """Fake noise model class."""
+    pass
+
 if TYPE_CHECKING:
     try:
         import qiskit_aer
@@ -29,10 +33,7 @@ if TYPE_CHECKING:
         NoiseModel = qiskit_aer.noise.NoiseModel
 
     except ImportError:
-
-        class NoiseModel:
-            """Fake noise model class."""
-            pass
+        pass
 
 
 @pydantic_dataclass(
