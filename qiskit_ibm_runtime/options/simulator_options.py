@@ -69,9 +69,9 @@ class SimulatorOptions:
                     "'noise_model' can only be a dictionary or qiskit_aer.noise.NoiseModel."
                 )
 
-            from qiskit_aer.noise import (
+            from qiskit_aer.noise import (  # pylint:disable=import-outside-toplevel
                 NoiseModel as AerNoiseModel,
-            )  # pylint:disable=import-outside-toplevel
+            )
 
             if not isinstance(model, AerNoiseModel):
                 raise ValueError(
@@ -94,9 +94,9 @@ class SimulatorOptions:
                 "qiskit-aer", "Aer provider", "pip install qiskit-aer"
             )
 
-        from qiskit_aer.noise import (
+        from qiskit_aer.noise import (  # pylint:disable=import-outside-toplevel
             NoiseModel as AerNoiseModel,
-        )  # pylint:disable=import-outside-toplevel
+        )
 
         self.noise_model = AerNoiseModel.from_backend(backend)
 
