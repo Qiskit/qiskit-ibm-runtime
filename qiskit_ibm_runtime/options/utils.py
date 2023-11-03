@@ -79,7 +79,9 @@ def _to_obj(cls_, data):  # type: ignore
     )
 
 
-def merge_options(old_options: Union[dict, "BaseOptions"], new_options: Optional[dict] = None) -> dict:
+def merge_options(
+    old_options: Union[dict, "BaseOptions"], new_options: Optional[dict] = None
+) -> dict:
     """Merge current options with the new ones.
 
     Args:
@@ -123,6 +125,7 @@ def merge_options(old_options: Union[dict, "BaseOptions"], new_options: Optional
 
 def skip_unset_validation(func: Callable) -> Callable:
     """Decorator used to skip unset value"""
+
     @functools.wraps(func)
     def wrapper(cls, val, *args, **kwargs) -> Callable:
         if isinstance(val, UnsetType):
@@ -130,6 +133,7 @@ def skip_unset_validation(func: Callable) -> Callable:
         return func(cls, val, *args, **kwargs)
 
     return wrapper
+
 
 class Dict:
     """Fake Dict type.

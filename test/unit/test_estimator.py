@@ -12,7 +12,7 @@
 
 """Tests for estimator class."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from qiskit import QuantumCircuit
 from qiskit.quantum_info import SparsePauliOp, Pauli, random_hermitian, random_pauli_list
@@ -110,8 +110,9 @@ class TestEstimatorV2(IBMTestCase):
                     f"{inputs} and {expected} not partially equal.",
                 )
 
-    @data({"zne_extrapolator": "bad_extrapolator"},
-          {"zne_extrapolator": "double_exponential", "zne_noise_factors": [1]},
+    @data(
+        {"zne_extrapolator": "bad_extrapolator"},
+        {"zne_extrapolator": "double_exponential", "zne_noise_factors": [1]},
     )
     def test_invalid_resilience_options(self, res_opt):
         """Test invalid resilience options."""

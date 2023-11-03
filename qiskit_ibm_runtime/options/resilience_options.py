@@ -45,7 +45,9 @@ ZneExtrapolatorType = Literal[
 ]
 
 
-@pydantic_dataclass(config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid"))
+@pydantic_dataclass(
+    config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid")
+)
 class ResilienceOptionsV2:
     """Resilience options.
 
@@ -127,11 +129,14 @@ class ResilienceOptionsV2:
             raise ValueError("pec_max_overhead must be None or >= 1")
         return overhead
 
-    @model_validator(mode='after')
+    @model_validator(mode="after")
     def _validate_options(self):
         """Validate the model."""
         # Validate ZNE noise factors + extrapolator combination
-        if all(not isinstance(fld, UnsetType) for fld in [self.zne_noise_factors, self.zne_extrapolator]):
+        if all(
+            not isinstance(fld, UnsetType)
+            for fld in [self.zne_noise_factors, self.zne_extrapolator]
+        ):
             required_factors = {
                 "exponential": 2,
                 "double_exponential": 4,
@@ -141,7 +146,11 @@ class ResilienceOptionsV2:
                 "polynomial_degree_3": 4,
                 "polynomial_degree_4": 5,
             }
-            extrapolators = [self.zne_extrapolator] if isinstance(self.zne_extrapolator, str) else self.zne_extrapolator
+            extrapolators = (
+                [self.zne_extrapolator]
+                if isinstance(self.zne_extrapolator, str)
+                else self.zne_extrapolator
+            )
             for extrap in extrapolators:
                 if len(self.zne_noise_factors) < required_factors[extrap]:
                     raise ValueError(
@@ -174,7 +183,9 @@ class ResilienceOptionsV2:
 #     pec_max_overhead: float = 100
 
 
-@pydantic_dataclass(config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid"))
+@pydantic_dataclass(
+    config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid")
+)
 class ResilienceOptionsV1:
     """Resilience options.
 
@@ -200,7 +211,7 @@ class ResilienceOptionsV1:
     noise_factors: Optional[Sequence[float]] = None
     extrapolator: Optional[ExtrapolatorType] = None
 
-    @model_validator(mode='after')
+    @model_validator(mode="after")
     def _validate_options(self):
         """Validate the model."""
         required_factors = {

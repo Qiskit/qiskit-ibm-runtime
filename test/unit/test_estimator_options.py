@@ -118,7 +118,9 @@ class TestEStimatorOptions(IBMTestCase):
                 )
 
                 # Make sure the structure didn't change.
-                self.assertTrue(dict_keys_equal(asdict(EstimatorOptions()), options), f"options={options}")
+                self.assertTrue(
+                    dict_keys_equal(asdict(EstimatorOptions()), options), f"options={options}"
+                )
 
     def test_kwargs_options(self):
         """Test specifying arbitrary options."""
@@ -142,20 +144,22 @@ class TestEStimatorOptions(IBMTestCase):
                 resulting_cmap = inputs["transpilation"]["coupling_map"]
                 self.assertEqual(coupling_map, set(map(tuple, resulting_cmap)))
 
-    @data({"optimization_level": 99},
-          {"resilience_level": 99},
-          {"dynamical_decoupling": "foo"},
-          {"transpilation": {"skip_transpilation": "foo"}},
-          {"execution": {"shots": 0}},
-          {"twirling": {"strategy": "foo"}},
-          {"transpilation": {"foo": "bar"}},
-          {"resilience_level": 3, "_is_simulator": True},
-          {"zne_noise_factors": [0.5]},
-          {"noise_factors": [1, 3, 5]},
-          {"zne_extrapolator": "exponential", "zne_noise_factors": [1]},
-          {"zne_mitigation": True, "pec_mitigation": True}
-          )
+    @data(
+        {"optimization_level": 99},
+        {"resilience_level": 99},
+        {"dynamical_decoupling": "foo"},
+        {"transpilation": {"skip_transpilation": "foo"}},
+        {"execution": {"shots": 0}},
+        {"twirling": {"strategy": "foo"}},
+        {"transpilation": {"foo": "bar"}},
+        {"resilience_level": 3, "_is_simulator": True},
+        {"zne_noise_factors": [0.5]},
+        {"noise_factors": [1, 3, 5]},
+        {"zne_extrapolator": "exponential", "zne_noise_factors": [1]},
+        {"zne_mitigation": True, "pec_mitigation": True},
+    )
     def test_bad_inputs(self, val):
+        """Test invalid inputs."""
         with self.assertRaises(ValidationError) as exc:
             EstimatorOptions(**val)
         self.assertIn(list(val.keys())[0], str(exc.exception))

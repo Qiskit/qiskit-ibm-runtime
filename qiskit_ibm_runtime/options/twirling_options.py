@@ -28,7 +28,9 @@ TwirlingStrategyType = Literal[
 ]
 
 
-@pydantic_dataclass(config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid"))
+@pydantic_dataclass(
+    config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid")
+)
 class TwirlingOptions:
     """Twirling options.
 
@@ -59,4 +61,3 @@ class TwirlingOptions:
     gates: Union[UnsetType, bool] = Unset
     measure: Union[UnsetType, bool] = Unset
     strategy: Union[UnsetType, TwirlingStrategyType] = Unset
-

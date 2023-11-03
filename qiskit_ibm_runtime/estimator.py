@@ -13,7 +13,6 @@
 """Estimator primitive."""
 
 from __future__ import annotations
-from abc import ABC
 import os
 from typing import Optional, Dict, Sequence, Any, Union, Mapping
 import logging
@@ -34,11 +33,11 @@ from qiskit.providers.options import Options as TerraOptions
 from .runtime_job import RuntimeJob
 from .ibm_backend import IBMBackend
 from .options import Options
-from .options.estimator_options import EstimatorOptionsV2, EstimatorOptions
-from .options.utils import merge_options
+from .options.estimator_options import EstimatorOptions
 from .base_primitive import BasePrimitive
 from .utils.qctrl import validate as qctrl_validate
 from .utils.deprecation import issue_deprecation_msg
+
 # TODO: remove when we have real v2 base estimator
 from .qiskit.primitives import BaseEstimatorV2
 
@@ -69,8 +68,20 @@ BindingsArrayLike = Union[
 
 
 class Estimator(BasePrimitive):
+    """Base class for Qiskit Runtime Estimator."""
+
     _PROGRAM_ID = "estimator"
     version = 0
+
+    def __init__(
+        self,
+        backend: Optional[Union[str, IBMBackend]] = None,
+        session: Optional[Union[Session, str, IBMBackend]] = None,
+        options: Optional[Union[Dict, EstimatorOptions]] = None,
+    ):
+        """Initializes the Estimator primitive."""
+        BasePrimitive.__init__(self, backend=backend, session=session, options=options)
+
 
 class EstimatorV2(Estimator, BaseEstimatorV2):
     """Class for interacting with Qiskit Runtime Estimator primitive service.
@@ -119,7 +130,7 @@ class EstimatorV2(Estimator, BaseEstimatorV2):
     """
 
     _ALLOWED_BASIS: str = "IXYZ01+-rl"
-    _OPTIONS_CLASS = EstimatorOptionsV2
+    _OPTIONS_CLASS = EstimatorOptions
 
     version = 2
 
@@ -145,13 +156,18 @@ class EstimatorV2(Estimator, BaseEstimatorV2):
 
             options: Primitive options, see :class:`Options` for detailed description.
                 The ``backend`` keyword is still supported but is deprecated.
+
+        Raises:
+            NotImplementedError: If "q-ctrl" channel strategy is used.
         """
         BaseEstimatorV2.__init__(self)
-        BasePrimitive.__init__(self, backend=backend, session=session, options=options)
+        Estimator.__init__(self, backend=backend, session=session, options=options)
 
-        self.options._is_simulator = self._backend is not None and self._backend.configuration().simulator is True
+        self.options._is_simulator = (
+            self._backend is not None and self._backend.configuration().simulator is True
+        )
         if self._service._channel_strategy == "q-ctrl":
-            raise NotImplemented("EstimatorV2 is not supported with q-ctrl channel strategy.")
+            raise NotImplementedError("EstimatorV2 is not supported with q-ctrl channel strategy.")
 
     def run(  # pylint: disable=arguments-differ
         self,
@@ -188,15 +204,20 @@ class EstimatorV2(Estimator, BaseEstimatorV2):
 
         circuits = self._validate_circuits(circuits=circuits)
         observables = self._validate_observables(observables=observables)
-        parameter_values = self._validate_parameter_values(parameter_values=parameter_values, default=[()] * len(circuits),)
+        parameter_values = self._validate_parameter_values(
+            parameter_values=parameter_values,
+            default=[()] * len(circuits),
+        )
         self._cross_validate_circuits_observables(circuits=circuits, observables=observables)
-        self._cross_validate_circuits_parameter_values(circuits=circuits, parameter_values=parameter_values)
+        self._cross_validate_circuits_parameter_values(
+            circuits=circuits, parameter_values=parameter_values
+        )
 
         return self._run(
             circuits=circuits,
             observables=observables,
             parameter_values=parameter_values,
-            **user_kwargs
+            **user_kwargs,
         )
         # return super().run(
         #     circuits=circuits,
@@ -228,7 +249,11 @@ class EstimatorV2(Estimator, BaseEstimatorV2):
         Returns:
             Submitted job
         """
-        logger.debug("Running %s with new options %s", self.__class__.__name__, kwargs.get("_user_kwargs", {}))
+        logger.debug(
+            "Running %s with new options %s",
+            self.__class__.__name__,
+            kwargs.get("_user_kwargs", {}),
+        )
         inputs = {
             "circuits": circuits,
             "observables": observables,
@@ -407,7 +432,7 @@ class EstimatorV1(Estimator, BaseEstimator):
         # qiskit.providers.Options. We largely ignore this _run_options because we use
         # a nested dictionary to categorize options.
         BaseEstimator.__init__(self)
-        BasePrimitive.__init__(self, backend=backend, session=session, options=options)
+        Estimator.__init__(self, backend=backend, session=session, options=options)
 
     def run(  # pylint: disable=arguments-differ
         self,

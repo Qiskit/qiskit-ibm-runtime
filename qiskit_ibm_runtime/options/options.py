@@ -13,8 +13,8 @@
 """Primitive options."""
 
 from abc import ABC, abstractmethod
-from typing import Optional, Union, ClassVar, Literal, get_args, Any
-from dataclasses import dataclass, fields, field, asdict
+from typing import Optional, Union, ClassVar
+from dataclasses import dataclass, fields, field
 import copy
 import warnings
 
@@ -29,16 +29,19 @@ from .simulator_options import SimulatorOptions
 from .transpilation_options import TranspilationOptions
 from .resilience_options import ResilienceOptionsV1 as ResilienceOptions
 from ..runtime_options import RuntimeOptions
+
 # TODO use real base options when available
 from ..qiskit.primitives import BasePrimitiveOptions
 
 
 @dataclass
 class BaseOptions(ABC, BasePrimitiveOptions):
+    """Base options class."""
 
     @abstractmethod
+    @staticmethod
     def _get_program_inputs(options: dict) -> dict:
-        raise NotImplemented()
+        raise NotImplementedError()
 
     @staticmethod
     def _get_runtime_options(options: dict) -> dict:
@@ -64,7 +67,9 @@ class BaseOptions(ABC, BasePrimitiveOptions):
         return out
 
 
-@pydantic_dataclass(config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid"))
+@pydantic_dataclass(
+    config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid")
+)
 class OptionsV2(BaseOptions):
     """Base primitive options.
 

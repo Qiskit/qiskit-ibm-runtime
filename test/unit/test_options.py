@@ -170,7 +170,7 @@ class TestOptions(IBMTestCase):
             temp_options[opt] = {"aaa": "bbb"}
             with self.assertRaises(ValidationError) as exc:
                 Options.validate_options(temp_options)
-            self.assertIn(f"bbb", str(exc.exception))
+            self.assertIn("bbb", str(exc.exception))
 
     def test_coupling_map_options(self):
         """Check that coupling_map is processed correctly for various types"""

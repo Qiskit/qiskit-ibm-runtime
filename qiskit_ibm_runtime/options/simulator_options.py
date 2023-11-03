@@ -12,8 +12,7 @@
 
 """Simulator options."""
 
-from typing import Optional, List, Union, Literal, get_args, TYPE_CHECKING
-from dataclasses import dataclass
+from typing import Optional, List, Union, TYPE_CHECKING
 
 from qiskit.exceptions import MissingOptionalLibraryError
 from qiskit.providers import BackendV1, BackendV2
@@ -21,19 +20,24 @@ from qiskit.utils import optionals
 from qiskit.transpiler import CouplingMap  # pylint: disable=unused-import
 
 from pydantic.dataclasses import dataclass as pydantic_dataclass
-from pydantic import Field, ConfigDict, model_validator
+from pydantic import ConfigDict
 
-try:
-    import qiskit_aer
+if TYPE_CHECKING:
+    try:
+        import qiskit_aer
 
-    NoiseModel = qiskit_aer.noise.NoiseModel
+        NoiseModel = qiskit_aer.noise.NoiseModel
 
-except ImportError:
-    class NoiseModel:
-        pass
+    except ImportError:
+
+        class NoiseModel:
+            """Fake noise model class."""
+            pass
 
 
-@pydantic_dataclass(config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid"))
+@pydantic_dataclass(
+    config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid")
+)
 class SimulatorOptions:
     """Simulator options.
 
@@ -67,7 +71,7 @@ class SimulatorOptions:
             backend: backend to be set.
 
         Raises:
-            MissingOptionalLibraryError if qiskit-aer is not found.
+            MissingOptionalLibraryError: if qiskit-aer is not found.
         """
         if not optionals.HAS_AER:
             raise MissingOptionalLibraryError(

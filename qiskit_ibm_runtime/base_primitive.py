@@ -19,9 +19,7 @@ import copy
 import logging
 from dataclasses import asdict, replace
 
-from qiskit.providers.options import Options as TerraOptions
-
-from .options import BaseOptions
+from .options import BaseOptions, Options
 from .options.utils import merge_options, set_default_error_levels
 from .runtime_job import RuntimeJob
 from .ibm_backend import IBMBackend
@@ -38,7 +36,7 @@ logger = logging.getLogger(__name__)
 class BasePrimitive(ABC):
     """Base class for Qiskit Runtime primitives."""
 
-    _OPTIONS_CLASS: BaseOptions = None
+    _OPTIONS_CLASS: type[BaseOptions] = Options
     version = 0
 
     def __init__(
@@ -71,6 +69,7 @@ class BasePrimitive(ABC):
         self._session: Optional[Session] = None
         self._service: QiskitRuntimeService = None
         self._backend: Optional[IBMBackend] = None
+        self._options: dict = {}  # Only used by v1
 
         self._initialize_options(options=options)
 
@@ -193,7 +192,8 @@ class BasePrimitive(ABC):
         if self.version == 1:
             self._options = merge_options(self._options, fields)
         else:
-            self.options = self._OPTIONS_CLASS(**merge_options(self.options, fields))
+            self.options = self._OPTIONS_CLASS(  # pylint: disable=attribute-defined-outside-init
+                **merge_options(self.options, fields))
 
     def _initialize_options(self, options: Optional[Union[Dict, BaseOptions]] = None):
         """Initialize the options."""
@@ -211,7 +211,9 @@ class BasePrimitive(ABC):
                 default_options = asdict(opt_cls())
                 self._options = merge_options(default_options, options_copy)
             else:
-                raise ValueError(f"Invalid 'options' type. It can only be a dictionary of {opt_cls}")
+                raise ValueError(
+                    f"Invalid 'options' type. It can only be a dictionary of {opt_cls}"
+                )
         elif self.version == 2:
             if options is None:
                 self.options = opt_cls()
@@ -221,7 +223,9 @@ class BasePrimitive(ABC):
                 default_options = opt_cls()
                 self.options = opt_cls(**merge_options(default_options, options))
             else:
-                raise ValueError(f"Invalid 'options' type. It can only be a dictionary of {opt_cls}")
+                raise ValueError(
+                    f"Invalid 'options' type. It can only be a dictionary of {opt_cls}"
+                )
         else:
             raise ValueError(f"Invalid primitive version {self.version}")
 

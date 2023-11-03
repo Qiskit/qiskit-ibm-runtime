@@ -15,12 +15,14 @@
 from typing import Union
 
 from pydantic.dataclasses import dataclass as pydantic_dataclass
-from pydantic import Field, ConfigDict, model_validator, field_validator, ValidationInfo
+from pydantic import ConfigDict, model_validator, field_validator, ValidationInfo
 
 from .utils import Unset, UnsetType, skip_unset_validation
 
 
-@pydantic_dataclass(config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid"))
+@pydantic_dataclass(
+    config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid")
+)
 class ExecutionOptionsV2:
     """Execution options.
 
@@ -47,6 +49,7 @@ class ExecutionOptionsV2:
             circuit in order.
             Default: False
     """
+
     shots: Union[UnsetType, int] = Unset
     init_qubits: bool = True
     samples: Union[UnsetType, int] = Unset
@@ -62,17 +65,26 @@ class ExecutionOptionsV2:
             raise ValueError(f"{info.field_name} must be >= 1")
         return fld
 
-    @model_validator(mode='after')
+    @model_validator(mode="after")
     def _validate_options(self):
         """Validate the model."""
-        if all(not isinstance(fld, UnsetType) for fld in [self.shots, self.samples, self.shots_per_sample]) and self.shots != self.samples * self.shots_per_sample:
+        if (
+            all(
+                not isinstance(fld, UnsetType)
+                for fld in [self.shots, self.samples, self.shots_per_sample]
+            )
+            and self.shots != self.samples * self.shots_per_sample
+        ):
             raise ValueError(
-                f"Shots ({self.shots}) != samples ({self.samples}) * shots_per_sample ({self.shots_per_sample})"
+                f"Shots ({self.shots}) != "
+                f"samples ({self.samples}) * shots_per_sample ({self.shots_per_sample})"
             )
         return self
 
 
-@pydantic_dataclass(config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid"))
+@pydantic_dataclass(
+    config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid")
+)
 class ExecutionOptionsV1:
     """Execution options.
 

@@ -19,7 +19,14 @@ from qiskit.transpiler import CouplingMap
 from pydantic.dataclasses import dataclass as pydantic_dataclass
 from pydantic import Field, ConfigDict, model_validator, field_validator
 
-from .utils import Dict, Unset, UnsetType, _remove_dict_unset_values, merge_options, skip_unset_validation
+from .utils import (
+    Dict,
+    Unset,
+    UnsetType,
+    _remove_dict_unset_values,
+    merge_options,
+    skip_unset_validation,
+)
 from .execution_options import ExecutionOptionsV2
 from .transpilation_options import TranspilationOptions
 from .resilience_options import ResilienceOptionsV2
@@ -29,12 +36,10 @@ from .options import OptionsV2
 DDSequenceType = Literal["XX", "XpXm", "XY4"]
 
 
+@pydantic_dataclass(
+    config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid")
+)
 class EstimatorOptions(OptionsV2):
-    pass
-
-
-@pydantic_dataclass(config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid"))
-class EstimatorOptionsV2(EstimatorOptions):
     """Options for v2 Estimator.
 
     Args:
@@ -84,6 +89,7 @@ class EstimatorOptionsV2(EstimatorOptions):
             :class:`SimulatorOptions` for all available options.
 
     """
+
     _version: int = 2
     _is_simulator: bool = False
 
@@ -102,10 +108,14 @@ class EstimatorOptionsV2(EstimatorOptions):
 
     @field_validator("optimization_level")
     @classmethod
+    @skip_unset_validation
     def _validate_optimization_level(cls, optimization_level: Union[UnsetType, int]):
         """Validate optimization_leve."""
-        if not isinstance(optimization_level, UnsetType) and not (0 <= optimization_level <= 3):
-            raise ValueError(f"Invalid optimization_level. Valid range is 0-{EstimatorOptionsV2._MAX_OPTIMIZATION_LEVEL}")
+        if not 0 <= optimization_level <= 3:
+            raise ValueError(
+                "Invalid optimization_level. Valid range is "
+                f"0-{EstimatorOptions._MAX_OPTIMIZATION_LEVEL}"
+            )
         return optimization_level
 
     @field_validator("resilience_level")
@@ -113,11 +123,14 @@ class EstimatorOptionsV2(EstimatorOptions):
     @skip_unset_validation
     def _validate_resilience_level(cls, resilience_level: Union[UnsetType, int]):
         """Validate resilience_level."""
-        if not (0 <= resilience_level <= 3):
-            raise ValueError(f"Invalid optimization_level. Valid range is 0-{EstimatorOptionsV2._MAX_RESILIENCE_LEVEL}")
+        if not 0 <= resilience_level <= 3:
+            raise ValueError(
+                "Invalid optimization_level. Valid range is "
+                f"0-{EstimatorOptions._MAX_RESILIENCE_LEVEL}"
+            )
         return resilience_level
 
-    @model_validator(mode='after')
+    @model_validator(mode="after")
     def _validate_options(self):
         """Validate the model."""
         # TODO: Server should have different optimization/resilience levels for simulator
@@ -173,7 +186,7 @@ class EstimatorOptionsV2(EstimatorOptions):
             inputs = merge_options(inputs, options.get("experimental"))
 
         inputs["_experimental"] = True
-        inputs["version"] = EstimatorOptionsV2._version
+        inputs["version"] = EstimatorOptions._version
         _remove_dict_unset_values(inputs)
 
         return inputs

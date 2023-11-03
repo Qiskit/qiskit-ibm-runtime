@@ -61,4 +61,4 @@ from .simulator_options import SimulatorOptions
 from .transpilation_options import TranspilationOptions
 from .resilience_options import ResilienceOptionsV1 as ResilienceOptions
 from .twirling_options import TwirlingOptions
-from .estimator_options import EstimatorOptionsV2 as EstimatorOptions
+from .estimator_options import EstimatorOptions

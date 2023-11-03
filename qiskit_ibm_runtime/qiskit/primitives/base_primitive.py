@@ -23,7 +23,6 @@ from qiskit.circuit import QuantumCircuit
 
 @dataclass
 class BasePrimitiveOptions:
-
     def __call__(self):
         return replace(self)
 
@@ -45,7 +44,6 @@ class BasePrimitiveV2(ABC):
             **fields: The fields to update the options
         """
         raise NotImplementedError()
-
 
     @staticmethod
     def _validate_circuits(

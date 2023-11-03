@@ -15,12 +15,14 @@
 from typing import List, Union, Literal
 
 from pydantic.dataclasses import dataclass as pydantic_dataclass
-from pydantic import Field, ConfigDict, field_validator
+from pydantic import ConfigDict, field_validator
 
 from .utils import Unset, UnsetType, skip_unset_validation
 
 
-@pydantic_dataclass(config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid"))
+@pydantic_dataclass(
+    config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid")
+)
 class TranspilationOptions:
     """Transpilation options.
 
@@ -44,7 +46,9 @@ class TranspilationOptions:
     skip_transpilation: bool = False
     initial_layout: Union[UnsetType, dict, List] = Unset  # TODO: Support Layout
     layout_method: Union[UnsetType, Literal["trivial", "dense", "noise_adaptive", "sabre"]] = Unset
-    routing_method: Union[UnsetType, Literal["basic", "lookahead", "stochastic", "sabre", "none"]] = Unset
+    routing_method: Union[
+        UnsetType, Literal["basic", "lookahead", "stochastic", "sabre", "none"]
+    ] = Unset
     approximation_degree: Union[UnsetType, float] = Unset
 
     @field_validator("approximation_degree")
@@ -52,7 +56,7 @@ class TranspilationOptions:
     @skip_unset_validation
     def _validate_approximation_degree(cls, degree: Union[UnsetType, float]):
         """Validate approximation_degree."""
-        if not (0.0 <= degree <= 1.0):
+        if not 0.0 <= degree <= 1.0:
             raise ValueError(
                 "approximation_degree must be between 0.0 (maximal approximation) "
                 "and 1.0 (no approximation)"

@@ -13,11 +13,9 @@
 """Tests for primitive classes."""
 
 import sys
-import os
-from unittest.mock import MagicMock, patch
 from dataclasses import asdict
-from typing import Dict
 from unittest import skip
+from unittest.mock import MagicMock, patch
 
 from ddt import data, ddt
 from qiskit import transpile
@@ -44,7 +42,7 @@ from ..utils import (
     dict_keys_equal,
     create_faulty_backend,
     combine,
-    MockSession
+    MockSession,
 )
 
 
@@ -79,7 +77,13 @@ class TestPrimitivesV2(IBMTestCase):
             inst = primitive(session=MagicMock(spec=MockSession), options=options)
             self.assertTrue(dict_paritally_equal(asdict(inst.options()), options))
 
-    @combine(primitive=[EstimatorV2], env_var=[{"log_level": "DEBUG"}, {"job_tags": ["foo", "bar"]},])
+    @combine(
+        primitive=[EstimatorV2],
+        env_var=[
+            {"log_level": "DEBUG"},
+            {"job_tags": ["foo", "bar"]},
+        ],
+    )
     def test_runtime_options(self, primitive, env_var):
         """Test RuntimeOptions specified as primitive options."""
         session = MagicMock(spec=MockSession)
@@ -104,9 +108,7 @@ class TestPrimitivesV2(IBMTestCase):
         """Test initializing a primitive with a backend name."""
         backend_name = "ibm_gotham"
 
-        with patch(
-            "qiskit_ibm_runtime.base_primitive.QiskitRuntimeService"
-        ) as mock_service:
+        with patch("qiskit_ibm_runtime.base_primitive.QiskitRuntimeService") as mock_service:
             mock_service.reset_mock()
             mock_service_inst = MagicMock()
             mock_service.return_value = mock_service_inst
@@ -128,9 +130,7 @@ class TestPrimitivesV2(IBMTestCase):
         """Test initializing a primitive with a backend name using session."""
         backend_name = "ibm_gotham"
 
-        with patch(
-            "qiskit_ibm_runtime.base_primitive.QiskitRuntimeService"
-        ):
+        with patch("qiskit_ibm_runtime.base_primitive.QiskitRuntimeService"):
             with self.assertRaises(ValueError) as exc:
                 inst = primitive(session=backend_name)
                 self.assertIsNone(inst.session)
@@ -174,9 +174,7 @@ class TestPrimitivesV2(IBMTestCase):
     @data(EstimatorV2)
     def test_init_with_no_backend_session_cloud(self, primitive):
         """Test initializing a primitive without backend or session for cloud channel."""
-        with patch(
-            "qiskit_ibm_runtime.base_primitive.QiskitRuntimeService"
-        ) as mock_service:
+        with patch("qiskit_ibm_runtime.base_primitive.QiskitRuntimeService") as mock_service:
             mock_service_inst = MagicMock()
             mock_service_inst.channel = "ibm_cloud"
             mock_service.return_value = mock_service_inst
@@ -190,9 +188,7 @@ class TestPrimitivesV2(IBMTestCase):
     def test_init_with_no_backend_session_quantum(self, primitive):
         """Test initializing a primitive without backend or session for quantum channel."""
 
-        with patch(
-            "qiskit_ibm_runtime.base_primitive.QiskitRuntimeService"
-        ) as mock_service:
+        with patch("qiskit_ibm_runtime.base_primitive.QiskitRuntimeService") as mock_service:
             mock_service.reset_mock()
             with self.assertRaises(ValueError):
                 _ = primitive()
@@ -311,8 +307,7 @@ class TestPrimitivesV2(IBMTestCase):
                 rt_options = session.run.call_args.kwargs["options"]
                 self._assert_dict_partially_equal(rt_options, options)
 
-    @combine(primitive=[EstimatorV2],
-             exp_opt=[{"foo": "bar"}, {"transpilation": {"foo": "bar"}}])
+    @combine(primitive=[EstimatorV2], exp_opt=[{"foo": "bar"}, {"transpilation": {"foo": "bar"}}])
     def test_run_experimental_options(self, primitive, exp_opt):
         """Test specifying arbitrary options in run."""
         # FIXME
