@@ -177,7 +177,6 @@ import logging
 from .qiskit_runtime_service import QiskitRuntimeService
 from .ibm_backend import IBMBackend
 from .runtime_job import RuntimeJob
-from .runtime_program import RuntimeProgram, ParameterNamespace
 from .runtime_options import RuntimeOptions
 from .utils.json import RuntimeEncoder, RuntimeDecoder
 from .session import Session  # pylint: disable=cyclic-import
