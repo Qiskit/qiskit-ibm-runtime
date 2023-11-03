@@ -16,7 +16,6 @@ from typing import Optional, Union, Callable
 import functools
 import copy
 from dataclasses import is_dataclass, asdict
-from functools import cache
 
 from ..ibm_backend import IBMBackend
 
@@ -151,9 +150,10 @@ class UnsetType:
     def __repr__(self) -> str:
         return "Unset"
 
-    @cache
-    def __new__(cls) -> "UnsetType":
-        return super().__new__(cls)
+    def __new__(cls):
+        if not hasattr(cls, "_instance"):
+            cls._instance = super().__new__(cls)
+        return cls._instance
 
 
 Unset: UnsetType = UnsetType()

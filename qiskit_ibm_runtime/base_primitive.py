@@ -189,7 +189,9 @@ class BasePrimitive(ABC):
             **fields: The fields to update the options
         """
         if self.version == 1:
-            self._options = merge_options(self._options, fields)
+            self._options = merge_options(  # pylint: disable=attribute-defined-outside-init
+                self._options, fields
+            )
         else:
             self.options = self._OPTIONS_CLASS(  # pylint: disable=attribute-defined-outside-init
                 **merge_options(self.options, fields)

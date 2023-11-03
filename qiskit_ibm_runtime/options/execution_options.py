@@ -54,7 +54,7 @@ class ExecutionOptionsV2:
     init_qubits: bool = True
     samples: Union[UnsetType, int] = Unset
     shots_per_sample: Union[UnsetType, int] = Unset
-    interleave_samples: bool = False
+    interleave_samples: Union[UnsetType, bool] = Unset
 
     @field_validator("shots", "samples", "shots_per_sample")
     @classmethod

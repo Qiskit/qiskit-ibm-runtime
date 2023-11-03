@@ -23,7 +23,6 @@ from qiskit_aer.noise import NoiseModel
 
 from qiskit_ibm_runtime.options.utils import merge_options
 from qiskit_ibm_runtime.options import EstimatorOptions
-from qiskit_ibm_runtime.utils.qctrl import _warn_and_clean_options
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import dict_keys_equal, dict_paritally_equal, flat_dict_partially_equal
@@ -157,6 +156,7 @@ class TestEStimatorOptions(IBMTestCase):
         {"noise_factors": [1, 3, 5]},
         {"zne_extrapolator": "exponential", "zne_noise_factors": [1]},
         {"zne_mitigation": True, "pec_mitigation": True},
+        {"simulator": {"noise_model": "foo"}},
     )
     def test_bad_inputs(self, val):
         """Test invalid inputs."""

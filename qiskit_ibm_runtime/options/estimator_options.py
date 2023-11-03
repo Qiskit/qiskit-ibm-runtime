@@ -136,7 +136,11 @@ class EstimatorOptions(OptionsV2):
         # TODO: Server should have different optimization/resilience levels for simulator
         # TODO: Allow bypasing validation
 
-        if self.resilience_level == 3 and self._is_simulator and not self.simulator.coupling_map:
+        if (
+            self.resilience_level == 3
+            and self._is_simulator
+            and isinstance(self.simulator.coupling_map, UnsetType)
+        ):
             raise ValueError(
                 "When the backend is a simulator and resilience_level == 3,"
                 "a coupling map is required."
