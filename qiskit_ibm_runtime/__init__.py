@@ -166,7 +166,6 @@ Classes
    IBMBackend
    RuntimeJob
    RuntimeProgram
-   ParameterNamespace
    RuntimeOptions
    RuntimeEncoder
    RuntimeDecoder

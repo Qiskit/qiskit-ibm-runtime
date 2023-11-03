@@ -38,7 +38,7 @@ from .mock.fake_runtime_client import (
 from .mock.fake_runtime_service import FakeRuntimeService
 from ..ibm_test_case import IBMTestCase
 from ..decorators import run_quantum_and_cloud_fake
-from ..program import run_program, upload_program
+from ..program import run_program
 from ..serialization import get_complex_types
 from ..utils import mock_wait_for_final_state
 
@@ -183,14 +183,6 @@ class TestRuntimeJob(IBMTestCase):
                 job.result()
 
     @run_quantum_and_cloud_fake
-    def test_program_params_namespace(self, service):
-        """Test running a program using parameter namespace."""
-        program_id = upload_program(service)
-        params = service.program(program_id).parameters()
-        params.param1 = "Hello World"
-        run_program(service, program_id, inputs=params)
-
-    @run_quantum_and_cloud_fake
     def test_cancel_job(self, service):
         """Test canceling a job."""
         job = run_program(service, job_classes=CancelableRuntimeJob)
@@ -232,13 +224,6 @@ class TestRuntimeJob(IBMTestCase):
         inputs = {"param1": "foo", "param2": "bar"}
         job = run_program(service, inputs=inputs)
         self.assertEqual(inputs, job.inputs)
-
-    @run_quantum_and_cloud_fake
-    def test_job_program_id(self, service):
-        """Test job program ID."""
-        program_id = upload_program(service)
-        job = run_program(service, program_id=program_id)
-        self.assertEqual(program_id, job.program_id)
 
     @run_quantum_and_cloud_fake
     def test_wait_for_final_state(self, service):
