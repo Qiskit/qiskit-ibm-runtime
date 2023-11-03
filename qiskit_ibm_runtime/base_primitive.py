@@ -22,7 +22,7 @@ from dataclasses import asdict, replace
 from qiskit.providers.options import Options as TerraOptions
 
 from .options import BaseOptions
-from .options.utils import merge_options
+from .options.utils import merge_options, set_default_error_levels
 from .runtime_job import RuntimeJob
 from .ibm_backend import IBMBackend
 from .session import get_cm_session
@@ -68,10 +68,6 @@ class BasePrimitive(ABC):
         Raises:
             ValueError: Invalid arguments are given.
         """
-        # `self._options` in this class is a Dict.
-        # The base class, however, uses a `_run_options` which is an instance of
-        # qiskit.providers.Options. We largely ignore this _run_options because we use
-        # a nested dictionary to categorize options.
         self._session: Optional[Session] = None
         self._service: QiskitRuntimeService = None
         self._backend: Optional[IBMBackend] = None
@@ -126,10 +122,30 @@ class BasePrimitive(ABC):
             Submitted job.
         """
         my_options = self._options if self.version == 1 else self.options
+        logger.debug("Merging current options %s with %s", my_options, user_kwargs)
         combined = merge_options(my_options, user_kwargs)
-        self._validate_options(combined)
 
-        primitive_inputs.update(my_options._get_program_inputs(combined))
+        if self.version == 1:
+            if self._backend:
+                combined = set_default_error_levels(
+                    combined,
+                    self._backend,
+                    self._OPTIONS_CLASS._DEFAULT_OPTIMIZATION_LEVEL,
+                    self._OPTIONS_CLASS._DEFAULT_RESILIENCE_LEVEL,
+                )
+            else:
+                combined["optimization_level"] = self._OPTIONS_CLASS._DEFAULT_OPTIMIZATION_LEVEL
+                combined["resilience_level"] = self._OPTIONS_CLASS._DEFAULT_RESILIENCE_LEVEL
+
+            self._validate_options(combined)
+            combined = self._OPTIONS_CLASS._set_default_resilience_options(combined)
+            combined = self._OPTIONS_CLASS._remove_none_values(combined)
+            primitive_inputs.update(self._OPTIONS_CLASS._get_program_inputs(combined))
+            runtime_options = self._OPTIONS_CLASS._get_runtime_options(combined)
+        else:
+            self._validate_options(combined)
+            primitive_inputs.update(my_options._get_program_inputs(combined))
+            runtime_options = my_options._get_runtime_options(combined)
 
         if self._backend and combined["transpilation"]["skip_transpilation"]:
             for circ in primitive_inputs["circuits"]:
@@ -137,7 +153,6 @@ class BasePrimitive(ABC):
 
         logger.info("Submitting job using options %s", combined)
 
-        runtime_options = my_options._get_runtime_options(combined)
         if self._session:
             return self._session.run(
                 program_id=self._program_id(),
@@ -183,6 +198,8 @@ class BasePrimitive(ABC):
     def _initialize_options(self, options: Optional[Union[Dict, BaseOptions]] = None):
         """Initialize the options."""
         opt_cls = self._OPTIONS_CLASS
+
+        logger.debug("Initializing %s with options %s", self.__class__.__name__, options)
 
         if self.version == 1:
             if options is None:

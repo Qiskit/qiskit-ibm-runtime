@@ -20,13 +20,18 @@ from unittest import mock
 from typing import Dict, Optional, Any
 from datetime import datetime
 
+from ddt import data, unpack
+
 from qiskit.circuit import QuantumCircuit
+from qiskit.test.utils import generate_cases
 from qiskit.providers.jobstatus import JOB_FINAL_STATES, JobStatus
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.models import BackendStatus, BackendProperties
 from qiskit.providers.backend import Backend
+from qiskit.quantum_info import SparsePauliOp
 from qiskit_ibm_runtime.hub_group_project import HubGroupProject
-from qiskit_ibm_runtime import QiskitRuntimeService
+from qiskit_ibm_runtime import QiskitRuntimeService, Session
+from qiskit_ibm_runtime.estimator import Estimator
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.runtime_job import RuntimeJob
 from qiskit_ibm_runtime.exceptions import RuntimeInvalidStateError
@@ -152,7 +157,7 @@ def dict_paritally_equal(dict1: Dict, dict2: Dict) -> bool:
     """Determine whether all keys in dict2 are in dict1 and have same values."""
     for key, val in dict2.items():
         if isinstance(val, dict):
-            if not dict_paritally_equal(dict1.get(key), val):
+            if not dict_paritally_equal(dict1.get(key, {}), val):
                 return False
         elif key not in dict1 or val != dict1[key]:
             return False
@@ -258,3 +263,36 @@ def get_mocked_backend(name: str = "ibm_gotham") -> Any:
     mock_backend.service = mock_service
 
     return mock_backend
+
+
+def combine(**kwargs):
+    """Decorator to create combinations and tests
+    @combine(level=[0, 1, 2, 3],
+             circuit=[a, b, c, d],
+             dsc='Test circuit {circuit.__name__} with level {level}',
+             name='{circuit.__name__}_level{level}')
+    """
+
+    def deco(func):
+        return data(*generate_cases(docstring=func.__doc__, **kwargs))(unpack(func))
+
+    return deco
+
+
+def get_primitive_inputs(primitive, num_sets=1):
+    circ = QuantumCircuit(2, 2)
+    circ.h(0)
+    circ.cx(0, 1)
+    obs = SparsePauliOp.from_list([("IZ", 1)])
+
+    if isinstance(primitive, Estimator):
+        return {"circuits": [circ]*num_sets, "observables": [obs]*num_sets}
+
+    circ.measure_all()
+    return {"circuits": [circ]*num_sets}
+
+class MockSession(Session):
+    """Mock for session class"""
+
+    _circuits_map: Dict[str, QuantumCircuit] = {}
+    _instance = None

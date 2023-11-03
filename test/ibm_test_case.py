@@ -30,6 +30,8 @@ from .decorators import IntegrationTestDependencies, integration_test_setup
 from .templates import RUNTIME_PROGRAM, RUNTIME_PROGRAM_METADATA, PROGRAM_PREFIX
 
 
+logging.getLogger("qiskit_ibm_runtime").setLevel("DEBUG")
+
 class IBMTestCase(unittest.TestCase):
     """Custom TestCase for use with qiskit-ibm-runtime."""
 

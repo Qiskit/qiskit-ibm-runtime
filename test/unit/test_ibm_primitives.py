@@ -23,6 +23,7 @@ from qiskit.circuit import QuantumCircuit
 from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.providers.fake_provider import FakeManila
+from qiskit_aer.noise import NoiseModel
 
 from qiskit_ibm_runtime import (
     Sampler,
@@ -95,11 +96,7 @@ class TestPrimitives(IBMTestCase):
                     options = Options(environment=env)
                     inst = cls(session=session, options=options)
                     inst.run(self.qx, observables=self.obs)
-                    if sys.version_info >= (3, 8):
-                        run_options = session.run.call_args.kwargs["options"]
-                    else:
-                        _, kwargs = session.run.call_args
-                        run_options = kwargs["options"]
+                    run_options = session.run.call_args.kwargs["options"]
                     for key, val in env.items():
                         self.assertEqual(run_options[key], val)
 
@@ -281,10 +278,10 @@ class TestPrimitives(IBMTestCase):
         """Test run using default options."""
         session = MagicMock(spec=MockSession)
         options_vars = [
-            (Options(resilience_level=1), {"resilience_level": 1}),
+            (Options(resilience_level=1), {"resilience_settings": {"level": 1}}),
             (
                 Options(optimization_level=3),
-                {"transpilation": {"optimization_level": 3}},
+                {"transpilation_settings": {"optimization_settings": {"level": 3}}},
             ),
             (
                 {
@@ -292,8 +289,8 @@ class TestPrimitives(IBMTestCase):
                     "execution": {"shots": 100},
                 },
                 {
-                    "transpilation": {"initial_layout": [1, 2]},
-                    "execution": {"shots": 100},
+                    "transpilation_settings": {"initial_layout": [1, 2]},
+                    "run_options": {"shots": 100},
                 },
             ),
         ]
@@ -327,9 +324,9 @@ class TestPrimitives(IBMTestCase):
                 self._assert_dict_partially_equal(
                     inputs,
                     {
-                        "resilience_level": 1,
-                        "transpilation": {"optimization_level": 2},
-                        "execution": {"shots": 99},
+                        "resilience_settings": {"level": 1},
+                        "transpilation_settings": {"optimization_settings": {"level": 2}},
+                        "run_options": {"shots": 99},
                     },
                 )
 
@@ -337,17 +334,17 @@ class TestPrimitives(IBMTestCase):
         """Test run using overwritten options."""
         session = MagicMock(spec=MockSession)
         options_vars = [
-            ({"resilience_level": 1}, {"resilience_level": 1}),
-            ({"shots": 200}, {"execution": {"shots": 200}}),
+            ({"resilience_level": 1}, {"resilience_settings": {"level": 1}}),
+            ({"shots": 200}, {"run_options": {"shots": 200}}),
             (
                 {"optimization_level": 3},
-                {"transpilation": {"optimization_level": 3}},
+                {"transpilation_settings": {"optimization_settings": {"level": 3}}},
             ),
             (
                 {"initial_layout": [1, 2], "optimization_level": 2},
                 {
-                    "transpilation": {
-                        "optimization_level": 2,
+                    "transpilation_settings": {
+                        "optimization_settings": {"level": 2},
                         "initial_layout": [1, 2],
                     }
                 },
@@ -415,7 +412,7 @@ class TestPrimitives(IBMTestCase):
                 inst.run(self.qx, observables=self.obs, shots=200)
                 kwargs_list = session.run.call_args_list
                 for idx, shots in zip([0, 1], [100, 200]):
-                    self.assertEqual(kwargs_list[idx][1]["inputs"]["execution"]["shots"], shots)
+                    self.assertEqual(kwargs_list[idx][1]["inputs"]["run_options"]["shots"], shots)
                 self.assertDictEqual(inst.options.__dict__, asdict(Options()))
 
     def test_run_same_session(self):
@@ -497,10 +494,12 @@ class TestPrimitives(IBMTestCase):
 
         session = MagicMock(spec=MockSession)
         primitives = [Sampler, Estimator]
+        noise_model = NoiseModel.from_backend(FakeManila())
+        FakeManila()
         for cls in primitives:
             with self.subTest(primitive=cls):
                 options = Options(
-                    simulator={"noise_model": "foo"},
+                    simulator={"noise_model": noise_model},
                 )
                 inst = cls(session=session, options=options)
 
@@ -509,50 +508,38 @@ class TestPrimitives(IBMTestCase):
                 else:
                     inst.run(self.qx)
 
-                if sys.version_info >= (3, 8):
-                    inputs = session.run.call_args.kwargs["inputs"]
-                else:
-                    _, kwargs = session.run.call_args
-                    inputs = kwargs["inputs"]
+                inputs = session.run.call_args.kwargs["inputs"]
                 self.assertEqual(
-                    inputs["transpilation"]["optimization_level"],
+                    inputs["transpilation_settings"]["optimization_settings"]["level"],
                     Options._DEFAULT_OPTIMIZATION_LEVEL,
                 )
                 self.assertEqual(
-                    inputs["resilience_level"],
+                    inputs["resilience_settings"]["level"],
                     Options._DEFAULT_RESILIENCE_LEVEL,
                 )
 
                 session.service.backend().configuration().simulator = False
                 inst = cls(session=session)
                 inst.run(self.qx, observables=self.obs)
-                if sys.version_info >= (3, 8):
-                    inputs = session.run.call_args.kwargs["inputs"]
-                else:
-                    _, kwargs = session.run.call_args
-                    inputs = kwargs["inputs"]
+                inputs = session.run.call_args.kwargs["inputs"]
                 self.assertEqual(
-                    inputs["transpilation"]["optimization_level"],
+                    inputs["transpilation_settings"]["optimization_settings"]["level"],
                     Options._DEFAULT_OPTIMIZATION_LEVEL,
                 )
                 self.assertEqual(
-                    inputs["resilience_level"],
+                    inputs["resilience_settings"]["level"],
                     Options._DEFAULT_RESILIENCE_LEVEL,
                 )
 
                 session.service.backend().configuration().simulator = True
                 inst = cls(session=session)
                 inst.run(self.qx, observables=self.obs)
-                if sys.version_info >= (3, 8):
-                    inputs = session.run.call_args.kwargs["inputs"]
-                else:
-                    _, kwargs = session.run.call_args
-                    inputs = kwargs["inputs"]
+                inputs = session.run.call_args.kwargs["inputs"]
                 self.assertEqual(
-                    inputs["transpilation"]["optimization_level"],
+                    inputs["transpilation_settings"]["optimization_settings"]["level"],
                     1,
                 )
-                self.assertEqual(inputs["resilience_level"], 0)
+                self.assertEqual(inputs["resilience_settings"]["level"], 0)
 
     def test_resilience_options(self):
         """Test resilience options."""

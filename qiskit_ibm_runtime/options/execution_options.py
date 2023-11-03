@@ -17,7 +17,7 @@ from typing import Union
 from pydantic.dataclasses import dataclass as pydantic_dataclass
 from pydantic import Field, ConfigDict, model_validator, field_validator, ValidationInfo
 
-from .utils import Unset, UnsetType
+from .utils import Unset, UnsetType, skip_unset_validation
 
 
 @pydantic_dataclass(config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid"))
@@ -55,9 +55,10 @@ class ExecutionOptionsV2:
 
     @field_validator("shots", "samples", "shots_per_sample")
     @classmethod
+    @skip_unset_validation
     def _validate_positive_integer(cls, fld: Union[UnsetType, int], info: ValidationInfo):
         """Validate zne_stderr_threshold."""
-        if isinstance(fld, int) and fld < 1:
+        if fld < 1:
             raise ValueError(f"{info.field_name} must be >= 1")
         return fld
 

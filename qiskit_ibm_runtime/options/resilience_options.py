@@ -12,13 +12,12 @@
 
 """Resilience options."""
 
-from typing import Sequence, Literal, get_args, Union, Optional
-from dataclasses import dataclass, fields
+from typing import Sequence, Literal, Union, Optional
 
 from pydantic.dataclasses import dataclass as pydantic_dataclass
-from pydantic import Field, ConfigDict, field_validator, model_validator
+from pydantic import ConfigDict, field_validator, model_validator
 
-from .utils import Dict, Unset, UnsetType
+from .utils import Unset, UnsetType, skip_unset_validation
 
 ResilienceSupportedOptions = Literal[
     "noise_amplifier",
@@ -103,55 +102,57 @@ class ResilienceOptionsV2:
 
     @field_validator("zne_noise_factors")
     @classmethod
+    @skip_unset_validation
     def _validate_zne_noise_factors(cls, factors: Union[UnsetType, Sequence[float]]):
         """Validate zne_noise_factors."""
-        if isinstance(factors, Sequence) and any(i <= 0 for i in factors):
-            raise ValueError("zne_noise_factors` option value must all be non-negative")
+        if any(i < 1 for i in factors):
+            raise ValueError("zne_noise_factors` option value must all be >= 1")
         return factors
 
     @field_validator("zne_stderr_threshold")
     @classmethod
+    @skip_unset_validation
     def _validate_zne_stderr_threshold(cls, threshold: Union[UnsetType, float]):
         """Validate zne_stderr_threshold."""
-        if isinstance(threshold, float) and threshold <= 0:
+        if threshold <= 0:
             raise ValueError("Invalid zne_stderr_threshold option value must be > 0")
         return threshold
 
     @field_validator("pec_max_overhead")
     @classmethod
+    @skip_unset_validation
     def _validate_pec_max_overhead(cls, overhead: Union[UnsetType, float]):
         """Validate pec_max_overhead."""
-        if isinstance(overhead, float) and overhead < 1:
+        if overhead < 1:
             raise ValueError("pec_max_overhead must be None or >= 1")
         return overhead
 
     @model_validator(mode='after')
     def _validate_options(self):
         """Validate the model."""
-        # Validate ZNE options
-        if self.zne_mitigation is True:
-            # Validate noise factors + extrapolator combination
-            if all(not isinstance(fld, UnsetType) for fld in [self.zne_noise_factors, self.zne_extrapolator]):
-                required_factors = {
-                    "exponential": 2,
-                    "double_exponential": 4,
-                    "linear": 2,
-                    "polynomial_degree_1": 2,
-                    "polynomial_degree_2": 3,
-                    "polynomial_degree_3": 4,
-                    "polynomial_degree_4": 5,
-                }
-                for extrap in self.zne_extrapolator:
-                    if len(self.zne_noise_factors) < required_factors[extrap]:
-                        raise ValueError(
-                            f"{extrap} requires at least {required_factors[extrap]} zne_noise_factors"
-                        )
-            # Validate not ZNE+PEC
-            if self.pec_mitigation:
-                raise ValueError(
-                    "pec_mitigation and zne_mitigation`options cannot be "
-                    "simultaneously enabled. Set one of them to False."
-                )
+        # Validate ZNE noise factors + extrapolator combination
+        if all(not isinstance(fld, UnsetType) for fld in [self.zne_noise_factors, self.zne_extrapolator]):
+            required_factors = {
+                "exponential": 2,
+                "double_exponential": 4,
+                "linear": 2,
+                "polynomial_degree_1": 2,
+                "polynomial_degree_2": 3,
+                "polynomial_degree_3": 4,
+                "polynomial_degree_4": 5,
+            }
+            extrapolators = [self.zne_extrapolator] if isinstance(self.zne_extrapolator, str) else self.zne_extrapolator
+            for extrap in extrapolators:
+                if len(self.zne_noise_factors) < required_factors[extrap]:
+                    raise ValueError(
+                        f"{extrap} requires at least {required_factors[extrap]} zne_noise_factors"
+                    )
+        # Validate not ZNE+PEC
+        if self.pec_mitigation is True and self.zne_mitigation is True:
+            raise ValueError(
+                "pec_mitigation and zne_mitigation`options cannot be "
+                "simultaneously enabled. Set one of them to False."
+            )
 
         return self
 
@@ -199,21 +200,13 @@ class ResilienceOptionsV1:
     noise_factors: Optional[Sequence[float]] = None
     extrapolator: Optional[ExtrapolatorType] = None
 
-    @staticmethod
-    def validate_resilience_options(resilience_options: dict) -> None:
-        """Validate that resilience options are legal.
-        Raises:
-            ValueError: if any resilience option is not supported
-            ValueError: if noise_amplifier is not in NoiseAmplifierType.
-            ValueError: if extrapolator is not in ExtrapolatorType.
-            ValueError: if extrapolator == "QuarticExtrapolator" and number of noise_factors < 5.
-            ValueError: if extrapolator == "CubicExtrapolator" and number of noise_factors < 4.
-        """
-        extrapolator = resilience_options.get("extrapolator")
-        if (
-            extrapolator == "QuarticExtrapolator"
-            and len(resilience_options.get("noise_factors")) < 5
-        ):
-            raise ValueError("QuarticExtrapolator requires at least 5 noise_factors.")
-        if extrapolator == "CubicExtrapolator" and len(resilience_options.get("noise_factors")) < 4:
-            raise ValueError("CubicExtrapolator requires at least 4 noise_factors.")
+    @model_validator(mode='after')
+    def _validate_options(self):
+        """Validate the model."""
+        required_factors = {
+            "QuarticExtrapolator": 5,
+            "CubicExtrapolator": 4,
+        }
+        req_len = required_factors.get(self.extrapolator, None)
+        if req_len and len(self.noise_factors) < req_len:
+            raise ValueError(f"{self.extrapolator} requires at least {req_len} noise_factors.")

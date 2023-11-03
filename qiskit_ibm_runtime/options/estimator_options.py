@@ -12,14 +12,14 @@
 
 """Primitive options."""
 
-from typing import Optional, Union, ClassVar, Literal, get_args, Any
+from typing import Union, Literal
 import copy
 
 from qiskit.transpiler import CouplingMap
 from pydantic.dataclasses import dataclass as pydantic_dataclass
 from pydantic import Field, ConfigDict, model_validator, field_validator
 
-from .utils import Dict, Unset, UnsetType, _remove_dict_unset_values
+from .utils import Dict, Unset, UnsetType, _remove_dict_unset_values, merge_options, skip_unset_validation
 from .execution_options import ExecutionOptionsV2
 from .transpilation_options import TranspilationOptions
 from .resilience_options import ResilienceOptionsV2
@@ -110,9 +110,10 @@ class EstimatorOptionsV2(EstimatorOptions):
 
     @field_validator("resilience_level")
     @classmethod
+    @skip_unset_validation
     def _validate_resilience_level(cls, resilience_level: Union[UnsetType, int]):
         """Validate resilience_level."""
-        if not isinstance(resilience_level, UnsetType) and not (0 <= resilience_level <= 3):
+        if not (0 <= resilience_level <= 3):
             raise ValueError(f"Invalid optimization_level. Valid range is 0-{EstimatorOptionsV2._MAX_RESILIENCE_LEVEL}")
         return resilience_level
 
@@ -157,16 +158,6 @@ class EstimatorOptionsV2(EstimatorOptions):
         inputs["resilience_level"] = options.get("resilience_level")
         inputs["resilience"] = options.get("resilience", {})
 
-        # TODO: Turn off ZNE/PEC fields
-            # Turn off all ZNE fields
-        #     self.zne_extrapolator = Unset
-        #     self.zne_noise_factors = Unset
-        #     self.zne_stderr_threshold = Unset
-
-        # # Validate PEC options
-        # if isinstance(self.pec_mitigation, UnsetType):
-        #     self.pec_max_overhead = Unset
-
         inputs["twirling"] = options.get("twirling", {})
 
         inputs["execution"] = options.get("execution")
@@ -176,6 +167,10 @@ class EstimatorOptionsV2(EstimatorOptions):
                 "seed_simulator": sim_options.get("seed_simulator", None),
             }
         )
+
+        # Add arbitrary experimental options
+        if isinstance(options.get("experimental", None), dict):
+            inputs = merge_options(inputs, options.get("experimental"))
 
         inputs["_experimental"] = True
         inputs["version"] = EstimatorOptionsV2._version

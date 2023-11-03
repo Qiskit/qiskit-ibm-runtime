@@ -12,9 +12,11 @@
 
 """Utility functions for options."""
 
-from typing import Optional, Union
+from typing import Optional, Union, Callable
+import functools
 import copy
 from dataclasses import is_dataclass, asdict
+from functools import cache
 
 from ..ibm_backend import IBMBackend
 
@@ -56,19 +58,10 @@ def set_default_error_levels(
     return options
 
 
-def _remove_dict_none_values(in_dict: dict, allowed_none_keys: Optional[set] = None) -> None:
-    allowed_none_keys = allowed_none_keys or set()
-    for key, val in list(in_dict.items()):
-        if val is None and key not in allowed_none_keys:
-            del in_dict[key]
-        elif isinstance(val, dict):
-            _remove_dict_none_values(val, allowed_none_keys=allowed_none_keys)
-
-
 def _remove_dict_unset_values(in_dict: dict) -> None:
     """Remove Unset values."""
     for key, val in list(in_dict.items()):
-        if isinstance(val, Unset):
+        if isinstance(val, UnsetType):
             del in_dict[key]
         elif isinstance(val, dict):
             _remove_dict_unset_values(val)
@@ -128,6 +121,16 @@ def merge_options(old_options: Union[dict, "BaseOptions"], new_options: Optional
     return combined
 
 
+def skip_unset_validation(func: Callable) -> Callable:
+    """Decorator used to skip unset value"""
+    @functools.wraps(func)
+    def wrapper(cls, val, *args, **kwargs) -> Callable:
+        if isinstance(val, UnsetType):
+            return val
+        return func(cls, val, *args, **kwargs)
+
+    return wrapper
+
 class Dict:
     """Fake Dict type.
 
@@ -140,7 +143,13 @@ class Dict:
 
 class UnsetType:
     """Class used to represent an unset field."""
-    pass
+
+    def __repr__(self) -> str:
+        return "Unset"
+
+    @cache
+    def __new__(cls) -> "UnsetType":
+        return super().__new__(cls)
 
 
 Unset: UnsetType = UnsetType()

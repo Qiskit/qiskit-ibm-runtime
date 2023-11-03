@@ -190,7 +190,7 @@ from .version import __version__
 
 from .estimator import EstimatorV1 as Estimator, EstimatorV2
 from .sampler import SamplerV1 as Sampler
-from .options import Options
+from .options import Options, EstimatorOptions
 
 # Setup the logger for the IBM Quantum Provider package.
 logger = logging.getLogger(__name__)

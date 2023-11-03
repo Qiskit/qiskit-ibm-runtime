@@ -39,6 +39,8 @@ from .options.utils import merge_options
 from .base_primitive import BasePrimitive
 from .utils.qctrl import validate as qctrl_validate
 from .utils.deprecation import issue_deprecation_msg
+# TODO: remove when we have real v2 base estimator
+from .qiskit.primitives import BaseEstimatorV2
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
@@ -66,11 +68,11 @@ BindingsArrayLike = Union[
 """Parameter types that can be bound to a single circuit."""
 
 
-class Estimator(BasePrimitive, BaseEstimator):
+class Estimator(BasePrimitive):
     _PROGRAM_ID = "estimator"
     version = 0
 
-class EstimatorV2(Estimator):
+class EstimatorV2(Estimator, BaseEstimatorV2):
     """Class for interacting with Qiskit Runtime Estimator primitive service.
 
     Qiskit Runtime Estimator primitive service estimates expectation values of quantum circuits and
@@ -144,10 +146,12 @@ class EstimatorV2(Estimator):
             options: Primitive options, see :class:`Options` for detailed description.
                 The ``backend`` keyword is still supported but is deprecated.
         """
-        BaseEstimator.__init__(self)
+        BaseEstimatorV2.__init__(self)
         BasePrimitive.__init__(self, backend=backend, session=session, options=options)
 
-        self.options._is_simulator = self._backend and self._backend.configuration().simulator
+        self.options._is_simulator = self._backend is not None and self._backend.configuration().simulator is True
+        if self._service._channel_strategy == "q-ctrl":
+            raise NotImplemented("EstimatorV2 is not supported with q-ctrl channel strategy.")
 
     def run(  # pylint: disable=arguments-differ
         self,
@@ -181,12 +185,25 @@ class EstimatorV2(Estimator):
         """
         # To bypass base class merging of options.
         user_kwargs = {"_user_kwargs": kwargs}
-        return super().run(
+
+        circuits = self._validate_circuits(circuits=circuits)
+        observables = self._validate_observables(observables=observables)
+        parameter_values = self._validate_parameter_values(parameter_values=parameter_values, default=[()] * len(circuits),)
+        self._cross_validate_circuits_observables(circuits=circuits, observables=observables)
+        self._cross_validate_circuits_parameter_values(circuits=circuits, parameter_values=parameter_values)
+
+        return self._run(
             circuits=circuits,
             observables=observables,
             parameter_values=parameter_values,
-            **user_kwargs,
+            **user_kwargs
         )
+        # return super().run(
+        #     circuits=circuits,
+        #     observables=observables,
+        #     parameter_values=parameter_values,
+        #     **user_kwargs,
+        # )
 
     def _run(  # pylint: disable=arguments-differ
         self,
@@ -211,6 +228,7 @@ class EstimatorV2(Estimator):
         Returns:
             Submitted job
         """
+        logger.debug("Running %s with new options %s", self.__class__.__name__, kwargs.get("_user_kwargs", {}))
         inputs = {
             "circuits": circuits,
             "observables": observables,
@@ -223,17 +241,11 @@ class EstimatorV2(Estimator):
 
     def _validate_options(self, options: dict) -> None:
         """Validate that program inputs (options) are valid
-        Raises:
-            ValueError: if resilience_level is out of the allowed range.
-            ValueError: if resilience_level==3, backend is simulator and no coupling map
-        """
-        if os.getenv("QISKIT_RUNTIME_SKIP_OPTIONS_VALIDATION"):
-            return
 
-        # TODO: Fix q-ctrl validation
-        if self._service._channel_strategy == "q-ctrl":
-            qctrl_validate(options)
-            return
+        Raises:
+            ValidationError: if validation fails.
+        """
+        self._OPTIONS_CLASS(**options)
 
     @staticmethod
     def _validate_observables(
@@ -241,11 +253,10 @@ class EstimatorV2(Estimator):
     ) -> Sequence[ObservablesArrayLike]:
         def _check_and_init(obs: Any) -> Any:
             if isinstance(obs, str):
-                pass
-                if not all(basis in Estimator._ALLOWED_BASIS for basis in obs):
+                if not all(basis in EstimatorV2._ALLOWED_BASIS for basis in obs):
                     raise ValueError(
                         f"Invalid character(s) found in observable string. "
-                        f"Allowed basis are {Estimator._ALLOWED_BASIS}."
+                        f"Allowed basis are {EstimatorV2._ALLOWED_BASIS}."
                     )
             elif isinstance(obs, Sequence):
                 return tuple(_check_and_init(obs_) for obs_ in obs)
@@ -319,7 +330,7 @@ class EstimatorV2(Estimator):
         return "estimator"
 
 
-class EstimatorV1(Estimator):
+class EstimatorV1(Estimator, BaseEstimator):
     """Class for interacting with Qiskit Runtime Estimator primitive service.
 
     Qiskit Runtime Estimator primitive service estimates expectation values of quantum circuits and

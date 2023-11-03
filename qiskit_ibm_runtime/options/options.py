@@ -22,17 +22,19 @@ from qiskit.transpiler import CouplingMap
 from pydantic.dataclasses import dataclass as pydantic_dataclass
 from pydantic import Field, ConfigDict
 
-from .utils import Dict, _to_obj, UnsetType, Unset
+from .utils import Dict, _to_obj, UnsetType, Unset, _remove_dict_unset_values
 from .environment_options import EnvironmentOptions
 from .execution_options import ExecutionOptionsV1 as ExecutionOptions
 from .simulator_options import SimulatorOptions
 from .transpilation_options import TranspilationOptions
 from .resilience_options import ResilienceOptionsV1 as ResilienceOptions
 from ..runtime_options import RuntimeOptions
+# TODO use real base options when available
+from ..qiskit.primitives import BasePrimitiveOptions
 
 
 @dataclass
-class BaseOptions(ABC):
+class BaseOptions(ABC, BasePrimitiveOptions):
 
     @abstractmethod
     def _get_program_inputs(options: dict) -> dict:
@@ -45,17 +47,19 @@ class BaseOptions(ABC):
         Returns:
             Runtime options.
         """
-        environment = options.get("environment") or {}
-        out = {"max_execution_time": options.get("max_execution_time", None)}
+        options_copy = copy.deepcopy(options)
+        _remove_dict_unset_values(options_copy)
+        environment = options_copy.get("environment") or {}
+        out = {"max_execution_time": options_copy.get("max_execution_time", None)}
 
         for fld in fields(RuntimeOptions):
             if fld.name in environment:
                 out[fld.name] = environment[fld.name]
 
-        if "image" in options:
-            out["image"] = options["image"]
-        elif "image" in options.get("experimental", {}):
-            out["image"] = options["experimental"]["image"]
+        if "image" in options_copy:
+            out["image"] = options_copy["image"]
+        elif "image" in options_copy.get("experimental", {}):
+            out["image"] = options_copy["experimental"]["image"]
 
         return out
 
@@ -235,8 +239,8 @@ class Options(BaseOptions):
                 f"optimization_level can only take the values "
                 f"{list(range(Options._MAX_OPTIMIZATION_LEVEL + 1))}"
             )
-        ResilienceOptions.validate_resilience_options(options.get("resilience"))
-        TranspilationOptions.validate_transpilation_options(options.get("transpilation"))
+        ResilienceOptions(**options.get("resilience", {}))
+        TranspilationOptions(**options.get("transpilation", {}))
         execution_time = options.get("max_execution_time")
         if execution_time is not None:
             if execution_time > Options._MAX_EXECUTION_TIME:
@@ -244,9 +248,9 @@ class Options(BaseOptions):
                     f"max_execution_time must be below " f"{Options._MAX_EXECUTION_TIME} seconds."
                 )
 
-        EnvironmentOptions.validate_environment_options(options.get("environment"))
-        ExecutionOptions.validate_execution_options(options.get("execution"))
-        SimulatorOptions.validate_simulator_options(options.get("simulator"))
+        EnvironmentOptions(**options.get("environment", {}))
+        ExecutionOptions(**options.get("execution", {}))
+        SimulatorOptions(**options.get("simulator", {}))
 
     @staticmethod
     def _remove_none_values(options: dict) -> dict:

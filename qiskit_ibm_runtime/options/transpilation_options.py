@@ -17,7 +17,7 @@ from typing import List, Union, Literal
 from pydantic.dataclasses import dataclass as pydantic_dataclass
 from pydantic import Field, ConfigDict, field_validator
 
-from .utils import Unset, UnsetType
+from .utils import Unset, UnsetType, skip_unset_validation
 
 
 @pydantic_dataclass(config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid"))
@@ -49,9 +49,10 @@ class TranspilationOptions:
 
     @field_validator("approximation_degree")
     @classmethod
+    @skip_unset_validation
     def _validate_approximation_degree(cls, degree: Union[UnsetType, float]):
         """Validate approximation_degree."""
-        if degree is not Unset and 0.0 <= degree <= 1.0:
+        if not (0.0 <= degree <= 1.0):
             raise ValueError(
                 "approximation_degree must be between 0.0 (maximal approximation) "
                 "and 1.0 (no approximation)"
