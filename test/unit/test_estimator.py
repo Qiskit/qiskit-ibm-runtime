@@ -43,6 +43,7 @@ class TestEstimator(IBMTestCase):
             {"optimization_level": 4, "resilience_level": 2},
         ]
 
+
         with Session(
             service=FakeRuntimeService(channel="ibm_quantum", token="abc"),
             backend="common_backend",
