@@ -19,7 +19,6 @@ import logging
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.primitives import BaseSampler
-from qiskit.providers.options import Options as TerraOptions
 
 from .options import Options
 from .runtime_job import RuntimeJob
@@ -181,15 +180,6 @@ class SamplerV1(BasePrimitiveV1, Sampler, BaseSampler):
                 f"It can only take the values {valid_levels} in Sampler."
             )
         Options.validate_options(options)
-
-    @property
-    def options(self) -> TerraOptions:
-        """Return options values for the sampler.
-
-        Returns:
-            options
-        """
-        return TerraOptions(**self._options)
 
     @classmethod
     def _program_id(cls) -> str:

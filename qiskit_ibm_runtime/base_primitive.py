@@ -19,6 +19,8 @@ import copy
 import logging
 from dataclasses import asdict, replace
 
+from qiskit.providers.options import Options as TerraOptions
+
 from .options import BaseOptions, Options
 from .options.utils import merge_options, set_default_error_levels
 from .runtime_job import RuntimeJob
@@ -208,7 +210,7 @@ class BasePrimitiveV1(ABC):
         self,
         backend: Optional[Union[str, IBMBackend]] = None,
         session: Optional[Union[Session, str, IBMBackend]] = None,
-        options: Optional[Union[Dict, BaseOptions]] = None,
+        options: Optional[Union[Dict, Options]] = None,
     ):
         """Initializes the primitive.
 
@@ -231,6 +233,10 @@ class BasePrimitiveV1(ABC):
         Raises:
             ValueError: Invalid arguments are given.
         """
+        # `self._options` in this class is a Dict.
+        # The base class, however, uses a `_run_options` which is an instance of
+        # qiskit.providers.Options. We largely ignore this _run_options because we use
+        # a nested dictionary to categorize options.
         self._session: Optional[Session] = None
         self._service: QiskitRuntimeService = None
         self._backend: Optional[IBMBackend] = None
@@ -349,6 +355,14 @@ class BasePrimitiveV1(ABC):
             Session used by this primitive, or ``None`` if session is not used.
         """
         return self._session
+
+    @property
+    def options(self) -> TerraOptions:
+        """Return options values for the sampler.
+        Returns:
+            options
+        """
+        return TerraOptions(**self._options)
 
     def set_options(self, **fields: Any) -> None:
         """Set options values for the sampler.

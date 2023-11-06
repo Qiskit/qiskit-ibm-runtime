@@ -28,7 +28,6 @@ from qiskit.quantum_info import SparsePauliOp, Pauli
 from qiskit.primitives.utils import init_observable
 from qiskit.circuit import Parameter
 from qiskit.primitives.base.base_primitive import _isreal
-from qiskit.providers.options import Options as TerraOptions
 
 from .runtime_job import RuntimeJob
 from .ibm_backend import IBMBackend
@@ -513,15 +512,6 @@ class EstimatorV1(BasePrimitiveV1, Estimator, BaseEstimator):
                     "a coupling map is required."
                 )
         Options.validate_options(options)
-
-    @property
-    def options(self) -> TerraOptions:
-        """Return options values for the sampler.
-
-        Returns:
-            options
-        """
-        return TerraOptions(**self._options)
 
     @classmethod
     def _program_id(cls) -> str:
