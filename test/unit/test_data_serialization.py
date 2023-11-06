@@ -17,6 +17,7 @@ import os
 import subprocess
 import tempfile
 import warnings
+from unittest import skip
 from datetime import datetime
 
 import numpy as np
@@ -94,18 +95,6 @@ class TestDataSerialization(IBMTestCase):
     def test_coder_operators(self):
         """Test runtime encoder and decoder for operators."""
 
-        # filter warnings triggered by opflow imports
-        with warnings.catch_warnings():
-            warnings.filterwarnings(
-                "ignore", category=DeprecationWarning, module=r"qiskit\.opflow\."
-            )
-            from qiskit.opflow import PauliSumOp  # pylint: disable=import-outside-toplevel
-
-        # catch warnings triggered by opflow use
-        with warnings.catch_warnings(record=True) as w_log:
-            deprecated_op = PauliSumOp(SparsePauliOp(Pauli("XYZX"), coeffs=[2]))
-            self.assertTrue(len(w_log) > 0)
-
         coeff_x = Parameter("x")
         coeff_y = coeff_x + 1
 
@@ -113,7 +102,6 @@ class TestDataSerialization(IBMTestCase):
             SparsePauliOp(Pauli("XYZX"), coeffs=[2]),
             SparsePauliOp(Pauli("XYZX"), coeffs=[coeff_y]),
             SparsePauliOp(Pauli("XYZX"), coeffs=[1 + 2j]),
-            deprecated_op,
         )
 
         for operator in subtests:
@@ -122,11 +110,7 @@ class TestDataSerialization(IBMTestCase):
                 self.assertIsInstance(encoded, str)
 
                 with warnings.catch_warnings():
-                    # filter warnings triggered by opflow imports
                     # in L146 of utils/json.py
-                    warnings.filterwarnings(
-                        "ignore", category=DeprecationWarning, module=r"qiskit\.opflow\."
-                    )
                     warnings.filterwarnings(
                         "ignore",
                         category=DeprecationWarning,
@@ -172,6 +156,7 @@ class TestDataSerialization(IBMTestCase):
             decoded = json.loads(encoded, cls=RuntimeDecoder)
             self.assertTrue(np.array_equal(decoded["ndarray"], obj["ndarray"]))
 
+    @skip("Skip until qiskit-ibm-provider/736 is merged")
     def test_encoder_instruction(self):
         """Test encoding and decoding instructions"""
         subtests = (
