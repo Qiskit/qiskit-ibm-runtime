@@ -204,7 +204,7 @@ class BasePrimitiveV2(ABC):
 class BasePrimitiveV1(ABC):
     """Base class for Qiskit Runtime primitives."""
 
-    version = 0
+    version = 1
 
     def __init__(
         self,

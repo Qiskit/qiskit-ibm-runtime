@@ -92,6 +92,7 @@ class TestDataSerialization(IBMTestCase):
                     decoded = [decoded]
                 self.assertTrue(all(isinstance(item, QuantumCircuit) for item in decoded))
 
+    @skip("Skip until qiskit-ibm-provider/736 is merged")
     def test_coder_operators(self):
         """Test runtime encoder and decoder for operators."""
 

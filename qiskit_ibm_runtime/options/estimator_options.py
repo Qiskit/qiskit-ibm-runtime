@@ -134,7 +134,6 @@ class EstimatorOptions(OptionsV2):
     def _validate_options(self) -> "EstimatorOptions":
         """Validate the model."""
         # TODO: Server should have different optimization/resilience levels for simulator
-        # TODO: Allow bypasing validation
 
         if (
             self.resilience_level == 3
