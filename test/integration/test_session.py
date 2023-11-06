@@ -127,6 +127,23 @@ class TestBackendRunInSession(IBMIntegrationTestCase):
             result.get_counts()["00"], result.get_counts()["11"], delta=shots / 10
         )
 
+    def test_backend_and_primitive_in_session(self):
+        """Test Sampler.run and backend.run in the same session."""
+        backend = self.service.get_backend("ibmq_qasm_simulator")
+        with Session(backend=backend) as session:
+            sampler = Sampler(session=session)
+            job1 = sampler.run(circuits=ReferenceCircuits.bell())
+            job2 = backend.run(circuits=ReferenceCircuits.bell())
+            self.assertEqual(job1.session_id, job1.job_id())
+            self.assertIsNone(job2.session_id)
+        with backend.open_session() as session:
+            sampler = Sampler(backend=backend)
+            job1 = backend.run(ReferenceCircuits.bell())
+            job2 = sampler.run(circuits=ReferenceCircuits.bell())
+            session_id = session.session_id
+            self.assertEqual(session_id, job1.job_id())
+            self.assertIsNone(job2.session_id)
+
     def test_session_cancel(self):
         """Test closing a session"""
         backend = self.service.backend("ibmq_qasm_simulator")
