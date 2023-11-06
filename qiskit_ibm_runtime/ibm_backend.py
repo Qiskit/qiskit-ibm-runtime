@@ -817,9 +817,9 @@ class IBMBackend(Backend):
                 run_config_dict[key] = backend_options[key]
         return run_config_dict
 
-    def open_session(self, max_time: Optional[Union[int, str]] = None) -> ProviderSession:
+    def open_session(self) -> ProviderSession:
         """Open session"""
-        self._session = ProviderSession(max_time)
+        self._session = ProviderSession()
         return self._session
 
     @property
