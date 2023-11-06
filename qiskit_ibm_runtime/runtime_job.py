@@ -229,7 +229,6 @@ class RuntimeJob(Job):
             result_raw = self._download_external_result(
                 self._api_client.job_results(job_id=self.job_id())
             )
-
             self._results = _decoder.decode(result_raw) if result_raw else None
         return self._results
 

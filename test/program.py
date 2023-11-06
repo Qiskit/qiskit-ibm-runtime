@@ -45,6 +45,8 @@ def run_program(
         service._api_client.set_final_status(final_status)
     elif job_classes:
         service._api_client.set_job_classes(job_classes)
+    if not program_id:
+        program_id = "sampler"
     job = service.run(
         program_id=program_id,
         options=options,

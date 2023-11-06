@@ -832,7 +832,6 @@ class QiskitRuntimeService(Provider):
             RuntimeProgramNotFound: If the program cannot be found.
             IBMRuntimeError: An error occurred running the program.
         """
-
         qrt_options: RuntimeOptions = options
         if options is None:
             qrt_options = RuntimeOptions()
@@ -855,7 +854,6 @@ class QiskitRuntimeService(Provider):
             warnings.warn(
                 f"The backend {backend.name} currently has a status of {status.status_msg}."
             )
-        print(program_id)
         try:
             response = self._api_client.program_run(
                 program_id=program_id,
