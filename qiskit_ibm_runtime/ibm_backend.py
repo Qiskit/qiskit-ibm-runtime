@@ -703,7 +703,7 @@ class IBMBackend(Backend):
             image = str(image)
 
         if isinstance(init_circuit, bool):
-            warnings.warn(
+            raise IBMBackendApiError(
                 "init_circuit does not accept boolean values. "
                 "A quantum circuit should be passed in instead."
             )
