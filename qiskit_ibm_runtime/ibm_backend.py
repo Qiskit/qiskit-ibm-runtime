@@ -755,7 +755,7 @@ class IBMBackend(Backend):
         if session and not session.active:
             raise RuntimeError(f"The session {session.session_id} is closed.")
         session_id = session.session_id if session else None
-        start_session = session_id is None
+        start_session = session is not None and session_id is None
 
         log_level = getattr(self.options, "log_level", None)  # temporary
         try:
