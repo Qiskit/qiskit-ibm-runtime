@@ -160,7 +160,7 @@ Classes
    :toctree: ../stubs/
 
    QiskitRuntimeService
-   EstimatorV1
+   Estimator
    Sampler
    Session
    IBMBackend
