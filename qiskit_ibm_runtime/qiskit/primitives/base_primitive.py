@@ -16,7 +16,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from collections.abc import Sequence
 
 import numpy as np
@@ -28,9 +28,7 @@ from qiskit.circuit import QuantumCircuit
 class BasePrimitiveOptions:
     """Base primitive options."""
 
-    def __call__(self) -> "BasePrimitiveOptions":
-        """Return a copy of the options."""
-        return replace(self)
+    pass
 
 
 class BasePrimitiveV2(ABC):

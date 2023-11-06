@@ -187,10 +187,7 @@ from .exceptions import *
 from .utils.utils import setup_logger
 from .version import __version__
 
-from .estimator import EstimatorV2, EstimatorV1
-
-# TODO: Make v1 the default when merging to production
-from .estimator import EstimatorV2 as Estimator  # pylint: disable=reimported
+from .estimator import EstimatorV2, EstimatorV1 as Estimator
 from .sampler import SamplerV1 as Sampler
 from .options import Options, EstimatorOptions
 

@@ -75,7 +75,7 @@ class TestPrimitivesV2(IBMTestCase):
         ]
         for options in options_vars:
             inst = primitive(session=MagicMock(spec=MockSession), options=options)
-            self.assertTrue(dict_paritally_equal(asdict(inst.options()), options))
+            self.assertTrue(dict_paritally_equal(asdict(inst.options), options))
 
     @combine(
         primitive=[EstimatorV2],
@@ -288,7 +288,7 @@ class TestPrimitivesV2(IBMTestCase):
                 inst.run(self.qx, observables=self.obs, **options)
                 inputs = session.run.call_args.kwargs["inputs"]
                 self._assert_dict_partially_equal(inputs, expected)
-                self.assertDictEqual(asdict(inst.options()), asdict(opt_cls()))
+                self.assertDictEqual(asdict(inst.options), asdict(opt_cls()))
 
     @data(EstimatorV2)
     def test_run_overwrite_runtime_options(self, primitive):
@@ -328,7 +328,7 @@ class TestPrimitivesV2(IBMTestCase):
         kwargs_list = session.run.call_args_list
         for idx, shots in zip([0, 1], [100, 200]):
             self.assertEqual(kwargs_list[idx][1]["inputs"]["execution"]["shots"], shots)
-        self.assertDictEqual(asdict(inst.options()), asdict(opt_cls()))
+        self.assertDictEqual(asdict(inst.options), asdict(opt_cls()))
 
     def test_run_same_session(self):
         """Test multiple runs within a session."""
@@ -357,7 +357,7 @@ class TestPrimitivesV2(IBMTestCase):
                 inst = primitive(session=session, options=options)
                 inst.set_options(**new_opt)
                 # Make sure the values are equal.
-                inst_options = asdict(inst.options())
+                inst_options = asdict(inst.options)
                 self.assertTrue(
                     flat_dict_partially_equal(inst_options, new_opt),
                     f"inst_options={inst_options}, new_opt={new_opt}",
@@ -395,7 +395,7 @@ class TestPrimitivesV2(IBMTestCase):
             with self.subTest(options=opts):
                 inst1 = primitive(session=session, options=opts)
                 inst2 = primitive(session=session, options=expected)
-                self.assertEqual(inst1.options(), inst2.options())
+                self.assertEqual(inst1.options, inst2.options)
                 # # Make sure the values are equal.
                 # inst1_options = inst1.options.__dict__
                 # expected_dict = inst2.options.__dict__
