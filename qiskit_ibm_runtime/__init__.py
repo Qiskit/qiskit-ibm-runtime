@@ -160,8 +160,7 @@ Classes
    :toctree: ../stubs/
 
    QiskitRuntimeService
-   Estimator
-   EstimatorV2
+   EstimatorV1
    Sampler
    Session
    IBMBackend
@@ -188,7 +187,8 @@ from .exceptions import *
 from .utils.utils import setup_logger
 from .version import __version__
 
-from .estimator import EstimatorV1 as Estimator, EstimatorV2
+# TODO: Make v1 the default when merging to production
+from .estimator import EstimatorV2 as Estimator, EstimatorV1
 from .sampler import SamplerV1 as Sampler
 from .options import Options, EstimatorOptions
 

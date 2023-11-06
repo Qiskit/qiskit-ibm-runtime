@@ -29,6 +29,7 @@ class BasePrimitiveOptions:
     """Base primitive options."""
 
     def __call__(self) -> "BasePrimitiveOptions":
+        """Return a copy of the options."""
         return replace(self)
 
 
