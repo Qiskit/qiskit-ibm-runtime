@@ -1,0 +1,13 @@
+extends: existence
+message: Link names should make sense without context; change "%s" to something more descriptive.
+level: suggestion
+scope: raw
+ignorecase: true
+tokens:
+    # Manually match markdown / rst links
+    - '(?<=\[)(click )?here(?=\](\s*?)\()'
+    - '(?<=`)(click )?here(?=((\s*?)<(.+?)>)?`_)'
+    - '(?<=\[)(read )?more( information)?(?=\](\s*?)\()'
+    - '(?<=`)(read )?more( information)?(?=((\s*?)<(.+?)>)?`_)'
+    - '(?<=\[)(this )?(link|page)(?=\](\s*?)\()'
+    - '(?<=`)(this )?(link|page)(?=((\s*?)<(.+?)>)?`_)'

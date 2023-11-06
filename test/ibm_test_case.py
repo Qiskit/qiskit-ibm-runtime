@@ -17,6 +17,7 @@ import copy
 import logging
 import inspect
 import unittest
+import warnings
 from contextlib import suppress
 from collections import defaultdict
 from typing import DefaultDict, Dict
@@ -45,6 +46,8 @@ class IBMTestCase(unittest.TestCase):
         filename = "%s.log" % os.path.splitext(inspect.getfile(cls))[0]
         setup_test_logging(cls.log, filename)
         cls._set_logging_level(logging.getLogger(QISKIT_IBM_RUNTIME_LOGGER_NAME))
+        # fail test on deprecation warnings from qiskit
+        warnings.filterwarnings("error", category=DeprecationWarning, module="qiskit")
 
     @classmethod
     def _set_logging_level(cls, logger: logging.Logger) -> None:

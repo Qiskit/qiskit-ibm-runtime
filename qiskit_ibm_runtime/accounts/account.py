@@ -182,7 +182,7 @@ class Account:
         if not (channel in ["ibm_cloud", "ibm_quantum"]):
             raise InvalidAccountError(
                 f"Invalid `channel` value. Expected one of "
-                f"{['ibm_cloud', 'ibm_quantum']}, got '{channel}'."
+                f"['ibm_cloud', 'ibm_quantum'], got '{channel}'."
             )
 
     @staticmethod
