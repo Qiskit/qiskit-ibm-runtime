@@ -34,7 +34,7 @@ from .runtime_job import RuntimeJob
 from .ibm_backend import IBMBackend
 from .options import Options
 from .options.estimator_options import EstimatorOptions
-from .base_primitive import BasePrimitive
+from .base_primitive import BasePrimitiveV1, BasePrimitiveV2
 from .utils.qctrl import validate as qctrl_validate
 from .utils.deprecation import issue_deprecation_msg
 
@@ -67,23 +67,14 @@ BindingsArrayLike = Union[
 """Parameter types that can be bound to a single circuit."""
 
 
-class Estimator(BasePrimitive):
+class Estimator:
     """Base class for Qiskit Runtime Estimator."""
 
     _PROGRAM_ID = "estimator"
     version = 0
 
-    def __init__(
-        self,
-        backend: Optional[Union[str, IBMBackend]] = None,
-        session: Optional[Union[Session, str, IBMBackend]] = None,
-        options: Optional[Union[Dict, EstimatorOptions]] = None,
-    ):
-        """Initializes the Estimator primitive."""
-        BasePrimitive.__init__(self, backend=backend, session=session, options=options)
 
-
-class EstimatorV2(Estimator, BaseEstimatorV2):
+class EstimatorV2(BasePrimitiveV2, Estimator, BaseEstimatorV2):
     """Class for interacting with Qiskit Runtime Estimator primitive service.
 
     Qiskit Runtime Estimator primitive service estimates expectation values of quantum circuits and
@@ -160,8 +151,10 @@ class EstimatorV2(Estimator, BaseEstimatorV2):
         Raises:
             NotImplementedError: If "q-ctrl" channel strategy is used.
         """
+        self.options: EstimatorOptions
         BaseEstimatorV2.__init__(self)
-        Estimator.__init__(self, backend=backend, session=session, options=options)
+        Estimator.__init__(self)
+        BasePrimitiveV2.__init__(self, backend=backend, session=session, options=options)
 
         self.options._is_simulator = (
             self._backend is not None and self._backend.configuration().simulator is True
@@ -202,29 +195,12 @@ class EstimatorV2(Estimator, BaseEstimatorV2):
         # To bypass base class merging of options.
         user_kwargs = {"_user_kwargs": kwargs}
 
-        circuits = self._validate_circuits(circuits=circuits)
-        observables = self._validate_observables(observables=observables)
-        parameter_values = self._validate_parameter_values(
-            parameter_values=parameter_values,
-            default=[()] * len(circuits),
-        )
-        self._cross_validate_circuits_observables(circuits=circuits, observables=observables)
-        self._cross_validate_circuits_parameter_values(
-            circuits=circuits, parameter_values=parameter_values
-        )
-
-        return self._run(
+        return super().run(
             circuits=circuits,
             observables=observables,
             parameter_values=parameter_values,
             **user_kwargs,
         )
-        # return super().run(
-        #     circuits=circuits,
-        #     observables=observables,
-        #     parameter_values=parameter_values,
-        #     **user_kwargs,
-        # )
 
     def _run(  # pylint: disable=arguments-differ
         self,
@@ -355,7 +331,7 @@ class EstimatorV2(Estimator, BaseEstimatorV2):
         return "estimator"
 
 
-class EstimatorV1(Estimator, BaseEstimator):
+class EstimatorV1(BasePrimitiveV1, Estimator, BaseEstimator):
     """Class for interacting with Qiskit Runtime Estimator primitive service.
 
     Qiskit Runtime Estimator primitive service estimates expectation values of quantum circuits and
@@ -401,7 +377,6 @@ class EstimatorV1(Estimator, BaseEstimator):
             print(psi1_H23.result())
     """
 
-    _OPTIONS_CLASS = Options
     version = 1
 
     def __init__(
@@ -432,7 +407,8 @@ class EstimatorV1(Estimator, BaseEstimator):
         # qiskit.providers.Options. We largely ignore this _run_options because we use
         # a nested dictionary to categorize options.
         BaseEstimator.__init__(self)
-        Estimator.__init__(self, backend=backend, session=session, options=options)
+        Estimator.__init__(self)
+        BasePrimitiveV1.__init__(self, backend=backend, session=session, options=options)
 
     def run(  # pylint: disable=arguments-differ
         self,

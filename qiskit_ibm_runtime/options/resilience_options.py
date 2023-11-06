@@ -105,7 +105,7 @@ class ResilienceOptionsV2:
     @field_validator("zne_noise_factors")
     @classmethod
     @skip_unset_validation
-    def _validate_zne_noise_factors(cls, factors: Union[UnsetType, Sequence[float]]):
+    def _validate_zne_noise_factors(cls, factors: Sequence[float]) -> Sequence[float]:
         """Validate zne_noise_factors."""
         if any(i < 1 for i in factors):
             raise ValueError("zne_noise_factors` option value must all be >= 1")
@@ -114,7 +114,7 @@ class ResilienceOptionsV2:
     @field_validator("zne_stderr_threshold")
     @classmethod
     @skip_unset_validation
-    def _validate_zne_stderr_threshold(cls, threshold: Union[UnsetType, float]):
+    def _validate_zne_stderr_threshold(cls, threshold: float) -> float:
         """Validate zne_stderr_threshold."""
         if threshold <= 0:
             raise ValueError("Invalid zne_stderr_threshold option value must be > 0")
@@ -123,14 +123,14 @@ class ResilienceOptionsV2:
     @field_validator("pec_max_overhead")
     @classmethod
     @skip_unset_validation
-    def _validate_pec_max_overhead(cls, overhead: Union[UnsetType, float]):
+    def _validate_pec_max_overhead(cls, overhead: float) -> float:
         """Validate pec_max_overhead."""
         if overhead < 1:
             raise ValueError("pec_max_overhead must be None or >= 1")
         return overhead
 
     @model_validator(mode="after")
-    def _validate_options(self):
+    def _validate_options(self) -> "ResilienceOptionsV2":
         """Validate the model."""
         # Validate ZNE noise factors + extrapolator combination
         if all(
@@ -146,13 +146,13 @@ class ResilienceOptionsV2:
                 "polynomial_degree_3": 4,
                 "polynomial_degree_4": 5,
             }
-            extrapolators = (
-                [self.zne_extrapolator]
+            extrapolators: Sequence = (
+                [self.zne_extrapolator]  # type: ignore[assignment]
                 if isinstance(self.zne_extrapolator, str)
                 else self.zne_extrapolator
             )
             for extrap in extrapolators:
-                if len(self.zne_noise_factors) < required_factors[extrap]:
+                if len(self.zne_noise_factors) < required_factors[extrap]:  # type: ignore[arg-type]
                     raise ValueError(
                         f"{extrap} requires at least {required_factors[extrap]} zne_noise_factors"
                     )
@@ -212,7 +212,7 @@ class ResilienceOptionsV1:
     extrapolator: Optional[ExtrapolatorType] = None
 
     @model_validator(mode="after")
-    def _validate_options(self):
+    def _validate_options(self) -> "ResilienceOptionsV1":
         """Validate the model."""
         required_factors = {
             "QuarticExtrapolator": 5,
@@ -221,3 +221,5 @@ class ResilienceOptionsV1:
         req_len = required_factors.get(self.extrapolator, None)
         if req_len and len(self.noise_factors) < req_len:
             raise ValueError(f"{self.extrapolator} requires at least {req_len} noise_factors.")
+
+        return self

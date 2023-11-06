@@ -12,7 +12,7 @@
 
 """Simulator options."""
 
-from typing import List, Union
+from typing import List, Union, Optional
 
 from qiskit.exceptions import MissingOptionalLibraryError
 from qiskit.providers import BackendV1, BackendV2
@@ -54,7 +54,7 @@ class SimulatorOptions:
             ``['u1', 'u2', 'u3', 'cx']``. Unrolling is not done if not set.
     """
 
-    noise_model: Union[UnsetType, dict, NoiseModel] = Unset
+    noise_model: Optional[Union[UnsetType, dict, NoiseModel]] = Unset
     seed_simulator: Union[UnsetType, int] = Unset
     coupling_map: Union[UnsetType, List[List[int]], CouplingMap] = Unset
     basis_gates: Union[UnsetType, List[str]] = Unset

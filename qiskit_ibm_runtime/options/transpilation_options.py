@@ -66,7 +66,7 @@ class TranspilationOptions:
     @field_validator("approximation_degree")
     @classmethod
     @skip_unset_validation
-    def _validate_approximation_degree(cls, degree: Union[UnsetType, float]):
+    def _validate_approximation_degree(cls, degree: float) -> float:
         """Validate approximation_degree."""
         if not 0.0 <= degree <= 1.0:
             raise ValueError(

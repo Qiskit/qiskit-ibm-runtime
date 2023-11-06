@@ -24,7 +24,7 @@ from qiskit.providers.options import Options as TerraOptions
 from .options import Options
 from .runtime_job import RuntimeJob
 from .ibm_backend import IBMBackend
-from .base_primitive import BasePrimitive
+from .base_primitive import BasePrimitiveV1
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
@@ -33,23 +33,13 @@ from .utils.qctrl import validate as qctrl_validate
 logger = logging.getLogger(__name__)
 
 
-class Sampler(BasePrimitive):
+class Sampler:
     """Base type for Sampelr."""
 
     version = 0
-    _OPTIONS_CLASS = Options
-
-    def __init__(
-        self,
-        backend: Optional[Union[str, IBMBackend]] = None,
-        session: Optional[Union[Session, str, IBMBackend]] = None,
-        options: Optional[Union[Dict, Options]] = None,
-    ):
-        """Initializes the Sampler primitive."""
-        BasePrimitive.__init__(self, backend=backend, session=session, options=options)
 
 
-class SamplerV1(Sampler, BaseSampler):
+class SamplerV1(BasePrimitiveV1, Sampler, BaseSampler):
     """Class for interacting with Qiskit Runtime Sampler primitive service.
 
     Qiskit Runtime Sampler primitive service calculates quasi-probability distribution
@@ -111,7 +101,8 @@ class SamplerV1(Sampler, BaseSampler):
         # qiskit.providers.Options. We largely ignore this _run_options because we use
         # a nested dictionary to categorize options.
         BaseSampler.__init__(self)
-        Sampler.__init__(self, backend=backend, session=session, options=options)
+        Sampler.__init__(self)
+        BasePrimitiveV1.__init__(self, backend=backend, session=session, options=options)
 
     def run(  # pylint: disable=arguments-differ
         self,

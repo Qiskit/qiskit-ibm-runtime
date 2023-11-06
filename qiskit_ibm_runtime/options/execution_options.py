@@ -59,21 +59,21 @@ class ExecutionOptionsV2:
     @field_validator("shots", "samples", "shots_per_sample")
     @classmethod
     @skip_unset_validation
-    def _validate_positive_integer(cls, fld: Union[UnsetType, int], info: ValidationInfo):
+    def _validate_positive_integer(cls, fld: int, info: ValidationInfo) -> int:
         """Validate zne_stderr_threshold."""
         if fld < 1:
             raise ValueError(f"{info.field_name} must be >= 1")
         return fld
 
     @model_validator(mode="after")
-    def _validate_options(self):
+    def _validate_options(self) -> "ExecutionOptionsV2":
         """Validate the model."""
         if (
             all(
                 not isinstance(fld, UnsetType)
                 for fld in [self.shots, self.samples, self.shots_per_sample]
             )
-            and self.shots != self.samples * self.shots_per_sample
+            and self.shots != self.samples * self.shots_per_sample  # type: ignore[operator]
         ):
             raise ValueError(
                 f"Shots ({self.shots}) != "

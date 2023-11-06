@@ -229,6 +229,7 @@ class Options(BaseOptions):
             if key not in known_keys:
                 warnings.warn(f"Key '{key}' is an unrecognized option. It may be ignored.")
                 inputs[key] = options[key]
+        _remove_dict_unset_values(inputs)
         return inputs
 
     @staticmethod

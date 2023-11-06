@@ -12,12 +12,15 @@
 
 """Utility functions for options."""
 
-from typing import Optional, Union, Callable
+from typing import Optional, Union, Callable, TYPE_CHECKING, Any
 import functools
 import copy
 from dataclasses import is_dataclass, asdict
 
 from ..ibm_backend import IBMBackend
+
+if TYPE_CHECKING:
+    from ..options import BaseOptions
 
 
 def set_default_error_levels(
@@ -38,19 +41,17 @@ def set_default_error_levels(
         options with correct error level defaults.
     """
     if options.get("optimization_level") is None:
-        if (
-            backend.configuration().simulator
-            and options.get("simulator", {}).get("noise_model") is None
-        ):
+        if backend.configuration().simulator and options.get("simulator", {}).get(
+            "noise_model"
+        ) in [None, Unset]:
             options["optimization_level"] = 1
         else:
             options["optimization_level"] = default_optimization_level
 
     if options.get("resilience_level") is None:
-        if (
-            backend.configuration().simulator
-            and options.get("simulator", {}).get("noise_model") is None
-        ):
+        if backend.configuration().simulator and options.get("simulator", {}).get(
+            "noise_model"
+        ) in [None, Unset]:
             options["resilience_level"] = 0
         else:
             options["resilience_level"] = default_resilience_level
@@ -88,6 +89,9 @@ def merge_options(
 
     Returns:
         Merged dictionary.
+
+    Raises:
+        TypeError: if input type is invalid.
     """
 
     def _update_options(old: dict, new: dict, matched: Optional[dict] = None) -> None:
@@ -108,7 +112,13 @@ def merge_options(
         for key, val in matched.items():
             old[key] = val
 
-    combined = asdict(old_options) if is_dataclass(old_options) else copy.deepcopy(old_options)
+    if is_dataclass(old_options):
+        combined = asdict(old_options)
+    elif isinstance(old_options, dict):
+        combined = copy.deepcopy(old_options)
+    else:
+        raise TypeError("'old_options' can only be a dictionary or dataclass.")
+
     if not new_options:
         return combined
     new_options_copy = copy.deepcopy(new_options)
@@ -126,7 +136,7 @@ def skip_unset_validation(func: Callable) -> Callable:
     """Decorator used to skip unset value"""
 
     @functools.wraps(func)
-    def wrapper(cls, val, *args, **kwargs) -> Callable:
+    def wrapper(cls: Any, val: Any, *args: Any, **kwargs: Any) -> Any:
         if isinstance(val, UnsetType):
             return val
         return func(cls, val, *args, **kwargs)
@@ -150,10 +160,10 @@ class UnsetType:
     def __repr__(self) -> str:
         return "Unset"
 
-    def __new__(cls):
+    def __new__(cls) -> "UnsetType":
         if not hasattr(cls, "_instance"):
             cls._instance = super().__new__(cls)
         return cls._instance
 
 
-Unset: UnsetType = UnsetType()
+Unset = UnsetType()

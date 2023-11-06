@@ -109,7 +109,7 @@ class EstimatorOptions(OptionsV2):
     @field_validator("optimization_level")
     @classmethod
     @skip_unset_validation
-    def _validate_optimization_level(cls, optimization_level: Union[UnsetType, int]):
+    def _validate_optimization_level(cls, optimization_level: int) -> int:
         """Validate optimization_leve."""
         if not 0 <= optimization_level <= 3:
             raise ValueError(
@@ -121,7 +121,7 @@ class EstimatorOptions(OptionsV2):
     @field_validator("resilience_level")
     @classmethod
     @skip_unset_validation
-    def _validate_resilience_level(cls, resilience_level: Union[UnsetType, int]):
+    def _validate_resilience_level(cls, resilience_level: int) -> int:
         """Validate resilience_level."""
         if not 0 <= resilience_level <= 3:
             raise ValueError(
@@ -131,7 +131,7 @@ class EstimatorOptions(OptionsV2):
         return resilience_level
 
     @model_validator(mode="after")
-    def _validate_options(self):
+    def _validate_options(self) -> "EstimatorOptions":
         """Validate the model."""
         # TODO: Server should have different optimization/resilience levels for simulator
         # TODO: Allow bypasing validation
@@ -139,7 +139,7 @@ class EstimatorOptions(OptionsV2):
         if (
             self.resilience_level == 3
             and self._is_simulator
-            and isinstance(self.simulator.coupling_map, UnsetType)
+            and isinstance(self.simulator.coupling_map, UnsetType)  # type: ignore[union-attr]
         ):
             raise ValueError(
                 "When the backend is a simulator and resilience_level == 3,"
@@ -177,11 +177,11 @@ class EstimatorOptions(OptionsV2):
 
         inputs["twirling"] = options.get("twirling", {})
 
-        inputs["execution"] = options.get("execution")
+        inputs["execution"] = options.get("execution", {})
         inputs["execution"].update(
             {
-                "noise_model": sim_options.get("noise_model", None),
-                "seed_simulator": sim_options.get("seed_simulator", None),
+                "noise_model": sim_options.get("noise_model", Unset),
+                "seed_simulator": sim_options.get("seed_simulator", Unset),
             }
         )
 

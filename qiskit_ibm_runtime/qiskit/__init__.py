@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2022.
+# (C) Copyright IBM 2023.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -11,6 +11,3 @@
 # that they have been altered from the originals.
 
 """Temporary copy of base primitives"""
-
-from .base_estimator import BaseEstimatorV2  # type: ignore
-from .base_primitive import BasePrimitiveOptions  # type: ignore
