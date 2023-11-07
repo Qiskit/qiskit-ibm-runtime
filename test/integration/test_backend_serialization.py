@@ -17,14 +17,13 @@ from typing import Any, Dict, Set, Optional
 import dateutil.parser
 
 from ..ibm_test_case import IBMIntegrationTestCase
-from ..decorators import (
-    run_integration_test,
-)
+from ..decorators import run_integration_test, production_only
 
 
 class TestSerialization(IBMIntegrationTestCase):
     """Test data serialization."""
 
+    @production_only
     @run_integration_test
     def test_backend_configuration(self, service):
         """Test deserializing backend configuration."""
