@@ -93,7 +93,7 @@ class OptionsV2(BaseOptions):
             :class:`SimulatorOptions` for all available options.
     """
 
-    _version: int = 2
+    _VERSION: int = Field(2, frozen=True)
 
     # Options not really related to primitives.
     max_execution_time: Union[UnsetType, int] = Unset
@@ -144,7 +144,7 @@ class OptionsV2(BaseOptions):
             inputs = merge_options(inputs, options.get("experimental"))
 
         inputs["_experimental"] = True
-        inputs["version"] = OptionsV2._version
+        inputs["version"] = OptionsV2._VERSION
         _remove_dict_unset_values(inputs)
 
         # Remove empty dictionaries

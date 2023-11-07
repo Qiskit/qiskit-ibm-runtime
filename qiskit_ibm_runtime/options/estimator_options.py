@@ -87,7 +87,6 @@ class EstimatorOptions(OptionsV2):
 
     """
 
-    _VERSION: int = Field(2, frozen=True)
     _MAX_OPTIMIZATION_LEVEL: int = Field(3, frozen=True)
     _MAX_RESILIENCE_LEVEL: int = Field(3, frozen=True)
 

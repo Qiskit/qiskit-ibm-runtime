@@ -68,10 +68,8 @@ class SamplerOptions(OptionsV2):
 
     """
 
-    _version: int = 2
+    _MAX_OPTIMIZATION_LEVEL: int = Field(3, frozen=True)
     _is_simulator: bool = False
-
-    _MAX_OPTIMIZATION_LEVEL = 3
 
     # Sadly we cannot use pydantic's built in validation because it won't work on Unset.
     optimization_level: Union[UnsetType, int] = Unset
