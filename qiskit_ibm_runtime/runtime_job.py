@@ -27,9 +27,10 @@ from qiskit.providers.jobstatus import JobStatus, JOB_FINAL_STATES
 from qiskit.providers.job import JobV1 as Job
 
 # pylint: disable=unused-import,cyclic-import
-from qiskit_ibm_provider.utils import validate_job_tags, utc_to_local
+from qiskit_ibm_provider.utils import utc_to_local
 from qiskit_ibm_runtime import qiskit_runtime_service
 
+from .utils.utils import validate_job_tags
 from .constants import API_TO_JOB_ERROR_MESSAGE, API_TO_JOB_STATUS, DEFAULT_DECODERS
 from .exceptions import (
     IBMApiError,
@@ -40,12 +41,10 @@ from .exceptions import (
     RuntimeJobMaxTimeoutError,
 )
 from .program.result_decoder import ResultDecoder
-from .utils import RuntimeDecoder
 from .api.clients import RuntimeClient, RuntimeWebsocketClient, WebsocketClientCloseCode
 from .exceptions import IBMError
 from .api.exceptions import RequestsApiError
 from .api.client_parameters import ClientParameters
-from .utils.utils import CallableStr
 
 logger = logging.getLogger(__name__)
 
@@ -419,7 +418,7 @@ class RuntimeJob(Job):
                 with the server or updating the job tags.
         """
         tags_to_update = set(new_tags)
-        validate_job_tags(new_tags, RuntimeInvalidStateError)
+        validate_job_tags(new_tags)
 
         response = self._api_client.update_tags(job_id=self.job_id(), tags=list(tags_to_update))
 
@@ -575,7 +574,8 @@ class RuntimeJob(Job):
                     traceback.format_exc(),
                 )
 
-    def _empty_result_queue(self, result_queue: queue.Queue) -> None:
+    @staticmethod
+    def _empty_result_queue(result_queue: queue.Queue) -> None:
         """Empty the result queue.
 
         Args:

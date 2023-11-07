@@ -21,6 +21,9 @@ from typing import Dict, Optional, Any
 from datetime import datetime
 
 from qiskit.circuit import QuantumCircuit
+from qiskit.compiler import transpile, assemble
+from qiskit.qobj import QasmQobj
+from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit.providers.jobstatus import JOB_FINAL_STATES, JobStatus
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.models import BackendStatus, BackendProperties
@@ -55,6 +58,30 @@ def setup_test_logging(logger: logging.Logger, filename: str) -> None:
         logger.addHandler(file_handler)
 
     logger.setLevel(os.getenv("LOG_LEVEL", "DEBUG"))
+
+
+def most_busy_backend(
+    service: QiskitRuntimeService,
+    instance: Optional[str] = None,
+) -> IBMBackend:
+    """Return the most busy backend for the provider given.
+
+    Return the most busy available backend for those that
+    have a `pending_jobs` in their `status`. Backends such as
+    local backends that do not have this are not considered.
+
+    Args:
+        service: Qiskit Runtime Service.
+        instance: The instance in the hub/group/project format.
+
+    Returns:
+        The most busy backend.
+    """
+    backends = service.backends(simulator=False, operational=True, instance=instance)
+    return max(
+        (b for b in backends if b.configuration().n_qubits >= 5),
+        key=lambda b: b.status().pending_jobs,
+    )
 
 
 def get_large_circuit(backend: IBMBackend) -> QuantumCircuit:
@@ -254,3 +281,71 @@ def get_mocked_backend(name: str = "ibm_gotham") -> Any:
     mock_backend.name = name
     mock_backend._instance = None
     return mock_backend
+
+
+def submit_and_cancel(backend: IBMBackend, logger: logging.Logger) -> RuntimeJob:
+    """Submit and cancel a job.
+
+    Args:
+        backend: Backend to submit the job to.
+
+    Returns:
+        Cancelled job.
+    """
+    circuit = transpile(ReferenceCircuits.bell(), backend=backend)
+    job = backend.run(circuit)
+    cancel_job_safe(job, logger=logger)
+    return job
+
+
+def submit_job_bad_shots(backend: IBMBackend) -> RuntimeJob:
+    """Submit a job that will fail due to too many shots.
+
+    Args:
+        backend: Backend to submit the job to.
+
+    Returns:
+        Submitted job.
+    """
+    qobj = bell_in_qobj(backend=backend)
+    # Modify the number of shots to be an invalid amount.
+    qobj.config.shots = backend.configuration().max_shots + 10000
+    job_to_fail = backend._submit_job(qobj)
+    return job_to_fail
+
+
+def submit_job_one_bad_instr(backend: IBMBackend) -> RuntimeJob:
+    """Submit a job that contains one good and one bad instruction.
+
+    Args:
+        backend: Backend to submit the job to.
+
+    Returns:
+        Submitted job.
+    """
+    qc_new = transpile(ReferenceCircuits.bell(), backend)
+    if backend.configuration().simulator:
+        # Specify method so it doesn't fail at method selection.
+        qobj = assemble([qc_new] * 2, backend=backend, method="statevector")
+    else:
+        qobj = assemble([qc_new] * 2, backend=backend)
+    qobj.experiments[1].instructions[1].name = "bad_instruction"
+    job = backend._submit_job(qobj)
+    return job
+
+
+def bell_in_qobj(backend: IBMBackend, shots: int = 1024) -> QasmQobj:
+    """Return a bell circuit in Qobj format.
+
+    Args:
+        backend: Backend to use for transpiling the circuit.
+        shots: Number of shots.
+
+    Returns:
+        A bell circuit in Qobj format.
+    """
+    return assemble(
+        transpile(ReferenceCircuits.bell(), backend=backend),
+        backend=backend,
+        shots=shots,
+    )
