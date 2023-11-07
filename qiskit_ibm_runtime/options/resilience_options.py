@@ -92,10 +92,7 @@ class ResilienceOptionsV2:
     # ZNE
     zne_mitigation: Union[UnsetType, bool] = Unset
     zne_noise_factors: Union[UnsetType, Sequence[float]] = Unset
-    zne_extrapolator: Union[UnsetType, ZneExtrapolatorType, Sequence[ZneExtrapolatorType]] = (
-        "exponential",
-        "linear",
-    )
+    zne_extrapolator: Union[UnsetType, ZneExtrapolatorType, Sequence[ZneExtrapolatorType]] = Unset
     zne_stderr_threshold: Union[UnsetType, float] = Unset
 
     # PEC

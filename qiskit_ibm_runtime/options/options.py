@@ -22,7 +22,7 @@ from qiskit.transpiler import CouplingMap
 from pydantic.dataclasses import dataclass as pydantic_dataclass
 from pydantic import Field, ConfigDict
 
-from .utils import Dict, _to_obj, UnsetType, Unset, _remove_dict_unset_values
+from .utils import Dict, _to_obj, UnsetType, Unset, _remove_dict_unset_values, merge_options
 from .environment_options import EnvironmentOptions
 from .execution_options import ExecutionOptionsV1 as ExecutionOptions
 from .simulator_options import SimulatorOptions
@@ -93,9 +93,66 @@ class OptionsV2(BaseOptions):
             :class:`SimulatorOptions` for all available options.
     """
 
+    _version: int = 2
+
+    # Options not really related to primitives.
     max_execution_time: Union[UnsetType, int] = Unset
     environment: Union[EnvironmentOptions, Dict] = Field(default_factory=EnvironmentOptions)
     simulator: Union[SimulatorOptions, Dict] = Field(default_factory=SimulatorOptions)
+
+    @staticmethod
+    def _get_program_inputs(options: dict) -> dict:
+        """Convert the input options to program compatible inputs.
+
+        Returns:
+            Inputs acceptable by primitives.
+        """
+
+        def _set_if_exists(name: str, _inputs: dict, _options: dict) -> None:
+            if name in _options:
+                _inputs[name] = _options[name]
+
+        sim_options = options.get("simulator", {})
+        inputs = {}
+        inputs["transpilation"] = copy.copy(options.get("transpilation", {}))
+        inputs["skip_transpilation"] = inputs["transpilation"].pop("skip_transpilation")
+        coupling_map = sim_options.get("coupling_map", None)
+        # TODO: We can just move this to json encoder
+        if isinstance(coupling_map, CouplingMap):
+            coupling_map = list(map(list, coupling_map.get_edges()))
+        inputs["transpilation"].update(
+            {
+                "optimization_level": options.get("optimization_level"),
+                "coupling_map": coupling_map,
+                "basis_gates": sim_options.get("basis_gates", None),
+            }
+        )
+
+        for fld in ["resilience_level", "resilience", "twirling", "dynamical_decoupling"]:
+            _set_if_exists(fld, inputs, options)
+
+        inputs["execution"] = options.get("execution", {})
+        inputs["execution"].update(
+            {
+                "noise_model": sim_options.get("noise_model", Unset),
+                "seed_simulator": sim_options.get("seed_simulator", Unset),
+            }
+        )
+
+        # Add arbitrary experimental options
+        if isinstance(options.get("experimental", None), dict):
+            inputs = merge_options(inputs, options.get("experimental"))
+
+        inputs["_experimental"] = True
+        inputs["version"] = OptionsV2._version
+        _remove_dict_unset_values(inputs)
+
+        # Remove empty dictionaries
+        for key, val in list(inputs.items()):
+            if isinstance(val, dict) and not val:
+                del inputs[key]
+
+        return inputs
 
 
 @dataclass

@@ -14,3 +14,4 @@
 
 from .base_estimator import BaseEstimatorV2  # type: ignore
 from .base_primitive import BasePrimitiveOptions  # type: ignore
+from .base_sampler import BaseSamplerV2  # type: ignore

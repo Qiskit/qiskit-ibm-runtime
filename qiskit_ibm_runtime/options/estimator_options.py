@@ -13,9 +13,7 @@
 """Primitive options."""
 
 from typing import Union, Literal
-import copy
 
-from qiskit.transpiler import CouplingMap
 from pydantic.dataclasses import dataclass as pydantic_dataclass
 from pydantic import Field, ConfigDict, model_validator, field_validator
 
@@ -23,8 +21,6 @@ from .utils import (
     Dict,
     Unset,
     UnsetType,
-    _remove_dict_unset_values,
-    merge_options,
     skip_unset_validation,
 )
 from .execution_options import ExecutionOptionsV2
@@ -80,7 +76,7 @@ class EstimatorOptions(OptionsV2):
         resilience: Advanced resilience options to fine tune the resilience strategy.
             See :class:`ResilienceOptions` for all available options.
 
-        execution: Execution time options. See :class:`ExecutionOptions` for all available options.
+        execution: Execution time options. See :class:`ExecutionOptionsV2` for all available options.
 
         environment: Options related to the execution environment. See
             :class:`EnvironmentOptions` for all available options.
@@ -123,7 +119,7 @@ class EstimatorOptions(OptionsV2):
     @skip_unset_validation
     def _validate_resilience_level(cls, resilience_level: int) -> int:
         """Validate resilience_level."""
-        if not 0 <= resilience_level <= 3:
+        if not 0 <= resilience_level <= EstimatorOptions._MAX_RESILIENCE_LEVEL:
             raise ValueError(
                 "Invalid optimization_level. Valid range is "
                 f"0-{EstimatorOptions._MAX_RESILIENCE_LEVEL}"
@@ -146,53 +142,6 @@ class EstimatorOptions(OptionsV2):
             )
 
         return self
-
-    @staticmethod
-    def _get_program_inputs(options: dict) -> dict:
-        """Convert the input options to program compatible inputs.
-
-        Returns:
-            Inputs acceptable by primitives.
-        """
-
-        sim_options = options.get("simulator", {})
-        inputs = {}
-        inputs["transpilation"] = copy.copy(options.get("transpilation", {}))
-        inputs["skip_transpilation"] = inputs["transpilation"].pop("skip_transpilation")
-        coupling_map = sim_options.get("coupling_map", None)
-        # TODO: We can just move this to json encoder
-        if isinstance(coupling_map, CouplingMap):
-            coupling_map = list(map(list, coupling_map.get_edges()))
-        inputs["transpilation"].update(
-            {
-                "optimization_level": options.get("optimization_level"),
-                "coupling_map": coupling_map,
-                "basis_gates": sim_options.get("basis_gates", None),
-            }
-        )
-
-        inputs["resilience_level"] = options.get("resilience_level")
-        inputs["resilience"] = options.get("resilience", {})
-
-        inputs["twirling"] = options.get("twirling", {})
-
-        inputs["execution"] = options.get("execution", {})
-        inputs["execution"].update(
-            {
-                "noise_model": sim_options.get("noise_model", Unset),
-                "seed_simulator": sim_options.get("seed_simulator", Unset),
-            }
-        )
-
-        # Add arbitrary experimental options
-        if isinstance(options.get("experimental", None), dict):
-            inputs = merge_options(inputs, options.get("experimental"))
-
-        inputs["_experimental"] = True
-        inputs["version"] = EstimatorOptions._version
-        _remove_dict_unset_values(inputs)
-
-        return inputs
 
 
 # @dataclass(frozen=True)

@@ -69,7 +69,6 @@ BindingsArrayLike = Union[
 class Estimator:
     """Base class for Qiskit Runtime Estimator."""
 
-    _PROGRAM_ID = "estimator"
     version = 0
 
 
