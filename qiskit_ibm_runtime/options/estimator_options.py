@@ -80,7 +80,7 @@ class EstimatorOptions(OptionsV2):
         resilience: Advanced resilience options to fine tune the resilience strategy.
             See :class:`ResilienceOptions` for all available options.
 
-        execution: Execution time options. See :class:`ExecutionOptions` for all available options.
+        execution: Execution time options. See :class:`ExecutionOptionsV2` for all available options.
 
         environment: Options related to the execution environment. See
             :class:`EnvironmentOptions` for all available options.
@@ -90,11 +90,11 @@ class EstimatorOptions(OptionsV2):
 
     """
 
-    _version: int = 2
-    _is_simulator: bool = False
+    _VERSION: int = Field(2, frozen=True)
+    _MAX_OPTIMIZATION_LEVEL: int = Field(3, frozen=True)
+    _MAX_RESILIENCE_LEVEL: int = Field(3, frozen=True)
 
-    _MAX_OPTIMIZATION_LEVEL = 3
-    _MAX_RESILIENCE_LEVEL = 3
+    _is_simulator: bool = False
 
     # Sadly we cannot use pydantic's built in validation because it won't work on Unset.
     optimization_level: Union[UnsetType, int] = Unset
@@ -111,7 +111,7 @@ class EstimatorOptions(OptionsV2):
     @skip_unset_validation
     def _validate_optimization_level(cls, optimization_level: int) -> int:
         """Validate optimization_leve."""
-        if not 0 <= optimization_level <= 3:
+        if not 0 <= optimization_level <= EstimatorOptions._MAX_OPTIMIZATION_LEVEL:
             raise ValueError(
                 "Invalid optimization_level. Valid range is "
                 f"0-{EstimatorOptions._MAX_OPTIMIZATION_LEVEL}"
@@ -123,7 +123,7 @@ class EstimatorOptions(OptionsV2):
     @skip_unset_validation
     def _validate_resilience_level(cls, resilience_level: int) -> int:
         """Validate resilience_level."""
-        if not 0 <= resilience_level <= 3:
+        if not 0 <= resilience_level <= EstimatorOptions._MAX_RESILIENCE_LEVEL:
             raise ValueError(
                 "Invalid optimization_level. Valid range is "
                 f"0-{EstimatorOptions._MAX_RESILIENCE_LEVEL}"
@@ -189,7 +189,7 @@ class EstimatorOptions(OptionsV2):
             inputs = merge_options(inputs, options.get("experimental"))
 
         inputs["_experimental"] = True
-        inputs["version"] = EstimatorOptions._version
+        inputs["version"] = EstimatorOptions._VERSION
         _remove_dict_unset_values(inputs)
 
         return inputs
