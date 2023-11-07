@@ -99,9 +99,6 @@ class QiskitRuntimeService(Provider):
                 circuits=[psi], observables=[H1], parameter_values=[theta]
             )
             print(f"Estimator results: {job.result()}")
-            # Close the session only if all jobs are finished
-            # and you don't need to run more in the session.
-            session.close()
 
     The example above uses the dedicated :class:`~qiskit_ibm_runtime.Sampler`
     and :class:`~qiskit_ibm_runtime.Estimator` classes. You can also
@@ -219,6 +216,10 @@ class QiskitRuntimeService(Provider):
                 for backend_name in hgp.backends:
                     if backend_name not in self._backends:
                         self._backends[backend_name] = None
+            self._current_instance = self._account.instance
+            if not self._current_instance:
+                self._current_instance = self._get_hgp().name
+                logger.info("Default instance: %s", self._current_instance)
         QiskitRuntimeService.global_service = self
 
         # TODO - it'd be nice to allow some kind of autocomplete, but `service.ibmq_foo`
@@ -811,6 +812,18 @@ class QiskitRuntimeService(Provider):
                 value of 20.
             skip: The number of programs to skip.
         """
+        warnings.warn(
+            (
+                "Custom programs are being deprecated as of qiskit-ibm-runtime 0.14.0 and will "
+                "be removed on November 27, 2023. You can instead convert your custom programs "
+                "to use Qiskit Runtime primitives with Quantum Serverless. Refer to the migration "
+                "guide for instructions: "
+                "https://qiskit-extensions.github.io/quantum-serverless/migration"
+                "/migration_from_qiskit_runtime_programs.html"
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
         programs = self.programs(refresh, limit, skip)
         for prog in programs:
             print("=" * 50)
@@ -839,6 +852,18 @@ class QiskitRuntimeService(Provider):
         Returns:
             A list of runtime programs.
         """
+        warnings.warn(
+            (
+                "Custom programs are being deprecated as of qiskit-ibm-runtime 0.14.0 and will "
+                "be removed on November 27, 2023. You can instead convert your custom programs "
+                "to use Qiskit Runtime primitives with Quantum Serverless. Refer to the migration "
+                "guide for instructions: "
+                "https://qiskit-extensions.github.io/quantum-serverless/migration"
+                "/migration_from_qiskit_runtime_programs.html"
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if skip is None:
             skip = 0
         if not self._programs or refresh:
@@ -883,6 +908,18 @@ class QiskitRuntimeService(Provider):
             RuntimeProgramNotFound: If the program does not exist.
             IBMRuntimeError: If the request failed.
         """
+        warnings.warn(
+            (
+                "Custom programs are being deprecated as of qiskit-ibm-runtime 0.14.0 and will "
+                "be removed on November 27, 2023. You can instead convert your custom programs "
+                "to use Qiskit Runtime primitives with Quantum Serverless. Refer to the migration "
+                "guide for instructions: "
+                "https://qiskit-extensions.github.io/quantum-serverless/migration"
+                "/migration_from_qiskit_runtime_programs.html"
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if program_id not in self._programs or refresh:
             try:
                 response = self._api_client.program_get(program_id)
@@ -970,15 +1007,19 @@ class QiskitRuntimeService(Provider):
             RuntimeProgramNotFound: If the program cannot be found.
             IBMRuntimeError: An error occurred running the program.
         """
-        # TODO: Remove this after 3 months
-        if program_id in ["hello-world", "vqe", "qaoa"]:
-            raise IBMInputValueError(
-                "The hello-world, vqe, and qaoa programs have been retired in the "
-                "Qiskit Runtime service. Please visit https://qiskit.org/ecosystem/ibm-runtime "
-                "for an introduction on Sessions and Primitives, and to access "
-                "tutorials on how to execute VQE and QAOA using Qiskit Runtime Primitives."
+        if program_id not in ["sampler", "estimator", "circuit-runner", "qasm3-runner"]:
+            warnings.warn(
+                (
+                    "Custom programs are being deprecated as of qiskit-ibm-runtime 0.14.0 and will "
+                    "be removed on November 27, 2023. You can instead convert your custom programs "
+                    "to use Qiskit Runtime primitives with Quantum Serverless. Refer to the migration "
+                    "guide for instructions: "
+                    "https://qiskit-extensions.github.io/quantum-serverless/migration"
+                    "/migration_from_qiskit_runtime_programs.html"
+                ),
+                DeprecationWarning,
+                stacklevel=2,
             )
-
         qrt_options: RuntimeOptions = options
         if options is None:
             qrt_options = RuntimeOptions()
@@ -997,6 +1038,9 @@ class QiskitRuntimeService(Provider):
             # Find the right hgp
             hgp = self._get_hgp(instance=qrt_options.instance, backend_name=qrt_options.backend)
             hgp_name = hgp.name
+            if hgp_name != self._current_instance:
+                self._current_instance = hgp_name
+                logger.info("Instance selected: %s", self._current_instance)
         backend = self.backend(name=qrt_options.backend, instance=hgp_name)
         status = backend.status()
         if status.operational is True and status.status_msg != "active":
@@ -1021,6 +1065,12 @@ class QiskitRuntimeService(Provider):
                 if self._channel_strategy == "default"
                 else self._channel_strategy,
             )
+            if self._channel == "ibm_quantum":
+                messages = response.get("messages")
+                if messages:
+                    warning_message = messages[0].get("data")
+                    warnings.warn(warning_message)
+
         except RequestsApiError as ex:
             if ex.status_code == 404:
                 raise RuntimeProgramNotFound(f"Program not found: {ex.message}") from None
@@ -1092,6 +1142,18 @@ class QiskitRuntimeService(Provider):
             IBMNotAuthorizedError: If you are not authorized to upload programs.
             IBMRuntimeError: If the upload failed.
         """
+        warnings.warn(
+            (
+                "Custom programs are being deprecated as of qiskit-ibm-runtime 0.14.0 and will "
+                "be removed on November 27, 2023. You can instead convert your custom programs "
+                "to use Qiskit Runtime primitives with Quantum Serverless. Refer to the migration "
+                "guide for instructions: "
+                "https://qiskit-extensions.github.io/quantum-serverless/migration"
+                "/migration_from_qiskit_runtime_programs.html"
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
         program_metadata = self._read_metadata(metadata=metadata)
 
         for req in ["name", "max_execution_time"]:
@@ -1175,6 +1237,18 @@ class QiskitRuntimeService(Provider):
             RuntimeProgramNotFound: If the program doesn't exist.
             IBMRuntimeError: If the request failed.
         """
+        warnings.warn(
+            (
+                "Custom programs are being deprecated as of qiskit-ibm-runtime 0.14.0 and will "
+                "be removed on November 27, 2023. You can instead convert your custom programs "
+                "to use Qiskit Runtime primitives with Quantum Serverless. Refer to the migration "
+                "guide for instructions: "
+                "https://qiskit-extensions.github.io/quantum-serverless/migration"
+                "/migration_from_qiskit_runtime_programs.html"
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if not any([data, metadata, name, description, max_execution_time, spec]):
             warnings.warn(
                 "None of the 'data', 'metadata', 'name', 'description', "
@@ -1239,6 +1313,18 @@ class QiskitRuntimeService(Provider):
             RuntimeProgramNotFound: If the program doesn't exist.
             IBMRuntimeError: If the request failed.
         """
+        warnings.warn(
+            (
+                "Custom programs are being deprecated as of qiskit-ibm-runtime 0.14.0 and will "
+                "be removed on November 27, 2023. You can instead convert your custom programs "
+                "to use Qiskit Runtime primitives with Quantum Serverless. Refer to the migration "
+                "guide for instructions: "
+                "https://qiskit-extensions.github.io/quantum-serverless/migration"
+                "/migration_from_qiskit_runtime_programs.html"
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
         try:
             self._api_client.program_delete(program_id=program_id)
         except RequestsApiError as ex:
@@ -1261,6 +1347,18 @@ class QiskitRuntimeService(Provider):
             RuntimeProgramNotFound: if program not found (404)
             IBMRuntimeError: if update failed (401, 403)
         """
+        warnings.warn(
+            (
+                "Custom programs are being deprecated as of qiskit-ibm-runtime 0.14.0 and will "
+                "be removed on November 27, 2023. You can instead convert your custom programs "
+                "to use Qiskit Runtime primitives with Quantum Serverless. Refer to the migration "
+                "guide for instructions: "
+                "https://qiskit-extensions.github.io/quantum-serverless/migration"
+                "/migration_from_qiskit_runtime_programs.html"
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
         try:
             self._api_client.set_program_visibility(program_id, public)
         except RequestsApiError as ex:

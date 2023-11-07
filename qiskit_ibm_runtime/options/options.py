@@ -19,7 +19,8 @@ import warnings
 
 from qiskit.transpiler import CouplingMap
 
-from .utils import _flexible, Dict
+from .utils import Dict, _to_obj
+
 from .environment_options import EnvironmentOptions
 from .execution_options import ExecutionOptions
 from .simulator_options import SimulatorOptions
@@ -28,7 +29,6 @@ from .resilience_options import ResilienceOptions
 from ..runtime_options import RuntimeOptions
 
 
-@_flexible
 @dataclass
 class Options:
     """Options for the primitives.
@@ -62,10 +62,10 @@ class Options:
             for more information about the error mitigation methods used at each level.
 
         max_execution_time: Maximum execution time in seconds, which is based
-            on quantum time (not wall clock time). Quantum time is the time that
-            the QPU complex (including control software, control electronics, QPU, and so on)
-            is engaged in processing the job. If a job exceeds this time limit, it is forcibly cancelled.
-            Simulator jobs continue to use wall clock time because they do not have quantum time.
+            on system execution time (not wall clock time). System execution time is
+            the amount of time that the system is dedicated to processing your job.
+            If a job exceeds this time limit, it is forcibly cancelled.
+            Simulator jobs continue to use wall clock time.
 
             Refer to the
             `Max execution time documentation
@@ -112,6 +112,14 @@ class Options:
         "simulator": SimulatorOptions,
         "resilience": ResilienceOptions,
     }
+
+    def __post_init__(self):  # type: ignore
+        """Convert dictionary fields to object."""
+        obj_fields = getattr(self, "_obj_fields", {})
+        for key in list(obj_fields):
+            if hasattr(self, key):
+                orig_val = getattr(self, key)
+                setattr(self, key, _to_obj(obj_fields[key], orig_val))
 
     @staticmethod
     def _get_program_inputs(options: dict) -> dict:
