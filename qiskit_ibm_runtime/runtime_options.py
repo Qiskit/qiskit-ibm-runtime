@@ -103,4 +103,4 @@ class RuntimeOptions:
             )
 
         if self.job_tags:
-            validate_job_tags(self.job_tags, IBMInputValueError)
+            validate_job_tags(self.job_tags)
