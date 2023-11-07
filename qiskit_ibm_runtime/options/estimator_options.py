@@ -17,7 +17,7 @@ import copy
 
 from qiskit.transpiler import CouplingMap
 from pydantic.dataclasses import dataclass as pydantic_dataclass
-from pydantic import Field, ConfigDict, model_validator, field_validator
+from pydantic import Field, ConfigDict, field_validator
 
 from .utils import (
     Dict,
@@ -90,11 +90,9 @@ class EstimatorOptions(OptionsV2):
 
     """
 
-    _VERSION: int = Field(2, frozen=True)
-    _MAX_OPTIMIZATION_LEVEL: int = Field(3, frozen=True)
-    _MAX_RESILIENCE_LEVEL: int = Field(3, frozen=True)
-
-    _is_simulator: bool = False
+    _VERSION: int = Field(2, frozen=True)  # pylint: disable=invalid-name
+    _MAX_OPTIMIZATION_LEVEL: int = Field(3, frozen=True)  # pylint: disable=invalid-name
+    _MAX_RESILIENCE_LEVEL: int = Field(3, frozen=True)  # pylint: disable=invalid-name
 
     # Sadly we cannot use pydantic's built in validation because it won't work on Unset.
     optimization_level: Union[UnsetType, int] = Unset
@@ -129,23 +127,6 @@ class EstimatorOptions(OptionsV2):
                 f"0-{EstimatorOptions._MAX_RESILIENCE_LEVEL}"
             )
         return resilience_level
-
-    @model_validator(mode="after")
-    def _validate_options(self) -> "EstimatorOptions":
-        """Validate the model."""
-        # TODO: Server should have different optimization/resilience levels for simulator
-
-        if (
-            self.resilience_level == 3
-            and self._is_simulator
-            and isinstance(self.simulator.coupling_map, UnsetType)  # type: ignore[union-attr]
-        ):
-            raise ValueError(
-                "When the backend is a simulator and resilience_level == 3,"
-                "a coupling map is required."
-            )
-
-        return self
 
     @staticmethod
     def _get_program_inputs(options: dict) -> dict:

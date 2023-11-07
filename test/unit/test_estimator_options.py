@@ -151,7 +151,6 @@ class TestEStimatorOptions(IBMTestCase):
         {"execution": {"shots": 0}},
         {"twirling": {"strategy": "foo"}},
         {"transpilation": {"foo": "bar"}},
-        {"resilience_level": 3, "_is_simulator": True},
         {"zne_noise_factors": [0.5]},
         {"noise_factors": [1, 3, 5]},
         {"zne_extrapolator": "exponential", "zne_noise_factors": [1]},
