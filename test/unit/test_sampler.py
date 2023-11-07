@@ -14,11 +14,11 @@
 
 from unittest.mock import MagicMock
 
+from ddt import data, ddt
+
 from qiskit import QuantumCircuit
 from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit_ibm_runtime import Sampler, Session, SamplerV2, SamplerOptions
-
-from ddt import data, ddt
 
 from ..ibm_test_case import IBMTestCase
 from .mock.fake_runtime_service import FakeRuntimeService
@@ -55,7 +55,9 @@ class TestSamplerV2(IBMTestCase):
         super().setUp()
         self.circuit = QuantumCircuit(1, 1)
 
-    @data({"optimization_level": 4}, {"resilience_level": 1}, {"resilience": {"zne_mitigation": True}})
+    @data(
+        {"optimization_level": 4}, {"resilience_level": 1}, {"resilience": {"zne_mitigation": True}}
+    )
     def test_unsupported_values_for_sampler_options(self, opt):
         """Test exception when options levels are not supported."""
         with Session(

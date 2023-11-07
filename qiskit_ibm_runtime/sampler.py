@@ -125,8 +125,6 @@ class SamplerV2(BasePrimitiveV2, Sampler, BaseSamplerV2):
             circuits: a (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
                 a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
 
-            observables: Observable objects.
-
             parameter_values: Concrete parameters to be bound.
 
             **kwargs: Individual options to overwrite the default primitive options.

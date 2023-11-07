@@ -41,13 +41,17 @@ def set_default_error_levels(
         options with correct error level defaults.
     """
     if options.get("optimization_level") is None:
-        if backend.configuration().simulator and not options.get("simulator", {}).get("noise_model"):
+        if backend.configuration().simulator and not options.get("simulator", {}).get(
+            "noise_model"
+        ):
             options["optimization_level"] = 1
         else:
             options["optimization_level"] = default_optimization_level
 
     if options.get("resilience_level") is None:
-        if backend.configuration().simulator and not options.get("simulator", {}).get("noise_model"):
+        if backend.configuration().simulator and not options.get("simulator", {}).get(
+            "noise_model"
+        ):
             options["resilience_level"] = 0
         else:
             options["resilience_level"] = default_resilience_level

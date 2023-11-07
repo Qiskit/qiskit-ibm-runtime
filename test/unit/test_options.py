@@ -330,17 +330,41 @@ class TestOptionsV2(IBMTestCase):
         """Test converting to program inputs from v2 options."""
 
         noise_model = NoiseModel.from_backend(FakeManila())
-        transpilation = {"skip_transpilation": False, "initial_layout": [1, 2], "layout_method": "trivial", "routing_method": "basic", "approximation_degree": 0.5}
-        simulator ={"noise_model": noise_model, "seed_simulator": 42, "coupling_map": [[0, 1]], "basis_gates": ['u1']}
-        execution={"shots": 400, "init_qubits": True, "samples": 20, "shots_per_sample": 20, "interleave_samples": True}
+        transpilation = {
+            "skip_transpilation": False,
+            "initial_layout": [1, 2],
+            "layout_method": "trivial",
+            "routing_method": "basic",
+            "approximation_degree": 0.5,
+        }
+        simulator = {
+            "noise_model": noise_model,
+            "seed_simulator": 42,
+            "coupling_map": [[0, 1]],
+            "basis_gates": ["u1"],
+        }
+        execution = {
+            "shots": 400,
+            "init_qubits": True,
+            "samples": 20,
+            "shots_per_sample": 20,
+            "interleave_samples": True,
+        }
         optimization_level = 2
         twirling = {"gates": True, "measure": True, "strategy": "all"}
-        resilience = {"measure_noise_mitigation": True, "zne_mitigation": True, "zne_noise_factors": [1, 3], "zne_extrapolator": "exponential", "zne_stderr_threshold": 1, "pec_mitigation": False, "pec_max_overhead": 2}
+        resilience = {
+            "measure_noise_mitigation": True,
+            "zne_mitigation": True,
+            "zne_noise_factors": [1, 3],
+            "zne_extrapolator": "exponential",
+            "zne_stderr_threshold": 1,
+            "pec_mitigation": False,
+            "pec_max_overhead": 2,
+        }
 
         estimator_extra = {}
         if isinstance(opt_cls, EstimatorOptions):
-            estimator_extra = {"resilience_level": 3,
-                     "resilience": resilience}
+            estimator_extra = {"resilience_level": 3, "resilience": resilience}
 
         opt = opt_cls(
             max_execution_time=100,
@@ -350,11 +374,24 @@ class TestOptionsV2(IBMTestCase):
             transpilation=transpilation,
             execution=execution,
             twirling=twirling,
-            experimental={"foo": "bar"}, **estimator_extra)
+            experimental={"foo": "bar"},
+            **estimator_extra,
+        )
 
         transpilation.pop("skip_transpilation")
-        transpilation.update({"optimization_level": optimization_level, "coupling_map": simulator.pop("coupling_map"), "basis_gates": simulator.pop("basis_gates")})
-        execution.update({"noise_model": simulator.pop("noise_model"), "seed_simulator": simulator.pop("seed_simulator")})
+        transpilation.update(
+            {
+                "optimization_level": optimization_level,
+                "coupling_map": simulator.pop("coupling_map"),
+                "basis_gates": simulator.pop("basis_gates"),
+            }
+        )
+        execution.update(
+            {
+                "noise_model": simulator.pop("noise_model"),
+                "seed_simulator": simulator.pop("seed_simulator"),
+            }
+        )
         expected = {
             "transpilation": transpilation,
             "skip_transpilation": False,
@@ -363,7 +400,7 @@ class TestOptionsV2(IBMTestCase):
             "execution": execution,
             "foo": "bar",
             "version": 2,
-            **estimator_extra
+            **estimator_extra,
         }
 
         inputs = opt_cls._get_program_inputs(asdict(opt))
@@ -423,7 +460,9 @@ class TestOptionsV2(IBMTestCase):
                 resulting_cmap = inputs["transpilation"]["coupling_map"]
                 self.assertEqual(coupling_map, set(map(tuple, resulting_cmap)))
 
-    @combine(opt_cls=[EstimatorOptions, SamplerOptions], fake_backend=[FakeManila(), FakeNairobiV2()])
+    @combine(
+        opt_cls=[EstimatorOptions, SamplerOptions], fake_backend=[FakeManila(), FakeNairobiV2()]
+    )
     def test_simulator_set_backend(self, opt_cls, fake_backend):
         """Test Options.simulator.set_backend method."""
 
@@ -473,8 +512,8 @@ class TestOptionsV2(IBMTestCase):
             {"zne_mitigation": True, "pec_mitigation": True},
             {"simulator": {"noise_model": "foo"}},
             {"shots": 1, "samples": 99, "shots_per_sample": 99},
-            {"shots": 0}
-        ]
+            {"shots": 0},
+        ],
     )
     def test_invalid_options(self, opt_cls, opt):
         """Test invalid inputs."""

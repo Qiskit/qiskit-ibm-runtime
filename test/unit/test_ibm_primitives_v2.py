@@ -308,7 +308,10 @@ class TestPrimitivesV2(IBMTestCase):
                 rt_options = session.run.call_args.kwargs["options"]
                 self._assert_dict_partially_equal(rt_options, options)
 
-    @combine(primitive=[EstimatorV2, SamplerV2], exp_opt=[{"foo": "bar"}, {"transpilation": {"foo": "bar"}}])
+    @combine(
+        primitive=[EstimatorV2, SamplerV2],
+        exp_opt=[{"foo": "bar"}, {"transpilation": {"foo": "bar"}}],
+    )
     def test_run_experimental_options(self, primitive, exp_opt):
         """Test specifying arbitrary options in run."""
         session = MagicMock(spec=MockSession)
@@ -326,7 +329,7 @@ class TestPrimitivesV2(IBMTestCase):
         inputs = session.run.call_args.kwargs["inputs"]
         for fld in ["circuits", "observables", "parameters", "parameter_values", "_experimental"]:
             inputs.pop(fld, None)
-        expected = {'skip_transpilation': False, 'execution': {'init_qubits': True}, 'version': 2}
+        expected = {"skip_transpilation": False, "execution": {"init_qubits": True}, "version": 2}
         self.assertDictEqual(inputs, expected)
 
     @data(EstimatorV2, SamplerV2)
