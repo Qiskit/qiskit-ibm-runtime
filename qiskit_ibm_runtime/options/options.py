@@ -93,7 +93,7 @@ class OptionsV2(BaseOptions):
             :class:`SimulatorOptions` for all available options.
     """
 
-    _VERSION: int = Field(2, frozen=True)
+    _VERSION: int = Field(2, frozen=True)  # pylint: disable=invalid-name
 
     # Options not really related to primitives.
     max_execution_time: Union[UnsetType, int] = Unset

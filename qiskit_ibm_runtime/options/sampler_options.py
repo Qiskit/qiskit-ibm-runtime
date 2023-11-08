@@ -68,7 +68,7 @@ class SamplerOptions(OptionsV2):
 
     """
 
-    _MAX_OPTIMIZATION_LEVEL: int = Field(3, frozen=True)
+    _MAX_OPTIMIZATION_LEVEL: int = Field(3, frozen=True)  # pylint: disable=invalid-name
     _is_simulator: bool = False
 
     # Sadly we cannot use pydantic's built in validation because it won't work on Unset.
