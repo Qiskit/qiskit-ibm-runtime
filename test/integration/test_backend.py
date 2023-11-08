@@ -82,7 +82,7 @@ class TestIBMBackend(IBMIntegrationTestCase):
         super().setUpClass()
         if cls.dependencies.channel == "ibm_cloud":
             # TODO use real device when cloud supports it
-            cls.backend = cls.dependencies.service.least_busy(simulator=False, min_num_qubits=5)
+            cls.backend = cls.dependencies.service.least_busy(min_num_qubits=5)
         if cls.dependencies.channel == "ibm_quantum":
             cls.backend = cls.dependencies.service.least_busy(
                 simulator=False, min_num_qubits=5, instance=cls.dependencies.instance
@@ -202,11 +202,15 @@ class TestIBMBackend(IBMIntegrationTestCase):
 
     def test_backend_pending_jobs(self):
         """Test pending jobs are returned."""
+        if self.dependencies.channel == "ibm_cloud":
+            raise SkipTest("Cloud account does not have real backend.")
         backends = self.service.backends()
         self.assertTrue(any(backend.status().pending_jobs > 0 for backend in backends))
 
     def test_backend_fetch_all_qubit_properties(self):
         """Check retrieving properties of all qubits"""
+        if self.dependencies.channel == "ibm_cloud":
+            raise SkipTest("Cloud channel does not have instance.")
         num_qubits = self.backend.num_qubits
         qubits = list(range(num_qubits))
         qubit_properties = self.backend.qubit_properties(qubits)
@@ -260,6 +264,8 @@ class TestIBMBackend(IBMIntegrationTestCase):
 
     def test_too_many_qubits_in_circuit(self):
         """Check error message if circuit contains more qubits than supported on the backend."""
+        if self.dependencies.channel == "ibm_cloud":
+            raise SkipTest("Cloud channel does not have instance.")
         num = len(self.backend.properties().qubits)
         num_qubits = num + 1
         circuit = QuantumCircuit(num_qubits, num_qubits)
