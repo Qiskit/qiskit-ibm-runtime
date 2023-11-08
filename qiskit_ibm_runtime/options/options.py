@@ -112,26 +112,27 @@ class OptionsV2(BaseOptions):
             if name in _options:
                 _inputs[name] = _options[name]
 
-        sim_options = options.get("simulator", {})
+        options_copy = copy.deepcopy(options)
+        sim_options = options_copy.get("simulator", {})
         inputs = {}
-        inputs["transpilation"] = copy.copy(options.get("transpilation", {}))
+        inputs["transpilation"] = options_copy.get("transpilation", {})
         inputs["skip_transpilation"] = inputs["transpilation"].pop("skip_transpilation")
-        coupling_map = sim_options.get("coupling_map", None)
+        coupling_map = sim_options.get("coupling_map", Unset)
         # TODO: We can just move this to json encoder
         if isinstance(coupling_map, CouplingMap):
             coupling_map = list(map(list, coupling_map.get_edges()))
         inputs["transpilation"].update(
             {
-                "optimization_level": options.get("optimization_level"),
+                "optimization_level": options_copy.get("optimization_level", Unset),
                 "coupling_map": coupling_map,
-                "basis_gates": sim_options.get("basis_gates", None),
+                "basis_gates": sim_options.get("basis_gates", Unset),
             }
         )
 
         for fld in ["resilience_level", "resilience", "twirling", "dynamical_decoupling"]:
-            _set_if_exists(fld, inputs, options)
+            _set_if_exists(fld, inputs, options_copy)
 
-        inputs["execution"] = options.get("execution", {})
+        inputs["execution"] = options_copy.get("execution", {})
         inputs["execution"].update(
             {
                 "noise_model": sim_options.get("noise_model", Unset),
@@ -140,8 +141,11 @@ class OptionsV2(BaseOptions):
         )
 
         # Add arbitrary experimental options
-        if isinstance(options.get("experimental", None), dict):
-            inputs = merge_options(inputs, options.get("experimental"))
+        if isinstance(options_copy.get("experimental", None), dict):
+            inputs = merge_options(inputs, options_copy.get("experimental"))
+
+        # Remove image
+        inputs.pop("image", None)
 
         inputs["_experimental"] = True
         inputs["version"] = OptionsV2._VERSION

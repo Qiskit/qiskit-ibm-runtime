@@ -77,7 +77,6 @@ class EstimatorOptions(OptionsV2):
             See :class:`ResilienceOptions` for all available options.
 
         execution: Execution time options. See :class:`ExecutionOptionsV2` for all available options.
-        execution: Execution time options. See :class:`ExecutionOptionsV2` for all available options.
 
         environment: Options related to the execution environment. See
             :class:`EnvironmentOptions` for all available options.
@@ -89,8 +88,6 @@ class EstimatorOptions(OptionsV2):
 
     _MAX_OPTIMIZATION_LEVEL: int = Field(3, frozen=True)  # pylint: disable=invalid-name
     _MAX_RESILIENCE_LEVEL: int = Field(3, frozen=True)  # pylint: disable=invalid-name
-
-    _is_simulator: bool = False
 
     # Sadly we cannot use pydantic's built in validation because it won't work on Unset.
     optimization_level: Union[UnsetType, int] = Unset
