@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    Added a method ``RuntimeJob.queue_info()`` to get the queue information
+    from the backend.

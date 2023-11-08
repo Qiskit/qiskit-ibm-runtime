@@ -174,7 +174,6 @@ class TestIBMJobAttributes(IBMTestCase):
 
         self.assertEqual(job.batman_, "bruce")
 
-    @skip("queue_info supported in provider but not here")
     def test_queue_info(self):
         """Test retrieving queue information."""
         # Find the most busy backend.
