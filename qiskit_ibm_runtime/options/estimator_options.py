@@ -169,6 +169,9 @@ class EstimatorOptions(OptionsV2):
         if isinstance(options.get("experimental", None), dict):
             inputs = merge_options(inputs, options.get("experimental"))
 
+        # Remove image
+        inputs.pop("image", None)
+
         inputs["_experimental"] = True
         inputs["version"] = EstimatorOptions._VERSION
         _remove_dict_unset_values(inputs)

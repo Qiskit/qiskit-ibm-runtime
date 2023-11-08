@@ -94,6 +94,26 @@ class TestPrimitivesV2(IBMTestCase):
         for key, val in env_var.items():
             self.assertEqual(run_options[key], val)
 
+    @combine(
+        primitive=[EstimatorV2],
+        opts=[
+            {"experimental": {"image": "foo:bar"}},
+            {"experimental": {"image": "foo:bar"}, "environment": {"log_level": "INFO"}},
+        ],
+    )
+    def test_image(self, primitive, opts):
+        """Test passing an image to options."""
+        session = MagicMock(spec=MockSession)
+        options = primitive._OPTIONS_CLASS(**opts)
+        inst = primitive(session=session, options=options)
+        inst.run(self.qx, observables=self.obs)
+        run_options = session.run.call_args.kwargs["options"]
+        input_params = session.run.call_args.kwargs["inputs"]
+        expected = list(opts.values())[0]
+        for key, val in expected.items():
+            self.assertEqual(run_options[key], val)
+            self.assertNotIn(key, input_params)
+
     @data(EstimatorV2)
     def test_options_copied(self, primitive):
         """Test modifying original options does not affect primitives."""
