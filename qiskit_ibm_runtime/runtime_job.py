@@ -29,7 +29,6 @@ from qiskit.providers.job import JobV1 as Job
 # pylint: disable=unused-import,cyclic-import
 from qiskit_ibm_provider.utils import utc_to_local
 
-# from qiskit_ibm_provider.job import QueueInfo
 from qiskit_ibm_runtime import qiskit_runtime_service
 
 from .utils.utils import validate_job_tags
