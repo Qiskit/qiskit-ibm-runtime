@@ -286,9 +286,8 @@ class TestIBMJob(IBMIntegrationTestCase):
         )
         self.assertNotIn(job.job_id(), [rjob.job_id() for rjob in oldest_jobs])
 
-    @skip("how do we support refresh")
     def test_refresh_job_result(self):
-        """Test re-retrieving job result via refresh."""
+        """Test re-retrieving job result."""
         result = self.sim_job.result()
 
         # Save original cached results.
@@ -300,8 +299,8 @@ class TestIBMJob(IBMIntegrationTestCase):
         self.assertNotEqual(cached_result, result.to_dict())
         self.assertEqual(result.results[0].header.name, "modified_result")
 
-        # Re-retrieve result via refresh.
-        result = self.sim_job.result(refresh=True)
+        # Re-retrieve result.
+        result = self.sim_job.result()
         self.assertDictEqual(cached_result, result.to_dict())
         self.assertNotEqual(result.results[0].header.name, "modified_result")
 
