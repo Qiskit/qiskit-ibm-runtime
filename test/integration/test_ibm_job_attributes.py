@@ -25,12 +25,11 @@ from qiskit import QuantumCircuit
 from qiskit.test.reference_circuits import ReferenceCircuits
 
 from qiskit_ibm_provider.api.clients.runtime import RuntimeClient
-from qiskit_ibm_provider.exceptions import (
-    IBMBackendValueError,
-)
+from qiskit_ibm_provider.exceptions import IBMBackendValueError
 from qiskit_ibm_provider.job.exceptions import IBMJobFailureError
 
 from qiskit_ibm_runtime import IBMBackend, RuntimeJob
+from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from ..decorators import (
     IntegrationTestDependencies,
     integration_test_setup,
@@ -224,7 +223,7 @@ class TestIBMJobAttributes(IBMTestCase):
         cancel_job_safe(job, self.log)
 
     def test_esp_readout_not_enabled(self):
-        """Test that an error is thrown is ESP readout is used and the backend does not support it."""
+        """Test that an error is thrown if ESP readout is used and the backend does not support it."""
         # sim backend does not have ``measure_esp_enabled`` flag: defaults to ``False``
         with self.assertRaises(IBMBackendValueError) as context_manager:
             self.sim_backend.run(self.bell, use_measure_esp=True)
@@ -283,10 +282,8 @@ class TestIBMJobAttributes(IBMTestCase):
                     len(rjobs), 1, "Expected job {}, got {}".format(job.job_id(), rjobs)
                 )
                 self.assertEqual(rjobs[0].job_id(), job.job_id())
-                # TODO check why this sometimes fails
-                # self.assertEqual(set(rjobs[0].tags()), set(job_tags))
+                self.assertEqual(set(rjobs[0].tags), set(job_tags))
 
-    @skip("refresh supported in provider but not in runtime")
     def test_job_tags_replace(self):
         """Test updating job tags by replacing a job's existing tags."""
         initial_job_tags = [uuid.uuid4().hex[:16]]
@@ -304,15 +301,13 @@ class TestIBMJobAttributes(IBMTestCase):
 
                 # Wait a bit so we don't get cached results.
                 time.sleep(2)
-                job.refresh()
-
-                self.assertEqual(set(tags_to_replace), set(job.tags()))
+                self.assertEqual(set(tags_to_replace), set(job.tags))
 
     def test_invalid_job_tags(self):
         """Test using job tags with an and operator."""
-        self.assertRaises(IBMBackendValueError, self.sim_backend.run, self.bell, job_tags={"foo"})
+        self.assertRaises(IBMInputValueError, self.sim_backend.run, self.bell, job_tags={"foo"})
         self.assertRaises(
-            IBMBackendValueError,
+            IBMInputValueError,
             self.service.jobs,
             job_tags=[1, 2, 3],
         )
