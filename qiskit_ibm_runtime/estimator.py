@@ -154,9 +154,6 @@ class EstimatorV2(BasePrimitiveV2, Estimator, BaseEstimatorV2):
         Estimator.__init__(self)
         BasePrimitiveV2.__init__(self, backend=backend, session=session, options=options)
 
-        self.options._is_simulator = (
-            self._backend is not None and self._backend.configuration().simulator is True
-        )
         if self._service._channel_strategy == "q-ctrl":
             raise NotImplementedError("EstimatorV2 is not supported with q-ctrl channel strategy.")
 
@@ -243,8 +240,22 @@ class EstimatorV2(BasePrimitiveV2, Estimator, BaseEstimatorV2):
 
         Raises:
             ValidationError: if validation fails.
+            ValueError: if validation fails.
         """
         self._OPTIONS_CLASS(**options)
+
+        # TODO: Server should have different optimization/resilience levels for simulator
+
+        if (
+            options["resilience_level"] == 3
+            and self._backend is not None
+            and self._backend.configuration().simulator is True
+            and not options["simulator"]["coupling_map"]
+        ):
+            raise ValueError(
+                "When the backend is a simulator and resilience_level == 3,"
+                "a coupling map is required."
+            )
 
     @staticmethod
     def _validate_observables(

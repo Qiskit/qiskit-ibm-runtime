@@ -80,6 +80,17 @@ class TestEstimatorV2(IBMTestCase):
                     _ = inst.run(self.circuit, observables=self.observables, **bad_opt)
                 self.assertIn(list(bad_opt.keys())[0], str(exc.exception))
 
+    def test_res_level3_simulator(self):
+        """Test the correct default error levels are used."""
+
+        session = MagicMock(spec=MockSession)
+        session.service.backend().configuration().simulator = True
+
+        inst = EstimatorV2(session=session, options={"resilience_level": 3})
+        with self.assertRaises(ValueError) as exc:
+            inst.run(self.circuit, observables=self.observables)
+        self.assertIn("coupling map", str(exc.exception))
+
     def test_run_default_options(self):
         """Test run using default options."""
         session = MagicMock(spec=MockSession)
