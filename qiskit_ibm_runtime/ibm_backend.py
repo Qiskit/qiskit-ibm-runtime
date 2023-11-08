@@ -751,11 +751,14 @@ class IBMBackend(Backend):
         if self._service._channel == "ibm_quantum":
             hgp_name = self._instance or self._service._get_hgp().name
 
-        session = self._session
-        if session and not session.active:
-            raise RuntimeError(f"The session {session.session_id} is closed.")
-        session_id = session.session_id if session else None
-        start_session = session is not None and session_id is None
+        if self._session:
+            if not self._session.active:
+                raise RuntimeError(f"The session {self._session.session_id} is closed.")
+            session_id = self._session.session_id
+            start_session = session_id is None
+        else:
+            session_id = None
+            start_session = False
 
         log_level = getattr(self.options, "log_level", None)  # temporary
         try:
