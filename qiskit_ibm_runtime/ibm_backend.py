@@ -787,6 +787,7 @@ class IBMBackend(Backend):
                 program_id=program_id,
                 session_id=session_id,
                 service=self.service,
+                tags=job_tags,
             )
             logger.debug("Job %s was successfully submitted.", job.job_id())
         except TypeError as err:

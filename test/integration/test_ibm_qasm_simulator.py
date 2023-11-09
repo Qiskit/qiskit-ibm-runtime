@@ -17,41 +17,25 @@ from unittest import skip
 
 from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister
 from qiskit.compiler import transpile
-from qiskit.providers.aer.noise import (  # pylint: disable=import-error,no-name-in-module
-    NoiseModel,
-)
 from qiskit.test.reference_circuits import ReferenceCircuits
 
-from qiskit_ibm_runtime import IBMBackend
-from ..decorators import (
-    integration_test_setup_with_backend,
-    IntegrationTestDependencies,
-)
 from ..ibm_test_case import IBMIntegrationTestCase
 
 
 class TestIBMQasmSimulator(IBMIntegrationTestCase):
     """Test IBM Quantum QASM Simulator."""
 
-    @integration_test_setup_with_backend(simulator=False)
-    def setUp(self, backend: IBMBackend, dependencies: IntegrationTestDependencies) -> None:
-        """Initial test setup."""
-        # pylint: disable=unused-argument
-        # pylint: disable=arguments-differ
-        super().setUp()
-        self.sim_backend = self.service.backend("ibmq_qasm_simulator")
-        self.real_device_backend = backend
-
     def test_execute_one_circuit_simulator_online(self):
         """Test execute_one_circuit_simulator_online."""
+        backend = self.service.get_backend("ibmq_qasm_simulator")
         quantum_register = QuantumRegister(1)
         classical_register = ClassicalRegister(1)
         quantum_circuit = QuantumCircuit(quantum_register, classical_register, name="qc")
         quantum_circuit.h(quantum_register[0])
         quantum_circuit.measure(quantum_register[0], classical_register[0])
-        circs = transpile(quantum_circuit, backend=self.sim_backend)
+        circs = transpile(quantum_circuit, backend=backend)
         shots = 1024
-        job = self.sim_backend.run(circs, shots=shots)
+        job = backend.run(circs, shots=shots)
         result = job.result()
         counts = result.get_counts(quantum_circuit)
         target = {"0": shots / 2, "1": shots / 2}
@@ -60,6 +44,7 @@ class TestIBMQasmSimulator(IBMIntegrationTestCase):
 
     def test_execute_several_circuits_simulator_online(self):
         """Test execute_several_circuits_simulator_online."""
+        backend = self.service.get_backend("ibmq_qasm_simulator")
         quantum_register = QuantumRegister(2)
         classical_register = ClassicalRegister(2)
         qcr1 = QuantumCircuit(quantum_register, classical_register, name="qc1")
@@ -72,8 +57,8 @@ class TestIBMQasmSimulator(IBMIntegrationTestCase):
         qcr2.measure(quantum_register[0], classical_register[0])
         qcr2.measure(quantum_register[1], classical_register[1])
         shots = 1024
-        circs = transpile([qcr1, qcr2], backend=self.sim_backend)
-        job = self.sim_backend.run(circs, shots=shots)
+        circs = transpile([qcr1, qcr2], backend=backend)
+        job = backend.run(circs, shots=shots)
         result = job.result()
         counts1 = result.get_counts(qcr1)
         counts2 = result.get_counts(qcr2)
@@ -85,6 +70,7 @@ class TestIBMQasmSimulator(IBMIntegrationTestCase):
 
     def test_online_qasm_simulator_two_registers(self):
         """Test online_qasm_simulator_two_registers."""
+        backend = self.service.get_backend("ibmq_qasm_simulator")
         qr1 = QuantumRegister(2)
         cr1 = ClassicalRegister(2)
         qr2 = QuantumRegister(2)
@@ -101,8 +87,8 @@ class TestIBMQasmSimulator(IBMIntegrationTestCase):
         qcr2.measure(qr1[1], cr1[1])
         qcr2.measure(qr2[0], cr2[0])
         qcr2.measure(qr2[1], cr2[1])
-        circs = transpile([qcr1, qcr2], self.sim_backend)
-        job = self.sim_backend.run(circs, shots=1024)
+        circs = transpile([qcr1, qcr2], backend)
+        job = backend.run(circs, shots=1024)
         result = job.result()
         result1 = result.get_counts(qcr1)
         result2 = result.get_counts(qcr2)
@@ -156,16 +142,3 @@ class TestIBMQasmSimulator(IBMIntegrationTestCase):
         finally:
             backend._configuration._data["simulation_method"] = sim_method
             backend._submit_job = submit_fn
-
-    # @skip(
-    #     "NoiseModel.from_backend does not currently support V2 Backends. \
-    #     Skip test until it's fixed in aer."
-    # )
-    def test_simulator_with_noise_model(self):
-        """Test using simulator with a noise model."""
-        noise_model = NoiseModel.from_backend(self.real_device_backend)
-        result = self.sim_backend.run(
-            transpile(ReferenceCircuits.bell(), backend=self.sim_backend),
-            noise_model=noise_model,
-        ).result()
-        self.assertTrue(result)
