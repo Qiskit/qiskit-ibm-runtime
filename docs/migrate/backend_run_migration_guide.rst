@@ -8,7 +8,7 @@ using Qiskit IBM Provider (the ``qiskit_ibm_provider`` package) to code using th
 Qiskit IBM Runtime (``qiskit_ibm_runtime`` package).
 We demonstrate the migration with code examples.
 
-**Example 1: Straightforward execution of ``backend.run()``**
+**Example 1: Straightforward execution of backend.run()**
 
 .. code-block:: python
 
@@ -40,7 +40,7 @@ In Runtime, the code will be:
     job = backend.run(transpiled_circuit)
     print(job.result())
 
-**Example 2: Execution of ``backend.run()`` within a session:**
+**Example 2: Execution of backend.run() within a session:**
 
 This section of code is identical in Provider and in Runtime.
 
@@ -54,7 +54,7 @@ The Session for ``Primitives`` (``Sampler`` and ``Estimator``) is currently diff
 the Session for ``IBMBackend``. Therefore, we cannot run a primitive and a backend
 using a single Session.
 
-**Example 3: Primitive Session containing ``backend.run``:**
+**Example 3: Primitive Session containing backend.run:**
 
 In this example, ``sampler`` is run within session, but ``backend`` is run independently
 of ``session``.
@@ -66,7 +66,7 @@ of ``session``.
         job1 = sampler.run(transpiled_circuit)
         job2 = backend.run(transpiled_circuit)
 
-**Example 4: Backend Session containing ``Sampler``:**
+**Example 4: Backend Session containing Sampler:**
 
 In this example, ``backend`` is run within a session, but ``sampler` is run independently
 of ``session``.
