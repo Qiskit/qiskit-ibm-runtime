@@ -46,15 +46,16 @@ This section of code is identical in Provider and in Runtime.
 
 .. code-block:: python
 
-with backend.open_session() as session:
-    job1 = backend.run(transpiled_circuit)
-    job2 = backend.run(transpiled_circuit)
+    with backend.open_session() as session:
+        job1 = backend.run(transpiled_circuit)
+        job2 = backend.run(transpiled_circuit)
 
 The Session for ``Primitives`` (``Sampler`` and ``Estimator``) is currently different than
 the Session for ``IBMBackend``. Therefore, we cannot run a primitive and a backend
 using a single Session.
 
 **Example 3: Primitive Session containing ``backend.run``:**
+
 In this example, ``sampler`` is run within session, but ``backend`` is run independently
 of ``session``.
 
