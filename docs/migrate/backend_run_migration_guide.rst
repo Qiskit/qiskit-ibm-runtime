@@ -40,13 +40,14 @@ In Runtime, the code will be:
     print(job.result())
 
 **Example 2: Execution of ``backend.run()`` within a session:**
+
 This section of code is identical in Provider and in Runtime.
 
 .. code-block:: python
 
-     with backend.open_session() as session:
-        job1 = backend.run(transpiled_circuit)
-        job2 = backend.run(transpiled_circuit)
+with backend.open_session() as session:
+    job1 = backend.run(transpiled_circuit)
+    job2 = backend.run(transpiled_circuit)
 
 The Session for ``Primitives`` (``Sampler`` and ``Estimator``) is currently different than
 the Session for ``IBMBackend``. Therefore, we cannot run a primitive and a backend
@@ -57,10 +58,10 @@ In this example, ``sampler`` is run within session, but ``backend`` is run indep
 of ``session``.
 .. code-block:: python
 
-     with Session(backend=backend) as session:
-            sampler = Sampler(session=session)
-            job1 = sampler.run(transpiled_circuit)
-            job2 = backend.run(transpiled_circuit)
+    with Session(backend=backend) as session:
+        sampler = Sampler(session=session)
+        job1 = sampler.run(transpiled_circuit)
+        job2 = backend.run(transpiled_circuit)
 
 **Example 4: Backend Session containing ``Sampler``:**
 In this example, ``backend`` is run within a session, but ``sampler` is run independently
