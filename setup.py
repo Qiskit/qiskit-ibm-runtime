@@ -77,4 +77,10 @@ setuptools.setup(
         "Documentation": "https://qiskit.org/documentation/",
         "Source Code": "https://github.com/Qiskit/qiskit-ibm-runtime",
     },
+    entry_points={
+        "qiskit.transpiler.translation": [
+            "ibm_backend = qiskit_ibm_runtime.transpiler.plugin:IBMTranslationPlugin",
+            "ibm_dynamic_circuits = qiskit_ibm_runtime.transpiler.plugin:IBMDynamicTranslationPlugin",
+        ]
+    },
 )

@@ -34,6 +34,7 @@ from qiskit_ibm_provider.utils.hgp import to_instance_format, from_instance_form
 from qiskit_ibm_provider.utils.backend_decoder import configuration_from_server_data
 from qiskit_ibm_runtime import ibm_backend
 
+from .utils.utils import validate_job_tags
 from .accounts import AccountManager, Account, ChannelType
 from .api.clients import AuthClient, VersionClient
 from .api.clients.runtime import RuntimeClient
@@ -210,6 +211,11 @@ class QiskitRuntimeService(Provider):
             auth_client = self._authenticate_ibm_quantum_account(self._client_params)
             # Update client parameters to use authenticated values.
             self._client_params.url = auth_client.current_service_urls()["services"]["runtime"]
+            if self._client_params.url == "https://api.de.quantum-computing.ibm.com/runtime":
+                warnings.warn(
+                    "Features in versions of qiskit-ibm-runtime greater than 0.13.0 may not "
+                    "be supported in this environment"
+                )
             self._client_params.token = auth_client.current_access_token()
             self._api_client = RuntimeClient(self._client_params)
             self._hgps = self._initialize_hgps(auth_client)
@@ -1454,6 +1460,8 @@ class QiskitRuntimeService(Provider):
                     "The 'instance' keyword is only supported for ``ibm_quantum`` runtime."
                 )
             hub, group, project = from_instance_format(instance)
+        if job_tags:
+            validate_job_tags(job_tags)
 
         job_responses = []  # type: List[Dict[str, Any]]
         current_page_limit = limit or 20
