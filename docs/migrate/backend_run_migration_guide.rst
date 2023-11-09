@@ -68,7 +68,7 @@ of ``session``.
 
 **Example 4: Backend Session containing Sampler:**
 
-In this example, ``backend`` is run within a session, but ``sampler` is run independently
+In this example, ``backend`` is run within a session, but ``sampler`` is run independently
 of ``session``.
 
 .. code-block:: python
