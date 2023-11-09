@@ -3,12 +3,12 @@
 Migration guide: using ``backend.run()`` in ``qiskit_ibm_runtime``
 ==================================================================
 
-This guide describes how to migrate code that was implemented ``backend.run()``
+This guide describes how to migrate code that implemented ``backend.run()``
 using Qiskit IBM Provider (the ``qiskit_ibm_provider`` package) to code using the
 Qiskit IBM Runtime (``qiskit_ibm_runtime`` package).
 We demonstrate the migration with code examples.
 
-Example 1: Straightforward execution of ``backend.run()``
+**Example 1: Straightforward execution of ``backend.run()``**
 
 .. code-block:: python
 
@@ -39,7 +39,8 @@ In Runtime, the code will be:
     job = backend.run(transpiled_circuit)
     print(job.result())
 
-Example 2: Execution of ``backend.run()`` within a session:
+**Example 2: Execution of ``backend.run()`` within a session:**
+This section of code is identical in Provider and in Runtime.
 
 .. code-block:: python
 
@@ -47,11 +48,27 @@ Example 2: Execution of ``backend.run()`` within a session:
         job1 = backend.run(transpiled_circuit)
         job2 = backend.run(transpiled_circuit)
 
-This section of code is identical in Provider and in Runtime.
+The Session for ``Primitives`` (``Sampler`` and ``Estimator``) is currently different than
+the Session for ``IBMBackend``. Therefore, we cannot run a primitive and a backend
+using a single Session.
 
-Related links
--------------
+**Example 3: Primitive Session containing ``backend.run``:**
+In this example, ``sampler`` is run within session, but ``backend`` is run independently
+of ``session``.
+.. code-block:: python
 
-* `Get started with Estimator <../tutorials/how-to-getting-started-with-estimator.ipynb>`__
-* `Get started with Sampler <../tutorials/how-to-getting-started-with-sampler.ipynb>`__
-* `Tutorial: Migrate from qiskit-ibmq-provider to qiskit-ibm-provider <https://qiskit.org/documentation/partners/qiskit_ibm_provider/tutorials/Migration_Guide_from_qiskit-ibmq-provider.html>`__
+     with Session(backend=backend) as session:
+            sampler = Sampler(session=session)
+            job1 = sampler.run(transpiled_circuit)
+            job2 = backend.run(transpiled_circuit)
+
+**Example 4: Backend Session containing ``Sampler``:**
+In this example, ``backend`` is run within a session, but ``sampler` is run independently
+of ``session``.
+.. code-block:: python
+
+    with backend.open_session() as session:
+        sampler = Sampler(backend=backend)
+        job1 = backend.run(transpiled_circuit)
+        job2 = sampler.run(transpiled_circuit)
+        session_id = session.session_id
