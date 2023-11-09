@@ -16,6 +16,7 @@ from qiskit.circuit.library import RealAmplitudes
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit.primitives import EstimatorResult, SamplerResult
+from qiskit.result import Result
 
 from qiskit_ibm_runtime import Estimator, Session, Sampler, Options
 
@@ -97,3 +98,77 @@ class TestIntegrationSession(IBMIntegrationTestCase):
         sampler = Sampler(session=new_session)
         job = sampler.run(ReferenceCircuits.bell(), shots=400)
         self.assertEqual(session_id, job.session_id)
+
+
+class TestBackendRunInSession(IBMIntegrationTestCase):
+    """Integration tests for Backend.run in Session."""
+
+    def test_session_id(self):
+        """Test that session_id is updated correctly and maintained throughout the session"""
+        backend = self.service.get_backend("ibmq_qasm_simulator")
+        backend.open_session()
+        self.assertEqual(backend.session.session_id, None)
+        self.assertTrue(backend.session.active)
+        job1 = backend.run(ReferenceCircuits.bell())
+        self.assertEqual(job1._session_id, job1.job_id())
+        job2 = backend.run(ReferenceCircuits.bell())
+        self.assertFalse(job2._session_id == job2.job_id())
+
+    def test_backend_run_with_session(self):
+        """Test that 'shots' parameter is transferred correctly"""
+        shots = 1000
+        backend = self.service.backend("ibmq_qasm_simulator")
+        backend.open_session()
+        result = backend.run(circuits=ReferenceCircuits.bell(), shots=shots).result()
+        backend.cancel_session()
+        self.assertIsInstance(result, Result)
+        self.assertEqual(result.results[0].shots, shots)
+        self.assertAlmostEqual(
+            result.get_counts()["00"], result.get_counts()["11"], delta=shots / 10
+        )
+
+    def test_session_cancel(self):
+        """Test closing a session"""
+        backend = self.service.backend("ibmq_qasm_simulator")
+        backend.open_session()
+        self.assertTrue(backend.session.active)
+        backend.cancel_session()
+        self.assertIsNone(backend.session)
+
+    def test_run_after_cancel(self):
+        """Test running after session is cancelled."""
+        backend = self.service.backend("ibmq_qasm_simulator")
+        job1 = backend.run(circuits=ReferenceCircuits.bell())
+        self.assertIsNone(backend.session)
+        self.assertIsNone(job1._session_id)
+
+        backend.open_session()
+        job2 = backend.run(ReferenceCircuits.bell())
+        self.assertIsNotNone(job2._session_id)
+        backend.cancel_session()
+
+        job3 = backend.run(circuits=ReferenceCircuits.bell())
+        self.assertIsNone(backend.session)
+        self.assertIsNone(job3._session_id)
+
+    def test_session_as_context_manager(self):
+        """Test session as a context manager"""
+        backend = self.service.backend("ibmq_qasm_simulator")
+
+        with backend.open_session() as session:
+            job1 = backend.run(ReferenceCircuits.bell())
+            session_id = session.session_id
+            self.assertEqual(session_id, job1.job_id())
+            job2 = backend.run(ReferenceCircuits.bell())
+            self.assertFalse(session_id == job2.job_id())
+
+    def test_run_after_cancel_as_context_manager(self):
+        """Test run after cancel in context manager"""
+        backend = self.service.backend("ibmq_qasm_simulator")
+        with backend.open_session() as session:
+            _ = backend.run(ReferenceCircuits.bell())
+        self.assertEqual(backend.session, session)
+        backend.cancel_session()
+        job = backend.run(circuits=ReferenceCircuits.bell())
+        self.assertIsNone(backend.session)
+        self.assertIsNone(job._session_id)

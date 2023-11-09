@@ -17,6 +17,7 @@ import os
 import subprocess
 import tempfile
 import warnings
+from unittest import skip
 from datetime import datetime
 
 import numpy as np
@@ -91,20 +92,16 @@ class TestDataSerialization(IBMTestCase):
                     decoded = [decoded]
                 self.assertTrue(all(isinstance(item, QuantumCircuit) for item in decoded))
 
+    @skip("Skip until qiskit-ibm-provider/736 is merged")
     def test_coder_operators(self):
         """Test runtime encoder and decoder for operators."""
 
         # filter warnings triggered by opflow imports
         with warnings.catch_warnings():
-            warnings.filterwarnings(
-                "ignore", category=DeprecationWarning, module=r"qiskit\.opflow\."
-            )
+            warnings.filterwarnings("ignore", category=DeprecationWarning)
             from qiskit.opflow import PauliSumOp  # pylint: disable=import-outside-toplevel
 
-        # catch warnings triggered by opflow use
-        with warnings.catch_warnings(record=True) as w_log:
             deprecated_op = PauliSumOp(SparsePauliOp(Pauli("XYZX"), coeffs=[2]))
-            self.assertTrue(len(w_log) > 0)
 
         coeff_x = Parameter("x")
         coeff_y = coeff_x + 1
@@ -124,14 +121,7 @@ class TestDataSerialization(IBMTestCase):
                 with warnings.catch_warnings():
                     # filter warnings triggered by opflow imports
                     # in L146 of utils/json.py
-                    warnings.filterwarnings(
-                        "ignore", category=DeprecationWarning, module=r"qiskit\.opflow\."
-                    )
-                    warnings.filterwarnings(
-                        "ignore",
-                        category=DeprecationWarning,
-                        module=r"qiskit_ibm_runtime\.utils\.json",
-                    )
+                    warnings.filterwarnings("ignore", category=DeprecationWarning)
                     decoded = json.loads(encoded, cls=RuntimeDecoder)
                     self.assertEqual(operator, decoded)
 
@@ -141,7 +131,12 @@ class TestDataSerialization(IBMTestCase):
         self.assertIsInstance(noise_model, NoiseModel)
         encoded = json.dumps(noise_model, cls=RuntimeEncoder)
         self.assertIsInstance(encoded, str)
-        decoded = json.loads(encoded, cls=RuntimeDecoder)
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore",
+                category=DeprecationWarning,
+            )
+            decoded = json.loads(encoded, cls=RuntimeDecoder)
         self.assertIsInstance(decoded, NoiseModel)
         self.assertEqual(noise_model.noise_qubits, decoded.noise_qubits)
         self.assertEqual(noise_model.noise_instructions, decoded.noise_instructions)
@@ -172,6 +167,7 @@ class TestDataSerialization(IBMTestCase):
             decoded = json.loads(encoded, cls=RuntimeDecoder)
             self.assertTrue(np.array_equal(decoded["ndarray"], obj["ndarray"]))
 
+    @skip("Skip until qiskit-ibm-provider/736 is merged")
     def test_encoder_instruction(self):
         """Test encoding and decoding instructions"""
         subtests = (

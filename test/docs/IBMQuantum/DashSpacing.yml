@@ -1,6 +1,6 @@
 extends: existence
 message: "Add spaces around the dash in '%s'."
-link: 'https://www.ibm.com/developerworks/library/styleguidelines/index.html#N106BF'
+link: 'https://ibmdocs-test.dcs.ibm.com/docs/en/ibm-style?topic=punctuation-dashes'
 ignorecase: true
 nonword: true
 level: error

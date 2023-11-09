@@ -15,7 +15,6 @@
 from dataclasses import dataclass
 from typing import Literal, get_args
 
-from .utils import _flexible
 
 ExecutionSupportedOptions = Literal[
     "shots",
@@ -23,7 +22,6 @@ ExecutionSupportedOptions = Literal[
 ]
 
 
-@_flexible
 @dataclass
 class ExecutionOptions:
     """Execution options.

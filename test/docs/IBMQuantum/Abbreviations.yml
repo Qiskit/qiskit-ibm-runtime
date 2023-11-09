@@ -1,6 +1,6 @@
 extends: existence
 message: "Do not use periods in all-uppercase abbreviations such as '%s'."
-link: 'https://www.ibm.com/developerworks/library/styleguidelines/index.html#N100DC'
+link: 'https://ibmdocs-test.dcs.ibm.com/docs/en/ibm-style?topic=punctuation-periods#abbreviations'
 level: error
 nonword: true
 tokens:
