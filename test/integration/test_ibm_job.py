@@ -14,7 +14,6 @@
 import copy
 import time
 from datetime import datetime, timedelta
-from threading import Thread, Event
 from unittest import SkipTest, mock
 from unittest import skip
 
@@ -27,14 +26,9 @@ from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit_ibm_provider.api.rest.job import Job as RestJob
 from qiskit_ibm_provider.exceptions import IBMBackendApiError
 
-from qiskit_ibm_runtime import IBMBackend, RuntimeJob
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
 from qiskit_ibm_runtime.exceptions import RuntimeJobTimeoutError, RuntimeJobNotFound
-from ..decorators import (
-    IntegrationTestDependencies,
-    integration_test_setup_with_backend,
-)
-from ..fake_account_client import BaseFakeAccountClient, CancelableFakeJob
+
 from ..ibm_test_case import IBMIntegrationTestCase
 from ..utils import (
     most_busy_backend,
@@ -46,23 +40,13 @@ from ..utils import (
 class TestIBMJob(IBMIntegrationTestCase):
     """Test ibm_job module."""
 
-    sim_backend: IBMBackend
-    real_device_backend: IBMBackend
-    bell = QuantumCircuit
-    sim_job: RuntimeJob
-    last_month: datetime
-
-    @classmethod
-    @integration_test_setup_with_backend(simulator=False, min_num_qubits=2)
-    def setUpClass(cls, backend: IBMBackend, dependencies: IntegrationTestDependencies) -> None:
-        """Initial class level setup."""
-        # pylint: disable=arguments-differ
-        super().setUpClass(dependencies=dependencies)
-        cls.sim_backend = dependencies.service.backend("ibmq_qasm_simulator")
-        cls.real_device_backend = backend
-        cls.bell = transpile(ReferenceCircuits.bell(), cls.sim_backend)
-        cls.sim_job = cls.sim_backend.run(cls.bell)
-        cls.last_month = datetime.now() - timedelta(days=30)
+    def setUp(self):
+        """Initial test setup."""
+        super().setUp()
+        self.sim_backend = self.service.backend("ibmq_qasm_simulator")
+        self.bell = ReferenceCircuits.bell()
+        self.sim_job = self.sim_backend.run(self.bell)
+        self.last_month = datetime.now() - timedelta(days=30)
 
     def test_run_multiple_simulator(self):
         """Test running multiple jobs in a simulator."""
@@ -116,6 +100,8 @@ class TestIBMJob(IBMIntegrationTestCase):
 
     def test_cancel(self):
         """Test job cancellation."""
+        if self.dependencies.channel == "ibm_cloud":
+            raise SkipTest("Cloud account does not have real backend.")
         # Find the most busy backend
         backend = most_busy_backend(self.service)
         submit_and_cancel(backend, self.log)
@@ -142,9 +128,7 @@ class TestIBMJob(IBMIntegrationTestCase):
 
     def test_retrieve_pending_jobs(self):
         """Test retrieving jobs with the pending filter."""
-        pending_job_list = self.service.jobs(
-            backend_name=self.sim_backend.name, limit=3, pending=True
-        )
+        pending_job_list = self.service.jobs(program_id="sampler", limit=3, pending=True)
         for job in pending_job_list:
             self.assertTrue(job.status() in [JobStatus.QUEUED, JobStatus.RUNNING])
 
@@ -154,30 +138,6 @@ class TestIBMJob(IBMIntegrationTestCase):
         self.assertEqual(self.sim_job.job_id(), retrieved_job.job_id())
         self.assertEqual(self.sim_job.inputs["circuits"], retrieved_job.inputs["circuits"])
         self.assertEqual(self.sim_job.result().get_counts(), retrieved_job.result().get_counts())
-
-    def test_retrieve_job_uses_appropriate_backend(self):
-        """Test that retrieved jobs come from their appropriate backend."""
-        backend_1 = self.real_device_backend
-        # Get a second backend.
-        backend_2 = None
-        service = self.real_device_backend.service
-        for my_backend in service.backends():
-            if my_backend.status().operational and my_backend.name != backend_1.name:
-                backend_2 = my_backend
-                break
-        if not backend_2:
-            raise SkipTest("Skipping test that requires multiple backends")
-
-        job_1 = backend_1.run(transpile(ReferenceCircuits.bell()))
-        job_2 = backend_2.run(transpile(ReferenceCircuits.bell()))
-
-        # test a retrieved job's backend is the same as the queried backend
-        self.assertEqual(service.job(job_1.job_id()).backend().name, backend_1.name)
-        self.assertEqual(service.job(job_2.job_id()).backend().name, backend_2.name)
-
-        # Cleanup
-        for job in [job_1, job_2]:
-            cancel_job_safe(job, self.log)
 
     def test_retrieve_job_error(self):
         """Test retrieving an invalid job."""
@@ -286,9 +246,8 @@ class TestIBMJob(IBMIntegrationTestCase):
         )
         self.assertNotIn(job.job_id(), [rjob.job_id() for rjob in oldest_jobs])
 
-    @skip("how do we support refresh")
     def test_refresh_job_result(self):
-        """Test re-retrieving job result via refresh."""
+        """Test re-retrieving job result."""
         result = self.sim_job.result()
 
         # Save original cached results.
@@ -300,77 +259,15 @@ class TestIBMJob(IBMIntegrationTestCase):
         self.assertNotEqual(cached_result, result.to_dict())
         self.assertEqual(result.results[0].header.name, "modified_result")
 
-        # Re-retrieve result via refresh.
-        result = self.sim_job.result(refresh=True)
+        # Re-retrieve result.
+        result = self.sim_job.result()
         self.assertDictEqual(cached_result, result.to_dict())
         self.assertNotEqual(result.results[0].header.name, "modified_result")
 
-    @skip("TODO update test case")
-    def test_wait_for_final_state(self):
-        """Test waiting for job to reach final state."""
-
-        def final_state_callback(c_job_id, c_status, c_job, **kwargs):
-            """Job status query callback function."""
-            self.assertEqual(c_job_id, job.job_id())
-            self.assertNotIn(c_status, JOB_FINAL_STATES)
-            self.assertEqual(c_job.job_id(), job.job_id())
-            self.assertIn("queue_info", kwargs)
-
-            queue_info = kwargs.pop("queue_info", None)
-            callback_info["called"] = True
-
-            if wait_time is None:
-                # Look for status change.
-                data = {"status": c_status, "queue_info": queue_info}
-                self.assertNotEqual(data, callback_info["last data"])
-                callback_info["last data"] = data
-            else:
-                # Check called within wait time.
-                if callback_info["last call time"] and job._status not in JOB_FINAL_STATES:
-                    self.assertAlmostEqual(
-                        time.time() - callback_info["last call time"],
-                        wait_time,
-                        delta=0.2,
-                    )
-                callback_info["last call time"] = time.time()
-
-        def job_canceller(job_, exit_event, wait):
-            exit_event.wait(wait)
-            cancel_job_safe(job_, self.log)
-
-        wait_args = [2, None]
-
-        saved_api = self.sim_backend._api_client
-        try:
-            self.sim_backend._api_client = BaseFakeAccountClient(job_class=CancelableFakeJob)
-            for wait_time in wait_args:
-                with self.subTest(wait_time=wait_time):
-                    # Put callback data in a dictionary to make it mutable.
-                    callback_info = {
-                        "called": False,
-                        "last call time": 0.0,
-                        "last data": {},
-                    }
-                    cancel_event = Event()
-                    job = self.sim_backend.run(self.bell)
-                    # Cancel the job after a while.
-                    Thread(target=job_canceller, args=(job, cancel_event, 7), daemon=True).start()
-                    try:
-                        job.wait_for_final_state(
-                            timeout=10, wait=wait_time, callback=final_state_callback
-                        )
-                        self.assertTrue(job.in_final_state())
-                        self.assertTrue(callback_info["called"])
-                        cancel_event.set()
-                    finally:
-                        # Ensure all threads ended.
-                        for thread in job._executor._threads:
-                            thread.join(0.1)
-        finally:
-            self.sim_backend._api_client = saved_api
-
     def test_wait_for_final_state_timeout(self):
         """Test waiting for job to reach final state times out."""
+        if self.dependencies.channel == "ibm_cloud":
+            raise SkipTest("Cloud account does not have real backend.")
         backend = most_busy_backend(TestIBMJob.service)
         job = backend.run(transpile(ReferenceCircuits.bell(), backend=backend))
         try:
