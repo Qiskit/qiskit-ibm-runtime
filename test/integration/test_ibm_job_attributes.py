@@ -32,7 +32,7 @@ from ..decorators import (
     integration_test_setup,
 )
 from ..ibm_test_case import IBMTestCase
-from ..utils import most_busy_backend
+from ..utils import most_busy_backend, cancel_job_safe
 
 
 class TestIBMJobAttributes(IBMTestCase):
@@ -85,6 +85,77 @@ class TestIBMJobAttributes(IBMTestCase):
                 job.creation_date, start_datetime, end_datetime
             ),
         )
+
+    @skip("time_per_step supported in provider but not in runtime")
+    def test_time_per_step(self):
+        """Test retrieving time per step, while ensuring the date times are in local time."""
+        # datetime, before running the job, in local time.
+        start_datetime = datetime.now().replace(tzinfo=tz.tzlocal()) - timedelta(seconds=1)
+        job = self.sim_backend.run(self.bell)
+        job.result()
+        # datetime, after the job is done running, in local time.
+        end_datetime = datetime.now().replace(tzinfo=tz.tzlocal()) + timedelta(seconds=1)
+
+        self.assertTrue(job.time_per_step())
+        for step, time_data in job.time_per_step().items():
+            self.assertTrue(
+                (start_datetime <= time_data <= end_datetime),
+                'job time step "{}={}" is not '
+                "between the start date time {} and end date time {}".format(
+                    step, time_data, start_datetime, end_datetime
+                ),
+            )
+
+        rjob = self.service.job(job.job_id())
+        self.assertTrue(rjob.time_per_step())
+
+    def test_queue_info(self):
+        """Test retrieving queue information."""
+        # Find the most busy backend.
+        backend = most_busy_backend(self.service)
+        leave_states = list(JOB_FINAL_STATES) + [JobStatus.RUNNING]
+        job = backend.run(self.bell)
+        queue_info = None
+        for _ in range(20):
+            queue_info = job.queue_info()
+            # Even if job status is queued, its queue info may not be immediately available.
+            if (
+                job._status is JobStatus.QUEUED and job.queue_position() is not None
+            ) or job._status in leave_states:
+                break
+            time.sleep(1)
+
+        if job._status is JobStatus.QUEUED and job.queue_position() is not None:
+            self.log.debug(
+                "Job id=%s, queue info=%s, queue position=%s",
+                job.job_id(),
+                queue_info,
+                job.queue_position(),
+            )
+            msg = "Job {} is queued but has no ".format(job.job_id())
+            self.assertIsNotNone(queue_info, msg + "queue info.")
+            for attr, value in queue_info.__dict__.items():
+                self.assertIsNotNone(value, msg + attr)
+            self.assertTrue(
+                all(
+                    0 < priority <= 1.0
+                    for priority in [
+                        queue_info.hub_priority,
+                        queue_info.group_priority,
+                        queue_info.project_priority,
+                    ]
+                ),
+                "Unexpected queue info {} for job {}".format(queue_info, job.job_id()),
+            )
+
+            self.assertTrue(queue_info.format())
+            self.assertTrue(repr(queue_info))
+        elif job._status is not None:
+            self.assertIsNone(job.queue_position())
+            self.log.warning("Unable to retrieve queue information")
+
+        # Cancel job so it doesn't consume more resources.
+        cancel_job_safe(job, self.log)
 
     def test_esp_readout_not_enabled(self):
         """Test that an error is thrown if ESP readout is used and the backend does not support it."""
@@ -180,69 +251,3 @@ class TestIBMJobAttributes(IBMTestCase):
         """Test cost estimation is returned correctly."""
         self.assertTrue(self.sim_job.usage_estimation)
         self.assertIn("quantum_seconds", self.sim_job.usage_estimation)
-
-    @skip("time_per_step supported in provider but not in runtime")
-    def test_time_per_step(self):
-        """Test retrieving time per step, while ensuring the date times are in local time."""
-        # datetime, before running the job, in local time.
-        start_datetime = datetime.now().replace(tzinfo=tz.tzlocal()) - timedelta(seconds=1)
-        job = self.sim_backend.run(self.bell)
-        job.result()
-        # datetime, after the job is done running, in local time.
-        end_datetime = datetime.now().replace(tzinfo=tz.tzlocal()) + timedelta(seconds=1)
-
-        self.assertTrue(job.time_per_step())
-        for step, time_data in job.time_per_step().items():
-            self.assertTrue(
-                (start_datetime <= time_data <= end_datetime),
-                'job time step "{}={}" is not '
-                "between the start date time {} and end date time {}".format(
-                    step, time_data, start_datetime, end_datetime
-                ),
-            )
-
-        rjob = self.service.job(job.job_id())
-        self.assertTrue(rjob.time_per_step())
-
-    @skip("queue_info supported in provider but not here")
-    def test_queue_info(self):
-        """Test retrieving queue information."""
-        # Find the most busy backend.
-        backend = most_busy_backend(self.service)
-        leave_states = list(JOB_FINAL_STATES) + [JobStatus.RUNNING]
-        job = backend.run(self.bell)
-        queue_info = None
-        for _ in range(20):
-            queue_info = job.queue_info()
-            # Even if job status is queued, its queue info may not be immediately available.
-            if (
-                job._status is JobStatus.QUEUED and job.queue_position() is not None
-            ) or job._status in leave_states:
-                break
-            time.sleep(1)
-
-        if job._status is JobStatus.QUEUED and job.queue_position() is not None:
-            self.log.debug(
-                "Job id=%s, queue info=%s, queue position=%s",
-                job.job_id(),
-                queue_info,
-                job.queue_position(),
-            )
-            msg = "Job {} is queued but has no ".format(job.job_id())
-            self.assertIsNotNone(queue_info, msg + "queue info.")
-            for attr, value in queue_info.__dict__.items():
-                self.assertIsNotNone(value, msg + attr)
-            self.assertTrue(
-                all(
-                    0 < priority <= 1.0
-                    for priority in [
-                        queue_info.hub_priority,
-                        queue_info.group_priority,
-                        queue_info.project_priority,
-                    ]
-                ),
-                "Unexpected queue info {} for job {}".format(queue_info, job.job_id()),
-            )
-
-            self.assertTrue(queue_info.format())
-            self.assertTrue(repr(queue_info))
