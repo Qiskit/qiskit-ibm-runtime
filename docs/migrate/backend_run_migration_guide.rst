@@ -31,6 +31,7 @@ In the Provider, the code is:
     print(job.result())
 
 In Runtime, the code will be:
+
 .. code-block:: python
 
     from qiskit_ibm_runtime import QiskitRuntimeService
@@ -56,6 +57,7 @@ using a single Session.
 **Example 3: Primitive Session containing ``backend.run``:**
 In this example, ``sampler`` is run within session, but ``backend`` is run independently
 of ``session``.
+
 .. code-block:: python
 
     with Session(backend=backend) as session:
@@ -64,8 +66,10 @@ of ``session``.
         job2 = backend.run(transpiled_circuit)
 
 **Example 4: Backend Session containing ``Sampler``:**
+
 In this example, ``backend`` is run within a session, but ``sampler` is run independently
 of ``session``.
+
 .. code-block:: python
 
     with backend.open_session() as session:
