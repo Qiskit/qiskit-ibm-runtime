@@ -19,8 +19,7 @@ from qiskit.providers import BackendV1, BackendV2
 from qiskit.utils import optionals
 from qiskit.transpiler import CouplingMap  # pylint: disable=unused-import
 
-from pydantic.dataclasses import dataclass as pydantic_dataclass
-from pydantic import ConfigDict, field_validator
+from pydantic import field_validator
 
 from .utils import Unset, UnsetType, skip_unset_validation
 

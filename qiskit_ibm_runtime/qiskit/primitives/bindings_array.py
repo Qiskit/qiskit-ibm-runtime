@@ -9,6 +9,7 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
+# type: ignore
 
 """
 Bindings array class
@@ -258,6 +259,9 @@ class BindingsArray(ShapedMixin):
 
         Returns:
             A coerced bindings array.
+
+        Raises:
+            TypeError: If input value type is invalid.
         """
         if isinstance(bindings_array, BindingsArray):
             return bindings_array
@@ -272,7 +276,9 @@ class BindingsArray(ShapedMixin):
         elif isinstance(bindings_array, Mapping):
             bindings_array = cls(kwvals=bindings_array)
         else:
-            raise TypeError(f"Parameter values type {type(bindings_array)} is not BindingsArray-like.")
+            raise TypeError(
+                f"Parameter values type {type(bindings_array)} is not BindingsArray-like."
+            )
         return bindings_array
 
     def validate(self):
@@ -285,8 +291,10 @@ class BindingsArray(ShapedMixin):
         for par, val in self.kwvals.items():
             if not isinstance(val, np.ndarray) and val.dtype != float:
                 raise TypeError(
-                    f"Invalid individual parameter value type {type(val)} for parameter {par}, should be a float."
+                    f"Invalid individual parameter value type {type(val)} "
+                    f"for parameter {par}, should be a float."
                 )
+
 
 def _standardize_shape(val: np.ndarray, shape: Tuple[int, ...]) -> np.ndarray:
     """Return ``val`` or ``val[..., None]``.

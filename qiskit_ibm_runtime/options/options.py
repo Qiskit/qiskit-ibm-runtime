@@ -13,7 +13,7 @@
 """Primitive options."""
 
 from abc import abstractmethod
-from typing import Optional, Union, ClassVar
+from typing import Optional, Union, ClassVar, Any
 from dataclasses import dataclass, fields, field
 import copy
 import warnings
@@ -97,7 +97,7 @@ class OptionsV2(BaseOptions, BasePrimitiveOptions):
     environment: Union[EnvironmentOptions, Dict] = Field(default_factory=EnvironmentOptions)
     simulator: Union[SimulatorOptions, Dict] = Field(default_factory=SimulatorOptions)
 
-    def update(self, **kwargs):
+    def update(self, **kwargs: Any) -> None:
         """Update the options."""
         merged = merge_options(self, kwargs)
         for key, val in merged.items():

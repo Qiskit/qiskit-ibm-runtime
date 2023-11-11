@@ -58,7 +58,7 @@ class TestPrimitivesV2(IBMTestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.qx = ReferenceCircuits.bell()
+        cls.circ = ReferenceCircuits.bell()
         cls.obs = SparsePauliOp.from_list([("IZ", 1)])
         return super().setUpClass()
 
@@ -273,57 +273,72 @@ class TestPrimitivesV2(IBMTestCase):
     def test_parameters_single_circuit(self, primitive):
         """Test parameters for a single cirucit."""
 
-        qx = RealAmplitudes(num_qubits=2, reps=1)
+        circ = RealAmplitudes(num_qubits=2, reps=1)
 
         param_vals = [
             # 1 set of parameter values
             [1, 2, 3, 4],
-            [np.pi] * qx.num_parameters,
+            [np.pi] * circ.num_parameters,
             np.random.uniform(size=(4,)),
-            # {param: [2.0] for param in qx.parameters},  # TODO: this doesn't work now
+            # {param: [2.0] for param in circ.parameters},  # TODO: this doesn't work now
             # N sets of parameter values
             # [[1, 2, 3, 4]] * 2,  # TODO: This doesn't work right now
             np.random.random((2, 4)),
             np.linspace(0, 1, 24).reshape((2, 3, 4)),
-            {param: [1, 2, 3] for param in qx.parameters},
-            {param: np.linspace(0, 1, 5) for param in qx.parameters},
-            {tuple(qx.parameters): np.random.random((2, 3, 4))},
-            {tuple(qx.parameters[:2]): np.random.random((2, 1, 2)), tuple(qx.parameters[2:4]): np.random.random((2, 1, 2))},
+            {param: [1, 2, 3] for param in circ.parameters},
+            {param: np.linspace(0, 1, 5) for param in circ.parameters},
+            {tuple(circ.parameters): np.random.random((2, 3, 4))},
+            {
+                tuple(circ.parameters[:2]): np.random.random((2, 1, 2)),
+                tuple(circ.parameters[2:4]): np.random.random((2, 1, 2)),
+            },
         ]
 
         inst = primitive(backend=get_mocked_backend())
         for val in param_vals:
             with self.subTest(val=val):
-                task = (qx, "ZZ", val) if isinstance(inst, EstimatorV2) else (qx, val)
+                task = (circ, "ZZ", val) if isinstance(inst, EstimatorV2) else (circ, val)
                 inst.run(task)
 
     @data(EstimatorV2, SamplerV2)
     def test_parameters_vals_kwvals(self, primitive):
         """Test a mixture of vals and kwvals."""
-        qx = RealAmplitudes(num_qubits=2, reps=1)
+        circ = RealAmplitudes(num_qubits=2, reps=1)
         inst = primitive(backend=get_mocked_backend())
 
         with self.subTest("0-d"):
             param_vals = np.linspace(0, 1, 4)
-            kwvals = {tuple(qx.parameters[:2]): param_vals[:2]}
-            ba = BindingsArray(vals=param_vals[2:], kwvals=kwvals)
-            task = (qx, "ZZ", ba) if isinstance(inst, EstimatorV2) else (qx, ba)
+            kwvals = {tuple(circ.parameters[:2]): param_vals[:2]}
+            barray = BindingsArray(vals=param_vals[2:], kwvals=kwvals)
+            task = (circ, "ZZ", barray) if isinstance(inst, EstimatorV2) else (circ, barray)
             inst.run(task)
 
         with self.subTest("n-d"):
-            kwvals = {tuple(qx.parameters[:2]): np.random.random((2, 3, 2))}
-            ba = BindingsArray(vals=np.random.random((2, 3, 2)), kwvals=kwvals)
-            task = (qx, "ZZ", ba) if isinstance(inst, EstimatorV2) else (qx, ba)
+            kwvals = {tuple(circ.parameters[:2]): np.random.random((2, 3, 2))}
+            barray = BindingsArray(vals=np.random.random((2, 3, 2)), kwvals=kwvals)
+            task = (circ, "ZZ", barray) if isinstance(inst, EstimatorV2) else (circ, barray)
             inst.run(task)
 
     @data(EstimatorV2, SamplerV2)
     def test_parameters_multiple_circuits(self, primitive):
         """Test multiple parameters for multiple circuits."""
-        circuits = [QuantumCircuit(2), RealAmplitudes(num_qubits=2, reps=1), RealAmplitudes(num_qubits=3, reps=1) ]
+        circuits = [
+            QuantumCircuit(2),
+            RealAmplitudes(num_qubits=2, reps=1),
+            RealAmplitudes(num_qubits=3, reps=1),
+        ]
 
         param_vals = [
-            ([], np.random.uniform(size=(4,)), np.random.uniform(size=(6,)),),
-            ([], np.random.random((2, 4)), np.random.random((2, 6)),),
+            (
+                [],
+                np.random.uniform(size=(4,)),
+                np.random.uniform(size=(6,)),
+            ),
+            (
+                [],
+                np.random.random((2, 4)),
+                np.random.random((2, 6)),
+            ),
         ]
 
         inst = primitive(backend=get_mocked_backend())
@@ -331,7 +346,11 @@ class TestPrimitivesV2(IBMTestCase):
             with self.subTest(all_params=all_params):
                 tasks = []
                 for circ, circ_params in zip(circuits, all_params):
-                    tasklet = (circ, "Z" * circ.num_qubits, circ_params) if isinstance(inst, EstimatorV2) else (circ, circ_params)
+                    tasklet = (
+                        (circ, "Z" * circ.num_qubits, circ_params)
+                        if isinstance(inst, EstimatorV2)
+                        else (circ, circ_params)
+                    )
                     tasks.append(tasklet)
                 inst.run(tasks)
 
@@ -358,7 +377,7 @@ class TestPrimitivesV2(IBMTestCase):
             (
                 {"skip_transpilation": True},
                 {"skip_transpilation": True},
-            )
+            ),
         ]
 
         for options, expected in options_vars:
@@ -415,7 +434,6 @@ class TestPrimitivesV2(IBMTestCase):
     @data(EstimatorV2, SamplerV2)
     def test_run_multiple_different_options(self, primitive):
         """Test multiple runs with different options."""
-        opt_cls = primitive._options_class
         session = MagicMock(spec=MockSession)
         inst = primitive(session=session, options={"shots": 100})
         inst.run(**get_primitive_inputs(inst))
@@ -506,9 +524,9 @@ class TestPrimitivesV2(IBMTestCase):
                 inst = cls(session=session, options=options)
 
                 if isinstance(inst, Estimator):
-                    inst.run(self.qx, observables=self.obs)
+                    inst.run(self.circ, observables=self.obs)
                 else:
-                    inst.run(self.qx)
+                    inst.run(self.circ)
 
                 if sys.version_info >= (3, 8):
                     inputs = session.run.call_args.kwargs["inputs"]
@@ -526,7 +544,7 @@ class TestPrimitivesV2(IBMTestCase):
 
                 session.service.backend().configuration().simulator = False
                 inst = cls(session=session)
-                inst.run(self.qx, observables=self.obs)
+                inst.run(self.circ, observables=self.obs)
                 if sys.version_info >= (3, 8):
                     inputs = session.run.call_args.kwargs["inputs"]
                 else:
@@ -543,7 +561,7 @@ class TestPrimitivesV2(IBMTestCase):
 
                 session.service.backend().configuration().simulator = True
                 inst = cls(session=session)
-                inst.run(self.qx, observables=self.obs)
+                inst.run(self.circ, observables=self.obs)
                 if sys.version_info >= (3, 8):
                     inputs = session.run.call_args.kwargs["inputs"]
                 else:
@@ -786,9 +804,9 @@ class TestPrimitivesV2(IBMTestCase):
                 with self.subTest(msg=f"{cls}, {options}"):
                     inst = cls(session=session)
                     if isinstance(inst, Estimator):
-                        _ = inst.run(self.qx, observables=self.obs, **options)
+                        _ = inst.run(self.circ, observables=self.obs, **options)
                     else:
-                        _ = inst.run(self.qx, **options)
+                        _ = inst.run(self.circ, **options)
 
     @skip("Q-Ctrl does not support v2 yet")
     def test_qctrl_unsupported_values_for_options(self):
@@ -809,8 +827,8 @@ class TestPrimitivesV2(IBMTestCase):
                     inst = cls(session=session)
                     with self.assertRaises(ValueError) as exc:
                         if isinstance(inst, Sampler):
-                            _ = inst.run(self.qx, **bad_opt)
+                            _ = inst.run(self.circ, **bad_opt)
                         else:
-                            _ = inst.run(self.qx, observables=self.obs, **bad_opt)
+                            _ = inst.run(self.circ, observables=self.obs, **bad_opt)
 
                         self.assertIn(expected_message, str(exc.exception))

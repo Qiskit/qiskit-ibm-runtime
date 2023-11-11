@@ -68,9 +68,8 @@ from qiskit_ibm_provider.qpy import (
 )
 
 # TODO: Remove when they are in terra
+from ..qiskit.primitives import ObservablesArray, BindingsArray
 from ..qiskit.primitives.base_task import BaseTask
-from ..qiskit.primitives.observables_array import ObservablesArray
-from ..qiskit.primitives.bindings_array import BindingsArray
 
 _TERRA_VERSION = tuple(
     int(x) for x in re.match(r"\d+\.\d+\.\d", _terra_version_string).group(0).split(".")[:3]
@@ -267,7 +266,7 @@ class RuntimeEncoder(json.JSONEncoder):
                     encoded_kwvals[json.dumps(key, cls=RuntimeEncoder)] = val
                 out_val["kwvals"] = encoded_kwvals
             if obj.vals:
-                out_val["vals"] = obj.vals
+                out_val["vals"] = obj.vals  # type: ignore[assignment]
             out_val["shape"] = obj.shape
             return {"__type__": "BindingsArray", "__value__": out_val}
 

@@ -12,10 +12,9 @@
 
 """Temporary copy of base primitives"""
 
-from .base_estimator import BaseEstimatorV2
-from .base_sampler import BaseSamplerV2
-
-from .bindings_array import BindingsArray
-from .observables_array import ObservablesArray
-from .estimator_task import EstimatorTask
-from .sampler_task import SamplerTask
+from .base_estimator import BaseEstimatorV2  # type: ignore[attr-defined]
+from .base_sampler import BaseSamplerV2  # type: ignore[attr-defined]
+from .bindings_array import BindingsArray  # type: ignore[attr-defined]
+from .observables_array import ObservablesArray  # type: ignore[attr-defined]
+from .estimator_task import EstimatorTask  # type: ignore[attr-defined]
+from .sampler_task import SamplerTask  # type: ignore[attr-defined]

@@ -16,13 +16,7 @@
 from __future__ import annotations
 from typing import Optional
 
-from abc import ABC, abstractmethod
-from dataclasses import replace
-from collections.abc import Sequence
-
-import numpy as np
-
-from qiskit.circuit import QuantumCircuit
+from abc import ABC
 
 from .options import BasePrimitiveOptions, BasePrimitiveOptionsLike
 
@@ -57,6 +51,7 @@ class BasePrimitiveV2(ABC):
             raise TypeError(
                 f"Invalid 'options' type. It can only be a dictionary of {self._options_class}"
             )
+
 
 #     @abstractmethod
 #     def set_options(self, **fields) -> None:

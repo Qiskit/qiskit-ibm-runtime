@@ -14,17 +14,13 @@
 
 from __future__ import annotations
 import os
-from typing import Optional, Dict, Sequence, Any, Union, Mapping, Iterable
+from typing import Optional, Dict, Sequence, Any, Union
 import logging
 import typing
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info.operators.base_operator import BaseOperator
 from qiskit.primitives import BaseEstimator
-from qiskit.quantum_info import SparsePauliOp, Pauli
-from qiskit.primitives.utils import init_observable
-from qiskit.circuit import Parameter
-from qiskit.primitives.base.base_primitive import _isreal
 
 from .runtime_job import RuntimeJob
 from .ibm_backend import IBMBackend
@@ -32,11 +28,9 @@ from .options import Options
 from .options.estimator_options import EstimatorOptions
 from .base_primitive import BasePrimitiveV1, BasePrimitiveV2
 from .utils.qctrl import validate as qctrl_validate
-from .utils.deprecation import issue_deprecation_msg
 
 # TODO: remove when we have real v2 base estimator
 from .qiskit.primitives import BaseEstimatorV2
-from .qiskit.primitives.estimator_task import EstimatorTaskLike, EstimatorTask
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session

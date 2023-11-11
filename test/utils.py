@@ -36,9 +36,6 @@ from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.runtime_job import RuntimeJob
 from qiskit_ibm_runtime.exceptions import RuntimeInvalidStateError
 
-# TODO: remove when we have real v2 base in terra
-from qiskit_ibm_runtime.qiskit.primitives import EstimatorTask, SamplerTask
-
 
 def setup_test_logging(logger: logging.Logger, filename: str) -> None:
     """Set logging to file and stdout for a logger.

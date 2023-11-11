@@ -9,6 +9,7 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
+# type: ignore
 
 """
 Array shape related classes and functions
@@ -113,7 +114,7 @@ def _flatten_to_ints(arg: ShapeInput) -> Iterable[int]:
             raise ValueError(f"Expected {item} to be iterable or an integer.") from ex
 
 
-def shape_tuple(*shapes: ShapeInput) -> Tuple[int, ...]:
+def shape_tuple(*shapes: ShapeInput) -> Tuple[int, ...]:  # pylint: disable=differing-param-doc
     """
     Flatten the input into a single tuple of integers, preserving order.
 

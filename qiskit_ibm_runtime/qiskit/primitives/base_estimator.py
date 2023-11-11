@@ -9,6 +9,7 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
+# type: ignore
 
 r"""
 
@@ -80,7 +81,7 @@ Here is an example of how the estimator is used.
 
 from __future__ import annotations
 
-from abc import abstractmethod, ABC
+from abc import abstractmethod
 from typing import Generic, TypeVar, Iterable, Optional
 
 from qiskit.circuit import QuantumCircuit

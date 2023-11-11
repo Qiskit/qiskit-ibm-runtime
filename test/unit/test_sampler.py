@@ -58,10 +58,11 @@ class TestSamplerV2(IBMTestCase):
         super().setUp()
         self.circuit = QuantumCircuit(1, 1)
 
-    @data([(RealAmplitudes(num_qubits=2, reps=1), [1, 2, 3, 4])],
-          [(RealAmplitudes(num_qubits=2, reps=1), [1, 2, 3, 4])],
-          [(QuantumCircuit(2),)],
-          [(RealAmplitudes(num_qubits=1, reps=1), [1, 2]), (QuantumCircuit(3),)]
+    @data(
+        [(RealAmplitudes(num_qubits=2, reps=1), [1, 2, 3, 4])],
+        [(RealAmplitudes(num_qubits=2, reps=1), [1, 2, 3, 4])],
+        [(QuantumCircuit(2),)],
+        [(RealAmplitudes(num_qubits=1, reps=1), [1, 2]), (QuantumCircuit(3),)],
     )
     def test_run_program_inputs(self, in_tasks):
         """Verify program inputs are correct."""

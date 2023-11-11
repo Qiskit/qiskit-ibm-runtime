@@ -17,7 +17,7 @@ Options class
 from __future__ import annotations
 
 from abc import ABC
-from typing import Union
+from typing import Union, Any
 
 from pydantic import ConfigDict
 from pydantic.dataclasses import dataclass
@@ -31,7 +31,7 @@ primitive_dataclass = dataclass(
 class BasePrimitiveOptions(ABC):
     """Base calss of options for primitives."""
 
-    def update(self, **kwargs):
+    def update(self, **kwargs: Any) -> None:
         """Update the options."""
         for key, val in kwargs.items():
             setattr(self, key, val)

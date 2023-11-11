@@ -9,6 +9,7 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
+# type: ignore
 
 """
 Sampler Task class
@@ -18,8 +19,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Union, Optional
-
-import numpy as np
 
 from qiskit import QuantumCircuit
 
@@ -49,6 +48,9 @@ class SamplerTask(BaseTask, ShapedMixin):
 
         Returns:
             A coerced estiamtor task.
+
+        Raises:
+            ValueError: If input values are invalid.
         """
         if isinstance(task, SamplerTask):
             return task
@@ -61,7 +63,11 @@ class SamplerTask(BaseTask, ShapedMixin):
         return cls(circuit=circuit, parameter_values=parameter_values)
 
     def validate(self) -> None:
-        """Validate the task."""
+        """Validate the task.
+
+        Raises:
+            ValueError: If input values are invalid.
+        """
         super().validate()
         self.parameter_values.validate()
         # Cross validate circuits and paramter_values
@@ -73,6 +79,4 @@ class SamplerTask(BaseTask, ShapedMixin):
             )
 
 
-SamplerTaskLike = Union[
-    SamplerTask, tuple[QuantumCircuit, BindingsArrayLike]
-]
+SamplerTaskLike = Union[SamplerTask, tuple[QuantumCircuit, BindingsArrayLike]]

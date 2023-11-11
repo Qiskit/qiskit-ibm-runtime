@@ -521,16 +521,16 @@ class TestOptionsV2(IBMTestCase):
         self.assertIn(list(opt.keys())[0], str(exc.exception))
 
     @data(
-            {"resilience_level": 2},
-            {"max_execution_time": 200},
-            {"resilience_level": 2, "transpilation": {"initial_layout": [1, 2]}},
-            {"shots": 1024, "seed_simulator": 42},
-            {"resilience_level": 2, "shots": 2048, "initial_layout": [3, 4]},
-            {
-                "initial_layout": [1, 2],
-                "transpilation": {"layout_method": "trivial"},
-                "log_level": "INFO",
-            },
+        {"resilience_level": 2},
+        {"max_execution_time": 200},
+        {"resilience_level": 2, "transpilation": {"initial_layout": [1, 2]}},
+        {"shots": 1024, "seed_simulator": 42},
+        {"resilience_level": 2, "shots": 2048, "initial_layout": [3, 4]},
+        {
+            "initial_layout": [1, 2],
+            "transpilation": {"layout_method": "trivial"},
+            "log_level": "INFO",
+        },
     )
     def test_update_options(self, new_opts):
         """Test update method."""
@@ -543,6 +543,4 @@ class TestOptionsV2(IBMTestCase):
             f"new_opts={new_opts}, combined={options}",
         )
         # Make sure the structure didn't change.
-        self.assertTrue(
-            dict_keys_equal(asdict(options), asdict(EstimatorOptions()))
-        )
+        self.assertTrue(dict_keys_equal(asdict(options), asdict(EstimatorOptions())))

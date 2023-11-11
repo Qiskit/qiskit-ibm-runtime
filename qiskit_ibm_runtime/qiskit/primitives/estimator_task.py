@@ -9,6 +9,7 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
+# type: ignore
 
 """
 Estiamtor Task class
@@ -52,6 +53,9 @@ class EstimatorTask(BaseTask, ShapedMixin):
 
         Returns:
             A coerced estiamtor task.
+
+        Raises:
+            ValueError: If input values are invalid.
         """
         if isinstance(task, EstimatorTask):
             return task

@@ -34,7 +34,7 @@ from qiskit_aer.noise import NoiseModel
 from qiskit_ibm_runtime.utils import RuntimeEncoder, RuntimeDecoder
 
 # TODO: Remove when they are in terra
-from qiskit_ibm_runtime.qiskit.primitives import BindingsArray, ObservablesArray, EstimatorTask
+from qiskit_ibm_runtime.qiskit.primitives import BindingsArray, ObservablesArray
 
 from .mock.fake_runtime_client import CustomResultRuntimeJob
 from .mock.fake_runtime_service import FakeRuntimeService
@@ -260,11 +260,13 @@ if __name__ == '__main__':
         pass
 
     @data(
-            ObservablesArray([["X", "Y", "Z"], ["0", "1", "+"]]),
-            ObservablesArray(qi.pauli_basis(2)),
-            ObservablesArray([qi.random_pauli_list(2, 3) for _ in range(5)]),
-            ObservablesArray(np.array([["X", "Y"], ["Z", "I"]], dtype=object)),
-            ObservablesArray([[SparsePauliOp(qi.random_pauli_list(2, 3)) for _ in range(3)] for _ in range(5)])
+        ObservablesArray([["X", "Y", "Z"], ["0", "1", "+"]]),
+        ObservablesArray(qi.pauli_basis(2)),
+        ObservablesArray([qi.random_pauli_list(2, 3) for _ in range(5)]),
+        ObservablesArray(np.array([["X", "Y"], ["Z", "I"]], dtype=object)),
+        ObservablesArray(
+            [[SparsePauliOp(qi.random_pauli_list(2, 3)) for _ in range(3)] for _ in range(5)]
+        ),
     )
     def test_obs_array(self, oarray):
         """Test encoding and decoding ObservablesArray"""
@@ -275,18 +277,29 @@ if __name__ == '__main__':
         self.assertEqual(decoded, oarray.tolist())
 
     @data(
-            BindingsArray([1, 2, 3.4]),
-            BindingsArray([4.0, 5.0, 6.0], shape=()),
-            BindingsArray([[1+2j, 2+3j], [3+4j, 4+5j]], shape=(2,)),
-            BindingsArray(np.random.uniform(size=(5,))),
-            BindingsArray(np.linspace(0, 1, 30).reshape((2, 3, 5))),
-            BindingsArray(kwvals={Parameter("a"): [0.0], Parameter("b"): [1.0]}, shape=1),
-            BindingsArray(kwvals={(Parameter("a"), Parameter("b")): np.random.random((4, 3, 2)), Parameter("c"): np.random.random((4, 3))}),
-            BindingsArray(vals=np.random.random((2, 3, 4)), kwvals={(Parameter("a"), Parameter("b")): np.random.random((2, 3, 2)), Parameter("c"): np.random.random((2, 3))}),
-            BindingsArray(vals=[[1.0, 2.0], [1.1, 2.1]], kwvals={Parameter("c"): [3.0, 3.1]})
-        )
+        BindingsArray([1, 2, 3.4]),
+        BindingsArray([4.0, 5.0, 6.0], shape=()),
+        BindingsArray([[1 + 2j, 2 + 3j], [3 + 4j, 4 + 5j]], shape=(2,)),
+        BindingsArray(np.random.uniform(size=(5,))),
+        BindingsArray(np.linspace(0, 1, 30).reshape((2, 3, 5))),
+        BindingsArray(kwvals={Parameter("a"): [0.0], Parameter("b"): [1.0]}, shape=1),
+        BindingsArray(
+            kwvals={
+                (Parameter("a"), Parameter("b")): np.random.random((4, 3, 2)),
+                Parameter("c"): np.random.random((4, 3)),
+            }
+        ),
+        BindingsArray(
+            vals=np.random.random((2, 3, 4)),
+            kwvals={
+                (Parameter("a"), Parameter("b")): np.random.random((2, 3, 2)),
+                Parameter("c"): np.random.random((2, 3)),
+            },
+        ),
+        BindingsArray(vals=[[1.0, 2.0], [1.1, 2.1]], kwvals={Parameter("c"): [3.0, 3.1]}),
+    )
     def test_bindings_array(self, barray):
-        """Test encoding and decoding BindingsArray. """
+        """Test encoding and decoding BindingsArray."""
 
         def _to_str_keyed(_in_dict):
             _out_dict = {}

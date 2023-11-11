@@ -30,8 +30,7 @@ from .constants import DEFAULT_DECODERS
 from .qiskit_runtime_service import QiskitRuntimeService
 
 # TODO: remove when we have real v2 base estimator
-from .qiskit.primitives.estimator_task import EstimatorTask
-from .qiskit.primitives.sampler_task import SamplerTask
+from .qiskit.primitives import EstimatorTask, SamplerTask
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
@@ -42,7 +41,7 @@ logger = logging.getLogger(__name__)
 class BasePrimitiveV2(ABC):
     """Base class for Qiskit Runtime primitives."""
 
-    _options_class: type[BaseOptions] = BaseOptions
+    _options_class: Optional[type[BaseOptions]] = None
     version = 2
 
     def __init__(

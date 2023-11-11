@@ -23,7 +23,7 @@ import numpy as np
 from ddt import data, ddt
 
 from qiskit_ibm_runtime import Estimator, Session, EstimatorV2, EstimatorOptions
-from qiskit_ibm_runtime.qiskit.primitives import EstimatorTask, BindingsArray
+from qiskit_ibm_runtime.qiskit.primitives import EstimatorTask
 
 from .mock.fake_runtime_service import FakeRuntimeService
 from ..ibm_test_case import IBMTestCase
@@ -65,10 +65,11 @@ class TestEstimatorV2(IBMTestCase):
         self.circuit = QuantumCircuit(1, 1)
         self.observables = SparsePauliOp.from_list([("I", 1)])
 
-    @data([(RealAmplitudes(num_qubits=2, reps=1), ["ZZ"], [1, 2, 3, 4])],
-          [(RealAmplitudes(num_qubits=2, reps=1), ["ZZ", "YY"], [1, 2, 3, 4])],
-          [(QuantumCircuit(2), ["XX"])],
-          [(RealAmplitudes(num_qubits=1, reps=1), ["I"], [1, 2]), (QuantumCircuit(3), ["YYY"])]
+    @data(
+        [(RealAmplitudes(num_qubits=2, reps=1), ["ZZ"], [1, 2, 3, 4])],
+        [(RealAmplitudes(num_qubits=2, reps=1), ["ZZ", "YY"], [1, 2, 3, 4])],
+        [(QuantumCircuit(2), ["XX"])],
+        [(RealAmplitudes(num_qubits=1, reps=1), ["I"], [1, 2]), (QuantumCircuit(3), ["YYY"])],
     )
     def test_run_program_inputs(self, in_tasks):
         """Verify program inputs are correct."""
@@ -176,8 +177,14 @@ class TestEstimatorV2(IBMTestCase):
             [qi.random_pauli_list(2)],
             [Pauli("XX"), Pauli("YY")],
             [SparsePauliOp(["XX"]), SparsePauliOp(["YY"])],
-            [{"XX": 1 + 2j}, {"YY": 1 + 2j}, ],
-            [{Pauli("XX"): 1 + 2j}, {Pauli("YY"): 1 + 2j},],
+            [
+                {"XX": 1 + 2j},
+                {"YY": 1 + 2j},
+            ],
+            [
+                {Pauli("XX"): 1 + 2j},
+                {Pauli("YY"): 1 + 2j},
+            ],
             [random_pauli_list(2, 2)],
             [random_pauli_list(2, 3) for _ in range(5)],
             np.array([["II", "XX", "YY"], ["ZZ", "XZ", "II"]], dtype=object),
@@ -209,9 +216,15 @@ class TestEstimatorV2(IBMTestCase):
             # ],
             [["XX", "YY"], ["ZZZ", "III"]],
             [[Pauli("XX"), Pauli("YY")], [Pauli("XXX"), Pauli("YYY")]],
-            [[SparsePauliOp(["XX"]), SparsePauliOp(["YY"])], [SparsePauliOp(["XXX"]), SparsePauliOp(["YYY"])]],
+            [
+                [SparsePauliOp(["XX"]), SparsePauliOp(["YY"])],
+                [SparsePauliOp(["XXX"]), SparsePauliOp(["YYY"])],
+            ],
             [[{"XX": 1 + 2j}, {"YY": 1 + 2j}], [{"XXX": 1 + 2j}, {"YYY": 1 + 2j}]],
-            [[{Pauli("XX"): 1 + 2j}, {Pauli("YY"): 1 + 2j}], [{Pauli("XXX"): 1 + 2j}, {Pauli("YYY"): 1 + 2j}]],
+            [
+                [{Pauli("XX"): 1 + 2j}, {Pauli("YY"): 1 + 2j}],
+                [{Pauli("XXX"): 1 + 2j}, {Pauli("YYY"): 1 + 2j}],
+            ],
             [random_pauli_list(2, 2), random_pauli_list(3, 2)],
         ]
 
@@ -241,4 +254,4 @@ class TestEstimatorV2(IBMTestCase):
         for obs in all_obs:
             with self.subTest(obs=obs):
                 with self.assertRaises(ValueError):
-                    estimator.run((circuit,obs))
+                    estimator.run((circuit, obs))
