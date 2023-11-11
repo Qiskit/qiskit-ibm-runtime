@@ -14,8 +14,8 @@
 
 from typing import Optional, Callable, List, Literal
 
-from pydantic.dataclasses import dataclass as pydantic_dataclass
-from pydantic import ConfigDict
+# TODO use real base options when available
+from ..qiskit.primitives.options import primitive_dataclass
 
 LogLevelType = Literal[
     "DEBUG",
@@ -26,9 +26,7 @@ LogLevelType = Literal[
 ]
 
 
-@pydantic_dataclass(
-    config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid")
-)
+@primitive_dataclass
 class EnvironmentOptions:
     """Options related to the execution environment.
 

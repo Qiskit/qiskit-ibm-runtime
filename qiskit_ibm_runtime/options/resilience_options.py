@@ -14,10 +14,13 @@
 
 from typing import Sequence, Literal, Union, Optional
 
-from pydantic.dataclasses import dataclass as pydantic_dataclass
-from pydantic import ConfigDict, field_validator, model_validator
+from pydantic import field_validator, model_validator
 
 from .utils import Unset, UnsetType, skip_unset_validation
+
+# TODO use real base options when available
+from ..qiskit.primitives.options import primitive_dataclass
+
 
 ResilienceSupportedOptions = Literal[
     "noise_amplifier",
@@ -45,9 +48,7 @@ ZneExtrapolatorType = Literal[
 ]
 
 
-@pydantic_dataclass(
-    config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid")
-)
+@primitive_dataclass
 class ResilienceOptionsV2:
     """Resilience options.
 
@@ -180,9 +181,7 @@ class ResilienceOptionsV2:
 #     pec_max_overhead: float = 100
 
 
-@pydantic_dataclass(
-    config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid")
-)
+@primitive_dataclass
 class ResilienceOptionsV1:
     """Resilience options.
 

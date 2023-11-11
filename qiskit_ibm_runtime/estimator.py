@@ -14,12 +14,9 @@
 
 from __future__ import annotations
 import os
-from typing import Optional, Dict, Sequence, Any, Union, Mapping
+from typing import Optional, Dict, Sequence, Any, Union, Mapping, Iterable
 import logging
 import typing
-
-import numpy as np
-from numpy.typing import ArrayLike
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info.operators.base_operator import BaseOperator
@@ -39,6 +36,7 @@ from .utils.deprecation import issue_deprecation_msg
 
 # TODO: remove when we have real v2 base estimator
 from .qiskit.primitives import BaseEstimatorV2
+from .qiskit.primitives.estimator_task import EstimatorTaskLike, EstimatorTask
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
@@ -47,23 +45,6 @@ if typing.TYPE_CHECKING:
     from qiskit.opflow import PauliSumOp
 
 logger = logging.getLogger(__name__)
-
-
-BasisObservableLike = Union[str, Pauli, SparsePauliOp, Mapping[Union[str, Pauli], complex]]
-"""Types that can be natively used to construct a :const:`BasisObservable`."""
-
-ObservablesArrayLike = Union[ArrayLike, Sequence[BasisObservableLike], BasisObservableLike]
-
-ParameterMappingLike = Mapping[
-    Parameter, Union[float, np.ndarray, Sequence[float], Sequence[Sequence[float]]]
-]
-BindingsArrayLike = Union[
-    float,
-    np.ndarray,
-    ParameterMappingLike,
-    Sequence[Union[float, Sequence[float], np.ndarray, ParameterMappingLike]],
-]
-"""Parameter types that can be bound to a single circuit."""
 
 
 class Estimator:
@@ -118,8 +99,7 @@ class EstimatorV2(BasePrimitiveV2, Estimator, BaseEstimatorV2):
             print(psi1_H23.result())
     """
 
-    _ALLOWED_BASIS: str = "IXYZ01+-rl"
-    _OPTIONS_CLASS = EstimatorOptions
+    _options_class = EstimatorOptions
 
     version = 2
 
@@ -149,91 +129,14 @@ class EstimatorV2(BasePrimitiveV2, Estimator, BaseEstimatorV2):
         Raises:
             NotImplementedError: If "q-ctrl" channel strategy is used.
         """
-        self.options: EstimatorOptions
+        # self.options: EstimatorOptions
+
         BaseEstimatorV2.__init__(self)
         Estimator.__init__(self)
         BasePrimitiveV2.__init__(self, backend=backend, session=session, options=options)
 
         if self._service._channel_strategy == "q-ctrl":
             raise NotImplementedError("EstimatorV2 is not supported with q-ctrl channel strategy.")
-
-    def run(  # pylint: disable=arguments-differ
-        self,
-        circuits: QuantumCircuit | Sequence[QuantumCircuit],
-        observables: Sequence[ObservablesArrayLike]
-        | ObservablesArrayLike
-        | Sequence[BaseOperator]
-        | BaseOperator,
-        parameter_values: BindingsArrayLike | Sequence[BindingsArrayLike] | None = None,
-        **kwargs: Any,
-    ) -> RuntimeJob:
-        """Submit a request to the estimator primitive.
-
-        Args:
-            circuits: a (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
-                a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
-
-            observables: Observable objects.
-
-            parameter_values: Concrete parameters to be bound.
-
-            **kwargs: Individual options to overwrite the default primitive options.
-                These include the runtime options in :class:`qiskit_ibm_runtime.RuntimeOptions`.
-
-        Returns:
-            Submitted job.
-            The result of the job is an instance of :class:`qiskit.primitives.EstimatorResult`.
-
-        Raises:
-            ValueError: Invalid arguments are given.
-        """
-        # To bypass base class merging of options.
-        user_kwargs = {"_user_kwargs": kwargs}
-
-        return super().run(
-            circuits=circuits,
-            observables=observables,
-            parameter_values=parameter_values,
-            **user_kwargs,
-        )
-
-    def _run(  # pylint: disable=arguments-differ
-        self,
-        circuits: Sequence[QuantumCircuit],
-        observables: Sequence[ObservablesArrayLike],
-        parameter_values: Sequence[Sequence[float]],
-        **kwargs: Any,
-    ) -> RuntimeJob:
-        """Submit a request to the estimator primitive.
-
-        Args:
-            circuits: a (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
-                a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
-
-            observables: A list of observable objects.
-
-            parameter_values: An optional list of concrete parameters to be bound.
-
-            **kwargs: Individual options to overwrite the default primitive options.
-                These include the runtime options in :class:`~qiskit_ibm_runtime.RuntimeOptions`.
-
-        Returns:
-            Submitted job
-        """
-        logger.debug(
-            "Running %s with new options %s",
-            self.__class__.__name__,
-            kwargs.get("_user_kwargs", {}),
-        )
-        inputs = {
-            "circuits": circuits,
-            "observables": observables,
-            "parameters": [circ.parameters for circ in circuits],
-            "parameter_values": parameter_values,
-        }
-        return self._run_primitive(
-            primitive_inputs=inputs, user_kwargs=kwargs.get("_user_kwargs", {})
-        )
 
     def _validate_options(self, options: dict) -> None:
         """Validate that program inputs (options) are valid
@@ -242,8 +145,6 @@ class EstimatorV2(BasePrimitiveV2, Estimator, BaseEstimatorV2):
             ValidationError: if validation fails.
             ValueError: if validation fails.
         """
-        self._OPTIONS_CLASS(**options)
-
         # TODO: Server should have different optimization/resilience levels for simulator
 
         if (
@@ -255,83 +156,6 @@ class EstimatorV2(BasePrimitiveV2, Estimator, BaseEstimatorV2):
             raise ValueError(
                 "When the backend is a simulator and resilience_level == 3,"
                 "a coupling map is required."
-            )
-
-    @staticmethod
-    def _validate_observables(
-        observables: Sequence[ObservablesArrayLike] | ObservablesArrayLike,
-    ) -> Sequence[ObservablesArrayLike]:
-        def _check_and_init(obs: Any) -> Any:
-            if isinstance(obs, str):
-                if not all(basis in EstimatorV2._ALLOWED_BASIS for basis in obs):
-                    raise ValueError(
-                        f"Invalid character(s) found in observable string. "
-                        f"Allowed basis are {EstimatorV2._ALLOWED_BASIS}."
-                    )
-            elif isinstance(obs, Sequence):
-                return tuple(_check_and_init(obs_) for obs_ in obs)
-            elif not isinstance(obs, (Pauli, SparsePauliOp)) and isinstance(obs, BaseOperator):
-                issue_deprecation_msg(
-                    msg="Only Pauli and SparsePauliOp operators can be used as observables.",
-                    version="0.13",
-                    remedy="",
-                )
-                return init_observable(obs)
-            elif isinstance(obs, Mapping):
-                for key in obs.keys():
-                    _check_and_init(key)
-
-            return obs
-
-        if isinstance(observables, str) or not isinstance(observables, Sequence):
-            observables = (observables,)
-
-        if len(observables) == 0:
-            raise ValueError("No observables were provided.")
-
-        return tuple(_check_and_init(obs_array) for obs_array in observables)
-
-    @staticmethod
-    def _validate_parameter_values(
-        parameter_values: BindingsArrayLike | Sequence[BindingsArrayLike] | None,
-        default: Sequence[Sequence[float]] | Sequence[float] | None = None,
-    ) -> Sequence:
-
-        # Allow optional (if default)
-        if parameter_values is None:
-            if default is None:
-                raise ValueError("No default `parameter_values`, optional input disallowed.")
-            parameter_values = default
-
-        # Convert single input types to length-1 lists
-        if _isreal(parameter_values):
-            parameter_values = [[parameter_values]]
-        elif isinstance(parameter_values, Mapping):
-            parameter_values = [parameter_values]
-        elif isinstance(parameter_values, Sequence) and all(
-            _isreal(item) for item in parameter_values
-        ):
-            parameter_values = [parameter_values]
-        return tuple(parameter_values)  # type: ignore[arg-type]
-
-    @staticmethod
-    def _cross_validate_circuits_parameter_values(
-        circuits: tuple[QuantumCircuit, ...], parameter_values: tuple[tuple[float, ...], ...]
-    ) -> None:
-        if len(circuits) != len(parameter_values):
-            raise ValueError(
-                f"The number of circuits ({len(circuits)}) does not match "
-                f"the number of parameter value sets ({len(parameter_values)})."
-            )
-
-    @staticmethod
-    def _cross_validate_circuits_observables(
-        circuits: tuple[QuantumCircuit, ...], observables: tuple[ObservablesArrayLike, ...]
-    ) -> None:
-        if len(circuits) != len(observables):
-            raise ValueError(
-                f"The number of circuits ({len(circuits)}) does not match "
-                f"the number of observables ({len(observables)})."
             )
 
     @classmethod

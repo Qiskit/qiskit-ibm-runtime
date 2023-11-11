@@ -12,15 +12,14 @@
 
 """Primitive options."""
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from typing import Optional, Union, ClassVar
 from dataclasses import dataclass, fields, field
 import copy
 import warnings
 
 from qiskit.transpiler import CouplingMap
-from pydantic.dataclasses import dataclass as pydantic_dataclass
-from pydantic import Field, ConfigDict
+from pydantic import Field
 
 from .utils import Dict, _to_obj, UnsetType, Unset, _remove_dict_unset_values, merge_options
 from .environment_options import EnvironmentOptions
@@ -31,11 +30,11 @@ from .resilience_options import ResilienceOptionsV1 as ResilienceOptions
 from ..runtime_options import RuntimeOptions
 
 # TODO use real base options when available
-from ..qiskit.primitives import BasePrimitiveOptions
+from ..qiskit.primitives.options import BasePrimitiveOptions, primitive_dataclass
 
 
 @dataclass
-class BaseOptions(ABC, BasePrimitiveOptions):
+class BaseOptions:
     """Base options class."""
 
     @staticmethod
@@ -68,10 +67,8 @@ class BaseOptions(ABC, BasePrimitiveOptions):
         return out
 
 
-@pydantic_dataclass(
-    config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid")
-)
-class OptionsV2(BaseOptions):
+@primitive_dataclass
+class OptionsV2(BaseOptions, BasePrimitiveOptions):
     """Base primitive options, used by v2 primitives.
 
     Args:
@@ -99,6 +96,13 @@ class OptionsV2(BaseOptions):
     max_execution_time: Union[UnsetType, int] = Unset
     environment: Union[EnvironmentOptions, Dict] = Field(default_factory=EnvironmentOptions)
     simulator: Union[SimulatorOptions, Dict] = Field(default_factory=SimulatorOptions)
+
+    def update(self, **kwargs):
+        """Update the options."""
+        merged = merge_options(self, kwargs)
+        for key, val in merged.items():
+            if not key.startswith("_"):
+                setattr(self, key, val)
 
     @staticmethod
     def _get_program_inputs(options: dict) -> dict:

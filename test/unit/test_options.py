@@ -519,3 +519,30 @@ class TestOptionsV2(IBMTestCase):
         with self.assertRaises(ValidationError) as exc:
             opt_cls(**opt)
         self.assertIn(list(opt.keys())[0], str(exc.exception))
+
+    @data(
+            {"resilience_level": 2},
+            {"max_execution_time": 200},
+            {"resilience_level": 2, "transpilation": {"initial_layout": [1, 2]}},
+            {"shots": 1024, "seed_simulator": 42},
+            {"resilience_level": 2, "shots": 2048, "initial_layout": [3, 4]},
+            {
+                "initial_layout": [1, 2],
+                "transpilation": {"layout_method": "trivial"},
+                "log_level": "INFO",
+            },
+    )
+    def test_update_options(self, new_opts):
+        """Test update method."""
+        options = EstimatorOptions()
+        options.update(**new_opts)
+
+        # Make sure the values are equal.
+        self.assertTrue(
+            flat_dict_partially_equal(asdict(options), new_opts),
+            f"new_opts={new_opts}, combined={options}",
+        )
+        # Make sure the structure didn't change.
+        self.assertTrue(
+            dict_keys_equal(asdict(options), asdict(EstimatorOptions()))
+        )

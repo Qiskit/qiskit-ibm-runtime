@@ -36,6 +36,9 @@ from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.runtime_job import RuntimeJob
 from qiskit_ibm_runtime.exceptions import RuntimeInvalidStateError
 
+# TODO: remove when we have real v2 base in terra
+from qiskit_ibm_runtime.qiskit.primitives import EstimatorTask, SamplerTask
+
 
 def setup_test_logging(logger: logging.Logger, filename: str) -> None:
     """Set logging to file and stdout for a logger.
@@ -287,10 +290,10 @@ def get_primitive_inputs(primitive, num_sets=1):
     obs = SparsePauliOp.from_list([("IZ", 1)])
 
     if isinstance(primitive, Estimator):
-        return {"circuits": [circ] * num_sets, "observables": [obs] * num_sets}
+        return {"tasks": [(circ, [obs])] * num_sets}
 
     circ.measure_all()
-    return {"circuits": [circ] * num_sets}
+    return {"tasks": [(circ,)] * num_sets}
 
 
 class MockSession(Session):

@@ -9,7 +9,6 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
-# type: ignore
 
 r"""
 
@@ -81,168 +80,39 @@ Here is an example of how the estimator is used.
 
 from __future__ import annotations
 
-from abc import abstractmethod
-from collections.abc import Sequence
-from typing import Generic, TypeVar
-import typing
+from abc import abstractmethod, ABC
+from typing import Generic, TypeVar, Iterable, Optional
 
 from qiskit.circuit import QuantumCircuit
-from qiskit.circuit.parametertable import ParameterView
 from qiskit.providers import JobV1 as Job
-from qiskit.quantum_info.operators import SparsePauliOp
-from qiskit.quantum_info.operators.base_operator import BaseOperator
 
-from .utils import init_observable
-from .base_primitive import BasePrimitiveV2, BasePrimitiveOptions
-
-if typing.TYPE_CHECKING:
-    from qiskit.opflow import PauliSumOp
+from .estimator_task import EstimatorTask, EstimatorTaskLike
+from .base_primitive import BasePrimitiveV2
+from .options import BasePrimitiveOptionsLike
 
 T = TypeVar("T", bound=Job)  # pylint: disable=invalid-name
 
 
 class BaseEstimatorV2(BasePrimitiveV2, Generic[T]):
-    """Estimator base class.
+    """TODO"""
 
-    Base class for Estimator that estimates expectation values of quantum circuits and observables.
-    """
+    def __init__(self, options: Optional[BasePrimitiveOptionsLike] = None):
+        super().__init__(options=options)
 
-    __hash__ = None
+    def run(self, tasks: EstimatorTaskLike | Iterable[EstimatorTaskLike]) -> T:
+        """TODO: docstring"""
+        if isinstance(tasks, EstimatorTask):
+            tasks = [tasks]
+        elif isinstance(tasks, tuple) and isinstance(tasks[0], QuantumCircuit):
+            tasks = [EstimatorTask.coerce(tasks)]
+        elif tasks is not EstimatorTask:
+            tasks = [EstimatorTask.coerce(task) for task in tasks]
 
-    def __init__(
-        self,
-        *,
-        options: dict | BasePrimitiveOptions | None = None,
-    ):
-        """
-        Creating an instance of an Estimator, or using one in a ``with`` context opens a session that
-        holds resources until the instance is ``close()`` ed or the context is exited.
+        for task in tasks:
+            task.validate()
 
-        Args:
-            options: Default options.
-        """
-        self._circuits = []
-        self._observables = []
-        self._parameters = []
-        super().__init__(options)
-
-    def run(  # pylint: disable=differing-param-doc
-        self,
-        circuits: Sequence[QuantumCircuit] | QuantumCircuit,
-        observables: Sequence[BaseOperator | PauliSumOp | str] | BaseOperator | PauliSumOp | str,
-        parameter_values: Sequence[Sequence[float]] | Sequence[float] | float | None = None,
-        **run_options,
-    ) -> T:
-        """Run the job of the estimation of expectation value(s).
-
-        ``circuits``, ``observables``, and ``parameter_values`` should have the same
-        length. The i-th element of the result is the expectation of observable
-
-        .. code-block:: python
-
-            obs = observables[i]
-
-        for the state prepared by
-
-        .. code-block:: python
-
-            circ = circuits[i]
-
-        with bound parameters
-
-        .. code-block:: python
-
-            values = parameter_values[i].
-
-        Args:
-            circuits: one or more circuit objects.
-            observables: one or more observable objects. Several formats are allowed;
-                importantly, ``str`` should follow the string representation format for
-                :class:`~qiskit.quantum_info.Pauli` objects.
-            parameter_values: concrete parameters to be bound.
-            run_options: runtime options used for circuit execution.
-
-        Returns:
-            The job object of EstimatorResult.
-
-        Raises:
-            TypeError: Invalid argument type given.
-            ValueError: Invalid argument values given.
-        """
-        # Singular validation
-        circuits = self._validate_circuits(circuits)
-        observables = self._validate_observables(observables)
-        parameter_values = self._validate_parameter_values(
-            parameter_values,
-            default=[()] * len(circuits),
-        )
-
-        # Cross-validation
-        self._cross_validate_circuits_parameter_values(circuits, parameter_values)
-        self._cross_validate_circuits_observables(circuits, observables)
-
-        return self._run(circuits, observables, parameter_values, **run_options)
+        return self._run(tasks)
 
     @abstractmethod
-    def _run(
-        self,
-        circuits: tuple[QuantumCircuit, ...],
-        observables: tuple[SparsePauliOp, ...],
-        parameter_values: tuple[tuple[float, ...], ...],
-        **run_options,
-    ) -> T:
-        raise NotImplementedError("The subclass of BaseEstimator must implment `_run` method.")
-
-    @staticmethod
-    def _validate_observables(
-        observables: Sequence[BaseOperator | PauliSumOp | str] | BaseOperator | PauliSumOp | str,
-    ) -> tuple[SparsePauliOp, ...]:
-        if isinstance(observables, str) or not isinstance(observables, Sequence):
-            observables = (observables,)
-        if len(observables) == 0:
-            raise ValueError("No observables were provided.")
-        return tuple(init_observable(obs) for obs in observables)
-
-    @staticmethod
-    def _cross_validate_circuits_observables(
-        circuits: tuple[QuantumCircuit, ...], observables: tuple[BaseOperator | PauliSumOp, ...]
-    ) -> None:
-        if len(circuits) != len(observables):
-            raise ValueError(
-                f"The number of circuits ({len(circuits)}) does not match "
-                f"the number of observables ({len(observables)})."
-            )
-        for i, (circuit, observable) in enumerate(zip(circuits, observables)):
-            if circuit.num_qubits != observable.num_qubits:
-                raise ValueError(
-                    f"The number of qubits of the {i}-th circuit ({circuit.num_qubits}) does "
-                    f"not match the number of qubits of the {i}-th observable "
-                    f"({observable.num_qubits})."
-                )
-
-    @property
-    def circuits(self) -> tuple[QuantumCircuit, ...]:
-        """Quantum circuits that represents quantum states.
-
-        Returns:
-            The quantum circuits.
-        """
-        return tuple(self._circuits)
-
-    @property
-    def observables(self) -> tuple[SparsePauliOp, ...]:
-        """Observables to be estimated.
-
-        Returns:
-            The observables.
-        """
-        return tuple(self._observables)
-
-    @property
-    def parameters(self) -> tuple[ParameterView, ...]:
-        """Parameters of the quantum circuits.
-
-        Returns:
-            Parameters, where ``parameters[i][j]`` is the j-th parameter of the i-th circuit.
-        """
-        return tuple(self._parameters)
+    def _run(self, tasks: list[EstimatorTask]) -> T:
+        pass

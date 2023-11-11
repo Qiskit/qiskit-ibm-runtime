@@ -24,6 +24,9 @@ from pydantic import ConfigDict, field_validator
 
 from .utils import Unset, UnsetType, skip_unset_validation
 
+# TODO use real base options when available
+from ..qiskit.primitives.options import primitive_dataclass
+
 
 class NoiseModel:
     """Fake noise model class for pydantic."""
@@ -31,9 +34,7 @@ class NoiseModel:
     pass
 
 
-@pydantic_dataclass(
-    config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid")
-)
+@primitive_dataclass
 class SimulatorOptions:
     """Simulator options.
 

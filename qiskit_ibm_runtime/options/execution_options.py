@@ -14,15 +14,15 @@
 
 from typing import Union
 
-from pydantic.dataclasses import dataclass as pydantic_dataclass
-from pydantic import ConfigDict, model_validator, field_validator, ValidationInfo
+from pydantic import model_validator, field_validator, ValidationInfo
 
 from .utils import Unset, UnsetType, skip_unset_validation
 
+# TODO use real base options when available
+from ..qiskit.primitives.options import primitive_dataclass
 
-@pydantic_dataclass(
-    config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid")
-)
+
+@primitive_dataclass
 class ExecutionOptionsV2:
     """Execution options.
 
@@ -82,9 +82,7 @@ class ExecutionOptionsV2:
         return self
 
 
-@pydantic_dataclass(
-    config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid")
-)
+@primitive_dataclass
 class ExecutionOptionsV1:
     """Execution options.
 

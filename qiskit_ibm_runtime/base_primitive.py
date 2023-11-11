@@ -29,6 +29,10 @@ from .session import get_cm_session
 from .constants import DEFAULT_DECODERS
 from .qiskit_runtime_service import QiskitRuntimeService
 
+# TODO: remove when we have real v2 base estimator
+from .qiskit.primitives.estimator_task import EstimatorTask
+from .qiskit.primitives.sampler_task import SamplerTask
+
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
 
@@ -38,7 +42,7 @@ logger = logging.getLogger(__name__)
 class BasePrimitiveV2(ABC):
     """Base class for Qiskit Runtime primitives."""
 
-    _OPTIONS_CLASS: type[BaseOptions] = Options
+    _options_class: type[BaseOptions] = BaseOptions
     version = 2
 
     def __init__(
@@ -72,16 +76,7 @@ class BasePrimitiveV2(ABC):
         self._service: QiskitRuntimeService = None
         self._backend: Optional[IBMBackend] = None
 
-        opt_cls = self._OPTIONS_CLASS
-        if options is None:
-            self.options = opt_cls()
-        elif isinstance(options, opt_cls):
-            self.options = replace(options)
-        elif isinstance(options, dict):
-            default_options = opt_cls()
-            self.options = opt_cls(**merge_options(default_options, options))
-        else:
-            raise ValueError(f"Invalid 'options' type. It can only be a dictionary of {opt_cls}")
+        self._set_options(options)
 
         if isinstance(session, Session):
             self._session = session
@@ -120,36 +115,33 @@ class BasePrimitiveV2(ABC):
                     "A backend or session must be specified when not using ibm_cloud channel."
                 )
 
-    def _run_primitive(self, primitive_inputs: Dict, user_kwargs: Dict) -> RuntimeJob:
+    def _run(self, tasks: Union[list[EstimatorTask], list[SamplerTask]]) -> RuntimeJob:
         """Run the primitive.
 
         Args:
-            primitive_inputs: Inputs to pass to the primitive.
-            user_kwargs: Individual options to overwrite the default primitive options.
+            tasks: Inputs tasks to pass to the primitive.
 
         Returns:
             Submitted job.
         """
-        logger.debug("Merging current options %s with %s", self.options, user_kwargs)
-        combined = merge_options(self.options, user_kwargs)
+        primitive_inputs = {"tasks": tasks}
+        options_dict = asdict(self.options)
+        self._validate_options(options_dict)
+        primitive_inputs.update(self._options_class._get_program_inputs(options_dict))
+        runtime_options = self._options_class._get_runtime_options(options_dict)
 
-        self._validate_options(combined)
+        if self._backend and options_dict["transpilation"]["skip_transpilation"]:
+            for task in tasks:
+                self._backend.check_faulty(task.circuit)
 
-        primitive_inputs.update(self._OPTIONS_CLASS._get_program_inputs(combined))
-        runtime_options = self._OPTIONS_CLASS._get_runtime_options(combined)
-
-        if self._backend and combined["transpilation"]["skip_transpilation"]:
-            for circ in primitive_inputs["circuits"]:
-                self._backend.check_faulty(circ)
-
-        logger.info("Submitting job using options %s", combined)
+        logger.info("Submitting job using options %s", options_dict)
 
         if self._session:
             return self._session.run(
                 program_id=self._program_id(),
                 inputs=primitive_inputs,
                 options=runtime_options,
-                callback=combined.get("environment", {}).get("callback", None),
+                callback=options_dict.get("environment", {}).get("callback", None),
                 result_decoder=DEFAULT_DECODERS.get(self._program_id()),
             )
 
@@ -162,7 +154,7 @@ class BasePrimitiveV2(ABC):
             program_id=self._program_id(),
             options=runtime_options,
             inputs=primitive_inputs,
-            callback=combined.get("environment", {}).get("callback", None),
+            callback=options_dict.get("environment", {}).get("callback", None),
             result_decoder=DEFAULT_DECODERS.get(self._program_id()),
         )
 
@@ -175,15 +167,19 @@ class BasePrimitiveV2(ABC):
         """
         return self._session
 
-    def set_options(self, **fields: Any) -> None:
-        """Set options values for the sampler.
-
-        Args:
-            **fields: The fields to update the options
-        """
-        self.options = self._OPTIONS_CLASS(  # pylint: disable=attribute-defined-outside-init
-            **merge_options(self.options, fields)
-        )
+    def _set_options(self, options: Optional[Union[Dict, BaseOptions]] = None) -> None:
+        """Set options."""
+        if options is None:
+            self._options = self._options_class()
+        elif isinstance(options, dict):
+            default_options = self._options_class()
+            self.options = self._options_class(**merge_options(default_options, options))
+        elif isinstance(options, self._options_class):
+            self._options = replace(options)
+        else:
+            raise TypeError(
+                f"Invalid 'options' type. It can only be a dictionary of {self._options_class}"
+            )
 
     @abstractmethod
     def _validate_options(self, options: dict) -> None:

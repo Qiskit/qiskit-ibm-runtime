@@ -18,8 +18,11 @@ from unittest import skip
 from unittest.mock import MagicMock, patch
 
 from ddt import data, ddt
+import numpy as np
+
 from qiskit import transpile
 from qiskit.circuit import QuantumCircuit
+from qiskit.circuit.library import RealAmplitudes
 from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.providers.fake_provider import FakeManila
@@ -34,6 +37,7 @@ from qiskit_ibm_runtime.ibm_backend import IBMBackend
 import qiskit_ibm_runtime.session as session_pkg
 from qiskit_ibm_runtime import EstimatorV2, SamplerV2
 from qiskit_ibm_runtime.estimator import Estimator as IBMBaseEstimator
+from qiskit_ibm_runtime.qiskit.primitives import BindingsArray
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import (
@@ -44,6 +48,7 @@ from ..utils import (
     combine,
     MockSession,
     get_primitive_inputs,
+    get_mocked_backend,
 )
 
 
@@ -88,7 +93,7 @@ class TestPrimitivesV2(IBMTestCase):
     def test_runtime_options(self, primitive, env_var):
         """Test RuntimeOptions specified as primitive options."""
         session = MagicMock(spec=MockSession)
-        options = primitive._OPTIONS_CLASS(environment=env_var)
+        options = primitive._options_class(environment=env_var)
         inst = primitive(session=session, options=options)
         inst.run(**get_primitive_inputs(inst))
         run_options = session.run.call_args.kwargs["options"]
@@ -105,9 +110,9 @@ class TestPrimitivesV2(IBMTestCase):
     def test_image(self, primitive, opts):
         """Test passing an image to options."""
         session = MagicMock(spec=MockSession)
-        options = primitive._OPTIONS_CLASS(**opts)
+        options = primitive._options_class(**opts)
         inst = primitive(session=session, options=options)
-        inst.run(self.qx, observables=self.obs)
+        inst.run(**get_primitive_inputs(inst))
         run_options = session.run.call_args.kwargs["options"]
         input_params = session.run.call_args.kwargs["inputs"]
         expected = list(opts.values())[0]
@@ -118,7 +123,7 @@ class TestPrimitivesV2(IBMTestCase):
     @data(EstimatorV2)
     def test_options_copied(self, primitive):
         """Test modifying original options does not affect primitives."""
-        options = primitive._OPTIONS_CLASS()
+        options = primitive._options_class()
         options.max_execution_time = 100
         inst = primitive(session=MagicMock(spec=MockSession), options=options)
         options.max_execution_time = 200
@@ -265,24 +270,73 @@ class TestPrimitivesV2(IBMTestCase):
         self.assertNotIn("start_session", kwargs_list)
 
     @data(EstimatorV2, SamplerV2)
-    def test_run_updated_default_options(self, primitive):
-        """Test run using updated default options."""
-        session = MagicMock(spec=MockSession)
-        inst = primitive(session=session)
-        inst.set_options(skip_transpilation=True, optimization_level=2, shots=99)
-        inst.run(**get_primitive_inputs(inst))
-        inputs = session.run.call_args.kwargs["inputs"]
-        self._assert_dict_partially_equal(
-            inputs,
-            {
-                "skip_transpilation": True,
-                "transpilation": {"optimization_level": 2},
-                "execution": {"shots": 99},
-            },
-        )
+    def test_parameters_single_circuit(self, primitive):
+        """Test parameters for a single cirucit."""
+
+        qx = RealAmplitudes(num_qubits=2, reps=1)
+
+        param_vals = [
+            # 1 set of parameter values
+            [1, 2, 3, 4],
+            [np.pi] * qx.num_parameters,
+            np.random.uniform(size=(4,)),
+            # {param: [2.0] for param in qx.parameters},  # TODO: this doesn't work now
+            # N sets of parameter values
+            # [[1, 2, 3, 4]] * 2,  # TODO: This doesn't work right now
+            np.random.random((2, 4)),
+            np.linspace(0, 1, 24).reshape((2, 3, 4)),
+            {param: [1, 2, 3] for param in qx.parameters},
+            {param: np.linspace(0, 1, 5) for param in qx.parameters},
+            {tuple(qx.parameters): np.random.random((2, 3, 4))},
+            {tuple(qx.parameters[:2]): np.random.random((2, 1, 2)), tuple(qx.parameters[2:4]): np.random.random((2, 1, 2))},
+        ]
+
+        inst = primitive(backend=get_mocked_backend())
+        for val in param_vals:
+            with self.subTest(val=val):
+                task = (qx, "ZZ", val) if isinstance(inst, EstimatorV2) else (qx, val)
+                inst.run(task)
 
     @data(EstimatorV2, SamplerV2)
-    def test_run_overwrite_options(self, primitive):
+    def test_parameters_vals_kwvals(self, primitive):
+        """Test a mixture of vals and kwvals."""
+        qx = RealAmplitudes(num_qubits=2, reps=1)
+        inst = primitive(backend=get_mocked_backend())
+
+        with self.subTest("0-d"):
+            param_vals = np.linspace(0, 1, 4)
+            kwvals = {tuple(qx.parameters[:2]): param_vals[:2]}
+            ba = BindingsArray(vals=param_vals[2:], kwvals=kwvals)
+            task = (qx, "ZZ", ba) if isinstance(inst, EstimatorV2) else (qx, ba)
+            inst.run(task)
+
+        with self.subTest("n-d"):
+            kwvals = {tuple(qx.parameters[:2]): np.random.random((2, 3, 2))}
+            ba = BindingsArray(vals=np.random.random((2, 3, 2)), kwvals=kwvals)
+            task = (qx, "ZZ", ba) if isinstance(inst, EstimatorV2) else (qx, ba)
+            inst.run(task)
+
+    @data(EstimatorV2, SamplerV2)
+    def test_parameters_multiple_circuits(self, primitive):
+        """Test multiple parameters for multiple circuits."""
+        circuits = [QuantumCircuit(2), RealAmplitudes(num_qubits=2, reps=1), RealAmplitudes(num_qubits=3, reps=1) ]
+
+        param_vals = [
+            ([], np.random.uniform(size=(4,)), np.random.uniform(size=(6,)),),
+            ([], np.random.random((2, 4)), np.random.random((2, 6)),),
+        ]
+
+        inst = primitive(backend=get_mocked_backend())
+        for all_params in param_vals:
+            with self.subTest(all_params=all_params):
+                tasks = []
+                for circ, circ_params in zip(circuits, all_params):
+                    tasklet = (circ, "Z" * circ.num_qubits, circ_params) if isinstance(inst, EstimatorV2) else (circ, circ_params)
+                    tasks.append(tasklet)
+                inst.run(tasks)
+
+    @data(EstimatorV2, SamplerV2)
+    def test_run_updated_options(self, primitive):
         """Test run using overwritten options."""
         session = MagicMock(spec=MockSession)
         options_vars = [
@@ -301,15 +355,19 @@ class TestPrimitivesV2(IBMTestCase):
                     }
                 },
             ),
+            (
+                {"skip_transpilation": True},
+                {"skip_transpilation": True},
+            )
         ]
-        opt_cls = primitive._OPTIONS_CLASS
+
         for options, expected in options_vars:
             with self.subTest(options=options):
                 inst = primitive(session=session)
-                inst.run(**get_primitive_inputs(inst), **options)
+                inst.options.update(**options)
+                inst.run(**get_primitive_inputs(inst))
                 inputs = session.run.call_args.kwargs["inputs"]
                 self._assert_dict_partially_equal(inputs, expected)
-                self.assertDictEqual(asdict(inst.options), asdict(opt_cls()))
 
     @data(EstimatorV2, SamplerV2)
     def test_run_overwrite_runtime_options(self, primitive):
@@ -324,7 +382,8 @@ class TestPrimitivesV2(IBMTestCase):
         for options in options_vars:
             with self.subTest(options=options):
                 inst = primitive(session=session)
-                inst.run(**get_primitive_inputs(inst), **options)
+                inst.options.update(**options)
+                inst.run(**get_primitive_inputs(inst))
                 rt_options = session.run.call_args.kwargs["options"]
                 self._assert_dict_partially_equal(rt_options, options)
 
@@ -336,7 +395,8 @@ class TestPrimitivesV2(IBMTestCase):
         """Test specifying arbitrary options in run."""
         session = MagicMock(spec=MockSession)
         inst = primitive(session=session)
-        inst.run(**get_primitive_inputs(inst), experimental=exp_opt)
+        inst.options.experimental = exp_opt
+        inst.run(**get_primitive_inputs(inst))
         inputs = session.run.call_args.kwargs["inputs"]
         self._assert_dict_partially_equal(inputs, exp_opt)
 
@@ -347,7 +407,7 @@ class TestPrimitivesV2(IBMTestCase):
         inst = primitive(session=session)
         inst.run(**get_primitive_inputs(inst))
         inputs = session.run.call_args.kwargs["inputs"]
-        for fld in ["circuits", "observables", "parameters", "parameter_values", "_experimental"]:
+        for fld in ["tasks", "_experimental"]:
             inputs.pop(fld, None)
         expected = {"skip_transpilation": False, "execution": {"init_qubits": True}, "version": 2}
         self.assertDictEqual(inputs, expected)
@@ -355,15 +415,15 @@ class TestPrimitivesV2(IBMTestCase):
     @data(EstimatorV2, SamplerV2)
     def test_run_multiple_different_options(self, primitive):
         """Test multiple runs with different options."""
-        opt_cls = primitive._OPTIONS_CLASS
+        opt_cls = primitive._options_class
         session = MagicMock(spec=MockSession)
-        inst = primitive(session=session)
-        inst.run(**get_primitive_inputs(inst), shots=100)
-        inst.run(**get_primitive_inputs(inst), shots=200)
+        inst = primitive(session=session, options={"shots": 100})
+        inst.run(**get_primitive_inputs(inst))
+        inst.options.update(shots=200)
+        inst.run(**get_primitive_inputs(inst))
         kwargs_list = session.run.call_args_list
         for idx, shots in zip([0, 1], [100, 200]):
             self.assertEqual(kwargs_list[idx][1]["inputs"]["execution"]["shots"], shots)
-        self.assertDictEqual(asdict(inst.options), asdict(opt_cls()))
 
     def test_run_same_session(self):
         """Test multiple runs within a session."""
@@ -376,38 +436,38 @@ class TestPrimitivesV2(IBMTestCase):
             inst.run(**get_primitive_inputs(inst))
         self.assertEqual(session.run.call_count, num_runs)
 
-    @data(EstimatorV2, SamplerV2)
-    def test_set_options(self, primitive):
+    @combine(
+        primitive=[EstimatorV2, SamplerV2],
+        new_opts=[
+            {"optimization_level": 2},
+            {"optimization_level": 3, "shots": 200},
+        ],
+    )
+    def test_set_options(self, primitive, new_opts):
         """Test set options."""
-        opt_cls = primitive._OPTIONS_CLASS
+        opt_cls = primitive._options_class
         options = opt_cls(optimization_level=1, execution={"shots": 100})
-        new_options = [
-            ({"optimization_level": 2}, opt_cls()),
-            ({"optimization_level": 3, "shots": 200}, opt_cls()),
-        ]
 
         session = MagicMock(spec=MockSession)
-        for new_opt, new_str in new_options:
-            with self.subTest(new_opt=new_opt):
-                inst = primitive(session=session, options=options)
-                inst.set_options(**new_opt)
-                # Make sure the values are equal.
-                inst_options = asdict(inst.options)
-                self.assertTrue(
-                    flat_dict_partially_equal(inst_options, new_opt),
-                    f"inst_options={inst_options}, new_opt={new_opt}",
-                )
-                # Make sure the structure didn't change.
-                self.assertTrue(
-                    dict_keys_equal(inst_options, asdict(new_str)),
-                    f"inst_options={inst_options}, new_str={new_str}",
-                )
+        inst = primitive(session=session, options=options)
+        inst.options.update(**new_opts)
+        # Make sure the values are equal.
+        inst_options = asdict(inst.options)
+        self.assertTrue(
+            flat_dict_partially_equal(inst_options, new_opts),
+            f"inst_options={inst_options}, new_opt={new_opts}",
+        )
+        # Make sure the structure didn't change.
+        self.assertTrue(
+            dict_keys_equal(inst_options, asdict(opt_cls())),
+            f"inst_options={inst_options}, original={opt_cls()}",
+        )
 
     @data(EstimatorV2, SamplerV2)
     def test_accept_level_1_options(self, primitive):
         """Test initializing options properly when given on level 1."""
 
-        opt_cls = primitive._OPTIONS_CLASS
+        opt_cls = primitive._options_class
         options_dicts = [
             {},
             {"shots": 10},
@@ -512,15 +572,16 @@ class TestPrimitivesV2(IBMTestCase):
         service.backend.return_value = ibm_backend
         session = Session(service=service, backend=fake_backend.name)
 
-        inst = primitive(session=session)
-        if isinstance(inst, IBMBaseEstimator):  # TODO fix for sampler
-            inputs = {"circuits": transpiled, "observables": observable}
+        inst = primitive(session=session, options={"skip_transpilation": True})
+
+        if isinstance(inst, IBMBaseEstimator):
+            task = (transpiled, observable)
         else:
             transpiled.measure_all()
-            inputs = {"circuits": transpiled}
+            task = (transpiled,)
 
         with self.assertRaises(ValueError) as err:
-            inst.run(**inputs, skip_transpilation=True)
+            inst.run(tasks=task)
         self.assertIn(f"faulty qubit {faulty_qubit}", str(err.exception))
 
     @data(EstimatorV2, SamplerV2)
@@ -543,16 +604,16 @@ class TestPrimitivesV2(IBMTestCase):
         service.backend.return_value = ibm_backend
         session = Session(service=service, backend=fake_backend.name)
 
-        inst = primitive(session=session)
+        inst = primitive(session=session, options={"skip_transpilation": True})
         if isinstance(inst, IBMBaseEstimator):
-            inputs = {"circuits": transpiled, "observables": [observable, observable]}
+            tasks = [(transpiled[0], observable), (transpiled[1], observable)]
         else:
             for circ in transpiled:
                 circ.measure_all()
-            inputs = {"circuits": transpiled}
+            tasks = [(transpiled[0],), (transpiled[1],)]
 
         with self.assertRaises(ValueError) as err:
-            inst.run(**inputs, skip_transpilation=True)
+            inst.run(tasks=tasks)
         self.assertIn(f"faulty qubit {faulty_qubit}", str(err.exception))
 
     @data(EstimatorV2, SamplerV2)
@@ -572,15 +633,15 @@ class TestPrimitivesV2(IBMTestCase):
         service.backend.return_value = ibm_backend
         session = Session(service=service, backend=fake_backend.name)
 
-        inst = primitive(session=session)
+        inst = primitive(session=session, options={"skip_transpilation": True})
         if isinstance(inst, IBMBaseEstimator):
-            inputs = {"circuits": transpiled, "observables": observable}
+            task = (transpiled, observable)
         else:
             transpiled.measure_all()
-            inputs = {"circuits": transpiled}
+            task = (transpiled,)
 
         with self.assertRaises(ValueError) as err:
-            inst.run(**inputs, skip_transpilation=True)
+            inst.run(tasks=task)
         self.assertIn("cx", str(err.exception))
         self.assertIn(f"faulty edge {tuple(edge_qubits)}", str(err.exception))
 
@@ -601,15 +662,15 @@ class TestPrimitivesV2(IBMTestCase):
         service.backend.return_value = ibm_backend
         session = Session(service=service, backend=fake_backend.name)
 
-        inst = primitive(session=session)
+        inst = primitive(session=session, options={"skip_transpilation": True})
         if isinstance(inst, IBMBaseEstimator):
-            inputs = {"circuits": transpiled, "observables": observable}
+            task = (transpiled, observable)
         else:
             transpiled.measure_active(inplace=True)
-            inputs = {"circuits": transpiled}
+            task = (transpiled,)
 
         with patch.object(Session, "run") as mock_run:
-            inst.run(**inputs, skip_transpilation=True)
+            inst.run(task)
         mock_run.assert_called_once()
 
     @data(EstimatorV2, SamplerV2)
@@ -631,15 +692,15 @@ class TestPrimitivesV2(IBMTestCase):
         service.backend.return_value = ibm_backend
         session = Session(service=service, backend=fake_backend.name)
 
-        inst = primitive(session=session)
+        inst = primitive(session=session, options={"skip_transpilation": True})
         if isinstance(inst, IBMBaseEstimator):
-            inputs = {"circuits": transpiled, "observables": observable}
+            task = (transpiled, observable)
         else:
             transpiled.measure_all()
-            inputs = {"circuits": transpiled}
+            task = (transpiled,)
 
         with patch.object(Session, "run") as mock_run:
-            inst.run(**inputs, skip_transpilation=True)
+            inst.run(task)
         mock_run.assert_called_once()
 
     @data(EstimatorV2, SamplerV2)
@@ -664,13 +725,13 @@ class TestPrimitivesV2(IBMTestCase):
 
         inst = primitive(session=session)
         if isinstance(inst, IBMBaseEstimator):
-            inputs = {"circuits": transpiled, "observables": observable}
+            task = (transpiled, observable)
         else:
             transpiled.measure_all()
-            inputs = {"circuits": transpiled}
+            task = (transpiled,)
 
         with patch.object(Session, "run") as mock_run:
-            inst.run(**inputs)
+            inst.run(task)
         mock_run.assert_called_once()
 
     def _update_dict(self, dict1, dict2):

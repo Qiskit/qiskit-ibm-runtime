@@ -9,7 +9,6 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
-# type: ignore
 
 r"""
 ===================
@@ -77,14 +76,14 @@ Here is an example of how sampler is used.
 from __future__ import annotations
 
 from abc import abstractmethod
-from collections.abc import Sequence
-from typing import Generic, TypeVar
+from typing import Generic, TypeVar, Optional, Iterable
 
 from qiskit.circuit import QuantumCircuit
-from qiskit.circuit.parametertable import ParameterView
 from qiskit.providers import JobV1 as Job
 
-from .base_primitive import BasePrimitiveV2, BasePrimitiveOptions
+from .base_primitive import BasePrimitiveV2
+from .options import BasePrimitiveOptionsLike
+from .sampler_task import SamplerTask, SamplerTaskLike
 
 T = TypeVar("T", bound=Job)  # pylint: disable=invalid-name
 
@@ -95,76 +94,23 @@ class BaseSamplerV2(BasePrimitiveV2, Generic[T]):
     Base class of Sampler that calculates quasi-probabilities of bitstrings from quantum circuits.
     """
 
-    __hash__ = None
+    def __init__(self, options: Optional[BasePrimitiveOptionsLike] = None):
+        super().__init__(options=options)
 
-    def __init__(
-        self,
-        *,
-        options: dict | BasePrimitiveOptions | None = None,
-    ):
-        """
-        Args:
-            options: Default options.
-        """
-        self._circuits = []
-        self._parameters = []
-        super().__init__(options)
+    def run(self, tasks: SamplerTaskLike | Iterable[SamplerTaskLike]) -> T:
+        """TODO: docstring"""
+        if isinstance(tasks, SamplerTask):
+            tasks = [tasks]
+        elif isinstance(tasks, tuple) and isinstance(tasks[0], QuantumCircuit):
+            tasks = [SamplerTask.coerce(tasks)]
+        elif tasks is not SamplerTask:
+            tasks = [SamplerTask.coerce(task) for task in tasks]
 
-    def run(  # pylint: disable=differing-param-doc
-        self,
-        circuits: Sequence[QuantumCircuit] | QuantumCircuit,
-        parameter_values: Sequence[Sequence[float]] | Sequence[float] | float | None = None,
-        **run_options,
-    ) -> T:
-        """Run the job of the sampling of bitstrings.
+        for task in tasks:
+            task.validate()
 
-        Args:
-            circuits: One of more circuit objects.
-            parameter_values: Parameters to be bound to the circuit.
-            run_options: Backend runtime options used for circuit execution.
-
-        Returns:
-            The job object of the result of the sampler. The i-th result corresponds to
-            ``circuits[i]`` evaluated with parameters bound as ``parameter_values[i]``.
-
-        Raises:
-            ValueError: Invalid arguments are given.
-        """
-        # Singular validation
-        circuits = self._validate_circuits(circuits)
-        parameter_values = self._validate_parameter_values(
-            parameter_values,
-            default=[()] * len(circuits),
-        )
-
-        # Cross-validation
-        self._cross_validate_circuits_parameter_values(circuits, parameter_values)
-
-        return self._run(circuits, parameter_values, **run_options)
+        return self._run(tasks)
 
     @abstractmethod
-    def _run(
-        self,
-        circuits: tuple[QuantumCircuit, ...],
-        parameter_values: tuple[tuple[float, ...], ...],
-        **run_options,
-    ) -> T:
-        raise NotImplementedError("The subclass of BaseEstimator must implment `_run` method.")
-
-    @property
-    def circuits(self) -> tuple[QuantumCircuit, ...]:
-        """Quantum circuits that represents quantum states.
-
-        Returns:
-            The quantum circuits.
-        """
-        return tuple(self._circuits)
-
-    @property
-    def parameters(self) -> tuple[ParameterView, ...]:
-        """Parameters of the quantum circuits.
-
-        Returns:
-            Parameters, where ``parameters[i][j]`` is the j-th parameter of the i-th circuit.
-        """
-        return tuple(self._parameters)
+    def _run(self, tasks: list[SamplerTask]) -> T:
+        pass
