@@ -12,8 +12,8 @@
 
 """Tests for Session classession."""
 
+import sys
 import time
-import random
 from concurrent.futures import ThreadPoolExecutor, wait
 
 from unittest.mock import MagicMock, Mock, patch
@@ -125,13 +125,14 @@ class TestSession(IBMTestCase):
 
         def _wait_a_bit(*args, **kwargs):
             # pylint: disable=unused-argument
-            time.sleep(random.random() / 2)
+            switchinterval = sys.getswitchinterval()
+            time.sleep(switchinterval * 2)
             return MagicMock()
 
         service.run = Mock(side_effect=_wait_a_bit)
 
         session = Session(service=service, backend="ibm_gotham")
-        with ThreadPoolExecutor(max_workers=5) as executor:
+        with ThreadPoolExecutor(max_workers=2) as executor:
             results = list(map(lambda _: executor.submit(session.run, "", {}), range(5)))
             wait(results)
 
