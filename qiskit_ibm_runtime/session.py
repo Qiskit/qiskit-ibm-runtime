@@ -26,8 +26,6 @@ from .runtime_program import ParameterNamespace
 from .program.result_decoder import ResultDecoder
 from .ibm_backend import IBMBackend
 
-_session_setup_lock = Lock()
-
 
 def _active_session(func):  # type: ignore
     """Decorator used to ensure the session is active."""
@@ -118,6 +116,7 @@ class Session:
             backend = backend.name
         self._backend = backend
 
+        self._setup_lock = Lock()
         self._session_id: Optional[str] = None
         self._active = True
         self._max_time = (
@@ -158,7 +157,7 @@ class Session:
 
         if not self._session_id:
             # Make sure only one thread can send the session starter job.
-            _session_setup_lock.acquire()
+            self._setup_lock.acquire()
             # TODO: What happens if session max time != first job max time?
             # Use session max time if this is first job.
             options["session_time"] = self._max_time
@@ -177,8 +176,8 @@ class Session:
             if self._session_id is None:
                 self._session_id = job.job_id()
         finally:
-            if _session_setup_lock.locked():
-                _session_setup_lock.release()
+            if self._setup_lock.locked():
+                self._setup_lock.release()
 
         if self._backend is None:
             self._backend = job.backend().name
