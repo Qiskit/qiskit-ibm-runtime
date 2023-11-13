@@ -840,6 +840,16 @@ class IBMBackend(Backend):
 
         self._session = None
 
+    def close_session(self) -> None:
+        """Close the session so new jobs will no longer be accepted, but existing
+        queued or running jobs will run to completion. The session will be terminated once there
+        are no more pending jobs."""
+        if self._session:
+            self._session.cancel()
+            if self._session.session_id:
+                self._api_client.close_session(self._session.session_id)
+        self._session = None
+
 
 class IBMRetiredBackend(IBMBackend):
     """Backend class interfacing with an IBM Quantum device no longer available."""
