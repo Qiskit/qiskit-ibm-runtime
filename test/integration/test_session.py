@@ -12,6 +12,8 @@
 
 """Integration tests for Session."""
 
+import warnings
+
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.test.reference_circuits import ReferenceCircuits
@@ -137,7 +139,12 @@ class TestBackendRunInSession(IBMIntegrationTestCase):
             self.assertEqual(job1.session_id, job1.job_id())
             self.assertIsNone(job2.session_id)
         with backend.open_session() as session:
-            sampler = Sampler(backend=backend)
+            with warnings.catch_warnings(record=True) as warn:
+                sampler = Sampler(backend=backend)
+            self.assertIn(
+                "Primitives will not be run within an IBMBackend session",
+                str(warn[0].message)
+            )
             job1 = backend.run(ReferenceCircuits.bell())
             job2 = sampler.run(circuits=ReferenceCircuits.bell())
             session_id = session.session_id
