@@ -135,6 +135,14 @@ class TestBackendRunInSession(IBMIntegrationTestCase):
         backend.cancel_session()
         self.assertIsNone(backend.session)
 
+    def test_session_close(self):
+        """Test closing a session"""
+        backend = self.service.backend("ibmq_qasm_simulator")
+        backend.open_session()
+        self.assertTrue(backend.session.active)
+        backend.close_session()
+        self.assertIsNone(backend.session)
+
     def test_run_after_cancel(self):
         """Test running after session is cancelled."""
         backend = self.service.backend("ibmq_qasm_simulator")
