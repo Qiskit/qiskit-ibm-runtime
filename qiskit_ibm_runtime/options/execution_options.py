@@ -85,17 +85,17 @@ class ExecutionOptions:
         if shots is not None:
             if not isinstance(shots, Integral):
                 raise ValueError(f"shots must be None or an integer, not {type(shots)}")
-            if shots < 1:
+            if shots < 0:
                 raise ValueError("shots must be None or >= 1")
         if samples is not None:
             if not isinstance(samples, Integral):
                 raise ValueError(f"samples must be None or an integer, not {type(samples)}")
-            if samples < 1:
+            if samples < 0:
                 raise ValueError("samples must be None or >= 1")
         if shots_per_sample is not None:
             if not isinstance(shots_per_sample, Integral):
                 raise ValueError(
                     f"shots_per_sample must be None or an integer, not {type(shots_per_sample)}"
                 )
-            if shots_per_sample < 1:
+            if shots_per_sample < 0:
                 raise ValueError("shots_per_sample must be None or >= 1")
