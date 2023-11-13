@@ -1,4 +1,4 @@
-Migration guide: Migrate backend.run() from qiskit_ibm_provider to qiskit_ibm_runtime
+Migration guide: Migrate ``backend.run()`` from ``qiskit_ibm_provider`` to ``qiskit_ibm_runtime``
 =====================================================================================
 
 This guide describes how to migrate code that implemented ``backend.run()``
