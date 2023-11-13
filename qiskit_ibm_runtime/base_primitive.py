@@ -121,7 +121,7 @@ class BasePrimitive(ABC):
                 raise ValueError(
                     "A backend or session must be specified when not using ibm_cloud channel."
                 )
-        # Check if initialized within a IBMProvider session. If so, issue a warning.
+        # Check if initialized within a IBMBackend session. If so, issue a warning.
         if get_cm_provider_session():
             warnings.warn(
                 "IBMBackend session is open, but Primitives will not be run within an IBMBackend session"
