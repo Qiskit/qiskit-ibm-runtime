@@ -1,5 +1,3 @@
-.. _migrate to primitives:
-
 Migration guide: using ``backend.run()`` in ``qiskit_ibm_runtime``
 ==================================================================
 
