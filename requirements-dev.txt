@@ -24,7 +24,7 @@ sphinx-automodapi
 sphinx-autodoc-typehints<=1.19.2
 sphinx-design>=0.4.0
 sphinx-intl
-sphinxext-rediraffe
 jupyter-sphinx
+sphinx-reredirects
 reno>=2.11.0
 qiskit-sphinx-theme~=1.16.0

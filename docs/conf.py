@@ -61,7 +61,7 @@ extensions = [
     'reno.sphinxext',
     'nbsphinx',
     'sphinx_design',
-    'sphinxext.rediraffe',
+    'sphinx_reredirects',
     'qiskit_sphinx_theme',
 ]
 templates_path = ['_templates']
@@ -167,13 +167,16 @@ autoclass_content = 'both'
 
 # -- Redirects ---------------------------------------------------------------
 
-rediraffe_redirects = {
-    "tutorials/chsh_with_estimator.ipynb": "tutorials/chsh-with-estimator/index.ipynb",
-    "tutorials/Error-Suppression-and-Error-Mitigation.ipynb": "tutorials/error-suppression-and-error-mitigation/index.ipynb",
-    "tutorials/grover_with_sampler.ipynb": "tutorials/grover-with-sampler/index.ipynb",
-    "tutorials/how-to-getting-started-with-estimator.ipynb": "tutorials/how-to-getting-started-with-estimator/index.ipynb",
-    "tutorials/how-to-getting-started-with-sampler.ipynb": "tutorials/how-to-getting-started-with-sampler/index.ipynb",
-    "tutorials/qaoa_with_primitives.ipynb": "tutorials/qaoa-with-primitives/index.ipynb",
-    "tutorials/user-transpiled-circuits.ipynb": "tutorials/user-transpiled-circuits/index.ipynb",
-    "tutorials/vqe_with_estimator.ipynb": "tutorials/vqe-with-estimator/index.ipynb"
+redirects = {
+    f"tutorials/{name}.ipynb": f"tutorials/{name.lower().replace('_', '-')}/index.ipynb"
+    for name in [
+        "chsh_with_estimator",
+        "Error-Suppression-and-Error-Mitigation",
+        "grover_with_sampler",
+        "how-to-getting-started-with-estimator",
+        "how-to-getting-started-with-sampler",
+        "qaoa_with_primitives",
+        "user-transpiled-circuits",
+        "vqe_with_estimator"
+    ]
 }
