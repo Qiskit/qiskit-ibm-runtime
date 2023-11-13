@@ -15,13 +15,14 @@
 import os
 import logging
 import inspect
-import unittest
 import warnings
 from contextlib import suppress
 from collections import defaultdict
 from typing import DefaultDict, Dict
 
 from qiskit.test.reference_circuits import ReferenceCircuits
+from qiskit.test.base import BaseQiskitTestCase
+
 from qiskit_ibm_runtime import QISKIT_IBM_RUNTIME_LOGGER_NAME
 from qiskit_ibm_runtime import QiskitRuntimeService, Sampler, Options
 
@@ -29,7 +30,7 @@ from .utils import setup_test_logging
 from .decorators import IntegrationTestDependencies, integration_test_setup
 
 
-class IBMTestCase(unittest.TestCase):
+class IBMTestCase(BaseQiskitTestCase):
     """Custom TestCase for use with qiskit-ibm-runtime."""
 
     log: logging.Logger

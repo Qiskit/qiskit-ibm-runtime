@@ -35,6 +35,7 @@ class Runtime(RestAdapterBase):
         "programs": "/programs",
         "jobs": "/jobs",
         "backends": "/backends",
+        "cloud_instance": "/instance",
     }
 
     def program_job(self, job_id: str) -> "ProgramJob":
@@ -228,3 +229,12 @@ class Runtime(RestAdapterBase):
         if channel_strategy:
             params["channel_strategy"] = channel_strategy
         return self.session.get(url, params=params, timeout=timeout).json()
+
+    def cloud_instance(self) -> bool:
+        """Return boolean of whether or not the instance has q-ctrl enabled.
+
+        Returns:
+            Boolean value.
+        """
+        url = self.get_url("cloud_instance")
+        return self.session.get(url).json().get("qctrl_enabled")
