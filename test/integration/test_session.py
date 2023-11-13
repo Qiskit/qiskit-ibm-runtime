@@ -135,7 +135,11 @@ class TestBackendRunInSession(IBMIntegrationTestCase):
         with Session(backend=backend) as session:
             sampler = Sampler(session=session)
             job1 = sampler.run(circuits=ReferenceCircuits.bell())
-            job2 = backend.run(circuits=ReferenceCircuits.bell())
+            with warnings.catch_warnings(record=True) as warn:
+                job2 = backend.run(circuits=ReferenceCircuits.bell())
+            self.assertIn(
+                "IBMBackend will not be run within a Primitive session", str(warn[0].message)
+            )
             self.assertEqual(job1.session_id, job1.job_id())
             self.assertIsNone(job2.session_id)
         with backend.open_session() as session:

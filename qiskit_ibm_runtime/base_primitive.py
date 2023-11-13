@@ -28,7 +28,7 @@ from .options import Options
 from .options.utils import set_default_error_levels
 from .runtime_job import RuntimeJob
 from .ibm_backend import IBMBackend
-from .session import get_cm_session
+from .utils.default_session import get_cm_session
 from .constants import DEFAULT_DECODERS
 from .qiskit_runtime_service import QiskitRuntimeService
 

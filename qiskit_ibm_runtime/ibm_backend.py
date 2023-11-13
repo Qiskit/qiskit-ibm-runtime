@@ -65,6 +65,7 @@ from .exceptions import IBMBackendApiProtocolError
 from .utils.backend_converter import (
     convert_to_target,
 )
+from .utils.default_session import get_cm_session as get_cm_primitive_session
 
 logger = logging.getLogger(__name__)
 
@@ -751,6 +752,11 @@ class IBMBackend(Backend):
         if self._service._channel == "ibm_quantum":
             hgp_name = self._instance or self._service._get_hgp().name
 
+        # Check if initialized within a Primitive session. If so, issue a warning.
+        if get_cm_primitive_session():
+            warnings.warn(
+                "Primitive session is open, but IBMBackend will not be run within a Primitive session"
+            )
         if self._session:
             if not self._session.active:
                 raise RuntimeError(f"The session {self._session.session_id} is closed.")
