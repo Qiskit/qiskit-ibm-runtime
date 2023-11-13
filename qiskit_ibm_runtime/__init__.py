@@ -143,16 +143,6 @@ Supplementary Information
         job = Sampler(backend).run(ReferenceCircuits.bell(), callback=result_callback)
         print(job.result())
 
-.. dropdown:: Uploading a program
-   :animate: fade-in-slide-down
-
-    Authorized users can upload their custom Qiskit Runtime programs.
-    A Qiskit Runtime program is a piece of Python
-    code and its metadata that takes certain inputs, performs
-    quantum and maybe classical processing, and returns the results.
-
-    Files related to writing a runtime program are in the
-    ``qiskit_ibm_runtime/program`` directory.
 
 Classes
 ==========================
