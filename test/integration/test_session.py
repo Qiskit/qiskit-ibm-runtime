@@ -142,8 +142,7 @@ class TestBackendRunInSession(IBMIntegrationTestCase):
             with warnings.catch_warnings(record=True) as warn:
                 sampler = Sampler(backend=backend)
             self.assertIn(
-                "Primitives will not be run within an IBMBackend session",
-                str(warn[0].message)
+                "Primitives will not be run within an IBMBackend session", str(warn[0].message)
             )
             job1 = backend.run(ReferenceCircuits.bell())
             job2 = sampler.run(circuits=ReferenceCircuits.bell())
