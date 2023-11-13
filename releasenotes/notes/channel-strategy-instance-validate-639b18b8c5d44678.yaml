@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    An error will be raised during initialization if ``q-ctrl`` is passed in as the ``channel_strategy`` and
+    the account instance does not have ``q-ctrl`` enabled. 
