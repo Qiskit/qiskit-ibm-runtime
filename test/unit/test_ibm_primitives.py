@@ -16,7 +16,6 @@ import sys
 import copy
 import os
 from unittest.mock import MagicMock, patch
-import warnings
 from dataclasses import asdict
 from typing import Dict
 
@@ -84,28 +83,6 @@ class TestPrimitives(IBMTestCase):
                     expected = asdict(Options())
                     self._update_dict(expected, copy.deepcopy(options))
                     self.assertDictEqual(expected, inst.options.__dict__)
-
-    def test_backend_in_options(self):
-        """Test specifying backend in options."""
-        primitives = [Sampler, Estimator]
-        backend_name = "ibm_gotham"
-        backend = MagicMock(spec=IBMBackend)
-        backend._instance = None
-        backend.name = backend_name
-        backends = [backend_name, backend]
-        for cls in primitives:
-            for backend in backends:
-                with self.subTest(primitive=cls, backend=backend):
-                    options = {"backend": backend}
-                    with warnings.catch_warnings(record=True) as warn:
-                        warnings.simplefilter("always")
-                        cls(session=MagicMock(spec=MockSession), options=options)
-                        self.assertTrue(
-                            all(
-                                issubclass(one_warn.category, DeprecationWarning)
-                                for one_warn in warn
-                            )
-                        )
 
     def test_runtime_options(self):
         """Test RuntimeOptions specified as primitive options."""
@@ -415,22 +392,6 @@ class TestPrimitives(IBMTestCase):
                         rt_options = kwargs["options"]
                     self._assert_dict_partially_equal(rt_options, options)
 
-    def test_kwarg_options(self):
-        """Test specifying arbitrary options."""
-        session = MagicMock(spec=MockSession)
-        primitives = [Sampler, Estimator]
-        for cls in primitives:
-            with self.subTest(primitive=cls):
-                options = Options(foo="foo")  # pylint: disable=unexpected-keyword-arg
-                inst = cls(session=session, options=options)
-                inst.run(self.qx, observables=self.obs)
-                if sys.version_info >= (3, 8):
-                    inputs = session.run.call_args.kwargs["inputs"]
-                else:
-                    _, kwargs = session.run.call_args
-                    inputs = kwargs["inputs"]
-                self.assertEqual(inputs.get("foo"), "foo")
-
     def test_run_kwarg_options(self):
         """Test specifying arbitrary options in run."""
         session = MagicMock(spec=MockSession)
@@ -477,10 +438,6 @@ class TestPrimitives(IBMTestCase):
         new_options = [
             ({"optimization_level": 2}, Options()),
             ({"optimization_level": 3, "shots": 200}, Options()),
-            (
-                {"shots": 300, "foo": "foo"},
-                Options(foo="foo"),  # pylint: disable=unexpected-keyword-arg
-            ),
         ]
 
         session = MagicMock(spec=MockSession)
