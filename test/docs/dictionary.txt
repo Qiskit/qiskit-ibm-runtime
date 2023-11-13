@@ -124,6 +124,7 @@ Schmitt
 Schroeter
 Schuld
 Schwarz
+SciPy
 Shadbolt
 Shen
 Shende
@@ -157,6 +158,7 @@ Vion
 Vivek
 Vojtech
 Volkoff
+Watrous
 Weedbrook
 Wierichs
 Woerner
@@ -251,3 +253,4 @@ transpiling
 tridiagonal
 trits
 unitaries
+untrusted
