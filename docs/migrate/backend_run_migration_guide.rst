@@ -4,7 +4,7 @@ Migration guide: using ``backend.run()`` in ``qiskit_ibm_runtime``
 ==================================================================
 
 This guide describes how to migrate code that implemented ``backend.run()``
-using Qiskit IBM Provider (the ``qiskit_ibm_provider`` package) to code using the
+using Qiskit IBM Provider (the ``qiskit_ibm_provider`` package) to use
 Qiskit IBM Runtime (``qiskit_ibm_runtime`` package).
 We demonstrate the migration with code examples.
 
@@ -18,7 +18,6 @@ We demonstrate the migration with code examples.
     circuit.h(0)
     circuit.cx(0, 1)
     circuit.measure_all()
-    transpiled_circuit = transpile(circuit, backend=backend)
 
 In the Provider, the code is:
 
@@ -27,6 +26,7 @@ In the Provider, the code is:
     from qiskit_ibm_provider import IBMProvider
     provider = IBMProvider()
     backend = provider.get_backend("ibmq_qasm_simulator")
+    transpiled_circuit = transpile(circuit, backend=backend)
     job = backend.run(transpiled_circuit)
     print(job.result())
 
@@ -35,8 +35,9 @@ In Runtime, the code will be:
 .. code-block:: python
 
     from qiskit_ibm_runtime import QiskitRuntimeService
-    service = QiskitIBMService()
+    service = QiskitRuntimeService(channel="ibm_quantum")
     backend = service.backend("ibmq_qasm_simulator")
+    transpiled_circuit = transpile(circuit, backend=backend)
     job = backend.run(transpiled_circuit)
     print(job.result())
 
@@ -49,6 +50,9 @@ This section of code is identical in Provider and in Runtime.
     with backend.open_session() as session:
         job1 = backend.run(transpiled_circuit)
         job2 = backend.run(transpiled_circuit)
+        print(job1.session_id)
+        print(job2.session_id)
+    backend.cancel_session()
 
 The Session for ``Primitives`` (``Sampler`` and ``Estimator``) is currently different than
 the Session for ``IBMBackend``. Therefore, we cannot run a primitive and a backend
@@ -61,10 +65,13 @@ of ``session``.
 
 .. code-block:: python
 
+    from qiskit_ibm_runtime import Session, Sampler
     with Session(backend=backend) as session:
         sampler = Sampler(session=session)
         job1 = sampler.run(transpiled_circuit)
         job2 = backend.run(transpiled_circuit)
+        print(job1.session_id)
+        print(job2.session_id)
 
 **Example 4: Backend Session containing Sampler:**
 
@@ -75,6 +82,10 @@ of ``session``.
 
     with backend.open_session() as session:
         sampler = Sampler(backend=backend)
-        job1 = backend.run(transpiled_circuit)
-        job2 = sampler.run(transpiled_circuit)
+        job1 = sampler.run(transpiled_circuit)
+        job2 = backend.run(transpiled_circuit)
         session_id = session.session_id
+        print(job1.session_id)
+        print(job2.session_id)
+
+
