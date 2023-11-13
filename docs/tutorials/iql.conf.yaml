@@ -1,3 +1,6 @@
+# This file relates tutorials in this folder to lesson IDs in the database for
+# `learning.quantum.ibm.com`. Speak to Frank Harkins or Sanket Panda to add a
+# new tutorial.
 lessons:
   - path: error-suppression-and-error-mitigation
     idStaging: 7e6b09d2-58d5-4892-9c70-4a4d662acd22
