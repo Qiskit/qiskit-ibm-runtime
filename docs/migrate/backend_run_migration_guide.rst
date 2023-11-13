@@ -69,7 +69,7 @@ of ``session``.
     with Session(backend=backend) as session:
         sampler = Sampler(session=session)
         job1 = sampler.run(transpiled_circuit)
-        job2 = backend.run(transpiled_circuit)
+        job2 = backend.run(transpiled_circuit) # runs outside the session
         print(job1.session_id)
         print(job2.session_id)
 
@@ -82,7 +82,7 @@ of ``session``.
 
     with backend.open_session() as session:
         sampler = Sampler(backend=backend)
-        job1 = sampler.run(transpiled_circuit)
+        job1 = sampler.run(transpiled_circuit)  # runs outside the session
         job2 = backend.run(transpiled_circuit)
         session_id = session.session_id
         print(job1.session_id)
