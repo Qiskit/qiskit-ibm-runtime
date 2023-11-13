@@ -123,8 +123,6 @@ class EstimatorV2(BasePrimitiveV2, Estimator, BaseEstimatorV2):
         Raises:
             NotImplementedError: If "q-ctrl" channel strategy is used.
         """
-        # self.options: EstimatorOptions
-
         BaseEstimatorV2.__init__(self)
         Estimator.__init__(self)
         BasePrimitiveV2.__init__(self, backend=backend, session=session, options=options)
