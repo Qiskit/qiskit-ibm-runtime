@@ -81,9 +81,6 @@ class Estimator(BasePrimitive, BaseEstimator):
                 parameter_values=[theta1]*2
             )
             print(psi1_H23.result())
-            # Close the session only if all jobs are finished
-            # and you don't need to run more in the session
-            session.close()
     """
 
     _PROGRAM_ID = "estimator"
@@ -179,9 +176,7 @@ class Estimator(BasePrimitive, BaseEstimator):
         """
         inputs = {
             "circuits": circuits,
-            "circuit_indices": list(range(len(circuits))),
             "observables": observables,
-            "observable_indices": list(range(len(observables))),
             "parameters": [circ.parameters for circ in circuits],
             "parameter_values": parameter_values,
         }

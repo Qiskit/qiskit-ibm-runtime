@@ -1,6 +1,6 @@
 extends: conditional
 message: "Define acronyms and abbreviations (such as '%s') on first occurrence if they're likely to be unfamiliar."
-link: 'https://www.ibm.com/developerworks/library/styleguidelines/index.html#N100DC'
+link: 'https://ibmdocs-test.dcs.ibm.com/docs/en/ibm-style?topic=grammar-abbreviations#general-guidelines'
 level: suggestion
 ignorecase: false
 # Ensures that the existence of 'first' implies the existence of 'second'.

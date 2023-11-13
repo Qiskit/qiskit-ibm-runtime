@@ -19,8 +19,8 @@ import json
 
 from qiskit_ibm_provider.api.rest.base import RestAdapterBase
 from qiskit_ibm_provider.api.rest.program_job import ProgramJob
-from qiskit_ibm_provider.api.rest.runtime_session import RuntimeSession
 from qiskit_ibm_provider.utils import local_to_utc
+from .runtime_session import RuntimeSession
 
 from .program import Program
 from ...utils import RuntimeEncoder
@@ -36,6 +36,7 @@ class Runtime(RestAdapterBase):
         "programs": "/programs",
         "jobs": "/jobs",
         "backends": "/backends",
+        "cloud_instance": "/instance",
     }
 
     def program(self, program_id: str) -> "Program":
@@ -293,3 +294,12 @@ class Runtime(RestAdapterBase):
         if channel_strategy:
             params["channel_strategy"] = channel_strategy
         return self.session.get(url, params=params, timeout=timeout).json()
+
+    def cloud_instance(self) -> bool:
+        """Return boolean of whether or not the instance has q-ctrl enabled.
+
+        Returns:
+            Boolean value.
+        """
+        url = self.get_url("cloud_instance")
+        return self.session.get(url).json().get("qctrl_enabled")

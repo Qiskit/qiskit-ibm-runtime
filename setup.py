@@ -27,7 +27,7 @@ REQUIREMENTS = [
     "python-dateutil>=2.8.0",
     "websocket-client>=1.5.1",
     "ibm-platform-services>=0.22.6",
-    "qiskit-ibm-provider>=0.7.0",
+    "qiskit-ibm-provider>=0.7.2",
 ]
 
 # Handle version.
@@ -76,5 +76,11 @@ setuptools.setup(
         "Bug Tracker": "https://github.com/Qiskit/qiskit-ibm-runtime/issues",
         "Documentation": "https://qiskit.org/documentation/",
         "Source Code": "https://github.com/Qiskit/qiskit-ibm-runtime",
+    },
+    entry_points={
+        "qiskit.transpiler.translation": [
+            "ibm_backend = qiskit_ibm_runtime.transpiler.plugin:IBMTranslationPlugin",
+            "ibm_dynamic_circuits = qiskit_ibm_runtime.transpiler.plugin:IBMDynamicTranslationPlugin",
+        ]
     },
 )

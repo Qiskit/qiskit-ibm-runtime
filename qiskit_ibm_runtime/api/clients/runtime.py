@@ -337,13 +337,28 @@ class RuntimeClient(BaseBackendClient):
         """
         return self._api.program_job(job_id).metadata()
 
-    def close_session(self, session_id: str) -> None:
-        """Close the runtime session.
+    def cancel_session(self, session_id: str) -> None:
+        """Close all jobs in the runtime session.
 
         Args:
             session_id: Session ID.
         """
+        self._api.runtime_session(session_id=session_id).cancel()
+
+    def close_session(self, session_id: str) -> None:
+        """Update session so jobs can no longer be submitted."""
         self._api.runtime_session(session_id=session_id).close()
+
+    def session_details(self, session_id: str) -> Dict[str, Any]:
+        """Get session details.
+
+        Args:
+            session_id: Session ID.
+
+        Returns:
+            Session details.
+        """
+        return self._api.runtime_session(session_id=session_id).details()
 
     def list_backends(
         self, hgp: Optional[str] = None, channel_strategy: Optional[str] = None
@@ -358,6 +373,14 @@ class RuntimeClient(BaseBackendClient):
             IBM backends available for this service instance.
         """
         return self._api.backends(hgp=hgp, channel_strategy=channel_strategy)["devices"]
+
+    def cloud_instance(self) -> bool:
+        """Returns a boolean of whether or not the instance has q-ctrl enabled.
+
+        Returns:
+            Boolean value.
+        """
+        return self._api.cloud_instance()
 
     def backend_configuration(self, backend_name: str) -> Dict[str, Any]:
         """Return the configuration of the IBM backend.

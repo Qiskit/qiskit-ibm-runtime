@@ -156,3 +156,50 @@ class IntegrationTestDependencies:
     token: str
     channel: str
     url: str
+
+
+def integration_test_setup_with_backend(
+    backend_name: Optional[str] = None,
+    simulator: Optional[bool] = True,
+    min_num_qubits: Optional[int] = None,
+    staging: Optional[bool] = True,
+) -> Callable:
+    """Returns a decorator that retrieves the appropriate backend to use for testing.
+
+    Either retrieves the backend via its name (if specified), or selects the least busy backend that
+    matches all given filter criteria.
+
+    Args:
+        backend_name: The name of the backend.
+        simulator: If set to True, the list of suitable backends is limited to simulators.
+        min_num_qubits: Minimum number of qubits the backend has to have.
+
+    Returns:
+        Decorator that retrieves the appropriate backend to use for testing.
+    """
+
+    def _decorator(func):
+        @wraps(func)
+        @integration_test_setup()
+        def _wrapper(self, *args, **kwargs):
+            dependencies: IntegrationTestDependencies = kwargs["dependencies"]
+            service = dependencies.service
+            if not staging:
+                raise SkipTest("Tests not supported on staging.")
+            if backend_name:
+                _backend = service.backend(name=backend_name)
+            else:
+                _backend = service.least_busy(
+                    min_num_qubits=min_num_qubits,
+                    simulator=simulator,
+                )
+            if not _backend:
+                # pylint: disable=broad-exception-raised
+                raise Exception("Unable to find a suitable backend.")
+
+            kwargs["backend"] = _backend
+            func(self, *args, **kwargs)
+
+        return _wrapper
+
+    return _decorator

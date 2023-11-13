@@ -15,7 +15,6 @@
 from typing import Optional, List, Union, Literal, get_args
 from dataclasses import dataclass
 
-from .utils import _flexible
 
 TranspilationSupportedOptions = Literal[
     "skip_transpilation",
@@ -39,7 +38,6 @@ RoutingMethodType = Literal[
 ]
 
 
-@_flexible
 @dataclass
 class TranspilationOptions:
     """Transpilation options.
