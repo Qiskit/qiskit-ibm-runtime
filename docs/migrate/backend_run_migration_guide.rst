@@ -56,7 +56,7 @@ Using a session with primitives (``Sampler`` and ``Estimator``) is different fro
 the Session for ``IBMBackend``. Therefore, we cannot run a primitive and a backend
 using a single Session.
 
-**Example 3: Primitive Session containing backend.run:**
+**Example 3: Primitive session containing backend.run:**
 
 In this example, ``sampler`` is run within session, but ``backend`` is run independently
 of ``session``.
