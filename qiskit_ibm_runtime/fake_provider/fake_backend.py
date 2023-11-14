@@ -588,7 +588,7 @@ class FakeBackend(BackendV1):
         if pulse_job:
             if _optionals.HAS_AER:
                 import qiskit_aer as aer  # pylint: disable=import-outside-toplevel
-                from qiskit_aer.pulse import (  # pylint: disable=import-outside-toplevel
+                from qiskit_aer.pulse import (  # pylint: disable=import-outside-toplevel,import-error
                     PulseSystemModel,
                 )
 
