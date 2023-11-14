@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    A warning will be raised at initialization if the DE environment is being used since not all 
+    features are supported there.
+
