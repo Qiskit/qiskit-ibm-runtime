@@ -17,7 +17,7 @@ We demonstrate the migration with code examples.
     circuit.cx(0, 1)
     circuit.measure_all()
 
-In the Provider, the code is:
+In Provider, the code is:
 
 .. code-block:: python
 
