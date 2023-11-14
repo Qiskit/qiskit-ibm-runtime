@@ -755,7 +755,7 @@ class IBMBackend(Backend):
         # Check if initialized within a Primitive session. If so, issue a warning.
         if get_cm_primitive_session():
             warnings.warn(
-                "Primitive session is open, but IBMBackend will not be run within a Primitive session"
+                "A Primitive session is open but Backend.run() jobs will not be run within this session"
             )
         if self._session:
             if not self._session.active:

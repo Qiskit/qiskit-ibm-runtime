@@ -124,7 +124,7 @@ class BasePrimitive(ABC):
         # Check if initialized within a IBMBackend session. If so, issue a warning.
         if get_cm_provider_session():
             warnings.warn(
-                "IBMBackend session is open, but Primitives will not be run within an IBMBackend session"
+                "A Backend.run() session is open but Primitives will not be run within this session"
             )
 
     def _run_primitive(self, primitive_inputs: Dict, user_kwargs: Dict) -> RuntimeJob:
