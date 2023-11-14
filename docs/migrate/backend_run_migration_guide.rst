@@ -71,7 +71,7 @@ of ``session``.
         print(job1.session_id)
         print(job2.session_id)
 
-**Example 4: Backend Session containing Sampler:**
+**Example 4: Backend session containing Sampler:**
 
 In this example, ``backend`` is run within a session, but ``sampler`` is run independently
 of ``session``.
