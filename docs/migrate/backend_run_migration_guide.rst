@@ -52,7 +52,7 @@ This section of code is identical in Provider and in Runtime.
         print(job2.session_id)
     backend.cancel_session()
 
-The Session for ``Primitives`` (``Sampler`` and ``Estimator``) is currently different than
+Using a session with primitives (``Sampler`` and ``Estimator``) is different from using a session 
 the Session for ``IBMBackend``. Therefore, we cannot run a primitive and a backend
 using a single Session.
 
