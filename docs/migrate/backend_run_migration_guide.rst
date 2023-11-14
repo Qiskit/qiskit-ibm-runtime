@@ -1,9 +1,18 @@
 Migration guide: Migrate ``backend.run()`` from ``qiskit_ibm_provider`` to ``qiskit_ibm_runtime``
 =================================================================================================
 
+The qiskit Runtime interface includes two packages:
+Qiskit IBM Provider (the ``qiskit_ibm_provider`` package) and
+Qiskit IBM Runtime (the ``qiskit_ibm_runtime`` package). Until now, Primitives (Sampler and Estimator)
+were run in Runtime. Custom circuits that performed their own transpilation and used ``backend.run()``
+were run in Provider.
+
+In this release, we add support for running custom circuits using ``backend.run()`` in Runtime,
+so users can run all programs through Runtime.
+We eventually plan to deprecate Provider.
+
 This guide describes how to migrate code that implemented ``backend.run()``
-using Qiskit IBM Provider (the ``qiskit_ibm_provider`` package) to use
-Qiskit IBM Runtime (the ``qiskit_ibm_runtime`` package).
+using Provider to use Qiskit IBM Runtime instead.
 We demonstrate the migration with code examples.
 
 **Example 1: Straightforward execution of backend.run()**
@@ -52,9 +61,9 @@ This section of code is identical in Provider and in Runtime.
         print(job2.session_id)
     backend.cancel_session()
 
-Using a session with primitives (``Sampler`` and ``Estimator``) is different from using a session 
-the Session for ``IBMBackend``. Therefore, we cannot run a primitive and a backend
-using a single session.
+The current implementation of Session is different for ``IBMBackend`` than that of Primitives.
+Therefore, we cannot run a primitive and a backend using a single session. This will be remediated
+in subsequent releases.
 
 **Example 3: Primitive session containing backend.run:**
 
