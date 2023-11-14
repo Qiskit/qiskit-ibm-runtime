@@ -78,7 +78,7 @@ of ``session``.
         job1 = sampler.run(transpiled_circuit)
         job2 = backend.run(transpiled_circuit) # runs outside the session
         print(job1.session_id)
-        print(job2.session_id)
+        print(job2.session_id)  # is None
 
 **Example 4: Backend session containing Sampler:**
 
@@ -92,7 +92,7 @@ of ``session``.
         job1 = sampler.run(transpiled_circuit)  # runs outside the session
         job2 = backend.run(transpiled_circuit)
         session_id = session.session_id
-        print(job1.session_id)
+        print(job1.session_id)  # is None
         print(job2.session_id)
 
 
