@@ -28,7 +28,7 @@ In Provider, the code is:
     job = backend.run(transpiled_circuit)
     print(job.result())
 
-In Runtime, the code will be:
+In Runtime, the code is:
 
 .. code-block:: python
 
