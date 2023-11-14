@@ -3,19 +3,20 @@ Migration guide: Migrate ``backend.run()`` from ``qiskit_ibm_provider`` to ``qis
 
 The qiskit Runtime interface includes two packages:
 Qiskit IBM Provider (the ``qiskit_ibm_provider`` package) and
-Qiskit IBM Runtime (the ``qiskit_ibm_runtime`` package). Until now, Primitives (Sampler and Estimator)
-were run in Runtime. Custom circuits that performed their own transpilation and used ``backend.run()``
+Qiskit IBM Runtime (the ``qiskit_ibm_runtime`` package). Until now,
+Primitives (``Sampler`` and ``Estimator``)
+were run in Runtime. Custom circuits that performed their own transpilation and used ``IBMBackend.run()``
 were run in Provider.
 
-In this release, we add support for running custom circuits using ``backend.run()`` in Runtime,
+In this release, we add support for running custom circuits using ``IBMBackend.run()`` in Runtime,
 so users can run all programs through Runtime.
 We eventually plan to deprecate Provider.
 
-This guide describes how to migrate code that implemented ``backend.run()``
+This guide describes how to migrate code that implemented ``IBMBackend.run()``
 using Provider to use Qiskit IBM Runtime instead.
 We demonstrate the migration with code examples.
 
-**Example 1: Straightforward execution of backend.run()**
+**Example 1: Straightforward execution of IBMBackend.run()**
 
 .. code-block:: python
 
