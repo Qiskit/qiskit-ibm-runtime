@@ -15,7 +15,6 @@
 from typing import Dict, Optional, Type, Union, Callable, Any
 from types import TracebackType
 from functools import wraps
-from contextvars import ContextVar
 
 from qiskit_ibm_provider.utils.converters import hms_to_seconds
 
@@ -26,6 +25,7 @@ from .program.result_decoder import ResultDecoder
 from .ibm_backend import IBMBackend
 from .exceptions import IBMInputValueError
 from .utils.deprecation import deprecate_arguments
+from .utils.default_session import set_cm_session
 
 
 def _active_session(func):  # type: ignore
@@ -335,19 +335,3 @@ class Session:
     ) -> None:
         set_cm_session(None)
         self.close()
-
-
-# Default session
-_DEFAULT_SESSION: ContextVar[Optional[Session]] = ContextVar("_DEFAULT_SESSION", default=None)
-_IN_SESSION_CM: ContextVar[bool] = ContextVar("_IN_SESSION_CM", default=False)
-
-
-def set_cm_session(session: Optional[Session]) -> None:
-    """Set the context manager session."""
-    _DEFAULT_SESSION.set(session)
-    _IN_SESSION_CM.set(session is not None)
-
-
-def get_cm_session() -> Session:
-    """Return the context managed session."""
-    return _DEFAULT_SESSION.get()

@@ -229,6 +229,7 @@ qudit
 qutrits
 recalibrated
 reuploading
+rustworkx
 satisfiability
 serverless
 simulability
