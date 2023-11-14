@@ -3,7 +3,7 @@ Migration guide: Migrate ``backend.run()`` from ``qiskit_ibm_provider`` to ``qis
 
 This guide describes how to migrate code that implemented ``backend.run()``
 using Qiskit IBM Provider (the ``qiskit_ibm_provider`` package) to use
-Qiskit IBM Runtime (``qiskit_ibm_runtime`` package).
+Qiskit IBM Runtime (the ``qiskit_ibm_runtime`` package).
 We demonstrate the migration with code examples.
 
 **Example 1: Straightforward execution of backend.run()**
