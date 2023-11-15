@@ -61,7 +61,7 @@ This section of code is identical in Provider and in Runtime.
     backend.cancel_session()
 
 Sessions are implemented differently in ``IBMBackend`` than when using primitives.
-Therefore, we cannot run a primitive and a backend using a single session. This will be remediated
+Therefore, we cannot run a primitive and use backend.run() within a single session.  If you specify both, one will be run outside of the session.
 in subsequent releases.
 
 **Example 3: Primitive session containing backend.run:**
