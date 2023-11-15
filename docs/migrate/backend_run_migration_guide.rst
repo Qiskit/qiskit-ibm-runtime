@@ -5,7 +5,7 @@ The Qiskit Runtime interface includes two packages:
 Qiskit IBM Provider (the ``qiskit_ibm_provider`` package) and
 Qiskit IBM Runtime (the ``qiskit_ibm_runtime`` package). Until now,
 primitives (``Sampler`` and ``Estimator``)
-were run in Runtime. Custom circuits that performed their own transpilation and used ``IBMBackend.run()``
+were run in Runtime. Custom circuits that were manually transpiled and used ``IBMBackend.run()``
 were run in Provider.
 
 In this release, we add support for running custom circuits using ``IBMBackend.run()`` in Runtime,
@@ -61,8 +61,7 @@ This section of code is identical in Provider and in Runtime.
     backend.cancel_session()
 
 Sessions are implemented differently in ``IBMBackend`` than when using primitives.
-Therefore, we cannot run a primitive and use backend.run() within a single session.  If you specify both, one will be run outside of the session.
-in subsequent releases.
+Therefore, we cannot run a primitive and use backend.run() within a single session. If you specify both, one will be run outside of the session.
 
 **Example 3: Primitive session containing backend.run:**
 
