@@ -15,6 +15,8 @@
 import os
 import ast
 from typing import Optional, Dict
+import warnings
+
 from qiskit_ibm_provider.proxies import ProxyConfiguration
 
 from .exceptions import AccountNotFoundError
@@ -195,6 +197,10 @@ class AccountManager:
                 return Account.from_saved_format(all_config[account_name])
 
         if os.path.isfile(_QISKITRC_CONFIG_FILE):
+            warnings.warn(
+                "Use of the ~/.qiskit/qiskitrc.json file is deprecated."
+                "Please use the ~/.qiskit/qiskit-ibm.json file instead."
+            )
             return cls._from_qiskitrc_file()
 
         raise AccountNotFoundError("Unable to find account.")
