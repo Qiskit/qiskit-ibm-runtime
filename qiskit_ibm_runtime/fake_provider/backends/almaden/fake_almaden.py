@@ -15,7 +15,7 @@ Fake Almaden device (20 qubit).
 """
 
 import os
-from qiskit_ibm_runtime.fake_provider import fake_qasm_backend, fake_backend
+from qiskit.providers.fake_provider import fake_qasm_backend, fake_backend
 
 
 class FakeAlmadenV2(fake_backend.FakeBackendV2):

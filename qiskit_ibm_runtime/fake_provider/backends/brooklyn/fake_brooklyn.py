@@ -15,7 +15,7 @@ Fake Brooklyn device (65 qubit).
 """
 
 import os
-from qiskit_ibm_runtime.fake_provider import fake_pulse_backend, fake_backend
+from qiskit.providers.fake_provider import fake_pulse_backend, fake_backend
 
 
 class FakeBrooklynV2(fake_backend.FakeBackendV2):

@@ -22,7 +22,7 @@ from qiskit.providers.models import (
     QasmBackendConfiguration,
     BackendProperties,
 )
-from qiskit_ibm_runtime.fake_provider.fake_backend import FakeBackend
+from qiskit.providers.fake_provider.fake_backend import FakeBackend
 
 
 class FakeTokyo(FakeBackend):

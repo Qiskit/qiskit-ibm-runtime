@@ -24,7 +24,7 @@ The fake provider module contains fake providers and fake backends classes. The 
 built to mimic the behaviors of IBM Quantum systems using system snapshots. The system snapshots
 contain important information about the quantum system such as coupling map, basis gates, qubit
 properties (T1, T2, error rate, etc.) which are useful for testing the transpiler and performing
-noisy simulation of the system.
+noisy simulations of the system.
 
 Example Usage
 =============
@@ -35,10 +35,9 @@ Here is an example of using a fake backend for transpilation and simulation.
    :include-source:
 
    from qiskit import QuantumCircuit
-   from qiskit_ibm_runtime.fake_provider import FakeManilaV2
    from qiskit import transpile
    from qiskit.tools.visualization import plot_histogram
-
+   from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 
    # Get a fake backend from the fake provider
    backend = FakeManilaV2()
@@ -72,7 +71,7 @@ Here is an example of using a fake backend for transpilation and simulation.
     .. code-block:: python
 
         from qiskit_ibm_runtime import IBMProvider
-        from qiskit.providers.aer import AerSimulator
+        from qiskit_aer import AerSimulator
 
         # get a real backend from a real provider
         provider = IBMProvider()
@@ -208,46 +207,10 @@ Fake V1 backends are fake backends with IBM Quantum systems snapshots implemente
     FakeVigo
     FakeWashington
     FakeYorktown
-
-Special Fake Backends
-=====================
-
-Special fake backends are fake backends that were created for special testing purposes.
-
-.. autosummary::
-    :toctree: ../stubs/
-
-    FakeQasmSimulator
-
-Fake Backend Base Classes
-=========================
-
-The fake backends based on IBM hardware are based on a set of base classes:
-
-.. currentmodule:: qiskit_ibm_runtime.fake_provider.fake_backend
-.. autoclass:: qiskit_ibm_runtime.fake_provider.fake_backend.FakeBackendV2
-
-.. currentmodule:: qiskit_ibm_runtime.fake_provider
-.. autoclass:: FakeBackend
-.. autoclass:: FakeQasmBackend
-.. autoclass:: FakePulseBackend
 """
-
-# Fake job and qobj classes
-from .fake_job import FakeJob
-from .fake_qobj import FakeQobj
-
-# Base classes for fake backends
-from . import fake_backend
-from .fake_backend import FakeBackend
-from .fake_qasm_backend import FakeQasmBackend
-from .fake_pulse_backend import FakePulseBackend
 
 # Fake providers
 from .fake_provider import FakeProviderFactory, FakeProviderForBackendV2, FakeProvider
 
 # Standard fake backends with IBM Quantum systems snapshots
 from .backends import *
-
-# Special fake backends for special testing purposes
-from .fake_qasm_simulator import FakeQasmSimulator

@@ -15,7 +15,7 @@ Fake Sherbrooke device (127 qubit).
 """
 
 import os
-from qiskit_ibm_runtime.fake_provider import fake_backend
+from qiskit.providers.fake_provider import fake_backend
 
 
 class FakeSherbrooke(fake_backend.FakeBackendV2):

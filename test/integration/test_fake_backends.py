@@ -25,9 +25,9 @@ from qiskit.compiler import assemble
 from qiskit.compiler import transpile
 from qiskit.exceptions import QiskitError
 from qiskit.execute_function import execute
+from qiskit.providers.backend import BackendV2
 from qiskit.providers.backend_compat import BackendV2Converter
 from qiskit.providers.models.backendproperties import BackendProperties
-from qiskit.providers.backend import BackendV2
 from qiskit.utils import optionals
 from qiskit.circuit.library import (
     SXGate,

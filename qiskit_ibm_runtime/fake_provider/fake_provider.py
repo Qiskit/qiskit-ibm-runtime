@@ -20,7 +20,6 @@ from qiskit.providers.provider import ProviderV1
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 
 from .backends import *
-from .fake_qasm_simulator import FakeQasmSimulator
 
 
 class FakeProviderFactory:
@@ -190,7 +189,6 @@ class FakeProvider(ProviderV1):
             FakeOurense(),  # type: ignore
             FakeParis(),  # type: ignore
             FakePoughkeepsie(),  # type: ignore
-            FakeQasmSimulator(),  # type: ignore
             FakeQuito(),  # type: ignore
             FakeRochester(),  # type: ignore
             FakeRome(),  # type: ignore
