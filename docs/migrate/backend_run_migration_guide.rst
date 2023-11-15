@@ -60,7 +60,7 @@ This section of code is identical in Provider and in Runtime.
         print(job2.session_id)
     backend.cancel_session()
 
-The current implementation of Session is different for ``IBMBackend`` than that of Primitives.
+Sessions are implemented differently in ``IBMBackend`` than when using primitives.
 Therefore, we cannot run a primitive and a backend using a single session. This will be remediated
 in subsequent releases.
 
