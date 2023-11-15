@@ -67,7 +67,7 @@ in subsequent releases.
 **Example 3: Primitive session containing backend.run:**
 
 In this example, ``sampler`` is run within session, but ``backend`` is run independently
-of ``session``.
+of the session.
 
 .. code-block:: python
 
