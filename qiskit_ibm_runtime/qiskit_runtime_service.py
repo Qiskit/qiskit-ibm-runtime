@@ -20,6 +20,8 @@ from datetime import datetime
 from collections import OrderedDict
 from typing import Dict, Callable, Optional, Union, List, Any, Type, Sequence
 
+from qiskit_aer import AerSimulator
+from qiskit.providers.fake_provider import FakeBackendV2 as FakeBackend
 from qiskit.providers.backend import BackendV1 as Backend
 from qiskit.providers.provider import ProviderV1 as Provider
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
@@ -34,6 +36,7 @@ from qiskit_ibm_provider.utils.hgp import to_instance_format, from_instance_form
 from qiskit_ibm_provider.utils.backend_decoder import configuration_from_server_data
 from qiskit_ibm_runtime import ibm_backend
 
+from .utils.fake_backends import fake_backend_list
 from .utils.utils import validate_job_tags
 from .accounts import AccountManager, Account, ChannelType
 from .api.clients import AuthClient, VersionClient
@@ -532,7 +535,7 @@ class QiskitRuntimeService(Provider):
         instance: Optional[str] = None,
         filters: Optional[Callable[[List["ibm_backend.IBMBackend"]], bool]] = None,
         **kwargs: Any,
-    ) -> List["ibm_backend.IBMBackend"]:
+    ) -> Union[List["ibm_backend.IBMBackend"], List[FakeBackend]]:
         """Return all backends accessible via this account, subject to optional filtering.
 
         Args:
@@ -572,11 +575,18 @@ class QiskitRuntimeService(Provider):
             QiskitBackendNotFoundError: If the backend is not in any instance.
         """
         # TODO filter out input_allowed not having runtime
-        backends: List[IBMBackend] = []
+        backends: Union[List[IBMBackend], List[FakeBackend]] = []
         instance_filter = instance if instance else self._account.instance
         if self._channel == "ibm_quantum":
             if name:
                 if name not in self._backends:
+                    fake_backend = self._get_fake_backend(name)
+                    print(fake_backend)
+                    print(isinstance(fake_backend, FakeBackend))
+                    print("fake_backend name = "+str(fake_backend.backend_name))
+                    if fake_backend:
+                        backends.append(fake_backend)
+                        return backends
                     raise QiskitBackendNotFoundError("No backend matches the criteria.")
                 if not self._backends[name] or instance != self._backends[name]._instance:
                     self._set_backend_config(name)
@@ -802,6 +812,9 @@ class QiskitRuntimeService(Provider):
         # pylint: disable=arguments-differ, line-too-long
         backends = self.backends(name, instance=instance)
         if not backends:
+            # fake_backend = self._get_fake_backend(name)
+            # if fake_backend:
+            #     return fake_backend
             cloud_msg_url = ""
             if self._channel == "ibm_cloud":
                 cloud_msg_url = (
@@ -809,10 +822,14 @@ class QiskitRuntimeService(Provider):
                     "https://cloud.ibm.com/docs/quantum-computing?topic=quantum-computing-choose-backend "
                 )
             raise QiskitBackendNotFoundError("No backend matches the criteria." + cloud_msg_url)
+        print("backend= " + str(backends[0].backend_name))
         return backends[0]
 
     def get_backend(self, name: str = None, **kwargs: Any) -> Backend:
         return self.backend(name, **kwargs)
+
+    def _get_fake_backend(self, name: str):
+        return fake_backend_list[name]
 
     def pprint_programs(
         self,
@@ -1051,6 +1068,17 @@ class QiskitRuntimeService(Provider):
             inputs = vars(inputs)
 
         qrt_options.validate(channel=self.channel)
+
+        # if backend is a simulator, run locally
+        if isinstance(qrt_options.backend, AerSimulator):
+            from qiskit_aer import Sampler as AerSampler
+            from qiskit_aer import Estimator as AerEstimator
+            print("1 backend = "+ str(qrt_options.backend))
+            #return FakeRuntimeJob(AerSampler.run(...))
+        elif isinstance(qrt_options.backend, FakeBackend):
+            from qiskit.primitives import BackendSampler, BackendEstimator
+            print("2 backend = " + str(qrt_options.backend))
+            #return FakeRuntimeJob(BackendSampler.run(...))
 
         hgp_name = None
         if self._channel == "ibm_quantum":
