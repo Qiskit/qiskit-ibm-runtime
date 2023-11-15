@@ -10,10 +10,9 @@ were run in Provider.
 
 In this release, we add support for running custom circuits using ``IBMBackend.run()`` in Runtime,
 so users can run all programs through Runtime.
-We eventually plan to deprecate Provider.
 
 This guide describes how to migrate code that implemented ``IBMBackend.run()``
-using Provider to use Qiskit IBM Runtime instead.
+using Provider to use Qiskit IBM Runtime.
 We demonstrate the migration with code examples.
 
 **Example 1: Straightforward execution of IBMBackend.run()**
