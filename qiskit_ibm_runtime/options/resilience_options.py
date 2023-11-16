@@ -148,7 +148,7 @@ class ResilienceOptionsV2:
                 if isinstance(self.zne_extrapolator, str)
                 else self.zne_extrapolator
             )
-            for extrap in extrapolators:
+            for extrap in extrapolators:  # pylint: disable=not-an-iterable
                 if len(self.zne_noise_factors) < required_factors[extrap]:  # type: ignore[arg-type]
                     raise ValueError(
                         f"{extrap} requires at least {required_factors[extrap]} zne_noise_factors"

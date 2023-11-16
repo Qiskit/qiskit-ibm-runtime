@@ -63,7 +63,7 @@ class TestDataSerialization(IBMTestCase):
             results=[],
         )
 
-        data = {
+        base_types = {
             "string": "foo",
             "float": 1.5,
             "complex": 2 + 3j,
@@ -71,17 +71,17 @@ class TestDataSerialization(IBMTestCase):
             "result": result,
             "sclass": SerializableClass("foo"),
         }
-        encoded = json.dumps(data, cls=RuntimeEncoder)
+        encoded = json.dumps(base_types, cls=RuntimeEncoder)
         decoded = json.loads(encoded, cls=RuntimeDecoder)
         decoded["sclass"] = SerializableClass.from_json(decoded["sclass"])
 
         decoded_result = decoded.pop("result")
-        data.pop("result")
+        base_types.pop("result")
 
         decoded_array = decoded.pop("array")
-        orig_array = data.pop("array")
+        orig_array = base_types.pop("array")
 
-        self.assertEqual(decoded, data)
+        self.assertEqual(decoded, base_types)
         self.assertIsInstance(decoded_result, Result)
         self.assertTrue((decoded_array == orig_array).all())
 
@@ -309,7 +309,7 @@ if __name__ == '__main__':
         def _to_str_keyed(_in_dict):
             _out_dict = {}
             for a_key_tuple, val in _in_dict.items():
-                str_key = tuple([a_key.name for a_key in a_key_tuple])
+                str_key = tuple(a_key.name for a_key in a_key_tuple)
                 _out_dict[str_key] = val
             return _out_dict
 

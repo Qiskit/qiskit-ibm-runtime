@@ -98,9 +98,12 @@ class TestSamplerV2(IBMTestCase):
         """Test run using default options."""
         session = MagicMock(spec=MockSession)
         options_vars = [
-            (SamplerOptions(dynamical_decoupling="XX"), {"dynamical_decoupling": "XX"}),
             (
-                SamplerOptions(optimization_level=3),
+                SamplerOptions(dynamical_decoupling="XX"),  # pylint: disable=unexpected-keyword-arg
+                {"dynamical_decoupling": "XX"},
+            ),
+            (
+                SamplerOptions(optimization_level=3),  # pylint: disable=unexpected-keyword-arg
                 {"transpilation": {"optimization_level": 3}},
             ),
             (

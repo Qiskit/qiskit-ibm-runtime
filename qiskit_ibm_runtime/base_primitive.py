@@ -24,7 +24,8 @@ from qiskit.providers.options import Options as TerraOptions
 
 from qiskit_ibm_provider.session import get_cm_session as get_cm_provider_session
 
-from .options import BaseOptions, Options
+from .options import Options
+from .options.options import BaseOptions, OptionsV2
 from .options.utils import merge_options, set_default_error_levels
 from .runtime_job import RuntimeJob
 from .ibm_backend import IBMBackend
@@ -44,7 +45,7 @@ logger = logging.getLogger(__name__)
 class BasePrimitiveV2(ABC):
     """Base class for Qiskit Runtime primitives."""
 
-    _options_class: Optional[type[BaseOptions]] = None
+    _options_class: Optional[type[BaseOptions]] = OptionsV2
     version = 2
 
     def __init__(

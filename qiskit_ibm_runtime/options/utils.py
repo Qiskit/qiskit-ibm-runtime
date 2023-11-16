@@ -20,7 +20,7 @@ from dataclasses import is_dataclass, asdict
 from ..ibm_backend import IBMBackend
 
 if TYPE_CHECKING:
-    from ..options import BaseOptions
+    from ..options.options import BaseOptions
 
 
 def set_default_error_levels(

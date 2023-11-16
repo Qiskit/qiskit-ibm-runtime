@@ -123,9 +123,12 @@ class TestEstimatorV2(IBMTestCase):
         """Test run using default options."""
         session = MagicMock(spec=MockSession)
         options_vars = [
-            (EstimatorOptions(resilience_level=1), {"resilience_level": 1}),
             (
-                EstimatorOptions(optimization_level=3),
+                EstimatorOptions(resilience_level=1),  # pylint: disable=unexpected-keyword-arg
+                {"resilience_level": 1},
+            ),
+            (
+                EstimatorOptions(optimization_level=3),  # pylint: disable=unexpected-keyword-arg
                 {"transpilation": {"optimization_level": 3}},
             ),
             (

@@ -57,7 +57,7 @@ Classes
 
 from .environment_options import EnvironmentOptions
 from .execution_options import ExecutionOptionsV1 as ExecutionOptions
-from .options import Options, BaseOptions
+from .options import Options
 from .simulator_options import SimulatorOptions
 from .transpilation_options import TranspilationOptions
 from .resilience_options import ResilienceOptionsV1 as ResilienceOptions
