@@ -23,7 +23,7 @@ from qiskit.primitives import BaseSampler
 from .options import Options
 from .runtime_job import RuntimeJob
 from .ibm_backend import IBMBackend
-from .base_primitive import BasePrimitive
+from .base_primitive import BasePrimitiveV1
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
@@ -32,7 +32,13 @@ from .utils.qctrl import validate as qctrl_validate
 logger = logging.getLogger(__name__)
 
 
-class Sampler(BasePrimitive, BaseSampler):
+class Sampler:
+    """Base type for Sampelr."""
+
+    version = 0
+
+
+class SamplerV1(BasePrimitiveV1, Sampler, BaseSampler):
     """Class for interacting with Qiskit Runtime Sampler primitive service.
 
     Qiskit Runtime Sampler primitive service calculates quasi-probability distribution
@@ -62,6 +68,8 @@ class Sampler(BasePrimitive, BaseSampler):
             # You can run more jobs inside the session
     """
 
+    _OPTIONS_CLASS = Options
+
     def __init__(
         self,
         backend: Optional[Union[str, IBMBackend]] = None,
@@ -90,7 +98,8 @@ class Sampler(BasePrimitive, BaseSampler):
         # qiskit.providers.Options. We largely ignore this _run_options because we use
         # a nested dictionary to categorize options.
         BaseSampler.__init__(self)
-        BasePrimitive.__init__(self, backend=backend, session=session, options=options)
+        Sampler.__init__(self)
+        BasePrimitiveV1.__init__(self, backend=backend, session=session, options=options)
 
     def run(  # pylint: disable=arguments-differ
         self,
@@ -161,13 +170,11 @@ class Sampler(BasePrimitive, BaseSampler):
             qctrl_validate(options)
             return
 
-        if options.get("resilience_level") and not options.get("resilience_level") in [
-            0,
-            1,
-        ]:
+        valid_levels = list(range(Options._MAX_RESILIENCE_LEVEL_SAMPLER + 1))
+        if options.get("resilience_level") and not options.get("resilience_level") in valid_levels:
             raise ValueError(
-                f"resilience_level can only take the values "
-                f"{list(range(Options._MAX_RESILIENCE_LEVEL_SAMPLER + 1))} in Sampler"
+                f"resilience_level {options.get('resilience_level')} is not a valid value."
+                f"It can only take the values {valid_levels} in Sampler."
             )
         Options.validate_options(options)
 

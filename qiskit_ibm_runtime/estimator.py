@@ -14,19 +14,31 @@
 
 from __future__ import annotations
 import os
-from typing import Optional, Dict, Sequence, Any, Union
+from typing import Optional, Dict, Sequence, Any, Union, Mapping
 import logging
 import typing
+
+import numpy as np
+from numpy.typing import ArrayLike
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info.operators.base_operator import BaseOperator
 from qiskit.primitives import BaseEstimator
+from qiskit.quantum_info import SparsePauliOp, Pauli
+from qiskit.primitives.utils import init_observable
+from qiskit.circuit import Parameter
+from qiskit.primitives.base.base_primitive import _isreal
 
 from .runtime_job import RuntimeJob
 from .ibm_backend import IBMBackend
 from .options import Options
-from .base_primitive import BasePrimitive
+from .options.estimator_options import EstimatorOptions
+from .base_primitive import BasePrimitiveV1, BasePrimitiveV2
 from .utils.qctrl import validate as qctrl_validate
+from .utils.deprecation import issue_deprecation_msg
+
+# TODO: remove when we have real v2 base estimator
+from .qiskit.primitives import BaseEstimatorV2
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
@@ -37,7 +49,31 @@ if typing.TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class Estimator(BasePrimitive, BaseEstimator):
+BasisObservableLike = Union[str, Pauli, SparsePauliOp, Mapping[Union[str, Pauli], complex]]
+"""Types that can be natively used to construct a :const:`BasisObservable`."""
+
+ObservablesArrayLike = Union[ArrayLike, Sequence[BasisObservableLike], BasisObservableLike]
+
+ParameterMappingLike = Mapping[
+    Parameter, Union[float, np.ndarray, Sequence[float], Sequence[Sequence[float]]]
+]
+BindingsArrayLike = Union[
+    float,
+    np.ndarray,
+    ParameterMappingLike,
+    Sequence[Union[float, Sequence[float], np.ndarray, ParameterMappingLike]],
+]
+"""Parameter types that can be bound to a single circuit."""
+
+
+class Estimator:
+    """Base class for Qiskit Runtime Estimator."""
+
+    _PROGRAM_ID = "estimator"
+    version = 0
+
+
+class EstimatorV2(BasePrimitiveV2, Estimator, BaseEstimatorV2):
     """Class for interacting with Qiskit Runtime Estimator primitive service.
 
     Qiskit Runtime Estimator primitive service estimates expectation values of quantum circuits and
@@ -83,7 +119,273 @@ class Estimator(BasePrimitive, BaseEstimator):
             print(psi1_H23.result())
     """
 
-    _PROGRAM_ID = "estimator"
+    _ALLOWED_BASIS: str = "IXYZ01+-rl"
+    _OPTIONS_CLASS = EstimatorOptions
+
+    version = 2
+
+    def __init__(
+        self,
+        backend: Optional[Union[str, IBMBackend]] = None,
+        session: Optional[Union[Session, str, IBMBackend]] = None,
+        options: Optional[Union[Dict, EstimatorOptions]] = None,
+    ):
+        """Initializes the Estimator primitive.
+
+        Args:
+            backend: Backend to run the primitive. This can be a backend name or an :class:`IBMBackend`
+                instance. If a name is specified, the default account (e.g. ``QiskitRuntimeService()``)
+                is used.
+
+            session: Session in which to call the primitive.
+
+                If both ``session`` and ``backend`` are specified, ``session`` takes precedence.
+                If neither is specified, and the primitive is created inside a
+                :class:`qiskit_ibm_runtime.Session` context manager, then the session is used.
+                Otherwise if IBM Cloud channel is used, a default backend is selected.
+
+            options: Primitive options, see :class:`Options` for detailed description.
+                The ``backend`` keyword is still supported but is deprecated.
+
+        Raises:
+            NotImplementedError: If "q-ctrl" channel strategy is used.
+        """
+        self.options: EstimatorOptions
+        BaseEstimatorV2.__init__(self)
+        Estimator.__init__(self)
+        BasePrimitiveV2.__init__(self, backend=backend, session=session, options=options)
+
+        if self._service._channel_strategy == "q-ctrl":
+            raise NotImplementedError("EstimatorV2 is not supported with q-ctrl channel strategy.")
+
+    def run(  # pylint: disable=arguments-differ
+        self,
+        circuits: QuantumCircuit | Sequence[QuantumCircuit],
+        observables: Sequence[ObservablesArrayLike]
+        | ObservablesArrayLike
+        | Sequence[BaseOperator]
+        | BaseOperator,
+        parameter_values: BindingsArrayLike | Sequence[BindingsArrayLike] | None = None,
+        **kwargs: Any,
+    ) -> RuntimeJob:
+        """Submit a request to the estimator primitive.
+
+        Args:
+            circuits: a (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
+                a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
+
+            observables: Observable objects.
+
+            parameter_values: Concrete parameters to be bound.
+
+            **kwargs: Individual options to overwrite the default primitive options.
+                These include the runtime options in :class:`qiskit_ibm_runtime.RuntimeOptions`.
+
+        Returns:
+            Submitted job.
+            The result of the job is an instance of :class:`qiskit.primitives.EstimatorResult`.
+
+        Raises:
+            ValueError: Invalid arguments are given.
+        """
+        # To bypass base class merging of options.
+        user_kwargs = {"_user_kwargs": kwargs}
+
+        return super().run(
+            circuits=circuits,
+            observables=observables,
+            parameter_values=parameter_values,
+            **user_kwargs,
+        )
+
+    def _run(  # pylint: disable=arguments-differ
+        self,
+        circuits: Sequence[QuantumCircuit],
+        observables: Sequence[ObservablesArrayLike],
+        parameter_values: Sequence[Sequence[float]],
+        **kwargs: Any,
+    ) -> RuntimeJob:
+        """Submit a request to the estimator primitive.
+
+        Args:
+            circuits: a (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
+                a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
+
+            observables: A list of observable objects.
+
+            parameter_values: An optional list of concrete parameters to be bound.
+
+            **kwargs: Individual options to overwrite the default primitive options.
+                These include the runtime options in :class:`~qiskit_ibm_runtime.RuntimeOptions`.
+
+        Returns:
+            Submitted job
+        """
+        logger.debug(
+            "Running %s with new options %s",
+            self.__class__.__name__,
+            kwargs.get("_user_kwargs", {}),
+        )
+        inputs = {
+            "circuits": circuits,
+            "observables": observables,
+            "parameters": [circ.parameters for circ in circuits],
+            "parameter_values": parameter_values,
+        }
+        return self._run_primitive(
+            primitive_inputs=inputs, user_kwargs=kwargs.get("_user_kwargs", {})
+        )
+
+    def _validate_options(self, options: dict) -> None:
+        """Validate that program inputs (options) are valid
+
+        Raises:
+            ValidationError: if validation fails.
+            ValueError: if validation fails.
+        """
+        self._OPTIONS_CLASS(**options)
+
+        # TODO: Server should have different optimization/resilience levels for simulator
+
+        if (
+            options["resilience_level"] == 3
+            and self._backend is not None
+            and self._backend.configuration().simulator is True
+            and not options["simulator"]["coupling_map"]
+        ):
+            raise ValueError(
+                "When the backend is a simulator and resilience_level == 3,"
+                "a coupling map is required."
+            )
+
+    @staticmethod
+    def _validate_observables(
+        observables: Sequence[ObservablesArrayLike] | ObservablesArrayLike,
+    ) -> Sequence[ObservablesArrayLike]:
+        def _check_and_init(obs: Any) -> Any:
+            if isinstance(obs, str):
+                if not all(basis in EstimatorV2._ALLOWED_BASIS for basis in obs):
+                    raise ValueError(
+                        f"Invalid character(s) found in observable string. "
+                        f"Allowed basis are {EstimatorV2._ALLOWED_BASIS}."
+                    )
+            elif isinstance(obs, Sequence):
+                return tuple(_check_and_init(obs_) for obs_ in obs)
+            elif not isinstance(obs, (Pauli, SparsePauliOp)) and isinstance(obs, BaseOperator):
+                issue_deprecation_msg(
+                    msg="Only Pauli and SparsePauliOp operators can be used as observables",
+                    version="0.13",
+                    remedy="",
+                )
+                return init_observable(obs)
+            elif isinstance(obs, Mapping):
+                for key in obs.keys():
+                    _check_and_init(key)
+
+            return obs
+
+        if isinstance(observables, str) or not isinstance(observables, Sequence):
+            observables = (observables,)
+
+        if len(observables) == 0:
+            raise ValueError("No observables were provided.")
+
+        return tuple(_check_and_init(obs_array) for obs_array in observables)
+
+    @staticmethod
+    def _validate_parameter_values(
+        parameter_values: BindingsArrayLike | Sequence[BindingsArrayLike] | None,
+        default: Sequence[Sequence[float]] | Sequence[float] | None = None,
+    ) -> Sequence:
+
+        # Allow optional (if default)
+        if parameter_values is None:
+            if default is None:
+                raise ValueError("No default `parameter_values`, optional input disallowed.")
+            parameter_values = default
+
+        # Convert single input types to length-1 lists
+        if _isreal(parameter_values):
+            parameter_values = [[parameter_values]]
+        elif isinstance(parameter_values, Mapping):
+            parameter_values = [parameter_values]
+        elif isinstance(parameter_values, Sequence) and all(
+            _isreal(item) for item in parameter_values
+        ):
+            parameter_values = [parameter_values]
+        return tuple(parameter_values)  # type: ignore[arg-type]
+
+    @staticmethod
+    def _cross_validate_circuits_parameter_values(
+        circuits: tuple[QuantumCircuit, ...], parameter_values: tuple[tuple[float, ...], ...]
+    ) -> None:
+        if len(circuits) != len(parameter_values):
+            raise ValueError(
+                f"The number of circuits ({len(circuits)}) does not match "
+                f"the number of parameter value sets ({len(parameter_values)})."
+            )
+
+    @staticmethod
+    def _cross_validate_circuits_observables(
+        circuits: tuple[QuantumCircuit, ...], observables: tuple[ObservablesArrayLike, ...]
+    ) -> None:
+        if len(circuits) != len(observables):
+            raise ValueError(
+                f"The number of circuits ({len(circuits)}) does not match "
+                f"the number of observables ({len(observables)})."
+            )
+
+    @classmethod
+    def _program_id(cls) -> str:
+        """Return the program ID."""
+        return "estimator"
+
+
+class EstimatorV1(BasePrimitiveV1, Estimator, BaseEstimator):
+    """Class for interacting with Qiskit Runtime Estimator primitive service.
+
+    Qiskit Runtime Estimator primitive service estimates expectation values of quantum circuits and
+    observables.
+
+    The :meth:`run` can be used to submit circuits, observables, and parameters
+    to the Estimator primitive.
+
+    You are encouraged to use :class:`~qiskit_ibm_runtime.Session` to open a session,
+    during which you can invoke one or more primitives. Jobs submitted within a session
+    are prioritized by the scheduler, and data is cached for efficiency.
+
+    Example::
+
+        from qiskit.circuit.library import RealAmplitudes
+        from qiskit.quantum_info import SparsePauliOp
+
+        from qiskit_ibm_runtime import QiskitRuntimeService, Estimator
+
+        service = QiskitRuntimeService(channel="ibm_cloud")
+
+        psi1 = RealAmplitudes(num_qubits=2, reps=2)
+
+        H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
+        H2 = SparsePauliOp.from_list([("IZ", 1)])
+        H3 = SparsePauliOp.from_list([("ZI", 1), ("ZZ", 1)])
+
+        with Session(service=service, backend="ibmq_qasm_simulator") as session:
+            estimator = Estimator(session=session)
+
+            theta1 = [0, 1, 1, 2, 3, 5]
+
+            # calculate [ <psi1(theta1)|H1|psi1(theta1)> ]
+            psi1_H1 = estimator.run(circuits=[psi1], observables=[H1], parameter_values=[theta1])
+            print(psi1_H1.result())
+
+            # calculate [ <psi1(theta1)|H2|psi1(theta1)>, <psi1(theta1)|H3|psi1(theta1)> ]
+            psi1_H23 = estimator.run(
+                circuits=[psi1, psi1],
+                observables=[H2, H3],
+                parameter_values=[theta1]*2
+            )
+            print(psi1_H23.result())
+    """
 
     def __init__(
         self,
@@ -113,7 +415,8 @@ class Estimator(BasePrimitive, BaseEstimator):
         # qiskit.providers.Options. We largely ignore this _run_options because we use
         # a nested dictionary to categorize options.
         BaseEstimator.__init__(self)
-        BasePrimitive.__init__(self, backend=backend, session=session, options=options)
+        Estimator.__init__(self)
+        BasePrimitiveV1.__init__(self, backend=backend, session=session, options=options)
 
     def run(  # pylint: disable=arguments-differ
         self,

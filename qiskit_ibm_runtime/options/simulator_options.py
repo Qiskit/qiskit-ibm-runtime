@@ -12,27 +12,28 @@
 
 """Simulator options."""
 
-
-from typing import Optional, List, Union, Literal, get_args, TYPE_CHECKING
-from dataclasses import dataclass
+from typing import List, Union, Optional
 
 from qiskit.exceptions import MissingOptionalLibraryError
 from qiskit.providers import BackendV1, BackendV2
 from qiskit.utils import optionals
 from qiskit.transpiler import CouplingMap  # pylint: disable=unused-import
 
-if TYPE_CHECKING:
-    import qiskit_aer
+from pydantic.dataclasses import dataclass as pydantic_dataclass
+from pydantic import ConfigDict, field_validator
 
-SimulatorSupportedOptions = Literal[
-    "noise_model",
-    "seed_simulator",
-    "coupling_map",
-    "basis_gates",
-]
+from .utils import Unset, UnsetType, skip_unset_validation
 
 
-@dataclass()
+class NoiseModel:
+    """Fake noise model class for pydantic."""
+
+    pass
+
+
+@pydantic_dataclass(
+    config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid")
+)
 class SimulatorOptions:
     """Simulator options.
 
@@ -50,23 +51,33 @@ class SimulatorOptions:
             e.g: ``[[0, 1], [0, 3], [1, 2], [1, 5], [2, 5], [4, 1], [5, 3]]``
 
         basis_gates: List of basis gate names to unroll to. For example,
-            ``['u1', 'u2', 'u3', 'cx']``. If ``None``, do not unroll.
+            ``['u1', 'u2', 'u3', 'cx']``. Unrolling is not done if not set.
     """
 
-    noise_model: Optional[Union[dict, "qiskit_aer.noise.noise_model.NoiseModel"]] = None
-    seed_simulator: Optional[int] = None
-    coupling_map: Optional[Union[List[List[int]], "CouplingMap"]] = None
-    basis_gates: Optional[List[str]] = None
+    noise_model: Optional[Union[UnsetType, dict, NoiseModel]] = Unset
+    seed_simulator: Union[UnsetType, int] = Unset
+    coupling_map: Union[UnsetType, List[List[int]], CouplingMap] = Unset
+    basis_gates: Union[UnsetType, List[str]] = Unset
 
-    @staticmethod
-    def validate_simulator_options(simulator_options: dict) -> None:
-        """Validate that simulator options are legal.
-        Raises:
-            ValueError: if any simulator option is not supported
-        """
-        for opt in simulator_options:
-            if not opt in get_args(SimulatorSupportedOptions):
-                raise ValueError(f"Unsupported value '{opt}' for simulator.")
+    @field_validator("noise_model", mode="plain")
+    @classmethod
+    @skip_unset_validation
+    def _validate_noise_model(cls, model: Union[dict, NoiseModel]) -> Union[dict, NoiseModel]:
+        if not isinstance(model, dict):
+            if not optionals.HAS_AER:
+                raise ValueError(
+                    "'noise_model' can only be a dictionary or qiskit_aer.noise.NoiseModel."
+                )
+
+            from qiskit_aer.noise import (  # pylint:disable=import-outside-toplevel
+                NoiseModel as AerNoiseModel,
+            )
+
+            if not isinstance(model, AerNoiseModel):
+                raise ValueError(
+                    "'noise_model' can only be a dictionary or qiskit_aer.noise.NoiseModel."
+                )
+        return model
 
     def set_backend(self, backend: Union[BackendV1, BackendV2]) -> None:
         """Set backend for simulation.
@@ -76,16 +87,18 @@ class SimulatorOptions:
             backend: backend to be set.
 
         Raises:
-            MissingOptionalLibraryError if qiskit-aer is not found.
+            MissingOptionalLibraryError: if qiskit-aer is not found.
         """
         if not optionals.HAS_AER:
             raise MissingOptionalLibraryError(
                 "qiskit-aer", "Aer provider", "pip install qiskit-aer"
             )
 
-        from qiskit_aer.noise import NoiseModel  # pylint:disable=import-outside-toplevel
+        from qiskit_aer.noise import (  # pylint:disable=import-outside-toplevel
+            NoiseModel as AerNoiseModel,
+        )
 
-        self.noise_model = NoiseModel.from_backend(backend)
+        self.noise_model = AerNoiseModel.from_backend(backend)
 
         if isinstance(backend, BackendV1):
             self.coupling_map = backend.configuration().coupling_map

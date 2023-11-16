@@ -173,6 +173,7 @@ Classes
 """
 
 import logging
+import warnings
 
 from .qiskit_runtime_service import QiskitRuntimeService
 from .ibm_backend import IBMBackend
@@ -187,9 +188,9 @@ from .exceptions import *
 from .utils.utils import setup_logger
 from .version import __version__
 
-from .estimator import Estimator
-from .sampler import Sampler
-from .options import Options
+from .estimator import EstimatorV2, EstimatorV1 as Estimator
+from .sampler import SamplerV1 as Sampler
+from .options import Options, EstimatorOptions
 
 # Setup the logger for the IBM Quantum Provider package.
 logger = logging.getLogger(__name__)
@@ -202,3 +203,5 @@ QISKIT_IBM_RUNTIME_LOG_LEVEL = "QISKIT_IBM_RUNTIME_LOG_LEVEL"
 """The environment variable name that is used to set the level for the IBM Quantum logger."""
 QISKIT_IBM_RUNTIME_LOG_FILE = "QISKIT_IBM_RUNTIME_LOG_FILE"
 """The environment variable name that is used to set the file for the IBM Quantum logger."""
+
+warnings.warn("You are using the experimental branch. Stability is not guaranteed.")

@@ -15,12 +15,15 @@
 from dataclasses import asdict
 
 from ddt import data, ddt
+from pydantic import ValidationError
 from qiskit.providers import BackendV1
 from qiskit.providers.fake_provider import FakeManila, FakeNairobiV2
 from qiskit.transpiler import CouplingMap
 from qiskit_aer.noise import NoiseModel
 
 from qiskit_ibm_runtime import Options, RuntimeOptions
+from qiskit_ibm_runtime.options.utils import merge_options
+from qiskit_ibm_runtime.options import EstimatorOptions
 from qiskit_ibm_runtime.utils.qctrl import _warn_and_clean_options
 
 from ..ibm_test_case import IBMTestCase
@@ -31,7 +34,8 @@ from ..utils import dict_keys_equal, dict_paritally_equal, flat_dict_partially_e
 class TestOptions(IBMTestCase):
     """Class for testing the Sampler class."""
 
-    def test_merge_options(self):
+    @data(Options, EstimatorOptions)
+    def test_merge_options(self, opt_cls):
         """Test merging options."""
         options_vars = [
             {},
@@ -47,8 +51,8 @@ class TestOptions(IBMTestCase):
         ]
         for new_ops in options_vars:
             with self.subTest(new_ops=new_ops):
-                options = Options()
-                combined = Options._merge_options(asdict(options), new_ops)
+                options = opt_cls()
+                combined = merge_options(asdict(options), new_ops)
 
                 # Make sure the values are equal.
                 self.assertTrue(
@@ -90,7 +94,7 @@ class TestOptions(IBMTestCase):
             execution={"shots": 100},
             environment={"log_level": "DEBUG"},
             simulator={"noise_model": noise_model},
-            resilience={"noise_factors": (0, 2, 4)},
+            resilience={"noise_factors": (1, 2, 4)},
         )
         inputs = Options._get_program_inputs(asdict(options))
 
@@ -103,7 +107,7 @@ class TestOptions(IBMTestCase):
             },
             "resilience_settings": {
                 "level": 2,
-                "noise_factors": (0, 2, 4),
+                "noise_factors": (1, 2, 4),
             },
         }
         self.assertTrue(
@@ -147,21 +151,6 @@ class TestOptions(IBMTestCase):
             str(exc.exception),
         )
 
-    def test_backend_in_options(self):
-        """Test specifying backend in options."""
-        backend_name = "ibm_gotham"
-        backend = FakeManila()
-        backend._instance = None
-        backend.name = backend_name
-        backends = [backend_name, backend]
-        for backend in backends:
-            with self.assertRaises(TypeError) as exc:
-                _ = Options(backend=backend)  # pylint: disable=unexpected-keyword-arg
-            self.assertIn(
-                "__init__() got an unexpected keyword argument 'backend'",
-                str(exc.exception),
-            )
-
     def test_unsupported_options(self):
         """Test error on unsupported second level options"""
         # defining minimal dict of options
@@ -171,7 +160,6 @@ class TestOptions(IBMTestCase):
             "transpilation": {"initial_layout": [1, 2], "skip_transpilation": True},
             "execution": {"shots": 100},
             "environment": {"log_level": "DEBUG"},
-            "simulator": {"noise_model": "model"},
             "resilience": {
                 "noise_factors": (0, 2, 4),
                 "extrapolator": "LinearExtrapolator",
@@ -181,9 +169,9 @@ class TestOptions(IBMTestCase):
         for opt in ["resilience", "simulator", "transpilation", "execution"]:
             temp_options = options.copy()
             temp_options[opt] = {"aaa": "bbb"}
-            with self.assertRaises(ValueError) as exc:
+            with self.assertRaises(ValidationError) as exc:
                 Options.validate_options(temp_options)
-            self.assertIn(f"Unsupported value 'aaa' for {opt}.", str(exc.exception))
+            self.assertIn("bbb", str(exc.exception))
 
     def test_coupling_map_options(self):
         """Check that coupling_map is processed correctly for various types"""
