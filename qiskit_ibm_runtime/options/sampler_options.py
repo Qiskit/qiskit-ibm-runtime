@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Primitive options."""
+"""Sampler options."""
 
 from typing import Union, Literal
 
@@ -25,7 +25,6 @@ from .utils import (
 )
 from .execution_options import ExecutionOptionsV2
 from .transpilation_options import TranspilationOptions
-from .resilience_options import ResilienceOptionsV2
 from .twirling_options import TwirlingOptions
 from .options import OptionsV2
 
@@ -35,8 +34,8 @@ DDSequenceType = Literal["XX", "XpXm", "XY4"]
 @pydantic_dataclass(
     config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid")
 )
-class EstimatorOptions(OptionsV2):
-    """Options for v2 Estimator.
+class SamplerOptions(OptionsV2):
+    """Options for v2 Sampler.
 
     Args:
         optimization_level: How much optimization to perform on the circuits.
@@ -50,35 +49,16 @@ class EstimatorOptions(OptionsV2):
             * 2: heavy optimization
             * 3: even heavier optimization
 
-        resilience_level: How much resilience to build against errors.
-            Higher levels generate more accurate results,
-            at the expense of longer processing times. Default: 1.
-
-            * 0: No mitigation.
-            * 1: Minimal mitigation costs. Mitigate error associated with readout errors.
-            * 2: Medium mitigation costs. Typically reduces bias in estimators but
-              is not guaranteed to be zero bias. Only applies to estimator.
-            * 3: Heavy mitigation with layer sampling. Theoretically expected to deliver zero
-              bias estimators. Only applies to estimator.
-
-            Refer to the
-            `Qiskit Runtime documentation
-            <https://qiskit.org/documentation/partners/qiskit_ibm_runtime>`_.
-            for more information about the error mitigation methods used at each level.
-
         dynamical_decoupling: Optional, specify a dynamical decoupling sequence to use.
             Allowed values are ``"XX"``, ``"XpXm"``, ``"XY4"``.
             Default: None
 
-        seed_estimator: Seed used to control sampling.
-
         transpilation: Transpilation options. See :class:`TranspilationOptions` for all
             available options.
 
-        resilience: Advanced resilience options to fine tune the resilience strategy.
-            See :class:`ResilienceOptions` for all available options.
-
         execution: Execution time options. See :class:`ExecutionOptionsV2` for all available options.
+
+        twirling: Pauli-twirling related options. See :class:`TwirlingOptions` for all available options.
 
         environment: Options related to the execution environment. See
             :class:`EnvironmentOptions` for all available options.
@@ -89,15 +69,11 @@ class EstimatorOptions(OptionsV2):
     """
 
     _MAX_OPTIMIZATION_LEVEL: int = Field(3, frozen=True)  # pylint: disable=invalid-name
-    _MAX_RESILIENCE_LEVEL: int = Field(3, frozen=True)  # pylint: disable=invalid-name
 
     # Sadly we cannot use pydantic's built in validation because it won't work on Unset.
     optimization_level: Union[UnsetType, int] = Unset
-    resilience_level: Union[UnsetType, int] = Unset
     dynamical_decoupling: Union[UnsetType, DDSequenceType] = Unset
-    seed_estimator: Union[UnsetType, int] = Unset
     transpilation: Union[TranspilationOptions, Dict] = Field(default_factory=TranspilationOptions)
-    resilience: Union[ResilienceOptionsV2, Dict] = Field(default_factory=ResilienceOptionsV2)
     execution: Union[ExecutionOptionsV2, Dict] = Field(default_factory=ExecutionOptionsV2)
     twirling: Union[TwirlingOptions, Dict] = Field(default_factory=TwirlingOptions)
     experimental: Union[UnsetType, dict] = Unset
@@ -107,21 +83,9 @@ class EstimatorOptions(OptionsV2):
     @skip_unset_validation
     def _validate_optimization_level(cls, optimization_level: int) -> int:
         """Validate optimization_leve."""
-        if not 0 <= optimization_level <= EstimatorOptions._MAX_OPTIMIZATION_LEVEL:
+        if not 0 <= optimization_level <= SamplerOptions._MAX_OPTIMIZATION_LEVEL:
             raise ValueError(
                 "Invalid optimization_level. Valid range is "
-                f"0-{EstimatorOptions._MAX_OPTIMIZATION_LEVEL}"
+                f"0-{SamplerOptions._MAX_OPTIMIZATION_LEVEL}"
             )
         return optimization_level
-
-    @field_validator("resilience_level")
-    @classmethod
-    @skip_unset_validation
-    def _validate_resilience_level(cls, resilience_level: int) -> int:
-        """Validate resilience_level."""
-        if not 0 <= resilience_level <= EstimatorOptions._MAX_RESILIENCE_LEVEL:
-            raise ValueError(
-                "Invalid optimization_level. Valid range is "
-                f"0-{EstimatorOptions._MAX_RESILIENCE_LEVEL}"
-            )
-        return resilience_level

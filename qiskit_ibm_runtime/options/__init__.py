@@ -51,6 +51,7 @@ Classes
    SimulatorOptions
    TwirlingOptions
    EstimatorOptions
+   SamplerOptions
 
 """
 
@@ -62,3 +63,4 @@ from .transpilation_options import TranspilationOptions
 from .resilience_options import ResilienceOptionsV1 as ResilienceOptions
 from .twirling_options import TwirlingOptions
 from .estimator_options import EstimatorOptions
+from .sampler_options import SamplerOptions

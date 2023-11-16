@@ -23,19 +23,18 @@ from qiskit_aer.noise import NoiseModel
 
 from qiskit_ibm_runtime import Options, RuntimeOptions
 from qiskit_ibm_runtime.options.utils import merge_options
-from qiskit_ibm_runtime.options import EstimatorOptions
+from qiskit_ibm_runtime.options import EstimatorOptions, SamplerOptions
 from qiskit_ibm_runtime.utils.qctrl import _warn_and_clean_options
 
 from ..ibm_test_case import IBMTestCase
-from ..utils import dict_keys_equal, dict_paritally_equal, flat_dict_partially_equal
+from ..utils import dict_keys_equal, dict_paritally_equal, flat_dict_partially_equal, combine
 
 
 @ddt
 class TestOptions(IBMTestCase):
-    """Class for testing the Sampler class."""
+    """Class for testing the Options class."""
 
-    @data(Options, EstimatorOptions)
-    def test_merge_options(self, opt_cls):
+    def test_merge_options(self):
         """Test merging options."""
         options_vars = [
             {},
@@ -51,7 +50,7 @@ class TestOptions(IBMTestCase):
         ]
         for new_ops in options_vars:
             with self.subTest(new_ops=new_ops):
-                options = opt_cls()
+                options = Options()
                 combined = merge_options(asdict(options), new_ops)
 
                 # Make sure the values are equal.
@@ -270,3 +269,257 @@ class TestOptions(IBMTestCase):
             with self.subTest(msg=f"{option}"):
                 _warn_and_clean_options(option)
                 self.assertEqual(expected_, option)
+
+
+@ddt
+class TestOptionsV2(IBMTestCase):
+    """Class for testing the v2 Options class."""
+
+    def test_merge_options(self):
+        """Test merging options."""
+        options_vars = [
+            {},
+            {"resilience_level": 9},
+            {"resilience_level": 8, "transpilation": {"initial_layout": [1, 2]}},
+            {"shots": 99, "seed_simulator": 42},
+            {"resilience_level": 99, "shots": 98, "initial_layout": [3, 4]},
+            {
+                "initial_layout": [1, 2],
+                "transpilation": {"layout_method": "trivial"},
+                "log_level": "INFO",
+            },
+        ]
+        for new_ops in options_vars:
+            with self.subTest(new_ops=new_ops):
+                options = EstimatorOptions()
+                combined = merge_options(asdict(options), new_ops)
+
+                # Make sure the values are equal.
+                self.assertTrue(
+                    flat_dict_partially_equal(combined, new_ops),
+                    f"new_ops={new_ops}, combined={combined}",
+                )
+                # Make sure the structure didn't change.
+                self.assertTrue(
+                    dict_keys_equal(combined, asdict(options)),
+                    f"options={options}, combined={combined}",
+                )
+
+    @data(EstimatorOptions, SamplerOptions)
+    def test_runtime_options(self, opt_cls):
+        """Test converting runtime options."""
+        full_options = RuntimeOptions(
+            backend="ibm_gotham",
+            image="foo:bar",
+            log_level="DEBUG",
+            instance="h/g/p",
+            job_tags=["foo", "bar"],
+            max_execution_time=600,
+        )
+        partial_options = RuntimeOptions(backend="foo", log_level="DEBUG")
+
+        for rt_options in [full_options, partial_options]:
+            with self.subTest(rt_options=rt_options):
+                self.assertGreaterEqual(
+                    vars(rt_options).items(),
+                    opt_cls._get_runtime_options(vars(rt_options)).items(),
+                )
+
+    @data(EstimatorOptions, SamplerOptions)
+    def test_program_inputs(self, opt_cls):
+        """Test converting to program inputs from v2 options."""
+
+        noise_model = NoiseModel.from_backend(FakeManila())
+        transpilation = {
+            "skip_transpilation": False,
+            "initial_layout": [1, 2],
+            "layout_method": "trivial",
+            "routing_method": "basic",
+            "approximation_degree": 0.5,
+        }
+        simulator = {
+            "noise_model": noise_model,
+            "seed_simulator": 42,
+            "coupling_map": [[0, 1]],
+            "basis_gates": ["u1"],
+        }
+        execution = {
+            "shots": 400,
+            "init_qubits": True,
+            "samples": 20,
+            "shots_per_sample": 20,
+            "interleave_samples": True,
+        }
+        optimization_level = 2
+        twirling = {"gates": True, "measure": True, "strategy": "all"}
+        resilience = {
+            "measure_noise_mitigation": True,
+            "zne_mitigation": True,
+            "zne_noise_factors": [1, 3],
+            "zne_extrapolator": "exponential",
+            "zne_stderr_threshold": 1,
+            "pec_mitigation": False,
+            "pec_max_overhead": 2,
+        }
+
+        estimator_extra = {}
+        if isinstance(opt_cls, EstimatorOptions):
+            estimator_extra = {
+                "resilience_level": 3,
+                "resilience": resilience,
+                "seed_estimator": 42,
+            }
+
+        opt = opt_cls(
+            max_execution_time=100,
+            simulator=simulator,
+            optimization_level=optimization_level,
+            dynamical_decoupling="XX",
+            transpilation=transpilation,
+            execution=execution,
+            twirling=twirling,
+            experimental={"foo": "bar"},
+            **estimator_extra,
+        )
+
+        transpilation.pop("skip_transpilation")
+        transpilation.update(
+            {
+                "optimization_level": optimization_level,
+                "coupling_map": simulator.pop("coupling_map"),
+                "basis_gates": simulator.pop("basis_gates"),
+            }
+        )
+        execution.update(
+            {
+                "noise_model": simulator.pop("noise_model"),
+                "seed_simulator": simulator.pop("seed_simulator"),
+            }
+        )
+        expected = {
+            "transpilation": transpilation,
+            "skip_transpilation": False,
+            "twirling": twirling,
+            "dynamical_decoupling": "XX",
+            "execution": execution,
+            "foo": "bar",
+            "version": 2,
+            **estimator_extra,
+        }
+
+        inputs = opt_cls._get_program_inputs(asdict(opt))
+        inputs.pop("_experimental", None)
+        self.assertDictEqual(inputs, expected)
+        self.assertFalse(simulator, f"simulator not empty: {simulator}")
+
+    @data(EstimatorOptions, SamplerOptions)
+    def test_init_options_with_dictionary(self, opt_cls):
+        """Test initializing options with dictionaries."""
+
+        options_dicts = [
+            {},
+            {"dynamical_decoupling": "XX"},
+            {"simulator": {"seed_simulator": 42}},
+            {"optimization_level": 2, "environment": {"log_level": "WARNING"}},
+            {
+                "transpilation": {"initial_layout": [1, 2], "layout_method": "trivial"},
+                "execution": {"shots": 100},
+            },
+            {"twirling": {"gates": True, "strategy": "active"}},
+            {"environment": {"log_level": "ERROR"}},
+        ]
+
+        for opts_dict in options_dicts:
+            with self.subTest(opts_dict=opts_dict):
+                options = asdict(opt_cls(**opts_dict))
+                self.assertTrue(
+                    dict_paritally_equal(options, opts_dict),
+                    f"options={options}, opts_dict={opts_dict}",
+                )
+
+                # Make sure the structure didn't change.
+                self.assertTrue(dict_keys_equal(asdict(opt_cls()), options), f"options={options}")
+
+    @data(EstimatorOptions, SamplerOptions)
+    def test_kwargs_options(self, opt_cls):
+        """Test specifying arbitrary options."""
+        with self.assertRaises(ValidationError) as exc:
+            _ = opt_cls(foo="foo")  # pylint: disable=unexpected-keyword-arg
+        self.assertIn("foo", str(exc.exception))
+
+    @data(EstimatorOptions, SamplerOptions)
+    def test_coupling_map_options(self, opt_cls):
+        """Check that coupling_map is processed correctly for various types"""
+        coupling_map = {(1, 0), (2, 1), (0, 1), (1, 2)}
+        coupling_maps = [
+            coupling_map,
+            list(map(list, coupling_map)),
+            CouplingMap(coupling_map),
+        ]
+        for variant in coupling_maps:
+            with self.subTest(opts_dict=variant):
+                options = opt_cls()
+                options.simulator.coupling_map = variant
+                inputs = opt_cls._get_program_inputs(asdict(options))
+                resulting_cmap = inputs["transpilation"]["coupling_map"]
+                self.assertEqual(coupling_map, set(map(tuple, resulting_cmap)))
+
+    @combine(
+        opt_cls=[EstimatorOptions, SamplerOptions], fake_backend=[FakeManila(), FakeNairobiV2()]
+    )
+    def test_simulator_set_backend(self, opt_cls, fake_backend):
+        """Test Options.simulator.set_backend method."""
+
+        options = opt_cls()
+        options.simulator.seed_simulator = 42
+        options.simulator.set_backend(fake_backend)
+
+        noise_model = NoiseModel.from_backend(fake_backend)
+        basis_gates = (
+            fake_backend.configuration().basis_gates
+            if isinstance(fake_backend, BackendV1)
+            else fake_backend.operation_names
+        )
+        coupling_map = (
+            fake_backend.configuration().coupling_map
+            if isinstance(fake_backend, BackendV1)
+            else fake_backend.coupling_map
+        )
+
+        self.assertEqual(options.simulator.coupling_map, coupling_map)
+        self.assertEqual(options.simulator.noise_model, noise_model)
+
+        expected_options = opt_cls()
+        expected_options.simulator = {
+            "noise_model": noise_model,
+            "basis_gates": basis_gates,
+            "coupling_map": coupling_map,
+            "seed_simulator": 42,
+        }
+
+        self.assertDictEqual(asdict(options), asdict(expected_options))
+
+    @combine(
+        opt_cls=[EstimatorOptions, SamplerOptions],
+        opt=[
+            {"optimization_level": 99},
+            {"resilience_level": 99},
+            {"dynamical_decoupling": "foo"},
+            {"transpilation": {"skip_transpilation": "foo"}},
+            {"execution": {"shots": 0}},
+            {"twirling": {"strategy": "foo"}},
+            {"transpilation": {"foo": "bar"}},
+            {"zne_noise_factors": [0.5]},
+            {"noise_factors": [1, 3, 5]},
+            {"zne_extrapolator": "exponential", "zne_noise_factors": [1]},
+            {"zne_mitigation": True, "pec_mitigation": True},
+            {"simulator": {"noise_model": "foo"}},
+            {"shots": 1, "samples": 99, "shots_per_sample": 99},
+            {"shots": 0},
+        ],
+    )
+    def test_invalid_options(self, opt_cls, opt):
+        """Test invalid inputs."""
+        with self.assertRaises(ValidationError) as exc:
+            opt_cls(**opt)
+        self.assertIn(list(opt.keys())[0], str(exc.exception))
