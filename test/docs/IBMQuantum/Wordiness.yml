@@ -1,0 +1,29 @@
+extends: substitution
+message: Try '%s' rather than '%s'.
+link: 'https://ibmdocs-test.dcs.ibm.com/docs/en/ibm-style?topic=word-usage'
+level: warning
+ignorecase: true
+action:
+  name: replace
+# swap maps tokens in form of bad: good
+swap:
+  'a lot(?: of)?': many|much
+  a number of: several
+  as long as: if|provided that
+  comprised of: consist of
+  hence: therefore
+  in order to: to
+  in other words: for example|that is
+  in spite of: regardless of|despite
+  in the event: in case|if|when
+  keep in mind: remember
+  leverage: use
+  on the fly: dynamically|as needed|in real time|immediately
+  on the other hand: however|alternatively|conversely
+  pain point: challenge|concern|difficulty|issue
+  prepend: add a prefix to
+  prior to: before
+  rule of thumb: rule
+  terminate: end|stop
+  thus: therefore
+  utilize: use

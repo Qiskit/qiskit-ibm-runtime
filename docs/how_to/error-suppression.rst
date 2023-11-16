@@ -8,9 +8,12 @@ Error suppression typically results in some classical pre-processing overhead to
 Primitives let you employ error suppression techniques by setting the optimization level (``optimization_level`` option) and by choosing advanced transpilation options. 
 
 Setting the optimization level
-------------------------------
+-------------------------------
 
 The ``optimization_level`` setting specifies how much optimization to perform on the circuits. Higher levels generate more optimized circuits, at the expense of longer transpilation times.
+
+..note::
+    When using primitives, optimization levels 2 and 3 behave like level 1.
 
 +--------------------+---------------------------------------------------------------------------------------------------+
 | Optimization Level | Estimator & Sampler                                                                               |
@@ -22,7 +25,7 @@ The ``optimization_level`` setting specifies how much optimization to perform on
 |                    | - routing (stochastic swaps)                                                                      |
 |                    |                                                                                                   |
 +--------------------+---------------------------------------------------------------------------------------------------+
-| 1                  | Light optimization:                                                                               |
+| 1, 2, 3            | Light optimization:                                                                               |
 |                    |                                                                                                   |
 |                    | - Layout (trivial → vf2 → SabreLayout if routing is required)                                     |
 |                    | - routing (SabreSWAPs if needed)                                                                  |
@@ -30,21 +33,9 @@ The ``optimization_level`` setting specifies how much optimization to perform on
 |                    | - Error Suppression: Dynamical Decoupling                                                         |
 |                    |                                                                                                   |
 +--------------------+---------------------------------------------------------------------------------------------------+
-| 2                  | Medium optimization:                                                                              |
-|                    |                                                                                                   |
-|                    | - Layout/Routing: Optimization level 1 (without trivial) + heuristic optimized with greater       |
-|                    |      search depth and trials of optimization function                                             |
-|                    | - commutative cancellation                                                                        |
-|                    | - Error Suppression: Dynamical Decoupling                                                         |
-|                    |                                                                                                   |
-+--------------------+---------------------------------------------------------------------------------------------------+
-| 3 (default)        | High Optimization:                                                                                |
-|                    |                                                                                                   |
-|                    | * Optimization level 2 + heuristic optimized on layout/routing further with greater effort/trials |
-|                    | * 2 qubit KAK optimization                                                                        |
-|                    | * Error Suppression: Dynamical Decoupling                                                         |
-|                    |                                                                                                   |
-+--------------------+---------------------------------------------------------------------------------------------------+
+
+..note::
+    If you want to use more advanced optimization, use the Qiskit transpiler locally and then pass the transpiled circuits to the primitives. For instructions see the `Submitting user-transpiled circuits using primitives <https://learning.quantum-computing.ibm.com/tutorial/submitting-user-transpiled-circuits-using-primitives>`__ tutorial.
 
 Example: configure Estimator with optimization levels
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -56,7 +47,7 @@ Example: configure Estimator with optimization levels
     from qiskit.quantum_info import SparsePauliOp
 
     service = QiskitRuntimeService()
-    options = Options(optimization_level=2)
+    options = Options(optimization_level=1)
 
     psi = RealAmplitudes(num_qubits=2, reps=2)
     H = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
@@ -68,7 +59,7 @@ Example: configure Estimator with optimization levels
         psi1_H1 = job.result()
 
 .. note:: 
-    If optimization level is not specified, the service uses ``optimization_level = 3``.  
+    If optimization level is not specified, the service uses ``optimization_level = 1``.  
 
 Example: configure Sampler with optimization levels
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -78,7 +69,7 @@ Example: configure Sampler with optimization levels
     from qiskit_ibm_runtime import QiskitRuntimeService, Session, Sampler, Options
 
     service = QiskitRuntimeService()
-    options = Options(optimization_level=3)
+    options = Options(optimization_level=1)
 
     with Session(service=service, backend="ibmq_qasm_simulator") as session:
         sampler = Sampler(session=session, options=options)
