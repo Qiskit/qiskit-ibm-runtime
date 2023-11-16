@@ -32,7 +32,7 @@ from qiskit_ibm_runtime import (
     Session,
 )
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
-import qiskit_ibm_runtime.session as session_pkg
+from qiskit_ibm_runtime.utils.default_session import _DEFAULT_SESSION
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import (
@@ -61,7 +61,7 @@ class TestPrimitives(IBMTestCase):
 
     def tearDown(self) -> None:
         super().tearDown()
-        session_pkg._DEFAULT_SESSION.set(None)
+        _DEFAULT_SESSION.set(None)
 
     def test_dict_options(self):
         """Test passing a dictionary as options."""
