@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Primitive options."""
+"""Sampler options."""
 
 from typing import Union, Literal
 
@@ -69,7 +69,6 @@ class SamplerOptions(OptionsV2):
     """
 
     _MAX_OPTIMIZATION_LEVEL: int = Field(3, frozen=True)  # pylint: disable=invalid-name
-    _is_simulator: bool = False
 
     # Sadly we cannot use pydantic's built in validation because it won't work on Unset.
     optimization_level: Union[UnsetType, int] = Unset

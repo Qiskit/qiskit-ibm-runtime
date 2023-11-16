@@ -34,8 +34,7 @@ from ..utils import dict_keys_equal, dict_paritally_equal, flat_dict_partially_e
 class TestOptions(IBMTestCase):
     """Class for testing the Options class."""
 
-    @data(Options, EstimatorOptions)
-    def test_merge_options(self, opt_cls):
+    def test_merge_options(self):
         """Test merging options."""
         options_vars = [
             {},
