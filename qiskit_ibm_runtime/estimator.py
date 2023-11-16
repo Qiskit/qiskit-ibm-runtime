@@ -273,7 +273,7 @@ class EstimatorV2(BasePrimitiveV2, Estimator, BaseEstimatorV2):
                 return tuple(_check_and_init(obs_) for obs_ in obs)
             elif not isinstance(obs, (Pauli, SparsePauliOp)) and isinstance(obs, BaseOperator):
                 issue_deprecation_msg(
-                    msg="Only Pauli and SparsePauliOp operators can be used as observables.",
+                    msg="Only Pauli and SparsePauliOp operators can be used as observables",
                     version="0.13",
                     remedy="",
                 )
