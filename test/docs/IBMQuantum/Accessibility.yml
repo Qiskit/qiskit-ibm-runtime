@@ -1,0 +1,15 @@
+extends: substitution
+message: Use '%s' rather than '%s' if referring to position in a document (for screen readers).
+link: 'https://ibmdocs-test.dcs.ibm.com/docs/en/ibm-style?topic=word-usage'
+level: warning
+ignorecase: true
+action:
+  name: replace
+# swap maps tokens in form of bad: good
+swap:
+  'down(?:-)?level': earlier|previous|not at the latest level
+  'down(?:-)?level': earlier|previous|not at the latest level
+  above: previous
+  below: following
+  bottom: end|last
+  top: start|beginning|first

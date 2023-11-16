@@ -272,7 +272,7 @@ class EstimatorV2(BasePrimitiveV2, Estimator, BaseEstimatorV2):
                 return tuple(_check_and_init(obs_) for obs_ in obs)
             elif not isinstance(obs, (Pauli, SparsePauliOp)) and isinstance(obs, BaseOperator):
                 issue_deprecation_msg(
-                    msg="Only Pauli and SparsePauliOp operators can be used as observables.",
+                    msg="Only Pauli and SparsePauliOp operators can be used as observables",
                     version="0.13",
                     remedy="",
                 )
@@ -478,9 +478,7 @@ class EstimatorV1(BasePrimitiveV1, Estimator, BaseEstimator):
         """
         inputs = {
             "circuits": circuits,
-            "circuit_indices": list(range(len(circuits))),
             "observables": observables,
-            "observable_indices": list(range(len(observables))),
             "parameters": [circ.parameters for circ in circuits],
             "parameter_values": parameter_values,
         }

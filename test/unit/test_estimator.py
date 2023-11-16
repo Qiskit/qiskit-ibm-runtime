@@ -15,7 +15,7 @@
 from unittest.mock import MagicMock
 
 from qiskit import QuantumCircuit
-from qiskit.quantum_info import SparsePauliOp, Pauli, random_hermitian, random_pauli_list
+from qiskit.quantum_info import SparsePauliOp, Pauli
 from qiskit.circuit import Parameter
 
 import numpy as np
@@ -143,7 +143,6 @@ class TestEstimatorV2(IBMTestCase):
             SparsePauliOp(["IX", "YZ"]),
             {"YZ": 1 + 2j},
             {Pauli("XX"): 1 + 2j},
-            random_hermitian((2, 2)),
             [["XX", "YY"]],
             [[Pauli("XX"), Pauli("YY")]],
             [[SparsePauliOp(["XX"]), SparsePauliOp(["YY"])]],
@@ -159,7 +158,6 @@ class TestEstimatorV2(IBMTestCase):
                     {Pauli("YY"): 1 + 2j},
                 ]
             ],
-            [random_pauli_list(2, 2)],
         ]
 
         circuit = QuantumCircuit(2)
@@ -188,7 +186,6 @@ class TestEstimatorV2(IBMTestCase):
             [[SparsePauliOp(["XX"]), SparsePauliOp(["YY"])]] * num_qx,
             [[{"XX": 1 + 2j}, {"YY": 1 + 2j}]] * num_qx,
             [[{Pauli("XX"): 1 + 2j}, {Pauli("YY"): 1 + 2j}]] * num_qx,
-            [random_pauli_list(2, 2)] * num_qx,
         ]
 
         circuit = QuantumCircuit(2)

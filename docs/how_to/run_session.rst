@@ -20,7 +20,7 @@ Open a session
 You can open a runtime session by using the context manager `with Session(…)` or by initializing the `Session` class. When you start a session, you can specify options, such as the backend to run on. This topic describes the most commonly used options.  For the full list, see the `Sessions API documentation <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/stubs/qiskit_ibm_runtime.Session.html#qiskit_ibm_runtime.Session>`__.
 
 .. important::
-  Data from the first session job is cached and used by subsequent jobs.  Therefore, if the first job is cancelled, subsequent session jobs will all fail.
+  If the first session job is canceled, subsequent session jobs will all fail.
 
 **Session class**
 
@@ -50,21 +50,23 @@ When you start a session, you can specify session options, such as the backend t
 
 There are two ways to specify a backend in a session:
 
-**Directly specify a string with the backend name.** Example:
+**Directly specify a string with the backend name.** 
 
-  .. code-block:: python
+Example:
 
-    backend = "ibmq_qasm_simulator"
-    with Session(backend=backend):
-      ...
+.. code-block:: python
+
+  service = QiskitRuntimeService()
+  with Session(service=service, backend="ibmq_qasm_simulator"):
+   ...
 
 **Pass the backend object.** Example:
 
-  .. code-block:: python
+.. code-block:: python
 
-    backend = service.get_backend("ibmq_qasm_simulator")
-    with Session(backend=backend):
-      ...
+  backend = service.get_backend("ibmq_qasm_simulator")
+  with Session(backend=backend):
+    ...
 
 .. _session_length:
 

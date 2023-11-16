@@ -23,6 +23,8 @@ from datetime import datetime
 from ddt import data, unpack
 
 from qiskit.circuit import QuantumCircuit
+from qiskit.compiler import transpile
+from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit.test.utils import generate_cases
 from qiskit.providers.jobstatus import JOB_FINAL_STATES, JobStatus
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
@@ -60,6 +62,30 @@ def setup_test_logging(logger: logging.Logger, filename: str) -> None:
         logger.addHandler(file_handler)
 
     logger.setLevel(os.getenv("LOG_LEVEL", "DEBUG"))
+
+
+def most_busy_backend(
+    service: QiskitRuntimeService,
+    instance: Optional[str] = None,
+) -> IBMBackend:
+    """Return the most busy backend for the provider given.
+
+    Return the most busy available backend for those that
+    have a `pending_jobs` in their `status`. Backends such as
+    local backends that do not have this are not considered.
+
+    Args:
+        service: Qiskit Runtime Service.
+        instance: The instance in the hub/group/project format.
+
+    Returns:
+        The most busy backend.
+    """
+    backends = service.backends(simulator=False, operational=True, instance=instance)
+    return max(
+        (b for b in backends if b.configuration().n_qubits >= 5),
+        key=lambda b: b.status().pending_jobs,
+    )
 
 
 def get_large_circuit(backend: IBMBackend) -> QuantumCircuit:
@@ -263,6 +289,21 @@ def get_mocked_backend(name: str = "ibm_gotham") -> Any:
     mock_backend.service = mock_service
 
     return mock_backend
+
+
+def submit_and_cancel(backend: IBMBackend, logger: logging.Logger) -> RuntimeJob:
+    """Submit and cancel a job.
+
+    Args:
+        backend: Backend to submit the job to.
+
+    Returns:
+        Cancelled job.
+    """
+    circuit = transpile(ReferenceCircuits.bell(), backend=backend)
+    job = backend.run(circuit)
+    cancel_job_safe(job, logger=logger)
+    return job
 
 
 def combine(**kwargs):

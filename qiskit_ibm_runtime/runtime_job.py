@@ -27,9 +27,10 @@ from qiskit.providers.jobstatus import JobStatus, JOB_FINAL_STATES
 from qiskit.providers.job import JobV1 as Job
 
 # pylint: disable=unused-import,cyclic-import
-from qiskit_ibm_provider.utils import validate_job_tags, utc_to_local
+from qiskit_ibm_provider.utils import utc_to_local
 from qiskit_ibm_runtime import qiskit_runtime_service
 
+from .utils.utils import validate_job_tags
 from .constants import API_TO_JOB_ERROR_MESSAGE, API_TO_JOB_STATUS, DEFAULT_DECODERS
 from .exceptions import (
     IBMApiError,
@@ -40,12 +41,10 @@ from .exceptions import (
     RuntimeJobMaxTimeoutError,
 )
 from .program.result_decoder import ResultDecoder
-from .utils import RuntimeDecoder
 from .api.clients import RuntimeClient, RuntimeWebsocketClient, WebsocketClientCloseCode
 from .exceptions import IBMError
 from .api.exceptions import RequestsApiError
 from .api.client_parameters import ClientParameters
-from .utils.utils import CallableStr
 
 logger = logging.getLogger(__name__)
 
@@ -123,7 +122,6 @@ class RuntimeJob(Job):
         """
         super().__init__(backend=backend, job_id=job_id)
         self._api_client = api_client
-        self._results: Optional[Any] = None
         self._interim_results: Optional[Any] = None
         self._params = params or {}
         self._creation_date = creation_date
@@ -213,25 +211,22 @@ class RuntimeJob(Job):
             RuntimeInvalidStateError: If the job was cancelled, and attempting to retrieve result.
         """
         _decoder = decoder or self._final_result_decoder
-        if self._results is None or (_decoder != self._final_result_decoder):
-            self.wait_for_final_state(timeout=timeout)
-            if self._status == JobStatus.ERROR:
-                error_message = self._reason if self._reason else self._error_message
-                if self._reason == "RAN TOO LONG":
-                    raise RuntimeJobMaxTimeoutError(error_message)
-                raise RuntimeJobFailureError(f"Unable to retrieve job result. {error_message}")
-            if self._status is JobStatus.CANCELLED:
-                raise RuntimeInvalidStateError(
-                    "Unable to retrieve result for job {}. "
-                    "Job was cancelled.".format(self.job_id())
-                )
-
-            result_raw = self._download_external_result(
-                self._api_client.job_results(job_id=self.job_id())
+        self.wait_for_final_state(timeout=timeout)
+        if self._status == JobStatus.ERROR:
+            error_message = self._reason if self._reason else self._error_message
+            if self._reason == "RAN TOO LONG":
+                raise RuntimeJobMaxTimeoutError(error_message)
+            raise RuntimeJobFailureError(f"Unable to retrieve job result. {error_message}")
+        if self._status is JobStatus.CANCELLED:
+            raise RuntimeInvalidStateError(
+                "Unable to retrieve result for job {}. " "Job was cancelled.".format(self.job_id())
             )
 
-            self._results = _decoder.decode(result_raw) if result_raw else None
-        return self._results
+        result_raw = self._download_external_result(
+            self._api_client.job_results(job_id=self.job_id())
+        )
+
+        return _decoder.decode(result_raw) if result_raw else None
 
     def cancel(self) -> None:
         """Cancel the job.
@@ -419,7 +414,7 @@ class RuntimeJob(Job):
                 with the server or updating the job tags.
         """
         tags_to_update = set(new_tags)
-        validate_job_tags(new_tags, RuntimeInvalidStateError)
+        validate_job_tags(new_tags)
 
         response = self._api_client.update_tags(job_id=self.job_id(), tags=list(tags_to_update))
 
@@ -575,7 +570,8 @@ class RuntimeJob(Job):
                     traceback.format_exc(),
                 )
 
-    def _empty_result_queue(self, result_queue: queue.Queue) -> None:
+    @staticmethod
+    def _empty_result_queue(result_queue: queue.Queue) -> None:
         """Empty the result queue.
 
         Args:
