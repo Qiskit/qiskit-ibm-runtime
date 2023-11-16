@@ -39,6 +39,10 @@ from .utils.deprecation import issue_deprecation_msg
 
 # TODO: remove when we have real v2 base estimator
 from .qiskit.primitives import BaseEstimatorV2
+from .utils.deprecation import issue_deprecation_msg
+
+# TODO: remove when we have real v2 base estimator
+from .qiskit.primitives import BaseEstimatorV2
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
