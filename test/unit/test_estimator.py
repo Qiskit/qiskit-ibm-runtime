@@ -15,7 +15,7 @@
 from unittest.mock import MagicMock
 
 from qiskit import QuantumCircuit
-from qiskit.quantum_info import SparsePauliOp, Pauli, random_hermitian, random_pauli_list
+from qiskit.quantum_info import SparsePauliOp, Pauli
 from qiskit.circuit import Parameter
 
 import numpy as np
