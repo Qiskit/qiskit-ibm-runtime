@@ -201,7 +201,7 @@ class AccountManager:
                 msg="Use of the ~/.qiskit/qiskitrc.json file is deprecated.",
                 version="0.15.0",
                 remedy="Please use the ~/.qiskit/qiskit-ibm.json file instead.",
-                period="1 month"
+                period="1 month",
             )
             return cls._from_qiskitrc_file()
 
