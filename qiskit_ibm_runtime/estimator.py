@@ -294,9 +294,7 @@ class EstimatorV1(BasePrimitiveV1, Estimator, BaseEstimator):
         """
         inputs = {
             "circuits": circuits,
-            "circuit_indices": list(range(len(circuits))),
             "observables": observables,
-            "observable_indices": list(range(len(observables))),
             "parameters": [circ.parameters for circ in circuits],
             "parameter_values": parameter_values,
         }

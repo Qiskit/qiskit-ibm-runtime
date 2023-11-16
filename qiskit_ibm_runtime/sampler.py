@@ -238,7 +238,6 @@ class SamplerV1(BasePrimitiveV1, Sampler, BaseSampler):
         inputs = {
             "circuits": circuits,
             "parameters": [circ.parameters for circ in circuits],
-            "circuit_indices": list(range(len(circuits))),
             "parameter_values": parameter_values,
         }
         return self._run_primitive(

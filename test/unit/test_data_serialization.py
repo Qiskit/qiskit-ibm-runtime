@@ -133,7 +133,12 @@ class TestDataSerialization(IBMTestCase):
         self.assertIsInstance(noise_model, NoiseModel)
         encoded = json.dumps(noise_model, cls=RuntimeEncoder)
         self.assertIsInstance(encoded, str)
-        decoded = json.loads(encoded, cls=RuntimeDecoder)
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore",
+                category=DeprecationWarning,
+            )
+            decoded = json.loads(encoded, cls=RuntimeDecoder)
         self.assertIsInstance(decoded, NoiseModel)
         self.assertEqual(noise_model.noise_qubits, decoded.noise_qubits)
         self.assertEqual(noise_model.noise_instructions, decoded.noise_instructions)

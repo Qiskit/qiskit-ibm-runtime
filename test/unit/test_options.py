@@ -364,7 +364,11 @@ class TestOptionsV2(IBMTestCase):
 
         estimator_extra = {}
         if isinstance(opt_cls, EstimatorOptions):
-            estimator_extra = {"resilience_level": 3, "resilience": resilience}
+            estimator_extra = {
+                "resilience_level": 3,
+                "resilience": resilience,
+                "seed_estimator": 42,
+            }
 
         opt = opt_cls(
             max_execution_time=100,

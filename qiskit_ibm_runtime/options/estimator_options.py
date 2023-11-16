@@ -70,6 +70,8 @@ class EstimatorOptions(OptionsV2):
             Allowed values are ``"XX"``, ``"XpXm"``, ``"XY4"``.
             Default: None
 
+        seed_estimator: Seed used to control sampling.
+
         transpilation: Transpilation options. See :class:`TranspilationOptions` for all
             available options.
 
@@ -93,6 +95,7 @@ class EstimatorOptions(OptionsV2):
     optimization_level: Union[UnsetType, int] = Unset
     resilience_level: Union[UnsetType, int] = Unset
     dynamical_decoupling: Union[UnsetType, DDSequenceType] = Unset
+    seed_estimator: Union[UnsetType, int] = Unset
     transpilation: Union[TranspilationOptions, Dict] = Field(default_factory=TranspilationOptions)
     resilience: Union[ResilienceOptionsV2, Dict] = Field(default_factory=ResilienceOptionsV2)
     execution: Union[ExecutionOptionsV2, Dict] = Field(default_factory=ExecutionOptionsV2)
@@ -122,63 +125,3 @@ class EstimatorOptions(OptionsV2):
                 f"0-{EstimatorOptions._MAX_RESILIENCE_LEVEL}"
             )
         return resilience_level
-
-
-# @dataclass(frozen=True)
-# class _ResilienceLevel0Options:
-#     resilience_level: int = 0
-#     resilience: ResilienceOptions = field(
-#         default_factory=lambda: ResilienceOptions(
-#             measure_noise_mitigation=False, zne_mitigation=False, pec_mitigation=False
-#         )
-#     )
-#     twirling: TwirlingOptions = field(
-#         default_factory=lambda: TwirlingOptions(gates=False, measure=False)
-#     )
-
-
-# @dataclass(frozen=True)
-# class _ResilienceLevel1Options:
-#     resilience_level: int = 1
-#     resilience: ResilienceOptions = field(
-#         default_factory=lambda: ResilienceOptions(
-#             measure_noise_mitigation=True, zne_mitigation=False, pec_mitigation=False
-#         )
-#     )
-#     twirling: TwirlingOptions = field(
-#         default_factory=lambda: TwirlingOptions(gates=False, measure=True, strategy="active-accum")
-#     )
-
-
-# @dataclass(frozen=True)
-# class _ResilienceLevel2Options:
-#     resilience_level: int = 2
-#     resilience: ResilienceOptions = field(
-#         default_factory=lambda: ResilienceOptions(
-#             measure_noise_mitigation=True, pec_mitigation=False, **asdict(_ZneOptions())
-#         )
-#     )
-#     twirling: TwirlingOptions = field(
-#         default_factory=lambda: TwirlingOptions(gates=True, measure=True, strategy="active-accum")
-#     )
-
-
-# @dataclass(frozen=True)
-# class _ResilienceLevel3Options:
-#     resilience_level: int = 3
-#     resilience: ResilienceOptions = field(
-#         default_factory=lambda: ResilienceOptions(
-#             measure_noise_mitigation=True, zne_mitigation=False, **asdict(_PecOptions())
-#         )
-#     )
-#     twirling: TwirlingOptions = field(
-#         default_factory=lambda: TwirlingOptions(gates=True, measure=True, strategy="active")
-#     )
-
-
-# _DEFAULT_RESILIENCE_LEVEL_OPTIONS = {
-#     0: _ResilienceLevel0Options(),
-#     1: _ResilienceLevel1Options(),
-#     2: _ResilienceLevel2Options(),
-#     3: _ResilienceLevel3Options(),
-# }
