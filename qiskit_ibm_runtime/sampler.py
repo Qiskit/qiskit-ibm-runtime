@@ -37,7 +37,7 @@ logger = logging.getLogger(__name__)
 
 
 class Sampler:
-    """Base type for Sampelr."""
+    """Base type for Sampler."""
 
     version = 0
 
@@ -45,31 +45,14 @@ class Sampler:
 class SamplerV2(BasePrimitiveV2, Sampler, BaseSamplerV2):
     """Class for interacting with Qiskit Runtime Sampler primitive service.
 
-    Qiskit Runtime Sampler primitive service calculates quasi-probability distribution
-    of bitstrings from quantum circuits.
+    This class supports version 2 of the Sampler interface, which uses different
+    input and output formats than version 1.
+
+    Qiskit Runtime Sampler primitive returns the sampled result according to the
+    specified output type. For example, it returns a bitstring for each shot
+    if measurement level 2 (bits) is requested.
 
     The :meth:`run` method can be used to submit circuits and parameters to the Sampler primitive.
-
-    You are encouraged to use :class:`~qiskit_ibm_runtime.Session` to open a session,
-    during which you can invoke one or more primitives. Jobs submitted within a session
-    are prioritized by the scheduler, and data is cached for efficiency.
-
-    Example::
-
-        from qiskit.test.reference_circuits import ReferenceCircuits
-        from qiskit_ibm_runtime import QiskitRuntimeService, Session, Sampler
-
-        service = QiskitRuntimeService(channel="ibm_cloud")
-        bell = ReferenceCircuits.bell()
-
-        with Session(service, backend="ibmq_qasm_simulator") as session:
-            sampler = Sampler(session=session)
-
-            job = sampler.run(bell, shots=1024)
-            print(f"Job ID: {job.job_id()}")
-            print(f"Job result: {job.result()}")
-
-            # You can run more jobs inside the session
     """
 
     _options_class = SamplerOptions

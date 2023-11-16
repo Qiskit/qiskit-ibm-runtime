@@ -66,7 +66,6 @@ class ResilienceOptionsV2:
         zne_extrapolator: An extrapolation strategy. One or more of ``"multi_exponential"``,
             ``"single_exponential"``, ``"double_exponential"``, ``"linear"``.
             Only applicable if ZNE is enabled.
-            Default: ``("exponential, "linear")``
 
         zne_stderr_threshold: A standard error threshold for accepting the ZNE result of Pauli basis
             expectation values when using ZNE mitigation. Any extrapolator model resulting an larger
@@ -162,23 +161,6 @@ class ResilienceOptionsV2:
             )
 
         return self
-
-
-# @dataclass(frozen=True)
-# class _ZneOptions:
-#     zne_mitigation: bool = True
-#     zne_noise_factors: Sequence[float] = (1, 3, 5)
-#     zne_extrapolator: Union[ZneExtrapolatorType, Sequence[ZneExtrapolatorType]] = (
-#         "exponential",
-#         "linear",
-#     )
-#     zne_stderr_threshold: float = 0.25
-
-
-# @dataclass(frozen=True)
-# class _PecOptions:
-#     pec_mitigation: bool = True
-#     pec_max_overhead: float = 100
 
 
 @primitive_dataclass

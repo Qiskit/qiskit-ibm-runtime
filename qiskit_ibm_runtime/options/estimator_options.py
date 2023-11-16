@@ -10,7 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Primitive options."""
+"""Estimator options."""
 
 from typing import Union, Literal
 
@@ -36,7 +36,7 @@ DDSequenceType = Literal["XX", "XpXm", "XY4"]
 
 @primitive_dataclass
 class EstimatorOptions(OptionsV2):
-    """Options for v2 Estimator.
+    """Options for EstimatorV2.
 
     Args:
         optimization_level: How much optimization to perform on the circuits.
