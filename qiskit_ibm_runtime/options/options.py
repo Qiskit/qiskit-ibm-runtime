@@ -129,7 +129,13 @@ class OptionsV2(BaseOptions):
             }
         )
 
-        for fld in ["resilience_level", "resilience", "twirling", "dynamical_decoupling"]:
+        for fld in [
+            "resilience_level",
+            "resilience",
+            "twirling",
+            "dynamical_decoupling",
+            "seed_estimator",
+        ]:
             _set_if_exists(fld, inputs, options_copy)
 
         inputs["execution"] = options_copy.get("execution", {})
