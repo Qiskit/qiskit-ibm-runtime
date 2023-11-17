@@ -285,6 +285,10 @@ class BaseFakeRuntimeClient:
             classes = [classes]
         self._job_classes = classes
 
+    def cloud_instance(self):
+        """Return whether or not channel_strategy q-ctrl is enabled."""
+        return False
+
     def set_final_status(self, final_status):
         """Set job status to passed in final status instantly."""
         self._final_status = final_status
