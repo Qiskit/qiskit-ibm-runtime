@@ -19,7 +19,7 @@ import re
 import hashlib
 from queue import Queue
 from threading import Condition
-from typing import List, Optional, Any, Dict, Union, Tuple, Type
+from typing import List, Optional, Any, Dict, Union, Tuple
 from urllib.parse import urlparse
 
 import requests
@@ -27,22 +27,22 @@ from ibm_cloud_sdk_core.authenticators import (  # pylint: disable=import-error
     IAMAuthenticator,
 )
 from ibm_platform_services import ResourceControllerV2  # pylint: disable=import-error
+from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 
-def validate_job_tags(job_tags: Optional[List[str]], exception: Type[Exception]) -> None:
+def validate_job_tags(job_tags: Optional[List[str]]) -> None:
     """Validates input job tags.
 
     Args:
         job_tags: Job tags to be validated.
-        exception: Exception to raise if the tags are invalid.
 
     Raises:
-        Exception: If the job tags are invalid.
+        IBMInputValueError: If the job tags are invalid.
     """
     if job_tags and (
         not isinstance(job_tags, list) or not all(isinstance(tag, str) for tag in job_tags)
     ):
-        raise exception("job_tags needs to be a list of strings.")
+        raise IBMInputValueError("job_tags needs to be a list of strings.")
 
 
 def get_iam_api_url(cloud_url: str) -> str:

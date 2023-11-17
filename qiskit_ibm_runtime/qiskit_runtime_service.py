@@ -34,6 +34,7 @@ from qiskit_ibm_provider.utils.hgp import to_instance_format, from_instance_form
 from qiskit_ibm_provider.utils.backend_decoder import configuration_from_server_data
 from qiskit_ibm_runtime import ibm_backend
 
+from .utils.utils import validate_job_tags
 from .accounts import AccountManager, Account, ChannelType
 from .api.clients import AuthClient, VersionClient
 from .api.clients.runtime import RuntimeClient
@@ -204,11 +205,17 @@ class QiskitRuntimeService(Provider):
             # TODO: We can make the backend discovery lazy
             self._backends = self._discover_cloud_backends()
             QiskitRuntimeService.global_service = self
+            self._validate_channel_strategy()
             return
         else:
             auth_client = self._authenticate_ibm_quantum_account(self._client_params)
             # Update client parameters to use authenticated values.
             self._client_params.url = auth_client.current_service_urls()["services"]["runtime"]
+            if self._client_params.url == "https://api.de.quantum-computing.ibm.com/runtime":
+                warnings.warn(
+                    "Features in versions of qiskit-ibm-runtime greater than and including "
+                    "0.13.0 may not be supported in this environment"
+                )
             self._client_params.token = auth_client.current_access_token()
             self._api_client = RuntimeClient(self._client_params)
             self._hgps = self._initialize_hgps(auth_client)
@@ -307,6 +314,18 @@ class QiskitRuntimeService(Provider):
         account.validate()
 
         return account
+
+    def _validate_channel_strategy(self) -> None:
+        """Raise an error if the passed in channel_strategy and
+        instance do not match.
+
+        """
+        if self._channel_strategy == "q-ctrl":
+            qctrl_enabled = self._api_client.cloud_instance()
+            if not qctrl_enabled:
+                raise IBMNotAuthorizedError(
+                    "This account is not authorized to use ``q-ctrl`` as a channel strategy."
+                )
 
     def _discover_cloud_backends(self) -> Dict[str, "ibm_backend.IBMBackend"]:
         """Return the remote backends available for this service instance.
@@ -1441,6 +1460,8 @@ class QiskitRuntimeService(Provider):
                     "The 'instance' keyword is only supported for ``ibm_quantum`` runtime."
                 )
             hub, group, project = from_instance_format(instance)
+        if job_tags:
+            validate_job_tags(job_tags)
 
         job_responses = []  # type: List[Dict[str, Any]]
         current_page_limit = limit or 20
