@@ -289,7 +289,7 @@ class Session:
         """Construct a Session object with a given session_id
 
         Args:
-            session_id: the id of the session to be created. This can be an already
+            session_id: the id of the session to be created. This must be an already
                 existing session id.
             service: instance of the ``QiskitRuntimeService`` class.
             backend: instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
