@@ -277,7 +277,7 @@ class TestRuntimeJob(IBMTestCase):
             job = run_program(service=service)
             with mock_wait_for_final_state(service, job):
                 mock_response = MagicMock()
-                mock_response.content = "content-from-external-url"
+                mock_response.text = "content-from-external-url"
                 request_mock.get.return_value = mock_response
                 with mock_wait_for_final_state(service, job):
                     job.wait_for_final_state()

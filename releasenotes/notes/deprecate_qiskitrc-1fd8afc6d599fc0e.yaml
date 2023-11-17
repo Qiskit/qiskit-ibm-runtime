@@ -1,0 +1,5 @@
+---
+deprecations:
+  - |
+    Usage of the ``~/.qiskit/qiskitrc.json`` file for account information has been 
+    deprecated. Use ``~/.qiskit/qiskit-ibm.json`` instead.
