@@ -2,5 +2,5 @@
 fixes:
   - |
     The ``backend`` parameter in :meth:`~qiskit_ibm_runtime.Session.from_id` is being deprecated because
-    sessions do not support multiple backends. Additionally, the `service` parameter is no longer optional.
+    sessions do not support multiple backends. Additionally, the ``service`` parameter is no longer optional.
 
