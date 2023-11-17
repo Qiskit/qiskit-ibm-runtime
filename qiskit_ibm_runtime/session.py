@@ -23,9 +23,8 @@ from .runtime_job import RuntimeJob
 from .runtime_program import ParameterNamespace
 from .program.result_decoder import ResultDecoder
 from .ibm_backend import IBMBackend
-from .exceptions import IBMInputValueError
-from .utils.deprecation import deprecate_arguments
 from .utils.default_session import set_cm_session
+from .utils.deprecation import deprecate_arguments
 
 
 def _active_session(func):  # type: ignore
@@ -284,7 +283,7 @@ class Session:
     def from_id(
         cls,
         session_id: str,
-        service: QiskitRuntimeService,
+        service: Optional[QiskitRuntimeService] = None,
         backend: Optional[Union[str, IBMBackend]] = None,
     ) -> "Session":
         """Construct a Session object with a given session_id
@@ -296,32 +295,16 @@ class Session:
             backend: instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
                 string name of backend.
 
-        Raises:
-            IBMInputValueError: If given `session_id` does not exist. or the backend passed in does
-                not match the original session backend.
-
         Returns:
             A new Session with the given ``session_id``
-        """
 
+        """
         if backend:
             deprecate_arguments("backend", "0.15.0", "Sessions do not support multiple backends.")
-            if isinstance(backend, IBMBackend):
-                backend = backend.name
 
-        response = service._api_client.session_details(session_id)
-        if response:
-            session_backend = response.get("backend_name")
-            if backend and backend != session_backend:
-                raise IBMInputValueError(
-                    f"The session_id {session_id} was created with backend {session_backend}, "
-                    f"but backend {backend} was given."
-                )
-            session = cls(service, session_backend)
-            session._session_id = session_id
-            return session
-
-        raise IBMInputValueError(f"The session_id {session_id} does not exist.")
+        session = cls(service, backend)
+        session._session_id = session_id
+        return session
 
     def __enter__(self) -> "Session":
         set_cm_session(self)

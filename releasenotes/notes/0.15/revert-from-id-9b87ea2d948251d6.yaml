@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    Reverting `0.15.0` changes to :meth:`~qiskit_ibm_runtime.Session.from_id` because it was
+    a breaking change without proper deprecation. 
+
