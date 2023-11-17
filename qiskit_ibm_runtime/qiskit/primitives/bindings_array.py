@@ -16,9 +16,9 @@ Bindings array class
 """
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Iterable, Sequence
 from itertools import chain, product
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union, Mapping
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
