@@ -21,6 +21,7 @@ from qiskit.primitives import EstimatorResult, SamplerResult
 from qiskit.result import Result
 
 from qiskit_ibm_runtime import Estimator, Session, Sampler, Options
+from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 from ..decorators import run_integration_test, quantum_only
 from ..ibm_test_case import IBMIntegrationTestCase
@@ -90,16 +91,16 @@ class TestIntegrationSession(IBMIntegrationTestCase):
 
     @run_integration_test
     def test_session_from_id(self, service):
-        """Test creating a session from a given id"""
+        """Test creating a session with from_id with simulator."""
         backend = service.backend("ibmq_qasm_simulator")
-        with Session(service, backend=backend) as session:
-            sampler = Sampler(session=session)
-            job = sampler.run(ReferenceCircuits.bell(), shots=400)
-            session_id = job.session_id
-        new_session = Session.from_id(backend=backend, session_id=session_id)
-        sampler = Sampler(session=new_session)
+        session = Session(service=service, backend=backend)
+
+        sampler = Sampler(session=session)
         job = sampler.run(ReferenceCircuits.bell(), shots=400)
-        self.assertEqual(session_id, job.session_id)
+        session_id = job.session_id
+
+        with self.assertRaises(IBMInputValueError):
+            _ = Session.from_id(session_id=session_id, service=service)
 
 
 class TestBackendRunInSession(IBMIntegrationTestCase):
