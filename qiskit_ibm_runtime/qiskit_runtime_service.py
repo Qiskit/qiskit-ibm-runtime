@@ -320,11 +320,17 @@ class QiskitRuntimeService(Provider):
         instance do not match.
 
         """
+        qctrl_enabled = self._api_client.cloud_instance()
         if self._channel_strategy == "q-ctrl":
-            qctrl_enabled = self._api_client.cloud_instance()
             if not qctrl_enabled:
                 raise IBMNotAuthorizedError(
-                    "This account is not authorized to use ``q-ctrl`` as a channel strategy."
+                    "This account is not authorized to use q-ctrl as a channel strategy."
+                )
+        else:
+            if qctrl_enabled:
+                raise IBMNotAuthorizedError(
+                    "The instance passed in is only compatible with the q-ctrl channel strategy. "
+                    "Please try passing in channel_strategy='q-ctrl'."
                 )
 
     def _discover_cloud_backends(self) -> Dict[str, "ibm_backend.IBMBackend"]:
