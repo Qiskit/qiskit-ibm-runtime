@@ -20,6 +20,7 @@ from qiskit.utils import optionals
 from qiskit_ibm_runtime.fake_provider import FakeAthens, FakePerth
 from ..ibm_test_case import IBMTestCase
 
+
 def get_test_circuit():
     """Generates simple circuit for tests."""
     desired_vector = [1 / math.sqrt(2), 0, 0, 1 / math.sqrt(2)]
