@@ -15,10 +15,10 @@ import math
 import unittest
 
 from qiskit import QuantumRegister, ClassicalRegister, QuantumCircuit, transpile
-from qiskit.test import QiskitTestCase
 from qiskit.utils import optionals
 
 from qiskit_ibm_runtime.fake_provider import FakeAthens, FakePerth
+from ..ibm_test_case import IBMTestCase
 
 
 def get_test_circuit():
@@ -33,7 +33,7 @@ def get_test_circuit():
     return qc
 
 
-class FakeBackendsTest(QiskitTestCase):
+class FakeBackendsTest(IBMTestCase):
     """fake backends test."""
 
     @unittest.skipUnless(optionals.HAS_AER, "qiskit-aer is required to run this test")
