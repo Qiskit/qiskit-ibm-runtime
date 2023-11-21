@@ -18,6 +18,7 @@ import os
 import uuid
 from typing import Any
 from unittest import skipIf
+import warnings
 
 from qiskit_ibm_provider.proxies import ProxyConfiguration
 from qiskit_ibm_runtime.accounts import (
@@ -859,7 +860,9 @@ class TestEnableAccount(IBMTestCase):
         """
         with custom_qiskitrc(contents=str.encode(str_contents)):
             with temporary_account_config_file(contents={}):
-                service = FakeRuntimeService()
+                with warnings.catch_warnings(record=True) as warn:
+                    service = FakeRuntimeService()
+        self.assertIn("Use of the ~/.qiskit/qiskitrc.json file is deprecated", str(warn[0].message))
         self.assertTrue(service._account)
         self.assertEqual(service._account.token, token)
 

@@ -23,6 +23,7 @@ from .runtime_job import RuntimeJob
 from .utils.result_decoder import ResultDecoder
 from .ibm_backend import IBMBackend
 from .utils.default_session import set_cm_session
+from .utils.deprecation import deprecate_arguments
 
 
 def _active_session(func):  # type: ignore
@@ -287,7 +288,7 @@ class Session:
         """Construct a Session object with a given session_id
 
         Args:
-            session_id: the id of the session to be created. This can be an already
+            session_id: the id of the session to be created. This must be an already
                 existing session id.
             service: instance of the ``QiskitRuntimeService`` class.
             backend: instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
@@ -297,6 +298,9 @@ class Session:
             A new Session with the given ``session_id``
 
         """
+        if backend:
+            deprecate_arguments("backend", "0.15.0", "Sessions do not support multiple backends.")
+
         session = cls(service, backend)
         session._session_id = session_id
         return session

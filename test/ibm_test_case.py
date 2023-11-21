@@ -46,7 +46,7 @@ class IBMTestCase(BaseQiskitTestCase):
         setup_test_logging(cls.log, filename)
         cls._set_logging_level(logging.getLogger(QISKIT_IBM_RUNTIME_LOGGER_NAME))
         # fail test on deprecation warnings from qiskit
-        warnings.filterwarnings("error", category=DeprecationWarning, module="qiskit")
+        warnings.filterwarnings("error", category=DeprecationWarning, module=r"^qiskit$")
 
     @classmethod
     def _set_logging_level(cls, logger: logging.Logger) -> None:
