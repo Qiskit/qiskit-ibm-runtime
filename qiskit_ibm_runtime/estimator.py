@@ -246,6 +246,20 @@ class Estimator(BasePrimitive, BaseEstimator):
                     "When the backend is a simulator and resilience_level == 3,"
                     "a coupling map is required."
                 )
+
+        zne_amplifier = options.get("resilience").get("zne_amplifier")
+        if zne_amplifier != "gate_folding":
+            if not options.get("execution").get("fast_parametric_update"):
+                raise ValueError(
+                    f"Unable to use zne_amplifier = {zne_amplifier} with"
+                    " fast_parametric_update=False",
+                )
+            if "parameters" not in self._backend.configuration().supported_features:
+                raise ValueError(
+                    f"Unable to use zne_amplifier = {zne_amplifier} with a backend"
+                    " that does not support 'parameters' feature.",
+                )
+
         Options.validate_options(options)
 
     @staticmethod

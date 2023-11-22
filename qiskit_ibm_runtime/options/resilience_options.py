@@ -79,6 +79,9 @@ class ResilienceOptions:
             Only applicable if ZNE is enabled.
             Default: ``("exponential, "linear")``
 
+        zne_amplifier: The method to use when amplifying noise to the intended noise factors.
+            Default: `"gate_folding"`.
+
         zne_stderr_threshold: A standard error threshold for accepting the ZNE result of Pauli basis
             expectation values when using ZNE mitigation. Any extrapolator model resulting an larger
             standard error than this value, or mean that is outside of the allowed range and threshold
@@ -86,6 +89,22 @@ class ResilienceOptions:
             used for that basis term.
             Only applicable if ZNE is enabled.
             Default: 0.25
+
+        zne_return_all_extrapolated: If True return an array of the extrapolated expectation values
+            for all input ``zne_extrapolator`` models, along with the automatically selected
+            extrapolated value. If False only return the automatically selected extrapolated value.
+            Default: False
+
+        zne_return_unextrapolated: If True return the unextrapolated expectation values for each
+            of ihe input ``zne_noise_factors`` along with the extrapolated values as an array
+            valued result. If False only return the extrapolated values.
+            Default: False
+
+        zne_extrapolated_noise_factors: Specify 1 or more noise factor values to evaluate the
+            extrapolated models at. If a sequence of values the returned results will be array
+            valued with specified noise factor evaluated for the extrapolation model. A value
+            of 0 corresponds to zero-noise extrapolation.
+            Default: 0
 
         pec_mitigation: Whether to turn on Probabilistic Error Cancellation error mitigation method.
             By default, PEC is enabled for resilience level 3.
@@ -97,6 +116,34 @@ class ResilienceOptions:
             sampling overhead.
             Only applicable if PEC is enabled.
             Default: 100
+
+        measure_noise_learning_shots: Specify a custom number of total shots to run for learning
+            the Pauli twirled measure noise when applying measure noise mitigation. If `"auto"`
+            the number of shots will be determined based on the execution options.
+            Default: ``"auto"``
+
+        measure_noise_learning_samples: Specify the number of twirling samples to run when
+            learning the Pauli twirled measure noise model.
+            Default: 32
+
+        layer_noise_learning_max_experiments: Specify the maximum number of layer noise learning
+            experiments that can be run when characterization layer noise for PEC.
+            Default: 3
+
+        layer_noise_learning_shots: Specify the total number of shots to run for each Pauli
+            twirled measurement circuit to run when learning the layer noise of an
+            individual layer for PEC.
+            Default: 4096
+
+        layer_noise_learning_samples: Specify the number of twirling samples to run per
+            measurement circuit when learning the layer noise of an individual layer for
+            PEC.
+            Default: 32.
+
+        layer_noise_learning_depths: Specify a custom sequence of layer pair depths to use when
+            running learning experiments for layer noise for PEC. If None a default
+            value will be used.
+            Default: None
     """
 
     noise_amplifier: NoiseAmplifierType = None
@@ -113,11 +160,25 @@ class ResilienceOptions:
         "exponential",
         "linear",
     )
+    zne_amplifier: str = "gate_folding"
     zne_stderr_threshold: float = None
+    zne_return_all_extrapolated: bool = False
+    zne_return_unextrapolated: bool = False
+    zne_extrapolated_noise_factors: Union[float, Sequence[float]] = 0
 
     # PEC
     pec_mitigation: bool = None
     pec_max_overhead: float = None
+
+    # Measure noise learning options
+    measure_noise_learning_shots: Union[int, Literal["auto"]] = "auto"
+    measure_noise_learning_samples: int = 32
+
+    # Layer noise learning options
+    layer_noise_learning_max_experiments: int = 3
+    layer_noise_learning_shots: int = 32 * 128
+    layer_noise_learning_samples: int = 32
+    layer_noise_learning_depths: Sequence[int] = None
 
     @staticmethod
     def validate_resilience_options(resilience_options: dict) -> None:

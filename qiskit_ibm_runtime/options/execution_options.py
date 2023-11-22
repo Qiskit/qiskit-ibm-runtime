@@ -13,7 +13,7 @@
 """Execution options."""
 
 from dataclasses import dataclass
-from typing import Literal, get_args, Optional
+from typing import Literal, get_args, Optional, Union
 from numbers import Integral
 
 
@@ -22,7 +22,9 @@ ExecutionSupportedOptions = Literal[
     "init_qubits",
     "samples",
     "shots_per_sample",
-    "interleave_samples",
+    "max_circuits",
+    "max_concurrent_jobs",
+    "fast_parametric_update",
 ]
 
 
@@ -34,7 +36,7 @@ class ExecutionOptions:
         shots: Number of repetitions of each circuit, for sampling. Default: 4096.
 
         init_qubits: Whether to reset the qubits to the ground state for each shot.
-            Default: ``True``.
+            Default: ``True``
 
         samples: The number of samples of each measurement circuit to run. This
             is used when twirling or resilience levels 1, 2, 3. If None it will
@@ -48,17 +50,27 @@ class ExecutionOptions:
             ``samples`` (if specified).
             Default: None
 
-        interleave_samples: If True interleave samples from different measurement
-            circuits when running. If False run all samples from each measurement
-            circuit in order.
-            Default: False
+        max_circuits: Specify a custom maximum number of circuits run in a single job.
+            Default: None
+        
+        max_concurrent_jobs: Specify a custom maximum number of concurrent jobs that can
+            be actively running on a backend during primitive execution. If `"auto"` this
+            will be set automatically depending on the backend type and capabilities.
+            Default: ``"auto"``
+            
+        fast_parametric_update: Specify if parametric update should be used for execution
+            of parametric circuits. If ``"auto"`` it will be enabled automatically on
+            supported backends.
+            Default": ``"auto"``
     """
 
     shots: int = 4096
     init_qubits: bool = True
     samples: Optional[int] = None
     shots_per_sample: Optional[int] = None
-    interleave_samples: bool = False
+    max_circuits: Optional[int] = None
+    max_concurrent_jobs: Union[int, str] = "auto"
+    fast_parametric_update: Union[bool, str] = "auto"
 
     @staticmethod
     def validate_execution_options(execution_options: dict) -> None:
@@ -86,16 +98,16 @@ class ExecutionOptions:
             if not isinstance(shots, Integral):
                 raise ValueError(f"shots must be None or an integer, not {type(shots)}")
             if shots < 0:
-                raise ValueError("shots must be None or >= 1")
+                raise ValueError("shots must be None or >= 0")
         if samples is not None:
             if not isinstance(samples, Integral):
                 raise ValueError(f"samples must be None or an integer, not {type(samples)}")
             if samples < 0:
-                raise ValueError("samples must be None or >= 1")
+                raise ValueError("samples must be None or >= 0")
         if shots_per_sample is not None:
             if not isinstance(shots_per_sample, Integral):
                 raise ValueError(
                     f"shots_per_sample must be None or an integer, not {type(shots_per_sample)}"
                 )
             if shots_per_sample < 0:
-                raise ValueError("shots_per_sample must be None or >= 1")
+                raise ValueError("shots_per_sample must be None or >= 0")
