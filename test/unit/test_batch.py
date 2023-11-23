@@ -15,7 +15,8 @@
 from unittest.mock import patch
 
 from qiskit_ibm_runtime import Batch
-import qiskit_ibm_runtime.session as session_pkg
+from qiskit_ibm_runtime.utils.default_session import _DEFAULT_SESSION
+
 from ..ibm_test_case import IBMTestCase
 
 
@@ -24,7 +25,7 @@ class TestBatch(IBMTestCase):
 
     def tearDown(self) -> None:
         super().tearDown()
-        session_pkg._DEFAULT_SESSION.set(None)
+        _DEFAULT_SESSION.set(None)
 
     @patch("qiskit_ibm_runtime.session.QiskitRuntimeService", autospec=True)
     def test_default_batch(self, mock_service):
