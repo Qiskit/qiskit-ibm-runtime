@@ -168,7 +168,7 @@ class RuntimeJob(Job):
             if "url" in result_url_json:
                 url = result_url_json["url"]
                 result_response = requests.get(url, timeout=10)
-                return result_response.content
+                return result_response.text
             return response
         except json.JSONDecodeError:
             return response
