@@ -26,6 +26,9 @@ from ..ibm_test_case import IBMIntegrationJobTestCase
 from ..decorators import run_integration_test, cloud_only
 from ..utils import cancel_job_safe
 
+FIDELITY_THRESHOLD = 0.9
+DIFFERENCE_THRESHOLD = 0.1
+
 
 class TestQCTRL(IBMIntegrationJobTestCase):
     """Integration tests for QCTRL integration."""
@@ -86,7 +89,8 @@ class TestQCTRL(IBMIntegrationJobTestCase):
 
         # Execute circuit in a session with sampler
         with Session(service, backend=self.backend):
-            sampler = Sampler()
+            options = Options(resilience_level=1)
+            sampler = Sampler(options=options)
 
             result = sampler.run(bell_circuit_sampler, shots=shots).result()
             results_dict = {
@@ -100,6 +104,7 @@ class TestQCTRL(IBMIntegrationJobTestCase):
         fidelity = hellinger_fidelity(results_dict, ideal_result)
 
         print("fidelity with ideal results: ", fidelity)
+        self.assertGreater(fidelity, FIDELITY_THRESHOLD)
 
     @run_integration_test
     @cloud_only
@@ -119,7 +124,8 @@ class TestQCTRL(IBMIntegrationJobTestCase):
 
         # Execute circuit in a session with sampler
         with Session(service, backend=self.backend):
-            sampler = Sampler()
+            options = Options(resilience_level=1)
+            sampler = Sampler(options=options)
 
             result = sampler.run(ghz_circuit_sampler, shots=shots).result()
             results_dict = {
@@ -131,8 +137,7 @@ class TestQCTRL(IBMIntegrationJobTestCase):
             key: val / shots for key, val in Statevector(ghz_circuit).probabilities_dict().items()
         }
         fidelity = hellinger_fidelity(results_dict, ideal_result)
-
-        print("fidelity with ideal results: ", fidelity)
+        self.assertGreater(fidelity, FIDELITY_THRESHOLD)
 
     @run_integration_test
     @cloud_only
@@ -150,7 +155,8 @@ class TestQCTRL(IBMIntegrationJobTestCase):
 
         # Execute circuit in a session with sampler
         with Session(service, backend=self.backend):
-            sampler = Sampler()
+            options = Options(resilience_level=1)
+            sampler = Sampler(options=options)
 
             result = sampler.run(superposition_circuit_sampler, shots=shots).result()
             results_dict = {
@@ -163,8 +169,7 @@ class TestQCTRL(IBMIntegrationJobTestCase):
             for key, val in Statevector(superposition_circuit).probabilities_dict().items()
         }
         fidelity = hellinger_fidelity(results_dict, ideal_result)
-
-        print("fidelity with ideal results: ", fidelity)
+        self.assertGreater(fidelity, FIDELITY_THRESHOLD)
 
     @run_integration_test
     @cloud_only
@@ -192,7 +197,8 @@ class TestQCTRL(IBMIntegrationJobTestCase):
 
         # Execute circuit in a session with sampler
         with Session(service, backend=self.backend):
-            sampler = Sampler()
+            options = Options(resilience_level=1)
+            sampler = Sampler(options=options)
 
             result = sampler.run(computational_states_sampler_circuits, shots=shots).result()
             results_dict_list = [
@@ -210,6 +216,8 @@ class TestQCTRL(IBMIntegrationJobTestCase):
         ]
 
         print("fidelity with ideal results: ", fidelities)
+        for fidelity in fidelities:
+            self.assertGreater(fidelity, FIDELITY_THRESHOLD)
 
     @run_integration_test
     @cloud_only
@@ -249,6 +257,8 @@ class TestQCTRL(IBMIntegrationJobTestCase):
             "absolute difference between theory and experiment expectation values: ",
             absolute_difference_dict,
         )
+        for diff in absolute_difference:
+            self.assertLess(diff, DIFFERENCE_THRESHOLD)
 
     @run_integration_test
     @cloud_only
@@ -291,6 +301,8 @@ class TestQCTRL(IBMIntegrationJobTestCase):
             "absolute difference between theory and experiment expectation values: ",
             absolute_difference_dict,
         )
+        for diff in absolute_difference:
+            self.assertLess(diff, DIFFERENCE_THRESHOLD)
 
     @run_integration_test
     @cloud_only
@@ -331,6 +343,8 @@ class TestQCTRL(IBMIntegrationJobTestCase):
             "absolute difference between theory and experiment expectation values: ",
             absolute_difference_dict,
         )
+        for diff in absolute_difference:
+            self.assertLess(diff, DIFFERENCE_THRESHOLD)
 
     @run_integration_test
     @cloud_only
@@ -392,3 +406,5 @@ class TestQCTRL(IBMIntegrationJobTestCase):
                     absolute_difference[idx * len(observables) : (idx + 1) * len(observables)],
                 )
             }
+        for diff in absolute_difference:
+            self.assertLess(diff, DIFFERENCE_THRESHOLD)
