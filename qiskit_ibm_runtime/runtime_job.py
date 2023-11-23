@@ -692,7 +692,7 @@ class RuntimeJob(Job):
             api_metadata = self._api_client.job_metadata(self.job_id())
             self._queue_info = QueueInfo(
                 position_in_queue=api_metadata.get("position_in_queue"),
-                status=self._api_client.backend_status(self._backend.name),
+                status=status(),
                 estimated_start_time=api_metadata.get("estimated_start_time"),
                 estimated_completion_time=api_metadata.get("estimated_completion_time"),
             )
@@ -722,7 +722,7 @@ class RuntimeJob(Job):
         api_metadata = self._api_client.job_metadata(self.job_id())
         self._queue_info = QueueInfo(
             position_in_queue=api_metadata.get("position_in_queue"),
-            status=self._api_client.backend_status(self._backend.name),
+            status=self.status(),
             estimated_start_time=api_metadata.get("estimated_start_time"),
             estimated_completion_time=api_metadata.get("estimated_completion_time"),
         )

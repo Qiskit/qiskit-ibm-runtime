@@ -81,11 +81,8 @@ class QueueInfo:
             TypeError: If the `estimated_start_time` or `estimated_end_time`
                 value is not valid.
         """
-        status = (
-            api_status_to_job_status(self._status).name
-            if self._status
-            else self._get_value(self._status)
-        )
+        status = self._get_value(self._status)
+
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             est_start_time = (
