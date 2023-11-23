@@ -12,6 +12,8 @@
 
 """Utility functions for options."""
 
+#from qiskit.providers.fake_provider import FakeBackendV2 as FakeBackend
+from qiskit.providers.fake_provider import fake_backend
 from ..ibm_backend import IBMBackend
 
 
@@ -33,8 +35,12 @@ def set_default_error_levels(
         options with correct error level defaults.
     """
     if options.get("optimization_level") is None:
+        if isinstance(backend, fake_backend.FakeBackendV2):
+            print("I am a fake")
+        else:
+            print("nononon")
         if (
-            backend.configuration().simulator
+            (isinstance(backend, fake_backend.FakeBackendV2) or backend.configuration().simulator)
             and options.get("simulator", {}).get("noise_model") is None
         ):
             options["optimization_level"] = 1
@@ -43,7 +49,7 @@ def set_default_error_levels(
 
     if options.get("resilience_level") is None:
         if (
-            backend.configuration().simulator
+            (isinstance(backend, fake_backend.FakeBackendV2) or backend.configuration().simulator)
             and options.get("simulator", {}).get("noise_model") is None
         ):
             options["resilience_level"] = 0

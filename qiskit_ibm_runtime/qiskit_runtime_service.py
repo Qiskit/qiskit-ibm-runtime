@@ -21,7 +21,8 @@ from collections import OrderedDict
 from typing import Dict, Callable, Optional, Union, List, Any, Type, Sequence
 
 from qiskit_aer import AerSimulator
-from qiskit.providers.fake_provider import FakeBackendV2 as FakeBackend
+#from qiskit.providers.fake_provider import FakeBackendV2 as FakeBackend
+from qiskit.providers.fake_provider import fake_backend
 from qiskit.providers.backend import BackendV1 as Backend
 from qiskit.providers.provider import ProviderV1 as Provider
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
@@ -30,6 +31,7 @@ from qiskit.providers.models import (
     PulseBackendConfiguration,
     QasmBackendConfiguration,
 )
+from qiskit.primitives.primitive_job import PrimitiveJob
 
 from qiskit_ibm_provider.proxies import ProxyConfiguration
 from qiskit_ibm_provider.utils.hgp import to_instance_format, from_instance_format
@@ -535,7 +537,7 @@ class QiskitRuntimeService(Provider):
         instance: Optional[str] = None,
         filters: Optional[Callable[[List["ibm_backend.IBMBackend"]], bool]] = None,
         **kwargs: Any,
-    ) -> Union[List["ibm_backend.IBMBackend"], List[FakeBackend]]:
+    ) -> Union[List["ibm_backend.IBMBackend"], List[fake_backend.FakeBackendV2]]:
         """Return all backends accessible via this account, subject to optional filtering.
 
         Args:
@@ -575,14 +577,14 @@ class QiskitRuntimeService(Provider):
             QiskitBackendNotFoundError: If the backend is not in any instance.
         """
         # TODO filter out input_allowed not having runtime
-        backends: Union[List[IBMBackend], List[FakeBackend]] = []
+        backends: Union[List[IBMBackend], List[fake_backend.FakeBackendV2]] = []
         instance_filter = instance if instance else self._account.instance
         if self._channel == "ibm_quantum":
             if name:
                 if name not in self._backends:
                     fake_backend = self._get_fake_backend(name)
                     print(fake_backend)
-                    print(isinstance(fake_backend, FakeBackend))
+                    print(isinstance(fake_backend, fake_backend.FakeBackendV2))
                     print("fake_backend name = "+str(fake_backend.backend_name))
                     if fake_backend:
                         backends.append(fake_backend)
@@ -793,7 +795,7 @@ class QiskitRuntimeService(Provider):
         self,
         name: str = None,
         instance: Optional[str] = None,
-    ) -> Backend:
+    ) -> Union[Backend, fake_backend.FakeBackendV2]:
         """Return a single backend matching the specified filtering.
 
         Args:
@@ -810,7 +812,16 @@ class QiskitRuntimeService(Provider):
             QiskitBackendNotFoundError: if no backend could be found.
         """
         # pylint: disable=arguments-differ, line-too-long
+        if name and name not in self._backends:
+            my_fake_backend = self._get_fake_backend(name)
+            print(my_fake_backend)
+            print(isinstance(my_fake_backend, fake_backend.FakeBackendV2))
+            print("fake_backend name = " + str(my_fake_backend.backend_name))
+            if my_fake_backend:
+                return my_fake_backend
+
         backends = self.backends(name, instance=instance)
+        print("backends = "+str(backends))
         if not backends:
             # fake_backend = self._get_fake_backend(name)
             # if fake_backend:
@@ -822,14 +833,20 @@ class QiskitRuntimeService(Provider):
                     "https://cloud.ibm.com/docs/quantum-computing?topic=quantum-computing-choose-backend "
                 )
             raise QiskitBackendNotFoundError("No backend matches the criteria." + cloud_msg_url)
-        print("backend= " + str(backends[0].backend_name))
         return backends[0]
 
     def get_backend(self, name: str = None, **kwargs: Any) -> Backend:
         return self.backend(name, **kwargs)
 
-    def _get_fake_backend(self, name: str):
-        return fake_backend_list[name]
+    def _get_fake_backend(self, name: str) -> fake_backend.FakeBackendV2:
+        from qiskit.providers.fake_provider.backends.manila.fake_manila import FakeManilaV2
+        print(issubclass(FakeManilaV2, fake_backend.FakeBackendV2))
+        my_fake_backend = fake_backend_list[name]
+        print(type(my_fake_backend))
+        print(my_fake_backend.backend_name)
+        print(my_fake_backend.defs_filename)
+        print("in get, my type = " + str(isinstance(my_fake_backend, fake_backend.FakeBackendV2)))
+        return my_fake_backend
 
     def pprint_programs(
         self,
@@ -1061,7 +1078,7 @@ class QiskitRuntimeService(Provider):
             qrt_options = RuntimeOptions()
         elif isinstance(options, Dict):
             qrt_options = RuntimeOptions(**options)
-
+        print("qrt_options = " + str(qrt_options))
         # If using params object, extract as dictionary.
         if isinstance(inputs, ParameterNamespace):
             inputs.validate()
@@ -1075,10 +1092,23 @@ class QiskitRuntimeService(Provider):
             from qiskit_aer import Estimator as AerEstimator
             print("1 backend = "+ str(qrt_options.backend))
             #return FakeRuntimeJob(AerSampler.run(...))
-        elif isinstance(qrt_options.backend, FakeBackend):
+        elif isinstance(qrt_options.backend, fake_backend.FakeBackendV2):
             from qiskit.primitives import BackendSampler, BackendEstimator
             print("2 backend = " + str(qrt_options.backend))
-            #return FakeRuntimeJob(BackendSampler.run(...))
+            print("program_id = " + str(program_id))
+            if program_id == "sampler":
+                print("inputs = " + str(inputs))
+                print(qrt_options)
+                sampler = BackendSampler(
+                    backend=qrt_options.backend, skip_transpilation=True
+                )
+
+                return sampler._run(circuits=inputs["circuits"],
+                                    parameter_values=inputs["parameters"],
+                                    run_options=options)
+
+            #primitive_job = BackendSampler.run(...)
+            #return FakeRuntimeJob(primitive_job)
 
         hgp_name = None
         if self._channel == "ibm_quantum":

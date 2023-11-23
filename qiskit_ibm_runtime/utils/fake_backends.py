@@ -25,7 +25,7 @@ fake_backend_list = {
 "lima": FakeLimaV2,
 "london": FakeLondonV2,
 "manhattan": FakeManhattanV2,
-"manila": FakeManilaV2,
+"manila": FakeManilaV2(),
 "melbourne": FakeMelbourneV2,
 "montreal": FakeMontrealV2,
 "mumbai": FakeMumbaiV2,

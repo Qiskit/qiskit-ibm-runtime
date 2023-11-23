@@ -20,6 +20,7 @@ import logging
 from dataclasses import asdict
 
 from qiskit.providers.options import Options as TerraOptions
+from qiskit.providers.fake_provider import fake_backend
 
 from .options import Options
 from .options.utils import set_default_error_levels
@@ -96,12 +97,16 @@ class BasePrimitive(ABC):
             self._service = backend.service
             self._backend = backend
         elif isinstance(backend, str):
+            print("here")
             self._service = (
                 QiskitRuntimeService()
                 if QiskitRuntimeService.global_service is None
                 else QiskitRuntimeService.global_service
             )
             self._backend = self._service.backend(backend)
+            print("actual backend = " + str(self._backend))
+            print(type(self._backend))
+            print(isinstance(self._backend, fake_backend.FakeBackendV2))
         elif get_cm_session():
             self._session = get_cm_session()
             self._service = self._session.service
@@ -156,6 +161,19 @@ class BasePrimitive(ABC):
         logger.info("Submitting job using options %s", combined)
 
         runtime_options = Options._get_runtime_options(combined)
+
+        if isinstance(self._backend, fake_backend.FakeBackendV2):
+            print("runnnnning")
+            runtime_options["backend"] = self._backend #fix this - for cloud, is str,
+                                                        # for fake is Backend
+
+            return self._service.run(
+                program_id=self._program_id(),
+                options=runtime_options,
+                inputs=primitive_inputs,
+                callback=combined.get("environment", {}).get("callback", None),
+                result_decoder=DEFAULT_DECODERS.get(self._program_id()),
+        )
         if self._session:
             return self._session.run(
                 program_id=self._program_id(),
@@ -164,7 +182,6 @@ class BasePrimitive(ABC):
                 callback=combined.get("environment", {}).get("callback", None),
                 result_decoder=DEFAULT_DECODERS.get(self._program_id()),
             )
-
         if self._backend:
             runtime_options["backend"] = self._backend.name
             if "instance" not in runtime_options:
