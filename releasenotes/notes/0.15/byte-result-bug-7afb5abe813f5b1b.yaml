@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    Fixed an issue where canceled and failed jobs would return an invalid result that
+    resulted in a type error, preventing the actual error from being returned
+    to the user.
