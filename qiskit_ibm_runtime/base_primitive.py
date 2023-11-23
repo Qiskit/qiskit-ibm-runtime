@@ -100,16 +100,12 @@ class BasePrimitive(ABC):
             self._service = backend.service
             self._backend = backend
         elif isinstance(backend, str):
-            print("here")
             self._service = (
                 QiskitRuntimeService()
                 if QiskitRuntimeService.global_service is None
                 else QiskitRuntimeService.global_service
             )
             self._backend = self._service.backend(backend)
-            print("actual backend = " + str(self._backend))
-            print(type(self._backend))
-            print(isinstance(self._backend, fake_backend.FakeBackendV2))
         elif get_cm_session():
             self._session = get_cm_session()
             self._service = self._session.service
@@ -171,7 +167,6 @@ class BasePrimitive(ABC):
         runtime_options = Options._get_runtime_options(combined)
 
         if isinstance(self._backend, fake_backend.FakeBackendV2):
-            print("runnnnning")
             runtime_options["backend"] = self._backend #fix this - for cloud, is str,
                                                         # for fake is Backend
 

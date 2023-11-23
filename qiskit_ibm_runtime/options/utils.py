@@ -35,10 +35,6 @@ def set_default_error_levels(
         options with correct error level defaults.
     """
     if options.get("optimization_level") is None:
-        if isinstance(backend, fake_backend.FakeBackendV2):
-            print("I am a fake")
-        else:
-            print("nononon")
         if (
             (isinstance(backend, fake_backend.FakeBackendV2) or backend.configuration().simulator)
             and options.get("simulator", {}).get("noise_model") is None
