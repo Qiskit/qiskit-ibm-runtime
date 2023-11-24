@@ -12,12 +12,13 @@
 
 """Estimator result decoder."""
 
-from typing import Dict
+from typing import Dict, List
 import numpy as np
 
 from qiskit.primitives import EstimatorResult
 
 from ..program.result_decoder import ResultDecoder
+from ..qiskit.primitives.task_result import TaskResult
 
 
 class EstimatorResultDecoder(ResultDecoder):
@@ -26,6 +27,19 @@ class EstimatorResultDecoder(ResultDecoder):
     @classmethod
     def decode(cls, raw_result: str) -> EstimatorResult:
         """Convert the result to EstimatorResult."""
+        decoded: Dict = super().decode(raw_result)
+        return EstimatorResult(
+            values=np.asarray(decoded["values"]),
+            metadata=decoded["metadata"],
+        )
+
+
+class EstimatorV2ResultDecoder(ResultDecoder):
+    """Class used to decode v2 estimator results"""
+
+    @classmethod
+    def decode(cls, raw_result: str) -> List[TaskResult]:
+        """Convert the result to a list of TaskResult."""
         decoded: Dict = super().decode(raw_result)
         return EstimatorResult(
             values=np.asarray(decoded["values"]),

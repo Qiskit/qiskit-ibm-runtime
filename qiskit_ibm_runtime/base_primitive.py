@@ -145,7 +145,7 @@ class BasePrimitiveV2(ABC):
                 inputs=primitive_inputs,
                 options=runtime_options,
                 callback=options_dict.get("environment", {}).get("callback", None),
-                result_decoder=DEFAULT_DECODERS.get(self._program_id()),
+                result_decoder=DEFAULT_DECODERS.get((self._program_id(), self.version)),
             )
 
         if self._backend:
@@ -158,7 +158,7 @@ class BasePrimitiveV2(ABC):
             options=runtime_options,
             inputs=primitive_inputs,
             callback=options_dict.get("environment", {}).get("callback", None),
-            result_decoder=DEFAULT_DECODERS.get(self._program_id()),
+            result_decoder=DEFAULT_DECODERS.get((self._program_id(), self.version)),
         )
 
     @property
