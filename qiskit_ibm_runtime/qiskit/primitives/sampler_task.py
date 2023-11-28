@@ -18,7 +18,7 @@ Sampler Task class
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Union, Optional
+from typing import Union, Optional, Tuple
 
 from qiskit import QuantumCircuit
 
@@ -79,4 +79,4 @@ class SamplerTask(BaseTask, ShapedMixin):
             )
 
 
-SamplerTaskLike = Union[SamplerTask, tuple[QuantumCircuit, BindingsArrayLike]]
+SamplerTaskLike = Union[SamplerTask, Tuple[QuantumCircuit, BindingsArrayLike]]
