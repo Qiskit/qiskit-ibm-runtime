@@ -31,6 +31,7 @@ from qiskit_ibm_provider.utils import utc_to_local
 from qiskit_ibm_runtime import qiskit_runtime_service
 
 from .utils.utils import validate_job_tags
+from .utils.estimator_result_decoder import EstimatorResultDecoder
 from .constants import API_TO_JOB_ERROR_MESSAGE, API_TO_JOB_STATUS, DEFAULT_DECODERS
 from .exceptions import (
     IBMApiError,
@@ -231,12 +232,12 @@ class RuntimeJob(Job):
 
         version_param = {}
         # TODO: Remove getting/setting version once it's in result metadata
-        if self.program_id in ["estimator"]:
+        if isinstance(_decoder, EstimatorResultDecoder):
             if not self._version:
                 self._version = self.inputs.get("version", 1)
             version_param["version"] = self._version
 
-        return _decoder.decode(result_raw, self._version) if result_raw else None  # type: ignore
+        return _decoder.decode(result_raw, **version_param) if result_raw else None  # type: ignore
 
     def cancel(self) -> None:
         """Cancel the job.
