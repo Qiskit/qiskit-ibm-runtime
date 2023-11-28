@@ -1067,7 +1067,7 @@ class QiskitRuntimeService(Provider):
                 f"The backend {backend.name} currently has a status of {status.status_msg}."
             )
 
-        version = inputs.get("version", 1)
+        version = inputs.get("version", 1) if inputs else 1
         try:
             response = self._api_client.program_run(
                 program_id=program_id,
