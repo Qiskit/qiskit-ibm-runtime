@@ -20,8 +20,7 @@ from qiskit_ibm_provider.utils.converters import hms_to_seconds
 
 from qiskit_ibm_runtime import QiskitRuntimeService
 from .runtime_job import RuntimeJob
-from .runtime_program import ParameterNamespace
-from .program.result_decoder import ResultDecoder
+from .utils.result_decoder import ResultDecoder
 from .ibm_backend import IBMBackend
 from .utils.default_session import set_cm_session
 from .utils.deprecation import deprecate_arguments
@@ -128,7 +127,7 @@ class Session:
     def run(
         self,
         program_id: str,
-        inputs: Union[Dict, ParameterNamespace],
+        inputs: Dict,
         options: Optional[Dict] = None,
         callback: Optional[Callable] = None,
         result_decoder: Optional[Type[ResultDecoder]] = None,

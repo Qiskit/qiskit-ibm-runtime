@@ -13,7 +13,6 @@
 """Custom TestCase for IBM Provider."""
 
 import os
-import copy
 import logging
 import inspect
 import warnings
@@ -29,7 +28,6 @@ from qiskit_ibm_runtime import QiskitRuntimeService, Sampler, Options
 
 from .utils import setup_test_logging
 from .decorators import IntegrationTestDependencies, integration_test_setup
-from .templates import RUNTIME_PROGRAM, RUNTIME_PROGRAM_METADATA, PROGRAM_PREFIX
 
 
 class IBMTestCase(BaseQiskitTestCase):
@@ -106,25 +104,6 @@ class IBMIntegrationTestCase(IBMTestCase):
                 job.cancel()
             with suppress(Exception):
                 service.delete_job(job.job_id())
-
-    def _upload_program(
-        self,
-        service: QiskitRuntimeService,
-        name: str = None,
-        max_execution_time: int = 300,
-        data: str = None,
-        is_public: bool = False,
-    ) -> str:
-        """Upload a new program."""
-        name = name or PROGRAM_PREFIX
-        data = data or RUNTIME_PROGRAM
-        metadata = copy.deepcopy(RUNTIME_PROGRAM_METADATA)
-        metadata["name"] = name
-        metadata["max_execution_time"] = max_execution_time
-        metadata["is_public"] = is_public
-        program_id = service.upload_program(data=data, metadata=metadata)
-        self.to_delete[service.channel].append(program_id)
-        return program_id
 
 
 class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
