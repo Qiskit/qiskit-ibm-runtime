@@ -36,9 +36,7 @@ class TestQCTRL(IBMIntegrationJobTestCase):
     def setUp(self) -> None:
         super().setUp()
         self.bell = ReferenceCircuits.bell()
-        self.backend = "ibmq_qasm_simulator"
-        # does q-ctrl work with simulator?
-        # self.dependencies.service.least_busy(simulator=False)
+        self.backend = "alt_canberra"
 
     @run_integration_test
     @cloud_only
