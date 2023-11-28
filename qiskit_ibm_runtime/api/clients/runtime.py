@@ -268,13 +268,13 @@ class RuntimeClient(BaseBackendClient):
         """
         return self._api.backends(hgp=hgp, channel_strategy=channel_strategy)["devices"]
 
-    def cloud_instance(self) -> bool:
+    def is_qctrl_enabled(self) -> bool:
         """Returns a boolean of whether or not the instance has q-ctrl enabled.
 
         Returns:
             Boolean value.
         """
-        return self._api.cloud_instance()
+        return self._api.is_qctrl_enabled()
 
     def backend_configuration(self, backend_name: str) -> Dict[str, Any]:
         """Return the configuration of the IBM backend.
