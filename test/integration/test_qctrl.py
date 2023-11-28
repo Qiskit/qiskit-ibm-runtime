@@ -96,14 +96,12 @@ class TestQCTRL(IBMIntegrationJobTestCase):
             results_dict = {
                 "{0:02b}".format(key): value for key, value in result.quasi_dists[0].items()
             }  # convert keys to bitstrings
-            # print(f">>> Quasi-probability distribution from the sampler job: {results_dict}")
 
         ideal_result = {
             key: val / shots for key, val in Statevector(bell_circuit).probabilities_dict().items()
         }
         fidelity = hellinger_fidelity(results_dict, ideal_result)
 
-        print("fidelity with ideal results: ", fidelity)
         self.assertGreater(fidelity, FIDELITY_THRESHOLD)
 
     @run_integration_test
@@ -215,7 +213,6 @@ class TestQCTRL(IBMIntegrationJobTestCase):
             for results_dict, ideal_result in zip(results_dict_list, ideal_results_list)
         ]
 
-        print("fidelity with ideal results: ", fidelities)
         for fidelity in fidelities:
             self.assertGreater(fidelity, FIDELITY_THRESHOLD)
 
@@ -249,14 +246,10 @@ class TestQCTRL(IBMIntegrationJobTestCase):
         absolute_difference = [
             abs(obs_theory - obs_exp) for obs_theory, obs_exp in zip(ideal_result, result.values)
         ]
-        absolute_difference_dict = {
-            obs.paulis[0].to_label(): diff for obs, diff in zip(observables, absolute_difference)
-        }
+        # absolute_difference_dict = {
+        #     obs.paulis[0].to_label(): diff for obs, diff in zip(observables, absolute_difference)
+        # }
 
-        print(
-            "absolute difference between theory and experiment expectation values: ",
-            absolute_difference_dict,
-        )
         for diff in absolute_difference:
             self.assertLess(diff, DIFFERENCE_THRESHOLD)
 
@@ -335,14 +328,10 @@ class TestQCTRL(IBMIntegrationJobTestCase):
         absolute_difference = [
             abs(obs_theory - obs_exp) for obs_theory, obs_exp in zip(ideal_result, result.values)
         ]
-        absolute_difference_dict = {
-            obs.paulis[0].to_label(): diff for obs, diff in zip(observables, absolute_difference)
-        }
+        # absolute_difference_dict = {
+        #     obs.paulis[0].to_label(): diff for obs, diff in zip(observables, absolute_difference)
+        # }
 
-        print(
-            "absolute difference between theory and experiment expectation values: ",
-            absolute_difference_dict,
-        )
         for diff in absolute_difference:
             self.assertLess(diff, DIFFERENCE_THRESHOLD)
 
