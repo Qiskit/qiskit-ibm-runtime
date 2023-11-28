@@ -64,7 +64,7 @@ class TestProxies(IBMTestCase):
         params = dependencies.service._client_params
         params.proxies = ProxyConfiguration(urls=VALID_PROXIES)
         client = RuntimeClient(params)
-        client.list_programs(limit=1)
+        client.jobs_get(limit=1)
         api_line = pproxy_desired_access_log_line(params.url)
         self.proxy_process.terminate()  # kill to be able of reading the output
         proxy_output = self.proxy_process.stdout.read().decode("utf-8")
@@ -81,7 +81,7 @@ class TestProxies(IBMTestCase):
             url=dependencies.url,
             proxies={"urls": VALID_PROXIES},
         )
-        service.programs(limit=1)
+        service.jobs(limit=1)
 
         auth_line = pproxy_desired_access_log_line(dependencies.url)
         api_line = list(service._hgps.values())[0]._runtime_client._session.base_url
@@ -162,7 +162,7 @@ class TestProxies(IBMTestCase):
         )
         with self.assertRaises(RuntimeRequestsApiError) as context_manager:
             client = RuntimeClient(params)
-            client.list_programs(limit=1)
+            client.jobs_get(limit=1)
         self.assertIsInstance(context_manager.exception.__cause__, ProxyError)
 
     @integration_test_setup(supported_channel=["ibm_quantum"], init_service=False)
@@ -203,7 +203,7 @@ class TestProxies(IBMTestCase):
         )
         with self.assertRaises(RuntimeRequestsApiError) as context_manager:
             client = RuntimeClient(params)
-            client.list_programs(limit=1)
+            client.jobs_get(limit=1)
 
         self.assertIsInstance(context_manager.exception.__cause__, ProxyError)
 
