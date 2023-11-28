@@ -15,6 +15,7 @@
 from typing import Dict, Optional, Type, Union, Callable, Any
 from types import TracebackType
 from functools import wraps
+from threading import Lock
 
 from qiskit_ibm_provider.utils.converters import hms_to_seconds
 
@@ -115,6 +116,7 @@ class Session:
             backend = backend.name
         self._backend = backend
 
+        self._setup_lock = Lock()
         self._session_id: Optional[str] = None
         self._active = True
         self._max_time = (
@@ -154,22 +156,28 @@ class Session:
         options["backend"] = self._backend
 
         if not self._session_id:
+            # Make sure only one thread can send the session starter job.
+            self._setup_lock.acquire()
             # TODO: What happens if session max time != first job max time?
             # Use session max time if this is first job.
             options["session_time"] = self._max_time
 
-        job = self._service.run(
-            program_id=program_id,
-            options=options,
-            inputs=inputs,
-            session_id=self._session_id,
-            start_session=self._session_id is None,
-            callback=callback,
-            result_decoder=result_decoder,
-        )
+        try:
+            job = self._service.run(
+                program_id=program_id,
+                options=options,
+                inputs=inputs,
+                session_id=self._session_id,
+                start_session=self._session_id is None,
+                callback=callback,
+                result_decoder=result_decoder,
+            )
 
-        if self._session_id is None:
-            self._session_id = job.job_id()
+            if self._session_id is None:
+                self._session_id = job.job_id()
+        finally:
+            if self._setup_lock.locked():
+                self._setup_lock.release()
 
         if self._backend is None:
             self._backend = job.backend().name
