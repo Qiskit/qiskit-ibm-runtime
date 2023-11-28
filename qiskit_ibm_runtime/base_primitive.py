@@ -22,6 +22,7 @@ import warnings
 
 from qiskit.providers.options import Options as TerraOptions
 from qiskit.providers.fake_provider import fake_backend
+from qiskit_aer import AerSimulator
 
 from qiskit_ibm_provider.session import get_cm_session as get_cm_provider_session
 
@@ -99,6 +100,13 @@ class BasePrimitive(ABC):
         if isinstance(backend, IBMBackend):
             self._service = backend.service
             self._backend = backend
+        elif isinstance(backend, AerSimulator):
+            self._backend = backend
+            self._service = (
+                QiskitRuntimeService()
+                if QiskitRuntimeService.global_service is None
+                else QiskitRuntimeService.global_service
+            )
         elif isinstance(backend, str):
             self._service = (
                 QiskitRuntimeService()
@@ -138,6 +146,7 @@ class BasePrimitive(ABC):
         Returns:
             Submitted job.
         """
+        run_simulator = isinstance(self._backend, Union[fake_backend.FakeBackendV2, AerSimulator])
         combined = Options._merge_options(self._options, user_kwargs)
 
         if self._backend:
@@ -158,7 +167,7 @@ class BasePrimitive(ABC):
 
         primitive_inputs.update(Options._get_program_inputs(combined))
 
-        if self._backend and combined["transpilation"]["skip_transpilation"]:
+        if self._backend and combined["transpilation"]["skip_transpilation"] and not run_simulator:
             for circ in primitive_inputs["circuits"]:
                 self._backend.check_faulty(circ)
 
@@ -166,9 +175,11 @@ class BasePrimitive(ABC):
 
         runtime_options = Options._get_runtime_options(combined)
 
-        if isinstance(self._backend, fake_backend.FakeBackendV2):
+        if run_simulator:
             runtime_options["backend"] = self._backend #fix this - for cloud, is str,
                                                         # for fake is Backend
+            print("runtime options = ", runtime_options)
+            print("inputs ", primitive_inputs)
 
             return self._service.run(
                 program_id=self._program_id(),

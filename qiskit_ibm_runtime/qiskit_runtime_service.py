@@ -21,6 +21,9 @@ from collections import OrderedDict
 from typing import Dict, Callable, Optional, Union, List, Any, Type, Sequence
 
 from qiskit_aer import AerSimulator
+from qiskit_aer.backends.aerbackend import AerBackend
+from qiskit_aer.primitives import Sampler as AerSampler
+from qiskit_aer.primitives import Estimator as AerEstimator
 #from qiskit.providers.fake_provider import FakeBackendV2 as FakeBackend
 from qiskit.providers.fake_provider import fake_backend
 from qiskit.providers.backend import BackendV1 as Backend
@@ -32,6 +35,7 @@ from qiskit.providers.models import (
     QasmBackendConfiguration,
 )
 from qiskit.primitives.primitive_job import PrimitiveJob
+from qiskit.primitives import BackendSampler, BackendEstimator
 
 from qiskit_ibm_provider.proxies import ProxyConfiguration
 from qiskit_ibm_provider.utils.hgp import to_instance_format, from_instance_format
@@ -584,9 +588,6 @@ class QiskitRuntimeService(Provider):
             if name:
                 if name not in self._backends:
                     fake_backend = self._get_fake_backend(name)
-                    print(fake_backend)
-                    print(isinstance(fake_backend, fake_backend.FakeBackendV2))
-                    print("fake_backend name = "+str(fake_backend.backend_name))
                     if fake_backend:
                         backends.append(fake_backend)
                         return backends
@@ -815,14 +816,10 @@ class QiskitRuntimeService(Provider):
         # pylint: disable=arguments-differ, line-too-long
         if name and name not in self._backends:
             my_fake_backend = self._get_fake_backend(name)
-            print(my_fake_backend)
-            print(isinstance(my_fake_backend, fake_backend.FakeBackendV2))
-            print("fake_backend name = " + str(my_fake_backend.backend_name))
             if my_fake_backend:
                 return my_fake_backend
 
         backends = self.backends(name, instance=instance)
-        print("backends = "+str(backends))
         if not backends:
             # fake_backend = self._get_fake_backend(name)
             # if fake_backend:
@@ -841,12 +838,7 @@ class QiskitRuntimeService(Provider):
 
     def _get_fake_backend(self, name: str) -> fake_backend.FakeBackendV2:
         from qiskit.providers.fake_provider.backends.manila.fake_manila import FakeManilaV2
-        print(issubclass(FakeManilaV2, fake_backend.FakeBackendV2))
         my_fake_backend = fake_backend_list[name]
-        print(type(my_fake_backend))
-        print(my_fake_backend.backend_name)
-        print(my_fake_backend.defs_filename)
-        print("in get, my type = " + str(isinstance(my_fake_backend, fake_backend.FakeBackendV2)))
         return my_fake_backend
 
     def pprint_programs(
@@ -1061,6 +1053,7 @@ class QiskitRuntimeService(Provider):
             RuntimeProgramNotFound: If the program cannot be found.
             IBMRuntimeError: An error occurred running the program.
         """
+        print("inputs = ", inputs)
         if program_id not in ["sampler", "estimator", "circuit-runner", "qasm3-runner"]:
             warnings.warn(
                 (
@@ -1079,43 +1072,97 @@ class QiskitRuntimeService(Provider):
             qrt_options = RuntimeOptions()
         elif isinstance(options, Dict):
             qrt_options = RuntimeOptions(**options)
-        print("qrt_options = " + str(qrt_options))
         # If using params object, extract as dictionary.
         if isinstance(inputs, ParameterNamespace):
             inputs.validate()
             inputs = vars(inputs)
 
         qrt_options.validate(channel=self.channel)
+        # transpilation_options = inputs["transpilation_settings"]
+        # print("transpilation_options = ", transpilation_options)
+        sim_options = inputs["run_options"]
+        # print("simulator options = ", sim_options)
 
+        is_fake_backend = False
+        is_aer_backend = False
         # if backend is a simulator, run locally
         if isinstance(qrt_options.backend, AerSimulator):
-            from qiskit_aer import Sampler as AerSampler
-            from qiskit_aer import Estimator as AerEstimator
-            print("1 backend = "+ str(qrt_options.backend))
-            #return FakeRuntimeJob(AerSampler.run(...))
-        elif isinstance(qrt_options.backend, fake_backend.FakeBackendV2):
-            from qiskit.primitives import BackendSampler, BackendEstimator
-            print("2 backend = " + str(qrt_options.backend))
-            print("program_id = " + str(program_id))
+            is_aer_simulator = True
             if program_id == "sampler":
-                print("inputs = " + str(inputs))
-                print(qrt_options)
-                sampler = BackendSampler(
-                    backend=qrt_options.backend, skip_transpilation=True
-                )
+                prog = AerSampler
+            else:    #program_id == "estimator":
+                prog = AerEstimator
 
-                primitive_job = sampler._run(circuits=inputs["circuits"],
-                                    parameter_values=inputs["parameters"],
-                                    run_options=options)
-                fake_runtime_job = FakeRuntimeJob(
-                    primitive_job=primitive_job,
-                    backend=qrt_options.backend,
-                    job_id=primitive_job.job_id(),
-                    program_id=program_id,
-                    service=self,
-                    params=inputs["parameters"],
-                )
-                return fake_runtime_job
+        elif isinstance(qrt_options.backend, fake_backend.FakeBackendV2):
+            #return FakeRuntimeJob(AerSampler.run(...))
+            is_fake_backend= True
+            if program_id == "sampler":
+                prog = BackendSampler
+            else:    #program_id == "estimator":
+                prog = BackendEstimator
+
+        else:
+            is_simulation = False
+        # elif isinstance(qrt_options.backend, fake_backend.FakeBackendV2):
+        #     #from qiskit_ibm_runtime.options import Options
+        #     if program_id == "sampler":
+        #         sampler = BackendSa
+        #
+        #         else:mpler(
+        #             backend=qrt_options.backend,
+        #             options=sim_options,
+        #             skip_transpilation=inputs["transpilation_settings"]["skip_transpilation"],
+        #         )
+
+        if is_fake_backend:
+            my_program = prog(backend=qrt_options.backend,
+                              options=sim_options,
+                              skip_transpilation=inputs["transpilation_settings"]["skip_transpilation"]
+                            )
+            observables = inputs.get("observables", None)
+
+            primitive_job = my_program._run(circuits=inputs["circuits"],
+                            parameter_values=inputs["parameters"],
+                            run_options=sim_options,
+                            observables=observables
+                            )
+            fake_runtime_job = FakeRuntimeJob(
+                primitive_job=primitive_job,
+                backend=qrt_options.backend,
+                job_id=primitive_job.job_id(),
+                program_id=program_id,
+                service=self,
+                params=inputs["parameters"],
+            )
+            return fake_runtime_job
+
+        if is_aer_simulator:
+            aer_backend_options = {}
+            for opt in inputs["run_options"]:
+                if hasattr(AerSimulator._default_options(), opt):
+                    aer_backend_options[opt] = inputs["run_options"][opt]
+            print("aer_config", aer_backend_options)
+
+            my_program = prog(backend_options=aer_backend_options,
+                              transpile_options=inputs["transpilation_settings"],
+                              skip_transpilation=inputs["transpilation_settings"]["skip_transpilation"]
+                              )
+            observables = inputs.get("observables", None)
+
+            primitive_job = my_program._run(circuits=inputs["circuits"],
+                                            parameter_values=inputs["parameters"],
+                                            run_options=sim_options,
+                                            observables=observables
+                                            )
+            fake_runtime_job = FakeRuntimeJob(
+                primitive_job=primitive_job,
+                backend=qrt_options.backend,
+                job_id=primitive_job.job_id(),
+                program_id=program_id,
+                service=self,
+                params=inputs["parameters"],
+            )
+            return fake_runtime_job
 
             #primitive_job = BackendSampler.run(...)
             #return FakeRuntimeJob(primitive_job)
