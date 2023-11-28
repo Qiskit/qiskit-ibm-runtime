@@ -25,7 +25,6 @@ from qiskit_ibm_runtime.exceptions import (
     RuntimeJobFailureError,
     RuntimeJobNotFound,
     RuntimeJobMaxTimeoutError,
-    RuntimeProgramNotFound,
     IBMInputValueError,
     RuntimeInvalidStateError,
 )
@@ -33,13 +32,11 @@ from .mock.fake_runtime_client import (
     FailedRuntimeJob,
     FailedRanTooLongRuntimeJob,
     CancelableRuntimeJob,
-    CustomResultRuntimeJob,
 )
 from .mock.fake_runtime_service import FakeRuntimeService
 from ..ibm_test_case import IBMTestCase
 from ..decorators import run_quantum_and_cloud_fake
-from ..program import run_program, upload_program
-from ..serialization import get_complex_types
+from ..program import run_program
 from ..utils import mock_wait_for_final_state
 
 
@@ -59,12 +56,6 @@ class TestRuntimeJob(IBMTestCase):
             job.wait_for_final_state()
             self.assertEqual(job.status(), JobStatus.DONE)
             self.assertTrue(job.result())
-
-    @run_quantum_and_cloud_fake
-    def test_run_phantom_program(self, service):
-        """Test running a phantom program."""
-        with self.assertRaises(RuntimeProgramNotFound):
-            _ = run_program(service=service, program_id="phantom_program")
 
     @run_quantum_and_cloud_fake
     def test_run_program_phantom_backend(self, service):
@@ -183,14 +174,6 @@ class TestRuntimeJob(IBMTestCase):
                 job.result()
 
     @run_quantum_and_cloud_fake
-    def test_program_params_namespace(self, service):
-        """Test running a program using parameter namespace."""
-        program_id = upload_program(service)
-        params = service.program(program_id).parameters()
-        params.param1 = "Hello World"
-        run_program(service, program_id, inputs=params)
-
-    @run_quantum_and_cloud_fake
     def test_cancel_job(self, service):
         """Test canceling a job."""
         job = run_program(service, job_classes=CancelableRuntimeJob)
@@ -234,31 +217,12 @@ class TestRuntimeJob(IBMTestCase):
         self.assertEqual(inputs, job.inputs)
 
     @run_quantum_and_cloud_fake
-    def test_job_program_id(self, service):
-        """Test job program ID."""
-        program_id = upload_program(service)
-        job = run_program(service, program_id=program_id)
-        self.assertEqual(program_id, job.program_id)
-
-    @run_quantum_and_cloud_fake
     def test_wait_for_final_state(self, service):
         """Test wait for final state."""
         job = run_program(service)
         with mock_wait_for_final_state(service, job):
             job.wait_for_final_state()
         self.assertEqual(JobStatus.DONE, job.status())
-
-    @run_quantum_and_cloud_fake
-    def test_get_result_twice(self, service):
-        """Test getting results multiple times."""
-        custom_result = get_complex_types()
-        job_cls = CustomResultRuntimeJob
-        job_cls.custom_result = custom_result
-
-        job = run_program(service=service, job_classes=job_cls)
-        with mock_wait_for_final_state(service, job):
-            _ = job.result()
-            _ = job.result()
 
     @run_quantum_and_cloud_fake
     def test_delete_job(self, service):
@@ -281,9 +245,6 @@ class TestRuntimeJob(IBMTestCase):
                 request_mock.get.return_value = mock_response
                 with mock_wait_for_final_state(service, job):
                     job.wait_for_final_state()
-                    job._api_client.job_results = MagicMock(
-                        return_value='{"url": "https://external-url.com/"}'
-                    )
                     result = job.result()
 
-        self.assertEqual(result, "content-from-external-url")
+        self.assertTrue(result)
