@@ -41,6 +41,4 @@ DEFAULT_DECODERS = {
     "estimator": [ResultDecoder, EstimatorResultDecoder],
     "circuit-runner": RunnerResult,
     "qasm3-runner": RunnerResult,
-    ("sampler", 2): [ResultDecoder, SamplerResultDecoder],
-    ("estimator", 2): [ResultDecoder, EstimatorResultDecoder],
 }

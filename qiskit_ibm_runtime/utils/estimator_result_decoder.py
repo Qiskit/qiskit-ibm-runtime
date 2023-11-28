@@ -25,22 +25,20 @@ class EstimatorResultDecoder(ResultDecoder):
     """Class used to decode estimator results"""
 
     @classmethod
-    def decode(cls, raw_result: str) -> EstimatorResult:
+    def decode(  # type: ignore # pylint: disable=arguments-differ
+        cls, raw_result: str, version: int
+    ) -> EstimatorResult:
         """Convert the result to EstimatorResult."""
         decoded: Dict = super().decode(raw_result)
-        return EstimatorResult(
-            values=np.asarray(decoded["values"]),
-            metadata=decoded["metadata"],
-        )
-
-
-class EstimatorV2ResultDecoder(ResultDecoder):
-    """Class used to decode v2 estimator results"""
-
-    @classmethod
-    def decode(cls, raw_result: str) -> List[TaskResult]:
-        """Convert the result to a list of TaskResult."""
-        decoded: Dict = super().decode(raw_result)
+        if version == 2:
+            out_results = []
+            for val, meta in zip(decoded["values"], decoded["metadata"]):
+                if not isinstance(val, np.ndarray):
+                    val = np.asarray(val)
+                out_results.append(
+                    TaskResult(data={"evs": val, "stds": meta.pop("standard_error")}, metadata=meta)
+                )
+            return out_results
         return EstimatorResult(
             values=np.asarray(decoded["values"]),
             metadata=decoded["metadata"],

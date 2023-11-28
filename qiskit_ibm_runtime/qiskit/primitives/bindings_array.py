@@ -16,9 +16,9 @@ Bindings array class
 """
 from __future__ import annotations
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable
 from itertools import chain, product
-from typing import Dict, List, Optional, Tuple, Union, Mapping
+from typing import Dict, List, Optional, Tuple, Union, Mapping, Sequence
 
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
@@ -102,8 +102,6 @@ class BindingsArray(ShapedMixin):
         """
         super().__init__()
 
-        if vals is None and kwvals is None and shape is None:
-            raise ValueError("Must specify a shape if no values are present")
         if vals is None:
             vals = []
         if kwvals is None:
@@ -161,6 +159,76 @@ class BindingsArray(ShapedMixin):
     def vals(self) -> List[np.ndarray]:
         """The non-keyword values of this array."""
         return self._vals
+
+    def as_array(self, parameters: Optional[Iterable[Parameter]] = None) -> np.ndarray:
+        """Return the contents of this bindings array as a single NumPy array.
+
+        As with each :attr:`~vals` and :attr:`~kwvals` array, the parameters are indexed along the
+        last dimension.
+
+        The order of the :attr:`~vals` portion of this bindings array is always preserved, and
+        always comes first in the returned array, irrespective of whether ``parameters`` are
+        provided.
+
+        If ``parameters`` are provided, then they determine the order of any :attr:`~kwvals`
+        present in this bindings array. If :attr:`~vals` are present in addition to :attr:`~kwvals`,
+        then it is up to the user to ensure that their provided ``parameters`` account for this.
+
+        Parameters:
+            parameters: Optional parameters that determine the order of the output.
+
+        Returns:
+            This bindings array as a single NumPy array.
+
+        Raises:
+            RuntimeError: If these bindings contain multple dtypes.
+            KeyError: If ``parameters`` are provided that are not a superset of those in this
+                bindings array.
+        """
+        dtypes = {arr.dtype for arr in self.vals}
+        dtypes.update(arr.dtype for arr in self.kwvals.values())
+        if len(dtypes) > 1:
+            raise RuntimeError(f"Multiple dtypes ({dtypes}) were found.")
+        dtype = next(iter(dtypes)) if dtypes else float
+
+        if self.num_parameters == 0 and not self.shape:
+            # we want this special case to look like a single binding on no parameters
+            return np.empty((1, 0), dtype=dtype)
+
+        ret = np.empty(shape_tuple(self.shape, self.num_parameters), dtype=dtype)
+
+        # always start by placing the vals in the returned array
+        pos = 0
+        for arr in self.vals:
+            size = arr.shape[-1]
+            ret[..., pos : pos + size] = arr
+            pos += size
+
+        def _param_name(parameter: Union[Parameter, str]) -> str:
+            """Helper function to handle parameters or strings"""
+            if isinstance(parameter, Parameter):
+                return parameter.name
+            return parameter
+
+        if parameters is None:
+            # preserve the order of the kwvals
+            for arr in self.kwvals.values():
+                size = arr.shape[-1]
+                ret[..., pos : pos + size] = arr
+                pos += size
+        elif self.kwvals:
+            # use the order of the provided parameters
+            parameters = {_param_name(parameter): idx for idx, parameter in enumerate(parameters)}
+            for arr_params, arr in self.kwvals.items():
+                try:
+                    idxs = [parameters[_param_name(param)] for param in arr_params]
+                except KeyError as ex:
+                    raise KeyError(
+                        "This bindings array has a parameter absent from the provided parameters."
+                    ) from ex
+                ret[..., idxs] = arr
+
+        return ret
 
     def bind_at_idx(self, circuit: QuantumCircuit, idx: Tuple[int, ...]) -> QuantumCircuit:
         """Return the circuit bound to the values at the provided index.
@@ -229,13 +297,13 @@ class BindingsArray(ShapedMixin):
         """
         return self.reshape(self.size)
 
-    def reshape(self, shape: Union[int, Iterable[int]]) -> BindingsArray:
+    def reshape(self, *shape: ShapeInput) -> BindingsArray:
         """Return a new :class:`~BindingsArray` with a different shape.
 
         This results in a new view of the same arrays.
 
         Args:
-            shape: The shape of the returned bindings array.
+            *shape: The shape of the returned bindings array.
 
         Returns:
             A new bindings array.
@@ -243,12 +311,21 @@ class BindingsArray(ShapedMixin):
         Raises:
             ValueError: If the provided shape has a different product than the current size.
         """
-        shape = (shape, -1) if isinstance(shape, int) else (*shape, -1)
-        if np.prod(shape[:-1]).astype(int) != self.size:
-            raise ValueError("Reshaping cannot change the total number of elements.")
-        vals = [val.reshape(shape) for val in self._vals]
-        kwvals = {params: val.reshape(shape) for params, val in self._kwvals.items()}
-        return BindingsArray(vals, kwvals, shape[:-1])
+        shape = shape_tuple(shape)
+
+        # if we have a minus 1, try and replace it with with a positive number
+        if any(dim < 0 for dim in shape):
+            if (subsize := np.prod([dim for dim in shape if dim >= 0]).astype(int)) > 0:
+                shape = tuple(dim if dim > 0 else self.size // subsize for dim in shape)
+
+        if np.prod(shape).astype(int) != self.size:
+            raise ValueError(f"Reshaping cannot change the total number of elements. {shape}")
+
+        vals = [val.reshape(shape + (val.shape[-1],)) for val in self._vals]
+        kwvals = {
+            params: val.reshape(shape + (val.shape[-1],)) for params, val in self._kwvals.items()
+        }
+        return BindingsArray(vals, kwvals, shape)
 
     @classmethod
     def coerce(cls, bindings_array: BindingsArrayLike) -> BindingsArray:
@@ -346,8 +423,8 @@ def _infer_shape(
         if len(parameters) > 1:
             # here, the last dimension _has_  to be over parameters
             examine_array(val.shape[:-1])
-        elif val.shape[-1] != 1:
-            # here, if the last dimension is not 1 then the shape is the shape
+        elif val.shape == () or val.shape == (1,) or val.shape[-1] != 1:
+            # here, if the last dimension is not 1 or shape is () or (1,) then the shape is the shape
             examine_array(val.shape)
         else:
             # here, the last dimension could be over parameters or not
@@ -355,6 +432,8 @@ def _infer_shape(
 
     if len(vals) == 1 and len(kwvals) == 0:
         examine_array(vals[0].shape[:-1])
+    elif len(vals) == 0 and len(kwvals) == 0:
+        examine_array(())
     else:
         for val in vals:
             # here, the last dimension could be over parameters or not
