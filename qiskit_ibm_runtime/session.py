@@ -15,16 +15,16 @@
 from typing import Dict, Optional, Type, Union, Callable, Any
 from types import TracebackType
 from functools import wraps
-from contextvars import ContextVar
 from threading import Lock
 
 from qiskit_ibm_provider.utils.converters import hms_to_seconds
 
 from qiskit_ibm_runtime import QiskitRuntimeService
 from .runtime_job import RuntimeJob
-from .runtime_program import ParameterNamespace
-from .program.result_decoder import ResultDecoder
+from .utils.result_decoder import ResultDecoder
 from .ibm_backend import IBMBackend
+from .utils.default_session import set_cm_session
+from .utils.deprecation import deprecate_arguments
 
 
 def _active_session(func):  # type: ignore
@@ -129,7 +129,7 @@ class Session:
     def run(
         self,
         program_id: str,
-        inputs: Union[Dict, ParameterNamespace],
+        inputs: Dict,
         options: Optional[Dict] = None,
         callback: Optional[Callable] = None,
         result_decoder: Optional[Type[ResultDecoder]] = None,
@@ -296,7 +296,7 @@ class Session:
         """Construct a Session object with a given session_id
 
         Args:
-            session_id: the id of the session to be created. This can be an already
+            session_id: the id of the session to be created. This must be an already
                 existing session id.
             service: instance of the ``QiskitRuntimeService`` class.
             backend: instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
@@ -306,6 +306,9 @@ class Session:
             A new Session with the given ``session_id``
 
         """
+        if backend:
+            deprecate_arguments("backend", "0.15.0", "Sessions do not support multiple backends.")
+
         session = cls(service, backend)
         session._session_id = session_id
         return session
@@ -322,19 +325,3 @@ class Session:
     ) -> None:
         set_cm_session(None)
         self.close()
-
-
-# Default session
-_DEFAULT_SESSION: ContextVar[Optional[Session]] = ContextVar("_DEFAULT_SESSION", default=None)
-_IN_SESSION_CM: ContextVar[bool] = ContextVar("_IN_SESSION_CM", default=False)
-
-
-def set_cm_session(session: Optional[Session]) -> None:
-    """Set the context manager session."""
-    _DEFAULT_SESSION.set(session)
-    _IN_SESSION_CM.set(session is not None)
-
-
-def get_cm_session() -> Session:
-    """Return the context managed session."""
-    return _DEFAULT_SESSION.get()

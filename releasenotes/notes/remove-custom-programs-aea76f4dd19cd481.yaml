@@ -1,0 +1,4 @@
+---
+upgrade:
+  - |
+    Methods related to using custom programs are removed.

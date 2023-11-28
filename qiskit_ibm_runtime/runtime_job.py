@@ -40,7 +40,7 @@ from .exceptions import (
     RuntimeJobTimeoutError,
     RuntimeJobMaxTimeoutError,
 )
-from .program.result_decoder import ResultDecoder
+from .utils.result_decoder import ResultDecoder
 from .api.clients import RuntimeClient, RuntimeWebsocketClient, WebsocketClientCloseCode
 from .exceptions import IBMError
 from .api.exceptions import RequestsApiError
@@ -122,7 +122,6 @@ class RuntimeJob(Job):
         """
         super().__init__(backend=backend, job_id=job_id)
         self._api_client = api_client
-        self._results: Optional[Any] = None
         self._interim_results: Optional[Any] = None
         self._params = params or {}
         self._creation_date = creation_date
@@ -167,7 +166,7 @@ class RuntimeJob(Job):
             if "url" in result_url_json:
                 url = result_url_json["url"]
                 result_response = requests.get(url, timeout=10)
-                return result_response.content
+                return result_response.text
             return response
         except json.JSONDecodeError:
             return response
@@ -212,25 +211,22 @@ class RuntimeJob(Job):
             RuntimeInvalidStateError: If the job was cancelled, and attempting to retrieve result.
         """
         _decoder = decoder or self._final_result_decoder
-        if self._results is None or (_decoder != self._final_result_decoder):
-            self.wait_for_final_state(timeout=timeout)
-            if self._status == JobStatus.ERROR:
-                error_message = self._reason if self._reason else self._error_message
-                if self._reason == "RAN TOO LONG":
-                    raise RuntimeJobMaxTimeoutError(error_message)
-                raise RuntimeJobFailureError(f"Unable to retrieve job result. {error_message}")
-            if self._status is JobStatus.CANCELLED:
-                raise RuntimeInvalidStateError(
-                    "Unable to retrieve result for job {}. "
-                    "Job was cancelled.".format(self.job_id())
-                )
-
-            result_raw = self._download_external_result(
-                self._api_client.job_results(job_id=self.job_id())
+        self.wait_for_final_state(timeout=timeout)
+        if self._status == JobStatus.ERROR:
+            error_message = self._reason if self._reason else self._error_message
+            if self._reason == "RAN TOO LONG":
+                raise RuntimeJobMaxTimeoutError(error_message)
+            raise RuntimeJobFailureError(f"Unable to retrieve job result. {error_message}")
+        if self._status is JobStatus.CANCELLED:
+            raise RuntimeInvalidStateError(
+                "Unable to retrieve result for job {}. " "Job was cancelled.".format(self.job_id())
             )
 
-            self._results = _decoder.decode(result_raw) if result_raw else None
-        return self._results
+        result_raw = self._download_external_result(
+            self._api_client.job_results(job_id=self.job_id())
+        )
+
+        return _decoder.decode(result_raw) if result_raw else None
 
     def cancel(self) -> None:
         """Cancel the job.

@@ -65,6 +65,7 @@ from .exceptions import IBMBackendApiProtocolError
 from .utils.backend_converter import (
     convert_to_target,
 )
+from .utils.default_session import get_cm_session as get_cm_primitive_session
 
 logger = logging.getLogger(__name__)
 
@@ -751,6 +752,11 @@ class IBMBackend(Backend):
         if self._service._channel == "ibm_quantum":
             hgp_name = self._instance or self._service._get_hgp().name
 
+        # Check if initialized within a Primitive session. If so, issue a warning.
+        if get_cm_primitive_session():
+            warnings.warn(
+                "A Primitive session is open but Backend.run() jobs will not be run within this session"
+            )
         if self._session:
             if not self._session.active:
                 raise RuntimeError(f"The session {self._session.session_id} is closed.")
@@ -787,6 +793,7 @@ class IBMBackend(Backend):
                 program_id=program_id,
                 session_id=session_id,
                 service=self.service,
+                tags=job_tags,
             )
             logger.debug("Job %s was successfully submitted.", job.job_id())
         except TypeError as err:
@@ -837,6 +844,16 @@ class IBMBackend(Backend):
             if self._session.session_id:
                 self._api_client.close_session(self._session.session_id)
 
+        self._session = None
+
+    def close_session(self) -> None:
+        """Close the session so new jobs will no longer be accepted, but existing
+        queued or running jobs will run to completion. The session will be terminated once there
+        are no more pending jobs."""
+        if self._session:
+            self._session.cancel()
+            if self._session.session_id:
+                self._api_client.close_session(self._session.session_id)
         self._session = None
 
 

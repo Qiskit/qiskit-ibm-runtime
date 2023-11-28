@@ -20,7 +20,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 from qiskit_ibm_runtime import Session
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
-import qiskit_ibm_runtime.session as session_pkg
+from qiskit_ibm_runtime.utils.default_session import _DEFAULT_SESSION
 from .mock.fake_runtime_service import FakeRuntimeService
 from ..ibm_test_case import IBMTestCase
 
@@ -30,7 +30,7 @@ class TestSession(IBMTestCase):
 
     def tearDown(self) -> None:
         super().tearDown()
-        session_pkg._DEFAULT_SESSION.set(None)
+        _DEFAULT_SESSION.set(None)
 
     @patch("qiskit_ibm_runtime.session.QiskitRuntimeService", autospec=True)
     def test_default_service(self, mock_service):
