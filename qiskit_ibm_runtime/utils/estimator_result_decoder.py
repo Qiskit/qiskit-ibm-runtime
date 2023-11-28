@@ -12,7 +12,7 @@
 
 """Estimator result decoder."""
 
-from typing import Dict, List
+from typing import Dict
 import numpy as np
 
 from qiskit.primitives import EstimatorResult
