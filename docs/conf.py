@@ -42,7 +42,7 @@ author = 'Qiskit Development Team'
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = '0.16.1'
+release = '0.17.0'
 
 docs_url_prefix = "ecosystem/ibm-runtime"
 
