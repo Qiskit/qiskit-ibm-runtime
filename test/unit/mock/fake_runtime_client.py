@@ -285,7 +285,7 @@ class BaseFakeRuntimeClient:
             classes = [classes]
         self._job_classes = classes
 
-    def cloud_instance(self):
+    def is_qctrl_enabled(self):
         """Return whether or not channel_strategy q-ctrl is enabled."""
         return False
 

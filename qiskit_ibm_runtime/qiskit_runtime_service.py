@@ -320,17 +320,21 @@ class QiskitRuntimeService(Provider):
         instance do not match.
 
         """
-        qctrl_enabled = self._api_client.cloud_instance()
+        qctrl_enabled = self._api_client.is_qctrl_enabled()
         if self._channel_strategy == "q-ctrl":
             if not qctrl_enabled:
                 raise IBMNotAuthorizedError(
-                    "This account is not authorized to use q-ctrl as a channel strategy."
+                    "The instance passed in is not compatible with Q-CTRL channel strategy. "
+                    "Please switch to or create an instance with the Q-CTRL strategy enabled. "
+                    "See https://cloud.ibm.com/docs/quantum-computing?"
+                    "topic=quantum-computing-get-started for more information"
                 )
         else:
             if qctrl_enabled:
                 raise IBMNotAuthorizedError(
-                    "The instance passed in is only compatible with the q-ctrl channel strategy. "
-                    "Please try passing in channel_strategy='q-ctrl'."
+                    "The instance passed in is only compatible with Q-CTRL performance "
+                    "management strategy. "
+                    "To use this instance, set channel_strategy='q-ctrl'."
                 )
 
     def _discover_cloud_backends(self) -> Dict[str, "ibm_backend.IBMBackend"]:

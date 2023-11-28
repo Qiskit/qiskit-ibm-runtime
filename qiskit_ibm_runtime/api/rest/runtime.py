@@ -295,7 +295,7 @@ class Runtime(RestAdapterBase):
             params["channel_strategy"] = channel_strategy
         return self.session.get(url, params=params, timeout=timeout).json()
 
-    def cloud_instance(self) -> bool:
+    def is_qctrl_enabled(self) -> bool:
         """Return boolean of whether or not the instance has q-ctrl enabled.
 
         Returns:
