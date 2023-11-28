@@ -26,18 +26,9 @@ The module from which the classes are imported has changed. The following table 
    * - ``qiskit.providers.ibmq.runtime.RuntimeJob``
      - ``qiskit_ibm_runtime.RuntimeJob``
      -  
-   * - ``qiskit.providers.ibmq.runtime.RuntimeProgram``
-     - ``qiskit_ibm_runtime.RuntimeProgram``
-     - 
-   * - ``qiskit.providers.ibmq.runtime.UserMessenger``
-     - ``qiskit_ibm_runtime.program.UserMessenger``
-     - Notice the new location, in ``qiskit_ibm_runtime.program``
-   * - ``qiskit.providers.ibmq.runtime.ProgramBackend``
-     - ``qiskit_ibm_runtime.program.ProgramBackend``
-     - Notice the new location, in ``qiskit_ibm_runtime.program``
    * - ``qiskit.providers.ibmq.runtime.ResultDecoder``
-     - ``qiskit_ibm_runtime.program.ResultDecoder``
-     - Notice the new location, in ``qiskit_ibm_runtime.program``
+     - ``qiskit_ibm_runtime.utils.ResultDecoder``
+     - Notice the new location, in ``qiskit_ibm_runtime.utils``
    * - ``qiskit.providers.ibmq.runtime.RuntimeEncoder``
      - ``qiskit_ibm_runtime.RuntimeEncoder``
      - 

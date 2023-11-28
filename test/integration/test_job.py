@@ -25,7 +25,6 @@ from qiskit_ibm_runtime.exceptions import (
     RuntimeJobFailureError,
     RuntimeInvalidStateError,
     RuntimeJobNotFound,
-    RuntimeJobMaxTimeoutError,
 )
 from ..ibm_test_case import IBMIntegrationJobTestCase
 from ..decorators import run_integration_test, production_only, quantum_only
@@ -95,40 +94,6 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         with self.assertRaises(RuntimeJobFailureError) as err_cm:
             job.result()
             self.assertIn("KeyError", str(err_cm.exception))
-
-    @unittest.skip("Custom programs not currently supported.")
-    @run_integration_test
-    def test_run_program_failed_ran_too_long(self, service):
-        """Test a program that failed since it ran longer than maximum execution time."""
-        max_execution_time = 60
-        inputs = {"iterations": 1, "sleep_per_iteration": 61}
-        program_id = self._upload_program(service, max_execution_time=max_execution_time)
-        job = self._run_program(service, program_id=program_id, inputs=inputs)
-
-        job.wait_for_final_state()
-        job_result_raw = service._api_client.job_results(job.job_id())
-        self.assertEqual(JobStatus.ERROR, job.status())
-        self.assertIn(
-            API_TO_JOB_ERROR_MESSAGE["CANCELLED - RAN TOO LONG"].format(
-                job.job_id(), job_result_raw
-            ),
-            job.error_message(),
-        )
-        with self.assertRaises(RuntimeJobMaxTimeoutError):
-            job.result()
-
-    @unittest.skip("Custom programs not currently supported.")
-    @run_integration_test
-    def test_run_program_override_max_execution_time(self, service):
-        """Test that the program max execution time is overridden."""
-        program_max_execution_time = 400
-        job_max_execution_time = 350
-        program_id = self._upload_program(service, max_execution_time=program_max_execution_time)
-        job = self._run_program(
-            service, program_id=program_id, max_execution_time=job_max_execution_time
-        )
-        job.wait_for_final_state()
-        self.assertEqual(job._api_client.job_get(job.job_id())["cost"], job_max_execution_time)
 
     @run_integration_test
     @production_only
