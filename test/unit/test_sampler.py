@@ -12,6 +12,7 @@
 
 """Tests for sampler class."""
 
+from unittest import skip
 from unittest.mock import MagicMock
 
 from ddt import data, ddt
@@ -50,6 +51,7 @@ class TestSampler(IBMTestCase):
                 self.assertIn(list(bad_opt.keys())[0], str(exc.exception))
 
 
+@skip("Skip until SamplerV2 is supported")
 @ddt
 class TestSamplerV2(IBMTestCase):
     """Class for testing the Estimator class."""
