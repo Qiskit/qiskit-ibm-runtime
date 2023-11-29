@@ -176,8 +176,8 @@ class BasePrimitive(ABC):
         runtime_options = Options._get_runtime_options(combined)
 
         if run_simulator:
-            runtime_options["backend"] = self._backend #fix this - for cloud, is str,
-                                                        # for fake is Backend
+            runtime_options["backend"] = self._backend  # fix this - for cloud, is str,
+            # for fake is Backend
             print("runtime options = ", runtime_options)
             print("inputs ", primitive_inputs)
 
@@ -188,7 +188,7 @@ class BasePrimitive(ABC):
                 # are these relevant for simulators?
                 # callback=combined.get("environment", {}).get("callback", None),
                 # result_decoder=DEFAULT_DECODERS.get(self._program_id()),
-        )
+            )
         if self._session:
             return self._session.run(
                 program_id=self._program_id(),

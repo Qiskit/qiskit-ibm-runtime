@@ -21,7 +21,7 @@ from collections import OrderedDict
 from typing import Dict, Callable, Optional, Union, List, Any, Type, Sequence
 
 from qiskit_aer import AerSimulator
-from qiskit_aer.backends.aerbackend import AerBackend
+#from qiskit_aer.backends.aerbackend import AerBackend
 from qiskit_aer.primitives import Sampler as AerSampler
 from qiskit_aer.primitives import Estimator as AerEstimator
 from qiskit.providers.fake_provider import fake_backend
@@ -33,7 +33,7 @@ from qiskit.providers.models import (
     PulseBackendConfiguration,
     QasmBackendConfiguration,
 )
-from qiskit.primitives.primitive_job import PrimitiveJob
+#from qiskit.primitives.primitive_job import PrimitiveJob
 from qiskit.primitives import BackendSampler, BackendEstimator
 
 from qiskit_ibm_provider.proxies import ProxyConfiguration
@@ -904,28 +904,30 @@ class QiskitRuntimeService(Provider):
             is_aer_backend = True
             if program_id == "sampler":
                 prog = AerSampler
-            else:    #program_id == "estimator":
+            else:  # program_id == "estimator":
                 prog = AerEstimator
 
         if isinstance(qrt_options.backend, fake_backend.FakeBackendV2):
-            is_fake_backend= True
+            is_fake_backend = True
             if program_id == "sampler":
                 prog = BackendSampler
-            else:    #program_id == "estimator":
+            else:  # program_id == "estimator":
                 prog = BackendEstimator
 
         if is_fake_backend:
-            my_program = prog(backend=qrt_options.backend,
-                              options=sim_options,
-                              skip_transpilation=inputs["transpilation_settings"]["skip_transpilation"]
-                            )
+            my_program = prog(
+                backend=qrt_options.backend,
+                options=sim_options,
+                skip_transpilation=inputs["transpilation_settings"]["skip_transpilation"],
+            )
             observables = inputs.get("observables", None)
 
-            primitive_job = my_program._run(circuits=inputs["circuits"],
-                            parameter_values=inputs["parameters"],
-                            run_options=sim_options,
-                            observables=observables
-                            )
+            primitive_job = my_program._run(
+                circuits=inputs["circuits"],
+                parameter_values=inputs["parameters"],
+                run_options=sim_options,
+                observables=observables,
+            )
             fake_runtime_job = FakeRuntimeJob(
                 primitive_job=primitive_job,
                 backend=qrt_options.backend,
@@ -943,17 +945,19 @@ class QiskitRuntimeService(Provider):
                     aer_backend_options[opt] = inputs["run_options"][opt]
             print("aer_config", aer_backend_options)
 
-            my_program = prog(backend_options=aer_backend_options,
-                              transpile_options=inputs["transpilation_settings"],
-                              skip_transpilation=inputs["transpilation_settings"]["skip_transpilation"]
-                              )
+            my_program = prog(
+                backend_options=aer_backend_options,
+                transpile_options=inputs["transpilation_settings"],
+                skip_transpilation=inputs["transpilation_settings"]["skip_transpilation"],
+            )
             observables = inputs.get("observables", None)
 
-            primitive_job = my_program._run(circuits=inputs["circuits"],
-                                            parameter_values=inputs["parameters"],
-                                            run_options=sim_options,
-                                            observables=observables
-                                            )
+            primitive_job = my_program._run(
+                circuits=inputs["circuits"],
+                parameter_values=inputs["parameters"],
+                run_options=sim_options,
+                observables=observables,
+            )
             fake_runtime_job = FakeRuntimeJob(
                 primitive_job=primitive_job,
                 backend=qrt_options.backend,
