@@ -19,7 +19,7 @@ from qiskit.primitives.base.base_primitive import BasePrimitive
 from qiskit.providers import JobError, JobStatus, JobV1
 from qiskit.providers.fake_provider import FakeBackendV2 as FakeBackend
 
-from .program.result_decoder import ResultDecoder
+from .utils.result_decoder import ResultDecoder
 
 class FakeRuntimeJob(JobV1):
     """Representation of a runtime program execution on a simulator."""

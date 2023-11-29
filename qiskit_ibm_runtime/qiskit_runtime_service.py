@@ -843,6 +843,10 @@ class QiskitRuntimeService(Provider):
     def get_backend(self, name: str = None, **kwargs: Any) -> Backend:
         return self.backend(name, **kwargs)
 
+    def _get_fake_backend(self, name: str) -> fake_backend.FakeBackendV2:
+        my_fake_backend = fake_backend_list[name]
+        return my_fake_backend
+
     def run(
         self,
         program_id: str,
