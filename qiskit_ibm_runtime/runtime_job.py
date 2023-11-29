@@ -40,7 +40,7 @@ from .exceptions import (
     RuntimeJobTimeoutError,
     RuntimeJobMaxTimeoutError,
 )
-from .program.result_decoder import ResultDecoder
+from .utils.result_decoder import ResultDecoder
 from .api.clients import RuntimeClient, RuntimeWebsocketClient, WebsocketClientCloseCode
 from .exceptions import IBMError
 from .api.exceptions import RequestsApiError
