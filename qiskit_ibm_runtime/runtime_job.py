@@ -232,7 +232,7 @@ class RuntimeJob(Job):
 
         version_param = {}
         # TODO: Remove getting/setting version once it's in result metadata
-        if isinstance(_decoder, EstimatorResultDecoder):
+        if _decoder.__name__ == EstimatorResultDecoder.__name__:
             if not self._version:
                 self._version = self.inputs.get("version", 1)
             version_param["version"] = self._version
