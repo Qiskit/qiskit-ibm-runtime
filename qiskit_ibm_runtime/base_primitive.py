@@ -178,8 +178,6 @@ class BasePrimitive(ABC):
         if run_simulator:
             runtime_options["backend"] = self._backend  # fix this - for cloud, is str,
             # for fake is Backend
-            print("runtime options = ", runtime_options)
-            print("inputs ", primitive_inputs)
 
             return self._service.run(
                 program_id=self._program_id(),

@@ -883,7 +883,6 @@ class QiskitRuntimeService(Provider):
             RuntimeProgramNotFound: If the program cannot be found.
             IBMRuntimeError: An error occurred running the program.
         """
-        print("inputs = ", inputs)
 
         qrt_options: RuntimeOptions = options
         if options is None:
@@ -892,10 +891,8 @@ class QiskitRuntimeService(Provider):
             qrt_options = RuntimeOptions(**options)
 
         qrt_options.validate(channel=self.channel)
-        # transpilation_options = inputs["transpilation_settings"]
-        # print("transpilation_options = ", transpilation_options)
+
         sim_options = inputs["run_options"]
-        # print("simulator options = ", sim_options)
 
         is_fake_backend = False
         is_aer_backend = False
@@ -925,8 +922,9 @@ class QiskitRuntimeService(Provider):
             primitive_job = my_program._run(
                 circuits=inputs["circuits"],
                 parameter_values=inputs["parameters"],
-                run_options=sim_options,
                 observables=observables,
+                **sim_options,
+
             )
             fake_runtime_job = FakeRuntimeJob(
                 primitive_job=primitive_job,
@@ -943,7 +941,6 @@ class QiskitRuntimeService(Provider):
             for opt in inputs["run_options"]:
                 if hasattr(AerSimulator._default_options(), opt):
                     aer_backend_options[opt] = inputs["run_options"][opt]
-            print("aer_config", aer_backend_options)
 
             my_program = prog(
                 backend_options=aer_backend_options,

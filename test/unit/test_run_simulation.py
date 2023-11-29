@@ -26,7 +26,8 @@ class TestRunSimulation(IBMTestCase):
 
     def test_basic_flow(self):
         """Test basic flow on simulator."""
-        service = QiskitRuntimeService(channel="ibm_quantum")
+        #service = QiskitRuntimeService(channel="ibm_quantum")
+        service = FakeRuntimeService()
         shots = 1000
         for backend in ["manila", AerSimulator()]:
             circuit = ReferenceCircuits.bell()
@@ -37,4 +38,4 @@ class TestRunSimulation(IBMTestCase):
             self.assertAlmostEqual(result.quasi_dists[0][3], 0.5, delta=0.2)
 
             # currently not working correctly for FakeBackend
-            # self.assertEqual(result.metadata[0]["shots"], shots)
+            self.assertEqual(result.metadata[0]["shots"], shots)
