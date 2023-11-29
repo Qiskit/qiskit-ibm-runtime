@@ -24,7 +24,6 @@ from qiskit_aer import AerSimulator
 from qiskit_aer.backends.aerbackend import AerBackend
 from qiskit_aer.primitives import Sampler as AerSampler
 from qiskit_aer.primitives import Estimator as AerEstimator
-#from qiskit.providers.fake_provider import FakeBackendV2 as FakeBackend
 from qiskit.providers.fake_provider import fake_backend
 from qiskit.providers.backend import BackendV1 as Backend
 from qiskit.providers.provider import ProviderV1 as Provider
@@ -594,9 +593,9 @@ class QiskitRuntimeService(Provider):
         if self._channel == "ibm_quantum":
             if name:
                 if name not in self._backends:
-                    fake_backend = self._get_fake_backend(name)
-                    if fake_backend:
-                        backends.append(fake_backend)
+                    backend = self._get_fake_backend(name)
+                    if backend:
+                        backends.append(backend)
                         return backends
                     raise QiskitBackendNotFoundError("No backend matches the criteria.")
                 if not self._backends[name] or instance != self._backends[name]._instance:
@@ -822,15 +821,12 @@ class QiskitRuntimeService(Provider):
         """
         # pylint: disable=arguments-differ, line-too-long
         if name and name not in self._backends:
-            my_fake_backend = self._get_fake_backend(name)
-            if my_fake_backend:
-                return my_fake_backend
+            backend = self._get_fake_backend(name)
+            if backend:
+                return backend
 
         backends = self.backends(name, instance=instance)
         if not backends:
-            # fake_backend = self._get_fake_backend(name)
-            # if fake_backend:
-            #     return fake_backend
             cloud_msg_url = ""
             if self._channel == "ibm_cloud":
                 cloud_msg_url = (
@@ -844,8 +840,8 @@ class QiskitRuntimeService(Provider):
         return self.backend(name, **kwargs)
 
     def _get_fake_backend(self, name: str) -> fake_backend.FakeBackendV2:
-        my_fake_backend = fake_backend_list[name]
-        return my_fake_backend
+        backend = fake_backend_list[name]
+        return backend
 
     def run(
         self,
@@ -905,32 +901,18 @@ class QiskitRuntimeService(Provider):
         is_aer_backend = False
         # if backend is a simulator, run locally
         if isinstance(qrt_options.backend, AerSimulator):
-            is_aer_simulator = True
+            is_aer_backend = True
             if program_id == "sampler":
                 prog = AerSampler
             else:    #program_id == "estimator":
                 prog = AerEstimator
 
-        elif isinstance(qrt_options.backend, fake_backend.FakeBackendV2):
-            #return FakeRuntimeJob(AerSampler.run(...))
+        if isinstance(qrt_options.backend, fake_backend.FakeBackendV2):
             is_fake_backend= True
             if program_id == "sampler":
                 prog = BackendSampler
             else:    #program_id == "estimator":
                 prog = BackendEstimator
-
-        else:
-            is_simulation = False
-        # elif isinstance(qrt_options.backend, fake_backend.FakeBackendV2):
-        #     #from qiskit_ibm_runtime.options import Options
-        #     if program_id == "sampler":
-        #         sampler = BackendSa
-        #
-        #         else:mpler(
-        #             backend=qrt_options.backend,
-        #             options=sim_options,
-        #             skip_transpilation=inputs["transpilation_settings"]["skip_transpilation"],
-        #         )
 
         if is_fake_backend:
             my_program = prog(backend=qrt_options.backend,
@@ -954,7 +936,7 @@ class QiskitRuntimeService(Provider):
             )
             return fake_runtime_job
 
-        if is_aer_simulator:
+        if is_aer_backend:
             aer_backend_options = {}
             for opt in inputs["run_options"]:
                 if hasattr(AerSimulator._default_options(), opt):
@@ -981,9 +963,6 @@ class QiskitRuntimeService(Provider):
                 params=inputs["parameters"],
             )
             return fake_runtime_job
-
-            #primitive_job = BackendSampler.run(...)
-            #return FakeRuntimeJob(primitive_job)
 
         hgp_name = None
         if self._channel == "ibm_quantum":
