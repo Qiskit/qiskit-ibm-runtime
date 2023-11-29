@@ -99,6 +99,6 @@ Choose a primitive to run
 
 Qiskit Runtime uses primitives to interface with quantum computers and they are publicly available. Choose the appropriate link to continue learning how to run a primitive.
 
-`Getting started with Sampler <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/tutorials/how-to-getting-started-with-sampler.html>`__
+`Getting started with Sampler <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/tutorials/how-to-getting-started-with-sampler/index.html>`__
 
-`Getting started with Estimator <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/tutorials/how-to-getting-started-with-estimator.html>`__
+`Getting started with Estimator <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/tutorials/how-to-getting-started-with-estimator/index.html>`__

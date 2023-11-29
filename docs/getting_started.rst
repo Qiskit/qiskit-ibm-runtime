@@ -77,8 +77,8 @@ Getting started with primitives
 
 .. nbgallery::
 
-   tutorials/how-to-getting-started-with-sampler
-   tutorials/how-to-getting-started-with-estimator
+   tutorials/how-to-getting-started-with-sampler/index
+   tutorials/how-to-getting-started-with-estimator/index
 
 
 `See more tutorials <tutorials.html>`_

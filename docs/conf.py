@@ -61,7 +61,8 @@ extensions = [
     'reno.sphinxext',
     'nbsphinx',
     'sphinx_design',
-    "qiskit_sphinx_theme",
+    'sphinx_reredirects',
+    'qiskit_sphinx_theme',
 ]
 templates_path = ['_templates']
 
@@ -163,3 +164,19 @@ html_last_updated_fmt = '%Y/%m/%d'
 html_sourcelink_suffix = ''
 
 autoclass_content = 'both'
+
+# -- Redirects ---------------------------------------------------------------
+
+redirects = {
+    f"tutorials/{name}.ipynb": f"tutorials/{name.lower().replace('_', '-')}/index.ipynb"
+    for name in [
+        "chsh_with_estimator",
+        "Error-Suppression-and-Error-Mitigation",
+        "grover_with_sampler",
+        "how-to-getting-started-with-estimator",
+        "how-to-getting-started-with-sampler",
+        "qaoa_with_primitives",
+        "user-transpiled-circuits",
+        "vqe_with_estimator"
+    ]
+}
