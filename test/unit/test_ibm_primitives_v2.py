@@ -35,7 +35,7 @@ from qiskit_ibm_runtime import (
 )
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.utils.default_session import _DEFAULT_SESSION
-from qiskit_ibm_runtime import EstimatorV2, SamplerV2
+from qiskit_ibm_runtime import EstimatorV2
 from qiskit_ibm_runtime.estimator import Estimator as IBMBaseEstimator
 from qiskit_ibm_runtime.qiskit.primitives import BindingsArray
 
