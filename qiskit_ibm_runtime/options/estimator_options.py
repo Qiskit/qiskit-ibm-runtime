@@ -10,12 +10,11 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Primitive options."""
+"""Estimator options."""
 
 from typing import Union, Literal
 
-from pydantic.dataclasses import dataclass as pydantic_dataclass
-from pydantic import Field, ConfigDict, field_validator
+from pydantic import Field, field_validator
 
 from .utils import (
     Dict,
@@ -29,14 +28,15 @@ from .resilience_options import ResilienceOptionsV2
 from .twirling_options import TwirlingOptions
 from .options import OptionsV2
 
+# TODO use real base options when available
+from ..qiskit.primitives.options import primitive_dataclass
+
 DDSequenceType = Literal["XX", "XpXm", "XY4"]
 
 
-@pydantic_dataclass(
-    config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid")
-)
+@primitive_dataclass
 class EstimatorOptions(OptionsV2):
-    """Options for v2 Estimator.
+    """Options for EstimatorV2.
 
     Args:
         optimization_level: How much optimization to perform on the circuits.

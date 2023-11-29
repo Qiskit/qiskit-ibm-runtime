@@ -14,10 +14,10 @@
 
 from typing import Literal, Union
 
-from pydantic.dataclasses import dataclass as pydantic_dataclass
-from pydantic import ConfigDict
-
 from .utils import Unset, UnsetType
+
+# TODO use real base options when available
+from ..qiskit.primitives.options import primitive_dataclass
 
 
 TwirlingStrategyType = Literal[
@@ -28,9 +28,7 @@ TwirlingStrategyType = Literal[
 ]
 
 
-@pydantic_dataclass(
-    config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid")
-)
+@primitive_dataclass
 class TwirlingOptions:
     """Twirling options.
 

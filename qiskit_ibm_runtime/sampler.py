@@ -37,7 +37,7 @@ logger = logging.getLogger(__name__)
 
 
 class Sampler:
-    """Base type for Sampelr."""
+    """Base type for Sampler."""
 
     version = 0
 
@@ -45,34 +45,17 @@ class Sampler:
 class SamplerV2(BasePrimitiveV2, Sampler, BaseSamplerV2):
     """Class for interacting with Qiskit Runtime Sampler primitive service.
 
-    Qiskit Runtime Sampler primitive service calculates quasi-probability distribution
-    of bitstrings from quantum circuits.
+    This class supports version 2 of the Sampler interface, which uses different
+    input and output formats than version 1.
+
+    Qiskit Runtime Sampler primitive returns the sampled result according to the
+    specified output type. For example, it returns a bitstring for each shot
+    if measurement level 2 (bits) is requested.
 
     The :meth:`run` method can be used to submit circuits and parameters to the Sampler primitive.
-
-    You are encouraged to use :class:`~qiskit_ibm_runtime.Session` to open a session,
-    during which you can invoke one or more primitives. Jobs submitted within a session
-    are prioritized by the scheduler, and data is cached for efficiency.
-
-    Example::
-
-        from qiskit.test.reference_circuits import ReferenceCircuits
-        from qiskit_ibm_runtime import QiskitRuntimeService, Session, Sampler
-
-        service = QiskitRuntimeService(channel="ibm_cloud")
-        bell = ReferenceCircuits.bell()
-
-        with Session(service, backend="ibmq_qasm_simulator") as session:
-            sampler = Sampler(session=session)
-
-            job = sampler.run(bell, shots=1024)
-            print(f"Job ID: {job.job_id()}")
-            print(f"Job result: {job.result()}")
-
-            # You can run more jobs inside the session
     """
 
-    _OPTIONS_CLASS = SamplerOptions
+    _options_class = SamplerOptions
 
     version = 2
 
@@ -107,77 +90,10 @@ class SamplerV2(BasePrimitiveV2, Sampler, BaseSamplerV2):
         Sampler.__init__(self)
         BasePrimitiveV2.__init__(self, backend=backend, session=session, options=options)
 
-        if self._service._channel_strategy == "q-ctrl":
-            raise NotImplementedError("SamplerV2 is not supported with q-ctrl channel strategy.")
+        raise NotImplementedError("SamplerV2 is not currently supported.")
 
-    def run(  # pylint: disable=arguments-differ
-        self,
-        circuits: QuantumCircuit | Sequence[QuantumCircuit],
-        parameter_values: Sequence[float] | Sequence[Sequence[float]] | None = None,
-        **kwargs: Any,
-    ) -> RuntimeJob:
-        """Submit a request to the estimator primitive.
-
-        Args:
-            circuits: a (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
-                a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
-
-            parameter_values: Concrete parameters to be bound.
-
-            **kwargs: Individual options to overwrite the default primitive options.
-                These include the runtime options in :class:`qiskit_ibm_runtime.RuntimeOptions`.
-
-        Returns:
-            Submitted job.
-            The result of the job is an instance of :class:`qiskit.primitives.EstimatorResult`.
-
-        Raises:
-            ValueError: Invalid arguments are given.
-        """
-        # To bypass base class merging of options.
-        user_kwargs = {"_user_kwargs": kwargs}
-
-        return super().run(
-            circuits=circuits,
-            parameter_values=parameter_values,
-            **user_kwargs,
-        )
-
-    def _run(  # pylint: disable=arguments-differ
-        self,
-        circuits: Sequence[QuantumCircuit],
-        parameter_values: tuple[tuple[float, ...], ...],
-        **kwargs: Any,
-    ) -> RuntimeJob:
-        """Submit a request to the estimator primitive.
-
-        Args:
-            circuits: a (parameterized) :class:`~qiskit.circuit.QuantumCircuit` or
-                a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
-
-            observables: A list of observable objects.
-
-            parameter_values: An optional list of concrete parameters to be bound.
-
-            **kwargs: Individual options to overwrite the default primitive options.
-                These include the runtime options in :class:`~qiskit_ibm_runtime.RuntimeOptions`.
-
-        Returns:
-            Submitted job
-        """
-        logger.debug(
-            "Running %s with new options %s",
-            self.__class__.__name__,
-            kwargs.get("_user_kwargs", {}),
-        )
-        inputs = {
-            "circuits": circuits,
-            "parameters": [circ.parameters for circ in circuits],
-            "parameter_values": parameter_values,
-        }
-        return self._run_primitive(
-            primitive_inputs=inputs, user_kwargs=kwargs.get("_user_kwargs", {})
-        )
+        # if self._service._channel_strategy == "q-ctrl":
+        #     raise NotImplementedError("SamplerV2 is not supported with q-ctrl channel strategy.")
 
     def _validate_options(self, options: dict) -> None:
         """Validate that program inputs (options) are valid
@@ -185,7 +101,7 @@ class SamplerV2(BasePrimitiveV2, Sampler, BaseSamplerV2):
         Raises:
             ValidationError: if validation fails.
         """
-        self._OPTIONS_CLASS(**options)
+        pass
 
     @classmethod
     def _program_id(cls) -> str:
@@ -223,7 +139,7 @@ class SamplerV1(BasePrimitiveV1, Sampler, BaseSampler):
             # You can run more jobs inside the session
     """
 
-    _OPTIONS_CLASS = Options
+    _options_class = Options
 
     def __init__(
         self,

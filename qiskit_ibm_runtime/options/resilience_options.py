@@ -14,10 +14,13 @@
 
 from typing import Sequence, Literal, Union, Optional
 
-from pydantic.dataclasses import dataclass as pydantic_dataclass
-from pydantic import ConfigDict, field_validator, model_validator
+from pydantic import field_validator, model_validator
 
 from .utils import Unset, UnsetType, skip_unset_validation
+
+# TODO use real base options when available
+from ..qiskit.primitives.options import primitive_dataclass
+
 
 ResilienceSupportedOptions = Literal[
     "noise_amplifier",
@@ -45,9 +48,7 @@ ZneExtrapolatorType = Literal[
 ]
 
 
-@pydantic_dataclass(
-    config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid")
-)
+@primitive_dataclass
 class ResilienceOptionsV2:
     """Resilience options.
 
@@ -65,7 +66,6 @@ class ResilienceOptionsV2:
         zne_extrapolator: An extrapolation strategy. One or more of ``"multi_exponential"``,
             ``"single_exponential"``, ``"double_exponential"``, ``"linear"``.
             Only applicable if ZNE is enabled.
-            Default: ``("exponential, "linear")``
 
         zne_stderr_threshold: A standard error threshold for accepting the ZNE result of Pauli basis
             expectation values when using ZNE mitigation. Any extrapolator model resulting an larger
@@ -148,7 +148,7 @@ class ResilienceOptionsV2:
                 if isinstance(self.zne_extrapolator, str)
                 else self.zne_extrapolator
             )
-            for extrap in extrapolators:
+            for extrap in extrapolators:  # pylint: disable=not-an-iterable
                 if len(self.zne_noise_factors) < required_factors[extrap]:  # type: ignore[arg-type]
                     raise ValueError(
                         f"{extrap} requires at least {required_factors[extrap]} zne_noise_factors"
@@ -163,26 +163,7 @@ class ResilienceOptionsV2:
         return self
 
 
-# @dataclass(frozen=True)
-# class _ZneOptions:
-#     zne_mitigation: bool = True
-#     zne_noise_factors: Sequence[float] = (1, 3, 5)
-#     zne_extrapolator: Union[ZneExtrapolatorType, Sequence[ZneExtrapolatorType]] = (
-#         "exponential",
-#         "linear",
-#     )
-#     zne_stderr_threshold: float = 0.25
-
-
-# @dataclass(frozen=True)
-# class _PecOptions:
-#     pec_mitigation: bool = True
-#     pec_max_overhead: float = 100
-
-
-@pydantic_dataclass(
-    config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid")
-)
+@primitive_dataclass
 class ResilienceOptionsV1:
     """Resilience options.
 

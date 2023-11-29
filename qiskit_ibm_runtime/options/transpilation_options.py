@@ -14,10 +14,12 @@
 
 from typing import List, Union, Literal
 
-from pydantic.dataclasses import dataclass as pydantic_dataclass
-from pydantic import ConfigDict, field_validator
+from pydantic import field_validator
 
 from .utils import Unset, UnsetType, skip_unset_validation
+
+# TODO use real base options when available
+from ..qiskit.primitives.options import primitive_dataclass
 
 LayoutMethodType = Literal[
     "trivial",
@@ -34,9 +36,7 @@ RoutingMethodType = Literal[
 ]
 
 
-@pydantic_dataclass(
-    config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid")
-)
+@primitive_dataclass
 class TranspilationOptions:
     """Transpilation options.
 

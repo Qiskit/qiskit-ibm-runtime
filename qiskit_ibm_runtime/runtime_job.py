@@ -31,6 +31,7 @@ from qiskit_ibm_provider.utils import utc_to_local
 from qiskit_ibm_runtime import qiskit_runtime_service
 
 from .utils.utils import validate_job_tags
+from .utils.estimator_result_decoder import EstimatorResultDecoder
 from .constants import API_TO_JOB_ERROR_MESSAGE, API_TO_JOB_STATUS, DEFAULT_DECODERS
 from .exceptions import (
     IBMApiError,
@@ -102,6 +103,7 @@ class RuntimeJob(Job):
         image: Optional[str] = "",
         session_id: Optional[str] = None,
         tags: Optional[List] = None,
+        version: Optional[int] = None,
     ) -> None:
         """RuntimeJob constructor.
 
@@ -119,6 +121,7 @@ class RuntimeJob(Job):
             service: Runtime service.
             session_id: Job ID of the first job in a runtime session.
             tags: Tags assigned to the job.
+            version: Primitive version.
         """
         super().__init__(backend=backend, job_id=job_id)
         self._api_client = api_client
@@ -135,6 +138,7 @@ class RuntimeJob(Job):
         self._session_id = session_id
         self._tags = tags
         self._usage_estimation: Dict[str, Any] = {}
+        self._version = version
 
         decoder = result_decoder or DEFAULT_DECODERS.get(program_id, None) or ResultDecoder
         if isinstance(decoder, Sequence):
@@ -226,7 +230,14 @@ class RuntimeJob(Job):
             self._api_client.job_results(job_id=self.job_id())
         )
 
-        return _decoder.decode(result_raw) if result_raw else None
+        version_param = {}
+        # TODO: Remove getting/setting version once it's in result metadata
+        if _decoder.__name__ == EstimatorResultDecoder.__name__:
+            if not self._version:
+                self._version = self.inputs.get("version", 1)
+            version_param["version"] = self._version
+
+        return _decoder.decode(result_raw, **version_param) if result_raw else None  # type: ignore
 
     def cancel(self) -> None:
         """Cancel the job.

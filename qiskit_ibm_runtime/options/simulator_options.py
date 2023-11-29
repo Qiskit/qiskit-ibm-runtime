@@ -19,10 +19,12 @@ from qiskit.providers import BackendV1, BackendV2
 from qiskit.utils import optionals
 from qiskit.transpiler import CouplingMap  # pylint: disable=unused-import
 
-from pydantic.dataclasses import dataclass as pydantic_dataclass
-from pydantic import ConfigDict, field_validator
+from pydantic import field_validator
 
 from .utils import Unset, UnsetType, skip_unset_validation
+
+# TODO use real base options when available
+from ..qiskit.primitives.options import primitive_dataclass
 
 
 class NoiseModel:
@@ -31,9 +33,7 @@ class NoiseModel:
     pass
 
 
-@pydantic_dataclass(
-    config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid")
-)
+@primitive_dataclass
 class SimulatorOptions:
     """Simulator options.
 
