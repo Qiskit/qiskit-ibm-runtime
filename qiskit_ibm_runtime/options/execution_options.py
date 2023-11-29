@@ -52,12 +52,12 @@ class ExecutionOptions:
 
         max_circuits: Specify a custom maximum number of circuits run in a single job.
             Default: None
-        
+
         max_concurrent_jobs: Specify a custom maximum number of concurrent jobs that can
             be actively running on a backend during primitive execution. If `"auto"` this
             will be set automatically depending on the backend type and capabilities.
             Default: ``"auto"``
-            
+
         fast_parametric_update: Specify if parametric update should be used for execution
             of parametric circuits. If ``"auto"`` it will be enabled automatically on
             supported backends.
