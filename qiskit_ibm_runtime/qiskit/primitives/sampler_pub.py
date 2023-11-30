@@ -12,7 +12,7 @@
 # type: ignore
 
 """
-Sampler Task class
+Sampler PUB class
 """
 
 from __future__ import annotations
@@ -22,15 +22,15 @@ from typing import Union, Optional, Tuple
 
 from qiskit import QuantumCircuit
 
-from .base_task import BaseTask
+from .base_pub import BasePub
 from .bindings_array import BindingsArray, BindingsArrayLike
 from .shape import ShapedMixin
 
 
 @dataclass(frozen=True)
-class SamplerTask(BaseTask, ShapedMixin):
-    """Task for Sampler.
-    Task is composed of triple (circuit, parameter_values).
+class SamplerPub(BasePub, ShapedMixin):
+    """PUB for Sampler.
+    PUB is composed of double (circuit, parameter_values).
     """
 
     parameter_values: Optional[BindingsArray] = BindingsArray([], shape=())
@@ -40,30 +40,30 @@ class SamplerTask(BaseTask, ShapedMixin):
         super().__setattr__("_shape", self.parameter_values.shape)
 
     @classmethod
-    def coerce(cls, task: SamplerTaskLike) -> SamplerTask:
-        """Coerce SamplerTaskLike into SamplerTask.
+    def coerce(cls, pub: SamplerPubLike) -> SamplerPub:
+        """Coerce SamplerPubLike into SamplerPub.
 
         Args:
-            task: an object to be sampler task.
+            pub: an object to be sampler pub.
 
         Returns:
-            A coerced estiamtor task.
+            A coerced estiamtor pub.
 
         Raises:
             ValueError: If input values are invalid.
         """
-        if isinstance(task, SamplerTask):
-            return task
-        if len(task) != 1 and len(task) != 2:
-            raise ValueError(f"The length of task must be 1 or 2, but length {len(task)} is given.")
-        circuit = task[0]
+        if isinstance(pub, SamplerPub):
+            return pub
+        if len(pub) != 1 and len(pub) != 2:
+            raise ValueError(f"The length of pub must be 1 or 2, but length {len(pub)} is given.")
+        circuit = pub[0]
         parameter_values = (
-            BindingsArray.coerce(task[1]) if len(task) == 2 else BindingsArray([], shape=())
+            BindingsArray.coerce(pub[1]) if len(pub) == 2 else BindingsArray([], shape=())
         )
         return cls(circuit=circuit, parameter_values=parameter_values)
 
     def validate(self) -> None:
-        """Validate the task.
+        """Validate the pub.
 
         Raises:
             ValueError: If input values are invalid.
@@ -79,4 +79,4 @@ class SamplerTask(BaseTask, ShapedMixin):
             )
 
 
-SamplerTaskLike = Union[SamplerTask, Tuple[QuantumCircuit, BindingsArrayLike]]
+SamplerPubLike = Union[SamplerPub, Tuple[QuantumCircuit, BindingsArrayLike]]

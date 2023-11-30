@@ -34,7 +34,7 @@ from .constants import DEFAULT_DECODERS
 from .qiskit_runtime_service import QiskitRuntimeService
 
 # TODO: remove when we have real v2 base estimator
-from .qiskit.primitives import EstimatorTask, SamplerTask
+from .qiskit.primitives import EstimatorPub, SamplerPub
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
@@ -118,24 +118,24 @@ class BasePrimitiveV2(ABC):
                     "A backend or session must be specified when not using ibm_cloud channel."
                 )
 
-    def _run(self, tasks: Union[list[EstimatorTask], list[SamplerTask]]) -> RuntimeJob:
+    def _run(self, pubs: Union[list[EstimatorPub], list[SamplerPub]]) -> RuntimeJob:
         """Run the primitive.
 
         Args:
-            tasks: Inputs tasks to pass to the primitive.
+            pubs: Inputs PUBs to pass to the primitive.
 
         Returns:
             Submitted job.
         """
-        primitive_inputs = {"tasks": tasks}
+        primitive_inputs = {"tasks": pubs}
         options_dict = asdict(self.options)
         self._validate_options(options_dict)
         primitive_inputs.update(self._options_class._get_program_inputs(options_dict))
         runtime_options = self._options_class._get_runtime_options(options_dict)
 
         if self._backend and options_dict["transpilation"]["skip_transpilation"]:
-            for task in tasks:
-                self._backend.check_faulty(task.circuit)
+            for pub in pubs:
+                self._backend.check_faulty(pub.circuit)
 
         logger.info("Submitting job using options %s", options_dict)
 

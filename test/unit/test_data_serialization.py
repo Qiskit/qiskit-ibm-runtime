@@ -260,8 +260,8 @@ if __name__ == '__main__':
 
         self.assertTrue(json.dumps(payload, cls=RuntimeEncoder))
 
-    def test_encoder_tasks(self):
-        """Test serializing tasks."""
+    def test_encoder_pubs(self):
+        """Test serializing pubs."""
         pass
 
     @data(

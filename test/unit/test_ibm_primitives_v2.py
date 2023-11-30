@@ -298,8 +298,8 @@ class TestPrimitivesV2(IBMTestCase):
         inst = primitive(backend=get_mocked_backend())
         for val in param_vals:
             with self.subTest(val=val):
-                task = (circ, "ZZ", val) if isinstance(inst, EstimatorV2) else (circ, val)
-                inst.run(task)
+                pub = (circ, "ZZ", val) if isinstance(inst, EstimatorV2) else (circ, val)
+                inst.run(pub)
 
     @data(EstimatorV2)
     def test_parameters_vals_kwvals(self, primitive):
@@ -311,14 +311,14 @@ class TestPrimitivesV2(IBMTestCase):
             param_vals = np.linspace(0, 1, 4)
             kwvals = {tuple(circ.parameters[:2]): param_vals[:2]}
             barray = BindingsArray(vals=param_vals[2:], kwvals=kwvals)
-            task = (circ, "ZZ", barray) if isinstance(inst, EstimatorV2) else (circ, barray)
-            inst.run(task)
+            pub = (circ, "ZZ", barray) if isinstance(inst, EstimatorV2) else (circ, barray)
+            inst.run(pub)
 
         with self.subTest("n-d"):
             kwvals = {tuple(circ.parameters[:2]): np.random.random((2, 3, 2))}
             barray = BindingsArray(vals=np.random.random((2, 3, 2)), kwvals=kwvals)
-            task = (circ, "ZZ", barray) if isinstance(inst, EstimatorV2) else (circ, barray)
-            inst.run(task)
+            pub = (circ, "ZZ", barray) if isinstance(inst, EstimatorV2) else (circ, barray)
+            inst.run(pub)
 
     @data(EstimatorV2)
     def test_parameters_multiple_circuits(self, primitive):
@@ -345,15 +345,15 @@ class TestPrimitivesV2(IBMTestCase):
         inst = primitive(backend=get_mocked_backend())
         for all_params in param_vals:
             with self.subTest(all_params=all_params):
-                tasks = []
+                pubs = []
                 for circ, circ_params in zip(circuits, all_params):
-                    tasklet = (
+                    publet = (
                         (circ, "Z" * circ.num_qubits, circ_params)
                         if isinstance(inst, EstimatorV2)
                         else (circ, circ_params)
                     )
-                    tasks.append(tasklet)
-                inst.run(tasks)
+                    pubs.append(publet)
+                inst.run(pubs)
 
     @data(EstimatorV2)
     def test_run_updated_options(self, primitive):
@@ -594,13 +594,13 @@ class TestPrimitivesV2(IBMTestCase):
         inst = primitive(session=session, options={"skip_transpilation": True})
 
         if isinstance(inst, IBMBaseEstimator):
-            task = (transpiled, observable)
+            pub = (transpiled, observable)
         else:
             transpiled.measure_all()
-            task = (transpiled,)
+            pub = (transpiled,)
 
         with self.assertRaises(ValueError) as err:
-            inst.run(tasks=task)
+            inst.run(pubs=pub)
         self.assertIn(f"faulty qubit {faulty_qubit}", str(err.exception))
 
     @data(EstimatorV2)
@@ -625,14 +625,14 @@ class TestPrimitivesV2(IBMTestCase):
 
         inst = primitive(session=session, options={"skip_transpilation": True})
         if isinstance(inst, IBMBaseEstimator):
-            tasks = [(transpiled[0], observable), (transpiled[1], observable)]
+            pubs = [(transpiled[0], observable), (transpiled[1], observable)]
         else:
             for circ in transpiled:
                 circ.measure_all()
-            tasks = [(transpiled[0],), (transpiled[1],)]
+            pubs = [(transpiled[0],), (transpiled[1],)]
 
         with self.assertRaises(ValueError) as err:
-            inst.run(tasks=tasks)
+            inst.run(pubs=pubs)
         self.assertIn(f"faulty qubit {faulty_qubit}", str(err.exception))
 
     @data(EstimatorV2)
@@ -654,13 +654,13 @@ class TestPrimitivesV2(IBMTestCase):
 
         inst = primitive(session=session, options={"skip_transpilation": True})
         if isinstance(inst, IBMBaseEstimator):
-            task = (transpiled, observable)
+            pub = (transpiled, observable)
         else:
             transpiled.measure_all()
-            task = (transpiled,)
+            pub = (transpiled,)
 
         with self.assertRaises(ValueError) as err:
-            inst.run(tasks=task)
+            inst.run(pubs=pub)
         self.assertIn("cx", str(err.exception))
         self.assertIn(f"faulty edge {tuple(edge_qubits)}", str(err.exception))
 
@@ -683,13 +683,13 @@ class TestPrimitivesV2(IBMTestCase):
 
         inst = primitive(session=session, options={"skip_transpilation": True})
         if isinstance(inst, IBMBaseEstimator):
-            task = (transpiled, observable)
+            pub = (transpiled, observable)
         else:
             transpiled.measure_active(inplace=True)
-            task = (transpiled,)
+            pub = (transpiled,)
 
         with patch.object(Session, "run") as mock_run:
-            inst.run(task)
+            inst.run(pub)
         mock_run.assert_called_once()
 
     @data(EstimatorV2)
@@ -713,13 +713,13 @@ class TestPrimitivesV2(IBMTestCase):
 
         inst = primitive(session=session, options={"skip_transpilation": True})
         if isinstance(inst, IBMBaseEstimator):
-            task = (transpiled, observable)
+            pub = (transpiled, observable)
         else:
             transpiled.measure_all()
-            task = (transpiled,)
+            pub = (transpiled,)
 
         with patch.object(Session, "run") as mock_run:
-            inst.run(task)
+            inst.run(pub)
         mock_run.assert_called_once()
 
     @data(EstimatorV2)
@@ -744,13 +744,13 @@ class TestPrimitivesV2(IBMTestCase):
 
         inst = primitive(session=session)
         if isinstance(inst, IBMBaseEstimator):
-            task = (transpiled, observable)
+            pub = (transpiled, observable)
         else:
             transpiled.measure_all()
-            task = (transpiled,)
+            pub = (transpiled,)
 
         with patch.object(Session, "run") as mock_run:
-            inst.run(task)
+            inst.run(pub)
         mock_run.assert_called_once()
 
     def _update_dict(self, dict1, dict2):

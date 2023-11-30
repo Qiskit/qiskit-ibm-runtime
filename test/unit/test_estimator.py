@@ -23,7 +23,7 @@ import numpy as np
 from ddt import data, ddt
 
 from qiskit_ibm_runtime import Estimator, Session, EstimatorV2, EstimatorOptions
-from qiskit_ibm_runtime.qiskit.primitives import EstimatorTask
+from qiskit_ibm_runtime.qiskit.primitives import EstimatorPub
 
 from .mock.fake_runtime_service import FakeRuntimeService
 from ..ibm_test_case import IBMTestCase
@@ -71,25 +71,25 @@ class TestEstimatorV2(IBMTestCase):
         [(QuantumCircuit(2), ["XX"])],
         [(RealAmplitudes(num_qubits=1, reps=1), ["I"], [1, 2]), (QuantumCircuit(3), ["YYY"])],
     )
-    def test_run_program_inputs(self, in_tasks):
+    def test_run_program_inputs(self, in_pubs):
         """Verify program inputs are correct."""
         session = MagicMock(spec=MockSession)
         inst = EstimatorV2(session=session)
-        inst.run(in_tasks)
+        inst.run(in_pubs)
         input_params = session.run.call_args.kwargs["inputs"]
         self.assertIn("tasks", input_params)
-        tasks_param = input_params["tasks"]
-        for a_task_param, an_in_taks in zip(tasks_param, in_tasks):
-            self.assertIsInstance(a_task_param, EstimatorTask)
+        pubs_param = input_params["tasks"]
+        for a_pub_param, an_in_taks in zip(pubs_param, in_pubs):
+            self.assertIsInstance(a_pub_param, EstimatorPub)
             # Check circuit
-            self.assertEqual(a_task_param.circuit, an_in_taks[0])
+            self.assertEqual(a_pub_param.circuit, an_in_taks[0])
             # Check observables
-            a_task_obs = a_task_param.observables.tolist()
-            for a_task_obs, an_input_obs in zip(a_task_param.observables.tolist(), an_in_taks[1]):
-                self.assertEqual(list(a_task_obs.keys())[0], an_input_obs)
+            a_pub_obs = a_pub_param.observables.tolist()
+            for a_pub_obs, an_input_obs in zip(a_pub_param.observables.tolist(), an_in_taks[1]):
+                self.assertEqual(list(a_pub_obs.keys())[0], an_input_obs)
             # Check parameter values
             an_input_params = an_in_taks[2] if len(an_in_taks) == 3 else []
-            np.allclose(a_task_param.parameter_values.vals, an_input_params)
+            np.allclose(a_pub_param.parameter_values.vals, an_input_params)
 
     def test_unsupported_values_for_estimator_options(self):
         """Test exception when options levels are not supported."""
@@ -167,7 +167,7 @@ class TestEstimatorV2(IBMTestCase):
             self.assertIn(list(res_opt.keys())[1], str(exc.exception))
 
     @data(True, False)
-    def test_observable_types_single_circuit(self, to_task):
+    def test_observable_types_single_circuit(self, to_pub):
         """Test different observable types for a single circuit."""
         all_obs = [
             # TODO: Uncomment single ObservableArrayLike when supported
@@ -197,10 +197,10 @@ class TestEstimatorV2(IBMTestCase):
         estimator = EstimatorV2(backend=get_mocked_backend())
         for obs in all_obs:
             with self.subTest(obs=obs):
-                task = (circuit, obs)
-                if to_task:
-                    task = EstimatorTask.coerce(task)
-                estimator.run(task)
+                pub = (circuit, obs)
+                if to_pub:
+                    pub = EstimatorPub.coerce(pub)
+                estimator.run(pub)
 
     def test_observable_types_multi_circuits(self):
         """Test different observable types for multiple circuits."""
@@ -236,7 +236,7 @@ class TestEstimatorV2(IBMTestCase):
         estimator = EstimatorV2(backend=get_mocked_backend())
         for obs in all_obs:
             with self.subTest(obs=obs):
-                estimator.run(tasks=[(circuit1, obs[0]), (circuit2, obs[1])])
+                estimator.run(pubs=[(circuit1, obs[0]), (circuit2, obs[1])])
 
     def test_invalid_basis(self):
         """Test observable containing invalid basis."""

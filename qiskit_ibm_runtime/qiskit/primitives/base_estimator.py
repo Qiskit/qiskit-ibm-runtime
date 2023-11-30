@@ -87,7 +87,7 @@ from typing import Generic, TypeVar, Iterable, Optional
 from qiskit.circuit import QuantumCircuit
 from qiskit.providers import JobV1 as Job
 
-from .estimator_task import EstimatorTask, EstimatorTaskLike
+from .estimator_pub import EstimatorPub, EstimatorPubLike
 from .base_primitive import BasePrimitiveV2
 from .options import BasePrimitiveOptionsLike
 
@@ -100,20 +100,20 @@ class BaseEstimatorV2(BasePrimitiveV2, Generic[T]):
     def __init__(self, options: Optional[BasePrimitiveOptionsLike] = None):
         super().__init__(options=options)
 
-    def run(self, tasks: EstimatorTaskLike | Iterable[EstimatorTaskLike]) -> T:
+    def run(self, pubs: EstimatorPubLike | Iterable[EstimatorPubLike]) -> T:
         """TODO: docstring"""
-        if isinstance(tasks, EstimatorTask):
-            tasks = [tasks]
-        elif isinstance(tasks, tuple) and isinstance(tasks[0], QuantumCircuit):
-            tasks = [EstimatorTask.coerce(tasks)]
-        elif tasks is not EstimatorTask:
-            tasks = [EstimatorTask.coerce(task) for task in tasks]
+        if isinstance(pubs, EstimatorPub):
+            pubs = [pubs]
+        elif isinstance(pubs, tuple) and isinstance(pubs[0], QuantumCircuit):
+            pubs = [EstimatorPub.coerce(pubs)]
+        elif pubs is not EstimatorPub:
+            pubs = [EstimatorPub.coerce(pub) for pub in pubs]
 
-        for task in tasks:
-            task.validate()
+        for pub in pubs:
+            pub.validate()
 
-        return self._run(tasks)
+        return self._run(pubs)
 
     @abstractmethod
-    def _run(self, tasks: list[EstimatorTask]) -> T:
+    def _run(self, pubs: list[EstimatorPub]) -> T:
         pass

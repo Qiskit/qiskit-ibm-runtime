@@ -84,7 +84,7 @@ from qiskit.providers import JobV1 as Job
 
 from .base_primitive import BasePrimitiveV2
 from .options import BasePrimitiveOptionsLike
-from .sampler_task import SamplerTask, SamplerTaskLike
+from .sampler_pub import SamplerPub, SamplerPubLike
 
 T = TypeVar("T", bound=Job)  # pylint: disable=invalid-name
 
@@ -98,20 +98,20 @@ class BaseSamplerV2(BasePrimitiveV2, Generic[T]):
     def __init__(self, options: Optional[BasePrimitiveOptionsLike] = None):
         super().__init__(options=options)
 
-    def run(self, tasks: SamplerTaskLike | Iterable[SamplerTaskLike]) -> T:
+    def run(self, pubs: SamplerPubLike | Iterable[SamplerPubLike]) -> T:
         """TODO: docstring"""
-        if isinstance(tasks, SamplerTask):
-            tasks = [tasks]
-        elif isinstance(tasks, tuple) and isinstance(tasks[0], QuantumCircuit):
-            tasks = [SamplerTask.coerce(tasks)]
-        elif tasks is not SamplerTask:
-            tasks = [SamplerTask.coerce(task) for task in tasks]
+        if isinstance(pubs, SamplerPub):
+            pubs = [pubs]
+        elif isinstance(pubs, tuple) and isinstance(pubs[0], QuantumCircuit):
+            pubs = [SamplerPub.coerce(pubs)]
+        elif pubs is not SamplerPub:
+            pubs = [SamplerPub.coerce(pub) for pub in pubs]
 
-        for task in tasks:
-            task.validate()
+        for pub in pubs:
+            pub.validate()
 
-        return self._run(tasks)
+        return self._run(pubs)
 
     @abstractmethod
-    def _run(self, tasks: list[SamplerTask]) -> T:
+    def _run(self, pubs: list[SamplerPub]) -> T:
         pass
