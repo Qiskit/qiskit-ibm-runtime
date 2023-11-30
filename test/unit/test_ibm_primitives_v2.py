@@ -427,7 +427,7 @@ class TestPrimitivesV2(IBMTestCase):
         inst = primitive(session=session)
         inst.run(**get_primitive_inputs(inst))
         inputs = session.run.call_args.kwargs["inputs"]
-        for fld in ["pubs", "_experimental"]:
+        for fld in ["tasks", "_experimental"]:
             inputs.pop(fld, None)
         expected = {"skip_transpilation": False, "execution": {"init_qubits": True}, "version": 2}
         self.assertDictEqual(inputs, expected)

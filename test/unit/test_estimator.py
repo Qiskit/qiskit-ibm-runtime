@@ -77,8 +77,8 @@ class TestEstimatorV2(IBMTestCase):
         inst = EstimatorV2(session=session)
         inst.run(in_pubs)
         input_params = session.run.call_args.kwargs["inputs"]
-        self.assertIn("pubs", input_params)
-        pubs_param = input_params["pubs"]
+        self.assertIn("tasks", input_params)
+        pubs_param = input_params["tasks"]
         for a_pub_param, an_in_taks in zip(pubs_param, in_pubs):
             self.assertIsInstance(a_pub_param, EstimatorPub)
             # Check circuit
