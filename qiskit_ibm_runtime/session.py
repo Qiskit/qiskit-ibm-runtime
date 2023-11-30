@@ -15,15 +15,16 @@
 from typing import Dict, Optional, Type, Union, Callable, Any
 from types import TracebackType
 from functools import wraps
+from threading import Lock
 
 from qiskit_ibm_provider.utils.converters import hms_to_seconds
 
 from qiskit_ibm_runtime import QiskitRuntimeService
 from .runtime_job import RuntimeJob
-from .runtime_program import ParameterNamespace
-from .program.result_decoder import ResultDecoder
+from .utils.result_decoder import ResultDecoder
 from .ibm_backend import IBMBackend
 from .utils.default_session import set_cm_session
+from .utils.deprecation import deprecate_arguments
 
 
 def _active_session(func):  # type: ignore
@@ -87,7 +88,7 @@ class Session:
                 forcibly closed. Can be specified as seconds (int) or a string like "2h 30m 40s".
                 This value must be less than the
                 `system imposed maximum
-                <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/faqs/max_execution_time.html>`_.
+                <https://docs.quantum.ibm.com/run/max-execution-time>`_.
 
         Raises:
             ValueError: If an input value is invalid.
@@ -115,6 +116,7 @@ class Session:
             backend = backend.name
         self._backend = backend
 
+        self._setup_lock = Lock()
         self._session_id: Optional[str] = None
         self._active = True
         self._max_time = (
@@ -127,7 +129,7 @@ class Session:
     def run(
         self,
         program_id: str,
-        inputs: Union[Dict, ParameterNamespace],
+        inputs: Dict,
         options: Optional[Dict] = None,
         callback: Optional[Callable] = None,
         result_decoder: Optional[Type[ResultDecoder]] = None,
@@ -154,22 +156,28 @@ class Session:
         options["backend"] = self._backend
 
         if not self._session_id:
+            # Make sure only one thread can send the session starter job.
+            self._setup_lock.acquire()
             # TODO: What happens if session max time != first job max time?
             # Use session max time if this is first job.
             options["session_time"] = self._max_time
 
-        job = self._service.run(
-            program_id=program_id,
-            options=options,
-            inputs=inputs,
-            session_id=self._session_id,
-            start_session=self._session_id is None,
-            callback=callback,
-            result_decoder=result_decoder,
-        )
+        try:
+            job = self._service.run(
+                program_id=program_id,
+                options=options,
+                inputs=inputs,
+                session_id=self._session_id,
+                start_session=self._session_id is None,
+                callback=callback,
+                result_decoder=result_decoder,
+            )
 
-        if self._session_id is None:
-            self._session_id = job.job_id()
+            if self._session_id is None:
+                self._session_id = job.job_id()
+        finally:
+            if self._setup_lock.locked():
+                self._setup_lock.release()
 
         if self._backend is None:
             self._backend = job.backend().name
@@ -288,7 +296,7 @@ class Session:
         """Construct a Session object with a given session_id
 
         Args:
-            session_id: the id of the session to be created. This can be an already
+            session_id: the id of the session to be created. This must be an already
                 existing session id.
             service: instance of the ``QiskitRuntimeService`` class.
             backend: instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
@@ -298,6 +306,9 @@ class Session:
             A new Session with the given ``session_id``
 
         """
+        if backend:
+            deprecate_arguments("backend", "0.15.0", "Sessions do not support multiple backends.")
+
         session = cls(service, backend)
         session._session_id = session_id
         return session

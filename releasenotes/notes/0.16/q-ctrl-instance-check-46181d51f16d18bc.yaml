@@ -1,0 +1,5 @@
+---
+fixes:
+  - |
+    If a cloud instance that is ``q-ctrl`` enabled is used while ``q-ctrl`` is not
+    passed in as the ``channel_strategy``, an error will be raised.
