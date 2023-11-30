@@ -11,7 +11,7 @@
 # that they have been altered from the originals.
 
 """
-Base Task class
+Base Pub class
 """
 
 from __future__ import annotations
@@ -20,8 +20,8 @@ from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
-class TaskResult:
-    """Result of task."""
+class PubsResult:
+    """Result of pub."""
 
     data: dict
     metadata: dict

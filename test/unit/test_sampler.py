@@ -22,7 +22,7 @@ from qiskit import QuantumCircuit
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit_ibm_runtime import Sampler, Session, SamplerV2, SamplerOptions
-from qiskit_ibm_runtime.qiskit.primitives import SamplerTask
+from qiskit_ibm_runtime.qiskit.primitives import SamplerPub
 
 from ..ibm_test_case import IBMTestCase
 from .mock.fake_runtime_service import FakeRuntimeService
@@ -66,21 +66,21 @@ class TestSamplerV2(IBMTestCase):
         [(QuantumCircuit(2),)],
         [(RealAmplitudes(num_qubits=1, reps=1), [1, 2]), (QuantumCircuit(3),)],
     )
-    def test_run_program_inputs(self, in_tasks):
+    def test_run_program_inputs(self, in_pubs):
         """Verify program inputs are correct."""
         session = MagicMock(spec=MockSession)
         inst = SamplerV2(session=session)
-        inst.run(in_tasks)
+        inst.run(in_pubs)
         input_params = session.run.call_args.kwargs["inputs"]
-        self.assertIn("tasks", input_params)
-        tasks_param = input_params["tasks"]
-        for a_task_param, an_in_taks in zip(tasks_param, in_tasks):
-            self.assertIsInstance(a_task_param, SamplerTask)
+        self.assertIn("pubs", input_params)
+        pubs_param = input_params["pubs"]
+        for a_pub_param, an_in_taks in zip(pubs_param, in_pubs):
+            self.assertIsInstance(a_pub_param, SamplerPub)
             # Check circuit
-            self.assertEqual(a_task_param.circuit, an_in_taks[0])
+            self.assertEqual(a_pub_param.circuit, an_in_taks[0])
             # Check parameter values
             an_input_params = an_in_taks[1] if len(an_in_taks) == 2 else []
-            np.allclose(a_task_param.parameter_values.vals, an_input_params)
+            np.allclose(a_pub_param.parameter_values.vals, an_input_params)
 
     @data(
         {"optimization_level": 4}, {"resilience_level": 1}, {"resilience": {"zne_mitigation": True}}

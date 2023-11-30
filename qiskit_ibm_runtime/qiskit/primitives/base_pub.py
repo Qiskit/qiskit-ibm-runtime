@@ -11,7 +11,7 @@
 # that they have been altered from the originals.
 
 """
-Base Task class
+Base Pub class
 """
 
 from __future__ import annotations
@@ -22,8 +22,8 @@ from qiskit import QuantumCircuit
 
 
 @dataclass(frozen=True)
-class BaseTask:
-    """Base class for Task"""
+class BasePub:
+    """Base class for Pub"""
 
     circuit: QuantumCircuit
 

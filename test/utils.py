@@ -328,10 +328,10 @@ def get_primitive_inputs(primitive, num_sets=1):
     obs = SparsePauliOp.from_list([("IZ", 1)])
 
     if isinstance(primitive, Estimator):
-        return {"tasks": [(circ, [obs])] * num_sets}
+        return {"pubs": [(circ, [obs])] * num_sets}
 
     circ.measure_all()
-    return {"tasks": [(circ,)] * num_sets}
+    return {"pubs": [(circ,)] * num_sets}
 
 
 class MockSession(Session):

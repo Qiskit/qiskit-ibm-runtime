@@ -12,7 +12,7 @@
 # type: ignore
 
 """
-Estiamtor Task class
+Estiamtor Pub class
 """
 
 from __future__ import annotations
@@ -24,16 +24,16 @@ import numpy as np
 
 from qiskit import QuantumCircuit
 
-from .base_task import BaseTask
+from .base_pub import BasePub
 from .bindings_array import BindingsArray, BindingsArrayLike
 from .observables_array import ObservablesArray, ObservablesArrayLike
 from .shape import ShapedMixin
 
 
 @dataclass(frozen=True)
-class EstimatorTask(BaseTask, ShapedMixin):
-    """Task for Estimator.
-    Task is composed of triple (circuit, observables, parameter_values).
+class EstimatorPub(BasePub, ShapedMixin):
+    """Pub for Estimator.
+    Pub is composed of triple (circuit, observables, parameter_values).
     """
 
     observables: ObservablesArray
@@ -45,31 +45,31 @@ class EstimatorTask(BaseTask, ShapedMixin):
         super().__setattr__("_shape", shape)
 
     @classmethod
-    def coerce(cls, task: EstimatorTaskLike) -> EstimatorTask:
-        """Coerce EstimatorTaskLike into EstimatorTask.
+    def coerce(cls, pub: EstimatorPubLike) -> EstimatorPub:
+        """Coerce EstimatorPubLike into EstimatorPub.
 
         Args:
-            task: an object to be estimator task.
+            pub: an object to be estimator pub.
 
         Returns:
-            A coerced estiamtor task.
+            A coerced estiamtor pub.
 
         Raises:
             ValueError: If input values are invalid.
         """
-        if isinstance(task, EstimatorTask):
-            return task
-        if len(task) != 2 and len(task) != 3:
-            raise ValueError(f"The length of task must be 2 or 3, but length {len(task)} is given.")
-        circuit = task[0]
-        observables = ObservablesArray.coerce(task[1])
+        if isinstance(pub, EstimatorPub):
+            return pub
+        if len(pub) != 2 and len(pub) != 3:
+            raise ValueError(f"The length of pub must be 2 or 3, but length {len(pub)} is given.")
+        circuit = pub[0]
+        observables = ObservablesArray.coerce(pub[1])
         parameter_values = (
-            BindingsArray.coerce(task[2]) if len(task) == 3 else BindingsArray([], shape=(1,))
+            BindingsArray.coerce(pub[2]) if len(pub) == 3 else BindingsArray([], shape=(1,))
         )
         return cls(circuit=circuit, observables=observables, parameter_values=parameter_values)
 
     def validate(self) -> None:
-        """Validate the task."""
+        """Validate the pub."""
         super().validate()
         self.observables.validate()
         self.parameter_values.validate()
@@ -92,6 +92,6 @@ class EstimatorTask(BaseTask, ShapedMixin):
             )
 
 
-EstimatorTaskLike = Union[
-    EstimatorTask, Tuple[QuantumCircuit, ObservablesArrayLike, BindingsArrayLike]
+EstimatorPubLike = Union[
+    EstimatorPub, Tuple[QuantumCircuit, ObservablesArrayLike, BindingsArrayLike]
 ]

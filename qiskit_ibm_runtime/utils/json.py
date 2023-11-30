@@ -69,7 +69,7 @@ from qiskit_ibm_provider.qpy import (
 
 # TODO: Remove when they are in terra
 from ..qiskit.primitives import ObservablesArray, BindingsArray
-from ..qiskit.primitives.base_task import BaseTask
+from ..qiskit.primitives.base_pub import BasePub
 
 _TERRA_VERSION = tuple(
     int(x) for x in re.match(r"\d+\.\d+\.\d", _terra_version_string).group(0).split(".")[:3]
@@ -254,7 +254,7 @@ class RuntimeEncoder(json.JSONEncoder):
                 serializer=lambda buff, data: dump(data, buff),  # type: ignore[no-untyped-call]
             )
             return {"__type__": "Instruction", "__value__": value}
-        if isinstance(obj, BaseTask):
+        if isinstance(obj, BasePub):
             return asdict(obj)
         if isinstance(obj, ObservablesArray):
             return obj.tolist()
