@@ -1,0 +1,5 @@
+---
+fixes:
+  - |
+    If an instance is passed in at initialization, and a backend that is not in that instance
+    but a different instance the user has access to is retrieved, an error is raised.
