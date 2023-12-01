@@ -15,8 +15,10 @@
 import os
 import ast
 from typing import Optional, Dict
+
 from qiskit_ibm_provider.proxies import ProxyConfiguration
 
+from qiskit_ibm_runtime.utils.deprecation import issue_deprecation_msg
 from .exceptions import AccountNotFoundError
 from .account import Account, ChannelType
 from .storage import save_config, read_config, delete_config, read_qiskitrc
@@ -195,6 +197,12 @@ class AccountManager:
                 return Account.from_saved_format(all_config[account_name])
 
         if os.path.isfile(_QISKITRC_CONFIG_FILE):
+            issue_deprecation_msg(
+                msg="Use of the ~/.qiskit/qiskitrc.json file is deprecated.",
+                version="0.15.0",
+                remedy="Please use the ~/.qiskit/qiskit-ibm.json file instead.",
+                period="1 month",
+            )
             return cls._from_qiskitrc_file()
 
         raise AccountNotFoundError("Unable to find account.")

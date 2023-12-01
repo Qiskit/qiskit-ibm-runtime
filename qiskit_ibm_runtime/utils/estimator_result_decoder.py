@@ -17,7 +17,7 @@ import numpy as np
 
 from qiskit.primitives import EstimatorResult
 
-from ..program.result_decoder import ResultDecoder
+from .result_decoder import ResultDecoder
 from ..qiskit.primitives.pub_result import PubsResult
 
 

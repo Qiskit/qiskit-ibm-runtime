@@ -43,15 +43,13 @@ from .constants import QISKIT_IBM_RUNTIME_API_URL
 from .exceptions import IBMNotAuthorizedError, IBMInputValueError, IBMAccountError
 from .exceptions import (
     IBMRuntimeError,
-    RuntimeDuplicateProgramError,
     RuntimeProgramNotFound,
     RuntimeJobNotFound,
 )
 from .hub_group_project import HubGroupProject  # pylint: disable=cyclic-import
-from .program.result_decoder import ResultDecoder
+from .utils.result_decoder import ResultDecoder
 from .runtime_job import RuntimeJob
-from .runtime_program import RuntimeProgram, ParameterNamespace
-from .utils import RuntimeDecoder, to_base64_string, to_python_identifier
+from .utils import RuntimeDecoder, to_python_identifier
 from .api.client_parameters import ClientParameters
 from .runtime_options import RuntimeOptions
 from .ibm_backend import IBMBackend
@@ -196,7 +194,6 @@ class QiskitRuntimeService(Provider):
 
         self._channel_strategy = channel_strategy or self._account.channel_strategy
         self._channel = self._account.channel
-        self._programs: Dict[str, RuntimeProgram] = {}
         self._backends: Dict[str, "ibm_backend.IBMBackend"] = {}
         self._backend_configs: Dict[str, Any] = {}
 
@@ -320,11 +317,21 @@ class QiskitRuntimeService(Provider):
         instance do not match.
 
         """
+        qctrl_enabled = self._api_client.is_qctrl_enabled()
         if self._channel_strategy == "q-ctrl":
-            qctrl_enabled = self._api_client.cloud_instance()
             if not qctrl_enabled:
                 raise IBMNotAuthorizedError(
-                    "This account is not authorized to use ``q-ctrl`` as a channel strategy."
+                    "The instance passed in is not compatible with Q-CTRL channel strategy. "
+                    "Please switch to or create an instance with the Q-CTRL strategy enabled. "
+                    "See https://cloud.ibm.com/docs/quantum-computing?"
+                    "topic=quantum-computing-get-started for more information"
+                )
+        else:
+            if qctrl_enabled:
+                raise IBMNotAuthorizedError(
+                    "The instance passed in is only compatible with Q-CTRL performance "
+                    "management strategy. "
+                    "To use this instance, set channel_strategy='q-ctrl'."
                 )
 
     def _discover_cloud_backends(self) -> Dict[str, "ibm_backend.IBMBackend"]:
@@ -562,7 +569,7 @@ class QiskitRuntimeService(Provider):
                     QiskitRuntimeService.backends(open_pulse=True)
 
                 For the full list of backend attributes, see the `IBMBackend` class documentation
-                <https://qiskit.org/documentation/apidoc/providers_models.html>
+                <https://docs.quantum.ibm.com/api/qiskit/providers_models>
 
         Returns:
             The list of available backends that match the filter.
@@ -814,182 +821,10 @@ class QiskitRuntimeService(Provider):
     def get_backend(self, name: str = None, **kwargs: Any) -> Backend:
         return self.backend(name, **kwargs)
 
-    def pprint_programs(
-        self,
-        refresh: bool = False,
-        detailed: bool = False,
-        limit: int = 20,
-        skip: int = 0,
-    ) -> None:
-        """Pretty print information about available runtime programs.
-
-        Args:
-            refresh: If ``True``, re-query the server for the programs. Otherwise
-                return the cached value.
-            detailed: If ``True`` print all details about available runtime programs.
-            limit: The number of programs returned at a time. Default and maximum
-                value of 20.
-            skip: The number of programs to skip.
-        """
-        warnings.warn(
-            (
-                "Custom programs are being deprecated as of qiskit-ibm-runtime 0.14.0 and will "
-                "be removed on November 27, 2023. You can instead convert your custom programs "
-                "to use Qiskit Runtime primitives with Quantum Serverless. Refer to the migration "
-                "guide for instructions: "
-                "https://qiskit-extensions.github.io/quantum-serverless/migration"
-                "/migration_from_qiskit_runtime_programs.html"
-            ),
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        programs = self.programs(refresh, limit, skip)
-        for prog in programs:
-            print("=" * 50)
-            if detailed:
-                print(str(prog))
-            else:
-                print(
-                    f"{prog.program_id}:",
-                )
-                print(f"  Name: {prog.name}")
-                print(f"  Description: {prog.description}")
-
-    def programs(
-        self, refresh: bool = False, limit: int = 20, skip: int = 0
-    ) -> List[RuntimeProgram]:
-        """Return available runtime programs.
-
-        Currently only program metadata is returned.
-
-        Args:
-            refresh: If ``True``, re-query the server for the programs. Otherwise
-                return the cached value.
-            limit: The number of programs returned at a time. ``None`` means no limit.
-            skip: The number of programs to skip.
-
-        Returns:
-            A list of runtime programs.
-        """
-        warnings.warn(
-            (
-                "Custom programs are being deprecated as of qiskit-ibm-runtime 0.14.0 and will "
-                "be removed on November 27, 2023. You can instead convert your custom programs "
-                "to use Qiskit Runtime primitives with Quantum Serverless. Refer to the migration "
-                "guide for instructions: "
-                "https://qiskit-extensions.github.io/quantum-serverless/migration"
-                "/migration_from_qiskit_runtime_programs.html"
-            ),
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        if skip is None:
-            skip = 0
-        if not self._programs or refresh:
-            self._programs = {}
-            current_page_limit = 20
-            offset = 0
-            while True:
-                response = self._api_client.list_programs(limit=current_page_limit, skip=offset)
-                program_page = response.get("programs", [])
-                # count is the total number of programs that would be returned if
-                # there was no limit or skip
-                count = response.get("count", 0)
-                if limit is None:
-                    limit = count
-                for prog_dict in program_page:
-                    program = self._to_program(prog_dict)
-                    self._programs[program.program_id] = program
-                num_cached_programs = len(self._programs)
-                if num_cached_programs == count or num_cached_programs >= (limit + skip):
-                    # Stop if there are no more programs returned by the server or
-                    # if the number of cached programs is greater than the sum of limit and skip
-                    break
-                offset += len(program_page)
-        if limit is None:
-            limit = len(self._programs)
-        return list(self._programs.values())[skip : limit + skip]
-
-    def program(self, program_id: str, refresh: bool = False) -> RuntimeProgram:
-        """Retrieve a runtime program.
-
-        Currently only program metadata is returned.
-
-        Args:
-            program_id: Program ID.
-            refresh: If ``True``, re-query the server for the program. Otherwise
-                return the cached value.
-
-        Returns:
-            Runtime program.
-
-        Raises:
-            RuntimeProgramNotFound: If the program does not exist.
-            IBMRuntimeError: If the request failed.
-        """
-        warnings.warn(
-            (
-                "Custom programs are being deprecated as of qiskit-ibm-runtime 0.14.0 and will "
-                "be removed on November 27, 2023. You can instead convert your custom programs "
-                "to use Qiskit Runtime primitives with Quantum Serverless. Refer to the migration "
-                "guide for instructions: "
-                "https://qiskit-extensions.github.io/quantum-serverless/migration"
-                "/migration_from_qiskit_runtime_programs.html"
-            ),
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        if program_id not in self._programs or refresh:
-            try:
-                response = self._api_client.program_get(program_id)
-            except RequestsApiError as ex:
-                if ex.status_code == 404:
-                    raise RuntimeProgramNotFound(f"Program not found: {ex.message}") from None
-                raise IBMRuntimeError(f"Failed to get program: {ex}") from None
-
-            self._programs[program_id] = self._to_program(response)
-
-        return self._programs[program_id]
-
-    def _to_program(self, response: Dict) -> RuntimeProgram:
-        """Convert server response to ``RuntimeProgram`` instances.
-
-        Args:
-            response: Server response.
-
-        Returns:
-            A ``RuntimeProgram`` instance.
-        """
-        backend_requirements = {}
-        parameters = {}
-        return_values = {}
-        interim_results = {}
-        if "spec" in response:
-            backend_requirements = response["spec"].get("backend_requirements", {})
-            parameters = response["spec"].get("parameters", {})
-            return_values = response["spec"].get("return_values", {})
-            interim_results = response["spec"].get("interim_results", {})
-
-        return RuntimeProgram(
-            program_name=response["name"],
-            program_id=response["id"],
-            description=response.get("description", ""),
-            parameters=parameters,
-            return_values=return_values,
-            interim_results=interim_results,
-            max_execution_time=response.get("cost", 0),
-            creation_date=response.get("creation_date", ""),
-            update_date=response.get("update_date", ""),
-            backend_requirements=backend_requirements,
-            is_public=response.get("is_public", False),
-            data=response.get("data", ""),
-            api_client=self._api_client,
-        )
-
     def run(
         self,
         program_id: str,
-        inputs: Union[Dict, ParameterNamespace],
+        inputs: Dict,
         options: Optional[Union[RuntimeOptions, Dict]] = None,
         callback: Optional[Callable] = None,
         result_decoder: Optional[Union[Type[ResultDecoder], Sequence[Type[ResultDecoder]]]] = None,
@@ -1026,29 +861,11 @@ class QiskitRuntimeService(Provider):
             RuntimeProgramNotFound: If the program cannot be found.
             IBMRuntimeError: An error occurred running the program.
         """
-        if program_id not in ["sampler", "estimator", "circuit-runner", "qasm3-runner"]:
-            warnings.warn(
-                (
-                    "Custom programs are being deprecated as of qiskit-ibm-runtime 0.14.0 and will "
-                    "be removed on November 27, 2023. You can instead convert your custom programs "
-                    "to use Qiskit Runtime primitives with Quantum Serverless. Refer to the migration "
-                    "guide for instructions: "
-                    "https://qiskit-extensions.github.io/quantum-serverless/migration"
-                    "/migration_from_qiskit_runtime_programs.html"
-                ),
-                DeprecationWarning,
-                stacklevel=2,
-            )
         qrt_options: RuntimeOptions = options
         if options is None:
             qrt_options = RuntimeOptions()
         elif isinstance(options, Dict):
             qrt_options = RuntimeOptions(**options)
-
-        # If using params object, extract as dictionary.
-        if isinstance(inputs, ParameterNamespace):
-            inputs.validate()
-            inputs = vars(inputs)
 
         qrt_options.validate(channel=self.channel)
 
@@ -1114,282 +931,6 @@ class QiskitRuntimeService(Provider):
             version=version,
         )
         return job
-
-    def upload_program(self, data: str, metadata: Optional[Union[Dict, str]] = None) -> str:
-        """Upload a runtime program.
-
-        In addition to program data, the following program metadata is also
-        required:
-
-            - name
-            - max_execution_time
-
-        Program metadata can be specified using the `metadata` parameter or
-        individual parameter (for example, `name` and `description`). If the
-        same metadata field is specified in both places, the individual parameter
-        takes precedence. For example, if you specify::
-
-            upload_program(metadata={"name": "name1"}, name="name2")
-
-        ``name2`` will be used as the program name.
-
-        Args:
-            data: Program data or path of the file containing program data to upload.
-            metadata: Name of the program metadata file or metadata dictionary.
-                A metadata file needs to be in the JSON format. The ``parameters``,
-                ``return_values``, and ``interim_results`` should be defined as JSON Schema.
-                See :file:`program/program_metadata_sample.json` for an example. The
-                fields in metadata are explained below.
-
-                * name: Name of the program. Required.
-                * max_execution_time: Maximum execution time in seconds. Required.
-                * description: Program description.
-                * is_public: Whether the runtime program should be visible to the public.
-                                    The default is ``False``.
-                * spec: Specifications for backend characteristics and input parameters
-                    required to run the program, interim results and final result.
-
-                    * backend_requirements: Backend requirements.
-                    * parameters: Program input parameters in JSON schema format.
-                    * return_values: Program return values in JSON schema format.
-                    * interim_results: Program interim results in JSON schema format.
-
-        Returns:
-            Program ID.
-
-        Raises:
-            IBMInputValueError: If required metadata is missing.
-            RuntimeDuplicateProgramError: If a program with the same name already exists.
-            IBMNotAuthorizedError: If you are not authorized to upload programs.
-            IBMRuntimeError: If the upload failed.
-        """
-        warnings.warn(
-            (
-                "Custom programs are being deprecated as of qiskit-ibm-runtime 0.14.0 and will "
-                "be removed on November 27, 2023. You can instead convert your custom programs "
-                "to use Qiskit Runtime primitives with Quantum Serverless. Refer to the migration "
-                "guide for instructions: "
-                "https://qiskit-extensions.github.io/quantum-serverless/migration"
-                "/migration_from_qiskit_runtime_programs.html"
-            ),
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        program_metadata = self._read_metadata(metadata=metadata)
-
-        for req in ["name", "max_execution_time"]:
-            if req not in program_metadata or not program_metadata[req]:
-                raise IBMInputValueError(f"{req} is a required metadata field.")
-
-        if "def main(" not in data:
-            # This is the program file
-            with open(data, "r", encoding="utf-8") as file:
-                data = file.read()
-
-        try:
-            program_data = to_base64_string(data)
-            response = self._api_client.program_create(
-                program_data=program_data, **program_metadata
-            )
-        except RequestsApiError as ex:
-            if ex.status_code == 409:
-                raise RuntimeDuplicateProgramError(
-                    "Program with the same name already exists."
-                ) from None
-            if ex.status_code == 403:
-                raise IBMNotAuthorizedError("You are not authorized to upload programs.") from None
-            raise IBMRuntimeError(f"Failed to create program: {ex}") from None
-        return response["id"]
-
-    def _read_metadata(self, metadata: Optional[Union[Dict, str]] = None) -> Dict:
-        """Read metadata.
-
-        Args:
-            metadata: Name of the program metadata file or metadata dictionary.
-
-        Returns:
-            Return metadata.
-        """
-        upd_metadata: dict = {}
-        if metadata is not None:
-            if isinstance(metadata, str):
-                with open(metadata, "r", encoding="utf-8") as file:
-                    upd_metadata = json.load(file)
-            else:
-                upd_metadata = metadata
-        # TODO validate metadata format
-        metadata_keys = [
-            "name",
-            "max_execution_time",
-            "description",
-            "spec",
-            "is_public",
-        ]
-        return {key: val for key, val in upd_metadata.items() if key in metadata_keys}
-
-    def update_program(
-        self,
-        program_id: str,
-        data: str = None,
-        metadata: Optional[Union[Dict, str]] = None,
-        name: str = None,
-        description: str = None,
-        max_execution_time: int = None,
-        spec: Optional[Dict] = None,
-    ) -> None:
-        """Update a runtime program.
-
-        Program metadata can be specified using the `metadata` parameter or
-        individual parameters, such as `name` and `description`. If the
-        same metadata field is specified in both places, the individual parameter
-        takes precedence.
-
-        Args:
-            program_id: Program ID.
-            data: Program data or path of the file containing program data to upload.
-            metadata: Name of the program metadata file or metadata dictionary.
-            name: New program name.
-            description: New program description.
-            max_execution_time: New maximum execution time.
-            spec: New specifications for backend characteristics, input parameters,
-                interim results and final result.
-
-        Raises:
-            RuntimeProgramNotFound: If the program doesn't exist.
-            IBMRuntimeError: If the request failed.
-        """
-        warnings.warn(
-            (
-                "Custom programs are being deprecated as of qiskit-ibm-runtime 0.14.0 and will "
-                "be removed on November 27, 2023. You can instead convert your custom programs "
-                "to use Qiskit Runtime primitives with Quantum Serverless. Refer to the migration "
-                "guide for instructions: "
-                "https://qiskit-extensions.github.io/quantum-serverless/migration"
-                "/migration_from_qiskit_runtime_programs.html"
-            ),
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        if not any([data, metadata, name, description, max_execution_time, spec]):
-            warnings.warn(
-                "None of the 'data', 'metadata', 'name', 'description', "
-                "'max_execution_time', or 'spec' parameters is specified. "
-                "No update is made."
-            )
-            return
-
-        if data:
-            if "def main(" not in data:
-                # This is the program file
-                with open(data, "r", encoding="utf-8") as file:
-                    data = file.read()
-            data = to_base64_string(data)
-
-        if metadata:
-            metadata = self._read_metadata(metadata=metadata)
-        combined_metadata = self._merge_metadata(
-            metadata=metadata,
-            name=name,
-            description=description,
-            max_execution_time=max_execution_time,
-            spec=spec,
-        )
-
-        try:
-            self._api_client.program_update(program_id, program_data=data, **combined_metadata)
-        except RequestsApiError as ex:
-            if ex.status_code == 404:
-                raise RuntimeProgramNotFound(f"Program not found: {ex.message}") from None
-            raise IBMRuntimeError(f"Failed to update program: {ex}") from None
-
-        if program_id in self._programs:
-            program = self._programs[program_id]
-            program._refresh()
-
-    def _merge_metadata(self, metadata: Optional[Dict] = None, **kwargs: Any) -> Dict:
-        """Merge multiple copies of metadata.
-        Args:
-            metadata: Program metadata.
-            **kwargs: Additional metadata fields to overwrite.
-        Returns:
-            Merged metadata.
-        """
-        merged = {}
-        metadata = metadata or {}
-        metadata_keys = ["name", "max_execution_time", "description", "spec"]
-        for key in metadata_keys:
-            if kwargs.get(key, None) is not None:
-                merged[key] = kwargs[key]
-            elif key in metadata.keys():
-                merged[key] = metadata[key]
-        return merged
-
-    def delete_program(self, program_id: str) -> None:
-        """Delete a runtime program.
-
-        Args:
-            program_id: Program ID.
-
-        Raises:
-            RuntimeProgramNotFound: If the program doesn't exist.
-            IBMRuntimeError: If the request failed.
-        """
-        warnings.warn(
-            (
-                "Custom programs are being deprecated as of qiskit-ibm-runtime 0.14.0 and will "
-                "be removed on November 27, 2023. You can instead convert your custom programs "
-                "to use Qiskit Runtime primitives with Quantum Serverless. Refer to the migration "
-                "guide for instructions: "
-                "https://qiskit-extensions.github.io/quantum-serverless/migration"
-                "/migration_from_qiskit_runtime_programs.html"
-            ),
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        try:
-            self._api_client.program_delete(program_id=program_id)
-        except RequestsApiError as ex:
-            if ex.status_code == 404:
-                raise RuntimeProgramNotFound(f"Program not found: {ex.message}") from None
-            raise IBMRuntimeError(f"Failed to delete program: {ex}") from None
-
-        if program_id in self._programs:
-            del self._programs[program_id]
-
-    def set_program_visibility(self, program_id: str, public: bool) -> None:
-        """Sets a program's visibility.
-
-        Args:
-            program_id: Program ID.
-            public: If ``True``, make the program visible to all.
-                If ``False``, make the program visible to just your account.
-
-        Raises:
-            RuntimeProgramNotFound: if program not found (404)
-            IBMRuntimeError: if update failed (401, 403)
-        """
-        warnings.warn(
-            (
-                "Custom programs are being deprecated as of qiskit-ibm-runtime 0.14.0 and will "
-                "be removed on November 27, 2023. You can instead convert your custom programs "
-                "to use Qiskit Runtime primitives with Quantum Serverless. Refer to the migration "
-                "guide for instructions: "
-                "https://qiskit-extensions.github.io/quantum-serverless/migration"
-                "/migration_from_qiskit_runtime_programs.html"
-            ),
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        try:
-            self._api_client.set_program_visibility(program_id, public)
-        except RequestsApiError as ex:
-            if ex.status_code == 404:
-                raise RuntimeProgramNotFound(f"Program not found: {ex.message}") from None
-            raise IBMRuntimeError(f"Failed to set program visibility: {ex}") from None
-
-        if program_id in self._programs:
-            program = self._programs[program_id]
-            program._is_public = public
 
     def job(self, job_id: str) -> RuntimeJob:
         """Retrieve a runtime job.
