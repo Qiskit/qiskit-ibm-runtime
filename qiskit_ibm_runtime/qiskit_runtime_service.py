@@ -569,7 +569,7 @@ class QiskitRuntimeService(Provider):
                     QiskitRuntimeService.backends(open_pulse=True)
 
                 For the full list of backend attributes, see the `IBMBackend` class documentation
-                <https://qiskit.org/documentation/apidoc/providers_models.html>
+                <https://docs.quantum.ibm.com/api/qiskit/providers_models>
 
         Returns:
             The list of available backends that match the filter.

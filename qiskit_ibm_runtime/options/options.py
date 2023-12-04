@@ -58,7 +58,7 @@ class Options:
 
             Refer to the
             `Qiskit Runtime documentation
-            <https://qiskit.org/documentation/partners/qiskit_ibm_runtime>`_.
+            <https://docs.quantum.ibm.com/run/configure-error-mitigation>`_.
             for more information about the error mitigation methods used at each level.
 
         max_execution_time: Maximum execution time in seconds, which is based
@@ -69,7 +69,7 @@ class Options:
 
             Refer to the
             `Max execution time documentation
-            <https://docs.quantum-computing.ibm.com/run/max-execution-time#maximum-execution-time>`_.
+            <https://docs.quantum.ibm.com/run/max-execution-time>`_.
             for more information.
 
         transpilation: Transpilation options. See :class:`TranspilationOptions` for all
