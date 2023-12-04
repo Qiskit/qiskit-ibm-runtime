@@ -24,6 +24,7 @@ import requests
 
 from qiskit.providers.backend import Backend
 from qiskit.providers.jobstatus import JobStatus, JOB_FINAL_STATES
+from qiskit.providers.models import BackendProperties
 from qiskit.providers.job import JobV1 as Job
 
 # pylint: disable=unused-import,cyclic-import
@@ -428,6 +429,20 @@ class RuntimeJob(Job):
                 "tags for job {}. The tags were not updated for "
                 "the job.".format(self.job_id())
             )
+
+    def properties(self, refresh: bool = False) -> Optional[BackendProperties]:
+        """Return the backend properties for this job.
+
+        Args:
+            refresh: If ``True``, re-query the server for the backend properties.
+                Otherwise, return a cached version.
+
+        Returns:
+            The backend properties used for this job, at the time the job was run,
+            or ``None`` if properties are not available.
+        """
+
+        return self._backend.properties(refresh, self.creation_date)
 
     def _set_status_and_error_message(self) -> None:
         """Fetch and set status and error message."""
