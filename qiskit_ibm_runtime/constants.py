@@ -14,7 +14,7 @@
 
 from qiskit.providers.jobstatus import JobStatus
 
-from .program.result_decoder import ResultDecoder
+from .utils.result_decoder import ResultDecoder
 from .utils.estimator_result_decoder import EstimatorResultDecoder
 from .utils.sampler_result_decoder import SamplerResultDecoder
 from .utils.runner_result import RunnerResult

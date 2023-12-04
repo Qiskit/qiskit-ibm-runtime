@@ -19,7 +19,7 @@ from qiskit.result import Result, QuasiDistribution
 from qiskit.result.postprocess import _hex_to_bin
 from qiskit.exceptions import QiskitError
 
-from ..program import ResultDecoder
+from .result_decoder import ResultDecoder
 from .json import RuntimeDecoder
 
 
