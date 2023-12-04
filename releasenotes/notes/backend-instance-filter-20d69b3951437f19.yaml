@@ -2,6 +2,7 @@
 fixes:
   - |
     When a single backend is retrieved with the ``instance`` parameter, 
+
     .. code-block::
         service.backend('ibm_torino', instance='ibm-q/open/main')
 
