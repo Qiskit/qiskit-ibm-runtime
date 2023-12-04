@@ -46,6 +46,25 @@ class TestIntegrationBackend(IBMIntegrationTestCase):
         )
 
     @run_integration_test
+    def test_backend_wrong_instance(self, service):
+        """Test getting a backend with wrong instance."""
+        hgps = list(service._hgps.keys())
+        if len(hgps) < 2:
+            raise SkipTest("Skipping test, not enough instances")
+
+        hgp_1 = hgps[0]
+        hgp_2 = hgps[1]
+        hgp_1_backends = service.backends(instance=hgp_1)
+        hgp_2_backends = service.backends(instance=hgp_2)
+        unique_hgp = list(
+            set(hgp_2_backends) - set(hgp_1_backends)
+        )  # get differences between the two lists
+        if unique_hgp:
+            unqiue_backned = unique_hgp[0]
+            with self.assertRaises(QiskitBackendNotFoundError):
+                service.backend(unqiue_backned.name, instance=hgp_1)
+
+    @run_integration_test
     @quantum_only
     def test_backends_no_config(self, service):
         """Test retrieving backends when a config is missing."""
