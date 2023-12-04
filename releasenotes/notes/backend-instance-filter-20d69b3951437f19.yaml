@@ -1,5 +1,14 @@
 ---
 fixes:
   - |
-    If an instance is passed in at initialization, and a backend that is not in that instance
-    but a different instance the user has access to is retrieved, an error is raised.
+    When a single backend is retrieved with the ``instance`` parameter, 
+    .. code-block::
+        service.backend('ibm_torino', instance='ibm-q/open/main')
+
+    if the backend is not in the instance but in a different one the user has access to, an error 
+    will be raised. The same error will now be raised if an instance is passed in at initialization
+    and then a backend not in that instance is retrieved. 
+
+    .. code-block::
+        service = QiskitRuntimeService(channel="ibm_quantum", instance="ibm-q/open/main")
+        service.backend('ibm_torino') # raises error if torino is not in ibm-q/open/main
