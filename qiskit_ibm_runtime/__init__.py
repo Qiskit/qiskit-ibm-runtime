@@ -24,7 +24,7 @@ streamlines computations requiring many iterations. These experiments will
 execute significantly faster within its improved hybrid quantum/classical process.
 
 Primitives and sessions
------------------------
+=======================
 
 Qiskit Runtime has two predefined primitives: ``Sampler`` and ``Estimator``.
 These primitives provide a simplified interface for performing foundational quantum
@@ -68,7 +68,7 @@ Below is an example of using primitives within a session::
         print(f"Estimator results: {job.result()}")
 
 Backend data
-------------
+============
 
 :class:`QiskitRuntimeService` also has methods, such as :meth:`backend`,
 :meth:`backends`, and :meth:`least_busy`, that allow you to query for a target
@@ -76,76 +76,76 @@ backend to use. These methods return one or more :class:`IBMBackend` instances
 that contains methods and attributes describing the backend.
 
 Supplementary Information
+=========================
+
+Account initialization
 -------------------------
 
-.. dropdown:: Account initialization
-   :animate: fade-in-slide-down
+You need to initialize your account before you can start using the Qiskit Runtime service.
+This is done by initializing a :class:`QiskitRuntimeService` instance with your
+account credentials. If you don't want to pass in the credentials each time, you
+can use the :meth:`QiskitRuntimeService.save_account` method to save the credentials
+on disk.
 
-    You need to initialize your account before you can start using the Qiskit Runtime service.
-    This is done by initializing a :class:`QiskitRuntimeService` instance with your
-    account credentials. If you don't want to pass in the credentials each time, you
-    can use the :meth:`QiskitRuntimeService.save_account` method to save the credentials
-    on disk.
+Qiskit Runtime is available on both IBM Cloud and IBM Quantum, and you can specify
+``channel="ibm_cloud"`` for IBM Cloud and ``channel="ibm_quantum"`` for IBM Quantum. The default
+is IBM Cloud.
 
-    Qiskit Runtime is available on both IBM Cloud and IBM Quantum, and you can specify
-    ``channel="ibm_cloud"`` for IBM Cloud and ``channel="ibm_quantum"`` for IBM Quantum. The default
-    is IBM Cloud.
+Runtime Jobs
+------------
 
-.. dropdown:: Runtime Jobs
-   :animate: fade-in-slide-down
+When you use the ``run()`` method of the :class:`Sampler` or :class:`Estimator`
+to invoke the primitive, a
+:class:`RuntimeJob` instance is returned. This class has all the basic job
+methods, such as :meth:`RuntimeJob.status`, :meth:`RuntimeJob.result`, and
+:meth:`RuntimeJob.cancel`.
 
-    When you use the ``run()`` method of the :class:`Sampler` or :class:`Estimator`
-    to invoke the primitive, a
-    :class:`RuntimeJob` instance is returned. This class has all the basic job
-    methods, such as :meth:`RuntimeJob.status`, :meth:`RuntimeJob.result`, and
-    :meth:`RuntimeJob.cancel`.
+Logging
+-------
 
-.. dropdown:: Logging
-   :animate: fade-in-slide-down
+``qiskit-ibm-runtime`` uses the ``qiskit_ibm_runtime`` logger.
 
-    ``qiskit-ibm-runtime`` uses the ``qiskit_ibm_runtime`` logger.
+Two environment variables can be used to control the logging:
 
-    Two environment variables can be used to control the logging:
+    * ``QISKIT_IBM_RUNTIME_LOG_LEVEL``: Specifies the log level to use.
+        If an invalid level is set, the log level defaults to ``WARNING``.
+        The valid log levels are ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``
+        (case-insensitive). If the environment variable is not set, then the parent logger's level
+        is used, which also defaults to ``WARNING``.
+    * ``QISKIT_IBM_RUNTIME_LOG_FILE``: Specifies the name of the log file to use. If specified,
+        messages will be logged to the file only. Otherwise messages will be logged to the standard
+        error (usually the screen).
 
-        * ``QISKIT_IBM_RUNTIME_LOG_LEVEL``: Specifies the log level to use.
-          If an invalid level is set, the log level defaults to ``WARNING``.
-          The valid log levels are ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``
-          (case-insensitive). If the environment variable is not set, then the parent logger's level
-          is used, which also defaults to ``WARNING``.
-        * ``QISKIT_IBM_RUNTIME_LOG_FILE``: Specifies the name of the log file to use. If specified,
-          messages will be logged to the file only. Otherwise messages will be logged to the standard
-          error (usually the screen).
+For more advanced use, you can modify the logger itself. For example, to manually set the level
+to ``WARNING``::
 
-    For more advanced use, you can modify the logger itself. For example, to manually set the level
-    to ``WARNING``::
+    import logging
+    logging.getLogger('qiskit_ibm_runtime').setLevel(logging.WARNING)
 
-        import logging
-        logging.getLogger('qiskit_ibm_runtime').setLevel(logging.WARNING)
+Interim and final results
+-------------------------
 
-.. dropdown:: Interim and final results
-   :animate: fade-in-slide-down
+Some runtime programs provide interim results that inform you about program
+progress. You can choose to stream the interim results and final result when you run the
+program by passing in the ``callback`` parameter, or at a later time using
+the :meth:`RuntimeJob.stream_results` method. For example::
 
-    Some runtime programs provide interim results that inform you about program
-    progress. You can choose to stream the interim results and final result when you run the
-    program by passing in the ``callback`` parameter, or at a later time using
-    the :meth:`RuntimeJob.stream_results` method. For example::
+    from qiskit.test.reference_circuits import ReferenceCircuits
+    from qiskit_ibm_runtime import QiskitRuntimeService, Sampler
 
-        from qiskit.test.reference_circuits import ReferenceCircuits
-        from qiskit_ibm_runtime import QiskitRuntimeService, Sampler
+    service = QiskitRuntimeService()
+    backend = service.backend("ibmq_qasm_simulator")
 
-        service = QiskitRuntimeService()
-        backend = service.backend("ibmq_qasm_simulator")
+    def result_callback(job_id, result):
+        print(result)
 
-        def result_callback(job_id, result):
-            print(result)
-
-        # Stream results as soon as the job starts running.
-        job = Sampler(backend).run(ReferenceCircuits.bell(), callback=result_callback)
-        print(job.result())
+    # Stream results as soon as the job starts running.
+    job = Sampler(backend).run(ReferenceCircuits.bell(), callback=result_callback)
+    print(job.result())
 
 
 Classes
-==========================
+=======
 .. autosummary::
    :toctree: ../stubs/
 
