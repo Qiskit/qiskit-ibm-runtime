@@ -1,4 +1,4 @@
-from qiskit.providers.fake_provider.backends import (
+from qiskit_ibm_runtime.fake_provider.backends import (
     FakeAlmadenV2,
     FakeArmonkV2,
     FakeAthensV2,

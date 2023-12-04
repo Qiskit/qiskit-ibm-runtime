@@ -37,5 +37,4 @@ class TestRunSimulation(IBMTestCase):
             self.assertAlmostEqual(result.quasi_dists[0][0], 0.5, delta=0.2)
             self.assertAlmostEqual(result.quasi_dists[0][3], 0.5, delta=0.2)
 
-            # currently not working correctly for FakeBackend
             self.assertEqual(result.metadata[0]["shots"], shots)
