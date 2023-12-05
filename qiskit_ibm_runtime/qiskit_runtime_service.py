@@ -947,11 +947,11 @@ class QiskitRuntimeService(Provider):
             for opt in inputs["run_options"]:
                 if hasattr(AerSimulator._default_options(), opt):
                     aer_backend_options[opt] = inputs["run_options"][opt]
-
+            print("transpile options = ", inputs["transpilation_settings"])
             my_program = prog(
                 backend_options=aer_backend_options,
-                transpile_options=inputs["transpilation_settings"],
-                skip_transpilation=inputs["transpilation_settings"]["skip_transpilation"],
+                transpile_options=transpile_options,
+                # skip_transpilation=inputs["transpilation_settings"]["skip_transpilation"],
             )
             observables = inputs.get("observables", None)
 

@@ -13,29 +13,36 @@
 """Tests for running locally on a simulator."""
 
 from qiskit_aer import AerSimulator
-
+from qiskit.quantum_info import SparsePauliOp
 from qiskit.test.reference_circuits import ReferenceCircuits
 
 # pylint: disable=unused-import
-from qiskit_ibm_runtime import QiskitRuntimeService, Sampler
+from qiskit_ibm_runtime import QiskitRuntimeService, Sampler, Estimator
 
 from ..ibm_test_case import IBMTestCase
 from .mock.fake_runtime_service import FakeRuntimeService
 
 
 class TestRunSimulation(IBMTestCase):
-    """ Tests for local execution on simulators"""
+    """Tests for local execution on simulators"""
+
     def test_basic_flow(self):
         """Test basic flow on simulator."""
         # service = QiskitRuntimeService(channel="ibm_quantum")
 
         service = FakeRuntimeService()  # pylint: disable=unused-variable
-        shots = 1000
+        shots = 100
+        circuit = ReferenceCircuits.bell()
         for backend in ["fake_manila", AerSimulator()]:
-            circuit = ReferenceCircuits.bell()
             sampler = Sampler(backend=backend)
             job = sampler.run(circuit, skip_transpilation=True, shots=shots)
             result = job.result()
             self.assertAlmostEqual(result.quasi_dists[0][0], 0.5, delta=0.2)
             self.assertAlmostEqual(result.quasi_dists[0][3], 0.5, delta=0.2)
             self.assertEqual(result.metadata[0]["shots"], shots)
+
+            estimator = Estimator(backend=backend)
+            obs = SparsePauliOp("ZZ")
+            job = estimator.run([circuit], observables=obs)
+            result = job.result()
+            self.assertAlmostEqual(result.values[0], 1.0, delta=0.01)
