@@ -147,10 +147,11 @@ class BasePrimitive(ABC):
         Returns:
             Submitted job.
         """
-        run_simulator = (
-            isinstance(self._backend, AerSimulator)
-            or FakeProviderForBackendV2().get_backend(self._backend.name) is not None
+        run_simulator = isinstance(self._backend, AerSimulator) or (
+            FakeProviderForBackendV2().get_backend(self._backend.name) is not None
+            and not isinstance(self._backend, IBMBackend)
         )
+
         combined = Options._merge_options(self._options, user_kwargs)
 
         if self._backend:

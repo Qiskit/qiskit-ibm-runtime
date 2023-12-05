@@ -32,7 +32,6 @@ from qiskit.providers.models import (
     PulseBackendConfiguration,
     QasmBackendConfiguration,
 )
-
 from qiskit.primitives import BackendSampler, BackendEstimator
 
 from qiskit_ibm_provider.proxies import ProxyConfiguration
@@ -909,7 +908,11 @@ class QiskitRuntimeService(Provider):
             else:  # program_id == "estimator":
                 prog = AerEstimator
 
-        if FakeProviderForBackendV2().get_backend(qrt_options.backend.name) is not None:
+        if (
+            not isinstance(qrt_options.backend, str)  # for fake backends in test suite
+            and not isinstance(qrt_options.backend, IBMBackend)
+            and FakeProviderForBackendV2().get_backend(qrt_options.backend.name) is not None
+        ):
             is_fake_backend = True
             if program_id == "sampler":
                 prog = BackendSampler
