@@ -12,15 +12,11 @@
 
 """Qiskit fake runtime job."""
 
-from typing import Optional, Dict, Union, List, Type, Sequence, Any
+from typing import Optional, Dict, Any
 
 from qiskit.primitives.primitive_job import PrimitiveJob
-from qiskit.primitives.base.base_primitive import BasePrimitive
-from qiskit.providers import JobError, JobStatus, JobV1
+from qiskit.providers import JobStatus, JobV1
 from qiskit.providers.fake_provider import FakeBackendV2 as FakeBackend
-
-from .utils.result_decoder import ResultDecoder
-
 
 class FakeRuntimeJob(JobV1):
     """Representation of a runtime program execution on a simulator."""
@@ -31,9 +27,9 @@ class FakeRuntimeJob(JobV1):
         backend: FakeBackend,
         job_id: str,
         program_id: str,
-        service: "qiskit_runtime_service.QiskitRuntimeService",
+        #service: "qiskit_runtime_service.QiskitRuntimeService",
         params: Optional[Dict] = None,
-        creation_date: Optional[str] = None,
+        # creation_date: Optional[str] = None,
         # user_callback: Optional[Callable] = None,
         # result_decoder: Optional[Union[Type[ResultDecoder], Sequence[Type[ResultDecoder]]]] = None,
         # tags: Optional[List] = None,

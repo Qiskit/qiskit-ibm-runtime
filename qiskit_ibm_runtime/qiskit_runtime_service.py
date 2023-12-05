@@ -21,7 +21,8 @@ from collections import OrderedDict
 from typing import Dict, Callable, Optional, Union, List, Any, Type, Sequence
 
 from qiskit_aer import AerSimulator
-#from qiskit_aer.backends.aerbackend import AerBackend
+
+# from qiskit_aer.backends.aerbackend import AerBackend
 from qiskit_aer.primitives import Sampler as AerSampler
 from qiskit_aer.primitives import Estimator as AerEstimator
 from qiskit.providers.fake_provider import fake_backend
@@ -33,7 +34,8 @@ from qiskit.providers.models import (
     PulseBackendConfiguration,
     QasmBackendConfiguration,
 )
-#from qiskit.primitives.primitive_job import PrimitiveJob
+
+# from qiskit.primitives.primitive_job import PrimitiveJob
 from qiskit.primitives import BackendSampler, BackendEstimator
 
 from qiskit_ibm_provider.proxies import ProxyConfiguration
@@ -893,10 +895,12 @@ class QiskitRuntimeService(Provider):
         qrt_options.validate(channel=self.channel)
 
         sim_options = inputs.get("run_options", None) if inputs else None
-        print("sim_options ",sim_options)
+        print("sim_options ", sim_options)
 
         transpile_options = {}
-        transpile_options["optimization_level"] = inputs.get("optimization_level", None)  if inputs else None #do we need additional options
+        transpile_options["optimization_level"] = (
+            inputs.get("optimization_level", None) if inputs else None
+        )  # do we need additional options
 
         is_fake_backend = False
         is_aer_backend = False
@@ -915,6 +919,7 @@ class QiskitRuntimeService(Provider):
             else:  # program_id == "estimator":
                 prog = BackendEstimator
 
+        # pylint: disable=unexpected-keyword-arg
         if is_fake_backend:
             my_program = prog(
                 backend=qrt_options.backend,
@@ -929,7 +934,6 @@ class QiskitRuntimeService(Provider):
                 observables=observables,
                 parameter_values=inputs["parameters"],
                 **sim_options,
-
             )
             fake_runtime_job = FakeRuntimeJob(
                 primitive_job=primitive_job,
@@ -958,7 +962,7 @@ class QiskitRuntimeService(Provider):
                 circuits=inputs["circuits"],
                 observables=observables,
                 parameter_values=inputs["parameters"],
-                **sim_options
+                **sim_options,
             )
             fake_runtime_job = FakeRuntimeJob(
                 primitive_job=primitive_job,

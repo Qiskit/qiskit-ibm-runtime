@@ -15,6 +15,7 @@
 from qiskit_aer import AerSimulator
 
 from qiskit.test.reference_circuits import ReferenceCircuits
+# pylint: disable=unused-import
 from qiskit_ibm_runtime import QiskitRuntimeService, Sampler
 
 from ..ibm_test_case import IBMTestCase
@@ -22,12 +23,12 @@ from .mock.fake_runtime_service import FakeRuntimeService
 
 
 class TestRunSimulation(IBMTestCase):
-    """Class for testing the Sampler class."""
 
     def test_basic_flow(self):
         """Test basic flow on simulator."""
-        #service = QiskitRuntimeService(channel="ibm_quantum")
-        service = FakeRuntimeService()
+        # service = QiskitRuntimeService(channel="ibm_quantum")
+
+        service = FakeRuntimeService()  # pylint: disable=unused-variable
         shots = 1000
         for backend in ["manila", AerSimulator()]:
             circuit = ReferenceCircuits.bell()
@@ -36,5 +37,4 @@ class TestRunSimulation(IBMTestCase):
             result = job.result()
             self.assertAlmostEqual(result.quasi_dists[0][0], 0.5, delta=0.2)
             self.assertAlmostEqual(result.quasi_dists[0][3], 0.5, delta=0.2)
-
             self.assertEqual(result.metadata[0]["shots"], shots)

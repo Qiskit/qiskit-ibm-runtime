@@ -131,7 +131,7 @@ class Options:
         sim_options = options.get("simulator", {})
         inputs = {}
 
-        #do we need to keep the flat options as well, for passing to terra directly?
+        # do we need to keep the flat options as well, for passing to terra directly?
         inputs["optimization_level"] = options["optimization_level"]
         inputs["transpilation_settings"] = options.get("transpilation", {})
         inputs["transpilation_settings"].update(
