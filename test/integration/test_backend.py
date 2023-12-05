@@ -46,6 +46,7 @@ class TestIntegrationBackend(IBMIntegrationTestCase):
         )
 
     @run_integration_test
+    @quantum_only
     def test_backend_wrong_instance(self, service):
         """Test getting a backend with wrong instance."""
         hgps = list(service._hgps.keys())
