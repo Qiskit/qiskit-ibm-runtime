@@ -891,14 +891,12 @@ class QiskitRuntimeService(Provider):
             qrt_options = RuntimeOptions(**options)
 
         qrt_options.validate(channel=self.channel)
-        print()
-        print("inputs ", inputs)
-        print()
-        sim_options = inputs["run_options"]
+
+        sim_options = inputs.get("run_options", None) if inputs else None
         print("sim_options ",sim_options)
 
         transpile_options = {}
-        transpile_options["optimization_level"] = inputs["optimization_level"] #do we need additional options
+        transpile_options["optimization_level"] = inputs.get("optimization_level", None)  if inputs else None #do we need additional options
 
         is_fake_backend = False
         is_aer_backend = False
@@ -928,8 +926,8 @@ class QiskitRuntimeService(Provider):
 
             primitive_job = my_program._run(
                 circuits=inputs["circuits"],
-                parameter_values=inputs["parameters"],
                 observables=observables,
+                parameter_values=inputs["parameters"],
                 **sim_options,
 
             )
@@ -958,9 +956,9 @@ class QiskitRuntimeService(Provider):
 
             primitive_job = my_program._run(
                 circuits=inputs["circuits"],
-                parameter_values=inputs["parameters"],
-                run_options=sim_options,
                 observables=observables,
+                parameter_values=inputs["parameters"],
+                **sim_options
             )
             fake_runtime_job = FakeRuntimeJob(
                 primitive_job=primitive_job,
