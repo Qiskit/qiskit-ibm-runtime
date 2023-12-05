@@ -22,10 +22,8 @@ from typing import Dict, Callable, Optional, Union, List, Any, Type, Sequence
 
 from qiskit_aer import AerSimulator
 
-# from qiskit_aer.backends.aerbackend import AerBackend
 from qiskit_aer.primitives import Sampler as AerSampler
 from qiskit_aer.primitives import Estimator as AerEstimator
-from qiskit.providers.fake_provider import fake_backend
 from qiskit.providers.backend import BackendV1 as Backend
 from qiskit.providers.provider import ProviderV1 as Provider
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
@@ -35,7 +33,6 @@ from qiskit.providers.models import (
     QasmBackendConfiguration,
 )
 
-# from qiskit.primitives.primitive_job import PrimitiveJob
 from qiskit.primitives import BackendSampler, BackendEstimator
 
 from qiskit_ibm_provider.proxies import ProxyConfiguration
@@ -44,7 +41,7 @@ from qiskit_ibm_provider.utils.backend_decoder import configuration_from_server_
 from qiskit_ibm_runtime import ibm_backend
 from .fake_runtime_job import FakeRuntimeJob
 
-from .utils.fake_backends import fake_backend_list
+from .fake_provider.fake_provider import FakeProviderForBackendV2
 from .utils.utils import validate_job_tags
 from .accounts import AccountManager, Account, ChannelType
 from .api.clients import AuthClient, VersionClient
@@ -550,7 +547,7 @@ class QiskitRuntimeService(Provider):
         instance: Optional[str] = None,
         filters: Optional[Callable[[List["ibm_backend.IBMBackend"]], bool]] = None,
         **kwargs: Any,
-    ) -> Union[List["ibm_backend.IBMBackend"], List[fake_backend.FakeBackendV2]]:
+    ) -> Union[List["ibm_backend.IBMBackend"], List[FakeProviderForBackendV2]]:
         """Return all backends accessible via this account, subject to optional filtering.
 
         Args:
@@ -590,7 +587,7 @@ class QiskitRuntimeService(Provider):
             QiskitBackendNotFoundError: If the backend is not in any instance.
         """
         # TODO filter out input_allowed not having runtime
-        backends: Union[List[IBMBackend], List[fake_backend.FakeBackendV2]] = []
+        backends: Union[List[IBMBackend], List[FakeProviderForBackendV2]] = []
         instance_filter = instance if instance else self._account.instance
         if self._channel == "ibm_quantum":
             if name:
@@ -805,7 +802,7 @@ class QiskitRuntimeService(Provider):
         self,
         name: str = None,
         instance: Optional[str] = None,
-    ) -> Union[Backend, fake_backend.FakeBackendV2]:
+    ) -> Union[Backend, FakeProviderForBackendV2]:
         """Return a single backend matching the specified filtering.
 
         Args:
@@ -841,8 +838,8 @@ class QiskitRuntimeService(Provider):
     def get_backend(self, name: str = None, **kwargs: Any) -> Backend:
         return self.backend(name, **kwargs)
 
-    def _get_fake_backend(self, name: str) -> fake_backend.FakeBackendV2:
-        backend = fake_backend_list[name]
+    def _get_fake_backend(self, name: str) -> FakeProviderForBackendV2:
+        backend = FakeProviderForBackendV2().get_backend(name)
         return backend
 
     def run(
@@ -912,7 +909,7 @@ class QiskitRuntimeService(Provider):
             else:  # program_id == "estimator":
                 prog = AerEstimator
 
-        if isinstance(qrt_options.backend, fake_backend.FakeBackendV2):
+        if FakeProviderForBackendV2().get_backend(qrt_options.backend.name) is not None:
             is_fake_backend = True
             if program_id == "sampler":
                 prog = BackendSampler

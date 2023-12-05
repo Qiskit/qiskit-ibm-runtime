@@ -15,6 +15,7 @@
 from qiskit_aer import AerSimulator
 
 from qiskit.test.reference_circuits import ReferenceCircuits
+
 # pylint: disable=unused-import
 from qiskit_ibm_runtime import QiskitRuntimeService, Sampler
 
@@ -23,14 +24,14 @@ from .mock.fake_runtime_service import FakeRuntimeService
 
 
 class TestRunSimulation(IBMTestCase):
-
+    """ Tests for local execution on simulators"""
     def test_basic_flow(self):
         """Test basic flow on simulator."""
         # service = QiskitRuntimeService(channel="ibm_quantum")
 
         service = FakeRuntimeService()  # pylint: disable=unused-variable
         shots = 1000
-        for backend in ["manila", AerSimulator()]:
+        for backend in ["fake_manila", AerSimulator()]:
             circuit = ReferenceCircuits.bell()
             sampler = Sampler(backend=backend)
             job = sampler.run(circuit, skip_transpilation=True, shots=shots)

@@ -70,13 +70,14 @@ class FakeProviderForBackendV2(ProviderV1):
     """
 
     def get_backend(self, name=None, **kwargs):  # type: ignore
-        backend = self._backends[0]
+        # backend = self._backends[0]
+        # when name=None, this will simply return Almaden. Is that what we want?
         if name:
-            filtered_backends = [backend for backend in self._backends if backend.name() == name]
-            if not filtered_backends:
-                raise QiskitBackendNotFoundError()
+            filtered_backends = [backend for backend in self.backends() if backend.name == name]
+            # if not filtered_backends:
+            #     raise QiskitBackendNotFoundError()
 
-            backend = filtered_backends[0]
+            backend = filtered_backends[0] if len(filtered_backends) > 0 else None
 
         return backend
 

@@ -20,12 +20,13 @@ import logging
 from dataclasses import asdict
 import warnings
 
-from qiskit.providers.options import Options as TerraOptions
-from qiskit.providers.fake_provider import fake_backend
 from qiskit_aer import AerSimulator
+
+from qiskit.providers.options import Options as TerraOptions
 
 from qiskit_ibm_provider.session import get_cm_session as get_cm_provider_session
 
+from .fake_provider.fake_provider import FakeProviderForBackendV2
 from .options import Options
 from .options.utils import set_default_error_levels
 from .runtime_job import RuntimeJob
@@ -146,7 +147,10 @@ class BasePrimitive(ABC):
         Returns:
             Submitted job.
         """
-        run_simulator = isinstance(self._backend, Union[fake_backend.FakeBackendV2, AerSimulator])
+        run_simulator = (
+            isinstance(self._backend, AerSimulator)
+            or FakeProviderForBackendV2().get_backend(self._backend.name) is not None
+        )
         combined = Options._merge_options(self._options, user_kwargs)
 
         if self._backend:
@@ -164,7 +168,6 @@ class BasePrimitive(ABC):
 
         combined = Options._set_default_resilience_options(combined)
         combined = Options._remove_none_values(combined)
-
         primitive_inputs.update(Options._get_program_inputs(combined))
 
         if self._backend and combined["transpilation"]["skip_transpilation"] and not run_simulator:

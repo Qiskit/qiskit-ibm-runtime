@@ -18,6 +18,7 @@ from qiskit.primitives.primitive_job import PrimitiveJob
 from qiskit.providers import JobStatus, JobV1
 from qiskit.providers.fake_provider import FakeBackendV2 as FakeBackend
 
+
 class FakeRuntimeJob(JobV1):
     """Representation of a runtime program execution on a simulator."""
 
@@ -27,7 +28,7 @@ class FakeRuntimeJob(JobV1):
         backend: FakeBackend,
         job_id: str,
         program_id: str,
-        #service: "qiskit_runtime_service.QiskitRuntimeService",
+        service: "qiskit_runtime_service.QiskitRuntimeService",
         params: Optional[Dict] = None,
         # creation_date: Optional[str] = None,
         # user_callback: Optional[Callable] = None,
@@ -36,6 +37,7 @@ class FakeRuntimeJob(JobV1):
     ) -> None:
         """FakeRuntimeJob constructor."""
         super().__init__(backend=backend, job_id=job_id)
+        self._service = service  # do we need this?
         self._primitive_job = primitive_job
         self._job_id = job_id
         self._params = params or {}
