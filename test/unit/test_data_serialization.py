@@ -246,7 +246,7 @@ if __name__ == '__main__':
                     decoder=result_decoder,
                 )
                 with mock_wait_for_final_state(ibm_quantum_service, job):
-                    result = job.result(decoder=decoder)
+                    result = job.result(decoder=decoder)  # pylint: disable=unexpected-keyword-arg
                 self.assertIsInstance(result["serializable_class"], SerializableClass)
 
     def test_circuit_metadata(self):
