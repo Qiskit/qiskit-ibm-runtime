@@ -55,15 +55,15 @@ class TestIntegrationBackend(IBMIntegrationTestCase):
 
         hgp_1 = hgps[0]
         hgp_2 = hgps[1]
-        hgp_1_backends = service.backends(instance=hgp_1)
-        hgp_2_backends = service.backends(instance=hgp_2)
-        unique_hgp = list(
+        hgp_1_backends = [backend.name for backend in service.backends(instance=hgp_1)]
+        hgp_2_backends = [backend.name for backend in service.backends(instance=hgp_2)]
+        unique_backends_list = list(
             set(hgp_2_backends) - set(hgp_1_backends)
         )  # get differences between the two lists
-        if unique_hgp:
-            unique_backend = unique_hgp[0]
+        if unique_backends_list:
+            unique_backend = unique_backends_list[0]
             with self.assertRaises(QiskitBackendNotFoundError):
-                service.backend(unique_backend.name, instance=hgp_1)
+                service.backend(unique_backend, instance=hgp_1)
 
     @run_integration_test
     @quantum_only
