@@ -62,7 +62,7 @@ class TestIntegrationBackend(IBMIntegrationTestCase):
         if unique_hgp:
             unique_backend = unique_hgp[0]
             with self.assertRaises(QiskitBackendNotFoundError):
-                service.backend(unqiue_backned.name, instance=hgp_1)
+                service.backend(unique_backend.name, instance=hgp_1)
 
     @run_integration_test
     @quantum_only
