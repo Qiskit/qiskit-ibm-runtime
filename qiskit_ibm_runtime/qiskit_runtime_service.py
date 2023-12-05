@@ -585,11 +585,11 @@ class QiskitRuntimeService(Provider):
             if name:
                 if name not in self._backends:
                     raise QiskitBackendNotFoundError("No backend matches the criteria.")
-                if not self._backends[name] or instance != self._backends[name]._instance:
+                if not self._backends[name] or instance_filter != self._backends[name]._instance:
                     self._set_backend_config(name)
                     self._backends[name] = self._create_backend_obj(
                         self._backend_configs[name],
-                        instance,
+                        instance_filter,
                     )
                 if self._backends[name]:
                     backends.append(self._backends[name])
@@ -664,9 +664,17 @@ class QiskitRuntimeService(Provider):
                         break
 
             elif config.backend_name not in self._get_hgp(instance=instance).backends:
+                hgps_with_backend = []
+                for hgp in list(self._hgps.values()):
+                    if config.backend_name in hgp.backends:
+                        hgps_with_backend.append(
+                            to_instance_format(hgp._hub, hgp._group, hgp._project)
+                        )
                 raise QiskitBackendNotFoundError(
                     f"Backend {config.backend_name} is not in "
-                    f"{instance}: please try a different hub/group/project."
+                    f"{instance}. Please try a different instance. "
+                    f"{config.backend_name} is in the following instances you have access to: "
+                    f"{hgps_with_backend}"
                 )
 
             return ibm_backend.IBMBackend(
