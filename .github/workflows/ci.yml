@@ -111,7 +111,6 @@ jobs:
           parallel: true
           path-to-lcov: coverage.lcov
   integration-tests:
-    if: github.event_name == 'push' && github.repository_owner == 'Qiskit'
     # only kick-off resource intensive integration tests if unit tests and all basic checks succeeded
     needs: [ "unit-tests"  ]
     name: Run integration tests - ${{ matrix.environment }}

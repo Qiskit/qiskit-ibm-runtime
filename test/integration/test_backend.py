@@ -59,9 +59,12 @@ class TestIntegrationBackend(IBMIntegrationTestCase):
         unique_hgp = list(
             set(hgp_2_backends) - set(hgp_1_backends)
         )  # get differences between the two lists
+        print(hgp_1_backends)
+        print(hgp_2_backends)
         if unique_hgp:
             unique_backend = unique_hgp[0]
             with self.assertRaises(QiskitBackendNotFoundError):
+                print(unique_backend, hgp_1)
                 service.backend(unique_backend.name, instance=hgp_1)
 
     @run_integration_test
