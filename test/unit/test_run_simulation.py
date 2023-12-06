@@ -11,7 +11,7 @@
 # that they have been altered from the originals.
 
 """Tests for running locally on a simulator."""
-
+from unittest.mock import MagicMock
 from qiskit_aer import AerSimulator
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.test.reference_circuits import ReferenceCircuits
@@ -30,7 +30,8 @@ class TestRunSimulation(IBMTestCase):
         """Test basic flow on simulator."""
         # service = QiskitRuntimeService(channel="ibm_quantum")
 
-        service = FakeRuntimeService(channel="ibm_quantum")  # pylint: disable=unused-variable
+        #service = FakeRuntimeService(channel="ibm_quantum")  # pylint: disable=unused-variable
+        service = MagicMock()  # pylint: disable=unused-variable
         shots = 100
         circuit = ReferenceCircuits.bell()
         for backend in ["fake_manila", AerSimulator()]:
@@ -52,7 +53,13 @@ class TestRunSimulation(IBMTestCase):
         service = FakeRuntimeService(channel="ibm_quantum")  # pylint: disable=unused-variable
         shots = 100
         circuit = ReferenceCircuits.bell()
-        sim_methods =["statevector", "density_matrix", "stabilizer", "extended_stabilizer", "matrix_product_state"]
+        sim_methods = [
+            "statevector",
+            "density_matrix",
+            "stabilizer",
+            "extended_stabilizer",
+            "matrix_product_state",
+        ]
         for method in sim_methods:
             backend = AerSimulator(method=method)
             sampler = Sampler(backend=backend)
