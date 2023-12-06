@@ -586,7 +586,7 @@ class QiskitRuntimeService(Provider):
             QiskitBackendNotFoundError: If the backend is not in any instance.
         """
         # TODO filter out input_allowed not having runtime
-        backends: Union[List[IBMBackend], List[FakeProviderForBackendV2]] = []
+        backends: List[Union[IBMBackend, FakeProviderForBackendV2]] = []
         instance_filter = instance if instance else self._account.instance
         if self._channel == "ibm_quantum":
             if name:
@@ -889,7 +889,6 @@ class QiskitRuntimeService(Provider):
             qrt_options = RuntimeOptions(**options)
 
         qrt_options.validate(channel=self.channel)
-
         sim_options = inputs.get("run_options", None) if inputs else None
         print("sim_options ", sim_options)
 
@@ -909,11 +908,11 @@ class QiskitRuntimeService(Provider):
                 prog = AerEstimator
 
         if (
-            not isinstance(qrt_options.backend, str)  # for fake backends in test suite
-            and not isinstance(qrt_options.backend, IBMBackend)
-            and FakeProviderForBackendV2().get_backend(qrt_options.backend.name) is not None
+            not isinstance(qrt_options.backend, IBMBackend)
+            and not isinstance(qrt_options.backend, str)
+            and FakeProviderForBackendV2().get_backend(qrt_options.backend.name) is not None # type: ignore
         ):
-            is_fake_backend = True
+            is_fake_backend = True  # type: ignore
             if program_id == "sampler":
                 prog = BackendSampler
             else:  # program_id == "estimator":
@@ -940,7 +939,6 @@ class QiskitRuntimeService(Provider):
                 backend=qrt_options.backend,
                 job_id=primitive_job.job_id(),
                 program_id=program_id,
-                service=self,
                 params=inputs["parameters"],
             )
             return fake_runtime_job
@@ -969,7 +967,6 @@ class QiskitRuntimeService(Provider):
                 backend=qrt_options.backend,
                 job_id=primitive_job.job_id(),
                 program_id=program_id,
-                service=self,
                 params=inputs["parameters"],
             )
             return fake_runtime_job

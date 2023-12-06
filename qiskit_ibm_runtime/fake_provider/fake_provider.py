@@ -16,8 +16,11 @@
 Fake provider class that provides access to fake backends.
 """
 
+from typing import List
+
 from qiskit.providers.provider import ProviderV1
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
+from qiskit.providers.fake_provider.fake_backend import FakeBackendV2
 
 from .backends import *
 
@@ -69,7 +72,7 @@ class FakeProviderForBackendV2(ProviderV1):
     available in the :mod:`qiskit_ibm_runtime.fake_provider`.
     """
 
-    def get_backend(self, name=None, **kwargs):  # type: ignore
+    def get_backend(self, name=None, **kwargs) -> FakeBackendV2:  # type: ignore
         # backend = self._backends[0]
         # when name=None, this will simply return Almaden. Is that what we want?
         if name:
@@ -81,7 +84,7 @@ class FakeProviderForBackendV2(ProviderV1):
 
         return backend
 
-    def backends(self, name=None, **kwargs):  # type: ignore
+    def backends(self, name=None, **kwargs) -> List[FakeBackendV2]:  # type: ignore
         return self._backends
 
     def __init__(self) -> None:
