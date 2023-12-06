@@ -30,7 +30,7 @@ class TestRunSimulation(IBMTestCase):
         """Test basic flow on simulator."""
         # service = QiskitRuntimeService(channel="ibm_quantum")
 
-        #service = FakeRuntimeService(channel="ibm_quantum")  # pylint: disable=unused-variable
+        # service = FakeRuntimeService(channel="ibm_quantum")  # pylint: disable=unused-variable
         service = MagicMock()  # pylint: disable=unused-variable
         shots = 100
         circuit = ReferenceCircuits.bell()
@@ -50,6 +50,7 @@ class TestRunSimulation(IBMTestCase):
             self.assertEqual(result.metadata[0]["shots"], shots)
 
     def test_aer_sim_options(self):
+        """ Test that options to Aer simulator are passed properly"""
         service = FakeRuntimeService(channel="ibm_quantum")  # pylint: disable=unused-variable
         shots = 100
         circuit = ReferenceCircuits.bell()
