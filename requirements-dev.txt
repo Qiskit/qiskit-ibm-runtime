@@ -23,3 +23,6 @@ sphinx-automodapi
 sphinx-autodoc-typehints<=1.19.2
 jupyter-sphinx
 reno>=2.11.0
+
+# Fake backend tools
+tabulate
