@@ -47,3 +47,16 @@ class TestRunSimulation(IBMTestCase):
             result = job.result()
             self.assertAlmostEqual(result.values[0], 1.0, delta=0.01)
             self.assertEqual(result.metadata[0]["shots"], shots)
+
+    def test_aer_sim_options(self):
+        service = FakeRuntimeService(channel="ibm_quantum")  # pylint: disable=unused-variable
+        shots = 100
+        circuit = ReferenceCircuits.bell()
+        sim_methods =["statevector", "density_matrix", "stabilizer", "extended_stabilizer", "matrix_product_state"]
+        for method in sim_methods:
+            backend = AerSimulator(method=method)
+            sampler = Sampler(backend=backend)
+            job = sampler.run(circuit, shots=shots)
+            result = job.result()
+            print("***")
+            self.assertEqual(result.metadata[0]["simulator_metadata"]["method"], method)

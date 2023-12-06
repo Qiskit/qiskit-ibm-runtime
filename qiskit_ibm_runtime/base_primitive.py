@@ -182,14 +182,13 @@ class BasePrimitive(ABC):
         if run_simulator:
             # do we need to keep the flat options as well, for passing to terra directly?
             primitive_inputs["optimization_level"] = combined["optimization_level"]
-            runtime_options["backend"] = self._backend  # fix this - for cloud, is str,
-            # for fake is Backend
+            runtime_options["backend"] = self._backend
 
             return self._service.run(
                 program_id=self._program_id(),
                 options=runtime_options,
                 inputs=primitive_inputs,
-                # are these relevant for simulators?
+                # are the following relevant for simulators?
                 # callback=combined.get("environment", {}).get("callback", None),
                 # result_decoder=DEFAULT_DECODERS.get(self._program_id()),
             )
