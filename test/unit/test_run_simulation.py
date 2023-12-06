@@ -30,7 +30,7 @@ class TestRunSimulation(IBMTestCase):
         """Test basic flow on simulator."""
         # service = QiskitRuntimeService(channel="ibm_quantum")
 
-        service = FakeRuntimeService()  # pylint: disable=unused-variable
+        service = FakeRuntimeService(channel="ibm_quantum")  # pylint: disable=unused-variable
         shots = 100
         circuit = ReferenceCircuits.bell()
         for backend in ["fake_manila", AerSimulator()]:
