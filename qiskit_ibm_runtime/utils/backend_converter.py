@@ -151,11 +151,11 @@ def convert_to_target(
                         if any(qubit in faulty_qubits for qubit in qarg):
                             continue
                         target[inst][qarg].calibration = sched
-    if "delay" not in target:
-        target.add_instruction(
-            Delay(Parameter("t")),
-            {(bit,): None for bit in range(target.num_qubits) if bit not in faulty_qubits},
-        )
+        if "delay" not in target:
+            target.add_instruction(
+                Delay(Parameter("t")),
+                {(bit,): None for bit in range(target.num_qubits) if bit not in faulty_qubits},
+            )
     return target
 
 
