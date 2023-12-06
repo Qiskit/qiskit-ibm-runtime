@@ -951,7 +951,7 @@ class QiskitRuntimeService(Provider):
             return fake_runtime_job
 
         if is_aer_backend:
-            aer_backend_options = qrt_options.backend._options
+            aer_backend_options = qrt_options.backend._options  # type:ignore
             for opt in inputs["run_options"]:
                 if hasattr(AerSimulator._default_options(), opt):
                     aer_backend_options[opt] = inputs["run_options"][opt]
