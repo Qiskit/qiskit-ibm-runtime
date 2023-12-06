@@ -1,0 +1,32 @@
+---
+features:
+  - |
+    A new module :mod:`qiskit_ibm_runtime.fake_provider`, has been added to provide access
+    to a series of fake backends derived from snapshots of IBM Quantum devices. This
+    functionality was originally provided by the :mod:`qiskit.providers.fake_provider`
+    module, but will soon be deprecated in favor of :mod:`qiskit_ibm_runtime.fake_provider`.
+
+    The snapshots provided by the fake backends are useful for local testing of the transpiler
+    and performing local noisy simulations of the system before running on real devices.
+    Here is an example of using a fake backend for transpilation and simulation::
+
+      from qiskit import QuantumCircuit
+      from qiskit import transpile
+      from qiskit_ibm_runtime.fake_provider import FakeManilaV2
+
+      # Get a fake backend from the fake provider
+      backend = FakeManilaV2()
+
+      # Create a simple circuit
+      circuit = QuantumCircuit(3)
+      circuit.h(0)
+      circuit.cx(0,1)
+      circuit.cx(0,2)
+      circuit.measure_all()
+
+      # Transpile the ideal circuit to a circuit that can be directly executed by the backend
+      transpiled_circuit = transpile(circuit, backend)
+
+      # Run the transpiled circuit using the simulated fake backend
+      job = backend.run(transpiled_circuit)
+      counts = job.result().get_counts()
