@@ -910,7 +910,7 @@ class QiskitRuntimeService(Provider):
         if (
             not isinstance(qrt_options.backend, IBMBackend)
             and not isinstance(qrt_options.backend, str)
-            and FakeProviderForBackendV2().get_backend(qrt_options.backend.name) is not None # type: ignore
+            and FakeProviderForBackendV2().get_backend(qrt_options.backend.name) is not None  # type: ignore
         ):
             is_fake_backend = True  # type: ignore
             if program_id == "sampler":
