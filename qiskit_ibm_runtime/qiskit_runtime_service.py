@@ -858,7 +858,7 @@ class QiskitRuntimeService(Provider):
         result_decoder: Optional[Union[Type[ResultDecoder], Sequence[Type[ResultDecoder]]]] = None,
         session_id: Optional[str] = None,
         start_session: Optional[bool] = False,
-    ) -> RuntimeJob:
+    ) -> Union[RuntimeJob, FakeRuntimeJob]:
         """Execute the runtime program.
 
         Args:
@@ -898,7 +898,6 @@ class QiskitRuntimeService(Provider):
 
         qrt_options.validate(channel=self.channel)
         sim_options = inputs.get("run_options", None) if inputs else None
-        print("sim_options ", sim_options)
 
         transpile_options = {}
         transpile_options["optimization_level"] = (
@@ -926,7 +925,7 @@ class QiskitRuntimeService(Provider):
                 prog = BackendSampler
             else:  # program_id == "estimator":
                 prog = BackendEstimator
-
+        print("skip =", inputs["transpilation_settings"]["skip_transpilation"])
         # pylint: disable=unexpected-keyword-arg
         if is_fake_backend:
             my_program = prog(
@@ -936,7 +935,6 @@ class QiskitRuntimeService(Provider):
             )
             my_program.set_transpile_options(**transpile_options)
             observables = inputs.get("observables", None)
-
             primitive_job = my_program._run(
                 circuits=inputs["circuits"],
                 observables=observables,
@@ -957,14 +955,12 @@ class QiskitRuntimeService(Provider):
             for opt in inputs["run_options"]:
                 if hasattr(AerSimulator._default_options(), opt):
                     aer_backend_options[opt] = inputs["run_options"][opt]
-            print("transpile options = ", inputs["transpilation_settings"])
             my_program = prog(
                 backend_options=aer_backend_options,
                 transpile_options=transpile_options,
                 # skip_transpilation=inputs["transpilation_settings"]["skip_transpilation"],
             )
             observables = inputs.get("observables", None)
-
             primitive_job = my_program._run(
                 circuits=inputs["circuits"],
                 observables=observables,
@@ -1026,7 +1022,6 @@ class QiskitRuntimeService(Provider):
             if response["backend"]
             else qrt_options.backend
         )
-
         job = RuntimeJob(
             backend=backend,
             api_client=self._api_client,

@@ -35,7 +35,7 @@ class TestRunSimulation(IBMTestCase):
         circuit = ReferenceCircuits.bell()
         for backend in ["fake_manila", AerSimulator()]:
             sampler = Sampler(backend=backend)
-            job = sampler.run(circuit, skip_transpilation=True, shots=shots)
+            job = sampler.run(circuit, shots=shots)
             result = job.result()
             self.assertAlmostEqual(result.quasi_dists[0][0], 0.5, delta=0.2)
             self.assertAlmostEqual(result.quasi_dists[0][3], 0.5, delta=0.2)
@@ -43,6 +43,7 @@ class TestRunSimulation(IBMTestCase):
 
             estimator = Estimator(backend=backend)
             obs = SparsePauliOp("ZZ")
-            job = estimator.run([circuit], observables=obs)
+            job = estimator.run([circuit], observables=obs, shots=shots)
             result = job.result()
             self.assertAlmostEqual(result.values[0], 1.0, delta=0.01)
+            self.assertEqual(result.metadata[0]["shots"], shots)

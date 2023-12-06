@@ -180,6 +180,8 @@ class BasePrimitive(ABC):
         runtime_options = Options._get_runtime_options(combined)
 
         if run_simulator:
+            # do we need to keep the flat options as well, for passing to terra directly?
+            primitive_inputs["optimization_level"] = combined["optimization_level"]
             runtime_options["backend"] = self._backend  # fix this - for cloud, is str,
             # for fake is Backend
 
