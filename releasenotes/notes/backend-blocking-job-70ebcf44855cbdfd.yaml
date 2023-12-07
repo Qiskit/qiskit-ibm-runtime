@@ -1,8 +1,0 @@
----
-fixes:
-  - |
-    Fixed an issue where the first job in a cloud channel session without a backend passed 
-    in would block other jobs from starting. This would happen because the first job would
-    attempt to retrieve the backend from the job which required the job to be in a 
-    completed state. 
-
