@@ -130,7 +130,6 @@ class Options:
         """
         sim_options = options.get("simulator", {})
         inputs = {}
-
         inputs["transpilation_settings"] = options.get("transpilation", {})
         inputs["transpilation_settings"].update(
             {

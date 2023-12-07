@@ -79,7 +79,7 @@ class FakeProviderForBackendV2(ProviderV1):
             filtered_backends = [backend for backend in self.backends() if backend.name == name]
             # if not filtered_backends:
             #     raise QiskitBackendNotFoundError()
-
+            # I prefer returning None rather than throwing an error. Any objection?
             backend = filtered_backends[0] if len(filtered_backends) > 0 else None
 
         return backend

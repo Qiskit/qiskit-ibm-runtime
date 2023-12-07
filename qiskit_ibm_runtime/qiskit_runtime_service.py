@@ -37,9 +37,9 @@ from qiskit.primitives import BackendSampler, BackendEstimator
 from qiskit_ibm_provider.proxies import ProxyConfiguration
 from qiskit_ibm_provider.utils.hgp import to_instance_format, from_instance_format
 from qiskit_ibm_provider.utils.backend_decoder import configuration_from_server_data
+
 from qiskit_ibm_runtime import ibm_backend
 from .fake_runtime_job import FakeRuntimeJob
-
 from .fake_provider.fake_provider import FakeProviderForBackendV2
 from .utils.utils import validate_job_tags
 from .accounts import AccountManager, Account, ChannelType
@@ -889,7 +889,6 @@ class QiskitRuntimeService(Provider):
             RuntimeProgramNotFound: If the program cannot be found.
             IBMRuntimeError: An error occurred running the program.
         """
-
         qrt_options: RuntimeOptions = options
         if options is None:
             qrt_options = RuntimeOptions()
