@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    When running on ``AerSimulator`` or on a ``FakeProviderForBackendV2``, the program will now locally
+    rather than running on the IBM Cloud.
