@@ -925,7 +925,6 @@ class QiskitRuntimeService(Provider):
                 prog = BackendSampler
             else:  # program_id == "estimator":
                 prog = BackendEstimator
-        print("skip =", inputs["transpilation_settings"]["skip_transpilation"])
         # pylint: disable=unexpected-keyword-arg
         if is_fake_backend:
             my_program = prog(

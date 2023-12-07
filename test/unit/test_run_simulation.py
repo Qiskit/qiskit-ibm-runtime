@@ -31,7 +31,7 @@ class TestRunSimulation(IBMTestCase):
         # service = QiskitRuntimeService(channel="ibm_quantum")
 
         # service = FakeRuntimeService(channel="ibm_quantum")  # pylint: disable=unused-variable
-        service = MagicMock()  # pylint: disable=unused-variable
+        service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
         shots = 100
         circuit = ReferenceCircuits.bell()
         for backend in ["fake_manila", AerSimulator()]:
@@ -51,7 +51,7 @@ class TestRunSimulation(IBMTestCase):
 
     def test_aer_sim_options(self):
         """Test that options to Aer simulator are passed properly"""
-        service = FakeRuntimeService(channel="ibm_quantum")  # pylint: disable=unused-variable
+        service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
         shots = 100
         circuit = ReferenceCircuits.bell()
         sim_methods = [
