@@ -11,7 +11,6 @@
 # that they have been altered from the originals.
 
 """Tests for running locally on a simulator."""
-from unittest.mock import MagicMock
 from qiskit_aer import AerSimulator
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.test.reference_circuits import ReferenceCircuits
