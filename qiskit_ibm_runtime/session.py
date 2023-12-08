@@ -23,7 +23,6 @@ from qiskit_ibm_runtime import QiskitRuntimeService
 from .runtime_job import RuntimeJob
 from .utils.result_decoder import ResultDecoder
 from .ibm_backend import IBMBackend
-from .exceptions import RuntimeJobTimeoutError
 from .utils.default_session import set_cm_session
 from .utils.deprecation import deprecate_arguments
 
@@ -181,10 +180,7 @@ class Session:
                 self._setup_lock.release()
 
         if self._backend is None:
-            try:
-                self._backend = job.backend(0).name
-            except RuntimeJobTimeoutError:
-                self._backend = None
+            self._backend = job.backend().name
 
         return job
 
