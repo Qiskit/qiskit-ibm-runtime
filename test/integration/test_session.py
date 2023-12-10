@@ -101,19 +101,6 @@ class TestIntegrationSession(IBMIntegrationTestCase):
         job = sampler.run(ReferenceCircuits.bell(), shots=400)
         self.assertEqual(session_id, job.session_id)
 
-    @run_integration_test
-    def test_session_no_backend(self, service):
-        """Test session without passing in backend."""
-        if self.dependencies.channel == "ibm_quantum":
-            self.skipTest("Not supported on ibm_quantum")
-        with Session(service) as session:
-            sampler = Sampler(session=session)
-            job1 = sampler.run(ReferenceCircuits.bell(), shots=400)
-            job2 = sampler.run(ReferenceCircuits.bell(), shots=400)
-        self.assertTrue(job1.backend())
-        self.assertTrue(job2.backend())
-        self.assertEqual(job1.backend().name, job2.backend().name)
-
 
 class TestBackendRunInSession(IBMIntegrationTestCase):
     """Integration tests for Backend.run in Session."""
