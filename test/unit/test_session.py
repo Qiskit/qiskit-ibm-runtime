@@ -82,6 +82,8 @@ class TestSession(IBMTestCase):
             with self.subTest(max_time=max_t):
                 session = Session(service=MagicMock(), backend="ibm_gotham", max_time=max_t)
                 self.assertEqual(session._max_time, expected)
+        for max_t, expected in max_times:
+            with self.subTest(max_time=max_t):
                 backend.open_session(max_time=max_t)
                 self.assertEqual(backend.session._max_time, expected)
 
