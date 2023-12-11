@@ -17,6 +17,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor, wait
 
 from unittest.mock import MagicMock, Mock, patch
+from qiskit.providers.fake_provider import FakeManila
 
 from qiskit_ibm_runtime import Session
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
@@ -65,6 +66,12 @@ class TestSession(IBMTestCase):
 
     def test_max_time(self):
         """Test max time."""
+        model_backend = FakeManila()
+        backend = IBMBackend(
+            configuration=model_backend.configuration(),
+            service=MagicMock(),
+            api_client=None,
+        )
         max_times = [
             (42, 42),
             ("1h", 1 * 60 * 60),
@@ -75,6 +82,8 @@ class TestSession(IBMTestCase):
             with self.subTest(max_time=max_t):
                 session = Session(service=MagicMock(), backend="ibm_gotham", max_time=max_t)
                 self.assertEqual(session._max_time, expected)
+                backend.open_session(max_time=max_t)
+                self.assertEqual(backend.session._max_time, expected)
 
     def test_run_after_close(self):
         """Test running after session is closed."""
