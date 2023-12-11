@@ -34,6 +34,7 @@ from qiskit_ibm_provider.utils.hgp import to_instance_format, from_instance_form
 from qiskit_ibm_provider.utils.backend_decoder import configuration_from_server_data
 from qiskit_ibm_runtime import ibm_backend
 
+from qiskit_ibm_runtime.utils.deprecation import issue_deprecation_msg
 from .utils.utils import validate_job_tags
 from .accounts import AccountManager, Account, ChannelType
 from .api.clients import AuthClient, VersionClient
@@ -53,6 +54,7 @@ from .utils import RuntimeDecoder, to_python_identifier
 from .api.client_parameters import ClientParameters
 from .runtime_options import RuntimeOptions
 from .ibm_backend import IBMBackend
+
 
 logger = logging.getLogger(__name__)
 
@@ -827,6 +829,11 @@ class QiskitRuntimeService(Provider):
         return backends[0]
 
     def get_backend(self, name: str = None, **kwargs: Any) -> Backend:
+        issue_deprecation_msg(
+            msg="QiskitRuntimeService.get_backend() is deprecated.",
+            version="0.17.0",
+            remedy="use QiskitRuntimeService.backend() instead"
+        )
         return self.backend(name, **kwargs)
 
     def run(

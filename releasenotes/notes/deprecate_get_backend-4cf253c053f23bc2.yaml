@@ -1,0 +1,5 @@
+---
+deprecations:
+  - |
+    ``QiskitRuntimeService.get_backend()`` has been deprecated, use ``QiskitRuntimeService.backend()`` instead.
+

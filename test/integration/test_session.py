@@ -107,7 +107,7 @@ class TestBackendRunInSession(IBMIntegrationTestCase):
 
     def test_session_id(self):
         """Test that session_id is updated correctly and maintained throughout the session"""
-        backend = self.service.get_backend("ibmq_qasm_simulator")
+        backend = self.service.backend("ibmq_qasm_simulator")
         backend.open_session()
         self.assertEqual(backend.session.session_id, None)
         self.assertTrue(backend.session.active)
@@ -131,7 +131,7 @@ class TestBackendRunInSession(IBMIntegrationTestCase):
 
     def test_backend_and_primitive_in_session(self):
         """Test Sampler.run and backend.run in the same session."""
-        backend = self.service.get_backend("ibmq_qasm_simulator")
+        backend = self.service.backend("ibmq_qasm_simulator")
         with Session(backend=backend) as session:
             sampler = Sampler(session=session)
             job1 = sampler.run(circuits=ReferenceCircuits.bell())

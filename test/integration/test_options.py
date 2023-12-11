@@ -31,7 +31,7 @@ class TestIntegrationOptions(IBMIntegrationTestCase):
     @run_integration_test
     def test_noise_model(self, service):
         """Test running with noise model."""
-        backend = service.get_backend("ibmq_qasm_simulator")
+        backend = service.backend("ibmq_qasm_simulator")
         self.log.info("Using backend %s", backend.name)
 
         fake_backend = FakeManila()

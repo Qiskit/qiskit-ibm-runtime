@@ -175,7 +175,7 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
             "max_execution_time": max_execution_time,
         }
         if pid == "sampler":
-            backend = service.get_backend(backend_name)
+            backend = service.backend(backend_name)
             options = Options()
             if log_level:
                 options.environment.log_level = log_level

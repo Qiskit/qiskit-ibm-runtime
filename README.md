@@ -137,7 +137,7 @@ bell.cx(0, 1)
 bell.measure_all()
 
 # 3. Execute using the Sampler primitive
-backend = service.get_backend('ibmq_qasm_simulator')
+backend = service.backend('ibmq_qasm_simulator')
 sampler = Sampler(backend=backend, options=options)
 job = sampler.run(circuits=bell)
 print(f"Job ID is {job.job_id()}")
@@ -180,7 +180,7 @@ for x in range(points):
     theta1.append(theta)
 
 # 3. Execute using the Estimator primitive
-backend = service.get_backend('ibmq_qasm_simulator')
+backend = service.backend('ibmq_qasm_simulator')
 estimator = Estimator(backend, options=options)
 job = estimator.run(circuits=[qc_example]*points, observables=[M1]*points, parameter_values=theta1)
 print(f"Job ID is {job.job_id()}")
