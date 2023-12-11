@@ -17,8 +17,6 @@ from datetime import datetime
 from typing import Any, Optional, Union, Dict
 import dateutil.parser
 
-from qiskit_ibm_provider.utils.utils import api_status_to_job_status
-
 from ..utils import utc_to_local, duration_difference
 
 
@@ -117,11 +115,7 @@ class QueueInfo:
         Returns:
              The job queue information report.
         """
-        status = (
-            api_status_to_job_status(self._status).value
-            if self._status
-            else self._get_value(self._status)
-        )
+        status = self._status
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")

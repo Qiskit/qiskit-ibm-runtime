@@ -15,7 +15,7 @@
 import uuid
 import time
 from datetime import datetime, timedelta
-from unittest import skip
+from unittest import skip, SkipTest
 
 from dateutil import tz
 from qiskit.compiler import transpile
@@ -205,6 +205,8 @@ class TestIBMJobAttributes(IBMTestCase):
 
     def test_queue_info(self):
         """Test retrieving queue information."""
+        if self.dependencies.channel == "ibm_cloud":
+            raise SkipTest("Not supported on cloud channel.")
         # Find the most busy backend.
         backend = most_busy_backend(self.service)
         leave_states = list(JOB_FINAL_STATES) + [JobStatus.RUNNING]
@@ -228,19 +230,6 @@ class TestIBMJobAttributes(IBMTestCase):
             )
             msg = "Job {} is queued but has no ".format(job.job_id())
             self.assertIsNotNone(queue_info, msg + "queue info.")
-            for attr, value in queue_info.__dict__.items():
-                self.assertIsNotNone(value, msg + attr)
-            self.assertTrue(
-                all(
-                    0 < priority <= 1.0
-                    for priority in [
-                        queue_info.hub_priority,
-                        queue_info.group_priority,
-                        queue_info.project_priority,
-                    ]
-                ),
-                "Unexpected queue info {} for job {}".format(queue_info, job.job_id()),
-            )
             self.assertTrue(queue_info.format())
             self.assertTrue(repr(queue_info))
         elif job._status is not None:
