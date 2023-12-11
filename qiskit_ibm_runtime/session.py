@@ -23,7 +23,6 @@ from qiskit_ibm_runtime import QiskitRuntimeService
 from .runtime_job import RuntimeJob
 from .utils.result_decoder import ResultDecoder
 from .ibm_backend import IBMBackend
-from .exceptions import RuntimeJobTimeoutError
 from .utils.default_session import set_cm_session
 from .utils.deprecation import deprecate_arguments
 
@@ -181,10 +180,7 @@ class Session:
                 self._setup_lock.release()
 
         if self._backend is None:
-            try:
-                self._backend = job.backend(0).name
-            except RuntimeJobTimeoutError:
-                self._backend = None
+            self._backend = job.backend().name
 
         return job
 
@@ -253,6 +249,7 @@ class Session:
             last_job_completed: Timestamp of when the last job in the session completed.
             started_at: Timestamp of when the session was started.
             closed_at: Timestamp of when the session was closed.
+            activated_at: Timestamp of when the session state was changed to active.
         """
         if self._session_id:
             response = self._service._api_client.session_details(self._session_id)
@@ -269,6 +266,7 @@ class Session:
                     "last_job_completed": response.get("last_job_completed"),
                     "started_at": response.get("started_at"),
                     "closed_at": response.get("closed_at"),
+                    "activated_at": response.get("activated_at"),
                 }
         return None
 
