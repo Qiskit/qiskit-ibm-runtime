@@ -22,8 +22,6 @@ import warnings
 
 from qiskit.providers.options import Options as TerraOptions
 
-from qiskit_ibm_provider.session import get_cm_session as get_cm_provider_session
-
 from .options import Options
 from .options.utils import set_default_error_levels
 from .runtime_job import RuntimeJob
@@ -31,6 +29,7 @@ from .ibm_backend import IBMBackend
 from .utils.default_session import get_cm_session
 from .constants import DEFAULT_DECODERS
 from .qiskit_runtime_service import QiskitRuntimeService
+from .backend_session.session import get_cm_session as get_cm_provider_session
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session

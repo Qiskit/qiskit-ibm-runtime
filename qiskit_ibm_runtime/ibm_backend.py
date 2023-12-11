@@ -51,7 +51,7 @@ from qiskit_ibm_provider.exceptions import IBMBackendValueError, IBMBackendApiEr
 from qiskit_ibm_provider.api.exceptions import RequestsApiError
 
 # temporary until we unite the 2 Session classes
-from qiskit_ibm_provider.session import (
+from .backend_session.session import (
     Session as ProviderSession,
 )  # temporary until we unite the 2 Session classes
 
