@@ -70,6 +70,7 @@ class FakeProviderForBackendV2(ProviderV1):
     """
 
     def backend(self, name=None, **kwargs):  # type: ignore
+        """Return FakeBackend with name 'name', and obeying additional filters as defined in kwargs"""
         backend = self._backends[0]
         if name:
             filtered_backends = [backend for backend in self._backends if backend.name() == name]
@@ -144,6 +145,7 @@ class FakeProvider(ProviderV1):
     """
 
     def backend(self, name=None, **kwargs):  # type: ignore
+        """Return FakeBackend with name 'name', and obeying additional filters as defined in kwargs"""
         backend = self._backends[0]
         if name:
             filtered_backends = [backend for backend in self._backends if backend.name() == name]
