@@ -832,7 +832,7 @@ class QiskitRuntimeService(Provider):
         issue_deprecation_msg(
             msg="QiskitRuntimeService.get_backend() is deprecated.",
             version="0.17.0",
-            remedy="use QiskitRuntimeService.backend() instead"
+            remedy="use QiskitRuntimeService.backend() instead",
         )
         return self.backend(name, **kwargs)
 
