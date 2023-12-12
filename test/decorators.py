@@ -49,20 +49,6 @@ def quantum_only(func):
     return _wrapper
 
 
-def cloud_only(func):
-    """Decorator that runs a test using only ibm_cloud services."""
-
-    @wraps(func)
-    def _wrapper(self, service):
-        if service._channel != "ibm_cloud":
-            raise SkipTest(
-                f"Skipping integration test. {self} does not support channel type {service._channel}"
-            )
-        func(self, service)
-
-    return _wrapper
-
-
 def run_quantum_and_cloud_fake(func):
     """Decorator that runs a test using both quantum and cloud fake services."""
 
