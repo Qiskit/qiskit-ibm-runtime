@@ -12,7 +12,6 @@
 
 """Integration tests for Session."""
 
-import warnings
 
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.quantum_info import SparsePauliOp
@@ -129,24 +128,52 @@ class TestBackendRunInSession(IBMIntegrationTestCase):
             result.get_counts()["00"], result.get_counts()["11"], delta=shots / 10
         )
 
-    def test_backend_and_primitive_in_session(self):
-        """Test Sampler.run and backend.run in the same session."""
+    def test_backend_run_session_param(self):
+        """Test Sampler.run and backend.run in the same session.
+        Session is defined as parameter"""
         backend = self.service.get_backend("ibmq_qasm_simulator")
         with Session(backend=backend) as session:
             sampler = Sampler(session=session)
             job1 = sampler.run(circuits=ReferenceCircuits.bell())
-            with warnings.catch_warnings(record=True):
-                job2 = backend.run(circuits=ReferenceCircuits.bell())
+            job2 = backend.run(circuits=ReferenceCircuits.bell(), session=session)
             self.assertEqual(job1.session_id, job1.job_id())
-            self.assertIsNone(job2.session_id)
+            self.assertEqual(job2.session_id, job1.job_id())
+
+    def test_backend_run_session_context_manager(self):
+        """Test Sampler.run and backend.run in the same session.
+           Session is defined in context manager"""
+        backend = self.service.get_backend("ibmq_qasm_simulator")
+        with Session(backend=backend) as session:
+            sampler = Sampler(session=session)
+            job1 = sampler.run(circuits=ReferenceCircuits.bell())
+            job2 = backend.run(circuits=ReferenceCircuits.bell())
+            self.assertEqual(session.session_id, job1.job_id())
+            self.assertEqual(job2.session_id, session.session_id)
+
+    def test_backend_open_session(self):
+        """Test Sampler.run and backend.run in the same session.
+        Session is created by open_session."""
+        backend = self.service.get_backend("ibmq_qasm_simulator")
         with backend.open_session() as session:
-            with warnings.catch_warnings(record=True):
-                sampler = Sampler(backend=backend)
+            sampler = Sampler(backend=backend, session=session)
             job1 = backend.run(ReferenceCircuits.bell())
             job2 = sampler.run(circuits=ReferenceCircuits.bell())
             session_id = session.session_id
             self.assertEqual(session_id, job1.job_id())
-            self.assertIsNone(job2.session_id)
+            self.assertEqual(job2.session_id, session_id)
+
+    def test_backend_open_session_with_context_manager(self):
+        """Test Sampler.run and backend.run in the same session.
+        Session is created by open_session. Sampler gets
+        Session from  backend without parameter"""
+        backend = self.service.get_backend("ibmq_qasm_simulator")
+        with backend.open_session() as session:
+            sampler = Sampler(backend=backend)
+            job1 = backend.run(ReferenceCircuits.bell())
+            job2 = sampler.run(circuits=ReferenceCircuits.bell())
+            session_id = session.session_id
+            self.assertEqual(session_id, job1.job_id())
+            self.assertEqual(job2.session_id, session_id)
 
     def test_session_cancel(self):
         """Test closing a session"""

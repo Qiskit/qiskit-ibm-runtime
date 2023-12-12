@@ -61,6 +61,8 @@ from .utils.backend_converter import (
     convert_to_target,
 )
 from .session import Session
+from .utils.default_session import get_cm_session
+
 
 logger = logging.getLogger(__name__)
 
@@ -191,6 +193,7 @@ class IBMBackend(Backend):
         self._target = None
         self._max_circuits = configuration.max_experiments
         self._session: Session = None
+
         if (
             not self._configuration.simulator
             and hasattr(self.options, "noise_model")
@@ -578,6 +581,7 @@ class IBMBackend(Backend):
     def run(
         self,
         circuits: Union[QuantumCircuit, str, List[Union[QuantumCircuit, str]]],
+        session: Session = None,
         dynamic: bool = None,
         job_tags: Optional[List[str]] = None,
         init_circuit: Optional[QuantumCircuit] = None,
@@ -727,6 +731,7 @@ class IBMBackend(Backend):
         run_config_dict["circuits"] = circuits
 
         return self._runtime_run(
+            session=session,
             program_id=program_id,
             inputs=run_config_dict,
             backend_name=self.name,
@@ -739,6 +744,7 @@ class IBMBackend(Backend):
         program_id: str,
         inputs: Dict,
         backend_name: str,
+        session: Optional[Session] = None,
         job_tags: Optional[List[str]] = None,
         image: Optional[str] = None,
     ) -> RuntimeJob:
@@ -746,6 +752,11 @@ class IBMBackend(Backend):
         hgp_name = None
         if self._service._channel == "ibm_quantum":
             hgp_name = self._instance or self._service._get_hgp().name
+
+        if session:
+            self._session = session
+        elif get_cm_session():
+            self._session = get_cm_session()
 
         if self._session:
             if not self._session._active:

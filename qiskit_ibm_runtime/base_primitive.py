@@ -95,6 +95,7 @@ class BasePrimitive(ABC):
         if isinstance(backend, IBMBackend):
             self._service = backend.service
             self._backend = backend
+            self._session = self._backend.session
         elif isinstance(backend, str):
             self._service = (
                 QiskitRuntimeService()
