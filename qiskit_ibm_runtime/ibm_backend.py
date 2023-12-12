@@ -749,11 +749,6 @@ class IBMBackend(Backend):
         if self._service._channel == "ibm_quantum":
             hgp_name = self._instance or self._service._get_hgp().name
 
-        # Check if initialized within a Primitive session. If so, issue a warning.
-        if get_cm_primitive_session():
-            warnings.warn(
-                "A Primitive session is open but Backend.run() jobs will not be run within this session"
-            )
         if self._session:
             if not self._session._active:
                 raise RuntimeError(f"The session {self._session.session_id} is closed.")
