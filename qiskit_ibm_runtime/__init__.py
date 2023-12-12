@@ -125,7 +125,7 @@ to ``WARNING``::
 Interim and final results
 -------------------------
 
-Some runtime programs provide interim results that inform you about program
+Some runtime primitives provide interim results that inform you about program
 progress. You can choose to stream the interim results and final result when you run the
 program by passing in the ``callback`` parameter, or at a later time using
 the :meth:`RuntimeJob.stream_results` method. For example::
