@@ -67,6 +67,8 @@ from .utils.backend_converter import (
 )
 from .utils.default_session import get_cm_session as get_cm_primitive_session
 
+from .session import Session
+
 logger = logging.getLogger(__name__)
 
 QOBJRUNNERPROGRAMID = "circuit-runner"
