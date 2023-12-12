@@ -20,7 +20,8 @@ from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit.providers.jobstatus import JobStatus
 from qiskit.quantum_info import SparsePauliOp
 
-from qiskit_ibm_runtime import Sampler, Session, Options, Estimator
+from qiskit_ibm_runtime import Sampler, Session, Options, Estimator, QiskitRuntimeService
+from qiskit_ibm_runtime.exceptions import IBMNotAuthorizedError
 
 from ..ibm_test_case import IBMIntegrationTestCase
 from ..decorators import run_integration_test
@@ -37,6 +38,28 @@ class TestQCTRL(IBMIntegrationTestCase):
         super().setUp()
         self.bell = ReferenceCircuits.bell()
         self.backend = "alt_canberra"
+
+    def test_channel_strategy_parameter(self):
+        """Test passing in channel strategy parameter for a q-ctrl instance."""
+        service = QiskitRuntimeService(
+            channel="ibm_cloud",
+            url=self.dependencies.url,
+            token=self.dependencies.token,
+            instance=self.dependencies.instance,
+            channel_strategy="q-ctrl",
+        )
+        self.assertTrue(service)
+
+    def test_invalid_channel_strategy_parameter(self):
+        """Test passing in invalid channel strategy parameter for a q-ctrl instance."""
+        with self.assertRaises(IBMNotAuthorizedError):
+            QiskitRuntimeService(
+                channel="ibm_cloud",
+                url=self.dependencies.url,
+                token=self.dependencies.token,
+                instance=self.dependencies.instance,
+                channel_strategy=None,
+            )
 
     @run_integration_test
     def test_qctrl(self, service):

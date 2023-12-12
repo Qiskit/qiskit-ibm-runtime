@@ -50,4 +50,4 @@ jobs:
           pip install -e .
           pip install -c constraints.txt -r requirements-dev.txt
       - name: Run q-ctrl tests
-        run: python -m unittest test/e2e/test_qctrl.py
+        run: python -m unittest test/qctrl/test_qctrl.py
