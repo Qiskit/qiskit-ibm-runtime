@@ -141,7 +141,7 @@ class TestBackendRunInSession(IBMIntegrationTestCase):
 
     def test_backend_run_session_context_manager(self):
         """Test Sampler.run and backend.run in the same session.
-           Session is defined in context manager"""
+        Session is defined in context manager"""
         backend = self.service.get_backend("ibmq_qasm_simulator")
         with Session(backend=backend) as session:
             sampler = Sampler(session=session)
