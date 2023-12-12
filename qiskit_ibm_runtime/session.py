@@ -95,13 +95,13 @@ class Session:
         """
 
         if service is None:
-            if isinstance(backend, IBMBackend):
+            if isinstance(backend, ibm_backend.IBMBackend):
                 self._service = backend.service
             else:
                 self._service = (
-                    QiskitRuntimeService()
-                    if QiskitRuntimeService.global_service is None
-                    else QiskitRuntimeService.global_service
+                    qiskit_runtime_service.QiskitRuntimeService()
+                    if qiskit_runtime_service.QiskitRuntimeService.global_service is None
+                    else qiskit_runtime_service.QiskitRuntimeService.global_service
                 )
 
         else:
@@ -111,7 +111,7 @@ class Session:
             raise ValueError('"backend" is required for ``ibm_quantum`` channel.')
 
         self._instance = None
-        if isinstance(backend, IBMBackend):
+        if isinstance(backend, ibm_backend.IBMBackend):
             self._instance = backend._instance
             backend = backend.name
         self._backend = backend

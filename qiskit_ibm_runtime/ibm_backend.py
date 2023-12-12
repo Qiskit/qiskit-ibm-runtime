@@ -50,11 +50,6 @@ from qiskit_ibm_provider.utils.options import QASM2Options, QASM3Options
 from qiskit_ibm_provider.exceptions import IBMBackendValueError, IBMBackendApiError
 from qiskit_ibm_provider.api.exceptions import RequestsApiError
 
-# temporary until we unite the 2 Session classes
-from .backend_session.session import (
-    Session as ProviderSession,
-)  # temporary until we unite the 2 Session classes
-
 from .utils.utils import validate_job_tags
 from . import qiskit_runtime_service  # pylint: disable=unused-import,cyclic-import
 from .runtime_job import RuntimeJob
@@ -197,7 +192,7 @@ class IBMBackend(Backend):
         self._defaults = None
         self._target = None
         self._max_circuits = configuration.max_experiments
-        self._session: ProviderSession = None
+        self._session: Session = None
         if (
             not self._configuration.simulator
             and hasattr(self.options, "noise_model")
@@ -760,7 +755,7 @@ class IBMBackend(Backend):
                 "A Primitive session is open but Backend.run() jobs will not be run within this session"
             )
         if self._session:
-            if not self._session.active:
+            if not self._session._active:
                 raise RuntimeError(f"The session {self._session.session_id} is closed.")
             session_id = self._session.session_id
             start_session = session_id is None
@@ -829,13 +824,13 @@ class IBMBackend(Backend):
                 run_config_dict[key] = backend_options[key]
         return run_config_dict
 
-    def open_session(self) -> ProviderSession:
+    def open_session(self) -> Session:
         """Open session"""
-        self._session = ProviderSession()
+        self._session = Session(backend=self)
         return self._session
 
     @property
-    def session(self) -> ProviderSession:
+    def session(self) -> Session:
         """Return session"""
         return self._session
 
