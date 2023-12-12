@@ -15,7 +15,7 @@ Fake Essex device (5 qubit).
 """
 
 import os
-from qiskit.providers.fake_provider import fake_qasm_backend, fake_backend
+from qiskit_ibm_runtime.fake_provider import fake_qasm_backend, fake_backend
 
 
 class FakeEssexV2(fake_backend.FakeBackendV2):
