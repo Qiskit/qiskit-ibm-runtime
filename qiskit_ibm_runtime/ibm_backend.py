@@ -60,7 +60,7 @@ from .exceptions import IBMBackendApiProtocolError
 from .utils.backend_converter import (
     convert_to_target,
 )
-from .session import Session
+from .session import Session  # pylint: disable=cyclic-import
 from .utils.default_session import get_cm_session
 
 
