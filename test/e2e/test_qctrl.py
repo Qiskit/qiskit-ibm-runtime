@@ -22,15 +22,15 @@ from qiskit.quantum_info import SparsePauliOp
 
 from qiskit_ibm_runtime import Sampler, Session, Options, Estimator
 
-from ..ibm_test_case import IBMIntegrationJobTestCase
-from ..decorators import run_integration_test, cloud_only
+from ..ibm_test_case import IBMIntegrationTestCase
+from ..decorators import run_integration_test
 from ..utils import cancel_job_safe
 
 FIDELITY_THRESHOLD = 0.9
 DIFFERENCE_THRESHOLD = 0.1
 
 
-class TestQCTRL(IBMIntegrationJobTestCase):
+class TestQCTRL(IBMIntegrationTestCase):
     """Integration tests for QCTRL integration."""
 
     def setUp(self) -> None:
@@ -39,10 +39,8 @@ class TestQCTRL(IBMIntegrationJobTestCase):
         self.backend = "alt_canberra"
 
     @run_integration_test
-    @cloud_only
     def test_qctrl(self, service):
         """Test simple bell circuit."""
-        service._channel_strategy = "q-ctrl"
         with Session(service, self.backend) as session:
             options = Options(resilience_level=1)
             sampler = Sampler(session=session, options=options)
@@ -51,11 +49,8 @@ class TestQCTRL(IBMIntegrationJobTestCase):
             self.assertTrue(result)
 
     @run_integration_test
-    @cloud_only
     def test_cancel_qctrl_job(self, service):
         """Test canceling qctrl job."""
-        service._channel_strategy = "q-ctrl"
-
         with Session(service, self.backend) as session:
             options = Options(resilience_level=1)
             sampler = Sampler(session=session, options=options)
@@ -69,10 +64,8 @@ class TestQCTRL(IBMIntegrationJobTestCase):
         self.assertEqual(rjob.status(), JobStatus.CANCELLED)
 
     @run_integration_test
-    @cloud_only
     def test_sampler_qctrl_bell(self, service):
         """Test qctrl bell state"""
-        service._channel_strategy = "q-ctrl"
         # Set shots for experiment
         shots = 1000
 
@@ -103,10 +96,8 @@ class TestQCTRL(IBMIntegrationJobTestCase):
         self.assertGreater(fidelity, FIDELITY_THRESHOLD)
 
     @run_integration_test
-    @cloud_only
     def test_sampler_qctrl_ghz(self, service):
         """Test qctrl small GHZ"""
-        service._channel_strategy = "q-ctrl"
         shots = 1000
         num_qubits = 5
         ghz_circuit = QuantumCircuit(num_qubits)
@@ -136,7 +127,6 @@ class TestQCTRL(IBMIntegrationJobTestCase):
         self.assertGreater(fidelity, FIDELITY_THRESHOLD)
 
     @run_integration_test
-    @cloud_only
     def test_sampler_qctrl_superposition(self, service):
         """Test qctrl small superposition"""
 
@@ -168,7 +158,6 @@ class TestQCTRL(IBMIntegrationJobTestCase):
         self.assertGreater(fidelity, FIDELITY_THRESHOLD)
 
     @run_integration_test
-    @cloud_only
     def test_sampler_qctrl_conditional_states(self, service):
         """Test cqtrl conitional states"""
         shots = 1000
@@ -215,7 +204,6 @@ class TestQCTRL(IBMIntegrationJobTestCase):
             self.assertGreater(fidelity, FIDELITY_THRESHOLD)
 
     @run_integration_test
-    @cloud_only
     def test_estimator_qctrl_bell(self, service):
         """Test estimator qctrl bell state"""
         # Set shots for experiment
@@ -252,7 +240,6 @@ class TestQCTRL(IBMIntegrationJobTestCase):
             self.assertLess(diff, DIFFERENCE_THRESHOLD)
 
     @run_integration_test
-    @cloud_only
     def test_estimator_qctrl_ghz(self, service):
         """Test estimator qctrl GHZ state"""
         shots = 1000
@@ -296,7 +283,6 @@ class TestQCTRL(IBMIntegrationJobTestCase):
             self.assertLess(diff, DIFFERENCE_THRESHOLD)
 
     @run_integration_test
-    @cloud_only
     def test_estimator_qctrl_superposition(self, service):
         """Test estimator qctrl small superposition"""
         shots = 1000
@@ -334,7 +320,6 @@ class TestQCTRL(IBMIntegrationJobTestCase):
             self.assertLess(diff, DIFFERENCE_THRESHOLD)
 
     @run_integration_test
-    @cloud_only
     def test_estimator_qctrl_conditional(self, service):
         """Test estimator qctrl conditional states"""
         shots = 1000
