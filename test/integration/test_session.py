@@ -110,7 +110,7 @@ class TestBackendRunInSession(IBMIntegrationTestCase):
         backend = self.service.get_backend("ibmq_qasm_simulator")
         backend.open_session()
         self.assertEqual(backend.session.session_id, None)
-        self.assertTrue(backend.session.active)
+        self.assertTrue(backend.session._active)
         job1 = backend.run(ReferenceCircuits.bell())
         self.assertEqual(job1._session_id, job1.job_id())
         job2 = backend.run(ReferenceCircuits.bell())
@@ -152,7 +152,7 @@ class TestBackendRunInSession(IBMIntegrationTestCase):
         """Test closing a session"""
         backend = self.service.backend("ibmq_qasm_simulator")
         backend.open_session()
-        self.assertTrue(backend.session.active)
+        self.assertTrue(backend.session._active)
         backend.cancel_session()
         self.assertIsNone(backend.session)
 
@@ -160,7 +160,7 @@ class TestBackendRunInSession(IBMIntegrationTestCase):
         """Test closing a session"""
         backend = self.service.backend("ibmq_qasm_simulator")
         backend.open_session()
-        self.assertTrue(backend.session.active)
+        self.assertTrue(backend.session._active)
         backend.close_session()
         self.assertIsNone(backend.session)
 

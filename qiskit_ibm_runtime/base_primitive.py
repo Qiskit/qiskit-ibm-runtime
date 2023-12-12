@@ -18,7 +18,6 @@ from typing import Dict, Optional, Any, Union
 import copy
 import logging
 from dataclasses import asdict
-import warnings
 
 from qiskit.providers.options import Options as TerraOptions
 

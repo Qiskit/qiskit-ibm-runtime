@@ -19,7 +19,7 @@ from threading import Lock
 
 from qiskit_ibm_provider.utils.converters import hms_to_seconds
 
-from . import qiskit_runtime_service # pylint: disable=cyclic-import
+from . import qiskit_runtime_service  # pylint: disable=cyclic-import
 from .runtime_job import RuntimeJob
 from .utils.result_decoder import ResultDecoder
 from . import ibm_backend
