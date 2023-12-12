@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    :meth:`~qiskit_ibm_runtime.Session.details` has a new field, `activated_at`, which 
+    is the timestamp of when the session was changed to active.
+
