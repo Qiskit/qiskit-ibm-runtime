@@ -20,6 +20,7 @@ import logging
 from dataclasses import asdict
 import warnings
 
+
 from qiskit_aer import AerSimulator
 
 from qiskit.providers.options import Options as TerraOptions
@@ -47,7 +48,7 @@ class BasePrimitive(ABC):
 
     def __init__(
         self,
-        backend: Optional[Union[str, IBMBackend]] = None,
+        backend: Optional[Union[str, IBMBackend, FakeBackendV2]] = None,
         session: Optional[Union[Session, str, IBMBackend]] = None,
         options: Optional[Union[Dict, Options]] = None,
     ):
@@ -78,7 +79,7 @@ class BasePrimitive(ABC):
         # a nested dictionary to categorize options.
         self._session: Optional[Session] = None
         self._service: QiskitRuntimeService = None
-        self._backend: Optional[IBMBackend] = None
+        self._backend: Optional[Union[IBMBackend, FakeBackendV2]] = None
 
         if options is None:
             self._options = asdict(Options())
@@ -102,7 +103,7 @@ class BasePrimitive(ABC):
         if isinstance(backend, IBMBackend):
             self._service = backend.service
             self._backend = backend
-        elif isinstance(backend, Union[AerSimulator, FakeBackendV2]):
+        elif isinstance(backend, (AerSimulator, FakeBackendV2)):
             self._backend = backend
             self._service = (
                 QiskitRuntimeService()
