@@ -17,6 +17,7 @@ from qiskit.test.reference_circuits import ReferenceCircuits
 
 # pylint: disable=unused-import
 from qiskit_ibm_runtime import QiskitRuntimeService, Sampler, Estimator
+from qiskit_ibm_runtime.fake_provider.backends.almaden import FakeAlmadenV2
 
 from ..ibm_test_case import IBMTestCase
 from .mock.fake_runtime_service import FakeRuntimeService
@@ -31,7 +32,7 @@ class TestRunSimulation(IBMTestCase):
         service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
         shots = 100
         circuit = ReferenceCircuits.bell()
-        for backend in ["fake_manila", AerSimulator()]:
+        for backend in ["fake_manila", AerSimulator(), FakeAlmadenV2()]:
             sampler = Sampler(backend=backend)
             job = sampler.run(circuit, shots=shots)
             result = job.result()

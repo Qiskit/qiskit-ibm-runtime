@@ -23,6 +23,7 @@ import warnings
 from qiskit_aer import AerSimulator
 
 from qiskit.providers.options import Options as TerraOptions
+from qiskit.providers.fake_provider.fake_backend import FakeBackendV2
 
 from qiskit_ibm_provider.session import get_cm_session as get_cm_provider_session
 
@@ -101,7 +102,7 @@ class BasePrimitive(ABC):
         if isinstance(backend, IBMBackend):
             self._service = backend.service
             self._backend = backend
-        elif isinstance(backend, AerSimulator):
+        elif isinstance(backend, Union[AerSimulator, FakeBackendV2]):
             self._backend = backend
             self._service = (
                 QiskitRuntimeService()
