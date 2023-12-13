@@ -946,7 +946,7 @@ class QiskitRuntimeService(Provider):
                 program_id=program_id,
                 params=inputs["parameters"],
                 creation_date=datetime.now(),
-                tags=qrt_options.job_tags
+                tags=qrt_options.job_tags,
             )
             return fake_runtime_job
 
