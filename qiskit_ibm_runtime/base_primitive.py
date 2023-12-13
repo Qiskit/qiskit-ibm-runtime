@@ -189,9 +189,6 @@ class BasePrimitive(ABC):
                 program_id=self._program_id(),
                 options=runtime_options,
                 inputs=primitive_inputs,
-                # are the following relevant for simulators?
-                # callback=combined.get("environment", {}).get("callback", None),
-                # result_decoder=DEFAULT_DECODERS.get(self._program_id()),
             )
         if self._session:
             return self._session.run(

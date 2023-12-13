@@ -13,6 +13,7 @@
 """Qiskit fake runtime job."""
 
 from typing import Optional, Dict, Any
+from datetime import datetime
 
 from qiskit.primitives.primitive_job import PrimitiveJob
 from qiskit.providers import JobStatus, JobV1
@@ -31,20 +32,16 @@ class FakeRuntimeJob(JobV1):
         backend: FakeBackend,
         job_id: str,
         program_id: str,
-        # service: "qiskit_runtime_service.QiskitRuntimeService",
         params: Optional[Dict] = None,
-        # creation_date: Optional[str] = None,
-        # user_callback: Optional[Callable] = None,
-        # result_decoder: Optional[Union[Type[ResultDecoder], Sequence[Type[ResultDecoder]]]] = None,
-        # tags: Optional[List] = None,
+        creation_date: Optional[str] = None,
     ) -> None:
         """FakeRuntimeJob constructor."""
         super().__init__(backend=backend, job_id=job_id)
-        # self._service = service  # do we need this?
         self._primitive_job = primitive_job
         self._job_id = job_id
         self._params = params or {}
         self._program_id = program_id
+        self._creation_date = creation_date
 
     def result(self) -> Any:
         """Return the results of the job."""
@@ -64,6 +61,16 @@ class FakeRuntimeJob(JobV1):
             Input parameters used in this job.
         """
         return self._params
+
+    @property
+    def creation_date(self) -> Optional[datetime]:
+        """Job creation date in local time.
+
+        Returns:
+            The job creation date as a datetime object, in local time, or
+            ``None`` if creation date is not available.
+        """
+        return self._creation_date
 
     def submit(self) -> None:
         """Unsupported method.
