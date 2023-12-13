@@ -20,7 +20,12 @@ from datetime import datetime
 from collections import OrderedDict
 from typing import Dict, Callable, Optional, Union, List, Any, Type, Sequence
 
-from qiskit_aer import AerSimulator
+try:
+    from qiskit_aer import AerSimulator
+
+    HAS_AER_SIMULATOR = True
+except ImportError:
+    HAS_AER_SIMULATOR = False
 
 from qiskit_aer.primitives import Sampler as AerSampler
 from qiskit_aer.primitives import Estimator as AerEstimator
@@ -33,6 +38,7 @@ from qiskit.providers.models import (
     QasmBackendConfiguration,
 )
 from qiskit.primitives import BackendSampler, BackendEstimator
+from qiskit.providers.fake_provider.fake_backend import FakeBackendV2
 
 from qiskit_ibm_provider.proxies import ProxyConfiguration
 from qiskit_ibm_provider.utils.hgp import to_instance_format, from_instance_format
@@ -888,6 +894,8 @@ class QiskitRuntimeService(Provider):
             IBMInputValueError: If input is invalid.
             RuntimeProgramNotFound: If the program cannot be found.
             IBMRuntimeError: An error occurred running the program.
+            QiskitBackendNotFoundError: If backend is an AerSimulator or FakeBackendV2,
+            and aer is not installed.
         """
         qrt_options: RuntimeOptions = options
         if options is None:
@@ -905,6 +913,10 @@ class QiskitRuntimeService(Provider):
 
         is_fake_backend = False
         is_aer_backend = False
+
+        if isinstance(qrt_options.backend, (AerSimulator, FakeBackendV2)) and not HAS_AER_SIMULATOR:
+            raise QiskitBackendNotFoundError("To use an Aer Simulator, you must install aer")
+
         # if backend is a simulator, run locally
         if isinstance(qrt_options.backend, AerSimulator):
             is_aer_backend = True

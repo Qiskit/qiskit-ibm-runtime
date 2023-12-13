@@ -20,11 +20,16 @@ import logging
 from dataclasses import asdict
 import warnings
 
+try:
+    from qiskit_aer import AerSimulator
 
-from qiskit_aer import AerSimulator
+    HAS_AER_SIMULATOR = True
+except ImportError:
+    HAS_AER_SIMULATOR = False
 
 from qiskit.providers.options import Options as TerraOptions
 from qiskit.providers.fake_provider.fake_backend import FakeBackendV2
+from qiskit.providers.exceptions import QiskitBackendNotFoundError
 
 from qiskit_ibm_provider.session import get_cm_session as get_cm_provider_session
 
@@ -80,6 +85,9 @@ class BasePrimitive(ABC):
         self._session: Optional[Session] = None
         self._service: QiskitRuntimeService = None
         self._backend: Optional[Union[IBMBackend, FakeBackendV2]] = None
+
+        if isinstance(backend, (AerSimulator, FakeBackendV2)) and not HAS_AER_SIMULATOR:
+            raise QiskitBackendNotFoundError("To use an Aer Simulator, you must install aer")
 
         if options is None:
             self._options = asdict(Options())

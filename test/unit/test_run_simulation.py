@@ -11,8 +11,12 @@
 # that they have been altered from the originals.
 
 """Tests for running locally on a simulator."""
+
+import unittest
+
 from qiskit_aer import AerSimulator
 from qiskit.quantum_info import SparsePauliOp
+from qiskit.utils import optionals
 from qiskit.test.reference_circuits import ReferenceCircuits
 
 # pylint: disable=unused-import
@@ -26,6 +30,7 @@ from .mock.fake_runtime_service import FakeRuntimeService
 class TestRunSimulation(IBMTestCase):
     """Tests for local execution on simulators"""
 
+    @unittest.skipUnless(optionals.HAS_AER, "qiskit-aer is required to run this test")
     def test_basic_flow(self):
         """Test basic flow on simulator."""
         # pylint: disable=unused-variable
@@ -47,6 +52,7 @@ class TestRunSimulation(IBMTestCase):
             self.assertAlmostEqual(result.values[0], 1.0, delta=0.01)
             self.assertEqual(result.metadata[0]["shots"], shots)
 
+    @unittest.skipUnless(optionals.HAS_AER, "qiskit-aer is required to run this test")
     def test_aer_sim_options(self):
         """Test that options to Aer simulator are passed properly"""
         # pylint: disable=unused-variable
@@ -66,5 +72,4 @@ class TestRunSimulation(IBMTestCase):
             sampler = Sampler(backend=backend)
             job = sampler.run(circuit, shots=shots)
             result = job.result()
-            print("***")
             self.assertEqual(result.metadata[0]["simulator_metadata"]["method"], method)
