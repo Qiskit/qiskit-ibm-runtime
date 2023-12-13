@@ -12,7 +12,7 @@
 
 """Qiskit fake runtime job."""
 
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from datetime import datetime
 
 from qiskit.primitives.primitive_job import PrimitiveJob
@@ -34,6 +34,7 @@ class FakeRuntimeJob(JobV1):
         program_id: str,
         params: Optional[Dict] = None,
         creation_date: Optional[str] = None,
+        tags: Optional[List] = None,
     ) -> None:
         """FakeRuntimeJob constructor."""
         super().__init__(backend=backend, job_id=job_id)
@@ -42,6 +43,7 @@ class FakeRuntimeJob(JobV1):
         self._params = params or {}
         self._program_id = program_id
         self._creation_date = creation_date
+        self._tags = tags
 
     def result(self) -> Any:
         """Return the results of the job."""
@@ -71,6 +73,15 @@ class FakeRuntimeJob(JobV1):
             ``None`` if creation date is not available.
         """
         return self._creation_date
+
+    @property
+    def tags(self) -> List:
+        """Job tags.
+
+        Returns:
+            Tags assigned to the job that can be used for filtering.
+        """
+        return self._tags
 
     def submit(self) -> None:
         """Unsupported method.

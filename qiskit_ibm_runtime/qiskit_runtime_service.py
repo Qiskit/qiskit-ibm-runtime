@@ -945,7 +945,8 @@ class QiskitRuntimeService(Provider):
                 job_id=primitive_job.job_id(),
                 program_id=program_id,
                 params=inputs["parameters"],
-                creation_date=datetime.now()
+                creation_date=datetime.now(),
+                tags=qrt_options.job_tags
             )
             return fake_runtime_job
 
@@ -971,7 +972,8 @@ class QiskitRuntimeService(Provider):
                 job_id=primitive_job.job_id(),
                 program_id=program_id,
                 params=inputs["parameters"],
-                creation_date=datetime.now()
+                creation_date=datetime.now(),
+                tags=qrt_options.job_tags,
             )
             return fake_runtime_job
 
