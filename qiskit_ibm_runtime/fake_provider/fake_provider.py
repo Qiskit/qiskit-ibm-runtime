@@ -72,16 +72,12 @@ class FakeProviderForBackendV2(ProviderV1):
     available in the :mod:`qiskit_ibm_runtime.fake_provider`.
     """
 
-    def get_backend(self, name=None, **kwargs) -> FakeBackendV2:  # type: ignore
-        # backend = self._backends[0]
-        # when name=None, this will simply return Almaden. Is that what we want?
+    def get_backend(self, name: str = None, **kwargs) -> FakeBackendV2:  # type: ignore
+        """Return the backend according to its name. If kwargs are defined, then
+        additional filters may be applied. If no such backend, return None."""
         if name:
             filtered_backends = [backend for backend in self.backends() if backend.name == name]
-            # if not filtered_backends:
-            #     raise QiskitBackendNotFoundError()
-            # I prefer returning None rather than throwing an error. Any objection?
             backend = filtered_backends[0] if len(filtered_backends) > 0 else None
-
         return backend
 
     def backends(self, name=None, **kwargs) -> List[FakeBackendV2]:  # type: ignore
