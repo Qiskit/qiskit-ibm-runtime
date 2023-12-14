@@ -182,7 +182,7 @@ class TestQCTRL(IBMIntegrationTestCase):
 
     @run_integration_test
     def test_sampler_qctrl_conditional_states(self, service):
-        """Test cqtrl conitional states"""
+        """Test qctrl conditional states"""
         shots = 1000
         num_qubits = 3
         computational_states_circuits = []
