@@ -33,8 +33,10 @@ def set_default_error_levels(
     Returns:
         options with correct error level defaults.
     """
+    # The check that this is not a FakeBackendV2 is needed because FakeBackendV2
+    # does not have a configuration
     is_simulator = (
-        isinstance(backend, fake_backend.FakeBackendV2) or backend.configuration().simulator
+        not isinstance(backend, fake_backend.FakeBackendV2) and backend.configuration().simulator
     )
     if options.get("optimization_level") is None:
         if is_simulator and options.get("simulator", {}).get("noise_model") is None:
