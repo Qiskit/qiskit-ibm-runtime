@@ -73,3 +73,18 @@ class TestRunSimulation(IBMTestCase):
             job = sampler.run(circuit, shots=shots)
             result = job.result()
             self.assertEqual(result.metadata[0]["simulator_metadata"]["method"], method)
+
+    def test_run_backend_on_simulator(self):
+        """Test backend.run() on a simulator"""
+        # pylint: disable=unused-variable
+        service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
+        shots = 100
+        seed_simulator = 123
+        circuit = ReferenceCircuits.bell()
+        for backend in [FakeAlmadenV2(), AerSimulator()]:
+            result = backend.run(
+                circuit, seed_simulator=seed_simulator, shots=shots, method="statevector"
+            ).result()
+            self.assertEqual(result.results[0].shots, shots)
+            self.assertEqual(result.results[0].seed_simulator, seed_simulator)
+            self.assertEqual(result.results[0].metadata["method"], "statevector")
