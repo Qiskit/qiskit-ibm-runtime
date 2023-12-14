@@ -35,11 +35,12 @@ Misc Functions
     to_python_identifier
 """
 
-from qiskit_ibm_provider.utils.converters import (
+from .converters import (
     utc_to_local,
     local_to_utc,
     seconds_to_duration,
     duration_difference,
+    are_circuits_dynamic,
 )
 from .utils import to_python_identifier, is_crn, get_runtime_api_base_url, resolve_crn
 from .json import RuntimeEncoder, RuntimeDecoder, to_base64_string

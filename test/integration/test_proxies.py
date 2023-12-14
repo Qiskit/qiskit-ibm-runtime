@@ -17,9 +17,9 @@ import urllib
 
 from requests.exceptions import ProxyError
 
-from qiskit_ibm_provider.proxies import ProxyConfiguration
 from qiskit_ibm_provider.api.exceptions import RequestsApiError as ProviderRequestsApiError
 from qiskit_ibm_runtime import QiskitRuntimeService
+from qiskit_ibm_runtime.proxies import ProxyConfiguration
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 from qiskit_ibm_runtime.api.clients import AuthClient, VersionClient
 from qiskit_ibm_runtime.api.clients.runtime import RuntimeClient
