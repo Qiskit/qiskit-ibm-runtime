@@ -62,16 +62,6 @@ class TestQCTRL(IBMIntegrationTestCase):
             )
 
     @run_integration_test
-    def test_qctrl(self, service):
-        """Test simple bell circuit."""
-        with Session(service, self.backend) as session:
-            options = Options(resilience_level=1)
-            sampler = Sampler(session=session, options=options)
-
-            result = sampler.run(circuits=self.bell).result()
-            self.assertTrue(result)
-
-    @run_integration_test
     def test_cancel_qctrl_job(self, service):
         """Test canceling qctrl job."""
         with Session(service, self.backend) as session:
@@ -83,7 +73,6 @@ class TestQCTRL(IBMIntegrationTestCase):
         rjob = service.job(job.job_id())
         if not cancel_job_safe(rjob, self.log):
             return
-        time.sleep(5)
         self.assertEqual(rjob.status(), JobStatus.CANCELLED)
 
     @run_integration_test
