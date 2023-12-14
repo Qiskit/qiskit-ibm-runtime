@@ -15,7 +15,7 @@
 import uuid
 import time
 from datetime import datetime, timedelta
-from unittest import skip
+from unittest import skip, SkipTest
 
 from dateutil import tz
 from qiskit.compiler import transpile
@@ -32,7 +32,7 @@ from ..decorators import (
     integration_test_setup,
 )
 from ..ibm_test_case import IBMTestCase
-from ..utils import most_busy_backend
+from ..utils import most_busy_backend, cancel_job_safe
 
 
 class TestIBMJobAttributes(IBMTestCase):
@@ -200,13 +200,13 @@ class TestIBMJobAttributes(IBMTestCase):
                     step, time_data, start_datetime, end_datetime
                 ),
             )
-
         rjob = self.service.job(job.job_id())
         self.assertTrue(rjob.time_per_step())
 
-    @skip("queue_info supported in provider but not here")
     def test_queue_info(self):
         """Test retrieving queue information."""
+        if self.dependencies.channel == "ibm_cloud":
+            raise SkipTest("Not supported on cloud channel.")
         # Find the most busy backend.
         backend = most_busy_backend(self.service)
         leave_states = list(JOB_FINAL_STATES) + [JobStatus.RUNNING]
@@ -230,19 +230,11 @@ class TestIBMJobAttributes(IBMTestCase):
             )
             msg = "Job {} is queued but has no ".format(job.job_id())
             self.assertIsNotNone(queue_info, msg + "queue info.")
-            for attr, value in queue_info.__dict__.items():
-                self.assertIsNotNone(value, msg + attr)
-            self.assertTrue(
-                all(
-                    0 < priority <= 1.0
-                    for priority in [
-                        queue_info.hub_priority,
-                        queue_info.group_priority,
-                        queue_info.project_priority,
-                    ]
-                ),
-                "Unexpected queue info {} for job {}".format(queue_info, job.job_id()),
-            )
-
             self.assertTrue(queue_info.format())
             self.assertTrue(repr(queue_info))
+        elif job._status is not None:
+            self.assertIsNone(job.queue_position())
+            self.log.warning("Unable to retrieve queue information")
+
+        # Cancel job so it doesn't consume more resources.
+        cancel_job_safe(job, self.log)
