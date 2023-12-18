@@ -14,6 +14,7 @@
 
 import os
 from typing import Optional, Dict
+
 from qiskit_ibm_provider.proxies import ProxyConfiguration
 
 from .exceptions import AccountNotFoundError

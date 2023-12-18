@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    Added support for ``backend.run()``. The functionality is similar to that in ``qiskit-ibm-provider``.
+
