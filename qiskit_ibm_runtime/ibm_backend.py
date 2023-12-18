@@ -41,11 +41,6 @@ from qiskit.pulse.channels import (
 )
 from qiskit.transpiler.target import Target
 
-from qiskit_ibm_provider.utils.backend_decoder import (
-    defaults_from_server_data,
-    properties_from_server_data,
-)
-from qiskit_ibm_provider.utils import local_to_utc, are_circuits_dynamic
 from qiskit_ibm_provider.utils.options import QASM2Options, QASM3Options
 from qiskit_ibm_provider.exceptions import IBMBackendValueError, IBMBackendApiError
 from qiskit_ibm_provider.api.exceptions import RequestsApiError
@@ -66,6 +61,11 @@ from .utils.backend_converter import (
     convert_to_target,
 )
 from .utils.default_session import get_cm_session as get_cm_primitive_session
+from .utils.backend_decoder import (
+    defaults_from_server_data,
+    properties_from_server_data,
+)
+from .utils import local_to_utc, are_circuits_dynamic
 
 logger = logging.getLogger(__name__)
 
