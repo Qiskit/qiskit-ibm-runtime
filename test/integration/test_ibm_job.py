@@ -14,8 +14,7 @@
 import copy
 import time
 from datetime import datetime, timedelta
-from unittest import SkipTest, mock
-from unittest import skip
+from unittest import SkipTest
 
 from dateutil import tz
 from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister
@@ -23,10 +22,6 @@ from qiskit.compiler import transpile
 from qiskit.providers.jobstatus import JobStatus, JOB_FINAL_STATES
 from qiskit.test.reference_circuits import ReferenceCircuits
 
-from qiskit_ibm_provider.api.rest.job import Job as RestJob
-from qiskit_ibm_runtime.exceptions import IBMBackendApiError
-
-from qiskit_ibm_runtime.api.exceptions import RequestsApiError
 from qiskit_ibm_runtime.exceptions import RuntimeJobTimeoutError, RuntimeJobNotFound
 
 from ..ibm_test_case import IBMIntegrationTestCase
@@ -277,34 +272,6 @@ class TestIBMJob(IBMIntegrationTestCase):
             for thread in job._executor._threads:
                 thread.join(0.1)
             cancel_job_safe(job, self.log)
-
-    @skip("not supported by api")
-    def test_job_submit_partial_fail(self):
-        """Test job submit partial fail."""
-        job_id = []
-
-        def _side_effect(self, *args, **kwargs):
-            # pylint: disable=unused-argument
-            job_id.append(self.job_id)
-            raise RequestsApiError("Kaboom")
-
-        fail_points = ["put_object_storage", "callback_upload"]
-
-        for fail_method in fail_points:
-            with self.subTest(fail_method=fail_method):
-                with mock.patch.object(
-                    RestJob, fail_method, side_effect=_side_effect, autospec=True
-                ):
-                    with self.assertRaises(IBMBackendApiError):
-                        self.sim_backend.run(self.bell)
-
-                self.assertTrue(job_id, "Job ID not saved.")
-                job = self.service.job(job_id[0])
-                self.assertEqual(
-                    job.status(),
-                    JobStatus.CANCELLED,
-                    f"Job {job.job_id()} status is {job.status()} and not cancelled!",
-                )
 
     def test_job_circuits(self):
         """Test job circuits."""
