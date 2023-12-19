@@ -27,11 +27,11 @@ from qiskit.providers.fake_provider.backends.poughkeepsie.fake_poughkeepsie impo
     FakePoughkeepsie,
 )
 
-from qiskit_ibm_provider.api.exceptions import (
+from qiskit_ibm_provider.apiconstants import ApiJobStatus, API_JOB_FINAL_STATES
+from qiskit_ibm_runtime.api.exceptions import (
     RequestsApiError,
     UserTimeoutExceededError,
 )
-from qiskit_ibm_provider.apiconstants import ApiJobStatus, API_JOB_FINAL_STATES
 
 VALID_RESULT_RESPONSE = {
     "backend_name": "ibmqx2",

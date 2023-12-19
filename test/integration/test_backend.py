@@ -21,8 +21,8 @@ from qiskit import QuantumCircuit
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.test.reference_circuits import ReferenceCircuits
 
-from qiskit_ibm_provider.ibm_qubit_properties import IBMQubitProperties
-from qiskit_ibm_provider.exceptions import IBMBackendValueError
+from qiskit_ibm_runtime.ibm_qubit_properties import IBMQubitProperties
+from qiskit_ibm_runtime.exceptions import IBMBackendValueError
 
 from qiskit_ibm_runtime import QiskitRuntimeService
 

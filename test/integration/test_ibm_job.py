@@ -24,7 +24,7 @@ from qiskit.providers.jobstatus import JobStatus, JOB_FINAL_STATES
 from qiskit.test.reference_circuits import ReferenceCircuits
 
 from qiskit_ibm_provider.api.rest.job import Job as RestJob
-from qiskit_ibm_provider.exceptions import IBMBackendApiError
+from qiskit_ibm_runtime.exceptions import IBMBackendApiError
 
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
 from qiskit_ibm_runtime.exceptions import RuntimeJobTimeoutError, RuntimeJobNotFound

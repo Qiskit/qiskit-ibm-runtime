@@ -17,13 +17,12 @@ import urllib
 
 from requests.exceptions import ProxyError
 
-from qiskit_ibm_provider.api.exceptions import RequestsApiError as ProviderRequestsApiError
 from qiskit_ibm_runtime.proxies import ProxyConfiguration
 from qiskit_ibm_runtime import QiskitRuntimeService
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 from qiskit_ibm_runtime.api.clients import AuthClient, VersionClient
 from qiskit_ibm_runtime.api.clients.runtime import RuntimeClient
-from qiskit_ibm_runtime.api.exceptions import RequestsApiError as RuntimeRequestsApiError
+from qiskit_ibm_runtime.api.exceptions import RequestsApiError
 
 from ..ibm_test_case import IBMTestCase
 from ..decorators import IntegrationTestDependencies, integration_test_setup
@@ -160,7 +159,7 @@ class TestProxies(IBMTestCase):
             url=dependencies.url,
             proxies=ProxyConfiguration(urls=INVALID_PORT_PROXIES),
         )
-        with self.assertRaises(RuntimeRequestsApiError) as context_manager:
+        with self.assertRaises(RequestsApiError) as context_manager:
             client = RuntimeClient(params)
             client.jobs_get(limit=1)
         self.assertIsInstance(context_manager.exception.__cause__, ProxyError)
@@ -174,7 +173,7 @@ class TestProxies(IBMTestCase):
             url=dependencies.url,
             proxies=ProxyConfiguration(urls=INVALID_PORT_PROXIES),
         )
-        with self.assertRaises(ProviderRequestsApiError) as context_manager:
+        with self.assertRaises(RequestsApiError) as context_manager:
             _ = AuthClient(params)
 
         self.assertIsInstance(context_manager.exception.__cause__, ProxyError)
@@ -184,7 +183,7 @@ class TestProxies(IBMTestCase):
         self, dependencies: IntegrationTestDependencies
     ) -> None:
         """Should raise RequestApiError with ProxyError using VersionClient."""
-        with self.assertRaises(ProviderRequestsApiError) as context_manager:
+        with self.assertRaises(RequestsApiError) as context_manager:
             version_finder = VersionClient(dependencies.url, proxies=INVALID_PORT_PROXIES)
             version_finder.version()
 
@@ -201,7 +200,7 @@ class TestProxies(IBMTestCase):
             url=dependencies.url,
             proxies=ProxyConfiguration(urls=INVALID_ADDRESS_PROXIES),
         )
-        with self.assertRaises(RuntimeRequestsApiError) as context_manager:
+        with self.assertRaises(RequestsApiError) as context_manager:
             client = RuntimeClient(params)
             client.jobs_get(limit=1)
 
@@ -218,7 +217,7 @@ class TestProxies(IBMTestCase):
             url=dependencies.url,
             proxies=ProxyConfiguration(urls=INVALID_ADDRESS_PROXIES),
         )
-        with self.assertRaises(ProviderRequestsApiError) as context_manager:
+        with self.assertRaises(RequestsApiError) as context_manager:
             _ = AuthClient(params)
 
         self.assertIsInstance(context_manager.exception.__cause__, ProxyError)
@@ -228,7 +227,7 @@ class TestProxies(IBMTestCase):
         self, dependencies: IntegrationTestDependencies
     ) -> None:
         """Should raise RequestApiError with ProxyError using VersionClient."""
-        with self.assertRaises(ProviderRequestsApiError) as context_manager:
+        with self.assertRaises(RequestsApiError) as context_manager:
             version_finder = VersionClient(dependencies.url, proxies=INVALID_ADDRESS_PROXIES)
             version_finder.version()
 

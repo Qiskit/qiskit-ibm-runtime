@@ -41,10 +41,6 @@ from qiskit.pulse.channels import (
 )
 from qiskit.transpiler.target import Target
 
-from qiskit_ibm_provider.utils.options import QASM2Options, QASM3Options
-from qiskit_ibm_provider.exceptions import IBMBackendValueError, IBMBackendApiError
-from qiskit_ibm_provider.api.exceptions import RequestsApiError
-
 # temporary until we unite the 2 Session classes
 from qiskit_ibm_provider.session import (
     Session as ProviderSession,
@@ -56,7 +52,7 @@ from .runtime_job import RuntimeJob
 
 from .api.clients import RuntimeClient
 from .api.clients.backend import BaseBackendClient
-from .exceptions import IBMBackendApiProtocolError
+from .exceptions import IBMBackendApiProtocolError, IBMBackendValueError, IBMBackendApiError
 from .utils.backend_converter import (
     convert_to_target,
 )
@@ -65,6 +61,8 @@ from .utils.backend_decoder import (
     defaults_from_server_data,
     properties_from_server_data,
 )
+from .utils.options import QASM2Options, QASM3Options
+from .api.exceptions import RequestsApiError
 from .utils import local_to_utc, are_circuits_dynamic
 
 logger = logging.getLogger(__name__)

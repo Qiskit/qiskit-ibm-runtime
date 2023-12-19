@@ -19,7 +19,7 @@ from typing import Union, Tuple, Any, Optional, List
 
 from dateutil import tz, parser
 from qiskit.circuit import QuantumCircuit, ControlFlowOp
-from qiskit_ibm_provider.exceptions import IBMInputValueError
+from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 
 def utc_to_local(utc_dt: Union[datetime, str]) -> datetime:
