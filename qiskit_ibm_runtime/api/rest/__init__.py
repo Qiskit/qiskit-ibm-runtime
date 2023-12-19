@@ -16,4 +16,4 @@ Each adaptor handles a specific endpoint prefix followed by the base URL. The
 Job adaptor, for example, handles all /Jobs/{job id} endpoints.
 """
 
-from qiskit_ibm_provider.api.rest.root import Api
+from .root import Api

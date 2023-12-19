@@ -51,7 +51,6 @@ from . import qiskit_runtime_service  # pylint: disable=unused-import,cyclic-imp
 from .runtime_job import RuntimeJob
 
 from .api.clients import RuntimeClient
-from .api.clients.backend import BaseBackendClient
 from .exceptions import IBMBackendApiProtocolError, IBMBackendValueError, IBMBackendApiError
 from .utils.backend_converter import (
     convert_to_target,
@@ -170,7 +169,7 @@ class IBMBackend(Backend):
         self,
         configuration: Union[QasmBackendConfiguration, PulseBackendConfiguration],
         service: "qiskit_runtime_service.QiskitRuntimeService",
-        api_client: BaseBackendClient,
+        api_client: RuntimeClient,
         instance: Optional[str] = None,
     ) -> None:
         """IBMBackend constructor.
@@ -765,6 +764,7 @@ class IBMBackend(Backend):
             start_session = False
 
         log_level = getattr(self.options, "log_level", None)  # temporary
+        print(self._api_client)
         try:
             response = self._api_client.program_run(
                 program_id=program_id,

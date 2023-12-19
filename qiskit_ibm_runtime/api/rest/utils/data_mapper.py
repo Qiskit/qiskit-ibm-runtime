@@ -73,3 +73,66 @@ def to_python_identifier(name: str) -> str:
         name += "_"
 
     return name
+
+
+def map_job_response(data: Dict[str, Any]) -> Dict[str, Any]:
+    """Map the job information fields.
+
+    Args:
+        data: Data to be mapped.
+
+    Returns:
+        Mapped data.
+    """
+    field_map = {
+        "id": "job_id",
+        "backend": "_backend_info",
+        "creationDate": "creation_date",
+        "qObject": "qobj",
+        "qObjectResult": "result",
+        "timePerStep": "time_per_step",
+        "shots": "_api_shots",
+        "runMode": "run_mode",
+        "experimentTag": "experiment_id",
+    }
+    info_queue = map_info_queue(data.pop("infoQueue", {}))
+    dict_to_identifier(data, field_map)
+    if info_queue:
+        data["info_queue"] = info_queue
+    return data
+
+
+def map_job_status_response(data: Dict[str, Any]) -> Dict[str, Any]:
+    """Map job status response data.
+
+    Args:
+        data: Data to be mapped.
+
+    Returns:
+        Mapped data.
+    """
+    info_queue = map_info_queue(data.pop("infoQueue", {}))
+    dict_to_identifier(data)
+    if info_queue:
+        data["info_queue"] = info_queue
+    return data
+
+
+def map_info_queue(data: Dict[str, Any]) -> Dict[str, Any]:
+    """Map the infoQueue part of response data.
+
+    Args:
+        data: Data to be mapped.
+
+    Returns:
+        Mapped data.
+    """
+    field_map = {
+        "estimatedStartTime": "estimated_start_time",
+        "estimatedCompleteTime": "estimated_complete_time",
+        "hubPriority": "hub_priority",
+        "groupPriority": "group_priority",
+        "projectPriority": "project_priority",
+    }
+    dict_to_identifier(data, field_map)
+    return data

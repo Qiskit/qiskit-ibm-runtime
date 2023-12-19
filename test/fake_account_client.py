@@ -27,7 +27,7 @@ from qiskit.providers.fake_provider.backends.poughkeepsie.fake_poughkeepsie impo
     FakePoughkeepsie,
 )
 
-from qiskit_ibm_provider.apiconstants import ApiJobStatus, API_JOB_FINAL_STATES
+from qiskit_ibm_runtime.apiconstants import ApiJobStatus, API_JOB_FINAL_STATES
 from qiskit_ibm_runtime.api.exceptions import (
     RequestsApiError,
     UserTimeoutExceededError,
