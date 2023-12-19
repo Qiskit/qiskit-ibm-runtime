@@ -1,0 +1,5 @@
+---
+upgrade:
+  - |
+    Since `qiskit-ibm-provider` will be deprecated soon, we are consolidating the duplicated code
+    back into this repo, `qiskit-ibm-runtime`. 
