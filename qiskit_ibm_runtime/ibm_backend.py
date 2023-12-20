@@ -763,9 +763,11 @@ class IBMBackend(Backend):
                 raise RuntimeError(f"The session {self._session.session_id} is closed.")
             session_id = self._session.session_id
             start_session = session_id is None
+            max_session_time = self._session._max_time
         else:
             session_id = None
             start_session = False
+            max_session_time = None
 
         log_level = getattr(self.options, "log_level", None)  # temporary
         try:
@@ -778,6 +780,7 @@ class IBMBackend(Backend):
                 job_tags=job_tags,
                 session_id=session_id,
                 start_session=start_session,
+                session_time=max_session_time,
                 image=image,
             )
         except RequestsApiError as ex:
@@ -828,9 +831,9 @@ class IBMBackend(Backend):
                 run_config_dict[key] = backend_options[key]
         return run_config_dict
 
-    def open_session(self) -> Session:
+    def open_session(self, max_time: Optional[Union[int, str]] = None) -> Session:
         """Open session"""
-        self._session = Session(backend=self)
+        self._session = Session(backend=self, max_time=max_time)
         return self._session
 
     @property
