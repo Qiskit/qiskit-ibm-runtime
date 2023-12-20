@@ -41,6 +41,7 @@ from .exceptions import (
     IBMRuntimeError,
     RuntimeJobTimeoutError,
     RuntimeJobMaxTimeoutError,
+    IBMInputValueError,
 )
 from .utils.result_decoder import ResultDecoder
 from .api.clients import RuntimeClient, RuntimeWebsocketClient, WebsocketClientCloseCode
@@ -688,6 +689,16 @@ class RuntimeJob(Job):
             }
 
         return self._usage_estimation
+
+    @property
+    def transpiled_circuits(self) -> Dict[str, Any]:
+        """Return the transpiled circuits for this job."""
+        if self._program_id == "estimator":
+            raise IBMInputValueError("Transpiled circuits are not available for estimator jobs.")
+        result = self._download_external_result(
+            self._api_client.job_transpiled_circuits(self.job_id())
+        )
+        return json.loads(result)
 
     def queue_position(self, refresh: bool = False) -> Optional[int]:
         """Return the position of the job in the server queue.

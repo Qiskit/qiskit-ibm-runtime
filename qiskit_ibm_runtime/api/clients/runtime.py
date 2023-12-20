@@ -231,6 +231,17 @@ class RuntimeClient(BaseBackendClient):
         """
         return self._api.program_job(job_id).metadata()
 
+    def job_transpiled_circuits(self, job_id: str) -> str:
+        """Get job transpiled circuits.
+
+        Args:
+            job_id: Program job ID.
+
+        Returns:
+            Job transpiled circuits.
+        """
+        return self._api.program_job(job_id).transpiled_circuits()
+
     def cancel_session(self, session_id: str) -> None:
         """Close all jobs in the runtime session.
 
