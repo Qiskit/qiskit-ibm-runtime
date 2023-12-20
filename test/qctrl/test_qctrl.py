@@ -170,8 +170,8 @@ class TestQCTRL(IBMIntegrationTestCase):
         self.assertGreater(fidelity, FIDELITY_THRESHOLD)
 
     @run_integration_test
-    def test_sampler_qctrl_conditional_states(self, service):
-        """Test qctrl conditional states"""
+    def test_sampler_qctrl_computational_states(self, service):
+        """Test qctrl computational states"""
         shots = 1000
         num_qubits = 3
         computational_states_circuits = []
