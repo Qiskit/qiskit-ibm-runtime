@@ -16,7 +16,7 @@ Fake Perth device (7 qubits).
 """
 
 import os
-from qiskit.providers.fake_provider import fake_backend
+from qiskit_ibm_runtime.fake_provider import fake_backend
 
 
 class FakePerth(fake_backend.FakeBackendV2):
