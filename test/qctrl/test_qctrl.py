@@ -332,8 +332,8 @@ class TestQCTRL(IBMIntegrationTestCase):
             self.assertLess(diff, DIFFERENCE_THRESHOLD)
 
     @run_integration_test
-    def test_estimator_qctrl_conditional(self, service):
-        """Test estimator qctrl conditional states"""
+    def test_estimator_qctrl_computational(self, service):
+        """Test estimator qctrl computational states"""
         shots = 1000
         num_qubits = 3
         computational_states_circuits = []
