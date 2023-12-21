@@ -109,7 +109,7 @@ class IBMBackend(Backend):
         * max_shots: maximum number of shots supported.
         * coupling_map (list): The coupling map for the device
         * supported_instructions (List[str]): Instructions supported by the backend.
-        * dynamic_reprate_enabled (bool): whether delay between programs can be set dynamically
+        * dynamic_reprate_enabled (bool): whether delay between primitives can be set dynamically
           (ie via ``rep_delay``). Defaults to False.
         * rep_delay_range (List[float]): 2d list defining supported range of repetition
           delays for backend in μs. First entry is lower end of the range, second entry is
@@ -638,7 +638,7 @@ class IBMBackend(Backend):
                 * ``single`` returns information from every shot.
                 * ``avg`` returns average measurement output (averaged over number of shots).
 
-            rep_delay: Delay between programs in seconds. Only supported on certain
+            rep_delay: Delay between primitives in seconds. Only supported on certain
                 backends (if ``backend.configuration().dynamic_reprate_enabled=True``).
                 If supported, ``rep_delay`` must be from the range supplied
                 by the backend (``backend.configuration().rep_delay_range``). Default is given by

@@ -214,7 +214,7 @@ class BasePrimitive(ABC):
 
     @abstractmethod
     def _validate_options(self, options: dict) -> None:
-        """Validate that program inputs (options) are valid
+        """Validate that primitive inputs (options) are valid
 
         Raises:
             ValueError: if resilience_level is out of the allowed range.

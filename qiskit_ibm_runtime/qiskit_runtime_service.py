@@ -102,9 +102,9 @@ class QiskitRuntimeService(Provider):
 
     The example above uses the dedicated :class:`~qiskit_ibm_runtime.Sampler`
     and :class:`~qiskit_ibm_runtime.Estimator` classes. You can also
-    use the :meth:`run` method directly to invoke a Qiskit Runtime program.
+    use the :meth:`run` method directly to invoke a Qiskit Runtime primitive.
 
-    If the program has any interim results, you can use the ``callback``
+    If the primitive has any interim results, you can use the ``callback``
     parameter of the :meth:`run` method to stream the interim results.
     Alternatively, you can use the :meth:`RuntimeJob.stream_results` method to stream
     the results at a later time, but before the job finishes.
@@ -870,6 +870,13 @@ class QiskitRuntimeService(Provider):
             RuntimeProgramNotFound: If the program cannot be found.
             IBMRuntimeError: An error occurred running the program.
         """
+        issue_deprecation_msg(
+            msg="service.run is deprecated",
+            version="0.18.0",
+            remedy="service.run will instead be converted into a private method "
+            "since it should not be called directly.",
+            period="3 months",
+        )
         qrt_options: RuntimeOptions = options
         if options is None:
             qrt_options = RuntimeOptions()
@@ -937,6 +944,10 @@ class QiskitRuntimeService(Provider):
             service=self,
         )
         return job
+
+    def _run(self, *args: Any, **kwargs: Any) -> RuntimeJob:
+        """Private run method."""
+        return self.run(*args, **kwargs)
 
     def job(self, job_id: str) -> RuntimeJob:
         """Retrieve a runtime job.

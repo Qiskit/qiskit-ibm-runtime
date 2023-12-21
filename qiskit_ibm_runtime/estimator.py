@@ -185,7 +185,7 @@ class Estimator(BasePrimitive, BaseEstimator):
         )
 
     def _validate_options(self, options: dict) -> None:
-        """Validate that program inputs (options) are valid
+        """Validate that primitive inputs (options) are valid
         Raises:
             ValueError: if resilience_level is out of the allowed range.
             ValueError: if resilience_level==3, backend is simulator and no coupling map

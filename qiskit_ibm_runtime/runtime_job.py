@@ -33,6 +33,7 @@ from qiskit_ibm_runtime import qiskit_runtime_service
 
 from .utils.utils import validate_job_tags
 from .utils.queueinfo import QueueInfo
+from .utils.deprecation import issue_deprecation_msg
 from .constants import API_TO_JOB_ERROR_MESSAGE, API_TO_JOB_STATUS, DEFAULT_DECODERS
 from .exceptions import (
     IBMApiError,
@@ -631,6 +632,20 @@ class RuntimeJob(Job):
 
         Returns:
             ID of the program this job is for.
+        """
+        issue_deprecation_msg(
+            msg="The Job.program_id property is deprecated",
+            version="0.18.0",
+            remedy="Use Job.primitive_id instead.",
+        )
+        return self._program_id
+
+    @property
+    def primitive_id(self) -> str:
+        """Primitive name.
+
+        Returns:
+            Primitive this job is for.
         """
         return self._program_id
 
