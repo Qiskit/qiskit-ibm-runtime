@@ -39,15 +39,13 @@ from qiskit.providers.models import (
 )
 from qiskit.primitives import BackendSampler, BackendEstimator
 
-# from qiskit.providers.fake_provider.fake_backend import FakeBackendV2
-
 from qiskit_ibm_provider.proxies import ProxyConfiguration
 from qiskit_ibm_provider.utils.hgp import to_instance_format, from_instance_format
 from qiskit_ibm_provider.utils.backend_decoder import configuration_from_server_data
 
 from qiskit_ibm_runtime import ibm_backend
-from .fake_runtime_job import FakeRuntimeJob
 from qiskit_ibm_runtime.fake_provider.fake_backend import FakeBackendV2
+from .fake_runtime_job import FakeRuntimeJob
 from .fake_provider.fake_provider import FakeProviderForBackendV2
 from .utils.utils import validate_job_tags
 from .accounts import AccountManager, Account, ChannelType
