@@ -28,11 +28,11 @@ except ImportError:
     HAS_AER_SIMULATOR = False
 
 from qiskit.providers.options import Options as TerraOptions
-from qiskit.providers.fake_provider.fake_backend import FakeBackendV2
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 
 from qiskit_ibm_provider.session import get_cm_session as get_cm_provider_session
 
+from qiskit_ibm_runtime.fake_provider.fake_backend import FakeBackendV2
 from .fake_provider.fake_provider import FakeProviderForBackendV2
 from .options import Options
 from .options.utils import set_default_error_levels
