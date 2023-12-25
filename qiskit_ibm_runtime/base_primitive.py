@@ -158,7 +158,7 @@ class BasePrimitive(ABC):
             Submitted job.
         """
         run_simulator = isinstance(self._backend, AerSimulator) or (
-            FakeProviderForBackendV2().get_backend(self._backend.name) is not None
+            FakeProviderForBackendV2().backend(self._backend.name) is not None
             and not isinstance(self._backend, IBMBackend)
         )
 

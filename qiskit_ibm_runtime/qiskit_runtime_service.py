@@ -38,7 +38,7 @@ from qiskit.providers.models import (
     QasmBackendConfiguration,
 )
 from qiskit.primitives import BackendSampler, BackendEstimator
-from qiskit.providers.fake_provider.fake_backend import FakeBackendV2
+#from qiskit.providers.fake_provider.fake_backend import FakeBackendV2
 
 from qiskit_ibm_provider.proxies import ProxyConfiguration
 from qiskit_ibm_provider.utils.hgp import to_instance_format, from_instance_format
@@ -46,6 +46,7 @@ from qiskit_ibm_provider.utils.backend_decoder import configuration_from_server_
 
 from qiskit_ibm_runtime import ibm_backend
 from .fake_runtime_job import FakeRuntimeJob
+from qiskit_ibm_runtime.fake_provider.fake_backend import FakeBackendV2
 from .fake_provider.fake_provider import FakeProviderForBackendV2
 from .utils.utils import validate_job_tags
 from .accounts import AccountManager, Account, ChannelType
@@ -853,7 +854,7 @@ class QiskitRuntimeService(Provider):
         return self.backend(name, **kwargs)
 
     def _get_fake_backend(self, name: str) -> FakeProviderForBackendV2:
-        backend = FakeProviderForBackendV2().get_backend(name)
+        backend = FakeProviderForBackendV2().backend(name)
         return backend
 
     def run(
@@ -929,7 +930,7 @@ class QiskitRuntimeService(Provider):
         if (
             not isinstance(qrt_options.backend, IBMBackend)
             and not isinstance(qrt_options.backend, str)
-            and FakeProviderForBackendV2().get_backend(qrt_options.backend.name)
+            and FakeProviderForBackendV2().backend(qrt_options.backend.name)
             is not None  # type: ignore
         ):
             is_fake_backend = True  # type: ignore

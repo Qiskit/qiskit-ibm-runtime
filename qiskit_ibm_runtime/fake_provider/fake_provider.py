@@ -72,7 +72,7 @@ class FakeProviderForBackendV2(ProviderV1):
     available in the :mod:`qiskit_ibm_runtime.fake_provider`.
     """
 
-    def get_backend(self, name: str = None, **kwargs) -> FakeBackendV2:  # type: ignore
+    def backend(self, name: str = None, **kwargs) -> FakeBackendV2:  # type: ignore
         """Return the backend according to its name. If kwargs are defined, then
         additional filters may be applied. If no such backend, return None."""
         if name:
