@@ -38,7 +38,8 @@ from qiskit.providers.models import (
     QasmBackendConfiguration,
 )
 from qiskit.primitives import BackendSampler, BackendEstimator
-#from qiskit.providers.fake_provider.fake_backend import FakeBackendV2
+
+# from qiskit.providers.fake_provider.fake_backend import FakeBackendV2
 
 from qiskit_ibm_provider.proxies import ProxyConfiguration
 from qiskit_ibm_provider.utils.hgp import to_instance_format, from_instance_format
