@@ -17,7 +17,7 @@ from unittest import skip
 
 from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister
 from qiskit.compiler import transpile
-from qiskit.test.reference_circuits import ReferenceCircuits
+from ..utils import bell
 
 from ..ibm_test_case import IBMIntegrationTestCase
 
@@ -114,7 +114,7 @@ class TestIBMQasmSimulator(IBMIntegrationTestCase):
         try:
             backend._configuration._data["simulation_method"] = "extended_stabilizer"
             backend._submit_job = _new_submit
-            circ = transpile(ReferenceCircuits.bell(), backend=backend)
+            circ = transpile(bell(), backend=backend)
             backend.run(circ, header={"test": "circuits"})
         finally:
             backend._configuration._data["simulation_method"] = sim_method
@@ -137,7 +137,7 @@ class TestIBMQasmSimulator(IBMIntegrationTestCase):
         try:
             backend._configuration._data["simulation_method"] = "extended_stabilizer"
             backend._submit_job = _new_submit
-            circ = transpile(ReferenceCircuits.bell(), backend=backend)
+            circ = transpile(bell(), backend=backend)
             backend.run(circ, method="my_method", header={"test": "circuits"})
         finally:
             backend._configuration._data["simulation_method"] = sim_method

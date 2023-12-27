@@ -20,13 +20,12 @@ from contextlib import suppress
 from collections import defaultdict
 from typing import DefaultDict, Dict
 
-from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit.test.base import BaseQiskitTestCase
 
 from qiskit_ibm_runtime import QISKIT_IBM_RUNTIME_LOGGER_NAME
 from qiskit_ibm_runtime import QiskitRuntimeService, Sampler, Options
 
-from .utils import setup_test_logging
+from .utils import setup_test_logging, bell
 from .decorators import IntegrationTestDependencies, integration_test_setup
 
 
@@ -163,7 +162,7 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
             if inputs is not None
             else {
                 "interim_results": interim_results or {},
-                "circuits": circuits or ReferenceCircuits.bell(),
+                "circuits": circuits or bell(),
             }
         )
         pid = program_id or self.program_ids[service.channel]
@@ -184,7 +183,7 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
             if max_execution_time:
                 options.max_execution_time = max_execution_time
             sampler = Sampler(backend=backend, options=options)
-            job = sampler.run(circuits or ReferenceCircuits.bell(), callback=callback)
+            job = sampler.run(circuits or bell(), callback=callback)
         else:
             job = service.run(
                 program_id=pid,
