@@ -228,3 +228,17 @@ class TestBackendRunInSession(IBMIntegrationTestCase):
         job = backend.run(circuits=ReferenceCircuits.bell())
         self.assertIsNone(backend.session)
         self.assertIsNone(job._session_id)
+
+    def test_run_after_session(self):
+        """Test run after session was closed"""
+        backend = self.service.backend("ibmq_qasm_simulator")
+        with Session(backend=backend) as session:
+            _ = backend.run(ReferenceCircuits.bell())
+        self.assertEqual(backend.session, session)
+
+        with self.assertRaises(RuntimeError) as err:
+            _ = backend.run(circuits=ReferenceCircuits.bell())
+        self.assertIn(
+            f"The session {backend.session.session_id} is closed.",
+            str(err.exception),
+        )
