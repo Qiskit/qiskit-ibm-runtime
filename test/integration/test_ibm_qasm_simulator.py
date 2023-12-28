@@ -40,7 +40,7 @@ class TestIBMQasmSimulator(IBMIntegrationTestCase):
         counts = result.get_counts(quantum_circuit)
         target = {"0": shots / 2, "1": shots / 2}
         threshold = 0.1 * shots
-        self.assertDictAlmostEqual(counts, target, threshold)
+        self.assert_dict_almost_equal(counts, target, threshold)
 
     def test_execute_several_circuits_simulator_online(self):
         """Test execute_several_circuits_simulator_online."""
@@ -65,8 +65,8 @@ class TestIBMQasmSimulator(IBMIntegrationTestCase):
         target1 = {"00": shots / 4, "01": shots / 4, "10": shots / 4, "11": shots / 4}
         target2 = {"00": shots / 2, "11": shots / 2}
         threshold = 0.1 * shots
-        self.assertDictAlmostEqual(counts1, target1, threshold)
-        self.assertDictAlmostEqual(counts2, target2, threshold)
+        self.assert_dict_almost_equal(counts1, target1, threshold)
+        self.assert_dict_almost_equal(counts2, target2, threshold)
 
     def test_online_qasm_simulator_two_registers(self):
         """Test online_qasm_simulator_two_registers."""

@@ -46,16 +46,23 @@ class Sampler(BasePrimitive, BaseSampler):
 
     Example::
 
-        from qiskit.test.reference_circuits import ReferenceCircuits
+        from qiskit.circuit import QuantumCircuit, QuantumRegister, ClassicalRegister
         from qiskit_ibm_runtime import QiskitRuntimeService, Session, Sampler
 
         service = QiskitRuntimeService(channel="ibm_cloud")
-        bell = ReferenceCircuits.bell()
+
+        # Bell Circuit
+        qr = QuantumRegister(2, name="qr")
+        cr = ClassicalRegister(2, name="qc")
+        qc = QuantumCircuit(qr, cr, name="bell")
+        qc.h(qr[0])
+        qc.cx(qr[0], qr[1])
+        qc.measure(qr, cr)
 
         with Session(service, backend="ibmq_qasm_simulator") as session:
             sampler = Sampler(session=session)
 
-            job = sampler.run(bell, shots=1024)
+            job = sampler.run(qc, shots=1024)
             print(f"Job ID: {job.job_id()}")
             print(f"Job result: {job.result()}")
 
