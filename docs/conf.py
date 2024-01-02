@@ -33,11 +33,11 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
-    'sphinx.ext.mathjax',
     'jupyter_sphinx',
     'sphinx_autodoc_typehints',
     'reno.sphinxext',
     'nbsphinx',
+    'sphinxcontrib.katex',
 ]
 templates_path = ['_templates']
 
