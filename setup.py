@@ -74,7 +74,7 @@ setuptools.setup(
     zip_safe=False,
     project_urls={
         "Bug Tracker": "https://github.com/Qiskit/qiskit-ibm-runtime/issues",
-        "Documentation": "https://qiskit.org/documentation/",
+        "Documentation": "https://docs.quantum.ibm.com/",
         "Source Code": "https://github.com/Qiskit/qiskit-ibm-runtime",
     },
     entry_points={
