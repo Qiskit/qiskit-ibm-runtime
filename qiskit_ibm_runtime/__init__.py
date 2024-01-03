@@ -162,6 +162,8 @@ Classes
 
 import logging
 
+from qiskit_ibm_provider.utils.version_check import pypi_version_check, update_warning
+
 from .qiskit_runtime_service import QiskitRuntimeService
 from .ibm_backend import IBMBackend
 from .runtime_job import RuntimeJob
@@ -189,3 +191,9 @@ QISKIT_IBM_RUNTIME_LOG_LEVEL = "QISKIT_IBM_RUNTIME_LOG_LEVEL"
 """The environment variable name that is used to set the level for the IBM Quantum logger."""
 QISKIT_IBM_RUNTIME_LOG_FILE = "QISKIT_IBM_RUNTIME_LOG_FILE"
 """The environment variable name that is used to set the file for the IBM Quantum logger."""
+
+# Look for updated version on PyPi
+PACKAGE = "qiskit-ibm-runtime"
+update, versions = pypi_version_check(PACKAGE)
+if update:
+    update_warning(PACKAGE, versions)
