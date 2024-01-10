@@ -20,6 +20,7 @@ from threading import Lock
 from qiskit_ibm_provider.utils.converters import hms_to_seconds
 
 from qiskit_ibm_runtime import QiskitRuntimeService
+from .exceptions import IBMInputValueError
 from .runtime_job import RuntimeJob
 from .utils.result_decoder import ResultDecoder
 from .ibm_backend import IBMBackend
@@ -304,12 +305,33 @@ class Session:
             backend: instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
                 string name of backend.
 
+         Raises:
+            IBMInputValueError: If given `session_id` does not exist. or the backend passed in does
+                not match the original session backend.
+
         Returns:
             A new Session with the given ``session_id``
 
         """
         if backend:
             deprecate_arguments("backend", "0.15.0", "Sessions do not support multiple backends.")
+            if isinstance(backend, IBMBackend):
+                backend = backend.name
+
+        if service:
+            response = service._api_client.session_details(session_id)
+            if response:
+                session_backend = response.get("backend_name")
+                if backend and backend != session_backend:
+                    raise IBMInputValueError(
+                        f"The session_id {session_id} was created with backend {session_backend}, "
+                        f"but backend {backend} was given."
+                    )
+                backend = session_backend
+            else:
+                raise IBMInputValueError(f"The session_id {session_id} does not exist.")
+        if not service and not backend:
+            raise IBMInputValueError("Either service or backend must be given.")
 
         session = cls(service, backend)
         session._session_id = session_id
