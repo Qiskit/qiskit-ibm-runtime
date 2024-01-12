@@ -33,6 +33,8 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
+    # This is used by qiskit/documentation to generate links to github.com.
+    "sphinx.ext.viewcode",
     'jupyter_sphinx',
     'sphinx_autodoc_typehints',
     'reno.sphinxext',
