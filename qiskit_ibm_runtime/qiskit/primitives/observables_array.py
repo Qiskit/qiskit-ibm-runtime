@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2023.
+# (C) Copyright IBM 2024.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -9,7 +9,7 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
-# type: ignore
+
 
 """
 ND-Array container class for Estimator observables.
@@ -20,7 +20,7 @@ import re
 from collections import defaultdict
 from collections.abc import Mapping as MappingType
 from functools import lru_cache
-from typing import Iterable, Mapping, Union
+from typing import Iterable, Mapping, Union, overload
 
 import numpy as np
 from numpy.typing import ArrayLike
@@ -46,12 +46,13 @@ BasisObservableLike = Union[
 class ObservablesArray(ShapedMixin):
     """An ND-array of :const:`.BasisObservable` for an :class:`.Estimator` primitive."""
 
+    __slots__ = ("_array", "_shape")
     ALLOWED_BASIS: str = "IXYZ01+-lr"
     """The allowed characters in :const:`BasisObservable` strings."""
 
     def __init__(
         self,
-        observables: Union[BasisObservableLike, ArrayLike],
+        observables: BasisObservableLike | ArrayLike,
         copy: bool = True,
         validate: bool = True,
     ):
@@ -104,13 +105,21 @@ class ObservablesArray(ShapedMixin):
             return self._array
         raise ValueError("Type must be 'None' or 'object'")
 
-    def __getitem__(self, args) -> Union[ObservablesArray, BasisObservable]:
+    @overload
+    def __getitem__(self, args: int | tuple[int, ...]) -> BasisObservable:
+        ...
+
+    @overload
+    def __getitem__(self, args: slice) -> ObservablesArray:
+        ...
+
+    def __getitem__(self, args):
         item = self._array[args]
         if not isinstance(item, np.ndarray):
             return item
         return ObservablesArray(item, copy=False, validate=False)
 
-    def reshape(self, shape: Union[int, Iterable[int]]) -> "ObservablesArray":
+    def reshape(self, shape: int | Iterable[int]) -> ObservablesArray:
         """Return a new array with a different shape.
 
         This results in a new view of the same arrays.
@@ -201,7 +210,16 @@ class ObservablesArray(ShapedMixin):
 
     def validate(self):
         """Validate the consistency in observables array."""
-        pass
+        num_qubits = None
+        for obs in self._array.reshape(-1):
+            basis_num_qubits = len(next(iter(obs)))
+            if num_qubits is None:
+                num_qubits = basis_num_qubits
+            elif basis_num_qubits != num_qubits:
+                raise ValueError(
+                    "The number of qubits must be the same for all observables in the "
+                    "observables array."
+                )
 
     @classmethod
     def _validate_basis(cls, basis: str) -> None:

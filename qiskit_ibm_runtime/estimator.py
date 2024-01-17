@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 import os
-from typing import Optional, Dict, Sequence, Any, Union
+from typing import Optional, Dict, Sequence, Any, Union, Iterable
 import logging
 import typing
 
@@ -29,8 +29,10 @@ from .options.estimator_options import EstimatorOptions
 from .base_primitive import BasePrimitiveV1, BasePrimitiveV2
 from .utils.qctrl import validate as qctrl_validate
 
-# TODO: remove when we have real v2 base estimator
+
+# TODO: remove when we have real v2 base estimator, estimatorpub, and estimatorpublike
 from .qiskit.primitives import BaseEstimatorV2
+from .qiskit.primitives.estimator_pub import EstimatorPub, EstimatorPubLike
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
@@ -129,6 +131,23 @@ class EstimatorV2(BasePrimitiveV2, Estimator, BaseEstimatorV2):
 
         if self._service._channel_strategy == "q-ctrl":
             raise NotImplementedError("EstimatorV2 is not supported with q-ctrl channel strategy.")
+
+    def run(
+        self, pubs: EstimatorPubLike | Iterable[EstimatorPubLike], precision: float | None = None
+    ) -> RuntimeJob:
+        """TODO: docstring"""
+        if isinstance(pubs, EstimatorPub):
+            pubs = [pubs]
+        elif isinstance(pubs, tuple) and isinstance(pubs[0], QuantumCircuit):
+            pubs = [EstimatorPub.coerce(pubs)]
+        elif pubs is not EstimatorPub:
+            pubs = [EstimatorPub.coerce(pub) for pub in pubs]
+
+        for pub in pubs:
+            pub.validate()
+
+        print(pubs[0], type(pubs[0]))
+        return self._run(pubs)
 
     def _validate_options(self, options: dict) -> None:
         """Validate that program inputs (options) are valid

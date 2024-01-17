@@ -170,6 +170,11 @@ class BasePrimitiveV2(ABC):
         """
         return self._session
 
+    @property
+    def options(self) -> BaseOptions:
+        """Return options"""
+        return self._options
+
     def _set_options(self, options: Optional[Union[Dict, BaseOptions]] = None) -> None:
         """Set options."""
         if options is None:

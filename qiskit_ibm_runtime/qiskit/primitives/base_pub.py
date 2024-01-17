@@ -11,27 +11,37 @@
 # that they have been altered from the originals.
 
 """
-Base Pub class
+Base Pubs class
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 from qiskit import QuantumCircuit
 
 
-@dataclass(frozen=True)
 class BasePub:
-    """Base class for Pub"""
+    """Base class for PUB (Primitive Unified Bloc)"""
 
-    circuit: QuantumCircuit
+    __slots__ = ("_circuit",)
 
-    def validate(self) -> None:
-        """Validate the inputs.
-
-        Raises:
-            TypeError: If input values has an invalid type.
+    def __init__(self, circuit: QuantumCircuit, validate: bool = False):
         """
+        Initialize a BasePub.
+
+        Args:
+            circuit: Quantum circuit object for the pubs.
+            validate: if True, the input data is validated during initialization.
+        """
+        self._circuit = circuit
+        if validate:
+            self.validate()
+
+    @property
+    def circuit(self) -> QuantumCircuit:
+        """A quantum circuit for the pub"""
+        return self._circuit
+
+    def validate(self):
+        """Validate the data"""
         if not isinstance(self.circuit, QuantumCircuit):
             raise TypeError("circuit must be QuantumCircuit.")
