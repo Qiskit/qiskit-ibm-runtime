@@ -53,6 +53,7 @@ from .utils import RuntimeDecoder, to_python_identifier
 from .api.client_parameters import ClientParameters
 from .runtime_options import RuntimeOptions
 from .ibm_backend import IBMBackend
+from .utils.deprecation import issue_deprecation_msg
 
 logger = logging.getLogger(__name__)
 
@@ -537,6 +538,7 @@ class QiskitRuntimeService(Provider):
         name: Optional[str] = None,
         min_num_qubits: Optional[int] = None,
         instance: Optional[str] = None,
+        dynamic_circuits: Optional[bool] = None,
         filters: Optional[Callable[[List["ibm_backend.IBMBackend"]], bool]] = None,
         **kwargs: Any,
     ) -> List["ibm_backend.IBMBackend"]:
@@ -547,6 +549,7 @@ class QiskitRuntimeService(Provider):
             min_num_qubits: Minimum number of qubits the backend has to have.
             instance: This is only supported for ``ibm_quantum`` runtime and is in the
                 hub/group/project format.
+            dynamic_circuits: Filter by whether the backend supports dynamic circuits.
             filters: More complex filters, such as lambda functions.
                 For example::
 
@@ -628,6 +631,15 @@ class QiskitRuntimeService(Provider):
         if min_num_qubits:
             backends = list(
                 filter(lambda b: b.configuration().n_qubits >= min_num_qubits, backends)
+            )
+
+        if dynamic_circuits is not None:
+            backends = list(
+                filter(
+                    lambda b: ("qasm3" in getattr(b.configuration(), "supported_features", []))
+                    == dynamic_circuits,
+                    backends,
+                )
             )
         return filter_backends(backends, filters=filters, **kwargs)
 
@@ -1187,6 +1199,12 @@ class QiskitRuntimeService(Provider):
         Returns:
             self
         """
+        issue_deprecation_msg(
+            msg="The runtime property is deprecated",
+            version="0.18.0",
+            remedy="",
+            period="1 month",
+        )
         return self
 
     def __repr__(self) -> str:

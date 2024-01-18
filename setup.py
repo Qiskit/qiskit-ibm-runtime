@@ -19,7 +19,7 @@ import os
 import setuptools
 
 REQUIREMENTS = [
-    "qiskit>=0.44.1",
+    "qiskit>=0.45.0",
     "requests>=2.19",
     "requests-ntlm>=1.1.0",
     "numpy>=1.13",
@@ -27,7 +27,7 @@ REQUIREMENTS = [
     "python-dateutil>=2.8.0",
     "websocket-client>=1.5.1",
     "ibm-platform-services>=0.22.6",
-    "qiskit-ibm-provider>=0.7.2",
+    "qiskit-ibm-provider>=0.8.0",
 ]
 
 # Handle version.
@@ -74,7 +74,7 @@ setuptools.setup(
     zip_safe=False,
     project_urls={
         "Bug Tracker": "https://github.com/Qiskit/qiskit-ibm-runtime/issues",
-        "Documentation": "https://qiskit.org/documentation/",
+        "Documentation": "https://docs.quantum.ibm.com/",
         "Source Code": "https://github.com/Qiskit/qiskit-ibm-runtime",
     },
     entry_points={

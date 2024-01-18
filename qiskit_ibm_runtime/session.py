@@ -249,6 +249,7 @@ class Session:
             last_job_completed: Timestamp of when the last job in the session completed.
             started_at: Timestamp of when the session was started.
             closed_at: Timestamp of when the session was closed.
+            activated_at: Timestamp of when the session state was changed to active.
         """
         if self._session_id:
             response = self._service._api_client.session_details(self._session_id)
@@ -265,6 +266,7 @@ class Session:
                     "last_job_completed": response.get("last_job_completed"),
                     "started_at": response.get("started_at"),
                     "closed_at": response.get("closed_at"),
+                    "activated_at": response.get("activated_at"),
                 }
         return None
 
@@ -273,7 +275,7 @@ class Session:
         """Return the session ID.
 
         Returns:
-            Session ID. None until a job runs in the session.
+            Session ID. None until a job is submitted.
         """
         return self._session_id
 

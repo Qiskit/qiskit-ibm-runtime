@@ -16,7 +16,7 @@ Fake Auckland device (27 qubits).
 """
 
 import os
-from qiskit.providers.fake_provider import fake_backend
+from qiskit_ibm_runtime.fake_provider import fake_backend
 
 
 class FakeAuckland(fake_backend.FakeBackendV2):
