@@ -26,7 +26,6 @@ import warnings
 import zlib
 from datetime import date
 from typing import Any, Callable, Dict, List, Union, Tuple
-from dataclasses import asdict
 
 import dateutil.parser
 import numpy as np
@@ -66,10 +65,10 @@ from qiskit_ibm_provider.qpy import (
     dump,
     load,
 )
+from qiskit_ibm_runtime.qiskit.primitives.estimator_pub import EstimatorPub
 
 # TODO: Remove when they are in terra
 from ..qiskit.primitives import ObservablesArray, BindingsArray
-from ..qiskit.primitives.base_pub import BasePub
 
 _TERRA_VERSION = tuple(
     int(x) for x in re.match(r"\d+\.\d+\.\d", _terra_version_string).group(0).split(".")[:3]
@@ -254,8 +253,14 @@ class RuntimeEncoder(json.JSONEncoder):
                 serializer=lambda buff, data: dump(data, buff),  # type: ignore[no-untyped-call]
             )
             return {"__type__": "Instruction", "__value__": value}
-        if isinstance(obj, BasePub):
-            return asdict(obj)
+        # TODO proper way to do this?
+        if isinstance(obj, EstimatorPub):
+            return {
+                "circuit": obj.circuit,
+                "observables": obj.observables,
+                "parameter_values": obj.parameter_values,
+                "precision": obj.precision,
+            }
         if isinstance(obj, ObservablesArray):
             return obj.tolist()
         if isinstance(obj, BindingsArray):

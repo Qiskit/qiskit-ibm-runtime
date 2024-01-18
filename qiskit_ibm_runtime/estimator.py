@@ -135,18 +135,27 @@ class EstimatorV2(BasePrimitiveV2, Estimator, BaseEstimatorV2):
     def run(
         self, pubs: EstimatorPubLike | Iterable[EstimatorPubLike], precision: float | None = None
     ) -> RuntimeJob:
-        """TODO: docstring"""
+        """Submit a request to the estimator primitive.
+
+        Args:
+            pubs: A pub-like (primitive unified bloc) object, such as a tuple,
+                  ``(circuit, observables, parameter_values)``, or a list of pub-like objects.
+            precision: Target precision for expectation value estimates..
+
+        Returns:
+            Submitted job.
+
+        """
         if isinstance(pubs, EstimatorPub):
             pubs = [pubs]
         elif isinstance(pubs, tuple) and isinstance(pubs[0], QuantumCircuit):
-            pubs = [EstimatorPub.coerce(pubs)]
+            pubs = [EstimatorPub.coerce(pubs, precision=precision)]
         elif pubs is not EstimatorPub:
-            pubs = [EstimatorPub.coerce(pub) for pub in pubs]
+            pubs = [EstimatorPub.coerce(pub, precision=precision) for pub in pubs]
 
         for pub in pubs:
             pub.validate()
 
-        print(pubs[0], type(pubs[0]))
         return self._run(pubs)
 
     def _validate_options(self, options: dict) -> None:
