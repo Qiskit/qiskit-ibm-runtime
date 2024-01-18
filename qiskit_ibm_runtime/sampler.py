@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 import os
-from typing import Dict, Optional, Sequence, Any, Union
+from typing import Dict, Optional, Sequence, Any, Union, Iterable
 import logging
 
 from qiskit.circuit import QuantumCircuit
@@ -32,6 +32,7 @@ from .options import SamplerOptions
 
 # TODO: remove when we have real v2 base estimator
 from .qiskit.primitives import BaseSamplerV2
+from .qiskit.primitives.sampler_pub import SamplerPubLike, SamplerPub
 
 logger = logging.getLogger(__name__)
 
@@ -90,10 +91,35 @@ class SamplerV2(BasePrimitiveV2, Sampler, BaseSamplerV2):
         Sampler.__init__(self)
         BasePrimitiveV2.__init__(self, backend=backend, session=session, options=options)
 
-        raise NotImplementedError("SamplerV2 is not currently supported.")
-
         # if self._service._channel_strategy == "q-ctrl":
         #     raise NotImplementedError("SamplerV2 is not supported with q-ctrl channel strategy.")
+
+    def run(
+            self, pubs: SamplerPubLike | Iterable[SamplerPubLike]
+    ) -> RuntimeJob:
+        """Submit a request to the sampler primitive.
+
+        Args:
+            pubs: A Primitive Unified Bloc or a list of such blocs
+
+        Returns:
+            Submitted job.
+            The result of the job is an instance of :class:`qiskit.primitives.containers.PrimitiveResult`.
+
+        Raises:
+            ValueError: Invalid arguments are given.
+        """
+        if isinstance(pubs, SamplerPub):
+            pubs = [pubs]
+        elif isinstance(pubs, tuple) and isinstance(pubs[0], QuantumCircuit):
+            pubs = [SamplerPub.coerce(pubs)]
+        elif pubs is not SamplerPub:
+            pubs = [SamplerPub.coerce(pub) for pub in pubs]
+
+        for pub in pubs:
+            pub.validate()
+
+        return self._run(pubs)
 
     def _validate_options(self, options: dict) -> None:
         """Validate that program inputs (options) are valid

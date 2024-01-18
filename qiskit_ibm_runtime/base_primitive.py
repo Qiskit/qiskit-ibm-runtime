@@ -127,7 +127,7 @@ class BasePrimitiveV2(ABC):
         Returns:
             Submitted job.
         """
-        primitive_inputs = {"tasks": pubs}
+        primitive_inputs = {"pubs": pubs}
         options_dict = asdict(self.options)
         self._validate_options(options_dict)
         primitive_inputs.update(self._options_class._get_program_inputs(options_dict))

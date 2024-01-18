@@ -70,6 +70,7 @@ from qiskit_ibm_provider.qpy import (
 # TODO: Remove when they are in terra
 from ..qiskit.primitives import ObservablesArray, BindingsArray
 from ..qiskit.primitives.base_pub import BasePub
+from ..qiskit.primitives.sampler_pub import SamplerPub
 
 _TERRA_VERSION = tuple(
     int(x) for x in re.match(r"\d+\.\d+\.\d", _terra_version_string).group(0).split(".")[:3]
@@ -256,6 +257,8 @@ class RuntimeEncoder(json.JSONEncoder):
             return {"__type__": "Instruction", "__value__": value}
         if isinstance(obj, BasePub):
             return asdict(obj)
+        if isinstance(obj, SamplerPub):
+            return {'circuit': obj.circuit, 'parameter_values': obj.parameter_values, 'shots': obj.shots, 'shape': obj.shape}
         if isinstance(obj, ObservablesArray):
             return obj.tolist()
         if isinstance(obj, BindingsArray):
