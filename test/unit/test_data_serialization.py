@@ -309,7 +309,8 @@ if __name__ == '__main__':
         def _to_str_keyed(_in_dict):
             _out_dict = {}
             for a_key_tuple, val in _in_dict.items():
-                str_key = tuple(a_key.name for a_key in a_key_tuple)
+                # TODO double check this is correct
+                str_key = tuple(a_key for a_key in a_key_tuple)
                 _out_dict[str_key] = val
             return _out_dict
 

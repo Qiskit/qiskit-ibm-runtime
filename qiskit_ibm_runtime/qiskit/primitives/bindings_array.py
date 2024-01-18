@@ -323,6 +323,10 @@ class BindingsArray(ShapedMixin):
         Returns:
             A new bindings array.
         """
+        # TODO added this - if the value passed in is already a BindingsArray,
+        # it should be returned instead of throwing a type error right?
+        if isinstance(bindings_array, BindingsArray):
+            return bindings_array
         if isinstance(bindings_array, Sequence):
             bindings_array = np.array(bindings_array)
         if bindings_array is None:
