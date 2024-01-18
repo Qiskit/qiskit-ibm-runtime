@@ -154,7 +154,7 @@ class EstimatorV2(BasePrimitiveV2, Estimator, BaseEstimatorV2):
             pubs = [EstimatorPub.coerce(pub, precision=precision) for pub in pubs]
 
         for pub in pubs:
-            pub.validate()
+            pub.validate()  # type: ignore[union-attr]
 
         return self._run(pubs)
 

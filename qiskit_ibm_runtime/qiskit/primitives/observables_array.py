@@ -10,6 +10,8 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+# Copied from qiskit, should be removed after first release
+# mypy: ignore-errors
 
 """
 ND-Array container class for Estimator observables.

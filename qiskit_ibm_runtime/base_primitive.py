@@ -181,7 +181,7 @@ class BasePrimitiveV2(ABC):
             self._options = self._options_class()
         elif isinstance(options, dict):
             default_options = self._options_class()
-            self.options = self._options_class(**merge_options(default_options, options))
+            self._options = self._options_class(**merge_options(default_options, options))
         elif isinstance(options, self._options_class):
             self._options = replace(options)
         else:

@@ -10,7 +10,8 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-
+# Copied from qiskit, should be removed after first release
+# mypy: ignore-errors
 """
 Sampler Pub class
 """
@@ -93,8 +94,8 @@ class SamplerPub(ShapedMixin):
         if shots is not None:
             if not isinstance(shots, Integral) or isinstance(shots, bool):
                 raise TypeError("shots must be an integer")
-            if shots < 0:
-                raise ValueError("shots must be non-negative")
+            if shots <= 0:
+                raise ValueError("shots must be positive")
 
         if isinstance(pub, SamplerPub):
             if pub.shots is None and shots is not None:
@@ -129,8 +130,8 @@ class SamplerPub(ShapedMixin):
         if self.shots is not None:
             if not isinstance(self.shots, Integral) or isinstance(self.shots, bool):
                 raise TypeError("shots must be an integer")
-            if self.shots < 0:
-                raise ValueError("shots must be non-negative")
+            if self.shots <= 0:
+                raise ValueError("shots must be positive")
 
         # Cross validate circuits and parameter values
         num_parameters = self.parameter_values.num_parameters
