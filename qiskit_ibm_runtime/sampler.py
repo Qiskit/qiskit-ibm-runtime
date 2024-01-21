@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 import os
-from typing import Dict, Optional, Sequence, Any, Union, Iterable
+from typing import Dict, Optional, Sequence, Any, Union, Iterable, List
 import logging
 
 from qiskit.circuit import QuantumCircuit
@@ -108,17 +108,18 @@ class SamplerV2(BasePrimitiveV2, Sampler, BaseSamplerV2):
         Raises:
             ValueError: Invalid arguments are given.
         """
+        pubs_to_run: List[SamplerPub]
         if isinstance(pubs, SamplerPub):
-            pubs = [pubs]
+            pubs_to_run = [pubs]
         elif isinstance(pubs, tuple) and isinstance(pubs[0], QuantumCircuit):
-            pubs = [SamplerPub.coerce(pubs)]
+            pubs_to_run = [SamplerPub.coerce(pubs)]
         elif pubs is not SamplerPub:
-            pubs = [SamplerPub.coerce(pub) for pub in pubs]
+            pubs_to_run = [SamplerPub.coerce(pub) for pub in pubs]
 
-        for pub in pubs:
+        for pub in pubs_to_run:
             pub.validate()
 
-        return self._run(pubs)
+        return self._run(pubs_to_run)
 
     def _validate_options(self, options: dict) -> None:
         """Validate that program inputs (options) are valid
