@@ -56,6 +56,7 @@ from qiskit.circuit import (
 from qiskit.circuit.parametertable import ParameterView
 from qiskit.result import Result
 from qiskit.version import __version__ as _terra_version_string
+from qiskit.primitives.containers import SamplerPub
 
 from qiskit_ibm_provider.qpy import (
     _write_parameter,
@@ -70,7 +71,6 @@ from qiskit_ibm_provider.qpy import (
 # TODO: Remove when they are in terra
 from ..qiskit.primitives import ObservablesArray, BindingsArray
 from ..qiskit.primitives.base_pub import BasePub
-from ..qiskit.primitives.sampler_pub import SamplerPub
 
 _TERRA_VERSION = tuple(
     int(x) for x in re.match(r"\d+\.\d+\.\d", _terra_version_string).group(0).split(".")[:3]

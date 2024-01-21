@@ -19,6 +19,7 @@ import logging
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.primitives import BaseSampler
+from qiskit.primitives.containers import SamplerPub, SamplerPubLike
 
 from .options import Options
 from .runtime_job import RuntimeJob
@@ -32,7 +33,6 @@ from .options import SamplerOptions
 
 # TODO: remove when we have real v2 base estimator
 from .qiskit.primitives import BaseSamplerV2
-from .qiskit.primitives.sampler_pub import SamplerPubLike, SamplerPub
 
 logger = logging.getLogger(__name__)
 
