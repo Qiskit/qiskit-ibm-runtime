@@ -258,7 +258,12 @@ class RuntimeEncoder(json.JSONEncoder):
         if isinstance(obj, BasePub):
             return asdict(obj)
         if isinstance(obj, SamplerPub):
-            return {'circuit': obj.circuit, 'parameter_values': obj.parameter_values, 'shots': obj.shots, 'shape': obj.shape}
+            return {
+                "circuit": obj.circuit,
+                "parameter_values": obj.parameter_values,
+                "shots": obj.shots,
+                "shape": obj.shape,
+            }
         if isinstance(obj, ObservablesArray):
             return obj.tolist()
         if isinstance(obj, BindingsArray):

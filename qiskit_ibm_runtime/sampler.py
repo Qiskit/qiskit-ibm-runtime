@@ -94,9 +94,7 @@ class SamplerV2(BasePrimitiveV2, Sampler, BaseSamplerV2):
         # if self._service._channel_strategy == "q-ctrl":
         #     raise NotImplementedError("SamplerV2 is not supported with q-ctrl channel strategy.")
 
-    def run(
-            self, pubs: SamplerPubLike | Iterable[SamplerPubLike]
-    ) -> RuntimeJob:
+    def run(self, pubs: SamplerPubLike | Iterable[SamplerPubLike]) -> RuntimeJob:
         """Submit a request to the sampler primitive.
 
         Args:
@@ -104,7 +102,8 @@ class SamplerV2(BasePrimitiveV2, Sampler, BaseSamplerV2):
 
         Returns:
             Submitted job.
-            The result of the job is an instance of :class:`qiskit.primitives.containers.PrimitiveResult`.
+            The result of the job is an instance of
+            :class:`qiskit.primitives.containers.PrimitiveResult`.
 
         Raises:
             ValueError: Invalid arguments are given.
