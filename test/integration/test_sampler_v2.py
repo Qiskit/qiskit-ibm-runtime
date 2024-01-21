@@ -23,8 +23,7 @@ from numpy.typing import NDArray
 from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister
 from qiskit.circuit import Parameter
 from qiskit.circuit.library import RealAmplitudes, UnitaryGate
-from qiskit.primitives import PrimitiveResult, PubResult
-from qiskit.primitives.containers import BitArray
+from qiskit.primitives.containers import BitArray, PrimitiveResult, PubResult
 from qiskit.primitives.containers.data_bin import DataBin
 from qiskit.providers import JobStatus
 
