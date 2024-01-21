@@ -21,6 +21,7 @@ from dataclasses import asdict, replace
 import warnings
 
 from qiskit.providers.options import Options as TerraOptions
+from qiskit.primitives.containers import SamplerPub
 
 from qiskit_ibm_provider.session import get_cm_session as get_cm_provider_session
 
@@ -34,7 +35,7 @@ from .constants import DEFAULT_DECODERS
 from .qiskit_runtime_service import QiskitRuntimeService
 
 # TODO: remove when we have real v2 base estimator
-from .qiskit.primitives import EstimatorPub, SamplerPub
+from .qiskit.primitives import EstimatorPub
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
