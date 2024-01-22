@@ -302,8 +302,8 @@ class Session:
             session_id: the id of the session to be created. This must be an already
                 existing session id.
             service: instance of the ``QiskitRuntimeService`` class.
-            backend: instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
-                string name of backend.
+            backend (DEPRECATED): instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
+                string name of backend. Either ``service`` or ``backend`` must be given.
 
          Raises:
             IBMInputValueError: If given `session_id` does not exist. or the backend passed in does
