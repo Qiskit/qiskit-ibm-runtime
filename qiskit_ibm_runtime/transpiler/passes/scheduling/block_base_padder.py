@@ -28,7 +28,7 @@ from qiskit.circuit.library import Barrier
 from qiskit.circuit.delay import Delay
 from qiskit.circuit.parameterexpression import ParameterExpression
 from qiskit.converters import dag_to_circuit
-from qiskit.dagcircuit import DAGCircuit, DAGNode
+from qiskit.dagcircuit import DAGCircuit, DAGNode, DAGOpNode
 from qiskit.transpiler.basepasses import TransformationPass
 from qiskit.transpiler.exceptions import TranspilerError
 
@@ -102,7 +102,9 @@ class BlockBasePadder(TransformationPass):
                 is inserted before this node is called.
         """
         if not self._schedule_idle_qubits:
-            self._idle_qubits = set(wire for wire in dag.idle_wires() if isinstance(wire, Qubit))
+            self._idle_qubits = set(
+                wire for wire in dag.idle_wires() if isinstance(wire, Qubit)
+            )
         self._pre_runhook(dag)
 
         self._init_run(dag)
@@ -220,6 +222,7 @@ class BlockBasePadder(TransformationPass):
         t_end: int,
         next_node: DAGNode,
         prev_node: DAGNode,
+        enable_dd: bool = False,
     ) -> None:
         """Interleave instruction sequence in between two nodes.
 
@@ -270,11 +273,15 @@ class BlockBasePadder(TransformationPass):
                 f"of {node.op.name} on qubits {indices} is not bounded."
             )
         if duration is None:
-            raise TranspilerError(f"Duration of {node.op.name} on qubits {indices} is not found.")
+            raise TranspilerError(
+                f"Duration of {node.op.name} on qubits {indices} is not found."
+            )
 
         return duration
 
-    def _needs_block_terminating_barrier(self, prev_node: DAGNode, curr_node: DAGNode) -> bool:
+    def _needs_block_terminating_barrier(
+        self, prev_node: DAGNode, curr_node: DAGNode
+    ) -> bool:
         # Only barrier if not in fast-path nodes
         is_fast_path_node = curr_node in self._fast_path_nodes
 
@@ -286,7 +293,10 @@ class BlockBasePadder(TransformationPass):
 
         return not (
             prev_node is None
-            or (isinstance(prev_node.op, ControlFlowOp) and isinstance(curr_node.op, ControlFlowOp))
+            or (
+                isinstance(prev_node.op, ControlFlowOp)
+                and isinstance(curr_node.op, ControlFlowOp)
+            )
             or _is_terminating_barrier(prev_node)
             or _is_terminating_barrier(curr_node)
             or is_fast_path_node
@@ -314,7 +324,9 @@ class BlockBasePadder(TransformationPass):
                 qubits = self._block_dag.qubits
             else:
                 barrier = Barrier(self._block_dag.num_qubits() - len(self._idle_qubits))
-                qubits = [x for x in self._block_dag.qubits if x not in self._idle_qubits]
+                qubits = [
+                    x for x in self._block_dag.qubits if x not in self._idle_qubits
+                ]
 
             barrier_node = self._apply_scheduled_op(
                 block_idx,
@@ -346,7 +358,17 @@ class BlockBasePadder(TransformationPass):
         self._conditional_block = False
 
         for node in block_order_op_nodes(block):
-            self._visit_node(node)
+            enable_dd_node = False
+            # add DD if predecessor is a named barrier
+            if (
+                isinstance(node, DAGOpNode)
+                and isinstance(node.op, Barrier)
+                and self._dd_barrier
+                and node.op.label
+                and self._dd_barrier in node.op.label
+            ):
+                enable_dd_node = True
+            self._visit_node(node, enable_dd=enable_dd_node)
 
         # Terminate the block to pad it after scheduling.
         prev_block_duration = self._block_duration
@@ -366,7 +388,7 @@ class BlockBasePadder(TransformationPass):
 
         return new_block_dag
 
-    def _visit_node(self, node: DAGNode) -> None:
+    def _visit_node(self, node: DAGNode, enable_dd: bool = False) -> None:
         if isinstance(node.op, ControlFlowOp):
             if isinstance(node.op, IfElseOp):
                 self._visit_if_else_op(node)
@@ -376,7 +398,7 @@ class BlockBasePadder(TransformationPass):
             if isinstance(node.op, Delay):
                 self._visit_delay(node)
             else:
-                self._visit_generic(node)
+                self._visit_generic(node, enable_dd=enable_dd)
         else:
             raise TranspilerError(
                 f"Operation {repr(node)} is likely added after the circuit is scheduled. "
@@ -412,13 +434,16 @@ class BlockBasePadder(TransformationPass):
         if not (
             last_node_in_block
             and isinstance(last_node.op, Measure)
-            and set(self._map_wires(node.qargs)) == set(self._map_wires(last_node.qargs))
+            and set(self._map_wires(node.qargs))
+            == set(self._map_wires(last_node.qargs))
         ):
             return False
 
         # Fast path contents are limited to gates and delays
         for block in node.op.blocks:
-            if not all(isinstance(inst.operation, (Gate, Delay)) for inst in block.data):
+            if not all(
+                isinstance(inst.operation, (Gate, Delay)) for inst in block.data
+            ):
                 return False
         return True
 
@@ -472,7 +497,9 @@ class BlockBasePadder(TransformationPass):
         if fast_path_node:
             padded_qubits = node.qargs
         elif not self._schedule_idle_qubits:
-            padded_qubits = [q for q in self._block_dag.qubits if q not in self._idle_qubits]
+            padded_qubits = [
+                q for q in self._block_dag.qubits if q not in self._idle_qubits
+            ]
         else:
             padded_qubits = self._block_dag.qubits
         self._apply_scheduled_op(
@@ -501,7 +528,7 @@ class BlockBasePadder(TransformationPass):
         t1 = t0 + self._get_node_duration(node)  # pylint: disable=invalid-name
         self._block_duration = max(self._block_duration, t1)
 
-    def _visit_generic(self, node: DAGNode) -> None:
+    def _visit_generic(self, node: DAGNode, enable_dd: bool = False) -> None:
         """Visit a generic node to pad."""
         # Note: t0 is the relative time with respect to the current block specified
         # by block_idx.
@@ -528,7 +555,10 @@ class BlockBasePadder(TransformationPass):
             # Fill idle time with some sequence
             if t0 - self._idle_after.get(bit, 0) > 0:
                 # Find previous node on the wire, i.e. always the latest node on the wire
-                prev_node = next(self._block_dag.predecessors(self._block_dag.output_map[bit]))
+                prev_node = next(
+                    self._block_dag.predecessors(self._block_dag.output_map[bit])
+                )
+
                 self._pad(
                     block_idx=block_idx,
                     qubit=bit,
@@ -536,6 +566,7 @@ class BlockBasePadder(TransformationPass):
                     t_end=t0,
                     next_node=node,
                     prev_node=prev_node,
+                    enable_dd=enable_dd,
                 )
 
             self._idle_after[bit] = t1
@@ -551,7 +582,10 @@ class BlockBasePadder(TransformationPass):
             self._map_wires(node.cargs),
         )
         self._last_node_to_touch.update(
-            {bit: (new_node, self._block_dag) for bit in new_node.qargs + new_node.cargs}
+            {
+                bit: (new_node, self._block_dag)
+                for bit in new_node.qargs + new_node.cargs
+            }
         )
 
     def _terminate_block(self, block_duration: int, block_idx: int) -> None:
