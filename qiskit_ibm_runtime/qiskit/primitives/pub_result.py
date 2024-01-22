@@ -9,6 +9,7 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
+# TODO replace with file in qiskit/primitives/containers/pub_result.py
 
 """
 Base Pub class
@@ -20,7 +21,7 @@ from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
-class PubsResult:
+class PubResult:
     """Result of pub."""
 
     data: dict

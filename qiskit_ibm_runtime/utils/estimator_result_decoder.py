@@ -18,7 +18,7 @@ import numpy as np
 from qiskit.primitives import EstimatorResult
 
 from .result_decoder import ResultDecoder
-from ..qiskit.primitives.pub_result import PubsResult
+from ..qiskit.primitives.pub_result import PubResult
 
 
 class EstimatorResultDecoder(ResultDecoder):
@@ -36,7 +36,7 @@ class EstimatorResultDecoder(ResultDecoder):
                 if not isinstance(val, np.ndarray):
                     val = np.asarray(val)
                 out_results.append(
-                    PubsResult(data={"evs": val, "stds": meta.pop("standard_error")}, metadata=meta)
+                    PubResult(data={"evs": val, "stds": meta.pop("standard_error")}, metadata=meta)
                 )
             return out_results
         return EstimatorResult(
