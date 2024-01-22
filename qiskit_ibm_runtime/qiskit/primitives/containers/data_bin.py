@@ -24,7 +24,7 @@ class DataBinMeta(type):
     This is so that the class has a custom repr with DataBin<*shape> notation.
     """
 
-    def __repr__(cls):
+    def __repr__(cls):  # type: ignore[no-untyped-def]
         name = cls.__name__
         if cls._SHAPE is None:
             return name
@@ -45,7 +45,7 @@ class DataBin(metaclass=DataBinMeta):
     _FIELD_TYPES: tuple[type, ...] = ()
     """The types of each field."""
 
-    def __repr__(self):
+    def __repr__(self):  # type: ignore[no-untyped-def]
         vals = (f"{name}={getattr(self, name)}" for name in self._FIELDS if hasattr(self, name))
         return f"{type(self)}({', '.join(vals)})"
 
@@ -76,7 +76,7 @@ def make_data_bin(
         unsafe_hash=True,
         repr=False,
     )
-    cls._SHAPE = shape
-    cls._FIELDS = field_names
-    cls._FIELD_TYPES = field_types
-    return cls
+    cls._SHAPE = shape  # type: ignore[attr-defined]
+    cls._FIELDS = field_names  # type: ignore[attr-defined]
+    cls._FIELD_TYPES = field_types  # type: ignore[no-untyped-def, attr-defined]
+    return cls  # type: ignore[return-value]

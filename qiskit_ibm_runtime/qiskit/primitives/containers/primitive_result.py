@@ -39,7 +39,7 @@ class PrimitiveResult(Generic[T]):
         """The metadata of this primitive result."""
         return self._metadata
 
-    def __getitem__(self, index) -> T:
+    def __getitem__(self, index: int) -> T:
         return self._pub_results[index]
 
     def __len__(self) -> int:
