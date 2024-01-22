@@ -220,9 +220,7 @@ class PadDynamicalDecoupling(BlockBasePadder):
         self._alt_spacings = alt_spacings
 
         if self._spacings and len(self._spacings) != len(self._dd_sequences):
-            raise TranspilerError(
-                "Number of sequence spacings must equal number of DD sequences."
-            )
+            raise TranspilerError("Number of sequence spacings must equal number of DD sequences.")
 
         if self._alt_spacings:
             if not self._coupling_map:
@@ -250,9 +248,7 @@ class PadDynamicalDecoupling(BlockBasePadder):
             self._sequence_min_length_ratios = sequence_min_length_ratios  # type: ignore
 
         if len(self._sequence_min_length_ratios) != len(self._dd_sequences):
-            raise TranspilerError(
-                "Number of sequence lengths must equal number of DD sequences."
-            )
+            raise TranspilerError("Number of sequence lengths must equal number of DD sequences.")
 
         self._insert_multiple_cycles = insert_multiple_cycles
 
@@ -272,9 +268,7 @@ class PadDynamicalDecoupling(BlockBasePadder):
         spacings_required = self._spacings is None
         if spacings_required:
             self._spacings = []  # type: ignore
-        alt_spacings_required = (
-            self._alt_spacings is None and self._coupling_map is not None
-        )
+        alt_spacings_required = self._alt_spacings is None and self._coupling_map is not None
         if alt_spacings_required:
             self._alt_spacings = []  # type: ignore
 
@@ -323,9 +317,7 @@ class PadDynamicalDecoupling(BlockBasePadder):
                 for gate in self._dd_sequences[seq_idx]:
                     noop = noop.dot(gate.to_matrix())
                 if not matrix_equal(noop, IGate().to_matrix(), ignore_phase=True):
-                    raise TranspilerError(
-                        "The DD sequence does not make an identity operation."
-                    )
+                    raise TranspilerError("The DD sequence does not make an identity operation.")
                 self._sequence_phase = np.angle(noop[0][0])
 
             # Precompute qubit-wise DD sequence length for performance
@@ -341,9 +333,7 @@ class PadDynamicalDecoupling(BlockBasePadder):
                 for index, gate in enumerate(seq):
                     try:
                         # Check calibration.
-                        gate_length = dag.calibrations[gate.name][
-                            (physical_index, gate.params)
-                        ]
+                        gate_length = dag.calibrations[gate.name][(physical_index, gate.params)]
                         if gate_length % self._alignment != 0:
                             # This is necessary to implement lightweight scheduling logic for this pass.
                             # Usually the pulse alignment constraint and pulse data chunk size take
@@ -442,9 +432,7 @@ class PadDynamicalDecoupling(BlockBasePadder):
             seq_ratio = self._sequence_min_length_ratios[sequence_idx]
             spacings = self._spacings[sequence_idx]
             alt_spacings = (
-                np.asarray(self._alt_spacings[sequence_idx])
-                if self._coupling_map
-                else None
+                np.asarray(self._alt_spacings[sequence_idx]) if self._coupling_map else None
             )
 
             # Verify the delay duration exceeds the minimum time to insert
@@ -480,21 +468,15 @@ class PadDynamicalDecoupling(BlockBasePadder):
             if len(dd_sequence) == 1 and not self._single_pulses:
                 # Special case of using a single gate for DD. Absorb the inverse unless single_pulses is True
                 u_inv = dd_sequence[0].inverse().to_matrix()
-                theta, phi, lam, phase = OneQubitEulerDecomposer().angles_and_phase(
-                    u_inv
-                )
-                if isinstance(next_node, DAGOpNode) and isinstance(
-                    next_node.op, (UGate, U3Gate)
-                ):
+                theta, phi, lam, phase = OneQubitEulerDecomposer().angles_and_phase(u_inv)
+                if isinstance(next_node, DAGOpNode) and isinstance(next_node.op, (UGate, U3Gate)):
                     # Absorb the inverse into the successor (from left in circuit)
                     theta_r, phi_r, lam_r = next_node.op.params
                     next_node.op.params = Optimize1qGates.compose_u3(
                         theta_r, phi_r, lam_r, theta, phi, lam
                     )
                     sequence_gphase += phase
-                elif isinstance(prev_node, DAGOpNode) and isinstance(
-                    prev_node.op, (UGate, U3Gate)
-                ):
+                elif isinstance(prev_node, DAGOpNode) and isinstance(prev_node.op, (UGate, U3Gate)):
                     # Absorb the inverse into the predecessor (from right in circuit)
                     theta_l, phi_l, lam_l = prev_node.op.params
                     prev_node.op.params = Optimize1qGates.compose_u3(
@@ -562,18 +544,14 @@ class PadDynamicalDecoupling(BlockBasePadder):
                 # 2. There is an extra delay inserted after the last operation.
                 # The condition below handles both.
                 seq_length = int(len(taus) / num_sequences)
-                if len(dd_sequence) == len(taus) or tau_idx % seq_length != (
-                    seq_length - 1
-                ):
+                if len(dd_sequence) == len(taus) or tau_idx % seq_length != (seq_length - 1):
                     gate = dd_sequence[dd_ind]
                     gate_length = seq_lengths[dd_ind]
                     self._apply_scheduled_op(block_idx, idle_after, gate, qubit)
                     idle_after += gate_length
                     dd_ind += 1
 
-            self._block_dag.global_phase = (
-                self._block_dag.global_phase + sequence_gphase
-            )
+            self._block_dag.global_phase = self._block_dag.global_phase + sequence_gphase
             return
 
         # DD could not be applied, delay instead
