@@ -21,7 +21,6 @@ import warnings
 
 from qiskit import QuantumCircuit
 from qiskit.qobj.utils import MeasLevel, MeasReturnType
-from qiskit.tools.events.pubsub import Publisher
 
 from qiskit.providers.backend import BackendV2 as Backend
 from qiskit.providers.options import Options
@@ -66,6 +65,14 @@ from .utils.backend_converter import (
     convert_to_target,
 )
 from .utils.default_session import get_cm_session as get_cm_primitive_session
+
+# If using a new-enough version of the IBM Provider, access the pub/sub
+# mechanism from it as a broker, but fall back to Qiskit if we're using
+# an old version (in which case it will also be falling back to Qiskit).
+try:
+    from qiskit_ibm_provider.utils.pubsub import Publisher
+except ImportError:
+    from qiskit.tools.events.pubsub import Publisher  # pylint: disable=ungrouped-imports
 
 logger = logging.getLogger(__name__)
 
