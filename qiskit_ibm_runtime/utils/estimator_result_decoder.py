@@ -16,13 +16,9 @@ from typing import Dict
 import numpy as np
 
 from qiskit.primitives import EstimatorResult
+from qiskit.primitives.containers import PrimitiveResult, make_data_bin, PubResult
 
 from .result_decoder import ResultDecoder
-
-# TODO replace with qiskit versions when released
-from ..qiskit.primitives.containers.primitive_result import PrimitiveResult
-from ..qiskit.primitives.containers.data_bin import make_data_bin
-from ..qiskit.primitives.containers.pub_result import PubResult
 
 
 class EstimatorResultDecoder(ResultDecoder):

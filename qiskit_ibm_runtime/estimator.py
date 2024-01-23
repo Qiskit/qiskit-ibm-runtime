@@ -21,6 +21,8 @@ import typing
 from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info.operators.base_operator import BaseOperator
 from qiskit.primitives import BaseEstimator
+from qiskit.primitives.base import BaseEstimatorV2
+from qiskit.primitives.containers import EstimatorPub, EstimatorPubLike
 
 from .runtime_job import RuntimeJob
 from .ibm_backend import IBMBackend
@@ -29,10 +31,6 @@ from .options.estimator_options import EstimatorOptions
 from .base_primitive import BasePrimitiveV1, BasePrimitiveV2
 from .utils.qctrl import validate as qctrl_validate
 
-
-# TODO: remove when we have real v2 base estimator, estimatorpub, and estimatorpublike
-from .qiskit.primitives import BaseEstimatorV2
-from .qiskit.primitives.estimator_pub import EstimatorPub, EstimatorPubLike
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
@@ -133,7 +131,7 @@ class EstimatorV2(BasePrimitiveV2, Estimator, BaseEstimatorV2):
             raise NotImplementedError("EstimatorV2 is not supported with q-ctrl channel strategy.")
 
     def run(
-        self, pubs: EstimatorPubLike | Iterable[EstimatorPubLike], precision: float | None = None
+        self, pubs: EstimatorPubLike | Iterable[EstimatorPubLike], *, precision: float | None = None
     ) -> RuntimeJob:
         """Submit a request to the estimator primitive.
 
@@ -156,7 +154,7 @@ class EstimatorV2(BasePrimitiveV2, Estimator, BaseEstimatorV2):
         for pub in pubs:
             pub.validate()  # type: ignore[union-attr]
 
-        return self._run(pubs)
+        return self._run(pubs)  # type: ignore[arg-type]
 
     def _validate_options(self, options: dict) -> None:
         """Validate that program inputs (options) are valid

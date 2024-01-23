@@ -19,7 +19,7 @@ import os
 import setuptools
 
 REQUIREMENTS = [
-    "qiskit>=0.44.1",
+    "qiskit @ git+https://github.com/Qiskit/qiskit.git",
     "requests>=2.19",
     "requests-ntlm>=1.1.0",
     "numpy>=1.13",

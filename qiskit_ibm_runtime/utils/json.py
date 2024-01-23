@@ -53,6 +53,7 @@ from qiskit.circuit import (
     QuantumRegister,
 )
 from qiskit.circuit.parametertable import ParameterView
+from qiskit.primitives import ObservablesArray, BindingsArray, EstimatorPub
 from qiskit.result import Result
 from qiskit.version import __version__ as _terra_version_string
 
@@ -65,10 +66,6 @@ from qiskit_ibm_provider.qpy import (
     dump,
     load,
 )
-from qiskit_ibm_runtime.qiskit.primitives.estimator_pub import EstimatorPub
-
-# TODO: Remove when they are in terra
-from ..qiskit.primitives import ObservablesArray, BindingsArray
 
 _TERRA_VERSION = tuple(
     int(x) for x in re.match(r"\d+\.\d+\.\d", _terra_version_string).group(0).split(".")[:3]

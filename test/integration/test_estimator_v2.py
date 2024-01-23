@@ -15,10 +15,7 @@
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.quantum_info import SparsePauliOp
 
-# TODO replace with real versions from qiskit
-from qiskit_ibm_runtime.qiskit.primitives.containers.primitive_result import PrimitiveResult
-from qiskit_ibm_runtime.qiskit.primitives.containers.pub_result import PubResult
-from qiskit_ibm_runtime.qiskit.primitives.containers.data_bin import DataBin
+from qiskit.primitives.containers import PrimitiveResult, PubResult, DataBin
 
 from qiskit_ibm_runtime import EstimatorV2, Session
 from ..decorators import run_integration_test
