@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    Added a new parameter, `dynamic_circuits` to :meth:`~qiskit_ibm_runtime.QiskitRuntimeService.backends`
+    to allow filtering of backends that support dynamic circuits.

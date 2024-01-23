@@ -622,7 +622,7 @@ class RuntimeJob(Job):
             Input parameters used in this job.
         """
         if not self._params:
-            response = self._api_client.job_get(job_id=self.job_id())
+            response = self._api_client.job_get(job_id=self.job_id(), exclude_params=False)
             self._params = response.get("params", {})
         return self._params
 

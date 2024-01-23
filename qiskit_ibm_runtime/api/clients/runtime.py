@@ -99,7 +99,7 @@ class RuntimeClient(BaseBackendClient):
             **hgp_dict,
         )
 
-    def job_get(self, job_id: str, exclude_params: bool = None) -> Dict:
+    def job_get(self, job_id: str, exclude_params: bool = True) -> Dict:
         """Get job data.
 
         Args:
