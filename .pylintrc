@@ -88,6 +88,7 @@ disable=arguments-renamed,              # more readable and clear
         too-many-public-methods,        # too verbose
         too-many-statements,            # too verbose
         unnecessary-pass,               # allow for methods with just "pass", for clarity
+        no-name-in-module,              # remove after qiskit 1.0 release 
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
