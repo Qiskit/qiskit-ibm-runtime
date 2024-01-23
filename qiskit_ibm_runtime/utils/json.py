@@ -56,7 +56,7 @@ from qiskit.circuit import (
 from qiskit.circuit.parametertable import ParameterView
 from qiskit.result import Result
 from qiskit.version import __version__ as _terra_version_string
-from qiskit.primitives.containers import SamplerPub
+from qiskit.primitives.containers import SamplerPub, BindingsArray
 
 from qiskit_ibm_provider.qpy import (
     _write_parameter,
@@ -69,7 +69,7 @@ from qiskit_ibm_provider.qpy import (
 )
 
 # TODO: Remove when they are in terra
-from ..qiskit.primitives import ObservablesArray, BindingsArray
+from ..qiskit.primitives import ObservablesArray
 from ..qiskit.primitives.base_pub import BasePub
 
 _TERRA_VERSION = tuple(
@@ -259,10 +259,13 @@ class RuntimeEncoder(json.JSONEncoder):
             return asdict(obj)
         if isinstance(obj, SamplerPub):
             return {
-                "circuit": obj.circuit,
-                "parameter_values": obj.parameter_values,
-                "shots": obj.shots,
-                "shape": obj.shape,
+                "__type__": "SamplerPub",
+                "__value__": {
+                    "circuit": obj.circuit,
+                    "parameter_values": obj.parameter_values,
+                    "shots": obj.shots,
+                    "shape": obj.shape,
+                },
             }
         if isinstance(obj, ObservablesArray):
             return obj.tolist()
@@ -350,6 +353,12 @@ class RuntimeDecoder(json.JSONDecoder):
                 return Result.from_dict(obj_val)
             if obj_type == "spmatrix":
                 return _decode_and_deserialize(obj_val, scipy.sparse.load_npz, False)
+            if obj_type == "SamplerPub":
+                return SamplerPub(
+                    circuit=obj_val["circuit"],
+                    parameter_values=obj_val["parameter_values"],
+                    shots=obj_val["shots"],
+                )
             if obj_type == "BindingsArray":
                 ba_kwargs = {"shape": obj_val.get("shape", None)}
                 kwvals = obj_val.get("kwvals", None)
