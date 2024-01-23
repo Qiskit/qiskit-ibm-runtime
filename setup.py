@@ -19,7 +19,6 @@ import os
 import setuptools
 
 REQUIREMENTS = [
-    "qiskit @ git+https://github.com/Qiskit/qiskit.git",
     "requests>=2.19",
     "requests-ntlm>=1.1.0",
     "numpy>=1.13",
@@ -29,6 +28,7 @@ REQUIREMENTS = [
     "ibm-platform-services>=0.22.6",
     "qiskit-ibm-provider>=0.7.2",
     "pydantic",
+    "qiskit @ git+https://github.com/Qiskit/qiskit.git",
 ]
 
 # Handle version.

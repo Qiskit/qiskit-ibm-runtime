@@ -48,10 +48,22 @@ class TestEstimatorV2(IBMIntegrationTestCase):
         with Session(service, self.backend) as session:
             estimator = EstimatorV2(session=session)
 
-            job = estimator.run([(psi1, [H1, H3], [theta1, theta3]), (psi2, H2, theta2)])
+            job = estimator.run([(psi1, H1, [theta1])])
             result = job.result()
             self.assertIsInstance(result, PrimitiveResult)
             self.assertIsInstance(result[0], PubResult)
-            self.assertIsInstance(result[0].data, DataBin)
-            self.assertEqual(len(result[0].data.evs), 2)
-            self.assertEqual(len(result[0].data.stds), 2)
+
+            job2 = estimator.run([(psi1, [H1, H3], [theta1, theta3]), (psi2, H2, theta2)])
+            result2 = job2.result()
+            self.assertIsInstance(result2, PrimitiveResult)
+            self.assertIsInstance(result2[0], PubResult)
+            self.assertIsInstance(result2[0].data, DataBin)
+            self.assertEqual(len(result2[0].data.evs), 2)
+            self.assertEqual(len(result2[0].data.stds), 2)
+
+            job3 = estimator.run([(psi1, H1, theta1), (psi2, H2, theta2), (psi1, H3, theta3)])
+            result3 = job3.result()
+            self.assertIsInstance(result3, PrimitiveResult)
+            self.assertIsInstance(result3[2], PubResult)
+            self.assertIsInstance(result3[2].data, DataBin)
+            self.assertTrue(result3[2].metadata)
