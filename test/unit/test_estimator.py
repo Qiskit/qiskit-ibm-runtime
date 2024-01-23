@@ -17,13 +17,13 @@ from unittest.mock import MagicMock
 from qiskit import QuantumCircuit
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.quantum_info import SparsePauliOp, Pauli, random_pauli_list
+from qiskit.primitives import EstimatorPub
 import qiskit.quantum_info as qi
 
 import numpy as np
 from ddt import data, ddt
 
 from qiskit_ibm_runtime import Estimator, Session, EstimatorV2, EstimatorOptions
-from qiskit_ibm_runtime.qiskit.primitives import EstimatorPub
 
 from .mock.fake_runtime_service import FakeRuntimeService
 from ..ibm_test_case import IBMTestCase

@@ -26,6 +26,7 @@ from qiskit.circuit.library import RealAmplitudes
 from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.providers.fake_provider import FakeManila
+from qiskit.primitives import BindingsArray
 
 from qiskit_ibm_runtime import (
     Sampler,
@@ -37,7 +38,7 @@ from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.utils.default_session import _DEFAULT_SESSION
 from qiskit_ibm_runtime import EstimatorV2
 from qiskit_ibm_runtime.estimator import Estimator as IBMBaseEstimator
-from qiskit_ibm_runtime.qiskit.primitives import BindingsArray
+
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import (

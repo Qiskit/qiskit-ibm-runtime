@@ -253,11 +253,20 @@ class RuntimeEncoder(json.JSONEncoder):
         # TODO proper way to do this?
         if isinstance(obj, EstimatorPub):
             return {
-                "circuit": obj.circuit,
-                "observables": obj.observables,
-                "parameter_values": obj.parameter_values,
-                "precision": obj.precision,
+                "__type__": "EstimatorPub",
+                "__value__": {
+                    "circuit": obj.circuit,
+                    "observables": obj.observables,
+                    "parameter_values": obj.parameter_values,
+                    "precision": obj.precision,
+                },
             }
+            # return {
+            #     "circuit": obj.circuit,
+            #     "observables": obj.observables,
+            #     "parameter_values": obj.parameter_values,
+            #     "precision": obj.precision,
+            # }
         if isinstance(obj, ObservablesArray):
             return obj.tolist()
         if isinstance(obj, BindingsArray):

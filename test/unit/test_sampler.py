@@ -19,10 +19,10 @@ from ddt import data, ddt
 import numpy as np
 
 from qiskit import QuantumCircuit
+from qiskit.primitives import SamplerPub
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit_ibm_runtime import Sampler, Session, SamplerV2, SamplerOptions
-from qiskit_ibm_runtime.qiskit.primitives import SamplerPub
 
 from ..ibm_test_case import IBMTestCase
 from .mock.fake_runtime_service import FakeRuntimeService

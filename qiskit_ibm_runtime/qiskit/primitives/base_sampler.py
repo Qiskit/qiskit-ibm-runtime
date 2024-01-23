@@ -81,10 +81,10 @@ from typing import Generic, TypeVar, Optional, Iterable
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.providers import JobV1 as Job
+from qiskit.primitives.containers import SamplerPub, SamplerPubLike
 
 from .base_primitive import BasePrimitiveV2
 from .options import BasePrimitiveOptionsLike
-from .sampler_pub import SamplerPub, SamplerPubLike
 
 T = TypeVar("T", bound=Job)  # pylint: disable=invalid-name
 
