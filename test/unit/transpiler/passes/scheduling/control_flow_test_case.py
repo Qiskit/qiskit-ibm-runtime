@@ -15,11 +15,12 @@
 from typing import Any, Optional
 
 from qiskit import QuantumCircuit
-from qiskit.test import QiskitTestCase
 from qiskit.test._canonical import canonicalize_control_flow
 
+from .....ibm_test_case import IBMTestCase
 
-class ControlFlowTestCase(QiskitTestCase):
+
+class ControlFlowTestCase(IBMTestCase):
     """Test case that enforces control flow canonicalization of quantum circuits."""
 
     def assertEqual(  # pylint: disable=arguments-differ
