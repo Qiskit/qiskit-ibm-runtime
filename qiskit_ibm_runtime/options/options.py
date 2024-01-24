@@ -157,7 +157,6 @@ class OptionsV2(BaseOptions, BasePrimitiveOptions):
         # Remove image
         inputs.pop("image", None)
 
-        inputs["_experimental"] = True
         inputs["version"] = OptionsV2._VERSION
         _remove_dict_unset_values(inputs)
 
