@@ -16,11 +16,7 @@ from dataclasses import dataclass
 from typing import Literal, get_args, Optional
 
 
-ExecutionSupportedOptions = Literal[
-    "shots",
-    "init_qubits",
-    "rep_delay"
-]
+ExecutionSupportedOptions = Literal["shots", "init_qubits", "rep_delay"]
 
 
 @dataclass
