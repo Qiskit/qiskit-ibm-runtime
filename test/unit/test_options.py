@@ -408,7 +408,6 @@ class TestOptionsV2(IBMTestCase):
         }
 
         inputs = opt_cls._get_program_inputs(asdict(opt))
-        inputs.pop("_experimental", None)
         self.assertDictEqual(inputs, expected)
         self.assertFalse(simulator, f"simulator not empty: {simulator}")
 
