@@ -13,12 +13,13 @@
 """Execution options."""
 
 from dataclasses import dataclass
-from typing import Literal, get_args
+from typing import Literal, get_args, Optional
 
 
 ExecutionSupportedOptions = Literal[
     "shots",
     "init_qubits",
+    "rep_delay"
 ]
 
 
@@ -31,10 +32,17 @@ class ExecutionOptions:
 
         init_qubits: Whether to reset the qubits to the ground state for each shot.
             Default: ``True``.
+
+        rep_delay: The repetition delay. This is the delay between a measurement and
+            the subsequent quantum circuit. This is only supported on backends that have
+            ``backend.configuration().dynamic_reprate_enabled=True``. It must be from the
+            range supplied by ``backend.configuration().rep_delay_range``.
+            Default is given by ``backend.configuration().default_rep_delay``.
     """
 
     shots: int = 4000
     init_qubits: bool = True
+    rep_delay: Optional[float] = None
 
     @staticmethod
     def validate_execution_options(execution_options: dict) -> None:

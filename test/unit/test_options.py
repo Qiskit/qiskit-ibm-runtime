@@ -121,7 +121,7 @@ class TestOptions(IBMTestCase):
             {"resilience_level": 8, "environment": {"log_level": "WARNING"}},
             {
                 "transpilation": {"initial_layout": [1, 2], "layout_method": "trivial"},
-                "execution": {"shots": 100},
+                "execution": {"shots": 100, "rep_delay": 1e-06},
             },
             {"resilience": {"noise_factors": (0, 2, 4)}},
             {"environment": {"log_level": "ERROR"}},

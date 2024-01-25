@@ -1,0 +1,11 @@
+---
+features:
+  - |
+    A ``rep_delay`` parameter has been added to the
+    :class:`~qiskit_ibm_runtime.options.ExecutionOptions`.
+    This parameter is used to denote the the delay between a measurement and
+    the subsequent quantum circuit.
+    This is only supported on backends that have
+    ``backend.configuration().dynamic_reprate_enabled=True``. It must be from the
+    range supplied by ``backend.configuration().rep_delay_range``.
+    Default is given by ``backend.configuration().default_rep_delay``.
