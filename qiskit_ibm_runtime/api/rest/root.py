@@ -17,9 +17,7 @@ from typing import Dict, List, Any, Union
 import json
 
 from .base import RestAdapterBase
-from .utils.data_mapper import map_job_response
-from .job import Job
-from ...utils.utils import filter_data
+from .program_job import ProgramJob
 
 logger = logging.getLogger(__name__)
 
@@ -33,10 +31,9 @@ class Api(RestAdapterBase):
         "hubs": "/Network",
         "version": "/version",
         "bookings": "/Network/bookings/v2",
-        "jobs": "/jobs/v2",
     }
 
-    def job(self, job_id: str) -> Job:
+    def job(self, job_id: str) -> ProgramJob:
         """Return an adapter for the job.
 
         Args:
@@ -45,7 +42,7 @@ class Api(RestAdapterBase):
         Returns:
             The backend adapter.
         """
-        return Job(self.session, job_id)
+        return ProgramJob(self.session, job_id)
 
     # Client functions.
 
@@ -104,44 +101,3 @@ class Api(RestAdapterBase):
         response = self.session.get(url).json()
 
         return response
-
-    def jobs(
-        self,
-        limit: int = 10,
-        skip: int = 0,
-        descending: bool = True,
-        extra_filter: Dict[str, Any] = None,
-    ) -> List[Dict[str, Any]]:
-        """Return a list of job information.
-
-        Args:
-            limit: Maximum number of items to return.
-            skip: Offset for the items to return.
-            descending: Whether the jobs should be in descending order.
-            extra_filter: Additional filtering passed to the query.
-
-        Returns:
-            JSON response.
-        """
-        url = self.get_url("jobs")
-        order = "DESC" if descending else "ASC"
-
-        query = {
-            "order": "creationDate " + order,
-            "limit": limit,
-            "skip": skip,
-        }
-        if extra_filter:
-            query.update(extra_filter)
-
-        if logger.getEffectiveLevel() is logging.DEBUG:
-            logger.debug(
-                "Endpoint: %s. Method: GET. Request Data: {'filter': %s}",
-                url,
-                filter_data(query),
-            )
-        data = self.session.get(url, params=query).json()
-        items = data.get("items")
-        for job_data in items:
-            map_job_response(job_data)
-        return items

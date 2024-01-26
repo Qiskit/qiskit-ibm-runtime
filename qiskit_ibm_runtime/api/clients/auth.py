@@ -21,10 +21,8 @@ from ..rest import Api
 from ..session import RetrySession
 from ..client_parameters import ClientParameters
 
-from .base import BaseClient
 
-
-class AuthClient(BaseClient):
+class AuthClient:
     """Client for accessing IBM Quantum authentication services."""
 
     def __init__(self, client_params: ClientParameters) -> None:

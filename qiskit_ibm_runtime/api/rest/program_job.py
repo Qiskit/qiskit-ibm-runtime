@@ -32,7 +32,6 @@ class ProgramJob(RestAdapterBase):
         "interim_results": "/interim_results",
         "metrics": "/metrics",
         "tags": "/tags",
-        "type": "/type",
     }
 
     def __init__(self, session: RetrySession, job_id: str, url_prefix: str = "") -> None:
@@ -58,15 +57,6 @@ class ProgramJob(RestAdapterBase):
         if exclude_params:
             payload["exclude_params"] = "true"
         return self.session.get(self.get_url("self"), params=payload).json(cls=RuntimeDecoder)
-
-    def job_type(self) -> str:
-        """Return job type:
-
-        Returns:
-            Job type, either "IQX" or "RUNTIME".
-        """
-        response = self.session.get(self.get_prefixed_url("/facade/v1", "type"))
-        return json.loads(response.text)["type"]
 
     def delete(self) -> None:
         """Delete program job."""

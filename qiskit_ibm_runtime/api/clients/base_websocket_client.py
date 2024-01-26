@@ -30,12 +30,6 @@ from ..exceptions import WebsocketError, WebsocketTimeoutError
 logger = logging.getLogger(__name__)
 
 
-class BaseClient:
-    """Abstract class for clients."""
-
-    pass
-
-
 class WebsocketClientCloseCode(enum.IntEnum):
     """Possible values used for closing websocket connection."""
 
@@ -45,7 +39,7 @@ class WebsocketClientCloseCode(enum.IntEnum):
     CANCEL = 4
 
 
-class BaseWebsocketClient(BaseClient, ABC):
+class BaseWebsocketClient(ABC):
     """Base class for websocket clients."""
 
     BACKOFF_MAX = 8

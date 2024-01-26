@@ -12,7 +12,7 @@
 
 """IBM Quantum API clients."""
 
-from .base import BaseClient, WebsocketClientCloseCode
+from .base_websocket_client import WebsocketClientCloseCode
 from .auth import AuthClient
 from .version import VersionClient
 from .runtime_ws import RuntimeWebsocketClient

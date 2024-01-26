@@ -773,7 +773,6 @@ class IBMBackend(Backend):
             max_session_time = None
 
         log_level = getattr(self.options, "log_level", None)  # temporary
-        print(self._api_client)
         try:
             response = self._api_client.program_run(
                 program_id=program_id,
