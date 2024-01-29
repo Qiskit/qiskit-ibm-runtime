@@ -53,7 +53,7 @@ class Sampler(BasePrimitive, BaseSampler):
 
         # Bell Circuit
         qr = QuantumRegister(2, name="qr")
-        cr = ClassicalRegister(2, name="qc")
+        cr = ClassicalRegister(2, name="cr")
         qc = QuantumCircuit(qr, cr, name="bell")
         qc.h(qr[0])
         qc.cx(qr[0], qr[1])
