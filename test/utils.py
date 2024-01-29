@@ -353,7 +353,7 @@ def bell_in_qobj(backend: IBMBackend, shots: int = 1024) -> QasmQobj:
 def bell():
     """Return a Bell circuit."""
     quantum_register = QuantumRegister(2, name="qr")
-    classical_register = ClassicalRegister(2, name="qc")
+    classical_register = ClassicalRegister(2, name="cr")
     quantum_circuit = QuantumCircuit(quantum_register, classical_register, name="bell")
     quantum_circuit.h(quantum_register[0])
     quantum_circuit.cx(quantum_register[0], quantum_register[1])
