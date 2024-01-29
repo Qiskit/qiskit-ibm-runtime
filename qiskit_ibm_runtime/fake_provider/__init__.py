@@ -11,9 +11,9 @@
 # that they have been altered from the originals.
 
 """
-======================================================
+=======================================================
 Fake Provider (:mod:`qiskit_ibm_runtime.fake_provider`)
-======================================================
+=======================================================
 
 .. currentmodule:: qiskit_ibm_runtime.fake_provider
 
