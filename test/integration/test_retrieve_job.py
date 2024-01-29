@@ -15,11 +15,10 @@
 import uuid
 from datetime import datetime, timezone
 from qiskit.providers.jobstatus import JobStatus
-from qiskit.test.reference_circuits import ReferenceCircuits
 
 from ..ibm_test_case import IBMIntegrationJobTestCase
 from ..decorators import run_integration_test, production_only, quantum_only
-from ..utils import wait_for_status, get_real_device
+from ..utils import wait_for_status, get_real_device, bell
 
 
 class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
@@ -61,7 +60,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         """Test lazy loading job params."""
         job = self._run_program(
             service,
-            inputs={"circuits": ReferenceCircuits.bell()},
+            inputs={"circuits": bell()},
             program_id="circuit-runner",
             backend="ibmq_qasm_simulator",
         )
@@ -113,7 +112,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
     @run_integration_test
     def test_retrieve_pending_jobs(self, service):
         """Test retrieving pending jobs (QUEUED, RUNNING)."""
-        circuits = [ReferenceCircuits.bell()] * 20
+        circuits = [bell()] * 20
         job = self._run_program(service, circuits=circuits)
         wait_for_status(job, JobStatus.RUNNING)
         rjobs = service.jobs(pending=True)
