@@ -22,11 +22,9 @@ from datetime import datetime
 
 from ddt import data, unpack
 
-from qiskit.circuit import QuantumCircuit
 from qiskit.compiler import transpile
 from qiskit.test.utils import generate_cases
 from qiskit.circuit import QuantumCircuit, QuantumRegister, ClassicalRegister
-from qiskit.compiler import transpile, assemble
 from qiskit.providers.jobstatus import JOB_FINAL_STATES, JobStatus
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.models import BackendStatus, BackendProperties
@@ -320,6 +318,7 @@ def combine(**kwargs):
 
     return deco
 
+
 def bell():
     """Return a Bell circuit."""
     quantum_register = QuantumRegister(2, name="qr")
@@ -344,6 +343,7 @@ def get_primitive_inputs(primitive, num_sets=1):
 
     circ.measure_all()
     return {"pubs": [(circ,)] * num_sets}
+
 
 class MockSession(Session):
     """Mock for session class"""

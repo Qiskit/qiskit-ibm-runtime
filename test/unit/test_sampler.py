@@ -20,7 +20,6 @@ import numpy as np
 
 from qiskit import QuantumCircuit
 from qiskit.circuit.library import RealAmplitudes
-from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit_ibm_runtime import Sampler, Session, SamplerV2, SamplerOptions
 from qiskit_ibm_runtime.qiskit.primitives import SamplerPub
 
