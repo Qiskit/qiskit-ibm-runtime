@@ -13,7 +13,6 @@
 """Test the conversion of Id gate operations to a delay."""
 
 from qiskit.circuit import QuantumCircuit
-from qiskit.test import QiskitTestCase
 from qiskit.transpiler.passmanager import PassManager
 
 from qiskit_ibm_runtime.transpiler.passes.basis.convert_id_to_delay import (
@@ -24,10 +23,12 @@ from qiskit_ibm_runtime.transpiler.passes.scheduling.utils import (
     DynamicCircuitInstructionDurations,
 )
 
+from .....ibm_test_case import IBMTestCase
+
 # pylint: disable=invalid-name
 
 
-class TestConvertIdToDelay(QiskitTestCase):
+class TestConvertIdToDelay(IBMTestCase):
     """Tests the ConvertIdToDelay pass"""
 
     def setUp(self):
