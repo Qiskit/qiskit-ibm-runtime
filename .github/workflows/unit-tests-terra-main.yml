@@ -18,7 +18,7 @@ on:
 jobs:
   unit-tests-latest-qiskit-terra:
     if: github.repository_owner == 'Qiskit'
-    name: Run unit tests with latest code of qiskit-terra
+    name: Run unit tests with latest code of Qiskit
     runs-on: "ubuntu-latest"
     env:
       LOG_LEVEL: DEBUG
@@ -35,9 +35,9 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -e .
-          pip install -c constraints.txt -r requirements-dev.txt
-          pip install -U git+https://github.com/Qiskit/qiskit-terra.git
+          # Installing the complete environment should happen in one `pip install` step,
+          # or pip will generally allow broken combinations of packages to be installed.
+          pip install -c constraints.txt -r requirements-dev.txt -e . git+https://github.com/Qiskit/qiskit.git
       - name: Run tests
         # running unit tests against latest (non-released) code of qiskit-terra gives a basic level
         # of confidence that the integration between qiskit-ibm-runtime and qiskit-terra works

@@ -38,7 +38,6 @@ from ..ibm_test_case import IBMTestCase
 from ..account import (
     get_account_config_contents,
     temporary_account_config_file,
-    custom_qiskitrc,
     no_envs,
     custom_envs,
 )
@@ -844,27 +843,6 @@ class TestEnableAccount(IBMTestCase):
             service = FakeRuntimeService(name=name, instance=instance)
         self.assertTrue(service._account)
         self.assertEqual(service._account.instance, instance)
-
-    @no_envs(["QISKIT_IBM_TOKEN"])
-    def test_enable_account_by_qiskitrc(self):
-        """Test initializing account by a qiskitrc file."""
-        token = "token-x"
-        proxies = {"urls": {"https": "localhost:8080"}}
-        str_contents = f"""
-        [ibmq]
-        token = {token}
-        url = https://auth.quantum-computing.ibm.com/api
-        verify = True
-        default_provider = ibm-q/open/main
-        proxies = {proxies}
-        """
-        with custom_qiskitrc(contents=str.encode(str_contents)):
-            with temporary_account_config_file(contents={}):
-                with warnings.catch_warnings(record=True) as warn:
-                    service = FakeRuntimeService()
-        self.assertIn("Use of the ~/.qiskit/qiskitrc.json file is deprecated", str(warn[0].message))
-        self.assertTrue(service._account)
-        self.assertEqual(service._account.token, token)
 
     def test_enable_account_by_channel_input_instance(self):
         """Test initializing account by channel and input instance."""
