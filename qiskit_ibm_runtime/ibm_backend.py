@@ -66,13 +66,8 @@ from .utils.backend_converter import (
 )
 from .utils.default_session import get_cm_session as get_cm_primitive_session
 
-# If using a new-enough version of the IBM Provider, access the pub/sub
-# mechanism from it as a broker, but fall back to Qiskit if we're using
-# an old version (in which case it will also be falling back to Qiskit).
-try:
-    from qiskit_ibm_provider.utils.pubsub import Publisher
-except ImportError:
-    from qiskit.tools.events.pubsub import Publisher  # pylint: disable=ungrouped-imports
+from .utils.pubsub import Publisher
+
 
 logger = logging.getLogger(__name__)
 
