@@ -12,10 +12,10 @@
 
 """Tests for sampler class."""
 
-from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit_ibm_runtime import Sampler, Session
 
 from ..ibm_test_case import IBMTestCase
+from ..utils import bell
 from .mock.fake_runtime_service import FakeRuntimeService
 
 
@@ -33,7 +33,7 @@ class TestSampler(IBMTestCase):
             service=FakeRuntimeService(channel="ibm_quantum", token="abc"),
             backend="common_backend",
         ) as session:
-            circuit = ReferenceCircuits.bell()
+            circuit = bell()
             for bad_opt in options_bad:
                 inst = Sampler(session=session)
                 with self.assertRaises(ValueError) as exc:
