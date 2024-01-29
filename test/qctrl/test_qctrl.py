@@ -16,7 +16,6 @@ import time
 
 from qiskit import QuantumCircuit
 from qiskit.quantum_info import Statevector, hellinger_fidelity
-from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit.providers.jobstatus import JobStatus
 from qiskit.quantum_info import SparsePauliOp
 
@@ -25,7 +24,7 @@ from qiskit_ibm_runtime.exceptions import IBMNotAuthorizedError
 
 from ..ibm_test_case import IBMIntegrationTestCase
 from ..decorators import run_integration_test
-from ..utils import cancel_job_safe
+from ..utils import cancel_job_safe, bell
 
 FIDELITY_THRESHOLD = 0.9
 DIFFERENCE_THRESHOLD = 0.1
@@ -36,7 +35,7 @@ class TestQCTRL(IBMIntegrationTestCase):
 
     def setUp(self) -> None:
         super().setUp()
-        self.bell = ReferenceCircuits.bell()
+        self.bell = bell()
         self.backend = "alt_canberra"
 
     def test_channel_strategy_parameter(self):
