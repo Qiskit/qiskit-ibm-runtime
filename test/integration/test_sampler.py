@@ -16,7 +16,7 @@ from math import sqrt
 
 from qiskit.circuit import QuantumCircuit, Gate
 from qiskit.circuit.library import RealAmplitudes
-from qiskit.test.reference_circuits import ReferenceCircuits
+
 from qiskit.primitives import BaseSampler, SamplerResult
 from qiskit.result import QuasiDistribution
 
@@ -25,6 +25,7 @@ from qiskit_ibm_runtime.exceptions import RuntimeJobFailureError
 
 from ..decorators import run_integration_test
 from ..ibm_test_case import IBMIntegrationTestCase
+from ..utils import bell
 
 
 class TestIntegrationIBMSampler(IBMIntegrationTestCase):
@@ -32,7 +33,7 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
 
     def setUp(self) -> None:
         super().setUp()
-        self.bell = ReferenceCircuits.bell()
+        self.bell = bell()
         self.backend = "ibmq_qasm_simulator"
 
     @run_integration_test

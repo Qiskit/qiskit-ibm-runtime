@@ -21,7 +21,6 @@ from dateutil import tz
 from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister
 from qiskit.compiler import transpile
 from qiskit.providers.jobstatus import JobStatus, JOB_FINAL_STATES
-from qiskit.test.reference_circuits import ReferenceCircuits
 
 from qiskit_ibm_provider.api.rest.job import Job as RestJob
 from qiskit_ibm_provider.exceptions import IBMBackendApiError
@@ -30,11 +29,7 @@ from qiskit_ibm_runtime.api.exceptions import RequestsApiError
 from qiskit_ibm_runtime.exceptions import RuntimeJobTimeoutError, RuntimeJobNotFound
 
 from ..ibm_test_case import IBMIntegrationTestCase
-from ..utils import (
-    most_busy_backend,
-    cancel_job_safe,
-    submit_and_cancel,
-)
+from ..utils import most_busy_backend, cancel_job_safe, submit_and_cancel, bell
 
 
 class TestIBMJob(IBMIntegrationTestCase):
@@ -44,7 +39,7 @@ class TestIBMJob(IBMIntegrationTestCase):
         """Initial test setup."""
         super().setUp()
         self.sim_backend = self.service.backend("ibmq_qasm_simulator")
-        self.bell = ReferenceCircuits.bell()
+        self.bell = bell()
         self.sim_job = self.sim_backend.run(self.bell)
         self.last_month = datetime.now() - timedelta(days=30)
 
@@ -269,7 +264,7 @@ class TestIBMJob(IBMIntegrationTestCase):
         if self.dependencies.channel == "ibm_cloud":
             raise SkipTest("Cloud account does not have real backend.")
         backend = most_busy_backend(TestIBMJob.service)
-        job = backend.run(transpile(ReferenceCircuits.bell(), backend=backend))
+        job = backend.run(transpile(bell(), backend=backend))
         try:
             self.assertRaises(RuntimeJobTimeoutError, job.wait_for_final_state, timeout=0.1)
         finally:
