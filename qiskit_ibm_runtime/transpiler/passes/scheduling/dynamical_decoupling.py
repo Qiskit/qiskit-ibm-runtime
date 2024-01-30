@@ -416,7 +416,7 @@ class PadDynamicalDecoupling(BlockBasePadder):
 
         if qubit not in self._dirty_qubits or (self._dd_barrier and not enable_dd):
             # Previous node is the start edge or reset, i.e. qubit is ground state;
-            # or dd to be applied after named barrier only
+            # or dd to be applied before named barrier only
             self._apply_scheduled_op(
                 block_idx, t_start, Delay(time_interval, self._block_dag.unit), qubit
             )
