@@ -15,12 +15,13 @@
 
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.quantum_info import SparsePauliOp
-from qiskit.test.reference_circuits import ReferenceCircuits
+
 from qiskit.primitives import EstimatorResult, SamplerResult
 from qiskit.result import Result
 
 from qiskit_ibm_runtime import Estimator, Session, Sampler, Options
 
+from ..utils import bell
 from ..decorators import run_integration_test, quantum_only
 from ..ibm_test_case import IBMIntegrationTestCase
 
@@ -50,7 +51,7 @@ class TestIntegrationSession(IBMIntegrationTestCase):
             self.assertEqual(result.metadata[0]["shots"], 100)
 
             sampler = Sampler(session=session, options=options)
-            result = sampler.run(circuits=ReferenceCircuits.bell(), shots=200).result()
+            result = sampler.run(circuits=bell(), shots=200).result()
             self.assertIsInstance(result, SamplerResult)
             self.assertEqual(len(result.quasi_dists), 1)
             self.assertEqual(len(result.metadata), 1)
@@ -66,7 +67,7 @@ class TestIntegrationSession(IBMIntegrationTestCase):
             self.assertEqual(len(result.metadata), 1)
             self.assertEqual(result.metadata[0]["shots"], 300)
 
-            result = sampler.run(circuits=ReferenceCircuits.bell(), shots=400).result()
+            result = sampler.run(circuits=bell(), shots=400).result()
             self.assertIsInstance(result, SamplerResult)
             self.assertEqual(len(result.quasi_dists), 1)
             self.assertEqual(len(result.metadata), 1)
@@ -83,7 +84,7 @@ class TestIntegrationSession(IBMIntegrationTestCase):
         backend = service.backend("ibmq_qasm_simulator", instance=instance)
         with Session(service, backend=backend) as session:
             sampler = Sampler(session=session)
-            job = sampler.run(ReferenceCircuits.bell(), shots=400)
+            job = sampler.run(bell(), shots=400)
             self.assertEqual(instance, backend._instance)
             self.assertEqual(instance, job.backend()._instance)
 
@@ -93,11 +94,11 @@ class TestIntegrationSession(IBMIntegrationTestCase):
         backend = service.backend("ibmq_qasm_simulator")
         with Session(service, backend=backend) as session:
             sampler = Sampler(session=session)
-            job = sampler.run(ReferenceCircuits.bell(), shots=400)
+            job = sampler.run(bell(), shots=400)
             session_id = job.session_id
         new_session = Session.from_id(backend=backend, session_id=session_id)
         sampler = Sampler(session=new_session)
-        job = sampler.run(ReferenceCircuits.bell(), shots=400)
+        job = sampler.run(bell(), shots=400)
         self.assertEqual(session_id, job.session_id)
 
 
@@ -109,10 +110,10 @@ class TestBackendRunInSession(IBMIntegrationTestCase):
         backend = self.service.get_backend("ibmq_qasm_simulator")
         backend.open_session()
         self.assertEqual(backend.session.session_id, None)
-        self.assertTrue(backend.session._active)
-        job1 = backend.run(ReferenceCircuits.bell())
+        self.assertTrue(backend.session.active)
+        job1 = backend.run(bell())
         self.assertEqual(job1._session_id, job1.job_id())
-        job2 = backend.run(ReferenceCircuits.bell())
+        job2 = backend.run(bell())
         self.assertFalse(job2._session_id == job2.job_id())
 
     def test_backend_run_with_session(self):
@@ -120,7 +121,7 @@ class TestBackendRunInSession(IBMIntegrationTestCase):
         shots = 1000
         backend = self.service.backend("ibmq_qasm_simulator")
         backend.open_session()
-        result = backend.run(circuits=ReferenceCircuits.bell(), shots=shots).result()
+        result = backend.run(circuits=bell(), shots=shots).result()
         backend.cancel_session()
         self.assertIsInstance(result, Result)
         self.assertEqual(result.results[0].shots, shots)
@@ -134,8 +135,8 @@ class TestBackendRunInSession(IBMIntegrationTestCase):
         backend = self.service.get_backend("ibmq_qasm_simulator")
         with Session(backend=backend) as session:
             sampler = Sampler(session=session)
-            job1 = sampler.run(circuits=ReferenceCircuits.bell())
-            job2 = backend.run(circuits=ReferenceCircuits.bell(), session=session)
+            job1 = sampler.run(circuits=bell())
+            job2 = backend.run(circuits=bell(), session=session)
             self.assertEqual(job1.session_id, job1.job_id())
             self.assertEqual(job2.session_id, job1.job_id())
 
@@ -145,8 +146,8 @@ class TestBackendRunInSession(IBMIntegrationTestCase):
         backend = self.service.get_backend("ibmq_qasm_simulator")
         with Session(backend=backend) as session:
             sampler = Sampler(session=session)
-            job1 = sampler.run(circuits=ReferenceCircuits.bell())
-            job2 = backend.run(circuits=ReferenceCircuits.bell())
+            job1 = sampler.run(circuits=bell())
+            job2 = backend.run(circuits=bell())
             self.assertEqual(session.session_id, job1.job_id())
             self.assertEqual(job2.session_id, session.session_id)
 
@@ -156,8 +157,8 @@ class TestBackendRunInSession(IBMIntegrationTestCase):
         backend = self.service.get_backend("ibmq_qasm_simulator")
         with backend.open_session() as session:
             sampler = Sampler(backend=backend, session=session)
-            job1 = backend.run(ReferenceCircuits.bell())
-            job2 = sampler.run(circuits=ReferenceCircuits.bell())
+            job1 = backend.run(bell())
+            job2 = sampler.run(circuits=bell())
             session_id = session.session_id
             self.assertEqual(session_id, job1.job_id())
             self.assertEqual(job2.session_id, session_id)
@@ -169,8 +170,8 @@ class TestBackendRunInSession(IBMIntegrationTestCase):
         backend = self.service.get_backend("ibmq_qasm_simulator")
         with backend.open_session() as session:
             sampler = Sampler(backend=backend)
-            job1 = backend.run(ReferenceCircuits.bell())
-            job2 = sampler.run(circuits=ReferenceCircuits.bell())
+            job1 = backend.run(bell())
+            job2 = sampler.run(circuits=bell())
             session_id = session.session_id
             self.assertEqual(session_id, job1.job_id())
             self.assertEqual(job2.session_id, session_id)
@@ -194,16 +195,16 @@ class TestBackendRunInSession(IBMIntegrationTestCase):
     def test_run_after_cancel(self):
         """Test running after session is cancelled."""
         backend = self.service.backend("ibmq_qasm_simulator")
-        job1 = backend.run(circuits=ReferenceCircuits.bell())
+        job1 = backend.run(circuits=bell())
         self.assertIsNone(backend.session)
         self.assertIsNone(job1._session_id)
 
         backend.open_session()
-        job2 = backend.run(ReferenceCircuits.bell())
+        job2 = backend.run(bell())
         self.assertIsNotNone(job2._session_id)
         backend.cancel_session()
 
-        job3 = backend.run(circuits=ReferenceCircuits.bell())
+        job3 = backend.run(circuits=bell())
         self.assertIsNone(backend.session)
         self.assertIsNone(job3._session_id)
 
@@ -212,20 +213,20 @@ class TestBackendRunInSession(IBMIntegrationTestCase):
         backend = self.service.backend("ibmq_qasm_simulator")
 
         with backend.open_session() as session:
-            job1 = backend.run(ReferenceCircuits.bell())
+            job1 = backend.run(bell())
             session_id = session.session_id
             self.assertEqual(session_id, job1.job_id())
-            job2 = backend.run(ReferenceCircuits.bell())
+            job2 = backend.run(bell())
             self.assertFalse(session_id == job2.job_id())
 
     def test_run_after_cancel_as_context_manager(self):
         """Test run after cancel in context manager"""
         backend = self.service.backend("ibmq_qasm_simulator")
         with backend.open_session() as session:
-            _ = backend.run(ReferenceCircuits.bell())
+            _ = backend.run(bell())
         self.assertEqual(backend.session, session)
         backend.cancel_session()
-        job = backend.run(circuits=ReferenceCircuits.bell())
+        job = backend.run(circuits=bell())
         self.assertIsNone(backend.session)
         self.assertIsNone(job._session_id)
 
@@ -233,11 +234,11 @@ class TestBackendRunInSession(IBMIntegrationTestCase):
         """Test run after session was closed"""
         backend = self.service.backend("ibmq_qasm_simulator")
         with Session(backend=backend) as session:
-            _ = backend.run(ReferenceCircuits.bell())
+            _ = backend.run(bell())
         self.assertEqual(backend.session, session)
 
         with self.assertRaises(RuntimeError) as err:
-            _ = backend.run(circuits=ReferenceCircuits.bell())
+            _ = backend.run(circuits=bell())
         self.assertIn(
             f"The session {backend.session.session_id} is closed.",
             str(err.exception),
