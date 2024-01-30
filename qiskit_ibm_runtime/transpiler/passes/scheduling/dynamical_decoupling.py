@@ -122,7 +122,6 @@ class PadDynamicalDecoupling(BlockBasePadder):
         coupling_map: CouplingMap = None,
         alt_spacings: Optional[Union[List[List[float]], List[float]]] = None,
         schedule_idle_qubits: bool = False,
-        single_pulses: bool = False,
         dd_barrier: Optional[str] = None,
     ):
         """Dynamical decoupling initializer.
@@ -179,7 +178,6 @@ class PadDynamicalDecoupling(BlockBasePadder):
             schedule_idle_qubits: Set to true if you'd like a delay inserted on idle qubits.
                 This is useful for timeline visualizations, but may cause issues
                 for execution on large backends.
-            single_pulses: Set to true to allow for single echo pulses without inverting them into the nearest unitary.
             dd_barrier: only apply DD to delays terminating with a barrier whose label contains the specified string
         Raises:
             TranspilerError: When invalid DD sequence is specified.
@@ -203,7 +201,6 @@ class PadDynamicalDecoupling(BlockBasePadder):
         self._alignment = pulse_alignment
         self._coupling_map = coupling_map
         self._coupling_coloring = None
-        self._single_pulses = single_pulses
         self._dd_barrier = dd_barrier
 
         if spacings is not None:
@@ -465,8 +462,8 @@ class PadDynamicalDecoupling(BlockBasePadder):
             if slack <= 0:
                 continue
 
-            if len(dd_sequence) == 1 and not self._single_pulses:
-                # Special case of using a single gate for DD. Absorb the inverse unless single_pulses is True
+            if len(dd_sequence) == 1:
+                # Special case of using a single gate for DD
                 u_inv = dd_sequence[0].inverse().to_matrix()
                 theta, phi, lam, phase = OneQubitEulerDecomposer().angles_and_phase(u_inv)
                 if isinstance(next_node, DAGOpNode) and isinstance(next_node.op, (UGate, U3Gate)):
