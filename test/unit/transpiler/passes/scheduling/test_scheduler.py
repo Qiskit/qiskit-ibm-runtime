@@ -1774,23 +1774,16 @@ class TestALAPSchedulingAndPaddingPass(ControlFlowTestCase):
 
         qr = QuantumRegister(7, name="q")
         expected = QuantumCircuit(qr, cr)
-        expected.delay(24080, qr[1])
-        expected.delay(24080, qr[2])
-        expected.delay(24080, qr[3])
-        expected.delay(24080, qr[4])
-        expected.delay(24080, qr[5])
-        expected.delay(24080, qr[6])
+        for q_ind in range(1, 7):
+            expected.delay(24240, qr[q_ind])
         expected.measure(qr[0], cr[0])
         with expected.if_test((cr[0], 1)):
             expected.x(qr[0])
         with expected.if_test((cr[0], 1)):
-            expected.delay(160, qr[0])
             expected.x(qr[1])
-            expected.delay(160, qr[2])
-            expected.delay(160, qr[3])
-            expected.delay(160, qr[4])
-            expected.delay(160, qr[5])
-            expected.delay(160, qr[6])
+            for q_ind in range(7):
+                if q_ind != 1:
+                    expected.delay(160, qr[q_ind])
         self.assertEqual(expected, scheduled)
 
     def test_c_if_plugin_conversion_with_transpile(self):

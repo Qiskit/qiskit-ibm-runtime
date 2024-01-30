@@ -21,7 +21,9 @@ from qiskit.transpiler.instruction_durations import (
     InstructionDurations,
     InstructionDurationsType,
 )
+from qiskit.transpiler.target import Target
 from qiskit.transpiler.exceptions import TranspilerError
+from qiskit.providers import Backend, BackendV1
 
 
 def block_order_op_nodes(dag: DAGCircuit) -> Generator[DAGOpNode, None, None]:
@@ -150,6 +152,43 @@ class DynamicCircuitInstructionDurations(InstructionDurations):
         self._enable_patching = enable_patching
         super().__init__(instruction_durations=instruction_durations, dt=dt)
 
+    @classmethod
+    def from_backend(cls, backend: Backend) -> "DynamicCircuitInstructionDurations":
+        """Construct a :class:`DynamicInstructionDurations` object from the backend.
+
+        Args:
+            backend: backend from which durations (gate lengths) and dt are extracted.
+
+        Returns:
+            DynamicInstructionDurations: The InstructionDurations constructed from backend.
+        """
+        if isinstance(backend, BackendV1):
+            return super(DynamicCircuitInstructionDurations, cls).from_backend(backend)
+
+        # Get durations from target if BackendV2
+        return cls.from_target(backend.target)
+
+    @classmethod
+    def from_target(cls, target: Target) -> "DynamicCircuitInstructionDurations":
+        """Construct a :class:`DynamicInstructionDurations` object from the target.
+
+        Args:
+            target: target from which durations (gate lengths) and dt are extracted.
+
+        Returns:
+            DynamicInstructionDurations: The InstructionDurations constructed from backend.
+        """
+
+        instruction_durations_dict = target.durations().duration_by_name_qubits
+        instruction_durations = []
+        for instr_key, instr_value in instruction_durations_dict.items():
+            instruction_durations += [(*instr_key, *instr_value)]
+        try:
+            dt = target.dt
+        except AttributeError:
+            dt = None
+        return cls(instruction_durations, dt=dt)
+
     def update(
         self, inst_durations: Optional[InstructionDurationsType], dt: float = None
     ) -> "DynamicCircuitInstructionDurations":
@@ -206,15 +245,23 @@ class DynamicCircuitInstructionDurations(InstructionDurations):
         elif name == "reset":
             self._patch_reset(key)
 
+    def _convert_and_patch_key(self, key: InstrKey) -> None:
+        """Convert duration to dt and patch key"""
+        prev_duration, unit = self._get_duration(key)
+        if unit != "dt":
+            prev_duration = self._convert_unit(prev_duration, unit, "dt")
+            # raise TranspilerError('Can currently only patch durations of "dt".')
+        odd_cycle_correction = self._get_odd_cycle_correction()
+        new_duration = prev_duration + self.MEASURE_PATCH_CYCLES + odd_cycle_correction
+        if unit != "dt":  # convert back to original unit
+            new_duration = self._convert_unit(new_duration, "dt", unit)
+        self._patch_key(key, new_duration, unit)
+
     def _patch_measurement(self, key: InstrKey) -> None:
         """Patch measurement duration by extending duration by 160dt as temporarily
         required by the dynamic circuit backend.
         """
-        prev_duration, unit = self._get_duration_dt(key)
-        if unit != "dt":
-            raise TranspilerError('Can currently only patch durations of "dt".')
-        odd_cycle_correction = self._get_odd_cycle_correction()
-        self._patch_key(key, prev_duration + self.MEASURE_PATCH_CYCLES + odd_cycle_correction, unit)
+        self._convert_and_patch_key(key)
         # Enforce patching of reset on measurement update
         self._patch_reset(("reset", key[1], key[2]))
 
@@ -227,31 +274,24 @@ class DynamicCircuitInstructionDurations(InstructionDurations):
         # triggers the end of scheduling after the measurement pulse
         measure_key = ("measure", key[1], key[2])
         try:
-            measure_duration, unit = self._get_duration_dt(measure_key)
+            measure_duration, unit = self._get_duration(measure_key)
             self._patch_key(key, measure_duration, unit)
         except KeyError:
             # Fall back to reset key if measure not available
-            prev_duration, unit = self._get_duration_dt(key)
-            if unit != "dt":
-                raise TranspilerError('Can currently only patch durations of "dt".')
-            odd_cycle_correction = self._get_odd_cycle_correction()
-            self._patch_key(
-                key,
-                prev_duration + self.MEASURE_PATCH_CYCLES + odd_cycle_correction,
-                unit,
-            )
+            self._convert_and_patch_key(key)
 
-    def _get_duration_dt(self, key: InstrKey) -> Tuple[int, str]:
+    def _get_duration(self, key: InstrKey) -> Tuple[int, str]:
         """Handling for the complicated structure of this class.
 
         TODO: This class implementation should be simplified in Qiskit. Too many edge cases.
         """
         if key[1] is None and key[2] is None:
-            return self.duration_by_name[key[0]]
+            duration = self.duration_by_name[key[0]]
         elif key[2] is None:
-            return self.duration_by_name_qubits[(key[0], key[1])]
-
-        return self.duration_by_name_qubits_params[key]
+            duration = self.duration_by_name_qubits[(key[0], key[1])]
+        else:
+            duration = self.duration_by_name_qubits_params[key]
+        return duration
 
     def _patch_key(self, key: InstrKey, duration: int, unit: str) -> None:
         """Handling for the complicated structure of this class.

@@ -63,3 +63,32 @@ class TestDynamicCircuitInstructionDurations(IBMTestCase):
         self.assertEqual(durations.get("x", (0,)), 200)
         self.assertEqual(durations.get("measure", (0,)), 1000)
         self.assertEqual(durations.get("measure", (0, 1)), 1200)
+
+    def test_durations_from_backend_v1(self):
+        """Test loading and patching durations from a V1 Backend"""
+
+        durations = DynamicCircuitInstructionDurations.from_backend(FakeKolkata())
+
+        self.assertEqual(durations.get("x", (0,)), 160)
+        self.assertEqual(durations.get("measure", (0,)), 3200)
+        self.assertEqual(durations.get("reset", (0,)), 3200)
+
+    def test_durations_from_backend_v2(self):
+        """Test loading and patching durations from a V2 Backend"""
+
+        durations = DynamicCircuitInstructionDurations.from_backend(FakeKolkataV2())
+
+        self.assertEqual(durations.get("x", (0,)), 160)
+        self.assertEqual(durations.get("measure", (0,)), 3200)
+        self.assertEqual(durations.get("reset", (0,)), 3200)
+
+    def test_durations_from_target(self):
+        """Test loading and patching durations from a target"""
+
+        durations = DynamicCircuitInstructionDurations.from_target(
+            FakeKolkataV2().target
+        )
+
+        self.assertEqual(durations.get("x", (0,)), 160)
+        self.assertEqual(durations.get("measure", (0,)), 3200)
+        self.assertEqual(durations.get("reset", (0,)), 3200)
