@@ -80,7 +80,7 @@ for a dynamic circuit backend's execution model:
     # Transpile.
     scheduled_teleport = pm.run(teleport)
 
-    scheduled_teleport.draw(output="mpl")
+    scheduled_teleport.draw(output="mpl", style="iqp")
 
 
 Instead of padding with delays we may also insert a dynamical decoupling sequence
@@ -105,7 +105,7 @@ using the :class:`PadDynamicalDecoupling` pass as shown below:
 
     dd_teleport = pm.run(teleport)
 
-    dd_teleport.draw(output="mpl")
+    dd_teleport.draw(output="mpl", style="iqp")
 
 When compiling a circuit with Qiskit, it is more efficient and more robust to perform all the
 transformations in a single transpilation.  This has been done above by extending Qiskit's preset
@@ -123,7 +123,7 @@ Scheduling with old format ``c_if`` conditioned gates is not supported.
 
     qc_c_if = QuantumCircuit(1, 1)
     qc_c_if.x(0).c_if(0, 1)
-    qc_c_if.draw(output="mpl")
+    qc_c_if.draw(output="mpl", style="iqp")
 
 The :class:`.IBMBackend` configures a translation plugin
 :class:`.IBMTranslationPlugin` to automatically
@@ -146,7 +146,7 @@ We may then schedule the transpiled circuit without further modification.
     )
 
     qc_if_dd = pm.run(qc_c_if, backend)
-    qc_if_dd.draw(output="mpl")
+    qc_if_dd.draw(output="mpl", style="iqp")
 
 
 If you are not using the transpiler plugin stages to
@@ -168,7 +168,7 @@ prior to your scheduling pass.
     )
 
     qc_if_dd = pm.run(qc_c_if)
-    qc_if_dd.draw(output="mpl")
+    qc_if_dd.draw(output="mpl", style="iqp")
 
 
 Exploiting IBM backend's local parallel "fast-path"
@@ -194,7 +194,7 @@ gates to the same measurement qubit.
         with qc.if_test((1, 1)):
             qc.x(1)
 
-        qc.draw(output="mpl")
+        qc.draw(output="mpl", style="iqp")
 
 
 The circuit below will not use the fast-path as the conditional gate is
@@ -207,7 +207,7 @@ on a different qubit than the measurement qubit.
         with qc.if_test((0, 1)):
             qc.x(1)
 
-        qc.draw(output="mpl")
+        qc.draw(output="mpl", style="iqp")
 
 Similarly, the circuit below contains gates on multiple qubits
 and will not be performed using the fast-path.
@@ -220,7 +220,7 @@ and will not be performed using the fast-path.
             qc.x(0)
             qc.x(1)
 
-        qc.draw(output="mpl")
+        qc.draw(output="mpl", style="iqp")
 
 A fast-path block may contain multiple gates as long as they are on the fast-path qubit.
 If there are multiple fast-path blocks being performed in parallel each block will be
@@ -238,7 +238,7 @@ padded out to the duration of the longest block.
         with qc.if_test((1, 1)):
             qc.delay(1600, 1)
 
-        qc.draw(output="mpl")
+        qc.draw(output="mpl", style="iqp")
 
 This behavior is also applied to the else condition of a fast-path eligible branch.
 
@@ -253,7 +253,7 @@ This behavior is also applied to the else condition of a fast-path eligible bran
         with else_:
             qc.delay(1600, 0)
 
-        qc.draw(output="mpl")
+        qc.draw(output="mpl", style="iqp")
 
 
 If a single measurement result is used with several conditional blocks, if there is a fast-path
@@ -272,7 +272,7 @@ the standard higher latency conditional branch.
             # Does not use fast-path
             qc.x(1)
 
-        qc.draw(output="mpl")
+        qc.draw(output="mpl", style="iqp")
 
 If you wish to prevent the usage of the fast-path you may insert a barrier between the measurement and
 the conditional branch.
@@ -286,7 +286,7 @@ the conditional branch.
         with qc.if_test((0, 1)):
             qc.x(0)
 
-        qc.draw(output="mpl")
+        qc.draw(output="mpl", style="iqp")
 
 Conditional measurements are not eligible for the fast-path.
 
@@ -298,7 +298,7 @@ Conditional measurements are not eligible for the fast-path.
             # Does not use the fast-path
             qc.measure(0, 1)
 
-        qc.draw(output="mpl")
+        qc.draw(output="mpl", style="iqp")
 
 Similarly nested control-flow is not eligible.
 
@@ -312,7 +312,7 @@ Similarly nested control-flow is not eligible.
             with qc.if_test((0, 1)):
                 qc.x(0)
 
-        qc.draw(output="mpl")
+        qc.draw(output="mpl", style="iqp")
 
 
 The scheduler is aware of the fast-path behavior and will not insert delays on idle qubits
@@ -345,11 +345,11 @@ be padded out by the scheduler to ensure they are of the same duration in Qiskit
         qc.delay(1000, 0)
 
 
-    qc.draw(output="mpl")
+    qc.draw(output="mpl", style="iqp")
 
     qc_dd = pm.run(qc)
 
-    qc_dd.draw(output="mpl")
+    qc_dd.draw(output="mpl", style="iqp")
 
 .. note::
     If there are qubits that are *not* involved in a fast-path decision it is not
@@ -374,7 +374,7 @@ be padded out by the scheduler to ensure they are of the same duration in Qiskit
             # since the condition is compile time evaluated.
             qc.x(2)
 
-        qc.draw(output="mpl")
+        qc.draw(output="mpl", style="iqp")
 
 
 Scheduling & Dynamical Decoupling
