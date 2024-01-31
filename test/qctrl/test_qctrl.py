@@ -12,8 +12,6 @@
 
 """Tests for job functions using real runtime service."""
 
-import time
-
 from qiskit import QuantumCircuit
 from qiskit.quantum_info import Statevector, hellinger_fidelity
 from qiskit.providers.jobstatus import JobStatus
