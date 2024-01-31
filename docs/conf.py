@@ -1,6 +1,4 @@
-# -*- coding: utf-8 -*-
-
-# This code is part of Qiskit.
+# This code is a Qiskit project.
 #
 # (C) Copyright IBM 2022.
 #
@@ -12,39 +10,23 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-# pylint: disable=invalid-name
-# Configuration file for the Sphinx documentation builder.
-#
-# This file does only contain a selection of the most common options. For a
-# full list see the documentation:
-# http://www.sphinx-doc.org/en/master/config
-
 # -- Path setup --------------------------------------------------------------
-
-# If extensions (or modules to document with autodoc) are in another directory,
-# add these directories to sys.path here. If the directory is relative to the
-# documentation root, use os.path.abspath to make it absolute, like shown here.
-#
 import os
 import sys
 
 sys.path.insert(0, os.path.abspath('.'))
 
-# Set env flag so that we can doc functions that may otherwise not be loaded
-# see for example interactive visualizations in qiskit.visualization.
-os.environ['QISKIT_DOCS'] = 'TRUE'
-
 # -- Project information -----------------------------------------------------
 project = 'Qiskit Runtime IBM Client'
-copyright = '2022, Qiskit Development Team'  # pylint: disable=redefined-builtin
+project_copyright = '2022, Qiskit Development Team'
 author = 'Qiskit Development Team'
+language = 'en'
 
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = '0.17.0'
-
 docs_url_prefix = "ecosystem/ibm-runtime"
+release = '0.18.1'
 
 # -- General configuration ---------------------------------------------------
 
@@ -52,16 +34,13 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
-    'sphinx.ext.mathjax',
-    'sphinx.ext.viewcode',
-    'sphinx.ext.extlinks',
-    'sphinx_tabs.tabs',
+    # This is used by qiskit/documentation to generate links to github.com.
+    "sphinx.ext.viewcode",
     'jupyter_sphinx',
     'sphinx_autodoc_typehints',
     'reno.sphinxext',
     'nbsphinx',
-    'sphinx_design',
-    "qiskit_sphinx_theme",
+    'sphinxcontrib.katex',
 ]
 templates_path = ['_templates']
 
@@ -91,10 +70,6 @@ nbsphinx_prolog += link_str + "{{ docname }}"
 
 autosummary_generate = True
 
-# -----------------------------------------------------------------------------
-# Autodoc
-# -----------------------------------------------------------------------------
-
 autodoc_default_options = {
     'inherited-members': None,
 }
@@ -110,16 +85,6 @@ numfig = True
 numfig_format = {
     'table': 'Table %s'
 }
-
-
-translations_list = [
-    ('en', 'English'),
-    ('ja_JP', 'Japanese'),
-    ('es_UN', 'Spanish'),
-]
-language = 'en'
-locale_dirs = ['locale/']
-gettext_compact = False     # optional.
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -140,26 +105,15 @@ add_module_names = False
 # package. Works only for the HTML builder currently.
 modindex_common_prefix = ['qiskit.']
 
-# -- Configuration for extlinks extension ------------------------------------
-# Refer to https://www.sphinx-doc.org/en/master/usage/extensions/extlinks.html
-
-
 # -- Options for HTML output -------------------------------------------------
 
-html_theme = "qiskit-ecosystem"
+# Even though alabaster isn't very pretty, we use it
+# over the normal qiskit-ecosystem theme because it's
+# faster to build and these docs are only necessary
+# so the API docs can be integrated into docs.quantum.ibm.com.
+html_theme = "alabaster"
 html_title = f"{project} {release}"
 
-html_logo = "images/ibm-quantum-logo.png"
-
-html_theme_options = {
-    # Because this is an IBM-focused project, we use a blue color scheme.
-    "light_css_variables": {
-        "color-brand-primary": "var(--qiskit-color-blue)",
-    },
-}
-
 html_last_updated_fmt = '%Y/%m/%d'
-
 html_sourcelink_suffix = ''
-
 autoclass_content = 'both'

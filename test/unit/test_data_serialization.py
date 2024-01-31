@@ -25,7 +25,7 @@ from ddt import data, ddt
 
 import qiskit.quantum_info as qi
 from qiskit.circuit import Parameter, QuantumCircuit
-from qiskit.test.reference_circuits import ReferenceCircuits
+
 from qiskit.circuit.library import EfficientSU2, CXGate, PhaseGate, U2Gate
 from qiskit.providers.fake_provider import FakeNairobi
 from qiskit.quantum_info import SparsePauliOp, Pauli, Statevector
@@ -44,7 +44,7 @@ from ..serialization import (
     SerializableClassDecoder,
     get_complex_types,
 )
-from ..utils import mock_wait_for_final_state
+from ..utils import mock_wait_for_final_state, bell
 
 
 @ddt
@@ -86,9 +86,9 @@ class TestDataSerialization(IBMTestCase):
 
     def test_coder_qc(self):
         """Test runtime encoder and decoder for circuits."""
-        bell = ReferenceCircuits.bell()
+        bell_circuit = bell()
         unbound = EfficientSU2(num_qubits=4, reps=1, entanglement="linear")
-        subtests = (bell, unbound, [bell, unbound])
+        subtests = (bell_circuit, unbound, [bell_circuit, unbound])
         for circ in subtests:
             with self.subTest(circ=circ):
                 encoded = json.dumps(circ, cls=RuntimeEncoder)

@@ -21,10 +21,10 @@ import numpy as np
 from qiskit import QuantumCircuit
 from qiskit.primitives import SamplerPub
 from qiskit.circuit.library import RealAmplitudes
-from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit_ibm_runtime import Sampler, Session, SamplerV2, SamplerOptions
 
 from ..ibm_test_case import IBMTestCase
+from ..utils import bell
 from .mock.fake_runtime_service import FakeRuntimeService
 from ..utils import MockSession, dict_paritally_equal
 
@@ -43,7 +43,7 @@ class TestSampler(IBMTestCase):
             service=FakeRuntimeService(channel="ibm_quantum", token="abc"),
             backend="common_backend",
         ) as session:
-            circuit = ReferenceCircuits.bell()
+            circuit = bell()
             for bad_opt in options_bad:
                 inst = Sampler(session=session)
                 with self.assertRaises(ValueError) as exc:

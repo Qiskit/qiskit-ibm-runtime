@@ -4,7 +4,7 @@ Contributing
 First read the overall project contributing guidelines. These are all
 included in the qiskit documentation:
 
-https://qiskit.org/documentation/contributing_to_qiskit.html
+https://github.com/Qiskit/qiskit/blob/main/CONTRIBUTING.md
 
 
 ## Contributing to qiskit-ibm-runtime
@@ -13,6 +13,10 @@ https://qiskit.org/documentation/contributing_to_qiskit.html
 In addition to the general guidelines there are specific details for
 contributing to qiskit-ibm-runtime, these are documented below.
 
+### Open an issue
+
+* For documentation issues relating to pages in the Start, Build, Transpile, Verify, Run, and Migration guides sections of https://docs.quantum.ibm.com, please open an issue in the [Qiskit/documentation repo](https://github.com/Qiskit/documentation/issues/new/choose) rather than the Qiskit/qiskit-ibm-runtime repo. In other words, any page that DOES NOT have `/api/` in the url should be addressed in the Qiskit/documentation repo. (Exception: the Migration guide urls contain `/api/` but are managed in the Qiskit/documentation repo.)
+* For issues relating to API reference pages (any page that contains /api/ in the url), please open an issue in the repo specific to that API reference.
 
 ### Pull request checklist
 

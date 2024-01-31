@@ -24,6 +24,7 @@ from qiskit_ibm_runtime.utils.utils import (
     get_resource_controller_api_url,
     get_iam_api_url,
 )
+from qiskit_ibm_runtime.exceptions import IBMNotAuthorizedError
 from ..ibm_test_case import IBMIntegrationTestCase
 from ..decorators import IntegrationTestDependencies
 
@@ -50,6 +51,28 @@ class TestIntegrationAccount(IBMIntegrationTestCase):
     def _skip_on_ibm_quantum(self):
         if self.dependencies.channel == "ibm_quantum":
             self.skipTest("Not supported on ibm_quantum")
+
+    def test_channel_strategy(self):
+        """Test passing in a channel strategy."""
+        self._skip_on_ibm_quantum()
+        # test when channel strategy not supported by instance
+        with self.assertRaises(IBMNotAuthorizedError):
+            QiskitRuntimeService(
+                channel="ibm_cloud",
+                url=self.dependencies.url,
+                token=self.dependencies.token,
+                instance=self.dependencies.instance,
+                channel_strategy="q-ctrl",
+            )
+        # test passing in default
+        service = QiskitRuntimeService(
+            channel="ibm_cloud",
+            url=self.dependencies.url,
+            token=self.dependencies.token,
+            instance=self.dependencies.instance,
+            channel_strategy="default",
+        )
+        self.assertTrue(service)
 
     def test_resolve_crn_for_valid_service_instance_name(self):
         """Verify if CRN is transparently resolved based for an existing service instance name."""

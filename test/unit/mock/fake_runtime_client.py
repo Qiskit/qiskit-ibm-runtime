@@ -344,7 +344,7 @@ class BaseFakeRuntimeClient:
         self._jobs[job_id] = job
         return {"id": job_id, "backend": backend_name}
 
-    def job_get(self, job_id: str, exclude_params: bool = None) -> Any:
+    def job_get(self, job_id: str, exclude_params: bool = True) -> Any:
         """Get the specific job."""
         return self._get_job(job_id, exclude_params).to_dict()
 
