@@ -226,7 +226,7 @@ class TestIBMJob(IBMIntegrationTestCase):
         job = self.sim_backend.run(self.bell)
         job.wait_for_final_state()
         newest_jobs = self.service.jobs(
-            limit=10,
+            limit=20,
             pending=False,
             descending=True,
             created_after=self.last_month,
