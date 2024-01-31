@@ -78,7 +78,7 @@ class PadDynamicalDecoupling(BlockBasePadder):
         pm = PassManager([ALAPScheduleAnalysis(durations),
                           PadDynamicalDecoupling(durations, dd_sequence)])
         circ_dd = pm.run(circ)
-        circ_dd.draw()
+        circ_dd.draw(output="mpl")
 
     .. jupyter-execute::
 
@@ -98,7 +98,7 @@ class PadDynamicalDecoupling(BlockBasePadder):
             ]
         )
         circ_dd = pm.run(circ)
-        circ_dd.draw()
+        circ_dd.draw(output="mpl")
 
     .. note::
 
