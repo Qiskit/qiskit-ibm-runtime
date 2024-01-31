@@ -12,10 +12,10 @@
 
 """
 ====================================================================
-Scheduling (:mod:`qiskit_ibm_provider.transpiler.passes.scheduling`)
+Scheduling (:mod:`qiskit_ibm_runtime.transpiler.passes.scheduling`)
 ====================================================================
 
-.. currentmodule:: qiskit_ibm_provider.transpiler.passes.scheduling
+.. currentmodule:: qiskit_ibm_runtime.transpiler.passes.scheduling
 
 A collection of scheduling passes for working with IBM Quantum's next-generation
 backends that support advanced "dynamic circuit" capabilities. Ie.,
