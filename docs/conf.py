@@ -40,6 +40,7 @@ extensions = [
     'reno.sphinxext',
     'nbsphinx',
     'sphinxcontrib.katex',
+    'matplotlib.sphinxext.plot_directive',
 ]
 templates_path = ['_templates']
 
