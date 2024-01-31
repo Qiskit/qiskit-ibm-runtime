@@ -17,8 +17,6 @@ from qiskit_ibm_runtime.transpiler.passes.scheduling.utils import (
 )
 from .....ibm_test_case import IBMTestCase
 
-from qiskit.providers.fake_provider import FakeKolkata, FakeKolkataV2
-
 
 class TestDynamicCircuitInstructionDurations(IBMTestCase):
     """Tests the DynamicCircuitInstructionDurations patching"""
