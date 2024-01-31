@@ -1070,3 +1070,36 @@ class TestPadDynamicalDecoupling(ControlFlowTestCase):
         dont_use = qc_dd.qubits[-1]
         for op in qc_dd.data:
             self.assertNotIn(dont_use, op.qubits)
+
+    def test_dd_named_barriers(self):
+        """Test DD applied on delays ending on named barriers."""
+
+        dd_sequence = [XGate(), XGate()]
+        pm = PassManager(
+            [
+                ASAPScheduleAnalysis(self.durations),
+                PadDynamicalDecoupling(
+                    self.durations,
+                    dd_sequence,
+                    pulse_alignment=1,
+                    dd_barrier="dd",
+                ),
+            ]
+        )
+
+        qc = QuantumCircuit(2, 2)
+        qc.h(0)
+        qc.delay(1200, 0)
+        qc.barrier()
+        qc.delay(1200, 0)
+        qc.measure(1, 0)
+        qc.barrier(label="dd_0")
+        qc.delay(1200, 0)
+        qc.barrier(label="delay_only")
+        qc.delay(1200, 1)
+        qc_dd = pm.run(qc)
+        # only 2 X gates are applied in the single delay
+        # defined by the 'dd_0' barrier
+        self.assertEqual(
+            len([inst for inst in qc_dd.data if isinstance(inst.operation, XGate)]), 2
+        )
