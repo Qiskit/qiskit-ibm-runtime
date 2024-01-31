@@ -348,11 +348,11 @@ class BlockBasePadder(TransformationPass):
 
         for node in block_order_op_nodes(block):
             enable_dd_node = False
-            # add DD if predecessor is a named barrier
+            # add DD if node is a named barrier
             if (
                 isinstance(node, DAGOpNode)
                 and isinstance(node.op, Barrier)
-                and self._dd_barrier
+                and getattr(self, "_dd_barrier", None)
                 and node.op.label
                 and self._dd_barrier in node.op.label
             ):
