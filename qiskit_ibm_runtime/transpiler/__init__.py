@@ -12,7 +12,7 @@
 
 """
 ====================================================================
-IBM Backend Transpiler Tools (:mod:`qiskit_ibm_provider.transpiler`)
+IBM Backend Transpiler Tools (:mod:`qiskit_ibm_runtime.transpiler`)
 ====================================================================
 
 A collection of transpiler tools for working with IBM Quantum's
