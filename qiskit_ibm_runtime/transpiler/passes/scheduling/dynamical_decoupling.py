@@ -178,7 +178,8 @@ class PadDynamicalDecoupling(BlockBasePadder):
             schedule_idle_qubits: Set to true if you'd like a delay inserted on idle qubits.
                 This is useful for timeline visualizations, but may cause issues
                 for execution on large backends.
-            dd_barrier: only apply DD to delays terminating with a barrier whose label contains the specified string
+            dd_barrier: only apply DD to delays terminating with a barrier
+                whose label contains the specified string
         Raises:
             TranspilerError: When invalid DD sequence is specified.
             TranspilerError: When pulse gate with the duration which is
