@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    :class:`~qiskit_ibm_runtime.RuntimeJob` now inherits from both `BasePrimitiveJob` and `JobV1`
+    from Qiskit.
