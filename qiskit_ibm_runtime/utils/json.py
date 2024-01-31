@@ -55,6 +55,7 @@ from qiskit.circuit import (
 from qiskit.circuit.parametertable import ParameterView
 from qiskit.result import Result
 from qiskit.version import __version__ as _terra_version_string
+from qiskit.utils import optionals
 
 from qiskit_ibm_provider.qpy import (
     _write_parameter,
@@ -219,7 +220,7 @@ class RuntimeEncoder(json.JSONEncoder):
             value = _serialize_and_encode(
                 data=obj,
                 serializer=lambda buff, data: dump(
-                    data, buff, RuntimeEncoder
+                    data, buff, RuntimeEncoder, use_symengine=optionals.HAS_SYMENGINE
                 ),  # type: ignore[no-untyped-call]
             )
             return {"__type__": "QuantumCircuit", "__value__": value}
