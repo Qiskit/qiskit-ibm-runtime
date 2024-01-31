@@ -1100,6 +1100,4 @@ class TestPadDynamicalDecoupling(ControlFlowTestCase):
         qc_dd = pm.run(qc)
         # only 2 X gates are applied in the single delay
         # defined by the 'dd_0' barrier
-        self.assertEqual(
-            len([inst for inst in qc_dd.data if isinstance(inst.operation, XGate)]), 2
-        )
+        self.assertEqual(len([inst for inst in qc_dd.data if isinstance(inst.operation, XGate)]), 2)
