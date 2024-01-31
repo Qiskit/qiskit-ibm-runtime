@@ -12,10 +12,10 @@
 
 """
 ================================================================
-Transpiler Passes (:mod:`qiskit_ibm_provider.transpiler.passes`)
+Transpiler Passes (:mod:`qiskit_ibm_runtime.transpiler.passes`)
 ================================================================
 
-.. currentmodule:: qiskit_ibm_provider.transpiler.passes
+.. currentmodule:: qiskit_ibm_runtime.transpiler.passes
 
 A collection of transpiler passes for IBM backends.
 
