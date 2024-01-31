@@ -765,9 +765,7 @@ class IBMBackend(Backend):
         elif get_cm_session():
             self._session = get_cm_session()
 
-        if self._session:
-            if not self._session._active:
-                raise RuntimeError(f"The session {self._session.session_id} is closed.")
+        if self._session and self._session._active:
             session_id = self._session.session_id
             start_session = session_id is None
             max_session_time = self._session._max_time

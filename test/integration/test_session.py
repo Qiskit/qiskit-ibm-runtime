@@ -105,21 +105,23 @@ class TestIntegrationSession(IBMIntegrationTestCase):
 class TestBackendRunInSession(IBMIntegrationTestCase):
     """Integration tests for Backend.run in Session."""
 
-    def test_session_id(self):
+    @run_integration_test
+    def test_session_id(self, service):
         """Test that session_id is updated correctly and maintained throughout the session"""
-        backend = self.service.get_backend("ibmq_qasm_simulator")
+        backend = service.get_backend("ibmq_qasm_simulator")
         backend.open_session()
         self.assertEqual(backend.session.session_id, None)
-        self.assertTrue(backend.session.active)
+        self.assertTrue(backend.session._active)
         job1 = backend.run(bell())
         self.assertEqual(job1._session_id, job1.job_id())
         job2 = backend.run(bell())
         self.assertFalse(job2._session_id == job2.job_id())
 
-    def test_backend_run_with_session(self):
+    @run_integration_test
+    def test_backend_run_with_session(self, service):
         """Test that 'shots' parameter is transferred correctly"""
         shots = 1000
-        backend = self.service.backend("ibmq_qasm_simulator")
+        backend = service.backend("ibmq_qasm_simulator")
         backend.open_session()
         result = backend.run(circuits=bell(), shots=shots).result()
         backend.cancel_session()
@@ -129,10 +131,11 @@ class TestBackendRunInSession(IBMIntegrationTestCase):
             result.get_counts()["00"], result.get_counts()["11"], delta=shots / 10
         )
 
-    def test_backend_run_session_param(self):
+    @run_integration_test
+    def test_backend_run_session_param(self, service):
         """Test Sampler.run and backend.run in the same session.
         Session is defined as parameter"""
-        backend = self.service.get_backend("ibmq_qasm_simulator")
+        backend = service.get_backend("ibmq_qasm_simulator")
         with Session(backend=backend) as session:
             sampler = Sampler(session=session)
             job1 = sampler.run(circuits=bell())
@@ -140,10 +143,11 @@ class TestBackendRunInSession(IBMIntegrationTestCase):
             self.assertEqual(job1.session_id, job1.job_id())
             self.assertEqual(job2.session_id, job1.job_id())
 
-    def test_backend_run_session_context_manager(self):
+    @run_integration_test
+    def test_backend_run_session_context_manager(self, service):
         """Test Sampler.run and backend.run in the same session.
         Session is defined in context manager"""
-        backend = self.service.get_backend("ibmq_qasm_simulator")
+        backend = service.get_backend("ibmq_qasm_simulator")
         with Session(backend=backend) as session:
             sampler = Sampler(session=session)
             job1 = sampler.run(circuits=bell())
@@ -151,10 +155,11 @@ class TestBackendRunInSession(IBMIntegrationTestCase):
             self.assertEqual(session.session_id, job1.job_id())
             self.assertEqual(job2.session_id, session.session_id)
 
-    def test_backend_open_session(self):
+    @run_integration_test
+    def test_backend_open_session(self, service):
         """Test Sampler.run and backend.run in the same session.
         Session is created by open_session."""
-        backend = self.service.get_backend("ibmq_qasm_simulator")
+        backend = service.get_backend("ibmq_qasm_simulator")
         with backend.open_session() as session:
             sampler = Sampler(backend=backend, session=session)
             job1 = backend.run(bell())
@@ -163,11 +168,12 @@ class TestBackendRunInSession(IBMIntegrationTestCase):
             self.assertEqual(session_id, job1.job_id())
             self.assertEqual(job2.session_id, session_id)
 
-    def test_backend_open_session_with_context_manager(self):
+    @run_integration_test
+    def test_backend_open_session_with_context_manager(self, service):
         """Test Sampler.run and backend.run in the same session.
         Session is created by open_session. Sampler gets
         Session from  backend without parameter"""
-        backend = self.service.get_backend("ibmq_qasm_simulator")
+        backend = service.get_backend("ibmq_qasm_simulator")
         with backend.open_session() as session:
             sampler = Sampler(backend=backend)
             job1 = backend.run(bell())
@@ -176,25 +182,28 @@ class TestBackendRunInSession(IBMIntegrationTestCase):
             self.assertEqual(session_id, job1.job_id())
             self.assertEqual(job2.session_id, session_id)
 
-    def test_session_cancel(self):
+    @run_integration_test
+    def test_session_cancel(self, service):
         """Test closing a session"""
-        backend = self.service.backend("ibmq_qasm_simulator")
+        backend = service.backend("ibmq_qasm_simulator")
         backend.open_session()
         self.assertTrue(backend.session._active)
         backend.cancel_session()
         self.assertIsNone(backend.session)
 
-    def test_session_close(self):
+    @run_integration_test
+    def test_session_close(self, service):
         """Test closing a session"""
-        backend = self.service.backend("ibmq_qasm_simulator")
+        backend = service.backend("ibmq_qasm_simulator")
         backend.open_session()
         self.assertTrue(backend.session._active)
         backend.close_session()
         self.assertIsNone(backend.session)
 
-    def test_run_after_cancel(self):
+    @run_integration_test
+    def test_run_after_cancel(self, service):
         """Test running after session is cancelled."""
-        backend = self.service.backend("ibmq_qasm_simulator")
+        backend = service.backend("ibmq_qasm_simulator")
         job1 = backend.run(circuits=bell())
         self.assertIsNone(backend.session)
         self.assertIsNone(job1._session_id)
@@ -208,9 +217,10 @@ class TestBackendRunInSession(IBMIntegrationTestCase):
         self.assertIsNone(backend.session)
         self.assertIsNone(job3._session_id)
 
-    def test_session_as_context_manager(self):
+    @run_integration_test
+    def test_session_as_context_manager(self, service):
         """Test session as a context manager"""
-        backend = self.service.backend("ibmq_qasm_simulator")
+        backend = service.backend("ibmq_qasm_simulator")
 
         with backend.open_session() as session:
             job1 = backend.run(bell())
@@ -219,9 +229,10 @@ class TestBackendRunInSession(IBMIntegrationTestCase):
             job2 = backend.run(bell())
             self.assertFalse(session_id == job2.job_id())
 
-    def test_run_after_cancel_as_context_manager(self):
+    @run_integration_test
+    def test_run_after_cancel_as_context_manager(self, service):
         """Test run after cancel in context manager"""
-        backend = self.service.backend("ibmq_qasm_simulator")
+        backend = service.backend("ibmq_qasm_simulator")
         with backend.open_session() as session:
             _ = backend.run(bell())
         self.assertEqual(backend.session, session)
@@ -230,16 +241,14 @@ class TestBackendRunInSession(IBMIntegrationTestCase):
         self.assertIsNone(backend.session)
         self.assertIsNone(job._session_id)
 
-    def test_run_after_session(self):
+    @run_integration_test
+    def test_run_after_session(self, service):
         """Test run after session was closed"""
-        backend = self.service.backend("ibmq_qasm_simulator")
+        backend = service.backend("ibmq_qasm_simulator")
         with Session(backend=backend) as session:
-            _ = backend.run(bell())
+            job1 = backend.run(bell())
+        self.assertTrue(job1.result())
         self.assertEqual(backend.session, session)
 
-        with self.assertRaises(RuntimeError) as err:
-            _ = backend.run(circuits=bell())
-        self.assertIn(
-            f"The session {backend.session.session_id} is closed.",
-            str(err.exception),
-        )
+        job2 = backend.run(circuits=bell())
+        self.assertTrue(job2.result())
