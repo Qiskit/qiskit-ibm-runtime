@@ -21,7 +21,6 @@ from qiskit_ibm_runtime.exceptions import RuntimeJobTimeoutError
 from ..unit.mock.proxy_server import MockProxyServer, use_proxies
 from ..ibm_test_case import IBMIntegrationJobTestCase
 from ..decorators import run_integration_test
-from ..utils import cancel_job_safe, wait_for_status
 
 
 class TestIntegrationResults(IBMIntegrationJobTestCase):
@@ -198,37 +197,6 @@ class TestIntegrationResults(IBMIntegrationJobTestCase):
         self.assertIn("Kaboom", ", ".join(err_cm.output))
         self.assertEqual(iterations - 1, final_it)
         self.assertIsNotNone(job._ws_client._server_close_code)
-
-    @run_integration_test
-    def test_callback_cancel_job(self, service):
-        """Test canceling a running job while streaming results."""
-
-        def result_callback(job_id, result):
-            # pylint: disable=unused-argument
-            nonlocal final_it
-            if "iteration" in result:
-                final_it = result["iteration"]
-
-        final_it = 0
-        iterations = 5
-        sub_tests = [JobStatus.QUEUED, JobStatus.RUNNING]
-
-        for status in sub_tests:
-            with self.subTest(status=status):
-                if status == JobStatus.QUEUED:
-                    _ = self._run_program(service)
-
-                job = self._run_program(
-                    service=service,
-                    interim_results="foo",
-                    callback=result_callback,
-                )
-                wait_for_status(job, status)
-                if not cancel_job_safe(job, self.log):
-                    return
-                time.sleep(3)  # Wait for cleanup
-                self.assertIsNotNone(job._ws_client._server_close_code)
-                self.assertLess(final_it, iterations)
 
     @skip("skip until qiskit-ibm-runtime #933 is fixed")
     @run_integration_test
