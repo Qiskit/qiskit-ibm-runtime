@@ -23,7 +23,6 @@ import numpy as np
 from qiskit import transpile
 from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.library import RealAmplitudes
-from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.providers.fake_provider import FakeManila
 
@@ -49,6 +48,7 @@ from ..utils import (
     MockSession,
     get_primitive_inputs,
     get_mocked_backend,
+    bell,
 )
 
 
@@ -59,7 +59,7 @@ class TestPrimitivesV2(IBMTestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.circ = ReferenceCircuits.bell()
+        cls.circ = bell()
         cls.obs = SparsePauliOp.from_list([("IZ", 1)])
         return super().setUpClass()
 

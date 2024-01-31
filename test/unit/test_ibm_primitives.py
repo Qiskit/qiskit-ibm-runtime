@@ -21,7 +21,7 @@ from typing import Dict
 
 from qiskit import transpile
 from qiskit.circuit import QuantumCircuit
-from qiskit.test.reference_circuits import ReferenceCircuits
+
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.providers.fake_provider import FakeManila
 from qiskit_aer.noise import NoiseModel
@@ -41,6 +41,7 @@ from ..utils import (
     flat_dict_partially_equal,
     dict_keys_equal,
     create_faulty_backend,
+    bell,
 )
 
 
@@ -56,7 +57,7 @@ class TestPrimitives(IBMTestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.qx = ReferenceCircuits.bell()
+        cls.qx = bell()
         cls.obs = SparsePauliOp.from_list([("IZ", 1)])
         return super().setUpClass()
 

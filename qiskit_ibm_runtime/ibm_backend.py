@@ -21,7 +21,6 @@ import warnings
 
 from qiskit import QuantumCircuit
 from qiskit.qobj.utils import MeasLevel, MeasReturnType
-from qiskit.tools.events.pubsub import Publisher
 
 from qiskit.providers.backend import BackendV2 as Backend
 from qiskit.providers.options import Options
@@ -66,6 +65,14 @@ from .utils.backend_converter import (
     convert_to_target,
 )
 from .utils.default_session import get_cm_session as get_cm_primitive_session
+
+# If using a new-enough version of the IBM Provider, access the pub/sub
+# mechanism from it as a broker, but fall back to Qiskit if we're using
+# an old version (in which case it will also be falling back to Qiskit).
+try:
+    from qiskit_ibm_provider.utils.pubsub import Publisher
+except ImportError:
+    from qiskit.tools.events.pubsub import Publisher  # pylint: disable=ungrouped-imports
 
 logger = logging.getLogger(__name__)
 
@@ -762,9 +769,11 @@ class IBMBackend(Backend):
                 raise RuntimeError(f"The session {self._session.session_id} is closed.")
             session_id = self._session.session_id
             start_session = session_id is None
+            max_session_time = self._session._max_time
         else:
             session_id = None
             start_session = False
+            max_session_time = None
 
         log_level = getattr(self.options, "log_level", None)  # temporary
         try:
@@ -777,6 +786,7 @@ class IBMBackend(Backend):
                 job_tags=job_tags,
                 session_id=session_id,
                 start_session=start_session,
+                session_time=max_session_time,
                 image=image,
             )
         except RequestsApiError as ex:
@@ -827,9 +837,9 @@ class IBMBackend(Backend):
                 run_config_dict[key] = backend_options[key]
         return run_config_dict
 
-    def open_session(self) -> ProviderSession:
+    def open_session(self, max_time: Optional[Union[int, str]] = None) -> ProviderSession:
         """Open session"""
-        self._session = ProviderSession()
+        self._session = ProviderSession(max_time=max_time)
         return self._session
 
     @property
