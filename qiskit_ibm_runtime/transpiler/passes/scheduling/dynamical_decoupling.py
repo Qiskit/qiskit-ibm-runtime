@@ -56,8 +56,8 @@ class PadDynamicalDecoupling(BlockBasePadder):
         from qiskit.transpiler import PassManager, InstructionDurations
         from qiskit.visualization import timeline_drawer
 
-        from qiskit_ibm_provider.transpiler.passes.scheduling import ALAPScheduleAnalysis
-        from qiskit_ibm_provider.transpiler.passes.scheduling import PadDynamicalDecoupling
+        from qiskit_ibm_runtime.transpiler.passes.scheduling import ALAPScheduleAnalysis
+        from qiskit_ibm_runtime.transpiler.passes.scheduling import PadDynamicalDecoupling
 
         circ = QuantumCircuit(4)
         circ.h(0)
@@ -103,7 +103,7 @@ class PadDynamicalDecoupling(BlockBasePadder):
     .. note::
 
         You need to call
-        :class:`~qiskit_ibm_provider.transpiler.passes.scheduling.ALAPScheduleAnalysis`
+        :class:`~qiskit_ibm_runtime.transpiler.passes.scheduling.ALAPScheduleAnalysis`
         before running dynamical decoupling to guarantee your circuit satisfies acquisition
         alignment constraints for dynamic circuit backends.
     """

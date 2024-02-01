@@ -38,9 +38,9 @@ for a dynamic circuit backend's execution model:
     from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
     from qiskit.transpiler.passmanager import PassManager
 
-    from qiskit_ibm_provider.transpiler.passes.scheduling import DynamicCircuitInstructionDurations
-    from qiskit_ibm_provider.transpiler.passes.scheduling import ALAPScheduleAnalysis
-    from qiskit_ibm_provider.transpiler.passes.scheduling import PadDelay
+    from qiskit_ibm_runtime.transpiler.passes.scheduling import DynamicCircuitInstructionDurations
+    from qiskit_ibm_runtime.transpiler.passes.scheduling import ALAPScheduleAnalysis
+    from qiskit_ibm_runtime.transpiler.passes.scheduling import PadDelay
     from qiskit.providers.fake_provider import FakeJakarta
 
 
@@ -90,7 +90,7 @@ using the :class:`PadDynamicalDecoupling` pass as shown below:
 
     from qiskit.circuit.library import XGate
 
-    from qiskit_ibm_provider.transpiler.passes.scheduling import PadDynamicalDecoupling
+    from qiskit_ibm_runtime.transpiler.passes.scheduling import PadDynamicalDecoupling
 
 
     dd_sequence = [XGate(), XGate()]
