@@ -371,7 +371,7 @@ def _read_parameter_expression_v3(file_obj, vectors, use_symengine):  # type: ig
     if use_symengine:
         expr_ = load_basic(payload)
     else:
-        from sympy.parsing.sympy_parser import parse_expr
+        from sympy.parsing.sympy_parser import parse_expr  # pylint: disable=import-outside-toplevel
 
         expr_ = symengine.sympify(parse_expr(payload.decode(common.ENCODE)))
     symbol_map = {}
