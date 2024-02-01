@@ -63,13 +63,8 @@ from .utils.options import QASM2Options, QASM3Options
 from .api.exceptions import RequestsApiError
 from .utils import local_to_utc, are_circuits_dynamic
 
-# If using a new-enough version of the IBM Provider, access the pub/sub
-# mechanism from it as a broker, but fall back to Qiskit if we're using
-# an old version (in which case it will also be falling back to Qiskit).
-try:
-    from qiskit_ibm_provider.utils.pubsub import Publisher
-except ImportError:
-    from qiskit.tools.events.pubsub import Publisher  # pylint: disable=ungrouped-imports
+from .utils.pubsub import Publisher
+
 
 logger = logging.getLogger(__name__)
 
