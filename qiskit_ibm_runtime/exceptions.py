@@ -28,8 +28,26 @@ class IBMAccountError(IBMError):
     pass
 
 
-class IBMBackendApiProtocolError(IBMError):
+class IBMBackendError(IBMError):
+    """Base class for errors raised by the backend modules."""
+
+    pass
+
+
+class IBMBackendApiProtocolError(IBMBackendError):
     """Errors raised when an unexpected value is received from the server."""
+
+    pass
+
+
+class IBMBackendValueError(IBMBackendError, ValueError):
+    """Value errors raised by the backend modules."""
+
+    pass
+
+
+class IBMBackendApiError(IBMBackendError):
+    """Errors that occur unexpectedly when querying the server."""
 
     pass
 
