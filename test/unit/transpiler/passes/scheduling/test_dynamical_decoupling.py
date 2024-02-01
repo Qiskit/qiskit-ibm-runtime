@@ -35,13 +35,13 @@ from qiskit_ibm_runtime.transpiler.passes.scheduling.utils import (
     DynamicCircuitInstructionDurations,
 )
 
-from .control_flow_test_case import ControlFlowTestCase
+from .....ibm_test_case import IBMTestCase
 
 # pylint: disable=invalid-name,not-context-manager
 
 
 @ddt
-class TestPadDynamicalDecoupling(ControlFlowTestCase):
+class TestPadDynamicalDecoupling(IBMTestCase):
     """Tests PadDynamicalDecoupling pass."""
 
     def setUp(self):

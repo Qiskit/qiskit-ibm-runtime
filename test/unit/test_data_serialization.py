@@ -96,13 +96,6 @@ class TestDataSerialization(IBMTestCase):
     def test_coder_operators(self):
         """Test runtime encoder and decoder for operators."""
 
-        # filter warnings triggered by opflow imports
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", category=DeprecationWarning)
-            from qiskit.opflow import PauliSumOp  # pylint: disable=import-outside-toplevel
-
-            deprecated_op = PauliSumOp(SparsePauliOp(Pauli("XYZX"), coeffs=[2]))
-
         coeff_x = Parameter("x")
         coeff_y = coeff_x + 1
 
@@ -110,7 +103,6 @@ class TestDataSerialization(IBMTestCase):
             SparsePauliOp(Pauli("XYZX"), coeffs=[2]),
             SparsePauliOp(Pauli("XYZX"), coeffs=[coeff_y]),
             SparsePauliOp(Pauli("XYZX"), coeffs=[1 + 2j]),
-            deprecated_op,
         )
 
         for operator in subtests:
