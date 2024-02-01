@@ -18,7 +18,7 @@ from qiskit import QuantumRegister, ClassicalRegister, QuantumCircuit, transpile
 from qiskit.utils import optionals
 
 from qiskit_ibm_runtime.fake_provider import FakeAthens, FakePerth
-from ..ibm_test_case import IBMTestCase
+from ...ibm_test_case import IBMTestCase
 
 
 def get_test_circuit():

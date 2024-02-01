@@ -19,7 +19,7 @@ import uuid
 from typing import Any
 from unittest import skipIf
 
-from qiskit_ibm_provider.proxies import ProxyConfiguration
+from qiskit_ibm_runtime.proxies import ProxyConfiguration
 from qiskit_ibm_runtime.accounts import (
     AccountManager,
     Account,
