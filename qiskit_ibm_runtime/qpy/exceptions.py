@@ -12,7 +12,7 @@
 
 """Exception for errors raised by the pulse module."""
 from typing import Any
-from qiskit.qpy.exceptions import QpyError
+from qiskit.qpy.exceptions import QpyError, QiskitWarning
 from ..exceptions import IBMError
 
 
@@ -27,3 +27,8 @@ class IBMQpyError(QpyError, IBMError):
     def __str__(self) -> str:
         """Return the message."""
         return repr(self.message)
+
+
+class QPYLoadingDeprecatedFeatureWarning(QiskitWarning):
+    """Visible deprecation warning for QPY loading functions without
+    a stable point in the call stack."""

@@ -76,7 +76,7 @@ def dump(  # type: ignore[no-untyped-def]
     programs: Union[List[QPY_SUPPORTED_TYPES], QPY_SUPPORTED_TYPES],
     file_obj: BinaryIO,
     metadata_serializer: Optional[Type[JSONEncoder]] = None,
-    use_symengine: bool = False,
+    use_symengine: bool = True,
 ):
     """Write QPY binary data to a file
 

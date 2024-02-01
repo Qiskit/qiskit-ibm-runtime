@@ -21,12 +21,16 @@ import uuid
 from typing import Any
 import numpy as np
 
+import symengine
+from symengine.lib.symengine_wrapper import (  # pylint: disable = no-name-in-module
+    load_basic,
+)
+
 from qiskit.circuit import CASE_DEFAULT, Clbit, ClassicalRegister
 from qiskit.circuit.classical import expr, types
 from qiskit.circuit.parameter import Parameter
 from qiskit.circuit.parameterexpression import ParameterExpression
 from qiskit.circuit.parametervector import ParameterVector, ParameterVectorElement
-from qiskit.utils import optionals as _optional
 
 from .. import common, formats, exceptions, type_keys
 
@@ -53,7 +57,6 @@ def _write_parameter_vec(file_obj, obj):  # type: ignore[no-untyped-def]
 
 def _write_parameter_expression(file_obj, obj, use_symengine):  # type: ignore[no-untyped-def]
     if use_symengine:
-        _optional.HAS_SYMENGINE.require_now("write_parameter_expression")
         expr_bytes = obj._symbol_expr.__reduce__()[1][0]
     else:
         from sympy import srepr, sympify  # pylint: disable=import-outside-toplevel
@@ -233,12 +236,7 @@ def _read_parameter_expression(file_obj):  # type: ignore[no-untyped-def]
     # pylint: disable=import-outside-toplevel
     from sympy.parsing.sympy_parser import parse_expr
 
-    if _optional.HAS_SYMENGINE:
-        from symengine import sympify  # pylint: disable=import-outside-toplevel
-
-        expr_ = sympify(parse_expr(file_obj.read(data.expr_size).decode(common.ENCODE)))
-    else:
-        expr_ = parse_expr(file_obj.read(data.expr_size).decode(common.ENCODE))
+    expr_ = symengine.sympify(parse_expr(file_obj.read(data.expr_size).decode(common.ENCODE)))
     symbol_map = {}
     for _ in range(data.map_elements):
         elem_data = formats.PARAM_EXPR_MAP_ELEM(
@@ -369,26 +367,13 @@ def _read_parameter_expression_v3(file_obj, vectors, use_symengine):  # type: ig
     data = formats.PARAMETER_EXPR(
         *struct.unpack(formats.PARAMETER_EXPR_PACK, file_obj.read(formats.PARAMETER_EXPR_SIZE))
     )
-    # pylint: disable=import-outside-toplevel
-    from sympy.parsing.sympy_parser import parse_expr
-
-    # pylint: disable=import-outside-toplevel
-
     payload = file_obj.read(data.expr_size)
     if use_symengine:
-        _optional.HAS_SYMENGINE.require_now("read_parameter_expression_v3")
-        from symengine.lib.symengine_wrapper import (  # pylint: disable = no-name-in-module
-            load_basic,
-        )
-
         expr_ = load_basic(payload)
     else:
-        if _optional.HAS_SYMENGINE:
-            from symengine import sympify
+        from sympy.parsing.sympy_parser import parse_expr
 
-            expr_ = sympify(parse_expr(payload.decode(common.ENCODE)))
-        else:
-            expr_ = parse_expr(payload.decode(common.ENCODE))
+        expr_ = symengine.sympify(parse_expr(payload.decode(common.ENCODE)))
     symbol_map = {}
     for _ in range(data.map_elements):
         elem_data = formats.PARAM_EXPR_MAP_ELEM_V3(

@@ -21,19 +21,17 @@ import warnings
 from io import BytesIO
 import numpy as np
 
+import symengine as sym
+from symengine.lib.symengine_wrapper import (  # pylint: disable = no-name-in-module
+    load_basic,
+)
+
 from qiskit.pulse import library, channels, instructions
 from qiskit.pulse.schedule import ScheduleBlock
-from qiskit.utils import optionals as _optional
 from qiskit.pulse.configuration import Kernel, Discriminator
 from .. import formats, common, type_keys
 from ..exceptions import QpyError
 from . import value
-
-
-if _optional.HAS_SYMENGINE:
-    import symengine as sym
-else:
-    import sympy as sym
 
 
 def _read_channel(file_obj, version):  # type: ignore[no-untyped-def]
@@ -113,25 +111,17 @@ def _read_discriminator(file_obj, version):  # type: ignore[no-untyped-def]
 def _loads_symbolic_expr(expr_bytes, use_symengine=False):  # type: ignore[no-untyped-def]
     if expr_bytes == b"":
         return None
-
+    expr_bytes = zlib.decompress(expr_bytes)
     if use_symengine:
-        _optional.HAS_SYMENGINE.require_now("load a symengine expression")
-        from symengine.lib.symengine_wrapper import (  # pylint: disable=import-outside-toplevel, no-name-in-module
-            load_basic,
-        )
-
-        expr = load_basic(zlib.decompress(expr_bytes))
+        return load_basic(expr_bytes)
 
     else:
         from sympy import parse_expr  # pylint: disable=import-outside-toplevel
 
         expr_txt = zlib.decompress(expr_bytes).decode(common.ENCODE)
         expr = parse_expr(expr_txt)
-        if _optional.HAS_SYMENGINE:
-            from symengine import sympify  # pylint: disable=import-outside-toplevel
 
-            return sympify(expr)
-    return expr
+        return expr
 
 
 def _read_symbolic_pulse(file_obj, version):  # type: ignore[no-untyped-def]
@@ -167,21 +157,15 @@ def _read_symbolic_pulse(file_obj, version):  # type: ignore[no-untyped-def]
     class_name = "SymbolicPulse"  # Default class name, if not in the library
 
     if pulse_type in legacy_library_pulses:
-        # Once complex amp support will be deprecated we will need:
-        # parameters["angle"] = np.angle(parameters["amp"])
-        # parameters["amp"] = np.abs(parameters["amp"])
-
-        # In the meanwhile we simply add:
-        parameters["angle"] = 0
+        parameters["angle"] = np.angle(parameters["amp"])
+        parameters["amp"] = np.abs(parameters["amp"])
         _amp, _angle = sym.symbols("amp, angle")
         envelope = envelope.subs(_amp, _amp * sym.exp(sym.I * _angle))
-
         # And warn that this will change in future releases:
         warnings.warn(
-            "Complex amp support for symbolic library pulses will be deprecated. "
-            "Once deprecated, library pulses loaded from old QPY files (Terra version < 0.23),"
-            " will be converted automatically to float (amp,angle) representation.",
-            PendingDeprecationWarning,
+            f"Library pulses with complex amp are no longer supported. "
+            f"{pulse_type} with complex amp was converted to (amp,angle) representation.",
+            UserWarning,
         )
         class_name = "ScalableSymbolicPulse"
 
@@ -256,6 +240,19 @@ def _read_symbolic_pulse_v6(file_obj, version, use_symengine):  # type: ignore[n
             valid_amp_conditions=valid_amp_conditions,
         )
     elif class_name == "ScalableSymbolicPulse":
+        # Between Qiskit 0.40 and 0.46, the (amp, angle) representation was present,
+        # but complex amp was still allowed. In Qiskit 1.0 and beyond complex amp
+        # is no longer supported and so the amp needs to be checked and converted.
+        # Once QPY version is bumped, a new reader function can be introduced without
+        # this check.
+        if isinstance(parameters["amp"], complex):
+            parameters["angle"] = np.angle(parameters["amp"])
+            parameters["amp"] = np.abs(parameters["amp"])
+            warnings.warn(
+                f"ScalableSymbolicPulse with complex amp are no longer supported. "
+                f"{pulse_type} with complex amp was converted to (amp,angle) representation.",
+                UserWarning,
+            )
         return library.ScalableSymbolicPulse(
             pulse_type=pulse_type,
             duration=duration,
@@ -424,7 +421,6 @@ def _dumps_symbolic_expr(expr, use_symengine):  # type: ignore[no-untyped-def]
         return b""
 
     if use_symengine:
-        _optional.HAS_SYMENGINE.require_now("dump a symengine expression")
         expr_bytes = expr.__reduce__()[1][0]
     else:
         from sympy import srepr, sympify  # pylint: disable=import-outside-toplevel
