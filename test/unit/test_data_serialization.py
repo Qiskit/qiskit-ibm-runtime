@@ -25,11 +25,11 @@ import numpy as np
 from qiskit.circuit import Parameter, QuantumCircuit
 
 from qiskit.circuit.library import EfficientSU2, CXGate, PhaseGate, U2Gate
-from qiskit.providers.fake_provider import FakeNairobi
 from qiskit.quantum_info import SparsePauliOp, Pauli, Statevector
 from qiskit.result import Result
 from qiskit_aer.noise import NoiseModel
 from qiskit_ibm_runtime.utils import RuntimeEncoder, RuntimeDecoder
+from qiskit_ibm_runtime.fake_provider import FakeNairobi
 from .mock.fake_runtime_client import CustomResultRuntimeJob
 from .mock.fake_runtime_service import FakeRuntimeService
 from ..ibm_test_case import IBMTestCase
