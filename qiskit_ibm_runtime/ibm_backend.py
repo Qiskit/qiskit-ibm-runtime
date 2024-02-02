@@ -41,9 +41,9 @@ from qiskit.pulse.channels import (
 from qiskit.transpiler.target import Target
 
 # temporary until we unite the 2 Session classes
-from qiskit_ibm_provider.session import (
+from .provider_session import (
     Session as ProviderSession,
-)  # temporary until we unite the 2 Session classes
+)  
 
 from .utils.utils import validate_job_tags
 from . import qiskit_runtime_service  # pylint: disable=unused-import,cyclic-import
