@@ -19,7 +19,7 @@ from qiskit import transpile, qasm3, QuantumCircuit
 from qiskit.providers.fake_provider import FakeManila
 from qiskit.providers.models import BackendStatus
 
-from qiskit_ibm_provider.exceptions import IBMBackendValueError
+from qiskit_ibm_runtime.exceptions import IBMBackendValueError
 
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 

@@ -17,14 +17,13 @@ from types import TracebackType
 from functools import wraps
 from threading import Lock
 
-from qiskit_ibm_provider.utils.converters import hms_to_seconds
-
 from qiskit_ibm_runtime import QiskitRuntimeService
 from .runtime_job import RuntimeJob
 from .utils.result_decoder import ResultDecoder
 from .ibm_backend import IBMBackend
 from .utils.default_session import set_cm_session
 from .utils.deprecation import deprecate_arguments
+from .utils.converters import hms_to_seconds
 
 
 def _active_session(func):  # type: ignore
@@ -53,14 +52,22 @@ class Session:
 
     For example::
 
-        from qiskit.test.reference_circuits import ReferenceCircuits
+        from qiskit.circuit import QuantumCircuit, QuantumRegister, ClassicalRegister
         from qiskit_ibm_runtime import Sampler, Session, Options
+
+        # Bell Circuit
+        qr = QuantumRegister(2, name="qr")
+        cr = ClassicalRegister(2, name="cr")
+        qc = QuantumCircuit(qr, cr, name="bell")
+        qc.h(qr[0])
+        qc.cx(qr[0], qr[1])
+        qc.measure(qr, cr)
 
         options = Options(optimization_level=3)
 
         with Session(backend="ibmq_qasm_simulator") as session:
             sampler = Sampler(session=session, options=options)
-            job = sampler.run(ReferenceCircuits.bell())
+            job = sampler.run(qc)
             print(f"Sampler job ID: {job.job_id()}")
             print(f"Sampler job result: {job.result()}")
 
