@@ -29,7 +29,6 @@ from qiskit.providers import BackendV2, BackendV1
 from qiskit import pulse
 from qiskit.exceptions import QiskitError
 from qiskit.utils import optionals as _optionals
-from qiskit.providers import basicaer
 from qiskit.transpiler import Target
 from qiskit.providers import Options
 from qiskit.providers.backend_compat import convert_to_target
@@ -38,6 +37,11 @@ from qiskit.providers.fake_provider.utils.json_decoder import (
     decode_backend_properties,
     decode_pulse_defaults,
 )
+
+try:
+    from qiskit.providers import basicaer
+except ImportError:
+    from qiskit.providers import basic_provider as basicaer
 
 
 class _Credentials:
