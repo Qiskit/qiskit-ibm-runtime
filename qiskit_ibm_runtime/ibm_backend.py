@@ -43,7 +43,7 @@ from qiskit.transpiler.target import Target
 # temporary until we unite the 2 Session classes
 from .provider_session import (
     Session as ProviderSession,
-)  
+)
 
 from .utils.utils import validate_job_tags
 from . import qiskit_runtime_service  # pylint: disable=unused-import,cyclic-import
