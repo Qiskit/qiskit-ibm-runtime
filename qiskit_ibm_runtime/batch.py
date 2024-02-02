@@ -12,10 +12,20 @@
 
 """Qiskit Runtime batch mode."""
 
+from typing import Optional, Union
+from qiskit_ibm_runtime import QiskitRuntimeService
+from .ibm_backend import IBMBackend
+
 from .session import Session
 
 
 class Batch(Session):
     """Class for creating a batch mode in Qiskit Runtime."""
 
-    pass
+    def __init__(
+        self,
+        service: Optional[QiskitRuntimeService] = None,
+        backend: Optional[Union[str, IBMBackend]] = None,
+        max_time: Optional[Union[int, str]] = None,
+    ):
+        super().__init__(service=service, backend=backend, max_time=max_time, mode="batch")

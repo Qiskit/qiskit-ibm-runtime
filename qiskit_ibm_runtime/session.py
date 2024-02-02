@@ -78,6 +78,7 @@ class Session:
         service: Optional[QiskitRuntimeService] = None,
         backend: Optional[Union[str, IBMBackend]] = None,
         max_time: Optional[Union[int, str]] = None,
+        mode: Optional[str] = None,
     ):  # pylint: disable=line-too-long
         """Session constructor.
 
@@ -110,9 +111,11 @@ class Session:
                     if QiskitRuntimeService.global_service is None
                     else QiskitRuntimeService.global_service
                 )
-
         else:
             self._service = service
+
+        session = self._service._api_client.create_session(mode=mode)
+        self._session_id = session.get("id")
 
         if self._service.channel == "ibm_quantum" and not backend:
             raise ValueError('"backend" is required for ``ibm_quantum`` channel.')
@@ -124,7 +127,6 @@ class Session:
         self._backend = backend
 
         self._setup_lock = Lock()
-        self._session_id: Optional[str] = None
         self._active = True
         self._max_time = (
             max_time
