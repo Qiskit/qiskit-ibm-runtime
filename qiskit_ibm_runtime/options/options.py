@@ -127,7 +127,6 @@ class OptionsV2(BaseOptions, BasePrimitiveOptions):
             coupling_map = list(map(list, coupling_map.get_edges()))
         inputs["transpilation"].update(
             {
-                "optimization_level": options_copy.get("optimization_level", Unset),
                 "coupling_map": coupling_map,
                 "basis_gates": sim_options.get("basis_gates", Unset),
             }
