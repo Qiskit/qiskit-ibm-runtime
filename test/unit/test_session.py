@@ -12,11 +12,7 @@
 
 """Tests for Session classession."""
 
-import sys
-import time
-from concurrent.futures import ThreadPoolExecutor, wait
-
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, patch
 from qiskit.providers.fake_provider import FakeManila
 
 from qiskit_ibm_runtime import Session
@@ -127,29 +123,6 @@ class TestSession(IBMTestCase):
             self.assertEqual(kwargs["result_decoder"], decoder)
             self.assertEqual(session.session_id, job.job_id())
             self.assertEqual(session.backend(), backend)
-
-    def test_run_is_thread_safe(self):
-        """Test the session sends a session starter job once, and only once."""
-        service = MagicMock()
-        api = MagicMock()
-        service._api_client = api
-
-        def _wait_a_bit(*args, **kwargs):
-            # pylint: disable=unused-argument
-            switchinterval = sys.getswitchinterval()
-            time.sleep(switchinterval * 2)
-            return MagicMock()
-
-        service.run = Mock(side_effect=_wait_a_bit)
-
-        session = Session(service=service, backend="ibm_gotham")
-        with ThreadPoolExecutor(max_workers=2) as executor:
-            results = list(map(lambda _: executor.submit(session.run, "", {}), range(5)))
-            wait(results)
-
-        calls = service.run.call_args_list
-        session_starters = list(filter(lambda c: c.kwargs["start_session"] is True, calls))
-        self.assertEqual(len(session_starters), 1)
 
     def test_close_without_run(self):
         """Test closing without run."""

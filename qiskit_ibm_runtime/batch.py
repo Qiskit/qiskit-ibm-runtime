@@ -28,4 +28,9 @@ class Batch(Session):
         backend: Optional[Union[str, IBMBackend]] = None,
         max_time: Optional[Union[int, str]] = None,
     ):
-        super().__init__(service=service, backend=backend, max_time=max_time, mode="batch")
+        super().__init__(service=service, backend=backend, max_time=max_time)
+
+    def create_session(self) -> None:
+        """Create a session."""
+        session = self._service._api_client.create_session(mode="batch")
+        return session.get("id")

@@ -230,13 +230,13 @@ class RuntimeClient(BaseBackendClient):
         """
         return self._api.program_job(job_id).metadata()
 
-    def create_session(self, session_id: str = "", mode: str = None) -> Dict[str, Any]:
+    def create_session(self, mode: str = None) -> Dict[str, Any]:
         """Create a session.
 
         Args:
             mode: Execution mode.
         """
-        return self._api.runtime_session(session_id=session_id).create(mode=mode)
+        return self._api.runtime_session(session_id=None).create(mode=mode)
 
     def cancel_session(self, session_id: str) -> None:
         """Close all jobs in the runtime session.

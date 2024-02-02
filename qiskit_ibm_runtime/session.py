@@ -15,7 +15,6 @@
 from typing import Dict, Optional, Type, Union, Callable, Any
 from types import TracebackType
 from functools import wraps
-from threading import Lock
 
 from qiskit_ibm_runtime import QiskitRuntimeService
 from .runtime_job import RuntimeJob
@@ -78,7 +77,6 @@ class Session:
         service: Optional[QiskitRuntimeService] = None,
         backend: Optional[Union[str, IBMBackend]] = None,
         max_time: Optional[Union[int, str]] = None,
-        mode: Optional[str] = None,
     ):  # pylint: disable=line-too-long
         """Session constructor.
 
@@ -114,8 +112,7 @@ class Session:
         else:
             self._service = service
 
-        session = self._service._api_client.create_session(mode=mode)
-        self._session_id = session.get("id")
+        self._session_id = self.create_session()
 
         if self._service.channel == "ibm_quantum" and not backend:
             raise ValueError('"backend" is required for ``ibm_quantum`` channel.')
@@ -126,13 +123,17 @@ class Session:
             backend = backend.name
         self._backend = backend
 
-        self._setup_lock = Lock()
         self._active = True
         self._max_time = (
             max_time
             if max_time is None or isinstance(max_time, int)
             else hms_to_seconds(max_time, "Invalid max_time value: ")
         )
+
+    def create_session(self) -> str:
+        """Create a session."""
+        session = self._service._api_client.create_session()
+        return session.get("id")
 
     @_active_session
     def run(
@@ -165,28 +166,22 @@ class Session:
         options["backend"] = self._backend
 
         if not self._session_id:
-            # Make sure only one thread can send the session starter job.
-            self._setup_lock.acquire()
             # TODO: What happens if session max time != first job max time?
             # Use session max time if this is first job.
             options["session_time"] = self._max_time
 
-        try:
-            job = self._service.run(
-                program_id=program_id,
-                options=options,
-                inputs=inputs,
-                session_id=self._session_id,
-                start_session=self._session_id is None,
-                callback=callback,
-                result_decoder=result_decoder,
-            )
+        job = self._service.run(
+            program_id=program_id,
+            options=options,
+            inputs=inputs,
+            session_id=self._session_id,
+            start_session=self._session_id is None,
+            callback=callback,
+            result_decoder=result_decoder,
+        )
 
-            if self._session_id is None:
-                self._session_id = job.job_id()
-        finally:
-            if self._setup_lock.locked():
-                self._setup_lock.release()
+        if self._session_id is None:
+            self._session_id = job.job_id()
 
         if self._backend is None:
             self._backend = job.backend().name
