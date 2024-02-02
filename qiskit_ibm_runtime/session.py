@@ -17,14 +17,14 @@ from types import TracebackType
 from functools import wraps
 from threading import Lock
 
-from qiskit_ibm_provider.utils.converters import hms_to_seconds
-
 from . import qiskit_runtime_service  # pylint: disable=cyclic-import
+from qiskit_ibm_runtime import QiskitRuntimeService
 from .runtime_job import RuntimeJob
 from .utils.result_decoder import ResultDecoder
 from . import ibm_backend
 from .utils.default_session import set_cm_session
 from .utils.deprecation import deprecate_arguments
+from .utils.converters import hms_to_seconds
 
 
 def _active_session(func):  # type: ignore
