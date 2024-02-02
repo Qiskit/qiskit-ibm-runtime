@@ -18,7 +18,6 @@ from functools import wraps
 from threading import Lock
 
 from . import qiskit_runtime_service  # pylint: disable=cyclic-import
-from qiskit_ibm_runtime import QiskitRuntimeService
 from .runtime_job import RuntimeJob
 from .utils.result_decoder import ResultDecoder
 from . import ibm_backend

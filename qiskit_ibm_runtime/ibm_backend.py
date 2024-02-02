@@ -50,8 +50,6 @@ from .utils.backend_converter import (
 )
 from .session import Session  # pylint: disable=cyclic-import
 from .utils.default_session import get_cm_session
-
-from .utils.default_session import get_cm_session as get_cm_primitive_session
 from .utils.backend_decoder import (
     defaults_from_server_data,
     properties_from_server_data,
