@@ -39,9 +39,9 @@ from qiskit.providers.fake_provider.utils.json_decoder import (
 )
 
 try:
-    from qiskit.providers import QasmSimulatorPy as BasicSimulator
+    from qiskit.providers.basicaer import QasmSimulatorPy as BasicSimulator
 except ImportError:
-    from qiskit.providers import BasicSimulator
+    from qiskit.providers.basic_provider import BasicSimulator
 
 
 class _Credentials:
@@ -308,12 +308,12 @@ class FakeBackendV2(BackendV2):
 
         This method runs circuit jobs (an individual or a list of QuantumCircuit
         ) and pulse jobs (an individual or a list of Schedule or ScheduleBlock)
-        using BasicAer or Aer simulator and returns a
+        using BasicAer simulator/ BasicSimulator or Aer simulator and returns a
         :class:`~qiskit.providers.Job` object.
 
         If qiskit-aer is installed, jobs will be run using AerSimulator with
         noise model of the fake backend. Otherwise, jobs will be run using
-        BasicAer simulator without noise.
+        BasicAer simulator/ BasicSimulator simulator without noise.
 
         Currently noisy simulation of a pulse job is not supported yet in
         FakeBackendV2.
