@@ -74,10 +74,9 @@ class TestPrimitivesV2(IBMTestCase):
             {},
             {
                 "max_execution_time": 100,
-                "transpilation": {"initial_layout": [1, 2]},
+                "transpilation": {"optimization_level": 1},
                 "execution": {"shots": 100, "init_qubits": True},
             },
-            {"optimization_level": 2},
             {"transpilation": {}},
         ]
         for options in options_vars:
@@ -363,17 +362,8 @@ class TestPrimitivesV2(IBMTestCase):
             ({"dynamical_decoupling": "XY4"}, {"dynamical_decoupling": "XY4"}),
             ({"shots": 200}, {"execution": {"shots": 200}}),
             (
-                {"optimization_level": 3},
-                {"transpilation": {"optimization_level": 3}},
-            ),
-            (
-                {"initial_layout": [1, 2], "optimization_level": 2},
-                {
-                    "transpilation": {
-                        "optimization_level": 2,
-                        "initial_layout": [1, 2],
-                    }
-                },
+                {"optimization_level": 1},
+                {"transpilation": {"optimization_level": 1}},
             ),
             (
                 {"skip_transpilation": True},
@@ -458,14 +448,14 @@ class TestPrimitivesV2(IBMTestCase):
     @combine(
         primitive=[EstimatorV2],
         new_opts=[
-            {"optimization_level": 2},
-            {"optimization_level": 3, "shots": 200},
+            {"optimization_level": 0},
+            {"optimization_level": 1, "shots": 200},
         ],
     )
     def test_set_options(self, primitive, new_opts):
         """Test set options."""
         opt_cls = primitive._options_class
-        options = opt_cls(optimization_level=1, execution={"shots": 100})
+        options = opt_cls(transpilation={"optimization_level": 1}, execution={"shots": 100})
 
         session = MagicMock(spec=MockSession)
         inst = primitive(session=session, options=options)
@@ -492,7 +482,7 @@ class TestPrimitivesV2(IBMTestCase):
             {"shots": 10},
             {"seed_simulator": 123},
             {"skip_transpilation": True, "log_level": "ERROR"},
-            {"initial_layout": [1, 2], "shots": 100, "optimization_level": 2},
+            {"shots": 100, "optimization_level": 1},
         ]
 
         expected_list = [opt_cls() for _ in range(len(options_dicts))]
@@ -500,9 +490,8 @@ class TestPrimitivesV2(IBMTestCase):
         expected_list[2].simulator.seed_simulator = 123
         expected_list[3].transpilation.skip_transpilation = True
         expected_list[3].environment.log_level = "ERROR"
-        expected_list[4].transpilation.initial_layout = [1, 2]
         expected_list[4].execution.shots = 100
-        expected_list[4].optimization_level = 2
+        expected_list[4].transpilation.optimization_level = 1
 
         session = MagicMock(spec=MockSession)
         for opts, expected in zip(options_dicts, expected_list):
