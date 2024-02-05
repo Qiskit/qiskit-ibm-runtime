@@ -60,11 +60,10 @@ from qiskit.qpy import (
     _write_parameter_expression,
     _read_parameter_expression,
     _read_parameter_expression_v3,
-    _read_parameter,
     load,
     dump,
 )
-from qiskit.qpy.binary_io.value import _write_parameter
+from qiskit.qpy.binary_io.value import _write_parameter, _read_parameter
 
 _TERRA_VERSION = tuple(
     int(x) for x in re.match(r"\d+\.\d+\.\d", _terra_version_string).group(0).split(".")[:3]
@@ -257,7 +256,9 @@ class RuntimeEncoder(json.JSONEncoder):
             quantum_circuit.append(obj, quantum_register)
             value = _serialize_and_encode(
                 data=quantum_circuit,
-                serializer=lambda buff, data: dump(data, buff, **kwargs),  # type: ignore[no-untyped-call]
+                serializer=lambda buff, data: dump(
+                    data, buff, **kwargs
+                ),  # type: ignore[no-untyped-call]
             )
             return {"__type__": "Instruction", "__value__": value}
         if HAS_AER and isinstance(obj, qiskit_aer.noise.NoiseModel):
