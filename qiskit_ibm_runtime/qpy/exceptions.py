@@ -12,7 +12,8 @@
 
 """Exception for errors raised by the pulse module."""
 from typing import Any
-from qiskit.qpy.exceptions import QpyError, QiskitWarning
+from qiskit.exceptions import QiskitWarning
+from qiskit.qpy.exceptions import QpyError
 from ..exceptions import IBMError
 
 
