@@ -16,11 +16,10 @@ from unittest import mock
 import warnings
 
 from qiskit import transpile, qasm3, QuantumCircuit
-from qiskit.providers.fake_provider import FakeManila
 from qiskit.providers.models import BackendStatus
 
 from qiskit_ibm_runtime.exceptions import IBMBackendValueError
-
+from qiskit_ibm_runtime.fake_provider import FakeManila
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 
 from ..ibm_test_case import IBMTestCase
