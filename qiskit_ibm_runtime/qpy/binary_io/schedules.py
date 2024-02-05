@@ -598,7 +598,7 @@ def read_schedule_block(  # type: ignore[no-untyped-def]
 
 
 def write_schedule_block(  # type: ignore[no-untyped-def]
-    file_obj, block, metadata_serializer=None, use_symengine=False
+    file_obj, block, metadata_serializer=None, use_symengine=False, version=common.QPY_VERSION
 ):
     """Write a single ScheduleBlock object in the file like object.
 
@@ -614,7 +614,7 @@ def write_schedule_block(  # type: ignore[no-untyped-def]
             native mechanism. This is a faster serialization alternative, but not supported in all
             platforms. Please check that your target platform is supported by the symengine library
             before setting this option, as it will be required by qpy to deserialize the payload.
-
+        version (int): The QPY format version to use for serializing this circuit block
     Raises:
         TypeError: If any of the instructions is invalid data format.
     """

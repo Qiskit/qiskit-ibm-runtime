@@ -204,6 +204,7 @@ def dump(  # type: ignore[no-untyped-def]
             program,
             metadata_serializer=metadata_serializer,
             use_symengine=use_symengine,
+            version=version,
         )
 
 
