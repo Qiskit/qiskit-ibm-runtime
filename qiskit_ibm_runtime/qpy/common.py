@@ -22,7 +22,7 @@ import struct
 from typing import Any
 from . import formats
 
-QPY_VERSION = 11
+QPY_VERSION = 10
 QPY_COMPATIBILITY_VERSION = 10
 ENCODE = "utf8"
 
