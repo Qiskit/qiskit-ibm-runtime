@@ -40,14 +40,6 @@ from .control_flow_test_case import ControlFlowTestCase
 class TestASAPSchedulingAndPaddingPass(ControlFlowTestCase):
     """Tests the ASAP Scheduling passes"""
 
-    def get_delay_dict(self, circ):
-        dag = circuit_to_dag(circ)
-        delays = dag.op_nodes(Delay)
-        delay_dict = {q_ind: [] for q_ind in range(len(case.qubits))}
-        for delay in delays:
-            delay_dict[dag.find_bit(delay.qargs[0]).index] += [delay.op.duration]
-        return delay_dict
-
     def test_if_test_gate_after_measure(self):
         """Test if schedules circuits with c_if after measure with a common clbit.
         See: https://github.com/Qiskit/qiskit-terra/issues/7654"""
