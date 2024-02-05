@@ -39,9 +39,9 @@ from qiskit.providers.fake_provider.utils.json_decoder import (
 )
 
 try:
-    from qiskit.providers import basicaer
+    from qiskit.providers import QasmSimulatorPy as BasicSimulator
 except ImportError:
-    from qiskit.providers import basic_provider as basicaer
+    from qiskit.providers import BasicSimulator
 
 
 class _Credentials:
