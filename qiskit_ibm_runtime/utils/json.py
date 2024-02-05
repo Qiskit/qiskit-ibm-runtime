@@ -56,16 +56,15 @@ from qiskit.circuit.parametertable import ParameterView
 from qiskit.result import Result
 from qiskit.version import __version__ as _terra_version_string
 from qiskit.utils import optionals
-
 from qiskit.qpy import (
-    _write_parameter,
     _write_parameter_expression,
     _read_parameter_expression,
     _read_parameter_expression_v3,
     _read_parameter,
     load,
-    dump
+    dump,
 )
+from qiskit.qpy.binary_io.value import _write_parameter
 
 _TERRA_VERSION = tuple(
     int(x) for x in re.match(r"\d+\.\d+\.\d", _terra_version_string).group(0).split(".")[:3]
