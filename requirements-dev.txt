@@ -12,7 +12,6 @@ websockets>=8
 black~=22.0
 coverage>=6.3
 pylatexenc
-mthree
 scikit-learn
 ddt>=1.2.0,!=1.4.0,!=1.4.3
 

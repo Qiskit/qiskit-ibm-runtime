@@ -16,12 +16,13 @@ from dataclasses import asdict
 
 from ddt import data, ddt
 from qiskit.providers import BackendV1
-from qiskit.providers.fake_provider import FakeManila, FakeNairobiV2
+
 from qiskit.transpiler import CouplingMap
 from qiskit_aer.noise import NoiseModel
 
 from qiskit_ibm_runtime import Options, RuntimeOptions
 from qiskit_ibm_runtime.utils.qctrl import _warn_and_clean_options
+from qiskit_ibm_runtime.fake_provider import FakeManila, FakeNairobiV2
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import dict_keys_equal, dict_paritally_equal, flat_dict_partially_equal
