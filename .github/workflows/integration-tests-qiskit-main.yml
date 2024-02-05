@@ -1,0 +1,30 @@
+name: Integration Tests
+on:
+  schedule:
+    - cron: '0 5 * * *'
+  workflow_dispatch:
+jobs:
+  unit-tests-latest-qiskit-terra:
+    if: github.repository_owner == 'Qiskit'
+    name: Run integration tests with latest code of Qiskit
+    runs-on: "ubuntu-latest"
+    env:
+      LOG_LEVEL: DEBUG
+      STREAM_LOG: True
+      QISKIT_IN_PARALLEL: True
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          # Installing the complete environment should happen in one `pip install` step,
+          # or pip will generally allow broken combinations of packages to be installed.
+          pip install -c constraints.txt -r requirements-dev.txt -e . git+https://github.com/Qiskit/qiskit.git
+      - name: Run tests
+        run: make integration-test
