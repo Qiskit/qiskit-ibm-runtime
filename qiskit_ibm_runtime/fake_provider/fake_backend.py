@@ -132,7 +132,7 @@ class FakeBackendV2(BackendV2):
                 self.set_options(noise_model=noise_model)
 
         else:
-            self.sim = basicaer.QasmSimulatorPy()
+            self.sim = BasicSimulator()
 
     def _get_conf_dict_from_json(self) -> dict:
         if not self.conf_filename:
@@ -209,7 +209,7 @@ class FakeBackendV2(BackendV2):
 
             return AerSimulator._default_options()
         else:
-            return basicaer.QasmSimulatorPy._default_options()
+            return BasicSimulator._default_options()
 
     @property
     def dtm(self) -> float:
@@ -479,7 +479,7 @@ class FakeBackend(BackendV1):
                 # it when run() is called
                 self.set_options(noise_model=noise_model)
         else:
-            self.sim = basicaer.QasmSimulatorPy()
+            self.sim = BasicSimulator()
 
     def properties(self) -> BackendProperties:
         """Return backend properties"""
@@ -540,7 +540,7 @@ class FakeBackend(BackendV1):
 
             return QasmSimulator._default_options()
         else:
-            return basicaer.QasmSimulatorPy._default_options()
+            return BasicSimulator._default_options()
 
     def run(self, run_input, **kwargs):  # type: ignore
         """Main job in simulator"""
