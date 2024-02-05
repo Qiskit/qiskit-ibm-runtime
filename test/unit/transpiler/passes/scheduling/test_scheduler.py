@@ -920,6 +920,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
     """Tests the ALAP Scheduling passes"""
 
     def get_delay_dict(self, circ):
+        """Return a dictionary with a list of delays for each qubit"""
         dag = circuit_to_dag(circ)
         delays = dag.op_nodes(Delay)
         delay_dict = {q_ind: [] for q_ind in range(len(circ.qubits))}
