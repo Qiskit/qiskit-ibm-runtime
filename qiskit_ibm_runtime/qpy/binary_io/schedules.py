@@ -599,7 +599,7 @@ def read_schedule_block(  # type: ignore[no-untyped-def]
 
 def write_schedule_block(  # type: ignore[no-untyped-def]
     file_obj, block, metadata_serializer=None, use_symengine=False, version=common.QPY_VERSION
-):
+):  # pylint: disable=unused-argument
     """Write a single ScheduleBlock object in the file like object.
 
     Args:
