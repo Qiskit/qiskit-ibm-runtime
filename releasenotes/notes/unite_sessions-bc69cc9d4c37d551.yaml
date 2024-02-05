@@ -1,0 +1,18 @@
+---
+features:
+  - |
+    Session in `qiskit_ibm_runtime` and in `qiskit_ibm_provider` are now the same.
+    It is possible now to run a primitive and backend.run() in the same session.
+    For example:
+    
+     .. code-block::
+    
+        backend = self.service.get_backend("ibmq_qasm_simulator")
+        with Session(backend=backend) as session:
+            sampler = Sampler(session=session)
+            job1 = sampler.run(circuits=ReferenceCircuits.bell())
+            job2 = backend.run(circuits=ReferenceCircuits.bell(), session=session)
+            # both jobs will be run in the same session
+            print(job1.session_id)
+            print(job2.session_id)
+    

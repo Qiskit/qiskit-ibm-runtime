@@ -27,7 +27,7 @@ class TestBatch(IBMTestCase):
         super().tearDown()
         _DEFAULT_SESSION.set(None)
 
-    @patch("qiskit_ibm_runtime.session.QiskitRuntimeService", autospec=True)
+    @patch("qiskit_ibm_runtime.session.qiskit_runtime_service.QiskitRuntimeService", autospec=True)
     def test_default_batch(self, mock_service):
         """Test using default batch mode."""
         mock_service.global_service = None

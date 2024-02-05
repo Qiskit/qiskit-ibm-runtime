@@ -17,10 +17,10 @@ from types import TracebackType
 from functools import wraps
 from threading import Lock
 
-from qiskit_ibm_runtime import QiskitRuntimeService
+from . import qiskit_runtime_service  # pylint: disable=cyclic-import
 from .runtime_job import RuntimeJob
 from .utils.result_decoder import ResultDecoder
-from .ibm_backend import IBMBackend
+from . import ibm_backend
 from .utils.default_session import set_cm_session
 from .utils.deprecation import deprecate_arguments
 from .utils.converters import hms_to_seconds
@@ -75,8 +75,8 @@ class Session:
 
     def __init__(
         self,
-        service: Optional[QiskitRuntimeService] = None,
-        backend: Optional[Union[str, IBMBackend]] = None,
+        service: Optional["qiskit_runtime_service.QiskitRuntimeService"] = None,
+        backend: Optional[Union[str, "ibm_backend.IBMBackend"]] = None,
         max_time: Optional[Union[int, str]] = None,
     ):  # pylint: disable=line-too-long
         """Session constructor.
@@ -102,13 +102,13 @@ class Session:
         """
 
         if service is None:
-            if isinstance(backend, IBMBackend):
+            if isinstance(backend, ibm_backend.IBMBackend):
                 self._service = backend.service
             else:
                 self._service = (
-                    QiskitRuntimeService()
-                    if QiskitRuntimeService.global_service is None
-                    else QiskitRuntimeService.global_service
+                    qiskit_runtime_service.QiskitRuntimeService()
+                    if qiskit_runtime_service.QiskitRuntimeService.global_service is None
+                    else qiskit_runtime_service.QiskitRuntimeService.global_service
                 )
 
         else:
@@ -118,7 +118,7 @@ class Session:
             raise ValueError('"backend" is required for ``ibm_quantum`` channel.')
 
         self._instance = None
-        if isinstance(backend, IBMBackend):
+        if isinstance(backend, ibm_backend.IBMBackend):
             self._instance = backend._instance
             backend = backend.name
         self._backend = backend
@@ -287,7 +287,7 @@ class Session:
         return self._session_id
 
     @property
-    def service(self) -> QiskitRuntimeService:
+    def service(self) -> "qiskit_runtime_service.QiskitRuntimeService":
         """Return service associated with this session.
 
         Returns:
@@ -299,8 +299,8 @@ class Session:
     def from_id(
         cls,
         session_id: str,
-        service: Optional[QiskitRuntimeService] = None,
-        backend: Optional[Union[str, IBMBackend]] = None,
+        service: Optional["qiskit_runtime_service.QiskitRuntimeService"] = None,
+        backend: Optional[Union[str, "ibm_backend.IBMBackend"]] = None,
     ) -> "Session":
         """Construct a Session object with a given session_id
 

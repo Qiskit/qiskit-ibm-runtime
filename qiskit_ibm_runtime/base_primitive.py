@@ -18,11 +18,8 @@ from typing import Dict, Optional, Any, Union
 import copy
 import logging
 from dataclasses import asdict
-import warnings
 
 from qiskit.providers.options import Options as TerraOptions
-
-from qiskit_ibm_provider.session import get_cm_session as get_cm_provider_session
 
 from .options import Options
 from .options.utils import set_default_error_levels
@@ -98,6 +95,7 @@ class BasePrimitive(ABC):
         if isinstance(backend, IBMBackend):
             self._service = backend.service
             self._backend = backend
+            self._session = self._backend.session
         elif isinstance(backend, str):
             self._service = (
                 QiskitRuntimeService()
@@ -121,11 +119,6 @@ class BasePrimitive(ABC):
                 raise ValueError(
                     "A backend or session must be specified when not using ibm_cloud channel."
                 )
-        # Check if initialized within a IBMBackend session. If so, issue a warning.
-        if get_cm_provider_session():
-            warnings.warn(
-                "A Backend.run() session is open but Primitives will not be run within this session"
-            )
 
     def _run_primitive(self, primitive_inputs: Dict, user_kwargs: Dict) -> RuntimeJob:
         """Run the primitive.
