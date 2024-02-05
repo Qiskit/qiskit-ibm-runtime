@@ -15,12 +15,12 @@
 from unittest.mock import patch
 
 from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister, transpile
-from qiskit.providers.fake_provider import FakeJakarta
 from qiskit.pulse import Schedule, Play, Constant, DriveChannel
 from qiskit.transpiler.passes import ConvertConditionsToIfOps
 from qiskit.transpiler.passmanager import PassManager
 from qiskit.transpiler.exceptions import TranspilerError
 
+from qiskit_ibm_runtime.fake_provider import FakeJakarta
 from qiskit_ibm_runtime.transpiler.passes.scheduling.pad_delay import PadDelay
 from qiskit_ibm_runtime.transpiler.passes.scheduling.scheduler import (
     ALAPScheduleAnalysis,
@@ -30,12 +30,12 @@ from qiskit_ibm_runtime.transpiler.passes.scheduling.utils import (
     DynamicCircuitInstructionDurations,
 )
 
-from .control_flow_test_case import ControlFlowTestCase
+from .....ibm_test_case import IBMTestCase
 
 # pylint: disable=invalid-name,not-context-manager
 
 
-class TestASAPSchedulingAndPaddingPass(ControlFlowTestCase):
+class TestASAPSchedulingAndPaddingPass(IBMTestCase):
     """Tests the ASAP Scheduling passes"""
 
     def test_if_test_gate_after_measure(self):
@@ -808,7 +808,7 @@ class TestASAPSchedulingAndPaddingPass(ControlFlowTestCase):
         self.assertEqual(expected, scheduled)
 
 
-class TestALAPSchedulingAndPaddingPass(ControlFlowTestCase):
+class TestALAPSchedulingAndPaddingPass(IBMTestCase):
     """Tests the ALAP Scheduling passes"""
 
     def test_alap(self):
