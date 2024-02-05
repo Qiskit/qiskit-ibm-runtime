@@ -43,7 +43,6 @@ for a dynamic circuit backend's execution model:
     from qiskit_ibm_runtime.transpiler.passes.scheduling import PadDelay
     from qiskit_ibm_runtime.fake_provider import FakeJakarta
 
-
     backend = FakeJakarta()
 
     # Temporary workaround for mock backends. For real backends this is not required.
