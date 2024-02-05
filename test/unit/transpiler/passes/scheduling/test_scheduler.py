@@ -20,6 +20,8 @@ from qiskit.pulse import Schedule, Play, Constant, DriveChannel
 from qiskit.transpiler.passes import ConvertConditionsToIfOps
 from qiskit.transpiler.passmanager import PassManager
 from qiskit.transpiler.exceptions import TranspilerError
+from qiskit.converters import circuit_to_dag
+from qiskit.circuit import Delay
 
 from qiskit_ibm_runtime.transpiler.passes.scheduling.pad_delay import PadDelay
 from qiskit_ibm_runtime.transpiler.passes.scheduling.scheduler import (
@@ -38,6 +40,14 @@ from .control_flow_test_case import ControlFlowTestCase
 class TestASAPSchedulingAndPaddingPass(ControlFlowTestCase):
     """Tests the ASAP Scheduling passes"""
 
+    def get_delay_dict(self, circ):
+        dag = circuit_to_dag(circ)
+        delays = dag.op_nodes(Delay)
+        delay_dict = {q_ind: [] for q_ind in range(len(case.qubits))}
+        for delay in delays:
+            delay_dict[dag.find_bit(delay.qargs[0]).index] += [delay.op.duration]
+        return delay_dict
+
     def test_if_test_gate_after_measure(self):
         """Test if schedules circuits with c_if after measure with a common clbit.
         See: https://github.com/Qiskit/qiskit-terra/issues/7654"""
@@ -48,9 +58,7 @@ class TestASAPSchedulingAndPaddingPass(ControlFlowTestCase):
         with else_:
             qc.x(0)
 
-        durations = DynamicCircuitInstructionDurations(
-            [("x", None, 200), ("measure", None, 840)]
-        )
+        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
         pm = PassManager(
             [
                 ASAPScheduleAnalysis(durations),
@@ -77,9 +85,7 @@ class TestASAPSchedulingAndPaddingPass(ControlFlowTestCase):
         qc.measure(0, 0)
         qc.x(1).c_if(0, True)
 
-        durations = DynamicCircuitInstructionDurations(
-            [("x", None, 200), ("measure", None, 840)]
-        )
+        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
         pm = PassManager(
             [
                 ASAPScheduleAnalysis(durations),
@@ -94,9 +100,7 @@ class TestASAPSchedulingAndPaddingPass(ControlFlowTestCase):
         qc = QuantumCircuit(1, 1)
         qc.x(0).c_if(0, True)
 
-        durations = DynamicCircuitInstructionDurations(
-            [("x", None, 200), ("measure", None, 840)]
-        )
+        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
         pm = PassManager(
             [
                 ConvertConditionsToIfOps(),
@@ -121,9 +125,7 @@ class TestASAPSchedulingAndPaddingPass(ControlFlowTestCase):
         qc.measure(0, 0)
         qc.measure(1, 0)
 
-        durations = DynamicCircuitInstructionDurations(
-            [("x", None, 200), ("measure", None, 840)]
-        )
+        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
         pm = PassManager(
             [
                 ASAPScheduleAnalysis(durations),
@@ -149,9 +151,7 @@ class TestASAPSchedulingAndPaddingPass(ControlFlowTestCase):
         qc.measure(1, 0)
         qc.measure(2, 0)
 
-        durations = DynamicCircuitInstructionDurations(
-            [("x", None, 200), ("measure", None, 840)]
-        )
+        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
         pm = PassManager(
             [
                 ASAPScheduleAnalysis(durations),
@@ -216,9 +216,7 @@ class TestASAPSchedulingAndPaddingPass(ControlFlowTestCase):
             qc.x(1)
             qc.x(2)
 
-        durations = DynamicCircuitInstructionDurations(
-            [("x", None, 200), ("measure", None, 840)]
-        )
+        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
         pm = PassManager(
             [
                 ASAPScheduleAnalysis(durations),
@@ -276,9 +274,7 @@ class TestASAPSchedulingAndPaddingPass(ControlFlowTestCase):
             qc.x(1)
         qc.measure(2, 0)
 
-        durations = DynamicCircuitInstructionDurations(
-            [("x", None, 200), ("measure", None, 840)]
-        )
+        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
         pm = PassManager(
             [
                 ASAPScheduleAnalysis(durations),
@@ -381,9 +377,7 @@ class TestASAPSchedulingAndPaddingPass(ControlFlowTestCase):
         with qc.if_test((0, 1)):
             qc.x(0)
 
-        durations = DynamicCircuitInstructionDurations(
-            [("x", None, 100), ("measure", None, 840)]
-        )
+        durations = DynamicCircuitInstructionDurations([("x", None, 100), ("measure", None, 840)])
 
         scheduled = PassManager(
             [
@@ -454,9 +448,7 @@ class TestASAPSchedulingAndPaddingPass(ControlFlowTestCase):
         xsched = Schedule(Play(Constant(300, 0.1), DriveChannel(0)))
         qc.add_calibration("x", (0,), xsched)
 
-        durations = DynamicCircuitInstructionDurations(
-            [("x", None, 160), ("cx", None, 600)]
-        )
+        durations = DynamicCircuitInstructionDurations([("x", None, 160), ("cx", None, 600)])
         pm = PassManager(
             [
                 ASAPScheduleAnalysis(durations),
@@ -496,9 +488,7 @@ class TestASAPSchedulingAndPaddingPass(ControlFlowTestCase):
         qc.x(1)
         qc.measure(0, 0)
 
-        durations = DynamicCircuitInstructionDurations(
-            [("x", None, 160), ("measure", None, 840)]
-        )
+        durations = DynamicCircuitInstructionDurations([("x", None, 160), ("measure", None, 840)])
 
         scheduled = PassManager(
             [
@@ -649,9 +639,7 @@ class TestASAPSchedulingAndPaddingPass(ControlFlowTestCase):
         qc.x(0)
         qc.x(1)
 
-        durations = DynamicCircuitInstructionDurations(
-            [("x", None, 200), ("measure", None, 840)]
-        )
+        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
         pm = PassManager(
             [
                 ASAPScheduleAnalysis(durations),
@@ -679,9 +667,7 @@ class TestASAPSchedulingAndPaddingPass(ControlFlowTestCase):
             qc.x(2)
         qc.measure(2, 2)
 
-        durations = DynamicCircuitInstructionDurations(
-            [("x", None, 200), ("measure", None, 840)]
-        )
+        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
         pm = PassManager(
             [
                 ASAPScheduleAnalysis(durations),
@@ -723,9 +709,7 @@ class TestASAPSchedulingAndPaddingPass(ControlFlowTestCase):
         qc.delay(1000, 2)
         qc.x(1)
 
-        durations = DynamicCircuitInstructionDurations(
-            [("x", None, 200), ("measure", None, 840)]
-        )
+        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
         pm = PassManager(
             [
                 ASAPScheduleAnalysis(durations),
@@ -768,9 +752,7 @@ class TestASAPSchedulingAndPaddingPass(ControlFlowTestCase):
                 qc.measure(2, 2)
         qc.x(3)
 
-        durations = DynamicCircuitInstructionDurations(
-            [("x", None, 200), ("measure", None, 840)]
-        )
+        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
         pm = PassManager(
             [
                 ASAPScheduleAnalysis(durations),
@@ -820,9 +802,7 @@ class TestASAPSchedulingAndPaddingPass(ControlFlowTestCase):
             qc.measure(0, 0)
         qc.x(0)
 
-        durations = DynamicCircuitInstructionDurations(
-            [("x", None, 200), ("measure", None, 840)]
-        )
+        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
         pm = PassManager(
             [
                 ASAPScheduleAnalysis(durations),
@@ -853,9 +833,7 @@ class TestASAPSchedulingAndPaddingPass(ControlFlowTestCase):
             qc.measure(0, 0)
         qc.x(0)
 
-        durations = DynamicCircuitInstructionDurations(
-            [("x", None, 200), ("measure", None, 840)]
-        )
+        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
         pm = PassManager(
             [
                 ASAPScheduleAnalysis(durations),
@@ -884,9 +862,7 @@ class TestASAPSchedulingAndPaddingPass(ControlFlowTestCase):
         with qc.if_test((cr[0], True)):
             qc.x(qr[0])
 
-        durations = DynamicCircuitInstructionDurations(
-            [("x", None, 200), ("measure", None, 840)]
-        )
+        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
         pm = PassManager(
             [
                 ConvertConditionsToIfOps(),
@@ -951,11 +927,17 @@ class TestASAPSchedulingAndPaddingPass(ControlFlowTestCase):
 class TestALAPSchedulingAndPaddingPass(ControlFlowTestCase):
     """Tests the ALAP Scheduling passes"""
 
+    def get_delay_dict(self, circ):
+        dag = circuit_to_dag(circ)
+        delays = dag.op_nodes(Delay)
+        delay_dict = {q_ind: [] for q_ind in range(len(circ.qubits))}
+        for delay in delays:
+            delay_dict[dag.find_bit(delay.qargs[0]).index] += [delay.op.duration]
+        return delay_dict
+
     def test_alap(self):
         """Test standard ALAP scheduling"""
-        durations = DynamicCircuitInstructionDurations(
-            [("x", None, 200), ("measure", None, 840)]
-        )
+        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
         qc = QuantumCircuit(3, 1)
         qc.measure(0, 0)
         qc.x(1)
@@ -986,9 +968,7 @@ class TestALAPSchedulingAndPaddingPass(ControlFlowTestCase):
         with else_:
             qc.x(0)
 
-        durations = DynamicCircuitInstructionDurations(
-            [("x", None, 200), ("measure", None, 840)]
-        )
+        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
         pm = PassManager(
             [
                 ALAPScheduleAnalysis(durations),
@@ -1017,9 +997,7 @@ class TestALAPSchedulingAndPaddingPass(ControlFlowTestCase):
         with qc.if_test((0, True)):
             qc.x(1)
 
-        durations = DynamicCircuitInstructionDurations(
-            [("x", None, 200), ("measure", None, 840)]
-        )
+        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
         pm = PassManager(
             [
                 ALAPScheduleAnalysis(durations),
@@ -1047,9 +1025,7 @@ class TestALAPSchedulingAndPaddingPass(ControlFlowTestCase):
         qc.measure(0, 0)
         qc.measure(1, 0)
 
-        durations = DynamicCircuitInstructionDurations(
-            [("x", None, 200), ("measure", None, 840)]
-        )
+        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
         pm = PassManager(
             [
                 ALAPScheduleAnalysis(durations),
@@ -1076,9 +1052,7 @@ class TestALAPSchedulingAndPaddingPass(ControlFlowTestCase):
         qc.measure(1, 0)
         qc.measure(2, 0)
 
-        durations = DynamicCircuitInstructionDurations(
-            [("x", None, 200), ("measure", None, 840)]
-        )
+        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
         pm = PassManager(
             [
                 ALAPScheduleAnalysis(durations),
@@ -1144,9 +1118,7 @@ class TestALAPSchedulingAndPaddingPass(ControlFlowTestCase):
             qc.x(1)
             qc.x(2)
 
-        durations = DynamicCircuitInstructionDurations(
-            [("x", None, 200), ("measure", None, 840)]
-        )
+        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
         pm = PassManager(
             [
                 ALAPScheduleAnalysis(durations),
@@ -1204,9 +1176,7 @@ class TestALAPSchedulingAndPaddingPass(ControlFlowTestCase):
             qc.x(1)
         qc.measure(2, 0)
 
-        durations = DynamicCircuitInstructionDurations(
-            [("x", None, 200), ("measure", None, 840)]
-        )
+        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
         pm = PassManager(
             [
                 ALAPScheduleAnalysis(durations),
@@ -1308,9 +1278,7 @@ class TestALAPSchedulingAndPaddingPass(ControlFlowTestCase):
         with qc.if_test((0, 1)):
             qc.x(0)
 
-        durations = DynamicCircuitInstructionDurations(
-            [("x", None, 100), ("measure", None, 840)]
-        )
+        durations = DynamicCircuitInstructionDurations([("x", None, 100), ("measure", None, 840)])
 
         scheduled = PassManager(
             [
@@ -1381,9 +1349,7 @@ class TestALAPSchedulingAndPaddingPass(ControlFlowTestCase):
         xsched = Schedule(Play(Constant(300, 0.1), DriveChannel(0)))
         qc.add_calibration("x", (0,), xsched)
 
-        durations = DynamicCircuitInstructionDurations(
-            [("x", None, 160), ("cx", None, 600)]
-        )
+        durations = DynamicCircuitInstructionDurations([("x", None, 160), ("cx", None, 600)])
         pm = PassManager(
             [
                 ALAPScheduleAnalysis(durations),
@@ -1423,9 +1389,7 @@ class TestALAPSchedulingAndPaddingPass(ControlFlowTestCase):
         qc.x(1)
         qc.measure(0, 0)
 
-        durations = DynamicCircuitInstructionDurations(
-            [("x", None, 160), ("measure", None, 840)]
-        )
+        durations = DynamicCircuitInstructionDurations([("x", None, 160), ("measure", None, 840)])
 
         scheduled = PassManager(
             [
@@ -1609,9 +1573,7 @@ class TestALAPSchedulingAndPaddingPass(ControlFlowTestCase):
         qc.x(0)
         qc.x(1)
 
-        durations = DynamicCircuitInstructionDurations(
-            [("x", None, 200), ("measure", None, 840)]
-        )
+        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
         pm = PassManager(
             [
                 ALAPScheduleAnalysis(durations),
@@ -1639,9 +1601,7 @@ class TestALAPSchedulingAndPaddingPass(ControlFlowTestCase):
             qc.x(2)
         qc.measure(2, 2)
 
-        durations = DynamicCircuitInstructionDurations(
-            [("x", None, 200), ("measure", None, 840)]
-        )
+        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
         pm = PassManager(
             [
                 ALAPScheduleAnalysis(durations),
@@ -1691,9 +1651,7 @@ class TestALAPSchedulingAndPaddingPass(ControlFlowTestCase):
         qc.x(1)
         qc.x(2)
 
-        durations = DynamicCircuitInstructionDurations(
-            [("x", None, 200), ("measure", None, 840)]
-        )
+        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
         pm = PassManager(
             [
                 ALAPScheduleAnalysis(durations),
@@ -1742,9 +1700,7 @@ class TestALAPSchedulingAndPaddingPass(ControlFlowTestCase):
         qc.delay(1000, 2)
         qc.x(1)
 
-        durations = DynamicCircuitInstructionDurations(
-            [("x", None, 200), ("measure", None, 840)]
-        )
+        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
         pm = PassManager(
             [
                 ALAPScheduleAnalysis(durations),
@@ -1890,9 +1846,7 @@ class TestALAPSchedulingAndPaddingPass(ControlFlowTestCase):
                 qc.measure(2, 2)
         qc.x(3)
 
-        durations = DynamicCircuitInstructionDurations(
-            [("x", None, 200), ("measure", None, 840)]
-        )
+        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
         pm = PassManager(
             [
                 ALAPScheduleAnalysis(durations),
@@ -1942,9 +1896,7 @@ class TestALAPSchedulingAndPaddingPass(ControlFlowTestCase):
             qc.measure(0, 0)
         qc.x(0)
 
-        durations = DynamicCircuitInstructionDurations(
-            [("x", None, 200), ("measure", None, 840)]
-        )
+        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
         pm = PassManager(
             [
                 ALAPScheduleAnalysis(durations),
@@ -1975,9 +1927,7 @@ class TestALAPSchedulingAndPaddingPass(ControlFlowTestCase):
             qc.measure(0, 0)
         qc.x(0)
 
-        durations = DynamicCircuitInstructionDurations(
-            [("x", None, 200), ("measure", None, 840)]
-        )
+        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
         pm = PassManager(
             [
                 ALAPScheduleAnalysis(durations),
@@ -2150,9 +2100,7 @@ class TestALAPSchedulingAndPaddingPass(ControlFlowTestCase):
         Which might hurt performance in later executon stages.
         """
 
-        durations = DynamicCircuitInstructionDurations(
-            [("x", None, 200), ("measure", None, 840)]
-        )
+        durations = DynamicCircuitInstructionDurations([("x", None, 200), ("measure", None, 840)])
         pm = PassManager([ALAPScheduleAnalysis(durations), PadDelay(durations)])
 
         qc = QuantumCircuit(3, 1)
@@ -2170,3 +2118,30 @@ class TestALAPSchedulingAndPaddingPass(ControlFlowTestCase):
         dont_use = scheduled.qubits[-1]
         for op in scheduled.data:
             self.assertNotIn(dont_use, op.qubits)
+
+    def test_scheduling_nonuniform_durations(self):
+        """Test that scheduling withing control flow blocks uses the
+        instruction durations on the correct qubit indices"""
+
+        backend = FakeJakarta()
+        backend.configuration().basis_gates.append("if_else")
+        durations = DynamicCircuitInstructionDurations(
+            [("cx", (0, 1), 250), ("cx", (1, 3), 4000), ("measure", None, 2600)]
+        )
+        pm = PassManager([ALAPScheduleAnalysis(durations), PadDelay(durations)])
+
+        qc = QuantumCircuit(4, 1)
+        qc.barrier()
+        qc.measure(0, 0)
+        with qc.if_test((0, True)):
+            qc.cx(0, 1)
+        qc_transpiled = transpile(qc, backend, initial_layout=[1, 3, 0, 2])
+        scheduled = pm.run(qc_transpiled)
+        delay_dict = self.get_delay_dict(scheduled.data[-1].operation.params[0])
+        self.assertEqual(delay_dict[0][0], 4000)
+
+        # different layout
+        qc_transpiled = transpile(qc, backend, initial_layout=[0, 1, 2, 3])
+        scheduled = pm.run(qc_transpiled)
+        delay_dict = self.get_delay_dict(scheduled.data[-1].operation.params[0])
+        self.assertEqual(delay_dict[2][0], 250)
