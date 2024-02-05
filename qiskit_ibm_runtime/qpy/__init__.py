@@ -74,6 +74,7 @@ https://qiskit.org/documentation/apidoc/qpy.html#qpy-format
 """
 
 from .interface import dump, load
+from .common import QPY_VERSION, QPY_COMPATIBILITY_VERSION
 
 # For backward compatibility. Provide, Runtime, Experiment call these private functions.
 from .binary_io import (
