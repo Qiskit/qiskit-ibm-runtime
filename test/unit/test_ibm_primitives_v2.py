@@ -420,7 +420,6 @@ class TestPrimitivesV2(IBMTestCase):
         for fld in ["tasks"]:
             inputs.pop(fld, None)
         expected = {"skip_transpilation": False, "execution": {"init_qubits": True}, "version": 2}
-        print(f">>>>>>> inputs is {inputs}")
         self.assertDictEqual(inputs, expected)
 
     @data(EstimatorV2)
