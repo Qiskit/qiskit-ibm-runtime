@@ -32,6 +32,7 @@ from qiskit.circuit import (
 )
 from qiskit.circuit.library import PauliEvolutionGate
 from qiskit.circuit.parameter import Parameter
+from qiskit.circuit.annotated_operation import AnnotatedOperation, Modifier
 from qiskit.circuit.classical import expr, types
 from qiskit.circuit.parameterexpression import ParameterExpression
 from qiskit.circuit.parametervector import ParameterVectorElement
@@ -107,6 +108,7 @@ class Value(TypeKeyBase):
     STRING = b"s"
     NULL = b"z"
     EXPRESSION = b"x"
+    MODIFIER = b"m"
     CASE_DEFAULT = b"d"
     REGISTER = b"R"
 
@@ -136,6 +138,8 @@ class Value(TypeKeyBase):
             return cls.CASE_DEFAULT
         if isinstance(obj, expr.Expr):
             return cls.EXPRESSION
+        if isinstance(obj, Modifier):
+            return cls.MODIFIER
 
         raise exceptions.QpyError(
             f"Object type '{type(obj)}' is not supported in {cls.__name__} namespace."
@@ -187,6 +191,7 @@ class CircuitInstruction(TypeKeyBase):
     GATE = b"g"
     PAULI_EVOL_GATE = b"p"
     CONTROLLED_GATE = b"c"
+    ANNOTATED_OPERATION = b"a"
 
     @classmethod
     def assign(cls, obj):  # type: ignore[no-untyped-def]
@@ -194,6 +199,8 @@ class CircuitInstruction(TypeKeyBase):
             return cls.PAULI_EVOL_GATE
         if isinstance(obj, ControlledGate):
             return cls.CONTROLLED_GATE
+        if isinstance(obj, AnnotatedOperation):
+            return cls.ANNOTATED_OPERATION
         if isinstance(obj, Gate):
             return cls.GATE
         if isinstance(obj, Instruction):
