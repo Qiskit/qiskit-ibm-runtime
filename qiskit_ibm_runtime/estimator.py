@@ -140,7 +140,7 @@ class EstimatorV2(BasePrimitiveV2, Estimator, BaseEstimatorV2):
         # TODO: Server should have different optimization/resilience levels for simulator
 
         if (
-            options["resilience_level"] == 3
+            options.get("resilience", {}).get("pec_mitigation", False) is True
             and self._backend is not None
             and self._backend.configuration().simulator is True
             and not options["simulator"]["coupling_map"]

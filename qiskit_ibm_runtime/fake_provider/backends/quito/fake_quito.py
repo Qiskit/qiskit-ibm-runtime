@@ -15,7 +15,7 @@ Fake Quito device (5 qubit).
 """
 
 import os
-from qiskit.providers.fake_provider import fake_pulse_backend, fake_backend
+from qiskit_ibm_runtime.fake_provider import fake_pulse_backend, fake_backend
 
 
 class FakeQuitoV2(fake_backend.FakeBackendV2):

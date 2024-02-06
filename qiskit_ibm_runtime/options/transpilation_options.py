@@ -34,6 +34,7 @@ RoutingMethodType = Literal[
     "sabre",
     "none",
 ]
+MAX_OPTIMIZATION_LEVEL: int = 1
 
 
 @primitive_dataclass
@@ -74,3 +75,34 @@ class TranspilationOptions:
                 "and 1.0 (no approximation)"
             )
         return degree
+
+
+@primitive_dataclass
+class TranspilationOptionsV2:
+    """Transpilation options for v2 primitives.
+
+    Args:
+
+        skip_transpilation: Whether to skip transpilation. Default is False.
+
+        optimization_level: How much optimization to perform on the circuits.
+            Higher levels generate more optimized circuits,
+            at the expense of longer transpilation times.
+
+            * 0: no optimization
+            * 1: light optimization
+    """
+
+    skip_transpilation: bool = False
+    optimization_level: Union[UnsetType, int] = Unset
+
+    @field_validator("optimization_level")
+    @classmethod
+    @skip_unset_validation
+    def _validate_optimization_level(cls, optimization_level: int) -> int:
+        """Validate optimization_leve."""
+        if not 0 <= optimization_level <= MAX_OPTIMIZATION_LEVEL:
+            raise ValueError(
+                "Invalid optimization_level. Valid range is " f"0-{MAX_OPTIMIZATION_LEVEL}"
+            )
+        return optimization_level

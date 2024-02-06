@@ -53,14 +53,22 @@ class Session:
 
     For example::
 
-        from qiskit.test.reference_circuits import ReferenceCircuits
+        from qiskit.circuit import QuantumCircuit, QuantumRegister, ClassicalRegister
         from qiskit_ibm_runtime import Sampler, Session, Options
+
+        # Bell Circuit
+        qr = QuantumRegister(2, name="qr")
+        cr = ClassicalRegister(2, name="cr")
+        qc = QuantumCircuit(qr, cr, name="bell")
+        qc.h(qr[0])
+        qc.cx(qr[0], qr[1])
+        qc.measure(qr, cr)
 
         options = Options(optimization_level=3)
 
         with Session(backend="ibmq_qasm_simulator") as session:
             sampler = Sampler(session=session, options=options)
-            job = sampler.run(ReferenceCircuits.bell())
+            job = sampler.run(qc)
             print(f"Sampler job ID: {job.job_id()}")
             print(f"Sampler job result: {job.result()}")
 
@@ -249,6 +257,7 @@ class Session:
             last_job_completed: Timestamp of when the last job in the session completed.
             started_at: Timestamp of when the session was started.
             closed_at: Timestamp of when the session was closed.
+            activated_at: Timestamp of when the session state was changed to active.
         """
         if self._session_id:
             response = self._service._api_client.session_details(self._session_id)
@@ -265,6 +274,7 @@ class Session:
                     "last_job_completed": response.get("last_job_completed"),
                     "started_at": response.get("started_at"),
                     "closed_at": response.get("closed_at"),
+                    "activated_at": response.get("activated_at"),
                 }
         return None
 
@@ -273,7 +283,7 @@ class Session:
         """Return the session ID.
 
         Returns:
-            Session ID. None until a job runs in the session.
+            Session ID. None until a job is submitted.
         """
         return self._session_id
 
