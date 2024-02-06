@@ -32,7 +32,7 @@ from qiskit.quantum_info import SparsePauliOp, Pauli, Statevector
 from qiskit.result import Result, Counts
 from qiskit.primitives.containers.bindings_array import BindingsArray
 from qiskit.primitives.containers.observables_array import ObservablesArray
-from qiskit.primitives.containers import BitArray
+from qiskit.primitives.containers import BitArray, DataBin, make_data_bin
 from qiskit_aer.noise import NoiseModel
 from qiskit_ibm_runtime.utils import RuntimeEncoder, RuntimeDecoder
 
@@ -333,3 +333,24 @@ if __name__ == '__main__':
         decoded = json.loads(encoded, cls=RuntimeDecoder)["array"]
         self.assertIsInstance(decoded, BitArray)
         self.assertEqual(barray, decoded)
+
+    def make_test_data_bins(self):
+        result_bins = []
+        data_bin_cls = make_data_bin(
+            [("alpha", np.ndarray), ("beta", np.ndarray)], shape=(10, 20)
+        )
+        alpha = np.empty((10, 20), dtype=np.uint16)
+        beta = np.empty((10, 20), dtype=int)
+        my_bin = data_bin_cls(alpha, beta)
+        result_bins.append(my_bin)
+        return result_bins
+
+
+    def test_data_bin(self):
+        """Test encoding and decoding BitArray."""
+        for dbin in self.make_test_data_bins():
+            payload = {"bin": dbin}
+            encoded = json.dumps(payload, cls=RuntimeEncoder)
+            decoded = json.loads(encoded, cls=RuntimeDecoder)["bin"]
+            self.assertIsInstance(decoded, DataBin)
+            self.assertEqual(dbin, decoded)
