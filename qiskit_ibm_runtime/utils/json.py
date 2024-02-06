@@ -58,6 +58,7 @@ from qiskit.result import Result
 from qiskit.version import __version__ as _terra_version_string
 from qiskit.primitives.containers.bindings_array import BindingsArray
 from qiskit.primitives.containers.observables_array import ObservablesArray
+from qiskit.primitives.containers import BitArray
 
 
 from qiskit_ibm_provider.qpy import (
@@ -268,6 +269,9 @@ class RuntimeEncoder(json.JSONEncoder):
             out_val["data"] = encoded_data
             out_val["shape"] = obj.shape
             return {"__type__": "BindingsArray", "__value__": out_val}
+        if isinstance(obj, BitArray):
+            out_val = {"array": obj.array, "num_bits": obj.num_bits}
+            return {"__type__": "BitArray", "__value__": out_val}
 
         if HAS_AER and isinstance(obj, qiskit_aer.noise.NoiseModel):
             return {"__type__": "NoiseModel", "__value__": obj.to_dict()}
@@ -355,8 +359,9 @@ class RuntimeDecoder(json.JSONDecoder):
                     ba_kwargs["data"] = decoded_data
                 elif data:
                     raise ValueError(f"Unexpected data type {type(data)} in BindingsArray.")
-
                 return BindingsArray(**ba_kwargs)
+            if obj_type == "BitArray":
+                return BitArray(**obj_val)
 
             if obj_type == "to_json":
                 return obj_val

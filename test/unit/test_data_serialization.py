@@ -29,9 +29,10 @@ from qiskit.circuit.library import EfficientSU2, CXGate, PhaseGate, U2Gate
 from qiskit.providers.fake_provider.backends import FakeNairobi
 import qiskit.quantum_info as qi
 from qiskit.quantum_info import SparsePauliOp, Pauli, Statevector
-from qiskit.result import Result
+from qiskit.result import Result, Counts
 from qiskit.primitives.containers.bindings_array import BindingsArray
 from qiskit.primitives.containers.observables_array import ObservablesArray
+from qiskit.primitives.containers import BitArray
 from qiskit_aer.noise import NoiseModel
 from qiskit_ibm_runtime.utils import RuntimeEncoder, RuntimeDecoder
 
@@ -316,3 +317,19 @@ if __name__ == '__main__':
             for key, val in barray_str_keyed.items():
                 self.assertIn(key, decoded_str_keyed)
                 self.assertTrue(np.allclose(val, decoded_str_keyed[key]))
+
+    @data(
+        BitArray(
+            np.array([[[3, 5], [3, 5], [234, 100]], [[0, 1], [1, 0], [1, 0]]], dtype=np.uint8),
+            num_bits=15,
+        ),
+        BitArray.from_bool_array([[1, 0, 0], [1, 1, 0]]),
+        BitArray.from_counts(Counts({"0b101010": 2, "0b1": 3, "0x010203": 4}))
+    )
+    def test_bit_array(self, barray):
+        """Test encoding and decoding BitArray."""
+        payload = {"array": barray}
+        encoded = json.dumps(payload, cls=RuntimeEncoder)
+        decoded = json.loads(encoded, cls=RuntimeDecoder)["array"]
+        self.assertIsInstance(decoded, BitArray)
+        self.assertEqual(barray, decoded)
