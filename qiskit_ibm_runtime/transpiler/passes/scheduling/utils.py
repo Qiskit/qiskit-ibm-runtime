@@ -177,7 +177,10 @@ class DynamicCircuitInstructionDurations(InstructionDurations):
                                     0
                                 ]  # Throw away datetime at index 1
                                 instruction_durations.append((gate, qubits, gate_length, "s"))
-                    for q, props in backend.properties()._qubits.items():
+                    for (
+                        q,  # pylint: disable=invalid-name
+                        props,
+                    ) in backend.properties()._qubits.items():
                         if "readout_length" in props:
                             readout_length = props["readout_length"][
                                 0
@@ -192,9 +195,9 @@ class DynamicCircuitInstructionDurations(InstructionDurations):
 
             return patch_from_backend(DynamicCircuitInstructionDurations, backend)
             # To here ---------------------------------------
-            return super(DynamicCircuitInstructionDurations, cls).from_backend(
-                backend
-            )  # pylint: disable=unreachable
+            return super(  # pylint: disable=unreachable
+                DynamicCircuitInstructionDurations, cls
+            ).from_backend(backend)
 
         # Get durations from target if BackendV2
         return cls.from_target(backend.target)
