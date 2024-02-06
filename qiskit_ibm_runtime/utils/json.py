@@ -259,7 +259,7 @@ class RuntimeEncoder(json.JSONEncoder):
         if isinstance(obj, BasePub):
             return asdict(obj)
         if isinstance(obj, ObservablesArray):
-            return obj.tolist()
+            return {"__type__": "ObservablesArray", "__value__": obj.tolist()}
         if isinstance(obj, BindingsArray):
             out_val = {}
             encoded_data = {}
@@ -341,6 +341,8 @@ class RuntimeDecoder(json.JSONDecoder):
                 return Result.from_dict(obj_val)
             if obj_type == "spmatrix":
                 return _decode_and_deserialize(obj_val, scipy.sparse.load_npz, False)
+            if obj_type == "ObservablesArray":
+                return ObservablesArray(obj_val)
             if obj_type == "BindingsArray":
                 ba_kwargs = {"shape": obj_val.get("shape", None)}
                 data = obj_val.get("data", None)
