@@ -270,8 +270,8 @@ class DynamicCircuitInstructionDurations(InstructionDurations):
         # triggers the end of scheduling after the measurement pulse
         measure_key = ("measure", key[1], key[2])
         try:
-            measure_duration, unit = self._get_duration_dt(measure_key)
-            self._get_duration(measure_key)
+            measure_duration, unit = self._get_duration(measure_key)
+            self._patch_key(key, measure_duration, unit)
         except KeyError:
             # Fall back to reset key if measure not available
             self._convert_and_patch_key(key)
