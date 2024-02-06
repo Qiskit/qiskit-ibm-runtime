@@ -371,7 +371,7 @@ class RuntimeDecoder(json.JSONDecoder):
             if obj_type == "DataBin":
                 field_names = obj_val['field_names']
                 field_types = [globals().get(field_type, field_type) for field_type in obj_val['field_types']]
-                data_bin_cls = make_data_bin(zip(field_names, field_types), shape=obj_val['shape'])
+                data_bin_cls = make_data_bin(zip(field_names, field_types), shape=tuple(obj_val['shape']))
                 return data_bin_cls(**obj_val['values'])
             if obj_type == "to_json":
                 return obj_val

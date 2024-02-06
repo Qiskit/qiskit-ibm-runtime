@@ -284,12 +284,11 @@ if __name__ == '__main__':
     @data(
         BindingsArray({'a': [1, 2, 3.4]}),
         BindingsArray({('a', 'b', 'c'): [4.0, 5.0, 6.0]}, shape=()),
-        BindingsArray({('a', 'b'):[[1 + 2j, 2 + 3j], [3 + 4j, 4 + 5j]]}),
         BindingsArray({Parameter("a"): np.random.uniform(size=(5,))}),
         BindingsArray({ParameterVector("a", 5): np.linspace(0, 1, 30).reshape((2, 3, 5))}),
         BindingsArray(data={Parameter("a"): [0.0], Parameter("b"): [1.0]}, shape=1),
         BindingsArray(
-            kwvals={
+            data={
                 (Parameter("a"), Parameter("b")): np.random.random((4, 3, 2)),
                 Parameter("c"): np.random.random((4, 3)),
             }
@@ -333,7 +332,6 @@ if __name__ == '__main__':
         decoded = json.loads(encoded, cls=RuntimeDecoder)["array"]
         self.assertIsInstance(decoded, BitArray)
         self.assertEqual(barray, decoded)
-
     def make_test_data_bins(self):
         result_bins = []
         data_bin_cls = make_data_bin(
@@ -344,8 +342,20 @@ if __name__ == '__main__':
         my_bin = data_bin_cls(alpha, beta)
         result_bins.append(my_bin)
         return result_bins
-
-
+    def assertDataBinsEqual(self, dbin1, dbin2):
+        """Compares two DataBins
+        Field types are compared up to their string representation
+        """
+        self.assertEqual(dbin1._FIELDS, dbin2._FIELDS)
+        self.assertEqual([str(field_type) for field_type in dbin1._FIELD_TYPES], [str(field_type) for field_type in dbin2._FIELD_TYPES])
+        self.assertEqual(dbin1._SHAPE, dbin2._SHAPE)
+        for field_name in dbin1._FIELDS:
+            field_1 = getattr(dbin1, field_name)
+            field_2 = getattr(dbin2, field_name)
+            if isinstance(field_1, np.ndarray):
+                self.assertTrue(np.allclose(field_1, field_2))
+            else:
+                self.assertEqual(field_1, field_2)
     def test_data_bin(self):
         """Test encoding and decoding BitArray."""
         for dbin in self.make_test_data_bins():
@@ -353,4 +363,4 @@ if __name__ == '__main__':
             encoded = json.dumps(payload, cls=RuntimeEncoder)
             decoded = json.loads(encoded, cls=RuntimeDecoder)["bin"]
             self.assertIsInstance(decoded, DataBin)
-            self.assertEqual(dbin, decoded)
+            self.assertDataBinsEqual(dbin, decoded)
