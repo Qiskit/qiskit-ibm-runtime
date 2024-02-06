@@ -163,7 +163,7 @@ class DynamicCircuitInstructionDurations(InstructionDurations):
         if isinstance(backend, BackendV1):
             # TODO Remove once https://github.com/Qiskit/qiskit/pull/11727 gets released in qiskit 0.46.1
             # From here ---------------------------------------
-            def patch_from_backend(cls, backend: Backend):
+            def patch_from_backend(cls, backend: Backend):  # type: ignore
                 """
                 REMOVE me once https://github.com/Qiskit/qiskit/pull/11727 gets released in qiskit 0.46.1
                 """
@@ -194,8 +194,8 @@ class DynamicCircuitInstructionDurations(InstructionDurations):
                 return cls(instruction_durations, dt=dt)
 
             return patch_from_backend(DynamicCircuitInstructionDurations, backend)
-            # To here ---------------------------------------
-            return super(  # pylint: disable=unreachable
+            # To here --------------------------------------- (remove comment ignore annotations too)
+            return super(  # type: ignore  # pylint: disable=unreachable
                 DynamicCircuitInstructionDurations, cls
             ).from_backend(backend)
 
