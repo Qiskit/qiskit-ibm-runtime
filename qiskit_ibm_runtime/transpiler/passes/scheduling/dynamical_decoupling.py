@@ -325,7 +325,11 @@ class PadDynamicalDecoupling(BlockBasePadder):
                     self._dd_sequence_lengths[qubit] = []
 
                 physical_index = dag.qubits.index(qubit)
-                if self._qubits and physical_index not in self._qubits:
+                if (
+                        self._qubits
+                        and physical_index not in self._qubits
+                        or qubit in self._idle_qubits
+                ):
                     continue
 
                 for index, gate in enumerate(seq):
