@@ -56,6 +56,9 @@ from qiskit.circuit import (
 from qiskit.circuit.parametertable import ParameterView
 from qiskit.result import Result
 from qiskit.version import __version__ as _terra_version_string
+from qiskit.primitives.containers.bindings_array import BindingsArray
+from qiskit.primitives.containers.observables_array import ObservablesArray
+
 
 from qiskit_ibm_provider.qpy import (
     _write_parameter,
@@ -68,7 +71,6 @@ from qiskit_ibm_provider.qpy import (
 )
 
 # TODO: Remove when they are in terra
-from ..qiskit.primitives import ObservablesArray, BindingsArray
 from ..qiskit.primitives.base_pub import BasePub
 
 _TERRA_VERSION = tuple(
@@ -260,13 +262,10 @@ class RuntimeEncoder(json.JSONEncoder):
             return obj.tolist()
         if isinstance(obj, BindingsArray):
             out_val = {}
-            if obj.kwvals:
-                encoded_kwvals = {}
-                for key, val in obj.kwvals.items():
-                    encoded_kwvals[json.dumps(key, cls=RuntimeEncoder)] = val
-                out_val["kwvals"] = encoded_kwvals
-            if obj.vals:
-                out_val["vals"] = obj.vals  # type: ignore[assignment]
+            encoded_data = {}
+            for key, val in obj.data.items():
+                encoded_data[json.dumps(key, cls=RuntimeEncoder)] = val
+            out_val["data"] = encoded_data
             out_val["shape"] = obj.shape
             return {"__type__": "BindingsArray", "__value__": out_val}
 
@@ -344,17 +343,16 @@ class RuntimeDecoder(json.JSONDecoder):
                 return _decode_and_deserialize(obj_val, scipy.sparse.load_npz, False)
             if obj_type == "BindingsArray":
                 ba_kwargs = {"shape": obj_val.get("shape", None)}
-                kwvals = obj_val.get("kwvals", None)
-                if isinstance(kwvals, dict):
-                    kwvals_decoded = {}
-                    for key, val in kwvals.items():
+                data = obj_val.get("data", None)
+                if isinstance(data, dict):
+                    decoded_data = {}
+                    for key, val in data.items():
                         # Convert to tuple or it can't be a key
                         decoded_key = tuple(json.loads(key, cls=RuntimeDecoder))
-                        kwvals_decoded[decoded_key] = val
-                    ba_kwargs["kwvals"] = kwvals_decoded
-                elif kwvals:
-                    raise ValueError(f"Unexpected kwvals type {type(kwvals)} in BindingsArray.")
-                ba_kwargs["vals"] = obj_val.get("vals", None)
+                        decoded_data[decoded_key] = val
+                    ba_kwargs["data"] = decoded_data
+                elif data:
+                    raise ValueError(f"Unexpected data type {type(data)} in BindingsArray.")
 
                 return BindingsArray(**ba_kwargs)
 
