@@ -1037,7 +1037,6 @@ class TestPadDynamicalDecoupling(IBMTestCase):
         self.assertNotEqual(delay_dict[3], delay_dict[4])
         self.assertEqual(delay_dict[0], delay_dict[2])
 
-
     def test_no_unused_qubits(self):
         """Test DD with if_test circuit that unused qubits are untouched and
         not scheduled. Unused qubits may also have missing durations when
