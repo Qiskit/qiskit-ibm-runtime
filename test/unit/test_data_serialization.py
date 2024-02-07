@@ -32,6 +32,8 @@ from qiskit.quantum_info import SparsePauliOp, Pauli, Statevector
 from qiskit.result import Result, Counts
 from qiskit.primitives.containers.bindings_array import BindingsArray
 from qiskit.primitives.containers.observables_array import ObservablesArray
+from qiskit.primitives.containers.estimator_pub import EstimatorPub
+from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.primitives.containers import BitArray, DataBin, make_data_bin
 from qiskit_aer.noise import NoiseModel
 from qiskit_ibm_runtime.utils import RuntimeEncoder, RuntimeDecoder
@@ -260,10 +262,85 @@ if __name__ == '__main__':
 
         self.assertTrue(json.dumps(payload, cls=RuntimeEncoder))
 
-    def test_encoder_pubs(self):
-        """Test serializing pubs."""
-        pass
+@ddt
+class TestContainerSerialization(IBMTestCase):
+    """Class for testing primitive containers serialization."""
 
+    # Container specific assertEqual methods
+    def assertObservableArraysEqual(self, obs1, obs2):
+        self.assertEqual(obs1.tolist(), obs2.tolist())
+
+    def assertBindingArraysEqual(self, barr1, barr2):
+        def _to_str_keyed(_in_dict):
+            _out_dict = {}
+            for a_key_tuple, val in _in_dict.items():
+                str_key = tuple(a_key.name if isinstance(a_key, Parameter) else a_key for a_key in a_key_tuple)
+                _out_dict[str_key] = val
+            return _out_dict
+
+            self.assertEqual(barr1.shape, barr2.shape)
+            self.assertTrue(np.allclose(barr1.vals, barr2.vals))
+            if barr1.kwvals:
+                barr1_str_keyed = _to_str_keyed(barr1.kwvals)
+                barr2_str_keyed = _to_str_keyed(barr2.kwvals)
+                for key, val in barr1_str_keyed.items():
+                    self.assertIn(key, barr2_str_keyed)
+                    self.assertTrue(np.allclose(val, barr2_str_keyed[key]))
+    def assertDataBinsEqual(self, dbin1, dbin2):
+        """Compares two DataBins
+        Field types are compared up to their string representation
+        """
+        self.assertEqual(dbin1._FIELDS, dbin2._FIELDS)
+        self.assertEqual([str(field_type) for field_type in dbin1._FIELD_TYPES], [str(field_type) for field_type in dbin2._FIELD_TYPES])
+        self.assertEqual(dbin1._SHAPE, dbin2._SHAPE)
+        for field_name in dbin1._FIELDS:
+            field_1 = getattr(dbin1, field_name)
+            field_2 = getattr(dbin2, field_name)
+            if isinstance(field_1, np.ndarray):
+                self.assertTrue(np.allclose(field_1, field_2))
+            else:
+                self.assertEqual(field_1, field_2)
+
+    def assertEstimatorPubEqual(self, pub1, pub2):
+        self.assertEqual(pub1.circuit, pub2.circuit)
+        self.assertObservableArraysEqual(pub1.observables, pub2.observables)
+        self.assertBindingArraysEqual(pub1.parameter_values, pub2.parameter_values)
+        self.assertEqual(pub1.precision, pub2.precision)
+
+    # Data generation methods
+
+    def make_test_data_bins(self):
+        """Generates test data for DataBin test"""
+        result_bins = []
+        data_bin_cls = make_data_bin(
+            [("alpha", np.ndarray), ("beta", np.ndarray)], shape=(10, 20)
+        )
+        alpha = np.empty((10, 20), dtype=np.uint16)
+        beta = np.empty((10, 20), dtype=int)
+        my_bin = data_bin_cls(alpha, beta)
+        result_bins.append(my_bin)
+        return result_bins
+
+    def make_test_estimator_pubs(self):
+        pubs = []
+        params = (Parameter("a"), Parameter("b"))
+        circuit = QuantumCircuit(2)
+        circuit.rx(params[0], 0)
+        circuit.ry(params[1], 1)
+        parameter_values = BindingsArray(data={params: np.ones((10, 2))})
+        observables = ObservablesArray([{"XX": 0.1}])
+        precision = 0.05
+
+        pub = EstimatorPub(
+            circuit=circuit,
+            observables=observables,
+            parameter_values=parameter_values,
+            precision=precision,
+        )
+        pubs.append(pub)
+        return pubs
+
+    # Tests
     @data(
         ObservablesArray([["X", "Y", "Z"], ["0", "1", "+"]]),
         ObservablesArray(qi.pauli_basis(2)),
@@ -279,7 +356,7 @@ if __name__ == '__main__':
         encoded = json.dumps(payload, cls=RuntimeEncoder)
         decoded = json.loads(encoded, cls=RuntimeDecoder)["array"]
         self.assertIsInstance(decoded, ObservablesArray)
-        self.assertEqual(decoded.tolist(), oarray.tolist())
+        self.assertObservableArraysEqual(decoded, oarray)
 
     @data(
         BindingsArray({'a': [1, 2, 3.4]}),
@@ -297,25 +374,12 @@ if __name__ == '__main__':
     def test_bindings_array(self, barray):
         """Test encoding and decoding BindingsArray."""
 
-        def _to_str_keyed(_in_dict):
-            _out_dict = {}
-            for a_key_tuple, val in _in_dict.items():
-                str_key = tuple(a_key.name if isinstance(a_key, Parameter) else a_key for a_key in a_key_tuple)
-                _out_dict[str_key] = val
-            return _out_dict
-
         payload = {"array": barray}
         encoded = json.dumps(payload, cls=RuntimeEncoder)
         decoded = json.loads(encoded, cls=RuntimeDecoder)["array"]
         self.assertIsInstance(decoded, BindingsArray)
-        self.assertEqual(barray.shape, decoded.shape)
-        self.assertTrue(np.allclose(barray.vals, decoded.vals))
-        if barray.kwvals:
-            barray_str_keyed = _to_str_keyed(barray.kwvals)
-            decoded_str_keyed = _to_str_keyed(decoded.kwvals)
-            for key, val in barray_str_keyed.items():
-                self.assertIn(key, decoded_str_keyed)
-                self.assertTrue(np.allclose(val, decoded_str_keyed[key]))
+        self.assertBindingArraysEqual(decoded, barray)
+
 
     @data(
         BitArray(
@@ -332,35 +396,22 @@ if __name__ == '__main__':
         decoded = json.loads(encoded, cls=RuntimeDecoder)["array"]
         self.assertIsInstance(decoded, BitArray)
         self.assertEqual(barray, decoded)
-    def make_test_data_bins(self):
-        result_bins = []
-        data_bin_cls = make_data_bin(
-            [("alpha", np.ndarray), ("beta", np.ndarray)], shape=(10, 20)
-        )
-        alpha = np.empty((10, 20), dtype=np.uint16)
-        beta = np.empty((10, 20), dtype=int)
-        my_bin = data_bin_cls(alpha, beta)
-        result_bins.append(my_bin)
-        return result_bins
-    def assertDataBinsEqual(self, dbin1, dbin2):
-        """Compares two DataBins
-        Field types are compared up to their string representation
-        """
-        self.assertEqual(dbin1._FIELDS, dbin2._FIELDS)
-        self.assertEqual([str(field_type) for field_type in dbin1._FIELD_TYPES], [str(field_type) for field_type in dbin2._FIELD_TYPES])
-        self.assertEqual(dbin1._SHAPE, dbin2._SHAPE)
-        for field_name in dbin1._FIELDS:
-            field_1 = getattr(dbin1, field_name)
-            field_2 = getattr(dbin2, field_name)
-            if isinstance(field_1, np.ndarray):
-                self.assertTrue(np.allclose(field_1, field_2))
-            else:
-                self.assertEqual(field_1, field_2)
+
+
     def test_data_bin(self):
-        """Test encoding and decoding BitArray."""
+        """Test encoding and decoding DataBin."""
         for dbin in self.make_test_data_bins():
             payload = {"bin": dbin}
             encoded = json.dumps(payload, cls=RuntimeEncoder)
             decoded = json.loads(encoded, cls=RuntimeDecoder)["bin"]
             self.assertIsInstance(decoded, DataBin)
             self.assertDataBinsEqual(dbin, decoded)
+
+    def test_estimator_pub(self):
+        """Test encoding and decoding EstimatorPub"""
+        for pub in self.make_test_estimator_pubs():
+            payload = {"pub": pub}
+            encoded = json.dumps(payload, cls=RuntimeEncoder)
+            decoded = json.loads(encoded, cls=RuntimeDecoder)["pub"]
+            self.assertIsInstance(decoded, EstimatorPub)
+            self.assertEstimatorPubEqual(pub, decoded)

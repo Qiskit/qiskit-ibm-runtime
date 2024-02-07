@@ -59,6 +59,8 @@ from qiskit.version import __version__ as _terra_version_string
 from qiskit.primitives.containers.bindings_array import BindingsArray
 from qiskit.primitives.containers.observables_array import ObservablesArray
 from qiskit.primitives.containers import BitArray, DataBin,make_data_bin
+from qiskit.primitives.containers.estimator_pub import EstimatorPub
+from qiskit.primitives.containers.sampler_pub import SamplerPub
 
 
 from qiskit_ibm_provider.qpy import (
@@ -279,6 +281,13 @@ class RuntimeEncoder(json.JSONEncoder):
                        "values": {field_name: getattr(obj, field_name) for field_name in obj._FIELDS},
                        }
             return {"__type__": "DataBin", "__value__": out_val}
+        if isinstance(obj, EstimatorPub):
+            out_val = {'circuit': obj.circuit,
+                       'observables': obj.observables,
+                       'parameter_values': obj.parameter_values,
+                       'precision': obj.precision
+                       }
+            return {"__type__": "EstimatorPub", "__value__": out_val}
         if HAS_AER and isinstance(obj, qiskit_aer.noise.NoiseModel):
             return {"__type__": "NoiseModel", "__value__": obj.to_dict()}
         if hasattr(obj, "settings"):
@@ -373,6 +382,8 @@ class RuntimeDecoder(json.JSONDecoder):
                 field_types = [globals().get(field_type, field_type) for field_type in obj_val['field_types']]
                 data_bin_cls = make_data_bin(zip(field_names, field_types), shape=tuple(obj_val['shape']))
                 return data_bin_cls(**obj_val['values'])
+            if obj_type == "EstimatorPub":
+                return EstimatorPub(**obj_val)
             if obj_type == "to_json":
                 return obj_val
             if obj_type == "NoiseModel":
