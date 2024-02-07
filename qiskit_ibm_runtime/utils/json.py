@@ -58,7 +58,7 @@ from qiskit.result import Result
 from qiskit.version import __version__ as _terra_version_string
 from qiskit.primitives.containers.bindings_array import BindingsArray
 from qiskit.primitives.containers.observables_array import ObservablesArray
-from qiskit.primitives.containers import BitArray, DataBin,make_data_bin
+from qiskit.primitives.containers import BitArray, DataBin, make_data_bin, PubResult, PrimitiveResult
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 
@@ -294,6 +294,9 @@ class RuntimeEncoder(json.JSONEncoder):
                        'shots': obj.shots
                        }
             return {"__type__": "SamplerPub", "__value__": out_val}
+        if isinstance(obj, PubResult):
+            out_val = {'data': obj.data, 'metadata': obj.metadata}
+            return {"__type__": "PubResult", "__value__": out_val}
         if HAS_AER and isinstance(obj, qiskit_aer.noise.NoiseModel):
             return {"__type__": "NoiseModel", "__value__": obj.to_dict()}
         if hasattr(obj, "settings"):
@@ -386,12 +389,17 @@ class RuntimeDecoder(json.JSONDecoder):
             if obj_type == "DataBin":
                 field_names = obj_val['field_names']
                 field_types = [globals().get(field_type, field_type) for field_type in obj_val['field_types']]
-                data_bin_cls = make_data_bin(zip(field_names, field_types), shape=tuple(obj_val['shape']))
+                shape = obj_val['shape']
+                if shape is not None and isinstance(shape, list):
+                    shape = tuple(shape)
+                data_bin_cls = make_data_bin(zip(field_names, field_types),shape=shape)
                 return data_bin_cls(**obj_val['values'])
             if obj_type == "EstimatorPub":
                 return EstimatorPub(**obj_val)
             if obj_type == "SamplerPub":
                 return SamplerPub(**obj_val)
+            if obj_type == "PubResult":
+                return PubResult(**obj_val)
             if obj_type == "to_json":
                 return obj_val
             if obj_type == "NoiseModel":

@@ -34,7 +34,7 @@ from qiskit.primitives.containers.bindings_array import BindingsArray
 from qiskit.primitives.containers.observables_array import ObservablesArray
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.primitives.containers.sampler_pub import SamplerPub
-from qiskit.primitives.containers import BitArray, DataBin, make_data_bin
+from qiskit.primitives.containers import BitArray, DataBin, make_data_bin, PubResult, PrimitiveResult
 from qiskit_aer.noise import NoiseModel
 from qiskit_ibm_runtime.utils import RuntimeEncoder, RuntimeDecoder
 
@@ -312,6 +312,11 @@ class TestContainerSerialization(IBMTestCase):
         self.assertBindingArraysEqual(pub1.parameter_values, pub2.parameter_values)
         self.assertEqual(pub1.shots, pub2.shots)
 
+    def assertPubResultEqual(self, pub_result1, pub_result2):
+        self.assertDataBinsEqual(pub_result1.data, pub_result2.data)
+        self.assertEqual(pub_result1.metadata, pub_result2.metadata)
+
+
     # Data generation methods
 
     def make_test_data_bins(self):
@@ -363,6 +368,14 @@ class TestContainerSerialization(IBMTestCase):
         pubs.append(pub)
         return pubs
 
+    def make_test_pub_results(self):
+        pub_results = []
+        data_bin = make_data_bin((("a", float), ("b", int)))
+        pub_result = PubResult(data_bin(a=1.0, b=2))
+        pub_results.append(pub_result)
+        pub_result = PubResult(data_bin(a=1.0, b=2), {"x": 1})
+        pub_results.append(pub_result)
+        return pub_results
     # Tests
     @data(
         ObservablesArray([["X", "Y", "Z"], ["0", "1", "+"]]),
@@ -440,10 +453,20 @@ class TestContainerSerialization(IBMTestCase):
             self.assertEstimatorPubEqual(pub, decoded)
 
     def test_sampler_pub(self):
-        """Test encoding and decoding EstimatorPub"""
+        """Test encoding and decoding SamplerPub"""
         for pub in self.make_test_sampler_pubs():
             payload = {"pub": pub}
             encoded = json.dumps(payload, cls=RuntimeEncoder)
             decoded = json.loads(encoded, cls=RuntimeDecoder)["pub"]
             self.assertIsInstance(decoded, SamplerPub)
             self.assertSamplerPubEqual(pub, decoded)
+
+    def test_pub_result(self):
+        """Test encoding and decoding PubResult"""
+        for pub_result in self.make_test_pub_results():
+            payload = {"pub_result": pub_result}
+            encoded = json.dumps(payload, cls=RuntimeEncoder)
+            decoded = json.loads(encoded, cls=RuntimeDecoder)["pub_result"]
+            self.assertIsInstance(decoded, PubResult)
+            self.assertPubResultEqual(pub_result, decoded)
+
