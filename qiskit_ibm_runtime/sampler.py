@@ -14,11 +14,14 @@
 
 from __future__ import annotations
 import os
-from typing import Dict, Optional, Sequence, Any, Union
+from typing import Dict, Optional, Sequence, Any, Union, Iterable
 import logging
+import warnings
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.primitives import BaseSampler
+from qiskit.primitives.base import BaseSamplerV2
+from qiskit.primitives.containers.sampler_pub import SamplerPub, SamplerPubLike
 
 from .options import Options
 from .runtime_job import RuntimeJob
@@ -29,9 +32,6 @@ from .base_primitive import BasePrimitiveV1, BasePrimitiveV2
 from .session import Session
 from .utils.qctrl import validate as qctrl_validate
 from .options import SamplerOptions
-
-# TODO: remove when we have real v2 base estimator
-from .qiskit.primitives import BaseSamplerV2
 
 logger = logging.getLogger(__name__)
 
@@ -94,6 +94,33 @@ class SamplerV2(BasePrimitiveV2, Sampler, BaseSamplerV2):
 
         # if self._service._channel_strategy == "q-ctrl":
         #     raise NotImplementedError("SamplerV2 is not supported with q-ctrl channel strategy.")
+
+    def run(
+        self, pubs: Iterable[SamplerPubLike], *, shots: int | None = None
+    ) -> RuntimeJob:
+        """Submit a request to the estimator primitive.
+
+        Args:
+            pubs: An iterable of pub-like (primitive unified bloc) objects, such as
+                tuples ``(circuit, observables)`` or ``(circuit, observables, parameter_values)``.
+            precision: The target precision for expectation value estimates of each
+                run Estimator Pub that does not specify its own precision. If None
+                the estimator's default precision value will be used.
+
+        Returns:
+            Submitted job.
+
+        """
+        coerced_pubs = [SamplerPub.coerce(pub, shots) for pub in pubs]
+
+        if any(len(pub.circuit.cregs) == 0 for pub in coerced_pubs):
+            warnings.warn(
+                "One of your circuits has no output classical registers and so the result "
+                "will be empty. Did you mean to add measurement instructions?",
+                UserWarning,
+            )
+
+        return self._run(coerced_pubs)  # type: ignore[arg-type]
 
     def _validate_options(self, options: dict) -> None:
         """Validate that program inputs (options) are valid

@@ -16,10 +16,8 @@ from typing import List, Union, Literal
 
 from pydantic import field_validator
 
-from .utils import Unset, UnsetType, skip_unset_validation
+from .utils import Unset, UnsetType, skip_unset_validation, primitive_dataclass
 
-# TODO use real base options when available
-from ..qiskit.primitives.options import primitive_dataclass
 
 LayoutMethodType = Literal[
     "trivial",

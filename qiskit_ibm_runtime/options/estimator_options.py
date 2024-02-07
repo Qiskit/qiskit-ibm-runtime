@@ -27,9 +27,7 @@ from .transpilation_options import TranspilationOptions
 from .resilience_options import ResilienceOptionsV2
 from .twirling_options import TwirlingOptions
 from .options import OptionsV2
-
-# TODO use real base options when available
-from ..qiskit.primitives.options import primitive_dataclass
+from .utils import primitive_dataclass
 
 DDSequenceType = Literal["XX", "XpXm", "XY4"]
 

@@ -17,6 +17,9 @@ import functools
 import copy
 from dataclasses import is_dataclass, asdict
 
+from pydantic import ConfigDict
+from pydantic.dataclasses import dataclass
+
 from ..ibm_backend import IBMBackend
 
 if TYPE_CHECKING:
@@ -170,3 +173,8 @@ class UnsetType:
 
 
 Unset = UnsetType()
+
+
+primitive_dataclass = dataclass(
+    config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid")
+)

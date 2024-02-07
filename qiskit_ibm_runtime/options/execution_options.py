@@ -16,10 +16,7 @@ from typing import Union
 
 from pydantic import model_validator, field_validator, ValidationInfo
 
-from .utils import Unset, UnsetType, skip_unset_validation
-
-# TODO use real base options when available
-from ..qiskit.primitives.options import primitive_dataclass
+from .utils import Unset, UnsetType, skip_unset_validation, primitive_dataclass
 
 
 @primitive_dataclass
