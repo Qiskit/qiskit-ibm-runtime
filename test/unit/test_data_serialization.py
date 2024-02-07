@@ -34,7 +34,13 @@ from qiskit.primitives.containers.bindings_array import BindingsArray
 from qiskit.primitives.containers.observables_array import ObservablesArray
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.primitives.containers.sampler_pub import SamplerPub
-from qiskit.primitives.containers import BitArray, DataBin, make_data_bin, PubResult, PrimitiveResult
+from qiskit.primitives.containers import (
+    BitArray,
+    DataBin,
+    make_data_bin,
+    PubResult,
+    PrimitiveResult,
+)
 from qiskit_aer.noise import NoiseModel
 from qiskit_ibm_runtime.utils import RuntimeEncoder, RuntimeDecoder
 
@@ -262,6 +268,7 @@ if __name__ == '__main__':
 
         self.assertTrue(json.dumps(payload, cls=RuntimeEncoder))
 
+
 @ddt
 class TestContainerSerialization(IBMTestCase):
     """Class for testing primitive containers serialization."""
@@ -274,7 +281,9 @@ class TestContainerSerialization(IBMTestCase):
         def _to_str_keyed(_in_dict):
             _out_dict = {}
             for a_key_tuple, val in _in_dict.items():
-                str_key = tuple(a_key.name if isinstance(a_key, Parameter) else a_key for a_key in a_key_tuple)
+                str_key = tuple(
+                    a_key.name if isinstance(a_key, Parameter) else a_key for a_key in a_key_tuple
+                )
                 _out_dict[str_key] = val
             return _out_dict
 
@@ -286,12 +295,16 @@ class TestContainerSerialization(IBMTestCase):
                 for key, val in barr1_str_keyed.items():
                     self.assertIn(key, barr2_str_keyed)
                     self.assertTrue(np.allclose(val, barr2_str_keyed[key]))
+
     def assertDataBinsEqual(self, dbin1, dbin2):
         """Compares two DataBins
         Field types are compared up to their string representation
         """
         self.assertEqual(dbin1._FIELDS, dbin2._FIELDS)
-        self.assertEqual([str(field_type) for field_type in dbin1._FIELD_TYPES], [str(field_type) for field_type in dbin2._FIELD_TYPES])
+        self.assertEqual(
+            [str(field_type) for field_type in dbin1._FIELD_TYPES],
+            [str(field_type) for field_type in dbin2._FIELD_TYPES],
+        )
         self.assertEqual(dbin1._SHAPE, dbin2._SHAPE)
         for field_name in dbin1._FIELDS:
             field_1 = getattr(dbin1, field_name)
@@ -324,19 +337,19 @@ class TestContainerSerialization(IBMTestCase):
 
     # Data generation methods
 
-    def make_test_data_bins(self):
+    @staticmethod
+    def make_test_data_bins():
         """Generates test data for DataBin test"""
         result_bins = []
-        data_bin_cls = make_data_bin(
-            [("alpha", np.ndarray), ("beta", np.ndarray)], shape=(10, 20)
-        )
+        data_bin_cls = make_data_bin([("alpha", np.ndarray), ("beta", np.ndarray)], shape=(10, 20))
         alpha = np.empty((10, 20), dtype=np.uint16)
         beta = np.empty((10, 20), dtype=int)
         my_bin = data_bin_cls(alpha, beta)
         result_bins.append(my_bin)
         return result_bins
 
-    def make_test_estimator_pubs(self):
+    @staticmethod
+    def make_test_estimator_pubs():
         pubs = []
         params = (Parameter("a"), Parameter("b"))
         circuit = QuantumCircuit(2)
@@ -355,7 +368,8 @@ class TestContainerSerialization(IBMTestCase):
         pubs.append(pub)
         return pubs
 
-    def make_test_sampler_pubs(self):
+    @staticmethod
+    def make_test_sampler_pubs():
         pubs = []
         params = (Parameter("a"), Parameter("b"))
         circuit = QuantumCircuit(2)
@@ -373,7 +387,8 @@ class TestContainerSerialization(IBMTestCase):
         pubs.append(pub)
         return pubs
 
-    def make_test_pub_results(self):
+    @staticmethod
+    def make_test_pub_results():
         pub_results = []
         data_bin = make_data_bin((("a", float), ("b", int)))
         pub_result = PubResult(data_bin(a=1.0, b=2))
@@ -382,11 +397,10 @@ class TestContainerSerialization(IBMTestCase):
         pub_results.append(pub_result)
         return pub_results
 
-    def make_test_primitive_results(self):
+    @staticmethod
+    def make_test_primitive_results():
         primitive_results = []
-        data_bin_cls = make_data_bin(
-            [("alpha", np.ndarray), ("beta", np.ndarray)], shape=(10, 20)
-        )
+        data_bin_cls = make_data_bin([("alpha", np.ndarray), ("beta", np.ndarray)], shape=(10, 20))
 
         alpha = np.empty((10, 20), dtype=np.uint16)
         beta = np.empty((10, 20), dtype=int)
@@ -395,7 +409,7 @@ class TestContainerSerialization(IBMTestCase):
             PubResult(data_bin_cls(alpha, beta)),
             PubResult(data_bin_cls(alpha, beta)),
         ]
-        result = PrimitiveResult(pub_results, {'1': 2})
+        result = PrimitiveResult(pub_results, {"1": 2})
         primitive_results.append(result)
         return primitive_results
 
@@ -406,7 +420,10 @@ class TestContainerSerialization(IBMTestCase):
         ObservablesArray([qi.random_pauli_list(2, 3, phase=False) for _ in range(5)]),
         ObservablesArray(np.array([["X", "Y"], ["Z", "I"]], dtype=object)),
         ObservablesArray(
-            [[SparsePauliOp(qi.random_pauli_list(2, 3, phase=False)) for _ in range(3)] for _ in range(5)]
+            [
+                [SparsePauliOp(qi.random_pauli_list(2, 3, phase=False)) for _ in range(3)]
+                for _ in range(5)
+            ]
         ),
     )
     def test_obs_array(self, oarray):
@@ -418,8 +435,8 @@ class TestContainerSerialization(IBMTestCase):
         self.assertObservableArraysEqual(decoded, oarray)
 
     @data(
-        BindingsArray({'a': [1, 2, 3.4]}),
-        BindingsArray({('a', 'b', 'c'): [4.0, 5.0, 6.0]}, shape=()),
+        BindingsArray({"a": [1, 2, 3.4]}),
+        BindingsArray({("a", "b", "c"): [4.0, 5.0, 6.0]}, shape=()),
         BindingsArray({Parameter("a"): np.random.uniform(size=(5,))}),
         BindingsArray({ParameterVector("a", 5): np.linspace(0, 1, 30).reshape((2, 3, 5))}),
         BindingsArray(data={Parameter("a"): [0.0], Parameter("b"): [1.0]}, shape=1),
@@ -439,14 +456,13 @@ class TestContainerSerialization(IBMTestCase):
         self.assertIsInstance(decoded, BindingsArray)
         self.assertBindingArraysEqual(decoded, barray)
 
-
     @data(
         BitArray(
             np.array([[[3, 5], [3, 5], [234, 100]], [[0, 1], [1, 0], [1, 0]]], dtype=np.uint8),
             num_bits=15,
         ),
         BitArray.from_bool_array([[1, 0, 0], [1, 1, 0]]),
-        BitArray.from_counts(Counts({"0b101010": 2, "0b1": 3, "0x010203": 4}))
+        BitArray.from_counts(Counts({"0b101010": 2, "0b1": 3, "0x010203": 4})),
     )
     def test_bit_array(self, barray):
         """Test encoding and decoding BitArray."""
@@ -456,51 +472,47 @@ class TestContainerSerialization(IBMTestCase):
         self.assertIsInstance(decoded, BitArray)
         self.assertEqual(barray, decoded)
 
-
-    def test_data_bin(self):
+    @data(*make_test_data_bins())
+    def test_data_bin(self, dbin):
         """Test encoding and decoding DataBin."""
-        for dbin in self.make_test_data_bins():
-            payload = {"bin": dbin}
-            encoded = json.dumps(payload, cls=RuntimeEncoder)
-            decoded = json.loads(encoded, cls=RuntimeDecoder)["bin"]
-            self.assertIsInstance(decoded, DataBin)
-            self.assertDataBinsEqual(dbin, decoded)
+        payload = {"bin": dbin}
+        encoded = json.dumps(payload, cls=RuntimeEncoder)
+        decoded = json.loads(encoded, cls=RuntimeDecoder)["bin"]
+        self.assertIsInstance(decoded, DataBin)
+        self.assertDataBinsEqual(dbin, decoded)
 
-    def test_estimator_pub(self):
+    @data(*make_test_estimator_pubs())
+    def test_estimator_pub(self, pub):
         """Test encoding and decoding EstimatorPub"""
-        for pub in self.make_test_estimator_pubs():
-            payload = {"pub": pub}
-            encoded = json.dumps(payload, cls=RuntimeEncoder)
-            decoded = json.loads(encoded, cls=RuntimeDecoder)["pub"]
-            self.assertIsInstance(decoded, EstimatorPub)
-            self.assertEstimatorPubsEqual(pub, decoded)
+        payload = {"pub": pub}
+        encoded = json.dumps(payload, cls=RuntimeEncoder)
+        decoded = json.loads(encoded, cls=RuntimeDecoder)["pub"]
+        self.assertIsInstance(decoded, EstimatorPub)
+        self.assertEstimatorPubsEqual(pub, decoded)
 
-    def test_sampler_pub(self):
+    @data(*make_test_sampler_pubs())
+    def test_sampler_pub(self, pub):
         """Test encoding and decoding SamplerPub"""
-        for pub in self.make_test_sampler_pubs():
-            payload = {"pub": pub}
-            encoded = json.dumps(payload, cls=RuntimeEncoder)
-            decoded = json.loads(encoded, cls=RuntimeDecoder)["pub"]
-            self.assertIsInstance(decoded, SamplerPub)
-            self.assertSamplerPubsEqual(pub, decoded)
+        payload = {"pub": pub}
+        encoded = json.dumps(payload, cls=RuntimeEncoder)
+        decoded = json.loads(encoded, cls=RuntimeDecoder)["pub"]
+        self.assertIsInstance(decoded, SamplerPub)
+        self.assertSamplerPubsEqual(pub, decoded)
 
-    def test_pub_result(self):
+    @data(*make_test_pub_results())
+    def test_pub_result(self, pub_result):
         """Test encoding and decoding PubResult"""
-        for pub_result in self.make_test_pub_results():
-            payload = {"pub_result": pub_result}
-            encoded = json.dumps(payload, cls=RuntimeEncoder)
-            decoded = json.loads(encoded, cls=RuntimeDecoder)["pub_result"]
-            self.assertIsInstance(decoded, PubResult)
-            self.assertPubResultsEqual(pub_result, decoded)
+        payload = {"pub_result": pub_result}
+        encoded = json.dumps(payload, cls=RuntimeEncoder)
+        decoded = json.loads(encoded, cls=RuntimeDecoder)["pub_result"]
+        self.assertIsInstance(decoded, PubResult)
+        self.assertPubResultsEqual(pub_result, decoded)
 
-    def test_primitive_result(self):
+    @data(*make_test_primitive_results())
+    def test_primitive_result(self, primitive_result):
         """Test encoding and decoding PubResult"""
-        for primitive_result in self.make_test_primitive_results():
-            payload = {"primitive_result": primitive_result}
-            encoded = json.dumps(payload, cls=RuntimeEncoder)
-            decoded = json.loads(encoded, cls=RuntimeDecoder)["primitive_result"]
-            self.assertIsInstance(decoded, PrimitiveResult)
-            self.assertPrimitiveResultsEqual(primitive_result, decoded)
-
-
-
+        payload = {"primitive_result": primitive_result}
+        encoded = json.dumps(payload, cls=RuntimeEncoder)
+        decoded = json.loads(encoded, cls=RuntimeDecoder)["primitive_result"]
+        self.assertIsInstance(decoded, PrimitiveResult)
+        self.assertPrimitiveResultsEqual(primitive_result, decoded)

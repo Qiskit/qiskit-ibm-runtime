@@ -58,7 +58,13 @@ from qiskit.result import Result
 from qiskit.version import __version__ as _terra_version_string
 from qiskit.primitives.containers.bindings_array import BindingsArray
 from qiskit.primitives.containers.observables_array import ObservablesArray
-from qiskit.primitives.containers import BitArray, DataBin, make_data_bin, PubResult, PrimitiveResult
+from qiskit.primitives.containers import (
+    BitArray,
+    DataBin,
+    make_data_bin,
+    PubResult,
+    PrimitiveResult,
+)
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 
@@ -275,30 +281,33 @@ class RuntimeEncoder(json.JSONEncoder):
             out_val = {"array": obj.array, "num_bits": obj.num_bits}
             return {"__type__": "BitArray", "__value__": out_val}
         if isinstance(obj, DataBin):
-            out_val = {"field_names": obj._FIELDS,
-                       "field_types": [str(field_type) for field_type in obj._FIELD_TYPES],
-                       "shape": obj._SHAPE,
-                       "values": {field_name: getattr(obj, field_name) for field_name in obj._FIELDS},
-                       }
+            out_val = {
+                "field_names": obj._FIELDS,
+                "field_types": [str(field_type) for field_type in obj._FIELD_TYPES],
+                "shape": obj._SHAPE,
+                "values": {field_name: getattr(obj, field_name) for field_name in obj._FIELDS},
+            }
             return {"__type__": "DataBin", "__value__": out_val}
         if isinstance(obj, EstimatorPub):
-            out_val = {'circuit': obj.circuit,
-                       'observables': obj.observables,
-                       'parameter_values': obj.parameter_values,
-                       'precision': obj.precision
-                       }
+            out_val = {
+                "circuit": obj.circuit,
+                "observables": obj.observables,
+                "parameter_values": obj.parameter_values,
+                "precision": obj.precision,
+            }
             return {"__type__": "EstimatorPub", "__value__": out_val}
         if isinstance(obj, SamplerPub):
-            out_val = {'circuit': obj.circuit,
-                       'parameter_values': obj.parameter_values,
-                       'shots': obj.shots
-                       }
+            out_val = {
+                "circuit": obj.circuit,
+                "parameter_values": obj.parameter_values,
+                "shots": obj.shots,
+            }
             return {"__type__": "SamplerPub", "__value__": out_val}
         if isinstance(obj, PubResult):
-            out_val = {'data': obj.data, 'metadata': obj.metadata}
+            out_val = {"data": obj.data, "metadata": obj.metadata}
             return {"__type__": "PubResult", "__value__": out_val}
         if isinstance(obj, PrimitiveResult):
-            out_val = {'pub_results': obj._pub_results, 'metadata': obj.metadata}
+            out_val = {"pub_results": obj._pub_results, "metadata": obj.metadata}
             return {"__type__": "PrimitiveResult", "__value__": out_val}
         if HAS_AER and isinstance(obj, qiskit_aer.noise.NoiseModel):
             return {"__type__": "NoiseModel", "__value__": obj.to_dict()}
@@ -390,13 +399,15 @@ class RuntimeDecoder(json.JSONDecoder):
             if obj_type == "BitArray":
                 return BitArray(**obj_val)
             if obj_type == "DataBin":
-                field_names = obj_val['field_names']
-                field_types = [globals().get(field_type, field_type) for field_type in obj_val['field_types']]
-                shape = obj_val['shape']
+                field_names = obj_val["field_names"]
+                field_types = [
+                    globals().get(field_type, field_type) for field_type in obj_val["field_types"]
+                ]
+                shape = obj_val["shape"]
                 if shape is not None and isinstance(shape, list):
                     shape = tuple(shape)
-                data_bin_cls = make_data_bin(zip(field_names, field_types),shape=shape)
-                return data_bin_cls(**obj_val['values'])
+                data_bin_cls = make_data_bin(zip(field_names, field_types), shape=shape)
+                return data_bin_cls(**obj_val["values"])
             if obj_type == "EstimatorPub":
                 return EstimatorPub(**obj_val)
             if obj_type == "SamplerPub":
