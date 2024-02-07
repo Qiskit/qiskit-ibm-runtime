@@ -23,11 +23,15 @@ from qiskit.circuit.library.standard_gates import IGate, UGate, U3Gate
 from qiskit.circuit.reset import Reset
 from qiskit.dagcircuit import DAGCircuit, DAGNode, DAGInNode, DAGOpNode
 from qiskit.quantum_info.operators.predicates import matrix_equal
-from qiskit.quantum_info.synthesis import OneQubitEulerDecomposer
 from qiskit.transpiler.exceptions import TranspilerError
 from qiskit.transpiler.instruction_durations import InstructionDurations
 from qiskit.transpiler.passes.optimization import Optimize1qGates
 from qiskit.transpiler import CouplingMap
+
+try:
+    from qiskit.quantum_info.synthesis import OneQubitEulerDecomposer
+except ImportError:
+    from qiskit.synthesis import OneQubitEulerDecomposer
 
 from .block_base_padder import BlockBasePadder
 
@@ -321,7 +325,11 @@ class PadDynamicalDecoupling(BlockBasePadder):
                     self._dd_sequence_lengths[qubit] = []
 
                 physical_index = dag.qubits.index(qubit)
-                if self._qubits and physical_index not in self._qubits:
+                if (
+                    self._qubits
+                    and physical_index not in self._qubits
+                    or qubit in self._idle_qubits
+                ):
                     continue
 
                 for index, gate in enumerate(seq):

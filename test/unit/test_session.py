@@ -15,6 +15,7 @@
 from unittest.mock import MagicMock, patch
 from qiskit.providers.fake_provider import FakeManila
 
+from qiskit_ibm_runtime.fake_provider import FakeManila
 from qiskit_ibm_runtime import Session
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.utils.default_session import _DEFAULT_SESSION
