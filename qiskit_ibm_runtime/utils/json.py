@@ -297,6 +297,9 @@ class RuntimeEncoder(json.JSONEncoder):
         if isinstance(obj, PubResult):
             out_val = {'data': obj.data, 'metadata': obj.metadata}
             return {"__type__": "PubResult", "__value__": out_val}
+        if isinstance(obj, PrimitiveResult):
+            out_val = {'pub_results': obj._pub_results, 'metadata': obj.metadata}
+            return {"__type__": "PrimitiveResult", "__value__": out_val}
         if HAS_AER and isinstance(obj, qiskit_aer.noise.NoiseModel):
             return {"__type__": "NoiseModel", "__value__": obj.to_dict()}
         if hasattr(obj, "settings"):
@@ -400,6 +403,8 @@ class RuntimeDecoder(json.JSONDecoder):
                 return SamplerPub(**obj_val)
             if obj_type == "PubResult":
                 return PubResult(**obj_val)
+            if obj_type == "PrimitiveResult":
+                return PrimitiveResult(**obj_val)
             if obj_type == "to_json":
                 return obj_val
             if obj_type == "NoiseModel":

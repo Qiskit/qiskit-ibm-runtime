@@ -301,21 +301,26 @@ class TestContainerSerialization(IBMTestCase):
             else:
                 self.assertEqual(field_1, field_2)
 
-    def assertEstimatorPubEqual(self, pub1, pub2):
+    def assertEstimatorPubsEqual(self, pub1, pub2):
         self.assertEqual(pub1.circuit, pub2.circuit)
         self.assertObservableArraysEqual(pub1.observables, pub2.observables)
         self.assertBindingArraysEqual(pub1.parameter_values, pub2.parameter_values)
         self.assertEqual(pub1.precision, pub2.precision)
 
-    def assertSamplerPubEqual(self, pub1, pub2):
+    def assertSamplerPubsEqual(self, pub1, pub2):
         self.assertEqual(pub1.circuit, pub2.circuit)
         self.assertBindingArraysEqual(pub1.parameter_values, pub2.parameter_values)
         self.assertEqual(pub1.shots, pub2.shots)
 
-    def assertPubResultEqual(self, pub_result1, pub_result2):
+    def assertPubResultsEqual(self, pub_result1, pub_result2):
         self.assertDataBinsEqual(pub_result1.data, pub_result2.data)
         self.assertEqual(pub_result1.metadata, pub_result2.metadata)
 
+    def assertPrimitiveResultsEqual(self, primitive_result1, primitive_result2):
+        self.assertEqual(len(primitive_result1), len(primitive_result2))
+        for pub_result1, pub_result2 in zip(primitive_result1, primitive_result2):
+            self.assertPubResultsEqual(pub_result1, pub_result2)
+        self.assertEqual(primitive_result1.metadata, primitive_result2.metadata)
 
     # Data generation methods
 
@@ -376,6 +381,24 @@ class TestContainerSerialization(IBMTestCase):
         pub_result = PubResult(data_bin(a=1.0, b=2), {"x": 1})
         pub_results.append(pub_result)
         return pub_results
+
+    def make_test_primitive_results(self):
+        primitive_results = []
+        data_bin_cls = make_data_bin(
+            [("alpha", np.ndarray), ("beta", np.ndarray)], shape=(10, 20)
+        )
+
+        alpha = np.empty((10, 20), dtype=np.uint16)
+        beta = np.empty((10, 20), dtype=int)
+
+        pub_results = [
+            PubResult(data_bin_cls(alpha, beta)),
+            PubResult(data_bin_cls(alpha, beta)),
+        ]
+        result = PrimitiveResult(pub_results, {'1': 2})
+        primitive_results.append(result)
+        return primitive_results
+
     # Tests
     @data(
         ObservablesArray([["X", "Y", "Z"], ["0", "1", "+"]]),
@@ -450,7 +473,7 @@ class TestContainerSerialization(IBMTestCase):
             encoded = json.dumps(payload, cls=RuntimeEncoder)
             decoded = json.loads(encoded, cls=RuntimeDecoder)["pub"]
             self.assertIsInstance(decoded, EstimatorPub)
-            self.assertEstimatorPubEqual(pub, decoded)
+            self.assertEstimatorPubsEqual(pub, decoded)
 
     def test_sampler_pub(self):
         """Test encoding and decoding SamplerPub"""
@@ -459,7 +482,7 @@ class TestContainerSerialization(IBMTestCase):
             encoded = json.dumps(payload, cls=RuntimeEncoder)
             decoded = json.loads(encoded, cls=RuntimeDecoder)["pub"]
             self.assertIsInstance(decoded, SamplerPub)
-            self.assertSamplerPubEqual(pub, decoded)
+            self.assertSamplerPubsEqual(pub, decoded)
 
     def test_pub_result(self):
         """Test encoding and decoding PubResult"""
@@ -468,5 +491,16 @@ class TestContainerSerialization(IBMTestCase):
             encoded = json.dumps(payload, cls=RuntimeEncoder)
             decoded = json.loads(encoded, cls=RuntimeDecoder)["pub_result"]
             self.assertIsInstance(decoded, PubResult)
-            self.assertPubResultEqual(pub_result, decoded)
+            self.assertPubResultsEqual(pub_result, decoded)
+
+    def test_primitive_result(self):
+        """Test encoding and decoding PubResult"""
+        for primitive_result in self.make_test_primitive_results():
+            payload = {"primitive_result": primitive_result}
+            encoded = json.dumps(payload, cls=RuntimeEncoder)
+            decoded = json.loads(encoded, cls=RuntimeDecoder)["primitive_result"]
+            self.assertIsInstance(decoded, PrimitiveResult)
+            self.assertPrimitiveResultsEqual(primitive_result, decoded)
+
+
 
