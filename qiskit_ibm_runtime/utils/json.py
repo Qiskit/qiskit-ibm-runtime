@@ -288,6 +288,12 @@ class RuntimeEncoder(json.JSONEncoder):
                        'precision': obj.precision
                        }
             return {"__type__": "EstimatorPub", "__value__": out_val}
+        if isinstance(obj, SamplerPub):
+            out_val = {'circuit': obj.circuit,
+                       'parameter_values': obj.parameter_values,
+                       'shots': obj.shots
+                       }
+            return {"__type__": "SamplerPub", "__value__": out_val}
         if HAS_AER and isinstance(obj, qiskit_aer.noise.NoiseModel):
             return {"__type__": "NoiseModel", "__value__": obj.to_dict()}
         if hasattr(obj, "settings"):
@@ -384,6 +390,8 @@ class RuntimeDecoder(json.JSONDecoder):
                 return data_bin_cls(**obj_val['values'])
             if obj_type == "EstimatorPub":
                 return EstimatorPub(**obj_val)
+            if obj_type == "SamplerPub":
+                return SamplerPub(**obj_val)
             if obj_type == "to_json":
                 return obj_val
             if obj_type == "NoiseModel":

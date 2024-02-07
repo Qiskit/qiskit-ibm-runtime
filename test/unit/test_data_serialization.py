@@ -307,6 +307,11 @@ class TestContainerSerialization(IBMTestCase):
         self.assertBindingArraysEqual(pub1.parameter_values, pub2.parameter_values)
         self.assertEqual(pub1.precision, pub2.precision)
 
+    def assertSamplerPubEqual(self, pub1, pub2):
+        self.assertEqual(pub1.circuit, pub2.circuit)
+        self.assertBindingArraysEqual(pub1.parameter_values, pub2.parameter_values)
+        self.assertEqual(pub1.shots, pub2.shots)
+
     # Data generation methods
 
     def make_test_data_bins(self):
@@ -336,6 +341,24 @@ class TestContainerSerialization(IBMTestCase):
             observables=observables,
             parameter_values=parameter_values,
             precision=precision,
+        )
+        pubs.append(pub)
+        return pubs
+
+    def make_test_sampler_pubs(self):
+        pubs = []
+        params = (Parameter("a"), Parameter("b"))
+        circuit = QuantumCircuit(2)
+        circuit.rx(params[0], 0)
+        circuit.ry(params[1], 1)
+        circuit.measure_all()
+        parameter_values = BindingsArray(data={params: np.ones((10, 2))})
+        shots = 1000
+
+        pub = SamplerPub(
+            circuit=circuit,
+            parameter_values=parameter_values,
+            shots=shots,
         )
         pubs.append(pub)
         return pubs
@@ -415,3 +438,12 @@ class TestContainerSerialization(IBMTestCase):
             decoded = json.loads(encoded, cls=RuntimeDecoder)["pub"]
             self.assertIsInstance(decoded, EstimatorPub)
             self.assertEstimatorPubEqual(pub, decoded)
+
+    def test_sampler_pub(self):
+        """Test encoding and decoding EstimatorPub"""
+        for pub in self.make_test_sampler_pubs():
+            payload = {"pub": pub}
+            encoded = json.dumps(payload, cls=RuntimeEncoder)
+            decoded = json.loads(encoded, cls=RuntimeDecoder)["pub"]
+            self.assertIsInstance(decoded, SamplerPub)
+            self.assertSamplerPubEqual(pub, decoded)
