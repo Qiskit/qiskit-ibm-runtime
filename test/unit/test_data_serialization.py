@@ -24,7 +24,6 @@ import numpy as np
 from ddt import data, ddt
 
 from qiskit.circuit import Parameter, ParameterVector, QuantumCircuit
-from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit.circuit.library import EfficientSU2, CXGate, PhaseGate, U2Gate
 from qiskit.providers.fake_provider.backends import FakeNairobi
 import qiskit.quantum_info as qi
@@ -290,14 +289,12 @@ class TestContainerSerialization(IBMTestCase):
                 _out_dict[str_key] = val
             return _out_dict
 
-            self.assertEqual(barr1.shape, barr2.shape)
-            self.assertTrue(np.allclose(barr1.vals, barr2.vals))
-            if barr1.kwvals:
-                barr1_str_keyed = _to_str_keyed(barr1.kwvals)
-                barr2_str_keyed = _to_str_keyed(barr2.kwvals)
-                for key, val in barr1_str_keyed.items():
-                    self.assertIn(key, barr2_str_keyed)
-                    self.assertTrue(np.allclose(val, barr2_str_keyed[key]))
+        self.assertEqual(barr1.shape, barr2.shape)
+        barr1_str_keyed = _to_str_keyed(barr1.data)
+        barr2_str_keyed = _to_str_keyed(barr2.data)
+        for key, val in barr1_str_keyed.items():
+            self.assertIn(key, barr2_str_keyed)
+            self.assertTrue(np.allclose(val, barr2_str_keyed[key]))
 
     def assert_data_bins_equal(self, dbin1, dbin2):
         """Compares two DataBins
