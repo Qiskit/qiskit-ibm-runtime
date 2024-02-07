@@ -1,0 +1,52 @@
+# This code is part of Qiskit.
+#
+# (C) Copyright IBM 2024.
+#
+# This code is licensed under the Apache License, Version 2.0. You may
+# obtain a copy of this license in the LICENSE.txt file in the root directory
+# of this source tree or at http://www.apache.org/licenses/LICENSE-2.0.
+#
+# Any modifications or derivative works of this code must retain this
+# copyright notice, and modified files need to carry a notice indicating
+# that they have been altered from the originals.
+
+name: Integration Tests (Qiskit Main)
+on:
+  schedule:
+    # run integration tests against Qiskit main once a week
+    - cron: '0 0 * * 0'
+  workflow_dispatch:
+jobs:
+  integration-tests:
+    if: github.repository_owner == 'Qiskit'
+    name: Run integration tests - ${{ matrix.environment }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      # avoid cancellation of in-progress jobs if any matrix job fails
+      fail-fast: false
+      matrix:
+        python-version: [ 3.9 ]
+        os: [ "ubuntu-latest" ]
+        environment: [ "ibm-quantum-production", "ibm-quantum-staging", "ibm-cloud-production", "ibm-cloud-staging" ]
+    environment: ${{ matrix.environment }}
+    env:
+      QISKIT_IBM_TOKEN: ${{ secrets.QISKIT_IBM_TOKEN }}
+      QISKIT_IBM_URL: ${{ secrets.QISKIT_IBM_URL }}
+      QISKIT_IBM_INSTANCE: ${{ secrets.QISKIT_IBM_INSTANCE }}
+      LOG_LEVEL: DEBUG
+      STREAM_LOG: True
+      QISKIT_IN_PARALLEL: True
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -c constraints.txt -r requirements-dev.txt -e . git+https://github.com/Qiskit/qiskit.git
+      - name: Run integration tests
+        run: make integration-test

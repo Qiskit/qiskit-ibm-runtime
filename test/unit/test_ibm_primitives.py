@@ -23,7 +23,6 @@ from qiskit import transpile
 from qiskit.circuit import QuantumCircuit
 
 from qiskit.quantum_info import SparsePauliOp
-from qiskit.providers.fake_provider import FakeManila
 from qiskit_aer.noise import NoiseModel
 
 from qiskit_ibm_runtime import (
@@ -34,6 +33,7 @@ from qiskit_ibm_runtime import (
 )
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.utils.default_session import _DEFAULT_SESSION
+from qiskit_ibm_runtime.fake_provider import FakeManila
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import (

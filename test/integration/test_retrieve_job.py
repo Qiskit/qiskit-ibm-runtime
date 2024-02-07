@@ -184,7 +184,9 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         job = self._run_program(service)
         job.wait_for_final_state()
         time_after_job = datetime.now(timezone.utc)
-        rjobs = service.jobs(created_before=time_after_job, created_after=current_time)
+        rjobs = service.jobs(
+            created_before=time_after_job, created_after=current_time, pending=False, limit=20
+        )
         self.assertTrue(job.job_id() in [j.job_id() for j in rjobs])
         for job in rjobs:
             self.assertTrue(job.creation_date <= time_after_job)

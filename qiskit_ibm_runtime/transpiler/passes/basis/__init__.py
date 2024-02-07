@@ -12,10 +12,10 @@
 
 """
 ==========================================================
-Basis (:mod:`qiskit_ibm_provider.transpiler.passes.basis`)
+Basis (:mod:`qiskit_ibm_runtime.transpiler.passes.basis`)
 ==========================================================
 
-.. currentmodule:: qiskit_ibm_provider.transpiler.passes.basis
+.. currentmodule:: qiskit_ibm_runtime.transpiler.passes.basis
 
 Passes to layout circuits to IBM backend's instruction sets.
 """
