@@ -13,7 +13,6 @@
 """Tests for Session classession."""
 
 from unittest.mock import MagicMock, patch
-from qiskit.providers.fake_provider import FakeManila
 
 from qiskit_ibm_runtime.fake_provider import FakeManila
 from qiskit_ibm_runtime import Session
