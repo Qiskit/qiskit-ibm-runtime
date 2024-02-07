@@ -280,6 +280,7 @@ class TestContainerSerialization(IBMTestCase):
 
     def assert_binding_arrays_equal(self, barr1, barr2):
         """Tests that two BindingArray objects are equal"""
+
         def _to_str_keyed(_in_dict):
             _out_dict = {}
             for a_key_tuple, val in _in_dict.items():
