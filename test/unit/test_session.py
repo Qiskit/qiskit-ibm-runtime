@@ -15,7 +15,7 @@
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, wait
-from unittest.mock import MagicMock, Mock, Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from qiskit_ibm_runtime.fake_provider import FakeManila
 from qiskit_ibm_runtime import Session

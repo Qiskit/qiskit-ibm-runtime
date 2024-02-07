@@ -15,16 +15,15 @@
 import os
 import logging
 import time
+import itertools
 import unittest
 from unittest import mock
 from typing import Dict, Optional, Any
 from datetime import datetime
 from ddt import data, unpack
-import itertools
 
 from qiskit.circuit import QuantumCircuit, QuantumRegister, ClassicalRegister
-from qiskit.compiler import transpile, assemble
-from qiskit.qobj import QasmQobj
+from qiskit.compiler import transpile
 from qiskit.providers.jobstatus import JOB_FINAL_STATES, JobStatus
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.models import BackendStatus, BackendProperties

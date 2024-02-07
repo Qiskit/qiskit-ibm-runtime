@@ -33,6 +33,9 @@ from qiskit_aer.noise import NoiseModel
 from qiskit_ibm_runtime.utils import RuntimeEncoder, RuntimeDecoder
 from qiskit_ibm_runtime.fake_provider import FakeNairobi
 
+# TODO: Remove when they are in terra
+from qiskit_ibm_runtime.qiskit.primitives import BindingsArray, ObservablesArray
+
 from .mock.fake_runtime_client import CustomResultRuntimeJob
 from .mock.fake_runtime_service import FakeRuntimeService
 from ..ibm_test_case import IBMTestCase
