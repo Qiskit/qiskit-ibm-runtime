@@ -26,15 +26,12 @@ from ddt import data, ddt
 from qiskit.circuit import Parameter, QuantumCircuit
 
 from qiskit.circuit.library import EfficientSU2, CXGate, PhaseGate, U2Gate
-from qiskit.providers.fake_provider import FakeNairobi
 import qiskit.quantum_info as qi
 from qiskit.quantum_info import SparsePauliOp, Pauli, Statevector
 from qiskit.result import Result
 from qiskit_aer.noise import NoiseModel
 from qiskit_ibm_runtime.utils import RuntimeEncoder, RuntimeDecoder
-
-# TODO: Remove when they are in terra
-from qiskit_ibm_runtime.qiskit.primitives import BindingsArray, ObservablesArray
+from qiskit_ibm_runtime.fake_provider import FakeNairobi
 
 from .mock.fake_runtime_client import CustomResultRuntimeJob
 from .mock.fake_runtime_service import FakeRuntimeService
