@@ -22,7 +22,7 @@ from qiskit.compiler import transpile
 from qiskit import QuantumCircuit
 from qiskit.providers.jobstatus import JobStatus, JOB_FINAL_STATES
 
-from qiskit_ibm_provider.exceptions import IBMBackendValueError
+from qiskit_ibm_runtime.exceptions import IBMBackendValueError
 
 from qiskit_ibm_runtime import IBMBackend, RuntimeJob
 from qiskit_ibm_runtime.exceptions import IBMInputValueError

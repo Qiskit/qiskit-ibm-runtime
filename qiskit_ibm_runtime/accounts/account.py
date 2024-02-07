@@ -18,8 +18,8 @@ from typing import Optional, Literal
 from urllib.parse import urlparse
 
 from requests.auth import AuthBase
-from qiskit_ibm_provider.proxies import ProxyConfiguration
-from qiskit_ibm_provider.utils.hgp import from_instance_format
+from ..proxies import ProxyConfiguration
+from ..utils.hgp import from_instance_format
 
 from .exceptions import InvalidAccountError, CloudResourceNameResolutionError
 from ..api.auth import QuantumAuth, CloudAuth

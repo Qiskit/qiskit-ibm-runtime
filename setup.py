@@ -28,7 +28,6 @@ REQUIREMENTS = [
     "ibm-platform-services>=0.22.6",
     "pydantic",
     "qiskit @ git+https://github.com/Qiskit/qiskit.git",
-    "qiskit-ibm-provider>=0.8.0",
 ]
 
 # Handle version.

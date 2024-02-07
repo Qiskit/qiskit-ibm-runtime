@@ -7,4 +7,3 @@ websocket-client>=1.5.1
 typing-extensions>=4.0.0
 ibm-platform-services>=0.22.6
 qiskit @ git+https://github.com/Qiskit/qiskit.git
-qiskit-ibm-provider>=0.8.0

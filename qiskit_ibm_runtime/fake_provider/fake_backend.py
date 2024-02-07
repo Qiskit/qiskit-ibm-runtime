@@ -29,7 +29,6 @@ from qiskit.providers import BackendV2, BackendV1
 from qiskit import pulse
 from qiskit.exceptions import QiskitError
 from qiskit.utils import optionals as _optionals
-from qiskit.providers import basicaer
 from qiskit.transpiler import Target
 from qiskit.providers import Options
 from qiskit.providers.backend_compat import convert_to_target
@@ -38,6 +37,11 @@ from qiskit.providers.fake_provider.utils.json_decoder import (
     decode_backend_properties,
     decode_pulse_defaults,
 )
+
+try:
+    from qiskit.providers.basicaer import QasmSimulatorPy as BasicSimulator
+except ImportError:
+    from qiskit.providers.basic_provider import BasicSimulator
 
 
 class _Credentials:
@@ -128,7 +132,7 @@ class FakeBackendV2(BackendV2):
                 self.set_options(noise_model=noise_model)
 
         else:
-            self.sim = basicaer.QasmSimulatorPy()
+            self.sim = BasicSimulator()
 
     def _get_conf_dict_from_json(self) -> dict:
         if not self.conf_filename:
@@ -205,7 +209,7 @@ class FakeBackendV2(BackendV2):
 
             return AerSimulator._default_options()
         else:
-            return basicaer.QasmSimulatorPy._default_options()
+            return BasicSimulator._default_options()
 
     @property
     def dtm(self) -> float:
@@ -304,12 +308,12 @@ class FakeBackendV2(BackendV2):
 
         This method runs circuit jobs (an individual or a list of QuantumCircuit
         ) and pulse jobs (an individual or a list of Schedule or ScheduleBlock)
-        using BasicAer or Aer simulator and returns a
+        using BasicAer simulator/ BasicSimulator or Aer simulator and returns a
         :class:`~qiskit.providers.Job` object.
 
         If qiskit-aer is installed, jobs will be run using AerSimulator with
         noise model of the fake backend. Otherwise, jobs will be run using
-        BasicAer simulator without noise.
+        BasicAer simulator/ BasicSimulator simulator without noise.
 
         Currently noisy simulation of a pulse job is not supported yet in
         FakeBackendV2.
@@ -475,7 +479,7 @@ class FakeBackend(BackendV1):
                 # it when run() is called
                 self.set_options(noise_model=noise_model)
         else:
-            self.sim = basicaer.QasmSimulatorPy()
+            self.sim = BasicSimulator()
 
     def properties(self) -> BackendProperties:
         """Return backend properties"""
@@ -536,7 +540,7 @@ class FakeBackend(BackendV1):
 
             return QasmSimulator._default_options()
         else:
-            return basicaer.QasmSimulatorPy._default_options()
+            return BasicSimulator._default_options()
 
     def run(self, run_input, **kwargs):  # type: ignore
         """Main job in simulator"""

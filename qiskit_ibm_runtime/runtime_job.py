@@ -28,9 +28,10 @@ from qiskit.providers.models import BackendProperties
 from qiskit.providers.job import JobV1 as Job
 
 # pylint: disable=unused-import,cyclic-import
-from qiskit_ibm_provider.utils import utc_to_local
+
 from qiskit_ibm_runtime import qiskit_runtime_service
 
+from .utils import utc_to_local
 from .utils.utils import validate_job_tags
 from .utils.estimator_result_decoder import EstimatorResultDecoder
 from .utils.queueinfo import QueueInfo
