@@ -23,7 +23,6 @@ from datetime import datetime
 import numpy as np
 from ddt import data, ddt
 
-import qiskit.quantum_info as qi
 from qiskit.circuit import Parameter, QuantumCircuit
 
 from qiskit.circuit.library import EfficientSU2, CXGate, PhaseGate, U2Gate
