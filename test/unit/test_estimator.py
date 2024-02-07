@@ -94,8 +94,8 @@ class TestEstimatorV2(IBMTestCase):
     def test_unsupported_values_for_estimator_options(self):
         """Test exception when options levels are not supported."""
         options_bad = [
-            {"resilience_level": 4, "optimization_level": 3},
-            {"optimization_level": 4, "resilience_level": 2},
+            {"resilience_level": 3},
+            {"resilience_level": 4},
         ]
 
         with Session(
@@ -108,13 +108,13 @@ class TestEstimatorV2(IBMTestCase):
                     inst.options.update(**bad_opt)
                 self.assertIn(list(bad_opt.keys())[0], str(exc.exception))
 
-    def test_res_level3_simulator(self):
-        """Test the correct default error levels are used."""
+    def test_pec_simulator(self):
+        """Test error is raised when using pec on simulator without coupling map."""
 
         session = MagicMock(spec=MockSession)
         session.service.backend().configuration().simulator = True
 
-        inst = EstimatorV2(session=session, options={"resilience_level": 3})
+        inst = EstimatorV2(session=session, options={"resilience": {"pec_mitigation": True}})
         with self.assertRaises(ValueError) as exc:
             inst.run((self.circuit, self.observables))
         self.assertIn("coupling map", str(exc.exception))
@@ -128,16 +128,12 @@ class TestEstimatorV2(IBMTestCase):
                 {"resilience_level": 1},
             ),
             (
-                EstimatorOptions(optimization_level=3),  # pylint: disable=unexpected-keyword-arg
-                {"transpilation": {"optimization_level": 3}},
-            ),
-            (
                 {
-                    "transpilation": {"initial_layout": [1, 2]},
+                    "transpilation": {"optimization_level": 1},
                     "execution": {"shots": 100},
                 },
                 {
-                    "transpilation": {"initial_layout": [1, 2]},
+                    "transpilation": {"optimization_level": 1},
                     "execution": {"shots": 100},
                 },
             ),

@@ -23,7 +23,7 @@ import warnings
 from qiskit.primitives import EstimatorPub, SamplerPub
 from qiskit.providers.options import Options as TerraOptions
 
-from qiskit_ibm_provider.session import get_cm_session as get_cm_provider_session
+from .provider_session import get_cm_session as get_cm_provider_session
 
 from .options import Options
 from .options.options import BaseOptions, OptionsV2

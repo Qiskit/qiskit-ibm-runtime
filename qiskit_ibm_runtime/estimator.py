@@ -16,7 +16,6 @@ from __future__ import annotations
 import os
 from typing import Optional, Dict, Sequence, Any, Union, Iterable
 import logging
-import typing
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info.operators.base_operator import BaseOperator
@@ -34,9 +33,6 @@ from .utils.qctrl import validate as qctrl_validate
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
-
-if typing.TYPE_CHECKING:
-    from qiskit.opflow import PauliSumOp
 
 logger = logging.getLogger(__name__)
 
@@ -166,7 +162,7 @@ class EstimatorV2(BasePrimitiveV2, Estimator, BaseEstimatorV2):
         # TODO: Server should have different optimization/resilience levels for simulator
 
         if (
-            options["resilience_level"] == 3
+            options.get("resilience", {}).get("pec_mitigation", False) is True
             and self._backend is not None
             and self._backend.configuration().simulator is True
             and not options["simulator"]["coupling_map"]
@@ -262,7 +258,7 @@ class EstimatorV1(BasePrimitiveV1, Estimator, BaseEstimator):
     def run(  # pylint: disable=arguments-differ
         self,
         circuits: QuantumCircuit | Sequence[QuantumCircuit],
-        observables: BaseOperator | PauliSumOp | Sequence[BaseOperator | PauliSumOp],
+        observables: BaseOperator | Sequence[BaseOperator],
         parameter_values: Sequence[float] | Sequence[Sequence[float]] | None = None,
         **kwargs: Any,
     ) -> RuntimeJob:
@@ -298,7 +294,7 @@ class EstimatorV1(BasePrimitiveV1, Estimator, BaseEstimator):
     def _run(  # pylint: disable=arguments-differ
         self,
         circuits: Sequence[QuantumCircuit],
-        observables: Sequence[BaseOperator | PauliSumOp],
+        observables: Sequence[BaseOperator],
         parameter_values: Sequence[Sequence[float]],
         **kwargs: Any,
     ) -> RuntimeJob:

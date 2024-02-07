@@ -17,7 +17,7 @@ from dataclasses import asdict
 from ddt import data, ddt
 from pydantic import ValidationError
 from qiskit.providers import BackendV1
-from qiskit.providers.fake_provider import FakeManila, FakeNairobiV2
+
 from qiskit.transpiler import CouplingMap
 from qiskit_aer.noise import NoiseModel
 
@@ -25,6 +25,7 @@ from qiskit_ibm_runtime import Options, RuntimeOptions
 from qiskit_ibm_runtime.options.utils import merge_options
 from qiskit_ibm_runtime.options import EstimatorOptions, SamplerOptions
 from qiskit_ibm_runtime.utils.qctrl import _warn_and_clean_options
+from qiskit_ibm_runtime.fake_provider import FakeManila, FakeNairobiV2
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import dict_keys_equal, dict_paritally_equal, flat_dict_partially_equal, combine
@@ -280,12 +281,10 @@ class TestOptionsV2(IBMTestCase):
         options_vars = [
             {},
             {"resilience_level": 9},
-            {"resilience_level": 8, "transpilation": {"initial_layout": [1, 2]}},
             {"shots": 99, "seed_simulator": 42},
-            {"resilience_level": 99, "shots": 98, "initial_layout": [3, 4]},
+            {"resilience_level": 99, "shots": 98, "skip_transpilation": True},
             {
-                "initial_layout": [1, 2],
-                "transpilation": {"layout_method": "trivial"},
+                "transpilation": {"optimization_level": 1},
                 "log_level": "INFO",
             },
         ]
@@ -330,12 +329,10 @@ class TestOptionsV2(IBMTestCase):
         """Test converting to program inputs from v2 options."""
 
         noise_model = NoiseModel.from_backend(FakeManila())
+        optimization_level = 0
         transpilation = {
             "skip_transpilation": False,
-            "initial_layout": [1, 2],
-            "layout_method": "trivial",
-            "routing_method": "basic",
-            "approximation_degree": 0.5,
+            "optimization_level": optimization_level,
         }
         simulator = {
             "noise_model": noise_model,
@@ -350,7 +347,7 @@ class TestOptionsV2(IBMTestCase):
             "shots_per_sample": 20,
             "interleave_samples": True,
         }
-        optimization_level = 2
+
         twirling = {"gates": True, "measure": True, "strategy": "all"}
         resilience = {
             "measure_noise_mitigation": True,
@@ -365,7 +362,7 @@ class TestOptionsV2(IBMTestCase):
         estimator_extra = {}
         if isinstance(opt_cls, EstimatorOptions):
             estimator_extra = {
-                "resilience_level": 3,
+                "resilience_level": 2,
                 "resilience": resilience,
                 "seed_estimator": 42,
             }
@@ -373,7 +370,6 @@ class TestOptionsV2(IBMTestCase):
         opt = opt_cls(
             max_execution_time=100,
             simulator=simulator,
-            optimization_level=optimization_level,
             dynamical_decoupling="XX",
             transpilation=transpilation,
             execution=execution,
@@ -385,7 +381,6 @@ class TestOptionsV2(IBMTestCase):
         transpilation.pop("skip_transpilation")
         transpilation.update(
             {
-                "optimization_level": optimization_level,
                 "coupling_map": simulator.pop("coupling_map"),
                 "basis_gates": simulator.pop("basis_gates"),
             }
@@ -419,9 +414,9 @@ class TestOptionsV2(IBMTestCase):
             {},
             {"dynamical_decoupling": "XX"},
             {"simulator": {"seed_simulator": 42}},
-            {"optimization_level": 2, "environment": {"log_level": "WARNING"}},
+            {"environment": {"log_level": "WARNING"}},
             {
-                "transpilation": {"initial_layout": [1, 2], "layout_method": "trivial"},
+                "transpilation": {"optimization_level": 1},
                 "execution": {"shots": 100},
             },
             {"twirling": {"gates": True, "strategy": "active"}},
@@ -526,12 +521,12 @@ class TestOptionsV2(IBMTestCase):
     @data(
         {"resilience_level": 2},
         {"max_execution_time": 200},
-        {"resilience_level": 2, "transpilation": {"initial_layout": [1, 2]}},
+        {"resilience_level": 2, "transpilation": {"optimization_level": 1}},
         {"shots": 1024, "seed_simulator": 42},
-        {"resilience_level": 2, "shots": 2048, "initial_layout": [3, 4]},
+        {"resilience_level": 2, "shots": 2048},
         {
-            "initial_layout": [1, 2],
-            "transpilation": {"layout_method": "trivial"},
+            "optimization_level": 1,
+            "transpilation": {"skip_transpilation": True},
             "log_level": "INFO",
         },
     )
