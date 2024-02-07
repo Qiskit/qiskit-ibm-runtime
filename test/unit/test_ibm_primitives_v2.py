@@ -24,7 +24,7 @@ from qiskit import transpile
 from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.quantum_info import SparsePauliOp
-from qiskit.providers.fake_provider import FakeManila
+from qiskit_ibm_runtime.fake_provider import FakeManila
 
 from qiskit_ibm_runtime import (
     Sampler,
