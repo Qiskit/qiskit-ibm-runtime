@@ -22,11 +22,7 @@ from typing import Dict, Optional, Any
 from datetime import datetime
 from ddt import data, unpack
 
-from qiskit.circuit import (
-    QuantumCircuit,
-    QuantumRegister,
-    ClassicalRegister,
-)
+from qiskit.circuit import QuantumCircuit, QuantumRegister, ClassicalRegister
 from qiskit.compiler import transpile
 from qiskit.providers.jobstatus import JOB_FINAL_STATES, JobStatus
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
