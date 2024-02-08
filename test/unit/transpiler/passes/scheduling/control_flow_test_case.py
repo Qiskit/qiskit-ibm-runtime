@@ -15,8 +15,8 @@
 from typing import Any, Optional
 
 from qiskit import QuantumCircuit
-from qiskit.test._canonical import canonicalize_control_flow
 
+from .....utils import canonicalize_control_flow
 from .....ibm_test_case import IBMTestCase
 
 
