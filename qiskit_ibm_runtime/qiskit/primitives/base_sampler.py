@@ -81,7 +81,8 @@ from typing import Generic, TypeVar, Optional, Iterable
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.providers import JobV1 as Job
-from qiskit.primitives.containers import SamplerPub, SamplerPubLike
+from qiskit.primitives.containers import SamplerPubLike
+from qiskit.primitives.containers.sampler_pub import SamplerPub
 
 from .base_primitive import BasePrimitiveV2
 from .options import BasePrimitiveOptionsLike

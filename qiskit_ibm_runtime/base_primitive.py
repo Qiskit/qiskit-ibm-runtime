@@ -20,7 +20,8 @@ import logging
 from dataclasses import asdict, replace
 import warnings
 
-from qiskit.primitives import EstimatorPub, SamplerPub
+from qiskit.primitives.containers.estimator_pub import EstimatorPub
+from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.providers.options import Options as TerraOptions
 
 from .provider_session import get_cm_session as get_cm_provider_session

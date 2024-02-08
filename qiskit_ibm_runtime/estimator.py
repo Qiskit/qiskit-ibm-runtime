@@ -21,7 +21,8 @@ from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info.operators.base_operator import BaseOperator
 from qiskit.primitives import BaseEstimator
 from qiskit.primitives.base import BaseEstimatorV2
-from qiskit.primitives.containers import EstimatorPub, EstimatorPubLike
+from qiskit.primitives.containers import EstimatorPubLike
+from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
 from .runtime_job import RuntimeJob
 from .ibm_backend import IBMBackend

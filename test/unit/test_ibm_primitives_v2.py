@@ -25,7 +25,7 @@ from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.quantum_info import SparsePauliOp
 
-from qiskit.primitives import BindingsArray
+from qiskit.primitives.containers.bindings_array import BindingsArray
 from qiskit_ibm_runtime.fake_provider import FakeManila
 
 
