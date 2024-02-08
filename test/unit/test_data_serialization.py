@@ -25,7 +25,6 @@ from ddt import data, ddt
 
 from qiskit.circuit import Parameter, ParameterVector, QuantumCircuit
 from qiskit.circuit.library import EfficientSU2, CXGate, PhaseGate, U2Gate
-from qiskit.providers.fake_provider.backends import FakeNairobi
 import qiskit.quantum_info as qi
 from qiskit.quantum_info import SparsePauliOp, Pauli, Statevector
 from qiskit.result import Result, Counts
