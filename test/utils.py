@@ -19,7 +19,7 @@ import itertools
 import unittest
 import threading
 from unittest import mock
-from typing import Dict, Optional, Any
+from typing import Dict, Optional, Any, List
 from datetime import datetime
 from ddt import data, unpack
 
@@ -387,7 +387,7 @@ class _CanonicalParametersIterator:
     """An object that, when iterated through, will produce the same sequence of parameters as every
     other instance of this iterator."""
 
-    __parameters = []
+    __parameters: List = []
     __mutex = threading.Lock()
 
     def __init__(self):
