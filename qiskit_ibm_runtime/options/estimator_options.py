@@ -97,6 +97,6 @@ class EstimatorOptions(OptionsV2):
         """Validate resilience_level."""
         if not 0 <= resilience_level <= MAX_RESILIENCE_LEVEL:
             raise ValueError(
-                "Invalid optimization_level. Valid range is " f"0-{MAX_RESILIENCE_LEVEL}"
+                "Invalid resilience_level. Valid range is " f"0-{MAX_RESILIENCE_LEVEL}"
             )
         return resilience_level
