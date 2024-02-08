@@ -267,10 +267,13 @@ if __name__ == '__main__':
     @data(
         ObservablesArray([["X", "Y", "Z"], ["0", "1", "+"]]),
         ObservablesArray(qi.pauli_basis(2)),
-        ObservablesArray([qi.random_pauli_list(2, 3) for _ in range(5)]),
+        ObservablesArray([qi.random_pauli_list(2, 3, phase=False) for _ in range(5)]),
         ObservablesArray(np.array([["X", "Y"], ["Z", "I"]], dtype=object)),
         ObservablesArray(
-            [[SparsePauliOp(qi.random_pauli_list(2, 3)) for _ in range(3)] for _ in range(5)]
+            [
+                [SparsePauliOp(qi.random_pauli_list(2, 3, phase=False)) for _ in range(3)]
+                for _ in range(5)
+            ]
         ),
     )
     def test_obs_array(self, oarray):
@@ -314,7 +317,6 @@ if __name__ == '__main__':
         decoded = json.loads(encoded, cls=RuntimeDecoder)["array"]
         self.assertIsInstance(decoded, BindingsArray)
         self.assertEqual(barray.shape, decoded.shape)
-        self.assertTrue(np.allclose(barray.data, decoded.data))
 
         barray_str_keyed = _to_str_keyed(barray.data)
         decoded_str_keyed = _to_str_keyed(decoded.data)

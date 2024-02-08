@@ -366,7 +366,6 @@ class RuntimeDecoder(json.JSONDecoder):
                     ba_kwargs["data"] = data_decoded
                 elif data:
                     raise ValueError(f"Unexpected data type {type(data)} in BindingsArray.")
-                ba_kwargs["vals"] = obj_val.get("vals", None)
 
                 return BindingsArray(**ba_kwargs)
 

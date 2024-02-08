@@ -18,7 +18,6 @@ from qiskit import QuantumCircuit
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.quantum_info import SparsePauliOp, Pauli, random_pauli_list
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
-import qiskit.quantum_info as qi
 
 import numpy as np
 from ddt import data, ddt
@@ -66,10 +65,10 @@ class TestEstimatorV2(IBMTestCase):
         self.observables = SparsePauliOp.from_list([("I", 1)])
 
     @data(
-        [(RealAmplitudes(num_qubits=2, reps=1), ["ZZ"], [1, 2, 3, 4])],
-        [(RealAmplitudes(num_qubits=2, reps=1), ["ZZ", "YY"], [1, 2, 3, 4])],
+        [(RealAmplitudes(num_qubits=2, reps=1), ["ZZ"], [[1, 2, 3, 4]])],
+        [(RealAmplitudes(num_qubits=2, reps=1), ["ZZ", "YY"], [[1, 2, 3, 4]])],
         [(QuantumCircuit(2), ["XX"])],
-        [(RealAmplitudes(num_qubits=1, reps=1), ["I"], [1, 2]), (QuantumCircuit(3), ["YYY"])],
+        [(RealAmplitudes(num_qubits=1, reps=1), ["I"], [[1, 2]]), (QuantumCircuit(3), ["YYY"])],
     )
     def test_run_program_inputs(self, in_pubs):
         """Verify program inputs are correct."""
@@ -89,7 +88,8 @@ class TestEstimatorV2(IBMTestCase):
                 self.assertEqual(list(a_pub_obs.keys())[0], an_input_obs)
             # Check parameter values
             an_input_params = an_in_taks[2] if len(an_in_taks) == 3 else []
-            np.allclose(a_pub_param.parameter_values.vals, an_input_params)
+            a_pub_param_values = list(a_pub_param.parameter_values.data.values())
+            np.allclose(a_pub_param_values, an_input_params)
 
     def test_unsupported_values_for_estimator_options(self):
         """Test exception when options levels are not supported."""
@@ -116,7 +116,7 @@ class TestEstimatorV2(IBMTestCase):
 
         inst = EstimatorV2(session=session, options={"resilience": {"pec_mitigation": True}})
         with self.assertRaises(ValueError) as exc:
-            inst.run((self.circuit, self.observables))
+            inst.run([(self.circuit, self.observables)])
         self.assertIn("coupling map", str(exc.exception))
 
     def test_run_default_options(self):
@@ -141,7 +141,7 @@ class TestEstimatorV2(IBMTestCase):
         for options, expected in options_vars:
             with self.subTest(options=options):
                 inst = EstimatorV2(session=session, options=options)
-                inst.run((self.circuit, self.observables))
+                inst.run([(self.circuit, self.observables)])
                 inputs = session.run.call_args.kwargs["inputs"]
                 self.assertTrue(
                     dict_paritally_equal(inputs, expected),
@@ -162,8 +162,8 @@ class TestEstimatorV2(IBMTestCase):
         if len(res_opt.keys()) > 1:
             self.assertIn(list(res_opt.keys())[1], str(exc.exception))
 
-    @data(True, False)
-    def test_observable_types_single_circuit(self, to_pub):
+    # ObservablesArray([qi.random_pauli_list(2, 3, phase=False) for _ in range(5)]),
+    def test_observable_types_single_circuit(self):
         """Test different observable types for a single circuit."""
         all_obs = [
             # TODO: Uncomment single ObservableArrayLike when supported
@@ -173,19 +173,18 @@ class TestEstimatorV2(IBMTestCase):
             # {"YZ": 1 + 2j},
             # {Pauli("XX"): 1 + 2j},
             ["XX", "YY"],
-            [qi.random_pauli_list(2)],
+            [random_pauli_list(2, 3, phase=False)],
             [Pauli("XX"), Pauli("YY")],
-            [SparsePauliOp(["XX"]), SparsePauliOp(["YY"])],
+            [SparsePauliOp(["XX"], [2]), SparsePauliOp(["YY"], [1])],
             [
-                {"XX": 1 + 2j},
-                {"YY": 1 + 2j},
+                {"XX": 1},
+                {"YY": 2},
             ],
             [
-                {Pauli("XX"): 1 + 2j},
-                {Pauli("YY"): 1 + 2j},
+                {Pauli("XX"): 1},
+                {Pauli("YY"): 2},
             ],
-            [random_pauli_list(2, 2)],
-            [random_pauli_list(2, 3) for _ in range(5)],
+            [random_pauli_list(2, 3, phase=False) for _ in range(5)],
             np.array([["II", "XX", "YY"], ["ZZ", "XZ", "II"]], dtype=object),
         ]
 
@@ -194,9 +193,7 @@ class TestEstimatorV2(IBMTestCase):
         for obs in all_obs:
             with self.subTest(obs=obs):
                 pub = (circuit, obs)
-                if to_pub:
-                    pub = EstimatorPub.coerce(pub)
-                estimator.run(pub)
+                estimator.run([pub])
 
     def test_observable_types_multi_circuits(self):
         """Test different observable types for multiple circuits."""
@@ -216,15 +213,15 @@ class TestEstimatorV2(IBMTestCase):
             [["XX", "YY"], ["ZZZ", "III"]],
             [[Pauli("XX"), Pauli("YY")], [Pauli("XXX"), Pauli("YYY")]],
             [
-                [SparsePauliOp(["XX"]), SparsePauliOp(["YY"])],
-                [SparsePauliOp(["XXX"]), SparsePauliOp(["YYY"])],
+                [SparsePauliOp(["XX", "YY"], [1, 2]), SparsePauliOp(["YY", "-XX"], [2, 1])],
+                [SparsePauliOp(["XXX"], [1]), SparsePauliOp(["YYY"], [2])],
             ],
-            [[{"XX": 1 + 2j}, {"YY": 1 + 2j}], [{"XXX": 1 + 2j}, {"YYY": 1 + 2j}]],
+            [[{"XX": 1}, {"YY": 2}], [{"XXX": 1}, {"YYY": 2}]],
             [
-                [{Pauli("XX"): 1 + 2j}, {Pauli("YY"): 1 + 2j}],
-                [{Pauli("XXX"): 1 + 2j}, {Pauli("YYY"): 1 + 2j}],
+                [{Pauli("XX"): 1}, {Pauli("YY"): 2}],
+                [{Pauli("XXX"): 1}, {Pauli("YYY"): 2}],
             ],
-            [random_pauli_list(2, 2), random_pauli_list(3, 2)],
+            [random_pauli_list(2, 2, phase=False), random_pauli_list(3, 2, phase=False)],
         ]
 
         circuit1 = QuantumCircuit(2)
