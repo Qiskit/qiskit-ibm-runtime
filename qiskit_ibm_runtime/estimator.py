@@ -46,7 +46,7 @@ class Estimator:
 
 
 class EstimatorV2(BasePrimitiveV2, Estimator, BaseEstimatorV2):
-    """Class for interacting with Qiskit Runtime Estimator primitive service.
+    r"""Class for interacting with Qiskit Runtime Estimator primitive service.
 
     Qiskit Runtime Estimator primitive service estimates expectation values of quantum circuits and
     observables.
@@ -59,11 +59,11 @@ class EstimatorV2(BasePrimitiveV2, Estimator, BaseEstimatorV2):
     define a computation unit of work for the estimator to complete:
 
     * a single :class:`~qiskit.circuit.QuantumCircuit`, possibly parametrized, whose final state we
-    define as :math:`\psi(\theta)`,
+      define as :math:`\psi(\theta)`,
 
     * one or more observables (specified as any :class:`~.ObservablesArrayLike`, including
-    :class:`~.Pauli`, :class:`~.SparsePauliOp`, ``str``) that specify which expectation values to
-    estimate, denoted :math:`H_j`, and
+      :class:`~.Pauli`, :class:`~.SparsePauliOp`, ``str``) that specify which expectation values to
+      estimate, denoted :math:`H_j`, and
 
     * a collection parameter value sets to bind the circuit against, :math:`\theta_k`.
 

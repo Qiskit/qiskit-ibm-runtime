@@ -21,7 +21,15 @@ import warnings
 from qiskit.transpiler import CouplingMap
 from pydantic import Field
 
-from .utils import Dict, _to_obj, UnsetType, Unset, _remove_dict_unset_values, merge_options, primitive_dataclass
+from .utils import (
+    Dict,
+    _to_obj,
+    UnsetType,
+    Unset,
+    _remove_dict_unset_values,
+    merge_options,
+    primitive_dataclass,
+)
 from .environment_options import EnvironmentOptions
 from .execution_options import ExecutionOptionsV1 as ExecutionOptions
 from .simulator_options import SimulatorOptions
@@ -63,18 +71,9 @@ class BaseOptions:
 
         return out
 
-@dataclass
-class BaseOptionsV2(BaseOptions):
-    """Base options for v2 primitives."""
-
-    def update(self, **kwargs: Any) -> None:
-        """Update the options."""
-        for key, val in kwargs.items():
-            setattr(self, key, val)
-
 
 @primitive_dataclass
-class OptionsV2(BaseOptionsV2):
+class OptionsV2(BaseOptions):
     """Base primitive options, used by v2 primitives.
 
     Args:

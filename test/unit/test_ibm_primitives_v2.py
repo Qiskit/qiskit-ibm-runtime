@@ -24,7 +24,7 @@ from qiskit import transpile
 from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.quantum_info import SparsePauliOp
-from qiskit.primitives import BindingsArray
+from qiskit.primitives.containers.bindings_array import BindingsArray
 
 from qiskit_ibm_runtime import (
     Sampler,
@@ -309,14 +309,12 @@ class TestPrimitivesV2(IBMTestCase):
 
         with self.subTest("0-d"):
             param_vals = np.linspace(0, 1, 4)
-            kwvals = {tuple(circ.parameters[:2]): param_vals[:2]}
-            barray = BindingsArray(vals=param_vals[2:], kwvals=kwvals)
+            barray = BindingsArray(data={tuple(circ.parameters): param_vals})
             pub = (circ, "ZZ", barray) if isinstance(inst, EstimatorV2) else (circ, barray)
             inst.run(pub)
 
         with self.subTest("n-d"):
-            kwvals = {tuple(circ.parameters[:2]): np.random.random((2, 3, 2))}
-            barray = BindingsArray(vals=np.random.random((2, 3, 2)), kwvals=kwvals)
+            barray = BindingsArray(data={tuple(circ.parameters): np.random.random((2, 3, 4))})
             pub = (circ, "ZZ", barray) if isinstance(inst, EstimatorV2) else (circ, barray)
             inst.run(pub)
 

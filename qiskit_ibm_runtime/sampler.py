@@ -95,17 +95,15 @@ class SamplerV2(BasePrimitiveV2, Sampler, BaseSamplerV2):
         # if self._service._channel_strategy == "q-ctrl":
         #     raise NotImplementedError("SamplerV2 is not supported with q-ctrl channel strategy.")
 
-    def run(
-        self, pubs: Iterable[SamplerPubLike], *, shots: int | None = None
-    ) -> RuntimeJob:
+    def run(self, pubs: Iterable[SamplerPubLike], *, shots: int | None = None) -> RuntimeJob:
         """Submit a request to the estimator primitive.
 
         Args:
-            pubs: An iterable of pub-like (primitive unified bloc) objects, such as
-                tuples ``(circuit, observables)`` or ``(circuit, observables, parameter_values)``.
-            precision: The target precision for expectation value estimates of each
-                run Estimator Pub that does not specify its own precision. If None
-                the estimator's default precision value will be used.
+            pubs: An iterable of pub-like objects. For example, a list of circuits
+                  or tuples ``(circuit, parameter_values)``.
+            shots: The total number of shots to sample for each sampler pub that does
+                   not specify its own shots. If ``None``, the primitive's default
+                   shots value will be used, which can vary by implementation.
 
         Returns:
             Submitted job.

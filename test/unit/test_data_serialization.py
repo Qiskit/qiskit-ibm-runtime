@@ -23,14 +23,13 @@ from datetime import datetime
 import numpy as np
 from ddt import data, ddt
 
-import qiskit.quantum_info as qi
 from qiskit.circuit import Parameter, QuantumCircuit
-
 from qiskit.circuit.library import EfficientSU2, CXGate, PhaseGate, U2Gate
 import qiskit.quantum_info as qi
 from qiskit.quantum_info import SparsePauliOp, Pauli, Statevector
 from qiskit.result import Result
-from qiskit.primitives import BindingsArray, ObservablesArray
+from qiskit.primitives.containers.observables_array import ObservablesArray
+from qiskit.primitives.containers.bindings_array import BindingsArray
 from qiskit_aer.noise import NoiseModel
 from qiskit_ibm_runtime.utils import RuntimeEncoder, RuntimeDecoder
 from qiskit_ibm_runtime.fake_provider import FakeNairobi
@@ -282,26 +281,21 @@ if __name__ == '__main__':
         self.assertEqual(decoded, oarray.tolist())
 
     @data(
-        BindingsArray([1, 2, 3.4]),
-        BindingsArray([4.0, 5.0, 6.0], shape=()),
-        BindingsArray([[1 + 2j, 2 + 3j], [3 + 4j, 4 + 5j]], shape=(2,)),
-        BindingsArray(np.random.uniform(size=(5,))),
-        BindingsArray(np.linspace(0, 1, 30).reshape((2, 3, 5))),
-        BindingsArray(kwvals={Parameter("a"): [0.0], Parameter("b"): [1.0]}, shape=1),
+        BindingsArray(data={Parameter("a"): [0.0], Parameter("b"): [1.0]}, shape=1),
         BindingsArray(
-            kwvals={
+            data={
                 (Parameter("a"), Parameter("b")): np.random.random((4, 3, 2)),
                 Parameter("c"): np.random.random((4, 3)),
             }
         ),
         BindingsArray(
-            vals=np.random.random((2, 3, 4)),
-            kwvals={
+            data={
                 (Parameter("a"), Parameter("b")): np.random.random((2, 3, 2)),
                 Parameter("c"): np.random.random((2, 3)),
             },
         ),
-        BindingsArray(vals=[[1.0, 2.0], [1.1, 2.1]], kwvals={Parameter("c"): [3.0, 3.1]}),
+        BindingsArray(data={Parameter("c"): [3.0, 3.1]}),
+        BindingsArray(data={"param1": [1, 2, 3], "param2": [3, 4, 5]}),
     )
     def test_bindings_array(self, barray):
         """Test encoding and decoding BindingsArray."""
@@ -319,10 +313,10 @@ if __name__ == '__main__':
         decoded = json.loads(encoded, cls=RuntimeDecoder)["array"]
         self.assertIsInstance(decoded, BindingsArray)
         self.assertEqual(barray.shape, decoded.shape)
-        self.assertTrue(np.allclose(barray.vals, decoded.vals))
-        if barray.kwvals:
-            barray_str_keyed = _to_str_keyed(barray.kwvals)
-            decoded_str_keyed = _to_str_keyed(decoded.kwvals)
-            for key, val in barray_str_keyed.items():
-                self.assertIn(key, decoded_str_keyed)
-                self.assertTrue(np.allclose(val, decoded_str_keyed[key]))
+        self.assertTrue(np.allclose(barray.data, decoded.data))
+
+        barray_str_keyed = _to_str_keyed(barray.data)
+        decoded_str_keyed = _to_str_keyed(decoded.data)
+        for key, val in barray_str_keyed.items():
+            self.assertIn(key, decoded_str_keyed)
+            self.assertTrue(np.allclose(val, decoded_str_keyed[key]))

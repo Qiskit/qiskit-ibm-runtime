@@ -17,7 +17,7 @@ from unittest.mock import MagicMock
 from qiskit import QuantumCircuit
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.quantum_info import SparsePauliOp, Pauli, random_pauli_list
-from qiskit.primitives import EstimatorPub
+from qiskit.primitives.containers.estimator_pub import EstimatorPub
 import qiskit.quantum_info as qi
 
 import numpy as np
