@@ -14,10 +14,7 @@
 
 from typing import Literal, Union
 
-from .utils import Unset, UnsetType
-
-# TODO use real base options when available
-from ..qiskit.primitives.options import primitive_dataclass
+from .utils import Unset, UnsetType, primitive_dataclass
 
 
 TwirlingStrategyType = Literal[

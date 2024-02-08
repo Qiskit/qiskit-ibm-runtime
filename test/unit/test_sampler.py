@@ -19,9 +19,9 @@ from ddt import data, ddt
 import numpy as np
 
 from qiskit import QuantumCircuit
+from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.circuit.library import RealAmplitudes
 from qiskit_ibm_runtime import Sampler, Session, SamplerV2, SamplerOptions
-from qiskit_ibm_runtime.qiskit.primitives import SamplerPub
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import bell

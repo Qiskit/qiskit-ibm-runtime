@@ -20,6 +20,8 @@ import logging
 from dataclasses import asdict, replace
 import warnings
 
+from qiskit.primitives.containers.estimator_pub import EstimatorPub
+from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.providers.options import Options as TerraOptions
 
 from .provider_session import get_cm_session as get_cm_provider_session
@@ -33,8 +35,6 @@ from .utils.default_session import get_cm_session
 from .constants import DEFAULT_DECODERS
 from .qiskit_runtime_service import QiskitRuntimeService
 
-# TODO: remove when we have real v2 base estimator
-from .qiskit.primitives import EstimatorPub, SamplerPub
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
@@ -127,7 +127,7 @@ class BasePrimitiveV2(ABC):
         Returns:
             Submitted job.
         """
-        primitive_inputs = {"tasks": pubs}
+        primitive_inputs = {"pubs": pubs}
         options_dict = asdict(self.options)
         self._validate_options(options_dict)
         primitive_inputs.update(self._options_class._get_program_inputs(options_dict))
@@ -170,13 +170,18 @@ class BasePrimitiveV2(ABC):
         """
         return self._session
 
+    @property
+    def options(self) -> BaseOptions:
+        """Return options"""
+        return self._options
+
     def _set_options(self, options: Optional[Union[Dict, BaseOptions]] = None) -> None:
         """Set options."""
         if options is None:
             self._options = self._options_class()
         elif isinstance(options, dict):
             default_options = self._options_class()
-            self.options = self._options_class(**merge_options(default_options, options))
+            self._options = self._options_class(**merge_options(default_options, options))
         elif isinstance(options, self._options_class):
             self._options = replace(options)
         else:

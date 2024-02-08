@@ -24,7 +24,6 @@ from qiskit import transpile
 from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.quantum_info import SparsePauliOp
-from qiskit_ibm_runtime.fake_provider import FakeManila
 
 from qiskit_ibm_runtime import (
     Sampler,
@@ -36,7 +35,8 @@ from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.utils.default_session import _DEFAULT_SESSION
 from qiskit_ibm_runtime import EstimatorV2
 from qiskit_ibm_runtime.estimator import Estimator as IBMBaseEstimator
-from qiskit_ibm_runtime.qiskit.primitives import BindingsArray
+from qiskit_ibm_runtime.fake_provider import FakeManila
+
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import (
@@ -298,7 +298,7 @@ class TestPrimitivesV2(IBMTestCase):
         for val in param_vals:
             with self.subTest(val=val):
                 pub = (circ, "ZZ", val) if isinstance(inst, EstimatorV2) else (circ, val)
-                inst.run(pub)
+                inst.run([pub])
 
     @data(EstimatorV2)
     def test_parameters_vals_kwvals(self, primitive):
@@ -308,16 +308,14 @@ class TestPrimitivesV2(IBMTestCase):
 
         with self.subTest("0-d"):
             param_vals = np.linspace(0, 1, 4)
-            kwvals = {tuple(circ.parameters[:2]): param_vals[:2]}
-            barray = BindingsArray(vals=param_vals[2:], kwvals=kwvals)
+            barray = {tuple(circ.parameters): param_vals}
             pub = (circ, "ZZ", barray) if isinstance(inst, EstimatorV2) else (circ, barray)
-            inst.run(pub)
+            inst.run([pub])
 
         with self.subTest("n-d"):
-            kwvals = {tuple(circ.parameters[:2]): np.random.random((2, 3, 2))}
-            barray = BindingsArray(vals=np.random.random((2, 3, 2)), kwvals=kwvals)
+            barray = {tuple(circ.parameters): np.random.random((2, 3, 4))}
             pub = (circ, "ZZ", barray) if isinstance(inst, EstimatorV2) else (circ, barray)
-            inst.run(pub)
+            inst.run([pub])
 
     @data(EstimatorV2)
     def test_parameters_multiple_circuits(self, primitive):
@@ -417,7 +415,7 @@ class TestPrimitivesV2(IBMTestCase):
         inst = primitive(session=session)
         inst.run(**get_primitive_inputs(inst))
         inputs = session.run.call_args.kwargs["inputs"]
-        for fld in ["tasks"]:
+        for fld in ["pubs"]:
             inputs.pop(fld, None)
         expected = {"skip_transpilation": False, "execution": {"init_qubits": True}, "version": 2}
         self.assertDictEqual(inputs, expected)
@@ -589,7 +587,7 @@ class TestPrimitivesV2(IBMTestCase):
             pub = (transpiled,)
 
         with self.assertRaises(ValueError) as err:
-            inst.run(pubs=pub)
+            inst.run(pubs=[pub])
         self.assertIn(f"faulty qubit {faulty_qubit}", str(err.exception))
 
     @data(EstimatorV2)
@@ -649,7 +647,7 @@ class TestPrimitivesV2(IBMTestCase):
             pub = (transpiled,)
 
         with self.assertRaises(ValueError) as err:
-            inst.run(pubs=pub)
+            inst.run(pubs=[pub])
         self.assertIn("cx", str(err.exception))
         self.assertIn(f"faulty edge {tuple(edge_qubits)}", str(err.exception))
 
@@ -678,7 +676,7 @@ class TestPrimitivesV2(IBMTestCase):
             pub = (transpiled,)
 
         with patch.object(Session, "run") as mock_run:
-            inst.run(pub)
+            inst.run([pub])
         mock_run.assert_called_once()
 
     @data(EstimatorV2)
@@ -708,7 +706,7 @@ class TestPrimitivesV2(IBMTestCase):
             pub = (transpiled,)
 
         with patch.object(Session, "run") as mock_run:
-            inst.run(pub)
+            inst.run([pub])
         mock_run.assert_called_once()
 
     @data(EstimatorV2)
@@ -739,7 +737,7 @@ class TestPrimitivesV2(IBMTestCase):
             pub = (transpiled,)
 
         with patch.object(Session, "run") as mock_run:
-            inst.run(pub)
+            inst.run([pub])
         mock_run.assert_called_once()
 
     def _update_dict(self, dict1, dict2):

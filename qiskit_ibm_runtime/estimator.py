@@ -14,12 +14,16 @@
 
 from __future__ import annotations
 import os
-from typing import Optional, Dict, Sequence, Any, Union
+from typing import Optional, Dict, Sequence, Any, Union, Iterable
 import logging
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info.operators.base_operator import BaseOperator
+from qiskit.quantum_info.operators import SparsePauliOp
 from qiskit.primitives import BaseEstimator
+from qiskit.primitives.base import BaseEstimatorV2
+from qiskit.primitives.containers import EstimatorPubLike
+from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
 from .runtime_job import RuntimeJob
 from .ibm_backend import IBMBackend
@@ -28,8 +32,6 @@ from .options.estimator_options import EstimatorOptions
 from .base_primitive import BasePrimitiveV1, BasePrimitiveV2
 from .utils.qctrl import validate as qctrl_validate
 
-# TODO: remove when we have real v2 base estimator
-from .qiskit.primitives import BaseEstimatorV2
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
@@ -44,7 +46,7 @@ class Estimator:
 
 
 class EstimatorV2(BasePrimitiveV2, Estimator, BaseEstimatorV2):
-    """Class for interacting with Qiskit Runtime Estimator primitive service.
+    r"""Class for interacting with Qiskit Runtime Estimator primitive service.
 
     Qiskit Runtime Estimator primitive service estimates expectation values of quantum circuits and
     observables.
@@ -52,41 +54,43 @@ class EstimatorV2(BasePrimitiveV2, Estimator, BaseEstimatorV2):
     The :meth:`run` can be used to submit circuits, observables, and parameters
     to the Estimator primitive.
 
-    You are encouraged to use :class:`~qiskit_ibm_runtime.Session` to open a session,
-    during which you can invoke one or more primitives. Jobs submitted within a session
-    are prioritized by the scheduler, and data is cached for efficiency.
+    Following construction, an estimator is used by calling its :meth:`run` method
+    with a list of PUBs (Primitive Unified Blocs). Each PUB contains four values that, together,
+    define a computation unit of work for the estimator to complete:
 
-    Example::
+    * a single :class:`~qiskit.circuit.QuantumCircuit`, possibly parametrized, whose final state we
+      define as :math:`\psi(\theta)`,
+
+    * one or more observables (specified as any :class:`~.ObservablesArrayLike`, including
+      :class:`~.Pauli`, :class:`~.SparsePauliOp`, ``str``) that specify which expectation values to
+      estimate, denoted :math:`H_j`, and
+
+    * a collection parameter value sets to bind the circuit against, :math:`\theta_k`.
+
+    * an optional target precision for expectation value estimates.
+
+    Here is an example of how the estimator is used.
+
+    .. code-block:: python
 
         from qiskit.circuit.library import RealAmplitudes
         from qiskit.quantum_info import SparsePauliOp
 
-        from qiskit_ibm_runtime import QiskitRuntimeService, Estimator
+        from qiskit_ibm_runtime import QiskitRuntimeService, EstimatorV2 as Estimator
 
-        service = QiskitRuntimeService(channel="ibm_cloud")
+        service = QiskitRuntimeService()
+        backend = service.backend("ibmq_qasm_simulator")
 
-        psi1 = RealAmplitudes(num_qubits=2, reps=2)
+        psi = RealAmplitudes(num_qubits=2, reps=2)
+        hamiltonian = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
+        theta = [0, 1, 1, 2, 3, 5]
 
-        H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
-        H2 = SparsePauliOp.from_list([("IZ", 1)])
-        H3 = SparsePauliOp.from_list([("ZI", 1), ("ZZ", 1)])
+        estimator = Estimator(backend=backend)
 
-        with Session(service=service, backend="ibmq_qasm_simulator") as session:
-            estimator = Estimator(session=session)
-
-            theta1 = [0, 1, 1, 2, 3, 5]
-
-            # calculate [ <psi1(theta1)|H1|psi1(theta1)> ]
-            psi1_H1 = estimator.run(circuits=[psi1], observables=[H1], parameter_values=[theta1])
-            print(psi1_H1.result())
-
-            # calculate [ <psi1(theta1)|H2|psi1(theta1)>, <psi1(theta1)|H3|psi1(theta1)> ]
-            psi1_H23 = estimator.run(
-                circuits=[psi1, psi1],
-                observables=[H2, H3],
-                parameter_values=[theta1]*2
-            )
-            print(psi1_H23.result())
+        # calculate [ <psi(theta1)|hamiltonian|psi(theta)> ]
+        job = estimator.run([(psi, hamiltonian, [theta])])
+        job_result = job.result()
+        print(f"The primitive-job finished with result {job_result}"))
     """
 
     _options_class = EstimatorOptions
@@ -125,6 +129,25 @@ class EstimatorV2(BasePrimitiveV2, Estimator, BaseEstimatorV2):
 
         if self._service._channel_strategy == "q-ctrl":
             raise NotImplementedError("EstimatorV2 is not supported with q-ctrl channel strategy.")
+
+    def run(
+        self, pubs: Iterable[EstimatorPubLike], *, precision: float | None = None
+    ) -> RuntimeJob:
+        """Submit a request to the estimator primitive.
+
+        Args:
+            pubs: An iterable of pub-like (primitive unified bloc) objects, such as
+                tuples ``(circuit, observables)`` or ``(circuit, observables, parameter_values)``.
+            precision: The target precision for expectation value estimates of each
+                run Estimator Pub that does not specify its own precision. If None
+                the estimator's default precision value will be used.
+
+        Returns:
+            Submitted job.
+
+        """
+        coerced_pubs = [EstimatorPub.coerce(pub, precision) for pub in pubs]
+        return self._run(coerced_pubs)  # type: ignore[arg-type]
 
     def _validate_options(self, options: dict) -> None:
         """Validate that program inputs (options) are valid
@@ -232,7 +255,7 @@ class EstimatorV1(BasePrimitiveV1, Estimator, BaseEstimator):
     def run(  # pylint: disable=arguments-differ
         self,
         circuits: QuantumCircuit | Sequence[QuantumCircuit],
-        observables: BaseOperator | Sequence[BaseOperator],
+        observables: Sequence[BaseOperator | str] | BaseOperator | str,
         parameter_values: Sequence[float] | Sequence[Sequence[float]] | None = None,
         **kwargs: Any,
     ) -> RuntimeJob:
@@ -267,9 +290,9 @@ class EstimatorV1(BasePrimitiveV1, Estimator, BaseEstimator):
 
     def _run(  # pylint: disable=arguments-differ
         self,
-        circuits: Sequence[QuantumCircuit],
-        observables: Sequence[BaseOperator],
-        parameter_values: Sequence[Sequence[float]],
+        circuits: tuple[QuantumCircuit, ...],
+        observables: tuple[SparsePauliOp, ...],
+        parameter_values: tuple[tuple[float, ...], ...],
         **kwargs: Any,
     ) -> RuntimeJob:
         """Submit a request to the estimator primitive.

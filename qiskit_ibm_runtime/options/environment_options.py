@@ -14,8 +14,7 @@
 
 from typing import Optional, Callable, List, Literal
 
-# TODO use real base options when available
-from ..qiskit.primitives.options import primitive_dataclass
+from .utils import primitive_dataclass
 
 LogLevelType = Literal[
     "DEBUG",

@@ -26,7 +26,6 @@ import warnings
 import zlib
 from datetime import date
 from typing import Any, Callable, Dict, List, Union, Tuple
-from dataclasses import asdict
 
 import dateutil.parser
 import numpy as np
@@ -54,6 +53,9 @@ from qiskit.circuit import (
     QuantumRegister,
 )
 from qiskit.circuit.parametertable import ParameterView
+from qiskit.primitives.containers.observables_array import ObservablesArray
+from qiskit.primitives.containers.bindings_array import BindingsArray
+from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.result import Result
 from qiskit.version import __version__ as _terra_version_string
 from qiskit.utils import optionals
@@ -65,10 +67,6 @@ from qiskit.qpy import (
     dump,
 )
 from qiskit.qpy.binary_io.value import _write_parameter, _read_parameter
-
-# TODO: Remove when they are in terra
-from ..qiskit.primitives import ObservablesArray, BindingsArray
-from ..qiskit.primitives.base_pub import BasePub
 
 _TERRA_VERSION = tuple(
     int(x) for x in re.match(r"\d+\.\d+\.\d", _terra_version_string).group(0).split(".")[:3]
@@ -266,20 +264,22 @@ class RuntimeEncoder(json.JSONEncoder):
                 ),  # type: ignore[no-untyped-call]
             )
             return {"__type__": "Instruction", "__value__": value}
-        if isinstance(obj, BasePub):
-            return asdict(obj)
+        # TODO proper way to do this?
+        if isinstance(obj, EstimatorPub):
+            return {
+                "circuit": obj.circuit,
+                "observables": obj.observables,
+                "parameter_values": obj.parameter_values,
+                "precision": obj.precision,
+            }
         if isinstance(obj, ObservablesArray):
             return obj.tolist()
         if isinstance(obj, BindingsArray):
-            out_val = {}
-            if obj.kwvals:
-                encoded_kwvals = {}
-                for key, val in obj.kwvals.items():
-                    encoded_kwvals[json.dumps(key, cls=RuntimeEncoder)] = val
-                out_val["kwvals"] = encoded_kwvals
-            if obj.vals:
-                out_val["vals"] = obj.vals  # type: ignore[assignment]
-            out_val["shape"] = obj.shape
+            out_val = {"shape": obj.shape}
+            encoded_data = {}
+            for key, val in obj.data.items():
+                encoded_data[json.dumps(key, cls=RuntimeEncoder)] = val
+            out_val["data"] = encoded_data
             return {"__type__": "BindingsArray", "__value__": out_val}
 
         if HAS_AER and isinstance(obj, qiskit_aer.noise.NoiseModel):
@@ -356,17 +356,16 @@ class RuntimeDecoder(json.JSONDecoder):
                 return _decode_and_deserialize(obj_val, scipy.sparse.load_npz, False)
             if obj_type == "BindingsArray":
                 ba_kwargs = {"shape": obj_val.get("shape", None)}
-                kwvals = obj_val.get("kwvals", None)
-                if isinstance(kwvals, dict):
-                    kwvals_decoded = {}
-                    for key, val in kwvals.items():
+                data = obj_val.get("data", None)
+                if isinstance(data, dict):
+                    data_decoded = {}
+                    for key, val in data.items():
                         # Convert to tuple or it can't be a key
                         decoded_key = tuple(json.loads(key, cls=RuntimeDecoder))
-                        kwvals_decoded[decoded_key] = val
-                    ba_kwargs["kwvals"] = kwvals_decoded
-                elif kwvals:
-                    raise ValueError(f"Unexpected kwvals type {type(kwvals)} in BindingsArray.")
-                ba_kwargs["vals"] = obj_val.get("vals", None)
+                        data_decoded[decoded_key] = val
+                    ba_kwargs["data"] = data_decoded
+                elif data:
+                    raise ValueError(f"Unexpected data type {type(data)} in BindingsArray.")
 
                 return BindingsArray(**ba_kwargs)
 
