@@ -1,4 +1,4 @@
-qiskit>=0.45.0
+qiskit @ git+https://github.com/Qiskit/qiskit.git
 requests~=2.27
 requests_ntlm>=1.1.0
 numpy>=1.13
