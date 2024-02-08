@@ -42,6 +42,7 @@ from qiskit.primitives.containers import (
 )
 from qiskit_aer.noise import NoiseModel
 from qiskit_ibm_runtime.utils import RuntimeEncoder, RuntimeDecoder
+from qiskit_ibm_runtime.fake_provider import FakeNairobi
 
 from .mock.fake_runtime_client import CustomResultRuntimeJob
 from .mock.fake_runtime_service import FakeRuntimeService

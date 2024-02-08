@@ -68,16 +68,15 @@ from qiskit.primitives.containers import (
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 
-
-from qiskit_ibm_provider.qpy import (
-    _write_parameter,
+from qiskit.utils import optionals
+from qiskit.qpy import (
     _write_parameter_expression,
     _read_parameter_expression,
     _read_parameter_expression_v3,
-    _read_parameter,
-    dump,
     load,
+    dump,
 )
+from qiskit.qpy.binary_io.value import _write_parameter, _read_parameter
 
 # TODO: Remove when they are in terra
 from ..qiskit.primitives.base_pub import BasePub
@@ -232,10 +231,15 @@ class RuntimeEncoder(json.JSONEncoder):
         if hasattr(obj, "to_json"):
             return {"__type__": "to_json", "__value__": obj.to_json()}
         if isinstance(obj, QuantumCircuit):
+            kwargs: dict[str, object] = {"use_symengine": bool(optionals.HAS_SYMENGINE)}
+            if _TERRA_VERSION[0] >= 1:
+                # NOTE: This can be updated only after the server side has
+                # updated to a newer qiskit version.
+                kwargs["version"] = 10
             value = _serialize_and_encode(
                 data=obj,
                 serializer=lambda buff, data: dump(
-                    data, buff, RuntimeEncoder
+                    data, buff, RuntimeEncoder, **kwargs
                 ),  # type: ignore[no-untyped-call]
             )
             return {"__type__": "QuantumCircuit", "__value__": value}
@@ -251,18 +255,26 @@ class RuntimeEncoder(json.JSONEncoder):
                 data=obj,
                 serializer=_write_parameter_expression,
                 compress=False,
+                use_symengine=bool(optionals.HAS_SYMENGINE),
             )
             return {"__type__": "ParameterExpression", "__value__": value}
         if isinstance(obj, ParameterView):
             return obj.data
         if isinstance(obj, Instruction):
+            kwargs = {"use_symengine": bool(optionals.HAS_SYMENGINE)}
+            if _TERRA_VERSION[0] >= 1:
+                # NOTE: This can be updated only after the server side has
+                # updated to a newer qiskit version.
+                kwargs["version"] = 10
             # Append instruction to empty circuit
             quantum_register = QuantumRegister(obj.num_qubits)
             quantum_circuit = QuantumCircuit(quantum_register)
             quantum_circuit.append(obj, quantum_register)
             value = _serialize_and_encode(
                 data=quantum_circuit,
-                serializer=lambda buff, data: dump(data, buff),  # type: ignore[no-untyped-call]
+                serializer=lambda buff, data: dump(
+                    data, buff, **kwargs
+                ),  # type: ignore[no-untyped-call]
             )
             return {"__type__": "Instruction", "__value__": value}
         if isinstance(obj, BasePub):
