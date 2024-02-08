@@ -53,9 +53,9 @@ from qiskit.circuit import (
     QuantumRegister,
 )
 from qiskit.circuit.parametertable import ParameterView
-from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.primitives.containers.observables_array import ObservablesArray
 from qiskit.primitives.containers.bindings_array import BindingsArray
+from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.result import Result
 from qiskit.version import __version__ as _terra_version_string
 from qiskit.utils import optionals
@@ -218,7 +218,7 @@ class RuntimeEncoder(json.JSONEncoder):
         if hasattr(obj, "to_json"):
             return {"__type__": "to_json", "__value__": obj.to_json()}
         if isinstance(obj, QuantumCircuit):
-            kwargs: dict[str, object] = {"use_symengine": bool(optionals.HAS_SYMENGINE)}
+            kwargs: Dict[str, object] = {"use_symengine": bool(optionals.HAS_SYMENGINE)}
             if _TERRA_VERSION[0] >= 1:
                 # NOTE: This can be updated only after the server side has
                 # updated to a newer qiskit version.
