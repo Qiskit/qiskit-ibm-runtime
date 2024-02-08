@@ -443,8 +443,8 @@ def canonicalize_control_flow(circuit: QuantumCircuit) -> QuantumCircuit:
             # Control-flow operations associated bits in the instruction arguments with bits in the
             # circuit blocks just by sequencing.  All blocks must have the same width.
             if isinstance(new_instruction.operation, ControlFlowOp):
-                op = new_instruction.operation
-                first_block = op.blocks[0]
+                operation = new_instruction.operation
+                first_block = operation.blocks[0]
                 inner_bit_map = dict(
                     zip(first_block.qubits, (bit_map[bit] for bit in new_instruction.qubits))
                 )
@@ -452,8 +452,8 @@ def canonicalize_control_flow(circuit: QuantumCircuit) -> QuantumCircuit:
                     zip(first_block.clbits, (bit_map[bit] for bit in new_instruction.clbits))
                 )
                 new_instruction = CircuitInstruction(
-                    operation=op.replace_blocks(
-                        [worker(block, inner_bit_map) for block in op.blocks]
+                    operation=operation.replace_blocks(
+                        [worker(block, inner_bit_map) for block in operation.blocks]
                     ),
                     qubits=sorted(new_instruction.qubits, key=bit_key),
                     clbits=sorted(new_instruction.clbits, key=bit_key),
