@@ -25,6 +25,7 @@ from ddt import data, ddt
 
 from qiskit.circuit import Parameter, ParameterVector, QuantumCircuit
 from qiskit.circuit.library import EfficientSU2, CXGate, PhaseGate, U2Gate
+
 import qiskit.quantum_info as qi
 from qiskit.quantum_info import SparsePauliOp, Pauli, Statevector
 from qiskit.result import Result, Counts
@@ -454,10 +455,17 @@ class TestContainerSerialization(IBMTestCase):
                 Parameter("c"): np.random.random((4, 3)),
             }
         ),
+        BindingsArray(
+            data={
+                (Parameter("a"), Parameter("b")): np.random.random((2, 3, 2)),
+                Parameter("c"): np.random.random((2, 3)),
+            },
+        ),
+        BindingsArray(data={Parameter("c"): [3.0, 3.1]}),
+        BindingsArray(data={"param1": [1, 2, 3], "param2": [3, 4, 5]}),
     )
     def test_bindings_array(self, barray):
         """Test encoding and decoding BindingsArray."""
-
         payload = {"array": barray}
         encoded = json.dumps(payload, cls=RuntimeEncoder)
         decoded = json.loads(encoded, cls=RuntimeDecoder)["array"]

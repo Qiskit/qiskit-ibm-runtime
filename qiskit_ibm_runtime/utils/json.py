@@ -26,7 +26,6 @@ import warnings
 import zlib
 from datetime import date
 from typing import Any, Callable, Dict, List, Union, Tuple
-from dataclasses import asdict
 
 import dateutil.parser
 import numpy as np
@@ -54,6 +53,9 @@ from qiskit.circuit import (
     QuantumRegister,
 )
 from qiskit.circuit.parametertable import ParameterView
+from qiskit.primitives.containers.observables_array import ObservablesArray
+from qiskit.primitives.containers.bindings_array import BindingsArray
+from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.result import Result
 from qiskit.version import __version__ as _terra_version_string
 from qiskit.primitives.containers.bindings_array import BindingsArray
@@ -77,9 +79,6 @@ from qiskit.qpy import (
     dump,
 )
 from qiskit.qpy.binary_io.value import _write_parameter, _read_parameter
-
-# TODO: Remove when they are in terra
-from ..qiskit.primitives.base_pub import BasePub
 
 _TERRA_VERSION = tuple(
     int(x) for x in re.match(r"\d+\.\d+\.\d", _terra_version_string).group(0).split(".")[:3]
@@ -277,17 +276,22 @@ class RuntimeEncoder(json.JSONEncoder):
                 ),  # type: ignore[no-untyped-call]
             )
             return {"__type__": "Instruction", "__value__": value}
-        if isinstance(obj, BasePub):
-            return asdict(obj)
+        # TODO proper way to do this?
+        if isinstance(obj, EstimatorPub):
+            return {
+                "circuit": obj.circuit,
+                "observables": obj.observables,
+                "parameter_values": obj.parameter_values,
+                "precision": obj.precision,
+            }
         if isinstance(obj, ObservablesArray):
             return {"__type__": "ObservablesArray", "__value__": obj.tolist()}
         if isinstance(obj, BindingsArray):
-            out_val = {}
+            out_val = {"shape": obj.shape}
             encoded_data = {}
             for key, val in obj.data.items():
                 encoded_data[json.dumps(key, cls=RuntimeEncoder)] = val
             out_val["data"] = encoded_data
-            out_val["shape"] = obj.shape
             return {"__type__": "BindingsArray", "__value__": out_val}
         if isinstance(obj, BitArray):
             out_val = {"array": obj.array, "num_bits": obj.num_bits}
