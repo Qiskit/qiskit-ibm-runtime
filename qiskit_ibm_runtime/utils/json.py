@@ -273,14 +273,6 @@ class RuntimeEncoder(json.JSONEncoder):
                 ),  # type: ignore[no-untyped-call]
             )
             return {"__type__": "Instruction", "__value__": value}
-        # TODO proper way to do this?
-        if isinstance(obj, EstimatorPub):
-            return {
-                "circuit": obj.circuit,
-                "observables": obj.observables,
-                "parameter_values": obj.parameter_values,
-                "precision": obj.precision,
-            }
         if isinstance(obj, ObservablesArray):
             return {"__type__": "ObservablesArray", "__value__": obj.tolist()}
         if isinstance(obj, BindingsArray):
