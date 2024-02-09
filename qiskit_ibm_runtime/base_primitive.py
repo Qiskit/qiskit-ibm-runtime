@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Dict, Optional, Any, Union
+from typing import Dict, Optional, Any, Union, TypeVar, Generic
 import copy
 import logging
 from dataclasses import asdict, replace
@@ -40,9 +40,10 @@ from .qiskit_runtime_service import QiskitRuntimeService
 from .session import Session
 
 logger = logging.getLogger(__name__)
+OptionsT = TypeVar("OptionsT", bound=BaseOptions)
 
 
-class BasePrimitiveV2(ABC):
+class BasePrimitiveV2(ABC, Generic[OptionsT]):
     """Base class for Qiskit Runtime primitives."""
 
     _options_class: Optional[type[BaseOptions]] = OptionsV2
@@ -171,7 +172,7 @@ class BasePrimitiveV2(ABC):
         return self._session
 
     @property
-    def options(self) -> BaseOptions:
+    def options(self) -> OptionsT:
         """Return options"""
         return self._options
 

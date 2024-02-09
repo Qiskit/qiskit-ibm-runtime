@@ -42,7 +42,7 @@ class Sampler:
     version = 0
 
 
-class SamplerV2(BasePrimitiveV2, Sampler, BaseSamplerV2):
+class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
     """Class for interacting with Qiskit Runtime Sampler primitive service.
 
     This class supports version 2 of the Sampler interface, which uses different

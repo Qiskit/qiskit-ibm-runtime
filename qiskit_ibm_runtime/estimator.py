@@ -45,7 +45,7 @@ class Estimator:
     version = 0
 
 
-class EstimatorV2(BasePrimitiveV2, Estimator, BaseEstimatorV2):
+class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2):
     r"""Class for interacting with Qiskit Runtime Estimator primitive service.
 
     Qiskit Runtime Estimator primitive service estimates expectation values of quantum circuits and
