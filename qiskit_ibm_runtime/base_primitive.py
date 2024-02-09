@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Dict, Optional, Any, Union, TypeVar, Generic
+from typing import Dict, Optional, Any, Union, TypeVar, Generic, Type
 import copy
 import logging
 from dataclasses import asdict, replace
@@ -27,7 +27,7 @@ from qiskit.providers.options import Options as TerraOptions
 from .provider_session import get_cm_session as get_cm_provider_session
 
 from .options import Options
-from .options.options import BaseOptions
+from .options.options import BaseOptions, OptionsV2
 from .options.utils import merge_options, set_default_error_levels
 from .runtime_job import RuntimeJob
 from .ibm_backend import IBMBackend
@@ -46,7 +46,7 @@ OptionsT = TypeVar("OptionsT", bound=BaseOptions)
 class BasePrimitiveV2(ABC, Generic[OptionsT]):
     """Base class for Qiskit Runtime primitives."""
 
-    _options_class: OptionsT = BaseOptions
+    _options_class: Type[OptionsT] = OptionsV2  # type: ignore[assignment]
     version = 2
 
     def __init__(
