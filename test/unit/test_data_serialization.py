@@ -23,18 +23,26 @@ from datetime import datetime
 import numpy as np
 from ddt import data, ddt
 
-from qiskit.circuit import Parameter, QuantumCircuit
+from qiskit.circuit import Parameter, ParameterVector, QuantumCircuit
 from qiskit.circuit.library import EfficientSU2, CXGate, PhaseGate, U2Gate
 
 import qiskit.quantum_info as qi
 from qiskit.quantum_info import SparsePauliOp, Pauli, Statevector
-from qiskit.result import Result
-from qiskit.primitives.containers.observables_array import ObservablesArray
+from qiskit.result import Result, Counts
 from qiskit.primitives.containers.bindings_array import BindingsArray
+from qiskit.primitives.containers.observables_array import ObservablesArray
+from qiskit.primitives.containers.estimator_pub import EstimatorPub
+from qiskit.primitives.containers.sampler_pub import SamplerPub
+from qiskit.primitives.containers import (
+    BitArray,
+    DataBin,
+    make_data_bin,
+    PubResult,
+    PrimitiveResult,
+)
 from qiskit_aer.noise import NoiseModel
 from qiskit_ibm_runtime.utils import RuntimeEncoder, RuntimeDecoder
 from qiskit_ibm_runtime.fake_provider import FakeNairobi
-
 
 from .mock.fake_runtime_client import CustomResultRuntimeJob
 from .mock.fake_runtime_service import FakeRuntimeService
@@ -260,10 +268,156 @@ if __name__ == '__main__':
 
         self.assertTrue(json.dumps(payload, cls=RuntimeEncoder))
 
-    def test_encoder_pubs(self):
-        """Test serializing pubs."""
-        pass
 
+@ddt
+class TestContainerSerialization(IBMTestCase):
+    """Class for testing primitive containers serialization."""
+
+    # Container specific assertEqual methods
+    def assert_observable_arrays_equal(self, obs1, obs2):
+        """Tests that two ObservableArray objects are equal"""
+        self.assertEqual(obs1.tolist(), obs2.tolist())
+
+    def assert_binding_arrays_equal(self, barr1, barr2):
+        """Tests that two BindingArray objects are equal"""
+
+        def _to_str_keyed(_in_dict):
+            _out_dict = {}
+            for a_key_tuple, val in _in_dict.items():
+                str_key = tuple(
+                    a_key.name if isinstance(a_key, Parameter) else a_key for a_key in a_key_tuple
+                )
+                _out_dict[str_key] = val
+            return _out_dict
+
+        self.assertEqual(barr1.shape, barr2.shape)
+        barr1_str_keyed = _to_str_keyed(barr1.data)
+        barr2_str_keyed = _to_str_keyed(barr2.data)
+        for key, val in barr1_str_keyed.items():
+            self.assertIn(key, barr2_str_keyed)
+            self.assertTrue(np.allclose(val, barr2_str_keyed[key]))
+
+    def assert_data_bins_equal(self, dbin1, dbin2):
+        """Compares two DataBins
+        Field types are compared up to their string representation
+        """
+        self.assertEqual(dbin1._FIELDS, dbin2._FIELDS)
+        self.assertEqual(
+            [str(field_type) for field_type in dbin1._FIELD_TYPES],
+            [str(field_type) for field_type in dbin2._FIELD_TYPES],
+        )
+        self.assertEqual(dbin1._SHAPE, dbin2._SHAPE)
+        for field_name in dbin1._FIELDS:
+            field_1 = getattr(dbin1, field_name)
+            field_2 = getattr(dbin2, field_name)
+            if isinstance(field_1, np.ndarray):
+                self.assertTrue(np.allclose(field_1, field_2))
+            else:
+                self.assertEqual(field_1, field_2)
+
+    def assert_estimator_pubs_equal(self, pub1, pub2):
+        """Tests that two EstimatorPub objects are equal"""
+        self.assertEqual(pub1.circuit, pub2.circuit)
+        self.assert_observable_arrays_equal(pub1.observables, pub2.observables)
+        self.assert_binding_arrays_equal(pub1.parameter_values, pub2.parameter_values)
+        self.assertEqual(pub1.precision, pub2.precision)
+
+    def assert_sampler_pubs_equal(self, pub1, pub2):
+        """Tests that two SamplerPub objects are equal"""
+        self.assertEqual(pub1.circuit, pub2.circuit)
+        self.assert_binding_arrays_equal(pub1.parameter_values, pub2.parameter_values)
+        self.assertEqual(pub1.shots, pub2.shots)
+
+    def assert_pub_results_equal(self, pub_result1, pub_result2):
+        """Tests that two PubResult objects are equal"""
+        self.assert_data_bins_equal(pub_result1.data, pub_result2.data)
+        self.assertEqual(pub_result1.metadata, pub_result2.metadata)
+
+    def assert_primitive_results_equal(self, primitive_result1, primitive_result2):
+        """Tests that two PrimitiveResult objects are equal"""
+        self.assertEqual(len(primitive_result1), len(primitive_result2))
+        for pub_result1, pub_result2 in zip(primitive_result1, primitive_result2):
+            self.assert_pub_results_equal(pub_result1, pub_result2)
+        self.assertEqual(primitive_result1.metadata, primitive_result2.metadata)
+
+    # Data generation methods
+
+    def make_test_data_bins(self):
+        """Generates test data for DataBin test"""
+        result_bins = []
+        data_bin_cls = make_data_bin([("alpha", np.ndarray), ("beta", np.ndarray)], shape=(10, 20))
+        alpha = np.empty((10, 20), dtype=np.uint16)
+        beta = np.empty((10, 20), dtype=int)
+        my_bin = data_bin_cls(alpha, beta)
+        result_bins.append(my_bin)
+        return result_bins
+
+    def make_test_estimator_pubs(self):
+        """Generates test data for EstimatorPub test"""
+        pubs = []
+        params = (Parameter("a"), Parameter("b"))
+        circuit = QuantumCircuit(2)
+        circuit.rx(params[0], 0)
+        circuit.ry(params[1], 1)
+        parameter_values = BindingsArray(data={params: np.ones((10, 2))})
+        observables = ObservablesArray([{"XX": 0.1}])
+        precision = 0.05
+
+        pub = EstimatorPub(
+            circuit=circuit,
+            observables=observables,
+            parameter_values=parameter_values,
+            precision=precision,
+        )
+        pubs.append(pub)
+        return pubs
+
+    def make_test_sampler_pubs(self):
+        """Generates test data for SamplerPub test"""
+        pubs = []
+        params = (Parameter("a"), Parameter("b"))
+        circuit = QuantumCircuit(2)
+        circuit.rx(params[0], 0)
+        circuit.ry(params[1], 1)
+        circuit.measure_all()
+        parameter_values = BindingsArray(data={params: np.ones((10, 2))})
+        shots = 1000
+
+        pub = SamplerPub(
+            circuit=circuit,
+            parameter_values=parameter_values,
+            shots=shots,
+        )
+        pubs.append(pub)
+        return pubs
+
+    def make_test_pub_results(self):
+        """Generates test data for PubResult test"""
+        pub_results = []
+        data_bin = make_data_bin((("a", float), ("b", int)))
+        pub_result = PubResult(data_bin(a=1.0, b=2))
+        pub_results.append(pub_result)
+        pub_result = PubResult(data_bin(a=1.0, b=2), {"x": 1})
+        pub_results.append(pub_result)
+        return pub_results
+
+    def make_test_primitive_results(self):
+        """Generates test data for PrimitiveResult test"""
+        primitive_results = []
+        data_bin_cls = make_data_bin([("alpha", np.ndarray), ("beta", np.ndarray)], shape=(10, 20))
+
+        alpha = np.empty((10, 20), dtype=np.uint16)
+        beta = np.empty((10, 20), dtype=int)
+
+        pub_results = [
+            PubResult(data_bin_cls(alpha, beta)),
+            PubResult(data_bin_cls(alpha, beta)),
+        ]
+        result = PrimitiveResult(pub_results, {"1": 2})
+        primitive_results.append(result)
+        return primitive_results
+
+    # Tests
     @data(
         ObservablesArray([["X", "Y", "Z"], ["0", "1", "+"]]),
         ObservablesArray(qi.pauli_basis(2)),
@@ -281,10 +435,14 @@ if __name__ == '__main__':
         payload = {"array": oarray}
         encoded = json.dumps(payload, cls=RuntimeEncoder)
         decoded = json.loads(encoded, cls=RuntimeDecoder)["array"]
-        self.assertIsInstance(decoded, list)
-        self.assertEqual(decoded, oarray.tolist())
+        self.assertIsInstance(decoded, ObservablesArray)
+        self.assert_observable_arrays_equal(decoded, oarray)
 
     @data(
+        BindingsArray({"a": [1, 2, 3.4]}),
+        BindingsArray({("a", "b", "c"): [4.0, 5.0, 6.0]}, shape=()),
+        BindingsArray({Parameter("a"): np.random.uniform(size=(5,))}),
+        BindingsArray({ParameterVector("a", 5): np.linspace(0, 1, 30).reshape((2, 3, 5))}),
         BindingsArray(data={Parameter("a"): [0.0], Parameter("b"): [1.0]}, shape=1),
         BindingsArray(
             data={
@@ -303,23 +461,69 @@ if __name__ == '__main__':
     )
     def test_bindings_array(self, barray):
         """Test encoding and decoding BindingsArray."""
-
-        def _to_str_keyed(_in_dict):
-            _out_dict = {}
-            for a_key_tuple, val in _in_dict.items():
-                # TODO double check this is correct
-                str_key = tuple(a_key for a_key in a_key_tuple)
-                _out_dict[str_key] = val
-            return _out_dict
-
         payload = {"array": barray}
         encoded = json.dumps(payload, cls=RuntimeEncoder)
         decoded = json.loads(encoded, cls=RuntimeDecoder)["array"]
         self.assertIsInstance(decoded, BindingsArray)
-        self.assertEqual(barray.shape, decoded.shape)
+        self.assert_binding_arrays_equal(decoded, barray)
 
-        barray_str_keyed = _to_str_keyed(barray.data)
-        decoded_str_keyed = _to_str_keyed(decoded.data)
-        for key, val in barray_str_keyed.items():
-            self.assertIn(key, decoded_str_keyed)
-            self.assertTrue(np.allclose(val, decoded_str_keyed[key]))
+    @data(
+        BitArray(
+            np.array([[[3, 5], [3, 5], [234, 100]], [[0, 1], [1, 0], [1, 0]]], dtype=np.uint8),
+            num_bits=15,
+        ),
+        BitArray.from_bool_array([[1, 0, 0], [1, 1, 0]]),
+        BitArray.from_counts(Counts({"0b101010": 2, "0b1": 3, "0x010203": 4})),
+    )
+    def test_bit_array(self, barray):
+        """Test encoding and decoding BitArray."""
+        payload = {"array": barray}
+        encoded = json.dumps(payload, cls=RuntimeEncoder)
+        decoded = json.loads(encoded, cls=RuntimeDecoder)["array"]
+        self.assertIsInstance(decoded, BitArray)
+        self.assertEqual(barray, decoded)
+
+    def test_data_bin(self):
+        """Test encoding and decoding DataBin."""
+        for dbin in self.make_test_data_bins():
+            payload = {"bin": dbin}
+            encoded = json.dumps(payload, cls=RuntimeEncoder)
+            decoded = json.loads(encoded, cls=RuntimeDecoder)["bin"]
+            self.assertIsInstance(decoded, DataBin)
+            self.assert_data_bins_equal(dbin, decoded)
+
+    def test_estimator_pub(self):
+        """Test encoding and decoding EstimatorPub"""
+        for pub in self.make_test_estimator_pubs():
+            payload = {"pub": pub}
+            encoded = json.dumps(payload, cls=RuntimeEncoder)
+            decoded = json.loads(encoded, cls=RuntimeDecoder)["pub"]
+            self.assertIsInstance(decoded, EstimatorPub)
+            self.assert_estimator_pubs_equal(pub, decoded)
+
+    def test_sampler_pub(self):
+        """Test encoding and decoding SamplerPub"""
+        for pub in self.make_test_sampler_pubs():
+            payload = {"pub": pub}
+            encoded = json.dumps(payload, cls=RuntimeEncoder)
+            decoded = json.loads(encoded, cls=RuntimeDecoder)["pub"]
+            self.assertIsInstance(decoded, SamplerPub)
+            self.assert_sampler_pubs_equal(pub, decoded)
+
+    def test_pub_result(self):
+        """Test encoding and decoding PubResult"""
+        for pub_result in self.make_test_pub_results():
+            payload = {"pub_result": pub_result}
+            encoded = json.dumps(payload, cls=RuntimeEncoder)
+            decoded = json.loads(encoded, cls=RuntimeDecoder)["pub_result"]
+            self.assertIsInstance(decoded, PubResult)
+            self.assert_pub_results_equal(pub_result, decoded)
+
+    def test_primitive_result(self):
+        """Test encoding and decoding PubResult"""
+        for primitive_result in self.make_test_primitive_results():
+            payload = {"primitive_result": primitive_result}
+            encoded = json.dumps(payload, cls=RuntimeEncoder)
+            decoded = json.loads(encoded, cls=RuntimeDecoder)["primitive_result"]
+            self.assertIsInstance(decoded, PrimitiveResult)
+            self.assert_primitive_results_equal(primitive_result, decoded)

@@ -53,11 +53,20 @@ from qiskit.circuit import (
     QuantumRegister,
 )
 from qiskit.circuit.parametertable import ParameterView
-from qiskit.primitives.containers.observables_array import ObservablesArray
-from qiskit.primitives.containers.bindings_array import BindingsArray
-from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.result import Result
 from qiskit.version import __version__ as _terra_version_string
+from qiskit.primitives.containers.bindings_array import BindingsArray
+from qiskit.primitives.containers.observables_array import ObservablesArray
+from qiskit.primitives.containers import (
+    BitArray,
+    DataBin,
+    make_data_bin,
+    PubResult,
+    PrimitiveResult,
+)
+from qiskit.primitives.containers.estimator_pub import EstimatorPub
+from qiskit.primitives.containers.sampler_pub import SamplerPub
+
 from qiskit.utils import optionals
 from qiskit.qpy import (
     _write_parameter_expression,
@@ -264,16 +273,8 @@ class RuntimeEncoder(json.JSONEncoder):
                 ),  # type: ignore[no-untyped-call]
             )
             return {"__type__": "Instruction", "__value__": value}
-        # TODO proper way to do this?
-        if isinstance(obj, EstimatorPub):
-            return {
-                "circuit": obj.circuit,
-                "observables": obj.observables,
-                "parameter_values": obj.parameter_values,
-                "precision": obj.precision,
-            }
         if isinstance(obj, ObservablesArray):
-            return obj.tolist()
+            return {"__type__": "ObservablesArray", "__value__": obj.tolist()}
         if isinstance(obj, BindingsArray):
             out_val = {"shape": obj.shape}
             encoded_data = {}
@@ -281,7 +282,38 @@ class RuntimeEncoder(json.JSONEncoder):
                 encoded_data[json.dumps(key, cls=RuntimeEncoder)] = val
             out_val["data"] = encoded_data
             return {"__type__": "BindingsArray", "__value__": out_val}
-
+        if isinstance(obj, BitArray):
+            out_val = {"array": obj.array, "num_bits": obj.num_bits}
+            return {"__type__": "BitArray", "__value__": out_val}
+        if isinstance(obj, DataBin):
+            out_val = {
+                "field_names": obj._FIELDS,
+                "field_types": [str(field_type) for field_type in obj._FIELD_TYPES],
+                "shape": obj._SHAPE,
+                "values": {field_name: getattr(obj, field_name) for field_name in obj._FIELDS},
+            }
+            return {"__type__": "DataBin", "__value__": out_val}
+        if isinstance(obj, EstimatorPub):
+            out_val = {
+                "circuit": obj.circuit,
+                "observables": obj.observables,
+                "parameter_values": obj.parameter_values,
+                "precision": obj.precision,
+            }
+            return {"__type__": "EstimatorPub", "__value__": out_val}
+        if isinstance(obj, SamplerPub):
+            out_val = {
+                "circuit": obj.circuit,
+                "parameter_values": obj.parameter_values,
+                "shots": obj.shots,
+            }
+            return {"__type__": "SamplerPub", "__value__": out_val}
+        if isinstance(obj, PubResult):
+            out_val = {"data": obj.data, "metadata": obj.metadata}
+            return {"__type__": "PubResult", "__value__": out_val}
+        if isinstance(obj, PrimitiveResult):
+            out_val = {"pub_results": obj._pub_results, "metadata": obj.metadata}
+            return {"__type__": "PrimitiveResult", "__value__": out_val}
         if HAS_AER and isinstance(obj, qiskit_aer.noise.NoiseModel):
             return {"__type__": "NoiseModel", "__value__": obj.to_dict()}
         if hasattr(obj, "settings"):
@@ -354,21 +386,41 @@ class RuntimeDecoder(json.JSONDecoder):
                 return Result.from_dict(obj_val)
             if obj_type == "spmatrix":
                 return _decode_and_deserialize(obj_val, scipy.sparse.load_npz, False)
+            if obj_type == "ObservablesArray":
+                return ObservablesArray(obj_val)
             if obj_type == "BindingsArray":
                 ba_kwargs = {"shape": obj_val.get("shape", None)}
                 data = obj_val.get("data", None)
                 if isinstance(data, dict):
-                    data_decoded = {}
+                    decoded_data = {}
                     for key, val in data.items():
                         # Convert to tuple or it can't be a key
                         decoded_key = tuple(json.loads(key, cls=RuntimeDecoder))
-                        data_decoded[decoded_key] = val
-                    ba_kwargs["data"] = data_decoded
+                        decoded_data[decoded_key] = val
+                    ba_kwargs["data"] = decoded_data
                 elif data:
                     raise ValueError(f"Unexpected data type {type(data)} in BindingsArray.")
-
                 return BindingsArray(**ba_kwargs)
-
+            if obj_type == "BitArray":
+                return BitArray(**obj_val)
+            if obj_type == "DataBin":
+                field_names = obj_val["field_names"]
+                field_types = [
+                    globals().get(field_type, field_type) for field_type in obj_val["field_types"]
+                ]
+                shape = obj_val["shape"]
+                if shape is not None and isinstance(shape, list):
+                    shape = tuple(shape)
+                data_bin_cls = make_data_bin(zip(field_names, field_types), shape=shape)
+                return data_bin_cls(**obj_val["values"])
+            if obj_type == "EstimatorPub":
+                return EstimatorPub(**obj_val)
+            if obj_type == "SamplerPub":
+                return SamplerPub(**obj_val)
+            if obj_type == "PubResult":
+                return PubResult(**obj_val)
+            if obj_type == "PrimitiveResult":
+                return PrimitiveResult(**obj_val)
             if obj_type == "to_json":
                 return obj_val
             if obj_type == "NoiseModel":
