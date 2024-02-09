@@ -397,7 +397,7 @@ class TestPrimitivesV2(IBMTestCase):
 
     @combine(
         primitive=[EstimatorV2],
-        exp_opt=[{"foo": "bar"}, {"transpilation": {"foo": "bar"}}],
+        exp_opt=[{"foo": "bar"}, {"transpilation": {"extra_key": "bar"}}],
     )
     def test_run_experimental_options(self, primitive, exp_opt):
         """Test specifying arbitrary options in run."""
@@ -407,6 +407,20 @@ class TestPrimitivesV2(IBMTestCase):
         inst.run(**get_primitive_inputs(inst))
         inputs = session.run.call_args.kwargs["inputs"]
         self._assert_dict_partially_equal(inputs, exp_opt)
+        self.assertNotIn("extra_key", inputs)
+
+    @combine(
+        primitive=[EstimatorV2],
+        exp_opt=[{"foo": "bar"}, {"execution": {"extra_key": "bar"}}],
+    )
+    def test_run_experimental_options_init(self, primitive, exp_opt):
+        """Test specifying arbitrary options in initialization."""
+        session = MagicMock(spec=MockSession)
+        inst = primitive(session=session, options={"experimental": exp_opt})
+        inst.run(**get_primitive_inputs(inst))
+        inputs = session.run.call_args.kwargs["inputs"]
+        self._assert_dict_partially_equal(inputs, exp_opt)
+        self.assertNotIn("extra_key", inputs)
 
     @data(EstimatorV2)
     def test_run_unset_options(self, primitive):

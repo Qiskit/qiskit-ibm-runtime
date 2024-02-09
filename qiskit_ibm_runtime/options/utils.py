@@ -115,6 +115,9 @@ def merge_options(
         for key, val in matched.items():
             old[key] = val
 
+        # Clear the matched dict so it's not reused
+        matched.clear()
+
     if is_dataclass(old_options):
         combined = asdict(old_options)
     elif isinstance(old_options, dict):
