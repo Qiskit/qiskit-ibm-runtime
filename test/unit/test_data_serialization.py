@@ -342,8 +342,7 @@ class TestContainerSerialization(IBMTestCase):
 
     # Data generation methods
 
-    @staticmethod
-    def make_test_data_bins():
+    def make_test_data_bins(self):
         """Generates test data for DataBin test"""
         result_bins = []
         data_bin_cls = make_data_bin([("alpha", np.ndarray), ("beta", np.ndarray)], shape=(10, 20))
@@ -353,8 +352,7 @@ class TestContainerSerialization(IBMTestCase):
         result_bins.append(my_bin)
         return result_bins
 
-    @staticmethod
-    def make_test_estimator_pubs():
+    def make_test_estimator_pubs(self):
         """Generates test data for EstimatorPub test"""
         pubs = []
         params = (Parameter("a"), Parameter("b"))
@@ -374,8 +372,7 @@ class TestContainerSerialization(IBMTestCase):
         pubs.append(pub)
         return pubs
 
-    @staticmethod
-    def make_test_sampler_pubs():
+    def make_test_sampler_pubs(self):
         """Generates test data for SamplerPub test"""
         pubs = []
         params = (Parameter("a"), Parameter("b"))
@@ -394,8 +391,7 @@ class TestContainerSerialization(IBMTestCase):
         pubs.append(pub)
         return pubs
 
-    @staticmethod
-    def make_test_pub_results():
+    def make_test_pub_results(self):
         """Generates test data for PubResult test"""
         pub_results = []
         data_bin = make_data_bin((("a", float), ("b", int)))
@@ -405,8 +401,7 @@ class TestContainerSerialization(IBMTestCase):
         pub_results.append(pub_result)
         return pub_results
 
-    @staticmethod
-    def make_test_primitive_results():
+    def make_test_primitive_results(self):
         """Generates test data for PrimitiveResult test"""
         primitive_results = []
         data_bin_cls = make_data_bin([("alpha", np.ndarray), ("beta", np.ndarray)], shape=(10, 20))
@@ -488,47 +483,47 @@ class TestContainerSerialization(IBMTestCase):
         self.assertIsInstance(decoded, BitArray)
         self.assertEqual(barray, decoded)
 
-    @data(*make_test_data_bins())
-    def test_data_bin(self, dbin):
+    def test_data_bin(self):
         """Test encoding and decoding DataBin."""
-        payload = {"bin": dbin}
-        encoded = json.dumps(payload, cls=RuntimeEncoder)
-        decoded = json.loads(encoded, cls=RuntimeDecoder)["bin"]
-        self.assertIsInstance(decoded, DataBin)
-        self.assert_data_bins_equal(dbin, decoded)
+        for dbin in self.make_test_data_bins():
+            payload = {"bin": dbin}
+            encoded = json.dumps(payload, cls=RuntimeEncoder)
+            decoded = json.loads(encoded, cls=RuntimeDecoder)["bin"]
+            self.assertIsInstance(decoded, DataBin)
+            self.assert_data_bins_equal(dbin, decoded)
 
-    @data(*make_test_estimator_pubs())
-    def test_estimator_pub(self, pub):
+    def test_estimator_pub(self):
         """Test encoding and decoding EstimatorPub"""
-        payload = {"pub": pub}
-        encoded = json.dumps(payload, cls=RuntimeEncoder)
-        decoded = json.loads(encoded, cls=RuntimeDecoder)["pub"]
-        self.assertIsInstance(decoded, EstimatorPub)
-        self.assert_estimator_pubs_equal(pub, decoded)
+        for pub in self.make_test_estimator_pubs():
+            payload = {"pub": pub}
+            encoded = json.dumps(payload, cls=RuntimeEncoder)
+            decoded = json.loads(encoded, cls=RuntimeDecoder)["pub"]
+            self.assertIsInstance(decoded, EstimatorPub)
+            self.assert_estimator_pubs_equal(pub, decoded)
 
-    @data(*make_test_sampler_pubs())
-    def test_sampler_pub(self, pub):
+    def test_sampler_pub(self):
         """Test encoding and decoding SamplerPub"""
-        payload = {"pub": pub}
-        encoded = json.dumps(payload, cls=RuntimeEncoder)
-        decoded = json.loads(encoded, cls=RuntimeDecoder)["pub"]
-        self.assertIsInstance(decoded, SamplerPub)
-        self.assert_sampler_pubs_equal(pub, decoded)
+        for pub in self.make_test_sampler_pubs():
+            payload = {"pub": pub}
+            encoded = json.dumps(payload, cls=RuntimeEncoder)
+            decoded = json.loads(encoded, cls=RuntimeDecoder)["pub"]
+            self.assertIsInstance(decoded, SamplerPub)
+            self.assert_sampler_pubs_equal(pub, decoded)
 
-    @data(*make_test_pub_results())
-    def test_pub_result(self, pub_result):
+    def test_pub_result(self):
         """Test encoding and decoding PubResult"""
-        payload = {"pub_result": pub_result}
-        encoded = json.dumps(payload, cls=RuntimeEncoder)
-        decoded = json.loads(encoded, cls=RuntimeDecoder)["pub_result"]
-        self.assertIsInstance(decoded, PubResult)
-        self.assert_pub_results_equal(pub_result, decoded)
+        for pub_result in self.make_test_pub_results():
+            payload = {"pub_result": pub_result}
+            encoded = json.dumps(payload, cls=RuntimeEncoder)
+            decoded = json.loads(encoded, cls=RuntimeDecoder)["pub_result"]
+            self.assertIsInstance(decoded, PubResult)
+            self.assert_pub_results_equal(pub_result, decoded)
 
-    @data(*make_test_primitive_results())
-    def test_primitive_result(self, primitive_result):
+    def test_primitive_result(self):
         """Test encoding and decoding PubResult"""
-        payload = {"primitive_result": primitive_result}
-        encoded = json.dumps(payload, cls=RuntimeEncoder)
-        decoded = json.loads(encoded, cls=RuntimeDecoder)["primitive_result"]
-        self.assertIsInstance(decoded, PrimitiveResult)
-        self.assert_primitive_results_equal(primitive_result, decoded)
+        for primitive_result in self.make_test_primitive_results():
+            payload = {"primitive_result": primitive_result}
+            encoded = json.dumps(payload, cls=RuntimeEncoder)
+            decoded = json.loads(encoded, cls=RuntimeDecoder)["primitive_result"]
+            self.assertIsInstance(decoded, PrimitiveResult)
+            self.assert_primitive_results_equal(primitive_result, decoded)
