@@ -15,7 +15,7 @@ from typing import Optional
 from datetime import datetime as python_datetime
 from dataclasses import dataclass
 
-from qiskit_ibm_runtime.fake_provider import FakeLima
+from qiskit.providers.fake_provider import FakeLima
 
 
 @dataclass

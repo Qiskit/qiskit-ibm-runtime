@@ -1,4 +1,3 @@
 include LICENSE.txt README.md
 include qiskit_ibm_runtime/VERSION.txt
-recursive-include qiskit_ibm_runtime/fake_provider/backends *.json
 recursive-include test *.py

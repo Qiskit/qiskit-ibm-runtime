@@ -15,7 +15,7 @@
 from typing import Dict, Any, Optional
 from datetime import datetime as python_datetime
 
-from qiskit_ibm_runtime.api.rest.base import RestAdapterBase
+from qiskit_ibm_provider.api.rest.base import RestAdapterBase
 from ..session import RetrySession
 
 

@@ -20,7 +20,7 @@ from qiskit.transpiler.preset_passmanagers.plugin import PassManagerStagePlugin
 from qiskit.transpiler.preset_passmanagers import common
 from qiskit.transpiler.passes import ConvertConditionsToIfOps
 
-from qiskit_ibm_runtime.transpiler.passes.basis.convert_id_to_delay import (
+from qiskit_ibm_provider.transpiler.passes.basis.convert_id_to_delay import (
     ConvertIdToDelay,
 )
 

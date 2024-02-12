@@ -11,9 +11,9 @@
 # that they have been altered from the originals.
 
 """
-=======================================================
+======================================================
 Fake Provider (:mod:`qiskit_ibm_runtime.fake_provider`)
-=======================================================
+======================================================
 
 .. currentmodule:: qiskit_ibm_runtime.fake_provider
 
@@ -48,11 +48,11 @@ Here is an example of using a fake backend for transpilation and simulation.
    circuit.cx(0,1)
    circuit.cx(0,2)
    circuit.measure_all()
-   circuit.draw('mpl', style="iqp")
+   circuit.draw('mpl')
 
    # Transpile the ideal circuit to a circuit that can be directly executed by the backend
    transpiled_circuit = transpile(circuit, backend)
-   transpiled_circuit.draw('mpl', style="iqp")
+   transpiled_circuit.draw('mpl')
 
    # Run the transpiled circuit using the simulated fake backend
    job = backend.run(transpiled_circuit)

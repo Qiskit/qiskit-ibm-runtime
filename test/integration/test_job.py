@@ -17,6 +17,8 @@ import time
 import unittest
 
 from qiskit.providers.jobstatus import JOB_FINAL_STATES, JobStatus
+from qiskit.test.decorators import slow_test
+from qiskit.test.reference_circuits import ReferenceCircuits
 
 from qiskit_ibm_runtime.constants import API_TO_JOB_ERROR_MESSAGE
 from qiskit_ibm_runtime.exceptions import (
@@ -31,7 +33,7 @@ from ..serialization import (
     SerializableClassDecoder,
     SerializableClass,
 )
-from ..utils import cancel_job_safe, wait_for_status, get_real_device, bell
+from ..utils import cancel_job_safe, wait_for_status, get_real_device
 
 
 class TestIntegrationJob(IBMIntegrationJobTestCase):
@@ -44,6 +46,16 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         job.wait_for_final_state()
         self.assertEqual(JobStatus.DONE, job.status())
         self.assertTrue(job.result())
+
+    @slow_test
+    @run_integration_test
+    def test_run_program_real_device(self, service):
+        """Test running a program."""
+        device = get_real_device(service)
+        job = self._run_program(service, backend=device)
+        result = job.result()
+        self.assertEqual(JobStatus.DONE, job.status())
+        self.assertEqual("foo", result)
 
     @run_integration_test
     @production_only
@@ -88,8 +100,12 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     def test_cancel_job_queued(self, service):
         """Test canceling a queued job."""
         real_device = get_real_device(service)
-        _ = self._run_program(service, circuits=[bell()] * 10, backend=real_device)
-        job = self._run_program(service, circuits=[bell()] * 2, backend=real_device)
+        _ = self._run_program(
+            service, circuits=[ReferenceCircuits.bell()] * 10, backend=real_device
+        )
+        job = self._run_program(
+            service, circuits=[ReferenceCircuits.bell()] * 2, backend=real_device
+        )
         wait_for_status(job, JobStatus.QUEUED)
         if not cancel_job_safe(job, self.log):
             return
@@ -102,7 +118,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         """Test canceling a running job."""
         job = self._run_program(
             service,
-            circuits=[bell()] * 10,
+            circuits=[ReferenceCircuits.bell()] * 10,
         )
         rjob = service.job(job.job_id())
         if not cancel_job_safe(rjob, self.log):
@@ -168,7 +184,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         interim_results = get_complex_types()
         inputs = {
             "interim_results": interim_results,
-            "circuits": bell(),
+            "circuits": ReferenceCircuits.bell(),
         }
         job = self._run_program(service, inputs=inputs, program_id="circuit-runner")
         self.assertEqual(inputs, job.inputs)

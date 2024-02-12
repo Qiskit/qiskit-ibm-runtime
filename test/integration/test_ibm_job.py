@@ -14,17 +14,27 @@
 import copy
 import time
 from datetime import datetime, timedelta
-from unittest import SkipTest
+from unittest import SkipTest, mock
+from unittest import skip
 
 from dateutil import tz
 from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister
 from qiskit.compiler import transpile
 from qiskit.providers.jobstatus import JobStatus, JOB_FINAL_STATES
+from qiskit.test.reference_circuits import ReferenceCircuits
 
+from qiskit_ibm_provider.api.rest.job import Job as RestJob
+from qiskit_ibm_provider.exceptions import IBMBackendApiError
+
+from qiskit_ibm_runtime.api.exceptions import RequestsApiError
 from qiskit_ibm_runtime.exceptions import RuntimeJobTimeoutError, RuntimeJobNotFound
 
 from ..ibm_test_case import IBMIntegrationTestCase
-from ..utils import most_busy_backend, cancel_job_safe, submit_and_cancel, bell
+from ..utils import (
+    most_busy_backend,
+    cancel_job_safe,
+    submit_and_cancel,
+)
 
 
 class TestIBMJob(IBMIntegrationTestCase):
@@ -34,7 +44,7 @@ class TestIBMJob(IBMIntegrationTestCase):
         """Initial test setup."""
         super().setUp()
         self.sim_backend = self.service.backend("ibmq_qasm_simulator")
-        self.bell = bell()
+        self.bell = ReferenceCircuits.bell()
         self.sim_job = self.sim_backend.run(self.bell)
         self.last_month = datetime.now() - timedelta(days=30)
 
@@ -221,7 +231,7 @@ class TestIBMJob(IBMIntegrationTestCase):
         job = self.sim_backend.run(self.bell)
         job.wait_for_final_state()
         newest_jobs = self.service.jobs(
-            limit=20,
+            limit=10,
             pending=False,
             descending=True,
             created_after=self.last_month,
@@ -259,7 +269,7 @@ class TestIBMJob(IBMIntegrationTestCase):
         if self.dependencies.channel == "ibm_cloud":
             raise SkipTest("Cloud account does not have real backend.")
         backend = most_busy_backend(TestIBMJob.service)
-        job = backend.run(transpile(bell(), backend=backend))
+        job = backend.run(transpile(ReferenceCircuits.bell(), backend=backend))
         try:
             self.assertRaises(RuntimeJobTimeoutError, job.wait_for_final_state, timeout=0.1)
         finally:
@@ -267,6 +277,34 @@ class TestIBMJob(IBMIntegrationTestCase):
             for thread in job._executor._threads:
                 thread.join(0.1)
             cancel_job_safe(job, self.log)
+
+    @skip("not supported by api")
+    def test_job_submit_partial_fail(self):
+        """Test job submit partial fail."""
+        job_id = []
+
+        def _side_effect(self, *args, **kwargs):
+            # pylint: disable=unused-argument
+            job_id.append(self.job_id)
+            raise RequestsApiError("Kaboom")
+
+        fail_points = ["put_object_storage", "callback_upload"]
+
+        for fail_method in fail_points:
+            with self.subTest(fail_method=fail_method):
+                with mock.patch.object(
+                    RestJob, fail_method, side_effect=_side_effect, autospec=True
+                ):
+                    with self.assertRaises(IBMBackendApiError):
+                        self.sim_backend.run(self.bell)
+
+                self.assertTrue(job_id, "Job ID not saved.")
+                job = self.service.job(job_id[0])
+                self.assertEqual(
+                    job.status(),
+                    JobStatus.CANCELLED,
+                    f"Job {job.job_id()} status is {job.status()} and not cancelled!",
+                )
 
     def test_job_circuits(self):
         """Test job circuits."""

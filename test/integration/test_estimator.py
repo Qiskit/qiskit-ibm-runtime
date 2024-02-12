@@ -18,13 +18,13 @@ from qiskit.circuit import QuantumCircuit, Parameter
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.primitives import Estimator as TerraEstimator
 from qiskit.quantum_info import SparsePauliOp
+from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit.primitives import BaseEstimator, EstimatorResult
 
 from qiskit_ibm_runtime import Estimator, Session
 
 from ..decorators import run_integration_test
 from ..ibm_test_case import IBMIntegrationTestCase
-from ..utils import bell
 
 
 class TestIntegrationEstimator(IBMIntegrationTestCase):
@@ -118,14 +118,12 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
         ws_result = []
         job_ids = set()
 
-        bell_circuit = bell()
+        bell = ReferenceCircuits.bell()
         obs = SparsePauliOp.from_list([("IZ", 1)])
 
         with Session(service, self.backend) as session:
             estimator = Estimator(session=session)
-            job = estimator.run(
-                circuits=[bell_circuit] * 60, observables=[obs] * 60, callback=_callback
-            )
+            job = estimator.run(circuits=[bell] * 60, observables=[obs] * 60, callback=_callback)
             result = job.result()
             self.assertIsInstance(ws_result[-1], dict)
             ws_result_values = np.asarray(ws_result[-1]["values"])

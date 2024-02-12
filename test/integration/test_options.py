@@ -13,12 +13,12 @@
 """Tests for job functions using real runtime service."""
 
 from qiskit import QuantumCircuit
+from qiskit.providers.fake_provider import FakeManila
 
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.quantum_info import SparsePauliOp
 from qiskit_aer.noise import NoiseModel
 from qiskit_ibm_runtime import Session, Sampler, Options, Estimator
-from qiskit_ibm_runtime.fake_provider import FakeManila
 from qiskit_ibm_runtime.exceptions import RuntimeJobFailureError
 
 from ..ibm_test_case import IBMIntegrationTestCase

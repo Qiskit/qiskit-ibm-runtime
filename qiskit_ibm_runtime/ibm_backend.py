@@ -21,6 +21,7 @@ import warnings
 
 from qiskit import QuantumCircuit
 from qiskit.qobj.utils import MeasLevel, MeasReturnType
+from qiskit.tools.events.pubsub import Publisher
 
 from qiskit.providers.backend import BackendV2 as Backend
 from qiskit.providers.options import Options
@@ -40,31 +41,31 @@ from qiskit.pulse.channels import (
 )
 from qiskit.transpiler.target import Target
 
-# temporary until we unite the 2 Session classes
-from .provider_session import (
-    Session as ProviderSession,
+from qiskit_ibm_provider.utils.backend_decoder import (
+    defaults_from_server_data,
+    properties_from_server_data,
 )
+from qiskit_ibm_provider.utils import local_to_utc, are_circuits_dynamic
+from qiskit_ibm_provider.utils.options import QASM2Options, QASM3Options
+from qiskit_ibm_provider.exceptions import IBMBackendValueError, IBMBackendApiError
+from qiskit_ibm_provider.api.exceptions import RequestsApiError
+
+# temporary until we unite the 2 Session classes
+from qiskit_ibm_provider.session import (
+    Session as ProviderSession,
+)  # temporary until we unite the 2 Session classes
 
 from .utils.utils import validate_job_tags
 from . import qiskit_runtime_service  # pylint: disable=unused-import,cyclic-import
 from .runtime_job import RuntimeJob
 
 from .api.clients import RuntimeClient
-from .exceptions import IBMBackendApiProtocolError, IBMBackendValueError, IBMBackendApiError
+from .api.clients.backend import BaseBackendClient
+from .exceptions import IBMBackendApiProtocolError
 from .utils.backend_converter import (
     convert_to_target,
 )
 from .utils.default_session import get_cm_session as get_cm_primitive_session
-from .utils.backend_decoder import (
-    defaults_from_server_data,
-    properties_from_server_data,
-)
-from .utils.options import QASM2Options, QASM3Options
-from .api.exceptions import RequestsApiError
-from .utils import local_to_utc, are_circuits_dynamic
-
-from .utils.pubsub import Publisher
-
 
 logger = logging.getLogger(__name__)
 
@@ -171,7 +172,7 @@ class IBMBackend(Backend):
         self,
         configuration: Union[QasmBackendConfiguration, PulseBackendConfiguration],
         service: "qiskit_runtime_service.QiskitRuntimeService",
-        api_client: RuntimeClient,
+        api_client: BaseBackendClient,
         instance: Optional[str] = None,
     ) -> None:
         """IBMBackend constructor.
@@ -761,11 +762,9 @@ class IBMBackend(Backend):
                 raise RuntimeError(f"The session {self._session.session_id} is closed.")
             session_id = self._session.session_id
             start_session = session_id is None
-            max_session_time = self._session._max_time
         else:
             session_id = None
             start_session = False
-            max_session_time = None
 
         log_level = getattr(self.options, "log_level", None)  # temporary
         try:
@@ -778,7 +777,6 @@ class IBMBackend(Backend):
                 job_tags=job_tags,
                 session_id=session_id,
                 start_session=start_session,
-                session_time=max_session_time,
                 image=image,
             )
         except RequestsApiError as ex:
@@ -829,9 +827,9 @@ class IBMBackend(Backend):
                 run_config_dict[key] = backend_options[key]
         return run_config_dict
 
-    def open_session(self, max_time: Optional[Union[int, str]] = None) -> ProviderSession:
+    def open_session(self) -> ProviderSession:
         """Open session"""
-        self._session = ProviderSession(max_time=max_time)
+        self._session = ProviderSession()
         return self._session
 
     @property

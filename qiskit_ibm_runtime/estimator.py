@@ -16,6 +16,7 @@ from __future__ import annotations
 import os
 from typing import Optional, Dict, Sequence, Any, Union
 import logging
+import typing
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info.operators.base_operator import BaseOperator
@@ -33,6 +34,9 @@ from .qiskit.primitives import BaseEstimatorV2
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
+
+if typing.TYPE_CHECKING:
+    from qiskit.opflow import PauliSumOp
 
 logger = logging.getLogger(__name__)
 
@@ -232,7 +236,7 @@ class EstimatorV1(BasePrimitiveV1, Estimator, BaseEstimator):
     def run(  # pylint: disable=arguments-differ
         self,
         circuits: QuantumCircuit | Sequence[QuantumCircuit],
-        observables: BaseOperator | Sequence[BaseOperator],
+        observables: BaseOperator | PauliSumOp | Sequence[BaseOperator | PauliSumOp],
         parameter_values: Sequence[float] | Sequence[Sequence[float]] | None = None,
         **kwargs: Any,
     ) -> RuntimeJob:
@@ -268,7 +272,7 @@ class EstimatorV1(BasePrimitiveV1, Estimator, BaseEstimator):
     def _run(  # pylint: disable=arguments-differ
         self,
         circuits: Sequence[QuantumCircuit],
-        observables: Sequence[BaseOperator],
+        observables: Sequence[BaseOperator | PauliSumOp],
         parameter_values: Sequence[Sequence[float]],
         **kwargs: Any,
     ) -> RuntimeJob:

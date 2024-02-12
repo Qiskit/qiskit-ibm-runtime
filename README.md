@@ -108,7 +108,7 @@ All quantum applications and algorithms level are fundamentally built using thre
 2. Define the observable or the classical register to be measured.
 4. Execute the quantum circuits by using a primitive (Estimator or Sampler).
 
-**Primitives** are base-level functions that serve as building blocks for many quantum algorithms and applications. The [primitive interfaces](https://docs.quantum.ibm.com/api/qiskit/primitives) are defined in Qiskit.
+**Primitives** are base-level functions that serve as building blocks for many quantum algorithms and applications. The [primitive interfaces](https://qiskit.org/documentation/apidoc/primitives.html) are defined in Qiskit.
 
 The IBM Runtime service offers these primitives with additional features, such as built-in error suppression and mitigation.
 
@@ -319,7 +319,7 @@ By participating, you are expected to uphold to this code.
 
 We use [GitHub issues] for tracking requests and bugs. Please use our [slack]
 for discussion and simple questions. To join our Slack community use the
-invite link at [ibm.com/quantum/qiskit]. For questions that are more suited for a forum we
+invite link at [Qiskit.org]. For questions that are more suited for a forum we
 use the `Qiskit` tag in [Stack Exchange].
 
 ## License
@@ -334,7 +334,7 @@ use the `Qiskit` tag in [Stack Exchange].
 [code of conduct]: https://github.com/Qiskit/qiskit-ibm-runtime/blob/main/CODE_OF_CONDUCT.md
 [GitHub issues]: https://github.com/Qiskit/qiskit-ibm-runtime/issues
 [slack]: https://qiskit.slack.com
-[ibm.com/quantum/qiskit]: https://www.ibm.com/quantum/qiskit
+[Qiskit.org]: https://qiskit.org
 [Stack Exchange]: https://quantumcomputing.stackexchange.com/questions/tagged/qiskit
 [many people]: https://github.com/Qiskit/qiskit-ibm-runtime/graphs/contributors
 [BibTeX file]: https://github.com/Qiskit/qiskit/blob/master/Qiskit.bib

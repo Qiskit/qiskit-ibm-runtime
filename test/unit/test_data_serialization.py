@@ -21,15 +21,21 @@ from unittest import skip
 from datetime import datetime
 
 import numpy as np
+from ddt import data, ddt
 
 from qiskit.circuit import Parameter, QuantumCircuit
-
+from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit.circuit.library import EfficientSU2, CXGate, PhaseGate, U2Gate
+from qiskit.providers.fake_provider import FakeNairobi
+import qiskit.quantum_info as qi
 from qiskit.quantum_info import SparsePauliOp, Pauli, Statevector
 from qiskit.result import Result
 from qiskit_aer.noise import NoiseModel
 from qiskit_ibm_runtime.utils import RuntimeEncoder, RuntimeDecoder
-from qiskit_ibm_runtime.fake_provider import FakeNairobi
+
+# TODO: Remove when they are in terra
+from qiskit_ibm_runtime.qiskit.primitives import BindingsArray, ObservablesArray
+
 from .mock.fake_runtime_client import CustomResultRuntimeJob
 from .mock.fake_runtime_service import FakeRuntimeService
 from ..ibm_test_case import IBMTestCase
@@ -39,9 +45,10 @@ from ..serialization import (
     SerializableClassDecoder,
     get_complex_types,
 )
-from ..utils import mock_wait_for_final_state, bell
+from ..utils import mock_wait_for_final_state
 
 
+@ddt
 class TestDataSerialization(IBMTestCase):
     """Class for testing runtime data serialization."""
 
@@ -56,7 +63,7 @@ class TestDataSerialization(IBMTestCase):
             results=[],
         )
 
-        data = {
+        base_types = {
             "string": "foo",
             "float": 1.5,
             "complex": 2 + 3j,
@@ -64,25 +71,25 @@ class TestDataSerialization(IBMTestCase):
             "result": result,
             "sclass": SerializableClass("foo"),
         }
-        encoded = json.dumps(data, cls=RuntimeEncoder)
+        encoded = json.dumps(base_types, cls=RuntimeEncoder)
         decoded = json.loads(encoded, cls=RuntimeDecoder)
         decoded["sclass"] = SerializableClass.from_json(decoded["sclass"])
 
         decoded_result = decoded.pop("result")
-        data.pop("result")
+        base_types.pop("result")
 
         decoded_array = decoded.pop("array")
-        orig_array = data.pop("array")
+        orig_array = base_types.pop("array")
 
-        self.assertEqual(decoded, data)
+        self.assertEqual(decoded, base_types)
         self.assertIsInstance(decoded_result, Result)
         self.assertTrue((decoded_array == orig_array).all())
 
     def test_coder_qc(self):
         """Test runtime encoder and decoder for circuits."""
-        bell_circuit = bell()
+        bell = ReferenceCircuits.bell()
         unbound = EfficientSU2(num_qubits=4, reps=1, entanglement="linear")
-        subtests = (bell_circuit, unbound, [bell_circuit, unbound])
+        subtests = (bell, unbound, [bell, unbound])
         for circ in subtests:
             with self.subTest(circ=circ):
                 encoded = json.dumps(circ, cls=RuntimeEncoder)
@@ -111,9 +118,12 @@ class TestDataSerialization(IBMTestCase):
                 self.assertIsInstance(encoded, str)
 
                 with warnings.catch_warnings():
-                    # filter warnings triggered by opflow imports
                     # in L146 of utils/json.py
-                    warnings.filterwarnings("ignore", category=DeprecationWarning)
+                    warnings.filterwarnings(
+                        "ignore",
+                        category=DeprecationWarning,
+                        module=r"qiskit_ibm_runtime\.utils\.json",
+                    )
                     decoded = json.loads(encoded, cls=RuntimeDecoder)
                     self.assertEqual(operator, decoded)
 
@@ -249,3 +259,69 @@ if __name__ == '__main__':
         payload = {"circuits": [circ]}
 
         self.assertTrue(json.dumps(payload, cls=RuntimeEncoder))
+
+    def test_encoder_pubs(self):
+        """Test serializing pubs."""
+        pass
+
+    @data(
+        ObservablesArray([["X", "Y", "Z"], ["0", "1", "+"]]),
+        ObservablesArray(qi.pauli_basis(2)),
+        ObservablesArray([qi.random_pauli_list(2, 3) for _ in range(5)]),
+        ObservablesArray(np.array([["X", "Y"], ["Z", "I"]], dtype=object)),
+        ObservablesArray(
+            [[SparsePauliOp(qi.random_pauli_list(2, 3)) for _ in range(3)] for _ in range(5)]
+        ),
+    )
+    def test_obs_array(self, oarray):
+        """Test encoding and decoding ObservablesArray"""
+        payload = {"array": oarray}
+        encoded = json.dumps(payload, cls=RuntimeEncoder)
+        decoded = json.loads(encoded, cls=RuntimeDecoder)["array"]
+        self.assertIsInstance(decoded, list)
+        self.assertEqual(decoded, oarray.tolist())
+
+    @data(
+        BindingsArray([1, 2, 3.4]),
+        BindingsArray([4.0, 5.0, 6.0], shape=()),
+        BindingsArray([[1 + 2j, 2 + 3j], [3 + 4j, 4 + 5j]], shape=(2,)),
+        BindingsArray(np.random.uniform(size=(5,))),
+        BindingsArray(np.linspace(0, 1, 30).reshape((2, 3, 5))),
+        BindingsArray(kwvals={Parameter("a"): [0.0], Parameter("b"): [1.0]}, shape=1),
+        BindingsArray(
+            kwvals={
+                (Parameter("a"), Parameter("b")): np.random.random((4, 3, 2)),
+                Parameter("c"): np.random.random((4, 3)),
+            }
+        ),
+        BindingsArray(
+            vals=np.random.random((2, 3, 4)),
+            kwvals={
+                (Parameter("a"), Parameter("b")): np.random.random((2, 3, 2)),
+                Parameter("c"): np.random.random((2, 3)),
+            },
+        ),
+        BindingsArray(vals=[[1.0, 2.0], [1.1, 2.1]], kwvals={Parameter("c"): [3.0, 3.1]}),
+    )
+    def test_bindings_array(self, barray):
+        """Test encoding and decoding BindingsArray."""
+
+        def _to_str_keyed(_in_dict):
+            _out_dict = {}
+            for a_key_tuple, val in _in_dict.items():
+                str_key = tuple(a_key.name for a_key in a_key_tuple)
+                _out_dict[str_key] = val
+            return _out_dict
+
+        payload = {"array": barray}
+        encoded = json.dumps(payload, cls=RuntimeEncoder)
+        decoded = json.loads(encoded, cls=RuntimeDecoder)["array"]
+        self.assertIsInstance(decoded, BindingsArray)
+        self.assertEqual(barray.shape, decoded.shape)
+        self.assertTrue(np.allclose(barray.vals, decoded.vals))
+        if barray.kwvals:
+            barray_str_keyed = _to_str_keyed(barray.kwvals)
+            decoded_str_keyed = _to_str_keyed(decoded.kwvals)
+            for key, val in barray_str_keyed.items():
+                self.assertIn(key, decoded_str_keyed)
+                self.assertTrue(np.allclose(val, decoded_str_keyed[key]))

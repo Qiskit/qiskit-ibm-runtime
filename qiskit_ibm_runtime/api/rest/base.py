@@ -43,3 +43,15 @@ class RestAdapterBase:
             The resolved URL of the endpoint (relative to the session base URL).
         """
         return "{}{}".format(self.prefix_url, self.URL_MAP[identifier])
+
+    def get_prefixed_url(self, prefix: str, identifier: str) -> str:
+        """Return an adjusted URL for the specified identifier.
+
+        Args:
+            prefix: string to be prepended to the URL.
+            identifier: Internal identifier of the endpoint.
+
+        Returns:
+            The resolved facade URL of the endpoint.
+        """
+        return "{}{}{}".format(prefix, self.prefix_url, self.URL_MAP[identifier])

@@ -21,9 +21,10 @@ from typing import Dict
 
 from qiskit import transpile
 from qiskit.circuit import QuantumCircuit
-
+from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit.quantum_info import SparsePauliOp
-from qiskit_ibm_runtime.fake_provider import FakeManila
+from qiskit.providers.fake_provider import FakeManila
+from qiskit_aer.noise import NoiseModel
 
 from qiskit_ibm_runtime import (
     Sampler,
@@ -40,7 +41,6 @@ from ..utils import (
     flat_dict_partially_equal,
     dict_keys_equal,
     create_faulty_backend,
-    bell,
 )
 
 
@@ -56,7 +56,7 @@ class TestPrimitives(IBMTestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.qx = bell()
+        cls.qx = ReferenceCircuits.bell()
         cls.obs = SparsePauliOp.from_list([("IZ", 1)])
         return super().setUpClass()
 
@@ -99,11 +99,7 @@ class TestPrimitives(IBMTestCase):
                     options = Options(environment=env)
                     inst = cls(session=session, options=options)
                     inst.run(self.qx, observables=self.obs)
-                    if sys.version_info >= (3, 8):
-                        run_options = session.run.call_args.kwargs["options"]
-                    else:
-                        _, kwargs = session.run.call_args
-                        run_options = kwargs["options"]
+                    run_options = session.run.call_args.kwargs["options"]
                     for key, val in env.items():
                         self.assertEqual(run_options[key], val)
 
@@ -505,10 +501,12 @@ class TestPrimitives(IBMTestCase):
 
         session = MagicMock(spec=MockSession)
         primitives = [Sampler, Estimator]
+        noise_model = NoiseModel.from_backend(FakeManila())
+        FakeManila()
         for cls in primitives:
             with self.subTest(primitive=cls):
                 options = Options(
-                    simulator={"noise_model": "foo"},
+                    simulator={"noise_model": noise_model},
                 )
                 inst = cls(session=session, options=options)
 
@@ -517,11 +515,7 @@ class TestPrimitives(IBMTestCase):
                 else:
                     inst.run(self.qx)
 
-                if sys.version_info >= (3, 8):
-                    inputs = session.run.call_args.kwargs["inputs"]
-                else:
-                    _, kwargs = session.run.call_args
-                    inputs = kwargs["inputs"]
+                inputs = session.run.call_args.kwargs["inputs"]
                 self.assertEqual(
                     inputs["transpilation_settings"]["optimization_settings"]["level"],
                     Options._DEFAULT_OPTIMIZATION_LEVEL,
@@ -534,11 +528,7 @@ class TestPrimitives(IBMTestCase):
                 session.service.backend().configuration().simulator = False
                 inst = cls(session=session)
                 inst.run(self.qx, observables=self.obs)
-                if sys.version_info >= (3, 8):
-                    inputs = session.run.call_args.kwargs["inputs"]
-                else:
-                    _, kwargs = session.run.call_args
-                    inputs = kwargs["inputs"]
+                inputs = session.run.call_args.kwargs["inputs"]
                 self.assertEqual(
                     inputs["transpilation_settings"]["optimization_settings"]["level"],
                     Options._DEFAULT_OPTIMIZATION_LEVEL,
@@ -551,11 +541,7 @@ class TestPrimitives(IBMTestCase):
                 session.service.backend().configuration().simulator = True
                 inst = cls(session=session)
                 inst.run(self.qx, observables=self.obs)
-                if sys.version_info >= (3, 8):
-                    inputs = session.run.call_args.kwargs["inputs"]
-                else:
-                    _, kwargs = session.run.call_args
-                    inputs = kwargs["inputs"]
+                inputs = session.run.call_args.kwargs["inputs"]
                 self.assertEqual(
                     inputs["transpilation_settings"]["optimization_settings"]["level"],
                     1,

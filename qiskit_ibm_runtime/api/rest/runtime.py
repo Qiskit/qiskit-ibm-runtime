@@ -17,9 +17,9 @@ from datetime import datetime
 from typing import Dict, Any, List, Union, Optional
 import json
 
-from qiskit_ibm_runtime.api.rest.base import RestAdapterBase
-from qiskit_ibm_runtime.api.rest.program_job import ProgramJob
-from qiskit_ibm_runtime.utils import local_to_utc
+from qiskit_ibm_provider.api.rest.base import RestAdapterBase
+from qiskit_ibm_provider.api.rest.program_job import ProgramJob
+from qiskit_ibm_provider.utils import local_to_utc
 from .runtime_session import RuntimeSession
 
 from ...utils import RuntimeEncoder

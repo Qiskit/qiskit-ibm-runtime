@@ -29,11 +29,10 @@ from qiskit.providers.models import (
     QasmBackendConfiguration,
 )
 
+from qiskit_ibm_provider.proxies import ProxyConfiguration
+from qiskit_ibm_provider.utils.hgp import to_instance_format, from_instance_format
+from qiskit_ibm_provider.utils.backend_decoder import configuration_from_server_data
 from qiskit_ibm_runtime import ibm_backend
-from .proxies import ProxyConfiguration
-from .utils.hgp import to_instance_format, from_instance_format
-from .utils.backend_decoder import configuration_from_server_data
-
 
 from .utils.utils import validate_job_tags
 from .accounts import AccountManager, Account, ChannelType
@@ -54,7 +53,6 @@ from .utils import RuntimeDecoder, to_python_identifier
 from .api.client_parameters import ClientParameters
 from .runtime_options import RuntimeOptions
 from .ibm_backend import IBMBackend
-from .utils.deprecation import issue_deprecation_msg
 
 logger = logging.getLogger(__name__)
 
@@ -72,8 +70,8 @@ class QiskitRuntimeService(Provider):
     A sample workflow of using the runtime service::
 
         from qiskit_ibm_runtime import QiskitRuntimeService, Session, Sampler, Estimator, Options
+        from qiskit.test.reference_circuits import ReferenceCircuits
         from qiskit.circuit.library import RealAmplitudes
-        from qiskit.circuit import QuantumCircuit, QuantumRegister, ClassicalRegister
         from qiskit.quantum_info import SparsePauliOp
 
         # Initialize account.
@@ -83,22 +81,15 @@ class QiskitRuntimeService(Provider):
         options = Options(optimization_level=1)
 
         # Prepare inputs.
+        bell = ReferenceCircuits.bell()
         psi = RealAmplitudes(num_qubits=2, reps=2)
         H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
         theta = [0, 1, 1, 2, 3, 5]
 
-        # Bell Circuit
-        qr = QuantumRegister(2, name="qr")
-        cr = ClassicalRegister(2, name="cr")
-        qc = QuantumCircuit(qr, cr, name="bell")
-        qc.h(qr[0])
-        qc.cx(qr[0], qr[1])
-        qc.measure(qr, cr)
-
         with Session(service=service, backend="ibmq_qasm_simulator") as session:
             # Submit a request to the Sampler primitive within the session.
             sampler = Sampler(session=session, options=options)
-            job = sampler.run(circuits=qc)
+            job = sampler.run(circuits=bell)
             print(f"Sampler results: {job.result()}")
 
             # Submit a request to the Estimator primitive within the session.
@@ -546,7 +537,6 @@ class QiskitRuntimeService(Provider):
         name: Optional[str] = None,
         min_num_qubits: Optional[int] = None,
         instance: Optional[str] = None,
-        dynamic_circuits: Optional[bool] = None,
         filters: Optional[Callable[[List["ibm_backend.IBMBackend"]], bool]] = None,
         **kwargs: Any,
     ) -> List["ibm_backend.IBMBackend"]:
@@ -557,7 +547,6 @@ class QiskitRuntimeService(Provider):
             min_num_qubits: Minimum number of qubits the backend has to have.
             instance: This is only supported for ``ibm_quantum`` runtime and is in the
                 hub/group/project format.
-            dynamic_circuits: Filter by whether the backend supports dynamic circuits.
             filters: More complex filters, such as lambda functions.
                 For example::
 
@@ -596,11 +585,11 @@ class QiskitRuntimeService(Provider):
             if name:
                 if name not in self._backends:
                     raise QiskitBackendNotFoundError("No backend matches the criteria.")
-                if not self._backends[name] or instance_filter != self._backends[name]._instance:
+                if not self._backends[name] or instance != self._backends[name]._instance:
                     self._set_backend_config(name)
                     self._backends[name] = self._create_backend_obj(
                         self._backend_configs[name],
-                        instance_filter,
+                        instance,
                     )
                 if self._backends[name]:
                     backends.append(self._backends[name])
@@ -640,15 +629,6 @@ class QiskitRuntimeService(Provider):
             backends = list(
                 filter(lambda b: b.configuration().n_qubits >= min_num_qubits, backends)
             )
-
-        if dynamic_circuits is not None:
-            backends = list(
-                filter(
-                    lambda b: ("qasm3" in getattr(b.configuration(), "supported_features", []))
-                    == dynamic_circuits,
-                    backends,
-                )
-            )
         return filter_backends(backends, filters=filters, **kwargs)
 
     def _set_backend_config(self, backend_name: str, instance: Optional[str] = None) -> None:
@@ -684,17 +664,9 @@ class QiskitRuntimeService(Provider):
                         break
 
             elif config.backend_name not in self._get_hgp(instance=instance).backends:
-                hgps_with_backend = []
-                for hgp in list(self._hgps.values()):
-                    if config.backend_name in hgp.backends:
-                        hgps_with_backend.append(
-                            to_instance_format(hgp._hub, hgp._group, hgp._project)
-                        )
                 raise QiskitBackendNotFoundError(
                     f"Backend {config.backend_name} is not in "
-                    f"{instance}. Please try a different instance. "
-                    f"{config.backend_name} is in the following instances you have access to: "
-                    f"{hgps_with_backend}"
+                    f"{instance}: please try a different hub/group/project."
                 )
 
             return ibm_backend.IBMBackend(
@@ -911,6 +883,8 @@ class QiskitRuntimeService(Provider):
             warnings.warn(
                 f"The backend {backend.name} currently has a status of {status.status_msg}."
             )
+
+        version = inputs.get("version", 1) if inputs else 1
         try:
             response = self._api_client.program_run(
                 program_id=program_id,
@@ -954,6 +928,7 @@ class QiskitRuntimeService(Provider):
             result_decoder=result_decoder,
             image=qrt_options.image,
             service=self,
+            version=version,
         )
         return job
 
@@ -1207,12 +1182,6 @@ class QiskitRuntimeService(Provider):
         Returns:
             self
         """
-        issue_deprecation_msg(
-            msg="The runtime property is deprecated",
-            version="0.18.0",
-            remedy="",
-            period="1 month",
-        )
         return self
 
     def __repr__(self) -> str:

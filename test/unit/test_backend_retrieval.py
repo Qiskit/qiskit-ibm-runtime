@@ -15,7 +15,7 @@
 import uuid
 
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
-from qiskit_ibm_runtime.fake_provider import FakeLima
+from qiskit.providers.fake_provider import FakeLima
 
 from .mock.fake_runtime_service import FakeRuntimeService
 from .mock.fake_api_backend import FakeApiBackendSpecs

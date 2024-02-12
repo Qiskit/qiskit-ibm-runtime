@@ -15,6 +15,7 @@
 import logging
 from typing import Any, List
 
+from qiskit_ibm_provider.utils.hgp import from_instance_format
 from qiskit_ibm_runtime import (  # pylint: disable=unused-import
     ibm_backend,
     qiskit_runtime_service,
@@ -22,7 +23,6 @@ from qiskit_ibm_runtime import (  # pylint: disable=unused-import
 
 from .api.client_parameters import ClientParameters
 from .api.clients import RuntimeClient
-from .utils.hgp import from_instance_format
 
 logger = logging.getLogger(__name__)
 

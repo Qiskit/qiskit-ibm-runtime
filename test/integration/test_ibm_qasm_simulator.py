@@ -17,7 +17,7 @@ from unittest import skip
 
 from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister
 from qiskit.compiler import transpile
-from ..utils import bell
+from qiskit.test.reference_circuits import ReferenceCircuits
 
 from ..ibm_test_case import IBMIntegrationTestCase
 
@@ -40,7 +40,7 @@ class TestIBMQasmSimulator(IBMIntegrationTestCase):
         counts = result.get_counts(quantum_circuit)
         target = {"0": shots / 2, "1": shots / 2}
         threshold = 0.1 * shots
-        self.assert_dict_almost_equal(counts, target, threshold)
+        self.assertDictAlmostEqual(counts, target, threshold)
 
     def test_execute_several_circuits_simulator_online(self):
         """Test execute_several_circuits_simulator_online."""
@@ -65,8 +65,8 @@ class TestIBMQasmSimulator(IBMIntegrationTestCase):
         target1 = {"00": shots / 4, "01": shots / 4, "10": shots / 4, "11": shots / 4}
         target2 = {"00": shots / 2, "11": shots / 2}
         threshold = 0.1 * shots
-        self.assert_dict_almost_equal(counts1, target1, threshold)
-        self.assert_dict_almost_equal(counts2, target2, threshold)
+        self.assertDictAlmostEqual(counts1, target1, threshold)
+        self.assertDictAlmostEqual(counts2, target2, threshold)
 
     def test_online_qasm_simulator_two_registers(self):
         """Test online_qasm_simulator_two_registers."""
@@ -114,7 +114,7 @@ class TestIBMQasmSimulator(IBMIntegrationTestCase):
         try:
             backend._configuration._data["simulation_method"] = "extended_stabilizer"
             backend._submit_job = _new_submit
-            circ = transpile(bell(), backend=backend)
+            circ = transpile(ReferenceCircuits.bell(), backend=backend)
             backend.run(circ, header={"test": "circuits"})
         finally:
             backend._configuration._data["simulation_method"] = sim_method
@@ -137,7 +137,7 @@ class TestIBMQasmSimulator(IBMIntegrationTestCase):
         try:
             backend._configuration._data["simulation_method"] = "extended_stabilizer"
             backend._submit_job = _new_submit
-            circ = transpile(bell(), backend=backend)
+            circ = transpile(ReferenceCircuits.bell(), backend=backend)
             backend.run(circ, method="my_method", header={"test": "circuits"})
         finally:
             backend._configuration._data["simulation_method"] = sim_method

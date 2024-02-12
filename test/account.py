@@ -121,6 +121,29 @@ class temporary_account_config_file(ContextDecorator):
         management._DEFAULT_ACCOUNT_CONFIG_JSON_FILE = self.account_config_json_backup
 
 
+class custom_qiskitrc(ContextDecorator):
+    """Context manager that uses a temporary qiskitrc."""
+
+    # pylint: disable=invalid-name
+
+    def __init__(self, contents=b""):
+        # Create a temporary file with the contents.
+        self.tmp_file = NamedTemporaryFile()
+        self.tmp_file.write(contents)
+        self.tmp_file.flush()
+        self.default_qiskitrc_file_original = management._QISKITRC_CONFIG_FILE
+
+    def __enter__(self):
+        # Temporarily modify the default location of the qiskitrc file.
+        management._QISKITRC_CONFIG_FILE = self.tmp_file.name
+        return self
+
+    def __exit__(self, *exc):
+        # Delete the temporary file and restore the default location.
+        self.tmp_file.close()
+        management._QISKITRC_CONFIG_FILE = self.default_qiskitrc_file_original
+
+
 def get_account_config_contents(
     name=None,
     channel="ibm_cloud",
@@ -131,7 +154,7 @@ def get_account_config_contents(
     proxies=None,
     set_default=None,
 ):
-    """Generate account config file content"""
+    """Generate qiskitrc content"""
     if instance is None:
         instance = "some_instance" if channel == "ibm_cloud" else "hub/group/project"
     token = token or uuid.uuid4().hex

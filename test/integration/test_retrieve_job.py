@@ -15,10 +15,11 @@
 import uuid
 from datetime import datetime, timezone
 from qiskit.providers.jobstatus import JobStatus
+from qiskit.test.reference_circuits import ReferenceCircuits
 
 from ..ibm_test_case import IBMIntegrationJobTestCase
 from ..decorators import run_integration_test, production_only, quantum_only
-from ..utils import wait_for_status, get_real_device, bell
+from ..utils import wait_for_status, get_real_device
 
 
 class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
@@ -60,7 +61,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         """Test lazy loading job params."""
         job = self._run_program(
             service,
-            inputs={"circuits": bell()},
+            inputs={"circuits": ReferenceCircuits.bell()},
             program_id="circuit-runner",
             backend="ibmq_qasm_simulator",
         )
@@ -69,18 +70,6 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         self.assertFalse(rjob._params)
         self.assertTrue(rjob.inputs)
         self.assertTrue(rjob._params)
-
-    @run_integration_test
-    @quantum_only
-    def test_params_not_retrieved(self, service):
-        """Test excluding params when unnecessary."""
-        job = self._run_program(service)
-        job.wait_for_final_state()
-
-        self.assertTrue(job.creation_date)
-        self.assertFalse(job._params)
-        self.assertTrue(job.inputs)
-        self.assertTrue(job._params)
 
     @run_integration_test
     def test_retrieve_all_jobs(self, service):
@@ -112,7 +101,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
     @run_integration_test
     def test_retrieve_pending_jobs(self, service):
         """Test retrieving pending jobs (QUEUED, RUNNING)."""
-        circuits = [bell()] * 20
+        circuits = [ReferenceCircuits.bell()] * 20
         job = self._run_program(service, circuits=circuits)
         wait_for_status(job, JobStatus.RUNNING)
         rjobs = service.jobs(pending=True)
@@ -184,9 +173,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         job = self._run_program(service)
         job.wait_for_final_state()
         time_after_job = datetime.now(timezone.utc)
-        rjobs = service.jobs(
-            created_before=time_after_job, created_after=current_time, pending=False, limit=20
-        )
+        rjobs = service.jobs(created_before=time_after_job, created_after=current_time)
         self.assertTrue(job.job_id() in [j.job_id() for j in rjobs])
         for job in rjobs:
             self.assertTrue(job.creation_date <= time_after_job)

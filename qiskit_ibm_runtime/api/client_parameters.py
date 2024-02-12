@@ -13,7 +13,7 @@
 """Represent IBM Quantum account client parameters."""
 
 from typing import Dict, Optional, Any, Union
-from ..proxies import ProxyConfiguration
+from qiskit_ibm_provider.proxies import ProxyConfiguration
 
 from ..utils import get_runtime_api_base_url
 from ..api.auth import QuantumAuth, CloudAuth
