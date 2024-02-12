@@ -66,7 +66,7 @@ class Session:
                 forcibly closed. Can be specified as seconds (int) or a string like "2h 30m 40s".
                 This value must be in between 300 seconds and the
                 `system imposed maximum
-                <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/faqs/max_execution_time.html>`_.
+                <https://docs.quantum.ibm.com/run/max-execution-timel>`_.
 
         Raises:
             ValueError: If an input value is invalid.
