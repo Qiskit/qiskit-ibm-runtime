@@ -14,16 +14,17 @@
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Dict, Optional, Any, Union
+from typing import Dict, Optional, Any, Union, TypeVar, Generic, Type
 import copy
 import logging
 from dataclasses import asdict, replace
 import warnings
 
+from qiskit.primitives.containers.estimator_pub import EstimatorPub
+from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.providers.options import Options as TerraOptions
-from qiskit.primitives.containers import SamplerPub
 
-from qiskit_ibm_provider.session import get_cm_session as get_cm_provider_session
+from .provider_session import get_cm_session as get_cm_provider_session
 
 from .options import Options
 from .options.options import BaseOptions, OptionsV2
@@ -34,26 +35,25 @@ from .utils.default_session import get_cm_session
 from .constants import DEFAULT_DECODERS
 from .qiskit_runtime_service import QiskitRuntimeService
 
-# TODO: remove when we have real v2 base estimator
-from .qiskit.primitives import EstimatorPub
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
 
 logger = logging.getLogger(__name__)
+OptionsT = TypeVar("OptionsT", bound=BaseOptions)
 
 
-class BasePrimitiveV2(ABC):
+class BasePrimitiveV2(ABC, Generic[OptionsT]):
     """Base class for Qiskit Runtime primitives."""
 
-    _options_class: Optional[type[BaseOptions]] = OptionsV2
+    _options_class: Type[OptionsT] = OptionsV2  # type: ignore[assignment]
     version = 2
 
     def __init__(
         self,
         backend: Optional[Union[str, IBMBackend]] = None,
         session: Optional[Union[Session, str, IBMBackend]] = None,
-        options: Optional[Union[Dict, BaseOptions]] = None,
+        options: Optional[Union[Dict, OptionsT]] = None,
     ):
         """Initializes the primitive.
 
@@ -171,13 +171,18 @@ class BasePrimitiveV2(ABC):
         """
         return self._session
 
-    def _set_options(self, options: Optional[Union[Dict, BaseOptions]] = None) -> None:
+    @property
+    def options(self) -> OptionsT:
+        """Return options"""
+        return self._options
+
+    def _set_options(self, options: Optional[Union[Dict, OptionsT]] = None) -> None:
         """Set options."""
         if options is None:
             self._options = self._options_class()
         elif isinstance(options, dict):
             default_options = self._options_class()
-            self.options = self._options_class(**merge_options(default_options, options))
+            self._options = self._options_class(**merge_options(default_options, options))
         elif isinstance(options, self._options_class):
             self._options = replace(options)
         else:

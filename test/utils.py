@@ -15,17 +15,15 @@
 import os
 import logging
 import time
+import itertools
 import unittest
 from unittest import mock
 from typing import Dict, Optional, Any
 from datetime import datetime
-
 from ddt import data, unpack
 
-from qiskit.circuit import QuantumCircuit
+from qiskit.circuit import QuantumCircuit, QuantumRegister, ClassicalRegister
 from qiskit.compiler import transpile
-from qiskit.test.reference_circuits import ReferenceCircuits
-from qiskit.test.utils import generate_cases
 from qiskit.providers.jobstatus import JOB_FINAL_STATES, JobStatus
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.models import BackendStatus, BackendProperties
@@ -300,10 +298,31 @@ def submit_and_cancel(backend: IBMBackend, logger: logging.Logger) -> RuntimeJob
     Returns:
         Cancelled job.
     """
-    circuit = transpile(ReferenceCircuits.bell(), backend=backend)
+    circuit = transpile(bell(), backend=backend)
     job = backend.run(circuit)
     cancel_job_safe(job, logger=logger)
     return job
+
+
+class Case(dict):
+    """<no description>"""
+
+
+def generate_cases(docstring, dsc=None, name=None, **kwargs):
+    """Combines kwargs in Cartesian product and creates Case with them"""
+    ret = []
+    keys = kwargs.keys()
+    vals = kwargs.values()
+    for values in itertools.product(*vals):
+        case = Case(zip(keys, values))
+        if docstring is not None:
+            setattr(case, "__doc__", docstring.format(**case))
+        if dsc is not None:
+            setattr(case, "__doc__", dsc.format(**case))
+        if name is not None:
+            setattr(case, "__name__", name.format(**case))
+        ret.append(case)
+    return ret
 
 
 def combine(**kwargs):
@@ -318,6 +337,18 @@ def combine(**kwargs):
         return data(*generate_cases(docstring=func.__doc__, **kwargs))(unpack(func))
 
     return deco
+
+
+def bell():
+    """Return a Bell circuit."""
+    quantum_register = QuantumRegister(2, name="qr")
+    classical_register = ClassicalRegister(2, name="cr")
+    quantum_circuit = QuantumCircuit(quantum_register, classical_register, name="bell")
+    quantum_circuit.h(quantum_register[0])
+    quantum_circuit.cx(quantum_register[0], quantum_register[1])
+    quantum_circuit.measure(quantum_register, classical_register)
+
+    return quantum_circuit
 
 
 def get_primitive_inputs(primitive, num_sets=1):

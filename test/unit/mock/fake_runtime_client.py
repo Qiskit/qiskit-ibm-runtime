@@ -22,7 +22,7 @@ from typing import Optional, Dict, Any, List
 
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 
-from qiskit_ibm_provider.utils.hgp import from_instance_format
+from qiskit_ibm_runtime.utils.hgp import from_instance_format
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
 from qiskit_ibm_runtime.utils import RuntimeEncoder
 
@@ -271,6 +271,7 @@ class BaseFakeRuntimeClient:
         self._job_kwargs = job_kwargs or {}
         self._channel = channel
         self.session_time = 0
+        self._sessions = set()
 
         # Setup the available backends
         if not backend_specs:
@@ -342,9 +343,11 @@ class BaseFakeRuntimeClient:
         )
         self.session_time = session_time
         self._jobs[job_id] = job
+        if start_session:
+            self._sessions.add(job_id)
         return {"id": job_id, "backend": backend_name}
 
-    def job_get(self, job_id: str, exclude_params: bool = None) -> Any:
+    def job_get(self, job_id: str, exclude_params: bool = True) -> Any:
         """Get the specific job."""
         return self._get_job(job_id, exclude_params).to_dict()
 
@@ -454,6 +457,12 @@ class BaseFakeRuntimeClient:
     def backend_pulse_defaults(self, backend_name: str) -> Dict[str, Any]:
         """Return the pulse defaults of a backend."""
         return self._find_backend(backend_name).defaults
+
+    def close_session(self, session_id: str) -> None:
+        """Close the session."""
+        if session_id not in self._sessions:
+            raise ValueError(f"Session {session_id} not found.")
+        self._sessions.remove(session_id)
 
     def _find_backend(self, backend_name):
         for back in self._backends:

@@ -17,6 +17,9 @@ import functools
 import copy
 from dataclasses import is_dataclass, asdict
 
+from pydantic import ConfigDict
+from pydantic.dataclasses import dataclass
+
 from ..ibm_backend import IBMBackend
 
 if TYPE_CHECKING:
@@ -112,6 +115,9 @@ def merge_options(
         for key, val in matched.items():
             old[key] = val
 
+        # Clear the matched dict so it's not reused
+        matched.clear()
+
     if is_dataclass(old_options):
         combined = asdict(old_options)
     elif isinstance(old_options, dict):
@@ -170,3 +176,8 @@ class UnsetType:
 
 
 Unset = UnsetType()
+
+
+primitive_dataclass = dataclass(
+    config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid")
+)

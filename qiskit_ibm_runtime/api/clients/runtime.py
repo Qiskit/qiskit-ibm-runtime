@@ -17,13 +17,12 @@ from typing import Any, Dict, List, Optional
 from datetime import datetime as python_datetime
 from requests import Response
 
-from qiskit_ibm_provider.utils.hgp import from_instance_format
 from qiskit_ibm_runtime.api.session import RetrySession
 
 from .backend import BaseBackendClient
 from ..rest.runtime import Runtime
 from ..client_parameters import ClientParameters
-
+from ...utils.hgp import from_instance_format
 
 logger = logging.getLogger(__name__)
 
@@ -100,7 +99,7 @@ class RuntimeClient(BaseBackendClient):
             **hgp_dict,
         )
 
-    def job_get(self, job_id: str, exclude_params: bool = None) -> Dict:
+    def job_get(self, job_id: str, exclude_params: bool = True) -> Dict:
         """Get job data.
 
         Args:

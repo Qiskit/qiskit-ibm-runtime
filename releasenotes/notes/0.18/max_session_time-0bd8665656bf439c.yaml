@@ -1,0 +1,4 @@
+---
+features:
+  - |
+    Added ``max_time`` parameter to ``IBMBackend.open_session()``.

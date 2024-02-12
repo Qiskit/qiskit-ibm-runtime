@@ -23,9 +23,7 @@ import numpy as np
 from qiskit import transpile
 from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.library import RealAmplitudes
-from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit.quantum_info import SparsePauliOp
-from qiskit.providers.fake_provider import FakeManila
 
 from qiskit_ibm_runtime import (
     Sampler,
@@ -37,7 +35,8 @@ from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.utils.default_session import _DEFAULT_SESSION
 from qiskit_ibm_runtime import EstimatorV2
 from qiskit_ibm_runtime.estimator import Estimator as IBMBaseEstimator
-from qiskit_ibm_runtime.qiskit.primitives import BindingsArray
+from qiskit_ibm_runtime.fake_provider import FakeManila
+
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import (
@@ -49,6 +48,7 @@ from ..utils import (
     MockSession,
     get_primitive_inputs,
     get_mocked_backend,
+    bell,
 )
 
 
@@ -59,7 +59,7 @@ class TestPrimitivesV2(IBMTestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.circ = ReferenceCircuits.bell()
+        cls.circ = bell()
         cls.obs = SparsePauliOp.from_list([("IZ", 1)])
         return super().setUpClass()
 
@@ -74,10 +74,9 @@ class TestPrimitivesV2(IBMTestCase):
             {},
             {
                 "max_execution_time": 100,
-                "transpilation": {"initial_layout": [1, 2]},
+                "transpilation": {"optimization_level": 1},
                 "execution": {"shots": 100, "init_qubits": True},
             },
-            {"optimization_level": 2},
             {"transpilation": {}},
         ]
         for options in options_vars:
@@ -299,7 +298,7 @@ class TestPrimitivesV2(IBMTestCase):
         for val in param_vals:
             with self.subTest(val=val):
                 pub = (circ, "ZZ", val) if isinstance(inst, EstimatorV2) else (circ, val)
-                inst.run(pub)
+                inst.run([pub])
 
     @data(EstimatorV2)
     def test_parameters_vals_kwvals(self, primitive):
@@ -309,16 +308,14 @@ class TestPrimitivesV2(IBMTestCase):
 
         with self.subTest("0-d"):
             param_vals = np.linspace(0, 1, 4)
-            kwvals = {tuple(circ.parameters[:2]): param_vals[:2]}
-            barray = BindingsArray(vals=param_vals[2:], kwvals=kwvals)
+            barray = {tuple(circ.parameters): param_vals}
             pub = (circ, "ZZ", barray) if isinstance(inst, EstimatorV2) else (circ, barray)
-            inst.run(pub)
+            inst.run([pub])
 
         with self.subTest("n-d"):
-            kwvals = {tuple(circ.parameters[:2]): np.random.random((2, 3, 2))}
-            barray = BindingsArray(vals=np.random.random((2, 3, 2)), kwvals=kwvals)
+            barray = {tuple(circ.parameters): np.random.random((2, 3, 4))}
             pub = (circ, "ZZ", barray) if isinstance(inst, EstimatorV2) else (circ, barray)
-            inst.run(pub)
+            inst.run([pub])
 
     @data(EstimatorV2)
     def test_parameters_multiple_circuits(self, primitive):
@@ -363,17 +360,8 @@ class TestPrimitivesV2(IBMTestCase):
             ({"dynamical_decoupling": "XY4"}, {"dynamical_decoupling": "XY4"}),
             ({"shots": 200}, {"execution": {"shots": 200}}),
             (
-                {"optimization_level": 3},
-                {"transpilation": {"optimization_level": 3}},
-            ),
-            (
-                {"initial_layout": [1, 2], "optimization_level": 2},
-                {
-                    "transpilation": {
-                        "optimization_level": 2,
-                        "initial_layout": [1, 2],
-                    }
-                },
+                {"optimization_level": 1},
+                {"transpilation": {"optimization_level": 1}},
             ),
             (
                 {"skip_transpilation": True},
@@ -409,7 +397,7 @@ class TestPrimitivesV2(IBMTestCase):
 
     @combine(
         primitive=[EstimatorV2],
-        exp_opt=[{"foo": "bar"}, {"transpilation": {"foo": "bar"}}],
+        exp_opt=[{"foo": "bar"}, {"transpilation": {"extra_key": "bar"}}],
     )
     def test_run_experimental_options(self, primitive, exp_opt):
         """Test specifying arbitrary options in run."""
@@ -419,6 +407,20 @@ class TestPrimitivesV2(IBMTestCase):
         inst.run(**get_primitive_inputs(inst))
         inputs = session.run.call_args.kwargs["inputs"]
         self._assert_dict_partially_equal(inputs, exp_opt)
+        self.assertNotIn("extra_key", inputs)
+
+    @combine(
+        primitive=[EstimatorV2],
+        exp_opt=[{"foo": "bar"}, {"execution": {"extra_key": "bar"}}],
+    )
+    def test_run_experimental_options_init(self, primitive, exp_opt):
+        """Test specifying arbitrary options in initialization."""
+        session = MagicMock(spec=MockSession)
+        inst = primitive(session=session, options={"experimental": exp_opt})
+        inst.run(**get_primitive_inputs(inst))
+        inputs = session.run.call_args.kwargs["inputs"]
+        self._assert_dict_partially_equal(inputs, exp_opt)
+        self.assertNotIn("extra_key", inputs)
 
     @data(EstimatorV2)
     def test_run_unset_options(self, primitive):
@@ -427,7 +429,7 @@ class TestPrimitivesV2(IBMTestCase):
         inst = primitive(session=session)
         inst.run(**get_primitive_inputs(inst))
         inputs = session.run.call_args.kwargs["inputs"]
-        for fld in ["pubs", "_experimental"]:
+        for fld in ["pubs"]:
             inputs.pop(fld, None)
         expected = {"skip_transpilation": False, "execution": {"init_qubits": True}, "version": 2}
         self.assertDictEqual(inputs, expected)
@@ -458,14 +460,14 @@ class TestPrimitivesV2(IBMTestCase):
     @combine(
         primitive=[EstimatorV2],
         new_opts=[
-            {"optimization_level": 2},
-            {"optimization_level": 3, "shots": 200},
+            {"optimization_level": 0},
+            {"optimization_level": 1, "shots": 200},
         ],
     )
     def test_set_options(self, primitive, new_opts):
         """Test set options."""
         opt_cls = primitive._options_class
-        options = opt_cls(optimization_level=1, execution={"shots": 100})
+        options = opt_cls(transpilation={"optimization_level": 1}, execution={"shots": 100})
 
         session = MagicMock(spec=MockSession)
         inst = primitive(session=session, options=options)
@@ -492,7 +494,7 @@ class TestPrimitivesV2(IBMTestCase):
             {"shots": 10},
             {"seed_simulator": 123},
             {"skip_transpilation": True, "log_level": "ERROR"},
-            {"initial_layout": [1, 2], "shots": 100, "optimization_level": 2},
+            {"shots": 100, "optimization_level": 1},
         ]
 
         expected_list = [opt_cls() for _ in range(len(options_dicts))]
@@ -500,9 +502,8 @@ class TestPrimitivesV2(IBMTestCase):
         expected_list[2].simulator.seed_simulator = 123
         expected_list[3].transpilation.skip_transpilation = True
         expected_list[3].environment.log_level = "ERROR"
-        expected_list[4].transpilation.initial_layout = [1, 2]
         expected_list[4].execution.shots = 100
-        expected_list[4].optimization_level = 2
+        expected_list[4].transpilation.optimization_level = 1
 
         session = MagicMock(spec=MockSession)
         for opts, expected in zip(options_dicts, expected_list):
@@ -600,7 +601,7 @@ class TestPrimitivesV2(IBMTestCase):
             pub = (transpiled,)
 
         with self.assertRaises(ValueError) as err:
-            inst.run(pubs=pub)
+            inst.run(pubs=[pub])
         self.assertIn(f"faulty qubit {faulty_qubit}", str(err.exception))
 
     @data(EstimatorV2)
@@ -660,7 +661,7 @@ class TestPrimitivesV2(IBMTestCase):
             pub = (transpiled,)
 
         with self.assertRaises(ValueError) as err:
-            inst.run(pubs=pub)
+            inst.run(pubs=[pub])
         self.assertIn("cx", str(err.exception))
         self.assertIn(f"faulty edge {tuple(edge_qubits)}", str(err.exception))
 
@@ -689,7 +690,7 @@ class TestPrimitivesV2(IBMTestCase):
             pub = (transpiled,)
 
         with patch.object(Session, "run") as mock_run:
-            inst.run(pub)
+            inst.run([pub])
         mock_run.assert_called_once()
 
     @data(EstimatorV2)
@@ -719,7 +720,7 @@ class TestPrimitivesV2(IBMTestCase):
             pub = (transpiled,)
 
         with patch.object(Session, "run") as mock_run:
-            inst.run(pub)
+            inst.run([pub])
         mock_run.assert_called_once()
 
     @data(EstimatorV2)
@@ -750,7 +751,7 @@ class TestPrimitivesV2(IBMTestCase):
             pub = (transpiled,)
 
         with patch.object(Session, "run") as mock_run:
-            inst.run(pub)
+            inst.run([pub])
         mock_run.assert_called_once()
 
     def _update_dict(self, dict1, dict2):

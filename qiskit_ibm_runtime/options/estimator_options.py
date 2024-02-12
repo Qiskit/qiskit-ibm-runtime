@@ -23,15 +23,14 @@ from .utils import (
     skip_unset_validation,
 )
 from .execution_options import ExecutionOptionsV2
-from .transpilation_options import TranspilationOptions
+from .transpilation_options import TranspilationOptionsV2
 from .resilience_options import ResilienceOptionsV2
 from .twirling_options import TwirlingOptions
 from .options import OptionsV2
-
-# TODO use real base options when available
-from ..qiskit.primitives.options import primitive_dataclass
+from .utils import primitive_dataclass
 
 DDSequenceType = Literal["XX", "XpXm", "XY4"]
+MAX_RESILIENCE_LEVEL: int = 2
 
 
 @primitive_dataclass
@@ -39,17 +38,6 @@ class EstimatorOptions(OptionsV2):
     """Options for EstimatorV2.
 
     Args:
-        optimization_level: How much optimization to perform on the circuits.
-            Higher levels generate more optimized circuits,
-            at the expense of longer transpilation times. This is based on the
-            ``optimization_level`` parameter in qiskit-terra but may include
-            backend-specific optimization. Default: 1.
-
-            * 0: no optimization
-            * 1: light optimization
-            * 2: heavy optimization
-            * 3: even heavier optimization
-
         resilience_level: How much resilience to build against errors.
             Higher levels generate more accurate results,
             at the expense of longer processing times. Default: 1.
@@ -88,40 +76,25 @@ class EstimatorOptions(OptionsV2):
 
     """
 
-    _MAX_OPTIMIZATION_LEVEL: int = Field(3, frozen=True)  # pylint: disable=invalid-name
-    _MAX_RESILIENCE_LEVEL: int = Field(3, frozen=True)  # pylint: disable=invalid-name
-
     # Sadly we cannot use pydantic's built in validation because it won't work on Unset.
-    optimization_level: Union[UnsetType, int] = Unset
     resilience_level: Union[UnsetType, int] = Unset
     dynamical_decoupling: Union[UnsetType, DDSequenceType] = Unset
     seed_estimator: Union[UnsetType, int] = Unset
-    transpilation: Union[TranspilationOptions, Dict] = Field(default_factory=TranspilationOptions)
+    transpilation: Union[TranspilationOptionsV2, Dict] = Field(
+        default_factory=TranspilationOptionsV2
+    )
     resilience: Union[ResilienceOptionsV2, Dict] = Field(default_factory=ResilienceOptionsV2)
     execution: Union[ExecutionOptionsV2, Dict] = Field(default_factory=ExecutionOptionsV2)
     twirling: Union[TwirlingOptions, Dict] = Field(default_factory=TwirlingOptions)
     experimental: Union[UnsetType, dict] = Unset
-
-    @field_validator("optimization_level")
-    @classmethod
-    @skip_unset_validation
-    def _validate_optimization_level(cls, optimization_level: int) -> int:
-        """Validate optimization_leve."""
-        if not 0 <= optimization_level <= EstimatorOptions._MAX_OPTIMIZATION_LEVEL:
-            raise ValueError(
-                "Invalid optimization_level. Valid range is "
-                f"0-{EstimatorOptions._MAX_OPTIMIZATION_LEVEL}"
-            )
-        return optimization_level
 
     @field_validator("resilience_level")
     @classmethod
     @skip_unset_validation
     def _validate_resilience_level(cls, resilience_level: int) -> int:
         """Validate resilience_level."""
-        if not 0 <= resilience_level <= EstimatorOptions._MAX_RESILIENCE_LEVEL:
+        if not 0 <= resilience_level <= MAX_RESILIENCE_LEVEL:
             raise ValueError(
-                "Invalid optimization_level. Valid range is "
-                f"0-{EstimatorOptions._MAX_RESILIENCE_LEVEL}"
+                "Invalid resilience_level. Valid range is " f"0-{MAX_RESILIENCE_LEVEL}"
             )
         return resilience_level

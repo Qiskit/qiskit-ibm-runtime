@@ -21,16 +21,21 @@ import warnings
 from qiskit.transpiler import CouplingMap
 from pydantic import Field
 
-from .utils import Dict, _to_obj, UnsetType, Unset, _remove_dict_unset_values, merge_options
+from .utils import (
+    Dict,
+    _to_obj,
+    UnsetType,
+    Unset,
+    _remove_dict_unset_values,
+    merge_options,
+    primitive_dataclass,
+)
 from .environment_options import EnvironmentOptions
 from .execution_options import ExecutionOptionsV1 as ExecutionOptions
 from .simulator_options import SimulatorOptions
 from .transpilation_options import TranspilationOptions
 from .resilience_options import ResilienceOptionsV1 as ResilienceOptions
 from ..runtime_options import RuntimeOptions
-
-# TODO use real base options when available
-from ..qiskit.primitives.options import BasePrimitiveOptions, primitive_dataclass
 
 
 @dataclass
@@ -68,7 +73,7 @@ class BaseOptions:
 
 
 @primitive_dataclass
-class OptionsV2(BaseOptions, BasePrimitiveOptions):
+class OptionsV2(BaseOptions):
     """Base primitive options, used by v2 primitives.
 
     Args:
@@ -127,7 +132,6 @@ class OptionsV2(BaseOptions, BasePrimitiveOptions):
             coupling_map = list(map(list, coupling_map.get_edges()))
         inputs["transpilation"].update(
             {
-                "optimization_level": options_copy.get("optimization_level", Unset),
                 "coupling_map": coupling_map,
                 "basis_gates": sim_options.get("basis_gates", Unset),
             }

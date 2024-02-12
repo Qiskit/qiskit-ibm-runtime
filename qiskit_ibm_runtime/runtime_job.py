@@ -24,14 +24,17 @@ import requests
 
 from qiskit.providers.backend import Backend
 from qiskit.providers.jobstatus import JobStatus, JOB_FINAL_STATES
+from qiskit.providers.models import BackendProperties
 from qiskit.providers.job import JobV1 as Job
 
 # pylint: disable=unused-import,cyclic-import
-from qiskit_ibm_provider.utils import utc_to_local
+
 from qiskit_ibm_runtime import qiskit_runtime_service
 
+from .utils import utc_to_local
 from .utils.utils import validate_job_tags
 from .utils.estimator_result_decoder import EstimatorResultDecoder
+from .utils.queueinfo import QueueInfo
 from .constants import API_TO_JOB_ERROR_MESSAGE, API_TO_JOB_STATUS, DEFAULT_DECODERS
 from .exceptions import (
     IBMApiError,
@@ -139,6 +142,7 @@ class RuntimeJob(Job):
         self._tags = tags
         self._usage_estimation: Dict[str, Any] = {}
         self._version = version
+        self._queue_info: QueueInfo = None
 
         decoder = result_decoder or DEFAULT_DECODERS.get(program_id, None) or ResultDecoder
         if isinstance(decoder, Sequence):
@@ -440,6 +444,20 @@ class RuntimeJob(Job):
                 "the job.".format(self.job_id())
             )
 
+    def properties(self, refresh: bool = False) -> Optional[BackendProperties]:
+        """Return the backend properties for this job.
+
+        Args:
+            refresh: If ``True``, re-query the server for the backend properties.
+                Otherwise, return a cached version.
+
+        Returns:
+            The backend properties used for this job, at the time the job was run,
+            or ``None`` if properties are not available.
+        """
+
+        return self._backend.properties(refresh, self.creation_date)
+
     def _set_status_and_error_message(self) -> None:
         """Fetch and set status and error message."""
         if self._status not in JOB_FINAL_STATES:
@@ -615,7 +633,7 @@ class RuntimeJob(Job):
             Input parameters used in this job.
         """
         if not self._params:
-            response = self._api_client.job_get(job_id=self.job_id())
+            response = self._api_client.job_get(job_id=self.job_id(), exclude_params=False)
             self._params = response.get("params", {})
         return self._params
 
@@ -682,3 +700,64 @@ class RuntimeJob(Job):
             }
 
         return self._usage_estimation
+
+    def queue_position(self, refresh: bool = False) -> Optional[int]:
+        """Return the position of the job in the server queue.
+
+        Note:
+            The position returned is within the scope of the provider
+            and may differ from the global queue position.
+
+        Args:
+            refresh: If ``True``, re-query the server to get the latest value.
+                Otherwise return the cached value.
+
+        Returns:
+            Position in the queue or ``None`` if position is unknown or not applicable.
+        """
+        if refresh:
+            api_metadata = self._api_client.job_metadata(self.job_id())
+            self._queue_info = QueueInfo(
+                position_in_queue=api_metadata.get("position_in_queue"),
+                status=self.status(),
+                estimated_start_time=api_metadata.get("estimated_start_time"),
+                estimated_completion_time=api_metadata.get("estimated_completion_time"),
+            )
+
+        if self._queue_info:
+            return self._queue_info.position
+        return None
+
+    def queue_info(self) -> Optional[QueueInfo]:
+        """Return queue information for this job.
+
+        The queue information may include queue position, estimated start and
+        end time, and dynamic priorities for the hub, group, and project. See
+        :class:`QueueInfo` for more information.
+
+        Note:
+            The queue information is calculated after the job enters the queue.
+            Therefore, some or all of the information may not be immediately
+            available, and this method may return ``None``.
+
+        Returns:
+            A :class:`QueueInfo` instance that contains queue information for
+            this job, or ``None`` if queue information is unknown or not
+            applicable.
+        """
+        # Get latest queue information.
+        api_metadata = self._api_client.job_metadata(self.job_id())
+        self._queue_info = QueueInfo(
+            position_in_queue=api_metadata.get("position_in_queue"),
+            status=self.status(),
+            estimated_start_time=api_metadata.get("estimated_start_time"),
+            estimated_completion_time=api_metadata.get("estimated_completion_time"),
+        )
+        # Return queue information only if it has any useful information.
+        if self._queue_info and any(
+            value is not None
+            for attr, value in self._queue_info.__dict__.items()
+            if not attr.startswith("_") and attr != "job_id"
+        ):
+            return self._queue_info
+        return None
