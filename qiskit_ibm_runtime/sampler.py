@@ -112,12 +112,9 @@ class SamplerV2(BasePrimitiveV2, Sampler, BaseSamplerV2):
         if isinstance(pubs, SamplerPub):
             pubs_to_run = [pubs]
         elif isinstance(pubs, tuple) and isinstance(pubs[0], QuantumCircuit):
-            pubs_to_run = [SamplerPub.coerce(pubs)]
+            pubs_to_run = [SamplerPub.coerce(pubs, shots)]
         elif pubs is not SamplerPub:
-            pubs_to_run = [SamplerPub.coerce(pub) for pub in pubs]
-
-        for pub in pubs_to_run:
-            pub.validate()
+            pubs_to_run = [SamplerPub.coerce(pub, shots) for pub in pubs]
 
         return self._run(pubs_to_run)
 
