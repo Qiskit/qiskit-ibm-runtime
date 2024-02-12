@@ -26,7 +26,7 @@ from qiskit_ibm_runtime import Sampler, Session, SamplerV2, SamplerOptions
 
 from ..ibm_test_case import IBMTestCase
 from .mock.fake_runtime_service import FakeRuntimeService
-from ..utils import MockSession, dict_paritally_equal
+from ..utils import MockSession, dict_paritally_equal, bell
 
 
 class TestSampler(IBMTestCase):
@@ -43,7 +43,7 @@ class TestSampler(IBMTestCase):
             service=FakeRuntimeService(channel="ibm_quantum", token="abc"),
             backend="common_backend",
         ) as session:
-            circuit = ReferenceCircuits.bell()
+            circuit = bell()
             for bad_opt in options_bad:
                 inst = Sampler(session=session)
                 with self.assertRaises(ValueError) as exc:

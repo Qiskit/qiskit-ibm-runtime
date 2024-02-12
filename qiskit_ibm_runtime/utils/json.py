@@ -26,7 +26,6 @@ import warnings
 import zlib
 from datetime import date
 from typing import Any, Callable, Dict, List, Union, Tuple
-from dataclasses import asdict
 
 import dateutil.parser
 import numpy as np
@@ -56,21 +55,15 @@ from qiskit.circuit import (
 from qiskit.circuit.parametertable import ParameterView
 from qiskit.result import Result
 from qiskit.version import __version__ as _terra_version_string
-from qiskit.primitives.containers import SamplerPub, BindingsArray
-
-from qiskit_ibm_provider.qpy import (
-    _write_parameter,
+from qiskit.utils import optionals
+from qiskit.qpy import (
     _write_parameter_expression,
     _read_parameter_expression,
     _read_parameter_expression_v3,
-    _read_parameter,
-    dump,
     load,
+    dump,
 )
-
-# TODO: Remove when they are in terra
-from ..qiskit.primitives import ObservablesArray
-from ..qiskit.primitives.base_pub import BasePub
+from qiskit.qpy.binary_io.value import _write_parameter, _read_parameter
 
 _TERRA_VERSION = tuple(
     int(x) for x in re.match(r"\d+\.\d+\.\d", _terra_version_string).group(0).split(".")[:3]
@@ -222,10 +215,15 @@ class RuntimeEncoder(json.JSONEncoder):
         if hasattr(obj, "to_json"):
             return {"__type__": "to_json", "__value__": obj.to_json()}
         if isinstance(obj, QuantumCircuit):
+            kwargs: dict[str, object] = {"use_symengine": bool(optionals.HAS_SYMENGINE)}
+            if _TERRA_VERSION[0] >= 1:
+                # NOTE: This can be updated only after the server side has
+                # updated to a newer qiskit version.
+                kwargs["version"] = 10
             value = _serialize_and_encode(
                 data=obj,
                 serializer=lambda buff, data: dump(
-                    data, buff, RuntimeEncoder
+                    data, buff, RuntimeEncoder, **kwargs
                 ),  # type: ignore[no-untyped-call]
             )
             return {"__type__": "QuantumCircuit", "__value__": value}
@@ -241,46 +239,28 @@ class RuntimeEncoder(json.JSONEncoder):
                 data=obj,
                 serializer=_write_parameter_expression,
                 compress=False,
+                use_symengine=bool(optionals.HAS_SYMENGINE),
             )
             return {"__type__": "ParameterExpression", "__value__": value}
         if isinstance(obj, ParameterView):
             return obj.data
         if isinstance(obj, Instruction):
+            kwargs = {"use_symengine": bool(optionals.HAS_SYMENGINE)}
+            if _TERRA_VERSION[0] >= 1:
+                # NOTE: This can be updated only after the server side has
+                # updated to a newer qiskit version.
+                kwargs["version"] = 10
             # Append instruction to empty circuit
             quantum_register = QuantumRegister(obj.num_qubits)
             quantum_circuit = QuantumCircuit(quantum_register)
             quantum_circuit.append(obj, quantum_register)
             value = _serialize_and_encode(
                 data=quantum_circuit,
-                serializer=lambda buff, data: dump(data, buff),  # type: ignore[no-untyped-call]
+                serializer=lambda buff, data: dump(
+                    data, buff, **kwargs
+                ),  # type: ignore[no-untyped-call]
             )
             return {"__type__": "Instruction", "__value__": value}
-        if isinstance(obj, BasePub):
-            return asdict(obj)
-        if isinstance(obj, SamplerPub):
-            return {
-                "__type__": "SamplerPub",
-                "__value__": {
-                    "circuit": obj.circuit,
-                    "parameter_values": obj.parameter_values,
-                    "shots": obj.shots,
-                    "shape": obj.shape,
-                },
-            }
-        if isinstance(obj, ObservablesArray):
-            return obj.tolist()
-        if isinstance(obj, BindingsArray):
-            out_val = {}
-            if obj.kwvals:
-                encoded_kwvals = {}
-                for key, val in obj.kwvals.items():
-                    encoded_kwvals[json.dumps(key, cls=RuntimeEncoder)] = val
-                out_val["kwvals"] = encoded_kwvals
-            if obj.vals:
-                out_val["vals"] = obj.vals  # type: ignore[assignment]
-            out_val["shape"] = obj.shape
-            return {"__type__": "BindingsArray", "__value__": out_val}
-
         if HAS_AER and isinstance(obj, qiskit_aer.noise.NoiseModel):
             return {"__type__": "NoiseModel", "__value__": obj.to_dict()}
         if hasattr(obj, "settings"):
@@ -353,28 +333,6 @@ class RuntimeDecoder(json.JSONDecoder):
                 return Result.from_dict(obj_val)
             if obj_type == "spmatrix":
                 return _decode_and_deserialize(obj_val, scipy.sparse.load_npz, False)
-            if obj_type == "SamplerPub":
-                return SamplerPub(
-                    circuit=obj_val["circuit"],
-                    parameter_values=obj_val["parameter_values"],
-                    shots=obj_val["shots"],
-                )
-            if obj_type == "BindingsArray":
-                ba_kwargs = {"shape": obj_val.get("shape", None)}
-                kwvals = obj_val.get("kwvals", None)
-                if isinstance(kwvals, dict):
-                    kwvals_decoded = {}
-                    for key, val in kwvals.items():
-                        # Convert to tuple or it can't be a key
-                        decoded_key = tuple(json.loads(key, cls=RuntimeDecoder))
-                        kwvals_decoded[decoded_key] = val
-                    ba_kwargs["kwvals"] = kwvals_decoded
-                elif kwvals:
-                    raise ValueError(f"Unexpected kwvals type {type(kwvals)} in BindingsArray.")
-                ba_kwargs["vals"] = obj_val.get("vals", None)
-
-                return BindingsArray(**ba_kwargs)
-
             if obj_type == "to_json":
                 return obj_val
             if obj_type == "NoiseModel":

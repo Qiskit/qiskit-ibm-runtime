@@ -20,20 +20,15 @@ from unittest import mock
 from typing import Dict, Optional, Any
 from datetime import datetime
 
-from ddt import data, unpack
-
-from qiskit.circuit import QuantumCircuit
-from qiskit.compiler import transpile
-from qiskit.test.reference_circuits import ReferenceCircuits
-from qiskit.test.utils import generate_cases
+from qiskit.circuit import QuantumCircuit, QuantumRegister, ClassicalRegister
+from qiskit.compiler import transpile, assemble
+from qiskit.qobj import QasmQobj
 from qiskit.providers.jobstatus import JOB_FINAL_STATES, JobStatus
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.models import BackendStatus, BackendProperties
 from qiskit.providers.backend import Backend
-from qiskit.quantum_info import SparsePauliOp
 from qiskit_ibm_runtime.hub_group_project import HubGroupProject
-from qiskit_ibm_runtime import QiskitRuntimeService, Session
-from qiskit_ibm_runtime.estimator import Estimator
+from qiskit_ibm_runtime import QiskitRuntimeService
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.runtime_job import RuntimeJob
 from qiskit_ibm_runtime.exceptions import RuntimeInvalidStateError
@@ -183,7 +178,7 @@ def dict_paritally_equal(dict1: Dict, dict2: Dict) -> bool:
     """Determine whether all keys in dict2 are in dict1 and have same values."""
     for key, val in dict2.items():
         if isinstance(val, dict):
-            if not dict_paritally_equal(dict1.get(key, {}), val):
+            if not dict_paritally_equal(dict1.get(key), val):
                 return False
         elif key not in dict1 or val != dict1[key]:
             return False
@@ -284,10 +279,6 @@ def get_mocked_backend(name: str = "ibm_gotham") -> Any:
     mock_backend = mock.MagicMock(spec=IBMBackend)
     mock_backend.name = name
     mock_backend._instance = None
-
-    mock_service = mock.MagicMock()
-    mock_backend.service = mock_service
-
     return mock_backend
 
 
@@ -300,42 +291,72 @@ def submit_and_cancel(backend: IBMBackend, logger: logging.Logger) -> RuntimeJob
     Returns:
         Cancelled job.
     """
-    circuit = transpile(ReferenceCircuits.bell(), backend=backend)
+    circuit = transpile(bell(), backend=backend)
     job = backend.run(circuit)
     cancel_job_safe(job, logger=logger)
     return job
 
 
-def combine(**kwargs):
-    """Decorator to create combinations and tests
-    @combine(level=[0, 1, 2, 3],
-             circuit=[a, b, c, d],
-             dsc='Test circuit {circuit.__name__} with level {level}',
-             name='{circuit.__name__}_level{level}')
+def submit_job_bad_shots(backend: IBMBackend) -> RuntimeJob:
+    """Submit a job that will fail due to too many shots.
+
+    Args:
+        backend: Backend to submit the job to.
+
+    Returns:
+        Submitted job.
     """
-
-    def deco(func):
-        return data(*generate_cases(docstring=func.__doc__, **kwargs))(unpack(func))
-
-    return deco
-
-
-def get_primitive_inputs(primitive, num_sets=1):
-    """Return primitive specific inputs."""
-    circ = QuantumCircuit(2, 2)
-    circ.h(0)
-    circ.cx(0, 1)
-    obs = SparsePauliOp.from_list([("IZ", 1)])
-
-    if isinstance(primitive, Estimator):
-        return {"pubs": [(circ, [obs])] * num_sets}
-
-    circ.measure_all()
-    return {"pubs": [(circ,)] * num_sets}
+    qobj = bell_in_qobj(backend=backend)
+    # Modify the number of shots to be an invalid amount.
+    qobj.config.shots = backend.configuration().max_shots + 10000
+    job_to_fail = backend._submit_job(qobj)
+    return job_to_fail
 
 
-class MockSession(Session):
-    """Mock for session class"""
+def submit_job_one_bad_instr(backend: IBMBackend) -> RuntimeJob:
+    """Submit a job that contains one good and one bad instruction.
 
-    _circuits_map: Dict[str, QuantumCircuit] = {}
-    _instance = None
+    Args:
+        backend: Backend to submit the job to.
+
+    Returns:
+        Submitted job.
+    """
+    qc_new = transpile(bell(), backend)
+    if backend.configuration().simulator:
+        # Specify method so it doesn't fail at method selection.
+        qobj = assemble([qc_new] * 2, backend=backend, method="statevector")
+    else:
+        qobj = assemble([qc_new] * 2, backend=backend)
+    qobj.experiments[1].instructions[1].name = "bad_instruction"
+    job = backend._submit_job(qobj)
+    return job
+
+
+def bell_in_qobj(backend: IBMBackend, shots: int = 1024) -> QasmQobj:
+    """Return a bell circuit in Qobj format.
+
+    Args:
+        backend: Backend to use for transpiling the circuit.
+        shots: Number of shots.
+
+    Returns:
+        A bell circuit in Qobj format.
+    """
+    return assemble(
+        transpile(bell(), backend=backend),
+        backend=backend,
+        shots=shots,
+    )
+
+
+def bell():
+    """Return a Bell circuit."""
+    quantum_register = QuantumRegister(2, name="qr")
+    classical_register = ClassicalRegister(2, name="cr")
+    quantum_circuit = QuantumCircuit(quantum_register, classical_register, name="bell")
+    quantum_circuit.h(quantum_register[0])
+    quantum_circuit.cx(quantum_register[0], quantum_register[1])
+    quantum_circuit.measure(quantum_register, classical_register)
+
+    return quantum_circuit

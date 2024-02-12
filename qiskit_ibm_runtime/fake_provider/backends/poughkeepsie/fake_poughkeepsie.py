@@ -23,7 +23,7 @@ from qiskit.providers.models import (
     BackendProperties,
 )
 from qiskit.providers.fake_provider.fake_backend import FakeBackend
-from qiskit.providers.fake_provider import fake_backend
+from qiskit_ibm_runtime.fake_provider import fake_backend
 
 
 class FakePoughkeepsieV2(fake_backend.FakeBackendV2):

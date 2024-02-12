@@ -19,15 +19,15 @@ import copy
 from qiskit.transpiler.target import Target
 from qiskit import QuantumCircuit
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
-from qiskit.test.reference_circuits import ReferenceCircuits
 
-from qiskit_ibm_provider.ibm_qubit_properties import IBMQubitProperties
-from qiskit_ibm_provider.exceptions import IBMBackendValueError
+from qiskit_ibm_runtime.ibm_qubit_properties import IBMQubitProperties
+from qiskit_ibm_runtime.exceptions import IBMBackendValueError
 
 from qiskit_ibm_runtime import QiskitRuntimeService
 
 from ..ibm_test_case import IBMIntegrationTestCase
 from ..decorators import run_integration_test, production_only, quantum_only
+from ..utils import bell
 
 
 class TestIntegrationBackend(IBMIntegrationTestCase):
@@ -44,6 +44,26 @@ class TestIntegrationBackend(IBMIntegrationTestCase):
             len(set(backend_names)),
             f"backend_names={backend_names}",
         )
+
+    @run_integration_test
+    @quantum_only
+    def test_backend_wrong_instance(self, service):
+        """Test getting a backend with wrong instance."""
+        hgps = list(service._hgps.keys())
+        if len(hgps) < 2:
+            raise SkipTest("Skipping test, not enough instances")
+
+        hgp_1 = hgps[0]
+        hgp_2 = hgps[1]
+        hgp_1_backends = [backend.name for backend in service.backends(instance=hgp_1)]
+        hgp_2_backends = [backend.name for backend in service.backends(instance=hgp_2)]
+        unique_backends_list = list(
+            set(hgp_2_backends) - set(hgp_1_backends)
+        )  # get differences between the two lists
+        if unique_backends_list:
+            unique_backend = unique_backends_list[0]
+            with self.assertRaises(QiskitBackendNotFoundError):
+                service.backend(unique_backend, instance=hgp_1)
 
     @run_integration_test
     @quantum_only
@@ -223,7 +243,7 @@ class TestIBMBackend(IBMIntegrationTestCase):
         backend = self.service.backend("ibmq_qasm_simulator")
         backend.options.shots = 2048
         backend.set_options(memory=True)
-        inputs = backend.run(ReferenceCircuits.bell(), shots=1, foo="foo").inputs
+        inputs = backend.run(bell(), shots=1, foo="foo").inputs
         self.assertEqual(inputs["shots"], 1)
         self.assertTrue(inputs["memory"])
         self.assertEqual(inputs["foo"], "foo")
@@ -236,7 +256,7 @@ class TestIBMBackend(IBMIntegrationTestCase):
         paused_status.status_msg = "internal"
         backend.status = mock.MagicMock(return_value=paused_status)
         with self.assertWarns(Warning):
-            backend.run(ReferenceCircuits.bell())
+            backend.run(bell())
 
     def test_backend_wrong_instance(self):
         """Test that an error is raised when retrieving a backend not in the instance."""

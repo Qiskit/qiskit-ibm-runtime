@@ -22,7 +22,7 @@ from typing import Optional, Dict, Any, List
 
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 
-from qiskit_ibm_provider.utils.hgp import from_instance_format
+from qiskit_ibm_runtime.utils.hgp import from_instance_format
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
 from qiskit_ibm_runtime.utils import RuntimeEncoder
 
@@ -344,7 +344,7 @@ class BaseFakeRuntimeClient:
         self._jobs[job_id] = job
         return {"id": job_id, "backend": backend_name}
 
-    def job_get(self, job_id: str, exclude_params: bool = None) -> Any:
+    def job_get(self, job_id: str, exclude_params: bool = True) -> Any:
         """Get the specific job."""
         return self._get_job(job_id, exclude_params).to_dict()
 
