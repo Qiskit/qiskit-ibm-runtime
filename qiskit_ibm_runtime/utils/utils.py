@@ -20,9 +20,8 @@ import hashlib
 import warnings
 from queue import Queue
 from threading import Condition
-from typing import List, Optional, Any, Dict, Union, Tuple
+from typing import List, Optional, Any, Dict, Union, Tuple, Sequence
 from urllib.parse import urlparse
-from collections.abc import Sequence
 
 import requests
 from ibm_cloud_sdk_core.authenticators import (  # pylint: disable=import-error
