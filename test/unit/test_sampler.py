@@ -75,12 +75,17 @@ class TestSamplerV2(IBMTestCase):
         self.assertIn("pubs", input_params)
         pubs_param = input_params["pubs"]
         for a_pub_param, an_in_taks in zip(pubs_param, in_pubs):
+            self.assertIsInstance(a_pub_param, tuple)
+            self.assertTrue(len(a_pub_param), 3)
             self.assertIsInstance(a_pub_param, SamplerPub)
+            pub_circ, pub_params, pub_shots = a_pub_param
+            # Check shots
+            self.assertTrue(isinstance(pub_shots, int) or pub_shots is None)
             # Check circuit
-            self.assertEqual(a_pub_param.circuit, an_in_taks[0])
+            self.assertEqual(pub_circ, an_in_taks[0])
             # Check parameter values
             an_input_params = an_in_taks[1] if len(an_in_taks) == 2 else []
-            np.allclose(a_pub_param.parameter_values.vals, an_input_params)
+            np.allclose(pub_params, an_input_params)
 
     @data(
         {"optimization_level": 4}, {"resilience_level": 1}, {"resilience": {"zne_mitigation": True}}
