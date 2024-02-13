@@ -79,21 +79,16 @@ class TestEstimatorV2(IBMTestCase):
         self.assertIn("pubs", input_params)
         pubs_param = input_params["pubs"]
         for a_pub_param, an_in_taks in zip(pubs_param, in_pubs):
-            self.assertIsInstance(a_pub_param, tuple)
-            self.assertTrue(len(a_pub_param), 4)
-            pub_circ, pub_obs, pub_params, _ = a_pub_param
+            self.assertIsInstance(a_pub_param, EstimatorPub)
             # Check circuit
-            self.assertEqual(pub_circ, an_in_taks[0])
+            self.assertEqual(a_pub_param.circuit, an_in_taks[0])
             # Check observables
-            for a_pub_obs, an_input_obs in zip(pub_obs, an_in_taks[1]):
-                self.assertIsInstance(a_pub_obs, dict)
-                self.assertEqual(len(a_pub_obs), 1)
+            a_pub_obs = a_pub_param.observables.tolist()
+            for a_pub_obs, an_input_obs in zip(a_pub_param.observables.tolist(), an_in_taks[1]):
                 self.assertEqual(list(a_pub_obs.keys())[0], an_input_obs)
-                self.assertEqual(list(a_pub_obs.values())[0], 1)
-
             # Check parameter values
             an_input_params = an_in_taks[2] if len(an_in_taks) == 3 else []
-            a_pub_param_values = pub_params.tolist()
+            a_pub_param_values = list(a_pub_param.parameter_values.data.values())
             np.allclose(a_pub_param_values, an_input_params)
 
     def test_unsupported_values_for_estimator_options(self):
