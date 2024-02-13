@@ -8,7 +8,7 @@ Most importantly: *do not* change any interface that is public-facing unless we
 absolutely have to.  Adding things is ok, taking things away is annoying for
 users but can be handled reasonably with plenty notice, but changing behavior
 generally means users cannot write code that will work with two subsequent
-versions of Qiskit, which is not acceptable.
+versions of qiskit-ibm-runtime, which is not acceptable.
 
 Beware that users will often be using functions, classes and methods that we,
 the Qiskit developers, may consider internal or not widely used.  Do not make
@@ -36,28 +36,21 @@ The guiding principles are:
 When removing a feature (for example a class, function or function parameter),
 we will follow this procedure:
 
-- The alternative path must be in place for one minor version before any
-  warnings are issued.  For example, if we want to replace the function `foo()`
-  with `bar()`, we must make at least one release with both functions before
-  issuing any warnings within `foo()`.  You may issue
-  `PendingDeprecationWarning`s from the old paths immediately.
-
-   *Reason*: we need to give people time to swap over without breaking their
-   code as soon as they upgrade.
-
-- After the alternative path has been in place for at least one minor version,
-  [issue the deprecation warnings](#issuing-deprecation-warnings).  Add a
+- A deprecation warning must be issued prior to any removal. The warning
+  must indicate what the alternative path is, and the alternative path
+  must be in place when the warning is issued. When a feature is
+  deprecated, add a
   release note with a `deprecations` section listing all deprecated paths,
   their alternatives, and the reason for deprecation.  [Update the tests to test the warnings](#testing-deprecated-functionality).
 
-   *Reason*: removals must be highly visible for at least one version, to
-   minimize the surprise to users when they actually go.
+   *Reason*: we need to give people time to swap over without breaking their
+   code as soon as they upgrade.
 
 - Set a removal date for the old feature, and remove it (and the warnings) when
   reached.  This must be at least three months after the version with the
   warnings was first released, and cannot be the minor version immediately
   after the warnings.  Add an `upgrade` release note that lists all the
-  removals.  For example, if the alternative path was provided in `0.19.0`
+  removals.  For example, if the alternative path was provided
   and the warnings were added in `0.20.0`, the earliest version for removal
   is `0.22.0`, even if `0.21.0` was released more than three months after
   `0.20.0`.
@@ -66,7 +59,7 @@ we will follow this procedure:
   users at least an extra minor version if not longer.**
 
   *Reason*: there needs to be time for users to see these messages, and to give
-  them time to adjust.  Not all users will update their version of Qiskit
+  them time to adjust.  Not all users will update their version of qiskit-ibm-runtime
   immediately, and some may skip minor versions.
 
 When a feature is marked as deprecated it is slated for removal, but users
@@ -82,7 +75,7 @@ Changing behavior without a removal is particularly difficult to manage, because
 we need to have both options available for two versions, and be able to issue
 warnings.  For example, changing the type of the return value from a function
 will almost invariably involve making an API break, which is frustrating for
-users and makes it difficult for them to use Qiskit.
+users and makes it difficult for them to use this package.
 
 The best solution here is often to make a new function, and then use [the procedures for removal](#removing-features) above.
 
@@ -112,32 +105,16 @@ change:
 
 ## Issuing deprecation warnings
 
-The proper way to raise a deprecation warning is to use the decorators `@deprecate_arg` and
-`@deprecate_func` from `qiskit.utils.deprecation`. These will generate a standardized message and
-and add the deprecation to that function's docstring so that it shows up in the docs.
+The proper way to raise a deprecation warning is to use the `@deprecate_function` decorator, and
+the `deprecate_arguments` and `issue_deprecation_msg` functions
+from `qiskit_ibm_runtime.utils.deprecation`.
+These will generate a standardized message and ensure an alternative path is specified.
 
-
-```python
-from qiskit.utils.deprecation import deprecate_arg, deprecate_func
-
-@deprecate_func(since="0.24.0", additional_msg="No replacement is provided.")
-def deprecated_func():
-    pass
-
-@deprecate_arg("bad_arg", new_alias="new_name", since="0.24.0")
-def another_func(bad_arg: str, new_name: str):
-    pass
-```
-
-Usually, you should set `additional_msg: str` with the format `"Instead, use ..."` so that
+Usually, you should set `remedy: str` with the format `"Instead, use ..."` so that
 people know how to migrate. Read those functions' docstrings for additional arguments like
-`pending: bool` and `predicate`.
+`version: str`.
 
-If you are deprecating outside the main Qiskit repo, set `package_name` to match your package.
-Alternatively, if you prefer to use your own decorator helpers, then have them call
-`add_deprecation_to_docstring` from `qiskit.utils.deprecation`.
-
-If `@deprecate_func` and `@deprecate_arg` cannot handle your use case, consider improving
+If the functions in `qiskit_ibm_runtime.utils.deprecation` cannot handle your use case, consider improving
 them. Otherwise, you can directly call the `warn` function
 from the [warnings module in the Python standard library](https://docs.python.org/3/library/warnings.html),
 using the category `DeprecationWarning`.  For example:
@@ -148,7 +125,7 @@ import warnings
 def deprecated_function():
    warnings.warn(
       "The function qiskit.deprecated_function() is deprecated since "
-      "Qiskit 0.44.0, and will be removed 3 months or more later. "
+      "qiskit-ibm-runtime 0.14.0, and will be removed 3 months or more later. "
       "Instead, you should use qiskit.other_function().",
       category=DeprecationWarning,
       stacklevel=2,
@@ -162,8 +139,8 @@ warning (so maintainers can easily see when it is valid to remove it), and what
 the alternative path is.
 
 Take note of the `stacklevel` argument.  This controls which function is
-accused of being deprecated.  Setting `stacklevel=1` (the default) means the
-warning will blame the `warn` function itself, while `stacklevel=2` will
+accused of being deprecated.  Setting `stacklevel=1` means the
+warning will blame the `warn` function itself, while `stacklevel=2` (the default) will
 correctly blame the containing function.  It is unusual to set this to anything
 other than `2`, but can be useful if you use a helper function to issue the
 same warning in multiple places.
@@ -194,10 +171,10 @@ class MyTestSuite(QiskitTestCase):
 
 It is important to warn the user when your breaking changes are coming.
 
-`@deprecate_arg` and `@deprecate_func` will automatically add the deprecation to the docstring
-for the function so that it shows up in docs.
+Make sure to update the docstring of the function, so that it shows up in
+API reference.
 
-If you are not using those decorators, you should directly add a [Sphinx deprecated directive](https://www.sphinx-doc.org/en/master/usage/restructuredtext/directives.html#directive-deprecated):
+You can add a [Sphinx deprecated directive](https://www.sphinx-doc.org/en/master/usage/restructuredtext/directives.html#directive-deprecated):
 
 
 ```python
@@ -205,10 +182,10 @@ def deprecated_function():
     """
     Short description of the deprecated function.
 
-    .. deprecated:: 0.44.0
-       The function qiskit.deprecated_function() is deprecated since
-       Qiskit 0.44.0, and will be removed 3 months or more later.
-       Instead, you should use qiskit.other_function().
+    .. deprecated:: 0.14.0
+       The function qiskit_ibm_runtime.deprecated_function() is deprecated since
+       qiskit_ibm_runtime 0.14.0, and will be removed 3 months or more later.
+       Instead, you should use qiskit_ibm_runtime.other_function().
 
     <rest of the docstring>
     """
@@ -223,5 +200,4 @@ In particular situations where a deprecation or change might be a major disrupto
 *migration guide* might be needed. Please write these guides in Qiskit's documentation at
 https://github.com/Qiskit/documentation/tree/main/docs/api/migration-guides. Once
 the migration guide is written and published, deprecation
-messages and documentation should link to it (use the `additional_msg` argument for
-`@deprecate_arg` and `@deprecate_func`).
+messages and documentation should link to it.
