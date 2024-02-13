@@ -294,20 +294,18 @@ class RuntimeEncoder(json.JSONEncoder):
             }
             return {"__type__": "DataBin", "__value__": out_val}
         if isinstance(obj, EstimatorPub):
-            out_val = {
-                "circuit": obj.circuit,
-                "observables": obj.observables,
-                "parameter_values": obj.parameter_values,
-                "precision": obj.precision,
-            }
-            return {"__type__": "EstimatorPub", "__value__": out_val}
+            return (
+                obj.circuit,
+                np.asarray(obj.observables, dtype=object),
+                obj.parameter_values.as_array(obj.circuit.parameters),
+                obj.precision,
+            )
         if isinstance(obj, SamplerPub):
-            out_val = {
-                "circuit": obj.circuit,
-                "parameter_values": obj.parameter_values,
-                "shots": obj.shots,
-            }
-            return {"__type__": "SamplerPub", "__value__": out_val}
+            return (
+                obj.circuit,
+                obj.parameter_values.as_array(obj.circuit.parameters),
+                obj.shots,
+            )
         if isinstance(obj, PubResult):
             out_val = {"data": obj.data, "metadata": obj.metadata}
             return {"__type__": "PubResult", "__value__": out_val}
@@ -413,10 +411,6 @@ class RuntimeDecoder(json.JSONDecoder):
                     shape = tuple(shape)
                 data_bin_cls = make_data_bin(zip(field_names, field_types), shape=shape)
                 return data_bin_cls(**obj_val["values"])
-            if obj_type == "EstimatorPub":
-                return EstimatorPub(**obj_val)
-            if obj_type == "SamplerPub":
-                return SamplerPub(**obj_val)
             if obj_type == "PubResult":
                 return PubResult(**obj_val)
             if obj_type == "PrimitiveResult":
