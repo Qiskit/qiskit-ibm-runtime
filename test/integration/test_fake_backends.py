@@ -164,3 +164,8 @@ class TestFakeBackends(IBMTestCase):
         self.assertIsInstance(backend.target.operation_from_name("cz"), CZGate)
         backend = FakeSherbrooke()
         self.assertIsInstance(backend.target.operation_from_name("ecr"), ECRGate)
+
+    def test_retrieving_single_backend(self):
+        backend_name = "fake_jakarta"
+        backend = FAKE_PROVIDER_FOR_BACKEND_V2.backend(backend_name)
+        self.assertEqual(backend.name, backend_name)
