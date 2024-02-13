@@ -109,7 +109,6 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
             Submitted job.
 
         """
-        # Coerce pubs to validate input pub-like arguments
         coerced_pubs = [SamplerPub.coerce(pub, shots) for pub in pubs]
 
         if any(len(pub.circuit.cregs) == 0 for pub in coerced_pubs):
@@ -118,12 +117,8 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
                 "will be empty. Did you mean to add measurement instructions?",
                 UserWarning,
             )
-        # Unpack pubs back to Pub-like tuples for serialization
-        unpacked_pubs = [
-            (pub.circuit, pub.parameter_values.as_array(pub.circuit.parameters), pub.shots)
-            for pub in coerced_pubs
-        ]
-        return self._run(unpacked_pubs)  # type: ignore[arg-type]
+
+        return self._run(coerced_pubs)  # type: ignore[arg-type]
 
     def _validate_options(self, options: dict) -> None:
         """Validate that program inputs (options) are valid
