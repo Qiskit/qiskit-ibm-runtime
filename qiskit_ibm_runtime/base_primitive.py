@@ -29,6 +29,7 @@ from .options.utils import set_default_error_levels
 from .runtime_job import RuntimeJob
 from .ibm_backend import IBMBackend
 from .utils.default_session import get_cm_session
+from .utils.utils import validate_isa_circuits
 from .constants import DEFAULT_DECODERS
 from .qiskit_runtime_service import QiskitRuntimeService
 
@@ -137,6 +138,9 @@ class BasePrimitive(ABC):
         Returns:
             Submitted job.
         """
+        if self._backend and hasattr(self._backend, "target"):
+            validate_isa_circuits(primitive_inputs["circuits"], self._backend.target)
+
         combined = Options._merge_options(self._options, user_kwargs)
 
         if self._backend:
