@@ -70,6 +70,7 @@ class PadDelay(BlockBasePadder):
         t_end: int,
         next_node: DAGNode,
         prev_node: DAGNode,
+        enable_dd: bool = False,
     ) -> None:
         if not self.fill_very_end and isinstance(next_node, DAGOutNode):
             return

@@ -1,0 +1,8 @@
+---
+fixes:
+  - |
+    Fixed an issue with the :func:`.qpy.dump` function, when the
+    ``use_symengine`` flag was set to a truthy object that evaluated to
+    ``True`` but was not actually the boolean ``True`` the generated QPY
+    payload would be corrupt.
+
