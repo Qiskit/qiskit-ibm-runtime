@@ -136,7 +136,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
 
         if self._backend and options_dict["transpilation"]["skip_transpilation"]:
             for pub in pubs:
-                self._backend.check_faulty(pub.circuit)
+                self._backend.check_faulty(pub[0])
 
         logger.info("Submitting job using options %s", options_dict)
 

@@ -17,6 +17,7 @@ import os
 from typing import Optional, Dict, Sequence, Any, Union, Iterable
 import logging
 
+import numpy as np
 from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info.operators.base_operator import BaseOperator
 from qiskit.quantum_info.operators import SparsePauliOp
@@ -146,8 +147,19 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
             Submitted job.
 
         """
+        # Coerce pubs to validate input pub-like arguments
         coerced_pubs = [EstimatorPub.coerce(pub, precision) for pub in pubs]
-        return self._run(coerced_pubs)  # type: ignore[arg-type]
+        # Unpack pubs back to Pub-like tuples for serialization
+        unpacked = [
+            (
+                pub.circuit,
+                np.asarray(pub.observables),
+                pub.parameter_values.as_array(pub.circuit.parameters),
+                pub.precision,
+            )
+            for pub in coerced_pubs
+        ]
+        return self._run(unpacked)  # type: ignore[arg-type]
 
     def _validate_options(self, options: dict) -> None:
         """Validate that program inputs (options) are valid
