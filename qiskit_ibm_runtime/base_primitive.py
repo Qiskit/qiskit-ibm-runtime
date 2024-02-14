@@ -134,7 +134,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
         primitive_inputs.update(self._options_class._get_program_inputs(options_dict))
         runtime_options = self._options_class._get_runtime_options(options_dict)
 
-        if self._backend and options_dict["transpilation"]["skip_transpilation"]:
+        if self._backend:
             for pub in pubs:
                 self._backend.check_faulty(pub.circuit)
 

@@ -277,7 +277,7 @@ def create_faulty_backend(
     return out_backend
 
 
-def get_mocked_backend(name: str = "ibm_gotham") -> Any:
+def get_mocked_backend(name: str = "ibm_gotham") -> IBMBackend:
     """Return a mock backend."""
     mock_backend = mock.MagicMock(spec=IBMBackend)
     mock_backend.name = name
@@ -285,6 +285,7 @@ def get_mocked_backend(name: str = "ibm_gotham") -> Any:
 
     mock_service = mock.MagicMock()
     mock_backend.service = mock_service
+    mock_backend.properties = lambda: None
 
     return mock_backend
 

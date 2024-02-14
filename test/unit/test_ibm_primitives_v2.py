@@ -74,10 +74,9 @@ class TestPrimitivesV2(IBMTestCase):
             {},
             {
                 "max_execution_time": 100,
-                "transpilation": {"optimization_level": 1},
                 "execution": {"shots": 100, "init_qubits": True},
             },
-            {"transpilation": {}},
+            {"optimization_level": 1},
         ]
         for options in options_vars:
             inst = primitive(session=MagicMock(spec=MockSession), options=options)
@@ -165,12 +164,8 @@ class TestPrimitivesV2(IBMTestCase):
     @data(EstimatorV2)
     def test_init_with_backend_instance(self, primitive):
         """Test initializing a primitive with a backend instance."""
-        service = MagicMock()
-        model_backend = FakeManila()
-        backend = IBMBackend(
-            configuration=model_backend.configuration(), service=service, api_client=MagicMock()
-        )
-        backend.name = "ibm_gotham"
+        backend = get_mocked_backend()
+        service = backend.service
 
         service.reset_mock()
         inst = primitive(backend=backend)
@@ -234,14 +229,8 @@ class TestPrimitivesV2(IBMTestCase):
     def test_default_session_cm_new_backend(self, primitive):
         """Test using a different backend within context manager."""
         cm_backend = "ibm_metropolis"
-        model_backend = FakeManila()
-        service = MagicMock()
-        backend = IBMBackend(
-            configuration=model_backend.configuration(),
-            service=service,
-            api_client=MagicMock(),
-        )
-        backend.name = "ibm_gotham"
+        backend = get_mocked_backend()
+        service = backend.service
 
         with Session(service=service, backend=cm_backend):
             inst = primitive(backend=backend)
@@ -254,13 +243,8 @@ class TestPrimitivesV2(IBMTestCase):
     @data(EstimatorV2)
     def test_no_session(self, primitive):
         """Test running without session."""
-        model_backend = FakeManila()
-        service = MagicMock()
-        backend = IBMBackend(
-            configuration=model_backend.configuration(),
-            service=service,
-            api_client=MagicMock(),
-        )
+        backend = get_mocked_backend()
+        service = backend.service
         inst = primitive(backend)
         inst.run(**get_primitive_inputs(inst))
         self.assertIsNone(inst.session)
@@ -363,10 +347,6 @@ class TestPrimitivesV2(IBMTestCase):
                 {"optimization_level": 1},
                 {"transpilation": {"optimization_level": 1}},
             ),
-            (
-                {"skip_transpilation": True},
-                {"skip_transpilation": True},
-            ),
         ]
 
         for options, expected in options_vars:
@@ -431,7 +411,7 @@ class TestPrimitivesV2(IBMTestCase):
         inputs = session.run.call_args.kwargs["inputs"]
         for fld in ["pubs"]:
             inputs.pop(fld, None)
-        expected = {"skip_transpilation": False, "execution": {"init_qubits": True}, "version": 2}
+        expected = {"execution": {"init_qubits": True}, "version": 2}
         self.assertDictEqual(inputs, expected)
 
     @data(EstimatorV2)
@@ -467,7 +447,7 @@ class TestPrimitivesV2(IBMTestCase):
     def test_set_options(self, primitive, new_opts):
         """Test set options."""
         opt_cls = primitive._options_class
-        options = opt_cls(transpilation={"optimization_level": 1}, execution={"shots": 100})
+        options = opt_cls(optimization_level=1, execution={"shots": 100})
 
         session = MagicMock(spec=MockSession)
         inst = primitive(session=session, options=options)
@@ -493,17 +473,16 @@ class TestPrimitivesV2(IBMTestCase):
             {},
             {"shots": 10},
             {"seed_simulator": 123},
-            {"skip_transpilation": True, "log_level": "ERROR"},
+            {"log_level": "ERROR"},
             {"shots": 100, "optimization_level": 1},
         ]
 
         expected_list = [opt_cls() for _ in range(len(options_dicts))]
         expected_list[1].execution.shots = 10
         expected_list[2].simulator.seed_simulator = 123
-        expected_list[3].transpilation.skip_transpilation = True
         expected_list[3].environment.log_level = "ERROR"
         expected_list[4].execution.shots = 100
-        expected_list[4].transpilation.optimization_level = 1
+        expected_list[4].optimization_level = 1
 
         session = MagicMock(spec=MockSession)
         for opts, expected in zip(options_dicts, expected_list):
@@ -592,7 +571,7 @@ class TestPrimitivesV2(IBMTestCase):
         service.backend.return_value = ibm_backend
         session = Session(service=service, backend=fake_backend.name)
 
-        inst = primitive(session=session, options={"skip_transpilation": True})
+        inst = primitive(session=session)
 
         if isinstance(inst, IBMBaseEstimator):
             pub = (transpiled, observable)
@@ -624,7 +603,7 @@ class TestPrimitivesV2(IBMTestCase):
         service.backend.return_value = ibm_backend
         session = Session(service=service, backend=fake_backend.name)
 
-        inst = primitive(session=session, options={"skip_transpilation": True})
+        inst = primitive(session=session)
         if isinstance(inst, IBMBaseEstimator):
             pubs = [(transpiled[0], observable), (transpiled[1], observable)]
         else:
@@ -653,7 +632,7 @@ class TestPrimitivesV2(IBMTestCase):
         service.backend.return_value = ibm_backend
         session = Session(service=service, backend=fake_backend.name)
 
-        inst = primitive(session=session, options={"skip_transpilation": True})
+        inst = primitive(session=session)
         if isinstance(inst, IBMBaseEstimator):
             pub = (transpiled, observable)
         else:
@@ -682,7 +661,7 @@ class TestPrimitivesV2(IBMTestCase):
         service.backend.return_value = ibm_backend
         session = Session(service=service, backend=fake_backend.name)
 
-        inst = primitive(session=session, options={"skip_transpilation": True})
+        inst = primitive(session=session)
         if isinstance(inst, IBMBaseEstimator):
             pub = (transpiled, observable)
         else:
@@ -707,37 +686,6 @@ class TestPrimitivesV2(IBMTestCase):
 
         edge_qubits = coupling_map[-1]
         ibm_backend = create_faulty_backend(fake_backend, faulty_edge=("cx", edge_qubits))
-
-        service = MagicMock()
-        service.backend.return_value = ibm_backend
-        session = Session(service=service, backend=fake_backend.name)
-
-        inst = primitive(session=session, options={"skip_transpilation": True})
-        if isinstance(inst, IBMBaseEstimator):
-            pub = (transpiled, observable)
-        else:
-            transpiled.measure_all()
-            pub = (transpiled,)
-
-        with patch.object(Session, "run") as mock_run:
-            inst.run([pub])
-        mock_run.assert_called_once()
-
-    @data(EstimatorV2)
-    def test_no_raise_skip_transpilation(self, primitive):
-        """Test faulty qubits and edges are not raise if not skipping."""
-        fake_backend = FakeManila()
-        num_qubits = fake_backend.configuration().num_qubits
-        circ = QuantumCircuit(num_qubits, num_qubits)
-        for i in range(num_qubits - 2):
-            circ.cx(i, i + 1)
-        transpiled = transpile(circ, backend=fake_backend)
-        observable = SparsePauliOp("Z" * num_qubits)
-
-        edge_qubits = [0, 1]
-        ibm_backend = create_faulty_backend(
-            fake_backend, faulty_qubit=0, faulty_edge=("cx", edge_qubits)
-        )
 
         service = MagicMock()
         service.backend.return_value = ibm_backend

@@ -124,18 +124,15 @@ class OptionsV2(BaseOptions):
         options_copy = copy.deepcopy(options)
         sim_options = options_copy.get("simulator", {})
         inputs = {}
-        inputs["transpilation"] = options_copy.get("transpilation", {})
-        inputs["skip_transpilation"] = inputs["transpilation"].pop("skip_transpilation")
         coupling_map = sim_options.get("coupling_map", Unset)
         # TODO: We can just move this to json encoder
         if isinstance(coupling_map, CouplingMap):
             coupling_map = list(map(list, coupling_map.get_edges()))
-        inputs["transpilation"].update(
-            {
+        inputs["transpilation"] = {
+                "optimization_level": options_copy.get("optimization_level", Unset),
                 "coupling_map": coupling_map,
                 "basis_gates": sim_options.get("basis_gates", Unset),
             }
-        )
 
         for fld in [
             "resilience_level",
@@ -232,7 +229,7 @@ class Options(BaseOptions):
 
     # Defaults for optimization_level and for resilience_level will be assigned
     # in Sampler/Estimator
-    _DEFAULT_OPTIMIZATION_LEVEL = 3
+    _DEFAULT_OPTIMIZATION_LEVEL = 1
     _DEFAULT_RESILIENCE_LEVEL = 1
     _MAX_OPTIMIZATION_LEVEL = 3
     _MAX_RESILIENCE_LEVEL_ESTIMATOR = 3
