@@ -30,7 +30,7 @@ class Batch(Session):
     ):
         super().__init__(service=service, backend=backend, max_time=max_time)
 
-    def create_session(self) -> None:
+    def _create_session(self) -> str:
         """Create a session."""
         session = self._service._api_client.create_session(mode="batch")
         return session.get("id")

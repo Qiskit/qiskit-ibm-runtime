@@ -112,7 +112,7 @@ class Session:
         else:
             self._service = service
 
-        self._session_id = self.create_session()
+        self._session_id = self._create_session()
 
         if self._service.channel == "ibm_quantum" and not backend:
             raise ValueError('"backend" is required for ``ibm_quantum`` channel.')
@@ -130,7 +130,7 @@ class Session:
             else hms_to_seconds(max_time, "Invalid max_time value: ")
         )
 
-    def create_session(self) -> str:
+    def _create_session(self) -> str:
         """Create a session."""
         session = self._service._api_client.create_session()
         return session.get("id")
