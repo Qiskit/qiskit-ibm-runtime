@@ -19,7 +19,7 @@ underscore (`_`).
 
 The guiding principles are:
 
-- we must not remove or change code without active warnings for least three
+- we must not remove or change code without active warnings for at least three
   months or two complete version cycles;
 
 - there must always be a way to achieve valid goals that does not issue any
