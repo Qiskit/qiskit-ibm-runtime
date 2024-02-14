@@ -498,8 +498,10 @@ class TestContainerSerialization(IBMTestCase):
             payload = {"pub": pub}
             encoded = json.dumps(payload, cls=RuntimeEncoder)
             decoded = json.loads(encoded, cls=RuntimeDecoder)["pub"]
-            self.assertIsInstance(decoded, EstimatorPub)
-            self.assert_estimator_pubs_equal(pub, decoded)
+            self.assertIsInstance(decoded, (list, tuple))
+            self.assertEqual(len(decoded), 4)
+            decoded_pub = EstimatorPub.coerce(decoded)
+            self.assert_estimator_pubs_equal(pub, decoded_pub)
 
     def test_sampler_pub(self):
         """Test encoding and decoding SamplerPub"""
@@ -507,8 +509,10 @@ class TestContainerSerialization(IBMTestCase):
             payload = {"pub": pub}
             encoded = json.dumps(payload, cls=RuntimeEncoder)
             decoded = json.loads(encoded, cls=RuntimeDecoder)["pub"]
-            self.assertIsInstance(decoded, SamplerPub)
-            self.assert_sampler_pubs_equal(pub, decoded)
+            self.assertIsInstance(decoded, (list, tuple))
+            self.assertEqual(len(decoded), 3)
+            decoded_pub = SamplerPub.coerce(decoded)
+            self.assert_sampler_pubs_equal(pub, decoded_pub)
 
     def test_pub_result(self):
         """Test encoding and decoding PubResult"""
