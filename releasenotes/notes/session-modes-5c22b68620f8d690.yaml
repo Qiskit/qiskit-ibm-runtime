@@ -1,0 +1,10 @@
+---
+features:
+  - |
+    Sessions will now be started with a new ``/sessions`` endpoint that allows for different 
+    execution modes. Batch mode is now supported through :class:`~qiskit_ibm_runtime.Batch`, and 
+    :class:`~qiskit_ibm_runtime.Session` will work the same as way as before. 
+    Please see https://docs.quantum.ibm.com/run/sessions for more information.
+
+    Note that starting a session using the ``/jobs`` endpoint will no longer be 
+    supported after March 31, 2024. Please update your code as soon as possible before this date. 
