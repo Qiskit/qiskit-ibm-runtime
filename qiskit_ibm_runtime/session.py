@@ -165,7 +165,7 @@ class Session:
 
         options["backend"] = self._backend
 
-        if not self._session_id:
+        if self._max_time:
             # TODO: What happens if session max time != first job max time?
             # Use session max time if this is first job.
             options["session_time"] = self._max_time

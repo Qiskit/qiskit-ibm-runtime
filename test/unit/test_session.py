@@ -29,7 +29,7 @@ class TestSession(IBMTestCase):
         super().tearDown()
         _DEFAULT_SESSION.set(None)
 
-    @patch("qiskit_ibm_runtime.session.QiskitRuntimeService", autospec=True)
+    @patch("qiskit_ibm_runtime.session.QiskitRuntimeService")
     def test_default_service(self, mock_service):
         """Test using default service."""
         mock_service.global_service = None
@@ -103,35 +103,21 @@ class TestSession(IBMTestCase):
         decoder = MagicMock()
         max_time = 42
         session = Session(service=service, backend=backend, max_time=max_time)
-        session_ids = [None, job.job_id()]
-        start_sessions = [True, False]
 
-        for idx in range(2):
-            session.run(
-                program_id=program_id,
-                inputs=inputs,
-                options=options,
-                result_decoder=decoder,
-            )
-            _, kwargs = service.run.call_args
-            self.assertEqual(kwargs["program_id"], program_id)
-            self.assertDictEqual(kwargs["options"], {"backend": backend, **options})
-            self.assertTrue({"session_time": 42}.items() <= kwargs["options"].items())
-            self.assertDictEqual(kwargs["inputs"], inputs)
-            self.assertEqual(kwargs["session_id"], session_ids[idx])
-            self.assertEqual(kwargs["start_session"], start_sessions[idx])
-            self.assertEqual(kwargs["result_decoder"], decoder)
-            self.assertEqual(session.session_id, job.job_id())
-            self.assertEqual(session.backend(), backend)
-
-    def test_close_without_run(self):
-        """Test closing without run."""
-        service = MagicMock()
-        api = MagicMock()
-        service._api_client = api
-        session = Session(service=service, backend="ibm_gotham")
-        session.close()
-        api.close_session.assert_not_called()
+        session.run(
+            program_id=program_id,
+            inputs=inputs,
+            options=options,
+            result_decoder=decoder,
+        )
+        _, kwargs = service.run.call_args
+        self.assertEqual(kwargs["program_id"], program_id)
+        self.assertDictEqual(kwargs["options"], {"backend": backend, **options})
+        self.assertTrue({"session_time": 42}.items() <= kwargs["options"].items())
+        self.assertDictEqual(kwargs["inputs"], inputs)
+        self.assertEqual(kwargs["result_decoder"], decoder)
+        self.assertEqual(session.backend(), backend)
+        self.assertEqual(kwargs["session_id"], session._session_id)
 
     def test_context_manager(self):
         """Test session as a context manager."""

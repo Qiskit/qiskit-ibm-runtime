@@ -285,6 +285,14 @@ class BaseFakeRuntimeClient:
             classes = [classes]
         self._job_classes = classes
 
+    def create_session(self) -> Dict[str, Any]:
+        """Create a session."""
+        return {"id": uuid.uuid4().hex}
+
+    def close_session(self, session_id: str) -> None:
+        """Close a session."""
+        pass
+
     def is_qctrl_enabled(self):
         """Return whether or not channel_strategy q-ctrl is enabled."""
         return False

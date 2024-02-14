@@ -21,16 +21,15 @@ from ..ibm_test_case import IBMTestCase
 
 
 class TestBatch(IBMTestCase):
-    """Class for testing the Session class."""
+    """Class for testing the Batch class."""
 
     def tearDown(self) -> None:
         super().tearDown()
         _DEFAULT_SESSION.set(None)
 
-    @patch("qiskit_ibm_runtime.session.QiskitRuntimeService", autospec=True)
+    @patch("qiskit_ibm_runtime.batch.QiskitRuntimeService", autospec=True)
     def test_default_batch(self, mock_service):
         """Test using default batch mode."""
         mock_service.global_service = None
         batch = Batch(backend="ibm_gotham")
         self.assertIsNotNone(batch.service)
-        mock_service.assert_called_once()
