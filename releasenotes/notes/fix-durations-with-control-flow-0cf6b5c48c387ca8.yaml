@@ -1,0 +1,10 @@
+---
+fixes:
+  - |
+    Fix assignment of instruction durations when scheduling circuits with   
+    control flow. Prior to this fix, the indices for instructions on inner 
+    blocks were not mapped to the physical indices in the outer dag.
+other:
+  - |
+    The :class:`~InstructionDurations` `durations` input is now also required 
+    for the constructor of :class:`~PadDelay`. 
