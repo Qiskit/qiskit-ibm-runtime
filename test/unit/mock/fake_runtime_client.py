@@ -285,7 +285,8 @@ class BaseFakeRuntimeClient:
             classes = [classes]
         self._job_classes = classes
 
-    def create_session(self) -> Dict[str, Any]:
+    # pylint: disable=unused-argument
+    def create_session(self, mode: str = None) -> Dict[str, Any]:
         """Create a session."""
         return {"id": uuid.uuid4().hex}
 
