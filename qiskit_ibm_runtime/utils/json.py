@@ -296,7 +296,7 @@ class RuntimeEncoder(json.JSONEncoder):
         if isinstance(obj, EstimatorPub):
             return (
                 obj.circuit,
-                np.asarray(obj.observables, dtype=object),
+                obj.observables.tolist(),
                 obj.parameter_values.as_array(obj.circuit.parameters),
                 obj.precision,
             )
