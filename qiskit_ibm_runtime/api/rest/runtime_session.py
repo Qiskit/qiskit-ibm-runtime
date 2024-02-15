@@ -44,11 +44,6 @@ class RuntimeSession(RestAdapterBase):
         """Create a session"""
         url = self.get_url("self")
         payload = {"mode": mode}
-        # TODO figure out if mode is required or not
-        # if mode:
-        #     payload["mode"] = mode
-        # else:
-        #     payload["mode"] = "dedicated"
         if backend:
             payload["backend"] = backend
         if instance:
