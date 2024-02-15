@@ -1,0 +1,4 @@
+---
+upgrade:
+  - |
+    Modify ``skip_reset_qubits`` optional flag to the constructor for :class:`.PadDynamicalDecoupling`. If ``False``, dynamical decoupling is applied on qubits regardless of their state, even on delays that are at the beginning of a circuit. This option now matches the behavior in qiskit. 
