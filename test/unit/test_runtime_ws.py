@@ -15,7 +15,6 @@
 import time
 from unittest.mock import MagicMock
 
-from qiskit.providers.fake_provider import FakeQasmSimulator
 from qiskit.quantum_info import SparsePauliOp
 from qiskit_ibm_runtime import (
     RuntimeJob,
@@ -235,7 +234,6 @@ class TestRuntimeWebsocketClient(IBMTestCase):
         params = ClientParameters(
             channel="ibm_quantum", token="my_token", url=MockWsServer.VALID_WS_URL
         )
-        backend = backend or FakeQasmSimulator()
         job = RuntimeJob(
             backend=backend,
             api_client=BaseFakeRuntimeClient(),

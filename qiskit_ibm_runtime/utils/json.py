@@ -55,17 +55,15 @@ from qiskit.circuit import (
 from qiskit.circuit.parametertable import ParameterView
 from qiskit.result import Result
 from qiskit.version import __version__ as _terra_version_string
-from qiskit.qpy import load
 from qiskit.utils import optionals
-
-from ..qpy import (
-    _write_parameter,
+from qiskit.qpy import (
     _write_parameter_expression,
     _read_parameter_expression,
     _read_parameter_expression_v3,
-    _read_parameter,
+    load,
     dump,
 )
+from qiskit.qpy.binary_io.value import _write_parameter, _read_parameter
 
 _TERRA_VERSION = tuple(
     int(x) for x in re.match(r"\d+\.\d+\.\d", _terra_version_string).group(0).split(".")[:3]
@@ -217,10 +215,15 @@ class RuntimeEncoder(json.JSONEncoder):
         if hasattr(obj, "to_json"):
             return {"__type__": "to_json", "__value__": obj.to_json()}
         if isinstance(obj, QuantumCircuit):
+            kwargs: dict[str, object] = {"use_symengine": bool(optionals.HAS_SYMENGINE)}
+            if _TERRA_VERSION[0] >= 1:
+                # NOTE: This can be updated only after the server side has
+                # updated to a newer qiskit version.
+                kwargs["version"] = 10
             value = _serialize_and_encode(
                 data=obj,
                 serializer=lambda buff, data: dump(
-                    data, buff, RuntimeEncoder, use_symengine=optionals.HAS_SYMENGINE
+                    data, buff, RuntimeEncoder, **kwargs
                 ),  # type: ignore[no-untyped-call]
             )
             return {"__type__": "QuantumCircuit", "__value__": value}
@@ -236,18 +239,26 @@ class RuntimeEncoder(json.JSONEncoder):
                 data=obj,
                 serializer=_write_parameter_expression,
                 compress=False,
+                use_symengine=bool(optionals.HAS_SYMENGINE),
             )
             return {"__type__": "ParameterExpression", "__value__": value}
         if isinstance(obj, ParameterView):
             return obj.data
         if isinstance(obj, Instruction):
+            kwargs = {"use_symengine": bool(optionals.HAS_SYMENGINE)}
+            if _TERRA_VERSION[0] >= 1:
+                # NOTE: This can be updated only after the server side has
+                # updated to a newer qiskit version.
+                kwargs["version"] = 10
             # Append instruction to empty circuit
             quantum_register = QuantumRegister(obj.num_qubits)
             quantum_circuit = QuantumCircuit(quantum_register)
             quantum_circuit.append(obj, quantum_register)
             value = _serialize_and_encode(
                 data=quantum_circuit,
-                serializer=lambda buff, data: dump(data, buff),  # type: ignore[no-untyped-call]
+                serializer=lambda buff, data: dump(
+                    data, buff, **kwargs
+                ),  # type: ignore[no-untyped-call]
             )
             return {"__type__": "Instruction", "__value__": value}
         if HAS_AER and isinstance(obj, qiskit_aer.noise.NoiseModel):

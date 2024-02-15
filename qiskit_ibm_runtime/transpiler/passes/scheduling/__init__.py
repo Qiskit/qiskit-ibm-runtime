@@ -43,7 +43,6 @@ for a dynamic circuit backend's execution model:
     from qiskit_ibm_runtime.transpiler.passes.scheduling import PadDelay
     from qiskit_ibm_runtime.fake_provider import FakeJakarta
 
-
     backend = FakeJakarta()
 
     # Temporary workaround for mock backends. For real backends this is not required.
@@ -56,7 +55,7 @@ for a dynamic circuit backend's execution model:
     # Generate the main Qiskit transpile passes.
     pm = generate_preset_pass_manager(optimization_level=1, backend=backend)
     # Configure the as-late-as-possible scheduling pass
-    pm.scheduling = PassManager([ALAPScheduleAnalysis(durations), PadDelay()])
+    pm.scheduling = PassManager([ALAPScheduleAnalysis(durations), PadDelay(durations)])
 
     qr = QuantumRegister(3)
     crz = ClassicalRegister(1, name="crz")
@@ -163,7 +162,7 @@ prior to your scheduling pass.
           [
               ConvertConditionsToIfOps(),
               ALAPScheduleAnalysis(durations),
-              PadDelay(),
+              PadDelay(durations),
           ]
     )
 
