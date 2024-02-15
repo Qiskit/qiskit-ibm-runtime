@@ -12,7 +12,6 @@
 
 """Runtime Session REST adapter."""
 
-import json
 from typing import Dict, Any
 from .base import RestAdapterBase
 from ..session import RetrySession
@@ -41,11 +40,20 @@ class RuntimeSession(RestAdapterBase):
         else:
             super().__init__(session, "{}/sessions/{}".format(url_prefix, session_id))
 
-    def create(self, mode: str = None) -> Dict[str, Any]:
+    def create(self, backend: str = None, instance: str = None, mode: str = None) -> Dict[str, Any]:
         """Create a session"""
         url = self.get_url("self")
-        payload = json.dumps({"mode": mode})
-        return self.session.post(url, data=payload).json()
+        payload = {"mode": mode}
+        # TODO figure out if mode is required or not
+        # if mode:
+        #     payload["mode"] = mode
+        # else:
+        #     payload["mode"] = "dedicated"
+        if backend:
+            payload["backend"] = backend
+        if instance:
+            payload["instance"] = instance
+        return self.session.post(url, json=payload).json()
 
     def cancel(self) -> None:
         """Cancel all jobs in the session."""
