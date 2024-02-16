@@ -43,7 +43,9 @@ class RuntimeSession(RestAdapterBase):
     def create(self, backend: str = None, instance: str = None, mode: str = None) -> Dict[str, Any]:
         """Create a session"""
         url = self.get_url("self")
-        payload = {"mode": mode}
+        payload = {}
+        if mode:
+            payload["mode"] = mode
         if backend:
             payload["backend"] = backend
         if instance:

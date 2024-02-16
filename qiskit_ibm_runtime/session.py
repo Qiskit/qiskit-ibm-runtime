@@ -292,7 +292,7 @@ class Session:
         """Return the session ID.
 
         Returns:
-            Session ID. None until a job is submitted.
+            Session ID. None if the backend is a simulator.
         """
         return self._session_id
 
