@@ -118,12 +118,12 @@ class Session:
         self._instance = None
         if isinstance(backend, IBMBackend):
             self._instance = backend._instance
-            sim_backend = backend.simulator
+            sim_backend = backend.configuration().simulator
             backend = backend.name
         else:
             backend_obj = self._service.backend(backend)
             self._instance = backend_obj._instance
-            sim_backend = backend_obj.simulator
+            sim_backend = backend_obj.configuration().simulator
         self._backend = backend
 
         if not sim_backend:

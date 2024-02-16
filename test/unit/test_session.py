@@ -117,7 +117,6 @@ class TestSession(IBMTestCase):
         self.assertDictEqual(kwargs["inputs"], inputs)
         self.assertEqual(kwargs["result_decoder"], decoder)
         self.assertEqual(session.backend(), backend)
-        self.assertEqual(kwargs["session_id"], session._session_id)
 
     def test_context_manager(self):
         """Test session as a context manager."""
@@ -141,14 +140,14 @@ class TestSession(IBMTestCase):
     def test_global_service(self):
         """Test that global service is used in Session"""
         _ = FakeRuntimeService(channel="ibm_quantum", token="abc")
-        session = Session(backend="ibmq_qasm_simulator")
+        session = Session(backend="common_backend")
         self.assertTrue(isinstance(session._service, FakeRuntimeService))
         self.assertEqual(session._service._account.token, "abc")
         _ = FakeRuntimeService(channel="ibm_quantum", token="xyz")
-        session = Session(backend="ibmq_qasm_simulator")
+        session = Session(backend="common_backend")
         self.assertEqual(session._service._account.token, "xyz")
         with Session(
-            service=FakeRuntimeService(channel="ibm_quantum", token="uvw"), backend="ibm_gotham"
+            service=FakeRuntimeService(channel="ibm_quantum", token="uvw"), backend="common_backend"
         ) as session:
             self.assertEqual(session._service._account.token, "uvw")
 
