@@ -25,7 +25,7 @@ from qiskit.compiler import transpile, assemble
 from qiskit.qobj import QasmQobj
 from qiskit.providers.jobstatus import JOB_FINAL_STATES, JobStatus
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
-from qiskit.providers.models import BackendStatus, BackendProperties
+from qiskit.providers.models import BackendStatus, BackendProperties, BackendConfiguration
 from qiskit.providers.backend import Backend
 
 from qiskit_ibm_runtime.hub_group_project import HubGroupProject
@@ -276,7 +276,9 @@ def create_faulty_backend(
     return out_backend
 
 
-def get_mocked_backend(name: str = "ibm_gotham", configuration=None) -> IBMBackend:
+def get_mocked_backend(
+    name: str = "ibm_gotham", configuration: Optional[BackendConfiguration] = None
+) -> IBMBackend:
     """Return a mock backend."""
 
     def _noop(*args, **kwargs):  # pylint: disable=unused-argument
