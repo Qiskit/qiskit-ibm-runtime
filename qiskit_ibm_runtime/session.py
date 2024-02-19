@@ -188,7 +188,7 @@ class Session:
             options=options,
             inputs=inputs,
             session_id=self._session_id,
-            start_session=self._session_id is None,
+            start_session=False,
             callback=callback,
             result_decoder=result_decoder,
         )
@@ -288,7 +288,7 @@ class Session:
         return None
 
     @property
-    def session_id(self) -> str:
+    def session_id(self) -> Optional[str]:
         """Return the session ID.
 
         Returns:
