@@ -18,13 +18,15 @@ import os
 from unittest.mock import MagicMock, patch
 from dataclasses import asdict
 from typing import Dict
+import warnings
 
+from ddt import data, ddt
 from qiskit import transpile
 from qiskit.circuit import QuantumCircuit
-
 from qiskit.quantum_info import SparsePauliOp
-from qiskit_ibm_runtime.fake_provider import FakeManila
+from qiskit.providers.models.backendconfiguration import QasmBackendConfiguration
 
+from qiskit_ibm_runtime.fake_provider import FakeManila
 from qiskit_ibm_runtime import (
     Sampler,
     Estimator,
@@ -41,6 +43,7 @@ from ..utils import (
     dict_keys_equal,
     create_faulty_backend,
     bell,
+    get_mocked_backend,
 )
 
 
@@ -51,6 +54,7 @@ class MockSession(Session):
     _instance = None
 
 
+@ddt
 class TestPrimitives(IBMTestCase):
     """Class for testing the Sampler and Estimator classes."""
 
@@ -846,6 +850,48 @@ class TestPrimitives(IBMTestCase):
         with patch.object(Session, "run") as mock_run:
             sampler.run(transpiled)
         mock_run.assert_called_once()
+
+    @data(Sampler, Estimator)
+    def test_abstract_circuits(self, primitive):
+        """Test passing in abstract circuit."""
+        backend = get_mocked_backend()
+        inst = primitive(backend=backend)
+
+        circ = QuantumCircuit(2, 2)
+        circ.cx(0, 1)
+        run_input = {"circuits": circ}
+        if isinstance(inst, Estimator):
+            run_input["observables"] = SparsePauliOp("ZZ")
+        else:
+            circ.measure_all()
+
+        with self.assertWarnsRegex(DeprecationWarning, "target hardware"):
+            inst.run(**run_input)
+
+    @data(Sampler, Estimator)
+    def test_abstract_circuits_backend_no_coupling_map(self, primitive):
+        """Test passing in abstract circuits to a backend with no coupling map."""
+
+        config = FakeManila().configuration().to_dict()
+        for gate in config["gates"]:
+            gate.pop("coupling_map", None)
+        config = QasmBackendConfiguration.from_dict(config)
+        backend = get_mocked_backend(configuration=config)
+
+        inst = primitive(backend=backend)
+        circ = QuantumCircuit(2, 2)
+        circ.cx(0, 1)
+        transpiled = transpile(circ, backend=backend)
+        run_input = {"circuits": transpiled}
+        if isinstance(inst, Estimator):
+            run_input["observables"] = SparsePauliOp("ZZ")
+        else:
+            transpiled.measure_all()
+
+        with warnings.catch_warnings(record=True) as warns:
+            warnings.simplefilter("always")
+            inst.run(**run_input)
+            self.assertFalse(warns)
 
     def _update_dict(self, dict1, dict2):
         for key, val in dict1.items():
