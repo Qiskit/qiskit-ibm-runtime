@@ -131,22 +131,20 @@ class TestBackendRunInSession(IBMIntegrationTestCase):
         )
 
     def test_backend_and_primitive_in_session(self):
-        """Test Sampler.run and backend.run in the same session."""
+        """Test using simulator does not start a session."""
         backend = self.service.get_backend("ibmq_qasm_simulator")
         with Session(backend=backend) as session:
             sampler = Sampler(session=session)
             job1 = sampler.run(circuits=bell())
             with warnings.catch_warnings(record=True):
                 job2 = backend.run(circuits=bell())
-            self.assertEqual(job1.session_id, job1.job_id())
+            self.assertIsNone(job1.session_id)
             self.assertIsNone(job2.session_id)
         with backend.open_session() as session:
             with warnings.catch_warnings(record=True):
                 sampler = Sampler(backend=backend)
             job1 = backend.run(bell())
             job2 = sampler.run(circuits=bell())
-            session_id = session.session_id
-            self.assertEqual(session_id, job1.job_id())
             self.assertIsNone(job2.session_id)
 
     def test_session_cancel(self):
