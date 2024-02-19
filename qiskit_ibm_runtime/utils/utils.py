@@ -70,7 +70,7 @@ def validate_isa_circuits(circuits: Sequence[QuantumCircuit], backend: BackendV2
             "the primitive examples (https://docs.quantum.ibm.com/run/primitives-examples) to see "
             "this coupled with operator transformations.",
             DeprecationWarning,
-            stacklevel=2,
+            stacklevel=6,
         )
 
 
