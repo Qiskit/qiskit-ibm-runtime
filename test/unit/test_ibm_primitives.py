@@ -857,11 +857,11 @@ class TestPrimitives(IBMTestCase):
         backend = get_mocked_backend()
         inst = primitive(backend=backend)
 
-        circ = QuantumCircuit(2, 2)
-        circ.cx(0, 1)
+        circ = QuantumCircuit(3, 3)
+        circ.cx(0, 2)
         run_input = {"circuits": circ}
         if isinstance(inst, Estimator):
-            run_input["observables"] = SparsePauliOp("ZZ")
+            run_input["observables"] = SparsePauliOp("ZZZ")
         else:
             circ.measure_all()
 

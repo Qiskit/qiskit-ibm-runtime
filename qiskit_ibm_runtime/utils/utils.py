@@ -29,40 +29,37 @@ from ibm_cloud_sdk_core.authenticators import (  # pylint: disable=import-error
 )
 from ibm_platform_services import ResourceControllerV2  # pylint: disable=import-error
 from qiskit.circuit import QuantumCircuit
-from qiskit.providers.backend import BackendV2
+from qiskit.transpiler import Target
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 
-def is_isa_circuit(circuit: QuantumCircuit, backend: BackendV2) -> bool:
+def is_isa_circuit(circuit: QuantumCircuit, target: Target) -> bool:
     """Checks if the circuit is an ISA circuit, meaning that it has a layout and that it
     only uses instructions that exist in the target.
 
     Args:
         circuit: A single QuantumCircuit
-        backend: The target backend.
+        target: The backend target
 
     Returns:
         Boolean True if the circuit is an ISA circuit
     """
-    if backend.coupling_map and circuit.layout is None:
-        return False
-
     for instruction in circuit.data:
         name = instruction.operation.name
         qargs = tuple(circuit.find_bit(x).index for x in instruction.qubits)
-        if not backend.target.instruction_supported(name, qargs) and name != "barrier":
+        if not target.instruction_supported(name, qargs) and name != "barrier":
             return False
     return True
 
 
-def validate_isa_circuits(circuits: Sequence[QuantumCircuit], backend: BackendV2) -> None:
+def validate_isa_circuits(circuits: Sequence[QuantumCircuit], target: Target) -> None:
     """Validate if all circuits are ISA circuits
 
     Args:
         circuits: A list of QuantumCircuits.
-        backend: The target backend.
+        target: The backend target
     """
-    if not all(is_isa_circuit(circuit, backend) for circuit in circuits):
+    if not all(is_isa_circuit(circuit, target) for circuit in circuits):
         warnings.warn(
             "Circuits that do not match the target hardware definition will no longer be supported "
             "after March 1, 2024. See the transpilation documentation "
