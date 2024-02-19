@@ -116,6 +116,14 @@ class Session:
             raise ValueError('"backend" is required for ``ibm_quantum`` channel.')
 
         self._instance = None
+
+        self._active = True
+        self._max_time = (
+            max_time
+            if max_time is None or isinstance(max_time, int)
+            else hms_to_seconds(max_time, "Invalid max_time value: ")
+        )
+
         if isinstance(backend, IBMBackend):
             self._instance = backend._instance
             sim_backend = backend.configuration().simulator
@@ -127,25 +135,15 @@ class Session:
         self._backend = backend
 
         if not sim_backend:
-            self._session_id = self._create_session(self._backend, self._instance)
+            self._session_id = self._create_session()
         else:
             self._session_id = None
 
-        self._active = True
-        self._max_time = (
-            max_time
-            if max_time is None or isinstance(max_time, int)
-            else hms_to_seconds(max_time, "Invalid max_time value: ")
+    def _create_session(self) -> str:
+        """Create a session."""
+        session = self._service._api_client.create_session(
+            self._backend, self._instance, self._max_time, self._service.channel
         )
-
-    def _create_session(self, backend: str = None, instance: str = None) -> str:
-        """Create a session.
-
-        Args:
-            backend: Backend name.
-            instance: Instance name, in h/g/p format.
-        """
-        session = self._service._api_client.create_session(backend, instance)
         return session.get("id")
 
     @_active_session
@@ -178,11 +176,6 @@ class Session:
 
         options["backend"] = self._backend
 
-        if self._max_time:
-            # TODO: What happens if session max time != first job max time?
-            # Use session max time if this is first job.
-            options["session_time"] = self._max_time
-
         job = self._service.run(
             program_id=program_id,
             options=options,
@@ -192,9 +185,6 @@ class Session:
             callback=callback,
             result_decoder=result_decoder,
         )
-
-        if self._session_id is None:
-            self._session_id = job.job_id()
 
         if self._backend is None:
             self._backend = job.backend().name
