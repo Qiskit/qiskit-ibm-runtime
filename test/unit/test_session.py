@@ -113,7 +113,6 @@ class TestSession(IBMTestCase):
         _, kwargs = service.run.call_args
         self.assertEqual(kwargs["program_id"], program_id)
         self.assertDictEqual(kwargs["options"], {"backend": backend, **options})
-        self.assertTrue({"session_time": 42}.items() <= kwargs["options"].items())
         self.assertDictEqual(kwargs["inputs"], inputs)
         self.assertEqual(kwargs["result_decoder"], decoder)
         self.assertEqual(session.backend(), backend)
