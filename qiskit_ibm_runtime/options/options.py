@@ -123,7 +123,7 @@ class OptionsV2(BaseOptions):
 
         options_copy = copy.deepcopy(options)
         sim_options = options_copy.get("simulator", {})
-        inputs = {}
+        inputs: dict[str, Any] = {}
         coupling_map = sim_options.get("coupling_map", Unset)
         # TODO: We can just move this to json encoder
         if isinstance(coupling_map, CouplingMap):
