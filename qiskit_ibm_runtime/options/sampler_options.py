@@ -70,7 +70,6 @@ class SamplerOptions(OptionsV2):
         """Validate optimization_leve."""
         if not 0 <= optimization_level <= MAX_OPTIMIZATION_LEVEL:
             raise ValueError(
-                "Invalid optimization_level. Valid range is "
-                f"0-{MAX_OPTIMIZATION_LEVEL}"
+                "Invalid optimization_level. Valid range is " f"0-{MAX_OPTIMIZATION_LEVEL}"
             )
         return optimization_level
