@@ -756,6 +756,7 @@ class IBMBackend(Backend):
             warnings.warn(
                 "A Primitive session is open but Backend.run() jobs will not be run within this session"
             )
+        session_id = None
         if self._session:
             if not self._session.active:
                 raise RuntimeError(f"The session {self._session.session_id} is closed.")
@@ -827,7 +828,7 @@ class IBMBackend(Backend):
             )
             self._session = ProviderSession(max_time=max_time, session_id=new_session.get("id"))
         else:
-            self._session = ProviderSession(max_time=max_time)
+            self._session = ProviderSession()
         return self._session
 
     @property
