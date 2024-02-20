@@ -387,7 +387,6 @@ class TestOptionsV2(IBMTestCase):
         )
         expected = {
             "transpilation": transpilation,
-            "skip_transpilation": False,
             "twirling": twirling,
             "dynamical_decoupling": "XX",
             "execution": execution,
@@ -512,12 +511,11 @@ class TestOptionsV2(IBMTestCase):
     @data(
         {"resilience_level": 2},
         {"max_execution_time": 200},
-        {"resilience_level": 2, "transpilation": {"optimization_level": 1}},
+        {"resilience_level": 2, "optimization_level": 1},
         {"shots": 1024, "seed_simulator": 42},
         {"resilience_level": 2, "shots": 2048},
         {
             "optimization_level": 1,
-            "transpilation": {"skip_transpilation": True},
             "log_level": "INFO",
         },
     )
