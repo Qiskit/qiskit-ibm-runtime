@@ -129,10 +129,10 @@ class OptionsV2(BaseOptions):
         if isinstance(coupling_map, CouplingMap):
             coupling_map = list(map(list, coupling_map.get_edges()))
         inputs["transpilation"] = {
-                "optimization_level": options_copy.get("optimization_level", Unset),
-                "coupling_map": coupling_map,
-                "basis_gates": sim_options.get("basis_gates", Unset),
-            }
+            "optimization_level": options_copy.get("optimization_level", Unset),
+            "coupling_map": coupling_map,
+            "basis_gates": sim_options.get("basis_gates", Unset),
+        }
 
         for fld in [
             "resilience_level",

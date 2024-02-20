@@ -31,11 +31,11 @@ from qiskit_ibm_runtime import (
     Options,
     Session,
 )
-from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.utils.default_session import _DEFAULT_SESSION
 from qiskit_ibm_runtime import EstimatorV2
 from qiskit_ibm_runtime.estimator import Estimator as IBMBaseEstimator
 from qiskit_ibm_runtime.fake_provider import FakeManila
+from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 
 from ..ibm_test_case import IBMTestCase
@@ -91,11 +91,11 @@ class TestPrimitivesV2(IBMTestCase):
     )
     def test_runtime_options(self, primitive, env_var):
         """Test RuntimeOptions specified as primitive options."""
-        session = MagicMock(spec=MockSession)
+        backend = get_mocked_backend()
         options = primitive._options_class(environment=env_var)
-        inst = primitive(session=session, options=options)
-        inst.run(**get_primitive_inputs(inst))
-        run_options = session.run.call_args.kwargs["options"]
+        inst = primitive(backend=backend, options=options)
+        inst.run(**get_primitive_inputs(inst, backend=backend))
+        run_options = backend.service.run.call_args.kwargs["options"]
         for key, val in env_var.items():
             self.assertEqual(run_options[key], val)
 
@@ -258,6 +258,8 @@ class TestPrimitivesV2(IBMTestCase):
         """Test parameters for a single cirucit."""
 
         circ = RealAmplitudes(num_qubits=2, reps=1)
+        backend = get_mocked_backend()
+        circ = transpile(circ, backend=backend)
 
         param_vals = [
             # 1 set of parameter values
@@ -281,33 +283,36 @@ class TestPrimitivesV2(IBMTestCase):
         inst = primitive(backend=get_mocked_backend())
         for val in param_vals:
             with self.subTest(val=val):
-                pub = (circ, "ZZ", val) if isinstance(inst, EstimatorV2) else (circ, val)
+                pub = (circ, "ZZIII", val) if isinstance(inst, EstimatorV2) else (circ, val)
                 inst.run([pub])
 
     @data(EstimatorV2)
-    def test_parameters_vals_kwvals(self, primitive):
-        """Test a mixture of vals and kwvals."""
+    def test_nd_parameters(self, primitive):
+        """Test with parameters of different dimensions."""
         circ = RealAmplitudes(num_qubits=2, reps=1)
-        inst = primitive(backend=get_mocked_backend())
+        backend = get_mocked_backend()
+        circ = transpile(circ, backend=backend)
+        inst = primitive(backend=backend)
 
         with self.subTest("0-d"):
             param_vals = np.linspace(0, 1, 4)
             barray = {tuple(circ.parameters): param_vals}
-            pub = (circ, "ZZ", barray) if isinstance(inst, EstimatorV2) else (circ, barray)
+            pub = (circ, "ZZIII", barray) if isinstance(inst, EstimatorV2) else (circ, barray)
             inst.run([pub])
 
         with self.subTest("n-d"):
             barray = {tuple(circ.parameters): np.random.random((2, 3, 4))}
-            pub = (circ, "ZZ", barray) if isinstance(inst, EstimatorV2) else (circ, barray)
+            pub = (circ, "ZZIII", barray) if isinstance(inst, EstimatorV2) else (circ, barray)
             inst.run([pub])
 
     @data(EstimatorV2)
     def test_parameters_multiple_circuits(self, primitive):
         """Test multiple parameters for multiple circuits."""
+        backend = get_mocked_backend()
         circuits = [
-            QuantumCircuit(2),
-            RealAmplitudes(num_qubits=2, reps=1),
-            RealAmplitudes(num_qubits=3, reps=1),
+            transpile(QuantumCircuit(2), backend=backend),
+            transpile(RealAmplitudes(num_qubits=2, reps=1), backend=backend),
+            transpile(RealAmplitudes(num_qubits=3, reps=1), backend=backend),
         ]
 
         param_vals = [
@@ -323,13 +328,13 @@ class TestPrimitivesV2(IBMTestCase):
             ),
         ]
 
-        inst = primitive(backend=get_mocked_backend())
+        inst = primitive(backend=backend)
         for all_params in param_vals:
             with self.subTest(all_params=all_params):
                 pubs = []
                 for circ, circ_params in zip(circuits, all_params):
                     publet = (
-                        (circ, "Z" * circ.num_qubits, circ_params)
+                        (circ, "Z" * backend.num_qubits, circ_params)
                         if isinstance(inst, EstimatorV2)
                         else (circ, circ_params)
                     )
@@ -701,6 +706,23 @@ class TestPrimitivesV2(IBMTestCase):
         with patch.object(Session, "run") as mock_run:
             inst.run([pub])
         mock_run.assert_called_once()
+
+    @data(EstimatorV2)
+    def test_abstract_circuits(self, primitive):
+        """Test passing in abstract circuit would fail."""
+        backend = get_mocked_backend()
+        inst = primitive(backend=backend)
+
+        circ = QuantumCircuit(3, 3)
+        circ.cx(0, 2)
+        pub = [circ]
+        if isinstance(inst, EstimatorV2):
+            pub.append(SparsePauliOp("ZZZ"))
+        else:
+            circ.measure_all()
+
+        with self.assertRaisesRegex(IBMInputValueError, "target hardware"):
+            inst.run(pubs=[tuple(pub)])
 
     def _update_dict(self, dict1, dict2):
         for key, val in dict1.items():

@@ -375,10 +375,10 @@ class TestOptionsV2(IBMTestCase):
         )
 
         transpilation = {
-                "optimization_level": optimization_level,
-                "coupling_map": simulator.pop("coupling_map"),
-                "basis_gates": simulator.pop("basis_gates"),
-            }
+            "optimization_level": optimization_level,
+            "coupling_map": simulator.pop("coupling_map"),
+            "basis_gates": simulator.pop("basis_gates"),
+        }
         execution.update(
             {
                 "noise_model": simulator.pop("noise_model"),

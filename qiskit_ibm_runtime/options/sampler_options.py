@@ -16,12 +16,7 @@ from typing import Union, Literal
 
 from pydantic import Field, field_validator
 
-from .utils import (
-    Dict,
-    Unset,
-    UnsetType,
-    skip_unset_validation
-)
+from .utils import Dict, Unset, UnsetType, skip_unset_validation
 from .execution_options import ExecutionOptionsV2
 from .twirling_options import TwirlingOptions
 from .options import OptionsV2
@@ -73,9 +68,9 @@ class SamplerOptions(OptionsV2):
     @skip_unset_validation
     def _validate_optimization_level(cls, optimization_level: int) -> int:
         """Validate optimization_leve."""
-        if not 0 <= optimization_level <= SamplerOptions._MAX_OPTIMIZATION_LEVEL:
+        if not 0 <= optimization_level <= MAX_OPTIMIZATION_LEVEL:
             raise ValueError(
                 "Invalid optimization_level. Valid range is "
-                f"0-{SamplerOptions._MAX_OPTIMIZATION_LEVEL}"
+                f"0-{MAX_OPTIMIZATION_LEVEL}"
             )
         return optimization_level

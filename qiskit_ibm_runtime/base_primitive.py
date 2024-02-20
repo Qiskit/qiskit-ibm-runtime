@@ -32,6 +32,7 @@ from .options.utils import merge_options, set_default_error_levels
 from .runtime_job import RuntimeJob
 from .ibm_backend import IBMBackend
 from .utils.default_session import get_cm_session
+from .utils.utils import validate_isa_circuits
 from .constants import DEFAULT_DECODERS
 from .qiskit_runtime_service import QiskitRuntimeService
 
@@ -136,6 +137,9 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
 
         if self._backend:
             for pub in pubs:
+                if hasattr(self._backend, "target") and not self._backend.configuration().simulator:
+                    validate_isa_circuits([pub.circuit], self._backend.target, raise_exc=True)
+
                 self._backend.check_faulty(pub.circuit)
 
         logger.info("Submitting job using options %s", options_dict)

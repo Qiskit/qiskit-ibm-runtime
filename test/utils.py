@@ -18,20 +18,20 @@ import time
 import itertools
 import unittest
 from unittest import mock
-from typing import Dict, Optional, Any
+from typing import Dict, Optional
 from datetime import datetime
 from ddt import data, unpack
 
+from qiskit import transpile
 from qiskit.circuit import QuantumCircuit, QuantumRegister, ClassicalRegister
-from qiskit.compiler import transpile
 from qiskit.providers.jobstatus import JOB_FINAL_STATES, JobStatus
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.models import BackendStatus, BackendProperties
 from qiskit.providers.backend import Backend
-from qiskit.quantum_info import SparsePauliOp
+from qiskit.quantum_info import SparsePauliOp, Pauli
+from qiskit_ibm_runtime.fake_provider import FakeManila
 from qiskit_ibm_runtime.hub_group_project import HubGroupProject
-from qiskit_ibm_runtime import QiskitRuntimeService, Session
-from qiskit_ibm_runtime.estimator import Estimator
+from qiskit_ibm_runtime import QiskitRuntimeService, Session, EstimatorV2
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.runtime_job import RuntimeJob
 from qiskit_ibm_runtime.exceptions import RuntimeInvalidStateError
@@ -279,13 +279,23 @@ def create_faulty_backend(
 
 def get_mocked_backend(name: str = "ibm_gotham") -> IBMBackend:
     """Return a mock backend."""
-    mock_backend = mock.MagicMock(spec=IBMBackend)
-    mock_backend.name = name
-    mock_backend._instance = None
+
+    def _noop(*args, **kwargs):  # pylint: disable=unused-argument
+        return None
 
     mock_service = mock.MagicMock()
-    mock_backend.service = mock_service
-    mock_backend.properties = lambda: None
+    mock_api_client = mock.MagicMock()
+    model_backend = FakeManila()
+
+    mock_api_client.backend_properties = _noop
+    mock_api_client.backend_pulse_defaults = _noop
+    mock_backend = IBMBackend(
+        configuration=model_backend.configuration(),
+        service=mock_service,
+        api_client=mock_api_client,
+    )
+    mock_backend.name = name
+    mock_backend._instance = None
 
     return mock_backend
 
@@ -352,18 +362,69 @@ def bell():
     return quantum_circuit
 
 
-def get_primitive_inputs(primitive, num_sets=1):
+def get_transpiled_circuit(backend, num_qubits=2, measure=False):
+    """Return a transpiled circuit."""
+    circ = QuantumCircuit(num_qubits)
+    circ.h(0)
+    for idx in range(num_qubits - 2):
+        circ.cx(idx, idx + 1)
+    if measure:
+        circ.measure_all()
+    return transpile(circ, backend=backend)
+
+
+def get_primitive_inputs(primitive, backend=None, num_sets=1):
     """Return primitive specific inputs."""
+    backend = backend or FakeManila()
     circ = QuantumCircuit(2, 2)
     circ.h(0)
     circ.cx(0, 1)
+    circ = transpile(circ, backend=backend)
     obs = SparsePauliOp.from_list([("IZ", 1)])
+    obs = obs.apply_layout(circ.layout, num_qubits=circ.num_qubits)
 
-    if isinstance(primitive, Estimator):
+    if isinstance(primitive, EstimatorV2):
         return {"pubs": [(circ, [obs])] * num_sets}
 
     circ.measure_all()
     return {"pubs": [(circ,)] * num_sets}
+
+
+def transpile_pubs(in_pubs, backend):
+    """Return pubs with transformed circuits and observables."""
+    t_pubs = []
+    for pub in in_pubs:
+        t_circ = transpile(pub[0], backend=backend)
+        t_obs = remap_observables(pub[1], t_circ)
+        t_pub = [t_circ, t_obs]
+        for elem in pub[2:]:
+            t_pub.append(elem)
+        t_pubs.append(tuple(t_pub))
+    return t_pubs
+
+
+def remap_observables(observables, isa_circuit):
+    """Remap observables based on input cirucit."""
+
+    def _convert_paul_or_str(_obs):
+        if isinstance(_obs, str):
+            return _obs + "I" * (len(layout.input_qubit_mapping) - len(_obs))
+        return Pauli("X" * (len(layout.input_qubit_mapping)))
+
+    out_obs = []
+    layout = isa_circuit.layout
+    for obs in observables:
+        if isinstance(obs, (str, Pauli)):
+            out_obs.append(_convert_paul_or_str(obs))
+        elif isinstance(obs, SparsePauliOp):
+            out_obs.append(obs.apply_layout(layout, num_qubits=isa_circuit.num_qubits))
+        elif isinstance(obs, dict):
+            mapped = {_convert_paul_or_str(key): val for key, val in obs.items()}
+            out_obs.append(mapped)
+        else:
+            raise ValueError(f"Observable of type {type(obs)} is not supported.")
+
+    return out_obs
 
 
 class MockSession(Session):
