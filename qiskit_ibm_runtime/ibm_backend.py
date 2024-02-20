@@ -760,12 +760,6 @@ class IBMBackend(Backend):
             if not self._session.active:
                 raise RuntimeError(f"The session {self._session.session_id} is closed.")
             session_id = self._session.session_id
-            start_session = session_id is None
-            max_session_time = self._session._max_time
-        else:
-            session_id = None
-            start_session = False
-            max_session_time = None
 
         log_level = getattr(self.options, "log_level", None)  # temporary
         try:
@@ -777,15 +771,11 @@ class IBMBackend(Backend):
                 log_level=log_level,
                 job_tags=job_tags,
                 session_id=session_id,
-                start_session=start_session,
-                session_time=max_session_time,
+                start_session=False,
                 image=image,
             )
         except RequestsApiError as ex:
             raise IBMBackendApiError("Error submitting job: {}".format(str(ex))) from ex
-        session_id = response.get("session_id", None)
-        if self._session:
-            self._session._session_id = session_id
         try:
             job = RuntimeJob(
                 backend=self,
@@ -831,7 +821,13 @@ class IBMBackend(Backend):
 
     def open_session(self, max_time: Optional[Union[int, str]] = None) -> ProviderSession:
         """Open session"""
-        self._session = ProviderSession(max_time=max_time)
+        if not self._configuration.simulator:
+            new_session = self._service._api_client.create_session(
+                self.name, self._instance, max_time, self._service.channel
+            )
+            self._session = ProviderSession(max_time=max_time, session_id=new_session.get("id"))
+        else:
+            self._session = ProviderSession(max_time=max_time)
         return self._session
 
     @property
