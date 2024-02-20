@@ -826,7 +826,7 @@ class IBMBackend(Backend):
             new_session = self._service._api_client.create_session(
                 self.name, self._instance, max_time, self._service.channel
             )
-            self._session = ProviderSession(max_time=max_time, session_id=new_session.get("id"))
+            self._session = ProviderSession(session_id=new_session.get("id"))
         else:
             self._session = ProviderSession()
         return self._session
