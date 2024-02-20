@@ -161,6 +161,23 @@ class TestBackendRunInSession(IBMIntegrationTestCase):
         backend.close_session()
         self.assertIsNone(backend.session)
 
+    def test_run_after_cancel(self):
+        """Test running after session is cancelled."""
+        backend = self.service.backend("ibmq_qasm_simulator")
+        job1 = backend.run(circuits=bell())
+        self.assertIsNone(backend.session)
+        self.assertIsNone(job1._session_id)
+
+        backend.open_session()
+        job2 = backend.run(bell())
+        self.assertTrue(job2.result())
+        backend.cancel_session()
+
+        job3 = backend.run(circuits=bell())
+        self.assertIsNone(backend.session)
+        self.assertTrue(job3.result())
+        self.assertIsNone(job3._session_id)
+
     def test_session_as_context_manager(self):
         """Test session as a context manager"""
         backend = self.service.backend("ibmq_qasm_simulator")
