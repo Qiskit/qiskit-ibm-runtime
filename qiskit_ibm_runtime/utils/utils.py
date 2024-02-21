@@ -44,6 +44,9 @@ def is_isa_circuit(circuit: QuantumCircuit, target: Target) -> bool:
     Returns:
         Boolean True if the circuit is an ISA circuit
     """
+    if circuit.num_qubits > target.num_qubits:
+        return False
+
     for instruction in circuit.data:
         name = instruction.operation.name
         qargs = tuple(circuit.find_bit(x).index for x in instruction.qubits)
