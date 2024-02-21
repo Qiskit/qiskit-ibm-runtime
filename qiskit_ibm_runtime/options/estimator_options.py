@@ -64,13 +64,12 @@ class EstimatorOptions(OptionsV2):
 
         seed_estimator: Seed used to control sampling.
 
-        transpilation: Transpilation options. See :class:`TranspilationOptions` for all
-            available options.
-
         resilience: Advanced resilience options to fine tune the resilience strategy.
             See :class:`ResilienceOptions` for all available options.
 
         execution: Execution time options. See :class:`ExecutionOptionsV2` for all available options.
+
+        twirling: Pauli twirling options. See :class:`TwirlingOptions` for all available options.
 
         environment: Options related to the execution environment. See
             :class:`EnvironmentOptions` for all available options.
