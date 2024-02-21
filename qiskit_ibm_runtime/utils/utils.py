@@ -36,14 +36,14 @@ from qiskit_ibm_runtime.exceptions import IBMInputValueError
 def is_isa_circuit(circuit: QuantumCircuit, target: Target) -> bool:
     """Checks if the circuit is an ISA circuit, meaning that it has a layout and that it
     only uses instructions that exist in the target.
+
     Args:
         circuit: A single QuantumCircuit
         target: A Qiskit Target
+
     Returns:
         Boolean True if the circuit is an ISA circuit
     """
-    if circuit.layout is None:
-        return False
     for instruction in circuit.data:
         name = instruction.operation.name
         qargs = tuple(circuit.find_bit(x).index for x in instruction.qubits)
