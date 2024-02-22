@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 import os
-from typing import Dict, Optional, Sequence, Any, Union, Iterable
+from typing import Dict, Optional, Sequence, Any, Union, Iterable, List
 import logging
 import warnings
 
@@ -42,7 +42,7 @@ class Sampler:
     version = 0
 
 
-class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
+class SamplerV2(BasePrimitiveV2, Sampler, BaseSamplerV2):
     """Class for interacting with Qiskit Runtime Sampler primitive service.
 
     This class supports version 2 of the Sampler interface, which uses different
@@ -90,8 +90,6 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
         Sampler.__init__(self)
         BasePrimitiveV2.__init__(self, backend=backend, session=session, options=options)
 
-        raise NotImplementedError("SamplerV2 is not currently supported.")
-
         # if self._service._channel_strategy == "q-ctrl":
         #     raise NotImplementedError("SamplerV2 is not supported with q-ctrl channel strategy.")
 
@@ -107,7 +105,11 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
 
         Returns:
             Submitted job.
+            The result of the job is an instance of
+            :class:`qiskit.primitives.containers.PrimitiveResult`.
 
+        Raises:
+            ValueError: Invalid arguments are given.
         """
         coerced_pubs = [SamplerPub.coerce(pub, shots) for pub in pubs]
 
@@ -148,23 +150,16 @@ class SamplerV1(BasePrimitiveV1, Sampler, BaseSampler):
 
     Example::
 
-        from qiskit.circuit import QuantumCircuit, QuantumRegister, ClassicalRegister
+        from qiskit.test.reference_circuits import ReferenceCircuits
         from qiskit_ibm_runtime import QiskitRuntimeService, Session, Sampler
 
         service = QiskitRuntimeService(channel="ibm_cloud")
-
-        # Bell Circuit
-        qr = QuantumRegister(2, name="qr")
-        cr = ClassicalRegister(2, name="cr")
-        qc = QuantumCircuit(qr, cr, name="bell")
-        qc.h(qr[0])
-        qc.cx(qr[0], qr[1])
-        qc.measure(qr, cr)
+        bell = ReferenceCircuits.bell()
 
         with Session(service, backend="ibmq_qasm_simulator") as session:
             sampler = Sampler(session=session)
 
-            job = sampler.run(qc, shots=1024)
+            job = sampler.run(bell, shots=1024)
             print(f"Job ID: {job.job_id()}")
             print(f"Job result: {job.result()}")
 
