@@ -33,7 +33,7 @@ from qiskit.transpiler import Target
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 
-def is_isa_circuit(circuit: QuantumCircuit, target: Target) -> bool:
+def is_isa_circuit(circuit: QuantumCircuit, target: Target) -> str:
     """Checks if the circuit is an ISA circuit, meaning that it has a layout and that it
     only uses instructions that exist in the target.
 
@@ -42,14 +42,22 @@ def is_isa_circuit(circuit: QuantumCircuit, target: Target) -> bool:
         target: The backend target
 
     Returns:
-        Boolean True if the circuit is an ISA circuit
+        Message on why the circuit is not an ISA circuit, if applicable.
     """
+    if circuit.num_qubits > target.num_qubits:
+        return (
+            f"The circuit has {circuit.num_qubits} qubits "
+            f"but the target system requires {target.num_qubits} qubits."
+        )
+
     for instruction in circuit.data:
         name = instruction.operation.name
         qargs = tuple(circuit.find_bit(x).index for x in instruction.qubits)
         if not target.instruction_supported(name, qargs) and name != "barrier":
-            return False
-    return True
+            return (
+                f"The instruction {name} on qubits {qargs} is not supported by the target system."
+            )
+    return ""
 
 
 def validate_isa_circuits(circuits: Sequence[QuantumCircuit], target: Target) -> None:
@@ -59,16 +67,20 @@ def validate_isa_circuits(circuits: Sequence[QuantumCircuit], target: Target) ->
         circuits: A list of QuantumCircuits.
         target: The backend target
     """
-    if not all(is_isa_circuit(circuit, target) for circuit in circuits):
-        warnings.warn(
-            "Circuits that do not match the target hardware definition will no longer be supported "
-            "after March 1, 2024. See the transpilation documentation "
-            "(https://docs.quantum.ibm.com/transpile) for instructions to transform circuits and "
-            "the primitive examples (https://docs.quantum.ibm.com/run/primitives-examples) to see "
-            "this coupled with operator transformations.",
-            DeprecationWarning,
-            stacklevel=6,
-        )
+    for circuit in circuits:
+        message = is_isa_circuit(circuit, target)
+        if message:
+            warnings.warn(
+                message
+                + " Circuits that do not match the target hardware definition will no longer be "
+                "supported after March 1, 2024. See the transpilation documentation "
+                "(https://docs.quantum.ibm.com/transpile) for instructions to transform circuits and "
+                "the primitive examples (https://docs.quantum.ibm.com/run/primitives-examples) to see "
+                "this coupled with operator transformations.",
+                DeprecationWarning,
+                stacklevel=6,
+            )
+            break
 
 
 def validate_job_tags(job_tags: Optional[List[str]]) -> None:
