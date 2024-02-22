@@ -282,9 +282,9 @@ class TestOptionsV2(IBMTestCase):
             {},
             {"resilience_level": 9},
             {"shots": 99, "seed_simulator": 42},
-            {"resilience_level": 99, "shots": 98, "skip_transpilation": True},
+            {"resilience_level": 99, "shots": 98},
             {
-                "transpilation": {"optimization_level": 1},
+                "optimization_level": 1,
                 "log_level": "INFO",
             },
         ]
@@ -330,10 +330,6 @@ class TestOptionsV2(IBMTestCase):
 
         noise_model = NoiseModel.from_backend(FakeManila())
         optimization_level = 0
-        transpilation = {
-            "skip_transpilation": False,
-            "optimization_level": optimization_level,
-        }
         simulator = {
             "noise_model": noise_model,
             "seed_simulator": 42,
@@ -370,21 +366,19 @@ class TestOptionsV2(IBMTestCase):
         opt = opt_cls(
             max_execution_time=100,
             simulator=simulator,
+            optimization_level=optimization_level,
             dynamical_decoupling="XX",
-            transpilation=transpilation,
             execution=execution,
             twirling=twirling,
             experimental={"foo": "bar"},
             **estimator_extra,
         )
 
-        transpilation.pop("skip_transpilation")
-        transpilation.update(
-            {
-                "coupling_map": simulator.pop("coupling_map"),
-                "basis_gates": simulator.pop("basis_gates"),
-            }
-        )
+        transpilation = {
+            "optimization_level": optimization_level,
+            "coupling_map": simulator.pop("coupling_map"),
+            "basis_gates": simulator.pop("basis_gates"),
+        }
         execution.update(
             {
                 "noise_model": simulator.pop("noise_model"),
@@ -393,7 +387,6 @@ class TestOptionsV2(IBMTestCase):
         )
         expected = {
             "transpilation": transpilation,
-            "skip_transpilation": False,
             "twirling": twirling,
             "dynamical_decoupling": "XX",
             "execution": execution,
@@ -414,11 +407,8 @@ class TestOptionsV2(IBMTestCase):
             {},
             {"dynamical_decoupling": "XX"},
             {"simulator": {"seed_simulator": 42}},
-            {"environment": {"log_level": "WARNING"}},
-            {
-                "transpilation": {"optimization_level": 1},
-                "execution": {"shots": 100},
-            },
+            {"optimization_level": 1, "environment": {"log_level": "WARNING"}},
+            {"execution": {"shots": 100}},
             {"twirling": {"gates": True, "strategy": "active"}},
             {"environment": {"log_level": "ERROR"}},
         ]
@@ -521,12 +511,11 @@ class TestOptionsV2(IBMTestCase):
     @data(
         {"resilience_level": 2},
         {"max_execution_time": 200},
-        {"resilience_level": 2, "transpilation": {"optimization_level": 1}},
+        {"resilience_level": 2, "optimization_level": 1},
         {"shots": 1024, "seed_simulator": 42},
         {"resilience_level": 2, "shots": 2048},
         {
             "optimization_level": 1,
-            "transpilation": {"skip_transpilation": True},
             "log_level": "INFO",
         },
     )

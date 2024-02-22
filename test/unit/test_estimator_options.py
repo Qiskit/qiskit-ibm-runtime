@@ -25,6 +25,7 @@ class TestEStimatorOptions(IBMTestCase):
     """Class for testing the Sampler class."""
 
     @data(
+        {"optimization_level": 99},
         {"resilience_level": 99},
         {"dynamical_decoupling": "foo"},
         {"transpilation": {"skip_transpilation": "foo"}},

@@ -63,7 +63,7 @@ class Session:
         qc.cx(qr[0], qr[1])
         qc.measure(qr, cr)
 
-        options = Options(optimization_level=3)
+        options = Options(optimization_level=1)
 
         with Session(backend="ibmq_qasm_simulator") as session:
             sampler = Sampler(session=session, options=options)
