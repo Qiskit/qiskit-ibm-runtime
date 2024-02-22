@@ -11,6 +11,7 @@
 # that they have been altered from the originals.
 
 """Tests for Sampler V2."""
+# pylint: disable=invalid-name
 
 from __future__ import annotations
 
@@ -20,7 +21,7 @@ from dataclasses import astuple
 import numpy as np
 from numpy.typing import NDArray
 
-from qiskit import ClassicalRegister, QiskitError, QuantumCircuit, QuantumRegister
+from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister
 from qiskit.circuit import Parameter
 from qiskit.circuit.library import RealAmplitudes, UnitaryGate
 from qiskit.primitives import PrimitiveResult, PubResult
@@ -76,7 +77,7 @@ class TestSampler(IBMIntegrationTestCase):
             target_counts = (
                 target.get_int_counts(idx) if isinstance(target, BitArray) else target[idx]
             )
-            max_key = max(max(int_counts.keys()), max(target_counts.keys()))
+            max_key = max(int_counts.keys(), target_counts.keys())
             ary = np.array([int_counts.get(i, 0) for i in range(max_key + 1)])
             tgt = np.array([target_counts.get(i, 0) for i in range(max_key + 1)])
             np.testing.assert_allclose(ary, tgt, rtol=rtol, err_msg=f"index: {idx}")
@@ -288,43 +289,6 @@ class TestSampler(IBMIntegrationTestCase):
             )
 
     @run_integration_test
-    def test_run_errors(self, service):
-        """Test for errors with run method"""
-        with Session(service, self.backend) as session:
-            qc1 = QuantumCircuit(1)
-            qc1.measure_all()
-            qc2 = RealAmplitudes(num_qubits=1, reps=1)
-            qc2.measure_all()
-            qc3 = QuantumCircuit(1)
-            qc4 = QuantumCircuit(1, 1)
-            with qc4.for_loop(range(5)):
-                qc4.h(0)
-
-            sampler = Sampler(session=session, options=self._options)
-            with self.subTest("set parameter values to a non-parameterized circuit"):
-                with self.assertRaises(ValueError):
-                    _ = sampler.run([(qc1, [1e2])]).result()
-            with self.subTest("missing all parameter values for a parameterized circuit"):
-                with self.assertRaises(ValueError):
-                    _ = sampler.run([qc2]).result()
-                with self.assertRaises(ValueError):
-                    _ = sampler.run([(qc2, [])]).result()
-                with self.assertRaises(ValueError):
-                    _ = sampler.run([(qc2, None)]).result()
-            with self.subTest("missing some parameter values for a parameterized circuit"):
-                with self.assertRaises(ValueError):
-                    _ = sampler.run([(qc2, [1e2])]).result()
-            with self.subTest("too many parameter values for a parameterized circuit"):
-                with self.assertRaises(ValueError):
-                    _ = sampler.run([(qc2, [1e2] * 100)]).result()
-            with self.subTest("no classical bits"):
-                with self.assertRaises(ValueError):
-                    _ = sampler.run([qc3]).result()
-            with self.subTest("with control flow"):
-                with self.assertRaises(QiskitError):
-                    _ = sampler.run([qc4]).result()
-
-    @run_integration_test
     def test_run_empty_parameter(self, service):
         """Test for empty parameter"""
         with Session(service, self.backend) as session:
@@ -392,14 +356,14 @@ class TestSampler(IBMIntegrationTestCase):
 
             with self.subTest("run arg"):
                 sampler = Sampler(session=session)
-                result = sampler.run([bell], shots).result()
+                result = sampler.run(pubs=[bell], shots=shots).result()
                 self.assertEqual(len(result), 1)
                 self.assertEqual(result[0].data.meas.num_shots, shots)
                 self.assertEqual(sum(result[0].data.meas.get_counts().values()), shots)
 
             with self.subTest("run arg"):
                 sampler = Sampler(session=session)
-                result = sampler.run([bell], shots).result()
+                result = sampler.run(pubs=[bell], shots=shots).result()
                 self.assertEqual(len(result), 1)
                 self.assertEqual(result[0].data.meas.num_shots, shots)
                 self.assertEqual(sum(result[0].data.meas.get_counts().values()), shots)

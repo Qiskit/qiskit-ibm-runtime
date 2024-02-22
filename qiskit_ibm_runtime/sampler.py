@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 import os
-from typing import Dict, Optional, Sequence, Any, Union, Iterable, List
+from typing import Dict, Optional, Sequence, Any, Union, Iterable
 import logging
 import warnings
 
