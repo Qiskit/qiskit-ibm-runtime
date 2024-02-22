@@ -33,6 +33,8 @@ from qiskit_ibm_runtime import Session
 from qiskit_ibm_runtime import SamplerV2 as Sampler
 from ..decorators import run_integration_test
 from ..ibm_test_case import IBMIntegrationTestCase
+
+
 class TestSampler(IBMIntegrationTestCase):
     """Test Sampler"""
 
@@ -281,7 +283,9 @@ class TestSampler(IBMIntegrationTestCase):
             self._assert_allclose(result[0].data.c, np.array({1: self._shots}))
 
             # qc({x: pi/2, y: 0})
-            self._assert_allclose(result[1].data.c, np.array({1: self._shots / 2, 5: self._shots / 2}))
+            self._assert_allclose(
+                result[1].data.c, np.array({1: self._shots / 2, 5: self._shots / 2})
+            )
 
     @run_integration_test
     def test_run_errors(self, service):
