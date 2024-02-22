@@ -70,7 +70,9 @@ class TestSampler(IBMIntegrationTestCase):
             (pqc2, [0, 1, 2, 3, 4, 5, 6, 7], {0: 1898, 1: 6864, 2: 928, 3: 311})
         )  # case 6
 
-    def _assert_allclose(self, bitarray: BitArray, target: NDArray | BitArray, rtol=1e-1):
+    def _assert_allclose(
+        self, bitarray: BitArray, target: NDArray | BitArray, rtol: float = 1e-1
+    ) -> None:
         self.assertEqual(bitarray.shape, target.shape)
         for idx in np.ndindex(bitarray.shape):
             int_counts = bitarray.get_int_counts(idx)
