@@ -1,0 +1,5 @@
+---
+deprecations:
+  - |
+    In a future release, ``backend`` will be a required argument to :class:`qiskit_ibm_runtime.Session` 
+    and :class:`qiskit_ibm_runtime.Batch` when using the ``ibm_cloud`` channel.
