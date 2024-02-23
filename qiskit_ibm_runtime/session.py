@@ -12,6 +12,7 @@
 
 """Qiskit Runtime flexible session."""
 
+import warnings
 from typing import Dict, Optional, Type, Union, Callable, Any
 from types import TracebackType
 from functools import wraps
@@ -112,8 +113,15 @@ class Session:
         else:
             self._service = service
 
-        if self._service.channel == "ibm_quantum" and not backend:
-            raise ValueError('"backend" is required for ``ibm_quantum`` channel.')
+        if not backend:
+            if self._service.channel == "ibm_quantum":
+                raise ValueError('"backend" is required for ``ibm_quantum`` channel.')
+            warnings.warn(
+                "In a future release no sooner than 3 months after the release date of "
+                "qiskit-ibm-runtime version 0.21.0, "
+                "``backend`` will no longer be optional when using primitives. "
+                "Please provide a backend."
+            )
 
         self._instance = None
 
