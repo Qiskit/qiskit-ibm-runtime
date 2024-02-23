@@ -21,7 +21,7 @@ from dataclasses import astuple
 import numpy as np
 from numpy.typing import NDArray
 
-from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister
+from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister, transpile
 from qiskit.circuit import Parameter
 from qiskit.circuit.library import RealAmplitudes, UnitaryGate
 from qiskit.primitives import PrimitiveResult, PubResult
@@ -32,6 +32,7 @@ from qiskit.providers import JobStatus
 
 from qiskit_ibm_runtime import Session
 from qiskit_ibm_runtime import SamplerV2 as Sampler
+from qiskit_ibm_runtime.fake_provider import FakeManila
 from ..decorators import run_integration_test
 from ..ibm_test_case import IBMIntegrationTestCase
 
@@ -42,6 +43,7 @@ class TestSampler(IBMIntegrationTestCase):
     def setUp(self):
         super().setUp()
         self.backend = "ibmq_qasm_simulator"
+        self.fake_backend = FakeManila()
         self._shots = 10000
         self._options = {"shots": 10000, "seed_simulator": 123}
 
@@ -59,6 +61,7 @@ class TestSampler(IBMIntegrationTestCase):
 
         pqc = RealAmplitudes(num_qubits=2, reps=2)
         pqc.measure_all()
+        pqc = transpile(circuits=pqc, backend=self.fake_backend)
         self._cases.append((pqc, [0] * 6, {0: 10000}))  # case 2
         self._cases.append((pqc, [1] * 6, {0: 168, 1: 3389, 2: 470, 3: 5973}))  # case 3
         self._cases.append((pqc, [0, 1, 1, 2, 3, 5], {0: 1339, 1: 3534, 2: 912, 3: 4215}))  # case 4
@@ -66,6 +69,7 @@ class TestSampler(IBMIntegrationTestCase):
 
         pqc2 = RealAmplitudes(num_qubits=2, reps=3)
         pqc2.measure_all()
+        pqc2 = transpile(circuits=pqc2, backend=self.fake_backend)
         self._cases.append(
             (pqc2, [0, 1, 2, 3, 4, 5, 6, 7], {0: 1898, 1: 6864, 2: 928, 3: 311})
         )  # case 6
@@ -79,7 +83,7 @@ class TestSampler(IBMIntegrationTestCase):
             target_counts = (
                 target.get_int_counts(idx) if isinstance(target, BitArray) else target[idx]
             )
-            max_key = max(int_counts.keys(), target_counts.keys())
+            max_key = max(max(int_counts.keys()), max(target_counts.keys())) # pylint: disable=nested-min-max
             ary = np.array([int_counts.get(i, 0) for i in range(max_key + 1)])
             tgt = np.array([target_counts.get(i, 0) for i in range(max_key + 1)])
             np.testing.assert_allclose(ary, tgt, rtol=rtol, err_msg=f"index: {idx}")
@@ -315,6 +319,7 @@ class TestSampler(IBMIntegrationTestCase):
         with Session(service, self.backend) as session:
             qc = RealAmplitudes(num_qubits=2, reps=2)
             qc.measure_all()
+            qc = transpile(circuits=qc, backend=self.fake_backend)
             k = 5
             params_array = np.random.rand(k, qc.num_parameters)
             params_list = params_array.tolist()
@@ -429,15 +434,13 @@ class TestSampler(IBMIntegrationTestCase):
         """Test for options"""
         with Session(service, self.backend) as session:
             with self.subTest("init"):
-                sampler = Sampler(session=session, options={"shots": 3000})
-                self.assertEqual(sampler.options.shots, 3000)
+                sampler = Sampler(session=session, options={"seed": 42})
+                self.assertEqual(sampler.options.seed, 42)
             with self.subTest("set options"):
-                sampler.options.shots = 1024
                 sampler.options.seed = 15
-                self.assertEqual(sampler.options.shots, 1024)
                 self.assertEqual(sampler.options.seed, 15)
             with self.subTest("update options"):
-                sampler.options.update({"shots": 100, "seed": 12})
+                sampler.options.update(seed=12)
                 self.assertEqual(sampler.options.shots, 100)
                 self.assertEqual(sampler.options.seed, 12)
 
@@ -477,15 +480,7 @@ class TestSampler(IBMIntegrationTestCase):
             sampler = Sampler(session=session, options=self._options)
             result = sampler.run([qc]).result()
             self.assertEqual(len(result), 1)
-            self.assertIn("shots", result[0].metadata)
-            self.assertEqual(result[0].metadata["shots"], self._shots)
-
-        shots = 100
-        sampler.options.shots = 100
-        result = sampler.run([qc]).result()
-        self.assertEqual(len(result), 1)
-        self.assertIn("shots", result[0].metadata)
-        self.assertEqual(result[0].metadata["shots"], shots)
+            self.assertEqual(result[0].data.meas.num_shots, self._shots)
 
     @run_integration_test
     def test_circuit_with_multiple_cregs(self, service):
