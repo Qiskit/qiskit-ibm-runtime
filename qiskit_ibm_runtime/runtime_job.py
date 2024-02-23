@@ -657,7 +657,7 @@ class RuntimeJob(Job):
         """Session ID.
 
         Returns:
-            Job ID of the first job in a runtime session.
+            Session ID. None if the backend is a simulator.
         """
         if not self._session_id:
             response = self._api_client.job_get(job_id=self.job_id())
