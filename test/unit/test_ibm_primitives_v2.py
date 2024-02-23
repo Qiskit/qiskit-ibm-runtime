@@ -707,7 +707,6 @@ class TestPrimitivesV2(IBMTestCase):
             inst.run([pub])
         mock_run.assert_called_once()
 
-
     @data(EstimatorV2, SamplerV2)
     def test_abstract_circuits(self, primitive):
         """Test passing in abstract circuit would fail."""
