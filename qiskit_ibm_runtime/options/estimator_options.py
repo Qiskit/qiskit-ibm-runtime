@@ -23,7 +23,6 @@ from .utils import (
     skip_unset_validation,
 )
 from .execution_options import ExecutionOptionsV2
-from .transpilation_options import TranspilationOptionsV2
 from .resilience_options import ResilienceOptionsV2
 from .twirling_options import TwirlingOptions
 from .options import OptionsV2
@@ -31,6 +30,7 @@ from .utils import primitive_dataclass
 
 DDSequenceType = Literal["XX", "XpXm", "XY4"]
 MAX_RESILIENCE_LEVEL: int = 2
+MAX_OPTIMIZATION_LEVEL: int = 1
 
 
 @primitive_dataclass
@@ -38,16 +38,20 @@ class EstimatorOptions(OptionsV2):
     """Options for EstimatorV2.
 
     Args:
+        optimization_level: How much optimization to perform on the circuits.
+            Higher levels generate more optimized circuits,
+            at the expense of longer processing times.
+            * 0: no optimization
+            * 1: light optimization
+
         resilience_level: How much resilience to build against errors.
             Higher levels generate more accurate results,
-            at the expense of longer processing times. Default: 1.
+            at the expense of longer processing times.
 
             * 0: No mitigation.
             * 1: Minimal mitigation costs. Mitigate error associated with readout errors.
             * 2: Medium mitigation costs. Typically reduces bias in estimators but
               is not guaranteed to be zero bias. Only applies to estimator.
-            * 3: Heavy mitigation with layer sampling. Theoretically expected to deliver zero
-              bias estimators. Only applies to estimator.
 
             Refer to the
             `Qiskit Runtime documentation
@@ -60,13 +64,12 @@ class EstimatorOptions(OptionsV2):
 
         seed_estimator: Seed used to control sampling.
 
-        transpilation: Transpilation options. See :class:`TranspilationOptions` for all
-            available options.
-
         resilience: Advanced resilience options to fine tune the resilience strategy.
             See :class:`ResilienceOptions` for all available options.
 
         execution: Execution time options. See :class:`ExecutionOptionsV2` for all available options.
+
+        twirling: Pauli twirling options. See :class:`TwirlingOptions` for all available options.
 
         environment: Options related to the execution environment. See
             :class:`EnvironmentOptions` for all available options.
@@ -77,16 +80,25 @@ class EstimatorOptions(OptionsV2):
     """
 
     # Sadly we cannot use pydantic's built in validation because it won't work on Unset.
+    optimization_level: Union[UnsetType, int] = Unset
     resilience_level: Union[UnsetType, int] = Unset
     dynamical_decoupling: Union[UnsetType, DDSequenceType] = Unset
     seed_estimator: Union[UnsetType, int] = Unset
-    transpilation: Union[TranspilationOptionsV2, Dict] = Field(
-        default_factory=TranspilationOptionsV2
-    )
     resilience: Union[ResilienceOptionsV2, Dict] = Field(default_factory=ResilienceOptionsV2)
     execution: Union[ExecutionOptionsV2, Dict] = Field(default_factory=ExecutionOptionsV2)
     twirling: Union[TwirlingOptions, Dict] = Field(default_factory=TwirlingOptions)
     experimental: Union[UnsetType, dict] = Unset
+
+    @field_validator("optimization_level")
+    @classmethod
+    @skip_unset_validation
+    def _validate_optimization_level(cls, optimization_level: int) -> int:
+        """Validate optimization_leve."""
+        if not 0 <= optimization_level <= MAX_OPTIMIZATION_LEVEL:
+            raise ValueError(
+                "Invalid optimization_level. Valid range is " f"0-{MAX_OPTIMIZATION_LEVEL}"
+            )
+        return optimization_level
 
     @field_validator("resilience_level")
     @classmethod

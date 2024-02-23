@@ -118,7 +118,7 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
     def test_sampler_optimization_level(self, service):
         """Test transpiler optimization level is properly mapped."""
         with Session(service, self.backend) as session:
-            sampler = Sampler(session=session, options={"optimization_level": 3})
+            sampler = Sampler(session=session, options={"optimization_level": 1})
             shots = 1000
             result = sampler.run(self.bell, shots=shots).result()
             self.assertEqual(result.quasi_dists[0].shots, shots)
