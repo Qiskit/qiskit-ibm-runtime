@@ -46,7 +46,7 @@ Below is an example of using primitives within a session::
     service = QiskitRuntimeService()
 
     # Set options, which can be overwritten at job level.
-    options = Options(optimization_level=3)
+    options = Options(optimization_level=1)
 
     # Prepare inputs.
     psi = RealAmplitudes(num_qubits=2, reps=2)
@@ -131,7 +131,7 @@ to ``WARNING``::
 Interim and final results
 -------------------------
 
-Some runtime primitives provide interim results that inform you about the 
+Some runtime primitives provide interim results that inform you about the
 progress of your job. You can choose to stream the interim results and final result when you run the
 program by passing in the ``callback`` parameter, or at a later time using
 the :meth:`RuntimeJob.stream_results` method. For example::

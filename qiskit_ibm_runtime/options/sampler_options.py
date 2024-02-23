@@ -14,20 +14,16 @@
 
 from typing import Union, Literal
 
-from pydantic import Field
+from pydantic import Field, field_validator
 
-from .utils import (
-    Dict,
-    Unset,
-    UnsetType,
-)
+from .utils import Dict, Unset, UnsetType, skip_unset_validation
 from .execution_options import ExecutionOptionsV2
-from .transpilation_options import TranspilationOptionsV2
 from .twirling_options import TwirlingOptions
 from .options import OptionsV2
 from .utils import primitive_dataclass
 
 DDSequenceType = Literal["XX", "XpXm", "XY4"]
+MAX_OPTIMIZATION_LEVEL: int = 1
 
 
 @primitive_dataclass
@@ -35,6 +31,12 @@ class SamplerOptions(OptionsV2):
     """Options for v2 Sampler.
 
     Args:
+        optimization_level: How much optimization to perform on the circuits.
+            Higher levels generate more optimized circuits,
+            at the expense of longer processing times.
+            * 0: no optimization
+            * 1: light optimization
+
         dynamical_decoupling: Optional, specify a dynamical decoupling sequence to use.
             Allowed values are ``"XX"``, ``"XpXm"``, ``"XY4"``.
             Default: None
@@ -55,10 +57,19 @@ class SamplerOptions(OptionsV2):
     """
 
     # Sadly we cannot use pydantic's built in validation because it won't work on Unset.
+    optimization_level: Union[UnsetType, int] = Unset
     dynamical_decoupling: Union[UnsetType, DDSequenceType] = Unset
-    transpilation: Union[TranspilationOptionsV2, Dict] = Field(
-        default_factory=TranspilationOptionsV2
-    )
     execution: Union[ExecutionOptionsV2, Dict] = Field(default_factory=ExecutionOptionsV2)
     twirling: Union[TwirlingOptions, Dict] = Field(default_factory=TwirlingOptions)
     experimental: Union[UnsetType, dict] = Unset
+
+    @field_validator("optimization_level")
+    @classmethod
+    @skip_unset_validation
+    def _validate_optimization_level(cls, optimization_level: int) -> int:
+        """Validate optimization_leve."""
+        if not 0 <= optimization_level <= MAX_OPTIMIZATION_LEVEL:
+            raise ValueError(
+                "Invalid optimization_level. Valid range is " f"0-{MAX_OPTIMIZATION_LEVEL}"
+            )
+        return optimization_level
