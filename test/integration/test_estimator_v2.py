@@ -98,6 +98,26 @@ class TestEstimatorV2(IBMIntegrationTestCase):
         for res_key in ["twirled_readout_errors", "zne_noise_factors"]:
             self.assertIn(res_key, result[0].metadata["resilience"])
 
+    @run_integration_test
+    def test_pec(self, service):
+        """Test running with PEC."""
+        backend = service.backend(self.backend)
+        pass_mgr = generate_preset_pass_manager(backend=backend, optimization_level=1)
+        circuit = pass_mgr.run(IQP([[6, 5, 3], [5, 4, 5], [3, 5, 1]]))
+        observables = SparsePauliOp("X" * circuit.num_qubits).apply_layout(circuit.layout)
+
+        estimator = EstimatorV2(backend=backend)
+        estimator.options.resilience_level = 0
+        estimator.options.optimization_level = 0
+        estimator.options.resilience.pec_mitigation = True
+        estimator.options.resilience.pec_max_overhead = 200
+        estimator.options.simulator.set_backend(service.backends(simulator=False)[0])
+
+        job = estimator.run([(circuit, observables)])
+        result = job.result()
+        self._verify_result_type(result, num_pubs=1, shapes=[(1,)])
+        self.assertIn("sampling_overhead", result[0].metadata["resilience"])
+
     def _verify_result_type(self, result, num_pubs, shapes):
         """Verify result type."""
         self.assertIsInstance(result, PrimitiveResult)
