@@ -21,8 +21,9 @@ from typing import Dict
 import warnings
 
 from ddt import data, ddt
-from qiskit import transpile
+from qiskit import transpile, pulse
 from qiskit.circuit import QuantumCircuit
+from qiskit.pulse.library import Gaussian
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.providers.models.backendconfiguration import QasmBackendConfiguration
 
@@ -887,6 +888,29 @@ class TestPrimitives(IBMTestCase):
             run_input["observables"] = SparsePauliOp("ZZ")
         else:
             transpiled.measure_all()
+
+        with warnings.catch_warnings(record=True) as warns:
+            warnings.simplefilter("always")
+            inst.run(**run_input)
+            self.assertFalse(warns)
+
+    @data(Sampler, Estimator)
+    def test_pulse_gates_is_isa(self, primitive):
+        """Test passing circuits with pulse gates is considered ISA."""
+        backend = get_mocked_backend()
+        inst = primitive(backend=backend)
+
+        circuit = QuantumCircuit(1)
+        circuit.h(0)
+        with pulse.build(backend, name="hadamard") as h_q0:
+            pulse.play(Gaussian(duration=64, amp=0.5, sigma=8), pulse.drive_channel(0))
+        circuit.add_calibration("h", [0], h_q0)
+
+        run_input = {"circuits": circuit}
+        if isinstance(inst, Estimator):
+            run_input["observables"] = SparsePauliOp("Z")
+        else:
+            circuit.measure_all()
 
         with warnings.catch_warnings(record=True) as warns:
             warnings.simplefilter("always")
