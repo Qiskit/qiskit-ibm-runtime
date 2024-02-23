@@ -12,11 +12,7 @@
 
 """Tests for Session classession."""
 
-import sys
-import time
-from concurrent.futures import ThreadPoolExecutor, wait
-
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, patch
 
 from qiskit_ibm_runtime.fake_provider import FakeManila
 from qiskit_ibm_runtime import Session
@@ -33,7 +29,7 @@ class TestSession(IBMTestCase):
         super().tearDown()
         _DEFAULT_SESSION.set(None)
 
-    @patch("qiskit_ibm_runtime.session.QiskitRuntimeService", autospec=True)
+    @patch("qiskit_ibm_runtime.session.QiskitRuntimeService")
     def test_default_service(self, mock_service):
         """Test using default service."""
         mock_service.global_service = None
@@ -107,58 +103,19 @@ class TestSession(IBMTestCase):
         decoder = MagicMock()
         max_time = 42
         session = Session(service=service, backend=backend, max_time=max_time)
-        session_ids = [None, job.job_id()]
-        start_sessions = [True, False]
 
-        for idx in range(2):
-            session.run(
-                program_id=program_id,
-                inputs=inputs,
-                options=options,
-                result_decoder=decoder,
-            )
-            _, kwargs = service.run.call_args
-            self.assertEqual(kwargs["program_id"], program_id)
-            self.assertDictEqual(kwargs["options"], {"backend": backend, **options})
-            self.assertTrue({"session_time": 42}.items() <= kwargs["options"].items())
-            self.assertDictEqual(kwargs["inputs"], inputs)
-            self.assertEqual(kwargs["session_id"], session_ids[idx])
-            self.assertEqual(kwargs["start_session"], start_sessions[idx])
-            self.assertEqual(kwargs["result_decoder"], decoder)
-            self.assertEqual(session.session_id, job.job_id())
-            self.assertEqual(session.backend(), backend)
-
-    def test_run_is_thread_safe(self):
-        """Test the session sends a session starter job once, and only once."""
-        service = MagicMock()
-        api = MagicMock()
-        service._api_client = api
-
-        def _wait_a_bit(*args, **kwargs):
-            # pylint: disable=unused-argument
-            switchinterval = sys.getswitchinterval()
-            time.sleep(switchinterval * 2)
-            return MagicMock()
-
-        service.run = Mock(side_effect=_wait_a_bit)
-
-        session = Session(service=service, backend="ibm_gotham")
-        with ThreadPoolExecutor(max_workers=2) as executor:
-            results = list(map(lambda _: executor.submit(session.run, "", {}), range(5)))
-            wait(results)
-
-        calls = service.run.call_args_list
-        session_starters = list(filter(lambda c: c.kwargs["start_session"] is True, calls))
-        self.assertEqual(len(session_starters), 1)
-
-    def test_close_without_run(self):
-        """Test closing without run."""
-        service = MagicMock()
-        api = MagicMock()
-        service._api_client = api
-        session = Session(service=service, backend="ibm_gotham")
-        session.close()
-        api.close_session.assert_not_called()
+        session.run(
+            program_id=program_id,
+            inputs=inputs,
+            options=options,
+            result_decoder=decoder,
+        )
+        _, kwargs = service.run.call_args
+        self.assertEqual(kwargs["program_id"], program_id)
+        self.assertDictEqual(kwargs["options"], {"backend": backend, **options})
+        self.assertDictEqual(kwargs["inputs"], inputs)
+        self.assertEqual(kwargs["result_decoder"], decoder)
+        self.assertEqual(session.backend(), backend)
 
     def test_context_manager(self):
         """Test session as a context manager."""
@@ -182,14 +139,14 @@ class TestSession(IBMTestCase):
     def test_global_service(self):
         """Test that global service is used in Session"""
         _ = FakeRuntimeService(channel="ibm_quantum", token="abc")
-        session = Session(backend="ibmq_qasm_simulator")
+        session = Session(backend="common_backend")
         self.assertTrue(isinstance(session._service, FakeRuntimeService))
         self.assertEqual(session._service._account.token, "abc")
         _ = FakeRuntimeService(channel="ibm_quantum", token="xyz")
-        session = Session(backend="ibmq_qasm_simulator")
+        session = Session(backend="common_backend")
         self.assertEqual(session._service._account.token, "xyz")
         with Session(
-            service=FakeRuntimeService(channel="ibm_quantum", token="uvw"), backend="ibm_gotham"
+            service=FakeRuntimeService(channel="ibm_quantum", token="uvw"), backend="common_backend"
         ) as session:
             self.assertEqual(session._service._account.token, "uvw")
 

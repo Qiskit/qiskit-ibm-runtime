@@ -17,9 +17,10 @@ import logging
 import os
 import re
 import hashlib
+import warnings
 from queue import Queue
 from threading import Condition
-from typing import List, Optional, Any, Dict, Union, Tuple
+from typing import List, Optional, Any, Dict, Union, Tuple, Sequence
 from urllib.parse import urlparse
 
 import requests
@@ -27,7 +28,63 @@ from ibm_cloud_sdk_core.authenticators import (  # pylint: disable=import-error
     IAMAuthenticator,
 )
 from ibm_platform_services import ResourceControllerV2  # pylint: disable=import-error
+from qiskit.circuit import QuantumCircuit
+from qiskit.transpiler import Target
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
+
+
+def is_isa_circuit(circuit: QuantumCircuit, target: Target) -> str:
+    """Checks if the circuit is an ISA circuit, meaning that it has a layout and that it
+    only uses instructions that exist in the target.
+
+    Args:
+        circuit: A single QuantumCircuit
+        target: The backend target
+
+    Returns:
+        Message on why the circuit is not an ISA circuit, if applicable.
+    """
+    if circuit.num_qubits > target.num_qubits:
+        return (
+            f"The circuit has {circuit.num_qubits} qubits "
+            f"but the target system requires {target.num_qubits} qubits."
+        )
+
+    for instruction in circuit.data:
+        name = instruction.operation.name
+        qargs = tuple(circuit.find_bit(x).index for x in instruction.qubits)
+        if (
+            not target.instruction_supported(name, qargs)
+            and name != "barrier"
+            and not circuit.has_calibration_for(instruction)
+        ):
+            return (
+                f"The instruction {name} on qubits {qargs} is not supported by the target system."
+            )
+    return ""
+
+
+def validate_isa_circuits(circuits: Sequence[QuantumCircuit], target: Target) -> None:
+    """Validate if all circuits are ISA circuits
+
+    Args:
+        circuits: A list of QuantumCircuits.
+        target: The backend target
+    """
+    for circuit in circuits:
+        message = is_isa_circuit(circuit, target)
+        if message:
+            warnings.warn(
+                message
+                + " Circuits that do not match the target hardware definition will no longer be "
+                "supported after March 1, 2024. See the transpilation documentation "
+                "(https://docs.quantum.ibm.com/transpile) for instructions to transform circuits and "
+                "the primitive examples (https://docs.quantum.ibm.com/run/primitives-examples) to see "
+                "this coupled with operator transformations.",
+                DeprecationWarning,
+                stacklevel=6,
+            )
+            break
 
 
 def validate_job_tags(job_tags: Optional[List[str]]) -> None:
