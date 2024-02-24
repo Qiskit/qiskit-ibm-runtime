@@ -59,7 +59,6 @@ from qiskit.primitives.containers.bindings_array import BindingsArray
 from qiskit.primitives.containers.observables_array import ObservablesArray
 from qiskit.primitives.containers import (
     BitArray,
-    DataBin,
     make_data_bin,
     PubResult,
     PrimitiveResult,
@@ -282,17 +281,6 @@ class RuntimeEncoder(json.JSONEncoder):
                 encoded_data[json.dumps(key, cls=RuntimeEncoder)] = val
             out_val["data"] = encoded_data
             return {"__type__": "BindingsArray", "__value__": out_val}
-        if isinstance(obj, BitArray):
-            out_val = {"array": obj.array, "num_bits": obj.num_bits}
-            return {"__type__": "BitArray", "__value__": out_val}
-        if isinstance(obj, DataBin):
-            out_val = {
-                "field_names": obj._FIELDS,
-                "field_types": [str(field_type) for field_type in obj._FIELD_TYPES],
-                "shape": obj._SHAPE,
-                "values": {field_name: getattr(obj, field_name) for field_name in obj._FIELDS},
-            }
-            return {"__type__": "DataBin", "__value__": out_val}
         if isinstance(obj, EstimatorPub):
             return (
                 obj.circuit,
@@ -306,12 +294,6 @@ class RuntimeEncoder(json.JSONEncoder):
                 obj.parameter_values.as_array(obj.circuit.parameters),
                 obj.shots,
             )
-        if isinstance(obj, PubResult):
-            out_val = {"data": obj.data, "metadata": obj.metadata}
-            return {"__type__": "PubResult", "__value__": out_val}
-        if isinstance(obj, PrimitiveResult):
-            out_val = {"pub_results": obj._pub_results, "metadata": obj.metadata}
-            return {"__type__": "PrimitiveResult", "__value__": out_val}
         if HAS_AER and isinstance(obj, qiskit_aer.noise.NoiseModel):
             return {"__type__": "NoiseModel", "__value__": obj.to_dict()}
         if hasattr(obj, "settings"):
