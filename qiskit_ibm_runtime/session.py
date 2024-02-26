@@ -12,7 +12,6 @@
 
 """Qiskit Runtime flexible session."""
 
-import warnings
 from typing import Dict, Optional, Type, Union, Callable, Any
 from types import TracebackType
 from functools import wraps
@@ -22,7 +21,7 @@ from .runtime_job import RuntimeJob
 from .utils.result_decoder import ResultDecoder
 from .ibm_backend import IBMBackend
 from .utils.default_session import set_cm_session
-from .utils.deprecation import deprecate_arguments
+from .utils.deprecation import deprecate_arguments, issue_deprecation_msg
 from .utils.converters import hms_to_seconds
 
 
@@ -116,11 +115,10 @@ class Session:
         if not backend:
             if self._service.channel == "ibm_quantum":
                 raise ValueError('"backend" is required for ``ibm_quantum`` channel.')
-            warnings.warn(
-                "In a future release no sooner than 3 months after the release date of "
-                "qiskit-ibm-runtime version 0.21.0, "
-                "``backend`` will no longer be optional when using primitives. "
-                "Please provide a backend."
+            issue_deprecation_msg(
+                "Not providing a backend is deprecated",
+                "0.21.0",
+                "Passing in a backend will be required, please provide a backend.",
             )
 
         self._instance = None

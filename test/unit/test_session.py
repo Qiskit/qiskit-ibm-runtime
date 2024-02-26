@@ -48,7 +48,7 @@ class TestSession(IBMTestCase):
         """Test warning if no backend provided on cloud channel."""
         service = MagicMock()
         service.channel = "ibm_cloud"
-        with self.assertWarns(UserWarning):
+        with self.assertWarns(DeprecationWarning):
             Session(service=service)
 
     def test_passing_ibm_backend(self):
