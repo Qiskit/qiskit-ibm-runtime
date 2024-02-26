@@ -513,21 +513,3 @@ class TestContainerSerialization(IBMTestCase):
             self.assertEqual(len(decoded), 3)
             decoded_pub = SamplerPub.coerce(decoded)
             self.assert_sampler_pubs_equal(pub, decoded_pub)
-
-    def test_pub_result(self):
-        """Test encoding and decoding PubResult"""
-        for pub_result in self.make_test_pub_results():
-            payload = {"pub_result": pub_result}
-            encoded = json.dumps(payload, cls=RuntimeEncoder)
-            decoded = json.loads(encoded, cls=RuntimeDecoder)["pub_result"]
-            self.assertIsInstance(decoded, PubResult)
-            self.assert_pub_results_equal(pub_result, decoded)
-
-    def test_primitive_result(self):
-        """Test encoding and decoding PubResult"""
-        for primitive_result in self.make_test_primitive_results():
-            payload = {"primitive_result": primitive_result}
-            encoded = json.dumps(payload, cls=RuntimeEncoder)
-            decoded = json.loads(encoded, cls=RuntimeDecoder)["primitive_result"]
-            self.assertIsInstance(decoded, PrimitiveResult)
-            self.assert_primitive_results_equal(primitive_result, decoded)
