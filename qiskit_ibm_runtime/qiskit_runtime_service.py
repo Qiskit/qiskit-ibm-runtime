@@ -891,7 +891,7 @@ class QiskitRuntimeService(Provider):
         """
         issue_deprecation_msg(
             msg="service.run is deprecated",
-            version="0.18.0",
+            version="0.21.0",
             remedy="service.run will instead be converted into a private method "
             "since it should not be called directly.",
             period="3 months",

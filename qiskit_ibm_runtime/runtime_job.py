@@ -636,7 +636,7 @@ class RuntimeJob(Job):
         """
         issue_deprecation_msg(
             msg="The Job.program_id property is deprecated",
-            version="0.18.0",
+            version="0.21.0",
             remedy="Use Job.primitive_id instead.",
         )
         return self._program_id

@@ -170,7 +170,7 @@ class Session:
         """
         issue_deprecation_msg(
             msg="session.run is deprecated",
-            version="0.18.0",
+            version="0.21.0",
             remedy="session.run will instead be converted into a private method "
             "since it should not be called directly.",
             period="3 months",
