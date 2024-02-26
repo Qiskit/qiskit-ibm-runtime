@@ -19,6 +19,7 @@ from qiskit.quantum_info import SparsePauliOp
 from qiskit.primitives.containers import PrimitiveResult, PubResult, DataBin
 
 from qiskit_ibm_runtime import EstimatorV2, Session
+from qiskit_ibm_runtime.fake_provider import FakeAuckland
 from ..decorators import run_integration_test
 from ..ibm_test_case import IBMIntegrationTestCase
 
@@ -111,7 +112,7 @@ class TestEstimatorV2(IBMIntegrationTestCase):
         estimator.options.optimization_level = 0
         estimator.options.resilience.pec_mitigation = True
         estimator.options.resilience.pec_max_overhead = 200
-        estimator.options.simulator.set_backend(service.backends(simulator=False)[0])
+        estimator.options.simulator.set_backend(FakeAuckland())
 
         job = estimator.run([(circuit, observables)])
         result = job.result()
