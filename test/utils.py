@@ -17,22 +17,23 @@ import logging
 import time
 import unittest
 from unittest import mock
-from typing import Dict, Optional, Any
+from typing import Dict, Optional
 from datetime import datetime
 
-from qiskit.circuit import QuantumCircuit
+from qiskit.circuit import QuantumCircuit, QuantumRegister, ClassicalRegister
 from qiskit.compiler import transpile, assemble
 from qiskit.qobj import QasmQobj
-from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit.providers.jobstatus import JOB_FINAL_STATES, JobStatus
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
-from qiskit.providers.models import BackendStatus, BackendProperties
+from qiskit.providers.models import BackendStatus, BackendProperties, BackendConfiguration
 from qiskit.providers.backend import Backend
+
 from qiskit_ibm_runtime.hub_group_project import HubGroupProject
 from qiskit_ibm_runtime import QiskitRuntimeService
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.runtime_job import RuntimeJob
 from qiskit_ibm_runtime.exceptions import RuntimeInvalidStateError
+from qiskit_ibm_runtime.fake_provider import FakeManila
 
 
 def setup_test_logging(logger: logging.Logger, filename: str) -> None:
@@ -275,11 +276,29 @@ def create_faulty_backend(
     return out_backend
 
 
-def get_mocked_backend(name: str = "ibm_gotham") -> Any:
+def get_mocked_backend(
+    name: str = "ibm_gotham", configuration: Optional[BackendConfiguration] = None
+) -> IBMBackend:
     """Return a mock backend."""
-    mock_backend = mock.MagicMock(spec=IBMBackend)
+
+    def _noop(*args, **kwargs):  # pylint: disable=unused-argument
+        return None
+
+    mock_service = mock.MagicMock(spec=QiskitRuntimeService)
+    mock_service._channel_strategy = None
+    mock_api_client = mock.MagicMock()
+
+    if not configuration:
+        configuration = FakeManila().configuration()
+
+    mock_api_client.backend_properties = _noop
+    mock_api_client.backend_pulse_defaults = _noop
+    mock_backend = IBMBackend(
+        configuration=configuration, service=mock_service, api_client=mock_api_client
+    )
     mock_backend.name = name
     mock_backend._instance = None
+
     return mock_backend
 
 
@@ -292,7 +311,7 @@ def submit_and_cancel(backend: IBMBackend, logger: logging.Logger) -> RuntimeJob
     Returns:
         Cancelled job.
     """
-    circuit = transpile(ReferenceCircuits.bell(), backend=backend)
+    circuit = transpile(bell(), backend=backend)
     job = backend.run(circuit)
     cancel_job_safe(job, logger=logger)
     return job
@@ -323,7 +342,7 @@ def submit_job_one_bad_instr(backend: IBMBackend) -> RuntimeJob:
     Returns:
         Submitted job.
     """
-    qc_new = transpile(ReferenceCircuits.bell(), backend)
+    qc_new = transpile(bell(), backend)
     if backend.configuration().simulator:
         # Specify method so it doesn't fail at method selection.
         qobj = assemble([qc_new] * 2, backend=backend, method="statevector")
@@ -345,7 +364,19 @@ def bell_in_qobj(backend: IBMBackend, shots: int = 1024) -> QasmQobj:
         A bell circuit in Qobj format.
     """
     return assemble(
-        transpile(ReferenceCircuits.bell(), backend=backend),
+        transpile(bell(), backend=backend),
         backend=backend,
         shots=shots,
     )
+
+
+def bell():
+    """Return a Bell circuit."""
+    quantum_register = QuantumRegister(2, name="qr")
+    classical_register = ClassicalRegister(2, name="cr")
+    quantum_circuit = QuantumCircuit(quantum_register, classical_register, name="bell")
+    quantum_circuit.h(quantum_register[0])
+    quantum_circuit.cx(quantum_register[0], quantum_register[1])
+    quantum_circuit.measure(quantum_register, classical_register)
+
+    return quantum_circuit

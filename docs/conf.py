@@ -25,7 +25,7 @@ language = 'en'
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = '0.17.1'
+release = '0.20.1'
 
 # -- General configuration ---------------------------------------------------
 
@@ -40,6 +40,7 @@ extensions = [
     'reno.sphinxext',
     'nbsphinx',
     'sphinxcontrib.katex',
+    'matplotlib.sphinxext.plot_directive',
 ]
 templates_path = ['_templates']
 

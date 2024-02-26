@@ -28,9 +28,10 @@ from qiskit.providers.models import BackendProperties
 from qiskit.providers.job import JobV1 as Job
 
 # pylint: disable=unused-import,cyclic-import
-from qiskit_ibm_provider.utils import utc_to_local
+
 from qiskit_ibm_runtime import qiskit_runtime_service
 
+from .utils import utc_to_local
 from .utils.utils import validate_job_tags
 from .utils.queueinfo import QueueInfo
 from .constants import API_TO_JOB_ERROR_MESSAGE, API_TO_JOB_STATUS, DEFAULT_DECODERS
@@ -656,7 +657,7 @@ class RuntimeJob(Job):
         """Session ID.
 
         Returns:
-            Job ID of the first job in a runtime session.
+            Session ID. None if the backend is a simulator.
         """
         if not self._session_id:
             response = self._api_client.job_get(job_id=self.job_id())

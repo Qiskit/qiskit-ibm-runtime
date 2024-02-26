@@ -17,13 +17,12 @@ from typing import Any, Dict, List, Optional
 from datetime import datetime as python_datetime
 from requests import Response
 
-from qiskit_ibm_provider.utils.hgp import from_instance_format
 from qiskit_ibm_runtime.api.session import RetrySession
 
 from .backend import BaseBackendClient
 from ..rest.runtime import Runtime
 from ..client_parameters import ClientParameters
-
+from ...utils.hgp import from_instance_format
 
 logger = logging.getLogger(__name__)
 
@@ -230,6 +229,23 @@ class RuntimeClient(BaseBackendClient):
             Job metadata.
         """
         return self._api.program_job(job_id).metadata()
+
+    def create_session(
+        self,
+        backend: Optional[str] = None,
+        instance: Optional[str] = None,
+        max_time: Optional[int] = None,
+        channel: Optional[str] = None,
+        mode: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Create a session.
+
+        Args:
+            mode: Execution mode.
+        """
+        return self._api.runtime_session(session_id=None).create(
+            backend, instance, max_time, channel, mode
+        )
 
     def cancel_session(self, session_id: str) -> None:
         """Close all jobs in the runtime session.

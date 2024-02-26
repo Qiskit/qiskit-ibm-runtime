@@ -17,8 +17,8 @@ import unittest
 from qiskit import QuantumRegister, ClassicalRegister, QuantumCircuit, transpile
 from qiskit.utils import optionals
 
-from qiskit_ibm_runtime.fake_provider import FakeAthens, FakePerth
-from ..ibm_test_case import IBMTestCase
+from qiskit_ibm_runtime.fake_provider import FakeAthens, FakePerth, FakeProviderForBackendV2
+from ...ibm_test_case import IBMTestCase
 
 
 def get_test_circuit():
@@ -60,3 +60,10 @@ class FakeBackendsTest(IBMTestCase):
         res = backend.run(qc, shots=1000).result().get_counts()
         # Assert noise was present and result wasn't ideal
         self.assertNotEqual(res, {"1": 1000})
+
+    def test_retrieving_single_backend(self):
+        """Test retrieving a single backend."""
+        provider = FakeProviderForBackendV2()
+        backend_name = "fake_jakarta"
+        backend = provider.backend(backend_name)
+        self.assertEqual(backend.name, backend_name)

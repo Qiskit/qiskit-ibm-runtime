@@ -40,39 +40,31 @@ from qiskit.pulse.channels import (
 )
 from qiskit.transpiler.target import Target
 
-from qiskit_ibm_provider.utils.backend_decoder import (
-    defaults_from_server_data,
-    properties_from_server_data,
-)
-from qiskit_ibm_provider.utils import local_to_utc, are_circuits_dynamic
-from qiskit_ibm_provider.utils.options import QASM2Options, QASM3Options
-from qiskit_ibm_provider.exceptions import IBMBackendValueError, IBMBackendApiError
-from qiskit_ibm_provider.api.exceptions import RequestsApiError
-
 # temporary until we unite the 2 Session classes
-from qiskit_ibm_provider.session import (
+from .provider_session import (
     Session as ProviderSession,
-)  # temporary until we unite the 2 Session classes
+)
 
 from .utils.utils import validate_job_tags
 from . import qiskit_runtime_service  # pylint: disable=unused-import,cyclic-import
 from .runtime_job import RuntimeJob
 
 from .api.clients import RuntimeClient
-from .api.clients.backend import BaseBackendClient
-from .exceptions import IBMBackendApiProtocolError
+from .exceptions import IBMBackendApiProtocolError, IBMBackendValueError, IBMBackendApiError
 from .utils.backend_converter import (
     convert_to_target,
 )
 from .utils.default_session import get_cm_session as get_cm_primitive_session
+from .utils.backend_decoder import (
+    defaults_from_server_data,
+    properties_from_server_data,
+)
+from .utils.options import QASM2Options, QASM3Options
+from .api.exceptions import RequestsApiError
+from .utils import local_to_utc, are_circuits_dynamic
 
-# If using a new-enough version of the IBM Provider, access the pub/sub
-# mechanism from it as a broker, but fall back to Qiskit if we're using
-# an old version (in which case it will also be falling back to Qiskit).
-try:
-    from qiskit_ibm_provider.utils.pubsub import Publisher
-except ImportError:
-    from qiskit.tools.events.pubsub import Publisher  # pylint: disable=ungrouped-imports
+from .utils.pubsub import Publisher
+
 
 logger = logging.getLogger(__name__)
 
@@ -179,7 +171,7 @@ class IBMBackend(Backend):
         self,
         configuration: Union[QasmBackendConfiguration, PulseBackendConfiguration],
         service: "qiskit_runtime_service.QiskitRuntimeService",
-        api_client: BaseBackendClient,
+        api_client: RuntimeClient,
         instance: Optional[str] = None,
     ) -> None:
         """IBMBackend constructor.
@@ -764,16 +756,11 @@ class IBMBackend(Backend):
             warnings.warn(
                 "A Primitive session is open but Backend.run() jobs will not be run within this session"
             )
+        session_id = None
         if self._session:
             if not self._session.active:
                 raise RuntimeError(f"The session {self._session.session_id} is closed.")
             session_id = self._session.session_id
-            start_session = session_id is None
-            max_session_time = self._session._max_time
-        else:
-            session_id = None
-            start_session = False
-            max_session_time = None
 
         log_level = getattr(self.options, "log_level", None)  # temporary
         try:
@@ -785,15 +772,11 @@ class IBMBackend(Backend):
                 log_level=log_level,
                 job_tags=job_tags,
                 session_id=session_id,
-                start_session=start_session,
-                session_time=max_session_time,
+                start_session=False,
                 image=image,
             )
         except RequestsApiError as ex:
             raise IBMBackendApiError("Error submitting job: {}".format(str(ex))) from ex
-        session_id = response.get("session_id", None)
-        if self._session:
-            self._session._session_id = session_id
         try:
             job = RuntimeJob(
                 backend=self,
@@ -839,7 +822,13 @@ class IBMBackend(Backend):
 
     def open_session(self, max_time: Optional[Union[int, str]] = None) -> ProviderSession:
         """Open session"""
-        self._session = ProviderSession(max_time=max_time)
+        if not self._configuration.simulator:
+            new_session = self._service._api_client.create_session(
+                self.name, self._instance, max_time, self._service.channel
+            )
+            self._session = ProviderSession(max_time=max_time, session_id=new_session.get("id"))
+        else:
+            self._session = ProviderSession()
         return self._session
 
     @property

@@ -9,3 +9,5 @@ qiskit-ibm-runtime API reference
 
    runtime_service
    options
+   transpiler
+   fake_provider

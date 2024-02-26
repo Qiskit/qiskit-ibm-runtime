@@ -27,7 +27,6 @@ REQUIREMENTS = [
     "python-dateutil>=2.8.0",
     "websocket-client>=1.5.1",
     "ibm-platform-services>=0.22.6",
-    "qiskit-ibm-provider>=0.8.0",
 ]
 
 # Handle version.
@@ -49,7 +48,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/Qiskit/qiskit-ibm-runtime",
     author="Qiskit Development Team",
-    author_email="hello@qiskit.org",
+    author_email="qiskit@us.ibm.com",
     license="Apache 2.0",
     classifiers=[
         "Environment :: Console",
@@ -64,6 +63,7 @@ setuptools.setup(
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
         "Topic :: Scientific/Engineering",
     ],
     keywords="qiskit sdk quantum api runtime ibm",

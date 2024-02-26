@@ -22,7 +22,7 @@ from typing import Optional, Dict, Any, List
 
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 
-from qiskit_ibm_provider.utils.hgp import from_instance_format
+from qiskit_ibm_runtime.utils.hgp import from_instance_format
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
 from qiskit_ibm_runtime.utils import RuntimeEncoder
 
@@ -284,6 +284,22 @@ class BaseFakeRuntimeClient:
         if not isinstance(classes, list):
             classes = [classes]
         self._job_classes = classes
+
+    # pylint: disable=unused-argument
+    def create_session(
+        self,
+        backend: Optional[str] = None,
+        instance: Optional[str] = None,
+        max_time: Optional[int] = None,
+        channel: Optional[str] = None,
+        mode: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Create a session."""
+        return {"id": uuid.uuid4().hex}
+
+    def close_session(self, session_id: str) -> None:
+        """Close a session."""
+        pass
 
     def is_qctrl_enabled(self):
         """Return whether or not channel_strategy q-ctrl is enabled."""

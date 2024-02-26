@@ -15,9 +15,6 @@
 from typing import Dict, Optional, Type, Union, Callable, Any
 from types import TracebackType
 from functools import wraps
-from threading import Lock
-
-from qiskit_ibm_provider.utils.converters import hms_to_seconds
 
 from qiskit_ibm_runtime import QiskitRuntimeService
 from .exceptions import IBMInputValueError
@@ -26,6 +23,7 @@ from .utils.result_decoder import ResultDecoder
 from .ibm_backend import IBMBackend
 from .utils.default_session import set_cm_session
 from .utils.deprecation import deprecate_arguments
+from .utils.converters import hms_to_seconds
 
 
 def _active_session(func):  # type: ignore
@@ -54,14 +52,22 @@ class Session:
 
     For example::
 
-        from qiskit.test.reference_circuits import ReferenceCircuits
+        from qiskit.circuit import QuantumCircuit, QuantumRegister, ClassicalRegister
         from qiskit_ibm_runtime import Sampler, Session, Options
+
+        # Bell Circuit
+        qr = QuantumRegister(2, name="qr")
+        cr = ClassicalRegister(2, name="cr")
+        qc = QuantumCircuit(qr, cr, name="bell")
+        qc.h(qr[0])
+        qc.cx(qr[0], qr[1])
+        qc.measure(qr, cr)
 
         options = Options(optimization_level=3)
 
         with Session(backend="ibmq_qasm_simulator") as session:
             sampler = Sampler(session=session, options=options)
-            job = sampler.run(ReferenceCircuits.bell())
+            job = sampler.run(qc)
             print(f"Sampler job ID: {job.job_id()}")
             print(f"Sampler job result: {job.result()}")
 
@@ -104,7 +110,6 @@ class Session:
                     if QiskitRuntimeService.global_service is None
                     else QiskitRuntimeService.global_service
                 )
-
         else:
             self._service = service
 
@@ -112,19 +117,35 @@ class Session:
             raise ValueError('"backend" is required for ``ibm_quantum`` channel.')
 
         self._instance = None
-        if isinstance(backend, IBMBackend):
-            self._instance = backend._instance
-            backend = backend.name
-        self._backend = backend
 
-        self._setup_lock = Lock()
-        self._session_id: Optional[str] = None
         self._active = True
         self._max_time = (
             max_time
             if max_time is None or isinstance(max_time, int)
             else hms_to_seconds(max_time, "Invalid max_time value: ")
         )
+
+        if isinstance(backend, IBMBackend):
+            self._instance = backend._instance
+            sim_backend = backend.configuration().simulator
+            backend = backend.name
+        else:
+            backend_obj = self._service.backend(backend)
+            self._instance = backend_obj._instance
+            sim_backend = backend_obj.configuration().simulator
+        self._backend = backend
+
+        if not sim_backend:
+            self._session_id = self._create_session()
+        else:
+            self._session_id = None
+
+    def _create_session(self) -> str:
+        """Create a session."""
+        session = self._service._api_client.create_session(
+            self._backend, self._instance, self._max_time, self._service.channel
+        )
+        return session.get("id")
 
     @_active_session
     def run(
@@ -156,29 +177,15 @@ class Session:
 
         options["backend"] = self._backend
 
-        if not self._session_id:
-            # Make sure only one thread can send the session starter job.
-            self._setup_lock.acquire()
-            # TODO: What happens if session max time != first job max time?
-            # Use session max time if this is first job.
-            options["session_time"] = self._max_time
-
-        try:
-            job = self._service.run(
-                program_id=program_id,
-                options=options,
-                inputs=inputs,
-                session_id=self._session_id,
-                start_session=self._session_id is None,
-                callback=callback,
-                result_decoder=result_decoder,
-            )
-
-            if self._session_id is None:
-                self._session_id = job.job_id()
-        finally:
-            if self._setup_lock.locked():
-                self._setup_lock.release()
+        job = self._service.run(
+            program_id=program_id,
+            options=options,
+            inputs=inputs,
+            session_id=self._session_id,
+            start_session=False,
+            callback=callback,
+            result_decoder=result_decoder,
+        )
 
         if self._backend is None:
             self._backend = job.backend().name
@@ -272,11 +279,11 @@ class Session:
         return None
 
     @property
-    def session_id(self) -> str:
+    def session_id(self) -> Optional[str]:
         """Return the session ID.
 
         Returns:
-            Session ID. None until a job is submitted.
+            Session ID. None if the backend is a simulator.
         """
         return self._session_id
 

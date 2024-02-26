@@ -15,8 +15,6 @@
 import time
 from unittest.mock import MagicMock
 
-from qiskit.providers.fake_provider import FakeQasmSimulator
-from qiskit.test.reference_circuits import ReferenceCircuits
 from qiskit.quantum_info import SparsePauliOp
 from qiskit_ibm_runtime import (
     RuntimeJob,
@@ -30,6 +28,7 @@ from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 from qiskit_ibm_runtime.exceptions import RuntimeInvalidStateError
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 
+from ..utils import bell
 from .mock.fake_runtime_client import BaseFakeRuntimeClient
 from .mock.ws_handler import (
     websocket_handler,
@@ -92,8 +91,9 @@ class TestRuntimeWebsocketClient(IBMTestCase):
         service = MagicMock(spec=QiskitRuntimeService)
         service.run = _patched_run
         service._channel_strategy = None
+        service._api_client = MagicMock()
 
-        circ = ReferenceCircuits.bell()
+        circ = bell()
         obs = SparsePauliOp.from_list([("IZ", 1)])
         primitives = [Sampler, Estimator]
         sub_tests = [
@@ -235,7 +235,6 @@ class TestRuntimeWebsocketClient(IBMTestCase):
         params = ClientParameters(
             channel="ibm_quantum", token="my_token", url=MockWsServer.VALID_WS_URL
         )
-        backend = backend or FakeQasmSimulator()
         job = RuntimeJob(
             backend=backend,
             api_client=BaseFakeRuntimeClient(),
