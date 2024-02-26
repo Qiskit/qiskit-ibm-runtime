@@ -25,7 +25,7 @@ language = 'en'
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = '0.17.1'
+release = '0.20.1'
 
 # -- General configuration ---------------------------------------------------
 
@@ -33,11 +33,14 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
-    'sphinx.ext.mathjax',
+    # This is used by qiskit/documentation to generate links to github.com.
+    "sphinx.ext.viewcode",
     'jupyter_sphinx',
     'sphinx_autodoc_typehints',
     'reno.sphinxext',
     'nbsphinx',
+    'sphinxcontrib.katex',
+    'matplotlib.sphinxext.plot_directive',
 ]
 templates_path = ['_templates']
 

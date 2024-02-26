@@ -216,7 +216,8 @@ class BaseDynamicCircuitAnalysis(TransformationPass):
             duration = dag.calibrations[node.op.name][cal_key].duration
             node.op.duration = duration
         else:
-            duration = node.op.duration
+            # map to outer dag to get the appropriate durations
+            duration = self._durations.get(node.op, indices, unit="dt")
 
         if isinstance(duration, ParameterExpression):
             raise TranspilerError(

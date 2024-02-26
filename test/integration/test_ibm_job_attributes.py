@@ -21,9 +21,8 @@ from dateutil import tz
 from qiskit.compiler import transpile
 from qiskit import QuantumCircuit
 from qiskit.providers.jobstatus import JobStatus, JOB_FINAL_STATES
-from qiskit.test.reference_circuits import ReferenceCircuits
 
-from qiskit_ibm_provider.exceptions import IBMBackendValueError
+from qiskit_ibm_runtime.exceptions import IBMBackendValueError
 
 from qiskit_ibm_runtime import IBMBackend, RuntimeJob
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
@@ -32,7 +31,7 @@ from ..decorators import (
     integration_test_setup,
 )
 from ..ibm_test_case import IBMTestCase
-from ..utils import most_busy_backend, cancel_job_safe
+from ..utils import most_busy_backend, cancel_job_safe, bell
 
 
 class TestIBMJobAttributes(IBMTestCase):
@@ -52,14 +51,14 @@ class TestIBMJobAttributes(IBMTestCase):
         cls.dependencies = dependencies
         cls.service = dependencies.service
         cls.sim_backend = dependencies.service.backend("ibmq_qasm_simulator")
-        cls.bell = transpile(ReferenceCircuits.bell(), cls.sim_backend)
+        cls.bell = transpile(bell(), cls.sim_backend)
         cls.sim_job = cls.sim_backend.run(cls.bell)
         cls.last_week = datetime.now() - timedelta(days=7)
 
     def setUp(self):
         """Initial test setup."""
         super().setUp()
-        self._qc = ReferenceCircuits.bell()
+        self._qc = bell()
 
     def test_job_id(self):
         """Test getting a job ID."""

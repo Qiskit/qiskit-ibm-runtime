@@ -22,13 +22,14 @@ import warnings
 
 from qiskit.providers.options import Options as TerraOptions
 
-from qiskit_ibm_provider.session import get_cm_session as get_cm_provider_session
+from .provider_session import get_cm_session as get_cm_provider_session
 
 from .options import Options
 from .options.utils import set_default_error_levels
 from .runtime_job import RuntimeJob
 from .ibm_backend import IBMBackend
 from .utils.default_session import get_cm_session
+from .utils.utils import validate_isa_circuits
 from .constants import DEFAULT_DECODERS
 from .qiskit_runtime_service import QiskitRuntimeService
 
@@ -137,6 +138,14 @@ class BasePrimitive(ABC):
         Returns:
             Submitted job.
         """
+        if (
+            self._backend
+            and isinstance(self._backend, IBMBackend)
+            and isinstance(self._backend.service, QiskitRuntimeService)
+            and hasattr(self._backend, "target")
+        ):
+            validate_isa_circuits(primitive_inputs["circuits"], self._backend.target)
+
         combined = Options._merge_options(self._options, user_kwargs)
 
         if self._backend:

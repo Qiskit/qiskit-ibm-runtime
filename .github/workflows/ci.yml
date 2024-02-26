@@ -33,8 +33,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -e .
-          pip install -c constraints.txt -r requirements-dev.txt
+          pip install -c constraints.txt -r requirements-dev.txt -e .
       - name: Run black
         run: make style
       - name: Run lint
@@ -82,7 +81,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: [3.8, 3.9, '3.10', '3.11']
+        python-version: [3.8, 3.9, '3.10', '3.11', '3.12']
         os: [ "macOS-latest", "ubuntu-latest", "windows-latest" ]
     env:
       LOG_LEVEL: DEBUG
@@ -99,8 +98,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -e .
-          pip install -c constraints.txt -r requirements-dev.txt
+          pip install -c constraints.txt -r requirements-dev.txt -e .
       - name: Run unit tests
         run: make unit-test-coverage
       - name: Report coverage to coveralls.io
@@ -142,8 +140,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -e .
-          pip install -c constraints.txt -r requirements-dev.txt
+          pip install -c constraints.txt -r requirements-dev.txt -e .
       - name: Run integration tests
         run: make integration-test
   tests-finished:

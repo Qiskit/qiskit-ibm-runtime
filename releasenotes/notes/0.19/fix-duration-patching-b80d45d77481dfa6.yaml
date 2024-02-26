@@ -1,0 +1,11 @@
+---
+fixes:
+  - |
+    Fix the patching of :class:`.DynamicCircuitInstructions` for instructions
+    with durations that are not in units of ``dt``. 
+upgrade:
+  - |
+    Extend :meth:`.DynamicCircuitInstructions.from_backend` to extract and 
+    patch durations from both :class:`.BackendV1` and :class:`.BackendV2`
+    objects. Also add :meth:`.DynamicCircuitInstructions.from_target` to use a
+    :class:`.Target` object instead.
