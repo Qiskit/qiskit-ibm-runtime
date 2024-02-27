@@ -1,0 +1,12 @@
+---
+deprecations:
+  - |
+    Due to the recent custom programs removal, we are deprecating and renaming the following methods.
+    :meth:`qiskit_ibm_runtime.QiskitRuntimeService.run` is deprecated and will be replaced by a private method
+    :meth:`qiskit_ibm_runtime.QiskitRuntimeService._run`.
+
+    :meth:`qiskit_ibm_runtime.Session.run` is deprecated and will be replaced by a private method
+    :meth:`qiskit_ibm_runtime.Session._run`.
+
+    :meth:`qiskit_ibm_runtime.RuntimeJob.program_id` is deprecated and will be replaced by
+    :meth:`qiskit_ibm_runtime.RuntimeJob.primitive_id`.

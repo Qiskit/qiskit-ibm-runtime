@@ -76,12 +76,6 @@ class IBMRuntimeError(IBMError):
     pass
 
 
-class RuntimeDuplicateProgramError(IBMRuntimeError):
-    """Error raised when a program being uploaded already exists."""
-
-    pass
-
-
 class RuntimeProgramNotFound(IBMRuntimeError):
     """Error raised when a program is not found."""
 

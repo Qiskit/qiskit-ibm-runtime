@@ -264,7 +264,6 @@ class BaseFakeRuntimeClient:
     ):
         """Initialize a fake runtime client."""
         # pylint: disable=unused-argument
-        self._programs = {}
         self._jobs = {}
         self._job_classes = job_classes or []
         self._final_status = final_status

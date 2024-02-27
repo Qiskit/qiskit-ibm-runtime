@@ -21,7 +21,7 @@ from .runtime_job import RuntimeJob
 from .utils.result_decoder import ResultDecoder
 from .ibm_backend import IBMBackend
 from .utils.default_session import set_cm_session
-from .utils.deprecation import deprecate_arguments
+from .utils.deprecation import deprecate_arguments, issue_deprecation_msg
 from .utils.converters import hms_to_seconds
 
 
@@ -168,6 +168,14 @@ class Session:
         Returns:
             Submitted job.
         """
+        issue_deprecation_msg(
+            msg="session.run is deprecated",
+            version="0.21.0",
+            remedy="session.run will instead be converted into a private method "
+            "since it should not be called directly.",
+            period="3 months",
+            stacklevel=3,
+        )
 
         options = options or {}
 
@@ -190,6 +198,11 @@ class Session:
             self._backend = job.backend().name
 
         return job
+
+    @_active_session
+    def _run(self, *args: Any, **kwargs: Any) -> RuntimeJob:
+        """Private run method"""
+        return self.run(*args, **kwargs)
 
     def cancel(self) -> None:
         """Cancel all pending jobs in a session."""
