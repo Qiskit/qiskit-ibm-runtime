@@ -12,6 +12,7 @@
 
 """Qiskit Runtime flexible session."""
 
+import warnings
 from typing import Dict, Optional, Type, Union, Callable, Any
 from types import TracebackType
 from functools import wraps
@@ -321,7 +322,9 @@ class Session:
 
         """
         if backend:
-            deprecate_arguments("backend", "0.15.0", "Sessions do not support multiple backends.")
+            deprecate_arguments(
+                "backend", "0.15.0", "The backend used to open the session will be used."
+            )
             if isinstance(backend, IBMBackend):
                 backend = backend.name
 
@@ -337,6 +340,15 @@ class Session:
                 backend = session_backend
             else:
                 raise IBMInputValueError(f"The session_id {session_id} does not exist.")
+        else:
+            warnings.warn(
+                (
+                    "The `service` parameter will be required in a future release no sooner than "
+                    "3 months after the release of qiskit-ibm-runtime 0.21.0 ."
+                ),
+                DeprecationWarning,
+                stacklevel=2,
+            )
         if not service and not backend:
             raise IBMInputValueError("Either service or backend must be given.")
 
