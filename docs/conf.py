@@ -184,7 +184,7 @@ def linkcode_resolve(domain, info):
         return None
     if full_file_name is None:
         return None
-    file_name = full_file_name.split("/qiskit-ibm-runtime/")[-1]
+    file_name = full_file_name.split("/qiskit_ibm_runtime/")[-1]
 
     try:
         source, lineno = inspect.getsourcelines(obj)
