@@ -179,7 +179,7 @@ def linkcode_resolve(domain, info):
         full_file_name = inspect.getsourcefile(obj)
     except TypeError:
         return None
-    if full_file_name is None:
+    if full_file_name is None or "/qiskit_ibm_runtime/" not in full_file_name:
         return None
     file_name = full_file_name.split("/qiskit_ibm_runtime/")[-1]
 
