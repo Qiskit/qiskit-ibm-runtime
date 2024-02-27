@@ -55,6 +55,7 @@ from qiskit.circuit import (
 from qiskit.circuit.parametertable import ParameterView
 from qiskit.result import Result
 from qiskit.version import __version__ as _terra_version_string
+from qiskit.utils import optionals
 from qiskit.primitives.containers.bindings_array import BindingsArray
 from qiskit.primitives.containers.observables_array import ObservablesArray
 from qiskit.primitives.containers import (

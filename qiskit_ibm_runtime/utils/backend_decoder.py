@@ -95,15 +95,16 @@ def properties_from_server_data(properties: Dict) -> BackendProperties:
     Returns:
         A ``BackendProperties`` instance.
     """
-    properties["last_update_date"] = dateutil.parser.isoparse(properties["last_update_date"])
-    for qubit in properties["qubits"]:
-        for nduv in qubit:
-            nduv["date"] = dateutil.parser.isoparse(nduv["date"])
-    for gate in properties["gates"]:
-        for param in gate["parameters"]:
-            param["date"] = dateutil.parser.isoparse(param["date"])
-    for gen in properties["general"]:
-        gen["date"] = dateutil.parser.isoparse(gen["date"])
+    if isinstance(properties["last_update_date"], str):
+        properties["last_update_date"] = dateutil.parser.isoparse(properties["last_update_date"])
+        for qubit in properties["qubits"]:
+            for nduv in qubit:
+                nduv["date"] = dateutil.parser.isoparse(nduv["date"])
+        for gate in properties["gates"]:
+            for param in gate["parameters"]:
+                param["date"] = dateutil.parser.isoparse(param["date"])
+        for gen in properties["general"]:
+            gen["date"] = dateutil.parser.isoparse(gen["date"])
 
     properties = utc_to_local_all(properties)
     return BackendProperties.from_dict(properties)
