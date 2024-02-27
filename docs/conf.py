@@ -190,4 +190,4 @@ def linkcode_resolve(domain, info):
     else:
         ending_lineno = lineno + len(source) - 1
         linespec = f"#L{lineno}-L{ending_lineno}"
-    return f"https://github.com/Qiskit/qiskit-ibm-runtime/tree/{GITHUB_BRANCH}/qiskit-ibm-runtime/{file_name}{linespec}"
+    return f"https://github.com/Qiskit/qiskit-ibm-runtime/tree/{GITHUB_BRANCH}/qiskit_ibm_runtime/{file_name}{linespec}"
