@@ -147,10 +147,10 @@ def determine_github_branch() -> str:
 
     # Check if the ref_name is a tag like `1.0.0` or `1.0.0rc1`. If so, we need
     # to transform it to a Git branch like `stable/1.0`.
-    version_without_patch_match = re.match(r"(\d+\.\d+)", ref_name)
+    version_without_patch = re.match(r"(\d+\.\d+)", ref_name)
     return (
-        f"stable/{version_without_patch_match.group()}"
-        if version_without_patch_match
+        f"stable/{version_without_patch.group()}"
+        if version_without_patch
         else ref_name
     )
 
