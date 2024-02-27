@@ -392,7 +392,7 @@ class RuntimeDecoder(json.JSONDecoder):
                 if shape is not None and isinstance(shape, list):
                     shape = tuple(shape)
                 data_bin_cls = make_data_bin(zip(field_names, field_types), shape=shape)
-                return data_bin_cls(**obj_val["values"])
+                return data_bin_cls(**obj_val["fields"])
             if obj_type == "PubResult":
                 return PubResult(**obj_val)
             if obj_type == "PrimitiveResult":
