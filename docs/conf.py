@@ -143,11 +143,7 @@ def determine_github_branch() -> str:
     if base_ref := os.environ.get("GITHUB_BASE_REF")
         return base_ref
 
-    ref_name = (
-        os.environ.get("GITHUB_REF_NAME")
-        or os.environ.get("BUILD_SOURCE_BRANCH_NAME")
-    )
-    assert ref_name is not None
+    ref_name = os.environ["GITHUB_REF_NAME"]
 
     # Check if the ref_name is a tag like `1.0.0` or `1.0.0rc1`. If so, we need
     # to transform it to a Git branch like `stable/1.0`.
