@@ -133,10 +133,7 @@ def determine_github_branch() -> str:
     for how we determine this with GitHub Actions.
     """
     # If CI env vars not set, default to `main`. This is relevant for local builds.
-    if (
-        "GITHUB_REF_NAME" not in os.environ
-        and "BUILD_SOURCE_BRANCH_NAME" not in os.environ
-    ):
+    if "GITHUB_REF_NAME" not in os.environ:
         return "main"
 
     # PR workflows set the branch they're merging into.
