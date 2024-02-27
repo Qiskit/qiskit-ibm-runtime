@@ -140,10 +140,7 @@ def determine_github_branch() -> str:
         return "main"
 
     # PR workflows set the branch they're merging into.
-    if base_ref := (
-        os.environ.get("GITHUB_BASE_REF")
-        or os.environ.get("SYSTEM_PULL_REQUEST_TARGET_BRANCH_NAME")
-    ):
+    if base_ref := os.environ.get("GITHUB_BASE_REF")
         return base_ref
 
     ref_name = (
