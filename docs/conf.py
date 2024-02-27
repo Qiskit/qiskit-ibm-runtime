@@ -164,7 +164,7 @@ def linkcode_resolve(domain, info):
 
     module_name = info["module"]
     module = sys.modules.get(module_name)
-    if module is None or "qiskit" not in module_name:
+    if module is None or "qiskit_ibm_runtime" not in module_name:
         return None
 
     obj = module
