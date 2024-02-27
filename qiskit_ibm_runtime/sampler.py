@@ -42,7 +42,7 @@ class Sampler:
     version = 0
 
 
-class SamplerV2(BasePrimitiveV2, Sampler, BaseSamplerV2):
+class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
     """Class for interacting with Qiskit Runtime Sampler primitive service.
 
     This class supports version 2 of the Sampler interface, which uses different
@@ -150,11 +150,16 @@ class SamplerV1(BasePrimitiveV1, Sampler, BaseSampler):
 
     Example::
 
-        from qiskit.test.reference_circuits import ReferenceCircuits
+        from qiskit.circuit import QuantumCircuit, QuantumRegister, ClassicalRegister
         from qiskit_ibm_runtime import QiskitRuntimeService, Session, Sampler
 
         service = QiskitRuntimeService(channel="ibm_cloud")
-        bell = ReferenceCircuits.bell()
+        quantum_register = QuantumRegister(2, name="qr")
+        classical_register = ClassicalRegister(2, name="cr")
+        bell = QuantumCircuit(quantum_register, classical_register, name="bell")
+        bell.h(quantum_register[0])
+        bell.cx(quantum_register[0], quantum_register[1])
+        bell.measure(quantum_register, classical_register)
 
         with Session(service, backend="ibmq_qasm_simulator") as session:
             sampler = Sampler(session=session)
