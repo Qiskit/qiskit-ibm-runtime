@@ -12,11 +12,12 @@
 
 """Sampler result decoder."""
 
-from typing import Dict
+from typing import Dict, Union
 from math import sqrt
 
 from qiskit.result import QuasiDistribution
 from qiskit.primitives import SamplerResult
+from qiskit.primitives import PrimitiveResult
 
 from .result_decoder import ResultDecoder
 
@@ -25,9 +26,16 @@ class SamplerResultDecoder(ResultDecoder):
     """Class used to decode sampler results."""
 
     @classmethod
-    def decode(cls, raw_result: str) -> SamplerResult:
+    def decode(cls, raw_result: str) -> Union[SamplerResult, PrimitiveResult]:
         """Convert the result to SamplerResult."""
         decoded: Dict = super().decode(raw_result)
+
+        if isinstance(decoded, PrimitiveResult):
+            return decoded
+
+        # TODO: Handle V2 result that is returned in dict format
+
+        # V1 result
         quasi_dists = []
         for quasi, meta in zip(decoded["quasi_dists"], decoded["metadata"]):
             shots = meta.get("shots", float("inf"))
