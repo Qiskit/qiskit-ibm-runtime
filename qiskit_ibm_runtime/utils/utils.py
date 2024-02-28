@@ -74,17 +74,14 @@ def validate_isa_circuits(circuits: Sequence[QuantumCircuit], target: Target) ->
     for circuit in circuits:
         message = is_isa_circuit(circuit, target)
         if message:
-            warnings.warn(
+            raise IBMInputValueError(
                 message
-                + " Circuits that do not match the target hardware definition will no longer be "
-                "supported after March 1, 2024. See the transpilation documentation "
+                + " Circuits that do not match the target hardware definition are no longer "
+                "supported after 4 March 2024. See the transpilation documentation "
                 "(https://docs.quantum.ibm.com/transpile) for instructions to transform circuits and "
                 "the primitive examples (https://docs.quantum.ibm.com/run/primitives-examples) to see "
-                "this coupled with operator transformations.",
-                DeprecationWarning,
-                stacklevel=6,
+                "this coupled with operator transformations."
             )
-            break
 
 
 def validate_job_tags(job_tags: Optional[List[str]]) -> None:

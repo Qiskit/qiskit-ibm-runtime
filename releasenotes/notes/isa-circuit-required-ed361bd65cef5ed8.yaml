@@ -1,0 +1,10 @@
+---
+upgrade:
+  - |
+    Circuits that do not match the target hardware definition are no longer
+    supported by Qiskit Runtime primitives, unless ``channel_strategy="q-ctrl"``
+    is used. See the transpilation documentation
+    (https://docs.quantum.ibm.com/transpile) for instructions to transform
+    circuits and the primitive examples
+    (https://docs.quantum.ibm.com/run/primitives-examples) to see
+    this coupled with operator transformations.

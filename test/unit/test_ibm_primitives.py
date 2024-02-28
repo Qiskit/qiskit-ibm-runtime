@@ -36,6 +36,7 @@ from qiskit_ibm_runtime import (
 )
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.utils.default_session import _DEFAULT_SESSION
+from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import (
@@ -866,7 +867,7 @@ class TestPrimitives(IBMTestCase):
         else:
             circ.measure_all()
 
-        with self.assertWarnsRegex(DeprecationWarning, "target hardware"):
+        with self.assertRaisesRegex(IBMInputValueError, "target hardware"):
             inst.run(**run_input)
 
     @data(Sampler, Estimator)
@@ -995,3 +996,20 @@ class TestPrimitives(IBMTestCase):
                             _ = inst.run(self.qx, observables=self.obs, **bad_opt)
 
                         self.assertIn(expected_message, str(exc.exception))
+
+    @data(Sampler, Estimator)
+    def test_qctrl_abstract_circuit(self, primitive):
+        """Test q-ctrl can still accept abstract circuits."""
+        backend = get_mocked_backend()
+        backend._service._channel_strategy = "q-ctrl"
+        inst = primitive(backend=backend)
+
+        circ = QuantumCircuit(3, 3)
+        circ.cx(0, 2)
+        run_input = {"circuits": circ}
+        if isinstance(inst, Estimator):
+            run_input["observables"] = SparsePauliOp("ZZZ")
+        else:
+            circ.measure_all()
+
+        inst.run(**run_input)
