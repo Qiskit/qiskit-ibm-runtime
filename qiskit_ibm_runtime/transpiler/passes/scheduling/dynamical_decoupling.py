@@ -126,6 +126,7 @@ class PadDynamicalDecoupling(BlockBasePadder):
         coupling_map: CouplingMap = None,
         alt_spacings: Optional[Union[List[List[float]], List[float]]] = None,
         schedule_idle_qubits: bool = False,
+        dd_barrier: Optional[str] = None,
     ):
         """Dynamical decoupling initializer.
 
@@ -181,6 +182,8 @@ class PadDynamicalDecoupling(BlockBasePadder):
             schedule_idle_qubits: Set to true if you'd like a delay inserted on idle qubits.
                 This is useful for timeline visualizations, but may cause issues
                 for execution on large backends.
+            dd_barrier: only apply DD to delays terminating with a barrier
+                whose label contains the specified string
         Raises:
             TranspilerError: When invalid DD sequence is specified.
             TranspilerError: When pulse gate with the duration which is
@@ -203,6 +206,7 @@ class PadDynamicalDecoupling(BlockBasePadder):
         self._alignment = pulse_alignment
         self._coupling_map = coupling_map
         self._coupling_coloring = None
+        self._dd_barrier = dd_barrier
 
         if spacings is not None:
             try:
@@ -371,6 +375,7 @@ class PadDynamicalDecoupling(BlockBasePadder):
         t_end: int,
         next_node: DAGNode,
         prev_node: DAGNode,
+        enable_dd: bool = False,
     ) -> None:
         # This routine takes care of the pulse alignment constraint for the DD sequence.
         # Note that the alignment constraint acts on the t0 of the DAGOpNode.
@@ -418,8 +423,9 @@ class PadDynamicalDecoupling(BlockBasePadder):
         ):
             self._dirty_qubits.remove(qubit)
 
-        if qubit not in self._dirty_qubits:
-            # Previous node is the start edge or reset, i.e. qubit is ground state.
+        if qubit not in self._dirty_qubits or (self._dd_barrier and not enable_dd):
+            # Previous node is the start edge or reset, i.e. qubit is ground state;
+            # or dd to be applied before named barrier only
             self._apply_scheduled_op(
                 block_idx, t_start, Delay(time_interval, self._block_dag.unit), qubit
             )

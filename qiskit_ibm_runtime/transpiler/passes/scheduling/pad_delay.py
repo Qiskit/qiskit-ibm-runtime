@@ -15,6 +15,7 @@
 from qiskit.circuit import Qubit
 from qiskit.circuit.delay import Delay
 from qiskit.dagcircuit import DAGNode, DAGOutNode
+from qiskit.transpiler.instruction_durations import InstructionDurations
 
 from .block_base_padder import BlockBasePadder
 
@@ -50,16 +51,23 @@ class PadDelay(BlockBasePadder):
     See :class:`BlockBasePadder` pass for details.
     """
 
-    def __init__(self, fill_very_end: bool = True, schedule_idle_qubits: bool = False):
+    def __init__(
+        self,
+        durations: InstructionDurations,
+        fill_very_end: bool = True,
+        schedule_idle_qubits: bool = False,
+    ):
         """Create new padding delay pass.
 
         Args:
+            durations: Durations of instructions to be used in scheduling.
             fill_very_end: Set ``True`` to fill the end of circuit with delay.
             schedule_idle_qubits: Set to true if you'd like a delay inserted on idle qubits.
                 This is useful for timeline visualizations, but may cause issues for execution
                 on large backends.
         """
         super().__init__(schedule_idle_qubits=schedule_idle_qubits)
+        self._durations = durations
         self.fill_very_end = fill_very_end
 
     def _pad(
@@ -70,6 +78,7 @@ class PadDelay(BlockBasePadder):
         t_end: int,
         next_node: DAGNode,
         prev_node: DAGNode,
+        enable_dd: bool = False,
     ) -> None:
         if not self.fill_very_end and isinstance(next_node, DAGOutNode):
             return
