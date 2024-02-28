@@ -22,7 +22,7 @@ import warnings
 
 from ddt import data, ddt
 from qiskit import transpile, pulse
-from qiskit.circuit import QuantumCircuit
+from qiskit.circuit import QuantumCircuit, QuantumRegister, ClassicalRegister
 from qiskit.pulse.library import Gaussian
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.providers.models.backendconfiguration import QasmBackendConfiguration
@@ -915,6 +915,47 @@ class TestPrimitives(IBMTestCase):
         with warnings.catch_warnings(record=True) as warns:
             warnings.simplefilter("always")
             inst.run(**run_input)
+            self.assertFalse(warns)
+
+    def test_dynamic_circuit_is_isa(self):
+        """Test passing dynmaic circuits is considered ISA."""
+        # pylint: disable=not-context-manager
+        
+        backend = get_mocked_backend()
+        sampler = Sampler(backend=backend)
+
+        qubits = QuantumRegister(3)
+        clbits = ClassicalRegister(3)
+        circuit = QuantumCircuit(qubits, clbits)
+        (q0, q1, q2) = qubits
+        (c0, c1, c2) = clbits
+
+        circuit.x(q0)
+        circuit.measure(q0, c0)
+        with circuit.if_test((c0, 1)):
+            circuit.x(q0)
+
+        circuit.measure(q1, c1)
+        with circuit.switch(c1) as case:
+            with case(0):
+                circuit.x(q0)
+            with case(1):
+                circuit.x(q1)
+
+        circuit.measure(q1, c1)
+        circuit.measure(q2, c2)
+        with circuit.while_loop((clbits, 0b111)):
+            circuit.rz(1.5, q1)
+            circuit.rz(1.5, q2)
+            circuit.measure(q1, c1)
+            circuit.measure(q2, c2)
+
+        with circuit.for_loop(range(2)) as _:
+            circuit.x(q0)
+
+        with warnings.catch_warnings(record=True) as warns:
+            warnings.simplefilter("always")
+            sampler.run(circuits=circuit)
             self.assertFalse(warns)
 
     def _update_dict(self, dict1, dict2):
