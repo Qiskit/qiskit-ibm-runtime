@@ -108,5 +108,5 @@ Qconfig.py
 
 /docs/stubs/
 
-# PyCharm
-./idea
+# Pycharm
+.idea
