@@ -289,7 +289,7 @@ class RuntimeEncoder(json.JSONEncoder):
                 "field_names": obj._FIELDS,
                 "field_types": [str(field_type) for field_type in obj._FIELD_TYPES],
                 "shape": obj._SHAPE,
-                "values": {field_name: getattr(obj, field_name) for field_name in obj._FIELDS},
+                "fields": {field_name: getattr(obj, field_name) for field_name in obj._FIELDS},
             }
             return {"__type__": "DataBin", "__value__": out_val}
         if isinstance(obj, EstimatorPub):
@@ -409,7 +409,7 @@ class RuntimeDecoder(json.JSONDecoder):
                 if shape is not None and isinstance(shape, list):
                     shape = tuple(shape)
                 data_bin_cls = make_data_bin(zip(field_names, field_types), shape=shape)
-                return data_bin_cls(**obj_val["values"])
+                return data_bin_cls(**obj_val["fields"])
             if obj_type == "PubResult":
                 return PubResult(**obj_val)
             if obj_type == "PrimitiveResult":
