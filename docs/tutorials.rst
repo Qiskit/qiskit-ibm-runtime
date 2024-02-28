@@ -20,9 +20,9 @@ Sampler
 .. nbgallery::
 
    tutorials/how-to-getting-started-with-sampler
-   tutorials/grover_with_sampler
-   tutorials/user-transpiled-circuits
-   tutorials/qaoa_with_primitives
+   tutorials/grovers_algorithm/grover_with_sampler
+   tutorials/submitting_transpiled_circuits/user-transpiled-circuits
+   tutorials/quantum_approximate_optimization_algorithm/qaoa_with_primitives
 
 
 .. Hiding - Indices and tables
