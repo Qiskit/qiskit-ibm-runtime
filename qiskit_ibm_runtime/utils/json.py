@@ -215,7 +215,7 @@ class RuntimeEncoder(json.JSONEncoder):
         if hasattr(obj, "to_json"):
             return {"__type__": "to_json", "__value__": obj.to_json()}
         if isinstance(obj, QuantumCircuit):
-            kwargs: dict[str, object] = {"use_symengine": bool(optionals.HAS_SYMENGINE)}
+            kwargs: Dict[str, object] = {"use_symengine": bool(optionals.HAS_SYMENGINE)}
             if _TERRA_VERSION[0] >= 1:
                 # NOTE: This can be updated only after the server side has
                 # updated to a newer qiskit version.

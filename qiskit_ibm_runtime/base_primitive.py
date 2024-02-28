@@ -29,6 +29,8 @@ from .options.utils import set_default_error_levels
 from .runtime_job import RuntimeJob
 from .ibm_backend import IBMBackend
 from .utils.default_session import get_cm_session
+from .utils.deprecation import issue_deprecation_msg
+from .utils.utils import validate_isa_circuits
 from .constants import DEFAULT_DECODERS
 from .qiskit_runtime_service import QiskitRuntimeService
 
@@ -121,6 +123,12 @@ class BasePrimitive(ABC):
                 raise ValueError(
                     "A backend or session must be specified when not using ibm_cloud channel."
                 )
+            issue_deprecation_msg(
+                "Not providing a backend is deprecated",
+                "0.21.0",
+                "Passing in a backend will be required, please provide a backend.",
+                3,
+            )
         # Check if initialized within a IBMBackend session. If so, issue a warning.
         if get_cm_provider_session():
             warnings.warn(
@@ -137,6 +145,14 @@ class BasePrimitive(ABC):
         Returns:
             Submitted job.
         """
+        if (
+            self._backend
+            and isinstance(self._backend, IBMBackend)
+            and isinstance(self._backend.service, QiskitRuntimeService)
+            and hasattr(self._backend, "target")
+        ):
+            validate_isa_circuits(primitive_inputs["circuits"], self._backend.target)
+
         combined = Options._merge_options(self._options, user_kwargs)
 
         if self._backend:

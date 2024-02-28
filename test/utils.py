@@ -17,7 +17,7 @@ import logging
 import time
 import unittest
 from unittest import mock
-from typing import Dict, Optional, Any
+from typing import Dict, Optional
 from datetime import datetime
 
 from qiskit.circuit import QuantumCircuit, QuantumRegister, ClassicalRegister
@@ -25,13 +25,15 @@ from qiskit.compiler import transpile, assemble
 from qiskit.qobj import QasmQobj
 from qiskit.providers.jobstatus import JOB_FINAL_STATES, JobStatus
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
-from qiskit.providers.models import BackendStatus, BackendProperties
+from qiskit.providers.models import BackendStatus, BackendProperties, BackendConfiguration
 from qiskit.providers.backend import Backend
+
 from qiskit_ibm_runtime.hub_group_project import HubGroupProject
 from qiskit_ibm_runtime import QiskitRuntimeService
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.runtime_job import RuntimeJob
 from qiskit_ibm_runtime.exceptions import RuntimeInvalidStateError
+from qiskit_ibm_runtime.fake_provider import FakeManila
 
 
 def setup_test_logging(logger: logging.Logger, filename: str) -> None:
@@ -274,11 +276,29 @@ def create_faulty_backend(
     return out_backend
 
 
-def get_mocked_backend(name: str = "ibm_gotham") -> Any:
+def get_mocked_backend(
+    name: str = "ibm_gotham", configuration: Optional[BackendConfiguration] = None
+) -> IBMBackend:
     """Return a mock backend."""
-    mock_backend = mock.MagicMock(spec=IBMBackend)
+
+    def _noop(*args, **kwargs):  # pylint: disable=unused-argument
+        return None
+
+    mock_service = mock.MagicMock(spec=QiskitRuntimeService)
+    mock_service._channel_strategy = None
+    mock_api_client = mock.MagicMock()
+
+    if not configuration:
+        configuration = FakeManila().configuration()
+
+    mock_api_client.backend_properties = _noop
+    mock_api_client.backend_pulse_defaults = _noop
+    mock_backend = IBMBackend(
+        configuration=configuration, service=mock_service, api_client=mock_api_client
+    )
     mock_backend.name = name
     mock_backend._instance = None
+
     return mock_backend
 
 
