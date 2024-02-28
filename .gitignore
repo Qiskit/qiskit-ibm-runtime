@@ -107,3 +107,6 @@ Qconfig.py
 .DS_Store
 
 /docs/stubs/
+
+# Pycharm
+.idea
