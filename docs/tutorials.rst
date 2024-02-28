@@ -12,7 +12,7 @@ Estimator
    tutorials/how-to-getting-started-with-estimator
    tutorials/Error-Suppression-and-Error-Mitigation
    tutorials/chsh_inequality/chsh_with_estimator
-   tutorials/vqe_with_estimator
+   tutorials/variational_quantum_eigensolver/vqe_with_estimator
 
 Sampler
 =================================
