@@ -15,7 +15,7 @@ Fake Algiers device (27 qubit).
 """
 
 import os
-from qiskit_ibm_runtime.fake_provider import fake_pulse_backend, fake_backend
+from qiskit_ibm_runtime.fake_provider import fake_backend
 
 
 class FakeAlgiers(fake_backend.FakeBackendV2):
