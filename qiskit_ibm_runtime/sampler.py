@@ -111,6 +111,8 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
         Raises:
             ValueError: Invalid arguments are given.
         """
+        if shots is None:
+            shots = self.options.default_shots
         coerced_pubs = [SamplerPub.coerce(pub, shots) for pub in pubs]
 
         if any(len(pub.circuit.cregs) == 0 for pub in coerced_pubs):

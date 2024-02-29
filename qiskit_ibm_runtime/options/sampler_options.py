@@ -31,6 +31,9 @@ class SamplerOptions(OptionsV2):
     """Options for v2 Sampler.
 
     Args:
+        default_shots: The default number of shots to use if none are specified in the pubs or in the
+            run method. Default: ``4096``.
+
         optimization_level: How much optimization to perform on the circuits.
             Higher levels generate more optimized circuits,
             at the expense of longer processing times.
@@ -57,6 +60,7 @@ class SamplerOptions(OptionsV2):
     """
 
     # Sadly we cannot use pydantic's built in validation because it won't work on Unset.
+    default_shots: int = 4096
     optimization_level: Union[UnsetType, int] = Unset
     dynamical_decoupling: Union[UnsetType, DDSequenceType] = Unset
     execution: Union[ExecutionOptionsV2, Dict] = Field(default_factory=ExecutionOptionsV2)

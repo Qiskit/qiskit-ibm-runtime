@@ -105,6 +105,10 @@ class TestSamplerV2(IBMTestCase):
                 {"dynamical_decoupling": "XX"},
             ),
             (
+                SamplerOptions(default_shots=42),  # pylint: disable=unexpected-keyword-arg
+                {"default_shots": 42},
+            ),
+            (
                 SamplerOptions(optimization_level=3),  # pylint: disable=unexpected-keyword-arg
                 {"transpilation": {"optimization_level": 3}},
             ),

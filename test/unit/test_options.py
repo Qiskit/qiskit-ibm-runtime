@@ -355,12 +355,16 @@ class TestOptionsV2(IBMTestCase):
             "pec_max_overhead": 2,
         }
 
-        estimator_extra = {}
+        extra = {}
         if isinstance(opt_cls, EstimatorOptions):
-            estimator_extra = {
+            extra = {
                 "resilience_level": 2,
                 "resilience": resilience,
                 "seed_estimator": 42,
+            }
+        if isinstance(opt_cls, SamplerOptions):
+            extra = {
+                "default_shots": 1024,
             }
 
         opt = opt_cls(
@@ -371,7 +375,7 @@ class TestOptionsV2(IBMTestCase):
             execution=execution,
             twirling=twirling,
             experimental={"foo": "bar"},
-            **estimator_extra,
+            **extra,
         )
 
         transpilation = {
@@ -392,7 +396,7 @@ class TestOptionsV2(IBMTestCase):
             "execution": execution,
             "foo": "bar",
             "version": 2,
-            **estimator_extra,
+            **extra,
         }
 
         inputs = opt_cls._get_program_inputs(asdict(opt))
