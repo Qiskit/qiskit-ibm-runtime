@@ -111,6 +111,7 @@ class FakeProviderForBackendV2(ProviderV1):
             FakeJohannesburgV2(),  # type: ignore
             FakeKawasaki(),  # type: ignore
             FakeKolkataV2(),  # type: ignore
+            FakeKyiv(),  # type: ignore
             FakeKyoto(),  # type: ignore
             FakeLagosV2(),  # type: ignore
             FakeLimaV2(),  # type: ignore

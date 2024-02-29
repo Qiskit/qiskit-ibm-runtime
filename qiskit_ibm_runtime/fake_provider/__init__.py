@@ -128,6 +128,7 @@ Fake V2 backends are fake backends with IBM Quantum systems snapshots implemente
     FakeJohannesburgV2
     FakeKawasaki
     FakeKolkataV2
+    FakeKyiv
     FakeKyoto
     FakeLagosV2
     FakeLimaV2
