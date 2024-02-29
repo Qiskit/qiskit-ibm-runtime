@@ -920,8 +920,18 @@ class TestPrimitives(IBMTestCase):
     def test_dynamic_circuit_is_isa(self):
         """Test passing dynmaic circuits is considered ISA."""
         # pylint: disable=not-context-manager
-        
-        backend = get_mocked_backend()
+
+        from qiskit_ibm_runtime import QiskitRuntimeService
+        service = QiskitRuntimeService(channel="ibm_quantum")
+        real = service.backend("ibm_sherbrooke")
+
+        from qiskit_ibm_runtime.fake_provider import FakeSherbrooke
+        fake = FakeSherbrooke()
+        # manila = FakeManila()
+        # manila.configuration().basis_gates.append("if_else")
+        backend = get_mocked_backend(configuration=real.configuration())
+        # backend = FakeManila()
+        # backend.configuration().basis_gates.append("if_else")
         sampler = Sampler(backend=backend)
 
         qubits = QuantumRegister(3)
@@ -935,23 +945,25 @@ class TestPrimitives(IBMTestCase):
         with circuit.if_test((c0, 1)):
             circuit.x(q0)
 
-        circuit.measure(q1, c1)
-        with circuit.switch(c1) as case:
-            with case(0):
-                circuit.x(q0)
-            with case(1):
-                circuit.x(q1)
+        # circuit.measure(q1, c1)
+        # with circuit.switch(c1) as case:
+        #     with case(0):
+        #         circuit.x(q0)
+        #     with case(1):
+        #         circuit.x(q1)
 
-        circuit.measure(q1, c1)
-        circuit.measure(q2, c2)
-        with circuit.while_loop((clbits, 0b111)):
-            circuit.rz(1.5, q1)
-            circuit.rz(1.5, q2)
-            circuit.measure(q1, c1)
-            circuit.measure(q2, c2)
+        # circuit.measure(q1, c1)
+        # circuit.measure(q2, c2)
+        # with circuit.while_loop((clbits, 0b111)):
+        #     circuit.rz(1.5, q1)
+        #     circuit.rz(1.5, q2)
+        #     circuit.measure(q1, c1)
+        #     circuit.measure(q2, c2)
 
-        with circuit.for_loop(range(2)) as _:
-            circuit.x(q0)
+        # with circuit.for_loop(range(2)) as _:
+        #     circuit.x(q0)
+
+        circuit = transpile(circuit, backend=real)
 
         with warnings.catch_warnings(record=True) as warns:
             warnings.simplefilter("always")

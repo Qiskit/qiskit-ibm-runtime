@@ -54,7 +54,7 @@ def is_isa_circuit(circuit: QuantumCircuit, target: Target) -> str:
         qargs = tuple(circuit.find_bit(x).index for x in instruction.qubits)
         if (
             not target.instruction_supported(name, qargs)
-            and name not in ["barrier", "if_else", "switch_case", "while_loop", "for_loop"]
+            and name != "barrier"
             and not circuit.has_calibration_for(instruction)
         ):
             return (
