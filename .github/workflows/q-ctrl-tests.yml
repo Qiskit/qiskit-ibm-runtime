@@ -12,6 +12,8 @@
 
 name: Q-CTRL Tests
 on:
+  schedule:
+    - cron: '0 1 * * *'
   push:
       tags:
         - "*"
