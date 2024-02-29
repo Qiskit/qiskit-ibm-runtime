@@ -149,8 +149,7 @@ class BasePrimitive(ABC):
             self._backend
             and isinstance(self._backend, IBMBackend)
             and isinstance(self._backend.service, QiskitRuntimeService)
-            and hasattr(self._backend, "target")
-            and self._backend.target
+            and getattr(self._backend, "target", None)
             and self._service._channel_strategy != "q-ctrl"
         ):
             validate_isa_circuits(primitive_inputs["circuits"], self._backend.target)
