@@ -106,7 +106,11 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
 
         Returns:
             Submitted job.
+            The result of the job is an instance of
+            :class:`qiskit.primitives.containers.PrimitiveResult`.
 
+        Raises:
+            ValueError: Invalid arguments are given.
         """
         coerced_pubs = [SamplerPub.coerce(pub, shots) for pub in pubs]
 
@@ -151,19 +155,17 @@ class SamplerV1(BasePrimitiveV1, Sampler, BaseSampler):
         from qiskit_ibm_runtime import QiskitRuntimeService, Session, Sampler
 
         service = QiskitRuntimeService(channel="ibm_cloud")
-
-        # Bell Circuit
-        qr = QuantumRegister(2, name="qr")
-        cr = ClassicalRegister(2, name="cr")
-        qc = QuantumCircuit(qr, cr, name="bell")
-        qc.h(qr[0])
-        qc.cx(qr[0], qr[1])
-        qc.measure(qr, cr)
+        quantum_register = QuantumRegister(2, name="qr")
+        classical_register = ClassicalRegister(2, name="cr")
+        bell = QuantumCircuit(quantum_register, classical_register, name="bell")
+        bell.h(quantum_register[0])
+        bell.cx(quantum_register[0], quantum_register[1])
+        bell.measure(quantum_register, classical_register)
 
         with Session(service, backend="ibmq_qasm_simulator") as session:
             sampler = Sampler(session=session)
 
-            job = sampler.run(qc, shots=1024)
+            job = sampler.run(bell, shots=1024)
             print(f"Job ID: {job.job_id()}")
             print(f"Job result: {job.result()}")
 

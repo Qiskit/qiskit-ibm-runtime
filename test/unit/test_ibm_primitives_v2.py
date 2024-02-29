@@ -32,7 +32,7 @@ from qiskit_ibm_runtime import (
     Session,
 )
 from qiskit_ibm_runtime.utils.default_session import _DEFAULT_SESSION
-from qiskit_ibm_runtime import EstimatorV2
+from qiskit_ibm_runtime import EstimatorV2, SamplerV2
 from qiskit_ibm_runtime.estimator import Estimator as IBMBaseEstimator
 from qiskit_ibm_runtime.fake_provider import FakeManila
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
@@ -67,7 +67,7 @@ class TestPrimitivesV2(IBMTestCase):
         super().tearDown()
         _DEFAULT_SESSION.set(None)
 
-    @data(EstimatorV2)
+    @data(EstimatorV2, SamplerV2)
     def test_dict_options(self, primitive):
         """Test passing a dictionary as options."""
         options_vars = [
@@ -83,7 +83,7 @@ class TestPrimitivesV2(IBMTestCase):
             self.assertTrue(dict_paritally_equal(asdict(inst.options), options))
 
     @combine(
-        primitive=[EstimatorV2],
+        primitive=[EstimatorV2, SamplerV2],
         env_var=[
             {"log_level": "DEBUG"},
             {"job_tags": ["foo", "bar"]},
@@ -100,7 +100,7 @@ class TestPrimitivesV2(IBMTestCase):
             self.assertEqual(run_options[key], val)
 
     @combine(
-        primitive=[EstimatorV2],
+        primitive=[EstimatorV2, SamplerV2],
         opts=[
             {"experimental": {"image": "foo:bar"}},
             {"experimental": {"image": "foo:bar"}, "environment": {"log_level": "INFO"}},
@@ -119,7 +119,7 @@ class TestPrimitivesV2(IBMTestCase):
             self.assertEqual(run_options[key], val)
             self.assertNotIn(key, input_params)
 
-    @data(EstimatorV2)
+    @data(EstimatorV2, SamplerV2)
     def test_options_copied(self, primitive):
         """Test modifying original options does not affect primitives."""
         options = primitive._options_class()
@@ -128,7 +128,7 @@ class TestPrimitivesV2(IBMTestCase):
         options.max_execution_time = 200
         self.assertEqual(inst.options.max_execution_time, 100)
 
-    @data(EstimatorV2)
+    @data(EstimatorV2, SamplerV2)
     def test_init_with_backend_str(self, primitive):
         """Test initializing a primitive with a backend name."""
         backend_name = "ibm_gotham"
@@ -150,7 +150,7 @@ class TestPrimitivesV2(IBMTestCase):
             runtime_options = mock_service_inst.run.call_args.kwargs["options"]
             self.assertEqual(runtime_options["backend"], backend_name)
 
-    @data(EstimatorV2)
+    @data(EstimatorV2, SamplerV2)
     def test_init_with_session_backend_str(self, primitive):
         """Test initializing a primitive with a backend name using session."""
         backend_name = "ibm_gotham"
@@ -161,7 +161,7 @@ class TestPrimitivesV2(IBMTestCase):
                 self.assertIsNone(inst.session)
             self.assertIn("session must be of type Session or None", str(exc.exception))
 
-    @data(EstimatorV2)
+    @data(EstimatorV2, SamplerV2)
     def test_init_with_backend_instance(self, primitive):
         """Test initializing a primitive with a backend instance."""
         backend = get_mocked_backend()
@@ -180,7 +180,7 @@ class TestPrimitivesV2(IBMTestCase):
             self.assertIsNone(inst.session)
         self.assertIn("session must be of type Session or None", str(exc.exception))
 
-    @data(EstimatorV2)
+    @data(EstimatorV2, SamplerV2)
     def test_init_with_backend_session(self, primitive):
         """Test initializing a primitive with both backend and session."""
         session = MagicMock(spec=MockSession)
@@ -192,7 +192,7 @@ class TestPrimitivesV2(IBMTestCase):
         inst.run(**get_primitive_inputs(inst))
         session.run.assert_called_once()
 
-    @data(EstimatorV2)
+    @data(EstimatorV2, SamplerV2)
     def test_init_with_no_backend_session_cloud(self, primitive):
         """Test initializing a primitive without backend or session for cloud channel."""
         with patch("qiskit_ibm_runtime.base_primitive.QiskitRuntimeService") as mock_service:
@@ -205,7 +205,7 @@ class TestPrimitivesV2(IBMTestCase):
             mock_service.assert_called_once()
             self.assertIsNone(inst.session)
 
-    @data(EstimatorV2)
+    @data(EstimatorV2, SamplerV2)
     def test_init_with_no_backend_session_quantum(self, primitive):
         """Test initializing a primitive without backend or session for quantum channel."""
 
@@ -214,7 +214,7 @@ class TestPrimitivesV2(IBMTestCase):
             with self.assertRaises(ValueError):
                 _ = primitive()
 
-    @data(EstimatorV2)
+    @data(EstimatorV2, SamplerV2)
     def test_default_session_context_manager(self, primitive):
         """Test getting default session within context manager."""
         service = MagicMock()
@@ -225,7 +225,7 @@ class TestPrimitivesV2(IBMTestCase):
             self.assertEqual(inst.session, session)
             self.assertEqual(inst.session.backend(), backend)
 
-    @data(EstimatorV2)
+    @data(EstimatorV2, SamplerV2)
     def test_default_session_cm_new_backend(self, primitive):
         """Test using a different backend within context manager."""
         cm_backend = "ibm_metropolis"
@@ -240,7 +240,7 @@ class TestPrimitivesV2(IBMTestCase):
             runtime_options = service.run.call_args.kwargs["options"]
             self.assertEqual(runtime_options["backend"], backend.name)
 
-    @data(EstimatorV2)
+    @data(EstimatorV2, SamplerV2)
     def test_no_session(self, primitive):
         """Test running without session."""
         backend = get_mocked_backend()
@@ -253,7 +253,7 @@ class TestPrimitivesV2(IBMTestCase):
         self.assertNotIn("session_id", kwargs_list)
         self.assertNotIn("start_session", kwargs_list)
 
-    @data(EstimatorV2)
+    @data(EstimatorV2, SamplerV2)
     def test_parameters_single_circuit(self, primitive):
         """Test parameters for a single cirucit."""
 
@@ -286,7 +286,7 @@ class TestPrimitivesV2(IBMTestCase):
                 pub = (circ, "ZZIII", val) if isinstance(inst, EstimatorV2) else (circ, val)
                 inst.run([pub])
 
-    @data(EstimatorV2)
+    @data(EstimatorV2, SamplerV2)
     def test_nd_parameters(self, primitive):
         """Test with parameters of different dimensions."""
         circ = RealAmplitudes(num_qubits=2, reps=1)
@@ -305,7 +305,7 @@ class TestPrimitivesV2(IBMTestCase):
             pub = (circ, "ZZIII", barray) if isinstance(inst, EstimatorV2) else (circ, barray)
             inst.run([pub])
 
-    @data(EstimatorV2)
+    @data(EstimatorV2, SamplerV2)
     def test_parameters_multiple_circuits(self, primitive):
         """Test multiple parameters for multiple circuits."""
         backend = get_mocked_backend()
@@ -341,7 +341,7 @@ class TestPrimitivesV2(IBMTestCase):
                     pubs.append(publet)
                 inst.run(pubs)
 
-    @data(EstimatorV2)
+    @data(EstimatorV2, SamplerV2)
     def test_run_updated_options(self, primitive):
         """Test run using overwritten options."""
         session = MagicMock(spec=MockSession)
@@ -362,7 +362,7 @@ class TestPrimitivesV2(IBMTestCase):
                 inputs = session.run.call_args.kwargs["inputs"]
                 self._assert_dict_partially_equal(inputs, expected)
 
-    @data(EstimatorV2)
+    @data(EstimatorV2, SamplerV2)
     def test_run_overwrite_runtime_options(self, primitive):
         """Test run using overwritten runtime options."""
         session = MagicMock(spec=MockSession)
@@ -381,7 +381,7 @@ class TestPrimitivesV2(IBMTestCase):
                 self._assert_dict_partially_equal(rt_options, options)
 
     @combine(
-        primitive=[EstimatorV2],
+        primitive=[EstimatorV2, SamplerV2],
         exp_opt=[{"foo": "bar"}, {"transpilation": {"extra_key": "bar"}}],
     )
     def test_run_experimental_options(self, primitive, exp_opt):
@@ -395,7 +395,7 @@ class TestPrimitivesV2(IBMTestCase):
         self.assertNotIn("extra_key", inputs)
 
     @combine(
-        primitive=[EstimatorV2],
+        primitive=[EstimatorV2, SamplerV2],
         exp_opt=[{"foo": "bar"}, {"execution": {"extra_key": "bar"}}],
     )
     def test_run_experimental_options_init(self, primitive, exp_opt):
@@ -407,7 +407,7 @@ class TestPrimitivesV2(IBMTestCase):
         self._assert_dict_partially_equal(inputs, exp_opt)
         self.assertNotIn("extra_key", inputs)
 
-    @data(EstimatorV2)
+    @data(EstimatorV2, SamplerV2)
     def test_run_unset_options(self, primitive):
         """Test running with unset options."""
         session = MagicMock(spec=MockSession)
@@ -419,7 +419,7 @@ class TestPrimitivesV2(IBMTestCase):
         expected = {"execution": {"init_qubits": True}, "version": 2}
         self.assertDictEqual(inputs, expected)
 
-    @data(EstimatorV2)
+    @data(EstimatorV2, SamplerV2)
     def test_run_multiple_different_options(self, primitive):
         """Test multiple runs with different options."""
         session = MagicMock(spec=MockSession)
@@ -434,7 +434,7 @@ class TestPrimitivesV2(IBMTestCase):
     def test_run_same_session(self):
         """Test multiple runs within a session."""
         num_runs = 5
-        primitives = [EstimatorV2]
+        primitives = [EstimatorV2, SamplerV2]
         session = MagicMock(spec=MockSession)
         for idx in range(num_runs):
             cls = primitives[idx % len(primitives)]
@@ -443,7 +443,7 @@ class TestPrimitivesV2(IBMTestCase):
         self.assertEqual(session.run.call_count, num_runs)
 
     @combine(
-        primitive=[EstimatorV2],
+        primitive=[EstimatorV2, SamplerV2],
         new_opts=[
             {"optimization_level": 0},
             {"optimization_level": 1, "shots": 200},
@@ -469,7 +469,7 @@ class TestPrimitivesV2(IBMTestCase):
             f"inst_options={inst_options}, original={opt_cls()}",
         )
 
-    @data(EstimatorV2)
+    @data(EstimatorV2, SamplerV2)
     def test_accept_level_1_options(self, primitive):
         """Test initializing options properly when given on level 1."""
 
@@ -559,7 +559,7 @@ class TestPrimitivesV2(IBMTestCase):
                 )
                 self.assertEqual(inputs["resilience_level"], 0)
 
-    @data(EstimatorV2)
+    @data(EstimatorV2, SamplerV2)
     def test_raise_faulty_qubits(self, primitive):
         """Test faulty qubits is raised."""
         fake_backend = FakeManila()
@@ -588,7 +588,7 @@ class TestPrimitivesV2(IBMTestCase):
             inst.run(pubs=[pub])
         self.assertIn(f"faulty qubit {faulty_qubit}", str(err.exception))
 
-    @data(EstimatorV2)
+    @data(EstimatorV2, SamplerV2)
     def test_raise_faulty_qubits_many(self, primitive):
         """Test faulty qubits is raised if one circuit uses it."""
         fake_backend = FakeManila()
@@ -620,7 +620,7 @@ class TestPrimitivesV2(IBMTestCase):
             inst.run(pubs=pubs)
         self.assertIn(f"faulty qubit {faulty_qubit}", str(err.exception))
 
-    @data(EstimatorV2)
+    @data(EstimatorV2, SamplerV2)
     def test_raise_faulty_edge(self, primitive):
         """Test faulty edge is raised."""
         fake_backend = FakeManila()
@@ -649,7 +649,7 @@ class TestPrimitivesV2(IBMTestCase):
         self.assertIn("cx", str(err.exception))
         self.assertIn(f"faulty edge {tuple(edge_qubits)}", str(err.exception))
 
-    @data(EstimatorV2)
+    @data(EstimatorV2, SamplerV2)
     def test_faulty_qubit_not_used(self, primitive):
         """Test faulty qubit is not raise if not used."""
         fake_backend = FakeManila()
@@ -677,7 +677,7 @@ class TestPrimitivesV2(IBMTestCase):
             inst.run([pub])
         mock_run.assert_called_once()
 
-    @data(EstimatorV2)
+    @data(EstimatorV2, SamplerV2)
     def test_faulty_edge_not_used(self, primitive):
         """Test faulty edge is not raised if not used."""
         fake_backend = FakeManila()
@@ -707,12 +707,11 @@ class TestPrimitivesV2(IBMTestCase):
             inst.run([pub])
         mock_run.assert_called_once()
 
-    @data(EstimatorV2)
+    @data(EstimatorV2, SamplerV2)
     def test_abstract_circuits(self, primitive):
         """Test passing in abstract circuit would fail."""
         backend = get_mocked_backend()
         inst = primitive(backend=backend)
-
         circ = QuantumCircuit(3, 3)
         circ.cx(0, 2)
         pub = [circ]
