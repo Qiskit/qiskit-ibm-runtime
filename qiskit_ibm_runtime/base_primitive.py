@@ -30,6 +30,7 @@ from .options import Options
 from .options.options import BaseOptions, OptionsV2
 from .options.utils import merge_options, set_default_error_levels
 from .runtime_job import RuntimeJob
+from .runtime_jobV2 import RuntimeJobV2
 from .ibm_backend import IBMBackend
 from .utils.default_session import get_cm_session
 from .utils.utils import validate_isa_circuits
@@ -120,7 +121,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
                     "A backend or session must be specified when not using ibm_cloud channel."
                 )
 
-    def _run(self, pubs: Union[list[EstimatorPub], list[SamplerPub]]) -> RuntimeJob:
+    def _run(self, pubs: Union[list[EstimatorPub], list[SamplerPub]]) -> RuntimeJobV2:
         """Run the primitive.
 
         Args:

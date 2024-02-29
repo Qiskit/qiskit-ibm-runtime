@@ -50,6 +50,7 @@ from .exceptions import (
 from .hub_group_project import HubGroupProject  # pylint: disable=cyclic-import
 from .utils.result_decoder import ResultDecoder
 from .runtime_job import RuntimeJob
+from .runtime_jobV2 import RuntimeJobV2
 from .utils import RuntimeDecoder, to_python_identifier
 from .api.client_parameters import ClientParameters
 from .runtime_options import RuntimeOptions
@@ -858,7 +859,7 @@ class QiskitRuntimeService(Provider):
         result_decoder: Optional[Union[Type[ResultDecoder], Sequence[Type[ResultDecoder]]]] = None,
         session_id: Optional[str] = None,
         start_session: Optional[bool] = False,
-    ) -> RuntimeJob:
+    ) -> Union[RuntimeJob, RuntimeJobV2]:
         """Execute the runtime program.
 
         Args:
@@ -946,21 +947,35 @@ class QiskitRuntimeService(Provider):
             else qrt_options.backend
         )
 
-        job = RuntimeJob(
-            backend=backend,
-            api_client=self._api_client,
-            client_params=self._client_params,
-            job_id=response["id"],
-            program_id=program_id,
-            user_callback=callback,
-            result_decoder=result_decoder,
-            image=qrt_options.image,
-            service=self,
-            version=version,
-        )
+        if version == 2:
+            job = RuntimeJobV2(
+                backend=backend,
+                api_client=self._api_client,
+                client_params=self._client_params,
+                job_id=response["id"],
+                program_id=program_id,
+                user_callback=callback,
+                result_decoder=result_decoder,
+                image=qrt_options.image,
+                service=self,
+                version=version,
+            )
+        else:   
+            job = RuntimeJob(
+                backend=backend,
+                api_client=self._api_client,
+                client_params=self._client_params,
+                job_id=response["id"],
+                program_id=program_id,
+                user_callback=callback,
+                result_decoder=result_decoder,
+                image=qrt_options.image,
+                service=self,
+                version=version,
+            )
         return job
 
-    def job(self, job_id: str) -> RuntimeJob:
+    def job(self, job_id: str) -> Union[RuntimeJob, RuntimeJobV2]:
         """Retrieve a runtime job.
 
         Args:
@@ -994,7 +1009,7 @@ class QiskitRuntimeService(Provider):
         created_after: Optional[datetime] = None,
         created_before: Optional[datetime] = None,
         descending: bool = True,
-    ) -> List[RuntimeJob]:
+    ) -> List[Union[RuntimeJob, RuntimeJobV2]]:
         """Retrieve all runtime jobs, subject to optional filtering.
 
         Args:
@@ -1096,7 +1111,7 @@ class QiskitRuntimeService(Provider):
                 raise RuntimeJobNotFound(f"Job not found: {ex.message}") from None
             raise IBMRuntimeError(f"Failed to delete job: {ex}") from None
 
-    def _decode_job(self, raw_data: Dict) -> RuntimeJob:
+    def _decode_job(self, raw_data: Dict) -> Union[RuntimeJob, RuntimeJobV2]:
         """Decode job data received from the server.
 
         Args:

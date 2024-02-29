@@ -24,8 +24,8 @@ from qiskit.primitives import BaseEstimator
 from qiskit.primitives.base import BaseEstimatorV2
 from qiskit.primitives.containers import EstimatorPubLike
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
-
 from .runtime_job import RuntimeJob
+from .runtime_jobV2 import RuntimeJobV2
 from .ibm_backend import IBMBackend
 from .options import Options
 from .options.estimator_options import EstimatorOptions
@@ -132,7 +132,7 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
 
     def run(
         self, pubs: Iterable[EstimatorPubLike], *, precision: float | None = None
-    ) -> RuntimeJob:
+    ) -> RuntimeJobV2:
         """Submit a request to the estimator primitive.
 
         Args:
