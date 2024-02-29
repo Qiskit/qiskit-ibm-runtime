@@ -25,7 +25,7 @@ from qiskit.primitives.base import BaseEstimatorV2
 from qiskit.primitives.containers import EstimatorPubLike
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from .runtime_job import RuntimeJob
-from .runtime_jobV2 import RuntimeJobV2
+from .runtime_job_v2 import RuntimeJobV2
 from .ibm_backend import IBMBackend
 from .options import Options
 from .options.estimator_options import EstimatorOptions

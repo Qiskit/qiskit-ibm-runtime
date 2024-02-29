@@ -25,7 +25,7 @@ import requests
 from qiskit.providers.backend import Backend
 from qiskit.providers.jobstatus import JobStatus, JOB_FINAL_STATES
 from qiskit.providers.models import BackendProperties
-from qiskit.primitives.base.base_primitive_job import BasePrimitiveJob 
+from qiskit.primitives.base.base_primitive_job import BasePrimitiveJob
 
 # pylint: disable=unused-import,cyclic-import
 
@@ -126,7 +126,8 @@ class RuntimeJobV2(BasePrimitiveJob):
             tags: Tags assigned to the job.
             version: Primitive version.
         """
-        super().__init__(backend=backend, job_id=job_id)
+        super().__init__(job_id=job_id)
+        self._backend = backend
         self._api_client = api_client
         self._interim_results: Optional[Any] = None
         self._params = params or {}
@@ -761,19 +762,19 @@ class RuntimeJobV2(BasePrimitiveJob):
         ):
             return self._queue_info
         return None
-    
+
     def cancelled(self) -> bool:
         """Return whether the job has been cancelled."""
         return self.status() is JobStatus.CANCELLED
-    
+
     def done(self) -> bool:
         """Return whether the job has successfully run."""
         return self.status() is JobStatus.DONE
-    
+
     def in_final_state(self) -> bool:
         """Return whether the job is in a final job state such as ``DONE`` or ``ERROR``."""
         return self.status() in JOB_FINAL_STATES
-    
+
     def running(self) -> bool:
         """Return whether the job is actively running."""
         return self.status() is JobStatus.RUNNING

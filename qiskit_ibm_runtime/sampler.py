@@ -25,7 +25,7 @@ from qiskit.primitives.containers.sampler_pub import SamplerPub, SamplerPubLike
 
 from .options import Options
 from .runtime_job import RuntimeJob
-from .runtime_jobV2 import RuntimeJobV2
+from .runtime_job_v2 import RuntimeJobV2
 from .ibm_backend import IBMBackend
 from .base_primitive import BasePrimitiveV1, BasePrimitiveV2
 

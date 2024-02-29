@@ -50,7 +50,7 @@ from .exceptions import (
 from .hub_group_project import HubGroupProject  # pylint: disable=cyclic-import
 from .utils.result_decoder import ResultDecoder
 from .runtime_job import RuntimeJob
-from .runtime_jobV2 import RuntimeJobV2
+from .runtime_job_v2 import RuntimeJobV2
 from .utils import RuntimeDecoder, to_python_identifier
 from .api.client_parameters import ClientParameters
 from .runtime_options import RuntimeOptions
@@ -960,7 +960,7 @@ class QiskitRuntimeService(Provider):
                 service=self,
                 version=version,
             )
-        else:   
+        else:
             job = RuntimeJob(
                 backend=backend,
                 api_client=self._api_client,

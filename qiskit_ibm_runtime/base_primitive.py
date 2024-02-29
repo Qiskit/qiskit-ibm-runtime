@@ -30,7 +30,7 @@ from .options import Options
 from .options.options import BaseOptions, OptionsV2
 from .options.utils import merge_options, set_default_error_levels
 from .runtime_job import RuntimeJob
-from .runtime_jobV2 import RuntimeJobV2
+from .runtime_job_v2 import RuntimeJobV2
 from .ibm_backend import IBMBackend
 from .utils.default_session import get_cm_session
 from .utils.utils import validate_isa_circuits

@@ -18,7 +18,7 @@ from functools import wraps
 
 from qiskit_ibm_runtime import QiskitRuntimeService
 from .runtime_job import RuntimeJob
-from .runtime_jobV2 import RuntimeJobV2
+from .runtime_job_v2 import RuntimeJobV2
 from .utils.result_decoder import ResultDecoder
 from .ibm_backend import IBMBackend
 from .utils.default_session import set_cm_session
