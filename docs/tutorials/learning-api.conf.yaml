@@ -1,0 +1,15 @@
+# These tutorials are uploaded to the IBM Quantum Learning app
+# https://learning.quantum.ibm.com/catalog/tutorials
+# urlProduction refers to a link in the Learning CMS
+lessons:
+  - path: variational_quantum_eigensolver 
+    urlProduction: tutorials/5e01f54c-0ef4-4003-8793-d6e5717110bb
+  - path: chsh_inequality 
+    urlProduction: tutorials/da7dbfe7-4ae7-4889-b78d-5dfd5263fb02
+  - path: grovers_algorithm
+    urlProduction: tutorials/76db794e-a4a7-466e-bd2b-d5d5950a9279
+  - path: quantum_approximate_optimization_algorithm
+    urlProduction: tutorials/8c5868ac-d82f-4ca4-ba9d-70d3d6344e80
+  - path: submitting_transpiled_circuits
+    urlProduction: tutorials/0f49821a-9de4-4932-a77a-ec3faf23cf55
+  
