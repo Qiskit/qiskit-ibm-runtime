@@ -23,7 +23,6 @@ from datetime import datetime
 import requests
 
 from qiskit.providers.backend import Backend
-from qiskit.providers.jobstatus import JobStatus, JOB_FINAL_STATES
 from qiskit.providers.models import BackendProperties
 from qiskit.primitives.base.base_primitive_job import BasePrimitiveJob
 
@@ -35,7 +34,7 @@ from .utils import utc_to_local
 from .utils.utils import validate_job_tags
 from .utils.estimator_result_decoder import EstimatorResultDecoder
 from .utils.queueinfo import QueueInfo
-from .constants import API_TO_JOB_ERROR_MESSAGE, API_TO_JOB_STATUS, DEFAULT_DECODERS
+from .constants import API_TO_JOB_ERROR_MESSAGE, DEFAULT_DECODERS
 from .exceptions import (
     IBMApiError,
     RuntimeJobFailureError,
@@ -49,6 +48,7 @@ from .api.clients import RuntimeClient, RuntimeWebsocketClient, WebsocketClientC
 from .exceptions import IBMError
 from .api.exceptions import RequestsApiError
 from .api.client_parameters import ClientParameters
+from .job_status import JobStatus, JOB_FINAL_STATES, API_TO_JOB_STATUS
 
 logger = logging.getLogger(__name__)
 
@@ -526,7 +526,7 @@ class RuntimeJobV2(BasePrimitiveJob):
             error_msg = API_TO_JOB_ERROR_MESSAGE["FAILED"]
             return error_msg.format(self.job_id(), self._reason or job_result_raw)
 
-    def _status_from_job_response(self, response: Dict) -> str:
+    def _status_from_job_response(self, response: Dict) -> JobStatus:
         """Returns the job status from an API response.
 
         Args:
@@ -765,11 +765,11 @@ class RuntimeJobV2(BasePrimitiveJob):
 
     def cancelled(self) -> bool:
         """Return whether the job has been cancelled."""
-        return self.status() is JobStatus.CANCELLED
+        return self.status() == JobStatus.CANCELLED
 
     def done(self) -> bool:
         """Return whether the job has successfully run."""
-        return self.status() is JobStatus.DONE
+        return self.status() == JobStatus.DONE
 
     def in_final_state(self) -> bool:
         """Return whether the job is in a final job state such as ``DONE`` or ``ERROR``."""
@@ -777,4 +777,4 @@ class RuntimeJobV2(BasePrimitiveJob):
 
     def running(self) -> bool:
         """Return whether the job is actively running."""
-        return self.status() is JobStatus.RUNNING
+        return self.status() == JobStatus.RUNNING
