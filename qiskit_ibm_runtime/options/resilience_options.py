@@ -35,13 +35,9 @@ ExtrapolatorType = Literal[
 ]
 
 ZneExtrapolatorType = Literal[
+    "linear",
     "exponential",
     "double_exponential",
-    "linear",
-    "polynomial_degree_1",
-    "polynomial_degree_2",
-    "polynomial_degree_3",
-    "polynomial_degree_4",
 ]
 
 
@@ -60,8 +56,8 @@ class ResilienceOptionsV2:
             circuits' noise is amplified.
             Only applicable if ZNE is enabled.
 
-        zne_extrapolator: An extrapolation strategy. One or more of ``"multi_exponential"``,
-            ``"single_exponential"``, ``"double_exponential"``, ``"linear"``.
+        zne_extrapolator: An extrapolation strategy. One or more of ``"exponential"``,
+            ``"double_exponential"``, and ``"linear"``.
             Only applicable if ZNE is enabled.
 
         zne_stderr_threshold: A standard error threshold for accepting the ZNE result of Pauli basis
@@ -127,10 +123,7 @@ class ResilienceOptionsV2:
     def _validate_options(self) -> "ResilienceOptionsV2":
         """Validate the model."""
         # Validate ZNE noise factors + extrapolator combination
-        if all(
-            not isinstance(fld, UnsetType)
-            for fld in [self.zne_noise_factors, self.zne_extrapolator]
-        ):
+        if self.zne_noise_factors and self.zne_extrapolator:
             required_factors = {
                 "exponential": 2,
                 "double_exponential": 4,

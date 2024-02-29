@@ -57,6 +57,7 @@ class Session:
     def __init__(
         self,
         max_time: Optional[Union[int, str]] = None,
+        session_id: Optional[str] = None,
     ):
         """Session constructor.
 
@@ -66,13 +67,13 @@ class Session:
                 forcibly closed. Can be specified as seconds (int) or a string like "2h 30m 40s".
                 This value must be in between 300 seconds and the
                 `system imposed maximum
-                <https://qiskit.org/documentation/partners/qiskit_ibm_runtime/faqs/max_execution_time.html>`_.
+                <https://docs.quantum.ibm.com/run/max-execution-time>`_.
 
         Raises:
             ValueError: If an input value is invalid.
         """
         self._instance = None
-        self._session_id: Optional[str] = None
+        self._session_id = session_id
         self._active = True
 
         self._max_time = (

@@ -458,6 +458,20 @@ class BaseFakeRuntimeClient:
         """Return the pulse defaults of a backend."""
         return self._find_backend(backend_name).defaults
 
+    # pylint: disable=unused-argument
+    def create_session(
+        self,
+        backend: Optional[str] = None,
+        instance: Optional[str] = None,
+        max_time: Optional[int] = None,
+        channel: Optional[str] = None,
+        mode: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Create a session."""
+        session_id = uuid.uuid4().hex
+        self._sessions.add(session_id)
+        return {"id": session_id}
+
     def close_session(self, session_id: str) -> None:
         """Close the session."""
         if session_id not in self._sessions:

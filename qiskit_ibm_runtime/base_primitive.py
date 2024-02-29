@@ -311,7 +311,14 @@ class BasePrimitiveV1(ABC):
         Returns:
             Submitted job.
         """
-        logger.debug("Merging current options %s with %s", self._options, user_kwargs)
+        if (
+            self._backend
+            and isinstance(self._backend, IBMBackend)
+            and isinstance(self._backend.service, QiskitRuntimeService)
+            and hasattr(self._backend, "target")
+        ):
+            validate_isa_circuits(primitive_inputs["circuits"], self._backend.target)
+
         combined = Options._merge_options(self._options, user_kwargs)
 
         if self._backend:

@@ -55,6 +55,15 @@ from qiskit.circuit import (
 from qiskit.circuit.parametertable import ParameterView
 from qiskit.result import Result
 from qiskit.version import __version__ as _terra_version_string
+from qiskit.utils import optionals
+from qiskit.qpy import (
+    _write_parameter_expression,
+    _read_parameter_expression,
+    _read_parameter_expression_v3,
+    load,
+    dump,
+)
+from qiskit.qpy.binary_io.value import _write_parameter, _read_parameter
 from qiskit.primitives.containers.bindings_array import BindingsArray
 from qiskit.primitives.containers.observables_array import ObservablesArray
 from qiskit.primitives.containers import (
@@ -66,16 +75,6 @@ from qiskit.primitives.containers import (
 )
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.primitives.containers.sampler_pub import SamplerPub
-
-from qiskit.utils import optionals
-from qiskit.qpy import (
-    _write_parameter_expression,
-    _read_parameter_expression,
-    _read_parameter_expression_v3,
-    load,
-    dump,
-)
-from qiskit.qpy.binary_io.value import _write_parameter, _read_parameter
 
 _TERRA_VERSION = tuple(
     int(x) for x in re.match(r"\d+\.\d+\.\d", _terra_version_string).group(0).split(".")[:3]
@@ -290,7 +289,7 @@ class RuntimeEncoder(json.JSONEncoder):
                 "field_names": obj._FIELDS,
                 "field_types": [str(field_type) for field_type in obj._FIELD_TYPES],
                 "shape": obj._SHAPE,
-                "values": {field_name: getattr(obj, field_name) for field_name in obj._FIELDS},
+                "fields": {field_name: getattr(obj, field_name) for field_name in obj._FIELDS},
             }
             return {"__type__": "DataBin", "__value__": out_val}
         if isinstance(obj, EstimatorPub):
@@ -410,7 +409,7 @@ class RuntimeDecoder(json.JSONDecoder):
                 if shape is not None and isinstance(shape, list):
                     shape = tuple(shape)
                 data_bin_cls = make_data_bin(zip(field_names, field_types), shape=shape)
-                return data_bin_cls(**obj_val["values"])
+                return data_bin_cls(**obj_val["fields"])
             if obj_type == "PubResult":
                 return PubResult(**obj_val)
             if obj_type == "PrimitiveResult":
