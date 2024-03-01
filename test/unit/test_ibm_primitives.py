@@ -25,9 +25,8 @@ from qiskit import transpile, pulse
 from qiskit.circuit import QuantumCircuit, QuantumRegister, ClassicalRegister
 from qiskit.pulse.library import Gaussian
 from qiskit.quantum_info import SparsePauliOp
-from qiskit.providers.models.backendconfiguration import QasmBackendConfiguration
 
-from qiskit_ibm_runtime.fake_provider import FakeManila
+from qiskit_ibm_runtime.fake_provider import FakeManila, FakeSherbrooke
 from qiskit_ibm_runtime import (
     Sampler,
     Estimator,
@@ -876,7 +875,6 @@ class TestPrimitives(IBMTestCase):
         config = FakeManila().configuration().to_dict()
         for gate in config["gates"]:
             gate.pop("coupling_map", None)
-        config = QasmBackendConfiguration.from_dict(config)
         backend = get_mocked_backend(configuration=config)
 
         inst = primitive(backend=backend)
@@ -920,18 +918,17 @@ class TestPrimitives(IBMTestCase):
     def test_dynamic_circuit_is_isa(self):
         """Test passing dynmaic circuits is considered ISA."""
         # pylint: disable=not-context-manager
+        # pylint: disable=invalid-name
+        sherbrooke = FakeSherbrooke()
+        config = sherbrooke._get_conf_dict_from_json()
+        config["supported_instructions"] += ["for_loop", "switch_case", "while_loop"]
 
-        from qiskit_ibm_runtime import QiskitRuntimeService
-        service = QiskitRuntimeService(channel="ibm_quantum")
-        real = service.backend("ibm_sherbrooke")
+        backend = get_mocked_backend(
+            configuration=config,
+            properties=sherbrooke._set_props_dict_from_json(),
+            defaults=sherbrooke._set_defs_dict_from_json(),
+        )
 
-        from qiskit_ibm_runtime.fake_provider import FakeSherbrooke
-        fake = FakeSherbrooke()
-        # manila = FakeManila()
-        # manila.configuration().basis_gates.append("if_else")
-        backend = get_mocked_backend(configuration=real.configuration())
-        # backend = FakeManila()
-        # backend.configuration().basis_gates.append("if_else")
         sampler = Sampler(backend=backend)
 
         qubits = QuantumRegister(3)
@@ -945,25 +942,25 @@ class TestPrimitives(IBMTestCase):
         with circuit.if_test((c0, 1)):
             circuit.x(q0)
 
-        # circuit.measure(q1, c1)
-        # with circuit.switch(c1) as case:
-        #     with case(0):
-        #         circuit.x(q0)
-        #     with case(1):
-        #         circuit.x(q1)
+        circuit.measure(q1, c1)
+        with circuit.switch(c1) as case:
+            with case(0):
+                circuit.x(q0)
+            with case(1):
+                circuit.x(q1)
 
-        # circuit.measure(q1, c1)
-        # circuit.measure(q2, c2)
-        # with circuit.while_loop((clbits, 0b111)):
-        #     circuit.rz(1.5, q1)
-        #     circuit.rz(1.5, q2)
-        #     circuit.measure(q1, c1)
-        #     circuit.measure(q2, c2)
+        circuit.measure(q1, c1)
+        circuit.measure(q2, c2)
+        with circuit.while_loop((clbits, 0b111)):
+            circuit.rz(1.5, q1)
+            circuit.rz(1.5, q2)
+            circuit.measure(q1, c1)
+            circuit.measure(q2, c2)
 
-        # with circuit.for_loop(range(2)) as _:
-        #     circuit.x(q0)
+        with circuit.for_loop(range(2)) as _:
+            circuit.x(q0)
 
-        circuit = transpile(circuit, backend=real)
+        circuit = transpile(circuit, backend=backend)
 
         with warnings.catch_warnings(record=True) as warns:
             warnings.simplefilter("always")
