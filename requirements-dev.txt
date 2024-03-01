@@ -13,7 +13,6 @@ black~=22.0
 coverage>=6.3
 pylatexenc
 scikit-learn
-setuptools
 ddt>=1.2.0,!=1.4.0,!=1.4.3
 
 # Documentation

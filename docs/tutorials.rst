@@ -11,8 +11,8 @@ Estimator
 
    tutorials/how-to-getting-started-with-estimator
    tutorials/Error-Suppression-and-Error-Mitigation
-   tutorials/chsh_with_estimator
-   tutorials/vqe_with_estimator
+   tutorials/chsh_inequality/chsh_with_estimator
+   tutorials/variational_quantum_eigensolver/vqe_with_estimator
 
 Sampler
 =================================
@@ -20,9 +20,9 @@ Sampler
 .. nbgallery::
 
    tutorials/how-to-getting-started-with-sampler
-   tutorials/grover_with_sampler
-   tutorials/user-transpiled-circuits
-   tutorials/qaoa_with_primitives
+   tutorials/grovers_algorithm/grover_with_sampler
+   tutorials/submitting_transpiled_circuits/user-transpiled-circuits
+   tutorials/quantum_approximate_optimization_algorithm/qaoa_with_primitives
 
 
 .. Hiding - Indices and tables
