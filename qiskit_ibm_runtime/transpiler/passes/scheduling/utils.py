@@ -14,6 +14,7 @@
 
 import warnings
 from typing import List, Generator, Optional, Tuple, Union
+from functools import lru_cache
 
 from qiskit.circuit import ControlFlowOp, Measure, Reset, Parameter
 from qiskit.dagcircuit import DAGCircuit, DAGOpNode
@@ -40,10 +41,11 @@ def block_order_op_nodes(dag: DAGCircuit) -> Generator[DAGOpNode, None, None]:
         """Does this node trigger the end of a block?"""
         return isinstance(node.op, ControlFlowOp)
 
+    @lru_cache(maxsize=None)
     def _emit(
         node: DAGOpNode,
-        grouped_measure: List[DAGOpNode],
-        block_triggers: List[DAGOpNode],
+        grouped_measure: Tuple[DAGOpNode],
+        block_triggers: Tuple[DAGOpNode],
     ) -> bool:
         """Should we emit this node?"""
         for measure in grouped_measure:
@@ -95,7 +97,7 @@ def block_order_op_nodes(dag: DAGCircuit) -> Generator[DAGOpNode, None, None]:
         for node in to_push:
             node_descendants = dag.descendants(node)
             if any(
-                _emit(descendant, yield_measures, yield_block_triggers)
+                _emit(descendant, tuple(yield_measures), tuple(yield_block_triggers))
                 for descendant in node_descendants
                 if isinstance(descendant, DAGOpNode)
             ):
