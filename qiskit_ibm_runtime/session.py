@@ -43,8 +43,6 @@ class Session:
     A Qiskit Runtime ``session`` allows you to group a collection of iterative calls to
     the quantum computer. A session is started when the first job within the session
     is started. Subsequent jobs within the session are prioritized by the scheduler.
-    Data used within a session, such as transpiled circuits, is also cached to avoid
-    unnecessary overhead.
 
     You can open a Qiskit Runtime session using this ``Session`` class and submit jobs
     to one or more primitives.

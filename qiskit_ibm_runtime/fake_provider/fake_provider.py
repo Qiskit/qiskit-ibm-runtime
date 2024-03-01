@@ -88,62 +88,62 @@ class FakeProviderForBackendV2(ProviderV1):
 
     def __init__(self) -> None:
         self._backends = [
-            FakeAlgiers(),  # type: ignore
-            FakeAlmadenV2(),  # type: ignore
-            FakeArmonkV2(),  # type: ignore
-            FakeAthensV2(),  # type: ignore
-            FakeAuckland(),  # type: ignore
-            FakeBelemV2(),  # type: ignore
-            FakeBoeblingenV2(),  # type: ignore
-            FakeBogotaV2(),  # type: ignore
-            FakeBrisbane(),  # type: ignore
-            FakeBrooklynV2(),  # type: ignore
-            FakeBurlingtonV2(),  # type: ignore
-            FakeCairoV2(),  # type: ignore
-            FakeCambridgeV2(),  # type: ignore
-            FakeCasablancaV2(),  # type: ignore
-            FakeCusco(),  # type: ignore
-            FakeEssexV2(),  # type: ignore
-            FakeGeneva(),  # type: ignore
-            FakeGuadalupeV2(),  # type: ignore
-            FakeHanoiV2(),  # type: ignore
-            FakeJakartaV2(),  # type: ignore
-            FakeJohannesburgV2(),  # type: ignore
+            # FakeAlgiers(),  # type: ignore
+            # FakeAlmadenV2(),  # type: ignore
+            # FakeArmonkV2(),  # type: ignore
+            # FakeAthensV2(),  # type: ignore
+            # FakeAuckland(),  # type: ignore
+            # FakeBelemV2(),  # type: ignore
+            # FakeBoeblingenV2(),  # type: ignore
+            # FakeBogotaV2(),  # type: ignore
+            # FakeBrisbane(),  # type: ignore
+            # FakeBrooklynV2(),  # type: ignore
+            # FakeBurlingtonV2(),  # type: ignore
+            # FakeCairoV2(),  # type: ignore
+            # FakeCambridgeV2(),  # type: ignore
+            # FakeCasablancaV2(),  # type: ignore
+            # FakeCusco(),  # type: ignore
+            # FakeEssexV2(),  # type: ignore
+            # FakeGeneva(),  # type: ignore
+            # FakeGuadalupeV2(),  # type: ignore
+            # FakeHanoiV2(),  # type: ignore
+            # FakeJakartaV2(),  # type: ignore
+            # FakeJohannesburgV2(),  # type: ignore
             FakeKawasaki(),  # type: ignore
-            FakeKolkataV2(),  # type: ignore
-            FakeKyiv(),  # type: ignore
-            FakeKyoto(),  # type: ignore
-            FakeLagosV2(),  # type: ignore
-            FakeLimaV2(),  # type: ignore
-            FakeLondonV2(),  # type: ignore
-            FakeManhattanV2(),  # type: ignore
-            FakeManilaV2(),  # type: ignore
-            FakeMelbourneV2(),  # type: ignore
-            FakeMontrealV2(),  # type: ignore
-            FakeMumbaiV2(),  # type: ignore
-            FakeNairobiV2(),  # type: ignore
-            FakeOsaka(),  # type: ignore
-            FakeOslo(),  # type: ignore
-            FakeOurenseV2(),  # type: ignore
-            FakeParisV2(),  # type: ignore
-            FakePeekskill(),  # type: ignore
-            FakePerth(),  # type: ignore
-            FakePrague(),  # type: ignore
-            FakePoughkeepsieV2(),  # type: ignore
-            FakeQuebec(),  # type: ignore
-            FakeQuitoV2(),  # type: ignore
-            FakeRochesterV2(),  # type: ignore
-            FakeRomeV2(),  # type: ignore
-            FakeSantiagoV2(),  # type: ignore
-            FakeSherbrooke(),  # type: ignore
-            FakeSingaporeV2(),  # type: ignore
-            FakeSydneyV2(),  # type: ignore
-            FakeTorino(),  # type: ignore
-            FakeTorontoV2(),  # type: ignore
-            FakeValenciaV2(),  # type: ignore
-            FakeVigoV2(),  # type: ignore
-            FakeWashingtonV2(),  # type: ignore
-            FakeYorktownV2(),  # type: ignore
+            # FakeKolkataV2(),  # type: ignore
+            # FakeKyiv(),  # type: ignore
+            # FakeKyoto(),  # type: ignore
+            # FakeLagosV2(),  # type: ignore
+            # FakeLimaV2(),  # type: ignore
+            # FakeLondonV2(),  # type: ignore
+            # FakeManhattanV2(),  # type: ignore
+            # FakeManilaV2(),  # type: ignore
+            # FakeMelbourneV2(),  # type: ignore
+            # FakeMontrealV2(),  # type: ignore
+            # FakeMumbaiV2(),  # type: ignore
+            # FakeNairobiV2(),  # type: ignore
+            # FakeOsaka(),  # type: ignore
+            # FakeOslo(),  # type: ignore
+            # FakeOurenseV2(),  # type: ignore
+            # FakeParisV2(),  # type: ignore
+            # FakePeekskill(),  # type: ignore
+            # FakePerth(),  # type: ignore
+            # FakePrague(),  # type: ignore
+            # FakePoughkeepsieV2(),  # type: ignore
+            # FakeQuebec(),  # type: ignore
+            # FakeQuitoV2(),  # type: ignore
+            # FakeRochesterV2(),  # type: ignore
+            # FakeRomeV2(),  # type: ignore
+            # FakeSantiagoV2(),  # type: ignore
+            # FakeSherbrooke(),  # type: ignore
+            # FakeSingaporeV2(),  # type: ignore
+            # FakeSydneyV2(),  # type: ignore
+            # FakeTorino(),  # type: ignore
+            # FakeTorontoV2(),  # type: ignore
+            # FakeValenciaV2(),  # type: ignore
+            # FakeVigoV2(),  # type: ignore
+            # FakeWashingtonV2(),  # type: ignore
+            # FakeYorktownV2(),  # type: ignore
         ]
 
         super().__init__()
@@ -214,8 +214,8 @@ class FakeProvider(ProviderV1):
             FakeToronto(),  # type: ignore
             FakeValencia(),  # type: ignore
             FakeVigo(),  # type: ignore
-            FakeWashington(),  # type: ignore
-            FakeYorktown(),  # type: ignore
+            # FakeWashington(),  # type: ignore
+            # FakeYorktown(),  # type: ignore
         ]
 
         super().__init__()

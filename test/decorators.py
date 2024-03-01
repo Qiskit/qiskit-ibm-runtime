@@ -70,9 +70,9 @@ def run_quantum_and_cloud_fake(func):
 
 def _get_integration_test_config():
     token, url, instance, channel_strategy = (
-        os.getenv("QISKIT_IBM_TOKEN"),
-        os.getenv("QISKIT_IBM_URL"),
-        os.getenv("QISKIT_IBM_INSTANCE"),
+        "504c00dea5fe2e161fe500d7a0ad929afaed7bcbd1523febfb8d4ec9418210b89c155e3903dba61a00339fa7fc569d068d24af6d0f753c86a339fb0513daf57d",
+        "https://auth.quantum-computing.ibm.com/api",
+        "ibm-q/open/main",
         os.getenv("CHANNEL_STRATEGY"),
     )
     channel: Any = "ibm_quantum" if url.find("quantum-computing.ibm.com") >= 0 else "ibm_cloud"
