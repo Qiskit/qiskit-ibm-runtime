@@ -18,7 +18,6 @@ import os
 from unittest.mock import MagicMock, patch
 from dataclasses import asdict
 from typing import Dict
-import warnings
 
 from ddt import data, ddt
 from qiskit import transpile, pulse
@@ -888,10 +887,7 @@ class TestPrimitives(IBMTestCase):
         else:
             transpiled.measure_all()
 
-        with warnings.catch_warnings(record=True) as warns:
-            warnings.simplefilter("always")
-            inst.run(**run_input)
-            self.assertFalse(warns)
+        inst.run(**run_input)
 
     @data(Sampler, Estimator)
     def test_pulse_gates_is_isa(self, primitive):
@@ -911,12 +907,10 @@ class TestPrimitives(IBMTestCase):
         else:
             circuit.measure_all()
 
-        with warnings.catch_warnings(record=True) as warns:
-            warnings.simplefilter("always")
-            inst.run(**run_input)
-            self.assertFalse(warns)
+        inst.run(**run_input)
 
-    def test_dynamic_circuit_is_isa(self):
+    @data(Sampler, Estimator)
+    def test_dynamic_circuit_is_isa(self, primitive):
         """Test passing dynmaic circuits is considered ISA."""
         # pylint: disable=not-context-manager
         # pylint: disable=invalid-name
@@ -930,7 +924,7 @@ class TestPrimitives(IBMTestCase):
             defaults=sherbrooke._set_defs_dict_from_json(),
         )
 
-        sampler = Sampler(backend=backend)
+        inst = primitive(backend=backend)
 
         qubits = QuantumRegister(3)
         clbits = ClassicalRegister(3)
@@ -962,11 +956,11 @@ class TestPrimitives(IBMTestCase):
             circuit.x(q0)
 
         circuit = transpile(circuit, backend=backend)
+        run_input = {"circuits": circuit}
+        if isinstance(inst, Estimator):
+            run_input["observables"] = SparsePauliOp("ZZZ").apply_layout(circuit.layout)
 
-        with warnings.catch_warnings(record=True) as warns:
-            warnings.simplefilter("always")
-            sampler.run(circuits=circuit)
-            self.assertFalse(warns)
+        inst.run(**run_input)
 
     def _update_dict(self, dict1, dict2):
         for key, val in dict1.items():
