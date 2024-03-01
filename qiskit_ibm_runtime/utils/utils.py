@@ -76,7 +76,7 @@ def validate_isa_circuits(circuits: Sequence[QuantumCircuit], target: Target) ->
             raise IBMInputValueError(
                 message
                 + " Circuits that do not match the target hardware definition are no longer "
-                "supported after 4 March 2024. See the transpilation documentation "
+                "supported after March 4, 2024. See the transpilation documentation "
                 "(https://docs.quantum.ibm.com/transpile) for instructions to transform circuits and "
                 "the primitive examples (https://docs.quantum.ibm.com/run/primitives-examples) to see "
                 "this coupled with operator transformations."
