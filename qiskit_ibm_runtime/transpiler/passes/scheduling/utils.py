@@ -124,6 +124,7 @@ def block_order_op_nodes(dag: DAGCircuit) -> Generator[DAGOpNode, None, None]:
         to_push.extend(next_nodes)
         next_nodes = to_push
 
+    _emit.cache_clear()
 
 InstrKey = Union[
     Tuple[str, None, None],
