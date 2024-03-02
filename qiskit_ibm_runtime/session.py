@@ -265,6 +265,7 @@ class Session:
             started_at: Timestamp of when the session was started.
             closed_at: Timestamp of when the session was closed.
             activated_at: Timestamp of when the session state was changed to active.
+            mode: Execution mode of the session
         """
         if self._session_id:
             response = self._service._api_client.session_details(self._session_id)
@@ -282,6 +283,7 @@ class Session:
                     "started_at": response.get("started_at"),
                     "closed_at": response.get("closed_at"),
                     "activated_at": response.get("activated_at"),
+                    "mode": response.get("mode"),
                 }
         return None
 
