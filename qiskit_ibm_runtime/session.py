@@ -12,11 +12,13 @@
 
 """Qiskit Runtime flexible session."""
 
+import warnings
 from typing import Dict, Optional, Type, Union, Callable, Any
 from types import TracebackType
 from functools import wraps
 
 from qiskit_ibm_runtime import QiskitRuntimeService
+from .exceptions import IBMInputValueError
 from .runtime_job import RuntimeJob
 from .utils.result_decoder import ResultDecoder
 from .ibm_backend import IBMBackend
@@ -263,6 +265,7 @@ class Session:
             started_at: Timestamp of when the session was started.
             closed_at: Timestamp of when the session was closed.
             activated_at: Timestamp of when the session state was changed to active.
+            mode: Execution mode of the session
         """
         if self._session_id:
             response = self._service._api_client.session_details(self._session_id)
@@ -280,6 +283,7 @@ class Session:
                     "started_at": response.get("started_at"),
                     "closed_at": response.get("closed_at"),
                     "activated_at": response.get("activated_at"),
+                    "mode": response.get("mode"),
                 }
         return None
 
@@ -314,15 +318,47 @@ class Session:
             session_id: the id of the session to be created. This must be an already
                 existing session id.
             service: instance of the ``QiskitRuntimeService`` class.
-            backend: instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
-                string name of backend.
+            backend (DEPRECATED): instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
+                string name of backend. Either ``service`` or ``backend`` must be given.
+
+         Raises:
+            IBMInputValueError: If given `session_id` does not exist. or the backend passed in does
+                not match the original session backend.
 
         Returns:
             A new Session with the given ``session_id``
 
         """
         if backend:
-            deprecate_arguments("backend", "0.15.0", "Sessions do not support multiple backends.")
+            deprecate_arguments(
+                "backend", "0.15.0", "The backend used to open the session will be used."
+            )
+            if isinstance(backend, IBMBackend):
+                backend = backend.name
+
+        if service:
+            response = service._api_client.session_details(session_id)
+            if response:
+                session_backend = response.get("backend_name")
+                if backend and backend != session_backend:
+                    raise IBMInputValueError(
+                        f"The session_id {session_id} was created with backend {session_backend}, "
+                        f"but backend {backend} was given."
+                    )
+                backend = session_backend
+            else:
+                raise IBMInputValueError(f"The session_id {session_id} does not exist.")
+        else:
+            warnings.warn(
+                (
+                    "The `service` parameter will be required in a future release no sooner than "
+                    "3 months after the release of qiskit-ibm-runtime 0.21.0 ."
+                ),
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        if not service and not backend:
+            raise IBMInputValueError("Either service or backend must be given.")
 
         session = cls(service, backend)
         session._session_id = session_id
