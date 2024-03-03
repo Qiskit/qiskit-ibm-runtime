@@ -234,14 +234,7 @@ class RuntimeJob(Job):
             self._api_client.job_results(job_id=self.job_id())
         )
 
-        version_param = {}
-        # TODO: Remove getting/setting version once it's in result metadata
-        if _decoder.__name__ == EstimatorResultDecoder.__name__:
-            if not self._version:
-                self._version = self.inputs.get("version", 1)
-            version_param["version"] = self._version
-
-        return _decoder.decode(result_raw, **version_param) if result_raw else None  # type: ignore
+        return _decoder.decode(result_raw) if result_raw else None  # type: ignore
 
     def cancel(self) -> None:
         """Cancel the job.
