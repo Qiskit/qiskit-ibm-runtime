@@ -35,7 +35,7 @@ class TwirlingOptions:
         enable_measure: Whether to apply measurement twirling.
 
         num_randomizations: The number of random samples to use when twirling or
-          peforming sampled mitigation.
+            peforming sampled mitigation.
 
         shots_per_randomization: The number of shots to run for each random sample.
 

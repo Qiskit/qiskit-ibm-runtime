@@ -21,6 +21,10 @@ from .utils import Unset, UnsetType, primitive_dataclass, make_constraint_valida
 class MeasureNoiseLearningOptions:
     """Options for measurement noise learning.
 
+.. note::
+    These options are only used when the resilience level or options specify a 
+    technique that requires measurement noise learning.
+
     Args:
         meas_num_randomizations: The number of random circuits to draw for the measurement
             learning experiment.

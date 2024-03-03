@@ -31,13 +31,9 @@ class DynamicalDecouplingOptions:
             * ``"XY4"``: : use the sequence
               ``tau/2 - (+X) - tau - (+Y) - tau (-X) - tau - (-Y) - tau/2``
 
-        extra_slack_distribution: Where to putting extra timing delays due to rounding issues.
-            The duration of the DD sequence should be identical to an idle time in the scheduled
-            quantum circuit, however, the delay in between gates comprising the sequence
-            should be integer number in units of dt, and it might be further truncated when
-            ``pulse_alignment`` is specified. This sometimes results in the duration of the
-            created sequence being shorter than the idle time that you want to fill with the
-            sequence, i.e. `extra slack`. This option takes following values.
+        extra_slack_distribution: Where to put extra timing delays due to rounding issues.
+            Rounding issues arise because the discrete time step ``dt`` of the system cannot 
+            be divided. This option takes following values.
 
             * ``"middle"``: Put the extra slack to the interval at the middle of the sequence.
             * ``"edges"``: Divide the extra slack as evenly as possible into intervals at

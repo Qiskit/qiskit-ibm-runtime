@@ -41,7 +41,7 @@ You can also pass dictionaries to each sub-category, for example::
 
 **V2 Primitives**
 
-``SamplerV2`` and ``EstimatorV2`` each has its own options. You can use the
+``SamplerV2`` and ``EstimatorV2`` each have their own options. You can use the
 ``options`` attribute to set the options. For example::
 
    from qiskit_ibm_runtime import QiskitRuntimeService, EstimatorV2

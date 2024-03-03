@@ -29,6 +29,10 @@ from .utils import (
 class LayerNoiseLearningOptions:
     """Options for learning layer noise.
 
+.. note::
+    These options are only used when the resilience level or options specify a 
+    technique that requires layer noise learning.
+
     Args:
 
         max_layers_to_learn: The max number of unique layers to learn.
