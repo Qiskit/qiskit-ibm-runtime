@@ -32,7 +32,7 @@ class DynamicalDecouplingOptions:
               ``tau/2 - (+X) - tau - (+Y) - tau (-X) - tau - (-Y) - tau/2``
 
         extra_slack_distribution: Where to put extra timing delays due to rounding issues.
-            Rounding issues arise because the discrete time step ``dt`` of the system cannot 
+            Rounding issues arise because the discrete time step ``dt`` of the system cannot
             be divided. This option takes following values.
 
             * ``"middle"``: Put the extra slack to the interval at the middle of the sequence.

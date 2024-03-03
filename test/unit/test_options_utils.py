@@ -21,7 +21,7 @@ from qiskit_ibm_runtime.options.utils import (
     merge_options,
     Unset,
     remove_dict_unset_values,
-    reomve_empty_dict,
+    remove_empty_dict,
 )
 from qiskit_ibm_runtime.options import EstimatorOptions, SamplerOptions
 
@@ -137,8 +137,8 @@ class TestOptionsUtils(IBMTestCase):
         ({"foo": {"bar": {}}}, {}),
         ({"foo": {"bar": {"foobar": {}}}}, {}),
     )
-    def test_reomve_empty_dict(self, in_vals):
+    def test_remove_empty_dict(self, in_vals):
         """Test removing empty dict."""
         in_dict, expected = in_vals
-        reomve_empty_dict(in_dict)
+        remove_empty_dict(in_dict)
         self.assertDictEqual(in_dict, expected)

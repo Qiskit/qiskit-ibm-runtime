@@ -106,7 +106,7 @@ class EstimatorOptions(OptionsV2):
     resilience: Union[ResilienceOptionsV2, Dict] = Field(default_factory=ResilienceOptionsV2)
     execution: Union[ExecutionOptionsV2, Dict] = Field(default_factory=ExecutionOptionsV2)
     twirling: Union[TwirlingOptions, Dict] = Field(default_factory=TwirlingOptions)
-    experimental: Union[UnsetType, Dict] = Unset
+    experimental: Union[UnsetType, dict] = Unset
 
     _gt0 = make_constraint_validator("default_precision", gt=0)
     _ge0 = make_constraint_validator("default_shots", ge=0)

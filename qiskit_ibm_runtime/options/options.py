@@ -29,7 +29,7 @@ from .utils import (
     remove_dict_unset_values,
     merge_options,
     primitive_dataclass,
-    reomve_empty_dict,
+    remove_empty_dict,
 )
 from .environment_options import EnvironmentOptions
 from .execution_options import ExecutionOptionsV1 as ExecutionOptions
@@ -147,14 +147,11 @@ class OptionsV2(BaseOptions):
 
         resilience_options = output_options.get("resilience", {})
         # Convert zne/pec settings to layer mitigation
-        layer_mitigation = []
-        if resilience_options.pop("zne_mitigation", None):
-            layer_mitigation.append("zne")
         if resilience_options.pop("pec_mitigation", None):
-            layer_mitigation.append("pec")
-        if layer_mitigation:
-            resilience_options["layer_mitigation"] = layer_mitigation
-            output_options["resilience"] = resilience_options
+            resilience_options["layer_mitigation"] = "pec"
+        if resilience_options.pop("zne_mitigation", None):
+            resilience_options["layer_mitigation"] = "zne"
+        output_options["resilience"] = resilience_options
 
         # rename meas_num_randomizations and meas_shots_per_randomization
         meas_learning_options = resilience_options.get("measure_noise_learning", {})
@@ -189,11 +186,10 @@ class OptionsV2(BaseOptions):
         # Remove image
         output_options.pop("image", None)
 
-        output_options["version"] = OptionsV2._VERSION
         remove_dict_unset_values(output_options)
-        reomve_empty_dict(output_options)
+        remove_empty_dict(output_options)
 
-        inputs = {"options": output_options}
+        inputs = {"options": output_options, "version": OptionsV2._VERSION}
         if options_copy.get("resilience_level"):
             inputs["resilience_level"] = options_copy["resilience_level"]
 

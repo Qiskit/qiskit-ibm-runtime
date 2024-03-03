@@ -73,12 +73,12 @@ def remove_dict_unset_values(in_dict: dict) -> None:
             remove_dict_unset_values(val)
 
 
-def reomve_empty_dict(in_dict: dict) -> None:
+def remove_empty_dict(in_dict: dict) -> None:
     """Remove empty dictionaries."""
     for key, val in list(in_dict.items()):
         if isinstance(val, dict):
             if val:
-                reomve_empty_dict(val)
+                remove_empty_dict(val)
             if not val:
                 del in_dict[key]
 

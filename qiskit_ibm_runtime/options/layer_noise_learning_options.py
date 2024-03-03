@@ -29,33 +29,33 @@ from .utils import (
 class LayerNoiseLearningOptions:
     """Options for learning layer noise.
 
-.. note::
-    These options are only used when the resilience level or options specify a 
-    technique that requires layer noise learning.
+    .. note::
+        These options are only used when the resilience level or options specify a
+        technique that requires layer noise learning.
 
-    Args:
+        Args:
 
-        max_layers_to_learn: The max number of unique layers to learn.
-            A ``None`` value indicates that there is no limit.
-            If there are more unique layers present, then some layers will not be learned or
-            mitigated. The learned layers are prioritized based on the number of times they
-            occur in a set of run estimator PUBs, and for equally occurring layers are
-            further sorted by the number of two-qubit gates in the layer.
+            max_layers_to_learn: The max number of unique layers to learn.
+                A ``None`` value indicates that there is no limit.
+                If there are more unique layers present, then some layers will not be learned or
+                mitigated. The learned layers are prioritized based on the number of times they
+                occur in a set of run estimator PUBs, and for equally occurring layers are
+                further sorted by the number of two-qubit gates in the layer.
 
-        shots_per_randomization: The total number of shots to use per random learning circuit.
-            A learning circuit is a random circuit at a specific learning depth with a specific
-            measurement basis that is executed on hardware.
+            shots_per_randomization: The total number of shots to use per random learning circuit.
+                A learning circuit is a random circuit at a specific learning depth with a specific
+                measurement basis that is executed on hardware.
 
-        num_randomizations: The number of random circuits to use per learning circuit
-            configuration. A configuration is a measurement basis and depth setting.
-            For example, if your experiment has six depths, and nine required measurement bases,
-            then setting this value to 32 will result in a total of ``32 * 9 * 6`` circuits
-            that need to be executed (at :attr:`~shots_per_randomization` each).
+            num_randomizations: The number of random circuits to use per learning circuit
+                configuration. A configuration is a measurement basis and depth setting.
+                For example, if your experiment has six depths, and nine required measurement bases,
+                then setting this value to 32 will result in a total of ``32 * 9 * 6`` circuits
+                that need to be executed (at :attr:`~shots_per_randomization` each).
 
-        layer_pair_depths: The circuit depths (measured in number of pairs) to use in learning
-            experiments. Pairs are used as the unit because we exploit the order-2 nature of
-            our entangling gates in the noise learning implementation. A value of ``3``
-            would correspond to 6 layers of the layer of interest, for example.
+            layer_pair_depths: The circuit depths (measured in number of pairs) to use in learning
+                experiments. Pairs are used as the unit because we exploit the order-2 nature of
+                our entangling gates in the noise learning implementation. A value of ``3``
+                would correspond to 6 layers of the layer of interest, for example.
     """
 
     max_layers_to_learn: Union[UnsetType, int, None] = Unset

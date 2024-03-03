@@ -108,7 +108,7 @@ class TestEstimatorOptions(IBMTestCase):
         resilience.update(
             {
                 "measure_noise_learning": {"num_randomizations": 1, "shots_per_randomization": 20},
-                "layer_mitigation": ["zne"],
+                "layer_mitigation": "zne",
             }
         )
         resilience.pop("zne_mitigation")

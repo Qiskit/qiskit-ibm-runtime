@@ -138,11 +138,11 @@ class TestEstimatorV2(IBMTestCase):
             ),
             (
                 {
-                    "default_precision": 0.5,
+                    "default_precision": 0.1,
                     "dynamical_decoupling": {"enable": True},
                 },
                 {
-                    "default_precision": 0.5,
+                    "default_precision": 0.1,
                     "dynamical_decoupling": {"enable": True},
                 },
             ),
