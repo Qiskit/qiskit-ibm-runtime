@@ -12,7 +12,7 @@
 
 """Estimator result decoder."""
 
-from typing import Dict
+from typing import Dict, Union
 import numpy as np
 
 from qiskit.primitives import EstimatorResult
@@ -26,24 +26,14 @@ class EstimatorResultDecoder(ResultDecoder):
 
     @classmethod
     def decode(  # type: ignore # pylint: disable=arguments-differ
-        cls, raw_result: str, version: int
-    ) -> EstimatorResult:
+        cls, raw_result: str
+    ) -> Union[EstimatorResult, PrimitiveResult]:
         """Convert the result to EstimatorResult."""
         decoded: Dict = super().decode(raw_result)
-        if version == 2:
-            out_results = []
-            for val, meta in zip(decoded["values"], decoded["metadata"]):
-                if not isinstance(val, np.ndarray):
-                    val = np.asarray(val)
-                data_bin_cls = make_data_bin(
-                    [("evs", np.ndarray), ("stds", np.ndarray)], shape=val.shape
-                )
-                out_results.append(
-                    PubResult(data=data_bin_cls(val, meta.pop("standard_error")), metadata=meta)
-                )
-            # TODO what metadata should be passed in to PrimitiveResult?
-            return PrimitiveResult(out_results, metadata=decoded["metadata"])
-        return EstimatorResult(
-            values=np.asarray(decoded["values"]),
-            metadata=decoded["metadata"],
-        )
+        if isinstance(decoded, PrimitiveResult):
+            return decoded        
+        else:
+            return EstimatorResult(
+                values=np.asarray(decoded["values"]),
+                metadata=decoded["metadata"],
+            )
