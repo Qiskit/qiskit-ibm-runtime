@@ -83,9 +83,8 @@ class TestSamplerOptions(IBMTestCase):
             "dynamical_decoupling": dynamical_decoupling,
             "execution": execution,
             "experimental": {"foo": "bar"},
-            "version": 2,
         }
-        expected = {"options": options}
+        expected = {"options": options, "version": 2}
 
         inputs = opt._get_program_inputs(asdict(opt))
         self.assertDictEqual(inputs, expected)

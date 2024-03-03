@@ -50,7 +50,6 @@ from ..utils import (
 )
 
 
-# TODO: Add SamplerV2 back when it's supported
 @ddt
 class TestPrimitivesV2(IBMTestCase):
     """Class for testing the Sampler and Estimator classes."""
@@ -106,12 +105,12 @@ class TestPrimitivesV2(IBMTestCase):
     )
     def test_image(self, primitive, opts):
         """Test passing an image to options."""
-        session = MagicMock(spec=MockSession)
+        backend = get_mocked_backend()
         options = primitive._options_class(**opts)
-        inst = primitive(session=session, options=options)
+        inst = primitive(backend=backend, options=options)
         inst.run(**get_primitive_inputs(inst))
-        run_options = session.run.call_args.kwargs["options"]
-        input_params = session.run.call_args.kwargs["inputs"]
+        run_options = backend.service.run.call_args.kwargs["options"]
+        input_params = backend.service.run.call_args.kwargs["inputs"]
         expected = list(opts.values())[0]
         for key, val in expected.items():
             self.assertEqual(run_options[key], val)
@@ -137,6 +136,7 @@ class TestPrimitivesV2(IBMTestCase):
             mock_service.return_value = mock_service_inst
             mock_backend = MagicMock()
             mock_backend.name = backend_name
+            mock_backend.target = None
             mock_service.global_service = None
             mock_service_inst.backend.return_value = mock_backend
 
@@ -186,6 +186,7 @@ class TestPrimitivesV2(IBMTestCase):
 
         session.reset_mock()
         inst = primitive(session=session, backend=backend_name)
+        inst._backend.target = None
         self.assertIsNotNone(inst.session)
         inst.run(**get_primitive_inputs(inst))
         session.run.assert_called_once()
@@ -342,7 +343,7 @@ class TestPrimitivesV2(IBMTestCase):
     @data(EstimatorV2, SamplerV2)
     def test_run_updated_options(self, primitive):
         """Test run using overwritten options."""
-        session = MagicMock(spec=MockSession)
+        backend = get_mocked_backend()
         options_vars = [
             (
                 {"dynamical_decoupling": {"sequence_type": "XY4"}},
@@ -357,16 +358,16 @@ class TestPrimitivesV2(IBMTestCase):
 
         for options, expected in options_vars:
             with self.subTest(options=options):
-                inst = primitive(session=session)
+                inst = primitive(backend=backend)
                 inst.options.update(**options)
                 inst.run(**get_primitive_inputs(inst))
-                inputs = session.run.call_args.kwargs["inputs"]["options"]
+                inputs = backend.service.run.call_args.kwargs["inputs"]["options"]
                 self._assert_dict_partially_equal(inputs, expected)
 
     @data(EstimatorV2, SamplerV2)
     def test_run_overwrite_runtime_options(self, primitive):
         """Test run using overwritten runtime options."""
-        session = MagicMock(spec=MockSession)
+        backend = get_mocked_backend()
         options_vars = [
             {"log_level": "DEBUG"},
             {"job_tags": ["foo", "bar"]},
@@ -375,10 +376,10 @@ class TestPrimitivesV2(IBMTestCase):
         ]
         for options in options_vars:
             with self.subTest(options=options):
-                inst = primitive(session=session)
+                inst = primitive(backend=backend)
                 inst.options.update(**options)
                 inst.run(**get_primitive_inputs(inst))
-                rt_options = session.run.call_args.kwargs["options"]
+                rt_options = backend.service.run.call_args.kwargs["options"]
                 self._assert_dict_partially_equal(rt_options, options)
 
     @combine(
@@ -387,11 +388,11 @@ class TestPrimitivesV2(IBMTestCase):
     )
     def test_run_experimental_options(self, primitive, exp_opt):
         """Test specifying arbitrary options in run."""
-        session = MagicMock(spec=MockSession)
-        inst = primitive(session=session)
+        backend = get_mocked_backend()
+        inst = primitive(backend=backend)
         inst.options.experimental = exp_opt
         inst.run(**get_primitive_inputs(inst))
-        inputs = session.run.call_args.kwargs["inputs"]["options"]
+        inputs = backend.service.run.call_args.kwargs["inputs"]["options"]
         self.assertDictEqual(inputs["experimental"], {"foo": "bar"})
         self.assertDictEqual(inputs["execution"], {"extra_key": "bar"})
         self.assertNotIn("extra_key", inputs)
@@ -402,10 +403,10 @@ class TestPrimitivesV2(IBMTestCase):
     )
     def test_run_experimental_options_init(self, primitive, exp_opt):
         """Test specifying arbitrary options in initialization."""
-        session = MagicMock(spec=MockSession)
-        inst = primitive(session=session, options={"experimental": exp_opt})
+        backend = get_mocked_backend()
+        inst = primitive(backend=backend, options={"experimental": exp_opt})
         inst.run(**get_primitive_inputs(inst))
-        inputs = session.run.call_args.kwargs["inputs"]["options"]
+        inputs = backend.service.run.call_args.kwargs["inputs"]["options"]
         self.assertDictEqual(inputs["experimental"], {"foo": "bar"})
         self.assertDictEqual(inputs["execution"], {"extra_key": "bar"})
         self.assertNotIn("extra_key", inputs)
@@ -413,22 +414,21 @@ class TestPrimitivesV2(IBMTestCase):
     @data(EstimatorV2, SamplerV2)
     def test_run_unset_options(self, primitive):
         """Test running with unset options."""
-        session = MagicMock(spec=MockSession)
-        inst = primitive(session=session)
+        backend = get_mocked_backend()
+        inst = primitive(backend=backend)
         inst.run(**get_primitive_inputs(inst))
-        inputs = session.run.call_args.kwargs["inputs"]["options"]
-        expected = {"version": 2}
-        self.assertDictEqual(inputs, expected)
+        inputs = backend.service.run.call_args.kwargs["inputs"]["options"]
+        self.assertFalse(inputs)
 
     @data(EstimatorV2, SamplerV2)
     def test_run_multiple_different_options(self, primitive):
         """Test multiple runs with different options."""
-        session = MagicMock(spec=MockSession)
-        inst = primitive(session=session, options={"default_shots": 100})
+        backend = get_mocked_backend()
+        inst = primitive(backend=backend, options={"default_shots": 100})
         inst.run(**get_primitive_inputs(inst))
         inst.options.update(default_shots=200)
         inst.run(**get_primitive_inputs(inst))
-        kwargs_list = session.run.call_args_list
+        kwargs_list = backend.service.run.call_args_list
         for idx, shots in zip([0, 1], [100, 200]):
             self.assertEqual(kwargs_list[idx][1]["inputs"]["options"]["default_shots"], shots)
 
@@ -440,6 +440,7 @@ class TestPrimitivesV2(IBMTestCase):
         for idx in range(num_runs):
             cls = primitives[idx % len(primitives)]
             inst = cls(session=session)
+            inst._backend.target = None
             inst.run(**get_primitive_inputs(inst))
         self.assertEqual(session.run.call_count, num_runs)
 

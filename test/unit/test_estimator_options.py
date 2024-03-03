@@ -123,9 +123,8 @@ class TestEstimatorOptions(IBMTestCase):
             "execution": execution,
             "resilience": resilience,
             "experimental": {"foo": "bar"},
-            "version": 2,
         }
-        expected = {"options": options, "resilience_level": resilience_level}
+        expected = {"options": options, "resilience_level": resilience_level, "version": 2}
 
         inputs = opt._get_program_inputs(asdict(opt))
         self.assertDictEqual(inputs, expected)
