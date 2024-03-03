@@ -12,12 +12,15 @@
 
 """Utility functions for options."""
 
+from __future__ import annotations
+
 from typing import Optional, Union, Callable, TYPE_CHECKING, Any
 import functools
 import copy
 from dataclasses import is_dataclass, asdict
+from numbers import Real
 
-from pydantic import ConfigDict
+from pydantic import ConfigDict, ValidationInfo, field_validator
 from pydantic.dataclasses import dataclass
 
 from ..ibm_backend import IBMBackend
@@ -61,13 +64,23 @@ def set_default_error_levels(
     return options
 
 
-def _remove_dict_unset_values(in_dict: dict) -> None:
+def remove_dict_unset_values(in_dict: dict) -> None:
     """Remove Unset values."""
     for key, val in list(in_dict.items()):
         if isinstance(val, UnsetType):
             del in_dict[key]
         elif isinstance(val, dict):
-            _remove_dict_unset_values(val)
+            remove_dict_unset_values(val)
+
+
+def reomve_empty_dict(in_dict: dict) -> None:
+    """Remove empty dictionaries."""
+    for key, val in list(in_dict.items()):
+        if isinstance(val, dict):
+            if val:
+                reomve_empty_dict(val)
+            if not val:
+                del in_dict[key]
 
 
 def _to_obj(cls_, data):  # type: ignore
@@ -104,8 +117,8 @@ def merge_options(
 
         for key, val in old.items():
             if isinstance(val, dict):
-                matched = new.pop(key, {})
-                _update_options(val, new, matched)
+                new_matched = new.pop(key, {})
+                _update_options(val, new, new_matched)
             elif key in new.keys():
                 old[key] = new.pop(key)
             elif key in matched.keys():
@@ -181,3 +194,49 @@ Unset = UnsetType()
 primitive_dataclass = dataclass(
     config=ConfigDict(validate_assignment=True, arbitrary_types_allowed=True, extra="forbid")
 )
+
+
+def make_constraint_validator(
+    *field_names: str,
+    ge: Real | None = None,
+    gt: Real | None = None,
+    le: Real | None = None,
+    lt: Real | None = None,
+) -> Callable:
+    """Make a field validator that performs the give constraint if the value is numeric.
+    This differs to the one built-in to ``pydantic.Field`` in that it ignores non-Real types,
+    which lets us apply this to fields with annotations like ``int | Literal["auto"]``.
+    Args:
+        field_names: The field names to check.
+        ge: A number the value must be greater than or equal to.
+        gt: A number the value must be strictly greater than.
+        le: A number the value must be less than or equal to.
+        lt: A number the value must be strictly less than.
+    Returns:
+        A new field validator.
+    """
+
+    @field_validator(*field_names, mode="before")  # type: ignore[misc]
+    @classmethod
+    @skip_unset_validation
+    def validator(cls: Any, value: Any, validation_info: ValidationInfo) -> Any:
+        if isinstance(value, Real):
+            if ge is not None and (value < ge):
+                raise ValueError(
+                    f"{cls.__name__}.{validation_info.field_name} must be >={ge}, but is =={value}."
+                )
+            if gt is not None and (value <= gt):
+                raise ValueError(
+                    f"{cls.__name__}.{validation_info.field_name} must be >{gt}, but is =={value}."
+                )
+            if le is not None and (value > le):
+                raise ValueError(
+                    f"{cls.__name__}.{validation_info.field_name} must be <={le}, but is =={value}."
+                )
+            if lt is not None and (value >= lt):
+                raise ValueError(
+                    f"{cls.__name__}.{validation_info.field_name} must be <{lt}, but is =={value}."
+                )
+        return value
+
+    return validator

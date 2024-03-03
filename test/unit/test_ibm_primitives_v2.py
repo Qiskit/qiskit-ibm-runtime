@@ -12,7 +12,6 @@
 
 """Tests for primitive classes."""
 
-import sys
 from dataclasses import asdict
 from unittest import skip
 from unittest.mock import MagicMock, patch
@@ -28,7 +27,6 @@ from qiskit.quantum_info import SparsePauliOp
 from qiskit_ibm_runtime import (
     Sampler,
     Estimator,
-    Options,
     Session,
 )
 from qiskit_ibm_runtime.utils.default_session import _DEFAULT_SESSION
@@ -74,9 +72,9 @@ class TestPrimitivesV2(IBMTestCase):
             {},
             {
                 "max_execution_time": 100,
-                "execution": {"shots": 100, "init_qubits": True},
+                "execution": {"init_qubits": True},
             },
-            {"optimization_level": 1},
+            {"default_shots": 1000},
         ]
         for options in options_vars:
             inst = primitive(session=MagicMock(spec=MockSession), options=options)
@@ -346,11 +344,14 @@ class TestPrimitivesV2(IBMTestCase):
         """Test run using overwritten options."""
         session = MagicMock(spec=MockSession)
         options_vars = [
-            ({"dynamical_decoupling": "XY4"}, {"dynamical_decoupling": "XY4"}),
-            ({"shots": 200}, {"execution": {"shots": 200}}),
             (
-                {"optimization_level": 1},
-                {"transpilation": {"optimization_level": 1}},
+                {"dynamical_decoupling": {"sequence_type": "XY4"}},
+                {"dynamical_decoupling": {"sequence_type": "XY4"}},
+            ),
+            ({"default_shots": 2000}, {"default_shots": 2000}),
+            (
+                {"execution": {"init_qubits": True}},
+                {"execution": {"init_qubits": True}},
             ),
         ]
 
@@ -359,7 +360,7 @@ class TestPrimitivesV2(IBMTestCase):
                 inst = primitive(session=session)
                 inst.options.update(**options)
                 inst.run(**get_primitive_inputs(inst))
-                inputs = session.run.call_args.kwargs["inputs"]
+                inputs = session.run.call_args.kwargs["inputs"]["options"]
                 self._assert_dict_partially_equal(inputs, expected)
 
     @data(EstimatorV2, SamplerV2)
@@ -382,7 +383,7 @@ class TestPrimitivesV2(IBMTestCase):
 
     @combine(
         primitive=[EstimatorV2, SamplerV2],
-        exp_opt=[{"foo": "bar"}, {"transpilation": {"extra_key": "bar"}}],
+        exp_opt=[{"foo": "bar", "execution": {"extra_key": "bar"}}],
     )
     def test_run_experimental_options(self, primitive, exp_opt):
         """Test specifying arbitrary options in run."""
@@ -390,21 +391,23 @@ class TestPrimitivesV2(IBMTestCase):
         inst = primitive(session=session)
         inst.options.experimental = exp_opt
         inst.run(**get_primitive_inputs(inst))
-        inputs = session.run.call_args.kwargs["inputs"]
-        self._assert_dict_partially_equal(inputs, exp_opt)
+        inputs = session.run.call_args.kwargs["inputs"]["options"]
+        self.assertDictEqual(inputs["experimental"], {"foo": "bar"})
+        self.assertDictEqual(inputs["execution"], {"extra_key": "bar"})
         self.assertNotIn("extra_key", inputs)
 
     @combine(
         primitive=[EstimatorV2, SamplerV2],
-        exp_opt=[{"foo": "bar"}, {"execution": {"extra_key": "bar"}}],
+        exp_opt=[{"foo": "bar", "execution": {"extra_key": "bar"}}],
     )
     def test_run_experimental_options_init(self, primitive, exp_opt):
         """Test specifying arbitrary options in initialization."""
         session = MagicMock(spec=MockSession)
         inst = primitive(session=session, options={"experimental": exp_opt})
         inst.run(**get_primitive_inputs(inst))
-        inputs = session.run.call_args.kwargs["inputs"]
-        self._assert_dict_partially_equal(inputs, exp_opt)
+        inputs = session.run.call_args.kwargs["inputs"]["options"]
+        self.assertDictEqual(inputs["experimental"], {"foo": "bar"})
+        self.assertDictEqual(inputs["execution"], {"extra_key": "bar"})
         self.assertNotIn("extra_key", inputs)
 
     @data(EstimatorV2, SamplerV2)
@@ -413,23 +416,21 @@ class TestPrimitivesV2(IBMTestCase):
         session = MagicMock(spec=MockSession)
         inst = primitive(session=session)
         inst.run(**get_primitive_inputs(inst))
-        inputs = session.run.call_args.kwargs["inputs"]
-        for fld in ["pubs"]:
-            inputs.pop(fld, None)
-        expected = {"execution": {"init_qubits": True}, "version": 2}
+        inputs = session.run.call_args.kwargs["inputs"]["options"]
+        expected = {"version": 2}
         self.assertDictEqual(inputs, expected)
 
     @data(EstimatorV2, SamplerV2)
     def test_run_multiple_different_options(self, primitive):
         """Test multiple runs with different options."""
         session = MagicMock(spec=MockSession)
-        inst = primitive(session=session, options={"shots": 100})
+        inst = primitive(session=session, options={"default_shots": 100})
         inst.run(**get_primitive_inputs(inst))
-        inst.options.update(shots=200)
+        inst.options.update(default_shots=200)
         inst.run(**get_primitive_inputs(inst))
         kwargs_list = session.run.call_args_list
         for idx, shots in zip([0, 1], [100, 200]):
-            self.assertEqual(kwargs_list[idx][1]["inputs"]["execution"]["shots"], shots)
+            self.assertEqual(kwargs_list[idx][1]["inputs"]["options"]["default_shots"], shots)
 
     def test_run_same_session(self):
         """Test multiple runs within a session."""
@@ -445,14 +446,14 @@ class TestPrimitivesV2(IBMTestCase):
     @combine(
         primitive=[EstimatorV2, SamplerV2],
         new_opts=[
-            {"optimization_level": 0},
-            {"optimization_level": 1, "shots": 200},
+            {"default_shots": 200},
+            {"dynamical_decoupling": {"enable": True}, "default_shots": 300},
         ],
     )
     def test_set_options(self, primitive, new_opts):
         """Test set options."""
         opt_cls = primitive._options_class
-        options = opt_cls(optimization_level=1, execution={"shots": 100})
+        options = opt_cls(default_shots=100)
 
         session = MagicMock(spec=MockSession)
         inst = primitive(session=session, options=options)
@@ -476,18 +477,15 @@ class TestPrimitivesV2(IBMTestCase):
         opt_cls = primitive._options_class
         options_dicts = [
             {},
-            {"shots": 10},
+            {"default_shots": 1024},
             {"seed_simulator": 123},
             {"log_level": "ERROR"},
-            {"shots": 100, "optimization_level": 1},
         ]
 
         expected_list = [opt_cls() for _ in range(len(options_dicts))]
-        expected_list[1].execution.shots = 10
+        expected_list[1].default_shots = 1024
         expected_list[2].simulator.seed_simulator = 123
         expected_list[3].environment.log_level = "ERROR"
-        expected_list[4].execution.shots = 100
-        expected_list[4].optimization_level = 1
 
         session = MagicMock(spec=MockSession)
         for opts, expected in zip(options_dicts, expected_list):
@@ -495,69 +493,6 @@ class TestPrimitivesV2(IBMTestCase):
                 inst1 = primitive(session=session, options=opts)
                 inst2 = primitive(session=session, options=expected)
                 self.assertEqual(inst1.options, inst2.options)
-
-    @skip("We don't change default error level anymore")
-    def test_default_error_levels(self):
-        """Test the correct default error levels are used."""
-
-        session = MagicMock(spec=MockSession)
-        primitives = [Sampler, Estimator]
-        for cls in primitives:
-            with self.subTest(primitive=cls):
-                options = Options(
-                    simulator={"noise_model": "foo"},
-                )
-                inst = cls(session=session, options=options)
-
-                if isinstance(inst, Estimator):
-                    inst.run(self.circ, observables=self.obs)
-                else:
-                    inst.run(self.circ)
-
-                if sys.version_info >= (3, 8):
-                    inputs = session.run.call_args.kwargs["inputs"]
-                else:
-                    _, kwargs = session.run.call_args
-                    inputs = kwargs["inputs"]
-                self.assertEqual(
-                    inputs["transpilation"]["optimization_level"],
-                    Options._DEFAULT_OPTIMIZATION_LEVEL,
-                )
-                self.assertEqual(
-                    inputs["resilience_level"],
-                    Options._DEFAULT_RESILIENCE_LEVEL,
-                )
-
-                session.service.backend().configuration().simulator = False
-                inst = cls(session=session)
-                inst.run(self.circ, observables=self.obs)
-                if sys.version_info >= (3, 8):
-                    inputs = session.run.call_args.kwargs["inputs"]
-                else:
-                    _, kwargs = session.run.call_args
-                    inputs = kwargs["inputs"]
-                self.assertEqual(
-                    inputs["transpilation"]["optimization_level"],
-                    Options._DEFAULT_OPTIMIZATION_LEVEL,
-                )
-                self.assertEqual(
-                    inputs["resilience_level"],
-                    Options._DEFAULT_RESILIENCE_LEVEL,
-                )
-
-                session.service.backend().configuration().simulator = True
-                inst = cls(session=session)
-                inst.run(self.circ, observables=self.obs)
-                if sys.version_info >= (3, 8):
-                    inputs = session.run.call_args.kwargs["inputs"]
-                else:
-                    _, kwargs = session.run.call_args
-                    inputs = kwargs["inputs"]
-                self.assertEqual(
-                    inputs["transpilation"]["optimization_level"],
-                    1,
-                )
-                self.assertEqual(inputs["resilience_level"], 0)
 
     @data(EstimatorV2, SamplerV2)
     def test_raise_faulty_qubits(self, primitive):

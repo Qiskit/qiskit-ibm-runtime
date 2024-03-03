@@ -14,7 +14,7 @@
 
 from typing import Literal, Union
 
-from .utils import Unset, UnsetType, primitive_dataclass
+from .utils import Unset, UnsetType, primitive_dataclass, make_constraint_validator
 
 
 TwirlingStrategyType = Literal[
@@ -30,29 +30,32 @@ class TwirlingOptions:
     """Twirling options.
 
     Args:
-        gates: Whether to apply 2-qubit gate twirling.
-            By default, gate twirling is enabled for resilience level >0.
+        enable_gates: Whether to apply 2-qubit gate twirling.
 
-        measure: Whether to apply measurement twirling.
-            By default, measurement twirling is enabled for resilience level >0.
+        enable_measure: Whether to apply measurement twirling.
+
+        num_randomizations: The number of random samples to use when twirling or
+          peforming sampled mitigation.
+
+        shots_per_randomization: The number of shots to run for each random sample.
 
         strategy: Specify the strategy of twirling qubits in identified layers of
             2-qubit twirled gates. Allowed values are
 
-            - If ``"active"`` only the instruction qubits in each individual twirled
+            * If ``"active"`` only the instruction qubits in each individual twirled
               layer will be twirled.
-            - If ``"active-circuit"`` the union of all instruction qubits in the circuit
+            * If ``"active-circuit"`` the union of all instruction qubits in the circuit
               will be twirled in each twirled layer.
-            - If ``"active-accum"`` the union of instructions qubits in the circuit up to
+            * If ``"active-accum"`` the union of instructions qubits in the circuit up to
               the current twirled layer will be twirled in each individual twirled layer.
-            - If ``"all"`` all qubits in the input circuit will be twirled in each
+            * If ``"all"`` all qubits in the input circuit will be twirled in each
               twirled layer.
-            - If None twirling will be disabled.
-
-            Default: ``"active-accum"`` for resilience levels 0, 1, 2. ``"active"`` for
-                     resilience level 3.
     """
 
-    gates: Union[UnsetType, bool] = Unset
-    measure: Union[UnsetType, bool] = Unset
+    enable_gates: Union[UnsetType, bool] = Unset
+    enable_measure: Union[UnsetType, bool] = Unset
+    num_randomizations: Union[UnsetType, int] = Unset
+    shots_per_randomization: Union[UnsetType, int] = Unset
     strategy: Union[UnsetType, TwirlingStrategyType] = Unset
+
+    _ge1 = make_constraint_validator("num_randomizations", "shots_per_randomization", ge=1)
