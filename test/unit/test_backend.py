@@ -16,11 +16,18 @@ from unittest import mock
 import warnings
 
 from qiskit import transpile, qasm3, QuantumCircuit
-from qiskit.providers.models import BackendStatus
+from qiskit.circuit import IfElseOp
+from qiskit.providers.models import (
+    BackendStatus,
+    BackendConfiguration,
+    BackendProperties,
+    PulseDefaults,
+)
 
 from qiskit_ibm_runtime.exceptions import IBMBackendValueError
-from qiskit_ibm_runtime.fake_provider import FakeManila
+from qiskit_ibm_runtime.fake_provider import FakeManila, FakeSherbrooke
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
+from qiskit_ibm_runtime.utils.backend_converter import convert_to_target
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import (
@@ -305,3 +312,17 @@ class TestBackend(IBMTestCase):
             f"Number of circuits, {max_circs+1} exceeds the maximum for this backend, {max_circs}",
             str(err.exception),
         )
+
+    def test_control_flow_converter(self):
+        """Test that control flow instructions are properly added to the target."""
+        backend = FakeSherbrooke()
+        backend._get_conf_dict_from_json()
+        backend._set_props_dict_from_json()
+        backend._set_defs_dict_from_json()
+        target = convert_to_target(
+            BackendConfiguration.from_dict(backend._conf_dict),
+            BackendProperties.from_dict(backend._props_dict),
+            PulseDefaults.from_dict(backend._defs_dict),
+        )
+        self.assertTrue(target.instruction_supported("if_else", ()))
+        self.assertTrue(target.instruction_supported(operation_class=IfElseOp))

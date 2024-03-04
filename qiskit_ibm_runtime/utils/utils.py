@@ -17,7 +17,6 @@ import logging
 import os
 import re
 import hashlib
-import warnings
 from queue import Queue
 from threading import Condition
 from typing import List, Optional, Any, Dict, Union, Tuple, Sequence
@@ -64,42 +63,24 @@ def is_isa_circuit(circuit: QuantumCircuit, target: Target) -> str:
     return ""
 
 
-def validate_isa_circuits(
-    circuits: Sequence[QuantumCircuit], target: Target, raise_exc: bool = False
-) -> None:
+def validate_isa_circuits(circuits: Sequence[QuantumCircuit], target: Target) -> None:
     """Validate if all circuits are ISA circuits
 
     Args:
-        circuits: A list of QuantumCircuits
+        circuits: A list of QuantumCircuits.
         target: The backend target
-
-    Raises:
-        IBMInputValueError if some of the circuits are not ISA circuits
     """
     for circuit in circuits:
         message = is_isa_circuit(circuit, target)
-        if not message:
-            return
-        if raise_exc:
+        if message:
             raise IBMInputValueError(
                 message
-                + " Circuits that do not match the target hardware definition will no longer be "
-                "supported after March 1, 2024. See the transpilation documentation "
+                + " Circuits that do not match the target hardware definition are no longer "
+                "supported after March 4, 2024. See the transpilation documentation "
                 "(https://docs.quantum.ibm.com/transpile) for instructions to transform circuits and "
                 "the primitive examples (https://docs.quantum.ibm.com/run/primitives-examples) to see "
                 "this coupled with operator transformations."
             )
-
-        warnings.warn(
-            message
-            + " Circuits that do not match the target hardware definition will no longer be "
-            "supported after March 1, 2024. See the transpilation documentation "
-            "(https://docs.quantum.ibm.com/transpile) for instructions to transform circuits and "
-            "the primitive examples (https://docs.quantum.ibm.com/run/primitives-examples) to see "
-            "this coupled with operator transformations.",
-            DeprecationWarning,
-            stacklevel=6,
-        )
 
 
 def validate_job_tags(job_tags: Optional[List[str]]) -> None:
