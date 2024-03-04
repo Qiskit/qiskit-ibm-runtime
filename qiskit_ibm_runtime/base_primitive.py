@@ -139,7 +139,10 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
 
         if self._backend:
             for pub in pubs:
-                if getattr(self._backend, "target", None) and not self._backend.configuration().simulator:
+                if (
+                    getattr(self._backend, "target", None)
+                    and not self._backend.configuration().simulator
+                ):
                     validate_isa_circuits([pub.circuit], self._backend.target)
 
                 self._backend.check_faulty(pub.circuit)
