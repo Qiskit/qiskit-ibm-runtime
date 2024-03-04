@@ -23,8 +23,7 @@ from datetime import datetime
 from ddt import data, unpack
 
 from qiskit.circuit import QuantumCircuit, QuantumRegister, ClassicalRegister
-from qiskit.compiler import transpile, assemble
-from qiskit.qobj import QasmQobj
+from qiskit.compiler import transpile
 from qiskit.providers.jobstatus import JOB_FINAL_STATES, JobStatus
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.models import (
@@ -34,13 +33,12 @@ from qiskit.providers.models import (
 )
 from qiskit.providers.backend import Backend
 from qiskit.quantum_info import SparsePauliOp, Pauli
+from qiskit_ibm_runtime import QiskitRuntimeService, Session, EstimatorV2
 from qiskit_ibm_runtime.fake_provider import FakeManila
 from qiskit_ibm_runtime.hub_group_project import HubGroupProject
-from qiskit_ibm_runtime import QiskitRuntimeService, Session, EstimatorV2
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.runtime_job import RuntimeJob
 from qiskit_ibm_runtime.exceptions import RuntimeInvalidStateError
-from qiskit_ibm_runtime.fake_provider import FakeManila
 
 
 def setup_test_logging(logger: logging.Logger, filename: str) -> None:

@@ -66,6 +66,15 @@ from qiskit.qpy import (
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.qpy.binary_io.value import _write_parameter, _read_parameter
+from qiskit.primitives.containers.bindings_array import BindingsArray
+from qiskit.primitives.containers.observables_array import ObservablesArray
+from qiskit.primitives.containers import (
+    BitArray,
+    DataBin,
+    make_data_bin,
+    PubResult,
+    PrimitiveResult,
+)
 
 _TERRA_VERSION = tuple(
     int(x) for x in re.match(r"\d+\.\d+\.\d", _terra_version_string).group(0).split(".")[:3]

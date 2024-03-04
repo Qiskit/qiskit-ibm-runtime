@@ -139,7 +139,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
         if self._backend:
             for pub in pubs:
                 if hasattr(self._backend, "target") and not self._backend.configuration().simulator:
-                    validate_isa_circuits([pub.circuit], self._backend.target, raise_exc=True)
+                    validate_isa_circuits([pub.circuit], self._backend.target)
 
                 self._backend.check_faulty(pub.circuit)
 

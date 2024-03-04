@@ -18,13 +18,13 @@ import os
 from unittest.mock import MagicMock, patch
 from dataclasses import asdict
 from typing import Dict
-import warnings
 
 from ddt import data, ddt
 from qiskit import transpile, pulse
 from qiskit.circuit import QuantumCircuit, QuantumRegister, ClassicalRegister
 from qiskit.pulse.library import Gaussian
 from qiskit.quantum_info import SparsePauliOp
+from qiskit_aer.noise import NoiseModel
 
 from qiskit_ibm_runtime.fake_provider import FakeManila, FakeSherbrooke
 from qiskit_ibm_runtime import (
