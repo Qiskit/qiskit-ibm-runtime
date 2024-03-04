@@ -31,7 +31,7 @@ class EstimatorResultDecoder(ResultDecoder):
         """Convert the result to EstimatorResult."""
         decoded: Dict = super().decode(raw_result)
         if isinstance(decoded, PrimitiveResult):
-            return decoded        
+            return decoded
         else:
             return EstimatorResult(
                 values=np.asarray(decoded["values"]),
