@@ -12,7 +12,7 @@
 
 """Sampler options."""
 
-from typing import Union, Literal
+from typing import Union
 
 from pydantic import Field
 
@@ -21,9 +21,6 @@ from .execution_options import ExecutionOptionsV2
 from .options import OptionsV2
 from .utils import primitive_dataclass
 from .dynamical_decoupling_options import DynamicalDecouplingOptions
-
-DDSequenceType = Literal["XX", "XpXm", "XY4"]
-MAX_OPTIMIZATION_LEVEL: int = 1
 
 
 @primitive_dataclass

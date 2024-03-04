@@ -66,6 +66,11 @@ class EstimatorOptions(OptionsV2):
             * 0: no optimization
             * 1: light optimization
 
+            Refer to the
+            `Configure runtime compilation for Qiskit Runtime
+            <https://docs.quantum.ibm.com/run/configure-runtime-compilation>`_.
+            for more information about the optimization levels.
+
             Default: 1.
 
         resilience_level: How much resilience to build against errors.
@@ -78,7 +83,7 @@ class EstimatorOptions(OptionsV2):
               is not guaranteed to be zero bias.
 
             Refer to the
-            `Qiskit Runtime documentation
+            `Configure error mitigation for Qiskit Runtime
             <https://docs.quantum.ibm.com/run/configure-error-mitigation>`_.
             for more information about the error mitigation methods used at each level.
 
