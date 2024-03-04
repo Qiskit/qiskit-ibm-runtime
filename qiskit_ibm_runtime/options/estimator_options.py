@@ -58,6 +58,7 @@ class EstimatorOptions(OptionsV2):
             randomizations, with a smaller number of shots per randomization. See the
             :attr:`~twirling` options.
 
+            Default: ``None``.
 
         optimization_level: How much optimization to perform on the circuits.
             Higher levels generate more optimized circuits,
