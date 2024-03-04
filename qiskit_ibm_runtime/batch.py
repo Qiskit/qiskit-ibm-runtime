@@ -13,8 +13,8 @@
 """Qiskit Runtime batch mode."""
 
 from typing import Optional, Union
-
 from qiskit_ibm_runtime import QiskitRuntimeService
+from .ibm_backend import IBMBackend
 
 from .ibm_backend import IBMBackend
 from .session import Session

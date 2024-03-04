@@ -22,13 +22,11 @@ import warnings
 
 from ddt import data, ddt
 from qiskit import transpile, pulse
-from qiskit.circuit import QuantumCircuit
+from qiskit.circuit import QuantumCircuit, QuantumRegister, ClassicalRegister
 from qiskit.pulse.library import Gaussian
 from qiskit.quantum_info import SparsePauliOp
-from qiskit.providers.models.backendconfiguration import QasmBackendConfiguration
-from qiskit_aer.noise import NoiseModel
 
-from qiskit_ibm_runtime.fake_provider import FakeManila
+from qiskit_ibm_runtime.fake_provider import FakeManila, FakeSherbrooke
 from qiskit_ibm_runtime import (
     Sampler,
     Estimator,
@@ -37,6 +35,7 @@ from qiskit_ibm_runtime import (
 )
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.utils.default_session import _DEFAULT_SESSION
+from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import (
@@ -853,7 +852,7 @@ class TestPrimitives(IBMTestCase):
         else:
             circ.measure_all()
 
-        with self.assertWarnsRegex(DeprecationWarning, "target hardware"):
+        with self.assertRaisesRegex(IBMInputValueError, "target hardware"):
             inst.run(**run_input)
 
     @data(Sampler, Estimator)
@@ -863,7 +862,6 @@ class TestPrimitives(IBMTestCase):
         config = FakeManila().configuration().to_dict()
         for gate in config["gates"]:
             gate.pop("coupling_map", None)
-        config = QasmBackendConfiguration.from_dict(config)
         backend = get_mocked_backend(configuration=config)
 
         inst = primitive(backend=backend)
@@ -876,10 +874,7 @@ class TestPrimitives(IBMTestCase):
         else:
             transpiled.measure_all()
 
-        with warnings.catch_warnings(record=True) as warns:
-            warnings.simplefilter("always")
-            inst.run(**run_input)
-            self.assertFalse(warns)
+        inst.run(**run_input)
 
     @data(Sampler, Estimator)
     def test_pulse_gates_is_isa(self, primitive):
@@ -899,10 +894,60 @@ class TestPrimitives(IBMTestCase):
         else:
             circuit.measure_all()
 
-        with warnings.catch_warnings(record=True) as warns:
-            warnings.simplefilter("always")
-            inst.run(**run_input)
-            self.assertFalse(warns)
+        inst.run(**run_input)
+
+    @data(Sampler, Estimator)
+    def test_dynamic_circuit_is_isa(self, primitive):
+        """Test passing dynmaic circuits is considered ISA."""
+        # pylint: disable=not-context-manager
+        # pylint: disable=invalid-name
+        sherbrooke = FakeSherbrooke()
+        config = sherbrooke._get_conf_dict_from_json()
+        config["supported_instructions"] += ["for_loop", "switch_case", "while_loop"]
+
+        backend = get_mocked_backend(
+            configuration=config,
+            properties=sherbrooke._set_props_dict_from_json(),
+            defaults=sherbrooke._set_defs_dict_from_json(),
+        )
+
+        inst = primitive(backend=backend)
+
+        qubits = QuantumRegister(3)
+        clbits = ClassicalRegister(3)
+        circuit = QuantumCircuit(qubits, clbits)
+        (q0, q1, q2) = qubits
+        (c0, c1, c2) = clbits
+
+        circuit.x(q0)
+        circuit.measure(q0, c0)
+        with circuit.if_test((c0, 1)):
+            circuit.x(q0)
+
+        circuit.measure(q1, c1)
+        with circuit.switch(c1) as case:
+            with case(0):
+                circuit.x(q0)
+            with case(1):
+                circuit.x(q1)
+
+        circuit.measure(q1, c1)
+        circuit.measure(q2, c2)
+        with circuit.while_loop((clbits, 0b111)):
+            circuit.rz(1.5, q1)
+            circuit.rz(1.5, q2)
+            circuit.measure(q1, c1)
+            circuit.measure(q2, c2)
+
+        with circuit.for_loop(range(2)) as _:
+            circuit.x(q0)
+
+        circuit = transpile(circuit, backend=backend)
+        run_input = {"circuits": circuit}
+        if isinstance(inst, Estimator):
+            run_input["observables"] = SparsePauliOp("ZZZ").apply_layout(circuit.layout)
+
+        inst.run(**run_input)
 
     def _update_dict(self, dict1, dict2):
         for key, val in dict1.items():
@@ -982,3 +1027,20 @@ class TestPrimitives(IBMTestCase):
                             _ = inst.run(self.qx, observables=self.obs, **bad_opt)
 
                         self.assertIn(expected_message, str(exc.exception))
+
+    @data(Sampler, Estimator)
+    def test_qctrl_abstract_circuit(self, primitive):
+        """Test q-ctrl can still accept abstract circuits."""
+        backend = get_mocked_backend()
+        backend._service._channel_strategy = "q-ctrl"
+        inst = primitive(backend=backend)
+
+        circ = QuantumCircuit(3, 3)
+        circ.cx(0, 2)
+        run_input = {"circuits": circ}
+        if isinstance(inst, Estimator):
+            run_input["observables"] = SparsePauliOp("ZZZ")
+        else:
+            circ.measure_all()
+
+        inst.run(**run_input)

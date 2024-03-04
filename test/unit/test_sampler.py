@@ -38,6 +38,8 @@ class TestSampler(IBMTestCase):
             {"resilience_level": 2, "optimization_level": 3},
             {"optimization_level": 4, "resilience_level": 1},
         ]
+        backend = get_mocked_backend()
+        circuit = transpile(bell(), backend=backend)
 
         with Session(
             service=FakeRuntimeService(channel="ibm_quantum", token="abc"),
