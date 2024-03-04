@@ -146,9 +146,10 @@ class BasePrimitive(ABC):
             Submitted job.
         """
         if (
-            self._backend
+            self._backend  # pylint: disable=too-many-boolean-expressions
             and isinstance(self._backend, IBMBackend)
             and isinstance(self._backend.service, QiskitRuntimeService)
+            and not self._backend.simulator
             and getattr(self._backend, "target", None)
             and self._service._channel_strategy != "q-ctrl"
         ):
