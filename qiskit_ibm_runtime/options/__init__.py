@@ -19,26 +19,6 @@ Primitive options (:mod:`qiskit_ibm_runtime.options`)
 
 Options that can be passed to the primitives.
 
-**V1 Primitives**
-
-The :class:`Options` class encapsulates all the options you can specify
-when invoking a V1 primitive. It includes frequently used options,
-such as ``optimization_level`` and ``resilience_level`` as well as
-sub-categories, such as ``transpilation`` and ``execution``.
-You can use auto-complete to easily find the options inside each
-sub-category, for example::
-
-   from qiskit_ibm_runtime.options import Options
-
-   options = Options()
-   options.transpilation.initial_layout = [0, 1, 2, 3]  # This an be done using auto-complete
-
-You can also pass dictionaries to each sub-category, for example::
-
-   from qiskit_ibm_runtime.options import Options
-
-   options = Options(transpilation={"initial_layout": [0, 1, 2, 3]})
-
 **V2 Primitives**
 
 ``SamplerV2`` and ``EstimatorV2`` each have their own options. You can use the
@@ -60,36 +40,68 @@ You can also use the ``update()`` method to do bulk update. For example::
    estimator = EstimatorV2(backend=backend)
    estimator.options.update(resilience_level=1)
 
+Refer to :class:`SamplerOptions` and :class:`EstimatorOptions` for V2 Sampler and
+V2 Estimator options, respectively.
+
+.. note::
+   If an option is not specified, the server default value is used. The
+   default values are subject to change. See the
+   `API Reference <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/options>`_
+   for the most up-to-date default values.
+
+
+**V1 Primitives**
+
+The :class:`Options` class encapsulates all the options you can specify
+when invoking a V1 primitive. It includes frequently used options,
+such as ``optimization_level`` and ``resilience_level`` as well as
+sub-categories, such as ``transpilation`` and ``execution``.
+You can use auto-complete to easily find the options inside each
+sub-category, for example::
+
+   from qiskit_ibm_runtime.options import Options
+
+   options = Options()
+   options.transpilation.initial_layout = [0, 1, 2, 3]  # This an be done using auto-complete
+
+You can also pass dictionaries to each sub-category, for example::
+
+   from qiskit_ibm_runtime.options import Options
+
+   options = Options(transpilation={"initial_layout": [0, 1, 2, 3]})
+
 
 Classes
 ==========================
 .. autosummary::
    :toctree: ../stubs/
 
-   Options
-   TranspilationOptions
-   ResilienceOptions
-   ResilienceOptionsV2
-   ExecutionOptions
-   EnvironmentOptions
-   SimulatorOptions
-   TwirlingOptions
    EstimatorOptions
    SamplerOptions
    DynamicalDecouplingOptions
+   ResilienceOptionsV2
    LayerNoiseLearningOptions
    MeasureNoiseLearningOptions
    PecOptions
    ZneOptions
+   TwirlingOptions
+   ExecutionOptionsV2
+   Options
+   TranspilationOptions
+   ResilienceOptions
+   ExecutionOptions
+   EnvironmentOptions
+   SimulatorOptions
 
 """
 
 from .environment_options import EnvironmentOptions
-from .execution_options import ExecutionOptionsV1 as ExecutionOptions
+from .execution_options import ExecutionOptions
+from .execution_options import ExecutionOptionsV2
 from .options import Options
 from .simulator_options import SimulatorOptions
 from .transpilation_options import TranspilationOptions
-from .resilience_options import ResilienceOptionsV1 as ResilienceOptions
+from .resilience_options import ResilienceOptions
 from .resilience_options import ResilienceOptionsV2
 from .twirling_options import TwirlingOptions
 from .estimator_options import EstimatorOptions

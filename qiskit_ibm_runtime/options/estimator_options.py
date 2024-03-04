@@ -34,14 +34,14 @@ MAX_OPTIMIZATION_LEVEL: int = 1
 
 @primitive_dataclass
 class EstimatorOptions(OptionsV2):
-    """Options for EstimatorV2.
+    """Options for V2 Estimator.
 
     Args:
         default_precision: The default precision to use for any PUB or ``run()``
             call that does not specify one.
             Each estimator pub can specify its own precision. If the ``run()`` method
             is given a precision, then that value is used for all PUBs in the ``run()``
-            call that do not specify their own.
+            call that do not specify their own. Default: 0.02.
 
         default_shots: The total number of shots to use per circuit per configuration.
 
@@ -62,8 +62,11 @@ class EstimatorOptions(OptionsV2):
         optimization_level: How much optimization to perform on the circuits.
             Higher levels generate more optimized circuits,
             at the expense of longer processing times.
+
             * 0: no optimization
             * 1: light optimization
+
+            Default: 1.
 
         resilience_level: How much resilience to build against errors.
             Higher levels generate more accurate results,
@@ -72,12 +75,14 @@ class EstimatorOptions(OptionsV2):
             * 0: No mitigation.
             * 1: Minimal mitigation costs. Mitigate error associated with readout errors.
             * 2: Medium mitigation costs. Typically reduces bias in estimators but
-              is not guaranteed to be zero bias. Only applies to estimator.
+              is not guaranteed to be zero bias.
 
             Refer to the
             `Qiskit Runtime documentation
-            <https://qiskit.org/documentation/partners/qiskit_ibm_runtime>`_.
+            <https://docs.quantum.ibm.com/run/configure-error-mitigation>`_.
             for more information about the error mitigation methods used at each level.
+
+            Default: 1.
 
         seed_estimator: Seed used to control sampling.
 
@@ -85,7 +90,7 @@ class EstimatorOptions(OptionsV2):
             :class:`DynamicalDecouplingOptions` for all available options.
 
         resilience: Advanced resilience options to fine tune the resilience strategy.
-            See :class:`ResilienceOptions` for all available options.
+            See :class:`ResilienceOptionsV2` for all available options.
 
         execution: Execution time options. See :class:`ExecutionOptionsV2` for all available options.
 

@@ -28,9 +28,9 @@ class ExecutionOptionsV2:
 
         rep_delay: The repetition delay. This is the delay between a measurement and
             the subsequent quantum circuit. This is only supported on backends that have
-            ``backend.configuration().dynamic_reprate_enabled=True``. It must be from the
-            range supplied by ``backend.configuration().rep_delay_range``.
-            Default is given by ``backend.configuration().default_rep_delay``.
+            ``backend.dynamic_reprate_enabled=True``. It must be from the
+            range supplied by ``backend.rep_delay_range``.
+            Default is given by ``backend.default_rep_delay``.
     """
 
     init_qubits: Union[UnsetType, bool] = Unset
@@ -38,8 +38,8 @@ class ExecutionOptionsV2:
 
 
 @primitive_dataclass
-class ExecutionOptionsV1:
-    """Execution options.
+class ExecutionOptions:
+    """Execution options for V1 primitives.
 
     Args:
         shots: Number of repetitions of each circuit, for sampling. Default: 4000.

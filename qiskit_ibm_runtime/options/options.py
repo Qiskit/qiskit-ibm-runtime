@@ -32,10 +32,10 @@ from .utils import (
     remove_empty_dict,
 )
 from .environment_options import EnvironmentOptions
-from .execution_options import ExecutionOptionsV1 as ExecutionOptions
+from .execution_options import ExecutionOptions
 from .simulator_options import SimulatorOptions
 from .transpilation_options import TranspilationOptions
-from .resilience_options import ResilienceOptionsV1 as ResilienceOptions
+from .resilience_options import ResilienceOptions
 from ..runtime_options import RuntimeOptions
 
 
@@ -198,7 +198,7 @@ class OptionsV2(BaseOptions):
 
 @dataclass
 class Options(BaseOptions):
-    """Options for the primitives, used by v1 primitives.
+    """Options for the primitives, used by V1 primitives.
 
     Args:
         optimization_level: How much optimization to perform on the circuits.

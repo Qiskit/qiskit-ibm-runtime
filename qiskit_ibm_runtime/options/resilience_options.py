@@ -37,23 +37,26 @@ ExtrapolatorType = Literal[
 
 @primitive_dataclass
 class ResilienceOptionsV2:
-    """Resilience options.
+    """Resilience options for V2 Estimator.
 
     Args:
         measure_mitigation: Whether to enable measurement error mitigation method.
             Further suboptions are available in :attr:`~measure_noise_learning`.
+            Default: True.
 
         measure_noise_learning: Additional measurement noise learning options.
             See :class:`MeasureNoiseLearningOptions` for all options.
 
         zne_mitigation: Whether to turn on Zero Noise Extrapolation error mitigation method.
             Further suboptions are available in :attr:`~zne`.
+            Default: False.
 
         zne: Additional zero noise extrapolation mitigation options.
             See :class:`ZneOptions` for all options.
 
         pec_mitigation: Whether to turn on Probabilistic Error Cancellation error mitigation method.
             Further suboptions are available in :attr:`~pec`.
+            Default: False.
 
         pec: Additional probabalistic error cancellation mitigation options.
             See :class:`PecOptions` for all options.
@@ -99,8 +102,8 @@ class ResilienceOptionsV2:
 
 
 @primitive_dataclass
-class ResilienceOptionsV1:
-    """Resilience options.
+class ResilienceOptions:
+    """Resilience options for V1 primitives.
 
     Args:
         noise_factors: An list of real valued noise factors that determine by what amount the
@@ -125,7 +128,7 @@ class ResilienceOptionsV1:
     extrapolator: Optional[ExtrapolatorType] = None
 
     @model_validator(mode="after")
-    def _validate_options(self) -> "ResilienceOptionsV1":
+    def _validate_options(self) -> "ResilienceOptions":
         """Validate the model."""
         required_factors = {
             "QuarticExtrapolator": 5,

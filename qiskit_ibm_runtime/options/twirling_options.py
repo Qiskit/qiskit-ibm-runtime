@@ -30,9 +30,9 @@ class TwirlingOptions:
     """Twirling options.
 
     Args:
-        enable_gates: Whether to apply 2-qubit gate twirling.
+        enable_gates: Whether to apply 2-qubit gate twirling. Default: False.
 
-        enable_measure: Whether to apply measurement twirling.
+        enable_measure: Whether to apply measurement twirling. Default: True.
 
         num_randomizations: The number of random samples to use when twirling or
             peforming sampled mitigation.
@@ -50,6 +50,8 @@ class TwirlingOptions:
               the current twirled layer will be twirled in each individual twirled layer.
             * If ``"all"`` all qubits in the input circuit will be twirled in each
               twirled layer.
+
+            Default: "active-accum".
     """
 
     enable_gates: Union[UnsetType, bool] = Unset

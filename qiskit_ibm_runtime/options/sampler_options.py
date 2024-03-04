@@ -28,11 +28,11 @@ MAX_OPTIMIZATION_LEVEL: int = 1
 
 @primitive_dataclass
 class SamplerOptions(OptionsV2):
-    """Options for v2 Sampler.
+    """Options for V2 Sampler.
 
     Args:
         default_shots: The default number of shots to use if none are specified in the PUBs
-            or in the run method.
+            or in the run method. Default: 4096.
 
         dynamical_decoupling: Suboptions for dynamical decoupling. See
             :class:`DynamicalDecouplingOptions` for all available options.

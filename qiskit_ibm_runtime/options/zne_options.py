@@ -37,7 +37,7 @@ class ZneOptions:
     """Zero noise extrapolation mitigation options.
 
     Args:
-        noise_factors: Noise factors to use for noise amplification.
+        noise_factors: Noise factors to use for noise amplification. Default: (1, 3, 5).
 
         extrapolator: Extrapolator(s) to try (in order) for extrapolating to zero noise.
             One or more of:
@@ -46,6 +46,8 @@ class ZneOptions:
             * "exponential"
             * "double_exponential"
             * "polynomial_degree_(1 <= k <= 7)"
+
+            Default: ("exponential", "linear").
     """
 
     noise_factors: Union[UnsetType, Sequence[float]] = Unset
