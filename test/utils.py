@@ -25,7 +25,11 @@ from qiskit.compiler import transpile, assemble
 from qiskit.qobj import QasmQobj
 from qiskit.providers.jobstatus import JOB_FINAL_STATES, JobStatus
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
-from qiskit.providers.models import BackendStatus, BackendProperties, BackendConfiguration
+from qiskit.providers.models import (
+    BackendStatus,
+    BackendProperties,
+    BackendConfiguration,
+)
 from qiskit.providers.backend import Backend
 
 from qiskit_ibm_runtime.hub_group_project import HubGroupProject
@@ -277,22 +281,25 @@ def create_faulty_backend(
 
 
 def get_mocked_backend(
-    name: str = "ibm_gotham", configuration: Optional[BackendConfiguration] = None
+    name: str = "ibm_gotham",
+    configuration: Optional[Dict] = None,
+    properties: Optional[Dict] = None,
+    defaults: Optional[Dict] = None,
 ) -> IBMBackend:
     """Return a mock backend."""
-
-    def _noop(*args, **kwargs):  # pylint: disable=unused-argument
-        return None
 
     mock_service = mock.MagicMock(spec=QiskitRuntimeService)
     mock_service._channel_strategy = None
     mock_api_client = mock.MagicMock()
 
-    if not configuration:
-        configuration = FakeManila().configuration()
+    configuration = (
+        FakeManila().configuration()
+        if configuration is None
+        else BackendConfiguration.from_dict(configuration)
+    )
 
-    mock_api_client.backend_properties = _noop
-    mock_api_client.backend_pulse_defaults = _noop
+    mock_api_client.backend_properties = lambda *args, **kwargs: properties
+    mock_api_client.backend_pulse_defaults = lambda *args, **kwargs: defaults
     mock_backend = IBMBackend(
         configuration=configuration, service=mock_service, api_client=mock_api_client
     )
