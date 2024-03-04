@@ -16,7 +16,7 @@ from typing import Dict, Union
 import numpy as np
 
 from qiskit.primitives import EstimatorResult
-from qiskit.primitives.containers import PrimitiveResult, make_data_bin, PubResult
+from qiskit.primitives.containers import PrimitiveResult
 
 from .result_decoder import ResultDecoder
 
