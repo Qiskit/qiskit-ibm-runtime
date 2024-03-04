@@ -12,7 +12,7 @@
 
 """Options for measurement noise learning."""
 
-from typing import Union
+from typing import Union, Literal
 
 from .utils import Unset, UnsetType, primitive_dataclass, make_constraint_validator
 
@@ -26,16 +26,15 @@ class MeasureNoiseLearningOptions:
         technique that requires measurement noise learning.
 
     Args:
-        meas_num_randomizations: The number of random circuits to draw for the measurement
+        num_randomizations: The number of random circuits to draw for the measurement
             learning experiment. Default: 32.
 
-        meas_shots_per_randomization: The number of shots to use for the learning experiment
-            per random circuit.
+        shots_per_randomization: The number of shots to use for the learning experiment
+            per random circuit. If "auto", the value will be chosen automatically
+            based on the input PUBs. Default: "auto".
     """
 
-    meas_num_randomizations: Union[UnsetType, int] = Unset
-    meas_shots_per_randomization: Union[UnsetType, int] = Unset
+    num_randomizations: Union[UnsetType, int] = Unset
+    shots_per_randomization: Union[UnsetType, int, Literal["auto"]] = Unset
 
-    _ge1 = make_constraint_validator(
-        "meas_num_randomizations", "meas_shots_per_randomization", ge=1
-    )
+    _ge1 = make_constraint_validator("num_randomizations", "shots_per_randomization", ge=1)

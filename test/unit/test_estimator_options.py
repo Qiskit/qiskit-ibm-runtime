@@ -40,7 +40,7 @@ class TestEstimatorOptions(IBMTestCase):
         {"noise_factors": [1, 3, 5]},
         {"zne_mitigation": True, "pec_mitigation": True},
         {"simulator": {"noise_model": "foo"}},
-        {"resilience": {"measure_noise_learning": {"meas_num_randomizations": 1}}},
+        {"resilience": {"measure_noise_learning": {"num_randomizations": 1}}},
         {"resilience": {"zne": {"noise_factors": [1]}}},
     )
     def test_bad_inputs(self, val):
@@ -68,8 +68,8 @@ class TestEstimatorOptions(IBMTestCase):
         resilience = {
             "measure_mitigation": True,
             "measure_noise_learning": {
-                "meas_num_randomizations": 1,
-                "meas_shots_per_randomization": 20,
+                "num_randomizations": 1,
+                "shots_per_randomization": 20,
             },
             "zne_mitigation": True,
             "zne": {"noise_factors": [1.0, 3.0], "extrapolator": "linear"},

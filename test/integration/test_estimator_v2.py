@@ -91,8 +91,8 @@ class TestEstimatorV2(IBMIntegrationTestCase):
         estimator.options.resilience.layer_noise_learning.shots_per_randomization = 64
         estimator.options.resilience.layer_noise_learning.num_randomizations = 16
         estimator.options.resilience.layer_noise_learning.layer_pair_depths = [0, 1, 2, 4]
-        estimator.options.resilience.measure_noise_learning.meas_num_randomizations = 32
-        estimator.options.resilience.measure_noise_learning.meas_shots_per_randomization = 100
+        estimator.options.resilience.measure_noise_learning.num_randomizations = 32
+        estimator.options.resilience.measure_noise_learning.shots_per_randomization = 100
         estimator.options.execution.init_qubits = True
         estimator.options.execution.rep_delay = 0.00025
         estimator.options.twirling.enable_gates = True

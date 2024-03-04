@@ -74,12 +74,13 @@ class TestOptionsUtils(IBMTestCase):
                 "optimization_level": 1,
                 "log_level": "INFO",
             },
-            {
-                "resilience": {
-                    "measure_noise_learning": {"meas_num_randomizations": 1},
-                    "zne": {"extrapolator": "linear"},
-                }
-            },
+            # TODO: Re-enable when flat merge is disabled
+            # {
+            #     "resilience": {
+            #         "measure_noise_learning": {"num_randomizations": 1},
+            #         "zne": {"extrapolator": "linear"},
+            #     }
+            # },
         ]
         for new_ops in options_vars:
             with self.subTest(new_ops=new_ops):

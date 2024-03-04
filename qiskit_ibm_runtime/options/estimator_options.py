@@ -106,7 +106,7 @@ class EstimatorOptions(OptionsV2):
 
     # Sadly we cannot use pydantic's built in validation because it won't work on Unset.
     default_precision: Union[UnsetType, float] = Unset
-    default_shots: Union[UnsetType, int] = Unset
+    default_shots: Union[UnsetType, int, None] = Unset
     optimization_level: Union[UnsetType, int] = Unset
     resilience_level: Union[UnsetType, int] = Unset
     seed_estimator: Union[UnsetType, int] = Unset

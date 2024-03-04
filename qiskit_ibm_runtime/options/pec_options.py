@@ -12,7 +12,7 @@
 
 """Probabalistic error cancellation mitigation options."""
 
-from typing import Union
+from typing import Union, Literal
 
 from .utils import Unset, UnsetType, primitive_dataclass, make_constraint_validator
 
@@ -30,9 +30,12 @@ class PecOptions:
             * A value of one corresponds to attempting to remove all of the noise.
             * A value greater than one corresponds to injecting noise.
             * A value between 0 and 1 corresponds to partially removing the noise.
+
+            If "auto", the value will be chosen automatically
+            based on the input PUBs. Default: "auto".
     """
 
     max_overhead: Union[UnsetType, float, None] = Unset
-    noise_gain: Union[UnsetType, float] = Unset
+    noise_gain: Union[UnsetType, float, Literal["auto"]] = Unset
 
     _gt0 = make_constraint_validator("max_overhead", "noise_gain", gt=0)

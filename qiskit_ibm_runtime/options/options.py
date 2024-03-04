@@ -153,17 +153,6 @@ class OptionsV2(BaseOptions):
             resilience_options["layer_mitigation"] = "zne"
         output_options["resilience"] = resilience_options
 
-        # rename meas_num_randomizations and meas_shots_per_randomization
-        meas_learning_options = resilience_options.get("measure_noise_learning", {})
-        if "meas_num_randomizations" in meas_learning_options:
-            meas_learning_options["num_randomizations"] = meas_learning_options.pop(
-                "meas_num_randomizations"
-            )
-        if "meas_shots_per_randomization" in meas_learning_options:
-            meas_learning_options["shots_per_randomization"] = meas_learning_options.pop(
-                "meas_shots_per_randomization"
-            )
-
         output_options["execution"] = options_copy.get("execution", {})
         output_options["execution"].update(
             {

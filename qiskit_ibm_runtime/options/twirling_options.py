@@ -36,9 +36,12 @@ class TwirlingOptions:
           in Estimator. Default: True.
 
         num_randomizations: The number of random samples to use when twirling or
-            peforming sampled mitigation.
+            peforming sampled mitigation. If "auto", the value will be chosen automatically
+            based on the input PUBs. Default: "auto".
 
         shots_per_randomization: The number of shots to run for each random sample.
+          If "auto", the value will be chosen automatically based on the input PUBs.
+          Default: "auto".
 
         strategy: Specify the strategy of twirling qubits in identified layers of
             2-qubit twirled gates. Allowed values are
@@ -57,8 +60,8 @@ class TwirlingOptions:
 
     enable_gates: Union[UnsetType, bool] = Unset
     enable_measure: Union[UnsetType, bool] = Unset
-    num_randomizations: Union[UnsetType, int] = Unset
-    shots_per_randomization: Union[UnsetType, int] = Unset
+    num_randomizations: Union[UnsetType, int, Literal["auto"]] = Unset
+    shots_per_randomization: Union[UnsetType, int, Literal["auto"]] = Unset
     strategy: Union[UnsetType, TwirlingStrategyType] = Unset
 
     _ge1 = make_constraint_validator("num_randomizations", "shots_per_randomization", ge=1)
