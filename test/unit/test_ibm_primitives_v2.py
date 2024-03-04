@@ -115,6 +115,8 @@ class TestPrimitivesV2(IBMTestCase):
         for key, val in expected.items():
             self.assertEqual(run_options[key], val)
             self.assertNotIn(key, input_params)
+            self.assertNotIn(key, input_params["options"])
+            self.assertNotIn(key, input_params["options"].get("experimental", {}))
 
     @data(EstimatorV2, SamplerV2)
     def test_options_copied(self, primitive):
