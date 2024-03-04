@@ -35,13 +35,10 @@ from .utils.queueinfo import QueueInfo
 from .constants import DEFAULT_DECODERS
 from .exceptions import (
     IBMApiError,
-    RuntimeInvalidStateError,
     IBMRuntimeError,
-    RuntimeJobTimeoutError,
 )
 from .utils.result_decoder import ResultDecoder
 from .api.clients import RuntimeClient, RuntimeWebsocketClient, WebsocketClientCloseCode
-from .exceptions import IBMError
 from .api.exceptions import RequestsApiError
 from .api.client_parameters import ClientParameters
 

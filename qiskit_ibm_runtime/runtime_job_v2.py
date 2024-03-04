@@ -386,3 +386,23 @@ class RuntimeJobV2(BasePrimitiveJob, BaseRuntimeJob):
             user_callback=callback,
             decoder=decoder,
         )
+
+    def interim_results(self, decoder: Optional[Type[ResultDecoder]] = None) -> Any:
+        """Return the interim results of the job.
+
+        Args:
+            decoder: A :class:`ResultDecoder` subclass used to decode interim results.
+
+        Returns:
+            Runtime job interim results.
+
+        Raises:
+            RuntimeJobFailureError: If the job failed.
+        """
+        if not self._final_interim_results:
+            _decoder = decoder or self._interim_result_decoder
+            interim_results_raw = self._api_client.job_interim_results(job_id=self.job_id())
+            self._interim_results = _decoder.decode(interim_results_raw)
+            if self.status() in JOB_FINAL_STATES:
+                self._final_interim_results = True
+        return self._interim_results
