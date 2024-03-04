@@ -12,7 +12,7 @@
 
 """Qiskit runtime job."""
 
-from typing import Any, Optional, Callable, Dict, Type, Union, Sequence, List
+from typing import Any, Optional, Callable, Dict, Type, Union, Sequence, List, Literal, Tuple
 import time
 import json
 import logging
@@ -48,9 +48,20 @@ from .api.clients import RuntimeClient, RuntimeWebsocketClient, WebsocketClientC
 from .exceptions import IBMError
 from .api.exceptions import RequestsApiError
 from .api.client_parameters import ClientParameters
-from .job_status import JobStatus, JOB_FINAL_STATES, API_TO_JOB_STATUS
 
 logger = logging.getLogger(__name__)
+
+JobStatus = Literal["INITIALIZING", "QUEUED", "RUNNING", "CANCELLED", "DONE", "ERROR"]
+
+JOB_FINAL_STATES: Tuple[JobStatus, ...] = ("DONE", "CANCELLED", "ERROR")
+
+API_TO_JOB_STATUS: Dict[str, JobStatus] = {
+    "QUEUED": "QUEUED",
+    "RUNNING": "RUNNING",
+    "COMPLETED": "DONE",
+    "FAILED": "ERROR",
+    "CANCELLED": "CANCELLED",
+}
 
 
 class RuntimeJobV2(BasePrimitiveJob):
@@ -133,7 +144,7 @@ class RuntimeJobV2(BasePrimitiveJob):
         self._params = params or {}
         self._creation_date = creation_date
         self._program_id = program_id
-        self._status = JobStatus.INITIALIZING
+        self._status: JobStatus = "INITIALIZING"
         self._reason: Optional[str] = None
         self._error_message: Optional[str] = None
         self._image = image
@@ -221,12 +232,12 @@ class RuntimeJobV2(BasePrimitiveJob):
         """
         _decoder = decoder or self._final_result_decoder
         self.wait_for_final_state(timeout=timeout)
-        if self._status == JobStatus.ERROR:
+        if self._status == "ERROR":
             error_message = self._reason if self._reason else self._error_message
             if self._reason == "RAN TOO LONG":
                 raise RuntimeJobMaxTimeoutError(error_message)
             raise RuntimeJobFailureError(f"Unable to retrieve job result. {error_message}")
-        if self._status is JobStatus.CANCELLED:
+        if self._status == "CANCELLED":
             raise RuntimeInvalidStateError(
                 "Unable to retrieve result for job {}. " "Job was cancelled.".format(self.job_id())
             )
@@ -234,15 +245,12 @@ class RuntimeJobV2(BasePrimitiveJob):
         result_raw = self._download_external_result(
             self._api_client.job_results(job_id=self.job_id())
         )
-
-        version_param = {}
         # TODO: Remove getting/setting version once it's in result metadata
         if _decoder.__name__ == EstimatorResultDecoder.__name__:
             if not self._version:
                 self._version = self.inputs.get("version", 1)
-            version_param["version"] = self._version
 
-        return _decoder.decode(result_raw, **version_param) if result_raw else None  # type: ignore
+        return _decoder.decode(result_raw) if result_raw else None  # type: ignore
 
     def cancel(self) -> None:
         """Cancel the job.
@@ -258,7 +266,7 @@ class RuntimeJobV2(BasePrimitiveJob):
                 raise RuntimeInvalidStateError(f"Job cannot be cancelled: {ex}") from None
             raise IBMRuntimeError(f"Failed to cancel job: {ex}") from None
         self.cancel_result_streaming()
-        self._status = JobStatus.CANCELLED
+        self._status = "CANCELLED"
 
     def backend(self, timeout: Optional[float] = None) -> Optional[Backend]:
         """Return the backend where this job was executed. Retrieve data again if backend is None.
@@ -496,7 +504,7 @@ class RuntimeJobV2(BasePrimitiveJob):
         Args:
             job_response: Job response from runtime API.
         """
-        if self._status == JobStatus.ERROR:
+        if self._status == "ERROR":
             self._error_message = self._error_msg_from_job_response(job_response)
         else:
             self._error_message = None
@@ -536,8 +544,8 @@ class RuntimeJobV2(BasePrimitiveJob):
             Job status.
         """
         mapped_job_status = API_TO_JOB_STATUS[response["state"]["status"].upper()]
-        if mapped_job_status == JobStatus.CANCELLED and self._reason == "RAN TOO LONG":
-            mapped_job_status = JobStatus.ERROR
+        if mapped_job_status == "CANCELLED" and self._reason == "RAN TOO LONG":
+            mapped_job_status = "ERROR"
         return mapped_job_status
 
     def _is_streaming(self) -> bool:
@@ -765,11 +773,11 @@ class RuntimeJobV2(BasePrimitiveJob):
 
     def cancelled(self) -> bool:
         """Return whether the job has been cancelled."""
-        return self.status() == JobStatus.CANCELLED
+        return self.status() == "CANCELLED"
 
     def done(self) -> bool:
         """Return whether the job has successfully run."""
-        return self.status() == JobStatus.DONE
+        return self.status() == "DONE"
 
     def in_final_state(self) -> bool:
         """Return whether the job is in a final job state such as ``DONE`` or ``ERROR``."""
@@ -777,4 +785,4 @@ class RuntimeJobV2(BasePrimitiveJob):
 
     def running(self) -> bool:
         """Return whether the job is actively running."""
-        return self.status() == JobStatus.RUNNING
+        return self.status() == "RUNNING"
