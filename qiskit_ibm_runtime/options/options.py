@@ -145,14 +145,6 @@ class OptionsV2(BaseOptions):
         ]:
             _set_if_exists(fld, output_options, options_copy)
 
-        resilience_options = output_options.get("resilience", {})
-        # Convert zne/pec settings to layer mitigation
-        if resilience_options.pop("pec_mitigation", None):
-            resilience_options["layer_mitigation"] = "pec"
-        if resilience_options.pop("zne_mitigation", None):
-            resilience_options["layer_mitigation"] = "zne"
-        output_options["resilience"] = resilience_options
-
         output_options["execution"] = options_copy.get("execution", {})
         output_options["execution"].update(
             {
