@@ -84,7 +84,7 @@ class TestSamplerOptions(IBMTestCase):
             "execution": execution,
             "experimental": {"foo": "bar"},
         }
-        expected = {"options": options, "version": 2}
+        expected = {"options": options, "version": 2, "support_qiskit": True}
 
         inputs = opt._get_program_inputs(asdict(opt))
         self.assertDictEqual(inputs, expected)
