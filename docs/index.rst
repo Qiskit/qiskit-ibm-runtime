@@ -28,11 +28,11 @@ Next steps
     Get started with Estimator <tutorials/how-to-getting-started-with-estimator>
     Get started with Sampler <tutorials/how-to-getting-started-with-sampler>
     Get started with error suppression and error mitigation <tutorials/Error-Suppression-and-Error-Mitigation>
-    CHSH with Estimator <tutorials/chsh_with_estimator>
-    VQE with Estimator <tutorials/vqe_with_estimator>
-    Grover with Sampler <tutorials/grover_with_sampler>
-    QAOA with Primitives <tutorials/qaoa_with_primitives>
-    Submit user-transpiled circuits using primitives <tutorials/user-transpiled-circuits>
+    CHSH with Estimator <tutorials/chsh_inequality/chsh_with_estimator>
+    VQE with Estimator <tutorials/variational_quantum_eigensolver/vqe_with_estimator>
+    Grover with Sampler <tutorials/grovers_algorithm/grover_with_sampler>
+    QAOA with Primitives <tutorials/quantum_approximate_optimization_algorithm/qaoa_with_primitives>
+    Submit user-transpiled circuits using primitives <tutorials/submitting_transpiled_circuits/user-transpiled-circuits>
     All tutorials <tutorials>
 
 
