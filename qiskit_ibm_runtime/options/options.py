@@ -165,7 +165,7 @@ class OptionsV2(BaseOptions):
                 output_options["experimental"] = new_keys
 
         # Remove image
-        output_options.pop("image", None)
+        output_options.get("experimental", {}).pop("image", None)
 
         remove_dict_unset_values(output_options)
         remove_empty_dict(output_options)
