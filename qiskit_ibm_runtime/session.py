@@ -38,13 +38,11 @@ def _active_session(func):  # type: ignore
 
 
 class Session:
-    """Class for creating a flexible Qiskit Runtime session.
+    """Class for creating a Qiskit Runtime session.
 
     A Qiskit Runtime ``session`` allows you to group a collection of iterative calls to
     the quantum computer. A session is started when the first job within the session
     is started. Subsequent jobs within the session are prioritized by the scheduler.
-    Data used within a session, such as transpiled circuits, is also cached to avoid
-    unnecessary overhead.
 
     You can open a Qiskit Runtime session using this ``Session`` class and submit jobs
     to one or more primitives.
@@ -52,7 +50,11 @@ class Session:
     For example::
 
         from qiskit.circuit import QuantumCircuit, QuantumRegister, ClassicalRegister
-        from qiskit_ibm_runtime import Sampler, Session, Options
+        from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
+        from qiskit_ibm_runtime import Session, SamplerV2 as Sampler
+
+        service = QiskitRuntimeService()
+        backend = service.least_busy(operational=True, simulator=False)
 
         # Bell Circuit
         qr = QuantumRegister(2, name="qr")
@@ -62,14 +64,14 @@ class Session:
         qc.cx(qr[0], qr[1])
         qc.measure(qr, cr)
 
-        options = Options(optimization_level=1)
+        isa_circuit = pm.run(qc)
 
-        with Session(backend="ibmq_qasm_simulator") as session:
-            sampler = Sampler(session=session, options=options)
+        with Session(backend=backend) as session:
+            sampler = Sampler(session=session)
             job = sampler.run(qc)
+            pub_result = job.result()[0]
             print(f"Sampler job ID: {job.job_id()}")
-            print(f"Sampler job result: {job.result()}")
-
+            print(f"Counts: {pub_result.data.meas.get_counts()}")
     """
 
     def __init__(
