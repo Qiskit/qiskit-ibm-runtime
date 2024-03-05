@@ -197,7 +197,7 @@ isa_observables = M1.apply_layout(isa_circuit.layout)
 # 3. Execute using the Estimator primitive
 estimator = Estimator(backend)
 estimator.options.resilience_level = 1  # Options can be set using auto-complete.
-job = estimator.run((isa_circuit, isa_observables, theta1))
+job = estimator.run([(isa_circuit, isa_observables, theta1)])
 print(f"Job ID is {job.job_id()}")
 pub_result = job.result()[0]
 print(f"Expectation values: {pub_result.data.evs}")
@@ -255,7 +255,7 @@ with Session(service=service, backend=backend) as session:
     thetad = thetaa + (thetab - thetaa) / gr
     while abs(thetab - thetaa) > tol:
         print(f"max value of M1 is in the range theta = {[thetaa, thetab]}")
-        job = estimator.run((isa_circuit, isa_observables, [[thetac],[thetad]]))
+        job = estimator.run([(isa_circuit, isa_observables, [[thetac],[thetad]])])
         test = job.result()[0].data.evs
         if test[0] > test[1]:
             thetab = thetad
@@ -266,7 +266,7 @@ with Session(service=service, backend=backend) as session:
 
     # Final job to evaluate Estimator at midpoint found using golden search method
     theta_mid = (thetab + thetaa) / 2
-    job = estimator.run((isa_circuit, isa_observables, theta_mid))
+    job = estimator.run([(isa_circuit, isa_observables, theta_mid)])
     print(f"Session ID is {session.session_id}")
     print(f"Final Job ID is {job.job_id()}")
     print(f"Job result is {job.result()[0].data.evs} at theta = {theta_mid}")
