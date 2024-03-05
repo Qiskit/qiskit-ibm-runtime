@@ -26,7 +26,6 @@ from qiskit.providers.job import JobV1 as Job
 from qiskit_ibm_runtime import qiskit_runtime_service
 from .constants import API_TO_JOB_STATUS
 from .exceptions import (
-    IBMError,
     RuntimeJobFailureError,
     RuntimeInvalidStateError,
     IBMRuntimeError,
@@ -39,7 +38,6 @@ from .api.clients import RuntimeClient
 from .api.exceptions import RequestsApiError
 from .api.client_parameters import ClientParameters
 from .base_runtime_job import BaseRuntimeJob
-from .constants import API_TO_JOB_ERROR_MESSAGE
 
 logger = logging.getLogger(__name__)
 
@@ -196,81 +194,13 @@ class RuntimeJob(Job, BaseRuntimeJob):
         self._set_status_and_error_message()
         return self._status
 
-    def error_message(self) -> Optional[str]:
-        """Returns the reason if the job failed.
+    def in_final_state(self) -> bool:
+        """Return whether the job is in a final job state such as ``DONE`` or ``ERROR``."""
+        return self._status in JOB_FINAL_STATES
 
-        Returns:
-            Error message string or ``None``.
-        """
-        self._set_status_and_error_message()
-        return self._error_message
-
-    def _set_status_and_error_message(self) -> None:
-        """Fetch and set status and error message."""
-        if self._status not in JOB_FINAL_STATES:
-            response = self._api_client.job_get(job_id=self.job_id())
-            self._set_status(response)
-            self._set_error_message(response)
-
-    def _set_error_message(self, job_response: Dict) -> None:
-        """Set error message if the job failed.
-
-        Args:
-            job_response: Job response from runtime API.
-        """
-        if self._status == JobStatus.ERROR:
-            self._error_message = self._error_msg_from_job_response(job_response)
-        else:
-            self._error_message = None
-
-    def _error_msg_from_job_response(self, response: Dict) -> str:
-        """Returns the error message from an API response.
-
-        Args:
-            response: Job response from the runtime API.
-
-        Returns:
-            Error message.
-        """
-        status = response["state"]["status"].upper()
-
-        job_result_raw = self._download_external_result(
-            self._api_client.job_results(job_id=self.job_id())
-        )
-        index = job_result_raw.rfind("Traceback")
-        if index != -1:
-            job_result_raw = job_result_raw[index:]
-
-        if status == "CANCELLED" and self._reason == "RAN TOO LONG":
-            error_msg = API_TO_JOB_ERROR_MESSAGE["CANCELLED - RAN TOO LONG"]
-            return error_msg.format(self.job_id(), job_result_raw)
-        else:
-            error_msg = API_TO_JOB_ERROR_MESSAGE["FAILED"]
-            return error_msg.format(self.job_id(), self._reason or job_result_raw)
-
-    def _set_status(self, job_response: Dict) -> None:
-        """Set status.
-
-        Args:
-            job_response: Job response from runtime API.
-
-        Raises:
-            IBMError: If an unknown status is returned from the server.
-        """
-        try:
-            reason = job_response["state"].get("reason")
-            reason_code = job_response["state"].get("reason_code")
-            if reason:
-                # TODO remove this in https://github.com/Qiskit/qiskit-ibm-runtime/issues/989
-                if reason.upper() == "RAN TOO LONG":
-                    self._reason = reason.upper()
-                else:
-                    self._reason = reason
-                if reason_code:
-                    self._reason = f"Error code {reason_code}; {self._reason}"
-            self._status = self._status_from_job_response(job_response)
-        except KeyError:
-            raise IBMError(f"Unknown status: {job_response['state']['status']}")
+    def errored(self) -> bool:
+        """Return whether the job has failed."""
+        return self._status == JobStatus.ERROR
 
     def _status_from_job_response(self, response: Dict) -> str:
         """Returns the job status from an API response.
