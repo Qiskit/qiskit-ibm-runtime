@@ -12,64 +12,37 @@
 
 """Sampler options."""
 
-from typing import Union, Literal
+from typing import Union
 
-from pydantic import Field, field_validator
+from pydantic import Field
 
-from .utils import Dict, Unset, UnsetType, skip_unset_validation
+from .utils import Dict, Unset, UnsetType
 from .execution_options import ExecutionOptionsV2
-from .twirling_options import TwirlingOptions
 from .options import OptionsV2
 from .utils import primitive_dataclass
-
-DDSequenceType = Literal["XX", "XpXm", "XY4"]
-MAX_OPTIMIZATION_LEVEL: int = 1
+from .dynamical_decoupling_options import DynamicalDecouplingOptions
 
 
 @primitive_dataclass
 class SamplerOptions(OptionsV2):
-    """Options for v2 Sampler.
+    """Options for V2 Sampler.
 
     Args:
-        optimization_level: How much optimization to perform on the circuits.
-            Higher levels generate more optimized circuits,
-            at the expense of longer processing times.
-            * 0: no optimization
-            * 1: light optimization
+        default_shots: The default number of shots to use if none are specified in the PUBs
+            or in the run method. Default: 4096.
 
-        dynamical_decoupling: Optional, specify a dynamical decoupling sequence to use.
-            Allowed values are ``"XX"``, ``"XpXm"``, ``"XY4"``.
-            Default: None
-
-        transpilation: Transpilation options. See :class:`TranspilationOptions` for all
-            available options.
+        dynamical_decoupling: Suboptions for dynamical decoupling. See
+            :class:`DynamicalDecouplingOptions` for all available options.
 
         execution: Execution time options. See :class:`ExecutionOptionsV2` for all available options.
 
-        twirling: Pauli-twirling related options. See :class:`TwirlingOptions` for all available options.
-
-        environment: Options related to the execution environment. See
-            :class:`EnvironmentOptions` for all available options.
-
-        simulator: Simulator options. See
-            :class:`SimulatorOptions` for all available options.
-
+        experimental: Experimental options.
     """
 
     # Sadly we cannot use pydantic's built in validation because it won't work on Unset.
-    optimization_level: Union[UnsetType, int] = Unset
-    dynamical_decoupling: Union[UnsetType, DDSequenceType] = Unset
+    default_shots: Union[UnsetType, int] = Unset
+    dynamical_decoupling: Union[DynamicalDecouplingOptions, Dict] = Field(
+        default_factory=DynamicalDecouplingOptions
+    )
     execution: Union[ExecutionOptionsV2, Dict] = Field(default_factory=ExecutionOptionsV2)
-    twirling: Union[TwirlingOptions, Dict] = Field(default_factory=TwirlingOptions)
     experimental: Union[UnsetType, dict] = Unset
-
-    @field_validator("optimization_level")
-    @classmethod
-    @skip_unset_validation
-    def _validate_optimization_level(cls, optimization_level: int) -> int:
-        """Validate optimization_leve."""
-        if not 0 <= optimization_level <= MAX_OPTIMIZATION_LEVEL:
-            raise ValueError(
-                "Invalid optimization_level. Valid range is " f"0-{MAX_OPTIMIZATION_LEVEL}"
-            )
-        return optimization_level
