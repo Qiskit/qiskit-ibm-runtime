@@ -62,66 +62,7 @@ SERVICE_NAME = "runtime"
 
 
 class QiskitRuntimeService(Provider):
-    """Class for interacting with the Qiskit Runtime service.
-
-    Qiskit Runtime is a new architecture offered by IBM Quantum that
-    streamlines computations requiring many iterations. These experiments will
-    execute significantly faster within its improved hybrid quantum/classical
-    process.
-
-    A sample workflow of using the runtime service::
-
-        from qiskit_ibm_runtime import QiskitRuntimeService, Session, Sampler, Estimator, Options
-        from qiskit.circuit.library import RealAmplitudes
-        from qiskit.circuit import QuantumCircuit, QuantumRegister, ClassicalRegister
-        from qiskit.quantum_info import SparsePauliOp
-
-        # Initialize account.
-        service = QiskitRuntimeService()
-
-        # Set options, which can be overwritten at job level.
-        options = Options(optimization_level=1)
-
-        # Prepare inputs.
-        psi = RealAmplitudes(num_qubits=2, reps=2)
-        H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
-        theta = [0, 1, 1, 2, 3, 5]
-
-        # Bell Circuit
-        qr = QuantumRegister(2, name="qr")
-        cr = ClassicalRegister(2, name="cr")
-        qc = QuantumCircuit(qr, cr, name="bell")
-        qc.h(qr[0])
-        qc.cx(qr[0], qr[1])
-        qc.measure(qr, cr)
-
-        with Session(service=service, backend="ibmq_qasm_simulator") as session:
-            # Submit a request to the Sampler primitive within the session.
-            sampler = Sampler(session=session, options=options)
-            job = sampler.run(circuits=qc)
-            print(f"Sampler results: {job.result()}")
-
-            # Submit a request to the Estimator primitive within the session.
-            estimator = Estimator(session=session, options=options)
-            job = estimator.run(
-                circuits=[psi], observables=[H1], parameter_values=[theta]
-            )
-            print(f"Estimator results: {job.result()}")
-
-    The example above uses the dedicated :class:`~qiskit_ibm_runtime.Sampler`
-    and :class:`~qiskit_ibm_runtime.Estimator` classes. You can also
-    use the :meth:`run` method directly to invoke a Qiskit Runtime program.
-
-    If the program has any interim results, you can use the ``callback``
-    parameter of the :meth:`run` method to stream the interim results.
-    Alternatively, you can use the :meth:`RuntimeJob.stream_results` method to stream
-    the results at a later time, but before the job finishes.
-
-    The :meth:`run` method returns a
-    :class:`RuntimeJob` object. You can use its
-    methods to perform tasks like checking job status, getting job result, and
-    canceling job.
-    """
+    """Class for interacting with the Qiskit Runtime service."""
 
     global_service = None
 
@@ -589,7 +530,6 @@ class QiskitRuntimeService(Provider):
             IBMInputValueError: If an input is invalid.
             QiskitBackendNotFoundError: If the backend is not in any instance.
         """
-        # TODO filter out input_allowed not having runtime
         backends: List[IBMBackend] = []
         instance_filter = instance if instance else self._account.instance
         if self._channel == "ibm_quantum":

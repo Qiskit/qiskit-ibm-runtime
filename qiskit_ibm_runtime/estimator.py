@@ -75,22 +75,26 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
 
         from qiskit.circuit.library import RealAmplitudes
         from qiskit.quantum_info import SparsePauliOp
-
+        from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
         from qiskit_ibm_runtime import QiskitRuntimeService, EstimatorV2 as Estimator
 
         service = QiskitRuntimeService()
-        backend = service.backend("ibmq_qasm_simulator")
+        backend = service.least_busy(operational=True, simulator=False)
 
         psi = RealAmplitudes(num_qubits=2, reps=2)
         hamiltonian = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
         theta = [0, 1, 1, 2, 3, 5]
 
+        pm = generate_preset_pass_manager(backend=backend, optimization_level=1)
+        isa_psi = pm.run(psi)
+        isa_observables = hamiltonian.apply_layout(isa_psi.layout)
+
         estimator = Estimator(backend=backend)
 
         # calculate [ <psi(theta1)|hamiltonian|psi(theta)> ]
-        job = estimator.run([(psi, hamiltonian, [theta])])
-        job_result = job.result()
-        print(f"The primitive-job finished with result {job_result}"))
+        job = estimator.run([(isa_psi, isa_observables, [theta])])
+        pub_result = job.result()[0]
+        print(f"Expectation values: {pub_result.data.evs}")
     """
 
     _options_class = EstimatorOptions
@@ -156,8 +160,6 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
             ValidationError: if validation fails.
             ValueError: if validation fails.
         """
-        # TODO: Server should have different optimization/resilience levels for simulator
-
         if (
             options.get("resilience", {}).get("pec_mitigation", False) is True
             and self._backend is not None

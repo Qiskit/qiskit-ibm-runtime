@@ -174,12 +174,11 @@ class TestEstimatorV2(IBMTestCase):
     def test_observable_types_single_circuit(self):
         """Test different observable types for a single circuit."""
         all_obs = [
-            # TODO: Uncomment single ObservableArrayLike when supported
-            # "IX",
-            # Pauli("YZ"),
-            # SparsePauliOp(["IX", "YZ"]),
-            # {"YZ": 1 + 2j},
-            # {Pauli("XX"): 1 + 2j},
+            "IX",
+            Pauli("YZ"),
+            SparsePauliOp(["IX", "YZ"]),
+            {"YZ": 1 + 2j},
+            {Pauli("XX"): 1 + 2j},
             ["XX", "YY"],
             [Pauli("XX"), Pauli("YY")],
             [SparsePauliOp(["XX"], [2]), SparsePauliOp(["YY"], [1])],
@@ -208,18 +207,17 @@ class TestEstimatorV2(IBMTestCase):
     def test_observable_types_multi_circuits(self):
         """Test different observable types for multiple circuits."""
         all_obs = [
-            # TODO: Uncomment single ObservableArrayLike when supported
-            # ["XX", "YYY"],
-            # [Pauli("XX"), Pauli("YYY")],
-            # [SparsePauliOp(["XX"]), SparsePauliOp(["YYY"])],
-            # [
-            #     {"XX": 1 + 2j},
-            #     {"YYY": 1 + 2j},
-            # ],
-            # [
-            #     {Pauli("XX"): 1 + 2j},
-            #     {Pauli("YYY"): 1 + 2j},
-            # ],
+            ["XX", "YYY"],
+            [Pauli("XX"), Pauli("YYY")],
+            [SparsePauliOp(["XX"]), SparsePauliOp(["YYY"])],
+            [
+                {"XX": 1 + 2j},
+                {"YYY": 1 + 2j},
+            ],
+            [
+                {Pauli("XX"): 1 + 2j},
+                {Pauli("YYY"): 1 + 2j},
+            ],
             [["XX", "YY"], ["ZZZ", "III"]],
             [[Pauli("XX"), Pauli("YY")], [Pauli("XXX"), Pauli("YYY")]],
             [

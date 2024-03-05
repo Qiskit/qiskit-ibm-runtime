@@ -267,9 +267,9 @@ class TestPrimitivesV2(IBMTestCase):
             [1, 2, 3, 4],
             [np.pi] * circ.num_parameters,
             np.random.uniform(size=(4,)),
-            # {param: [2.0] for param in circ.parameters},  # TODO: this doesn't work now
+            {param: [2.0] for param in circ.parameters},
             # N sets of parameter values
-            # [[1, 2, 3, 4]] * 2,  # TODO: This doesn't work right now
+            [[1, 2, 3, 4]] * 2,
             np.random.random((2, 4)),
             np.linspace(0, 1, 24).reshape((2, 3, 4)),
             {param: [1, 2, 3] for param in circ.parameters},
