@@ -286,7 +286,7 @@ class TestOptionsV2(IBMTestCase):
                 options = opt_cls()
                 options.simulator.coupling_map = variant
                 inputs = opt_cls._get_program_inputs(asdict(options))["options"]
-                resulting_cmap = inputs["transpilation"]["coupling_map"]
+                resulting_cmap = inputs["simulator"]["coupling_map"]
                 self.assertEqual(coupling_map, set(map(tuple, resulting_cmap)))
 
     @combine(

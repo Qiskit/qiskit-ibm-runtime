@@ -65,30 +65,22 @@ class TestSamplerOptions(IBMTestCase):
             execution=execution,
             experimental={"foo": "bar", "execution": {"secret": 88}},
         )
-
-        transpilation = {
-            "coupling_map": simulator.pop("coupling_map"),
-            "basis_gates": simulator.pop("basis_gates"),
-        }
         execution.update(
             {
-                "noise_model": simulator.pop("noise_model"),
-                "seed_simulator": simulator.pop("seed_simulator"),
                 "secret": 88,
             }
         )
         options = {
             "default_shots": 1000,
-            "transpilation": transpilation,
             "dynamical_decoupling": dynamical_decoupling,
             "execution": execution,
             "experimental": {"foo": "bar"},
+            "simulator": simulator,
         }
         expected = {"options": options, "version": 2, "support_qiskit": True}
 
         inputs = opt._get_program_inputs(asdict(opt))
         self.assertDictEqual(inputs, expected)
-        self.assertFalse(simulator, f"simulator not empty: {simulator}")
 
     @data(
         {},

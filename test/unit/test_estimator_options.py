@@ -95,13 +95,9 @@ class TestEstimatorOptions(IBMTestCase):
 
         transpilation = {
             "optimization_level": optimization_level,
-            "coupling_map": simulator.pop("coupling_map"),
-            "basis_gates": simulator.pop("basis_gates"),
         }
         execution.update(
             {
-                "noise_model": simulator.pop("noise_model"),
-                "seed_simulator": simulator.pop("seed_simulator"),
                 "secret": 88,
             }
         )
@@ -115,6 +111,7 @@ class TestEstimatorOptions(IBMTestCase):
             "execution": execution,
             "resilience": resilience,
             "experimental": {"foo": "bar"},
+            "simulator": simulator,
         }
         expected = {
             "options": options,
@@ -125,7 +122,6 @@ class TestEstimatorOptions(IBMTestCase):
 
         inputs = opt._get_program_inputs(asdict(opt))
         self.assertDictEqual(inputs, expected)
-        self.assertFalse(simulator, f"simulator not empty: {simulator}")
 
     @data(
         {},

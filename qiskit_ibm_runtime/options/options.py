@@ -123,16 +123,14 @@ class OptionsV2(BaseOptions):
                 _inputs[name] = _options[name]
 
         options_copy = copy.deepcopy(options)
-        sim_options = options_copy.get("simulator", {})
         output_options: dict[str, Any] = {}
+        sim_options = options_copy.get("simulator", {})
         coupling_map = sim_options.get("coupling_map", Unset)
         # TODO: We can just move this to json encoder
         if isinstance(coupling_map, CouplingMap):
-            coupling_map = list(map(list, coupling_map.get_edges()))
+            sim_options["coupling_map"] = list(map(list, coupling_map.get_edges()))
         output_options["transpilation"] = {
             "optimization_level": options_copy.get("optimization_level", Unset),
-            "coupling_map": coupling_map,
-            "basis_gates": sim_options.get("basis_gates", Unset),
         }
 
         for fld in [
@@ -142,16 +140,10 @@ class OptionsV2(BaseOptions):
             "dynamical_decoupling",
             "resilience",
             "twirling",
+            "simulator",
+            "execution",
         ]:
             _set_if_exists(fld, output_options, options_copy)
-
-        output_options["execution"] = options_copy.get("execution", {})
-        output_options["execution"].update(
-            {
-                "noise_model": sim_options.get("noise_model", Unset),
-                "seed_simulator": sim_options.get("seed_simulator", Unset),
-            }
-        )
 
         # Add arbitrary experimental options
         experimental = options_copy.get("experimental", None)
