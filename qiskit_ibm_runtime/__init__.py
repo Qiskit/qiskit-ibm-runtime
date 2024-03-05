@@ -68,7 +68,7 @@ Below is an example of using primitives within a session::
     with Session(service=service, backend=backend) as session:
         # Submit a request to the Sampler primitive within the session.
         sampler = Sampler(session=session)
-        job = sampler.run([(bell_isa_circuit,)])
+        job = sampler.run([bell_isa_circuit])
         pub_result = job.result()[0]
         print(f"Counts: {pub_result.data.cr.get_counts()}")
 
