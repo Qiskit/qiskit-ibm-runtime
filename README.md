@@ -148,8 +148,8 @@ isa_circuit = pm.run(bell)
 
 # 3. Execute using the Sampler primitive
 sampler = Sampler(backend=backend)
-sampler.options.execution.default_shots = 1024  # Options can be set using auto-complete.
-job = sampler.run(isa_circuit)
+sampler.options.default_shots = 1024  # Options can be set using auto-complete.
+job = sampler.run([isa_circuit])
 print(f"Job ID is {job.job_id()}")
 pub_result = job.result()[0]
 print(f"Counts for the meas output register: {pub_result.data.meas.get_counts()}")
