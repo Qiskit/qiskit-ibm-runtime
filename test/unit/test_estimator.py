@@ -129,8 +129,8 @@ class TestEstimatorV2(IBMTestCase):
         backend = get_mocked_backend()
         options_vars = [
             (
-                EstimatorOptions(resilience_level=1),  # pylint: disable=unexpected-keyword-arg
-                {"resilience_level": 1},
+                EstimatorOptions(default_shots=1024),  # pylint: disable=unexpected-keyword-arg
+                {"default_shots": 1024},
             ),
             (
                 EstimatorOptions(optimization_level=1),  # pylint: disable=unexpected-keyword-arg
@@ -138,12 +138,12 @@ class TestEstimatorV2(IBMTestCase):
             ),
             (
                 {
-                    "optimization_level": 1,
-                    "execution": {"shots": 100},
+                    "default_precision": 0.1,
+                    "dynamical_decoupling": {"enable": True},
                 },
                 {
-                    "transpilation": {"optimization_level": 1},
-                    "execution": {"shots": 100},
+                    "default_precision": 0.1,
+                    "dynamical_decoupling": {"enable": True},
                 },
             ),
         ]
@@ -151,10 +151,10 @@ class TestEstimatorV2(IBMTestCase):
             with self.subTest(options=options):
                 inst = EstimatorV2(backend=backend, options=options)
                 inst.run(**get_primitive_inputs(inst, backend=backend))
-                inputs = backend.service.run.call_args.kwargs["inputs"]
+                options = backend.service.run.call_args.kwargs["inputs"]["options"]
                 self.assertTrue(
-                    dict_paritally_equal(inputs, expected),
-                    f"{inputs} and {expected} not partially equal.",
+                    dict_paritally_equal(options, expected),
+                    f"{options} and {expected} not partially equal.",
                 )
 
     @data(

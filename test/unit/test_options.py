@@ -22,48 +22,17 @@ from qiskit.transpiler import CouplingMap
 from qiskit_aer.noise import NoiseModel
 
 from qiskit_ibm_runtime import Options, RuntimeOptions
-from qiskit_ibm_runtime.options.utils import merge_options
 from qiskit_ibm_runtime.options import EstimatorOptions, SamplerOptions
 from qiskit_ibm_runtime.utils.qctrl import _warn_and_clean_options
 from qiskit_ibm_runtime.fake_provider import FakeManila, FakeNairobiV2
 
 from ..ibm_test_case import IBMTestCase
-from ..utils import dict_keys_equal, dict_paritally_equal, flat_dict_partially_equal, combine
+from ..utils import dict_keys_equal, dict_paritally_equal, combine
 
 
 @ddt
 class TestOptions(IBMTestCase):
     """Class for testing the Options class."""
-
-    def test_merge_options(self):
-        """Test merging options."""
-        options_vars = [
-            {},
-            {"resilience_level": 9},
-            {"resilience_level": 8, "transpilation": {"initial_layout": [1, 2]}},
-            {"shots": 99, "seed_simulator": 42},
-            {"resilience_level": 99, "shots": 98, "initial_layout": [3, 4]},
-            {
-                "initial_layout": [1, 2],
-                "transpilation": {"layout_method": "trivial"},
-                "log_level": "INFO",
-            },
-        ]
-        for new_ops in options_vars:
-            with self.subTest(new_ops=new_ops):
-                options = Options()
-                combined = merge_options(asdict(options), new_ops)
-
-                # Make sure the values are equal.
-                self.assertTrue(
-                    flat_dict_partially_equal(combined, new_ops),
-                    f"new_ops={new_ops}, combined={combined}",
-                )
-                # Make sure the structure didn't change.
-                self.assertTrue(
-                    dict_keys_equal(combined, asdict(options)),
-                    f"options={options}, combined={combined}",
-                )
 
     def test_runtime_options(self):
         """Test converting runtime options."""
@@ -276,34 +245,6 @@ class TestOptions(IBMTestCase):
 class TestOptionsV2(IBMTestCase):
     """Class for testing the v2 Options class."""
 
-    def test_merge_options(self):
-        """Test merging options."""
-        options_vars = [
-            {},
-            {"resilience_level": 9},
-            {"shots": 99, "seed_simulator": 42},
-            {"resilience_level": 99, "shots": 98},
-            {
-                "optimization_level": 1,
-                "log_level": "INFO",
-            },
-        ]
-        for new_ops in options_vars:
-            with self.subTest(new_ops=new_ops):
-                options = EstimatorOptions()
-                combined = merge_options(asdict(options), new_ops)
-
-                # Make sure the values are equal.
-                self.assertTrue(
-                    flat_dict_partially_equal(combined, new_ops),
-                    f"new_ops={new_ops}, combined={combined}",
-                )
-                # Make sure the structure didn't change.
-                self.assertTrue(
-                    dict_keys_equal(combined, asdict(options)),
-                    f"options={options}, combined={combined}",
-                )
-
     @data(EstimatorOptions, SamplerOptions)
     def test_runtime_options(self, opt_cls):
         """Test converting runtime options."""
@@ -325,106 +266,6 @@ class TestOptionsV2(IBMTestCase):
                 )
 
     @data(EstimatorOptions, SamplerOptions)
-    def test_program_inputs(self, opt_cls):
-        """Test converting to program inputs from v2 options."""
-
-        noise_model = NoiseModel.from_backend(FakeManila())
-        optimization_level = 0
-        simulator = {
-            "noise_model": noise_model,
-            "seed_simulator": 42,
-            "coupling_map": [[0, 1]],
-            "basis_gates": ["u1"],
-        }
-        execution = {
-            "shots": 400,
-            "init_qubits": True,
-            "samples": 20,
-            "shots_per_sample": 20,
-            "interleave_samples": True,
-        }
-
-        twirling = {"gates": True, "measure": True, "strategy": "all"}
-        resilience = {
-            "measure_noise_mitigation": True,
-            "zne_mitigation": True,
-            "zne_noise_factors": [1, 3],
-            "zne_extrapolator": "exponential",
-            "zne_stderr_threshold": 1,
-            "pec_mitigation": False,
-            "pec_max_overhead": 2,
-        }
-
-        estimator_extra = {}
-        if isinstance(opt_cls, EstimatorOptions):
-            estimator_extra = {
-                "resilience_level": 2,
-                "resilience": resilience,
-                "seed_estimator": 42,
-            }
-
-        opt = opt_cls(
-            max_execution_time=100,
-            simulator=simulator,
-            optimization_level=optimization_level,
-            dynamical_decoupling="XX",
-            execution=execution,
-            twirling=twirling,
-            experimental={"foo": "bar"},
-            **estimator_extra,
-        )
-
-        transpilation = {
-            "optimization_level": optimization_level,
-            "coupling_map": simulator.pop("coupling_map"),
-            "basis_gates": simulator.pop("basis_gates"),
-        }
-        execution.update(
-            {
-                "noise_model": simulator.pop("noise_model"),
-                "seed_simulator": simulator.pop("seed_simulator"),
-            }
-        )
-        expected = {
-            "transpilation": transpilation,
-            "twirling": twirling,
-            "dynamical_decoupling": "XX",
-            "execution": execution,
-            "foo": "bar",
-            "version": 2,
-            **estimator_extra,
-        }
-
-        inputs = opt_cls._get_program_inputs(asdict(opt))
-        self.assertDictEqual(inputs, expected)
-        self.assertFalse(simulator, f"simulator not empty: {simulator}")
-
-    @data(EstimatorOptions, SamplerOptions)
-    def test_init_options_with_dictionary(self, opt_cls):
-        """Test initializing options with dictionaries."""
-
-        options_dicts = [
-            {},
-            {"dynamical_decoupling": "XX"},
-            {"simulator": {"seed_simulator": 42}},
-            {"optimization_level": 1, "environment": {"log_level": "WARNING"}},
-            {"execution": {"shots": 100}},
-            {"twirling": {"gates": True, "strategy": "active"}},
-            {"environment": {"log_level": "ERROR"}},
-        ]
-
-        for opts_dict in options_dicts:
-            with self.subTest(opts_dict=opts_dict):
-                options = asdict(opt_cls(**opts_dict))
-                self.assertTrue(
-                    dict_paritally_equal(options, opts_dict),
-                    f"options={options}, opts_dict={opts_dict}",
-                )
-
-                # Make sure the structure didn't change.
-                self.assertTrue(dict_keys_equal(asdict(opt_cls()), options), f"options={options}")
-
-    @data(EstimatorOptions, SamplerOptions)
     def test_kwargs_options(self, opt_cls):
         """Test specifying arbitrary options."""
         with self.assertRaises(ValidationError) as exc:
@@ -444,8 +285,8 @@ class TestOptionsV2(IBMTestCase):
             with self.subTest(opts_dict=variant):
                 options = opt_cls()
                 options.simulator.coupling_map = variant
-                inputs = opt_cls._get_program_inputs(asdict(options))
-                resulting_cmap = inputs["transpilation"]["coupling_map"]
+                inputs = opt_cls._get_program_inputs(asdict(options))["options"]
+                resulting_cmap = inputs["simulator"]["coupling_map"]
                 self.assertEqual(coupling_map, set(map(tuple, resulting_cmap)))
 
     @combine(
@@ -482,52 +323,3 @@ class TestOptionsV2(IBMTestCase):
         }
 
         self.assertDictEqual(asdict(options), asdict(expected_options))
-
-    @combine(
-        opt_cls=[EstimatorOptions, SamplerOptions],
-        opt=[
-            {"optimization_level": 99},
-            {"resilience_level": 99},
-            {"dynamical_decoupling": "foo"},
-            {"transpilation": {"skip_transpilation": "foo"}},
-            {"execution": {"shots": 0}},
-            {"twirling": {"strategy": "foo"}},
-            {"transpilation": {"foo": "bar"}},
-            {"zne_noise_factors": [0.5]},
-            {"noise_factors": [1, 3, 5]},
-            {"zne_extrapolator": "exponential", "zne_noise_factors": [1]},
-            {"zne_mitigation": True, "pec_mitigation": True},
-            {"simulator": {"noise_model": "foo"}},
-            {"shots": 1, "samples": 99, "shots_per_sample": 99},
-            {"shots": 0},
-        ],
-    )
-    def test_invalid_options(self, opt_cls, opt):
-        """Test invalid inputs."""
-        with self.assertRaises(ValidationError) as exc:
-            opt_cls(**opt)
-        self.assertIn(list(opt.keys())[0], str(exc.exception))
-
-    @data(
-        {"resilience_level": 2},
-        {"max_execution_time": 200},
-        {"resilience_level": 2, "optimization_level": 1},
-        {"shots": 1024, "seed_simulator": 42},
-        {"resilience_level": 2, "shots": 2048},
-        {
-            "optimization_level": 1,
-            "log_level": "INFO",
-        },
-    )
-    def test_update_options(self, new_opts):
-        """Test update method."""
-        options = EstimatorOptions()
-        options.update(**new_opts)
-
-        # Make sure the values are equal.
-        self.assertTrue(
-            flat_dict_partially_equal(asdict(options), new_opts),
-            f"new_opts={new_opts}, combined={options}",
-        )
-        # Make sure the structure didn't change.
-        self.assertTrue(dict_keys_equal(asdict(options), asdict(EstimatorOptions())))

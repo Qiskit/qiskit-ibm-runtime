@@ -133,17 +133,21 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
         primitive_inputs = {"pubs": pubs}
         options_dict = asdict(self.options)
         self._validate_options(options_dict)
-        primitive_inputs.update(self._options_class._get_program_inputs(options_dict))
+        primitive_options = self._options_class._get_program_inputs(options_dict)
+        primitive_inputs.update(primitive_options)
         runtime_options = self._options_class._get_runtime_options(options_dict)
 
         if self._backend:
             for pub in pubs:
-                if hasattr(self._backend, "target") and not self._backend.configuration().simulator:
+                if (
+                    getattr(self._backend, "target", None)
+                    and not self._backend.configuration().simulator
+                ):
                     validate_isa_circuits([pub.circuit], self._backend.target)
 
                 self._backend.check_faulty(pub.circuit)
 
-        logger.info("Submitting job using options %s", options_dict)
+        logger.info("Submitting job using options %s", primitive_options)
 
         if self._session:
             return self._session.run(
