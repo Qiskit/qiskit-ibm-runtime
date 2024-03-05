@@ -147,7 +147,7 @@ class SamplerV1(BasePrimitiveV1, Sampler, BaseSampler):
 
     You are encouraged to use :class:`~qiskit_ibm_runtime.Session` to open a session,
     during which you can invoke one or more primitives. Jobs submitted within a session
-    are prioritized by the scheduler, and data is cached for efficiency.
+    are prioritized by the scheduler.
 
     Example::
 
