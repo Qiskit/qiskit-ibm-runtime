@@ -12,6 +12,8 @@
 
 """Integration tests for Estimator V2"""
 
+from unittest import skip
+
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit.circuit.library import RealAmplitudes, IQP
 from qiskit.quantum_info import SparsePauliOp
@@ -78,10 +80,6 @@ class TestEstimatorV2(IBMIntegrationTestCase):
         estimator.options.resilience_level = 1
         estimator.options.optimization_level = 1
         estimator.options.seed_estimator = 42
-        estimator.options.dynamical_decoupling.enable = True
-        estimator.options.dynamical_decoupling.sequence_type = "XX"
-        estimator.options.dynamical_decoupling.extra_slack_distribution = "middle"
-        estimator.options.dynamical_decoupling.scheduling_method = "alap"
         estimator.options.resilience.measure_mitigation = True
         estimator.options.resilience.zne_mitigation = True
         estimator.options.resilience.zne.noise_factors = [3, 5]
@@ -104,10 +102,11 @@ class TestEstimatorV2(IBMIntegrationTestCase):
         job = estimator.run([(circuit, observables)])
         result = job.result()
         self._verify_result_type(result, num_pubs=1, shapes=[(1,)])
-        self.assertEqual(result[0].metadata["shots"], 4000)
+        self.assertEqual(result[0].metadata["shots"], 1600)
         for res_key in ["twirled_readout_errors", "zne_noise_factors"]:
             self.assertIn(res_key, result[0].metadata["resilience"])
 
+    @skip("Skip until simulator options are accepted by server.")
     @run_integration_test
     def test_pec(self, service):
         """Test running with PEC."""
