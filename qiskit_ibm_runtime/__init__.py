@@ -131,7 +131,7 @@ to ``WARNING``::
 Interim and final results
 -------------------------
 
-Some runtime primitives provide interim results that inform you about the 
+Some runtime primitives provide interim results that inform you about the
 progress of your job. You can choose to stream the interim results and final result when you run the
 program by passing in the ``callback`` parameter, or at a later time using
 the :meth:`RuntimeJob.stream_results` method. For example::
@@ -204,5 +204,3 @@ QISKIT_IBM_RUNTIME_LOG_LEVEL = "QISKIT_IBM_RUNTIME_LOG_LEVEL"
 """The environment variable name that is used to set the level for the IBM Quantum logger."""
 QISKIT_IBM_RUNTIME_LOG_FILE = "QISKIT_IBM_RUNTIME_LOG_FILE"
 """The environment variable name that is used to set the file for the IBM Quantum logger."""
-
-warnings.warn("You are using the experimental-0.2 branch. Stability is not guaranteed.")
