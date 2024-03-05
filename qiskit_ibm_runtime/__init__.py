@@ -37,16 +37,16 @@ allows you to make iterative calls to the quantum computer more efficiently.
 
 Below is an example of using primitives within a session::
 
-    from qiskit_ibm_runtime import QiskitRuntimeService, Session, Sampler, Estimator, Options
+    from qiskit_ibm_runtime import QiskitRuntimeService, Session
+    from qiskit_ibm_runtime import SamplerV2 as Sampler
+    from qiskit_ibm_runtime import EstimatorV2 as Estimator
     from qiskit.circuit.library import RealAmplitudes
     from qiskit.circuit import QuantumCircuit, QuantumRegister, ClassicalRegister
     from qiskit.quantum_info import SparsePauliOp
+    from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
     # Initialize account.
     service = QiskitRuntimeService()
-
-    # Set options, which can be overwritten at job level.
-    options = Options(optimization_level=3)
 
     # Prepare inputs.
     psi = RealAmplitudes(num_qubits=2, reps=2)
@@ -54,24 +54,32 @@ Below is an example of using primitives within a session::
     theta = [0, 1, 1, 2, 3, 5]
     # Bell Circuit
     qr = QuantumRegister(2, name="qr")
-    cr = ClassicalRegister(2, name="qc")
+    cr = ClassicalRegister(2, name="cr")
     qc = QuantumCircuit(qr, cr, name="bell")
     qc.h(qr[0])
     qc.cx(qr[0], qr[1])
     qc.measure(qr, cr)
 
-    with Session(service=service, backend="ibmq_qasm_simulator") as session:
+    backend = service.least_busy(operational=True, simulator=False)
+    bell_isa_circuit = pm.run(qc)
+    psi_isa_circuit = pm.run(psi)
+    isa_observables = H1.apply_layout(psi_isa_circuit.layout)
+
+    with Session(service=service, backend=backend) as session:
         # Submit a request to the Sampler primitive within the session.
-        sampler = Sampler(session=session, options=options)
-        job = sampler.run(circuits=qc)
-        print(f"Sampler results: {job.result()}")
+        sampler = Sampler(session=session)
+        job = sampler.run([bell_isa_circuit])
+        pub_result = job.result()[0]
+        print(f"Counts: {pub_result.data.cr.get_counts()}")
 
         # Submit a request to the Estimator primitive within the session.
-        estimator = Estimator(session=session, options=options)
+        estimator = Estimator(session=session)
+        estimator.options.resilience_level = 1  # Set options.
         job = estimator.run(
-            circuits=[psi], observables=[H1], parameter_values=[theta]
+            [(psi_isa_circuit, isa_observables, theta)]
         )
-        print(f"Estimator results: {job.result()}")
+        pub_result = job.result()[0]
+        print(f"Expectation values: {pub_result.data.evs}")
 
 Backend data
 ============
@@ -128,35 +136,6 @@ to ``WARNING``::
     import logging
     logging.getLogger('qiskit_ibm_runtime').setLevel(logging.WARNING)
 
-Interim and final results
--------------------------
-
-Some runtime primitives provide interim results that inform you about the 
-progress of your job. You can choose to stream the interim results and final result when you run the
-program by passing in the ``callback`` parameter, or at a later time using
-the :meth:`RuntimeJob.stream_results` method. For example::
-
-    from qiskit_ibm_runtime import QiskitRuntimeService, Sampler
-    from qiskit.circuit import QuantumCircuit, QuantumRegister, ClassicalRegister
-
-    service = QiskitRuntimeService()
-    backend = service.backend("ibmq_qasm_simulator")
-
-    # Bell Circuit
-    qr = QuantumRegister(2, name="qr")
-    cr = ClassicalRegister(2, name="qc")
-    qc = QuantumCircuit(qr, cr, name="bell")
-    qc.h(qr[0])
-    qc.cx(qr[0], qr[1])
-    qc.measure(qr, cr)
-
-    def result_callback(job_id, result):
-        print(result)
-
-    # Stream results as soon as the job starts running.
-    job = Sampler(backend).run(qc, callback=result_callback)
-    print(job.result())
-
 
 Classes
 =======
@@ -175,10 +154,12 @@ Classes
 """
 
 import logging
+import warnings
 
 from .qiskit_runtime_service import QiskitRuntimeService
 from .ibm_backend import IBMBackend
 from .runtime_job import RuntimeJob
+from .runtime_job_v2 import RuntimeJobV2
 from .runtime_options import RuntimeOptions
 from .utils.json import RuntimeEncoder, RuntimeDecoder
 from .session import Session  # pylint: disable=cyclic-import
@@ -188,9 +169,9 @@ from .exceptions import *
 from .utils.utils import setup_logger
 from .version import __version__
 
-from .estimator import Estimator
-from .sampler import Sampler
-from .options import Options
+from .estimator import EstimatorV2, EstimatorV1 as Estimator
+from .sampler import SamplerV2, SamplerV1 as Sampler
+from .options import Options, EstimatorOptions, SamplerOptions
 
 # Setup the logger for the IBM Quantum Provider package.
 logger = logging.getLogger(__name__)

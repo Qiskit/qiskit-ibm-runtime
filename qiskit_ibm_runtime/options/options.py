@@ -12,15 +12,25 @@
 
 """Primitive options."""
 
-from typing import Optional, Union, ClassVar
+from abc import abstractmethod
+from typing import Optional, Union, ClassVar, Any
 from dataclasses import dataclass, fields, field
 import copy
 import warnings
 
 from qiskit.transpiler import CouplingMap
+from pydantic import Field
 
-from .utils import Dict, _to_obj
-
+from .utils import (
+    Dict,
+    _to_obj,
+    UnsetType,
+    Unset,
+    remove_dict_unset_values,
+    merge_options,
+    primitive_dataclass,
+    remove_empty_dict,
+)
 from .environment_options import EnvironmentOptions
 from .execution_options import ExecutionOptions
 from .simulator_options import SimulatorOptions
@@ -30,8 +40,138 @@ from ..runtime_options import RuntimeOptions
 
 
 @dataclass
-class Options:
-    """Options for the primitives.
+class BaseOptions:
+    """Base options class."""
+
+    @staticmethod
+    @abstractmethod
+    def _get_program_inputs(options: dict) -> dict:
+        """Convert the input options to program compatible inputs."""
+        raise NotImplementedError()
+
+    @staticmethod
+    def _get_runtime_options(options: dict) -> dict:
+        """Extract runtime options.
+
+        Returns:
+            Runtime options.
+        """
+        options_copy = copy.deepcopy(options)
+        remove_dict_unset_values(options_copy)
+        environment = options_copy.get("environment") or {}
+        out = {"max_execution_time": options_copy.get("max_execution_time", None)}
+
+        for fld in fields(RuntimeOptions):
+            if fld.name in environment:
+                out[fld.name] = environment[fld.name]
+
+        if "image" in options_copy:
+            out["image"] = options_copy["image"]
+        elif "image" in options_copy.get("experimental", {}):
+            out["image"] = options_copy["experimental"]["image"]
+
+        return out
+
+
+@primitive_dataclass
+class OptionsV2(BaseOptions):
+    """Base primitive options, used by v2 primitives.
+
+    Args:
+        max_execution_time: Maximum execution time in seconds, which is based
+            on system execution time (not wall clock time). System execution time is
+            the amount of time that the system is dedicated to processing your job.
+            If a job exceeds this time limit, it is forcibly cancelled.
+            Simulator jobs continue to use wall clock time.
+
+            Refer to the
+            `Max execution time documentation
+            <https://docs.quantum-computing.ibm.com/run/max-execution-time#maximum-execution-time>`_.
+            for more information.
+
+        environment: Options related to the execution environment. See
+            :class:`EnvironmentOptions` for all available options.
+
+        simulator: Simulator options. See
+            :class:`SimulatorOptions` for all available options.
+    """
+
+    _VERSION: int = Field(2, frozen=True)  # pylint: disable=invalid-name
+
+    # Options not really related to primitives.
+    max_execution_time: Union[UnsetType, int] = Unset
+    environment: Union[EnvironmentOptions, Dict] = Field(default_factory=EnvironmentOptions)
+    simulator: Union[SimulatorOptions, Dict] = Field(default_factory=SimulatorOptions)
+
+    def update(self, **kwargs: Any) -> None:
+        """Update the options."""
+        merged = merge_options(self, kwargs)
+        for key, val in merged.items():
+            if not key.startswith("_"):
+                setattr(self, key, val)
+
+    @staticmethod
+    def _get_program_inputs(options: dict) -> dict:
+        """Convert the input options to program compatible inputs.
+
+        Returns:
+            Inputs acceptable by primitives.
+        """
+
+        def _set_if_exists(name: str, _inputs: dict, _options: dict) -> None:
+            if name in _options:
+                _inputs[name] = _options[name]
+
+        options_copy = copy.deepcopy(options)
+        output_options: dict[str, Any] = {}
+        sim_options = options_copy.get("simulator", {})
+        coupling_map = sim_options.get("coupling_map", Unset)
+        # TODO: We can just move this to json encoder
+        if isinstance(coupling_map, CouplingMap):
+            sim_options["coupling_map"] = list(map(list, coupling_map.get_edges()))
+        output_options["transpilation"] = {
+            "optimization_level": options_copy.get("optimization_level", Unset),
+        }
+
+        for fld in [
+            "default_precision",
+            "default_shots",
+            "seed_estimator",
+            "dynamical_decoupling",
+            "resilience",
+            "twirling",
+            "simulator",
+            "execution",
+        ]:
+            _set_if_exists(fld, output_options, options_copy)
+
+        # Add arbitrary experimental options
+        experimental = options_copy.get("experimental", None)
+        if isinstance(experimental, dict):
+            new_keys = {}
+            for key in list(experimental.keys()):
+                if key not in output_options:
+                    new_keys[key] = experimental.pop(key)
+            output_options = merge_options(output_options, experimental)
+            if new_keys:
+                output_options["experimental"] = new_keys
+
+        # Remove image
+        output_options.get("experimental", {}).pop("image", None)
+
+        remove_dict_unset_values(output_options)
+        remove_empty_dict(output_options)
+
+        inputs = {"options": output_options, "version": OptionsV2._VERSION, "support_qiskit": True}
+        if options_copy.get("resilience_level"):
+            inputs["resilience_level"] = options_copy["resilience_level"]
+
+        return inputs
+
+
+@dataclass
+class Options(BaseOptions):
+    """Options for the primitives, used by V1 primitives.
 
     Args:
         optimization_level: How much optimization to perform on the circuits.
@@ -89,7 +229,7 @@ class Options:
 
     # Defaults for optimization_level and for resilience_level will be assigned
     # in Sampler/Estimator
-    _DEFAULT_OPTIMIZATION_LEVEL = 3
+    _DEFAULT_OPTIMIZATION_LEVEL = 1
     _DEFAULT_RESILIENCE_LEVEL = 1
     _MAX_OPTIMIZATION_LEVEL = 3
     _MAX_RESILIENCE_LEVEL_ESTIMATOR = 3
@@ -160,6 +300,7 @@ class Options:
             if key not in known_keys:
                 warnings.warn(f"Key '{key}' is an unrecognized option. It may be ignored.")
                 inputs[key] = options[key]
+        remove_dict_unset_values(inputs)
         return inputs
 
     @staticmethod
@@ -176,18 +317,21 @@ class Options:
                 f"optimization_level can only take the values "
                 f"{list(range(Options._MAX_OPTIMIZATION_LEVEL + 1))}"
             )
-        ResilienceOptions.validate_resilience_options(options.get("resilience"))
-        TranspilationOptions.validate_transpilation_options(options.get("transpilation"))
+        ResilienceOptions(**options.get("resilience", {}))
+        TranspilationOptions(**options.get("transpilation", {}))
         execution_time = options.get("max_execution_time")
         if execution_time is not None:
             if execution_time > Options._MAX_EXECUTION_TIME:
                 raise ValueError(
-                    f"max_execution_time must be below " f"{Options._MAX_EXECUTION_TIME} seconds."
+                    f"max_execution_time must be below "
+                    f"{Options._MAX_EXECUTION_TIME} seconds."
+                    f"max_execution_time must be below "
+                    f"{Options._MAX_EXECUTION_TIME} seconds."
                 )
 
-        EnvironmentOptions.validate_environment_options(options.get("environment"))
-        ExecutionOptions.validate_execution_options(options.get("execution"))
-        SimulatorOptions.validate_simulator_options(options.get("simulator"))
+        EnvironmentOptions(**options.get("environment", {}))
+        ExecutionOptions(**options.get("execution", {}))
+        SimulatorOptions(**options.get("simulator", {}))
 
     @staticmethod
     def _remove_none_values(options: dict) -> dict:
@@ -216,25 +360,6 @@ class Options:
                 options["resilience"]["extrapolator"] = "LinearExtrapolator"
 
         return options
-
-    @staticmethod
-    def _get_runtime_options(options: dict) -> dict:
-        """Extract runtime options.
-
-        Returns:
-            Runtime options.
-        """
-        environment = options.get("environment") or {}
-        out = {"max_execution_time": options.get("max_execution_time", None)}
-
-        for fld in fields(RuntimeOptions):
-            if fld.name in environment:
-                out[fld.name] = environment[fld.name]
-
-        if "image" in options:
-            out["image"] = options["image"]
-
-        return out
 
     @staticmethod
     def _merge_options(old_options: dict, new_options: Optional[dict] = None) -> dict:
