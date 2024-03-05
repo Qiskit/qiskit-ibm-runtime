@@ -18,6 +18,7 @@ import logging
 import time
 
 from qiskit.providers.backend import Backend
+from qiskit.primitives.containers import PrimitiveResult
 from qiskit.primitives.base.base_primitive_job import BasePrimitiveJob
 
 # pylint: disable=unused-import,cyclic-import
@@ -51,7 +52,7 @@ API_TO_JOB_STATUS: Dict[str, JobStatus] = {
 }
 
 
-class RuntimeJobV2(BasePrimitiveJob, BaseRuntimeJob):
+class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob):
     """Representation of a runtime V2 primitive exeuction."""
 
     def __init__(
