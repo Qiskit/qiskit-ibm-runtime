@@ -1,13 +1,13 @@
 ---
 features:
   - |
-    Sessions will now be started with a new ``/sessions`` endpoint that allows for different 
-    execution modes. Batch mode is now supported through :class:`~qiskit_ibm_runtime.Batch`, and 
-    :class:`~qiskit_ibm_runtime.Session` will work the same as way as before. 
+    Sessions will now be started with a new ``/sessions`` endpoint that allows for different
+    execution modes. Batch mode is now supported through :class:`~qiskit_ibm_runtime.Batch`, and
+    :class:`~qiskit_ibm_runtime.Session` will work the same as way as before.
     Please see https://docs.quantum.ibm.com/run/sessions for more information.
 
-    Note that ``Session`` and ``Batch`` created from ``qiskit-ibm-runtime`` prior to this release will no longer be 
-    supported after March 31, 2024. Please update your ``qiskit-ibm-runtime`` version as soon as possible before this date. 
+    Note that ``Session`` and ``Batch`` created from ``qiskit-ibm-runtime`` prior to this release will no longer be
+    supported after March 31, 2024. Please update your ``qiskit-ibm-runtime`` version as soon as possible before this date.
 
-    Also note that using simulators with sessions is no longer supported. Users can still start 
+    Also note that using simulators with sessions is no longer supported. Users can still start
     sessions with simulators without any issues but a session will not actually be created. There will be no session ID.

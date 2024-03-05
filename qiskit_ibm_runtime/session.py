@@ -18,6 +18,7 @@ from functools import wraps
 
 from qiskit_ibm_runtime import QiskitRuntimeService
 from .runtime_job import RuntimeJob
+from .runtime_job_v2 import RuntimeJobV2
 from .utils.result_decoder import ResultDecoder
 from .ibm_backend import IBMBackend
 from .utils.default_session import set_cm_session
@@ -38,7 +39,7 @@ def _active_session(func):  # type: ignore
 
 
 class Session:
-    """Class for creating a flexible Qiskit Runtime session.
+    """Class for creating a Qiskit Runtime session.
 
     A Qiskit Runtime ``session`` allows you to group a collection of iterative calls to
     the quantum computer. A session is started when the first job within the session
@@ -50,7 +51,11 @@ class Session:
     For example::
 
         from qiskit.circuit import QuantumCircuit, QuantumRegister, ClassicalRegister
-        from qiskit_ibm_runtime import Sampler, Session, Options
+        from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
+        from qiskit_ibm_runtime import Session, SamplerV2 as Sampler
+
+        service = QiskitRuntimeService()
+        backend = service.least_busy(operational=True, simulator=False)
 
         # Bell Circuit
         qr = QuantumRegister(2, name="qr")
@@ -60,14 +65,15 @@ class Session:
         qc.cx(qr[0], qr[1])
         qc.measure(qr, cr)
 
-        options = Options(optimization_level=3)
+        pm = generate_preset_pass_manager(backend=backend, optimization_level=1)
+        isa_circuit = pm.run(qc)
 
-        with Session(backend="ibmq_qasm_simulator") as session:
-            sampler = Sampler(session=session, options=options)
-            job = sampler.run(qc)
+        with Session(backend=backend) as session:
+            sampler = Sampler(session=session)
+            job = sampler.run([isa_circuit])
+            pub_result = job.result()[0]
             print(f"Sampler job ID: {job.job_id()}")
-            print(f"Sampler job result: {job.result()}")
-
+            print(f"Counts: {pub_result.data.cr.get_counts()}")
     """
 
     def __init__(
@@ -158,7 +164,7 @@ class Session:
         options: Optional[Dict] = None,
         callback: Optional[Callable] = None,
         result_decoder: Optional[Type[ResultDecoder]] = None,
-    ) -> RuntimeJob:
+    ) -> Union[RuntimeJob, RuntimeJobV2]:
         """Run a program in the session.
 
         Args:
