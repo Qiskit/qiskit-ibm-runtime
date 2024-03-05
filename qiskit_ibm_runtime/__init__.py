@@ -54,29 +54,29 @@ Below is an example of using primitives within a session::
     theta = [0, 1, 1, 2, 3, 5]
     # Bell Circuit
     qr = QuantumRegister(2, name="qr")
-    cr = ClassicalRegister(2, name="qc")
+    cr = ClassicalRegister(2, name="cr")
     qc = QuantumCircuit(qr, cr, name="bell")
     qc.h(qr[0])
     qc.cx(qr[0], qr[1])
     qc.measure(qr, cr)
 
     backend = service.least_busy(operational=True, simulator=False)
-    ball_isa_circuit = pm.run(qc)
+    bell_isa_circuit = pm.run(qc)
     psi_isa_circuit = pm.run(psi)
     isa_observables = H1.apply_layout(psi_isa_circuit.layout)
 
     with Session(service=service, backend=backend) as session:
         # Submit a request to the Sampler primitive within the session.
         sampler = Sampler(session=session)
-        job = sampler.run(ball_isa_circuit)
+        job = sampler.run([(bell_isa_circuit,)])
         pub_result = job.result()[0]
-        print(f"Counts: {pub_result.data.meas.get_counts()}")
+        print(f"Counts: {pub_result.data.cr.get_counts()}")
 
         # Submit a request to the Estimator primitive within the session.
         estimator = Estimator(session=session)
         estimator.options.resilience_level = 1  # Set options.
         job = estimator.run(
-            (psi_isa_circuit, isa_observables, theta)
+            [(psi_isa_circuit, isa_observables, theta)]
         )
         pub_result = job.result()[0]
         print(f"Expectation values: {pub_result.data.evs}")

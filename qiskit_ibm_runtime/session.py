@@ -64,14 +64,15 @@ class Session:
         qc.cx(qr[0], qr[1])
         qc.measure(qr, cr)
 
+        pm = generate_preset_pass_manager(backend=backend, optimization_level=1)
         isa_circuit = pm.run(qc)
 
         with Session(backend=backend) as session:
             sampler = Sampler(session=session)
-            job = sampler.run(qc)
+            job = sampler.run([(isa_circuit,)])
             pub_result = job.result()[0]
             print(f"Sampler job ID: {job.job_id()}")
-            print(f"Counts: {pub_result.data.meas.get_counts()}")
+            print(f"Counts: {pub_result.data.cr.get_counts()}")
     """
 
     def __init__(
