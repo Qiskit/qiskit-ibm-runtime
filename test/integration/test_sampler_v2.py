@@ -32,7 +32,7 @@ from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit_ibm_runtime import Session
 from qiskit_ibm_runtime import SamplerV2 as Sampler
 from qiskit_ibm_runtime.fake_provider import FakeManila
-from ..decorators import run_integration_test
+from ..decorators import run_integration_test, production_only
 from ..ibm_test_case import IBMIntegrationTestCase
 from ..utils import get_real_device
 
@@ -533,6 +533,7 @@ class TestSampler(IBMIntegrationTestCase):
         result = job.result()
         self._verify_result_type(result, num_pubs=1, targets=[np.array(target)])
 
+    @production_only
     @run_integration_test
     def test_samplerv2_dd(self, service):
         """Test SamplerV2 DD options."""
