@@ -32,7 +32,7 @@ class EnvironmentOptions:
     Args:
         log_level: logging level to set in the execution environment. The valid
             log levels are: ``DEBUG``, ``INFO``, ``WARNING``, ``ERROR``, and ``CRITICAL``.
-            The default level is ``WARNING``.
+            Default: ``WARNING``.
 
         callback: Callback function to be invoked for any interim results and final result.
             The callback function will receive 2 positional parameters:

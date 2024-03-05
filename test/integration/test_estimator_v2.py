@@ -73,24 +73,33 @@ class TestEstimatorV2(IBMIntegrationTestCase):
         observables = SparsePauliOp("X" * circuit.num_qubits).apply_layout(circuit.layout)
 
         estimator = EstimatorV2(backend=backend)
+        estimator.options.default_precision = 0.05
+        estimator.options.default_shots = 400
         estimator.options.resilience_level = 1
         estimator.options.optimization_level = 1
-        # estimator.options.dynamical_decoupling = "XX"  # TODO: Re-enable when fixed
         estimator.options.seed_estimator = 42
-        estimator.options.resilience.measure_noise_mitigation = True
+        estimator.options.dynamical_decoupling.enable = True
+        estimator.options.dynamical_decoupling.sequence_type = "XX"
+        estimator.options.dynamical_decoupling.extra_slack_distribution = "middle"
+        estimator.options.dynamical_decoupling.scheduling_method = "alap"
+        estimator.options.resilience.measure_mitigation = True
         estimator.options.resilience.zne_mitigation = True
-        estimator.options.resilience.zne_noise_factors = [3, 5]
-        estimator.options.resilience.zne_extrapolator = "linear"
-        estimator.options.resilience.zne_stderr_threshold = 0.25
+        estimator.options.resilience.zne.noise_factors = [3, 5]
+        estimator.options.resilience.zne.extrapolator = "linear"
         estimator.options.resilience.pec_mitigation = False
-        estimator.options.execution.shots = 4000
-        estimator.options.execution.samples = 4
-        estimator.options.execution.shots_per_sample = 1000
+        estimator.options.resilience.layer_noise_learning.max_layers_to_learn = 10
+        estimator.options.resilience.layer_noise_learning.shots_per_randomization = 64
+        estimator.options.resilience.layer_noise_learning.num_randomizations = 16
+        estimator.options.resilience.layer_noise_learning.layer_pair_depths = [0, 1, 2, 4]
+        estimator.options.resilience.measure_noise_learning.num_randomizations = 32
+        estimator.options.resilience.measure_noise_learning.shots_per_randomization = 100
         estimator.options.execution.init_qubits = True
-        estimator.options.execution.interleave_samples = True
-        estimator.options.twirling.gates = True
-        estimator.options.twirling.measure = True
+        estimator.options.execution.rep_delay = 0.00025
+        estimator.options.twirling.enable_gates = True
+        estimator.options.twirling.enable_measure = True
         estimator.options.twirling.strategy = "active"
+        estimator.options.twirling.num_randomizations = 16
+        estimator.options.twirling.shots_per_randomization = 100
 
         job = estimator.run([(circuit, observables)])
         result = job.result()

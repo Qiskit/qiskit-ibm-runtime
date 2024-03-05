@@ -13,17 +13,17 @@
 """Resilience options."""
 
 from typing import Sequence, Literal, Union, Optional
+from dataclasses import asdict
 
-from pydantic import field_validator, model_validator
+from pydantic import model_validator, Field
 
-from .utils import Unset, UnsetType, skip_unset_validation, primitive_dataclass
+from .utils import Unset, UnsetType, Dict, primitive_dataclass
+from .measure_noise_learning_options import MeasureNoiseLearningOptions
+from .zne_options import ZneOptions
+from .pec_options import PecOptions
+from .layer_noise_learning_options import LayerNoiseLearningOptions
 
 
-ResilienceSupportedOptions = Literal[
-    "noise_amplifier",
-    "noise_factors",
-    "extrapolator",
-]
 NoiseAmplifierType = Literal[
     "LocalFoldingAmplifier",
 ]
@@ -34,115 +34,63 @@ ExtrapolatorType = Literal[
     "QuarticExtrapolator",
 ]
 
-ZneExtrapolatorType = Literal[
-    "linear",
-    "exponential",
-    "double_exponential",
-]
-
 
 @primitive_dataclass
 class ResilienceOptionsV2:
-    """Resilience options.
+    """Resilience options for V2 Estimator.
 
     Args:
-        measure_noise_mitigation: Whether to enable measurement error mitigation method.
-            By default, this is enabled for resilience level 1, 2, and 3 (when applicable).
+        measure_mitigation: Whether to enable measurement error mitigation method.
+            Further suboptions are available in :attr:`~measure_noise_learning`.
+            Default: True.
+
+        measure_noise_learning: Additional measurement noise learning options.
+            See :class:`MeasureNoiseLearningOptions` for all options.
 
         zne_mitigation: Whether to turn on Zero Noise Extrapolation error mitigation method.
-            By default, ZNE is enabled for resilience level 2.
+            Further suboptions are available in :attr:`~zne`.
+            Default: False.
 
-        zne_noise_factors: An list of real valued noise factors that determine by what amount the
-            circuits' noise is amplified.
-            Only applicable if ZNE is enabled.
-
-        zne_extrapolator: An extrapolation strategy. One or more of ``"exponential"``,
-            ``"double_exponential"``, and ``"linear"``.
-            Only applicable if ZNE is enabled.
-
-        zne_stderr_threshold: A standard error threshold for accepting the ZNE result of Pauli basis
-            expectation values when using ZNE mitigation. Any extrapolator model resulting an larger
-            standard error than this value, or mean that is outside of the allowed range and threshold
-            will be rejected. If all models are rejected the result for the lowest noise factor is
-            used for that basis term.
-            Only applicable if ZNE is enabled.
+        zne: Additional zero noise extrapolation mitigation options.
+            See :class:`ZneOptions` for all options.
 
         pec_mitigation: Whether to turn on Probabilistic Error Cancellation error mitigation method.
-            By default, PEC is enabled for resilience level 3.
+            Further suboptions are available in :attr:`~pec`.
+            Default: False.
 
-        pec_max_overhead: Specify a maximum sampling overhead for the PEC sampling noise model.
-            If None the full learned model will be sampled from, otherwise if the learned noise
-            model has a sampling overhead greater than this value it will be scaled down to
-            implement partial PEC with a scaled noise model corresponding to the maximum
-            sampling overhead.
-            Only applicable if PEC is enabled.
+        pec: Additional probabalistic error cancellation mitigation options.
+            See :class:`PecOptions` for all options.
+
+        layer_noise_learning: Layer noise learning options.
+            See :class:`LayerNoiseLearningOptions` for all options.
     """
 
-    # TREX
-    measure_noise_mitigation: Union[UnsetType, bool] = Unset
-    # TODO: measure_noise_local_model
-
-    # ZNE
+    measure_mitigation: Union[UnsetType, bool] = Unset
+    measure_noise_learning: Union[MeasureNoiseLearningOptions, Dict] = Field(
+        default_factory=MeasureNoiseLearningOptions
+    )
     zne_mitigation: Union[UnsetType, bool] = Unset
-    zne_noise_factors: Union[UnsetType, Sequence[float]] = Unset
-    zne_extrapolator: Union[UnsetType, ZneExtrapolatorType, Sequence[ZneExtrapolatorType]] = Unset
-    zne_stderr_threshold: Union[UnsetType, float] = Unset
-
-    # PEC
+    zne: Union[ZneOptions, Dict] = Field(default_factory=ZneOptions)
     pec_mitigation: Union[UnsetType, bool] = Unset
-    pec_max_overhead: Union[UnsetType, float] = Unset
-
-    @field_validator("zne_noise_factors")
-    @classmethod
-    @skip_unset_validation
-    def _validate_zne_noise_factors(cls, factors: Sequence[float]) -> Sequence[float]:
-        """Validate zne_noise_factors."""
-        if any(i < 1 for i in factors):
-            raise ValueError("zne_noise_factors` option value must all be >= 1")
-        return factors
-
-    @field_validator("zne_stderr_threshold")
-    @classmethod
-    @skip_unset_validation
-    def _validate_zne_stderr_threshold(cls, threshold: float) -> float:
-        """Validate zne_stderr_threshold."""
-        if threshold <= 0:
-            raise ValueError("Invalid zne_stderr_threshold option value must be > 0")
-        return threshold
-
-    @field_validator("pec_max_overhead")
-    @classmethod
-    @skip_unset_validation
-    def _validate_pec_max_overhead(cls, overhead: float) -> float:
-        """Validate pec_max_overhead."""
-        if overhead < 1:
-            raise ValueError("pec_max_overhead must be None or >= 1")
-        return overhead
+    pec: Union[PecOptions, Dict] = Field(default_factory=PecOptions)
+    layer_noise_learning: Union[LayerNoiseLearningOptions, Dict] = Field(
+        default_factory=LayerNoiseLearningOptions
+    )
 
     @model_validator(mode="after")
     def _validate_options(self) -> "ResilienceOptionsV2":
         """Validate the model."""
-        # Validate ZNE noise factors + extrapolator combination
-        if self.zne_noise_factors and self.zne_extrapolator:
-            required_factors = {
-                "exponential": 2,
-                "double_exponential": 4,
-                "linear": 2,
-                "polynomial_degree_1": 2,
-                "polynomial_degree_2": 3,
-                "polynomial_degree_3": 4,
-                "polynomial_degree_4": 5,
-            }
-            extrapolators: Sequence = (
-                [self.zne_extrapolator]  # type: ignore[assignment]
-                if isinstance(self.zne_extrapolator, str)
-                else self.zne_extrapolator
+        if not self.measure_mitigation and any(asdict(self.measure_noise_learning).values()):
+            raise ValueError(
+                "'measure_noise_learning' options are set, but 'measure_mitigation' is not set to True."
             )
-            for extrap in extrapolators:  # pylint: disable=not-an-iterable
-                if len(self.zne_noise_factors) < required_factors[extrap]:  # type: ignore[arg-type]
-                    raise ValueError(
-                        f"{extrap} requires at least {required_factors[extrap]} zne_noise_factors"
-                    )
+
+        if not self.zne_mitigation and any(asdict(self.zne).values()):
+            raise ValueError("'zne' options are set, but 'zne_mitigation' is not set to True.")
+
+        if not self.pec_mitigation and any(asdict(self.pec).values()):
+            raise ValueError("'pec' options are set, but 'pec_mitigation' is not set to True.")
+
         # Validate not ZNE+PEC
         if self.pec_mitigation is True and self.zne_mitigation is True:
             raise ValueError(
@@ -154,8 +102,8 @@ class ResilienceOptionsV2:
 
 
 @primitive_dataclass
-class ResilienceOptionsV1:
-    """Resilience options.
+class ResilienceOptions:
+    """Resilience options for V1 primitives.
 
     Args:
         noise_factors: An list of real valued noise factors that determine by what amount the
@@ -180,7 +128,7 @@ class ResilienceOptionsV1:
     extrapolator: Optional[ExtrapolatorType] = None
 
     @model_validator(mode="after")
-    def _validate_options(self) -> "ResilienceOptionsV1":
+    def _validate_options(self) -> "ResilienceOptions":
         """Validate the model."""
         required_factors = {
             "QuarticExtrapolator": 5,

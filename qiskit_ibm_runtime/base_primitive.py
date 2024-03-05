@@ -33,6 +33,7 @@ from .runtime_job import RuntimeJob
 from .runtime_job_v2 import RuntimeJobV2
 from .ibm_backend import IBMBackend
 from .utils.default_session import get_cm_session
+from .utils.deprecation import issue_deprecation_msg
 from .utils.utils import validate_isa_circuits
 from .constants import DEFAULT_DECODERS
 from .qiskit_runtime_service import QiskitRuntimeService
@@ -133,17 +134,21 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
         primitive_inputs = {"pubs": pubs}
         options_dict = asdict(self.options)
         self._validate_options(options_dict)
-        primitive_inputs.update(self._options_class._get_program_inputs(options_dict))
+        primitive_options = self._options_class._get_program_inputs(options_dict)
+        primitive_inputs.update(primitive_options)
         runtime_options = self._options_class._get_runtime_options(options_dict)
 
         if self._backend:
             for pub in pubs:
-                if hasattr(self._backend, "target") and not self._backend.configuration().simulator:
-                    validate_isa_circuits([pub.circuit], self._backend.target, raise_exc=True)
+                if (
+                    getattr(self._backend, "target", None)
+                    and not self._backend.configuration().simulator
+                ):
+                    validate_isa_circuits([pub.circuit], self._backend.target)
 
                 self._backend.check_faulty(pub.circuit)
 
-        logger.info("Submitting job using options %s", options_dict)
+        logger.info("Submitting job using options %s", primitive_options)
 
         if self._session:
             return self._session.run(
@@ -296,6 +301,12 @@ class BasePrimitiveV1(ABC):
                 raise ValueError(
                     "A backend or session must be specified when not using ibm_cloud channel."
                 )
+            issue_deprecation_msg(
+                "Not providing a backend is deprecated",
+                "0.21.0",
+                "Passing in a backend will be required, please provide a backend.",
+                3,
+            )
         # Check if initialized within a IBMBackend session. If so, issue a warning.
         if get_cm_provider_session():
             warnings.warn(
@@ -313,10 +324,12 @@ class BasePrimitiveV1(ABC):
             Submitted job.
         """
         if (
-            self._backend
+            self._backend  # pylint: disable=too-many-boolean-expressions
             and isinstance(self._backend, IBMBackend)
             and isinstance(self._backend.service, QiskitRuntimeService)
-            and hasattr(self._backend, "target")
+            and not self._backend.simulator
+            and getattr(self._backend, "target", None)
+            and self._service._channel_strategy != "q-ctrl"
         ):
             validate_isa_circuits(primitive_inputs["circuits"], self._backend.target)
 

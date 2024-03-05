@@ -26,15 +26,16 @@ from .utils import (
     _to_obj,
     UnsetType,
     Unset,
-    _remove_dict_unset_values,
+    remove_dict_unset_values,
     merge_options,
     primitive_dataclass,
+    remove_empty_dict,
 )
 from .environment_options import EnvironmentOptions
-from .execution_options import ExecutionOptionsV1 as ExecutionOptions
+from .execution_options import ExecutionOptions
 from .simulator_options import SimulatorOptions
 from .transpilation_options import TranspilationOptions
-from .resilience_options import ResilienceOptionsV1 as ResilienceOptions
+from .resilience_options import ResilienceOptions
 from ..runtime_options import RuntimeOptions
 
 
@@ -56,7 +57,7 @@ class BaseOptions:
             Runtime options.
         """
         options_copy = copy.deepcopy(options)
-        _remove_dict_unset_values(options_copy)
+        remove_dict_unset_values(options_copy)
         environment = options_copy.get("environment") or {}
         out = {"max_execution_time": options_copy.get("max_execution_time", None)}
 
@@ -122,56 +123,55 @@ class OptionsV2(BaseOptions):
                 _inputs[name] = _options[name]
 
         options_copy = copy.deepcopy(options)
+        output_options: dict[str, Any] = {}
         sim_options = options_copy.get("simulator", {})
-        inputs: dict[str, Any] = {}
         coupling_map = sim_options.get("coupling_map", Unset)
         # TODO: We can just move this to json encoder
         if isinstance(coupling_map, CouplingMap):
-            coupling_map = list(map(list, coupling_map.get_edges()))
-        inputs["transpilation"] = {
+            sim_options["coupling_map"] = list(map(list, coupling_map.get_edges()))
+        output_options["transpilation"] = {
             "optimization_level": options_copy.get("optimization_level", Unset),
-            "coupling_map": coupling_map,
-            "basis_gates": sim_options.get("basis_gates", Unset),
         }
 
         for fld in [
-            "resilience_level",
+            "default_precision",
+            "default_shots",
+            "seed_estimator",
+            "dynamical_decoupling",
             "resilience",
             "twirling",
-            "dynamical_decoupling",
-            "seed_estimator",
+            "simulator",
+            "execution",
         ]:
-            _set_if_exists(fld, inputs, options_copy)
-
-        inputs["execution"] = options_copy.get("execution", {})
-        inputs["execution"].update(
-            {
-                "noise_model": sim_options.get("noise_model", Unset),
-                "seed_simulator": sim_options.get("seed_simulator", Unset),
-            }
-        )
+            _set_if_exists(fld, output_options, options_copy)
 
         # Add arbitrary experimental options
-        if isinstance(options_copy.get("experimental", None), dict):
-            inputs = merge_options(inputs, options_copy.get("experimental"))
+        experimental = options_copy.get("experimental", None)
+        if isinstance(experimental, dict):
+            new_keys = {}
+            for key in list(experimental.keys()):
+                if key not in output_options:
+                    new_keys[key] = experimental.pop(key)
+            output_options = merge_options(output_options, experimental)
+            if new_keys:
+                output_options["experimental"] = new_keys
 
         # Remove image
-        inputs.pop("image", None)
+        output_options.get("experimental", {}).pop("image", None)
 
-        inputs["version"] = OptionsV2._VERSION
-        _remove_dict_unset_values(inputs)
+        remove_dict_unset_values(output_options)
+        remove_empty_dict(output_options)
 
-        # Remove empty dictionaries
-        for key, val in list(inputs.items()):
-            if isinstance(val, dict) and not val:
-                del inputs[key]
+        inputs = {"options": output_options, "version": OptionsV2._VERSION, "support_qiskit": True}
+        if options_copy.get("resilience_level"):
+            inputs["resilience_level"] = options_copy["resilience_level"]
 
         return inputs
 
 
 @dataclass
 class Options(BaseOptions):
-    """Options for the primitives, used by v1 primitives.
+    """Options for the primitives, used by V1 primitives.
 
     Args:
         optimization_level: How much optimization to perform on the circuits.
@@ -300,7 +300,7 @@ class Options(BaseOptions):
             if key not in known_keys:
                 warnings.warn(f"Key '{key}' is an unrecognized option. It may be ignored.")
                 inputs[key] = options[key]
-        _remove_dict_unset_values(inputs)
+        remove_dict_unset_values(inputs)
         return inputs
 
     @staticmethod
