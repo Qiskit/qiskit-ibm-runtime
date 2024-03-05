@@ -22,7 +22,7 @@ from qiskit.quantum_info.operators.base_operator import BaseOperator
 from qiskit.quantum_info.operators import SparsePauliOp
 from qiskit.primitives import BaseEstimator
 from qiskit.primitives.base import BaseEstimatorV2
-from qiskit.primitives.containers import EstimatorPubLike, PubResult, PrimitiveResult
+from qiskit.primitives.containers import EstimatorPubLike
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from .runtime_job import RuntimeJob
 from .runtime_job_v2 import RuntimeJobV2
@@ -132,7 +132,7 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
 
     def run(
         self, pubs: Iterable[EstimatorPubLike], *, precision: float | None = None
-    ) -> RuntimeJobV2[PrimitiveResult[PubResult]]:  # type: ignore
+    ) -> RuntimeJobV2:
         """Submit a request to the estimator primitive.
 
         Args:

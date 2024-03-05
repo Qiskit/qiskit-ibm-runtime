@@ -21,7 +21,6 @@ import warnings
 from qiskit.circuit import QuantumCircuit
 from qiskit.primitives import BaseSampler
 from qiskit.primitives.base import BaseSamplerV2
-from qiskit.primitives.containers import PrimitiveResult, PubResult
 from qiskit.primitives.containers.sampler_pub import SamplerPub, SamplerPubLike
 
 from .options import Options
@@ -95,9 +94,7 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
         if self._service._channel_strategy == "q-ctrl":
             raise NotImplementedError("SamplerV2 is not supported with q-ctrl channel strategy.")
 
-    def run(
-        self, pubs: Iterable[SamplerPubLike], *, shots: int | None = None
-    ) -> RuntimeJobV2[PrimitiveResult[PubResult]]:  # type: ignore
+    def run(self, pubs: Iterable[SamplerPubLike], *, shots: int | None = None) -> RuntimeJobV2:
         """Submit a request to the estimator primitive.
 
         Args:
