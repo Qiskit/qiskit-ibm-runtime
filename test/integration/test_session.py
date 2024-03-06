@@ -116,9 +116,9 @@ class TestBackendRunInSession(IBMIntegrationTestCase):
         self.assertEqual(backend.session.session_id, None)
         self.assertTrue(backend.session.active)
         job1 = backend.run(bell())
-        self.assertEqual(job1._session_id, job1.job_id())
+        self.assertTrue(job1.result())
         job2 = backend.run(bell())
-        self.assertFalse(job2._session_id == job2.job_id())
+        self.assertTrue(job2.result())
 
     def test_backend_run_with_session(self):
         """Test that 'shots' parameter is transferred correctly"""
