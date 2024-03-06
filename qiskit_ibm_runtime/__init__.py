@@ -173,15 +173,15 @@ from .exceptions import *
 from .utils.utils import setup_logger
 from .version import __version__
 
-from .estimator import (
+from .estimator import (  # pylint: disable=reimported
     EstimatorV2,
     EstimatorV1,
-    EstimatorV1 as Estimator,  # pylint: disable=reimported
+    EstimatorV1 as Estimator,
 )
-from .sampler import (
+from .sampler import (  # pylint: disable=reimported
     SamplerV2,
     SamplerV1,
-    SamplerV1 as Sampler,  # pylint: disable=reimported
+    SamplerV1 as Sampler,
 )
 from .options import Options, EstimatorOptions, SamplerOptions
 
