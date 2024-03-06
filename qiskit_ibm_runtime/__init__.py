@@ -144,7 +144,11 @@ Classes
 
    QiskitRuntimeService
    Estimator
+   EstimatorV1
+   EstimatorV2
    Sampler
+   SamplerV1
+   SamplerV2
    Session
    IBMBackend
    RuntimeJob
@@ -169,8 +173,16 @@ from .exceptions import *
 from .utils.utils import setup_logger
 from .version import __version__
 
-from .estimator import EstimatorV2, EstimatorV1 as Estimator
-from .sampler import SamplerV2, SamplerV1 as Sampler
+from .estimator import (  # pylint: disable=reimported
+    EstimatorV2,
+    EstimatorV1,
+    EstimatorV1 as Estimator,
+)
+from .sampler import (  # pylint: disable=reimported
+    SamplerV2,
+    SamplerV1,
+    SamplerV1 as Sampler,
+)
 from .options import Options, EstimatorOptions, SamplerOptions
 
 # Setup the logger for the IBM Quantum Provider package.
