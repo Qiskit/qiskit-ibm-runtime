@@ -173,8 +173,16 @@ from .exceptions import *
 from .utils.utils import setup_logger
 from .version import __version__
 
-from .estimator import EstimatorV2, EstimatorV1, EstimatorV1 as Estimator
-from .sampler import SamplerV2, SamplerV1, SamplerV1 as Sampler
+from .estimator import (
+    EstimatorV2,
+    EstimatorV1,
+    EstimatorV1 as Estimator,  # pylint: disable=reimported
+)
+from .sampler import (
+    SamplerV2,
+    SamplerV1,
+    SamplerV1 as Sampler,  # pylint: disable=reimported
+)
 from .options import Options, EstimatorOptions, SamplerOptions
 
 # Setup the logger for the IBM Quantum Provider package.
