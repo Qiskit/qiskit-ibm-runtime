@@ -152,6 +152,7 @@ Classes
    Session
    IBMBackend
    RuntimeJob
+   RuntimeJobV2
    RuntimeOptions
    RuntimeEncoder
    RuntimeDecoder
