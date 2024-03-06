@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2022.
+# (C) Copyright IBM 2024.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -12,19 +12,18 @@
 
 """Qiskit runtime job."""
 
-from typing import Any, Optional, Callable, Dict, Type, Union, Sequence, List
+from typing import Any, Optional, Callable, Dict, Type, Union, Sequence, List, Literal, Tuple
 from concurrent import futures
 import logging
 import time
 
 from qiskit.providers.backend import Backend
-from qiskit.providers.jobstatus import JobStatus, JOB_FINAL_STATES
-from qiskit.providers.job import JobV1 as Job
+from qiskit.primitives.containers import PrimitiveResult
+from qiskit.primitives.base.base_primitive_job import BasePrimitiveJob
 
 # pylint: disable=unused-import,cyclic-import
-
 from qiskit_ibm_runtime import qiskit_runtime_service
-from .constants import API_TO_JOB_STATUS
+from .utils.estimator_result_decoder import EstimatorResultDecoder
 from .exceptions import (
     RuntimeJobFailureError,
     RuntimeInvalidStateError,
@@ -33,7 +32,6 @@ from .exceptions import (
     RuntimeJobTimeoutError,
 )
 from .utils.result_decoder import ResultDecoder
-from .utils.queueinfo import QueueInfo
 from .api.clients import RuntimeClient
 from .api.exceptions import RequestsApiError
 from .api.client_parameters import ClientParameters
@@ -41,39 +39,19 @@ from .base_runtime_job import BaseRuntimeJob
 
 logger = logging.getLogger(__name__)
 
+JobStatus = Literal["INITIALIZING", "QUEUED", "RUNNING", "CANCELLED", "DONE", "ERROR"]
+JOB_FINAL_STATES: Tuple[JobStatus, ...] = ("DONE", "CANCELLED", "ERROR")
+API_TO_JOB_STATUS: Dict[str, JobStatus] = {
+    "QUEUED": "QUEUED",
+    "RUNNING": "RUNNING",
+    "COMPLETED": "DONE",
+    "FAILED": "ERROR",
+    "CANCELLED": "CANCELLED",
+}
 
-class RuntimeJob(Job, BaseRuntimeJob):
-    """Representation of a runtime program execution.
 
-    A new ``RuntimeJob`` instance is returned when you call
-    :meth:`QiskitRuntimeService.run<qiskit_ibm_runtime.QiskitRuntimeService.run>`
-    to execute a runtime program, or
-    :meth:`QiskitRuntimeService.job<qiskit_ibm_runtime.QiskitRuntimeService.job>`
-    to retrieve a previously executed job.
-
-    If the program execution is successful, you can inspect the job's status by
-    calling :meth:`status()`. Job status can be one of the
-    :class:`~qiskit.providers.JobStatus` members.
-
-    Some of the methods in this class are blocking, which means control may
-    not be returned immediately. :meth:`result()` is an example
-    of a blocking method::
-
-        job = service.run(...)
-
-        try:
-            job_result = job.result()  # It will block until the job finishes.
-            print("The job finished with result {}".format(job_result))
-        except RuntimeJobFailureError as ex:
-            print("Job failed!: {}".format(ex))
-
-    If the program has any interim results, you can use the ``callback``
-    parameter of the
-    :meth:`~qiskit_ibm_runtime.QiskitRuntimeService.run`
-    method to stream the interim results along with the final result.
-    Alternatively, you can use the :meth:`stream_results` method to stream
-    the results at a later time, but before the job finishes.
-    """
+class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob):
+    """Representation of a runtime V2 primitive exeuction."""
 
     def __init__(
         self,
@@ -110,7 +88,7 @@ class RuntimeJob(Job, BaseRuntimeJob):
             tags: Tags assigned to the job.
             version: Primitive version.
         """
-        Job.__init__(self, backend=backend, job_id=job_id)
+        BasePrimitiveJob.__init__(self, job_id=job_id)
         BaseRuntimeJob.__init__(
             self,
             backend=backend,
@@ -128,7 +106,7 @@ class RuntimeJob(Job, BaseRuntimeJob):
             tags=tags,
             version=version,
         )
-        self._status = JobStatus.INITIALIZING
+        self._status: JobStatus = "INITIALIZING"
         if user_callback is not None:
             self.stream_results(user_callback)
 
@@ -153,12 +131,12 @@ class RuntimeJob(Job, BaseRuntimeJob):
         """
         _decoder = decoder or self._final_result_decoder
         self.wait_for_final_state(timeout=timeout)
-        if self._status == JobStatus.ERROR:
+        if self._status == "ERROR":
             error_message = self._reason if self._reason else self._error_message
             if self._reason == "RAN TOO LONG":
                 raise RuntimeJobMaxTimeoutError(error_message)
             raise RuntimeJobFailureError(f"Unable to retrieve job result. {error_message}")
-        if self._status is JobStatus.CANCELLED:
+        if self._status == "CANCELLED":
             raise RuntimeInvalidStateError(
                 "Unable to retrieve result for job {}. " "Job was cancelled.".format(self.job_id())
             )
@@ -166,6 +144,10 @@ class RuntimeJob(Job, BaseRuntimeJob):
         result_raw = self._download_external_result(
             self._api_client.job_results(job_id=self.job_id())
         )
+        # TODO: Remove getting/setting version once it's in result metadata
+        if _decoder.__name__ == EstimatorResultDecoder.__name__:
+            if not self._version:
+                self._version = self.inputs.get("version", 1)
 
         return _decoder.decode(result_raw) if result_raw else None  # type: ignore
 
@@ -183,7 +165,7 @@ class RuntimeJob(Job, BaseRuntimeJob):
                 raise RuntimeInvalidStateError(f"Job cannot be cancelled: {ex}") from None
             raise IBMRuntimeError(f"Failed to cancel job: {ex}") from None
         self.cancel_result_streaming()
-        self._status = JobStatus.CANCELLED
+        self._status = "CANCELLED"
 
     def status(self) -> JobStatus:
         """Return the status of the job.
@@ -194,15 +176,7 @@ class RuntimeJob(Job, BaseRuntimeJob):
         self._set_status_and_error_message()
         return self._status
 
-    def in_final_state(self) -> bool:
-        """Return whether the job is in a final job state such as ``DONE`` or ``ERROR``."""
-        return self._status in JOB_FINAL_STATES
-
-    def errored(self) -> bool:
-        """Return whether the job has failed."""
-        return self._status == JobStatus.ERROR
-
-    def _status_from_job_response(self, response: Dict) -> str:
+    def _status_from_job_response(self, response: Dict) -> JobStatus:
         """Returns the job status from an API response.
 
         Args:
@@ -212,84 +186,29 @@ class RuntimeJob(Job, BaseRuntimeJob):
             Job status.
         """
         mapped_job_status = API_TO_JOB_STATUS[response["state"]["status"].upper()]
-        if mapped_job_status == JobStatus.CANCELLED and self._reason == "RAN TOO LONG":
-            mapped_job_status = JobStatus.ERROR
+        if mapped_job_status == "CANCELLED" and self._reason == "RAN TOO LONG":
+            mapped_job_status = "ERROR"
         return mapped_job_status
 
-    def submit(self) -> None:
-        """Unsupported method.
-        Note:
-            This method is not supported, please use
-            :meth:`~qiskit_ibm_runtime.QiskitRuntimeService.run`
-            to submit a job.
-        Raises:
-            NotImplementedError: Upon invocation.
-        """
-        raise NotImplementedError(
-            "job.submit() is not supported. Please use "
-            "QiskitRuntimeService.run() to submit a job."
-        )
+    def cancelled(self) -> bool:
+        """Return whether the job has been cancelled."""
+        return self.status() == "CANCELLED"
 
-    def queue_position(self, refresh: bool = False) -> Optional[int]:
-        """Return the position of the job in the server queue.
+    def done(self) -> bool:
+        """Return whether the job has successfully run."""
+        return self.status() == "DONE"
 
-        Note:
-            The position returned is within the scope of the provider
-            and may differ from the global queue position.
+    def errored(self) -> bool:
+        """Return whether the job has failed."""
+        return self._status == "ERROR"
 
-        Args:
-            refresh: If ``True``, re-query the server to get the latest value.
-                Otherwise return the cached value.
+    def in_final_state(self) -> bool:
+        """Return whether the job is in a final job state such as ``DONE`` or ``ERROR``."""
+        return self._status in JOB_FINAL_STATES
 
-        Returns:
-            Position in the queue or ``None`` if position is unknown or not applicable.
-        """
-        if refresh:
-            api_metadata = self._api_client.job_metadata(self.job_id())
-            self._queue_info = QueueInfo(
-                position_in_queue=api_metadata.get("position_in_queue"),
-                status=self.status(),
-                estimated_start_time=api_metadata.get("estimated_start_time"),
-                estimated_completion_time=api_metadata.get("estimated_completion_time"),
-            )
-
-        if self._queue_info:
-            return self._queue_info.position
-        return None
-
-    def queue_info(self) -> Optional[QueueInfo]:
-        """Return queue information for this job.
-
-        The queue information may include queue position, estimated start and
-        end time, and dynamic priorities for the hub, group, and project. See
-        :class:`QueueInfo` for more information.
-
-        Note:
-            The queue information is calculated after the job enters the queue.
-            Therefore, some or all of the information may not be immediately
-            available, and this method may return ``None``.
-
-        Returns:
-            A :class:`QueueInfo` instance that contains queue information for
-            this job, or ``None`` if queue information is unknown or not
-            applicable.
-        """
-        # Get latest queue information.
-        api_metadata = self._api_client.job_metadata(self.job_id())
-        self._queue_info = QueueInfo(
-            position_in_queue=api_metadata.get("position_in_queue"),
-            status=self.status(),
-            estimated_start_time=api_metadata.get("estimated_start_time"),
-            estimated_completion_time=api_metadata.get("estimated_completion_time"),
-        )
-        # Return queue information only if it has any useful information.
-        if self._queue_info and any(
-            value is not None
-            for attr, value in self._queue_info.__dict__.items()
-            if not attr.startswith("_") and attr != "job_id"
-        ):
-            return self._queue_info
-        return None
+    def running(self) -> bool:
+        """Return whether the job is actively running."""
+        return self.status() == "RUNNING"
 
     def logs(self) -> str:
         """Return job logs.

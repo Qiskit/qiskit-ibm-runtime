@@ -30,7 +30,7 @@ def validate(options: Dict[str, Any]) -> None:
     _warn_and_clean_options(options)
 
     # Default validation otherwise.
-    TranspilationOptions.validate_transpilation_options(options.get("transpilation"))
+    TranspilationOptions(**options.get("transpilation", {}))
     execution_time = options.get("max_execution_time")
     if execution_time is not None:
         if execution_time > Options._MAX_EXECUTION_TIME:
@@ -38,9 +38,9 @@ def validate(options: Dict[str, Any]) -> None:
                 f"max_execution_time must be below " f"{Options._MAX_EXECUTION_TIME} seconds."
             )
 
-    EnvironmentOptions.validate_environment_options(options.get("environment"))
-    ExecutionOptions.validate_execution_options(options.get("execution"))
-    SimulatorOptions.validate_simulator_options(options.get("simulator"))
+    EnvironmentOptions(**options.get("environment", {}))
+    ExecutionOptions(**options.get("execution", {}))
+    SimulatorOptions(**options.get("simulator", {}))
 
 
 def _raise_if_error_in_options(options: Dict[str, Any]) -> None:
