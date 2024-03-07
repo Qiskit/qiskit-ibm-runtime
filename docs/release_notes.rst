@@ -44,5 +44,29 @@ Release Notes
   :earliest-version: 0.8.0
 
 .. release-notes::
-  :branch: stable/0.15
+  :branch: stable/0.7
+  :earliest-version: 0.7.0rc1
+
+.. release-notes::
+  :branch: stable/0.6
+  :earliest-version: 0.6.0
+
+.. release-notes::
+  :branch: stable/0.5
+  :earliest-version: 0.5.0
+
+.. release-notes::
+  :branch: stable/0.4
+  :earliest-version: 0.4.0
+
+.. release-notes::
+  :branch: stable/0.3
+  :earliest-version: 0.3.0
+
+.. release-notes::
+  :branch: stable/0.2
+  :earliest-version: 0.2.0
+
+.. release-notes::
+  :branch: stable/0.1
   :earliest-version: 0.1.0rc1
