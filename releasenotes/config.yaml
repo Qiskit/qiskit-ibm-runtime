@@ -1,3 +1,4 @@
 ---
 encoding: utf8
 default_branch: main
+stop_at_branch_base: false

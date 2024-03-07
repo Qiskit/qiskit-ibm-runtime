@@ -13,4 +13,3 @@ Release Notes
 
 .. release-notes::
   :branch: stable/0.15
-  :earliest-version: 0.1.0rc1
