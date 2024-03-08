@@ -45,7 +45,7 @@ class QiskitRuntimeLocalService:
         self._channel_strategy = None
 
     def run(
-        self,    # pylint: disable=unused-argument
+        self,  # pylint: disable=unused-argument
         program_id: Literal["sampler", "estimator"],
         inputs: Dict,
         options: Union[RuntimeOptions, Dict],

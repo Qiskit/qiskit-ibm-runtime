@@ -12,12 +12,9 @@
 
 """Tests for local mode."""
 
-from typing import Dict
-
 from ddt import data, ddt
 
 from qiskit_aer import AerSimulator
-from qiskit.circuit import QuantumCircuit
 from qiskit.primitives import EstimatorResult, SamplerResult
 
 from qiskit_ibm_runtime.fake_provider import FakeManila, FakeManilaV2
@@ -26,6 +23,7 @@ from qiskit_ibm_runtime import (
     Estimator,
     Options,
     Session,
+    Batch,
 )
 
 from ..ibm_test_case import IBMTestCase
@@ -33,13 +31,6 @@ from ..utils import (
     get_primitive_inputs,
     combine,
 )
-
-
-class MockSession(Session):
-    """Mock for session class"""
-
-    _circuits_map: Dict[str, QuantumCircuit] = {}
-    _instance = None
 
 
 @ddt
@@ -106,10 +97,10 @@ class TestLocalMode(IBMTestCase):
         result = job.result()
         self.assertEqual(result.metadata[0]["shots"], shots)
 
-    @data(FakeManila(), FakeManilaV2(), AerSimulator())
-    def test_sampler_v1_session(self, backend):
+    @combine(session_cls=[Session, Batch], backend=[FakeManila(), FakeManilaV2(), AerSimulator()])
+    def test_sampler_v1_session(self, session_cls, backend):
         """Testing running v1 sampler inside session."""
-        with Session(backend=backend) as session:
+        with session_cls(backend=backend) as session:
             inst = Sampler(session=session)
             job = inst.run(**get_primitive_inputs(inst, backend=backend))
             result = job.result()
@@ -117,10 +108,10 @@ class TestLocalMode(IBMTestCase):
             self.assertEqual(len(result.quasi_dists), 1)
             self.assertEqual(len(result.metadata), 1)
 
-    @data(FakeManila(), FakeManilaV2(), AerSimulator())
-    def test_estimator_v1_session(self, backend):
+    @combine(session_cls=[Session, Batch], backend=[FakeManila(), FakeManilaV2(), AerSimulator()])
+    def test_estimator_v1_session(self, session_cls, backend):
         """Testing running v1 estimator inside session."""
-        with Session(backend=backend) as session:
+        with session_cls(backend=backend) as session:
             inst = Estimator(session=session)
             job = inst.run(**get_primitive_inputs(inst, backend=backend))
             result = job.result()
