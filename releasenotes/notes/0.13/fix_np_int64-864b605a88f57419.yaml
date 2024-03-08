@@ -1,5 +1,0 @@
----
-fixes:
-  - |
-    Fixed a bug where ``shots`` passed in as a numpy type were not being
-    serialized correctly.

@@ -1,6 +1,0 @@
----
-upgrade:
-  - |
-    Added error messages in case the user defines unsupported values 
-    for 'max_execution_time'.
-    Previously, this validation was done on the server side.

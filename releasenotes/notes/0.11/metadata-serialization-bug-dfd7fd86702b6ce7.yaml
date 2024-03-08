@@ -1,5 +1,0 @@
----
-fixes:
-  - |
-    Fixed an issue where circuit metadata was not being serialized correctly 
-    resulting in a type error.

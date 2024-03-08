@@ -1,4 +1,0 @@
----
-deprecations:
-  - |
-    :meth:`~qiskit_ibm_runtime.QiskitRuntimeService.runtime` has been deprecated.
