@@ -49,7 +49,7 @@ class QiskitRuntimeLocalService:
         program_id: Literal["sampler", "estimator"],
         inputs: Dict,
         options: Union[RuntimeOptions, Dict],
-        **kwargs: Any  # pylint: disable=unused-argument
+        **kwargs: Any,  # pylint: disable=unused-argument
     ) -> PrimitiveJob:
         """Execute the runtime program.
 

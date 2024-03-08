@@ -87,7 +87,7 @@ Local testing mode
 
 You can validate your quantum prorams before sending them to a physical system using
 the local testing mode. The local testing mode is activated if one of the fake
-backends in :module:`qiskit_ibm_runtime.fake_provider` or a Qiskit Aer backend
+backends in ``qiskit_ibm_runtime.fake_provider`` or a Qiskit Aer backend
 instance is used when instantiating a primitive or a session. For example::
 
     from qiskit_aer import AerSimulator
