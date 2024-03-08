@@ -45,11 +45,11 @@ class QiskitRuntimeLocalService:
         self._channel_strategy = None
 
     def run(
-        self,
+        self,    # pylint: disable=unused-argument
         program_id: Literal["sampler", "estimator"],
         inputs: Dict,
         options: Union[RuntimeOptions, Dict],
-        **kwargs: Any,  # pylint: disable=unused-argument
+        **kwargs: Any,
     ) -> PrimitiveJob:
         """Execute the runtime program.
 
