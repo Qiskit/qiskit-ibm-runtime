@@ -15,10 +15,10 @@
 from unittest.mock import MagicMock
 
 from qiskit_ibm_runtime import Batch
-from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.utils.default_session import _DEFAULT_SESSION
 
 from ..ibm_test_case import IBMTestCase
+from ..utils import get_mocked_backend
 
 
 class TestBatch(IBMTestCase):
@@ -30,17 +30,15 @@ class TestBatch(IBMTestCase):
 
     def test_passing_ibm_backend(self):
         """Test passing in IBMBackend instance."""
-        backend = MagicMock(spec=IBMBackend)
-        backend._instance = None
-        backend.name = "ibm_gotham"
+        name = "ibm_gotham"
+        backend = get_mocked_backend(name=name)
         session = Batch(service=MagicMock(), backend=backend)
-        self.assertEqual(session.backend(), "ibm_gotham")
+        self.assertEqual(session.backend(), name)
 
     def test_using_ibm_backend_service(self):
         """Test using service from an IBMBackend instance."""
-        backend = MagicMock(spec=IBMBackend)
-        backend._instance = None
-        backend.name = "ibm_gotham"
+        name = "ibm_gotham"
+        backend = get_mocked_backend(name=name)
         session = Batch(backend=backend)
         self.assertEqual(session.service, backend.service)
 

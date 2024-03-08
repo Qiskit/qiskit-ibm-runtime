@@ -1,6 +1,6 @@
 # This code is part of Qiskit.
 #
-# (C) Copyright IBM 2022.
+# (C) Copyright IBM 2022, 2024.
 #
 # This code is licensed under the Apache License, Version 2.0. You may
 # obtain a copy of this license in the LICENSE.txt file in the root directory
@@ -61,6 +61,7 @@ Below is an example of using primitives within a session::
     qc.measure(qr, cr)
 
     backend = service.least_busy(operational=True, simulator=False)
+    pm = generate_preset_pass_manager(backend=backend, optimization_level=1)
     bell_isa_circuit = pm.run(qc)
     psi_isa_circuit = pm.run(psi)
     isa_observables = H1.apply_layout(psi_isa_circuit.layout)
@@ -80,6 +81,46 @@ Below is an example of using primitives within a session::
         )
         pub_result = job.result()[0]
         print(f"Expectation values: {pub_result.data.evs}")
+
+Local testing mode
+==================
+
+You can validate your quantum prorams before sending them to a physical system using
+the local testing mode. The local testing mode is activated if one of the fake
+backends in :module:`qiskit_ibm_runtime.fake_provider` or a Qiskit Aer backend
+instance is used when instantiating a primitive or a session. For example::
+
+    from qiskit_aer import AerSimulator
+    from qiskit.circuit.library import RealAmplitudes
+    from qiskit.circuit import QuantumCircuit, QuantumRegister, ClassicalRegister
+    from qiskit.quantum_info import SparsePauliOp
+    from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
+
+    from qiskit_ibm_runtime import Session
+    from qiskit_ibm_runtime import Sampler
+    from qiskit_ibm_runtime.fake_provider import FakeManilaV2
+
+    # Bell Circuit
+    qc = QuantumCircuit(2)
+    qc.h(0)
+    qc.cx(0, 1)
+    qc.measure_all()
+
+    # Run the sampler job locally using FakeManilaV2
+    fake_manila = FakeManilaV2()
+    pm = generate_preset_pass_manager(backend=fake_manila, optimization_level=1)
+    isa_qc = pm.run(qc)
+    sampler = Sampler(backend=fake_manila)
+    result = sampler.run([isa_qc]).result()
+
+    # Run the sampler job locally using AerSimulator.
+    # Session syntax is supported but ignore.
+    aer_sim = AerSimulator()
+    pm = generate_preset_pass_manager(backend=aer_sim, optimization_level=1)
+    isa_qc = pm.run(qc)
+    with Session(backend=aer_sim) as session:
+        sampler = Sampler(session=session)
+        result = sampler.run([isa_qc]).result()
 
 Backend data
 ============
