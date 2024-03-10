@@ -237,7 +237,7 @@ class TestRuntimeJob(IBMTestCase):
     @run_quantum_and_cloud_fake
     def test_download_external_job_result(self, service):
         """Test downloading the job result from an external URL."""
-        with patch("qiskit_ibm_runtime.runtime_job.requests") as request_mock:
+        with patch("qiskit_ibm_runtime.base_runtime_job.requests") as request_mock:
             job = run_program(service=service)
             with mock_wait_for_final_state(service, job):
                 mock_response = MagicMock()
