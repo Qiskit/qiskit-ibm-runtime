@@ -15,7 +15,6 @@
 
 import itertools
 import operator
-from unittest import skip
 
 from ddt import ddt, data, idata, unpack
 
@@ -40,7 +39,6 @@ FAKE_PROVIDER_FOR_BACKEND_V2 = FakeProviderForBackendV2()
 FAKE_PROVIDER = FakeProvider()
 
 
-@skip("Skip until Qiskit/11880 is released")
 @ddt
 class TestFakeBackends(IBMTestCase):
     @classmethod
@@ -55,14 +53,13 @@ class TestFakeBackends(IBMTestCase):
         cls.circuit.x(1)
         cls.circuit.measure_all()
 
-    # TODO re-enable when Qiskit/11880 is released
-    # @idata(
-    #     itertools.product(
-    #         [be for be in FAKE_PROVIDER_FOR_BACKEND_V2.backends() if be.num_qubits > 1],
-    #         [0, 1, 2, 3],
-    #     )
-    # )
-    # @unpack
+    @idata(
+        itertools.product(
+            [be for be in FAKE_PROVIDER_FOR_BACKEND_V2.backends() if be.num_qubits > 1],
+            [0, 1, 2, 3],
+        )
+    )
+    @unpack
     def test_circuit_on_fake_backend_v2(self, backend, optimization_level):
         if not optionals.HAS_AER and backend.num_qubits > 20:
             self.skipTest("Unable to run fake_backend %s without qiskit-aer" % backend.backend_name)
