@@ -60,9 +60,9 @@ Below is an example of using primitives within a session::
     qc.cx(qr[0], qr[1])
     qc.measure(qr, cr)
 
+    backend = service.least_busy(operational=True, simulator=False)
     pm = generate_preset_pass_manager(target=backend.target, optimization_level=1)
 
-    backend = service.least_busy(operational=True, simulator=False)
     bell_isa_circuit = pm.run(qc)
     psi_isa_circuit = pm.run(psi)
     isa_observables = H1.apply_layout(psi_isa_circuit.layout)
