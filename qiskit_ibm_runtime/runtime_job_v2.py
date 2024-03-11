@@ -187,7 +187,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         """
         api_status = response["state"]["status"].upper()
         if api_status in API_TO_JOB_STATUS:
-            mapped_job_status = API_TO_JOB_STATUS[response["state"]["status"].upper()]
+            mapped_job_status = API_TO_JOB_STATUS[api_status]
             if mapped_job_status == "CANCELLED" and self._reason == "RAN TOO LONG":
                 mapped_job_status = "ERROR"
             return mapped_job_status
