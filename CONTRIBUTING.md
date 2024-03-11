@@ -61,140 +61,106 @@ The current categories for each label are as follows:
 
 ### Release Notes
 
-When making any end user facing changes in a contribution we have to make sure
-we document that when we release a new version of qiskit-ibm. The
-expectation is that if your code contribution has user facing changes that you
+When making any end user facing changes in a contribution, we have to make sure
+we document that when we release a new version of qiskit-ibm-runtime. The
+expectation is that if your code contribution has user facing changes, then you
 will write the release documentation for these changes. This documentation must
 explain what was changed, why it was changed, and how users can either use or
 adapt to the change. The idea behind release documentation is that when a naive
 user with limited internal knowledge of the project is upgrading from the
 previous release to the new one, they should be able to read the release notes,
-understand if they need to update their program which uses qiskit, and how they
-would go about doing that. It ideally should explain why they need to make
-this change too, to provide the necessary context.
+understand if they need to update their program which uses qiskit-ibm-runtime,
+and how they would go about doing that. It ideally should explain why
+they need to make this change too, to provide the necessary context.
 
 To make sure we don't forget a release note or if the details of user facing
 changes over a release cycle we require that all user facing changes include
-documentation at the same time as the code. To accomplish this we use the
-[reno](https://docs.openstack.org/reno/latest/) tool which enables a git based
-workflow for writing and compiling release notes.
+documentation at the same time as the code. To accomplish this, we use the
+[Towncrier](https://towncrier.readthedocs.io/en/stable/) tool.
 
 #### Adding a new release note
 
-Making a new release note is quite straightforward. Ensure that you have reno
-installed with::
+To create a new release note, first find either the issue or PR number associated with
+your change from GitHub because Towncrier links every release note to a GitHub issue
+or PR. If there is no associated issue and you haven't yet opened up the PR so you don't
+yet have a PR number, you can use the value `todo` at first, then go back and rename the
+file once you open up the PR and have its number.
 
-    pip install -U reno
+Then, identify which type of change your release note is:
 
-Once you have reno installed you can make a new release note by running in
-your local repository checkout's root::
+- `feat` (new feature)
+- `upgrade` (upgrade note)
+- `deprecation` (deprecation)
+- `bug` (bug fix)
+- `other` (other note)
 
-    reno new short-description-string
+Now, create a new file in the `releasenotes` folder in the format `<github-number>.<type>.rst`,
+such as `156.bug.rst` or `231.feat.rst`.
 
-where short-description-string is a brief string (with no spaces) that describes
-what's in the release note. This will become the prefix for the release note
-file. Once that is run it will create a new yaml file in releasenotes/notes.
-Then open that yaml file in a text editor and write the release note. The basic
-structure of a release note is restructured text in yaml lists under category
-keys. You add individual items under each category and they will be grouped
-automatically by release when the release notes are compiled. A single file
-can have as many entries in it as needed, but to avoid potential conflicts
-you'll want to create a new file for each pull request that has user facing
-changes. When you open the newly created file it will be a full template of
-the different categories with a description of a category as a single entry
-in each category. You'll want to delete all the sections you aren't using and
-update the contents for those you are. For example, the end result should
-look something like::
+Open up the new release note file and provide a description of the change, such as what users need
+to do. The files use RST syntax and you can use mechanisms like code blocks. However, Sphinx
+cross-references will not work and you should use full links to
+https://docs.quantum.ibm.com when linking to documentation.
 
-```yaml
-features:
-  - |
-    Introduced a new feature foo, that adds support for doing something to
-    ``QuantumCircuit`` objects. It can be used by using the foo function,
-    for example::
+Example notes:
 
-      from qiskit import foo
-      from qiskit import QuantumCircuit
-      foo(QuantumCircuit())
-
-  - |
-    The ``qiskit.QuantumCircuit`` module has a new method ``foo()``. This is
-    the equivalent of calling the ``qiskit.foo()`` to do something to your
-    QuantumCircuit. This is the equivalent of running ``qiskit.foo()`` on
-    your circuit, but provides the convenience of running it natively on
-    an object. For example::
-
-      from qiskit import QuantumCircuit
-
-      circ = QuantumCircuit()
-      circ.foo()
-
-deprecations:
-  - |
-    The ``qiskit.bar`` module has been deprecated and will be removed in a
-    future release. Its sole function, ``foobar()`` has been superseded by the
-    ``qiskit.foo()`` function which provides similar functionality but with
-    more accurate results and better performance. You should update your calls
-    ``qiskit.bar.foobar()`` calls to ``qiskit.foo()``.
+```rst
+Add ``dd_barrier`` optional input to
+```PadDynamicalDecoupling`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.transpiler.passes.scheduling.PadDynamicalDecoupling>`__
+constructor to identify portions of the circuit to apply dynamical
+decoupling (dd) on selectively. If this string is contained in the
+label of a barrier in the circuit, dd is applied on the delays ending
+with it (on the same qubits); otherwise, it is not applied.
 ```
 
-You can also look at other release notes for other examples.
+```
+When a single backend is retrieved with the ``instance`` parameter,
 
-You can use any restructured text feature in them (code sections, tables,
-enumerated lists, bulleted list, etc) to express what is being changed as
-needed. In general you want the release notes to include as much detail as
+.. code:: python
+
+  service.backend('ibm_torino', instance='ibm-q/open/main')
+  # raises error if torino is not in ibm-q/open/main but in a different instance
+  # the user has access to
+  service = QiskitRuntimeService(channel="ibm_quantum", instance="ibm-q/open/main")
+  service.backend('ibm_torino') # raises the same error
+
+if the backend is not in the instance, but in a different one the user
+has access to, an error will be raised. The same error will now be
+raised if an instance is passed in at initialization and then a
+backend not in that instance is retrieved.
+```
+
+In general, you want the release notes to include as much detail as
 needed so that users will understand what has changed, why it changed, and how
 they'll have to update their code.
 
-After you've finished writing your release notes you'll want to add the note
+Towncrier will automatically add a link to the PR or Issue number you used in
+the file name once we build the relesae notes during the release.
+
+After you've finished writing your release note, you need to add the note
 file to your commit with `git add` and commit them to your PR branch to make
 sure they're included with the code in your PR.
 
-#### Linking to issues
+#### Preview the release notes
 
-If you need to link to an issue or other github artifact as part of the release
-note this should be done using an inline link with the text being the issue
-number. For example you would write a release note with a link to issue 12345
-as:
+You can preview how the release notes look with the Sphinx docs build by
+using Towncrier. First, install Towncrier with [`pipx`](https://pipx.pypa.io/stable/) by
+running `pipx install tonwcrier`. 
 
-```yaml
-fixes:
-  - |
-    Fixes a race condition in the function ``foo()``. Refer to
-    `#12345 <https://github.com/Qiskit/qiskit-ibm-runtime/issues/12345>`_ for
-    more details.
-```
+Then, run `towncrier build --version=unreleased --keep`. Be careful to not save the changes
+to CHANGES.rst to Git! 
 
-#### Generating the release notes
-
-After release notes have been added if you want to see what the full output of
-the release notes. In general the output from reno that we'll get is a rst
-(ReStructuredText) file that can be compiled by
-[sphinx](https://www.sphinx-doc.org/en/master/). To generate the rst file you
-use the ``reno report`` command. If you want to generate the full Qiskit IBM provider
-release notes for all releases (since we started using reno during 0.9) you just
-run::
-
-    reno report
-
-but you can also use the ``--version`` argument to view a single release (after
-it has been tagged::
-
-    reno report --version 0.9.0
-
-At release time ``reno report`` is used to generate the release notes for the
-release and the output will be submitted as a pull request to the documentation
-repository's [release notes file](
-https://github.com/Qiskit/qiskit/blob/master/docs/release_notes.rst)
+Finally, preview the docs build by following the instructions in
+[Building documentation locally](#building-documentation-locally).
 
 ### Building documentation locally
 
-Building The release notes are part of the standard qiskit-ibm
+Building The release notes are part of the standard qiskit-ibm-runtime
 documentation builds. To check what the rendered html output of the release
 notes will look like for the current state of the repo you can run:
 `tox -edocs` which will build all the documentation into `docs/_build/html`
 and the release notes in particular will be located at
-`docs/_build/html/release_notes.html`
+`docs/_build/html/release_notes.html`.
 
 ### Test
 
@@ -314,19 +280,35 @@ merged to it are bugfixes.
 
 ### Release cycle
 
-When it is time to release a new minor version of qiskit-ibm we will:
+When it is time to release a new minor version of qiskit-ibm-runtime, first open a PR
+to prepare the release notes. Install the tool `towncrier` with `pipx install towncrier`.
+Then, in a new branch, run `towncrier build --version=<full-version> --yes`, and replace
+`<full-version>` with the version like `0.22.0`. Add all the changes to Git and
+open a PR.
 
-1.  Create a new tag with the version number and push it to github
-2.  Change the `main` version to the next release version.
+After landing the release notes preparation, checkout `main` and make sure that the last
+commit is the release notes prep. Then, create a new Git tag from `main` for the full
+version number, like `git tag 0.22.0`. Push the tag to GitHub. Also create a new branch like
+`stable/0.22` and push it to GitHub.
 
-The release automation processes will be triggered by the new tag and perform
-the following steps:
+GitHub Actions will automatically build and upload the wheels to PyPI. The
+qiskit-bot should also automatically create the GitHub Release for you.
 
-1. Create a stable branch for the new minor version from the release tag
-    on the `main` branch
-2. Build and upload binary wheels to pypi
-3. Create a github release page with a generated changelog
-4. Generate a PR on the meta-repository to bump the Qiskit IBM Provider version
-   and meta-package version.
+#### Patch releases
 
 The `stable/*` branches should only receive changes in the form of bug fixes.
+These bug fixes should first land on `main`, then be `git cherry-pick`ed to
+the stable branch. Include the Towncrier release note in these cherry-picks.
+
+When preparing a patch release, you also need to first land a PR against
+the `stable/*` branch to prepare the release notes with
+`towncrier build --version=<full-version> --yes`, where `<full-version>` is
+the patch release like `0.21.1`. Then, from the `stable/*` branch, create a new
+Git tag for the full version number, like `git tag 0.21.1`, and
+push the tag to GitHub.
+
+GitHub Actions will automatically build and upload the wheels to PyPI. The
+qiskit-bot should also automatically create the GitHub Release for you.
+
+Finally, you need to cherry-pick the release notes prep from `stable/*` to
+the `main` branch, such as from `stable/0.21` to `main`.
