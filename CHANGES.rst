@@ -22,9 +22,9 @@ Upgrade Notes
 -  Circuits that do not match the target hardware definition are no
    longer supported by Qiskit Runtime primitives, unless
    ``channel_strategy="q-ctrl"`` is used. See the transpilation
-   documentation (`transpile </transpile>`__) for instructions to
+   documentation (`transpile <https://docs.quantum.ibm.com/transpile>`__) for instructions to
    transform circuits and the primitive examples
-   (`run/primitives-examples </run/primitives-examples>`__) to see this
+   (`run/primitives-examples <https://docs.quantum.ibm.com/run/primitives-examples>`__) to see this
    coupled with operator transformations.
 
 Deprecation Notes
@@ -58,7 +58,7 @@ New Features
 ------------
 
 -  Add ``dd_barrier`` optional input to
-   ```PadDynamicalDecoupling`` <qiskit_ibm_runtime.transpiler.passes.scheduling.PadDynamicalDecoupling>`__
+   ```PadDynamicalDecoupling`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.transpiler.passes.scheduling.PadDynamicalDecoupling>`__
    constructor to identify portions of the circuit to apply dynamical
    decoupling (dd) on selectively. If this string is contained in the
    label of a barrier in the circuit, dd is applied on the delays ending
@@ -68,9 +68,9 @@ New Features
 
 -  Sessions will now be started with a new ``/sessions`` endpoint that
    allows for different execution modes. Batch mode is now supported
-   through ``Batch``, and ```Session`` <qiskit_ibm_runtime.Session>`__
+   through ``Batch``, and ```Session`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Session>`__
    will work the same as way as before. Please see
-   `run/sessions </run/sessions>`__ for more information.
+   `run/sessions <https://docs.quantum.ibm.com/run/sessions>`__ for more information.
 
    Note that ``Session`` and ``Batch`` created from
    ``qiskit-ibm-runtime`` prior to this release will no longer be
@@ -82,7 +82,7 @@ New Features
    a session will not actually be created. There will be no session ID.
 
 -  Sessions started with
-   ```qiskit_ibm_runtime.IBMBackend.open_session()`` <qiskit_ibm_runtime.IBMBackend#open_session>`__
+   ```qiskit_ibm_runtime.IBMBackend.open_session()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.IBMBackend#open_session>`__
    will use the new ``/sessions`` endpoint.
 
    The sessions functionality will not change but note that
@@ -95,9 +95,9 @@ Deprecation Notes
 
 -  Circuits that do not match the target hardware definition will no
    longer be supported after March 1, 2024. See the transpilation
-   documentation (`transpile </transpile>`__) for instructions to
+   documentation (`transpile <https://docs.quantum.ibm.com/transpile>`__) for instructions to
    transform circuits and the primitive examples
-   (`run/primitives-examples </run/primitives-examples>`__) to see this
+   (`run/primitives-examples <https://docs.quantum.ibm.com/run/primitives-examples>`__) to see this
    coupled with operator transformations.
 
 Bug Fixes
@@ -155,7 +155,7 @@ New Features
 ------------
 
 -  Added a new parameter, dynamic_circuits to
-   ```backends()`` <qiskit_ibm_runtime.QiskitRuntimeService#backends>`__
+   ```backends()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#backends>`__
    to allow filtering of backends that support dynamic circuits.
 
 -  Added ``max_time`` parameter to ``IBMBackend.open_session()``.
@@ -167,17 +167,17 @@ New Features
 Deprecation Notes
 -----------------
 
--  ```runtime()`` <qiskit_ibm_runtime.QiskitRuntimeService#runtime>`__
+-  ```runtime()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#runtime>`__
    has been deprecated.
 
 Bug Fixes
 ---------
 
--  Many methods in ```RuntimeJob`` <qiskit_ibm_runtime.RuntimeJob>`__
+-  Many methods in ```RuntimeJob`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob>`__
    require retrieving the job data from the API with ``job_get()``. This
    API call will now exclude the ``params`` field by default because
    they are only necessary in
-   ```qiskit_ibm_runtime.RuntimeJob.inputs()`` <qiskit_ibm_runtime.RuntimeJob#inputs>`__.
+   ```qiskit_ibm_runtime.RuntimeJob.inputs()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob#inputs>`__.
 
 0.17.0
 ======
@@ -186,11 +186,11 @@ New Features
 ------------
 
 -  Added a new method
-   ```properties()`` <qiskit_ibm_runtime.RuntimeJob#properties>`__ which
+   ```properties()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob#properties>`__ which
    returns the backend properties of the job at the time the job was
    run.
 
--  ```details()`` <qiskit_ibm_runtime.Session#details>`__ has a new
+-  ```details()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Session#details>`__ has a new
    field, activated_at, which is the timestamp of when the session was
    changed to active.
 
@@ -248,7 +248,7 @@ Bug Fixes
 ---------
 
 -  Reverting 0.15.0 changes to
-   ```from_id()`` <qiskit_ibm_runtime.Session#from_id>`__ because it was
+   ```from_id()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Session#from_id>`__ because it was
    a breaking change without proper deprecation.
 
 0.15.0
@@ -320,13 +320,13 @@ Bug Fixes
    being used since not all features are supported there.
 
 -  The ``backend`` parameter in
-   ```from_id()`` <qiskit_ibm_runtime.Session#from_id>`__ is being
+   ```from_id()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Session#from_id>`__ is being
    deprecated because sessions do not support multiple backends.
    Additionally, the ``service`` parameter is no longer optional.
 
 -  The ``circuit_indices`` and ``observable_indices`` run inputs for
-   ```Estimator`` <qiskit_ibm_runtime.Estimator>`__ and
-   ```Sampler`` <qiskit_ibm_runtime.Sampler>`__ have been completely
+   ```Estimator`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Estimator>`__ and
+   ```Sampler`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Sampler>`__ have been completely
    removed.
 
 Other Notes
@@ -343,7 +343,7 @@ New Features
 
 -  There is a new class, ``qiskit_ibm_runtime.Batch`` that currently
    works the same way as
-   ```qiskit_ibm_runtime.Session`` <qiskit_ibm_runtime.Session>`__ but
+   ```qiskit_ibm_runtime.Session`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Session>`__ but
    will later be updated to better support submitting multiple jobs at
    once.
 
@@ -365,12 +365,12 @@ New Features
 ------------
 
 -  Added a new method,
-   ```details()`` <qiskit_ibm_runtime.Session#details>`__ that returns
+   ```details()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Session#details>`__ that returns
    information about a session, including: maximum session time, active
    time remaining, the current state, and whether or not the session is
    accepting jobs.
 
-   Also added ```status()`` <qiskit_ibm_runtime.Session#status>`__,
+   Also added ```status()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Session#status>`__,
    which returns the current status of the session.
 
 -  At initialization, if not passed in directly, the default
@@ -382,7 +382,7 @@ New Features
 Upgrade Notes
 -------------
 
--  ```qiskit_ibm_runtime.Session.close()`` <qiskit_ibm_runtime.Session#close>`__
+-  ```qiskit_ibm_runtime.Session.close()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Session#close>`__
    has been updated to mark a ``Session`` as no longer accepting new
    jobs. The session won’t accept more jobs but it will continue to run
    any queued jobs until they are done or the max time expires. This
@@ -392,7 +392,7 @@ Upgrade Notes
    jobs rather than wait for the interactive timeout.
 
    The old close method behavior has been moved to a new method,
-   ```qiskit_ibm_runtime.Session.cancel()`` <qiskit_ibm_runtime.Session#cancel>`__,
+   ```qiskit_ibm_runtime.Session.cancel()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Session#cancel>`__,
    where all queued jobs within a session are cancelled and terminated.
 
 Bug Fixes
@@ -402,7 +402,7 @@ Bug Fixes
    serialized correctly.
 
 -  Fixed a bug in
-   ```target_history()`` <qiskit_ibm_runtime.IBMBackend#target_history>`__
+   ```target_history()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.IBMBackend#target_history>`__
    where the datetime parameter was not being used to retrieve backend
    properties from the specified date.
 
@@ -432,7 +432,7 @@ Upgrade Notes
 -------------
 
 -  Job error messages now include the error code. Error codes can be
-   found in `errors </errors>`__.
+   found in `errors <https://docs.quantum.ibm.com/errors>`__.
 
 0.12.1
 ======
@@ -447,7 +447,7 @@ New Features
 
 -  Users can now pass in a value of ``default`` to the
    ``channel_strategy`` parameter in
-   ```qiskit_ibm_runtime.QiskitRuntimeService`` <qiskit_ibm_runtime.QiskitRuntimeService>`__.
+   ```qiskit_ibm_runtime.QiskitRuntimeService`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService>`__.
    Now, if an account is configured with a certain channel strategy, the
    user can override it by passing in ``default``.
 
@@ -462,12 +462,12 @@ Bug Fixes
 ---------
 
 -  Retrieving backend properties with
-   ```properties()`` <qiskit_ibm_runtime.IBMBackend#properties>`__ now
+   ```properties()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.IBMBackend#properties>`__ now
    supports passing a ``datetime`` parameter to retrieve properties from
    a past date.
 
 -  The ``noise_factors`` and ``extrapolator`` options in
-   ```qiskit_ibm_runtime.options.ResilienceOptions`` <qiskit_ibm_runtime.options.ResilienceOptions>`__
+   ```qiskit_ibm_runtime.options.ResilienceOptions`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.options.ResilienceOptions>`__
    will now default to ``None`` unless ``resilience_level`` is set to 2.
    Only options relevant to the resilience level will be set, so when
    using ``resilience_level`` 2, ``noise_factors`` will still default to
@@ -501,7 +501,7 @@ New Features
       sampler = Sampler(backend="ibmq_qasm_simulator")
 
 -  Added a new method,
-   ```qiskit_ibm_runtime.QiskitRuntimeService.instances()`` <qiskit_ibm_runtime.QiskitRuntimeService#instances>`__
+   ```qiskit_ibm_runtime.QiskitRuntimeService.instances()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#instances>`__
    that returns all instances(hub/group/project) the user is in. This is
    only for the ``ibm_quantum`` channel since the ``ibm_cloud`` channel
    does not have multiple instances.
@@ -512,9 +512,9 @@ New Features
 
 -  There is a new parameter, ``channel_strategy`` that can be set in the
    initialization of
-   ```qiskit_ibm_runtime.QiskitRuntimeService`` <qiskit_ibm_runtime.QiskitRuntimeService>`__
+   ```qiskit_ibm_runtime.QiskitRuntimeService`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService>`__
    or saved in
-   ```qiskit_ibm_runtime.QiskitRuntimeService.save_account()`` <qiskit_ibm_runtime.QiskitRuntimeService#save_account>`__.
+   ```qiskit_ibm_runtime.QiskitRuntimeService.save_account()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#save_account>`__.
    If ``channel_strategy`` is set to ``q-ctrl``, all jobs within the
    service will use the Q-CTRL error mitigation strategy.
 
@@ -523,7 +523,7 @@ Upgrade Notes
 
 -  Circuits and other input parameters will no longer be automatically
    stored in runtime jobs. They can still be retrieved with
-   ```qiskit_ibm_runtime.RuntimeJob.inputs()`` <qiskit_ibm_runtime.RuntimeJob#inputs>`__.
+   ```qiskit_ibm_runtime.RuntimeJob.inputs()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob#inputs>`__.
 
 
 Deprecation Notes
@@ -561,10 +561,10 @@ New Features
 ------------
 
 -  Added reason for failure when invoking the method
-   ```error_message()`` <qiskit_ibm_runtime.RuntimeJob#error_message>`__.
+   ```error_message()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob#error_message>`__.
 
 -  Added a new property,
-   ```usage_estimation()`` <qiskit_ibm_runtime.RuntimeJob#usage_estimation>`__
+   ```usage_estimation()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob#usage_estimation>`__
    that returns the estimated system execution time,
    ``quantum_seconds``. System execution time represents the amount of
    time that the system is dedicated to processing your job.
@@ -574,11 +574,11 @@ New Features
    backend.
 
 -  There is a new method
-   ```update_tags()`` <qiskit_ibm_runtime.RuntimeJob#update_tags>`__
+   ```update_tags()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob#update_tags>`__
    that can be used to update the ``job_tags`` of a job.
 
 -  If ``instance`` is provided as parameter to
-   ```qiskit_ibm_runtime.QiskitRuntimeService`` <qiskit_ibm_runtime.QiskitRuntimeService>`__,
+   ```qiskit_ibm_runtime.QiskitRuntimeService`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService>`__,
    then this is used as a filter in ``QiskitRuntimeService.backends()``.
    If ``instance`` is not recognized as one of the provider instances,
    an exception will be raised. Previously, we only issued a warning.
@@ -593,7 +593,7 @@ New Features
    exception rather than returning None.
 
 -  A new method,
-   ```qiskit_ibm_runtime.options.SimulatorOptions.set_backend()`` <qiskit_ibm_runtime.options.SimulatorOptions#set_backend>`__,
+   ```qiskit_ibm_runtime.options.SimulatorOptions.set_backend()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.options.SimulatorOptions#set_backend>`__,
    allows users to more easily set simulator options for a backend.
 
    .. code:: python
@@ -625,7 +625,7 @@ Deprecation Notes
 -----------------
 
 -  In
-   ```qiskit_ibm_runtime.RuntimeJob.metrics()`` <qiskit_ibm_runtime.RuntimeJob#metrics>`__,
+   ```qiskit_ibm_runtime.RuntimeJob.metrics()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob#metrics>`__,
    the bss field will be replaced by usage.
 
 0.11.0
@@ -638,7 +638,7 @@ New Features
    ``qiskit_ibm_runtime.IBMRuntimeService.job()`` the ``params`` will no
    longer be returned from the API. They will instead be loaded loazily
    when they are actually needed in
-   ```qiskit_ibm_runtime.RuntimeJob.inputs()`` <qiskit_ibm_runtime.RuntimeJob#inputs>`__.
+   ```qiskit_ibm_runtime.RuntimeJob.inputs()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob#inputs>`__.
 
 -  Added warning when the backend is not active in
    QiskitRuntimeService.run.
@@ -661,16 +661,16 @@ Upgrade Notes
 
 -  A default session is no longer open for you if you pass a backend
    name or backend instance to
-   ```qiskit_ibm_runtime.Sampler`` <qiskit_ibm_runtime.Sampler>`__ or
-   ```qiskit_ibm_runtime.Estimator`` <qiskit_ibm_runtime.Estimator>`__
+   ```qiskit_ibm_runtime.Sampler`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Sampler>`__ or
+   ```qiskit_ibm_runtime.Estimator`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Estimator>`__
    constructors. The primitive will instead run without a session. In
    addition, you should now use the ``backend`` parameter to pass a
    backend name or instance instead of the ``session`` parameter (which
    can continue to be used to pass a session).
 
 -  The first parameter of the
-   ```qiskit_ibm_runtime.Sampler`` <qiskit_ibm_runtime.Sampler>`__ and
-   ```qiskit_ibm_runtime.Estimator`` <qiskit_ibm_runtime.Estimator>`__
+   ```qiskit_ibm_runtime.Sampler`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Sampler>`__ and
+   ```qiskit_ibm_runtime.Estimator`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Estimator>`__
    constructors is now ``backend`` instead of ``session``.
 
 Deprecation Notes
@@ -678,8 +678,8 @@ Deprecation Notes
 
 -  Passing a backend name or backend instance to the ``session``
    parameter when initializing a
-   ```qiskit_ibm_runtime.Sampler`` <qiskit_ibm_runtime.Sampler>`__ or
-   ```qiskit_ibm_runtime.Estimator`` <qiskit_ibm_runtime.Estimator>`__
+   ```qiskit_ibm_runtime.Sampler`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Sampler>`__ or
+   ```qiskit_ibm_runtime.Estimator`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Estimator>`__
    has been deprecated. Please use the ``backend`` parameter instead.
    You can continue to pass a session using the ``session`` parameter.
 
@@ -729,22 +729,22 @@ Deprecation Notes
 
 -  The deprecated arguments ``circuits``, ``parameters``, ``service``,
    and ``skip_transpilation`` have been removed from
-   ```Sampler`` <qiskit_ibm_runtime.Sampler>`__.
+   ```Sampler`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Sampler>`__.
 
    Similarly, the deprecated arguments ``circuits``, ``observables``,
    ``parameters``, ``service``, and ``skip_transpilation`` have been
-   removed from ```Estimator`` <qiskit_ibm_runtime.Estimator>`__.
+   removed from ```Estimator`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Estimator>`__.
 
    In
-   ```QiskitRuntimeService`` <qiskit_ibm_runtime.QiskitRuntimeService>`__,
+   ```QiskitRuntimeService`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService>`__,
    the ``auth`` parameter has been removed. Additionally, the
    ``instance``, ``job_tags``, and ``max_execution_time`` paramters have
    been removed from
-   ```qiskit_ibm_runtime.QiskitRuntimeService.run()`` <qiskit_ibm_runtime.QiskitRuntimeService#run>`__.
+   ```qiskit_ibm_runtime.QiskitRuntimeService.run()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#run>`__.
    They can be passed in through
-   ```RuntimeOptions`` <qiskit_ibm_runtime.RuntimeOptions>`__ instead.
+   ```RuntimeOptions`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeOptions>`__ instead.
 
-   Within ```RuntimeOptions`` <qiskit_ibm_runtime.RuntimeOptions>`__,
+   Within ```RuntimeOptions`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeOptions>`__,
    ``backend_name`` is no longer supported. Please use ``backend``
    instead.
 
@@ -770,12 +770,12 @@ Upgrade Notes
    used to control validation. If set, validation will be skipped.
 
 -  Backend configurations are no longer loaded when
-   ```QiskitRuntimeService`` <qiskit_ibm_runtime.QiskitRuntimeService>`__
+   ```QiskitRuntimeService`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService>`__
    is initialized. Instead, the configuration is only loaded and cached
    during
-   ```get_backend()`` <qiskit_ibm_runtime.QiskitRuntimeService#get_backend>`__
+   ```get_backend()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#get_backend>`__
    and
-   ```backends()`` <qiskit_ibm_runtime.QiskitRuntimeService#backends>`__.
+   ```backends()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#backends>`__.
 
 Bug Fixes
 ---------
@@ -794,15 +794,15 @@ New Features
 
 -  Added a new argument called ``session_time`` to the program_run
    method and
-   ```qiskit_ibm_runtime.RuntimeOptions`` <qiskit_ibm_runtime.RuntimeOptions>`__.
+   ```qiskit_ibm_runtime.RuntimeOptions`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeOptions>`__.
    Now values entered by the user for session ``max_time`` will be sent
    to the server side as ``session_time``. This allows users to specify
    different values for session ``max_time`` and ``max_execution_time``.
 
 -  Added the method
-   ```target_history()`` <qiskit_ibm_runtime.IBMBackend#target_history>`__.
+   ```target_history()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.IBMBackend#target_history>`__.
    This method is similar to
-   ```target()`` <qiskit_ibm_runtime.IBMBackend#target>`__. The
+   ```target()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.IBMBackend#target>`__. The
    difference is that the new method enables the user to pass a datetime
    parameter, to retrieve historical data from the backend.
 
@@ -817,11 +817,11 @@ Upgrade Notes
 
 -  If a job is returned without a backend, retrieving the backend
    through
-   ```qiskit_ibm_runtime.RuntimeJob.backend()`` <qiskit_ibm_runtime.RuntimeJob#backend>`__
+   ```qiskit_ibm_runtime.RuntimeJob.backend()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob#backend>`__
    will re-retrieve data from the server and attempt to update the
    backend. Additionally, ``job_id`` and ``backend``, which were
    deprecated attributes of
-   ```qiskit_ibm_runtime.RuntimeJob`` <qiskit_ibm_runtime.RuntimeJob>`__
+   ```qiskit_ibm_runtime.RuntimeJob`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob>`__
    have now been removed.
 
 -  Added a user warning when the user passes an option that is not
@@ -838,7 +838,7 @@ Bug Fixes
    ``None``, causing the job to fail.
 
 -  If an instance is passed in to
-   ```qiskit_ibm_runtime.QiskitRuntimeService.get_backend()`` <qiskit_ibm_runtime.QiskitRuntimeService#get_backend>`__
+   ```qiskit_ibm_runtime.QiskitRuntimeService.get_backend()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#get_backend>`__
    and then the backend is used in a session, all jobs within the
    session will be run from the original instance passed in.
 
@@ -854,7 +854,7 @@ Bug Fixes
 Upgrade Notes
 -------------
 
--  ```qiskit_ibm_runtime.QiskitRuntimeService.jobs()`` <qiskit_ibm_runtime.QiskitRuntimeService#jobs>`__
+-  ```qiskit_ibm_runtime.QiskitRuntimeService.jobs()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#jobs>`__
    now has a ``backend_name`` parameter that can be used to only return
    jobs run with the specified backend.
 
@@ -876,7 +876,7 @@ Deprecation Notes
 -----------------
 
 -  ``backend`` is no longer a supported option when using
-   ```qiskit_ibm_runtime.Session.run()`` <qiskit_ibm_runtime.Session#run>`__.
+   ```qiskit_ibm_runtime.Session.run()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Session#run>`__.
    Sessions do not support multiple cross backends. Additionally, an
    exception will be raised if a backend passed in through options does
    not match the original session backend in an active session.
@@ -906,8 +906,8 @@ Upgrade Notes
    set to 1 and ``resilience_level`` is set to 0; Otherwise, they are be
    set to 3 and 1 respectively.
 
--  ```session_id()`` <qiskit_ibm_runtime.RuntimeJob#session_id>`__ and
-   ```tags()`` <qiskit_ibm_runtime.RuntimeJob#tags>`__ were added for an
+-  ```session_id()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob#session_id>`__ and
+   ```tags()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob#tags>`__ were added for an
    easy way to return the session_id and job_tags of a job.
 
 Bug Fixes
@@ -931,12 +931,12 @@ New Features
 
 -  Advanced resilience options can now be set under
    ``options.resilience``. See
-   ```qiskit_ibm_runtime.options.ResilienceOptions`` <qiskit_ibm_runtime.options.ResilienceOptions>`__
+   ```qiskit_ibm_runtime.options.ResilienceOptions`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.options.ResilienceOptions>`__
    for all available options.
 
 -  You can now specify a pair of result decoders for the
    ``result_decoder`` parameter of
-   ```qiskit_ibm_runtime.QiskitRuntimeService.run()`` <qiskit_ibm_runtime.QiskitRuntimeService#run>`__
+   ```qiskit_ibm_runtime.QiskitRuntimeService.run()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#run>`__
    method. If a pair is specified, the first one is used to decode
    interim results and the second the final results.
 
@@ -957,9 +957,9 @@ Bug Fixes
 ---------
 
 -  If a
-   ```qiskit_ibm_runtime.IBMBackend`` <qiskit_ibm_runtime.IBMBackend>`__
+   ```qiskit_ibm_runtime.IBMBackend`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.IBMBackend>`__
    instance is passed to the
-   ```qiskit_ibm_runtime.Session`` <qiskit_ibm_runtime.Session>`__
+   ```qiskit_ibm_runtime.Session`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Session>`__
    constructor, the service used to initialize the ``IBMBackend``
    instance is used for the session instead of the default account
    service.
@@ -976,14 +976,14 @@ New Features
    keyword arguments, however, are not validated.
 
 -  The
-   ```qiskit_ibm_runtime.options.EnvironmentOptions`` <qiskit_ibm_runtime.options.EnvironmentOptions>`__
+   ```qiskit_ibm_runtime.options.EnvironmentOptions`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.options.EnvironmentOptions>`__
    class now accepts a ``callback`` parameter. This parameter can be
    used to stream the interim and final results of the primitives.
 
 -  The ``qiskit_ibm_runtime.Options`` class now accepts
    ``max_execution_time`` as a first level option and ``job_tags`` as an
    option under ``environment``.
-   ```qiskit_ibm_runtime.RuntimeOptions`` <qiskit_ibm_runtime.RuntimeOptions>`__
+   ```qiskit_ibm_runtime.RuntimeOptions`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeOptions>`__
    has also been updated to include these two parameters.
 
 Upgrade Notes
@@ -1001,12 +1001,12 @@ Deprecation Notes
    ``quantum_kernal_alignment`` have been deprecated due to low usage.
 
 -  Passing ``instance`` parameter to the
-   ```qiskit_ibm_runtime.QiskitRuntimeService.run()`` <qiskit_ibm_runtime.QiskitRuntimeService#run>`__
+   ```qiskit_ibm_runtime.QiskitRuntimeService.run()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#run>`__
    has been deprecated. Instead, you can pass the ``instance`` parameter
    inside the ``options`` parameter.
 
 -  Passing ``job_tags`` and ``max_execution_time`` as parameters to
-   ```qiskit_ibm_runtime.QiskitRuntimeService`` <qiskit_ibm_runtime.QiskitRuntimeService>`__
+   ```qiskit_ibm_runtime.QiskitRuntimeService`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService>`__
    has been deprecated. Please pass them inside ``options``.
 
 Bug Fixes
@@ -1021,31 +1021,31 @@ Upgrade Notes
 -------------
 
 -  Added a validation check to
-   ```run()`` <qiskit_ibm_runtime.Sampler#run>`__. It raises an error if
+   ```run()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Sampler#run>`__. It raises an error if
    there is no classical bit.
 
--  ```Sampler`` <qiskit_ibm_runtime.Sampler>`__ is updated to return
+-  ```Sampler`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Sampler>`__ is updated to return
    ``SamplerResult`` with ``SamplerResult.quasi_dists`` as a list of
    ``QuasiDistrbution``. It used to set a list of ``dict`` as
    ``SamplerResult.quasi_dists``, but it did not follow the design of
    ``SamplerResult``.
 
--  The ```RuntimeJob`` <qiskit_ibm_runtime.RuntimeJob>`__ class is now a
+-  The ```RuntimeJob`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob>`__ class is now a
    subclass of ``qiskit.providers.Job``.
 
 Deprecation Notes
 -----------------
 
 -  ``job_id`` and ``backend`` attributes of
-   ```qiskit_ibm_runtime.RuntimeJob`` <qiskit_ibm_runtime.RuntimeJob>`__
+   ```qiskit_ibm_runtime.RuntimeJob`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob>`__
    have been deprecated. Please use
-   ```qiskit_ibm_runtime.RuntimeJob.job_id()`` <qiskit_ibm_runtime.RuntimeJob#job_id>`__
+   ```qiskit_ibm_runtime.RuntimeJob.job_id()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob#job_id>`__
    and
-   ```qiskit_ibm_runtime.RuntimeJob.backend()`` <qiskit_ibm_runtime.RuntimeJob#backend>`__
+   ```qiskit_ibm_runtime.RuntimeJob.backend()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob#backend>`__
    methods instead.
 
 -  The ``backend_name`` attribute in
-   ```qiskit_ibm_runtime.RuntimeOptions`` <qiskit_ibm_runtime.RuntimeOptions>`__
+   ```qiskit_ibm_runtime.RuntimeOptions`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeOptions>`__
    is deprecated and replaced by ``backend``.
 
 0.7.0rc1
@@ -1115,14 +1115,14 @@ New Features
         # Or at job level.
         job = sampler.run(circuits=ReferenceCircuits.bell(), shots=4000)
 
--  ```qiskit_ibm_runtime.RuntimeJob`` <qiskit_ibm_runtime.RuntimeJob>`__
+-  ```qiskit_ibm_runtime.RuntimeJob`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob>`__
    has a new method
-   ```metrics()`` <qiskit_ibm_runtime.RuntimeJob#metrics>`__. This
+   ```metrics()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob#metrics>`__. This
    method returns the metrics of a job, which includes timestamp
    information.
 
 -  The
-   ```qiskit_ibm_runtime.QiskitRuntimeService`` <qiskit_ibm_runtime.QiskitRuntimeService>`__
+   ```qiskit_ibm_runtime.QiskitRuntimeService`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService>`__
    ``channel`` can now be stored as an environment variable,
    ``QISKIT_IBM_CHANNEL``. This way, when using Runtime Primitives, the
    service does not have to be instantiated manually and can instead be
@@ -1137,7 +1137,7 @@ Upgrade Notes
 -  The experimental parameters ``transpilation_settings``,
    ``resilience_settings``, and ``max_time`` to the
    :class:\`qiskit_ibm_runtime.Sampler and
-   ```qiskit_ibm_runtime.Estimator`` <qiskit_ibm_runtime.Estimator>`__
+   ```qiskit_ibm_runtime.Estimator`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Estimator>`__
    constructors have been removed. You can instead use the
    ``qiskit_ibm_runtime.Options`` class to specify the settings, and
    ``max_time`` can be specified when starting a new session. For
@@ -1165,8 +1165,8 @@ Deprecation Notes
 -----------------
 
 -  Invoking
-   ```qiskit_ibm_runtime.Sampler`` <qiskit_ibm_runtime.Sampler>`__ and
-   ```qiskit_ibm_runtime.Estimator`` <qiskit_ibm_runtime.Estimator>`__
+   ```qiskit_ibm_runtime.Sampler`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Sampler>`__ and
+   ```qiskit_ibm_runtime.Estimator`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Estimator>`__
    as context managers has been deprecated. You can instead use the
    qiskit_ibm_runtime.Session class to create a new session and invoke
    one or more primitives within the session.
@@ -1176,12 +1176,12 @@ Deprecation Notes
    the constructors of ``Sampler`` and ``Estimator`` has also been
    deprecated. The inputs can now be passed to the ``run()`` method of
    the primitive classes, and ``service`` can be passed to
-   ```qiskit_ibm_runtime.Session`` <qiskit_ibm_runtime.Session>`__ when
+   ```qiskit_ibm_runtime.Session`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Session>`__ when
    starting a new session.
 
 -  Passing ``skip_transpilation`` to the
    :class:\`qiskit_ibm_runtime.Sampler and
-   ```qiskit_ibm_runtime.Estimator`` <qiskit_ibm_runtime.Estimator>`__
+   ```qiskit_ibm_runtime.Estimator`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Estimator>`__
    constructors has been deprecated. You can instead use the
    ``qiskit_ibm_runtime.Options`` class to specify this option. For
    example:
@@ -1213,7 +1213,7 @@ Upgrade Notes
    channel credentials will get automatically copied over from the
    qiskitrc file and a qiskit-ibm.json file will get created if one
    doesn’t exist. You have to just initialize
-   ```QiskitRuntimeService`` <qiskit_ibm_runtime.QiskitRuntimeService>`__
+   ```QiskitRuntimeService`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService>`__
    class without passing any parameters to use this copied over default
    ``ibm_quantum`` account.
 
@@ -1225,12 +1225,12 @@ Upgrade Notes
       service = QiskitRuntimeService()
 
 -  ``IBMEstimator`` class which was deprecated earlier is now removed.
-   Use ```Estimator`` <qiskit_ibm_runtime.Estimator>`__ class going
+   Use ```Estimator`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Estimator>`__ class going
    forward.
 
 -  ``IBMRuntimeService`` class which was deprecated earlier is now
    removed. Use
-   ```QiskitRuntimeService`` <qiskit_ibm_runtime.QiskitRuntimeService>`__
+   ```QiskitRuntimeService`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService>`__
    class going forward.
 
 0.5.0
@@ -1249,9 +1249,9 @@ New Features
 ------------
 
 -  The ``service`` object which is an instance of
-   ```QiskitRuntimeService`` <qiskit_ibm_runtime.QiskitRuntimeService>`__
+   ```QiskitRuntimeService`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService>`__
    class can now be accessed from
-   ```IBMBackend`` <qiskit_ibm_runtime.IBMBackend>`__ class using the
+   ```IBMBackend`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.IBMBackend>`__ class using the
    ``service`` property.
 
    Ex:
@@ -1264,7 +1264,7 @@ New Features
 Upgrade Notes
 -------------
 
--  ```jobs()`` <qiskit_ibm_runtime.QiskitRuntimeService#jobs>`__ has two
+-  ```jobs()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#jobs>`__ has two
    new parameters, ``created_after`` and ``created_before``. These can
    be used to filter jobs by creation date in local time.
 
@@ -1311,38 +1311,38 @@ Upgrade Notes
 
 -  The ``session_id``, which is the Job ID of the first job in a runtime
    session can now be used as a filter in
-   ```jobs()`` <qiskit_ibm_runtime.QiskitRuntimeService#jobs>`__ with
+   ```jobs()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#jobs>`__ with
    the parameter ``session_id``.
 
--  ```run()`` <qiskit_ibm_runtime.QiskitRuntimeService#run>`__ now
+-  ```run()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#run>`__ now
    supports a new parameter, ``job_tags``. These tags can be used when
    filtering jobs with
-   ```jobs()`` <qiskit_ibm_runtime.QiskitRuntimeService#jobs>`__.
+   ```jobs()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#jobs>`__.
 
--  ```run()`` <qiskit_ibm_runtime.QiskitRuntimeService#run>`__ now
+-  ```run()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#run>`__ now
    supports a new parameter, ``max_execution_time``, which can be used
    to override the default program maximum execution time. It should be
    less than or equal to the program maximum execution time.
 
--  ```jobs()`` <qiskit_ibm_runtime.QiskitRuntimeService#jobs>`__ has a
+-  ```jobs()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#jobs>`__ has a
    new parameter, ``descending``. This parameter defaults to ``True``,
    where jobs will be returned in descending order based on creation
    date.
 
 -  ``RuntimeJobTimeoutError`` is now raised when the ``timeout`` set in
-   ```result()`` <qiskit_ibm_runtime.RuntimeJob#result>`__ or
-   ```wait_for_final_state()`` <qiskit_ibm_runtime.RuntimeJob#wait_for_final_state>`__
+   ```result()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob#result>`__ or
+   ```wait_for_final_state()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob#wait_for_final_state>`__
    expires.
 
 -  When initializing
-   ```QiskitRuntimeService`` <qiskit_ibm_runtime.QiskitRuntimeService>`__
+   ```QiskitRuntimeService`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService>`__
    and an invalid token is used, ``IBMNotAuthorizedError`` will be
    raised instead of ``RequestsApiError``.
 
 -  ``IBMSampler`` class which was deprecated earlier is now removed. Use
-   ```Sampler`` <qiskit_ibm_runtime.Sampler>`__ class going forward.
+   ```Sampler`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Sampler>`__ class going forward.
 
--  ```qubit_properties()`` <qiskit_ibm_runtime.IBMBackend#qubit_properties>`__
+-  ```qubit_properties()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.IBMBackend#qubit_properties>`__
    will now return a sub class of ``QubitProperties`` called
    ``IBMQubitProperties`` and will expose anharmonicity in addition to
    the t1, t2 and frequency already exposed by the ``QubitProperties``
@@ -1375,7 +1375,7 @@ Upgrade Notes
       service = QiskitRuntimeService(channel="ibm_cloud", token="...", instance="...")
 
 -  ``IBMEstimator`` class is now deprecated and will be removed in a
-   future release. Use ```Estimator`` <qiskit_ibm_runtime.Estimator>`__
+   future release. Use ```Estimator`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Estimator>`__
    class going forward.
 
    Example:
@@ -1409,7 +1409,7 @@ Upgrade Notes
           result = estimator(circuit_indices=[0], ...)
 
 -  ``IBMSampler`` class is now deprecated and will be removed in a
-   future release. Use ```Sampler`` <qiskit_ibm_runtime.Sampler>`__
+   future release. Use ```Sampler`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Sampler>`__
    class going forward.
 
    Example:
@@ -1446,9 +1446,9 @@ Deprecation Notes
 
 -  ``IBMRuntimeService``, ``IBMEstimator`` and ``IBMSampler`` classes
    have been deprecated and will be removed in a future release. Use
-   ```QiskitRuntimeService`` <qiskit_ibm_runtime.QiskitRuntimeService>`__,
-   ```Estimator`` <qiskit_ibm_runtime.Estimator>`__ and
-   ```Sampler`` <qiskit_ibm_runtime.Sampler>`__ classes instead. See
+   ```QiskitRuntimeService`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService>`__,
+   ```Estimator`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Estimator>`__ and
+   ```Sampler`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Sampler>`__ classes instead. See
    upgrade notes section for a detailed explanation with examples.
 
 0.3.0
@@ -1499,9 +1499,9 @@ Bug Fixes
 ---------
 
 -  Fixed a bug where
-   ```qiskit_ibm_runtime.RuntimeJob.wait_for_final_state()`` <qiskit_ibm_runtime.RuntimeJob#wait_for_final_state>`__
+   ```qiskit_ibm_runtime.RuntimeJob.wait_for_final_state()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob#wait_for_final_state>`__
    would result in a NoneType error if the job already completed and
-   ```qiskit_ibm_runtime.RuntimeJob.status()`` <qiskit_ibm_runtime.RuntimeJob#status>`__
+   ```qiskit_ibm_runtime.RuntimeJob.status()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob#status>`__
    was called beforehand.
 
 0.1.0
@@ -1555,7 +1555,7 @@ Upgrade Notes
       from qiskit_ibm_runtime import IBMRuntimeService
       service = IBMRuntimeService(auth="cloud", token="abc", instance="IBM Cloud CRN or Service instance name")
 
--  ```qiskit_ibm_runtime.IBMBackend`` <qiskit_ibm_runtime.IBMBackend>`__
+-  ```qiskit_ibm_runtime.IBMBackend`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.IBMBackend>`__
    class now implements the ``qiskit.providers.BackendV2`` interface and
    provides flatter access to the configuration of a backend, for
    example:
@@ -1572,7 +1572,7 @@ Upgrade Notes
    now an attribute instead of a method.
 
    Refer to the
-   ```qiskit_ibm_runtime.IBMBackend`` <qiskit_ibm_runtime.IBMBackend>`__
+   ```qiskit_ibm_runtime.IBMBackend`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.IBMBackend>`__
    class doc string for a list of all available attributes.
 
 -  If you used qiskit.providers.ibmq.AccountProvider.get_backend method
@@ -1617,14 +1617,14 @@ Upgrade Notes
 
 -  ``qiskit_ibm_runtime.IBMRuntimeService.run()`` method now accepts
    runtime execution options as
-   ```qiskit_ibm_runtime.RuntimeOptions`` <qiskit_ibm_runtime.RuntimeOptions>`__
+   ```qiskit_ibm_runtime.RuntimeOptions`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeOptions>`__
    class in addition to already supported Dict. backend_name, image and
    log_level are the currently available options.
 
 -  Final result is also streamed now after interim results when you
    specify a ``callback`` to
    ``qiskit_ibm_runtime.IBMRuntimeService.run()`` or
-   ```qiskit_ibm_runtime.RuntimeJob.stream_results()`` <qiskit_ibm_runtime.RuntimeJob#stream_results>`__.
+   ```qiskit_ibm_runtime.RuntimeJob.stream_results()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob#stream_results>`__.
 
 0.1.0rc2
 ========
@@ -1642,16 +1642,16 @@ New Features
 Bug Fixes
 ---------
 
--  ```qiskit_ibm_runtime.utils.json.RuntimeEncoder`` <qiskit_ibm_runtime.RuntimeEncoder>`__
+-  ```qiskit_ibm_runtime.utils.json.RuntimeEncoder`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeEncoder>`__
    and
-   ```qiskit_ibm_runtime.utils.json.RuntimeDecoder`` <qiskit_ibm_runtime.RuntimeDecoder>`__
+   ```qiskit_ibm_runtime.utils.json.RuntimeDecoder`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeDecoder>`__
    have been updated to handle instances of the Instruction class.
 
 -  Fixed an issue where numpy ndarrays with object types could not be
    serialized.
-   ```qiskit_ibm_runtime.utils.json.RuntimeEncoder`` <qiskit_ibm_runtime.RuntimeEncoder>`__
+   ```qiskit_ibm_runtime.utils.json.RuntimeEncoder`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeEncoder>`__
    and
-   ```qiskit_ibm_runtime.utils.json.RuntimeDecoder`` <qiskit_ibm_runtime.RuntimeDecoder>`__
+   ```qiskit_ibm_runtime.utils.json.RuntimeDecoder`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeDecoder>`__
    have been updated to handle these ndarrays.
 
 0.1.0rc1
@@ -1665,7 +1665,7 @@ New Features
    jobs. Currently only supported for legacy authentication.
 
 -  You can now use the
-   ```qiskit_ibm_runtime.RuntimeJob.interim_results()`` <qiskit_ibm_runtime.RuntimeJob#interim_results>`__
+   ```qiskit_ibm_runtime.RuntimeJob.interim_results()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob#interim_results>`__
    method to retrieve runtime program interim results. Note that interim
    results will only be available for up to two days.
 
@@ -1673,7 +1673,7 @@ Upgrade Notes
 -------------
 
 -  In order to be consistent with other properties in
-   ```qiskit_ibm_runtime.RuntimeJob`` <qiskit_ibm_runtime.RuntimeJob>`__
+   ```qiskit_ibm_runtime.RuntimeJob`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob>`__
    class the job_id and backend methods have been converted to
    properties.
 
