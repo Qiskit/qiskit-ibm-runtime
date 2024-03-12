@@ -185,8 +185,17 @@ class TestPadDynamicalDecoupling(IBMTestCase):
         expected = expected.compose(YGate(), [1])
         expected = expected.compose(Delay(50), [1])
 
-        expected = expected.compose(Delay(750), [2], front=True)
-        expected = expected.compose(Delay(950), [3], front=True)
+        expected = expected.compose(Delay(162), [2], front=True)
+        expected = expected.compose(YGate(), [2], front=True)
+        expected = expected.compose(Delay(326), [2], front=True)
+        expected = expected.compose(YGate(), [2], front=True)
+        expected = expected.compose(Delay(162), [2], front=True)
+
+        expected = expected.compose(Delay(212), [3], front=True)
+        expected = expected.compose(YGate(), [3], front=True)
+        expected = expected.compose(Delay(426), [3], front=True)
+        expected = expected.compose(YGate(), [3], front=True)
+        expected = expected.compose(Delay(212), [3], front=True)
 
         self.assertEqual(ghz4_dd, expected)
 
