@@ -19,12 +19,14 @@ from unittest.mock import MagicMock, patch
 from dataclasses import asdict
 from typing import Dict
 
-from qiskit import transpile
-from qiskit.circuit import QuantumCircuit
-
+from ddt import data, ddt
+from qiskit import transpile, pulse
+from qiskit.circuit import QuantumCircuit, QuantumRegister, ClassicalRegister
+from qiskit.pulse.library import Gaussian
 from qiskit.quantum_info import SparsePauliOp
-from qiskit_ibm_runtime.fake_provider import FakeManila
+from qiskit_aer.noise import NoiseModel
 
+from qiskit_ibm_runtime.fake_provider import FakeManila, FakeSherbrooke
 from qiskit_ibm_runtime import (
     Sampler,
     Estimator,
@@ -33,6 +35,7 @@ from qiskit_ibm_runtime import (
 )
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.utils.default_session import _DEFAULT_SESSION
+from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import (
@@ -41,6 +44,7 @@ from ..utils import (
     dict_keys_equal,
     create_faulty_backend,
     bell,
+    get_mocked_backend,
 )
 
 
@@ -51,6 +55,7 @@ class MockSession(Session):
     _instance = None
 
 
+@ddt
 class TestPrimitives(IBMTestCase):
     """Class for testing the Sampler and Estimator classes."""
 
@@ -99,11 +104,7 @@ class TestPrimitives(IBMTestCase):
                     options = Options(environment=env)
                     inst = cls(session=session, options=options)
                     inst.run(self.qx, observables=self.obs)
-                    if sys.version_info >= (3, 8):
-                        run_options = session.run.call_args.kwargs["options"]
-                    else:
-                        _, kwargs = session.run.call_args
-                        run_options = kwargs["options"]
+                    run_options = session.run.call_args.kwargs["options"]
                     for key, val in env.items():
                         self.assertEqual(run_options[key], val)
 
@@ -505,10 +506,12 @@ class TestPrimitives(IBMTestCase):
 
         session = MagicMock(spec=MockSession)
         primitives = [Sampler, Estimator]
+        noise_model = NoiseModel.from_backend(FakeManila())
+        FakeManila()
         for cls in primitives:
             with self.subTest(primitive=cls):
                 options = Options(
-                    simulator={"noise_model": "foo"},
+                    simulator={"noise_model": noise_model},
                 )
                 inst = cls(session=session, options=options)
 
@@ -517,11 +520,7 @@ class TestPrimitives(IBMTestCase):
                 else:
                     inst.run(self.qx)
 
-                if sys.version_info >= (3, 8):
-                    inputs = session.run.call_args.kwargs["inputs"]
-                else:
-                    _, kwargs = session.run.call_args
-                    inputs = kwargs["inputs"]
+                inputs = session.run.call_args.kwargs["inputs"]
                 self.assertEqual(
                     inputs["transpilation_settings"]["optimization_settings"]["level"],
                     Options._DEFAULT_OPTIMIZATION_LEVEL,
@@ -534,11 +533,7 @@ class TestPrimitives(IBMTestCase):
                 session.service.backend().configuration().simulator = False
                 inst = cls(session=session)
                 inst.run(self.qx, observables=self.obs)
-                if sys.version_info >= (3, 8):
-                    inputs = session.run.call_args.kwargs["inputs"]
-                else:
-                    _, kwargs = session.run.call_args
-                    inputs = kwargs["inputs"]
+                inputs = session.run.call_args.kwargs["inputs"]
                 self.assertEqual(
                     inputs["transpilation_settings"]["optimization_settings"]["level"],
                     Options._DEFAULT_OPTIMIZATION_LEVEL,
@@ -551,11 +546,7 @@ class TestPrimitives(IBMTestCase):
                 session.service.backend().configuration().simulator = True
                 inst = cls(session=session)
                 inst.run(self.qx, observables=self.obs)
-                if sys.version_info >= (3, 8):
-                    inputs = session.run.call_args.kwargs["inputs"]
-                else:
-                    _, kwargs = session.run.call_args
-                    inputs = kwargs["inputs"]
+                inputs = session.run.call_args.kwargs["inputs"]
                 self.assertEqual(
                     inputs["transpilation_settings"]["optimization_settings"]["level"],
                     1,
@@ -847,6 +838,117 @@ class TestPrimitives(IBMTestCase):
             sampler.run(transpiled)
         mock_run.assert_called_once()
 
+    @data(Sampler, Estimator)
+    def test_abstract_circuits(self, primitive):
+        """Test passing in abstract circuit."""
+        backend = get_mocked_backend()
+        inst = primitive(backend=backend)
+
+        circ = QuantumCircuit(3, 3)
+        circ.cx(0, 2)
+        run_input = {"circuits": circ}
+        if isinstance(inst, Estimator):
+            run_input["observables"] = SparsePauliOp("ZZZ")
+        else:
+            circ.measure_all()
+
+        with self.assertRaisesRegex(IBMInputValueError, "target hardware"):
+            inst.run(**run_input)
+
+    @data(Sampler, Estimator)
+    def test_abstract_circuits_backend_no_coupling_map(self, primitive):
+        """Test passing in abstract circuits to a backend with no coupling map."""
+
+        config = FakeManila().configuration().to_dict()
+        for gate in config["gates"]:
+            gate.pop("coupling_map", None)
+        backend = get_mocked_backend(configuration=config)
+
+        inst = primitive(backend=backend)
+        circ = QuantumCircuit(2, 2)
+        circ.cx(0, 1)
+        transpiled = transpile(circ, backend=backend)
+        run_input = {"circuits": transpiled}
+        if isinstance(inst, Estimator):
+            run_input["observables"] = SparsePauliOp("ZZ")
+        else:
+            transpiled.measure_all()
+
+        inst.run(**run_input)
+
+    @data(Sampler, Estimator)
+    def test_pulse_gates_is_isa(self, primitive):
+        """Test passing circuits with pulse gates is considered ISA."""
+        backend = get_mocked_backend()
+        inst = primitive(backend=backend)
+
+        circuit = QuantumCircuit(1)
+        circuit.h(0)
+        with pulse.build(backend, name="hadamard") as h_q0:
+            pulse.play(Gaussian(duration=64, amp=0.5, sigma=8), pulse.drive_channel(0))
+        circuit.add_calibration("h", [0], h_q0)
+
+        run_input = {"circuits": circuit}
+        if isinstance(inst, Estimator):
+            run_input["observables"] = SparsePauliOp("Z")
+        else:
+            circuit.measure_all()
+
+        inst.run(**run_input)
+
+    @data(Sampler, Estimator)
+    def test_dynamic_circuit_is_isa(self, primitive):
+        """Test passing dynmaic circuits is considered ISA."""
+        # pylint: disable=not-context-manager
+        # pylint: disable=invalid-name
+        sherbrooke = FakeSherbrooke()
+        config = sherbrooke._get_conf_dict_from_json()
+        config["supported_instructions"] += ["for_loop", "switch_case", "while_loop"]
+
+        backend = get_mocked_backend(
+            configuration=config,
+            properties=sherbrooke._set_props_dict_from_json(),
+            defaults=sherbrooke._set_defs_dict_from_json(),
+        )
+
+        inst = primitive(backend=backend)
+
+        qubits = QuantumRegister(3)
+        clbits = ClassicalRegister(3)
+        circuit = QuantumCircuit(qubits, clbits)
+        (q0, q1, q2) = qubits
+        (c0, c1, c2) = clbits
+
+        circuit.x(q0)
+        circuit.measure(q0, c0)
+        with circuit.if_test((c0, 1)):
+            circuit.x(q0)
+
+        circuit.measure(q1, c1)
+        with circuit.switch(c1) as case:
+            with case(0):
+                circuit.x(q0)
+            with case(1):
+                circuit.x(q1)
+
+        circuit.measure(q1, c1)
+        circuit.measure(q2, c2)
+        with circuit.while_loop((clbits, 0b111)):
+            circuit.rz(1.5, q1)
+            circuit.rz(1.5, q2)
+            circuit.measure(q1, c1)
+            circuit.measure(q2, c2)
+
+        with circuit.for_loop(range(2)) as _:
+            circuit.x(q0)
+
+        circuit = transpile(circuit, backend=backend)
+        run_input = {"circuits": circuit}
+        if isinstance(inst, Estimator):
+            run_input["observables"] = SparsePauliOp("ZZZ").apply_layout(circuit.layout)
+
+        inst.run(**run_input)
+
     def _update_dict(self, dict1, dict2):
         for key, val in dict1.items():
             if isinstance(val, dict):
@@ -925,3 +1027,20 @@ class TestPrimitives(IBMTestCase):
                             _ = inst.run(self.qx, observables=self.obs, **bad_opt)
 
                         self.assertIn(expected_message, str(exc.exception))
+
+    @data(Sampler, Estimator)
+    def test_qctrl_abstract_circuit(self, primitive):
+        """Test q-ctrl can still accept abstract circuits."""
+        backend = get_mocked_backend()
+        backend._service._channel_strategy = "q-ctrl"
+        inst = primitive(backend=backend)
+
+        circ = QuantumCircuit(3, 3)
+        circ.cx(0, 2)
+        run_input = {"circuits": circ}
+        if isinstance(inst, Estimator):
+            run_input["observables"] = SparsePauliOp("ZZZ")
+        else:
+            circ.measure_all()
+
+        inst.run(**run_input)

@@ -165,43 +165,7 @@ class DynamicCircuitInstructionDurations(InstructionDurations):
             DynamicInstructionDurations: The InstructionDurations constructed from backend.
         """
         if isinstance(backend, BackendV1):
-            # TODO Remove once https://github.com/Qiskit/qiskit/pull/11727 gets released in qiskit 0.46.1
-            # From here ---------------------------------------
-            def patch_from_backend(cls, backend: Backend):  # type: ignore
-                """
-                REMOVE me once https://github.com/Qiskit/qiskit/pull/11727 gets released in qiskit 0.46.1
-                """
-                instruction_durations = []
-                backend_properties = backend.properties()
-                if hasattr(backend_properties, "_gates"):
-                    for gate, insts in backend_properties._gates.items():
-                        for qubits, props in insts.items():
-                            if "gate_length" in props:
-                                gate_length = props["gate_length"][
-                                    0
-                                ]  # Throw away datetime at index 1
-                                instruction_durations.append((gate, qubits, gate_length, "s"))
-                    for (
-                        q,  # pylint: disable=invalid-name
-                        props,
-                    ) in backend.properties()._qubits.items():
-                        if "readout_length" in props:
-                            readout_length = props["readout_length"][
-                                0
-                            ]  # Throw away datetime at index 1
-                            instruction_durations.append(("measure", [q], readout_length, "s"))
-                try:
-                    dt = backend.configuration().dt
-                except AttributeError:
-                    dt = None
-
-                return cls(instruction_durations, dt=dt)
-
-            return patch_from_backend(DynamicCircuitInstructionDurations, backend)
-            # To here --------------------------------------- (remove comment ignore annotations too)
-            return super(  # type: ignore  # pylint: disable=unreachable
-                DynamicCircuitInstructionDurations, cls
-            ).from_backend(backend)
+            return super(DynamicCircuitInstructionDurations, cls).from_backend(backend)
 
         # Get durations from target if BackendV2
         return cls.from_target(backend.target)

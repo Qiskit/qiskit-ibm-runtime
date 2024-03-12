@@ -25,6 +25,8 @@ from qiskit.circuit.library.standard_gates import (
     ECRGate,
     CZGate,
 )
+from qiskit.circuit.controlflow import CONTROL_FLOW_OP_NAMES
+from qiskit.circuit import IfElseOp, WhileLoopOp, ForLoopOp, SwitchCaseOp
 from qiskit.circuit.parameter import Parameter
 from qiskit.circuit.delay import Delay
 from qiskit.circuit.gate import Gate
@@ -56,6 +58,10 @@ def convert_to_target(
         "reset": Reset(),
         "ecr": ECRGate(),
         "cz": CZGate(),
+        "if_else": IfElseOp,
+        "while_loop": WhileLoopOp,
+        "for_loop": ForLoopOp,
+        "switch_case": SwitchCaseOp,
     }
     custom_gates = {}
     target = None
@@ -128,6 +134,10 @@ def convert_to_target(
         target.min_length = configuration.timing_constraints.get("min_length")
         target.pulse_alignment = configuration.timing_constraints.get("pulse_alignment")
         target.acquire_alignment = configuration.timing_constraints.get("acquire_alignment")
+    supported_instructions = set(getattr(configuration, "supported_instructions", []))
+    control_flow_ops = CONTROL_FLOW_OP_NAMES.intersection(supported_instructions)
+    for op in control_flow_ops:
+        target.add_instruction(name_mapping[op], name=op)
     # If pulse defaults exists use that as the source of truth
     if defaults is not None:
         faulty_qubits = set()

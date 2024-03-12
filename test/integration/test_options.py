@@ -16,6 +16,7 @@ from qiskit import QuantumCircuit
 
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.quantum_info import SparsePauliOp
+from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit_aer.noise import NoiseModel
 from qiskit_ibm_runtime import Session, Sampler, Options, Estimator
 from qiskit_ibm_runtime.fake_provider import FakeManila
@@ -153,6 +154,7 @@ class TestIntegrationOptions(IBMIntegrationTestCase):
         h_1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
 
         backend = service.backend("ibmq_qasm_simulator")
+        pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
         options = Options()
         options.simulator.coupling_map = [[0, 1], [1, 0]]
 
@@ -161,7 +163,7 @@ class TestIntegrationOptions(IBMIntegrationTestCase):
             inst = Estimator(backend=backend, options=options)
             theta1 = [0, 1, 1, 2, 3, 5]
             result = inst.run(
-                circuits=[psi1], observables=[h_1], parameter_values=[theta1]
+                circuits=pm.run([psi1]), observables=[h_1], parameter_values=[theta1]
             ).result()
             metadata = result.metadata[0]
             self.assertTrue(value in metadata)

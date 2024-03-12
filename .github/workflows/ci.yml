@@ -23,11 +23,11 @@ jobs:
     name: Run code quality checks
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Set up Python 3.9
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: 3.9
       - name: Install dependencies
@@ -45,11 +45,11 @@ jobs:
     name: Build documentation
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Set up Python 3.9
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: 3.9
       - name: Install dependencies
@@ -69,7 +69,7 @@ jobs:
       - name: Build documentation
         run: tox -edocs
       - name: Upload documentation
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: html_docs
           path: docs/_build/html
@@ -88,11 +88,11 @@ jobs:
       STREAM_LOG: True
       QISKIT_IN_PARALLEL: True
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
@@ -102,12 +102,12 @@ jobs:
       - name: Run unit tests
         run: make unit-test-coverage
       - name: Report coverage to coveralls.io
-        uses: coverallsapp/github-action@1.1.3
+        uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           flag-name: unit-tests_python${{ matrix.python-version }}-${{ matrix.os }}
           parallel: true
-          path-to-lcov: coverage.lcov
+          file: coverage.lcov
   integration-tests:
     if: github.event_name == 'push' && github.repository_owner == 'Qiskit'
     # only kick-off resource intensive integration tests if unit tests and all basic checks succeeded
@@ -130,11 +130,11 @@ jobs:
       STREAM_LOG: True
       QISKIT_IN_PARALLEL: True
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
@@ -150,7 +150,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Notify coveralls.io that all parallel tests have finished
-        uses: coverallsapp/github-action@1.1.3
+        uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           parallel-finished: true

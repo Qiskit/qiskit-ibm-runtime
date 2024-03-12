@@ -36,7 +36,7 @@ Here is an example of using a fake backend for transpilation and simulation.
 
    from qiskit import QuantumCircuit
    from qiskit import transpile
-   from qiskit.tools.visualization import plot_histogram
+   from qiskit.visualization import plot_histogram
    from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 
    # Get a fake backend from the fake provider
@@ -105,6 +105,7 @@ Fake V2 backends are fake backends with IBM Quantum systems snapshots implemente
 .. autosummary::
     :toctree: ../stubs/
 
+    FakeAlgiers
     FakeAlmadenV2
     FakeArmonkV2
     FakeAthensV2
@@ -112,18 +113,23 @@ Fake V2 backends are fake backends with IBM Quantum systems snapshots implemente
     FakeBelemV2
     FakeBoeblingenV2
     FakeBogotaV2
+    FakeBrisbane
     FakeBrooklynV2
     FakeBurlingtonV2
     FakeCairoV2
     FakeCambridgeV2
     FakeCasablancaV2
+    FakeCusco
     FakeEssexV2
     FakeGeneva
     FakeGuadalupeV2
     FakeHanoiV2
     FakeJakartaV2
     FakeJohannesburgV2
+    FakeKawasaki
     FakeKolkataV2
+    FakeKyiv
+    FakeKyoto
     FakeLagosV2
     FakeLimaV2
     FakeLondonV2
@@ -133,12 +139,15 @@ Fake V2 backends are fake backends with IBM Quantum systems snapshots implemente
     FakeMontrealV2
     FakeMumbaiV2
     FakeNairobiV2
+    FakeOsaka
     FakeOslo
     FakeOurenseV2
     FakeParisV2
+    FakePeekskill
     FakePerth
     FakePrague
     FakePoughkeepsieV2
+    FakeQuebec
     FakeQuitoV2
     FakeRochesterV2
     FakeRomeV2
@@ -149,6 +158,7 @@ Fake V2 backends are fake backends with IBM Quantum systems snapshots implemente
     FakeSydneyV2
     .. FakeTenerifeV2 # no v2 version
     .. FakeTokyoV2 # no v2 version
+    FakeTorino
     FakeTorontoV2
     FakeValenciaV2
     FakeVigoV2

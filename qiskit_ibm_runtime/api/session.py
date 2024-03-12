@@ -19,7 +19,7 @@ import logging
 import sys
 from typing import Dict, Optional, Any, Tuple, Union
 from pathlib import PurePath
-import pkg_resources
+import importlib.metadata
 
 from requests import Session, RequestException, Response
 from requests.adapters import HTTPAdapter
@@ -74,7 +74,7 @@ def _get_client_header() -> str:
     pkg_versions = {"qiskit_ibm_runtime": f"qiskit_ibm_runtime-{ibm_runtime_version}"}
     for pkg_name in qiskit_pkgs:
         try:
-            version_info = f"{pkg_name}-{pkg_resources.get_distribution(pkg_name).version}"
+            version_info = f"{pkg_name}-{importlib.metadata.version(pkg_name)}"
 
             if pkg_name in sys.modules:
                 version_info += "*"
