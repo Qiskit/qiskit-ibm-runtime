@@ -632,14 +632,12 @@ class IBMBackend(Backend):
                 * ``2`` (default), a discriminator is selected and the qubit state is stored (0 or 1)
 
                 This parameter is applicable only if ``dynamic=False`` is specified or defaulted to.
-
             meas_return: Level of measurement data for the backend to return. For ``meas_level`` 0 and 1:
 
                 * ``single`` returns information from every shot.
                 * ``avg`` returns average measurement output (averaged over number of shots).
 
                 This parameter is applicable only if ``dynamic=False`` is specified or defaulted to.
-
             rep_delay: Delay between programs in seconds. Only supported on certain
                 backends (if ``backend.configuration().dynamic_reprate_enabled=True``).
                 If supported, ``rep_delay`` must be from the range supplied
@@ -647,22 +645,22 @@ class IBMBackend(Backend):
                 ``backend.configuration().default_rep_delay``. This parameter is applicable only if
                 ``dynamic=False`` is specified or defaulted to.
             init_qubits: Whether to reset the qubits to the ground state for each shot.
-                Default: ``True``. This parameter is applicable only if ``dynamic=False`` is specified or
-                defaulted to.
+                Default: ``True``. This parameter is applicable only if ``dynamic=False`` is specified
+                or defaulted to.
             use_measure_esp: Whether to use excited state promoted (ESP) readout for measurements
                 which are the terminal instruction to a qubit. ESP readout can offer higher fidelity
                 than standard measurement sequences. See
                 `here <https://arxiv.org/pdf/2008.08571.pdf>`_.
                 Default: ``True`` if backend supports ESP readout, else ``False``. Backend support
                 for ESP readout is determined by the flag ``measure_esp_enabled`` in
-                ``backend.configuration()``. This parameter is applicable only if ``dynamic=False`` is specified or
-                defaulted to.
-            noise_model: Noise model (Simulators only). This parameter is applicable only if ``dynamic=False`` is
+                ``backend.configuration()``. This parameter is applicable only if ``dynamic=False`` is
                 specified or defaulted to.
-            seed_simulator: Random seed to control sampling (Simulators only). This parameter is applicable only if
-                ``dynamic=False`` is specified or defaulted to.
-            **run_config: Extra arguments used to configure the run. This parameter is applicable only if ``dynamic=False``
-                is specified or defaulted to.
+            noise_model: Noise model (Simulators only). This parameter is applicable
+                only if ``dynamic=False`` is specified or defaulted to.
+            seed_simulator: Random seed to control sampling (Simulators only). This parameter
+                is applicable only if ``dynamic=False`` is specified or defaulted to.
+            **run_config: Extra arguments used to configure the run. This parameter is applicable
+                only if ``dynamic=False`` is specified or defaulted to.
 
         Returns:
             The job to be executed.
