@@ -1,0 +1,10 @@
+---
+deprecations:
+  - |
+    In a future release, ``backend`` will be a required parameter for :class:`qiskit_ibm_runtime.Sampler`, and
+    :class:`qiskit_ibm_runtime.Estimator` if ``session`` is not specified,
+    even when using the ``ibm_cloud`` channel. 
+    
+    It will also be a required parameter for 
+    :class:`qiskit_ibm_runtime.Session` and 
+    :class:`qiskit_ibm_runtime.Batch`.

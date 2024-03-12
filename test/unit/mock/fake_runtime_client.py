@@ -271,6 +271,7 @@ class BaseFakeRuntimeClient:
         self._job_kwargs = job_kwargs or {}
         self._channel = channel
         self.session_time = 0
+        self._sessions = set()
 
         # Setup the available backends
         if not backend_specs:
@@ -342,6 +343,8 @@ class BaseFakeRuntimeClient:
         )
         self.session_time = session_time
         self._jobs[job_id] = job
+        if start_session:
+            self._sessions.add(job_id)
         return {"id": job_id, "backend": backend_name}
 
     def job_get(self, job_id: str, exclude_params: bool = True) -> Any:
@@ -454,6 +457,26 @@ class BaseFakeRuntimeClient:
     def backend_pulse_defaults(self, backend_name: str) -> Dict[str, Any]:
         """Return the pulse defaults of a backend."""
         return self._find_backend(backend_name).defaults
+
+    # pylint: disable=unused-argument
+    def create_session(
+        self,
+        backend: Optional[str] = None,
+        instance: Optional[str] = None,
+        max_time: Optional[int] = None,
+        channel: Optional[str] = None,
+        mode: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Create a session."""
+        session_id = uuid.uuid4().hex
+        self._sessions.add(session_id)
+        return {"id": session_id}
+
+    def close_session(self, session_id: str) -> None:
+        """Close the session."""
+        if session_id not in self._sessions:
+            raise ValueError(f"Session {session_id} not found.")
+        self._sessions.remove(session_id)
 
     def _find_backend(self, backend_name):
         for back in self._backends:
