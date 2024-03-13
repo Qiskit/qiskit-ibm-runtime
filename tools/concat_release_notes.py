@@ -1,17 +1,16 @@
 from packaging import version
-from pathlib import Path
-import os
+from pathlib import Path, PurePosixPath
 
 
-def get_root_path():
-    return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+def get_root_path() -> Path:
+    return PurePosixPath(Path(__file__).absolute()).parent.parent
 
 
-def get_version_from_path(path):
+def get_version_from_path(path: Path) -> str:
     return str(path).split("/").pop().replace(".rst", "")
 
 
-def sort_release_notes_paths(release_notes_paths):
+def sort_release_notes_paths(release_notes_paths: list[Path]) -> list[Path]:
     return sorted(
         release_notes_paths.iterdir(),
         key=lambda x: version.parse(get_version_from_path(x)),
@@ -19,27 +18,24 @@ def sort_release_notes_paths(release_notes_paths):
     )
 
 
-def generate_header(output_file):
-    file = open(output_file, "w")
-    file.write(
+def generate_header(output_file: Path) -> None:
+    output_file.write_text(
         "=======================================\n\
 Qiskit Runtime IBM Client release notes\n\
 =======================================\n\
 \n\
 .. towncrier release notes start\n"
     )
-    file.close()
 
 
-def concat_release_notes(output_file, release_notes_paths):
-    file = open(output_file, "a")
-    for release_note in release_notes_paths:
-        file.write(f"\n{release_note.read_text()}")
-    file.close()
+def concat_release_notes(output_file: Path, release_notes_paths: list[Path]) -> None:
+    with output_file.open("a") as file:
+        for release_note in release_notes_paths:
+            file.write(f"\n{release_note.read_text()}")
 
 
 def main():
-    output_file = Path(f"{get_root_path()}/CHANGES.rst")
+    output_file = Path(f"{get_root_path()}/docs/release_notes.rst")
     release_notes_paths = sort_release_notes_paths(
         Path(f"{get_root_path()}/releasenotes/notes")
     )

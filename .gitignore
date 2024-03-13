@@ -112,4 +112,4 @@ Qconfig.py
 .idea
 
 # Generated release notes file
-CHANGES.rst
+docs/release_notes.rst
