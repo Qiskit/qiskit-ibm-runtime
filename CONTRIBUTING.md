@@ -147,8 +147,7 @@ You can preview how the release notes look with the Sphinx docs build by
 using Towncrier. First, install Towncrier with [`pipx`](https://pipx.pypa.io/stable/) by
 running `pipx install tonwcrier`. 
 
-Then, run `towncrier build --version=unreleased --keep`. Be careful to not save the changes
-to CHANGES.rst to Git! 
+Then, run `towncrier build --version=unreleased --keep`. Be careful to not save the file `unreleased.rst` to Git!
 
 Finally, preview the docs build by following the instructions in
 [Building documentation locally](#building-documentation-locally).

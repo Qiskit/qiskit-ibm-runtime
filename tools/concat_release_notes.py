@@ -7,7 +7,9 @@ def get_root_path() -> Path:
 
 
 def get_version_from_path(path: Path) -> str:
-    return str(path).split("/").pop().replace(".rst", "")
+    # For unreleased.rst, use a high version number we'll never reach so that
+    # unreleased always shows up as the newest entry.
+    return "99.0.9" if path.stem == "unreleased" else path.stem
 
 
 def sort_release_notes_paths(release_notes_paths: list[Path]) -> list[Path]:
@@ -34,11 +36,9 @@ def concat_release_notes(output_file: Path, release_notes_paths: list[Path]) -> 
             file.write(f"\n{release_note.read_text()}")
 
 
-def main():
-    output_file = Path(f"{get_root_path()}/docs/release_notes.rst")
-    release_notes_paths = sort_release_notes_paths(
-        Path(f"{get_root_path()}/releasenotes/notes")
-    )
+def main() -> None:
+    output_file = get_root_path() / "docs/release_notes.rst"
+    release_notes_paths = sort_release_notes_paths(get_root_path() / "releasenotes/notes")
     generate_header(output_file)
     concat_release_notes(output_file, release_notes_paths)
 
