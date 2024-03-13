@@ -152,7 +152,7 @@ class Session:
     def _create_session(self) -> str:
         """Create a session."""
         session = self._service._api_client.create_session(
-            self._backend, self._instance, self._max_time, self._service.channel
+            self._backend, self._instance, self._max_time, self._service.channel, "dedicated"
         )
         return session.get("id")
 
@@ -267,6 +267,7 @@ class Session:
             started_at: Timestamp of when the session was started.
             closed_at: Timestamp of when the session was closed.
             activated_at: Timestamp of when the session state was changed to active.
+            mode: The mode the session was created in.
         """
         if self._session_id:
             response = self._service._api_client.session_details(self._session_id)
@@ -284,6 +285,7 @@ class Session:
                     "started_at": response.get("started_at"),
                     "closed_at": response.get("closed_at"),
                     "activated_at": response.get("activated_at"),
+                    "mode": response.get("mode"),
                 }
         return None
 
