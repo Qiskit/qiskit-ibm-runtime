@@ -14,7 +14,7 @@ def get_version_from_path(path: Path) -> str:
 
 def sort_release_notes_paths(release_notes_paths: Path) -> list[Path]:
     return sorted(
-        (fp for fp in release_notes_paths.iterdir() if fp.is_file()),
+        (fp for fp in release_notes_paths.iterdir() if fp.suffix == ".rst"),
         key=lambda x: version.parse(get_version_from_path(x)),
         reverse=True,
     )
