@@ -3,7 +3,7 @@ from pathlib import Path
 
 
 def get_root_path() -> Path:
-    return Path(Path(__file__).absolute()).parent.parent
+    return Path(__file__).resolve().parent.parent
 
 
 def get_version_from_path(path: Path) -> str:
