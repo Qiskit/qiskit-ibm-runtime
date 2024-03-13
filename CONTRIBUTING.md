@@ -94,7 +94,7 @@ Then, identify which type of change your release note is:
 - `bug` (bug fix)
 - `other` (other note)
 
-Now, create a new file in the `releasenotes` folder in the format `<github-number>.<type>.rst`,
+Now, create a new file in the `release-notes/unreleased` folder in the format `<github-number>.<type>.rst`,
 such as `156.bug.rst` or `231.feat.rst`.
 
 Open up the new release note file and provide a description of the change, such as what users need

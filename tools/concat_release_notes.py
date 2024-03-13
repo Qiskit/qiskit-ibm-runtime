@@ -12,9 +12,9 @@ def get_version_from_path(path: Path) -> str:
     return "99.0.9" if path.stem == "unreleased" else path.stem
 
 
-def sort_release_notes_paths(release_notes_paths: list[Path]) -> list[Path]:
+def sort_release_notes_paths(release_notes_paths: Path) -> list[Path]:
     return sorted(
-        release_notes_paths.iterdir(),
+        (fp for fp in release_notes_paths.iterdir() if fp.is_file()),
         key=lambda x: version.parse(get_version_from_path(x)),
         reverse=True,
     )
@@ -38,7 +38,7 @@ def concat_release_notes(output_file: Path, release_notes_paths: list[Path]) -> 
 
 def main() -> None:
     output_file = get_root_path() / "docs/release_notes.rst"
-    release_notes_paths = sort_release_notes_paths(get_root_path() / "releasenotes/notes")
+    release_notes_paths = sort_release_notes_paths(get_root_path() / "release-notes")
     generate_header(output_file)
     concat_release_notes(output_file, release_notes_paths)
 

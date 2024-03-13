@@ -8,8 +8,8 @@ target-versions = ['py38', 'py39', 'py310', 'py311', 'py312']
 
 [tool.towncrier]
 single_file = false
-filename = "releasenotes/notes/{version}.rst"
-directory = "releasenotes"
+filename = "release-notes/{version}.rst"
+directory = "release-notes/unreleased"
 title_format = "{version} ({project_date})"
 issue_format = "`{issue} <https://https://github.com/Qiskit/qiskit-ibm-runtime/pull/{issue}>`__"
 
