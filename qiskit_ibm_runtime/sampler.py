@@ -176,6 +176,8 @@ class SamplerV1(BasePrimitiveV1, Sampler, BaseSampler):
 
     _options_class = Options
 
+    version = 1
+
     def __init__(
         self,
         backend: Optional[Union[str, IBMBackend]] = None,
