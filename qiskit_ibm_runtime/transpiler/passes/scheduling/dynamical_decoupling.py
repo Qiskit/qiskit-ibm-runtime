@@ -415,6 +415,10 @@ class PadDynamicalDecoupling(BlockBasePadder):
             )
             return
 
+        if not self._skip_reset_qubits and qubit not in self._dirty_qubits:
+            # mark all qubits as dirty if skip_reset_qubits is False
+            self._dirty_qubits.update([qubit])
+
         if (
             not isinstance(prev_node, DAGInNode)
             and self._skip_reset_qubits
