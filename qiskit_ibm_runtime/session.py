@@ -196,18 +196,25 @@ class Session:
 
         options["backend"] = self._backend
 
-        job = self._service.run(
-            program_id=program_id,  # type: ignore[arg-type]
-            options=options,
-            inputs=inputs,
-            session_id=self._session_id,
-            start_session=False,
-            callback=callback,
-            result_decoder=result_decoder,
-        )
+        if isinstance(self._service, QiskitRuntimeService):
+            job = self._service.run(
+                program_id=program_id,  # type: ignore[arg-type]
+                options=options,
+                inputs=inputs,
+                session_id=self._session_id,
+                start_session=False,
+                callback=callback,
+                result_decoder=result_decoder,
+            )
 
-        if self._backend is None:
-            self._backend = job.backend()
+            if self._backend is None:
+                self._backend = job.backend()
+        else:
+            job = self._service.run(
+                program_id=program_id,
+                runtime_options=options,
+                inputs=inputs
+            )
 
         return job
 

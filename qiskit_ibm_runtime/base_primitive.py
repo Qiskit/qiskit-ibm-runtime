@@ -381,12 +381,18 @@ class BasePrimitiveV1(ABC):
             if "instance" not in runtime_options and isinstance(self._backend, IBMBackend):
                 runtime_options["instance"] = self._backend._instance
 
+        if isinstance(self._service, QiskitRuntimeService):
+            return self._service.run(
+                program_id=self._program_id(),  # type: ignore[arg-type]
+                options=runtime_options,
+                inputs=primitive_inputs,
+                callback=combined.get("environment", {}).get("callback", None),
+                result_decoder=DEFAULT_DECODERS.get(self._program_id()),
+            )
         return self._service.run(
             program_id=self._program_id(),  # type: ignore[arg-type]
-            options=runtime_options,
-            inputs=primitive_inputs,
-            callback=combined.get("environment", {}).get("callback", None),
-            result_decoder=DEFAULT_DECODERS.get(self._program_id()),
+            runtime_options=runtime_options,
+            inputs=primitive_inputs
         )
 
     @property
