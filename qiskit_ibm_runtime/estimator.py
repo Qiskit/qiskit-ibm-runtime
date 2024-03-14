@@ -223,6 +223,8 @@ class EstimatorV1(BasePrimitiveV1, Estimator, BaseEstimator):
             print(psi1_H23.result())
     """
 
+    version = 1
+
     def __init__(
         self,
         backend: Optional[Union[str, IBMBackend]] = None,
