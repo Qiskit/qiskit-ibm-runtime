@@ -23,8 +23,8 @@ from qiskit.providers.backend import BackendV1, BackendV2
 from qiskit.primitives import BackendSampler, BackendEstimator
 from qiskit.primitives.primitive_job import PrimitiveJob
 
-from .runtime_options import RuntimeOptions
-from .ibm_backend import IBMBackend
+from ..runtime_options import RuntimeOptions
+from ..ibm_backend import IBMBackend
 
 logger = logging.getLogger(__name__)
 

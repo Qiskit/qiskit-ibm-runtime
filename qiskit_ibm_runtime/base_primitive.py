@@ -38,7 +38,7 @@ from .utils.deprecation import issue_deprecation_msg
 from .utils.utils import validate_isa_circuits
 from .constants import DEFAULT_DECODERS
 from .qiskit_runtime_service import QiskitRuntimeService
-from .local_service import QiskitRuntimeLocalService
+from .fake_provider.local_service import QiskitRuntimeLocalService
 
 
 # pylint: disable=unused-import,cyclic-import

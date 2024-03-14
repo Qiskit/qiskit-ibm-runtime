@@ -29,7 +29,7 @@ from .ibm_backend import IBMBackend
 from .utils.default_session import set_cm_session
 from .utils.deprecation import deprecate_arguments, issue_deprecation_msg
 from .utils.converters import hms_to_seconds
-from .local_service import QiskitRuntimeLocalService
+from .fake_provider.local_service import QiskitRuntimeLocalService
 
 
 def _active_session(func):  # type: ignore
