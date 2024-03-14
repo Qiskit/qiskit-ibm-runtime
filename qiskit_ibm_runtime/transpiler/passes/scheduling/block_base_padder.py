@@ -363,6 +363,7 @@ class BlockBasePadder(TransformationPass):
         prev_block_duration = self._block_duration
         prev_block_idx = self._current_block_idx
         self._terminate_block(self._block_duration, self._current_block_idx)
+        new_block_dag.duration = prev_block_duration
 
         # Edge-case: Add a barrier if the final node is a fast-path
         if self._prev_node in self._fast_path_nodes:

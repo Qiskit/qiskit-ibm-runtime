@@ -1,4 +1,0 @@
----
-other:
-  - |
-    Added migration code for running ``backend.run`` in `qiskit_ibm_runtime` instead of in `qiskit_ibm_provider`.
