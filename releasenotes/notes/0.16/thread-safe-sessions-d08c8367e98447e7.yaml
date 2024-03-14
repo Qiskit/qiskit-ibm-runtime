@@ -1,6 +1,0 @@
----
-prelude: >
-    Sessions are now thread-safe and allow for multiple concurrent interactive
-    experiments.
-features:
-  - Sessions are now thread-safe.
