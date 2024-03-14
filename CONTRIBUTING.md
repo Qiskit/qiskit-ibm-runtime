@@ -98,15 +98,13 @@ Now, create a new file in the `release-notes/unreleased` folder in the format `<
 such as `156.bug.rst` or `231.feat.rst`.
 
 Open up the new release note file and provide a description of the change, such as what users need
-to do. The files use RST syntax and you can use mechanisms like code blocks. However, Sphinx
-cross-references will not work and you should use full links to
-https://docs.quantum.ibm.com when linking to documentation.
+to do. The files use RST syntax and you can use mechanisms like code blocks and cross-references.
 
 Example notes:
 
 ```rst
 Add ``dd_barrier`` optional input to
-```PadDynamicalDecoupling`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.transpiler.passes.scheduling.PadDynamicalDecoupling>`__
+:class:`.PadDynamicalDecoupling`
 constructor to identify portions of the circuit to apply dynamical
 decoupling (dd) on selectively. If this string is contained in the
 label of a barrier in the circuit, dd is applied on the delays ending
