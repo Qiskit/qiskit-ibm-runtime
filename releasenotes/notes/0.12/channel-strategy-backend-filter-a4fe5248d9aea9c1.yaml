@@ -1,6 +1,0 @@
----
-features:
-  - |
-    If using a ``channel_strategy``, only backends that support that ``channel_strategy``
-    will be accessible to the user.
-

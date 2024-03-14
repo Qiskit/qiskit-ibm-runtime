@@ -1,7 +1,0 @@
-
----
-upgrade:
-  - |
-    Added a validation check to :meth:`~qiskit_ibm_runtime.Sampler.run`.
-    It raises an error if there is no classical bit.
-
