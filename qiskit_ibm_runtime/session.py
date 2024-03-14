@@ -210,10 +210,10 @@ class Session:
             if self._backend is None:
                 self._backend = job.backend()
         else:
-            job = self._service.run(
-                program_id=program_id,
+            job = self._service.run(  # type: ignore[call-arg]
+                program_id=program_id,  # type: ignore[arg-type]
                 runtime_options=options,
-                inputs=inputs
+                inputs=inputs,
             )
 
         return job

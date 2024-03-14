@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import logging
 import copy
-from typing import Dict, Union, Literal, Any
+from typing import Dict, Union, Literal
 
 from qiskit.utils import optionals
 from qiskit.providers.backend import BackendV1, BackendV2

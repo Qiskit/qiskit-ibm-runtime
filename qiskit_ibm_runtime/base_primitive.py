@@ -389,10 +389,10 @@ class BasePrimitiveV1(ABC):
                 callback=combined.get("environment", {}).get("callback", None),
                 result_decoder=DEFAULT_DECODERS.get(self._program_id()),
             )
-        return self._service.run(
+        return self._service.run(  # type: ignore[call-arg]
             program_id=self._program_id(),  # type: ignore[arg-type]
             runtime_options=runtime_options,
-            inputs=primitive_inputs
+            inputs=primitive_inputs,
         )
 
     @property
