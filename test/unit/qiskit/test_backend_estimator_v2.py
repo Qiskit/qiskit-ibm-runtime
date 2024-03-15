@@ -9,6 +9,7 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
+# type: ignore
 
 """Tests for Backend Estimator V2."""
 
@@ -374,7 +375,7 @@ class TestBackendEstimatorV2(IBMTestCase):
     @combine(abelian_grouping=[True, False])
     def test_aer(self, abelian_grouping):
         """Test for Aer simulator"""
-        from qiskit_aer import AerSimulator
+        from qiskit_aer import AerSimulator  # pylint: disable=import-outside-toplevel
 
         backend = AerSimulator()
         seed = 123

@@ -9,6 +9,7 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
+# type: ignore
 
 """Estimator V2 implementation for an arbitrary Backend object."""
 
@@ -27,7 +28,11 @@ from qiskit.quantum_info import Pauli, PauliList
 from qiskit.transpiler import PassManager, PassManagerConfig
 from qiskit.transpiler.passes import Optimize1qGatesDecomposition
 
-from qiskit.primitives.backend_estimator import _pauli_expval_with_variance, _prepare_counts, _run_circuits
+from qiskit.primitives.backend_estimator import (
+    _pauli_expval_with_variance,
+    _prepare_counts,
+    _run_circuits,
+)
 from qiskit.primitives.base import BaseEstimatorV2
 from qiskit.primitives.containers import EstimatorPubLike, PrimitiveResult, PubResult
 from qiskit.primitives.containers.bindings_array import BindingsArray

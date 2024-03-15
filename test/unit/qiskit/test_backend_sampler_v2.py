@@ -9,6 +9,7 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
+# type: ignore
 
 """Tests for Backend Sampler V2."""
 
@@ -83,7 +84,9 @@ class TestBackendSamplerV2(IBMTestCase):
             target_counts = (
                 target.get_int_counts(idx) if isinstance(target, BitArray) else target[idx]
             )
-            max_key = max(max(int_counts.keys()), max(target_counts.keys()))
+            max_key = max(  # pylint: disable=nested-min-max
+                max(int_counts.keys()), max(target_counts.keys())
+            )
             ary = np.array([int_counts.get(i, 0) for i in range(max_key + 1)])
             tgt = np.array([target_counts.get(i, 0) for i in range(max_key + 1)])
             np.testing.assert_allclose(ary, tgt, rtol=rtol, atol=atol, err_msg=f"index: {idx}")
@@ -637,7 +640,7 @@ class TestBackendSamplerV2(IBMTestCase):
         self.assertEqual(len(result), 1)
         data = result[0].data
         self.assertEqual(len(astuple(data)), 3)
-        for creg_name in target:
+        for creg_name in target:  # pylint: disable=consider-using-dict-items
             self.assertTrue(hasattr(data, creg_name))
             self._assert_allclose(getattr(data, creg_name), np.array(target[creg_name]))
 
