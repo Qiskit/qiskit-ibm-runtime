@@ -212,7 +212,7 @@ class Session:
         else:
             job = self._service.run(  # type: ignore[call-arg]
                 program_id=program_id,  # type: ignore[arg-type]
-                runtime_options=options,
+                options=options,
                 inputs=inputs,
             )
 

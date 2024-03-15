@@ -220,8 +220,6 @@ class TestPrimitivesV2(IBMTestCase):
         """Test getting default session within context manager."""
         backend_name = "ibm_gotham"
         backend = get_mocked_backend(name=backend_name)
-        # service = MagicMock()
-        # backend = "ibm_gotham"
 
         with Session(service=backend.service, backend=backend_name) as session:
             inst = primitive()

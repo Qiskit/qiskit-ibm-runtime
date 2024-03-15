@@ -121,30 +121,28 @@ class TestPrimitives(IBMTestCase):
                 options.transpilation.skip_transpilation = False
                 self.assertTrue(inst.options.get("transpilation").get("skip_transpilation"))
 
-    def test_init_with_backend_str(self):
+    @data(Sampler, Estimator)
+    def test_init_with_backend_str(self, primitive):
         """Test initializing a primitive with a backend name."""
-        primitives = [Sampler, Estimator]
         backend_name = "ibm_gotham"
+        mock_backend = get_mocked_backend(name=backend_name)
+        mock_service_inst = mock_backend.service
 
-        for cls in primitives:
-            with self.subTest(primitive=cls), patch(
-                "qiskit_ibm_runtime.base_primitive.QiskitRuntimeService"
-            ) as mock_service:
-                mock_service.reset_mock()
-                mock_service_inst = MagicMock()
-                mock_service.return_value = mock_service_inst
-                mock_backend = MagicMock()
-                mock_backend.name = backend_name
-                mock_service.global_service = None
-                mock_service_inst.backend.return_value = mock_backend
+        class MockQRTService:
+            """Mock class used to create a new QiskitRuntimeService."""
 
-                inst = cls(backend=backend_name)
-                mock_service.assert_called_once()
-                self.assertIsNone(inst.session)
-                inst.run(self.qx, observables=self.obs)
-                mock_service_inst.run.assert_called_once()
-                runtime_options = mock_service_inst.run.call_args.kwargs["options"]
-                self.assertEqual(runtime_options["backend"], mock_backend)
+            global_service = None
+
+            def __new__(cls, *args, **kwargs):  # pylint: disable=unused-argument
+                return mock_service_inst
+
+        with patch("qiskit_ibm_runtime.base_primitive.QiskitRuntimeService", new=MockQRTService):
+            inst = primitive(backend=backend_name)
+            self.assertIsNone(inst.session)
+            inst.run(self.qx, observables=self.obs)
+            mock_service_inst.run.assert_called_once()
+            runtime_options = mock_service_inst.run.call_args.kwargs["options"]
+            self.assertEqual(runtime_options["backend"], mock_backend)
 
     def test_init_with_session_backend_str(self):
         """Test initializing a primitive with a backend name using session."""
@@ -163,19 +161,15 @@ class TestPrimitives(IBMTestCase):
     def test_init_with_backend_instance(self):
         """Test initializing a primitive with a backend instance."""
         primitives = [Sampler, Estimator]
-        service = MagicMock()
-        model_backend = FakeManila()
-        backend = IBMBackend(
-            configuration=model_backend.configuration(), service=service, api_client=MagicMock()
-        )
-        backend.name = "ibm_gotham"
+        backend = get_mocked_backend()
+        service = backend.service
 
         for cls in primitives:
             with self.subTest(primitive=cls):
                 service.reset_mock()
                 inst = cls(backend=backend)
                 self.assertIsNone(inst.session)
-                inst.run(self.qx, observables=self.obs)
+                inst.run(**get_primitive_inputs(inst))
                 service.run.assert_called_once()
                 runtime_options = service.run.call_args.kwargs["options"]
                 self.assertEqual(runtime_options["backend"], backend)

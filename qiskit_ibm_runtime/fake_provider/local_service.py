@@ -48,7 +48,7 @@ class QiskitRuntimeLocalService:
         self,
         program_id: Literal["sampler", "estimator"],
         inputs: Dict,
-        runtime_options: Union[RuntimeOptions, Dict],
+        options: Union[RuntimeOptions, Dict],
     ) -> PrimitiveJob:
         """Execute the runtime program.
 
@@ -56,7 +56,7 @@ class QiskitRuntimeLocalService:
             program_id: Program ID.
             inputs: Program input parameters. These input values are passed
                 to the runtime program.
-            runtime_options: Runtime options that control the execution environment.
+            options: Runtime options that control the execution environment.
                 See :class:`RuntimeOptions` for all available options.
 
         Returns:
@@ -67,10 +67,10 @@ class QiskitRuntimeLocalService:
             NotImplementedError: If using V2 primitives.
         """
         # qrt_options: RuntimeOptions = options
-        if isinstance(runtime_options, Dict):
-            qrt_options = RuntimeOptions(**runtime_options)
+        if isinstance(options, Dict):
+            qrt_options = RuntimeOptions(**options)
         else:
-            qrt_options = runtime_options
+            qrt_options = options
 
         if program_id not in ["sampler", "estimator"]:
             raise ValueError("Only sampler and estimator are supported in local testing mode.")

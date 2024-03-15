@@ -391,7 +391,7 @@ class BasePrimitiveV1(ABC):
             )
         return self._service.run(  # type: ignore[call-arg]
             program_id=self._program_id(),  # type: ignore[arg-type]
-            runtime_options=runtime_options,
+            options=runtime_options,
             inputs=primitive_inputs,
         )
 

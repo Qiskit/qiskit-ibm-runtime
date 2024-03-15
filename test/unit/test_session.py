@@ -15,7 +15,7 @@
 from unittest.mock import MagicMock, patch
 
 from qiskit_ibm_runtime.fake_provider import FakeManila
-from qiskit_ibm_runtime import Session
+from qiskit_ibm_runtime import Session, QiskitRuntimeService
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.utils.default_session import _DEFAULT_SESSION
 
@@ -137,7 +137,7 @@ class TestSession(IBMTestCase):
         """Test default backend set."""
         job = MagicMock()
         job.backend().name.return_value = "ibm_gotham"  # pylint: disable=no-value-for-parameter
-        service = MagicMock()
+        service = MagicMock(spec=QiskitRuntimeService)
         service.run.return_value = job
         service.channel = "ibm_cloud"
 
