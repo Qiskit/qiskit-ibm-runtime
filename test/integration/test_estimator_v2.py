@@ -60,11 +60,11 @@ class TestEstimatorV2(IBMIntegrationTestCase):
 
             job2 = estimator.run([(psi1, [H1, H3], [theta1, theta3]), (psi2, H2, theta2)])
             result2 = job2.result()
-            self._verify_result_type(result2, num_pubs=2, shapes=[(2,), (1,)])
+            self._verify_result_type(result2, num_pubs=2, shapes=[(2,), ()])
 
             job3 = estimator.run([(psi1, H1, theta1), (psi2, H2, theta2), (psi1, H3, theta3)])
             result3 = job3.result()
-            self._verify_result_type(result3, num_pubs=3, shapes=[(1,), (1,), (1,)])
+            self._verify_result_type(result3, num_pubs=3, shapes=[(), (), ()])
 
     @run_integration_test
     def test_estimator_v2_options(self, service):
@@ -101,7 +101,7 @@ class TestEstimatorV2(IBMIntegrationTestCase):
 
         job = estimator.run([(circuit, observables)])
         result = job.result()
-        self._verify_result_type(result, num_pubs=1, shapes=[(1,)])
+        self._verify_result_type(result, num_pubs=1, shapes=[()])
         self.assertEqual(result[0].metadata["shots"], 1600)
         for res_key in ["twirled_readout_errors", "zne_noise_factors"]:
             self.assertIn(res_key, result[0].metadata["resilience"])

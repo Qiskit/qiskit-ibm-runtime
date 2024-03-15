@@ -1,6 +1,0 @@
----
-fixes:
-  - |
-    Many methods in :class:`~qiskit_ibm_runtime.RuntimeJob` require retrieving the job data from the API with
-    ``job_get()``. This API call will now exclude the ``params`` field by default because they are only necessary in
-    :meth:`qiskit_ibm_runtime.RuntimeJob.inputs`.

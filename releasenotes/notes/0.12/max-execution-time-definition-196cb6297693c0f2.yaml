@@ -1,7 +1,0 @@
----
-fixes:
-  - |
-    The `max_execution_time` option is now based on system execution time instead of wall clock time. 
-    System execution time is the amount of time that the system is dedicated to processing your job. 
-    If a job exceeds this time limit, it is forcibly cancelled.
-    Simulator jobs continue to use wall clock time.

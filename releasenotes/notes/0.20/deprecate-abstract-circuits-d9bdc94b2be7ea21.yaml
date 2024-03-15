@@ -1,7 +1,0 @@
----
-deprecations:
-  - |
-    Circuits that do not match the target hardware definition will no longer be supported after March 1, 2024. 
-    See the transpilation documentation (https://docs.quantum.ibm.com/transpile) for instructions to 
-    transform circuits and the primitive examples (https://docs.quantum.ibm.com/run/primitives-examples) 
-    to see this coupled with operator transformations.
