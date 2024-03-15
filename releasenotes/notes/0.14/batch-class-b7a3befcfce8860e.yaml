@@ -1,6 +1,0 @@
----
-features:
-  - |
-    There is a new class, :class:`qiskit_ibm_runtime.Batch` that currently works
-    the same way as :class:`qiskit_ibm_runtime.Session` but will later be updated 
-    to better support submitting multiple jobs at once.

@@ -1,5 +1,0 @@
----
-upgrade:
-  - |
-    `qiskit-ibm-provider` is pending deprecation, and therefore will no longer be a 
-    dependency for `qiskit-ibm-runtime`. 
