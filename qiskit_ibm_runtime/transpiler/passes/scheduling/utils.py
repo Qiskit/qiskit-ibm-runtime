@@ -41,7 +41,7 @@ def block_order_op_nodes(dag: DAGCircuit) -> Generator[DAGOpNode, None, None]:
         """Does this node trigger the end of a block?"""
         return isinstance(node.op, ControlFlowOp)
 
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=8192)
     def _emit(
         node: DAGOpNode,
         grouped_measure: Tuple[DAGOpNode],
