@@ -1,7 +1,0 @@
----
-upgrade:
-  - |
-    `qiskit-ibm-runtime` is now compatible with Qiskit versions `>= 0.45`, 
-    including `1.0.0`. 
-
-

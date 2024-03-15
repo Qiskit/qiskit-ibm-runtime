@@ -19,6 +19,7 @@ from qiskit.quantum_info import SparsePauliOp
 
 from qiskit.primitives import EstimatorResult, SamplerResult
 from qiskit.result import Result
+from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
 from qiskit_ibm_runtime import Estimator, Session, Sampler, Options
 
@@ -40,11 +41,13 @@ class TestIntegrationSession(IBMIntegrationTestCase):
         theta1 = [0, 1, 1, 2, 3, 5]
 
         options = Options(resilience_level=0)
+        backend = service.backend("ibmq_qasm_simulator")
+        pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
 
-        with Session(service, backend="ibmq_qasm_simulator") as session:
+        with Session(service, backend=backend) as session:
             estimator = Estimator(session=session, options=options)
             result = estimator.run(
-                circuits=[psi1], observables=[H1], parameter_values=[theta1], shots=100
+                circuits=pm.run([psi1]), observables=[H1], parameter_values=[theta1], shots=100
             ).result()
             self.assertIsInstance(result, EstimatorResult)
             self.assertEqual(len(result.values), 1)
@@ -52,7 +55,7 @@ class TestIntegrationSession(IBMIntegrationTestCase):
             self.assertEqual(result.metadata[0]["shots"], 100)
 
             sampler = Sampler(session=session, options=options)
-            result = sampler.run(circuits=bell(), shots=200).result()
+            result = sampler.run(circuits=pm.run(bell()), shots=200).result()
             self.assertIsInstance(result, SamplerResult)
             self.assertEqual(len(result.quasi_dists), 1)
             self.assertEqual(len(result.metadata), 1)
@@ -61,14 +64,14 @@ class TestIntegrationSession(IBMIntegrationTestCase):
             self.assertAlmostEqual(result.quasi_dists[0][0], 0.5, delta=0.1)
 
             result = estimator.run(
-                circuits=[psi1], observables=[H1], parameter_values=[theta1], shots=300
+                circuits=pm.run([psi1]), observables=[H1], parameter_values=[theta1], shots=300
             ).result()
             self.assertIsInstance(result, EstimatorResult)
             self.assertEqual(len(result.values), 1)
             self.assertEqual(len(result.metadata), 1)
             self.assertEqual(result.metadata[0]["shots"], 300)
 
-            result = sampler.run(circuits=bell(), shots=400).result()
+            result = sampler.run(circuits=pm.run(bell()), shots=400).result()
             self.assertIsInstance(result, SamplerResult)
             self.assertEqual(len(result.quasi_dists), 1)
             self.assertEqual(len(result.metadata), 1)
@@ -113,7 +116,9 @@ class TestBackendRunInSession(IBMIntegrationTestCase):
         self.assertEqual(backend.session.session_id, None)
         self.assertTrue(backend.session.active)
         job1 = backend.run(bell())
-        self.assertEqual(job1._session_id, None)
+        self.assertTrue(job1.result())
+        job2 = backend.run(bell())
+        self.assertTrue(job2.result())
 
     def test_backend_run_with_session(self):
         """Test that 'shots' parameter is transferred correctly"""

@@ -25,32 +25,35 @@ class Session:
     A Qiskit Runtime ``session`` allows you to group a collection of iterative calls to
     the quantum computer. A session is started when the first job within the session
     is started. Subsequent jobs within the session are prioritized by the scheduler.
-    Data used within a session, such as transpiled circuits, is also cached to avoid
-    unnecessary overhead.
 
     You can open a Qiskit Runtime session using this ``Session`` class
     and submit one or more jobs.
 
     For example::
 
-        from qiskit.test.reference_circuits import ReferenceCircuits
+        from qiskit import QuantumCircuit, transpile
         from qiskit_ibm_runtime import QiskitRuntimeService
 
-        circ = ReferenceCircuits.bell()
-        backend = QiskitRuntimeService().get_backend("ibmq_qasm_simulator")
+        service = QiskitRuntimeService()
+        backend = service.least_busy(operational=True, simulator=False)
+
+        circ = QuantumCircuit(2, 2)
+        circ.h(0)
+        circ.cx(0, 1)
+        isa_circuit = transpile(circ, backend)
 
         backend.open_session()
-        job = backend.run(circ)
+        job = backend.run(isa_circuit)
         print(f"Job ID: {job.job_id()}")
         print(f"Result: {job.result()}")
         # Close the session only if all jobs are finished and
         # you don't need to run more in the session.
-        backend.cancel_session()
+        backend.close_session()
 
     Session can also be used as a context manager::
 
         with backend.open_session() as session:
-            job = backend.run(ReferenceCircuits.bell())
+            job = backend.run(isa_circuit)
 
     """
 

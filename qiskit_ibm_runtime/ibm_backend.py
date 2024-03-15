@@ -612,18 +612,17 @@ class IBMBackend(Backend):
                 If specified, ``init_num_resets`` is ignored. Applicable only if ``dynamic=True``
                 is specified.
             init_num_resets: The number of qubit resets to insert before each circuit execution.
-
-            The following parameters are applicable only if ``dynamic=False`` is specified or
-            defaulted to.
-
             header: User input that will be attached to the job and will be
                 copied to the corresponding result header. Headers do not affect the run.
-                This replaces the old ``Qobj`` header.
+                This replaces the old ``Qobj`` header. This parameter is applicable only
+                if ``dynamic=False`` is specified or defaulted to.
             shots: Number of repetitions of each circuit, for sampling. Default: 4000
                 or ``max_shots`` from the backend configuration, whichever is smaller.
+                This parameter is applicable only if ``dynamic=False`` is specified or defaulted to.
             memory: If ``True``, per-shot measurement bitstrings are returned as well
                 (provided the backend supports it). For OpenPulse jobs, only
-                measurement level 2 supports this option.
+                measurement level 2 supports this option. This parameter is applicable only if
+                ``dynamic=False`` is specified or defaulted to.
             meas_level: Level of the measurement output for pulse experiments. See
                 `OpenPulse specification <https://arxiv.org/pdf/1809.03452.pdf>`_ for details:
 
@@ -632,28 +631,36 @@ class IBMBackend(Backend):
                   measurement kernel to the measurement output signal)
                 * ``2`` (default), a discriminator is selected and the qubit state is stored (0 or 1)
 
+                This parameter is applicable only if ``dynamic=False`` is specified or defaulted to.
             meas_return: Level of measurement data for the backend to return. For ``meas_level`` 0 and 1:
 
                 * ``single`` returns information from every shot.
                 * ``avg`` returns average measurement output (averaged over number of shots).
 
+                This parameter is applicable only if ``dynamic=False`` is specified or defaulted to.
             rep_delay: Delay between programs in seconds. Only supported on certain
                 backends (if ``backend.configuration().dynamic_reprate_enabled=True``).
                 If supported, ``rep_delay`` must be from the range supplied
                 by the backend (``backend.configuration().rep_delay_range``). Default is given by
-                ``backend.configuration().default_rep_delay``.
+                ``backend.configuration().default_rep_delay``. This parameter is applicable only if
+                ``dynamic=False`` is specified or defaulted to.
             init_qubits: Whether to reset the qubits to the ground state for each shot.
-                Default: ``True``.
+                Default: ``True``. This parameter is applicable only if ``dynamic=False`` is specified
+                or defaulted to.
             use_measure_esp: Whether to use excited state promoted (ESP) readout for measurements
                 which are the terminal instruction to a qubit. ESP readout can offer higher fidelity
                 than standard measurement sequences. See
                 `here <https://arxiv.org/pdf/2008.08571.pdf>`_.
                 Default: ``True`` if backend supports ESP readout, else ``False``. Backend support
                 for ESP readout is determined by the flag ``measure_esp_enabled`` in
-                ``backend.configuration()``.
-            noise_model: Noise model. (Simulators only)
-            seed_simulator: Random seed to control sampling. (Simulators only)
-            **run_config: Extra arguments used to configure the run.
+                ``backend.configuration()``. This parameter is applicable only if ``dynamic=False`` is
+                specified or defaulted to.
+            noise_model: Noise model (Simulators only). This parameter is applicable
+                only if ``dynamic=False`` is specified or defaulted to.
+            seed_simulator: Random seed to control sampling (Simulators only). This parameter
+                is applicable only if ``dynamic=False`` is specified or defaulted to.
+            **run_config: Extra arguments used to configure the run. This parameter is applicable
+                only if ``dynamic=False`` is specified or defaulted to.
 
         Returns:
             The job to be executed.

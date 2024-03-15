@@ -15,52 +15,24 @@
 from dataclasses import asdict
 
 from ddt import data, ddt
+from pydantic import ValidationError
 from qiskit.providers import BackendV1
 
 from qiskit.transpiler import CouplingMap
 from qiskit_aer.noise import NoiseModel
 
 from qiskit_ibm_runtime import Options, RuntimeOptions
+from qiskit_ibm_runtime.options import EstimatorOptions, SamplerOptions
 from qiskit_ibm_runtime.utils.qctrl import _warn_and_clean_options
 from qiskit_ibm_runtime.fake_provider import FakeManila, FakeNairobiV2
 
 from ..ibm_test_case import IBMTestCase
-from ..utils import dict_keys_equal, dict_paritally_equal, flat_dict_partially_equal
+from ..utils import dict_keys_equal, dict_paritally_equal, combine
 
 
 @ddt
 class TestOptions(IBMTestCase):
-    """Class for testing the Sampler class."""
-
-    def test_merge_options(self):
-        """Test merging options."""
-        options_vars = [
-            {},
-            {"resilience_level": 9},
-            {"resilience_level": 8, "transpilation": {"initial_layout": [1, 2]}},
-            {"shots": 99, "seed_simulator": 42},
-            {"resilience_level": 99, "shots": 98, "initial_layout": [3, 4]},
-            {
-                "initial_layout": [1, 2],
-                "transpilation": {"layout_method": "trivial"},
-                "log_level": "INFO",
-            },
-        ]
-        for new_ops in options_vars:
-            with self.subTest(new_ops=new_ops):
-                options = Options()
-                combined = Options._merge_options(asdict(options), new_ops)
-
-                # Make sure the values are equal.
-                self.assertTrue(
-                    flat_dict_partially_equal(combined, new_ops),
-                    f"new_ops={new_ops}, combined={combined}",
-                )
-                # Make sure the structure didn't change.
-                self.assertTrue(
-                    dict_keys_equal(combined, asdict(options)),
-                    f"options={options}, combined={combined}",
-                )
+    """Class for testing the Options class."""
 
     def test_runtime_options(self):
         """Test converting runtime options."""
@@ -91,7 +63,7 @@ class TestOptions(IBMTestCase):
             execution={"shots": 100},
             environment={"log_level": "DEBUG"},
             simulator={"noise_model": noise_model},
-            resilience={"noise_factors": (0, 2, 4)},
+            resilience={"noise_factors": (1, 2, 4)},
         )
         inputs = Options._get_program_inputs(asdict(options))
 
@@ -104,7 +76,7 @@ class TestOptions(IBMTestCase):
             },
             "resilience_settings": {
                 "level": 2,
-                "noise_factors": (0, 2, 4),
+                "noise_factors": (1, 2, 4),
             },
         }
         self.assertTrue(
@@ -148,21 +120,6 @@ class TestOptions(IBMTestCase):
             str(exc.exception),
         )
 
-    def test_backend_in_options(self):
-        """Test specifying backend in options."""
-        backend_name = "ibm_gotham"
-        backend = FakeManila()
-        backend._instance = None
-        backend.name = backend_name
-        backends = [backend_name, backend]
-        for backend in backends:
-            with self.assertRaises(TypeError) as exc:
-                _ = Options(backend=backend)  # pylint: disable=unexpected-keyword-arg
-            self.assertIn(
-                "__init__() got an unexpected keyword argument 'backend'",
-                str(exc.exception),
-            )
-
     def test_unsupported_options(self):
         """Test error on unsupported second level options"""
         # defining minimal dict of options
@@ -172,7 +129,6 @@ class TestOptions(IBMTestCase):
             "transpilation": {"initial_layout": [1, 2], "skip_transpilation": True},
             "execution": {"shots": 100},
             "environment": {"log_level": "DEBUG"},
-            "simulator": {"noise_model": "model"},
             "resilience": {
                 "noise_factors": (0, 2, 4),
                 "extrapolator": "LinearExtrapolator",
@@ -182,9 +138,9 @@ class TestOptions(IBMTestCase):
         for opt in ["resilience", "simulator", "transpilation", "execution"]:
             temp_options = options.copy()
             temp_options[opt] = {"aaa": "bbb"}
-            with self.assertRaises(ValueError) as exc:
+            with self.assertRaises(ValidationError) as exc:
                 Options.validate_options(temp_options)
-            self.assertIn(f"Unsupported value 'aaa' for {opt}.", str(exc.exception))
+            self.assertIn("bbb", str(exc.exception))
 
     def test_coupling_map_options(self):
         """Check that coupling_map is processed correctly for various types"""
@@ -283,3 +239,87 @@ class TestOptions(IBMTestCase):
             with self.subTest(msg=f"{option}"):
                 _warn_and_clean_options(option)
                 self.assertEqual(expected_, option)
+
+
+@ddt
+class TestOptionsV2(IBMTestCase):
+    """Class for testing the v2 Options class."""
+
+    @data(EstimatorOptions, SamplerOptions)
+    def test_runtime_options(self, opt_cls):
+        """Test converting runtime options."""
+        full_options = RuntimeOptions(
+            backend="ibm_gotham",
+            image="foo:bar",
+            log_level="DEBUG",
+            instance="h/g/p",
+            job_tags=["foo", "bar"],
+            max_execution_time=600,
+        )
+        partial_options = RuntimeOptions(backend="foo", log_level="DEBUG")
+
+        for rt_options in [full_options, partial_options]:
+            with self.subTest(rt_options=rt_options):
+                self.assertGreaterEqual(
+                    vars(rt_options).items(),
+                    opt_cls._get_runtime_options(vars(rt_options)).items(),
+                )
+
+    @data(EstimatorOptions, SamplerOptions)
+    def test_kwargs_options(self, opt_cls):
+        """Test specifying arbitrary options."""
+        with self.assertRaises(ValidationError) as exc:
+            _ = opt_cls(foo="foo")  # pylint: disable=unexpected-keyword-arg
+        self.assertIn("foo", str(exc.exception))
+
+    @data(EstimatorOptions, SamplerOptions)
+    def test_coupling_map_options(self, opt_cls):
+        """Check that coupling_map is processed correctly for various types"""
+        coupling_map = {(1, 0), (2, 1), (0, 1), (1, 2)}
+        coupling_maps = [
+            coupling_map,
+            list(map(list, coupling_map)),
+            CouplingMap(coupling_map),
+        ]
+        for variant in coupling_maps:
+            with self.subTest(opts_dict=variant):
+                options = opt_cls()
+                options.simulator.coupling_map = variant
+                inputs = opt_cls._get_program_inputs(asdict(options))["options"]
+                resulting_cmap = inputs["simulator"]["coupling_map"]
+                self.assertEqual(coupling_map, set(map(tuple, resulting_cmap)))
+
+    @combine(
+        opt_cls=[EstimatorOptions, SamplerOptions], fake_backend=[FakeManila(), FakeNairobiV2()]
+    )
+    def test_simulator_set_backend(self, opt_cls, fake_backend):
+        """Test Options.simulator.set_backend method."""
+
+        options = opt_cls()
+        options.simulator.seed_simulator = 42
+        options.simulator.set_backend(fake_backend)
+
+        noise_model = NoiseModel.from_backend(fake_backend)
+        basis_gates = (
+            fake_backend.configuration().basis_gates
+            if isinstance(fake_backend, BackendV1)
+            else fake_backend.operation_names
+        )
+        coupling_map = (
+            fake_backend.configuration().coupling_map
+            if isinstance(fake_backend, BackendV1)
+            else fake_backend.coupling_map
+        )
+
+        self.assertEqual(options.simulator.coupling_map, coupling_map)
+        self.assertEqual(options.simulator.noise_model, noise_model)
+
+        expected_options = opt_cls()
+        expected_options.simulator = {
+            "noise_model": noise_model,
+            "basis_gates": basis_gates,
+            "coupling_map": coupling_map,
+            "seed_simulator": 42,
+        }
+
+        self.assertDictEqual(asdict(options), asdict(expected_options))

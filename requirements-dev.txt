@@ -13,6 +13,7 @@ black~=22.0
 coverage>=6.3
 pylatexenc
 scikit-learn
+setuptools
 ddt>=1.2.0,!=1.4.0,!=1.4.3
 
 # Documentation
@@ -21,5 +22,5 @@ Sphinx>=6
 sphinx-automodapi
 sphinx-autodoc-typehints<=1.19.2
 jupyter-sphinx
-reno>=2.11.0
 sphinxcontrib-katex==0.9.9
+packaging

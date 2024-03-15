@@ -1,6 +1,0 @@
----
-fixes:
-  - |
-    Fixed an issue where retrieving the `coupling_map` of some backends would result
-    in a `NameError`.
-
