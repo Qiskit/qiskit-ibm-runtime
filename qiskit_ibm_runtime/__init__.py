@@ -86,7 +86,7 @@ Below is an example of using primitives within a session::
 Local testing mode
 ==================
 
-You can validate your quantum prorams before sending them to a physical system using
+You can validate your quantum programs before sending them to a physical system using
 the local testing mode. The local testing mode is activated if one of the fake
 backends in ``qiskit_ibm_runtime.fake_provider`` or a Qiskit Aer backend
 instance is used when instantiating a primitive or a session. For example::
@@ -115,7 +115,7 @@ instance is used when instantiating a primitive or a session. For example::
     result = sampler.run([isa_qc]).result()
 
     # Run the sampler job locally using AerSimulator.
-    # Session syntax is supported but ignore.
+    # Session syntax is supported but ignored.
     aer_sim = AerSimulator()
     pm = generate_preset_pass_manager(backend=aer_sim, optimization_level=1)
     isa_qc = pm.run(qc)
