@@ -1,5 +1,0 @@
----
-fixes:
-  - |
-    Fixed a bug where retrieving a fake backend through ``FakeProviderForBackendV2.backend()``
-    would result in a type error. 

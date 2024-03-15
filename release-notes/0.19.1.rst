@@ -1,0 +1,21 @@
+0.19.1
+======
+
+Upgrade Notes
+-------------
+
+-  Extend ``DynamicCircuitInstructions.from_backend()`` to extract and
+   patch durations from both ``BackendV1`` and ``BackendV2`` objects.
+   Also add ``DynamicCircuitInstructions.from_target()`` to use a
+   ``Target`` object instead.
+
+Bug Fixes
+---------
+
+-  Fix the patching of ``DynamicCircuitInstructions`` for instructions
+   with durations that are not in units of ``dt``.
+
+-  Fixed an issue with the ``qpy.dump()`` function, when the
+   ``use_symengine`` flag was set to a truthy object that evaluated to
+   ``True`` but was not actually the boolean ``True`` the generated QPY
+   payload would be corrupt.

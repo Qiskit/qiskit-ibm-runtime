@@ -1,0 +1,31 @@
+0.3.0
+=====
+
+Upgrade Notes
+-------------
+
+-  A new parameter ``channel`` has now been added to
+   ``qiskit_ibm_runtime.IBMRuntimeService`` class and also to methods
+   like ``save_account()``, ``saved_accounts()`` and
+   ``delete_account()``. It can be set to ``ibm_quantum`` or
+   ``ibm_cloud`` to authenticate to either of the two different channels
+   through which Qiskit Runtime service is currently offered.
+   ``channel`` replaces the ``auth`` parameter which has now been
+   deprecated.
+
+Deprecation Notes
+-----------------
+
+-  The ``auth`` parameter to ``qiskit_ibm_runtime.IBMRuntimeService``
+   class and also to methods like ``save_account()``,
+   ``saved_accounts()`` and ``delete_account()`` has now been deprecated
+   and will be removed in a future release. Please use the new
+   ``channel`` parameter instead.
+
+Bug Fixes
+---------
+
+-  Fixed
+   `#291 <https://github.com/Qiskit/qiskit-ibm-runtime/issues/219>`__
+   where passing a single ``QuantumCircuit`` to sampler or estimator
+   primitives was throwing an error.

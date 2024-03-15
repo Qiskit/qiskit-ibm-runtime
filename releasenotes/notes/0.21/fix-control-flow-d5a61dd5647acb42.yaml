@@ -1,6 +1,0 @@
----
-fixes:
-  - |
-    Fixed an issue with the :attr:`.IBMBackend.target` where it would
-    incorrectly exclude supported control flow operations (:class:`.IfElseOp`,
-    :class:`.WhileLoop`, etc.) if a given backend supported them.

@@ -1,6 +1,0 @@
----
-fixes:
-  - |
-    The ``circuit_indices`` and ``observable_indices`` run inputs for 
-    :class:`~qiskit_ibm_runtime.Estimator` and :class:`~qiskit_ibm_runtime.Sampler`
-    have been completely removed.
