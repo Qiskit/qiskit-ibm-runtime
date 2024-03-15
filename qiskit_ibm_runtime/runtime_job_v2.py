@@ -144,10 +144,6 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         result_raw = self._download_external_result(
             self._api_client.job_results(job_id=self.job_id())
         )
-        # TODO: Remove getting/setting version once it's in result metadata
-        if _decoder.__name__ == EstimatorResultDecoder.__name__:
-            if not self._version:
-                self._version = self.inputs.get("version", 1)
 
         return _decoder.decode(result_raw) if result_raw else None  # type: ignore
 
