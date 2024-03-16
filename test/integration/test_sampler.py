@@ -20,6 +20,7 @@ from qiskit.circuit.library import RealAmplitudes
 from qiskit.primitives import BaseSampler, SamplerResult
 from qiskit.result import QuasiDistribution
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
+from qiskit.providers.exceptions import QiskitBackendNotFoundError
 
 from qiskit_ibm_runtime import Sampler, Session
 from qiskit_ibm_runtime.exceptions import RuntimeJobFailureError
@@ -172,3 +173,10 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
             self.assertAlmostEqual(result.quasi_dists[i][3], 0.5, delta=0.1)
             self.assertAlmostEqual(result.quasi_dists[i][0], 0.5, delta=0.1)
         self.assertIsNone(job.session_id)
+
+    @run_integration_test
+    def test_sampler_backend_str(self, service):
+        """Test v1 primitive with string as backend."""
+        # pylint: disable=unused-argument
+        with self.assertRaisesRegex(QiskitBackendNotFoundError, "No backend matches"):
+            _ = Sampler(backend="fake_manila")

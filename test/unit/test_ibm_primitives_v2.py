@@ -218,13 +218,13 @@ class TestPrimitivesV2(IBMTestCase):
     @data(EstimatorV2, SamplerV2)
     def test_default_session_context_manager(self, primitive):
         """Test getting default session within context manager."""
-        service = MagicMock()
-        backend = "ibm_gotham"
+        backend_name = "ibm_gotham"
+        backend = get_mocked_backend(name=backend_name)
 
-        with Session(service=service, backend=backend) as session:
+        with Session(service=backend.service, backend=backend_name) as session:
             inst = primitive()
             self.assertEqual(inst.session, session)
-            self.assertEqual(inst.session.backend(), backend)
+            self.assertEqual(inst.session.backend(), backend_name)
 
     @data(EstimatorV2, SamplerV2)
     def test_default_session_cm_new_backend(self, primitive):
@@ -512,7 +512,7 @@ class TestPrimitivesV2(IBMTestCase):
         ibm_backend = create_faulty_backend(fake_backend, faulty_qubit=faulty_qubit)
         service = MagicMock()
         service.backend.return_value = ibm_backend
-        session = Session(service=service, backend=fake_backend.name)
+        session = Session(service=service, backend=fake_backend.name())
 
         inst = primitive(session=session)
 
@@ -544,7 +544,7 @@ class TestPrimitivesV2(IBMTestCase):
         ibm_backend = create_faulty_backend(fake_backend, faulty_qubit=faulty_qubit)
         service = MagicMock()
         service.backend.return_value = ibm_backend
-        session = Session(service=service, backend=fake_backend.name)
+        session = Session(service=service, backend=fake_backend.name())
 
         inst = primitive(session=session)
         if isinstance(inst, IBMBaseEstimator):
@@ -573,7 +573,7 @@ class TestPrimitivesV2(IBMTestCase):
         ibm_backend = create_faulty_backend(fake_backend, faulty_edge=("cx", edge_qubits))
         service = MagicMock()
         service.backend.return_value = ibm_backend
-        session = Session(service=service, backend=fake_backend.name)
+        session = Session(service=service, backend=fake_backend.name())
 
         inst = primitive(session=session)
         if isinstance(inst, IBMBaseEstimator):
@@ -602,7 +602,7 @@ class TestPrimitivesV2(IBMTestCase):
 
         service = MagicMock()
         service.backend.return_value = ibm_backend
-        session = Session(service=service, backend=fake_backend.name)
+        session = Session(service=service, backend=fake_backend.name())
 
         inst = primitive(session=session)
         if isinstance(inst, IBMBaseEstimator):
@@ -632,7 +632,7 @@ class TestPrimitivesV2(IBMTestCase):
 
         service = MagicMock()
         service.backend.return_value = ibm_backend
-        session = Session(service=service, backend=fake_backend.name)
+        session = Session(service=service, backend=fake_backend.name())
 
         inst = primitive(session=session)
         if isinstance(inst, IBMBaseEstimator):

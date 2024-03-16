@@ -104,7 +104,7 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
     def __init__(
         self,
         backend: Optional[Union[str, IBMBackend]] = None,
-        session: Optional[Union[Session, str, IBMBackend]] = None,
+        session: Optional[Session] = None,
         options: Optional[Union[Dict, EstimatorOptions]] = None,
     ):
         """Initializes the Estimator primitive.
@@ -228,7 +228,7 @@ class EstimatorV1(BasePrimitiveV1, Estimator, BaseEstimator):
     def __init__(
         self,
         backend: Optional[Union[str, IBMBackend]] = None,
-        session: Optional[Union[Session, str, IBMBackend]] = None,
+        session: Optional[Session] = None,
         options: Optional[Union[Dict, Options]] = None,
     ):
         """Initializes the Estimator primitive.
