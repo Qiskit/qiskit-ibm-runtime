@@ -63,7 +63,7 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
     def __init__(
         self,
         backend: Optional[Union[str, IBMBackend]] = None,
-        session: Optional[Union[Session, str, IBMBackend]] = None,
+        session: Optional[Session] = None,
         options: Optional[Union[Dict, SamplerOptions]] = None,
     ):
         """Initializes the Sampler primitive.
@@ -181,7 +181,7 @@ class SamplerV1(BasePrimitiveV1, Sampler, BaseSampler):
     def __init__(
         self,
         backend: Optional[Union[str, IBMBackend]] = None,
-        session: Optional[Union[Session, str, IBMBackend]] = None,
+        session: Optional[Session] = None,
         options: Optional[Union[Dict, Options]] = None,
     ):
         """Initializes the Sampler primitive.
