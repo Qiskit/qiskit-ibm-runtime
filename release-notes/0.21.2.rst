@@ -1,0 +1,7 @@
+0.21.2 (2024-03-18)
+===================
+
+Bug Fixes
+---------
+
+- Fixed a bug where ``RuntimeDecoder`` could import arbitrary classes. (`1527 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1527>`__)
