@@ -1,5 +1,0 @@
----
-features:
-  - |
-    Added a method ``RuntimeJob.queue_info()`` to get the queue information
-    from the backend. This feature was transferred from ``qiskit_ibm_provider``.

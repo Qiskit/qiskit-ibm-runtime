@@ -39,7 +39,6 @@ extensions = [
     "sphinx.ext.linkcode",
     'jupyter_sphinx',
     'sphinx_autodoc_typehints',
-    'reno.sphinxext',
     'nbsphinx',
     'sphinxcontrib.katex',
     'matplotlib.sphinxext.plot_directive',

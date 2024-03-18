@@ -1,5 +1,0 @@
----
-features:
-  - |
-    Added warning when the backend is not active in 
-    QiskitRuntimeService.run.
