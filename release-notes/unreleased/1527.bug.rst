@@ -1,1 +1,0 @@
-Fixed a bug where ``RuntimeDecoder`` could import arbitrary classes. 
