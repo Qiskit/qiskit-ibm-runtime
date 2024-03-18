@@ -18,7 +18,7 @@ import time
 import itertools
 import unittest
 from unittest import mock
-from typing import Dict, Optional
+from typing import Dict, Optional, Any
 from datetime import datetime
 from ddt import data, unpack
 
@@ -319,6 +319,17 @@ def get_mocked_backend(
     )
 
     return mock_backend
+
+
+def get_mocked_session(backend: Any = None) -> mock.MagicMock:
+    """Return a mocked session object."""
+    session = mock.MagicMock(spec=Session)
+    session._instance = None
+    session._backend = backend or get_mocked_backend()
+    session._service = getattr(backend, "service", None) or mock.MagicMock(
+        spec=QiskitRuntimeService
+    )
+    return session
 
 
 def submit_and_cancel(backend: IBMBackend, logger: logging.Logger) -> RuntimeJob:
