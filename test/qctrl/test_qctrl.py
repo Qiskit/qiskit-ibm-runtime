@@ -16,8 +16,9 @@ from qiskit import QuantumCircuit
 from qiskit.quantum_info import Statevector, hellinger_fidelity
 from qiskit.providers.jobstatus import JobStatus
 from qiskit.quantum_info import SparsePauliOp
+from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
-from qiskit_ibm_runtime import Sampler, Session, Options, Estimator, QiskitRuntimeService
+from qiskit_ibm_runtime import Sampler, SamplerV2, Session, Options, Estimator, QiskitRuntimeService
 from qiskit_ibm_runtime.exceptions import IBMNotAuthorizedError
 
 from ..ibm_test_case import IBMIntegrationTestCase
@@ -26,6 +27,36 @@ from ..utils import cancel_job_safe, bell
 
 FIDELITY_THRESHOLD = 0.9
 DIFFERENCE_THRESHOLD = 0.1
+
+
+class TestV2PrimitivesQCTRL(IBMIntegrationTestCase):
+    """Integration tests for V2 primitives using QCTRL."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.bell = bell()
+        self.backend = "alt_canberra"
+
+    @run_integration_test
+    def test_sampler_v2_qctrl_bell(self, service):
+        """Test qctrl bell state"""
+        # Set shots for experiment
+        shots = 1000
+
+        bell_circuit = QuantumCircuit(2)
+        bell_circuit.h(0)
+        bell_circuit.cx(0, 1)
+        bell_circuit.measure_all()
+        backend = service.backend(self.backend)
+        pm = generate_preset_pass_manager(backend=backend, optimization_level=1)
+        isa_circuit = pm.run(bell_circuit)
+
+        # Execute circuit in a session with sampler
+        with Session(service, backend=self.backend):
+            sampler = SamplerV2()
+
+            result = sampler.run([isa_circuit], shots=shots).result()
+            self.assertTrue(result)
 
 
 class TestQCTRL(IBMIntegrationTestCase):
