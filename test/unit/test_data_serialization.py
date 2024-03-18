@@ -27,7 +27,7 @@ from qiskit.circuit import Parameter, ParameterVector, QuantumCircuit
 from qiskit.circuit.library import EfficientSU2, CXGate, PhaseGate, U2Gate
 
 import qiskit.quantum_info as qi
-from qiskit.quantum_info import SparsePauliOp, Pauli, Statevector
+from qiskit.quantum_info import SparsePauliOp, Pauli
 from qiskit.result import Result, Counts
 from qiskit.primitives.containers.bindings_array import BindingsArray
 from qiskit.primitives.containers.observables_array import ObservablesArray
@@ -107,17 +107,18 @@ class TestDataSerialization(IBMTestCase):
                     decoded = [decoded]
                 self.assertTrue(all(isinstance(item, QuantumCircuit) for item in decoded))
 
-    @skip("Skip until qiskit-ibm-provider/736 is merged")
     def test_coder_operators(self):
         """Test runtime encoder and decoder for operators."""
 
-        coeff_x = Parameter("x")
-        coeff_y = coeff_x + 1
+        # TODO: Re-enable use of Parameter when #1521 is fixed.
+        # coeff_x = Parameter("x")
+        # coeff_y = coeff_x + 1
 
         subtests = (
             SparsePauliOp(Pauli("XYZX"), coeffs=[2]),
-            SparsePauliOp(Pauli("XYZX"), coeffs=[coeff_y]),
+            # SparsePauliOp(Pauli("XYZX"), coeffs=[coeff_y]),
             SparsePauliOp(Pauli("XYZX"), coeffs=[1 + 2j]),
+            Pauli("XYZ"),
         )
 
         for operator in subtests:
@@ -224,7 +225,7 @@ if __name__ == '__main__':
 
         subtests = (
             SparsePauliOp(Pauli("XYZX"), coeffs=[2]),
-            Statevector([1, 0]),
+            Pauli("XYZX"),
         )
         for operator in subtests:
             with self.subTest(operator=operator):
@@ -531,3 +532,18 @@ class TestContainerSerialization(IBMTestCase):
             decoded = json.loads(encoded, cls=RuntimeDecoder)["primitive_result"]
             self.assertIsInstance(decoded, PrimitiveResult)
             self.assert_primitive_results_equal(primitive_result, decoded)
+
+    def test_unknown_settings(self):
+        """Test settings not on whitelisted path."""
+        random_settings = {
+            "__type__": "settings",
+            "__module__": "subprocess",
+            "__class__": "Popen",
+            "__value__": {
+                "args": ["echo", "hi"]
+            }
+        }
+        encoded = json.dumps(random_settings)
+        decoded = json.loads(encoded, cls=RuntimeDecoder)
+        self.assertIsInstance(decoded, dict)
+        self.assertDictEqual(decoded, random_settings)
