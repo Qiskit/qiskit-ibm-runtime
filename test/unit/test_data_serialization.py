@@ -539,9 +539,7 @@ class TestContainerSerialization(IBMTestCase):
             "__type__": "settings",
             "__module__": "subprocess",
             "__class__": "Popen",
-            "__value__": {
-                "args": ["echo", "hi"]
-            }
+            "__value__": {"args": ["echo", "hi"]},
         }
         encoded = json.dumps(random_settings)
         decoded = json.loads(encoded, cls=RuntimeDecoder)
