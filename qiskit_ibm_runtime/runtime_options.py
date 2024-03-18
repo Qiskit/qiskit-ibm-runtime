@@ -12,10 +12,14 @@
 
 """Runtime options that control the execution environment."""
 
+from __future__ import annotations
+
 import re
 import logging
 from dataclasses import dataclass
 from typing import Optional, List
+
+from qiskit.providers.backend import Backend
 
 from .exceptions import IBMInputValueError
 from .utils.utils import validate_job_tags
@@ -25,7 +29,7 @@ from .utils.utils import validate_job_tags
 class RuntimeOptions:
     """Class for representing generic runtime execution options."""
 
-    backend: Optional[str] = None
+    backend: Optional[str | Backend] = None
     image: Optional[str] = None
     log_level: Optional[str] = None
     instance: Optional[str] = None
@@ -35,7 +39,7 @@ class RuntimeOptions:
 
     def __init__(
         self,
-        backend: Optional[str] = None,
+        backend: Optional[str | Backend] = None,
         image: Optional[str] = None,
         log_level: Optional[str] = None,
         instance: Optional[str] = None,
@@ -104,3 +108,11 @@ class RuntimeOptions:
 
         if self.job_tags:
             validate_job_tags(self.job_tags)
+
+    def get_backend_name(self) -> str:
+        """Get backend name."""
+        if isinstance(self.backend, str):
+            return self.backend
+        if self.backend:
+            return self.backend.name if self.backend.version == 2 else self.backend.name()
+        return None
