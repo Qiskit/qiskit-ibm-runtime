@@ -61,6 +61,7 @@ def _get_client_header() -> str:
         return ""
 
     qiskit_pkgs = [
+        "qiskit",
         "qiskit_terra",
         "qiskit_aer",
         "qiskit_experiments",

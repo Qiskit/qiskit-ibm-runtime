@@ -14,9 +14,9 @@
 
 from typing import Optional, Union
 
-from qiskit_ibm_runtime import QiskitRuntimeService
+from qiskit.providers.backend import BackendV1, BackendV2
 
-from .ibm_backend import IBMBackend
+from qiskit_ibm_runtime import QiskitRuntimeService
 from .session import Session
 
 
@@ -62,7 +62,7 @@ class Batch(Session):
     def __init__(
         self,
         service: Optional[QiskitRuntimeService] = None,
-        backend: Optional[Union[str, IBMBackend]] = None,
+        backend: Optional[Union[str, BackendV1, BackendV2]] = None,
         max_time: Optional[Union[int, str]] = None,
     ):
         """Batch constructor.
@@ -88,9 +88,11 @@ class Batch(Session):
         """
         super().__init__(service=service, backend=backend, max_time=max_time)
 
-    def _create_session(self) -> str:
+    def _create_session(self) -> Optional[str]:
         """Create a session."""
-        session = self._service._api_client.create_session(
-            self._backend, self._instance, self._max_time, self._service.channel, "batch"
-        )
-        return session.get("id")
+        if isinstance(self._service, QiskitRuntimeService):
+            session = self._service._api_client.create_session(
+                self.backend(), self._instance, self._max_time, self._service.channel, "batch"
+            )
+            return session.get("id")
+        return None

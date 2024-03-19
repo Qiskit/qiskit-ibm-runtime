@@ -228,9 +228,7 @@ class RuntimeEncoder(json.JSONEncoder):
         if isinstance(obj, QuantumCircuit):
             kwargs: Dict[str, object] = {"use_symengine": bool(optionals.HAS_SYMENGINE)}
             if _TERRA_VERSION[0] >= 1:
-                # NOTE: This can be updated only after the server side has
-                # updated to a newer qiskit version.
-                kwargs["version"] = 10
+                kwargs["version"] = 11
             value = _serialize_and_encode(
                 data=obj,
                 serializer=lambda buff, data: dump(
@@ -258,9 +256,7 @@ class RuntimeEncoder(json.JSONEncoder):
         if isinstance(obj, Instruction):
             kwargs = {"use_symengine": bool(optionals.HAS_SYMENGINE)}
             if _TERRA_VERSION[0] >= 1:
-                # NOTE: This can be updated only after the server side has
-                # updated to a newer qiskit version.
-                kwargs["version"] = 10
+                kwargs["version"] = 11
             # Append instruction to empty circuit
             quantum_register = QuantumRegister(obj.num_qubits)
             quantum_circuit = QuantumCircuit(quantum_register)
@@ -373,7 +369,9 @@ class RuntimeDecoder(json.JSONDecoder):
                 # to deserialize load qpy circuit and return first instruction object in that circuit.
                 circuit = _decode_and_deserialize(obj_val, load)[0]
                 return circuit.data[0][0]
-            if obj_type == "settings":
+            if obj_type == "settings" and obj["__module__"].startswith(
+                "qiskit.quantum_info.operators"
+            ):
                 return _deserialize_from_settings(
                     mod_name=obj["__module__"],
                     class_name=obj["__class__"],

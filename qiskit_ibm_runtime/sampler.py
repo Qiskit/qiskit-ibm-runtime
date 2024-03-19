@@ -63,7 +63,7 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
     def __init__(
         self,
         backend: Optional[Union[str, IBMBackend]] = None,
-        session: Optional[Union[Session, str, IBMBackend]] = None,
+        session: Optional[Session] = None,
         options: Optional[Union[Dict, SamplerOptions]] = None,
     ):
         """Initializes the Sampler primitive.
@@ -80,8 +80,7 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
                 :class:`qiskit_ibm_runtime.Session` context manager, then the session is used.
                 Otherwise if IBM Cloud channel is used, a default backend is selected.
 
-            options: Primitive options, see :class:`Options` for detailed description.
-                The ``backend`` keyword is still supported but is deprecated.
+            options: Sampler options, see :class:`SamplerOptions` for detailed description.
 
         Raises:
             NotImplementedError: If "q-ctrl" channel strategy is used.
@@ -95,7 +94,7 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
             raise NotImplementedError("SamplerV2 is not supported with q-ctrl channel strategy.")
 
     def run(self, pubs: Iterable[SamplerPubLike], *, shots: int | None = None) -> RuntimeJobV2:
-        """Submit a request to the estimator primitive.
+        """Submit a request to the sampler primitive.
 
         Args:
             pubs: An iterable of pub-like objects. For example, a list of circuits
@@ -181,7 +180,7 @@ class SamplerV1(BasePrimitiveV1, Sampler, BaseSampler):
     def __init__(
         self,
         backend: Optional[Union[str, IBMBackend]] = None,
-        session: Optional[Union[Session, str, IBMBackend]] = None,
+        session: Optional[Session] = None,
         options: Optional[Union[Dict, Options]] = None,
     ):
         """Initializes the Sampler primitive.
