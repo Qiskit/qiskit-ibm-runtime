@@ -94,7 +94,7 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
             raise NotImplementedError("SamplerV2 is not supported with q-ctrl channel strategy.")
 
     def run(self, pubs: Iterable[SamplerPubLike], *, shots: int | None = None) -> RuntimeJobV2:
-        """Submit a request to the estimator primitive.
+        """Submit a request to the sampler primitive.
 
         Args:
             pubs: An iterable of pub-like objects. For example, a list of circuits
