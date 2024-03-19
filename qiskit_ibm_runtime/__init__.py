@@ -98,7 +98,7 @@ instance is used when instantiating a primitive or a session. For example::
     from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
     from qiskit_ibm_runtime import Session
-    from qiskit_ibm_runtime import Sampler
+    from qiskit_ibm_runtime import SamplerV2 as Sampler
     from qiskit_ibm_runtime.fake_provider import FakeManilaV2
 
     # Bell Circuit

@@ -23,7 +23,7 @@ class PecOptions:
 
     Args:
         max_overhead: The maximum circuit sampling overhead allowed, or
-            ``None`` for no maximum.
+            ``None`` for no maximum. Default: 100.
 
         noise_gain: The amount by which to scale the noise, where:
 
