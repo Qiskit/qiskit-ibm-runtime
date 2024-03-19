@@ -369,7 +369,9 @@ class RuntimeDecoder(json.JSONDecoder):
                 # to deserialize load qpy circuit and return first instruction object in that circuit.
                 circuit = _decode_and_deserialize(obj_val, load)[0]
                 return circuit.data[0][0]
-            if obj_type == "settings":
+            if obj_type == "settings" and obj["__module__"].startswith(
+                "qiskit.quantum_info.operators"
+            ):
                 return _deserialize_from_settings(
                     mod_name=obj["__module__"],
                     class_name=obj["__class__"],

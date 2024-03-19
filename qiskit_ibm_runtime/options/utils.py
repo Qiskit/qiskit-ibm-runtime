@@ -25,6 +25,7 @@ from pydantic.dataclasses import dataclass
 
 from qiskit.providers.backend import Backend
 
+from ..utils.utils import is_simulator
 
 if TYPE_CHECKING:
     from ..options.options import BaseOptions
@@ -47,9 +48,7 @@ def set_default_error_levels(
     Returns:
         options with correct error level defaults.
     """
-    is_sim = False
-    if hasattr(backend, "configuration"):
-        is_sim = getattr(backend.configuration(), "simulator", False)
+    is_sim = is_simulator(backend)
 
     if options.get("optimization_level") is None:
         if is_sim and not options.get("simulator", {}).get("noise_model"):

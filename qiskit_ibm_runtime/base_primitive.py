@@ -35,7 +35,7 @@ from .runtime_job_v2 import RuntimeJobV2
 from .ibm_backend import IBMBackend
 from .utils.default_session import get_cm_session
 from .utils.deprecation import issue_deprecation_msg
-from .utils.utils import validate_isa_circuits
+from .utils.utils import validate_isa_circuits, is_simulator
 from .constants import DEFAULT_DECODERS
 from .qiskit_runtime_service import QiskitRuntimeService
 from .fake_provider.local_service import QiskitRuntimeLocalService
@@ -56,15 +56,15 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
 
     def __init__(
         self,
-        backend: Optional[Union[str, IBMBackend]] = None,
-        session: Optional[Union[Session, str, IBMBackend]] = None,
+        backend: Optional[Union[str, BackendV1, BackendV2]] = None,
+        session: Optional[Session] = None,
         options: Optional[Union[Dict, OptionsT]] = None,
     ):
         """Initializes the primitive.
 
         Args:
 
-            backend: Backend to run the primitive. This can be a backend name or an :class:`IBMBackend`
+            backend: Backend to run the primitive. This can be a backend name or a ``Backend``
                 instance. If a name is specified, the default account (e.g. ``QiskitRuntimeService()``)
                 is used.
 
@@ -75,30 +75,32 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
                 :class:`qiskit_ibm_runtime.Session` context manager, then the session is used.
                 Otherwise if IBM Cloud channel is used, a default backend is selected.
 
-            options: Primitive options, see :class:`Options` for detailed description.
-                The ``backend`` keyword is still supported but is deprecated.
+            options: Primitive options, see :class:`qiskit_ibm_runtime.options.EstimatorOptions`
+                and :class:`qiskit_ibm_runtime.options.SamplerOptions` for detailed description
+                on estimator and sampler options, respectively.
 
         Raises:
             ValueError: Invalid arguments are given.
         """
         self._session: Optional[Session] = None
-        self._service: QiskitRuntimeService = None
-        self._backend: Optional[IBMBackend] = None
+        self._service: QiskitRuntimeService | QiskitRuntimeLocalService = None
+        self._backend: Optional[BackendV1 | BackendV2] = None
 
         self._set_options(options)
 
         if isinstance(session, Session):
             self._session = session
             self._service = self._session.service
-            self._backend = self._service.backend(
-                name=self._session.backend(), instance=self._session._instance
-            )
+            self._backend = self._session._backend
             return
-        elif session is not None:
+        elif session is not None:  # type: ignore[unreachable]
             raise ValueError("session must be of type Session or None")
 
-        if isinstance(backend, IBMBackend):
+        if isinstance(backend, IBMBackend):  # type: ignore[unreachable]
             self._service = backend.service
+            self._backend = backend
+        elif isinstance(backend, (BackendV1, BackendV2)):
+            self._service = QiskitRuntimeLocalService()
             self._backend = backend
         elif isinstance(backend, str):
             self._service = (
@@ -123,6 +125,12 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
                 raise ValueError(
                     "A backend or session must be specified when not using ibm_cloud channel."
                 )
+            issue_deprecation_msg(
+                "Not providing a backend is deprecated",
+                "0.22.0",
+                "Passing in a backend will be required, please provide a backend.",
+                3,
+            )
 
     def _run(self, pubs: Union[list[EstimatorPub], list[SamplerPub]]) -> RuntimeJobV2:
         """Run the primitive.
@@ -142,13 +150,11 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
 
         if self._backend:
             for pub in pubs:
-                if (
-                    getattr(self._backend, "target", None)
-                    and not self._backend.configuration().simulator
-                ):
+                if getattr(self._backend, "target", None) and not is_simulator(self._backend):
                     validate_isa_circuits([pub.circuit], self._backend.target)
 
-                self._backend.check_faulty(pub.circuit)
+                if isinstance(self._backend, IBMBackend):
+                    self._backend.check_faulty(pub.circuit)
 
         logger.info("Submitting job using options %s", primitive_options)
 
@@ -162,16 +168,23 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
             )
 
         if self._backend:
-            runtime_options["backend"] = self._backend.name
-            if "instance" not in runtime_options:
+            runtime_options["backend"] = self._backend
+            if "instance" not in runtime_options and isinstance(self._backend, IBMBackend):
                 runtime_options["instance"] = self._backend._instance
 
+        if isinstance(self._service, QiskitRuntimeService):
+            return self._service.run(
+                program_id=self._program_id(),
+                options=runtime_options,
+                inputs=primitive_inputs,
+                callback=options_dict.get("environment", {}).get("callback", None),
+                result_decoder=DEFAULT_DECODERS.get(self._program_id()),
+            )
+
         return self._service.run(
-            program_id=self._program_id(),
+            program_id=self._program_id(),  # type: ignore[arg-type]
             options=runtime_options,
             inputs=primitive_inputs,
-            callback=options_dict.get("environment", {}).get("callback", None),
-            result_decoder=DEFAULT_DECODERS.get(self._program_id()),
         )
 
     @property
