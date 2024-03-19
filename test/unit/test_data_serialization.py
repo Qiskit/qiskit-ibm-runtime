@@ -17,7 +17,6 @@ import os
 import subprocess
 import tempfile
 import warnings
-from unittest import skip
 from datetime import datetime
 
 import numpy as np
@@ -178,7 +177,6 @@ class TestDataSerialization(IBMTestCase):
             decoded = json.loads(encoded, cls=RuntimeDecoder)
             self.assertTrue(np.array_equal(decoded["ndarray"], obj["ndarray"]))
 
-    @skip("Skip until qiskit-ibm-provider/736 is merged")
     def test_encoder_instruction(self):
         """Test encoding and decoding instructions"""
         subtests = (

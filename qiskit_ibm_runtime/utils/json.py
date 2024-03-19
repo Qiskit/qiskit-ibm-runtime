@@ -16,7 +16,6 @@
 
 import base64
 import copy
-import functools
 import importlib
 import inspect
 import io
@@ -25,7 +24,7 @@ import re
 import warnings
 import zlib
 from datetime import date
-from typing import Any, Callable, Dict, List, Union, Tuple
+from typing import Any, Callable, Dict, List, Union
 
 import dateutil.parser
 import numpy as np
@@ -48,7 +47,6 @@ from qiskit.circuit import (
     Instruction,
     Parameter,
     ParameterExpression,
-    ParameterVector,
     QuantumCircuit,
     QuantumRegister,
 )
@@ -58,7 +56,6 @@ from qiskit.version import __version__ as _terra_version_string
 from qiskit.utils import optionals
 from qiskit.qpy import (
     _write_parameter_expression,
-    _read_parameter_expression,
     _read_parameter_expression_v3,
     load,
     dump,
@@ -330,15 +327,6 @@ class RuntimeDecoder(json.JSONDecoder):
 
     def __init__(self, *args: Any, **kwargs: Any):
         super().__init__(object_hook=self.object_hook, *args, **kwargs)
-        self.__parameter_vectors: Dict[str, Tuple[ParameterVector, set]] = {}
-        self.__read_parameter_expression = (
-            functools.partial(
-                _read_parameter_expression_v3,
-                vectors=self.__parameter_vectors,
-            )
-            if _TERRA_VERSION >= (0, 19, 1)
-            else _read_parameter_expression
-        )
 
     def object_hook(self, obj: Any) -> Any:
         """Called to decode object."""
@@ -362,7 +350,7 @@ class RuntimeDecoder(json.JSONDecoder):
                 return _decode_and_deserialize(obj_val, _read_parameter, False)
             if obj_type == "ParameterExpression":
                 return _decode_and_deserialize(
-                    obj_val, self.__read_parameter_expression, False  # type: ignore[arg-type]
+                    obj_val, _read_parameter_expression_v3, False  # type: ignore[arg-type]
                 )
             if obj_type == "Instruction":
                 # Standalone instructions are encoded as the sole instruction in a QPY serialized circuit
