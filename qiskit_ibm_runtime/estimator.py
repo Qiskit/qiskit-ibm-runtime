@@ -121,8 +121,7 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
                 :class:`qiskit_ibm_runtime.Session` context manager, then the session is used.
                 Otherwise if IBM Cloud channel is used, a default backend is selected.
 
-            options: Primitive options, see :class:`Options` for detailed description.
-                The ``backend`` keyword is still supported but is deprecated.
+            options: Estimator options, see :class:`EstimatorOptions` for detailed description.
 
         Raises:
             NotImplementedError: If "q-ctrl" channel strategy is used.

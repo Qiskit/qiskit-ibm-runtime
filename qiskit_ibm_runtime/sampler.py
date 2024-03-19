@@ -80,8 +80,7 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
                 :class:`qiskit_ibm_runtime.Session` context manager, then the session is used.
                 Otherwise if IBM Cloud channel is used, a default backend is selected.
 
-            options: Primitive options, see :class:`Options` for detailed description.
-                The ``backend`` keyword is still supported but is deprecated.
+            options: Sampler options, see :class:`SamplerOptions` for detailed description.
 
         Raises:
             NotImplementedError: If "q-ctrl" channel strategy is used.
