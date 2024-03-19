@@ -23,7 +23,7 @@ from .session import Session
 class Batch(Session):
     """Class for creating a batch mode in Qiskit Runtime.
 
-    Just like `session`, a Qiskit Runtime ``batch`` allows you to group a collection of
+    Just like ``session``, a Qiskit Runtime ``batch`` allows you to group a collection of
     iterative calls to the quantum computer. Batch mode can shorten processing time if all jobs
     can be provided at the outset. If you want to submit iterative jobs, use sessions instead.
 
@@ -39,7 +39,11 @@ class Batch(Session):
     For example::
 
         from qiskit.circuit import QuantumCircuit, QuantumRegister, ClassicalRegister
-        from qiskit_ibm_runtime import Sampler, Batch, Options
+        from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
+        from qiskit_ibm_runtime import Batch, SamplerV2 as Sampler
+
+        service = QiskitRuntimeService()
+        backend = service.least_busy(operational=True, simulator=False)
 
         # Bell Circuit
         qr = QuantumRegister(2, name="qr")
@@ -49,13 +53,15 @@ class Batch(Session):
         qc.cx(qr[0], qr[1])
         qc.measure(qr, cr)
 
-        options = Options(optimization_level=3)
+        pm = generate_preset_pass_manager(backend=backend, optimization_level=1)
+        isa_circuit = pm.run(qc)
 
-        with Batch(backend="ibmq_qasm_simulator") as batch:
-            sampler = Sampler(batch, options=options)
-            job = sampler.run(qc)
+        with Batch(backend=backend) as batch:
+            sampler = Sampler(batch)
+            job = sampler.run([isa_circuit])
+            pub_result = job.result()[0]
             print(f"Sampler job ID: {job.job_id()}")
-            print(f"Sampler job result: {job.result()}")
+            print(f"Counts: {pub_result.data.cr.get_counts()}")
 
     """
 
@@ -72,11 +78,10 @@ class Batch(Session):
                 If ``None``, the service associated with the backend, if known, is used.
                 Otherwise ``QiskitRuntimeService()`` is used to initialize
                 your default saved account.
-            backend: Optional instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
-                string name of backend. An instance of :class:`qiskit_ibm_provider.IBMBackend`
-                will not work.
+            backend: Optional instance of ``Backend`` class or string name of backend.
+                If not specified, a backend will be selected automatically (IBM Cloud channel only).
 
-            max_time: (EXPERIMENTAL setting, can break between releases without warning)
+            max_time:
                 Maximum amount of time, a runtime session can be open before being
                 forcibly closed. Can be specified as seconds (int) or a string like "2h 30m 40s".
                 This value must be less than the
