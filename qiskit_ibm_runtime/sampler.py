@@ -90,9 +90,6 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
         Sampler.__init__(self)
         BasePrimitiveV2.__init__(self, backend=backend, session=session, options=options)
 
-        # if self._service._channel_strategy == "q-ctrl":
-        #     raise NotImplementedError("SamplerV2 is not supported with q-ctrl channel strategy.")
-
     def run(self, pubs: Iterable[SamplerPubLike], *, shots: int | None = None) -> RuntimeJobV2:
         """Submit a request to the sampler primitive.
 
