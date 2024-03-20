@@ -39,7 +39,7 @@ class LayerNoiseLearningOptions:
             If there are more unique layers present, then some layers will not be learned or
             mitigated. The learned layers are prioritized based on the number of times they
             occur in a set of run estimator PUBs, and for equally occurring layers are
-            further sorted by the number of two-qubit gates in the layer.
+            further sorted by the number of two-qubit gates in the layer. Default: 4.
 
         shots_per_randomization: The total number of shots to use per random learning circuit.
             A learning circuit is a random circuit at a specific learning depth with a specific

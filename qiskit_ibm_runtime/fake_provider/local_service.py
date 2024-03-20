@@ -17,6 +17,8 @@ from __future__ import annotations
 import logging
 import copy
 from typing import Dict, Union, Literal
+import warnings
+from dataclasses import asdict
 
 from qiskit.utils import optionals
 from qiskit.providers.backend import BackendV1, BackendV2
@@ -25,6 +27,7 @@ from qiskit.primitives.primitive_job import PrimitiveJob
 
 from ..runtime_options import RuntimeOptions
 from ..ibm_backend import IBMBackend
+from ..qiskit.primitives import BackendEstimatorV2, BackendSamplerV2  # type: ignore[attr-defined]
 
 logger = logging.getLogger(__name__)
 
@@ -66,19 +69,20 @@ class QiskitRuntimeLocalService:
             ValueError: If input is invalid.
             NotImplementedError: If using V2 primitives.
         """
-        # qrt_options: RuntimeOptions = options
         if isinstance(options, Dict):
-            qrt_options = RuntimeOptions(**options)
+            qrt_options = copy.deepcopy(options)
         else:
-            qrt_options = options
+            qrt_options = asdict(options)
+
+        backend = qrt_options.pop("backend", None)
 
         if program_id not in ["sampler", "estimator"]:
             raise ValueError("Only sampler and estimator are supported in local testing mode.")
-        if isinstance(qrt_options.backend, IBMBackend):
+        if isinstance(backend, IBMBackend):
             raise ValueError(
                 "Local testing mode is not supported when a cloud-based backend is used."
             )
-        if isinstance(qrt_options.backend, str):
+        if isinstance(backend, str):
             raise ValueError(
                 "Passing a backend name is not supported in local testing mode. "
                 "Please pass a backend instance."
@@ -94,25 +98,30 @@ class QiskitRuntimeLocalService:
             if program_id == "estimator":
                 primitive_inputs["observables"] = inputs.pop("observables")
             inputs.pop("parameters", None)
+
+            if optionals.HAS_AER:
+                # pylint: disable=import-outside-toplevel
+                from qiskit_aer.backends.aerbackend import AerBackend
+
+                if isinstance(backend, AerBackend):
+                    return self._run_aer_primitive_v1(
+                        primitive=program_id, options=inputs, inputs=primitive_inputs
+                    )
+
+            return self._run_backend_primitive_v1(
+                backend=backend,
+                primitive=program_id,
+                options=inputs,
+                inputs=primitive_inputs,
+            )
         else:
             primitive_inputs = {"pubs": inputs.pop("pubs")}
-            raise NotImplementedError("V2 primitives are not supported in local mode.")
-
-        if optionals.HAS_AER:
-            # pylint: disable=import-outside-toplevel
-            from qiskit_aer.backends.aerbackend import AerBackend
-
-            if isinstance(qrt_options.backend, AerBackend):
-                return self._run_aer_primitive_v1(
-                    primitive=program_id, options=inputs, inputs=primitive_inputs
-                )
-
-        return self._run_backend_primitive_v1(
-            backend=qrt_options.backend,
-            primitive=program_id,
-            options=inputs,
-            inputs=primitive_inputs,
-        )
+            return self._run_backend_primitive_v2(
+                backend=backend,
+                primitive=program_id,
+                options=inputs.get("options", {}),
+                inputs=primitive_inputs,
+            )
 
     def _run_aer_primitive_v1(
         self, primitive: Literal["sampler", "estimator"], options: dict, inputs: dict
@@ -197,3 +206,40 @@ class QiskitRuntimeLocalService:
 
         primitive_inst.set_transpile_options(**transpilation_options)
         return primitive_inst.run(**inputs, **run_options)
+
+    def _run_backend_primitive_v2(
+        self,
+        backend: BackendV1 | BackendV2,
+        primitive: Literal["sampler", "estimator"],
+        options: dict,
+        inputs: dict,
+    ) -> PrimitiveJob:
+        """Run V2 backend primitive.
+
+        Args:
+            backend: The backend to run the primitive on.
+            primitive: Name of the primitive.
+            options: Primitive options to use.
+            inputs: Primitive inputs.
+
+        Returns:
+            The job object of the result of the primitive.
+        """
+        options_copy = copy.deepcopy(options)
+
+        prim_options = {}
+        if seed_simulator := options_copy.pop("simulator", {}).pop("seed_simulator", None):
+            prim_options["seed_simulator"] = seed_simulator
+        if primitive == "sampler":
+            if default_shots := options_copy.pop("default_shots", None):
+                prim_options["default_shots"] = default_shots
+            primitive_inst = BackendSamplerV2(backend=backend, options=prim_options)
+        else:
+            if default_precision := options_copy.pop("default_precision", None):
+                prim_options["default_precision"] = default_precision
+            primitive_inst = BackendEstimatorV2(backend=backend, options=prim_options)
+
+        if options_copy:
+            warnings.warn(f"Options {options_copy} have no effect in local testing mode.")
+
+        return primitive_inst.run(**inputs)
