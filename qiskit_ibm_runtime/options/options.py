@@ -71,7 +71,7 @@ class BaseOptions:
             out["image"] = options_copy["experimental"]["image"]
 
         return out
-    
+
     def _repr_html_(self) -> str:
         """Return a string that formats this instance as an HTML table."""
         html_str = "<table style='font-size: 14px; width: 300px;'>"
@@ -79,12 +79,13 @@ class BaseOptions:
             if isinstance(value, dict):
                 html_str += f"<tr><th style='text-align: left;'>{key}</th><td></td></tr>"
                 for subkey, subvalue in value.items():
-                    html_str += f"<tr><td style='text-align: left; padding-left: 20px;'>{subkey}</td><td>{subvalue}</td></tr>"
+                    html_str += (
+                        f"<tr><td style='text-align: left; padding-left: 20px;'>{subkey}</td>"
+                        f"<td>{subvalue}</td></tr>"
+                    )
             else:
                 html_str += f"<tr><th style='text-align: left;'>{key}</th><td>{value}</td></tr>"
-        html_str + "</table>"
-        return html_str
-
+        return html_str + "</table>"
 
 
 @primitive_dataclass
