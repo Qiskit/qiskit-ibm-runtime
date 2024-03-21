@@ -1,5 +1,0 @@
-A new local testing mode is added. It allows you to
-validate your quantum prorams before sending them to a physical system.
-The local testing mode is activated if one of the fake
-backends in ``qiskit_ibm_runtime.fake_provider`` or a Qiskit Aer backend
-instance is used when instantiating a primitive or a session.
