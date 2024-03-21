@@ -18,11 +18,18 @@ from ddt import data, ddt
 from pydantic import ValidationError
 
 from qiskit_aer.noise import NoiseModel
+from qiskit_ibm_runtime import EstimatorV2 as Estimator
 from qiskit_ibm_runtime.options import EstimatorOptions
 from qiskit_ibm_runtime.fake_provider import FakeManila
 
 from ..ibm_test_case import IBMTestCase
-from ..utils import dict_keys_equal, dict_paritally_equal, flat_dict_partially_equal
+from ..utils import (
+    dict_keys_equal,
+    dict_paritally_equal,
+    flat_dict_partially_equal,
+    get_mocked_backend,
+    get_primitive_inputs,
+)
 
 
 @ddt
@@ -168,3 +175,37 @@ class TestEstimatorOptions(IBMTestCase):
         )
         # Make sure the structure didn't change.
         self.assertTrue(dict_keys_equal(asdict(options), asdict(EstimatorOptions())))
+
+    @data(
+        {"default_shots": 0},
+        {"seed_estimator": 0},
+        {"resilience": {"layer_noise_learning": {"max_layers_to_learn": 0}}},
+        {"resilience": {"layer_noise_learning": {"layer_pair_depths": [0]}}},
+        {"execution": {"rep_delay": 0.0}},
+    )
+    def test_zero_values(self, opt_dict):
+        """Test options with values of 0."""
+        backend = get_mocked_backend()
+        estimator = Estimator(backend=backend, options=opt_dict)
+        _ = estimator.run(**get_primitive_inputs(estimator))
+        options = backend.service.run.call_args.kwargs["inputs"]["options"]
+        self.assertDictEqual(options, opt_dict)
+
+    def test_zero_optimization_level(self):
+        """Test optimization_level=0."""
+        opt_dict = {"optimization_level": 0}
+        backend = get_mocked_backend()
+        estimator = Estimator(backend=backend, options=opt_dict)
+        _ = estimator.run(**get_primitive_inputs(estimator))
+        options = backend.service.run.call_args.kwargs["inputs"]["options"]
+        self.assertDictEqual(options, {"transpilation": {"optimization_level": 0}})
+
+    def test_zero_resilience_level(self):
+        """Test resilience_level=0"""
+        opt_dict = {"resilience_level": 0}
+        backend = get_mocked_backend()
+        estimator = Estimator(backend=backend, options=opt_dict)
+        _ = estimator.run(**get_primitive_inputs(estimator))
+        options = backend.service.run.call_args.kwargs["inputs"]
+        self.assertIn("resilience_level", options)
+        self.assertEqual(options["resilience_level"], 0)

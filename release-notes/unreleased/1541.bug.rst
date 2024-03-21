@@ -1,0 +1,2 @@
+Fix a bug that caused setting of ``resilience_level=0`` in ``EstimatorV2``
+to be ignored (and the default value used instead).
