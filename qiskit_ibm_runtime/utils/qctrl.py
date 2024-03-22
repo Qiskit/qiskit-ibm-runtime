@@ -83,7 +83,85 @@ def _warn_and_clean_options(options: Dict[str, Any]) -> None:
         },
     }
 
-    # Collect keys with miss-matching values
+    # Collect keys with mis-matching values
+    different_keys = _validate_values(expected_options, options)
+    # Override options
+    _update_values(expected_options, options)
+    if different_keys:
+        logger.warning(
+            "The following settings cannot be customized and will be overwritten: %s",
+            ",".join(sorted(different_keys)),
+        )
+
+
+def validate_v2(options: Dict[str, Any]) -> None:
+    """Validates the options for qctrl"""
+
+    # Raise error on bad options.
+    _raise_if_error_in_options_v2(options)
+    # Override options and warn.
+    _warn_and_clean_options_v2(options)
+
+    # Default validation otherwise.
+    TranspilationOptions(**options.get("transpilation", {}))
+    execution_time = options.get("max_execution_time")
+    if execution_time is not None:
+        if execution_time > Options._MAX_EXECUTION_TIME:
+            raise ValueError(
+                f"max_execution_time must be below " f"{Options._MAX_EXECUTION_TIME} seconds."
+            )
+
+    EnvironmentOptions(**options.get("environment", {}))
+    ExecutionOptions(**options.get("execution", {}))
+    SimulatorOptions(**options.get("simulator", {}))
+
+
+def _raise_if_error_in_options_v2(options: Dict[str, Any]) -> None:
+    """Checks for settings that produce errors and raise a ValueError"""
+
+    # Fail on resilience_level set to 0
+    resilience_level = options.get("resilience_level", 1)
+    _check_argument(
+        resilience_level > 0,
+        description=(
+            "Q-CTRL Primitives do not support resilience level 0. Please "
+            "set resilience_level to 1 and re-try"
+        ),
+        arguments={},
+    )
+
+    optimization_level = options.get("optimization_level", 1)
+    _check_argument(
+        optimization_level > 0,
+        description="Q-CTRL Primitives do not support optimization level 0. Please\
+        set optimization_level to 1 and re-try",
+        arguments={},
+    )
+
+
+def _warn_and_clean_options_v2(options: Dict[str, Any]) -> None:
+    """
+    Validate and update transpilation settings
+    """
+    # Issue a warning and override if any of these setting is not None
+    # or a different value than the default below
+    expected_options = {
+        "optimization_level": 1,
+        "resilience_level": 1,
+        "resilience": {
+            "measure_mitigation": None,
+            "measure_noise_learning": None,
+            "zne_mitigation": None,
+            "zne": None,
+            "pec_mitigation": None,
+            "pec": None,
+            "layer_noise_learning": None,
+        },
+        "twirling": None,
+        "dynamical_decoupling": None,
+    }
+
+    # Collect keys with mis-matching values
     different_keys = _validate_values(expected_options, options)
     # Override options
     _update_values(expected_options, options)
