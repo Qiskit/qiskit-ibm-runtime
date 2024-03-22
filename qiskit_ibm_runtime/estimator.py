@@ -30,7 +30,7 @@ from .ibm_backend import IBMBackend
 from .options import Options
 from .options.estimator_options import EstimatorOptions
 from .base_primitive import BasePrimitiveV1, BasePrimitiveV2
-from .utils.qctrl import validate as qctrl_validate,
+from .utils.qctrl import validate as qctrl_validate
 from .utils.qctrl import validate_v2 as qctrl_validate_v2
 
 
