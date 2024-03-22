@@ -20,6 +20,7 @@ from qiskit.primitives import Estimator as TerraEstimator
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.primitives import BaseEstimator, EstimatorResult
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
+from qiskit.providers.exceptions import QiskitBackendNotFoundError
 
 from qiskit_ibm_runtime import Estimator, Session
 
@@ -218,3 +219,10 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
         self.assertEqual(len(result1.values), len(isa_circuits))
         self.assertEqual(len(result1.metadata), len(isa_circuits))
         self.assertIsNone(job.session_id)
+
+    @run_integration_test
+    def test_estimator_backend_str(self, service):
+        """Test v1 primitive with string as backend."""
+        # pylint: disable=unused-argument
+        with self.assertRaisesRegex(QiskitBackendNotFoundError, "No backend matches"):
+            _ = Estimator(backend="fake_manila")

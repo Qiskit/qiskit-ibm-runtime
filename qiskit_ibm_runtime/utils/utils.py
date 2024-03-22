@@ -11,12 +11,13 @@
 # that they have been altered from the originals.
 
 """General utility functions."""
+
+from __future__ import annotations
 import copy
 import keyword
 import logging
 import os
 import re
-import hashlib
 from queue import Queue
 from threading import Condition
 from typing import List, Optional, Any, Dict, Union, Tuple, Sequence
@@ -29,7 +30,22 @@ from ibm_cloud_sdk_core.authenticators import (  # pylint: disable=import-error
 from ibm_platform_services import ResourceControllerV2  # pylint: disable=import-error
 from qiskit.circuit import QuantumCircuit
 from qiskit.transpiler import Target
+from qiskit.providers.backend import BackendV1, BackendV2
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
+
+
+def is_simulator(backend: BackendV1 | BackendV2) -> bool:
+    """Return true if the backend is a simulator.
+
+    Args:
+        backend: Backend to check.
+
+    Returns:
+        True if backend is a simulator.
+    """
+    if hasattr(backend, "configuration"):
+        return getattr(backend.configuration(), "simulator", False)
+    return getattr(backend, "simulator", False)
 
 
 def is_isa_circuit(circuit: QuantumCircuit, target: Target) -> str:
@@ -308,13 +324,6 @@ def _filter_value(data: Dict[str, Any], filter_keys: List[Union[str, Tuple[str, 
                 data[filter_key[0]][filter_key[1]] = "..."
             elif isinstance(value, dict):
                 _filter_value(value, filter_keys)
-
-
-def _hash(hash_str: str) -> str:
-    """Hashes and returns a digest.
-    blake2s is supposedly faster than SHAs.
-    """
-    return hashlib.blake2s(hash_str.encode()).hexdigest()
 
 
 class RefreshQueue(Queue):

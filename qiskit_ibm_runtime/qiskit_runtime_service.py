@@ -55,7 +55,6 @@ from .utils import RuntimeDecoder, to_python_identifier
 from .api.client_parameters import ClientParameters
 from .runtime_options import RuntimeOptions
 from .ibm_backend import IBMBackend
-from .utils.deprecation import issue_deprecation_msg
 
 logger = logging.getLogger(__name__)
 
@@ -841,12 +840,14 @@ class QiskitRuntimeService(Provider):
         hgp_name = None
         if self._channel == "ibm_quantum":
             # Find the right hgp
-            hgp = self._get_hgp(instance=qrt_options.instance, backend_name=qrt_options.backend)
+            hgp = self._get_hgp(
+                instance=qrt_options.instance, backend_name=qrt_options.get_backend_name()
+            )
             hgp_name = hgp.name
             if hgp_name != self._current_instance:
                 self._current_instance = hgp_name
                 logger.info("Instance selected: %s", self._current_instance)
-        backend = self.backend(name=qrt_options.backend, instance=hgp_name)
+        backend = self.backend(name=qrt_options.get_backend_name(), instance=hgp_name)
         status = backend.status()
         if status.operational is True and status.status_msg != "active":
             warnings.warn(
@@ -857,7 +858,7 @@ class QiskitRuntimeService(Provider):
         try:
             response = self._api_client.program_run(
                 program_id=program_id,
-                backend_name=qrt_options.backend,
+                backend_name=qrt_options.get_backend_name(),
                 params=inputs,
                 image=qrt_options.image,
                 hgp=hgp_name,
@@ -884,7 +885,7 @@ class QiskitRuntimeService(Provider):
         backend = (
             self.backend(name=response["backend"], instance=hgp_name)
             if response["backend"]
-            else qrt_options.backend
+            else qrt_options.get_backend_name()
         )
 
         if version == 2:
@@ -1157,21 +1158,6 @@ class QiskitRuntimeService(Provider):
             The channel type used.
         """
         return self._channel
-
-    @property
-    def runtime(self):  # type:ignore
-        """Return self for compatibility with IBMQ provider.
-
-        Returns:
-            self
-        """
-        issue_deprecation_msg(
-            msg="The runtime property is deprecated",
-            version="0.18.0",
-            remedy="",
-            period="1 month",
-        )
-        return self
 
     def __repr__(self) -> str:
         return "<{}>".format(self.__class__.__name__)

@@ -12,8 +12,6 @@
 
 """Tests for estimator class."""
 
-from unittest.mock import MagicMock
-
 import numpy as np
 from ddt import data, ddt
 
@@ -28,7 +26,6 @@ from .mock.fake_runtime_service import FakeRuntimeService
 from ..ibm_test_case import IBMTestCase
 from ..utils import (
     get_mocked_backend,
-    MockSession,
     dict_paritally_equal,
     transpile_pubs,
     get_primitive_inputs,
@@ -115,11 +112,10 @@ class TestEstimatorV2(IBMTestCase):
 
     def test_pec_simulator(self):
         """Test error is raised when using pec on simulator without coupling map."""
+        backend = get_mocked_backend()
+        backend.configuration().simulator = True
 
-        session = MagicMock(spec=MockSession)
-        session.service.backend().configuration().simulator = True
-
-        inst = EstimatorV2(session=session, options={"resilience": {"pec_mitigation": True}})
+        inst = EstimatorV2(backend=backend, options={"resilience": {"pec_mitigation": True}})
         with self.assertRaises(ValueError) as exc:
             inst.run(**get_primitive_inputs(inst))
         self.assertIn("coupling map", str(exc.exception))
