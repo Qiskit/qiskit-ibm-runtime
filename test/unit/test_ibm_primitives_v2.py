@@ -676,34 +676,35 @@ class TestPrimitivesV2(IBMTestCase):
             f"{dict1} and {dict2} not partially equal.",
         )
 
-    @skip("Q-Ctrl does not support v2 yet")
     def test_qctrl_supported_values_for_options(self):
         """Test exception when options levels not supported."""
         no_resilience_options = {
-            "noise_factors": None,
-            "extrapolator": None,
+            "measure_mitigation": None,
+            "measure_noise_learning": None,
+            "zne_mitigation": None,
+            "zne": None,
+            "pec_mitigation": None,
+            "pec": None,
+            "layer_noise_learning": None,
         }
 
         options_good = [
-            # Minium working settings
+            # Minimum working settings
             {},
             # No warnings, we need resilience options here because by default they are getting populated.
             {"resilience": no_resilience_options},
-            # Arbitrary approximation degree (issues warning)
-            {"approximation_degree": 1},
             # Arbitrary resilience options(issue warning)
             {
                 "resilience_level": 1,
-                "resilience": {"noise_factors": (1, 1, 3)},
-                "approximation_degree": 1,
+                "resilience": {"measure_mitigation": True},
             },
             # Resilience level > 1 (issue warning)
             {"resilience_level": 2},
-            # Optimization level = 1,2 (issue warning)
-            {"optimization_level": 1},
+            # Optimization level = 2,3 (issue warning)
             {"optimization_level": 2},
-            # Skip transpilation level(issue warning)
-            {"skip_transpilation": True},
+            {"optimization_level": 3},
+            {"twirling": {"gates": True}},
+            {"dynamical_decoupling": "XX"},
         ]
         session = MagicMock(spec=MockSession)
         session.service._channel_strategy = "q-ctrl"
@@ -718,7 +719,6 @@ class TestPrimitivesV2(IBMTestCase):
                     else:
                         _ = inst.run(self.circ, **options)
 
-    @skip("Q-Ctrl does not support v2 yet")
     def test_qctrl_unsupported_values_for_options(self):
         """Test exception when options levels are not supported."""
         options_bad = [
