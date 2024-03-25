@@ -13,7 +13,6 @@
 """Tests for primitive classes."""
 
 from dataclasses import asdict
-from unittest import skip
 from unittest.mock import MagicMock, patch
 
 from ddt import data, ddt
