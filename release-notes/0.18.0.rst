@@ -5,7 +5,7 @@ New Features
 ------------
 
 -  Added a new parameter, dynamic_circuits to
-   `` `backends() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#backends>`__ ``
+   `backends() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#backends>`__
    to allow filtering of backends that support dynamic circuits.
 
 -  Added ``max_time`` parameter to ``IBMBackend.open_session()``.
