@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    The Sampler and Estimator Primitives v2 have been enhanced to incorporate custom validation procedures when
+    the channel_strategy property within the :class:qiskit_ibm_runtime.QiskitRuntimeService is configured as "q-ctrl."
+    This customized validation logic effectively rectifies incorrect input options and safeguards users against
+    inadvertently disabling Q-CTRL's performance enhancements.
