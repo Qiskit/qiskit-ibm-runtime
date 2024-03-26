@@ -80,7 +80,7 @@ class TestSamplerV2(IBMTestCase):
             self.assertEqual(a_pub_param.circuit, an_in_taks[0])
             # Check parameter values
             an_input_params = an_in_taks[1] if len(an_in_taks) == 2 else []
-            np.allclose(a_pub_param.parameter_values.vals, an_input_params)
+            np.testing.assert_allclose(a_pub_param.parameter_values.vals, an_input_params)
 
     @data(
         {"optimization_level": 4}, {"resilience_level": 1}, {"resilience": {"zne_mitigation": True}}

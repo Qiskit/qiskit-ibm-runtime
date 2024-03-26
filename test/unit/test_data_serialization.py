@@ -296,7 +296,7 @@ class TestContainerSerialization(IBMTestCase):
         barr2_str_keyed = _to_str_keyed(barr2.data)
         for key, val in barr1_str_keyed.items():
             self.assertIn(key, barr2_str_keyed)
-            self.assertTrue(np.allclose(val, barr2_str_keyed[key]))
+            np.testing.assert_allclose(val, barr2_str_keyed[key])
 
     def assert_data_bins_equal(self, dbin1, dbin2):
         """Compares two DataBins
@@ -312,7 +312,7 @@ class TestContainerSerialization(IBMTestCase):
             field_1 = getattr(dbin1, field_name)
             field_2 = getattr(dbin2, field_name)
             if isinstance(field_1, np.ndarray):
-                self.assertTrue(np.allclose(field_1, field_2))
+                np.testing.assert_allclose(field_1, field_2)
             else:
                 self.assertEqual(field_1, field_2)
 
