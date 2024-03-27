@@ -147,7 +147,7 @@ class TestPrimitivesV2(IBMTestCase):
 
         with patch("qiskit_ibm_runtime.base_primitive.QiskitRuntimeService", new=MockQRTService):
             inst = primitive(backend=backend_name)
-            self.assertIsNone(inst.session)
+            self.assertIsNone(inst.mode)
             inst.run(**get_primitive_inputs(inst))
             mock_service_inst.run.assert_called_once()
             runtime_options = mock_service_inst.run.call_args.kwargs["options"]
@@ -172,7 +172,7 @@ class TestPrimitivesV2(IBMTestCase):
 
         service.reset_mock()
         inst = primitive(backend=backend)
-        self.assertIsNone(inst.session)
+        self.assertIsNone(inst.mode)
         inst.run(**get_primitive_inputs(inst))
         service.run.assert_called_once()
         runtime_options = service.run.call_args.kwargs["options"]
@@ -191,7 +191,7 @@ class TestPrimitivesV2(IBMTestCase):
 
         session.reset_mock()
         inst = primitive(session=session, backend=backend_name)
-        self.assertIsNotNone(inst.session)
+        self.assertIsNotNone(inst.mode)
         inst.run(**get_primitive_inputs(inst))
         session.run.assert_called_once()
 
@@ -206,7 +206,7 @@ class TestPrimitivesV2(IBMTestCase):
             mock_service.global_service = None
             inst = primitive()
             mock_service.assert_called_once()
-            self.assertIsNone(inst.session)
+            self.assertIsNone(inst.mode)
 
     @data(EstimatorV2, SamplerV2)
     def test_init_with_no_backend_session_quantum(self, primitive):
@@ -225,8 +225,8 @@ class TestPrimitivesV2(IBMTestCase):
 
         with Session(service=backend.service, backend=backend_name) as session:
             inst = primitive()
-            self.assertEqual(inst.session, session)
-            self.assertEqual(inst.session.backend(), backend_name)
+            self.assertEqual(inst.mode, session)
+            self.assertEqual(inst.mode.backend(), backend_name)
 
     @data(EstimatorV2, SamplerV2)
     def test_default_session_cm_new_backend(self, primitive):
@@ -237,7 +237,7 @@ class TestPrimitivesV2(IBMTestCase):
 
         with Session(service=service, backend=cm_backend):
             inst = primitive(backend=backend)
-            self.assertIsNone(inst.session)
+            self.assertIsNone(inst.mode)
             inst.run(**get_primitive_inputs(inst))
             service.run.assert_called_once()
             runtime_options = service.run.call_args.kwargs["options"]
@@ -250,7 +250,7 @@ class TestPrimitivesV2(IBMTestCase):
         service = backend.service
         inst = primitive(backend)
         inst.run(**get_primitive_inputs(inst))
-        self.assertIsNone(inst.session)
+        self.assertIsNone(inst.mode)
         service.run.assert_called_once()
         kwargs_list = service.run.call_args.kwargs
         self.assertNotIn("session_id", kwargs_list)
