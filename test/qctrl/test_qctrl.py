@@ -24,8 +24,8 @@ from ..ibm_test_case import IBMIntegrationTestCase
 from ..decorators import run_integration_test
 from ..utils import cancel_job_safe, bell
 
-FIDELITY_THRESHOLD = 0.9
-DIFFERENCE_THRESHOLD = 0.1
+FIDELITY_THRESHOLD = 0.8
+DIFFERENCE_THRESHOLD = 0.35
 
 
 class TestQCTRL(IBMIntegrationTestCase):

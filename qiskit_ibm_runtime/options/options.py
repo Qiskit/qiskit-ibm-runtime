@@ -163,7 +163,7 @@ class OptionsV2(BaseOptions):
         remove_empty_dict(output_options)
 
         inputs = {"options": output_options, "version": OptionsV2._VERSION, "support_qiskit": True}
-        if options_copy.get("resilience_level"):
+        if options_copy.get("resilience_level", Unset) != Unset:
             inputs["resilience_level"] = options_copy["resilience_level"]
 
         return inputs
