@@ -95,7 +95,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
             self._service = self._mode.service
             self._backend = self._mode._backend
             return
-        elif session is not None:  # type: ignore[unreachable]
+        elif mode is not None:  # type: ignore[unreachable]
             raise ValueError("mode must be of type Session, Batch or None")
 
         if isinstance(backend, IBMBackend):  # type: ignore[unreachable]
@@ -160,8 +160,8 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
 
         logger.info("Submitting job using options %s", primitive_options)
 
-        if self._session:
-            return self._session.run(
+        if self._mode:
+            return self._mode.run(
                 program_id=self._program_id(),
                 inputs=primitive_inputs,
                 options=runtime_options,
