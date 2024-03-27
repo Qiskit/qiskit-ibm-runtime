@@ -23,11 +23,7 @@ from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.quantum_info import SparsePauliOp
 
-from qiskit_ibm_runtime import (
-    Sampler,
-    Estimator,
-    Session,
-)
+from qiskit_ibm_runtime import Session
 from qiskit_ibm_runtime.utils.default_session import _DEFAULT_SESSION
 from qiskit_ibm_runtime import EstimatorV2, SamplerV2
 from qiskit_ibm_runtime.estimator import Estimator as IBMBaseEstimator
@@ -42,7 +38,6 @@ from ..utils import (
     dict_keys_equal,
     create_faulty_backend,
     combine,
-    MockSession,
     get_primitive_inputs,
     get_mocked_backend,
     bell,
