@@ -162,7 +162,7 @@ class TestPrimitivesV2(IBMTestCase):
             with self.assertRaises(ValueError) as exc:
                 inst = primitive(session=backend_name)
                 self.assertIsNone(inst.session)
-            self.assertIn("session must be of type Session or None", str(exc.exception))
+            self.assertIn("mode must be of type Session, Batch or None", str(exc.exception))
 
     @data(EstimatorV2, SamplerV2)
     def test_init_with_backend_instance(self, primitive):
@@ -181,7 +181,7 @@ class TestPrimitivesV2(IBMTestCase):
         with self.assertRaises(ValueError) as exc:
             inst = primitive(session=backend)
             self.assertIsNone(inst.session)
-        self.assertIn("session must be of type Session or None", str(exc.exception))
+        self.assertIn("mode must be of type Session, Batch or None", str(exc.exception))
 
     @data(EstimatorV2, SamplerV2)
     def test_init_with_backend_session(self, primitive):
