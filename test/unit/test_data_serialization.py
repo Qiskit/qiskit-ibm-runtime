@@ -109,13 +109,12 @@ class TestDataSerialization(IBMTestCase):
     def test_coder_operators(self):
         """Test runtime encoder and decoder for operators."""
 
-        # TODO: Re-enable use of Parameter when #1521 is fixed.
-        # coeff_x = Parameter("x")
-        # coeff_y = coeff_x + 1
+        coeff_x = Parameter("x")
+        coeff_y = coeff_x + 1
 
         subtests = (
             SparsePauliOp(Pauli("XYZX"), coeffs=[2]),
-            # SparsePauliOp(Pauli("XYZX"), coeffs=[coeff_y]),
+            SparsePauliOp(Pauli("XYZX"), coeffs=[coeff_y]),
             SparsePauliOp(Pauli("XYZX"), coeffs=[1 + 2j]),
             Pauli("XYZ"),
         )
