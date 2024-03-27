@@ -12,7 +12,6 @@
 
 """Tests for sampler class."""
 
-from unittest import skip
 from unittest.mock import MagicMock
 
 from ddt import data, ddt
@@ -51,7 +50,6 @@ class TestSampler(IBMTestCase):
                 self.assertIn(list(bad_opt.keys())[0], str(exc.exception))
 
 
-@skip("Skip until SamplerV2 is supported")
 @ddt
 class TestSamplerV2(IBMTestCase):
     """Class for testing the Estimator class."""
@@ -61,17 +59,17 @@ class TestSamplerV2(IBMTestCase):
         self.circuit = QuantumCircuit(1, 1)
 
     @data(
-        [(RealAmplitudes(num_qubits=2, reps=1), [1, 2, 3, 4])],
+        [(RealAmplitudes(num_qubits=2, reps=1), [[1, 2, 3, 4]])],
         [(RealAmplitudes(num_qubits=2, reps=1), [1, 2, 3, 4])],
         [(QuantumCircuit(2),)],
         [(RealAmplitudes(num_qubits=1, reps=1), [1, 2]), (QuantumCircuit(3),)],
     )
     def test_run_program_inputs(self, in_pubs):
         """Verify program inputs are correct."""
-        session = MagicMock(spec=MockSession)
-        inst = SamplerV2(session=session)
+        backend = get_mocked_backend()
+        inst = SamplerV2(backend=backend)
         inst.run(in_pubs)
-        input_params = session.run.call_args.kwargs["inputs"]
+        input_params = backend.service.run.call_args.kwargs["inputs"]
         self.assertIn("pubs", input_params)
         pubs_param = input_params["pubs"]
         for a_pub_param, an_in_taks in zip(pubs_param, in_pubs):
@@ -98,24 +96,24 @@ class TestSamplerV2(IBMTestCase):
 
     def test_run_default_options(self):
         """Test run using default options."""
-        session = MagicMock(spec=MockSession)
+        session = MagicMock(spec=MockSession, _backend="common_backend")
         options_vars = [
             (
-                SamplerOptions(dynamical_decoupling="XX"),  # pylint: disable=unexpected-keyword-arg
-                {"dynamical_decoupling": "XX"},
+                SamplerOptions(  # pylint: disable=unexpected-keyword-arg
+                    dynamical_decoupling={"sequence_type": "XX"}
+                ),
+                {"dynamical_decoupling": {"sequence_type": "XX"}},
             ),
             (
-                SamplerOptions(optimization_level=3),  # pylint: disable=unexpected-keyword-arg
-                {"transpilation": {"optimization_level": 3}},
+                SamplerOptions(default_shots=1000),  # pylint: disable=unexpected-keyword-arg
+                {"default_shots": 1000},
             ),
             (
                 {
-                    "transpilation": {"initial_layout": [1, 2]},
-                    "execution": {"shots": 100},
+                    "execution": {"init_qubits": True, "rep_delay": 0.01},
                 },
                 {
-                    "transpilation": {"initial_layout": [1, 2]},
-                    "execution": {"shots": 100},
+                    "execution": {"init_qubits": True, "rep_delay": 0.01},
                 },
             ),
         ]
@@ -123,7 +121,7 @@ class TestSamplerV2(IBMTestCase):
             with self.subTest(options=options):
                 inst = SamplerV2(session=session, options=options)
                 inst.run((self.circuit,))
-                inputs = session.run.call_args.kwargs["inputs"]
+                inputs = session.run.call_args.kwargs["inputs"]["options"]
                 self.assertTrue(
                     dict_paritally_equal(inputs, expected),
                     f"{inputs} and {expected} not partially equal.",
