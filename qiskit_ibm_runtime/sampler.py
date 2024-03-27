@@ -23,6 +23,7 @@ from qiskit.primitives import BaseSampler
 from qiskit.primitives.base import BaseSamplerV2
 from qiskit.primitives.containers.sampler_pub import SamplerPub, SamplerPubLike
 
+from . import Batch
 from .options import Options
 from .runtime_job import RuntimeJob
 from .runtime_job_v2 import RuntimeJobV2
@@ -31,6 +32,7 @@ from .base_primitive import BasePrimitiveV1, BasePrimitiveV2
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
+from .utils.deprecation import deprecate_arguments
 from .utils.qctrl import validate as qctrl_validate
 from .options import SamplerOptions
 
@@ -63,7 +65,8 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
     def __init__(
         self,
         backend: Optional[Union[str, IBMBackend]] = None,
-        session: Optional[Session] = None,
+        mode: Optional[Session | Batch] = None,
+        session: Optional[Session] = None,  # Deprecated
         options: Optional[Union[Dict, SamplerOptions]] = None,
     ):
         """Initializes the Sampler primitive.
@@ -73,7 +76,7 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
                 instance. If a name is specified, the default account (e.g. ``QiskitRuntimeService()``)
                 is used.
 
-            session: Session in which to call the primitive.
+            mode: Session or Batch in which to call the primitive.
 
                 If both ``session`` and ``backend`` are specified, ``session`` takes precedence.
                 If neither is specified, and the primitive is created inside a
@@ -88,7 +91,13 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
         self.options: SamplerOptions
         BaseSamplerV2.__init__(self)
         Sampler.__init__(self)
-        BasePrimitiveV2.__init__(self, backend=backend, session=session, options=options)
+        if session:
+            deprecate_arguments(
+                "session", "0.22.1", "The session param is going to be renamed to mode."
+            )
+        BasePrimitiveV2.__init__(
+            self, backend=backend, mode=mode if not None else session, options=options
+        )
 
         if self._service._channel_strategy == "q-ctrl":
             raise NotImplementedError("SamplerV2 is not supported with q-ctrl channel strategy.")

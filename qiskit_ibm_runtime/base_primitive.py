@@ -25,6 +25,7 @@ from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.providers.options import Options as TerraOptions
 from qiskit.providers.backend import BackendV1, BackendV2
 
+from . import Batch
 from .provider_session import get_cm_session as get_cm_provider_session
 
 from .options import Options
@@ -57,7 +58,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
     def __init__(
         self,
         backend: Optional[Union[str, BackendV1, BackendV2]] = None,
-        session: Optional[Session] = None,
+        mode: Optional[Session | Batch] = None,
         options: Optional[Union[Dict, OptionsT]] = None,
     ):
         """Initializes the primitive.
@@ -68,12 +69,13 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
                 instance. If a name is specified, the default account (e.g. ``QiskitRuntimeService()``)
                 is used.
 
-            session: Session in which to call the primitive.
+            mode: Session or Batch in which to call the primitive.
 
-                If both ``session`` and ``backend`` are specified, ``session`` takes precedence.
+                If both ``mode`` and ``backend`` are specified, ``mode`` takes precedence.
                 If neither is specified, and the primitive is created inside a
-                :class:`qiskit_ibm_runtime.Session` context manager, then the session is used.
-                Otherwise if IBM Cloud channel is used, a default backend is selected.
+                :class:`qiskit_ibm_runtime.Session` or :class:`qiskit_ibm_runtime.Batch` context manager,
+                 then the session is used. Otherwise if IBM Cloud channel is used, a default backend
+                 is selected.
 
             options: Primitive options, see :class:`qiskit_ibm_runtime.options.EstimatorOptions`
                 and :class:`qiskit_ibm_runtime.options.SamplerOptions` for detailed description
@@ -82,19 +84,19 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
         Raises:
             ValueError: Invalid arguments are given.
         """
-        self._session: Optional[Session] = None
+        self._mode: Optional[Session | Batch] = None
         self._service: QiskitRuntimeService | QiskitRuntimeLocalService = None
         self._backend: Optional[BackendV1 | BackendV2] = None
 
         self._set_options(options)
 
-        if isinstance(session, Session):
-            self._session = session
-            self._service = self._session.service
-            self._backend = self._session._backend
+        if isinstance(mode, Session) or isinstance(mode, Batch):
+            self._mode = mode
+            self._service = self._mode.service
+            self._backend = self._mode._backend
             return
         elif session is not None:  # type: ignore[unreachable]
-            raise ValueError("session must be of type Session or None")
+            raise ValueError("mode must be of type Session, Batch or None")
 
         if isinstance(backend, IBMBackend):  # type: ignore[unreachable]
             self._service = backend.service
@@ -110,10 +112,10 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
             )
             self._backend = self._service.backend(backend)
         elif get_cm_session():
-            self._session = get_cm_session()
-            self._service = self._session.service
+            self._mode = get_cm_session()
+            self._service = self._mode.service
             self._backend = self._service.backend(
-                name=self._session.backend(), instance=self._session._instance
+                name=self._mode.backend(), instance=self._mode._instance
             )
         else:
             self._service = (
