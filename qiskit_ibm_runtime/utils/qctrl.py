@@ -17,6 +17,7 @@ from typing import Any, Optional, Dict, List
 
 from ..options import Options
 from ..options import EnvironmentOptions, ExecutionOptions, TranspilationOptions, SimulatorOptions
+from ..options.utils import UnsetType
 
 logger = logging.getLogger(__name__)
 
@@ -105,14 +106,14 @@ def validate_v2(options: Dict[str, Any]) -> None:
     # Default validation otherwise.
     TranspilationOptions(**options.get("transpilation", {}))
     execution_time = options.get("max_execution_time")
-    if execution_time is not None:
+    if execution_time is not None and not isinstance(execution_time, UnsetType):
         if execution_time > Options._MAX_EXECUTION_TIME:
             raise ValueError(
                 f"max_execution_time must be below " f"{Options._MAX_EXECUTION_TIME} seconds."
             )
 
     EnvironmentOptions(**options.get("environment", {}))
-    ExecutionOptions(**options.get("execution", {}))
+    # ExecutionOptions(**options.get("execution", {}))
     SimulatorOptions(**options.get("simulator", {}))
 
 
@@ -121,6 +122,8 @@ def _raise_if_error_in_options_v2(options: Dict[str, Any]) -> None:
 
     # Fail on resilience_level set to 0
     resilience_level = options.get("resilience_level", 1)
+    if isinstance(resilience_level, UnsetType):
+        resilience_level = 1
     _check_argument(
         resilience_level > 0,
         description=(
@@ -131,6 +134,8 @@ def _raise_if_error_in_options_v2(options: Dict[str, Any]) -> None:
     )
 
     optimization_level = options.get("optimization_level", 1)
+    if isinstance(optimization_level, UnsetType):
+        optimization_level = 1
     _check_argument(
         optimization_level > 0,
         description="Q-CTRL Primitives do not support optimization level 0. Please\
@@ -189,7 +194,7 @@ def _validate_values(
             )
         else:
             current_value = current_options.get(expected_key, None)
-            if current_value is not None and expected_value != current_value:
+            if (current_value not in (None, UnsetType)) and expected_value != current_value:
                 different_keys.append(expected_key)
     return different_keys
 
