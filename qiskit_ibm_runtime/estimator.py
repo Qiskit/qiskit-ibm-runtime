@@ -138,7 +138,7 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
                 "session", "0.22.1", "The session param is going to be renamed to mode."
             )
         BasePrimitiveV2.__init__(
-            self, backend=backend, mode=mode if not None else session, options=options
+            self, backend=backend, mode=session if not None else mode, options=options
         )
 
         if self._service._channel_strategy == "q-ctrl":
