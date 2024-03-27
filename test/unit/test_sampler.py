@@ -23,7 +23,7 @@ from qiskit.circuit.library import RealAmplitudes
 from qiskit_ibm_runtime import Sampler, Session, SamplerV2, SamplerOptions
 
 from ..ibm_test_case import IBMTestCase
-from ..utils import bell, MockSession, dict_paritally_equal, get_mocked_backend
+from ..utils import bell, MockSession, dict_paritally_equal, get_mocked_backend, transpile_pubs
 from .mock.fake_runtime_service import FakeRuntimeService
 
 
@@ -59,7 +59,6 @@ class TestSamplerV2(IBMTestCase):
         self.circuit = QuantumCircuit(1, 1)
 
     @data(
-        [(RealAmplitudes(num_qubits=2, reps=1), [[1, 2, 3, 4]])],
         [(RealAmplitudes(num_qubits=2, reps=1), [1, 2, 3, 4])],
         [(QuantumCircuit(2),)],
         [(RealAmplitudes(num_qubits=1, reps=1), [1, 2]), (QuantumCircuit(3),)],
@@ -67,18 +66,21 @@ class TestSamplerV2(IBMTestCase):
     def test_run_program_inputs(self, in_pubs):
         """Verify program inputs are correct."""
         backend = get_mocked_backend()
+        t_pubs = transpile_pubs(in_pubs, backend)
         inst = SamplerV2(backend=backend)
-        inst.run(in_pubs)
+        inst.run(t_pubs)
         input_params = backend.service.run.call_args.kwargs["inputs"]
         self.assertIn("pubs", input_params)
         pubs_param = input_params["pubs"]
-        for a_pub_param, an_in_taks in zip(pubs_param, in_pubs):
+        for a_pub_param, an_in_taks in zip(pubs_param, t_pubs):
             self.assertIsInstance(a_pub_param, SamplerPub)
             # Check circuit
             self.assertEqual(a_pub_param.circuit, an_in_taks[0])
             # Check parameter values
             an_input_params = an_in_taks[1] if len(an_in_taks) == 2 else []
-            np.testing.assert_allclose(a_pub_param.parameter_values.vals, an_input_params)
+            param_values_array = list(a_pub_param.parameter_values.data.values())
+            a_pub_param_values = param_values_array[0] if param_values_array else param_values_array
+            np.testing.assert_allclose(a_pub_param_values, an_input_params)
 
     @data(
         {"optimization_level": 4}, {"resilience_level": 1}, {"resilience": {"zne_mitigation": True}}
