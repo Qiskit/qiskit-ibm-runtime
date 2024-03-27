@@ -33,7 +33,7 @@ from qiskit_ibm_runtime import EstimatorV2, SamplerV2
 from qiskit_ibm_runtime.estimator import Estimator as IBMBaseEstimator
 from qiskit_ibm_runtime.fake_provider import FakeManila
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
-
+from qiskit_ibm_runtime.options.utils import Unset
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import (
@@ -675,16 +675,16 @@ class TestPrimitivesV2(IBMTestCase):
             f"{dict1} and {dict2} not partially equal.",
         )
 
-    def test_qctrl_supported_values_for_options(self):
-        """Test exception when options levels not supported."""
+    def test_qctrl_supported_values_for_options_estimator(self):
+        """Test exception when options levels not supported for Estimator V2."""
         no_resilience_options = {
-            "measure_mitigation": None,
-            "measure_noise_learning": None,
-            "zne_mitigation": None,
-            "zne": None,
-            "pec_mitigation": None,
-            "pec": None,
-            "layer_noise_learning": None,
+            "measure_mitigation": Unset,
+            "measure_noise_learning": {},
+            "zne_mitigation": Unset,
+            "zne": {},
+            "pec_mitigation": Unset,
+            "pec": {},
+            "layer_noise_learning": {},
         }
 
         options_good = [
@@ -699,24 +699,37 @@ class TestPrimitivesV2(IBMTestCase):
             },
             # Resilience level > 1 (issue warning)
             {"resilience_level": 2},
-            # Optimization level = 2,3 (issue warning)
-            {"optimization_level": 2},
-            {"optimization_level": 3},
-            {"twirling": {"gates": True}},
-            {"dynamical_decoupling": "XX"},
+            # Twirling (issue warning)
+            {"twirling": {"strategy": "active"}},
+            # Dynamical_decoupling (issue warning)
+            {"dynamical_decoupling": {"sequence_type": "XY4"}},
         ]
-        session = MagicMock(spec=MockSession)
+        session = get_mocked_session()
         session.service._channel_strategy = "q-ctrl"
         session.service.backend().configuration().simulator = False
-        primitives = [Sampler, Estimator]
-        for cls in primitives:
-            for options in options_good:
-                with self.subTest(msg=f"{cls}, {options}"):
-                    inst = cls(session=session)
-                    if isinstance(inst, Estimator):
-                        _ = inst.run(self.circ, observables=self.obs, **options)
-                    else:
-                        _ = inst.run(self.circ, **options)
+        for options in options_good:
+            with self.subTest(msg=f"EstimatorV2, {options}"):
+                print(options)
+                inst = EstimatorV2(session=session, options=options)
+                _ = inst.run(**get_primitive_inputs(inst))
+
+    def test_qctrl_supported_values_for_options_sampler(self):
+        """Test exception when options levels not supported for Sampler V2."""
+
+        options_good = [
+            # Minimum working settings
+            {},
+            # Dynamical_decoupling (issue warning)
+            {"dynamical_decoupling": {"sequence_type": "XY4"}},
+        ]
+        session = get_mocked_session()
+        session.service._channel_strategy = "q-ctrl"
+        session.service.backend().configuration().simulator = False
+        for options in options_good:
+            with self.subTest(msg=f"SamplerV2, {options}"):
+                print(options)
+                inst = SamplerV2(session=session, options=options)
+                _ = inst.run(**get_primitive_inputs(inst))
 
     def test_qctrl_unsupported_values_for_options(self):
         """Test exception when options levels are not supported."""
@@ -726,18 +739,15 @@ class TestPrimitivesV2(IBMTestCase):
             # Bad optimization level
             ({"optimization_level": 0}, "optimization level"),
         ]
-        session = MagicMock(spec=MockSession)
+        session = get_mocked_session()
         session.service._channel_strategy = "q-ctrl"
         session.service.backend().configuration().simulator = False
-        primitives = [Sampler, Estimator]
+        primitives = [SamplerV2, EstimatorV2]
         for cls in primitives:
             for bad_opt, expected_message in options_bad:
                 with self.subTest(msg=bad_opt):
-                    inst = cls(session=session)
                     with self.assertRaises(ValueError) as exc:
-                        if isinstance(inst, Sampler):
-                            _ = inst.run(self.circ, **bad_opt)
-                        else:
-                            _ = inst.run(self.circ, observables=self.obs, **bad_opt)
+                        inst = cls(session=session, options=bad_opt)
+                        _ = inst.run(**get_primitive_inputs(inst))
 
                         self.assertIn(expected_message, str(exc.exception))
