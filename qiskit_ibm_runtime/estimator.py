@@ -130,9 +130,6 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
         Estimator.__init__(self)
         BasePrimitiveV2.__init__(self, backend=backend, session=session, options=options)
 
-        if self._service._channel_strategy == "q-ctrl":
-            raise NotImplementedError("EstimatorV2 is not supported with q-ctrl channel strategy.")
-
     def run(
         self, pubs: Iterable[EstimatorPubLike], *, precision: float | None = None
     ) -> RuntimeJobV2:
