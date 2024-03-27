@@ -18,11 +18,18 @@ from ddt import data, ddt
 from pydantic import ValidationError
 
 from qiskit_aer.noise import NoiseModel
+from qiskit_ibm_runtime import SamplerV2 as Sampler
 from qiskit_ibm_runtime.options import SamplerOptions
 from qiskit_ibm_runtime.fake_provider import FakeManila
 
 from ..ibm_test_case import IBMTestCase
-from ..utils import dict_keys_equal, dict_paritally_equal, flat_dict_partially_equal
+from ..utils import (
+    dict_keys_equal,
+    dict_paritally_equal,
+    flat_dict_partially_equal,
+    get_mocked_backend,
+    get_primitive_inputs,
+)
 
 
 @ddt
@@ -123,3 +130,15 @@ class TestSamplerOptions(IBMTestCase):
         )
         # Make sure the structure didn't change.
         self.assertTrue(dict_keys_equal(asdict(options), asdict(SamplerOptions())))
+
+    @data(
+        {"default_shots": 0},
+        {"execution": {"rep_delay": 0.0}},
+    )
+    def test_zero_values(self, opt_dict):
+        """Test options with values of 0."""
+        backend = get_mocked_backend()
+        sampler = Sampler(backend=backend, options=opt_dict)
+        _ = sampler.run(**get_primitive_inputs(sampler))
+        options = backend.service.run.call_args.kwargs["inputs"]["options"]
+        self.assertDictEqual(options, opt_dict)

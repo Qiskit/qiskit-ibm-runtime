@@ -1,0 +1,27 @@
+0.22.0 (2024-03-21)
+===================
+
+Upgrade Notes
+-------------
+
+- Modify ``skip_reset_qubits`` optional flag to the constructor for
+  :class:`.PadDynamicalDecoupling`. If ``False``, dynamical decoupling is applied on 
+  qubits regardless of their state, even on delays that are at the beginning 
+  of a circuit. This option now matches the behavior in Qiskit. (`1409 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1409>`__)
+
+
+New Features
+------------
+
+- A new local testing mode is added. It allows you to
+  validate your quantum prorams before sending them to a physical system.
+  The local testing mode is activated if one of the fake
+  backends in ``qiskit_ibm_runtime.fake_provider`` or a Qiskit Aer backend
+  instance is used when instantiating a primitive or a session. (`1495 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1495>`__)
+
+
+Bug Fixes
+---------
+
+- Fix a bug that caused setting of ``resilience_level=0`` in ``EstimatorV2``
+  to be ignored (and the default value used instead). (`1541 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1541>`__)

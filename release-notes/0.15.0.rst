@@ -5,12 +5,12 @@ New Features
 ------------
 
 -  A new module
-   ```qiskit_ibm_runtime.fake_provider`` <fake_provider#module-qiskit_ibm_runtime.fake_provider>`__,
+   `qiskit_ibm_runtime.fake_provider <fake_provider#module-qiskit_ibm_runtime.fake_provider>`__,
    has been added to provide access to a series of fake backends derived
    from snapshots of IBM Quantum devices. This functionality was
    originally provided by the ``qiskit.providers.fake_provider`` module,
    but will soon be deprecated in favor of
-   ```qiskit_ibm_runtime.fake_provider`` <fake_provider#module-qiskit_ibm_runtime.fake_provider>`__.
+   `qiskit_ibm_runtime.fake_provider <fake_provider#module-qiskit_ibm_runtime.fake_provider>`__.
 
    The snapshots provided by the fake backends are useful for local
    testing of the transpiler and performing local noisy simulations of
@@ -67,13 +67,13 @@ Bug Fixes
    being used since not all features are supported there.
 
 -  The ``backend`` parameter in
-   ```from_id()`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Session#from_id>`__ is being
+   `from_id() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Session#from_id>`__ is being
    deprecated because sessions do not support multiple backends.
    Additionally, the ``service`` parameter is no longer optional.
 
 -  The ``circuit_indices`` and ``observable_indices`` run inputs for
-   ```Estimator`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Estimator>`__ and
-   ```Sampler`` <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Sampler>`__ have been completely
+   `Estimator <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Estimator>`__ and
+   `Sampler <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Sampler>`__ have been completely
    removed.
 
 Other Notes
