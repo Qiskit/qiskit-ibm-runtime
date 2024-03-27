@@ -190,13 +190,13 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
         )
 
     @property
-    def session(self) -> Optional[Session]:
+    def mode(self) -> Optional[Session | Batch]:
         """Return session used by this primitive.
 
         Returns:
             Session used by this primitive, or ``None`` if session is not used.
         """
-        return self._session
+        return self._mode
 
     @property
     def options(self) -> OptionsT:
