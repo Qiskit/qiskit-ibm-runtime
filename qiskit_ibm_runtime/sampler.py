@@ -32,6 +32,7 @@ from .base_primitive import BasePrimitiveV1, BasePrimitiveV2
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
 from .utils.qctrl import validate as qctrl_validate
+from .utils.qctrl import validate_v2 as qctrl_validate_v2
 from .options import SamplerOptions
 
 logger = logging.getLogger(__name__)
@@ -125,7 +126,10 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
         Raises:
             ValidationError: if validation fails.
         """
-        pass
+
+        if self._service._channel_strategy == "q-ctrl":
+            qctrl_validate_v2(options)
+            return
 
     @classmethod
     def _program_id(cls) -> str:
