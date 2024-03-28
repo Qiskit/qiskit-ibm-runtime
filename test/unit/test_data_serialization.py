@@ -17,7 +17,6 @@ import os
 import subprocess
 import tempfile
 import warnings
-from unittest import skip
 from datetime import datetime
 
 import numpy as np
@@ -110,13 +109,12 @@ class TestDataSerialization(IBMTestCase):
     def test_coder_operators(self):
         """Test runtime encoder and decoder for operators."""
 
-        # TODO: Re-enable use of Parameter when #1521 is fixed.
-        # coeff_x = Parameter("x")
-        # coeff_y = coeff_x + 1
+        coeff_x = Parameter("x")
+        coeff_y = coeff_x + 1
 
         subtests = (
             SparsePauliOp(Pauli("XYZX"), coeffs=[2]),
-            # SparsePauliOp(Pauli("XYZX"), coeffs=[coeff_y]),
+            SparsePauliOp(Pauli("XYZX"), coeffs=[coeff_y]),
             SparsePauliOp(Pauli("XYZX"), coeffs=[1 + 2j]),
             Pauli("XYZ"),
         )
@@ -178,7 +176,6 @@ class TestDataSerialization(IBMTestCase):
             decoded = json.loads(encoded, cls=RuntimeDecoder)
             self.assertTrue(np.array_equal(decoded["ndarray"], obj["ndarray"]))
 
-    @skip("Skip until qiskit-ibm-provider/736 is merged")
     def test_encoder_instruction(self):
         """Test encoding and decoding instructions"""
         subtests = (
