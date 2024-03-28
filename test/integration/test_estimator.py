@@ -186,8 +186,8 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
             chsh1_runtime = job1.result()
             chsh2_runtime = job2.result()
 
-        self.assertTrue(np.allclose(chsh1_terra.values, chsh1_runtime.values, rtol=0.3))
-        self.assertTrue(np.allclose(chsh2_terra.values, chsh2_runtime.values, rtol=0.3))
+        np.testing.assert_allclose(chsh1_terra.values, chsh1_runtime.values, rtol=0.3)
+        np.testing.assert_allclose(chsh2_terra.values, chsh2_runtime.values, rtol=0.3)
 
     @run_integration_test
     def test_estimator_no_session(self, service):
