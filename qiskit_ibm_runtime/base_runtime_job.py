@@ -56,6 +56,7 @@ class BaseRuntimeJob(ABC):
     _executor = futures.ThreadPoolExecutor(thread_name_prefix="runtime_job")
 
     JOB_FINAL_STATES: Tuple[Any, ...] = ()
+    ERROR: Union[str, RuntimeJobStatus] = None
 
     def __init__(
         self,
@@ -257,7 +258,7 @@ class BaseRuntimeJob(ABC):
         Args:
             job_response: Job response from runtime API.
         """
-        if self.errored():
+        if self._status == self.ERROR:
             self._error_message = self._error_msg_from_job_response(job_response)
         else:
             self._error_message = None

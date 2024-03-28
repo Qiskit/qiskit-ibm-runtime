@@ -53,6 +53,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
     """Representation of a runtime V2 primitive exeuction."""
 
     JOB_FINAL_STATES: Tuple[JobStatus, ...] = ("DONE", "CANCELLED", "ERROR")
+    ERROR = "ERROR"
 
     def __init__(
         self,

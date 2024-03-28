@@ -76,6 +76,7 @@ class RuntimeJob(Job, BaseRuntimeJob):
     """
 
     JOB_FINAL_STATES = JOB_FINAL_STATES
+    ERROR = JobStatus.ERROR
 
     def __init__(
         self,
