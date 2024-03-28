@@ -75,6 +75,8 @@ class RuntimeJob(Job, BaseRuntimeJob):
     the results at a later time, but before the job finishes.
     """
 
+    JOB_FINAL_STATES = JOB_FINAL_STATES
+
     def __init__(
         self,
         backend: Backend,
@@ -196,11 +198,11 @@ class RuntimeJob(Job, BaseRuntimeJob):
 
     def in_final_state(self) -> bool:
         """Return whether the job is in a final job state such as ``DONE`` or ``ERROR``."""
-        return self._status in JOB_FINAL_STATES
+        return self.status() in JOB_FINAL_STATES
 
     def errored(self) -> bool:
         """Return whether the job has failed."""
-        return self._status == JobStatus.ERROR
+        return self.status() == JobStatus.ERROR
 
     def _status_from_job_response(self, response: Dict) -> str:
         """Returns the job status from an API response.

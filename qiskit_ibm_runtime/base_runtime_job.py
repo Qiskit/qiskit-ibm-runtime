@@ -13,7 +13,7 @@
 """Base runtime job class."""
 
 from abc import ABC, abstractmethod
-from typing import Any, Optional, Callable, Dict, Type, Union, Sequence, List
+from typing import Any, Optional, Callable, Dict, Type, Union, Sequence, List, Tuple
 import json
 import logging
 from concurrent import futures
@@ -54,6 +54,8 @@ class BaseRuntimeJob(ABC):
     """Used to inform streaming to stop."""
 
     _executor = futures.ThreadPoolExecutor(thread_name_prefix="runtime_job")
+
+    JOB_FINAL_STATES: Tuple[Any, ...] = ()
 
     def __init__(
         self,
@@ -220,7 +222,7 @@ class BaseRuntimeJob(ABC):
 
     def _set_status_and_error_message(self) -> None:
         """Fetch and set status and error message."""
-        if not self.in_final_state():
+        if self._status not in self.JOB_FINAL_STATES:
             response = self._api_client.job_get(job_id=self.job_id())
             self._set_status(response)
             self._set_error_message(response)
