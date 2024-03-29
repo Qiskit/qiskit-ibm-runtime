@@ -21,6 +21,7 @@ from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister
 from qiskit.compiler import transpile
 from qiskit.providers.jobstatus import JobStatus, JOB_FINAL_STATES
 
+from qiskit_ibm_runtime import SamplerV2 as Sampler
 from qiskit_ibm_runtime.exceptions import RuntimeJobTimeoutError, RuntimeJobNotFound
 
 from ..ibm_test_case import IBMIntegrationTestCase
@@ -35,7 +36,8 @@ class TestIBMJob(IBMIntegrationTestCase):
         super().setUp()
         self.sim_backend = self.service.backend("ibmq_qasm_simulator")
         self.bell = bell()
-        self.sim_job = self.sim_backend.run(self.bell)
+        sampler = Sampler(backend=self.sim_backend)
+        self.sim_job = sampler.run([self.bell])
         self.last_month = datetime.now() - timedelta(days=30)
 
     def test_run_multiple_simulator(self):

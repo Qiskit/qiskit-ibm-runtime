@@ -24,7 +24,7 @@ from qiskit.providers.jobstatus import JobStatus, JOB_FINAL_STATES
 
 from qiskit_ibm_runtime.exceptions import IBMBackendValueError
 
-from qiskit_ibm_runtime import IBMBackend, RuntimeJob
+from qiskit_ibm_runtime import IBMBackend, RuntimeJob, SamplerV2 as Sampler
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from ..decorators import (
     IntegrationTestDependencies,
@@ -52,7 +52,8 @@ class TestIBMJobAttributes(IBMTestCase):
         cls.service = dependencies.service
         cls.sim_backend = dependencies.service.backend("ibmq_qasm_simulator")
         cls.bell = transpile(bell(), cls.sim_backend)
-        cls.sim_job = cls.sim_backend.run(cls.bell)
+        sampler = Sampler(backend=cls.sim_backend)
+        cls.sim_job = sampler.run([cls.bell])
         cls.last_week = datetime.now() - timedelta(days=7)
 
     def setUp(self):
@@ -72,7 +73,8 @@ class TestIBMJobAttributes(IBMTestCase):
         """Test retrieving creation date, while ensuring it is in local time."""
         # datetime, before running the job, in local time.
         start_datetime = datetime.now().replace(tzinfo=tz.tzlocal()) - timedelta(seconds=1)
-        job = self.sim_backend.run(self.bell)
+        sampler = Sampler(backend=self.sim_backend)
+        job = sampler.run([self.bell])
         job.result()
         # datetime, after the job is done running, in local time.
         end_datetime = datetime.now().replace(tzinfo=tz.tzlocal()) + timedelta(seconds=1)
