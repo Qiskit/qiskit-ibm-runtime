@@ -65,8 +65,10 @@ def convert_to_target(
     }
     custom_gates = {}
     target = None
+    faulty_qubits = set()
     # Parse from properties if it exists
     if properties is not None:
+        faulty_qubits = set(properties.faulty_qubits())
         qubit_properties = qubit_props_list_from_props(properties=properties)
         target = Target(num_qubits=configuration.n_qubits, qubit_properties=qubit_properties)
         # Parse instructions
@@ -140,9 +142,6 @@ def convert_to_target(
         target.add_instruction(name_mapping[op], name=op)
     # If pulse defaults exists use that as the source of truth
     if defaults is not None:
-        faulty_qubits = set()
-        if properties is not None:
-            faulty_qubits = set(properties.faulty_qubits())
         inst_map = defaults.instruction_schedule_map
         for inst in inst_map.instructions:
             for qarg in inst_map.qubits_with_instruction(inst):
@@ -161,11 +160,11 @@ def convert_to_target(
                         if any(qubit in faulty_qubits for qubit in qarg):
                             continue
                         target[inst][qarg].calibration = sched
-        if "delay" not in target:
-            target.add_instruction(
-                Delay(Parameter("t")),
-                {(bit,): None for bit in range(target.num_qubits) if bit not in faulty_qubits},
-            )
+    if "delay" not in target:
+        target.add_instruction(
+            Delay(Parameter("t")),
+            {(bit,): None for bit in range(target.num_qubits) if bit not in faulty_qubits},
+        )
     return target
 
 
