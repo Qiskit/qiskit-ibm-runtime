@@ -14,7 +14,7 @@
 
 from abc import abstractmethod
 from typing import Optional, Union, ClassVar, Any
-from dataclasses import dataclass, fields, field
+from dataclasses import dataclass, fields, field, asdict
 import copy
 import warnings
 
@@ -71,6 +71,21 @@ class BaseOptions:
             out["image"] = options_copy["experimental"]["image"]
 
         return out
+
+    def _repr_html_(self) -> str:
+        """Return a string that formats this instance as an HTML table."""
+        html_str = "<table style='font-size: 14px; width: 300px;'>"
+        for key, value in asdict(self).items():
+            if isinstance(value, dict):
+                html_str += f"<tr><th style='text-align: left;'>{key}</th><td></td></tr>"
+                for subkey, subvalue in value.items():
+                    html_str += (
+                        f"<tr><td style='text-align: left; padding-left: 20px;'>{subkey}</td>"
+                        f"<td>{subvalue}</td></tr>"
+                    )
+            else:
+                html_str += f"<tr><th style='text-align: left;'>{key}</th><td>{value}</td></tr>"
+        return html_str + "</table>"
 
 
 @primitive_dataclass
@@ -163,7 +178,7 @@ class OptionsV2(BaseOptions):
         remove_empty_dict(output_options)
 
         inputs = {"options": output_options, "version": OptionsV2._VERSION, "support_qiskit": True}
-        if options_copy.get("resilience_level"):
+        if options_copy.get("resilience_level", Unset) != Unset:
             inputs["resilience_level"] = options_copy["resilience_level"]
 
         return inputs
