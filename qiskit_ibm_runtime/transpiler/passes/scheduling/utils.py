@@ -13,7 +13,7 @@
 """Utility functions for scheduling passes."""
 
 import warnings
-from typing import Callable, Generator, List, Optional, Tuple, Union
+from typing import Callable, Generator, Optional, Tuple, Union
 from functools import lru_cache
 
 from qiskit.circuit import ControlFlowOp, Measure, Reset, Parameter
