@@ -192,6 +192,7 @@ Classes
    SamplerV1
    SamplerV2
    Session
+   Batch
    IBMBackend
    RuntimeJob
    RuntimeJobV2
