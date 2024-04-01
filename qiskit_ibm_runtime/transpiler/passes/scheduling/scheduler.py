@@ -62,10 +62,9 @@ class BaseDynamicCircuitAnalysis(TransformationPass):
                 algorithm is used.
         """
         self._durations = durations
-        if block_ordering_callable is None:
-            self._block_ordering_callable = block_order_op_nodes
-        else:
-            self._block_ordering_callable = block_ordering_callable
+        self._block_ordering_callable = (
+            block_order_op_nodes if block_ordering_callable is None else block_ordering_callable
+        )
 
         self._dag: Optional[DAGCircuit] = None
         self._block_dag: Optional[DAGCircuit] = None

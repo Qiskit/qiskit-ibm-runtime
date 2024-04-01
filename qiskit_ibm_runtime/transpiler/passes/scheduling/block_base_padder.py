@@ -93,10 +93,9 @@ class BlockBasePadder(TransformationPass):
         self._idle_qubits: Set[Qubit] = set()
 
         # Block ordering callable
-        if block_ordering_callable is None:
-            self._block_ordering_callable = block_order_op_nodes
-        else:
-            self._block_ordering_callable = block_ordering_callable
+        self._block_ordering_callable = (
+            block_order_op_nodes if block_ordering_callable is None else block_ordering_callable
+        )
 
         super().__init__()
 
