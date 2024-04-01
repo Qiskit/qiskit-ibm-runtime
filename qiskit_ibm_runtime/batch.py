@@ -25,7 +25,7 @@ class Batch(Session):
 
     Similar to a ``session``, a Qiskit Runtime ``batch`` groups a collection of
     iterative calls to the quantum computer. Batch mode can shorten processing time if all jobs
-    can be provided at the outset. If you want to submit iterative jobs, use sessions instead.
+    can be provided at the outset. To submit iterative jobs, use sessions instead.
 
     Using batch mode has these benefits:
         - The jobs' classical computation, such as compilation, is run in parallel.
