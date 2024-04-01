@@ -27,7 +27,7 @@ from qiskit.transpiler.exceptions import TranspilerError
 from qiskit.providers import Backend, BackendV1
 
 
-BlockOrderingCallableType = Callable[List[DAGCircuit], Generator[DAGOpNode, None, None]]
+BlockOrderingCallableType = Callable[[DAGCircuit], Generator[DAGOpNode, None, None]]
 
 
 def block_order_op_nodes(dag: DAGCircuit) -> Generator[DAGOpNode, None, None]:
