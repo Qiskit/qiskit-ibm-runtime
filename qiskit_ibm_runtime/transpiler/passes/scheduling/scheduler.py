@@ -58,8 +58,8 @@ class BaseDynamicCircuitAnalysis(TransformationPass):
         Args:
             durations: Durations of instructions to be used in scheduling.
             block_ordering_callable: A callable used to produce an ordering of the nodes to minimize
-                the number of blocks needed. If not provided, a potentially slow but performant
-                algorithm is used.
+                the number of blocks needed. If not provided, :func:`~block_order_op_nodes` will be
+                used.
         """
         self._durations = durations
         self._block_ordering_callable = (

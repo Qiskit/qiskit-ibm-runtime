@@ -70,8 +70,8 @@ class PadDelay(BlockBasePadder):
                 This is useful for timeline visualizations, but may cause issues for execution
                 on large backends.
             block_ordering_callable: A callable used to produce an ordering of the nodes to minimize
-                the number of blocks needed. If not provided, a potentially slow but performant
-                algorithm is used.
+                the number of blocks needed. If not provided, :func:`~block_order_op_nodes` will be
+                used.
         """
         super().__init__(
             schedule_idle_qubits=schedule_idle_qubits,
