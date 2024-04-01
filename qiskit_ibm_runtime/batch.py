@@ -31,7 +31,7 @@ class Batch(Session):
         - The jobs' classical computation, such as compilation, is run in parallel.
           Thus, running multiple jobs in a batch is significantly faster than running them serially.
 
-        - There is no delay between job, which can help avoid drift.
+        - There is minimal delay between job, which can help avoid drift.
 
     You can open a Qiskit Runtime batch using this ``Batch`` class and submit jobs
     to one or more primitives.
