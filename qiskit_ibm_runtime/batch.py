@@ -81,7 +81,7 @@ class Batch(Session):
             backend: Optional instance of ``Backend`` class or backend string name.
 
             max_time:
-                Maximum amount of time, a runtime session can be open before being
+                Maximum amount of time a runtime session can be open before being
                 forcibly closed. Can be specified as seconds (int) or a string like "2h 30m 40s".
                 This value must be less than the
                 `system imposed maximum
