@@ -192,6 +192,7 @@ Classes
    SamplerV1
    SamplerV2
    Session
+   Batch
    IBMBackend
    RuntimeJob
    RuntimeJobV2
@@ -226,7 +227,7 @@ from .sampler import (  # pylint: disable=reimported
     SamplerV1,
     SamplerV1 as Sampler,
 )
-from .options import Options, EstimatorOptions, SamplerOptions
+from .options import Options, EstimatorOptions, SamplerOptions, OptionsV2
 
 # Setup the logger for the IBM Quantum Provider package.
 logger = logging.getLogger(__name__)
