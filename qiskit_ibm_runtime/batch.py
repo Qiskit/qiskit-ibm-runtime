@@ -36,7 +36,7 @@ class Batch(Session):
     You can open a Qiskit Runtime batch by using this ``Batch`` class, then submit jobs
     to one or more primitives.
 
-    For example:
+    For example::
 
         from qiskit.circuit import QuantumCircuit, QuantumRegister, ClassicalRegister
         from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
