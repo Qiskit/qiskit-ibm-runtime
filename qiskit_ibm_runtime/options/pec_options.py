@@ -27,15 +27,18 @@ class PecOptions:
 
         noise_gain: The amount by which to scale the noise, where:
 
-            * A value of one corresponds to attempting to remove all of the noise.
-            * A value greater than one corresponds to injecting noise.
-            * A value between 0 and 1 corresponds to partially removing the noise.
+            * A value of 0 corresponds to removing the full learned noise.
+            * A value of 1 corresponds to no removal of the learned noise.
+            * A value between 0 and 1 corresponds to partially removing the learned noise.
+            * A value greater than one corresponds to amplifying the learned noise.
 
-            If "auto", the value will be chosen automatically
-            based on the input PUBs. Default: "auto".
+            If "auto", the value in the range ``[0, 1)`` will be chosen automatically
+            for each input PUB based on the learned noise strength, ``max_overhead``,
+            and the depth of the PUB. Default: "auto".
     """
 
     max_overhead: Union[UnsetType, float, None] = Unset
     noise_gain: Union[UnsetType, float, Literal["auto"]] = Unset
 
-    _gt0 = make_constraint_validator("max_overhead", "noise_gain", gt=0)
+    _gt0 = make_constraint_validator("max_overhead", gt=0)
+    _ge0 = make_constraint_validator("noise_gain", ge=0)
