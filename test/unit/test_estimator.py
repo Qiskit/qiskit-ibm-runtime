@@ -90,8 +90,9 @@ class TestEstimatorV2(IBMTestCase):
                 self.assertEqual(list(a_pub_obs.keys())[0], an_input_obs)
             # Check parameter values
             an_input_params = an_in_taks[2] if len(an_in_taks) == 3 else []
-            a_pub_param_values = list(a_pub_param.parameter_values.data.values())
-            np.allclose(a_pub_param_values, an_input_params)
+            param_values_array = list(a_pub_param.parameter_values.data.values())
+            a_pub_param_values = param_values_array[0] if param_values_array else param_values_array
+            np.testing.assert_allclose(a_pub_param_values, an_input_params)
 
     def test_unsupported_values_for_estimator_options(self):
         """Test exception when options levels are not supported."""

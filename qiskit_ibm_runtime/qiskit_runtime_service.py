@@ -55,7 +55,6 @@ from .utils import RuntimeDecoder, to_python_identifier
 from .api.client_parameters import ClientParameters
 from .runtime_options import RuntimeOptions
 from .ibm_backend import IBMBackend
-from .utils.deprecation import issue_deprecation_msg
 
 logger = logging.getLogger(__name__)
 
@@ -1159,21 +1158,6 @@ class QiskitRuntimeService(Provider):
             The channel type used.
         """
         return self._channel
-
-    @property
-    def runtime(self):  # type:ignore
-        """Return self for compatibility with IBMQ provider.
-
-        Returns:
-            self
-        """
-        issue_deprecation_msg(
-            msg="The runtime property is deprecated",
-            version="0.18.0",
-            remedy="",
-            period="1 month",
-        )
-        return self
 
     def __repr__(self) -> str:
         return "<{}>".format(self.__class__.__name__)

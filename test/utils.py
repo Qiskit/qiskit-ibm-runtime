@@ -442,11 +442,12 @@ def transpile_pubs(in_pubs, backend):
     t_pubs = []
     for pub in in_pubs:
         t_circ = transpile(pub[0], backend=backend)
-        t_obs = remap_observables(pub[1], t_circ)
-        t_pub = [t_circ, t_obs]
-        for elem in pub[2:]:
-            t_pub.append(elem)
-        t_pubs.append(tuple(t_pub))
+        if len(pub) > 2:
+            t_obs = remap_observables(pub[1], t_circ)
+            t_pub = [t_circ, t_obs]
+            for elem in pub[2:]:
+                t_pub.append(elem)
+            t_pubs.append(tuple(t_pub))
     return t_pubs
 
 
