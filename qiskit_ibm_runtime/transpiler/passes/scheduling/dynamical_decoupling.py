@@ -187,7 +187,8 @@ class PadDynamicalDecoupling(BlockBasePadder):
             dd_barrier: only apply DD to delays terminating with a barrier
                 whose label contains the specified string
             block_ordering_callable: A callable used to produce an ordering of the nodes to minimize the
-                number of blocks needed. If not provided, a potentially slow but performant algorithm is used.
+                number of blocks needed. If not provided, a potentially slow but performant algorithm is
+                used.
         Raises:
             TranspilerError: When invalid DD sequence is specified.
             TranspilerError: When pulse gate with the duration which is
