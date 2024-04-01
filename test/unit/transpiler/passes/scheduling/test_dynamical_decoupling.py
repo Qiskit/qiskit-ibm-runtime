@@ -122,8 +122,10 @@ class TestPadDynamicalDecoupling(IBMTestCase):
         dd_sequence = [XGate(), XGate()]
 
         if use_topological_ordering:
+
             def _top_ord(dag):
                 return dag.topological_op_nodes()
+
             block_ordering_callable = _top_ord
         else:
             block_ordering_callable = None
@@ -263,8 +265,10 @@ class TestPadDynamicalDecoupling(IBMTestCase):
         dd_sequence = [RXGate(pi / 4)]
 
         if use_topological_ordering:
+
             def _top_ord(dag):
                 return dag.topological_op_nodes()
+
             block_ordering_callable = _top_ord
         else:
             block_ordering_callable = None
