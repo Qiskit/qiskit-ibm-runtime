@@ -33,7 +33,7 @@ class Batch(Session):
 
         - There is minimal delay between job, which can help avoid drift.
 
-    You can open a Qiskit Runtime batch using this ``Batch`` class and submit jobs
+    You can open a Qiskit Runtime batch by using this ``Batch`` class, then submit jobs
     to one or more primitives.
 
     For example::
