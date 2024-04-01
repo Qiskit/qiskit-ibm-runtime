@@ -79,7 +79,6 @@ class Batch(Session):
                 Otherwise ``QiskitRuntimeService()`` is used to initialize
                 your default saved account.
             backend: Optional instance of ``Backend`` class or backend string name.
-                If not specified, a backend will be selected automatically (IBM Cloud channel only).
 
             max_time:
                 Maximum amount of time, a runtime session can be open before being
