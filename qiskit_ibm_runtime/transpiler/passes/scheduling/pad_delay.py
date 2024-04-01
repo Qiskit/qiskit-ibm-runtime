@@ -12,12 +12,15 @@
 
 """Padding pass to insert Delay into empty timeslots for dynamic circuit backends."""
 
+from typing import Optional
+
 from qiskit.circuit import Qubit
 from qiskit.circuit.delay import Delay
 from qiskit.dagcircuit import DAGNode, DAGOutNode
 from qiskit.transpiler.instruction_durations import InstructionDurations
 
 from .block_base_padder import BlockBasePadder
+from .utils import BlockOrderingCallableType
 
 
 class PadDelay(BlockBasePadder):
@@ -56,6 +59,7 @@ class PadDelay(BlockBasePadder):
         durations: InstructionDurations,
         fill_very_end: bool = True,
         schedule_idle_qubits: bool = False,
+        block_ordering_callable: Optional[BlockOrderingCallableType] = None,
     ):
         """Create new padding delay pass.
 
@@ -65,8 +69,13 @@ class PadDelay(BlockBasePadder):
             schedule_idle_qubits: Set to true if you'd like a delay inserted on idle qubits.
                 This is useful for timeline visualizations, but may cause issues for execution
                 on large backends.
+            block_ordering_callable: A callable used to produce an ordering of the nodes to minimize the
+                number of blocks needed. If not provided, a potentially slow but performant algorithm is used.
         """
-        super().__init__(schedule_idle_qubits=schedule_idle_qubits)
+        super().__init__(
+            schedule_idle_qubits=schedule_idle_qubits,
+            block_ordering_callable=block_ordering_callable,
+        )
         self._durations = durations
         self.fill_very_end = fill_very_end
 
