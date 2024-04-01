@@ -23,7 +23,7 @@ from .session import Session
 class Batch(Session):
     """Class for running jobs in batch execution mode.
 
-    Just like ``session``, a Qiskit Runtime ``batch`` allows you to group a collection of
+    Similar to a ``session``, a Qiskit Runtime ``batch`` groups a collection of
     iterative calls to the quantum computer. Batch mode can shorten processing time if all jobs
     can be provided at the outset. If you want to submit iterative jobs, use sessions instead.
 
