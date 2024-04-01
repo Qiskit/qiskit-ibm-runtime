@@ -103,7 +103,7 @@ to do. The files use RST syntax and you can use mechanisms like code blocks and 
 Example notes:
 
 ```rst
-Add ``dd_barrier`` optional input to
+Add `dd_barrier` optional input to
 :class:`.PadDynamicalDecoupling`
 constructor to identify portions of the circuit to apply dynamical
 decoupling (dd) on selectively. If this string is contained in the
@@ -112,7 +112,7 @@ with it (on the same qubits); otherwise, it is not applied.
 ```
 
 ```
-When a single backend is retrieved with the ``instance`` parameter,
+When a single backend is retrieved with the `instance` parameter,
 
 .. code:: python
 
