@@ -303,6 +303,7 @@ class Session:
                     "started_at": response.get("started_at"),
                     "closed_at": response.get("closed_at"),
                     "activated_at": response.get("activated_at"),
+                    "elapsed_time": response.get("elapsed_time"),
                 }
         return None
 
