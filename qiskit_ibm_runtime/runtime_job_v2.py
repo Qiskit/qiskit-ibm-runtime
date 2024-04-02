@@ -174,7 +174,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         self._set_status_and_error_message()
         return self._status
 
-    def _status_from_job_response(self, response: Dict) -> JobStatus:
+    def _status_from_job_response(self, response: Dict) -> Union[JobStatus, str]:
         """Returns the job status from an API response.
 
         Args:
@@ -183,10 +183,13 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         Returns:
             Job status.
         """
-        mapped_job_status = API_TO_JOB_STATUS[response["state"]["status"].upper()]
-        if mapped_job_status == "CANCELLED" and self._reason == "RAN TOO LONG":
-            mapped_job_status = "ERROR"
-        return mapped_job_status
+        api_status = response["state"]["status"].upper()
+        if api_status in API_TO_JOB_STATUS:
+            mapped_job_status = API_TO_JOB_STATUS[api_status]
+            if mapped_job_status == "CANCELLED" and self._reason == "RAN TOO LONG":
+                mapped_job_status = "ERROR"
+            return mapped_job_status
+        return api_status
 
     def cancelled(self) -> bool:
         """Return whether the job has been cancelled."""

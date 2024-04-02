@@ -169,7 +169,7 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
             and not options["simulator"]["coupling_map"]
         ):
             raise ValueError(
-                "When the backend is a simulator and resilience_level == 3,"
+                "When the backend is a simulator and pec_mitigation is enabled, "
                 "a coupling map is required."
             )
 
