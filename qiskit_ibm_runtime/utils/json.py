@@ -402,7 +402,10 @@ class RuntimeDecoder(json.JSONDecoder):
                 shape = obj_val["shape"]
                 if shape is not None and isinstance(shape, list):
                     shape = tuple(shape)
-                data_bin_cls = make_data_bin(zip(field_names, field_types), shape=shape)
+                data_bin_cls = make_data_bin(
+                    zip(field_names, field_types) if field_names and field_types else None,
+                    shape=shape,
+                )
                 return data_bin_cls(**obj_val["fields"])
             if obj_type == "PubResult":
                 return PubResult(**obj_val)
