@@ -59,6 +59,7 @@ from .utils.backend_decoder import (
     defaults_from_server_data,
     properties_from_server_data,
 )
+from .utils.deprecation import issue_deprecation_msg
 from .utils.options import QASM2Options, QASM3Options
 from .api.exceptions import RequestsApiError
 from .utils import local_to_utc, are_circuits_dynamic
@@ -675,6 +676,12 @@ class IBMBackend(Backend):
                 - If ESP readout is used and the backend does not support this.
         """
         # pylint: disable=arguments-differ
+        issue_deprecation_msg(
+            msg="backend.run() is deprecated ",
+            version="0.23",
+            remedy="Please use the primitives instead.",
+            period="6 months",
+        )
         validate_job_tags(job_tags)
         if not isinstance(circuits, List):
             circuits = [circuits]
