@@ -286,6 +286,7 @@ class Session:
             started_at: Timestamp of when the session was started.
             closed_at: Timestamp of when the session was closed.
             activated_at: Timestamp of when the session state was changed to active.
+            elapsed_time: Session usage time (in seconds).
         """
         if self._session_id and isinstance(self._service, QiskitRuntimeService):
             response = self._service._api_client.session_details(self._session_id)
