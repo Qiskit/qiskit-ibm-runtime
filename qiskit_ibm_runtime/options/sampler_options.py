@@ -23,6 +23,7 @@ from .utils import primitive_dataclass
 from .dynamical_decoupling_options import DynamicalDecouplingOptions
 from .twirling_options import TwirlingOptions
 
+
 @primitive_dataclass
 class SamplerOptions(OptionsV2):
     """Options for V2 Sampler.
