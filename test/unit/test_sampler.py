@@ -67,7 +67,7 @@ class TestSamplerV2(IBMTestCase):
         """Verify program inputs are correct."""
         backend = get_mocked_backend()
         t_pubs = transpile_pubs(in_pubs, backend)
-        inst = SamplerV2(backend=backend)
+        inst = SamplerV2(mode=backend)
         inst.run(t_pubs)
         input_params = backend.service.run.call_args.kwargs["inputs"]
         self.assertIn("pubs", input_params)
@@ -91,7 +91,7 @@ class TestSamplerV2(IBMTestCase):
             service=FakeRuntimeService(channel="ibm_quantum", token="abc"),
             backend="common_backend",
         ) as session:
-            inst = SamplerV2(session=session)
+            inst = SamplerV2(mode=session)
             with self.assertRaises(ValueError) as exc:
                 inst.options.update(**opt)
             self.assertIn(list(opt.keys())[0], str(exc.exception))
@@ -121,7 +121,7 @@ class TestSamplerV2(IBMTestCase):
         ]
         for options, expected in options_vars:
             with self.subTest(options=options):
-                inst = SamplerV2(session=session, options=options)
+                inst = SamplerV2(mode=session, options=options)
                 inst.run((self.circuit,))
                 inputs = session.run.call_args.kwargs["inputs"]["options"]
                 self.assertTrue(

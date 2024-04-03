@@ -138,7 +138,7 @@ class TestSamplerOptions(IBMTestCase):
     def test_zero_values(self, opt_dict):
         """Test options with values of 0."""
         backend = get_mocked_backend()
-        sampler = Sampler(backend=backend, options=opt_dict)
+        sampler = Sampler(mode=backend, options=opt_dict)
         _ = sampler.run(**get_primitive_inputs(sampler))
         options = backend.service.run.call_args.kwargs["inputs"]["options"]
         self.assertDictEqual(options, opt_dict)

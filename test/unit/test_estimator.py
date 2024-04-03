@@ -75,7 +75,7 @@ class TestEstimatorV2(IBMTestCase):
         backend = get_mocked_backend()
         t_pubs = transpile_pubs(abs_pubs, backend)
 
-        inst = EstimatorV2(backend=backend)
+        inst = EstimatorV2(mode=backend)
         inst.run(t_pubs)
         input_params = backend.service.run.call_args.kwargs["inputs"]
         self.assertIn("pubs", input_params)
@@ -106,7 +106,7 @@ class TestEstimatorV2(IBMTestCase):
             backend="common_backend",
         ) as session:
             for bad_opt in options_bad:
-                inst = EstimatorV2(session=session)
+                inst = EstimatorV2(mode=session)
                 with self.assertRaises(ValueError) as exc:
                     inst.options.update(**bad_opt)
                 self.assertIn(list(bad_opt.keys())[0], str(exc.exception))
@@ -116,7 +116,7 @@ class TestEstimatorV2(IBMTestCase):
         backend = get_mocked_backend()
         backend.configuration().simulator = True
 
-        inst = EstimatorV2(backend=backend, options={"resilience": {"pec_mitigation": True}})
+        inst = EstimatorV2(mode=backend, options={"resilience": {"pec_mitigation": True}})
         with self.assertRaises(ValueError) as exc:
             inst.run(**get_primitive_inputs(inst))
         self.assertIn("coupling map", str(exc.exception))
@@ -146,7 +146,7 @@ class TestEstimatorV2(IBMTestCase):
         ]
         for options, expected in options_vars:
             with self.subTest(options=options):
-                inst = EstimatorV2(backend=backend, options=options)
+                inst = EstimatorV2(mode=backend, options=options)
                 inst.run(**get_primitive_inputs(inst, backend=backend))
                 options = backend.service.run.call_args.kwargs["inputs"]["options"]
                 self.assertTrue(
@@ -162,7 +162,7 @@ class TestEstimatorV2(IBMTestCase):
         """Test invalid resilience options."""
         backend = get_mocked_backend()
         with self.assertRaises(ValueError) as exc:
-            inst = EstimatorV2(backend=backend, options={"resilience": res_opt})
+            inst = EstimatorV2(mode=backend, options={"resilience": res_opt})
             inst.run(**get_primitive_inputs(inst, backend))
         self.assertIn(list(res_opt.values())[0], str(exc.exception))
         if len(res_opt.keys()) > 1:
@@ -195,7 +195,7 @@ class TestEstimatorV2(IBMTestCase):
         circuit.cx(0, 1)
         isa_circuit = transpile(circuit, backend=backend)
 
-        estimator = EstimatorV2(backend=backend)
+        estimator = EstimatorV2(mode=backend)
         for obs in all_obs:
             with self.subTest(obs=obs):
                 pub = (isa_circuit, remap_observables(obs, isa_circuit))
@@ -231,7 +231,7 @@ class TestEstimatorV2(IBMTestCase):
         backend = get_mocked_backend()
         circuit1 = get_transpiled_circuit(backend, num_qubits=2, measure=False)
         circuit2 = get_transpiled_circuit(backend, num_qubits=3, measure=False)
-        estimator = EstimatorV2(backend=backend)
+        estimator = EstimatorV2(mode=backend)
         for obs in all_obs:
             with self.subTest(obs=obs):
                 obs1 = remap_observables(obs[0], circuit1)
@@ -253,7 +253,7 @@ class TestEstimatorV2(IBMTestCase):
         ]
 
         circuit = QuantumCircuit(2)
-        estimator = EstimatorV2(backend=get_mocked_backend())
+        estimator = EstimatorV2(mode=get_mocked_backend())
         for obs in all_obs:
             with self.subTest(obs=obs):
                 with self.assertRaises(ValueError):

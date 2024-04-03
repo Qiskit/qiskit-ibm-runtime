@@ -186,7 +186,7 @@ class TestEstimatorOptions(IBMTestCase):
     def test_zero_values(self, opt_dict):
         """Test options with values of 0."""
         backend = get_mocked_backend()
-        estimator = Estimator(backend=backend, options=opt_dict)
+        estimator = Estimator(mode=backend, options=opt_dict)
         _ = estimator.run(**get_primitive_inputs(estimator))
         options = backend.service.run.call_args.kwargs["inputs"]["options"]
         self.assertDictEqual(options, opt_dict)
@@ -195,7 +195,7 @@ class TestEstimatorOptions(IBMTestCase):
         """Test optimization_level=0."""
         opt_dict = {"optimization_level": 0}
         backend = get_mocked_backend()
-        estimator = Estimator(backend=backend, options=opt_dict)
+        estimator = Estimator(mode=backend, options=opt_dict)
         _ = estimator.run(**get_primitive_inputs(estimator))
         options = backend.service.run.call_args.kwargs["inputs"]["options"]
         self.assertDictEqual(options, {"transpilation": {"optimization_level": 0}})
@@ -204,7 +204,7 @@ class TestEstimatorOptions(IBMTestCase):
         """Test resilience_level=0"""
         opt_dict = {"resilience_level": 0}
         backend = get_mocked_backend()
-        estimator = Estimator(backend=backend, options=opt_dict)
+        estimator = Estimator(mode=backend, options=opt_dict)
         _ = estimator.run(**get_primitive_inputs(estimator))
         options = backend.service.run.call_args.kwargs["inputs"]
         self.assertIn("resilience_level", options)
