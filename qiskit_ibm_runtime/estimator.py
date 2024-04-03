@@ -107,9 +107,9 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
 
     def __init__(
         self,
+        mode: Optional[IBMBackend, Session | Batch] = None,
         backend: Optional[Union[str, IBMBackend]] = None,
-        mode: Optional[Session | Batch] = None,
-        session: Optional[Session] = None,  # Deprecated
+        session: Optional[Session] = None,
         options: Optional[Union[Dict, EstimatorOptions]] = None,
     ):
         """Initializes the Estimator primitive.
@@ -134,13 +134,24 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
         """
         BaseEstimatorV2.__init__(self)
         Estimator.__init__(self)
+        if backend:
+            deprecate_arguments(
+                "backend",
+                "0.23.0",
+                "The backend argument is going to be consolidated into the mode param.",
+            )
         if session:
             deprecate_arguments(
-                "session", "0.22.1", "The session param is going to be renamed to mode."
+                "session",
+                "0.23.0",
+                "The session argument is going to be consolidated into the mode param.",
             )
-        BasePrimitiveV2.__init__(
-            self, backend=backend, mode=session if not None else mode, options=options
-        )
+        if isinstance(mode, str):
+            raise ValueError(
+                "The backend name as input is no longer supported. You can got the backend directly from"
+                " the service using QiskitRuntimeService().backend(backend_name)"
+            )
+        BasePrimitiveV2.__init__(self, mode=mode, options=options)
 
     def run(
         self, pubs: Iterable[EstimatorPubLike], *, precision: float | None = None
