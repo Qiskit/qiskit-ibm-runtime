@@ -16,6 +16,7 @@ from typing import Union
 
 from pydantic import Field
 
+from . import TwirlingOptions
 from .utils import Dict, Unset, UnsetType
 from .execution_options import ExecutionOptionsV2
 from .options import OptionsV2
@@ -36,6 +37,8 @@ class SamplerOptions(OptionsV2):
 
         execution: Execution time options. See :class:`ExecutionOptionsV2` for all available options.
 
+        twirling: Pauli twirling options. See :class:`TwirlingOptions` for all available options.
+
         experimental: Experimental options.
     """
 
@@ -45,4 +48,5 @@ class SamplerOptions(OptionsV2):
         default_factory=DynamicalDecouplingOptions
     )
     execution: Union[ExecutionOptionsV2, Dict] = Field(default_factory=ExecutionOptionsV2)
+    twirling: Union[TwirlingOptions, Dict] = Field(default_factory=TwirlingOptions)
     experimental: Union[UnsetType, dict] = Unset
