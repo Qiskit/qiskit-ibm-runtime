@@ -86,7 +86,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
         if isinstance(mode, (Session, Batch)):
             self._mode = mode
             self._service = self._mode.service
-            self._backend = self._mode.backend
+            self._backend = self._mode._backend
         elif isinstance(mode, IBMBackend):  # type: ignore[unreachable]
             self._service = mode.service
             self._backend = mode
