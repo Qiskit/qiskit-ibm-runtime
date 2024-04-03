@@ -1,2 +1,2 @@
-The Sampler V2 starts to support twirling.
+`SamplerV2` now supports twirling.
 The twirling can only be applied on gates or measurements that are not used within a control flow.
