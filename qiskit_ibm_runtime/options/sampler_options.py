@@ -16,13 +16,12 @@ from typing import Union
 
 from pydantic import Field
 
-from . import TwirlingOptions
 from .utils import Dict, Unset, UnsetType
 from .execution_options import ExecutionOptionsV2
 from .options import OptionsV2
 from .utils import primitive_dataclass
 from .dynamical_decoupling_options import DynamicalDecouplingOptions
-
+from .twirling_options import TwirlingOptions
 
 @primitive_dataclass
 class SamplerOptions(OptionsV2):
