@@ -57,23 +57,16 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
 
     def __init__(
         self,
-        backend: Optional[Union[str, BackendV1, BackendV2]] = None,
-        mode: Optional[Session | Batch] = None,
+        mode: Optional[Union[BackendV1, BackendV2, Session, Batch]] = None,
         options: Optional[Union[Dict, OptionsT]] = None,
     ):
         """Initializes the primitive.
 
         Args:
+            mode: Backend, Session or Batch in which to call the primitive.
 
-            backend: Backend to run the primitive. This can be a backend name or a ``Backend``
-                instance. If a name is specified, the default account (e.g. ``QiskitRuntimeService()``)
-                is used.
-
-            mode: Session or Batch in which to call the primitive.
-
-                If both ``mode`` and ``backend`` are specified, ``mode`` takes precedence.
                 If neither is specified, and the primitive is created inside a
-                :class:`qiskit_ibm_runtime.Session` or :class:`qiskit_ibm_runtime.Batch` context manager,
+                :class:`qiskit_ibm_runtime.Session` context manager,
                  then the session is used. Otherwise if IBM Cloud channel is used, a default backend
                  is selected.
 
@@ -84,33 +77,24 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
         Raises:
             ValueError: Invalid arguments are given.
         """
-        self._mode: Optional[Session | Batch] = None
+        self._mode: Optional[Union[BackendV1, BackendV2, Session, Batch]] = None
         self._service: QiskitRuntimeService | QiskitRuntimeLocalService = None
         self._backend: Optional[BackendV1 | BackendV2] = None
 
         self._set_options(options)
 
-        if isinstance(mode, Session) or isinstance(mode, Batch):
+        if isinstance(mode, (Session, Batch)):
             self._mode = mode
             self._service = self._mode.service
-            self._backend = self._mode._backend
-            return
-        elif mode is not None:  # type: ignore[unreachable]
-            raise ValueError("mode must be of type Session, Batch or None")
-
-        if isinstance(backend, IBMBackend):  # type: ignore[unreachable]
-            self._service = backend.service
-            self._backend = backend
-        elif isinstance(backend, (BackendV1, BackendV2)):
+            self._backend = self._mode.backend
+        elif isinstance(mode, IBMBackend):  # type: ignore[unreachable]
+            self._service = mode.service
+            self._backend = mode
+        elif isinstance(mode, (BackendV1, BackendV2)):
             self._service = QiskitRuntimeLocalService()
-            self._backend = backend
-        elif isinstance(backend, str):
-            self._service = (
-                QiskitRuntimeService()
-                if QiskitRuntimeService.global_service is None
-                else QiskitRuntimeService.global_service
-            )
-            self._backend = self._service.backend(backend)
+            self._backend = mode
+        elif mode is not None:  # type: ignore[unreachable]
+            raise ValueError("mode must be of type Backend, Session, Batch or None")
         elif get_cm_session():
             self._mode = get_cm_session()
             self._service = self._mode.service
