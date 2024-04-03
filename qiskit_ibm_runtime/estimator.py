@@ -34,6 +34,7 @@ from .options.estimator_options import EstimatorOptions
 from .base_primitive import BasePrimitiveV1, BasePrimitiveV2
 from .utils.deprecation import deprecate_arguments
 from .utils.qctrl import validate as qctrl_validate
+from .utils.qctrl import validate_v2 as qctrl_validate_v2
 
 
 # pylint: disable=unused-import,cyclic-import
@@ -141,9 +142,6 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
             self, backend=backend, mode=session if not None else mode, options=options
         )
 
-        if self._service._channel_strategy == "q-ctrl":
-            raise NotImplementedError("EstimatorV2 is not supported with q-ctrl channel strategy.")
-
     def run(
         self, pubs: Iterable[EstimatorPubLike], *, precision: float | None = None
     ) -> RuntimeJobV2:
@@ -170,6 +168,11 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
             ValidationError: if validation fails.
             ValueError: if validation fails.
         """
+
+        if self._service._channel_strategy == "q-ctrl":
+            qctrl_validate_v2(options)
+            return
+
         if (
             options.get("resilience", {}).get("pec_mitigation", False) is True
             and self._backend is not None
@@ -177,7 +180,7 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
             and not options["simulator"]["coupling_map"]
         ):
             raise ValueError(
-                "When the backend is a simulator and resilience_level == 3,"
+                "When the backend is a simulator and pec_mitigation is enabled, "
                 "a coupling map is required."
             )
 

@@ -34,6 +34,7 @@ from .base_primitive import BasePrimitiveV1, BasePrimitiveV2
 from .session import Session
 from .utils.deprecation import deprecate_arguments
 from .utils.qctrl import validate as qctrl_validate
+from .utils.qctrl import validate_v2 as qctrl_validate_v2
 from .options import SamplerOptions
 
 logger = logging.getLogger(__name__)
@@ -99,9 +100,6 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
             self, backend=backend, mode=session if not None else mode, options=options
         )
 
-        if self._service._channel_strategy == "q-ctrl":
-            raise NotImplementedError("SamplerV2 is not supported with q-ctrl channel strategy.")
-
     def run(self, pubs: Iterable[SamplerPubLike], *, shots: int | None = None) -> RuntimeJobV2:
         """Submit a request to the sampler primitive.
 
@@ -137,7 +135,10 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
         Raises:
             ValidationError: if validation fails.
         """
-        pass
+
+        if self._service._channel_strategy == "q-ctrl":
+            qctrl_validate_v2(options)
+            return
 
     @classmethod
     def _program_id(cls) -> str:
