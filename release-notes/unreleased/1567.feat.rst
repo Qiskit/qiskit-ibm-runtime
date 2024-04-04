@@ -1,2 +1,3 @@
 Session `details() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Session#details>`__ 
-now includes a new field, `elapsed_time`, which is the session usage time.
+now includes a new field, `usage_time`. Usage is defined as the time a quantum system 
+is committed to complete a job.
