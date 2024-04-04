@@ -97,6 +97,7 @@ class TestSamplerOptions(IBMTestCase):
         {"execution": {"init_qubits": True}},
         {"dynamical_decoupling": {"enable": True, "sequence_type": "XX"}},
         {"environment": {"log_level": "ERROR"}},
+        {"twirling": {"enable_gates": True, "strategy": "active"}},
     )
     def test_init_options_with_dictionary(self, opts_dict):
         """Test initializing options with dictionaries."""
@@ -117,6 +118,7 @@ class TestSamplerOptions(IBMTestCase):
             "sequence_type": "XX",
             "log_level": "INFO",
         },
+        {"twirling": {"enable_gates": True, "strategy": "active"}},
     )
     def test_update_options(self, new_opts):
         """Test update method."""
