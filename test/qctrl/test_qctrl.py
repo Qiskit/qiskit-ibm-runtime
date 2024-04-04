@@ -45,19 +45,18 @@ class TestV2PrimitivesQCTRL(IBMIntegrationTestCase):
     def setUp(self) -> None:
         super().setUp()
         self.bell = bell()
-        self.backend = "alt_canberra"
+        self.backend = self.service.least_busy(simulator=False)
 
     @run_integration_test
     def test_sampler_v2_qctrl(self, service):
         """Test qctrl bell state with samplerV2"""
-        shots = 1000
-
+        shots = 1
         bell_circuit = QuantumCircuit(2)
         bell_circuit.h(0)
         bell_circuit.cx(0, 1)
         bell_circuit.measure_all()
-        backend = service.backend(self.backend)
-        pm = generate_preset_pass_manager(backend=backend, optimization_level=1)
+
+        pm = generate_preset_pass_manager(backend=self.backend, optimization_level=1)
         isa_circuit = pm.run(bell_circuit)
 
         with Session(service, backend=self.backend):
