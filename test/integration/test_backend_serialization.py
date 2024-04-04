@@ -71,7 +71,7 @@ class TestSerialization(IBMIntegrationTestCase):
         backends = service.backends(operational=True, simulator=False, instance=instance)
 
         # Known keys that look like a serialized object.
-        good_keys = ("gates.qubits", "qubits.name", "backend_version")
+        good_keys = ("gates.qubits", "qubits.name", "backend_version", "general_qlists.qubits")
 
         for backend in backends:
             with self.subTest(backend=backend):
