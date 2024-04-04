@@ -677,9 +677,9 @@ class IBMBackend(Backend):
         """
         # pylint: disable=arguments-differ
         issue_deprecation_msg(
-            msg="backend.run() is deprecated ",
+            msg="backend.run() and related sessions methods are deprecated ",
             version="0.23",
-            remedy="Please use the primitives instead.",
+            remedy="Please use the primitives (SamplerV2, EsimatorV2) instead.",
             period="6 months",
         )
         validate_job_tags(job_tags)
@@ -836,6 +836,12 @@ class IBMBackend(Backend):
 
     def open_session(self, max_time: Optional[Union[int, str]] = None) -> ProviderSession:
         """Open session"""
+        issue_deprecation_msg(
+            msg="backend.run() and related sessions methods are deprecated ",
+            version="0.23",
+            remedy="Please use the primitives (SamplerV2, EsimatorV2) instead.",
+            period="6 months",
+        )
         if not self._configuration.simulator:
             new_session = self._service._api_client.create_session(
                 self.name, self._instance, max_time, self._service.channel
@@ -848,10 +854,22 @@ class IBMBackend(Backend):
     @property
     def session(self) -> ProviderSession:
         """Return session"""
+        issue_deprecation_msg(
+            msg="backend.run() and related sessions methods are deprecated ",
+            version="0.23",
+            remedy="Please use the primitives (SamplerV2, EsimatorV2) instead.",
+            period="6 months",
+        )
         return self._session
 
     def cancel_session(self) -> None:
         """Cancel session. All pending jobs will be cancelled."""
+        issue_deprecation_msg(
+            msg="backend.run() and related sessions methods are deprecated ",
+            version="0.23",
+            remedy="Please use the primitives (SamplerV2, EsimatorV2) instead.",
+            period="6 months",
+        )
         if self._session:
             self._session.cancel()
             if self._session.session_id:
@@ -863,6 +881,12 @@ class IBMBackend(Backend):
         """Close the session so new jobs will no longer be accepted, but existing
         queued or running jobs will run to completion. The session will be terminated once there
         are no more pending jobs."""
+        issue_deprecation_msg(
+            msg="backend.run() and related sessions methods are deprecated ",
+            version="0.23",
+            remedy="Please use the primitives (SamplerV2, EsimatorV2) instead.",
+            period="6 months",
+        )
         if self._session:
             self._session.cancel()
             if self._session.session_id:
