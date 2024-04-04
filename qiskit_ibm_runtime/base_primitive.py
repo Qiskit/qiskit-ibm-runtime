@@ -65,11 +65,6 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
         Args:
             mode: Backend, Session or Batch in which to call the primitive.
 
-                If neither is specified, and the primitive is created inside a
-                :class:`qiskit_ibm_runtime.Session` context manager,
-                 then the session is used. Otherwise if IBM Cloud channel is used, a default backend
-                 is selected.
-
             options: Primitive options, see :class:`qiskit_ibm_runtime.options.EstimatorOptions`
                 and :class:`qiskit_ibm_runtime.options.SamplerOptions` for detailed description
                 on estimator and sampler options, respectively.
@@ -134,16 +129,16 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
         primitive_inputs.update(primitive_options)
         runtime_options = self._options_class._get_runtime_options(options_dict)
 
-        if self._backend:
-            for pub in pubs:
-                if getattr(self._backend, "target", None) and not is_simulator(self._backend):
-                    validate_isa_circuits([pub.circuit], self._backend.target)
+        for pub in pubs:
+            if getattr(self._backend, "target", None) and not is_simulator(self._backend):
+                validate_isa_circuits([pub.circuit], self._backend.target)
 
-                if isinstance(self._backend, IBMBackend):
-                    self._backend.check_faulty(pub.circuit)
+            if isinstance(self._backend, IBMBackend):
+                self._backend.check_faulty(pub.circuit)
 
         logger.info("Submitting job using options %s", primitive_options)
 
+        # Batch or Session
         if self._mode:
             return self._mode.run(
                 program_id=self._program_id(),
@@ -175,10 +170,10 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
 
     @property
     def mode(self) -> Optional[Session | Batch]:
-        """Return session used by this primitive.
+        """Return the execution mode used by this primitive.
 
         Returns:
-            Session used by this primitive, or ``None`` if session is not used.
+            Mode used by this primitive, or ``None`` if an execution mode is not used.
         """
         return self._mode
 
@@ -224,24 +219,13 @@ class BasePrimitiveV1(ABC):
 
     def __init__(
         self,
-        backend: Optional[Union[str, BackendV1, BackendV2]] = None,
-        session: Optional[Session] = None,
+        mode: Optional[Union[BackendV1, BackendV2, Session, Batch]] = None,
         options: Optional[Union[Dict, Options]] = None,
     ):
         """Initializes the primitive.
 
         Args:
-
-            backend: Backend to run the primitive. This can be a backend name or a ``Backend``
-                instance. If a name is specified, the default account (e.g. ``QiskitRuntimeService()``)
-                is used.
-
-            session: Session in which to call the primitive.
-
-                If both ``session`` and ``backend`` are specified, ``session`` takes precedence.
-                If neither is specified, and the primitive is created inside a
-                :class:`qiskit_ibm_runtime.Session` context manager, then the session is used.
-                Otherwise if IBM Cloud channel is used, a default backend is selected.
+            mode: Backend, Session or Batch in which to call the primitive.
 
             options: Primitive options, see :class:`Options` for detailed description.
                 The ``backend`` keyword is still supported but is deprecated.
@@ -253,7 +237,7 @@ class BasePrimitiveV1(ABC):
         # The base class, however, uses a `_run_options` which is an instance of
         # qiskit.providers.Options. We largely ignore this _run_options because we use
         # a nested dictionary to categorize options.
-        self._session: Optional[Session] = None
+        self._mode: Optional[Union[BackendV1, BackendV2, Session, Batch]] = None
         self._service: QiskitRuntimeService | QiskitRuntimeLocalService = None
         self._backend: Optional[BackendV1 | BackendV2] = None
 
@@ -266,32 +250,23 @@ class BasePrimitiveV1(ABC):
             default_options = asdict(Options())
             self._options = merge_options(default_options, options_copy)
 
-        if isinstance(session, Session):
-            self._session = session
-            self._service = self._session.service
-            self._backend = self._session._backend
-            return
-        elif session is not None:  # type: ignore[unreachable]
-            raise ValueError("session must be of type Session or None")
-
-        if isinstance(backend, IBMBackend):  # type: ignore[unreachable]
-            self._service = backend.service
-            self._backend = backend
-        elif isinstance(backend, (BackendV1, BackendV2)):
+        if isinstance(mode, (Session, Batch)):
+            self._mode = mode
+            self._service = self._mode.service
+            self._backend = self._mode._backend
+        elif isinstance(mode, IBMBackend):  # type: ignore[unreachable]
+            self._service = mode.service
+            self._backend = mode
+        elif isinstance(mode, (BackendV1, BackendV2)):
             self._service = QiskitRuntimeLocalService()
-            self._backend = backend
-        elif isinstance(backend, str):
-            self._service = (
-                QiskitRuntimeService()
-                if QiskitRuntimeService.global_service is None
-                else QiskitRuntimeService.global_service
-            )
-            self._backend = self._service.backend(backend)
+            self._backend = mode
+        elif mode is not None:  # type: ignore[unreachable]
+            raise ValueError("mode must be of type Backend, Session, Batch or None")
         elif get_cm_session():
-            self._session = get_cm_session()
-            self._service = self._session.service
+            self._mode = get_cm_session()
+            self._service = self._mode.service
             self._backend = self._service.backend(
-                name=self._session.backend(), instance=self._session._instance
+                name=self._mode.backend(), instance=self._mode._instance
             )
         else:
             self._service = (
@@ -366,8 +341,8 @@ class BasePrimitiveV1(ABC):
         logger.info("Submitting job using options %s", combined)
 
         runtime_options = Options._get_runtime_options(combined)
-        if self._session:
-            return self._session.run(
+        if self._mode:
+            return self._mode.run(
                 program_id=self._program_id(),
                 inputs=primitive_inputs,
                 options=runtime_options,
@@ -395,13 +370,13 @@ class BasePrimitiveV1(ABC):
         )
 
     @property
-    def session(self) -> Optional[Session]:
-        """Return session used by this primitive.
+    def mode(self) -> Optional[Session]:
+        """Return the execution mode used by this primitive.
 
         Returns:
-            Session used by this primitive, or ``None`` if session is not used.
+            Mode used by this primitive, or ``None`` if an execution mode is not used.
         """
-        return self._session
+        return self._mode
 
     @property
     def options(self) -> TerraOptions:

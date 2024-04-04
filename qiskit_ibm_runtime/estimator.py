@@ -108,24 +108,23 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
     def __init__(
         self,
         mode: Optional[IBMBackend, Session | Batch] = None,
-        backend: Optional[Union[str, IBMBackend]] = None,
+        backend: Optional[IBMBackend] = None,
         session: Optional[Session] = None,
         options: Optional[Union[Dict, EstimatorOptions]] = None,
     ):
         """Initializes the Estimator primitive.
 
         Args:
-            backend: Backend to run the primitive. This can be a backend name or an :class:`IBMBackend`
-                instance. If a name is specified, the default account (e.g. ``QiskitRuntimeService()``)
-                is used.
+            mode: Session or Batch in which to call the primitive.
 
-             mode: Session or Batch in which to call the primitive.
+            backend: Backend to run the primitive. This should be an :class:`IBMBackend` instance.
 
-                If both ``mode`` and ``backend`` are specified, ``takes`` takes precedence.
+            session: Session in which to call the primitive.
+
+                If both ``session`` and ``backend`` are specified, ``session`` takes precedence.
                 If neither is specified, and the primitive is created inside a
-                :class:`qiskit_ibm_runtime.Session` or :class:`qiskit_ibm_runtime.Batch` context manager,
-                 then the session is used. Otherwise if IBM Cloud channel is used, a default backend is
-                 selected.
+                :class:`qiskit_ibm_runtime.Session` context manager, then the session is used.
+                Otherwise if IBM Cloud channel is used, a default backend is selected.
 
             options: Estimator options, see :class:`EstimatorOptions` for detailed description.
 
@@ -146,11 +145,13 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
                 "0.23.0",
                 "The session argument is going to be consolidated into the mode param.",
             )
-        if isinstance(mode, str):
+        if isinstance(mode, str) or isinstance(backend, str):
             raise ValueError(
                 "The backend name as input is no longer supported. You can got the backend directly from"
                 " the service using QiskitRuntimeService().backend(backend_name)"
             )
+        if mode is None:
+            mode = session if backend and session else backend if backend else session
         BasePrimitiveV2.__init__(self, mode=mode, options=options)
 
     def run(
@@ -251,6 +252,7 @@ class EstimatorV1(BasePrimitiveV1, Estimator, BaseEstimator):
 
     def __init__(
         self,
+        mode: Optional[Union[IBMBackend, Session, Batch]] = None,
         backend: Optional[Union[str, IBMBackend]] = None,
         session: Optional[Session] = None,
         options: Optional[Union[Dict, Options]] = None,
@@ -258,6 +260,9 @@ class EstimatorV1(BasePrimitiveV1, Estimator, BaseEstimator):
         """Initializes the Estimator primitive.
 
         Args:
+
+            mode: Backend, Session or Batch in which to call the primitive.
+
             backend: Backend to run the primitive. This can be a backend name or an :class:`IBMBackend`
                 instance. If a name is specified, the default account (e.g. ``QiskitRuntimeService()``)
                 is used.
@@ -278,7 +283,26 @@ class EstimatorV1(BasePrimitiveV1, Estimator, BaseEstimator):
         # a nested dictionary to categorize options.
         BaseEstimator.__init__(self)
         Estimator.__init__(self)
-        BasePrimitiveV1.__init__(self, backend=backend, session=session, options=options)
+        if session:
+            deprecate_arguments(
+                "session",
+                "0.23.0",
+                "The session param is going to be consolidated to the mode param.",
+            )
+        if backend:
+            deprecate_arguments(
+                "backend",
+                "0.23.0",
+                "The backend param is going to be consolidated to the mode param.",
+            )
+        if isinstance(mode, str):
+            raise ValueError(
+                "The backend name as input is no longer supported. You can got the backend directly "
+                "from the service using QiskitRuntimeService().backend(backend_name)"
+            )
+        if mode is None:
+            mode = session if backend and session else backend if backend else session
+        BasePrimitiveV1.__init__(self, mode=mode, options=options)
 
     def run(  # pylint: disable=arguments-differ
         self,
