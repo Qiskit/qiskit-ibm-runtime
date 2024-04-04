@@ -25,7 +25,6 @@ from qiskit.primitives.base import BaseEstimatorV2
 from qiskit.primitives.containers import EstimatorPubLike
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
-from . import Batch
 from .runtime_job import RuntimeJob
 from .runtime_job_v2 import RuntimeJobV2
 from .ibm_backend import IBMBackend
@@ -39,6 +38,7 @@ from .utils.qctrl import validate_v2 as qctrl_validate_v2
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
+from .batch import Batch
 
 logger = logging.getLogger(__name__)
 

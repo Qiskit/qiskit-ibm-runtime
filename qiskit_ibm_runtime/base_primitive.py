@@ -25,7 +25,6 @@ from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.providers.options import Options as TerraOptions
 from qiskit.providers.backend import BackendV1, BackendV2
 
-from . import Batch
 from .provider_session import get_cm_session as get_cm_provider_session
 
 from .options import Options
@@ -41,9 +40,9 @@ from .constants import DEFAULT_DECODERS
 from .qiskit_runtime_service import QiskitRuntimeService
 from .fake_provider.local_service import QiskitRuntimeLocalService
 
-
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
+from .batch import Batch
 
 logger = logging.getLogger(__name__)
 OptionsT = TypeVar("OptionsT", bound=BaseOptions)
