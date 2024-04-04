@@ -33,7 +33,7 @@ class TwirlingOptions:
         enable_gates: Whether to apply 2-qubit gate twirling. Default: False.
 
         enable_measure: Whether to enable twirling of expectation value measurements
-          in Estimator. Default: True.
+          in the Primitive. Default: True.
 
         num_randomizations: The number of random samples to use when twirling or
             peforming sampled mitigation. If "auto", the value will be chosen automatically
