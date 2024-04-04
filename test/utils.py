@@ -338,9 +338,7 @@ def get_mocked_batch(backend: Any = None) -> mock.MagicMock:
     batch = mock.MagicMock(spec=Batch)
     batch._instance = None
     batch._backend = backend or get_mocked_backend()
-    batch._service = getattr(backend, "service", None) or mock.MagicMock(
-        spec=QiskitRuntimeService
-    )
+    batch._service = getattr(backend, "service", None) or mock.MagicMock(spec=QiskitRuntimeService)
     return batch
 
 
