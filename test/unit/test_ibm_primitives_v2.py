@@ -42,6 +42,7 @@ from ..utils import (
     get_mocked_backend,
     bell,
     get_mocked_session,
+    get_mocked_batch,
 )
 
 
@@ -72,7 +73,7 @@ class TestPrimitivesV2(IBMTestCase):
         ]
         backend = get_mocked_backend()
         for options in options_vars:
-            inst = primitive(mode=backend, options=options)
+            inst = primitive(backend=backend, options=options)
             self.assertTrue(dict_paritally_equal(asdict(inst.options), options))
 
     @combine(
@@ -86,7 +87,7 @@ class TestPrimitivesV2(IBMTestCase):
         """Test RuntimeOptions specified as primitive options."""
         backend = get_mocked_backend()
         options = primitive._options_class(environment=env_var)
-        inst = primitive(mode=backend, options=options)
+        inst = primitive(backend=backend, options=options)
         inst.run(**get_primitive_inputs(inst, backend=backend))
         run_options = backend.service.run.call_args.kwargs["options"]
         for key, val in env_var.items():
@@ -103,7 +104,7 @@ class TestPrimitivesV2(IBMTestCase):
         """Test passing an image to options."""
         backend = get_mocked_backend()
         options = primitive._options_class(**opts)
-        inst = primitive(mode=backend, options=options)
+        inst = primitive(backend=backend, options=options)
         inst.run(**get_primitive_inputs(inst))
         run_options = backend.service.run.call_args.kwargs["options"]
         input_params = backend.service.run.call_args.kwargs["inputs"]
@@ -120,7 +121,7 @@ class TestPrimitivesV2(IBMTestCase):
         backend = get_mocked_backend()
         options = primitive._options_class()
         options.max_execution_time = 100
-        inst = primitive(mode=backend, options=options)
+        inst = primitive(backend=backend, options=options)
         options.max_execution_time = 200
         self.assertEqual(inst.options.max_execution_time, 100)
 
@@ -138,13 +139,26 @@ class TestPrimitivesV2(IBMTestCase):
             )
 
     @data(EstimatorV2, SamplerV2)
+    def test_init_with_session_backend_str(self, primitive):
+        """Test initializing a primitive with a backend name using session."""
+        backend_name = "ibm_gotham"
+
+        with patch("qiskit_ibm_runtime.base_primitive.QiskitRuntimeService"):
+            with self.assertRaises(ValueError) as exc:
+                inst = primitive(session=backend_name)
+                self.assertIsNone(inst.session)
+            self.assertIn(
+                "mode must be of type Backend, Session, Batch or None", str(exc.exception)
+            )
+
+    @data(EstimatorV2, SamplerV2)
     def test_init_with_backend_instance(self, primitive):
         """Test initializing a primitive with a backend instance."""
         backend = get_mocked_backend()
         service = backend.service
 
         service.reset_mock()
-        inst = primitive(mode=backend)
+        inst = primitive(backend=backend)
         self.assertIsNone(inst.mode)
         inst.run(**get_primitive_inputs(inst))
         service.run.assert_called_once()
@@ -158,7 +172,7 @@ class TestPrimitivesV2(IBMTestCase):
         session = get_mocked_session(get_mocked_backend(backend_name))
 
         session.reset_mock()
-        inst = primitive(mode=session)
+        inst = primitive(session=session)
         self.assertIsNotNone(inst.mode)
         inst.run(**get_primitive_inputs(inst))
         session.run.assert_called_once()
@@ -204,7 +218,7 @@ class TestPrimitivesV2(IBMTestCase):
         service = backend.service
 
         with Session(service=service, backend=cm_backend):
-            inst = primitive(mode=backend)
+            inst = primitive(backend=backend)
             self.assertIsNone(inst.mode)
             inst.run(**get_primitive_inputs(inst))
             service.run.assert_called_once()
@@ -223,6 +237,46 @@ class TestPrimitivesV2(IBMTestCase):
         kwargs_list = service.run.call_args.kwargs
         self.assertNotIn("session_id", kwargs_list)
         self.assertNotIn("start_session", kwargs_list)
+
+    @data(SamplerV2, EstimatorV2)
+    def test_init_with_mode_param(self, primitive):
+        """Test initializing a primitive with mode parameter."""
+        backend = get_mocked_backend()
+        backend_name = backend.name
+        session = get_mocked_session(get_mocked_backend(backend_name))
+        session.reset_mock()
+        session._backend = backend
+        batch = get_mocked_batch(get_mocked_backend(backend_name))
+        batch.reset_mock()
+        service = backend.service
+
+        # mode = backend
+        inst = primitive(mode=backend)
+        self.assertIsNotNone(inst)
+        inst.run(**get_primitive_inputs(inst))
+        service.run.assert_called_once()
+        runtime_options = service.run.call_args.kwargs["options"]
+        self.assertEqual(runtime_options["backend"], backend)
+
+        # mode = backend_name
+        with self.assertRaises(ValueError) as exc:
+            primitive(mode=backend_name)
+            self.assertIn(
+                "The backend name as input is no longer supported. You can got the backend "
+                "directly from the service",
+                str(exc.exception),
+            )
+        # mode = session
+        inst = primitive(mode=session)
+        self.assertIsNotNone(inst.mode)
+        inst.run(**get_primitive_inputs(inst, backend=backend))
+        session.run.assert_called_once()
+
+        # mode = batch
+        inst = primitive(mode=batch)
+        self.assertIsNotNone(inst.mode)
+        inst.run(**get_primitive_inputs(inst, backend=backend))
+        session.run.assert_called_once()
 
     @data(EstimatorV2, SamplerV2)
     def test_parameters_single_circuit(self, primitive):
@@ -251,7 +305,7 @@ class TestPrimitivesV2(IBMTestCase):
             },
         ]
 
-        inst = primitive(mode=get_mocked_backend())
+        inst = primitive(backend=get_mocked_backend())
         for val in param_vals:
             with self.subTest(val=val):
                 pub = (circ, "ZZIII", val) if isinstance(inst, EstimatorV2) else (circ, val)
@@ -263,7 +317,7 @@ class TestPrimitivesV2(IBMTestCase):
         circ = RealAmplitudes(num_qubits=2, reps=1)
         backend = get_mocked_backend()
         circ = transpile(circ, backend=backend)
-        inst = primitive(mode=backend)
+        inst = primitive(backend=backend)
 
         with self.subTest("0-d"):
             param_vals = np.linspace(0, 1, 4)
@@ -299,7 +353,7 @@ class TestPrimitivesV2(IBMTestCase):
             ),
         ]
 
-        inst = primitive(mode=backend)
+        inst = primitive(backend=backend)
         for all_params in param_vals:
             with self.subTest(all_params=all_params):
                 pubs = []
@@ -330,7 +384,7 @@ class TestPrimitivesV2(IBMTestCase):
 
         for options, expected in options_vars:
             with self.subTest(options=options):
-                inst = primitive(mode=backend)
+                inst = primitive(backend=backend)
                 inst.options.update(**options)
                 inst.run(**get_primitive_inputs(inst))
                 inputs = backend.service.run.call_args.kwargs["inputs"]["options"]
@@ -348,7 +402,7 @@ class TestPrimitivesV2(IBMTestCase):
         ]
         for options in options_vars:
             with self.subTest(options=options):
-                inst = primitive(mode=backend)
+                inst = primitive(backend=backend)
                 inst.options.update(**options)
                 inst.run(**get_primitive_inputs(inst))
                 rt_options = backend.service.run.call_args.kwargs["options"]
@@ -361,7 +415,7 @@ class TestPrimitivesV2(IBMTestCase):
     def test_run_experimental_options(self, primitive, exp_opt):
         """Test specifying arbitrary options in run."""
         backend = get_mocked_backend()
-        inst = primitive(mode=backend)
+        inst = primitive(backend=backend)
         inst.options.experimental = exp_opt
         inst.run(**get_primitive_inputs(inst))
         inputs = backend.service.run.call_args.kwargs["inputs"]["options"]
@@ -376,7 +430,7 @@ class TestPrimitivesV2(IBMTestCase):
     def test_run_experimental_options_init(self, primitive, exp_opt):
         """Test specifying arbitrary options in initialization."""
         backend = get_mocked_backend()
-        inst = primitive(mode=backend, options={"experimental": exp_opt})
+        inst = primitive(backend=backend, options={"experimental": exp_opt})
         inst.run(**get_primitive_inputs(inst))
         inputs = backend.service.run.call_args.kwargs["inputs"]["options"]
         self.assertDictEqual(inputs["experimental"], {"foo": "bar"})
@@ -387,7 +441,7 @@ class TestPrimitivesV2(IBMTestCase):
     def test_run_unset_options(self, primitive):
         """Test running with unset options."""
         backend = get_mocked_backend()
-        inst = primitive(mode=backend)
+        inst = primitive(backend=backend)
         inst.run(**get_primitive_inputs(inst))
         inputs = backend.service.run.call_args.kwargs["inputs"]["options"]
         self.assertFalse(inputs)
@@ -396,7 +450,7 @@ class TestPrimitivesV2(IBMTestCase):
     def test_run_multiple_different_options(self, primitive):
         """Test multiple runs with different options."""
         backend = get_mocked_backend()
-        inst = primitive(mode=backend, options={"default_shots": 100})
+        inst = primitive(backend=backend, options={"default_shots": 100})
         inst.run(**get_primitive_inputs(inst))
         inst.options.update(default_shots=200)
         inst.run(**get_primitive_inputs(inst))
@@ -411,7 +465,7 @@ class TestPrimitivesV2(IBMTestCase):
         session = get_mocked_session()
         for idx in range(num_runs):
             cls = primitives[idx % len(primitives)]
-            inst = cls(mode=session)
+            inst = cls(session=session)
             inst.run(**get_primitive_inputs(inst))
         self.assertEqual(session.run.call_count, num_runs)
 
@@ -428,7 +482,7 @@ class TestPrimitivesV2(IBMTestCase):
         options = opt_cls(default_shots=100)
         backend = get_mocked_backend()
 
-        inst = primitive(mode=backend, options=options)
+        inst = primitive(backend=backend, options=options)
         inst.options.update(**new_opts)
         # Make sure the values are equal.
         inst_options = asdict(inst.options)
@@ -462,8 +516,8 @@ class TestPrimitivesV2(IBMTestCase):
 
         for opts, expected in zip(options_dicts, expected_list):
             with self.subTest(options=opts):
-                inst1 = primitive(mode=backend, options=opts)
-                inst2 = primitive(mode=backend, options=expected)
+                inst1 = primitive(backend=backend, options=opts)
+                inst2 = primitive(backend=backend, options=expected)
                 self.assertEqual(inst1.options, inst2.options)
 
     @data(EstimatorV2, SamplerV2)
@@ -483,7 +537,7 @@ class TestPrimitivesV2(IBMTestCase):
         service.backend.return_value = ibm_backend
         session = Session(service=service, backend=fake_backend.name())
 
-        inst = primitive(mode=session)
+        inst = primitive(session=session)
 
         if isinstance(inst, IBMBaseEstimator):
             pub = (transpiled, observable)
@@ -515,7 +569,7 @@ class TestPrimitivesV2(IBMTestCase):
         service.backend.return_value = ibm_backend
         session = Session(service=service, backend=fake_backend.name())
 
-        inst = primitive(mode=session)
+        inst = primitive(session=session)
         if isinstance(inst, IBMBaseEstimator):
             pubs = [(transpiled[0], observable), (transpiled[1], observable)]
         else:
@@ -544,7 +598,7 @@ class TestPrimitivesV2(IBMTestCase):
         service.backend.return_value = ibm_backend
         session = Session(service=service, backend=fake_backend.name())
 
-        inst = primitive(mode=session)
+        inst = primitive(session=session)
         if isinstance(inst, IBMBaseEstimator):
             pub = (transpiled, observable)
         else:
@@ -573,7 +627,7 @@ class TestPrimitivesV2(IBMTestCase):
         service.backend.return_value = ibm_backend
         session = Session(service=service, backend=fake_backend.name())
 
-        inst = primitive(mode=session)
+        inst = primitive(session=session)
         if isinstance(inst, IBMBaseEstimator):
             pub = (transpiled, observable)
         else:
@@ -603,7 +657,7 @@ class TestPrimitivesV2(IBMTestCase):
         service.backend.return_value = ibm_backend
         session = Session(service=service, backend=fake_backend.name())
 
-        inst = primitive(mode=session)
+        inst = primitive(session=session)
         if isinstance(inst, IBMBaseEstimator):
             pub = (transpiled, observable)
         else:
@@ -618,7 +672,7 @@ class TestPrimitivesV2(IBMTestCase):
     def test_abstract_circuits(self, primitive):
         """Test passing in abstract circuit would fail."""
         backend = get_mocked_backend()
-        inst = primitive(mode=backend)
+        inst = primitive(backend=backend)
         circ = QuantumCircuit(3, 3)
         circ.cx(0, 2)
         pub = [circ]
@@ -679,7 +733,7 @@ class TestPrimitivesV2(IBMTestCase):
         for options in options_good:
             with self.subTest(msg=f"EstimatorV2, {options}"):
                 print(options)
-                inst = EstimatorV2(mode=session, options=options)
+                inst = EstimatorV2(session=session, options=options)
                 _ = inst.run(**get_primitive_inputs(inst))
 
     def test_qctrl_supported_values_for_options_sampler(self):
@@ -697,7 +751,7 @@ class TestPrimitivesV2(IBMTestCase):
         for options in options_good:
             with self.subTest(msg=f"SamplerV2, {options}"):
                 print(options)
-                inst = SamplerV2(mode=session, options=options)
+                inst = SamplerV2(session=session, options=options)
                 _ = inst.run(**get_primitive_inputs(inst))
 
     def test_qctrl_unsupported_values_for_options(self):

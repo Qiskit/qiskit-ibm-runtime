@@ -132,7 +132,7 @@ class TestLocalModeV2(IBMTestCase):
     @combine(backend=[FakeManila(), FakeManilaV2(), AerSimulator()], num_sets=[1, 3])
     def test_v2_sampler(self, backend, num_sets):
         """Test V2 Sampler on a local backend."""
-        inst = SamplerV2(mode=backend)
+        inst = SamplerV2(backend=backend)
         job = inst.run(**get_primitive_inputs(inst, backend=backend, num_sets=num_sets))
         result = job.result()
         self.assertIsInstance(result, PrimitiveResult)
@@ -145,7 +145,7 @@ class TestLocalModeV2(IBMTestCase):
     @combine(backend=[FakeManila(), FakeManilaV2(), AerSimulator()], num_sets=[1, 3])
     def test_v2_estimator(self, backend, num_sets):
         """Test V2 Estimator on a local backend."""
-        inst = EstimatorV2(mode=backend)
+        inst = EstimatorV2(backend=backend)
         job = inst.run(**get_primitive_inputs(inst, backend=backend, num_sets=num_sets))
         result = job.result()
         self.assertIsInstance(result, PrimitiveResult)
@@ -159,7 +159,7 @@ class TestLocalModeV2(IBMTestCase):
     def test_v2_sampler_with_accepted_options(self, backend):
         """Test V2 sampler with accepted options."""
         options = {"default_shots": 10, "simulator": {"seed_simulator": 42}}
-        inst = SamplerV2(mode=backend, options=options)
+        inst = SamplerV2(backend=backend, options=options)
         job = inst.run(**get_primitive_inputs(inst, backend=backend))
         pub_result = job.result()[0]
         self.assertEqual(pub_result.data.meas.num_shots, 10)
@@ -171,7 +171,7 @@ class TestLocalModeV2(IBMTestCase):
     def test_v2_estimator_with_accepted_options(self, backend):
         """Test V1 estimator with accepted options."""
         options = {"default_precision": 0.03125, "simulator": {"seed_simulator": 42}}
-        inst = EstimatorV2(mode=backend, options=options)
+        inst = EstimatorV2(backend=backend, options=options)
         job = inst.run(**get_primitive_inputs(inst, backend=backend))
         pub_result = job.result()[0]
         self.assertDictEqual(pub_result.metadata, {"target_precision": 0.03125})
@@ -187,7 +187,7 @@ class TestLocalModeV2(IBMTestCase):
             "dynamical_decoupling": {"enable": True},
             "simulator": {"seed_simulator": 42},
         }
-        inst = primitive(mode=backend, options=options)
+        inst = primitive(backend=backend, options=options)
         with warnings.catch_warnings(record=True) as warns:
             job = inst.run(**get_primitive_inputs(inst, backend=backend))
             _ = job.result()
@@ -198,7 +198,7 @@ class TestLocalModeV2(IBMTestCase):
     def test_sampler_v2_session(self, session_cls, backend):
         """Testing running v2 sampler inside session."""
         with session_cls(backend=backend) as session:
-            inst = SamplerV2(mode=session)
+            inst = SamplerV2(session=session)
             job = inst.run(**get_primitive_inputs(inst, backend=backend))
             result = job.result()
             self.assertIsInstance(result, PrimitiveResult)
@@ -212,7 +212,7 @@ class TestLocalModeV2(IBMTestCase):
     def test_estimator_v2_session(self, session_cls, backend):
         """Testing running v2 estimator inside session."""
         with session_cls(backend=backend) as session:
-            inst = EstimatorV2(mode=session)
+            inst = EstimatorV2(session=session)
             job = inst.run(**get_primitive_inputs(inst, backend=backend))
             result = job.result()
             self.assertIsInstance(result, PrimitiveResult)
