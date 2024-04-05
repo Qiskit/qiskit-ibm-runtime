@@ -1,0 +1,47 @@
+0.13.0
+======
+
+New Features
+------------
+
+-  Added a new method,
+   `details() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Session#details>`__ that returns
+   information about a session, including: maximum session time, active
+   time remaining, the current state, and whether or not the session is
+   accepting jobs.
+
+   Also added `status() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Session#status>`__,
+   which returns the current status of the session.
+
+-  At initialization, if not passed in directly, the default
+   ``instance`` selected by the provider will be logged at the “INFO”
+   level. When running a job, if the backend selected is not in the
+   default instance but in a different instance the user also has access
+   to, that instance will also be logged.
+
+Upgrade Notes
+-------------
+
+-  `qiskit_ibm_runtime.Session.close() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Session#close>`__
+   has been updated to mark a ``Session`` as no longer accepting new
+   jobs. The session won’t accept more jobs but it will continue to run
+   any queued jobs until they are done or the max time expires. This
+   will also happen automatically when the session context manager is
+   exited. When a session that is not accepting jobs has run out of jobs
+   to run, it’s immediately closed, freeing up the backend to run more
+   jobs rather than wait for the interactive timeout.
+
+   The old close method behavior has been moved to a new method,
+   `qiskit_ibm_runtime.Session.cancel() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Session#cancel>`__,
+   where all queued jobs within a session are cancelled and terminated.
+
+Bug Fixes
+---------
+
+-  Fixed a bug where ``shots`` passed in as a numpy type were not being
+   serialized correctly.
+
+-  Fixed a bug in
+   `target_history() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.IBMBackend#target_history>`__
+   where the datetime parameter was not being used to retrieve backend
+   properties from the specified date.

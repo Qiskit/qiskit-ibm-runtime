@@ -1,0 +1,70 @@
+0.12.0
+======
+
+New Features
+------------
+
+-  Added a ``global_service``, so that if the user defines a
+   QiskitRuntimeService, it will be used by the primitives, even if the
+   service is not passed to them explicitly. For example:
+
+   .. code:: python
+
+      from qiskit_ibm_runtime import QiskitRuntimeService, Sampler
+      service = QiskitRuntimeService(channel="ibm_quantum")
+      # Sampler._service field will be initialized to ``service``
+      sampler = Sampler(backend="ibmq_qasm_simulator")
+
+-  Added a new method,
+   `qiskit_ibm_runtime.QiskitRuntimeService.instances() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#instances>`__
+   that returns all instances(hub/group/project) the user is in. This is
+   only for the ``ibm_quantum`` channel since the ``ibm_cloud`` channel
+   does not have multiple instances.
+
+-  Added validations for options on the second level of the dict, i.e.,
+   for each of resilience, simulator, execution, and transpilation,
+   check that their options are supported. Otherwise throw an exception.
+
+-  There is a new parameter, ``channel_strategy`` that can be set in the
+   initialization of
+   `qiskit_ibm_runtime.QiskitRuntimeService <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService>`__
+   or saved in
+   `qiskit_ibm_runtime.QiskitRuntimeService.save_account() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#save_account>`__.
+   If ``channel_strategy`` is set to ``q-ctrl``, all jobs within the
+   service will use the Q-CTRL error mitigation strategy.
+
+Upgrade Notes
+-------------
+
+-  Circuits and other input parameters will no longer be automatically
+   stored in runtime jobs. They can still be retrieved with
+   `qiskit_ibm_runtime.RuntimeJob.inputs() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob#inputs>`__.
+
+
+Deprecation Notes
+-----------------
+
+-  The ``noise_amplifier`` resilience options is deprecated. After the
+   deprecation period, only local folding amplification will be
+   supported. Refer to https://github.com/qiskit-community/prototype-zne
+   for global folding amplification.
+
+Bug Fixes
+---------
+
+-  When running on channel “ibm_cloud”, it is possible not to specify
+   the backend. In this case, the system selects one of the available
+   backends for this service. Issue #625
+   https://github.com/Qiskit/qiskit-ibm-runtime/issues/625 reported that
+   the the backend returned by ``job.backend()`` was not always the
+   actual backend on which the job was run. This PR fixes this bug.
+
+-  Fixes a race condition in the test test_cancel_running_job() in
+   test_job.py where job cancellation could not be performed. Refer to
+   #1019 <https://github.com/Qiskit/qiskit-ibm-runtime/issues/1019>\_
+   for more details.
+
+-  Previously we added validation when jobs were run to make sure the
+   number of circuits was not greater than the maximum for that backend,
+   ``backend.max_circuits``. This limit isn’t actually necessary for
+   primtives run from within a session.

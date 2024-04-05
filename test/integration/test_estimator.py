@@ -19,6 +19,8 @@ from qiskit.circuit.library import RealAmplitudes
 from qiskit.primitives import Estimator as TerraEstimator
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.primitives import BaseEstimator, EstimatorResult
+from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
+from qiskit.providers.exceptions import QiskitBackendNotFoundError
 
 from qiskit_ibm_runtime import Estimator, Session
 
@@ -45,6 +47,8 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
         H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
         H2 = SparsePauliOp.from_list([("IZ", 1)])
         H3 = SparsePauliOp.from_list([("ZI", 1), ("ZZ", 1)])
+        backend = service.backend(self.backend)
+        pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
 
         with Session(service, self.backend) as session:
             estimator = Estimator(session=session)
@@ -54,7 +58,7 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
             theta2 = [0, 1, 1, 2, 3, 5, 8, 13]
             theta3 = [1, 2, 3, 4, 5, 6]
 
-            circuits1 = [psi1]
+            circuits1 = pm.run([psi1])
             # calculate [ <psi1(theta1)|H1|psi1(theta1)> ]
             job = estimator.run(circuits=circuits1, observables=[H1], parameter_values=[theta1])
             result1 = job.result()
@@ -62,7 +66,7 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
             self.assertEqual(len(result1.values), len(circuits1))
             self.assertEqual(len(result1.metadata), len(circuits1))
 
-            circuits2 = circuits1 * 2
+            circuits2 = pm.run(circuits1 * 2)
             # calculate [ <psi1(theta1)|H2|psi1(theta1)>, <psi1(theta1)|H3|psi1(theta1)> ]
             job = estimator.run(
                 circuits=circuits2, observables=[H2, H3], parameter_values=[theta1] * 2
@@ -72,7 +76,7 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
             self.assertEqual(len(result2.values), len(circuits2))
             self.assertEqual(len(result2.metadata), len(circuits2))
 
-            circuits3 = [psi2]
+            circuits3 = pm.run([psi2])
             # calculate [ <psi2(theta2)|H2|psi2(theta2)> ]
             job = estimator.run(circuits=circuits3, observables=[H2], parameter_values=[theta2])
             result3 = job.result()
@@ -91,7 +95,7 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
             self.assertEqual(len(result4.values), len(circuits2))
             self.assertEqual(len(result4.metadata), len(circuits2))
 
-            circuits5 = [psi1, psi2, psi1]
+            circuits5 = pm.run([psi1, psi2, psi1])
             # calculate [ <psi1(theta1)|H1|psi1(theta1)>,
             #             <psi2(theta2)|H2|psi2(theta2)>,
             #             <psi1(theta3)|H3|psi1(theta3)> ]
@@ -182,13 +186,14 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
             chsh1_runtime = job1.result()
             chsh2_runtime = job2.result()
 
-        self.assertTrue(np.allclose(chsh1_terra.values, chsh1_runtime.values, rtol=0.3))
-        self.assertTrue(np.allclose(chsh2_terra.values, chsh2_runtime.values, rtol=0.3))
+        np.testing.assert_allclose(chsh1_terra.values, chsh1_runtime.values, rtol=0.3)
+        np.testing.assert_allclose(chsh2_terra.values, chsh2_runtime.values, rtol=0.3)
 
     @run_integration_test
     def test_estimator_no_session(self, service):
         """Test estimator primitive without a session."""
         backend = service.backend(self.backend)
+        pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
         circ_count = 3
 
         psi1 = RealAmplitudes(num_qubits=2, reps=2)
@@ -202,14 +207,22 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
 
         theta = [0, 1, 1, 2, 3, 5]
         circuits = [psi1] * circ_count
+        isa_circuits = pm.run(circuits)
         # calculate [ <psi1(theta1)|H1|psi1(theta1)> ]
         job = estimator.run(
-            circuits=circuits,
+            circuits=isa_circuits,
             observables=[H1] * circ_count,
             parameter_values=[theta] * circ_count,
         )
         result1 = job.result()
         self.assertIsInstance(result1, EstimatorResult)
-        self.assertEqual(len(result1.values), len(circuits))
-        self.assertEqual(len(result1.metadata), len(circuits))
+        self.assertEqual(len(result1.values), len(isa_circuits))
+        self.assertEqual(len(result1.metadata), len(isa_circuits))
         self.assertIsNone(job.session_id)
+
+    @run_integration_test
+    def test_estimator_backend_str(self, service):
+        """Test v1 primitive with string as backend."""
+        # pylint: disable=unused-argument
+        with self.assertRaisesRegex(QiskitBackendNotFoundError, "No backend matches"):
+            _ = Estimator(backend="fake_manila")

@@ -50,11 +50,11 @@ from .exceptions import (
 from .hub_group_project import HubGroupProject  # pylint: disable=cyclic-import
 from .utils.result_decoder import ResultDecoder
 from .runtime_job import RuntimeJob
+from .runtime_job_v2 import RuntimeJobV2
 from .utils import RuntimeDecoder, to_python_identifier
 from .api.client_parameters import ClientParameters
 from .runtime_options import RuntimeOptions
 from .ibm_backend import IBMBackend
-from .utils.deprecation import issue_deprecation_msg
 
 logger = logging.getLogger(__name__)
 
@@ -62,66 +62,7 @@ SERVICE_NAME = "runtime"
 
 
 class QiskitRuntimeService(Provider):
-    """Class for interacting with the Qiskit Runtime service.
-
-    Qiskit Runtime is a new architecture offered by IBM Quantum that
-    streamlines computations requiring many iterations. These experiments will
-    execute significantly faster within its improved hybrid quantum/classical
-    process.
-
-    A sample workflow of using the runtime service::
-
-        from qiskit_ibm_runtime import QiskitRuntimeService, Session, Sampler, Estimator, Options
-        from qiskit.circuit.library import RealAmplitudes
-        from qiskit.circuit import QuantumCircuit, QuantumRegister, ClassicalRegister
-        from qiskit.quantum_info import SparsePauliOp
-
-        # Initialize account.
-        service = QiskitRuntimeService()
-
-        # Set options, which can be overwritten at job level.
-        options = Options(optimization_level=1)
-
-        # Prepare inputs.
-        psi = RealAmplitudes(num_qubits=2, reps=2)
-        H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
-        theta = [0, 1, 1, 2, 3, 5]
-
-        # Bell Circuit
-        qr = QuantumRegister(2, name="qr")
-        cr = ClassicalRegister(2, name="cr")
-        qc = QuantumCircuit(qr, cr, name="bell")
-        qc.h(qr[0])
-        qc.cx(qr[0], qr[1])
-        qc.measure(qr, cr)
-
-        with Session(service=service, backend="ibmq_qasm_simulator") as session:
-            # Submit a request to the Sampler primitive within the session.
-            sampler = Sampler(session=session, options=options)
-            job = sampler.run(circuits=qc)
-            print(f"Sampler results: {job.result()}")
-
-            # Submit a request to the Estimator primitive within the session.
-            estimator = Estimator(session=session, options=options)
-            job = estimator.run(
-                circuits=[psi], observables=[H1], parameter_values=[theta]
-            )
-            print(f"Estimator results: {job.result()}")
-
-    The example above uses the dedicated :class:`~qiskit_ibm_runtime.Sampler`
-    and :class:`~qiskit_ibm_runtime.Estimator` classes. You can also
-    use the :meth:`run` method directly to invoke a Qiskit Runtime program.
-
-    If the program has any interim results, you can use the ``callback``
-    parameter of the :meth:`run` method to stream the interim results.
-    Alternatively, you can use the :meth:`RuntimeJob.stream_results` method to stream
-    the results at a later time, but before the job finishes.
-
-    The :meth:`run` method returns a
-    :class:`RuntimeJob` object. You can use its
-    methods to perform tasks like checking job status, getting job result, and
-    canceling job.
-    """
+    """Class for interacting with the Qiskit Runtime service."""
 
     global_service = None
 
@@ -589,7 +530,6 @@ class QiskitRuntimeService(Provider):
             IBMInputValueError: If an input is invalid.
             QiskitBackendNotFoundError: If the backend is not in any instance.
         """
-        # TODO filter out input_allowed not having runtime
         backends: List[IBMBackend] = []
         instance_filter = instance if instance else self._account.instance
         if self._channel == "ibm_quantum":
@@ -858,7 +798,7 @@ class QiskitRuntimeService(Provider):
         result_decoder: Optional[Union[Type[ResultDecoder], Sequence[Type[ResultDecoder]]]] = None,
         session_id: Optional[str] = None,
         start_session: Optional[bool] = False,
-    ) -> RuntimeJob:
+    ) -> Union[RuntimeJob, RuntimeJobV2]:
         """Execute the runtime program.
 
         Args:
@@ -900,21 +840,25 @@ class QiskitRuntimeService(Provider):
         hgp_name = None
         if self._channel == "ibm_quantum":
             # Find the right hgp
-            hgp = self._get_hgp(instance=qrt_options.instance, backend_name=qrt_options.backend)
+            hgp = self._get_hgp(
+                instance=qrt_options.instance, backend_name=qrt_options.get_backend_name()
+            )
             hgp_name = hgp.name
             if hgp_name != self._current_instance:
                 self._current_instance = hgp_name
                 logger.info("Instance selected: %s", self._current_instance)
-        backend = self.backend(name=qrt_options.backend, instance=hgp_name)
+        backend = self.backend(name=qrt_options.get_backend_name(), instance=hgp_name)
         status = backend.status()
         if status.operational is True and status.status_msg != "active":
             warnings.warn(
                 f"The backend {backend.name} currently has a status of {status.status_msg}."
             )
+
+        version = inputs.get("version", 1) if inputs else 1
         try:
             response = self._api_client.program_run(
                 program_id=program_id,
-                backend_name=qrt_options.backend,
+                backend_name=qrt_options.get_backend_name(),
                 params=inputs,
                 image=qrt_options.image,
                 hgp=hgp_name,
@@ -941,23 +885,38 @@ class QiskitRuntimeService(Provider):
         backend = (
             self.backend(name=response["backend"], instance=hgp_name)
             if response["backend"]
-            else qrt_options.backend
+            else qrt_options.get_backend_name()
         )
 
-        job = RuntimeJob(
-            backend=backend,
-            api_client=self._api_client,
-            client_params=self._client_params,
-            job_id=response["id"],
-            program_id=program_id,
-            user_callback=callback,
-            result_decoder=result_decoder,
-            image=qrt_options.image,
-            service=self,
-        )
+        if version == 2:
+            job = RuntimeJobV2(
+                backend=backend,
+                api_client=self._api_client,
+                client_params=self._client_params,
+                job_id=response["id"],
+                program_id=program_id,
+                user_callback=callback,
+                result_decoder=result_decoder,
+                image=qrt_options.image,
+                service=self,
+                version=version,
+            )
+        else:
+            job = RuntimeJob(
+                backend=backend,
+                api_client=self._api_client,
+                client_params=self._client_params,
+                job_id=response["id"],
+                program_id=program_id,
+                user_callback=callback,
+                result_decoder=result_decoder,
+                image=qrt_options.image,
+                service=self,
+                version=version,
+            )
         return job
 
-    def job(self, job_id: str) -> RuntimeJob:
+    def job(self, job_id: str) -> Union[RuntimeJob, RuntimeJobV2]:
         """Retrieve a runtime job.
 
         Args:
@@ -991,7 +950,7 @@ class QiskitRuntimeService(Provider):
         created_after: Optional[datetime] = None,
         created_before: Optional[datetime] = None,
         descending: bool = True,
-    ) -> List[RuntimeJob]:
+    ) -> List[Union[RuntimeJob, RuntimeJobV2]]:
         """Retrieve all runtime jobs, subject to optional filtering.
 
         Args:
@@ -1093,7 +1052,7 @@ class QiskitRuntimeService(Provider):
                 raise RuntimeJobNotFound(f"Job not found: {ex.message}") from None
             raise IBMRuntimeError(f"Failed to delete job: {ex}") from None
 
-    def _decode_job(self, raw_data: Dict) -> RuntimeJob:
+    def _decode_job(self, raw_data: Dict) -> Union[RuntimeJob, RuntimeJobV2]:
         """Decode job data received from the server.
 
         Args:
@@ -1199,21 +1158,6 @@ class QiskitRuntimeService(Provider):
             The channel type used.
         """
         return self._channel
-
-    @property
-    def runtime(self):  # type:ignore
-        """Return self for compatibility with IBMQ provider.
-
-        Returns:
-            self
-        """
-        issue_deprecation_msg(
-            msg="The runtime property is deprecated",
-            version="0.18.0",
-            remedy="",
-            period="1 month",
-        )
-        return self
 
     def __repr__(self) -> str:
         return "<{}>".format(self.__class__.__name__)

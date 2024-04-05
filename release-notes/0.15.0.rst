@@ -1,0 +1,83 @@
+0.15.0
+======
+
+New Features
+------------
+
+-  A new module
+   `qiskit_ibm_runtime.fake_provider <fake_provider#module-qiskit_ibm_runtime.fake_provider>`__,
+   has been added to provide access to a series of fake backends derived
+   from snapshots of IBM Quantum devices. This functionality was
+   originally provided by the ``qiskit.providers.fake_provider`` module,
+   but will soon be deprecated in favor of
+   `qiskit_ibm_runtime.fake_provider <fake_provider#module-qiskit_ibm_runtime.fake_provider>`__.
+
+   The snapshots provided by the fake backends are useful for local
+   testing of the transpiler and performing local noisy simulations of
+   the system before running on real devices. Here is an example of
+   using a fake backend for transpilation and simulation:
+
+   .. code:: python
+
+      from qiskit import QuantumCircuit
+      from qiskit import transpile
+      from qiskit_ibm_runtime.fake_provider import FakeManilaV2
+
+      # Get a fake backend from the fake provider
+      backend = FakeManilaV2()
+
+      # Create a simple circuit
+      circuit = QuantumCircuit(3)
+      circuit.h(0)
+      circuit.cx(0,1)
+      circuit.cx(0,2)
+      circuit.measure_all()
+
+      # Transpile the ideal circuit to a circuit that can be directly executed by the backend
+      transpiled_circuit = transpile(circuit, backend)
+
+      # Run the transpiled circuit using the simulated fake backend
+      job = backend.run(transpiled_circuit)
+      counts = job.result().get_counts()
+
+-  Added support for ``backend.run()``. The functionality is similar to
+   that in ``qiskit-ibm-provider``.
+
+-  An error will be raised during initialization if ``q-ctrl`` is passed
+   in as the ``channel_strategy`` and the account instance does not have
+   ``q-ctrl`` enabled.
+
+-  Removed storing result in ``RuntimeJob._results``. Instead retrieve
+   results every time the ``results()`` method is called.
+
+Deprecation Notes
+-----------------
+
+-  Usage of the ``~/.qiskit/qiskitrc.json`` file for account information
+   has been deprecated. Use ``~/.qiskit/qiskit-ibm.json`` instead.
+
+Bug Fixes
+---------
+
+-  Fixed an issue where canceled and failed jobs would return an invalid
+   result that resulted in a type error, preventing the actual error
+   from being returned to the user.
+
+-  A warning will be raised at initialization if the DE environment is
+   being used since not all features are supported there.
+
+-  The ``backend`` parameter in
+   `from_id() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Session#from_id>`__ is being
+   deprecated because sessions do not support multiple backends.
+   Additionally, the ``service`` parameter is no longer optional.
+
+-  The ``circuit_indices`` and ``observable_indices`` run inputs for
+   `Estimator <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Estimator>`__ and
+   `Sampler <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Sampler>`__ have been completely
+   removed.
+
+Other Notes
+-----------
+
+-  Added migration code for running ``backend.run`` in
+   qiskit_ibm_runtime instead of in qiskit_ibm_provider.

@@ -1,6 +1,0 @@
----
-features:
-  - |
-    Added a new method :meth:`~qiskit_ibm_runtime.RuntimeJob.properties` which returns the 
-    backend properties of the job at the time the job was run. 
-

@@ -110,3 +110,6 @@ Qconfig.py
 
 # Pycharm
 .idea
+
+# Generated release notes file
+docs/release_notes.rst

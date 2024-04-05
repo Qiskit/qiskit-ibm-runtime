@@ -12,19 +12,25 @@
 
 """Qiskit Runtime flexible session."""
 
-import warnings
+from __future__ import annotations
+
 from typing import Dict, Optional, Type, Union, Callable, Any
 from types import TracebackType
 from functools import wraps
+import warnings
+
+from qiskit.providers.backend import BackendV1, BackendV2
 
 from qiskit_ibm_runtime import QiskitRuntimeService
 from .exceptions import IBMInputValueError
 from .runtime_job import RuntimeJob
+from .runtime_job_v2 import RuntimeJobV2
 from .utils.result_decoder import ResultDecoder
 from .ibm_backend import IBMBackend
 from .utils.default_session import set_cm_session
 from .utils.deprecation import deprecate_arguments, issue_deprecation_msg
 from .utils.converters import hms_to_seconds
+from .fake_provider.local_service import QiskitRuntimeLocalService
 
 
 def _active_session(func):  # type: ignore
@@ -40,13 +46,11 @@ def _active_session(func):  # type: ignore
 
 
 class Session:
-    """Class for creating a flexible Qiskit Runtime session.
+    """Class for creating a Qiskit Runtime session.
 
     A Qiskit Runtime ``session`` allows you to group a collection of iterative calls to
     the quantum computer. A session is started when the first job within the session
     is started. Subsequent jobs within the session are prioritized by the scheduler.
-    Data used within a session, such as transpiled circuits, is also cached to avoid
-    unnecessary overhead.
 
     You can open a Qiskit Runtime session using this ``Session`` class and submit jobs
     to one or more primitives.
@@ -54,7 +58,11 @@ class Session:
     For example::
 
         from qiskit.circuit import QuantumCircuit, QuantumRegister, ClassicalRegister
-        from qiskit_ibm_runtime import Sampler, Session, Options
+        from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
+        from qiskit_ibm_runtime import Session, SamplerV2 as Sampler
+
+        service = QiskitRuntimeService()
+        backend = service.least_busy(operational=True, simulator=False)
 
         # Bell Circuit
         qr = QuantumRegister(2, name="qr")
@@ -64,20 +72,21 @@ class Session:
         qc.cx(qr[0], qr[1])
         qc.measure(qr, cr)
 
-        options = Options(optimization_level=3)
+        pm = generate_preset_pass_manager(backend=backend, optimization_level=1)
+        isa_circuit = pm.run(qc)
 
-        with Session(backend="ibmq_qasm_simulator") as session:
-            sampler = Sampler(session=session, options=options)
-            job = sampler.run(qc)
+        with Session(backend=backend) as session:
+            sampler = Sampler(session=session)
+            job = sampler.run([isa_circuit])
+            pub_result = job.result()[0]
             print(f"Sampler job ID: {job.job_id()}")
-            print(f"Sampler job result: {job.result()}")
-
+            print(f"Counts: {pub_result.data.cr.get_counts()}")
     """
 
     def __init__(
         self,
         service: Optional[QiskitRuntimeService] = None,
-        backend: Optional[Union[str, IBMBackend]] = None,
+        backend: Optional[Union[str, BackendV1, BackendV2]] = None,
         max_time: Optional[Union[int, str]] = None,
     ):  # pylint: disable=line-too-long
         """Session constructor.
@@ -87,11 +96,10 @@ class Session:
                 If ``None``, the service associated with the backend, if known, is used.
                 Otherwise ``QiskitRuntimeService()`` is used to initialize
                 your default saved account.
-            backend: Optional instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
-                string name of backend. An instance of :class:`qiskit_ibm_provider.IBMBackend` will not work.
+            backend: Optional instance of ``Backend`` class or string name of backend.
                 If not specified, a backend will be selected automatically (IBM Cloud channel only).
 
-            max_time: (EXPERIMENTAL setting, can break between releases without warning)
+            max_time:
                 Maximum amount of time, a runtime session can be open before being
                 forcibly closed. Can be specified as seconds (int) or a string like "2h 30m 40s".
                 This value must be less than the
@@ -101,58 +109,63 @@ class Session:
         Raises:
             ValueError: If an input value is invalid.
         """
+        self._service: Optional[QiskitRuntimeService | QiskitRuntimeLocalService] = None
+        self._backend: Optional[BackendV1 | BackendV2] = None
+        self._instance = None
+        self._active = True
+        self._session_id = None
 
-        if service is None:
-            if isinstance(backend, IBMBackend):
-                self._service = backend.service
-            else:
+        self._service = service
+        if isinstance(backend, IBMBackend):
+            self._service = self._service or backend.service
+            self._backend = backend
+        elif isinstance(backend, (BackendV1, BackendV2)):
+            self._service = QiskitRuntimeLocalService()
+            self._backend = backend
+        else:
+            if not self._service:
                 self._service = (
                     QiskitRuntimeService()
                     if QiskitRuntimeService.global_service is None
                     else QiskitRuntimeService.global_service
                 )
-        else:
-            self._service = service
+            if isinstance(backend, str):
+                self._backend = self._service.backend(backend)
+            elif backend is None:
+                if self._service.channel == "ibm_quantum":
+                    raise ValueError('"backend" is required for ``ibm_quantum`` channel.')
+                issue_deprecation_msg(
+                    "Not providing a backend is deprecated",
+                    "0.21.0",
+                    "Passing in a backend will be required, please provide a backend.",
+                )
+            else:
+                raise ValueError(f"Invalid backend type {type(backend)}")
 
-        if not backend:
-            if self._service.channel == "ibm_quantum":
-                raise ValueError('"backend" is required for ``ibm_quantum`` channel.')
-            issue_deprecation_msg(
-                "Not providing a backend is deprecated",
-                "0.21.0",
-                "Passing in a backend will be required, please provide a backend.",
-            )
-
-        self._instance = None
-
-        self._active = True
         self._max_time = (
             max_time
             if max_time is None or isinstance(max_time, int)
             else hms_to_seconds(max_time, "Invalid max_time value: ")
         )
 
-        if isinstance(backend, IBMBackend):
-            self._instance = backend._instance
-            sim_backend = backend.configuration().simulator
-            backend = backend.name
-        else:
-            backend_obj = self._service.backend(backend)
-            self._instance = backend_obj._instance
-            sim_backend = backend_obj.configuration().simulator
-        self._backend = backend
+        if isinstance(self._backend, IBMBackend):
+            self._instance = self._backend._instance
+            if not self._backend.configuration().simulator:
+                self._session_id = self._create_session()
 
-        if not sim_backend:
-            self._session_id = self._create_session()
-        else:
-            self._session_id = None
+        if not self._session_id:
+            warnings.warn(
+                "Session is not supported in local testing mode or when using a simulator."
+            )
 
-    def _create_session(self) -> str:
+    def _create_session(self) -> Optional[str]:
         """Create a session."""
-        session = self._service._api_client.create_session(
-            self._backend, self._instance, self._max_time, self._service.channel
-        )
-        return session.get("id")
+        if isinstance(self._service, QiskitRuntimeService):
+            session = self._service._api_client.create_session(
+                self.backend(), self._instance, self._max_time, self._service.channel
+            )
+            return session.get("id")
+        return None
 
     @_active_session
     def run(
@@ -162,7 +175,7 @@ class Session:
         options: Optional[Dict] = None,
         callback: Optional[Callable] = None,
         result_decoder: Optional[Type[ResultDecoder]] = None,
-    ) -> RuntimeJob:
+    ) -> Union[RuntimeJob, RuntimeJobV2]:
         """Run a program in the session.
 
         Args:
@@ -184,25 +197,32 @@ class Session:
 
         options["backend"] = self._backend
 
-        job = self._service.run(
-            program_id=program_id,
-            options=options,
-            inputs=inputs,
-            session_id=self._session_id,
-            start_session=False,
-            callback=callback,
-            result_decoder=result_decoder,
-        )
+        if isinstance(self._service, QiskitRuntimeService):
+            job = self._service.run(
+                program_id=program_id,  # type: ignore[arg-type]
+                options=options,
+                inputs=inputs,
+                session_id=self._session_id,
+                start_session=False,
+                callback=callback,
+                result_decoder=result_decoder,
+            )
 
-        if self._backend is None:
-            self._backend = job.backend().name
+            if self._backend is None:
+                self._backend = job.backend()
+        else:
+            job = self._service.run(  # type: ignore[call-arg]
+                program_id=program_id,  # type: ignore[arg-type]
+                options=options,
+                inputs=inputs,
+            )
 
         return job
 
     def cancel(self) -> None:
         """Cancel all pending jobs in a session."""
         self._active = False
-        if self._session_id:
+        if self._session_id and isinstance(self._service, QiskitRuntimeService):
             self._service._api_client.cancel_session(self._session_id)
 
     def close(self) -> None:
@@ -210,7 +230,7 @@ class Session:
         queued or running jobs will run to completion. The session will be terminated once there
         are no more pending jobs."""
         self._active = False
-        if self._session_id:
+        if self._session_id and isinstance(self._service, QiskitRuntimeService):
             self._service._api_client.close_session(self._session_id)
 
     def backend(self) -> Optional[str]:
@@ -219,7 +239,9 @@ class Session:
         Returns:
             Backend for this session. None if unknown.
         """
-        return self._backend
+        if self._backend:
+            return self._backend.name if self._backend.version == 2 else self._backend.name()
+        return None
 
     def status(self) -> Optional[str]:
         """Return current session status.
@@ -267,7 +289,7 @@ class Session:
             activated_at: Timestamp of when the session state was changed to active.
             mode: Execution mode of the session
         """
-        if self._session_id:
+        if self._session_id and isinstance(self._service, QiskitRuntimeService):
             response = self._service._api_client.session_details(self._session_id)
             if response:
                 return {
