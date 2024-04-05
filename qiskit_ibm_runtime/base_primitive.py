@@ -92,8 +92,10 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
         elif get_cm_session():
             self._mode = get_cm_session()
             self._service = self._mode.service
-            self._backend = self._service.backend(
-                name=self._mode.backend(), instance=self._mode._instance
+            self._backend = (
+                self._service.backend(name=self._mode.backend(), instance=self._mode._instance)
+                if isinstance(self._service, QiskitRuntimeService)
+                else self._mode._backend
             )
         else:
             self._service = (
