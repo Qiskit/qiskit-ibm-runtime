@@ -55,13 +55,6 @@ class MockSession(Session):
     _instance = None
 
 
-class MockBatch(Session):
-    """Mock for Batch class"""
-
-    _circuits_map: Dict[str, QuantumCircuit] = {}
-    _instance = None
-
-
 @ddt
 class TestPrimitives(IBMTestCase):
     """Class for testing the Sampler and Estimator classes."""
@@ -132,20 +125,24 @@ class TestPrimitives(IBMTestCase):
     def test_init_with_backend_str(self, primitive):
         """Test initializing a primitive with a backend name."""
         backend_name = "ibm_gotham"
+        mock_backend = get_mocked_backend(name=backend_name)
+        mock_service_inst = mock_backend.service
 
-        with self.assertRaises(ValueError) as exc:
-            primitive(backend=backend_name)
-            self.assertIn(
-                "The backend name as input is no longer supported. You can got the backend "
-                "directly from the service",
-                str(exc.exception),
-            )
-            primitive(mode=backend_name)
-            self.assertIn(
-                "The backend name as input is no longer supported. You can got the backend "
-                "directly from the service",
-                str(exc.exception),
-            )
+        class MockQRTService:
+            """Mock class used to create a new QiskitRuntimeService."""
+
+            global_service = None
+
+            def __new__(cls, *args, **kwargs):  # pylint: disable=unused-argument
+                return mock_service_inst
+
+        with patch("qiskit_ibm_runtime.base_primitive.QiskitRuntimeService", new=MockQRTService):
+            inst = primitive(backend=backend_name)
+            self.assertIsNone(inst.session)
+            inst.run(self.qx, observables=self.obs)
+            mock_service_inst.run.assert_called_once()
+            runtime_options = mock_service_inst.run.call_args.kwargs["options"]
+            self.assertEqual(runtime_options["backend"], mock_backend)
 
     def test_init_with_session_backend_str(self):
         """Test initializing a primitive with a backend name using session."""
@@ -153,11 +150,13 @@ class TestPrimitives(IBMTestCase):
         backend_name = "ibm_gotham"
 
         for cls in primitives:
-            with self.assertRaises(ValueError) as exc:
-                cls(session=backend_name)
-            self.assertIn(
-                "mode must be of type Backend, Session, Batch or None", str(exc.exception)
-            )
+            with self.subTest(primitive=cls), patch(
+                "qiskit_ibm_runtime.base_primitive.QiskitRuntimeService"
+            ):
+                with self.assertRaises(ValueError) as exc:
+                    inst = cls(session=backend_name)
+                    self.assertIsNone(inst.session)
+                self.assertIn("session must be of type Session or None", str(exc.exception))
 
     def test_init_with_backend_instance(self):
         """Test initializing a primitive with a backend instance."""
@@ -169,18 +168,16 @@ class TestPrimitives(IBMTestCase):
             with self.subTest(primitive=cls):
                 service.reset_mock()
                 inst = cls(backend=backend)
-                self.assertIsNone(inst.mode)
+                self.assertIsNone(inst.session)
                 inst.run(**get_primitive_inputs(inst))
                 service.run.assert_called_once()
                 runtime_options = service.run.call_args.kwargs["options"]
                 self.assertEqual(runtime_options["backend"], backend)
 
                 with self.assertRaises(ValueError) as exc:
-                    inst = cls(session=backend.name)
-                    self.assertIsNone(inst.mode)
-                self.assertIn(
-                    "mode must be of type Backend, Session, Batch or None", str(exc.exception)
-                )
+                    inst = cls(session=backend)
+                    self.assertIsNone(inst.session)
+                self.assertIn("session must be of type Session or None", str(exc.exception))
 
     def test_init_with_backend_session(self):
         """Test initializing a primitive with both backend and session."""
@@ -193,8 +190,8 @@ class TestPrimitives(IBMTestCase):
         for cls in primitives:
             with self.subTest(primitive=cls):
                 session.reset_mock()
-                inst = cls(session=session, backend=backend)
-                self.assertIsNotNone(inst.mode)
+                inst = cls(session=session, backend=backend_name)
+                self.assertIsNotNone(inst.session)
                 inst.run(**get_primitive_inputs(inst, backend=backend))
                 session.run.assert_called_once()
 
@@ -213,7 +210,7 @@ class TestPrimitives(IBMTestCase):
                 mock_service.global_service = None
                 inst = cls()
                 mock_service.assert_called_once()
-                self.assertIsNone(inst.mode)
+                self.assertIsNone(inst.session)
 
     def test_init_with_no_backend_session_quantum(self):
         """Test initializing a primitive without backend or session for quantum channel."""
@@ -238,8 +235,8 @@ class TestPrimitives(IBMTestCase):
             with self.subTest(primitive=cls):
                 with Session(service=backend.service, backend=backend_name) as session:
                     inst = cls()
-                    self.assertEqual(inst.mode, session)
-                    self.assertEqual(inst.mode.backend(), backend_name)
+                    self.assertEqual(inst.session, session)
+                    self.assertEqual(inst.session.backend(), backend_name)
 
     def test_default_session_cm_new_backend(self):
         """Test using a different backend within context manager."""
@@ -251,7 +248,7 @@ class TestPrimitives(IBMTestCase):
                 backend = get_mocked_backend(name=backend_name)
                 with Session(service=backend.service, backend=cm_backend_name):
                     inst = cls(backend=backend)
-                    self.assertIsNone(inst.mode)
+                    self.assertIsNone(inst.session)
                     inst.run(**get_primitive_inputs(inst, backend=backend))
                     backend.service.run.assert_called_once()
                     runtime_options = backend.service.run.call_args.kwargs["options"]
@@ -271,50 +268,11 @@ class TestPrimitives(IBMTestCase):
                 )
                 inst = cls(backend)
                 inst.run(self.qx, observables=self.obs)
-                self.assertIsNone(inst.mode)
+                self.assertIsNone(inst.session)
                 service.run.assert_called_once()
                 kwargs_list = service.run.call_args.kwargs
                 self.assertNotIn("session_id", kwargs_list)
                 self.assertNotIn("start_session", kwargs_list)
-
-    @data(Sampler, Estimator)
-    def test_init_with_mode_param(self, primitive):
-        """Test initializing a primitive with mode parameter."""
-        backend = get_mocked_backend()
-        backend_name = backend.name
-        session = MagicMock(spec=MockSession)
-        session._backend = backend
-        batch = MagicMock(spec=MockBatch)
-        batch._backend = backend
-        service = backend.service
-
-        # mode = backend
-        inst = primitive(mode=backend)
-        self.assertIsNotNone(inst)
-        inst.run(**get_primitive_inputs(inst))
-        service.run.assert_called_once()
-        runtime_options = service.run.call_args.kwargs["options"]
-        self.assertEqual(runtime_options["backend"], backend)
-
-        # mode = backend_name
-        with self.assertRaises(ValueError) as exc:
-            primitive(mode=backend_name)
-            self.assertIn(
-                "The backend name as input is no longer supported. You can got the backend "
-                "directly from the service",
-                str(exc.exception),
-            )
-        # mode = session
-        inst = primitive(mode=session)
-        self.assertIsNotNone(inst.mode)
-        inst.run(**get_primitive_inputs(inst, backend=backend))
-        session.run.assert_called_once()
-
-        # mode = batch
-        inst = primitive(mode=batch)
-        self.assertIsNotNone(inst.mode)
-        inst.run(**get_primitive_inputs(inst, backend=backend))
-        session.run.assert_called_once()
 
     def test_run_default_options(self):
         """Test run using default options."""

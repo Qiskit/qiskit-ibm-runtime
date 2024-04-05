@@ -201,7 +201,6 @@ class SamplerV1(BasePrimitiveV1, Sampler, BaseSampler):
 
     def __init__(
         self,
-        mode: Optional[Union[IBMBackend, Session, Batch, str]] = None,
         backend: Optional[Union[str, IBMBackend]] = None,
         session: Optional[Session] = None,
         options: Optional[Union[Dict, Options]] = None,
@@ -209,15 +208,9 @@ class SamplerV1(BasePrimitiveV1, Sampler, BaseSampler):
         """Initializes the Sampler primitive.
 
         Args:
-            mode: The execution mode used to make the primitive query. It can be
-
-                * A :class:`Backend` if you are using job mode.
-                * A :class:`Session` if you are using session execution mode.
-                * A :class:`Batch` if you are using batch execution mode.
-            Refer to the `Qiskit Runtime documentation <https://docs.quantum.ibm.com/run>`_.
-            for more information about the ``Execution modes``.
-
-            backend: Backend to run the primitive. This should be an :class:`IBMBackend` instance.
+            backend: Backend to run the primitive. This can be a backend name or an :class:`IBMBackend`
+                instance. If a name is specified, the default account (e.g. ``QiskitRuntimeService()``)
+                is used.
 
             session: Session in which to call the primitive.
 
@@ -235,29 +228,7 @@ class SamplerV1(BasePrimitiveV1, Sampler, BaseSampler):
         # a nested dictionary to categorize options.
         BaseSampler.__init__(self)
         Sampler.__init__(self)
-        if session:
-            deprecate_arguments(
-                "session",
-                "0.23.0",
-                "The session param is going to be consolidated to the mode param.",
-            )
-        if backend:
-            deprecate_arguments(
-                "backend",
-                "0.23.0",
-                "The backend param is going to be consolidated to the mode param.",
-            )
-        if isinstance(mode, str) or isinstance(backend, str):
-            issue_deprecation_msg(
-                "The backend name as execution mode input has been deprecated.",
-                "0.23.0",
-                "A backend object should be provided instead. Get the backend directly from"
-                " the service using `QiskitRuntimeService().backend('ibm_backend')`",
-                3,
-            )
-        if mode is None:
-            mode = session if backend and session else backend if backend else session
-        BasePrimitiveV1.__init__(self, mode=mode, options=options)
+        BasePrimitiveV1.__init__(self, backend=backend, session=session, options=options)
 
     def run(  # pylint: disable=arguments-differ
         self,
