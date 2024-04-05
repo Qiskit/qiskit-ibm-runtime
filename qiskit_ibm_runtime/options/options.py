@@ -56,7 +56,9 @@ def _make_data_row(indent: int, name: str, value: Any, is_section: bool) -> Iter
     yield "  </tr>"
 
 
-def _iter_all_fields(data_cls, indent=0, dict_form=None) -> Iterable[tuple[int, str, Any, Any]]:
+def _iter_all_fields(
+    data_cls: Any, indent=0, dict_form=None
+) -> Iterable[tuple[int, str, Any, bool]]:
     """Recursively iterate over a dataclass, yielding (indent, name, value, is_dataclass) fields."""
     dict_form = dict_form or asdict(data_cls)
     suboptions = []
