@@ -13,7 +13,7 @@
 """Primitive options."""
 
 from abc import abstractmethod
-from typing import Iterable, Optional, Union, ClassVar, Any
+from typing import Iterable, Optional, Tuple, Union, ClassVar, Any
 from dataclasses import dataclass, fields, field, asdict, is_dataclass
 import copy
 import warnings
@@ -58,7 +58,7 @@ def _make_data_row(indent: int, name: str, value: Any, is_section: bool) -> Iter
 
 def _iter_all_fields(
     data_cls: Any, indent: int = 0, dict_form: Union[dict, None] = None
-) -> Iterable[tuple[int, str, Any, bool]]:
+) -> Iterable[Tuple[int, str, Any, bool]]:
     """Recursively iterate over a dataclass, yielding (indent, name, value, is_dataclass) fields."""
     # we pass dict_form through recursion simply to avoid calling asdict() more than once
     dict_form = dict_form or asdict(data_cls)
