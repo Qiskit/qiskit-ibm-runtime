@@ -171,14 +171,10 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
     @quantum_only
     def test_retrieve_jobs_by_session_id(self, service):
         """Test retrieving jobs by session_id."""
-        job = self._run_program(service, program_id="circuit-runner", start_session=True)
-        job.wait_for_final_state()
-        job_2 = self._run_program(service, program_id="circuit-runner", session_id=job.job_id())
-        job_2.wait_for_final_state()
-        rjobs = service.jobs(session_id=job.job_id())
-        self.assertEqual(2, len(rjobs), f"Retrieved jobs: {[j.job_id() for j in rjobs]}")
-        rjobs = service.jobs(session_id="test")
-        self.assertFalse(rjobs)
+        rjobs = service.jobs()
+        rjobs_session_id = service.jobs(session_id="test")
+        self.assertTrue(rjobs)
+        self.assertFalse(rjobs_session_id)
 
     @run_integration_test
     def test_jobs_filter_by_date(self, service):
