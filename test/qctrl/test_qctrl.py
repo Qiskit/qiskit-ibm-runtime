@@ -51,13 +51,9 @@ class TestV2PrimitivesQCTRL(IBMIntegrationTestCase):
     def test_sampler_v2_qctrl(self, service):
         """Test qctrl bell state with samplerV2"""
         shots = 1
-        bell_circuit = QuantumCircuit(2)
-        bell_circuit.h(0)
-        bell_circuit.cx(0, 1)
-        bell_circuit.measure_all()
 
         pm = generate_preset_pass_manager(backend=self.backend, optimization_level=1)
-        isa_circuit = pm.run(bell_circuit)
+        isa_circuit = pm.run(self.bell)
 
         with Session(service, backend=self.backend):
             sampler = SamplerV2()
@@ -68,8 +64,7 @@ class TestV2PrimitivesQCTRL(IBMIntegrationTestCase):
     @run_integration_test
     def test_estimator_v2_qctrl(self, service):
         """Test simple circuit with estimatorV2 using qctrl."""
-        backend = service.backend(self.backend)
-        pass_mgr = generate_preset_pass_manager(backend=backend, optimization_level=1)
+        pass_mgr = generate_preset_pass_manager(backend=self.backend, optimization_level=1)
 
         psi1 = pass_mgr.run(RealAmplitudes(num_qubits=2, reps=2))
         psi2 = pass_mgr.run(RealAmplitudes(num_qubits=2, reps=3))
