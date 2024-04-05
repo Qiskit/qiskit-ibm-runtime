@@ -28,7 +28,7 @@ from .runtime_job_v2 import RuntimeJobV2
 from .utils.result_decoder import ResultDecoder
 from .ibm_backend import IBMBackend
 from .utils.default_session import set_cm_session
-from .utils.deprecation import deprecate_arguments, issue_deprecation_msg
+from .utils.deprecation import issue_deprecation_msg
 from .utils.converters import hms_to_seconds
 from .fake_provider.local_service import QiskitRuntimeLocalService
 
@@ -332,7 +332,6 @@ class Session:
         cls,
         session_id: str,
         service: Optional[QiskitRuntimeService] = None,
-        backend: Optional[Union[str, IBMBackend]] = None,
     ) -> "Session":
         """Construct a Session object with a given session_id
 
@@ -340,8 +339,6 @@ class Session:
             session_id: the id of the session to be created. This must be an already
                 existing session id.
             service: instance of the ``QiskitRuntimeService`` class.
-            backend (DEPRECATED): instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
-                string name of backend. Either ``service`` or ``backend`` must be given.
 
          Raises:
             IBMInputValueError: If given `session_id` does not exist. or the backend passed in does
@@ -351,36 +348,24 @@ class Session:
             A new Session with the given ``session_id``
 
         """
-        if backend:
-            deprecate_arguments(
-                "backend", "0.15.0", "The backend used to open the session will be used."
-            )
-            if isinstance(backend, IBMBackend):
-                backend = backend.name
-
-        if service:
-            response = service._api_client.session_details(session_id)
-            if response:
-                session_backend = response.get("backend_name")
-                if backend and backend != session_backend:
-                    raise IBMInputValueError(
-                        f"The session_id {session_id} was created with backend {session_backend}, "
-                        f"but backend {backend} was given."
-                    )
-                backend = session_backend
-            else:
-                raise IBMInputValueError(f"The session_id {session_id} does not exist.")
-        else:
+        if not service:
             warnings.warn(
                 (
                     "The `service` parameter will be required in a future release no sooner than "
-                    "3 months after the release of qiskit-ibm-runtime 0.21.0 ."
+                    "3 months after the release of qiskit-ibm-runtime 0.23.0 ."
                 ),
                 DeprecationWarning,
                 stacklevel=2,
             )
-        if not service and not backend:
-            raise IBMInputValueError("Either service or backend must be given.")
+            service = QiskitRuntimeService()
+
+        response = service._api_client.session_details(session_id)
+        backend = response.get("backend_name")
+        mode = response.get("mode")
+        if mode != cls.__name__.lower():
+            raise IBMInputValueError(
+                f"Session ID {session_id} has session mode {mode} instead of {cls.__name__}."
+            )
 
         session = cls(service, backend)
         session._session_id = session_id

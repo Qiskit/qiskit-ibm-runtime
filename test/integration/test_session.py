@@ -100,7 +100,7 @@ class TestIntegrationSession(IBMIntegrationTestCase):
             sampler = Sampler(session=session)
             job = sampler.run(bell(), shots=400)
             session_id = job.session_id
-        new_session = Session.from_id(backend=backend, session_id=session_id)
+        new_session = Session.from_id(session_id=session_id, service=service)
         sampler = Sampler(session=new_session)
         job = sampler.run(bell(), shots=400)
         self.assertEqual(session_id, job.session_id)
