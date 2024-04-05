@@ -107,8 +107,8 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
 
     def __init__(
         self,
-        mode: Optional[Union[IBMBackend, Session, Batch]] = None,
-        backend: Optional[IBMBackend] = None,
+        mode: Optional[Union[IBMBackend, Session, Batch, str]] = None,
+        backend: Optional[str, IBMBackend] = None,
         session: Optional[Session] = None,
         options: Optional[Union[Dict, EstimatorOptions]] = None,
     ):
@@ -137,13 +137,13 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
             deprecate_arguments(
                 "backend",
                 "0.23.0",
-                "The backend argument is going to be consolidated into the mode param.",
+                "Please use the 'mode' parameter instead.",
             )
         if session:
             deprecate_arguments(
                 "session",
                 "0.23.0",
-                "The session argument is going to be consolidated into the mode param.",
+                "Please use the 'mode' parameter instead.",
             )
         if isinstance(mode, str) or isinstance(backend, str):
             raise ValueError(
