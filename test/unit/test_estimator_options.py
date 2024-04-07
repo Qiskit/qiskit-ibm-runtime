@@ -90,9 +90,9 @@ class TestEstimatorOptions(IBMTestCase):
     )
     def test_bad_inputs(self, val):
         """Test invalid inputs."""
-        input, error_msg = val
+        bad_input, error_msg = val
         with self.assertRaisesRegex(ValidationError, error_msg):
-            EstimatorOptions(**input)
+            EstimatorOptions(**bad_input)
 
     def test_program_inputs(self):
         """Test converting to program inputs from estimator options."""
