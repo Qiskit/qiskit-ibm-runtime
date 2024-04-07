@@ -54,11 +54,11 @@ class ZneOptions:
     extrapolator: Union[UnsetType, ExtrapolatorType, Sequence[ExtrapolatorType]] = Unset
 
     @classmethod
-    def _default_noise_factors(cls):
+    def _default_noise_factors(cls) -> Sequence[float]:
         return (1, 3, 5)
 
     @classmethod
-    def _default_extrapolator(cls):
+    def _default_extrapolator(cls) -> Sequence[ExtrapolatorType]:
         return ("exponential", "linear")
 
     @field_validator("noise_factors")
