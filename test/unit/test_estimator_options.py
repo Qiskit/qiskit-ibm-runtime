@@ -37,24 +37,62 @@ class TestEstimatorOptions(IBMTestCase):
     """Class for testing the EstimatorOptions class."""
 
     @data(
-        {"optimization_level": 99},
-        {"resilience_level": -1},
-        {"default_precision": 0},
-        {"dynamical_decoupling": "foo"},
-        {"execution": {"init_qubits": 2}},
-        {"twirling": {"strategy": "foo"}},
-        {"resilience": {"zne": {"noise_factors": [0.5]}}},
-        {"noise_factors": [1, 3, 5]},
-        {"zne_mitigation": True, "pec_mitigation": True},
-        {"simulator": {"noise_model": "foo"}},
-        {"resilience": {"measure_noise_learning": {"num_randomizations": 1}}},
-        {"resilience": {"zne": {"noise_factors": [1]}}},
+        ({"optimization_level": 99}, "optimization_level must be <=1"),
+        ({"resilience_level": -1}, "resilience_level must be >=0"),
+        ({"default_precision": 0}, "default_precision must be >0"),
+        (
+            {"dynamical_decoupling": "foo"},
+            "Input should be a dictionary or an instance of DynamicalDecouplingOptions",
+        ),
+        ({"execution": {"init_qubits": 2}}, "Input should be a valid boolean"),
+        (
+            {"twirling": {"strategy": "foo"}},
+            "Input should be 'active', 'active-accum', 'active-circuit' or 'all'",
+        ),
+        (
+            {"resilience": {"zne": {"noise_factors": [0.5]}}},
+            "noise_factors` option value must all be >= 1",
+        ),
+        ({"noise_factors": [1, 3, 5]}, "Unexpected keyword argument"),
+        (
+            {"resilience": {"zne_mitigation": True, "pec_mitigation": True}},
+            "pec_mitigation and zne_mitigation`options cannot be simultaneously enabled",
+        ),
+        (
+            {"simulator": {"noise_model": "foo"}},
+            "'noise_model' can only be a dictionary or qiskit_aer.noise.NoiseModel",
+        ),
+        (
+            {"resilience": {"measure_noise_learning": {"num_randomizations": 1}}},
+            "'measure_noise_learning' options are set, but 'measure_mitigation' is not set to True",
+        ),
+        (
+            {
+                "resilience": {
+                    "measure_mitigation": True,
+                    "measure_noise_learning": {"num_randomizations": 0},
+                }
+            },
+            "num_randomizations must be >=1",
+        ),
+        (
+            {"resilience": {"zne_mitigation": True, "zne": {"noise_factors": [1]}}},
+            "exponential requires at least 2 noise_factors",
+        ),
+        (
+            {"resilience": {"zne_mitigation": True, "zne": {"noise_factors": []}}},
+            "exponential requires at least 2 noise_factors",
+        ),
+        (
+            {"resilience": {"zne": {"noise_factors": [1, 3, 5]}}},
+            "'zne' options are set, but 'zne_mitigation' is not set to True",
+        ),
     )
     def test_bad_inputs(self, val):
         """Test invalid inputs."""
-        with self.assertRaises(ValidationError) as exc:
-            EstimatorOptions(**val)
-        self.assertIn(list(val.keys())[0], str(exc.exception))
+        bad_input, error_msg = val
+        with self.assertRaisesRegex(ValidationError, error_msg):
+            EstimatorOptions(**bad_input)
 
     def test_program_inputs(self):
         """Test converting to program inputs from estimator options."""
