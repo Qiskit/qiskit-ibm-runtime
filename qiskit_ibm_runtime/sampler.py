@@ -103,7 +103,7 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
             deprecate_arguments(
                 "backend",
                 "0.23.0",
-                "The backend param is going to be consolidated to the mode param.",
+                "Please use the 'mode' parameter instead.",
             )
         if session:
             deprecate_arguments(
