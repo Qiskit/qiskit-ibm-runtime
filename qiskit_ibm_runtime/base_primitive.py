@@ -272,7 +272,7 @@ class BasePrimitiveV1(ABC):
         self._backend: Optional[BackendV1 | BackendV2] = None
 
         issue_deprecation_msg(
-            "The primitives' V1 has been deprecated",
+            "The Sampler and Estimator V1 primitives have been deprecated",
             "0.23.0",
             "Please use the primitives' V2. See the `V2 migration guide "
             "<https://docs.quantum.ibm.com/api/migration-guides/v2-primitives>`_. for more details",
