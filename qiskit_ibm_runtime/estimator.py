@@ -158,7 +158,7 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
                 "The backend name as execution mode input has been deprecated.",
                 "0.23.0",
                 "A backend object should be provided instead. Get the backend directly from"
-                " the service using `QiskitRuntimeService().backend('ibm_foo')`",
+                " the service using `QiskitRuntimeService().backend('ibm_backend')`",
                 3,
             )
         if mode is None:
