@@ -286,6 +286,8 @@ class Session:
             started_at: Timestamp of when the session was started.
             closed_at: Timestamp of when the session was closed.
             activated_at: Timestamp of when the session state was changed to active.
+            usage_time: The usage time, in seconds, of this Session or Batch.
+            Usage is defined as the time a quantum system is committed to complete a job.
         """
         if self._session_id and isinstance(self._service, QiskitRuntimeService):
             response = self._service._api_client.session_details(self._session_id)
@@ -303,6 +305,7 @@ class Session:
                     "started_at": response.get("started_at"),
                     "closed_at": response.get("closed_at"),
                     "activated_at": response.get("activated_at"),
+                    "usage_time": response.get("elapsed_time"),
                 }
         return None
 
