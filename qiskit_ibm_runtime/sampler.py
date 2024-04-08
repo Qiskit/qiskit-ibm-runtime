@@ -73,13 +73,14 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
         """Initializes the Sampler primitive.
 
         Args:
-            mode: The execution mode used to make the primitive query. It can be
+            mode: The execution mode used to make the primitive query. It can be:
 
                 * A :class:`Backend` if you are using job mode.
                 * A :class:`Session` if you are using session execution mode.
                 * A :class:`Batch` if you are using batch execution mode.
-            Refer to the `Qiskit Runtime documentation <https://docs.quantum.ibm.com/run>`_.
-            for more information about the ``Execution modes``.
+
+                Refer to the `Qiskit Runtime documentation <https://docs.quantum.ibm.com/run>`_.
+                for more information about the ``Execution modes``.
 
             backend: Backend to run the primitive. This can be a backend name or an :class:`IBMBackend`
                 instance. If a name is specified, the default account (e.g. ``QiskitRuntimeService()``)
@@ -87,6 +88,7 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
 
             session: Session in which to call the primitive.
 
+                If both ``session`` and ``backend`` are specified, ``session`` takes precedence.
                 If neither is specified, and the primitive is created inside a
                 :class:`qiskit_ibm_runtime.Session` context manager, then the session is used.
                 Otherwise if IBM Cloud channel is used, a default backend is selected.

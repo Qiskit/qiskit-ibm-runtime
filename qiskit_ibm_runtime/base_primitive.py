@@ -34,7 +34,7 @@ from .runtime_job import RuntimeJob
 from .runtime_job_v2 import RuntimeJobV2
 from .ibm_backend import IBMBackend
 from .utils.default_session import get_cm_session
-from .utils.deprecation import issue_deprecation_msg
+from .utils.deprecation import issue_deprecation_msg, deprecate_function
 from .utils.utils import validate_isa_circuits, is_simulator
 from .constants import DEFAULT_DECODERS
 from .qiskit_runtime_service import QiskitRuntimeService
@@ -177,6 +177,16 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
             options=runtime_options,
             inputs=primitive_inputs,
         )
+
+    @property
+    def session(self) -> Optional[Session]:
+        """Return mode used by this primitive.
+
+        Returns:
+           Mode used by this primitive, or ``None`` if session is not used.
+        """
+        deprecate_function("session", "0.23.0", "Please use the 'mode' property instead.")
+        return self._mode
 
     @property
     def mode(self) -> Optional[Session | Batch | str]:

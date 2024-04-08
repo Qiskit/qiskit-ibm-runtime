@@ -115,13 +115,14 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
         """Initializes the Estimator primitive.
 
         Args:
-            mode: The execution mode used to make the primitive query. It can be
+            mode: The execution mode used to make the primitive query. It can be:
 
                 * A :class:`Backend` if you are using job mode.
                 * A :class:`Session` if you are using session execution mode.
                 * A :class:`Batch` if you are using batch execution mode.
-            Refer to the `Qiskit Runtime documentation <https://docs.quantum.ibm.com/run>`_.
-            for more information about the ``Execution modes``.
+
+                Refer to the `Qiskit Runtime documentation <https://docs.quantum.ibm.com/run>`_.
+                for more information about the ``Execution modes``.
 
             backend: Backend to run the primitive. This can be a backend name or an :class:`IBMBackend`
                 instance. If a name is specified, the default account (e.g. ``QiskitRuntimeService()``)
