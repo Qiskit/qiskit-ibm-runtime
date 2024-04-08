@@ -75,7 +75,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
         Raises:
             ValueError: Invalid arguments are given.
         """
-        self._mode: Optional[Union[BackendV1, BackendV2, Session, Batch]] = None
+        self._mode: Optional[Union[Session, Batch]] = None
         self._service: QiskitRuntimeService | QiskitRuntimeLocalService = None
         self._backend: Optional[BackendV1 | BackendV2] = None
 
