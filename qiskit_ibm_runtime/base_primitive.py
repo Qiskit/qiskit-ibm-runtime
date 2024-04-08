@@ -272,9 +272,10 @@ class BasePrimitiveV1(ABC):
         self._backend: Optional[BackendV1 | BackendV2] = None
 
         issue_deprecation_msg(
-            "The primitives' version 1 has been deprecated",
+            "The primitives' V1 has been deprecated",
             "0.23.0",
-            "Please use the primitives' version 2. See the `V2 migration guide <https://docs.quantum.ibm.com/api/migration-guides/v2-primitives>`_. for more details",
+            "Please use the primitives' V2. See the `V2 migration guide "
+            "<https://docs.quantum.ibm.com/api/migration-guides/v2-primitives>`_. for more details",
             3,
         )
 
