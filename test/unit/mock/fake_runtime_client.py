@@ -478,7 +478,7 @@ class BaseFakeRuntimeClient:
             raise ValueError(f"Session {session_id} not found.")
         self._sessions.remove(session_id)
 
-    def session_details(self, session_id: str) -> dict[str, Any]:
+    def session_details(self, session_id: str) -> Dict[str, Any]:
         """Return the details of the session."""
         return {"id": session_id, "mode": "session"}
 

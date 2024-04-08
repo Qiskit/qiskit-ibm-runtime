@@ -342,10 +342,10 @@ class Session:
             session_id: the id of the session to be created. This must be an already
                 existing session id.
             service: instance of the ``QiskitRuntimeService`` class.
+                If ``None``, ``QiskitRuntimeService()`` is used to initialize your default saved account.
 
          Raises:
-            IBMInputValueError: If given `session_id` does not exist. or the backend passed in does
-                not match the original session backend.
+            IBMInputValueError: If given `session_id` does not exist.
 
         Returns:
             A new Session with the given ``session_id``
@@ -368,7 +368,7 @@ class Session:
         class_name = "dedicated" if cls.__name__.lower() == "session" else cls.__name__.lower()
         if mode != class_name:
             raise IBMInputValueError(
-                f"Session ID {session_id} has session mode {mode} instead of {cls.__name__}."
+                f"Input ID {session_id} has execution mode {mode} instead of {class_name}."
             )
 
         session = cls(service, backend)
