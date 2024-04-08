@@ -480,7 +480,7 @@ class BaseFakeRuntimeClient:
 
     def session_details(self, session_id: str) -> Dict[str, Any]:
         """Return the details of the session."""
-        return {"id": session_id, "mode": "session"}
+        return {"id": session_id, "mode": "dedicated", "backend_name": "common_backend"}
 
     def _find_backend(self, backend_name):
         for back in self._backends:
