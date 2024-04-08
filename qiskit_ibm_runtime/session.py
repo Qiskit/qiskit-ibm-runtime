@@ -365,7 +365,8 @@ class Session:
         response = service._api_client.session_details(session_id)
         backend = response.get("backend_name")
         mode = response.get("mode")
-        if mode != cls.__name__.lower():
+        class_name = "dedicated" if cls.__name__.lower() == "session" else cls.__name__.lower()
+        if mode != class_name:
             raise IBMInputValueError(
                 f"Session ID {session_id} has session mode {mode} instead of {cls.__name__}."
             )

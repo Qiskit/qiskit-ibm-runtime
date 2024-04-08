@@ -478,6 +478,10 @@ class BaseFakeRuntimeClient:
             raise ValueError(f"Session {session_id} not found.")
         self._sessions.remove(session_id)
 
+    def session_details(self, session_id: str) -> dict[str, Any]:
+        """Return the details of the session."""
+        return {"id": session_id, "mode": "session"}
+
     def _find_backend(self, backend_name):
         for back in self._backends:
             if back.name == backend_name:
