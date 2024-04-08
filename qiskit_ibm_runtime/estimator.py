@@ -123,7 +123,9 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
             Refer to the `Qiskit Runtime documentation <https://docs.quantum.ibm.com/run>`_.
             for more information about the ``Execution modes``.
 
-            backend: Backend to run the primitive. This should be an :class:`IBMBackend` instance.
+            backend: Backend to run the primitive. This can be a backend name or an :class:`IBMBackend`
+                instance. If a name is specified, the default account (e.g. ``QiskitRuntimeService()``)
+                is used.
 
             session: Session in which to call the primitive.
 
@@ -156,7 +158,7 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
                 "The backend name as execution mode input has been deprecated.",
                 "0.23.0",
                 "A backend object should be provided instead. Get the backend directly from"
-                " the service using `QiskitRuntimeService().backend('ibm_backend')`",
+                " the service using `QiskitRuntimeService().backend('ibm_foo')`",
                 3,
             )
         if mode is None:

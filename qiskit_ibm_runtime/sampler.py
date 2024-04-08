@@ -65,7 +65,7 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
 
     def __init__(
         self,
-        mode: Optional[Union[IBMBackend, Session, Batch]] = None,
+        mode: Optional[Union[IBMBackend, Session, Batch, str]] = None,
         backend: Optional[Union[str, IBMBackend]] = None,
         session: Optional[Session] = None,
         options: Optional[Union[Dict, SamplerOptions]] = None,
@@ -73,9 +73,17 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
         """Initializes the Sampler primitive.
 
         Args:
-            mode: Backend, Session or Batch in which to call the primitive.
+            mode: The execution mode used to make the primitive query. It can be
 
-            backend: Backend object to run the primitive.
+                * A :class:`Backend` if you are using job mode.
+                * A :class:`Session` if you are using session execution mode.
+                * A :class:`Batch` if you are using batch execution mode.
+            Refer to the `Qiskit Runtime documentation <https://docs.quantum.ibm.com/run>`_.
+            for more information about the ``Execution modes``.
+
+            backend: Backend to run the primitive. This can be a backend name or an :class:`IBMBackend`
+                instance. If a name is specified, the default account (e.g. ``QiskitRuntimeService()``)
+                is used.
 
             session: Session in which to call the primitive.
 
@@ -104,9 +112,12 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
                 "The session param is going to be consolidated to the mode param.",
             )
         if isinstance(mode, str) or isinstance(backend, str):
-            raise ValueError(
-                "The backend name as input is no longer supported. You can got the backend directly "
-                "from the service using QiskitRuntimeService().backend(backend_name)"
+            issue_deprecation_msg(
+                "The backend name as execution mode input has been deprecated.",
+                "0.23.0",
+                "A backend object should be provided instead. Get the backend directly from"
+                " the service using `QiskitRuntimeService().backend('ibm_backend')`",
+                3,
             )
         if mode is None:
             mode = session if backend and session else backend if backend else session

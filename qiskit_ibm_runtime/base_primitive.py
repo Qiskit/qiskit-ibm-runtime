@@ -56,13 +56,17 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
 
     def __init__(
         self,
-        mode: Optional[Union[BackendV1, BackendV2, Session, Batch]] = None,
+        mode: Optional[Union[BackendV1, BackendV2, Session, Batch, str]] = None,
         options: Optional[Union[Dict, OptionsT]] = None,
     ):
         """Initializes the primitive.
 
         Args:
-            mode: Backend, Session or Batch in which to call the primitive.
+            mode: The execution mode used to make the primitive query. It can be
+
+                * A :class:`Backend` if you are using job mode.
+                * A :class:`Session` if you are using session execution mode.
+                * A :class:`Batch` if you are using batch execution mode.
 
             options: Primitive options, see :class:`qiskit_ibm_runtime.options.EstimatorOptions`
                 and :class:`qiskit_ibm_runtime.options.SamplerOptions` for detailed description
@@ -87,6 +91,15 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
         elif isinstance(mode, (BackendV1, BackendV2)):
             self._service = QiskitRuntimeLocalService()
             self._backend = mode
+        elif isinstance(mode, str):
+            self._service = (
+                QiskitRuntimeService()
+                if QiskitRuntimeService.global_service is None
+                else QiskitRuntimeService.global_service
+            )
+            backends = self._service.backends()
+            self._backend = self._service.backend(mode)
+            print(backends)
         elif mode is not None:  # type: ignore[unreachable]
             raise ValueError("mode must be of type Backend, Session, Batch or None")
         elif get_cm_session():
@@ -168,7 +181,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
         )
 
     @property
-    def mode(self) -> Optional[Session | Batch]:
+    def mode(self) -> Optional[Session | Batch | str]:
         """Return the execution mode used by this primitive.
 
         Returns:

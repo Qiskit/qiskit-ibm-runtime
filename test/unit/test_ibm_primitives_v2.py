@@ -129,14 +129,32 @@ class TestPrimitivesV2(IBMTestCase):
     def test_init_with_backend_str(self, primitive):
         """Test initializing a primitive with a backend name."""
         backend_name = "ibm_gotham"
+        mock_backend = get_mocked_backend(name=backend_name)
+        mock_service_inst = mock_backend.service
 
-        with self.assertRaises(ValueError) as exc:
-            primitive(mode=backend_name)
-            self.assertIn(
-                "The backend name as input is no longer supported. You can got the backend "
-                "directly from the service",
-                str(exc.exception),
-            )
+        class MockQRTService:
+            """Mock class used to create a new QiskitRuntimeService."""
+
+            global_service = None
+
+            def __new__(cls, *args, **kwargs):  # pylint: disable=unused-argument
+                return mock_service_inst
+
+        with patch("qiskit_ibm_runtime.base_primitive.QiskitRuntimeService", new=MockQRTService):
+            inst = primitive(backend=backend_name)
+            self.assertIsNone(inst.mode)
+            inst.run(**get_primitive_inputs(inst))
+            mock_service_inst.run.assert_called_once()
+            runtime_options = mock_service_inst.run.call_args.kwargs["options"]
+            self.assertEqual(runtime_options["backend"], mock_backend)
+
+            mock_service_inst.reset_mock()
+            str_mode_inst = primitive(mode=backend_name)
+            self.assertIsNone(str_mode_inst.mode)
+            inst.run(**get_primitive_inputs(str_mode_inst))
+            mock_service_inst.run.assert_called_once()
+            runtime_options = mock_service_inst.run.call_args.kwargs["options"]
+            self.assertEqual(runtime_options["backend"], mock_backend)
 
     @data(EstimatorV2, SamplerV2)
     def test_init_with_session_backend_str(self, primitive):
@@ -144,12 +162,8 @@ class TestPrimitivesV2(IBMTestCase):
         backend_name = "ibm_gotham"
 
         with patch("qiskit_ibm_runtime.base_primitive.QiskitRuntimeService"):
-            with self.assertRaises(ValueError) as exc:
-                inst = primitive(session=backend_name)
-                self.assertIsNone(inst.session)
-            self.assertIn(
-                "mode must be of type Backend, Session, Batch or None", str(exc.exception)
-            )
+            inst = primitive(session=backend_name)
+            self.assertIsNone(inst.mode)
 
     @data(EstimatorV2, SamplerV2)
     def test_init_with_backend_instance(self, primitive):
@@ -258,14 +272,6 @@ class TestPrimitivesV2(IBMTestCase):
         runtime_options = service.run.call_args.kwargs["options"]
         self.assertEqual(runtime_options["backend"], backend)
 
-        # mode = backend_name
-        with self.assertRaises(ValueError) as exc:
-            primitive(mode=backend_name)
-            self.assertIn(
-                "The backend name as input is no longer supported. You can got the backend "
-                "directly from the service",
-                str(exc.exception),
-            )
         # mode = session
         inst = primitive(mode=session)
         self.assertIsNotNone(inst.mode)
