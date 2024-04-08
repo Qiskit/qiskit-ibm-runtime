@@ -97,9 +97,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
                 if QiskitRuntimeService.global_service is None
                 else QiskitRuntimeService.global_service
             )
-            backends = self._service.backends()
             self._backend = self._service.backend(mode)
-            print(backends)
         elif mode is not None:  # type: ignore[unreachable]
             raise ValueError("mode must be of type Backend, Session, Batch or None")
         elif get_cm_session():
