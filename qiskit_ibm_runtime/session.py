@@ -22,12 +22,13 @@ import warnings
 from qiskit.providers.backend import BackendV1, BackendV2
 
 from qiskit_ibm_runtime import QiskitRuntimeService
+from .exceptions import IBMInputValueError
 from .runtime_job import RuntimeJob
 from .runtime_job_v2 import RuntimeJobV2
 from .utils.result_decoder import ResultDecoder
 from .ibm_backend import IBMBackend
 from .utils.default_session import set_cm_session
-from .utils.deprecation import deprecate_arguments, issue_deprecation_msg
+from .utils.deprecation import issue_deprecation_msg
 from .utils.converters import hms_to_seconds
 from .fake_provider.local_service import QiskitRuntimeLocalService
 
@@ -286,6 +287,7 @@ class Session:
             started_at: Timestamp of when the session was started.
             closed_at: Timestamp of when the session was closed.
             activated_at: Timestamp of when the session state was changed to active.
+            mode: Execution mode of the session.
             usage_time: The usage time, in seconds, of this Session or Batch.
             Usage is defined as the time a quantum system is committed to complete a job.
         """
@@ -305,6 +307,7 @@ class Session:
                     "started_at": response.get("started_at"),
                     "closed_at": response.get("closed_at"),
                     "activated_at": response.get("activated_at"),
+                    "mode": response.get("mode"),
                     "usage_time": response.get("elapsed_time"),
                 }
         return None
@@ -332,7 +335,6 @@ class Session:
         cls,
         session_id: str,
         service: Optional[QiskitRuntimeService] = None,
-        backend: Optional[Union[str, IBMBackend]] = None,
     ) -> "Session":
         """Construct a Session object with a given session_id
 
@@ -340,15 +342,34 @@ class Session:
             session_id: the id of the session to be created. This must be an already
                 existing session id.
             service: instance of the ``QiskitRuntimeService`` class.
-            backend: instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
-                string name of backend.
+                If ``None``, ``QiskitRuntimeService()`` is used to initialize your default saved account.
+
+         Raises:
+            IBMInputValueError: If given `session_id` does not exist.
 
         Returns:
             A new Session with the given ``session_id``
 
         """
-        if backend:
-            deprecate_arguments("backend", "0.15.0", "Sessions do not support multiple backends.")
+        if not service:
+            warnings.warn(
+                (
+                    "The `service` parameter will be required in a future release no sooner than "
+                    "3 months after the release of qiskit-ibm-runtime 0.23.0 ."
+                ),
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            service = QiskitRuntimeService()
+
+        response = service._api_client.session_details(session_id)
+        backend = response.get("backend_name")
+        mode = response.get("mode")
+        class_name = "dedicated" if cls.__name__.lower() == "session" else cls.__name__.lower()
+        if mode != class_name:
+            raise IBMInputValueError(
+                f"Input ID {session_id} has execution mode {mode} instead of {class_name}."
+            )
 
         session = cls(service, backend)
         session._session_id = session_id
