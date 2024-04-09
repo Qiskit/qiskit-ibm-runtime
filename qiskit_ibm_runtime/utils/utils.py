@@ -120,7 +120,9 @@ def is_static_circuit(circuit: QuantumCircuit) -> bool:
     return len(instructions) == 0
 
 
-def validate_no_dd_with_dynamic_circuits(circuits: Sequence[QuantumCircuit], options: "OptionsV2") -> None:
+def validate_no_dd_with_dynamic_circuits(
+    circuits: Sequence[QuantumCircuit], options: "OptionsV2"
+) -> None:
     """Validate that if dynamical decoupling options are enabled,
     no circuit in the pubs is dynamic
 
