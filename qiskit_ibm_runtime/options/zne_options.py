@@ -53,6 +53,14 @@ class ZneOptions:
     noise_factors: Union[UnsetType, Sequence[float]] = Unset
     extrapolator: Union[UnsetType, ExtrapolatorType, Sequence[ExtrapolatorType]] = Unset
 
+    @classmethod
+    def _default_noise_factors(cls) -> Sequence[float]:
+        return (1, 3, 5)
+
+    @classmethod
+    def _default_extrapolator(cls) -> Sequence[ExtrapolatorType]:
+        return ("exponential", "linear")
+
     @field_validator("noise_factors")
     @classmethod
     @skip_unset_validation
@@ -65,24 +73,29 @@ class ZneOptions:
     @model_validator(mode="after")
     def _validate_options(self) -> "ZneOptions":
         """Check that there are enough noise factors for all extrapolators."""
-        if self.extrapolator and self.noise_factors:
-            required_factors = {
-                "linear": 2,
-                "exponential": 2,
-                "double_exponential": 4,
-            }
-            for idx in range(1, 8):
-                required_factors[f"polynomial_degree_{idx}"] = idx + 1
+        noise_factors = (
+            self.noise_factors if self.noise_factors != Unset else self._default_noise_factors()
+        )
+        extrapolator = (
+            self.extrapolator if self.extrapolator != Unset else self._default_extrapolator()
+        )
 
-            extrapolators: Sequence = (
-                [self.extrapolator]  # type: ignore[assignment]
-                if isinstance(self.extrapolator, str)
-                else self.extrapolator
-            )
-            for extrap in extrapolators:  # pylint: disable=not-an-iterable
-                if len(self.noise_factors) < required_factors[extrap]:  # type: ignore[arg-type]
-                    raise ValueError(
-                        f"{extrap} requires at least {required_factors[extrap]} noise_factors"
-                    )
+        required_factors = {
+            "linear": 2,
+            "exponential": 2,
+            "double_exponential": 4,
+        }
+        for idx in range(1, 8):
+            required_factors[f"polynomial_degree_{idx}"] = idx + 1
 
+        extrapolators: Sequence = (
+            [extrapolator]  # type: ignore[assignment]
+            if isinstance(extrapolator, str)
+            else extrapolator
+        )
+        for extrap in extrapolators:  # pylint: disable=not-an-iterable
+            if len(noise_factors) < required_factors[extrap]:  # type: ignore[arg-type]
+                raise ValueError(
+                    f"{extrap} requires at least {required_factors[extrap]} noise_factors"
+                )
         return self
