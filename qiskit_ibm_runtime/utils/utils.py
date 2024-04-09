@@ -99,6 +99,44 @@ def validate_isa_circuits(circuits: Sequence[QuantumCircuit], target: Target) ->
             )
 
 
+def is_static_circuit(circuit: QuantumCircuit) -> bool:
+    """Checks if the circuit is a static QuantumCircuit.
+    A circuit is static if it not contains some control flow.
+
+    Args:
+        circuit: A single QuantumCircuit.
+
+    Returns:
+        The boolean value if of the circuit is static or not.
+    """
+    instructions = {
+        "if_else",
+        "while_loop",
+        "for_loop",
+        "continue_loop",
+        "break_loop",
+    }.intersection(circuit.count_ops())
+
+    return len(instructions) == 0
+
+
+def validate_no_dd_with_dynamic_circuits(circuits: Sequence[QuantumCircuit], options) -> None:
+    """Validate that if dynamical decoupling options are enabled,
+    no circuit in the pubs is dynamic
+
+    Args:
+        circuits: A list of QuantumCircuits.
+        options: The runtime options
+    """
+    if not hasattr(options, "dynamical_decoupling") or not options.dynamical_decoupling.enable:
+        return
+    for circuit in circuits:
+        if not is_static_circuit(circuit):
+            raise IBMInputValueError(
+                "Dynamical decoupling currently cannot be used with dynamic circuits"
+            )
+
+
 def validate_job_tags(job_tags: Optional[List[str]]) -> None:
     """Validates input job tags.
 
