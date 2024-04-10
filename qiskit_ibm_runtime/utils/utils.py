@@ -32,7 +32,6 @@ from qiskit.circuit import QuantumCircuit, ControlFlowOp
 from qiskit.transpiler import Target
 from qiskit.providers.backend import BackendV1, BackendV2
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
-from qiskit_ibm_runtime.options import OptionsV2  # pylint: disable=cyclic-import
 
 
 def is_simulator(backend: BackendV1 | BackendV2) -> bool:
@@ -114,9 +113,7 @@ def are_circuits_dynamic(circuits: List[QuantumCircuit]) -> bool:
     return False
 
 
-def validate_no_dd_with_dynamic_circuits(
-    circuits: Sequence[QuantumCircuit], options: OptionsV2
-) -> None:
+def validate_no_dd_with_dynamic_circuits(circuits: List[QuantumCircuit], options: Any) -> None:
     """Validate that if dynamical decoupling options are enabled,
     no circuit in the pubs is dynamic
 
