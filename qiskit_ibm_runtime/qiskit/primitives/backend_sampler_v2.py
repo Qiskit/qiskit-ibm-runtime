@@ -131,7 +131,6 @@ class BackendSamplerV2(BaseSamplerV2):
         self._validate_pubs(coerced_pubs)
         job = PrimitiveJob(self._run, coerced_pubs)
         job._submit()
-        print("")
         return job
 
     def _validate_pubs(self, pubs: list[SamplerPub]):
