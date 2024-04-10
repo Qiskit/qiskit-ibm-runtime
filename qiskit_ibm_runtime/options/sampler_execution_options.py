@@ -40,5 +40,5 @@ class SamplerExecutionOptionsV2(ExecutionOptionsV2):
       averaging over shots) in arbitrary units. This option is equivalent to selecting
       ``"kerneled"`` and then averaging over the shots axis, but requires less data bandwidth.
 
-    See https://pubs.aip.org/aip/rsi/article/88/10/104703/836456 for a description of kerneling.
+    See `Here <https://pubs.aip.org/aip/rsi/article/88/10/104703/836456>`_ for a description of kerneling.
     """
