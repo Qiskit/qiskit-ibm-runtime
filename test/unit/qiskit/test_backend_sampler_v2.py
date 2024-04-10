@@ -144,16 +144,14 @@ class TestBackendSamplerV2(IBMTestCase):
 
         with self.subTest("with circuit metadata"):
             sample_metadata = {
-                'user_metadata_field_1': 'metadata_1',
-                'user_metadata_field_2': 'metadata_2'
+                "user_metadata_field_1": "metadata_1",
+                "user_metadata_field_2": "metadata_2",
             }
             pqc, _, _ = self._cases[1]
             pqc.metadata = sample_metadata
             sampler = BackendSamplerV2(backend=backend, options=self._options)
             pqc = pm.run(pqc)
-            job = sampler.run(
-                [pqc], shots=self._shots
-            )
+            job = sampler.run([pqc], shots=self._shots)
             result = job.result()
             self.assertIsInstance(result, PrimitiveResult)
             self.assertIsInstance(result.metadata, dict)
