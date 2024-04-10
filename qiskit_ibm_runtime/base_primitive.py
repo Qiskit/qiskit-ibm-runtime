@@ -180,10 +180,10 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
 
     @property
     def session(self) -> Optional[Session]:
-        """Return mode used by this primitive.
+        """Return session used by this primitive.
 
         Returns:
-           Mode used by this primitive, or ``None`` if session is not used.
+           Session used by this primitive, or ``None`` if session is not used.
         """
         deprecate_function("session", "0.23.0", "Please use the 'mode' property instead.")
         return self._mode
