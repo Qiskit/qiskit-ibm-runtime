@@ -13,6 +13,7 @@
 """Integration tests for Session."""
 
 import warnings
+from unittest import SkipTest
 
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.quantum_info import SparsePauliOp
@@ -21,7 +22,8 @@ from qiskit.primitives import EstimatorResult, SamplerResult
 from qiskit.result import Result
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
-from qiskit_ibm_runtime import Estimator, Session, Sampler, Options
+from qiskit_ibm_runtime import Estimator, Session, Sampler, Options, Batch
+from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 from ..utils import bell
 from ..decorators import run_integration_test, quantum_only
@@ -95,15 +97,21 @@ class TestIntegrationSession(IBMIntegrationTestCase):
     @run_integration_test
     def test_session_from_id(self, service):
         """Test creating a session from a given id"""
-        backend = service.backend("ibmq_qasm_simulator")
+        try:
+            backend = service.backend("fake_backend1")
+        except:
+            raise SkipTest("No proper backends available")
+        pm = generate_preset_pass_manager(backend=backend, optimization_level=1)
+        isa_circuit = pm.run(bell())
         with Session(service, backend=backend) as session:
             sampler = Sampler(session=session)
-            job = sampler.run(bell(), shots=400)
-            session_id = job.session_id
-        new_session = Session.from_id(backend=backend, session_id=session_id)
-        sampler = Sampler(session=new_session)
-        job = sampler.run(bell(), shots=400)
-        self.assertEqual(session_id, job.session_id)
+            sampler.run(isa_circuit)
+
+        new_session = Session.from_id(session_id=session._session_id, service=service)
+        self.assertEqual(session._session_id, new_session._session_id)
+
+        with self.assertRaises(IBMInputValueError):
+            Batch.from_id(session_id=session._session_id, service=service)
 
 
 class TestBackendRunInSession(IBMIntegrationTestCase):
