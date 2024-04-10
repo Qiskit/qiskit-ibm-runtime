@@ -28,10 +28,11 @@ from ibm_cloud_sdk_core.authenticators import (  # pylint: disable=import-error
     IAMAuthenticator,
 )
 from ibm_platform_services import ResourceControllerV2  # pylint: disable=import-error
-from qiskit.circuit import QuantumCircuit
+from qiskit.circuit import QuantumCircuit, ControlFlowOp
 from qiskit.transpiler import Target
 from qiskit.providers.backend import BackendV1, BackendV2
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
+from qiskit_ibm_runtime.options import OptionsV2  # pylint: disable=cyclic-import
 
 
 def is_simulator(backend: BackendV1 | BackendV2) -> bool:
@@ -99,28 +100,23 @@ def validate_isa_circuits(circuits: Sequence[QuantumCircuit], target: Target) ->
             )
 
 
-def is_static_circuit(circuit: QuantumCircuit) -> bool:
-    """Checks if the circuit is a static QuantumCircuit.
-    A circuit is static if it not contains some control flow.
-
-    Args:
-        circuit: A single QuantumCircuit.
-
-    Returns:
-        The boolean value if of the circuit is static or not.
-    """
-    instructions = {
-        "if_else",
-        "while_loop",
-        "for_loop",
-        "continue_loop",
-        "break_loop",
-    }.intersection(circuit.count_ops())
-
-    return len(instructions) == 0
+def are_circuits_dynamic(circuits: List[QuantumCircuit]) -> bool:
+    """Checks if the input circuits are dynamic."""
+    for circuit in circuits:
+        if isinstance(circuit, str):
+            return True
+        for inst in circuit:
+            if (
+                isinstance(inst.operation, ControlFlowOp)
+                or getattr(inst.operation, "condition", None) is not None
+            ):
+                return True
+    return False
 
 
-def validate_no_dd_with_dynamic_circuits(circuits: Sequence[QuantumCircuit], options: Any) -> None:
+def validate_no_dd_with_dynamic_circuits(
+    circuits: Sequence[QuantumCircuit], options: OptionsV2
+) -> None:
     """Validate that if dynamical decoupling options are enabled,
     no circuit in the pubs is dynamic
 
@@ -130,11 +126,10 @@ def validate_no_dd_with_dynamic_circuits(circuits: Sequence[QuantumCircuit], opt
     """
     if not hasattr(options, "dynamical_decoupling") or not options.dynamical_decoupling.enable:
         return
-    for circuit in circuits:
-        if not is_static_circuit(circuit):
-            raise IBMInputValueError(
-                "Dynamical decoupling currently cannot be used with dynamic circuits"
-            )
+    if are_circuits_dynamic(circuits):
+        raise IBMInputValueError(
+            "Dynamical decoupling currently cannot be used with dynamic circuits"
+        )
 
 
 def validate_job_tags(job_tags: Optional[List[str]]) -> None:
