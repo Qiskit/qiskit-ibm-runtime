@@ -23,6 +23,7 @@ from qiskit import QuantumCircuit
 from qiskit.qobj.utils import MeasLevel, MeasReturnType
 
 from qiskit.providers.backend import BackendV2 as Backend
+from qiskit.providers.backend_compat import convert_to_target
 from qiskit.providers.options import Options
 from qiskit.providers.models import (
     BackendStatus,
@@ -51,9 +52,6 @@ from .runtime_job import RuntimeJob
 
 from .api.clients import RuntimeClient
 from .exceptions import IBMBackendApiProtocolError, IBMBackendValueError, IBMBackendApiError
-from .utils.backend_converter import (
-    convert_to_target,
-)
 from .utils.default_session import get_cm_session as get_cm_primitive_session
 from .utils.backend_decoder import (
     defaults_from_server_data,
