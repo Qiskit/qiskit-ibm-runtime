@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import logging
 import warnings
-from typing import List
+from typing import Any, Dict, List
 
 from qiskit.circuit.controlflow import (
     CONTROL_FLOW_OP_NAMES,
@@ -42,7 +42,7 @@ def convert_to_target(
     configuration: BackendConfiguration,
     properties: BackendProperties = None,
     defaults: PulseDefaults = None,
-):
+) -> Target:
     """Decode transpiler target from backend data set.
 
     This function generates :class:`.Target`` instance from intermediate
@@ -88,7 +88,7 @@ def convert_to_target(
         basis_gates, set(required), supported_instructions.intersection(CONTROL_FLOW_OP_NAMES)
     )
 
-    inst_name_map = {}  # type: dict[str, Instruction]
+    inst_name_map = {}
 
     faulty_ops = set()
     faulty_qubits = set()
@@ -143,7 +143,7 @@ def convert_to_target(
     # Populate instruction properties
     if properties:
 
-        def _get_value(prop_dict, prop_name):
+        def _get_value(prop_dict: Dict, prop_name: str) -> Any:
             if ndval := prop_dict.get(prop_name, None):
                 return ndval[0]
             return None
@@ -172,7 +172,7 @@ def convert_to_target(
 
         for name in all_instructions:
             try:
-                for qubits, params in properties.gate_property(name).items():
+                for qubits, param_dict in properties.gate_property(name).items():
                     if filter_faulty and (
                         set.intersection(faulty_qubits, qubits)
                         or not properties.is_gate_operational(name, qubits)
@@ -190,8 +190,8 @@ def convert_to_target(
                         # i.e. gate config is not provided, and instruction has been globally defined.
                         prop_name_map[name] = {}
                     prop_name_map[name][qubits] = InstructionProperties(
-                        error=_get_value(params, "gate_error"),
-                        duration=_get_value(params, "gate_length"),
+                        error=_get_value(param_dict, "gate_error"),
+                        duration=_get_value(param_dict, "gate_length"),
                     )
                 if isinstance(prop_name_map[name], dict) and any(
                     v is None for v in prop_name_map[name].values()
