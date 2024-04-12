@@ -91,11 +91,11 @@ class TestIntegrationBackend(IBMIntegrationTestCase):
         self.assertTrue(backend)
 
     @run_integration_test
-    def test_target_measure(self, service):
-        """Test confirming target contains measure."""
+    def test_target_reset(self, service):
+        """Test confirming target contains reset."""
         backends = service.backends()
         backend = service.backend(backends[0].name)
-        self.assertIn("measure", backend.target)
+        self.assertIn("reset", backend.target)
 
 
 class TestIBMBackend(IBMIntegrationTestCase):
