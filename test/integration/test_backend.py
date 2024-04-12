@@ -90,6 +90,13 @@ class TestIntegrationBackend(IBMIntegrationTestCase):
         backend = service.backend(backends[0].name)
         self.assertTrue(backend)
 
+    @run_integration_test
+    def test_target_measure(self, service):
+        """Test confirming target contains measure."""
+        backends = service.backends()
+        backend = service.backend(backends[0].name)
+        self.assertIn("measure", backend.target)
+
 
 class TestIBMBackend(IBMIntegrationTestCase):
     """Test ibm_backend module."""
