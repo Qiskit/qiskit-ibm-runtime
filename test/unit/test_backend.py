@@ -23,11 +23,11 @@ from qiskit.providers.models import (
     BackendProperties,
     PulseDefaults,
 )
-from qiskit.providers.backend_compat import convert_to_target
 
 from qiskit_ibm_runtime.exceptions import IBMBackendValueError
 from qiskit_ibm_runtime.fake_provider import FakeManila, FakeSherbrooke
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
+from qiskit_ibm_runtime.utils.backend_converter import convert_to_target
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import (
