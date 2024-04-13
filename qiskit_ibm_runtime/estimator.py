@@ -107,8 +107,8 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
 
     def __init__(
         self,
-        mode: Optional[Union[IBMBackend, Session, Batch, str]] = None,
-        backend: Optional[Union[str, IBMBackend]] = None,
+        mode: Optional[Union[BackendV1, BackendV2, Session, Batch, str]] = None,
+        backend: Optional[Union[str, BackendV1, BackendV2]] = None,
         session: Optional[Session] = None,
         options: Optional[Union[Dict, EstimatorOptions]] = None,
     ):
