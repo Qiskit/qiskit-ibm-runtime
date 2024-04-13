@@ -17,7 +17,7 @@ from typing import Union
 from pydantic import Field
 
 from .utils import Dict, Unset, UnsetType
-from .execution_options import ExecutionOptionsV2
+from .sampler_execution_options import SamplerExecutionOptionsV2
 from .options import OptionsV2
 from .utils import primitive_dataclass
 from .dynamical_decoupling_options import DynamicalDecouplingOptions
@@ -47,6 +47,8 @@ class SamplerOptions(OptionsV2):
     dynamical_decoupling: Union[DynamicalDecouplingOptions, Dict] = Field(
         default_factory=DynamicalDecouplingOptions
     )
-    execution: Union[ExecutionOptionsV2, Dict] = Field(default_factory=ExecutionOptionsV2)
+    execution: Union[SamplerExecutionOptionsV2, Dict] = Field(
+        default_factory=SamplerExecutionOptionsV2
+    )
     twirling: Union[TwirlingOptions, Dict] = Field(default_factory=TwirlingOptions)
     experimental: Union[UnsetType, dict] = Unset
