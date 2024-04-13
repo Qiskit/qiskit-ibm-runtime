@@ -22,6 +22,7 @@ from qiskit.circuit import QuantumCircuit
 from qiskit.primitives import BaseSampler
 from qiskit.primitives.base import BaseSamplerV2
 from qiskit.primitives.containers.sampler_pub import SamplerPub, SamplerPubLike
+from qiskit.providers import BackendV1, BackendV2
 
 from .options import Options
 from .runtime_job import RuntimeJob

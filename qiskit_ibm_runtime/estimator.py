@@ -18,6 +18,7 @@ from typing import Optional, Dict, Sequence, Any, Union, Iterable
 import logging
 
 from qiskit.circuit import QuantumCircuit
+from qiskit.providers import BackendV1, BackendV2
 from qiskit.quantum_info.operators.base_operator import BaseOperator
 from qiskit.quantum_info.operators import SparsePauliOp
 from qiskit.primitives import BaseEstimator
