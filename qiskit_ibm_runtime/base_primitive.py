@@ -189,7 +189,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
         return self._mode
 
     @property
-    def mode(self) -> Optional[Session | Batch | str]:
+    def mode(self) -> Optional[Session | Batch]:
         """Return the execution mode used by this primitive.
 
         Returns:
