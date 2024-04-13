@@ -49,7 +49,7 @@ class TestSamplerOptions(IBMTestCase):
         self.assertIn(list(val.keys())[0], str(exc.exception))
 
     def test_program_inputs(self):
-        """Test converting to program inputs from estimator options."""
+        """Test converting to program inputs from sampler options."""
         # pylint: disable=unexpected-keyword-arg
 
         noise_model = NoiseModel.from_backend(FakeManila())
@@ -94,7 +94,7 @@ class TestSamplerOptions(IBMTestCase):
         {"default_shots": 1000},
         {"simulator": {"seed_simulator": 42}},
         {"default_shots": 1, "environment": {"log_level": "WARNING"}},
-        {"execution": {"init_qubits": True}},
+        {"execution": {"init_qubits": True, "meas_type": "avg_kerneled"}},
         {"dynamical_decoupling": {"enable": True, "sequence_type": "XX"}},
         {"environment": {"log_level": "ERROR"}},
     )
