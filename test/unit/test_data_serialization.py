@@ -403,6 +403,7 @@ class TestContainerSerialization(IBMTestCase):
         """Generates test data for PrimitiveResult test"""
         primitive_results = []
         data_bin_cls = make_data_bin([("alpha", np.ndarray), ("beta", np.ndarray)], shape=(10, 20))
+        empty_data_bin = make_data_bin([], shape=None)
 
         alpha = np.empty((10, 20), dtype=np.uint16)
         beta = np.empty((10, 20), dtype=int)
@@ -410,6 +411,7 @@ class TestContainerSerialization(IBMTestCase):
         pub_results = [
             PubResult(data_bin_cls(alpha, beta)),
             PubResult(data_bin_cls(alpha, beta)),
+            PubResult(empty_data_bin()),
         ]
         result = PrimitiveResult(pub_results, {"1": 2})
         primitive_results.append(result)
