@@ -148,16 +148,20 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
         primitive_inputs.update(primitive_options)
         runtime_options = self._options_class._get_runtime_options(options_dict)
 
-        validate_no_dd_with_dynamic_circuits([pub.circuit for pub in pubs], self.options)
-        if self._backend:
-            for pub in pubs:
-                if isinstance(pub, tuple):
-                    continue
-                if getattr(self._backend, "target", None) and not is_simulator(self._backend):
-                    validate_isa_circuits([pub.circuit], self._backend.target)
+        pub_circuits = []
+        for pub in pubs:
+            if isinstance(pub, tuple):
+                pub_circuits.append(pub[0])
+                continue
+            if getattr(self._backend, "target", None) and not is_simulator(self._backend):
+                validate_isa_circuits([pub.circuit], self._backend.target)
 
-                if isinstance(self._backend, IBMBackend):
-                    self._backend.check_faulty(pub.circuit)
+            if isinstance(self._backend, IBMBackend):
+                self._backend.check_faulty(pub.circuit)
+
+            pub_circuits.append(pub.circuit)
+
+        validate_no_dd_with_dynamic_circuits(pub_circuits, self.options)
 
         logger.info("Submitting job using options %s", primitive_options)
 

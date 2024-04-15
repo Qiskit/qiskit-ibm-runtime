@@ -21,6 +21,7 @@ from qiskit.quantum_info import SparsePauliOp, Pauli
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
 from qiskit_ibm_runtime import Estimator, Session, EstimatorV2, EstimatorOptions, IBMInputValueError
+from qiskit_ibm_runtime.fake_provider import FakeSherbrooke
 
 from .mock.fake_runtime_service import FakeRuntimeService
 from ..ibm_test_case import IBMTestCase
@@ -269,8 +270,15 @@ class TestEstimatorV2(IBMTestCase):
             (0, True), QuantumCircuit(3, 1), QuantumCircuit(3, 1), [0, 1, 2], [0]
         )
 
-        in_pubs = [(dynamic_circuit, ["XXX"])]
-        backend = get_mocked_backend()
+        sherbrooke = FakeSherbrooke()
+        config = sherbrooke._get_conf_dict_from_json()
+        backend = get_mocked_backend(
+            configuration=config,
+            properties=sherbrooke._set_props_dict_from_json(),
+            defaults=sherbrooke._set_defs_dict_from_json(),
+        )
+        dynamic_circuit = transpile(dynamic_circuit, backend=backend)
+        in_pubs = [(dynamic_circuit, ["X" * dynamic_circuit.num_qubits])]
         inst = EstimatorV2(backend=backend)
         inst.options.dynamical_decoupling.enable = True
         with self.assertRaisesRegex(

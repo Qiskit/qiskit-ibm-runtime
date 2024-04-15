@@ -21,6 +21,7 @@ from qiskit import QuantumCircuit, transpile
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.circuit.library import RealAmplitudes
 from qiskit_ibm_runtime import Sampler, Session, SamplerV2, SamplerOptions, IBMInputValueError
+from qiskit_ibm_runtime.fake_provider import FakeSherbrooke
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import (
@@ -116,8 +117,16 @@ class TestSamplerV2(IBMTestCase):
             (0, True), QuantumCircuit(3, 1), QuantumCircuit(3, 1), [0, 1, 2], [0]
         )
 
+        sherbrooke = FakeSherbrooke()
+        config = sherbrooke._get_conf_dict_from_json()
+        backend = get_mocked_backend(
+            configuration=config,
+            properties=sherbrooke._set_props_dict_from_json(),
+            defaults=sherbrooke._set_defs_dict_from_json(),
+        )
+        dynamic_circuit = transpile(dynamic_circuit, backend=backend)
+
         in_pubs = [(dynamic_circuit,)]
-        backend = get_mocked_backend()
         inst = SamplerV2(backend=backend)
         inst.options.dynamical_decoupling.enable = True
         with self.assertRaisesRegex(
