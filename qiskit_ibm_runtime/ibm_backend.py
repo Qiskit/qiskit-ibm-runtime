@@ -335,6 +335,7 @@ class IBMBackend(Backend):
 
     def target_history(self, datetime: Optional[python_datetime] = None) -> Target:
         """A :class:`qiskit.transpiler.Target` object for the backend.
+
         Returns:
             Target with properties found on `datetime`
         """
