@@ -34,7 +34,7 @@ from .runtime_job import RuntimeJob
 from .runtime_job_v2 import RuntimeJobV2
 from .ibm_backend import IBMBackend
 from .utils.default_session import get_cm_session
-from .utils.deprecation import issue_deprecation_msg
+from .utils.deprecation import issue_deprecation_msg, deprecate_function
 from .utils.utils import validate_isa_circuits, is_simulator, validate_no_dd_with_dynamic_circuits
 from .constants import DEFAULT_DECODERS
 from .qiskit_runtime_service import QiskitRuntimeService
