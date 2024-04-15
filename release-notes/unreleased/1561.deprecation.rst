@@ -1,1 +1,2 @@
-`backend.run` has been deprecated. Please use the primitives instead. 
+`backend.run` has been deprecated. Please use the primitives instead. More details
+can be found in the `migration guide <https://docs.quantum.ibm.com/api/migration-guides/qiskit-runtime>`__ .
