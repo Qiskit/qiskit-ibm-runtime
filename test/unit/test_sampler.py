@@ -23,7 +23,15 @@ from qiskit.circuit.library import RealAmplitudes
 from qiskit_ibm_runtime import Sampler, Session, SamplerV2, SamplerOptions
 
 from ..ibm_test_case import IBMTestCase
-from ..utils import bell, MockSession, dict_paritally_equal, get_mocked_backend, transpile_pubs
+from ..utils import (
+    bell,
+    MockSession,
+    dict_paritally_equal,
+    get_mocked_backend,
+    transpile_pubs,
+    get_transpiled_circuit,
+)
+from ..constants import QASM2_SIMPLE, QASM3_SIMPLE, QASM3_WITH_PARAMS
 from .mock.fake_runtime_service import FakeRuntimeService
 
 
@@ -131,3 +139,51 @@ class TestSamplerV2(IBMTestCase):
                     dict_paritally_equal(inputs, expected),
                     f"{inputs} and {expected} not partially equal.",
                 )
+
+    @data(
+        QASM2_SIMPLE,
+        QASM3_SIMPLE,
+        (QASM3_WITH_PARAMS, {"theta1": 0.5, "theta2": 0.5}),
+        (QASM3_WITH_PARAMS, {"theta1": 0.5, "theta2": 0.5}, 1024),
+        [QASM2_SIMPLE, QASM3_SIMPLE],
+    )
+    def test_qasm_input(self, pub):
+        """Test passing in QASM strings in place of circuits."""
+        backend = get_mocked_backend()
+        inst = SamplerV2(backend=backend)
+        pubs = [pub] if not isinstance(pub, list) else pub
+        _ = inst.run(pubs)
+
+        input_params = backend.service.run.call_args.kwargs["inputs"]
+        self.assertIn("pubs", input_params)
+        pubs_param = input_params["pubs"]
+
+        for client_pub, server_pub in zip(pubs, pubs_param):
+            client_circ = client_pub if isinstance(client_pub, str) else client_pub[0]
+            if isinstance(client_circ, str):
+                self.assertEqual(client_circ, server_pub[0])
+
+    def test_qasm_circuit_input(self):
+        """Test passing both QASM strings and circuits."""
+        backend = get_mocked_backend()
+        inst = SamplerV2(backend=backend)
+        pubs = [get_transpiled_circuit(backend=backend), QASM2_SIMPLE]
+        _ = inst.run(pubs)
+
+        input_params = backend.service.run.call_args.kwargs["inputs"]
+        self.assertIn("pubs", input_params)
+        pubs_param = input_params["pubs"]
+
+        for client_pub, server_pub in zip(pubs, pubs_param):
+            client_circ = client_pub if isinstance(client_pub, str) else client_pub[0]
+            if isinstance(client_circ, str):
+                self.assertEqual(client_circ, server_pub[0])
+
+    @data((QASM2_SIMPLE, None, 1024, "foo"), (QASM3_SIMPLE, None, -1))
+    def test_invalid_qasm_pub(self, pub):
+        """Test invalid QASM pub."""
+        backend = get_mocked_backend()
+        inst = SamplerV2(backend=backend)
+        pubs = [pub] if not isinstance(pub, list) else pub
+        with self.assertRaises(ValueError):
+            _ = inst.run(pubs)

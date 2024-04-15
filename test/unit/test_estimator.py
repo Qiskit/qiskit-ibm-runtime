@@ -32,6 +32,7 @@ from ..utils import (
     remap_observables,
     get_transpiled_circuit,
 )
+from ..constants import QASM2_SIMPLE, QASM3_SIMPLE, QASM3_WITH_PARAMS
 
 
 class TestEstimator(IBMTestCase):
@@ -258,3 +259,52 @@ class TestEstimatorV2(IBMTestCase):
             with self.subTest(obs=obs):
                 with self.assertRaises(ValueError):
                     estimator.run((circuit, obs))
+
+    @data(
+        (QASM2_SIMPLE, "ZZZ"),
+        (QASM3_SIMPLE, "YYY"),
+        (QASM3_WITH_PARAMS, "ZZZ", {"theta1": 0.5, "theta2": 0.5}),
+        (QASM3_WITH_PARAMS, "ZZZ", {"theta1": 0.5, "theta2": 0.5}, 0.5),
+        [(QASM2_SIMPLE, "ZZZ"), (QASM3_SIMPLE, "ZZZ")],
+    )
+    def test_qasm_input(self, pub):
+        """Test passing in QASM strings in place of circuits."""
+        backend = get_mocked_backend()
+        inst = EstimatorV2(backend=backend)
+        pubs = [pub] if not isinstance(pub, list) else pub
+        _ = inst.run(pubs)
+
+        input_params = backend.service.run.call_args.kwargs["inputs"]
+        self.assertIn("pubs", input_params)
+        pubs_param = input_params["pubs"]
+
+        for client_pub, server_pub in zip(pubs, pubs_param):
+            client_circ = client_pub if isinstance(client_pub, str) else client_pub[0]
+            if isinstance(client_circ, str):
+                self.assertEqual(client_circ, server_pub[0])
+
+    def test_qasm_circuit_input(self):
+        """Test passing both QASM strings and circuits."""
+        backend = get_mocked_backend()
+        inst = EstimatorV2(backend=backend)
+        inputs = get_primitive_inputs(inst, backend=backend)
+        inputs["pubs"].append((QASM2_SIMPLE, "ZZZ"))
+        _ = inst.run(**inputs)
+
+        input_params = backend.service.run.call_args.kwargs["inputs"]
+        self.assertIn("pubs", input_params)
+        pubs_param = input_params["pubs"]
+
+        for client_pub, server_pub in zip(inputs["pubs"], pubs_param):
+            client_circ = client_pub if isinstance(client_pub, str) else client_pub[0]
+            if isinstance(client_circ, str):
+                self.assertEqual(client_circ, server_pub[0])
+
+    @data((QASM2_SIMPLE, "ZZZ", None, 0.5, "foo"), (QASM3_SIMPLE, "ZZZ", None, -1))
+    def test_invalid_qasm_pub(self, pub):
+        """Test invalid QASM pub."""
+        backend = get_mocked_backend()
+        inst = EstimatorV2(backend=backend)
+        pubs = [pub] if not isinstance(pub, list) else pub
+        with self.assertRaises(ValueError):
+            _ = inst.run(pubs)

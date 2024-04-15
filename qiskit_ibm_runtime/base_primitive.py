@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Dict, Optional, Any, Union, TypeVar, Generic, Type
+from typing import Dict, Optional, Any, Union, TypeVar, Generic, Type, Tuple
 import copy
 import logging
 from dataclasses import asdict, replace
@@ -132,7 +132,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
                 3,
             )
 
-    def _run(self, pubs: Union[list[EstimatorPub], list[SamplerPub]]) -> RuntimeJobV2:
+    def _run(self, pubs: Union[list[EstimatorPub], list[SamplerPub], list[Tuple]]) -> RuntimeJobV2:
         """Run the primitive.
 
         Args:
@@ -150,6 +150,8 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
 
         if self._backend:
             for pub in pubs:
+                if isinstance(pub, tuple):
+                    continue
                 if getattr(self._backend, "target", None) and not is_simulator(self._backend):
                     validate_isa_circuits([pub.circuit], self._backend.target)
 

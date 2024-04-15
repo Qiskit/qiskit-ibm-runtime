@@ -14,8 +14,9 @@
 
 from __future__ import annotations
 import os
-from typing import Optional, Dict, Sequence, Any, Union, Iterable
+from typing import Optional, Dict, Sequence, Any, Union, Iterable, Tuple
 import logging
+from numbers import Real
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info.operators.base_operator import BaseOperator
@@ -24,6 +25,9 @@ from qiskit.primitives import BaseEstimator
 from qiskit.primitives.base import BaseEstimatorV2
 from qiskit.primitives.containers import EstimatorPubLike
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
+from qiskit.primitives.containers.bindings_array import BindingsArrayLike
+from qiskit.primitives.containers.observables_array import ObservablesArrayLike
+
 from .runtime_job import RuntimeJob
 from .runtime_job_v2 import RuntimeJobV2
 from .ibm_backend import IBMBackend
@@ -38,6 +42,13 @@ from .utils.qctrl import validate_v2 as qctrl_validate_v2
 from .session import Session
 
 logger = logging.getLogger(__name__)
+
+
+EstimatorQasmPubLike = Union[
+    Tuple[str, ObservablesArrayLike],
+    Tuple[str, ObservablesArrayLike, BindingsArrayLike],
+    Tuple[str, ObservablesArrayLike, BindingsArrayLike, Real],
+]
 
 
 class Estimator:
@@ -132,7 +143,10 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
         BasePrimitiveV2.__init__(self, backend=backend, session=session, options=options)
 
     def run(
-        self, pubs: Iterable[EstimatorPubLike], *, precision: float | None = None
+        self,
+        pubs: Iterable[EstimatorPubLike | EstimatorQasmPubLike],
+        *,
+        precision: float | None = None,
     ) -> RuntimeJobV2:
         """Submit a request to the estimator primitive.
 
@@ -147,7 +161,14 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
             Submitted job.
 
         """
-        coerced_pubs = [EstimatorPub.coerce(pub, precision) for pub in pubs]
+        coerced_pubs = []
+        for pub in pubs:
+            if isinstance(pub, tuple) and isinstance(pub[0], str):
+                self._validate_qasm_pub(pub)
+                coerced_pubs.append(pub)
+            else:
+                coerced_pubs.append(EstimatorPub.coerce(pub, precision))
+
         return self._run(coerced_pubs)  # type: ignore[arg-type]
 
     def _validate_options(self, options: dict) -> None:
@@ -172,6 +193,27 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
                 "When the backend is a simulator and pec_mitigation is enabled, "
                 "a coupling map is required."
             )
+
+    def _validate_qasm_pub(self, pub: Tuple) -> None:
+        """Validate input pub when QASM is used.
+
+        Args:
+            pub: PUB to validate.
+
+        Raises:
+            ValueError: If the input pub contains invalid values.
+            TypeError: If the input pub contains invalid types.
+        """
+        if len(pub) not in [2, 3, 4]:
+            raise ValueError(
+                f"The length of pub must be 2, 3 or 4, but length {len(pub)} is given."
+            )
+        if len(pub) == 4:
+            precision = pub[3]
+            if not isinstance(precision, Real):
+                raise TypeError(f"precision must be a real number, not {type(precision)}.")
+            if precision < 0:
+                raise ValueError("precision must be non-negative")
 
     @classmethod
     def _program_id(cls) -> str:

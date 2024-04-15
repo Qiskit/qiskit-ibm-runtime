@@ -14,14 +14,16 @@
 
 from __future__ import annotations
 import os
-from typing import Dict, Optional, Sequence, Any, Union, Iterable
+from typing import Dict, Optional, Sequence, Any, Union, Iterable, Tuple
 import logging
 import warnings
+from numbers import Integral
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.primitives import BaseSampler
 from qiskit.primitives.base import BaseSamplerV2
 from qiskit.primitives.containers.sampler_pub import SamplerPub, SamplerPubLike
+from qiskit.primitives.containers.bindings_array import BindingsArrayLike
 
 from .options import Options
 from .runtime_job import RuntimeJob
@@ -36,6 +38,14 @@ from .utils.qctrl import validate_v2 as qctrl_validate_v2
 from .options import SamplerOptions
 
 logger = logging.getLogger(__name__)
+
+
+SamplerQasmPubLike = Union[
+    str,
+    Tuple[str],
+    Tuple[str, BindingsArrayLike],
+    Tuple[str, BindingsArrayLike, Union[Integral, None]],
+]
 
 
 class Sampler:
@@ -91,7 +101,9 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
         Sampler.__init__(self)
         BasePrimitiveV2.__init__(self, backend=backend, session=session, options=options)
 
-    def run(self, pubs: Iterable[SamplerPubLike], *, shots: int | None = None) -> RuntimeJobV2:
+    def run(
+        self, pubs: Iterable[SamplerPubLike | SamplerQasmPubLike], *, shots: int | None = None
+    ) -> RuntimeJobV2:
         """Submit a request to the sampler primitive.
 
         Args:
@@ -109,14 +121,22 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
         Raises:
             ValueError: Invalid arguments are given.
         """
-        coerced_pubs = [SamplerPub.coerce(pub, shots) for pub in pubs]
-
-        if any(len(pub.circuit.cregs) == 0 for pub in coerced_pubs):
-            warnings.warn(
-                "One of your circuits has no output classical registers and so the result "
-                "will be empty. Did you mean to add measurement instructions?",
-                UserWarning,
-            )
+        coerced_pubs = []
+        for idx, pub in enumerate(pubs):
+            if isinstance(pub, tuple) and isinstance(pub[0], str):
+                self._validate_qasm_pub(pub)
+                coerced_pubs.append(pub)
+            elif isinstance(pub, str):
+                coerced_pubs.append((pub,))
+            else:
+                coerced = SamplerPub.coerce(pub, shots)
+                coerced_pubs.append(coerced)
+                if len(coerced.circuit.cregs) == 0:
+                    warnings.warn(
+                        f"The circuit in {idx}-th PUB has no output classical registers and so the "
+                        "result will be empty. Did you mean to add measurement instructions?",
+                        UserWarning,
+                    )
 
         return self._run(coerced_pubs)  # type: ignore[arg-type]
 
@@ -130,6 +150,28 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
         if self._service._channel_strategy == "q-ctrl":
             qctrl_validate_v2(options)
             return
+
+    def _validate_qasm_pub(self, pub: Tuple) -> None:
+        """Validate input pub when QASM is used.
+
+        Args:
+            pub: PUB to validate.
+
+        Raises:
+            ValueError: If the input pub contains invalid values.
+            TypeError: If the input pub contains invalid types.
+        """
+        if len(pub) not in [2, 3]:
+            raise ValueError(
+                f"The length of pub must be 2, 3 or 4, but length {len(pub)} is given."
+            )
+        if len(pub) == 3:
+            shots = pub[2]
+            if shots is not None:
+                if not isinstance(shots, Integral) or isinstance(shots, bool):  # type: ignore
+                    raise TypeError("shots must be an integer")
+                if shots <= 0:
+                    raise ValueError("shots must be positive")
 
     @classmethod
     def _program_id(cls) -> str:
