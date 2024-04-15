@@ -1,2 +1,0 @@
-Fixed an issue where the `in_final_state()` method in `RuntimeJobV2` would not
-update the status when called.

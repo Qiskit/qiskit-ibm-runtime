@@ -1,4 +1,0 @@
-The Sampler and Estimator V2 Primitives have been enhanced to incorporate custom validation procedures when
-the channel_strategy property is set as "q-ctrl."
-This customized validation logic effectively rectifies incorrect input options and safeguards users against
-inadvertently disabling Q-CTRL's performance enhancements.
