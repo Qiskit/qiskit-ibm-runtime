@@ -271,6 +271,14 @@ class BasePrimitiveV1(ABC):
         self._service: QiskitRuntimeService | QiskitRuntimeLocalService = None
         self._backend: Optional[BackendV1 | BackendV2] = None
 
+        issue_deprecation_msg(
+            "The Sampler and Estimator V1 primitives have been deprecated",
+            "0.23.0",
+            "Please use the V2 Primitives. See the `V2 migration guide "
+            "<https://docs.quantum.ibm.com/api/migration-guides/v2-primitives>`_. for more details",
+            3,
+        )
+
         if options is None:
             self._options = asdict(Options())
         elif isinstance(options, Options):

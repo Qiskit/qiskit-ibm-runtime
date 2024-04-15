@@ -161,7 +161,7 @@ class TestSession(IBMTestCase):
 
     def test_session_from_id(self):
         """Create session with given session_id"""
-        service = MagicMock()
+        service = FakeRuntimeService(channel="ibm_quantum", token="abc")
         session_id = "123"
         session = Session.from_id(session_id=session_id, service=service)
         session.run(program_id="foo", inputs={})

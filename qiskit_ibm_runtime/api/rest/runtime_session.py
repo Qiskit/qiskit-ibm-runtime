@@ -83,8 +83,4 @@ class RuntimeSession(RestAdapterBase):
 
     def details(self) -> Dict[str, Any]:
         """Return the details of this session."""
-        try:
-            return self.session.get(self.get_url("self")).json()
-        # return None if API is not supported
-        except:  # pylint: disable=bare-except
-            return None
+        return self.session.get(self.get_url("self")).json()
