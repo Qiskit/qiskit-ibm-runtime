@@ -20,7 +20,7 @@ import numpy as np
 from qiskit import QuantumCircuit, transpile
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.circuit.library import RealAmplitudes
-from qiskit_ibm_runtime import Sampler, Session, SamplerV2, SamplerOptions
+from qiskit_ibm_runtime import Sampler, Session, SamplerV2, SamplerOptions, IBMInputValueError
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import bell, MockSession, dict_paritally_equal, get_mocked_backend, transpile_pubs
@@ -98,6 +98,25 @@ class TestSamplerV2(IBMTestCase):
             with self.assertRaises(ValueError) as exc:
                 inst.options.update(**opt)
             self.assertIn(list(opt.keys())[0], str(exc.exception))
+
+    def test_unsupported_dynamical_decoupling_with_dynamic_circuits(self):
+        """Test that running on dynamic circuits with dynamical decoupling enabled is not allowed"""
+        dynamic_circuit = QuantumCircuit(3, 1)
+        dynamic_circuit.h(0)
+        dynamic_circuit.measure(0, 0)
+        dynamic_circuit.if_else(
+            (0, True), QuantumCircuit(3, 1), QuantumCircuit(3, 1), [0, 1, 2], [0]
+        )
+
+        in_pubs = [(dynamic_circuit,)]
+        backend = get_mocked_backend()
+        inst = SamplerV2(backend=backend)
+        inst.options.dynamical_decoupling.enable = True
+        with self.assertRaisesRegex(
+            IBMInputValueError,
+            "Dynamical decoupling currently cannot be used with dynamic circuits",
+        ):
+            inst.run(in_pubs)
 
     def test_run_default_options(self):
         """Test run using default options."""

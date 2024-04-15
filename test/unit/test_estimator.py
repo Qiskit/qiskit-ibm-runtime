@@ -20,7 +20,7 @@ from qiskit.circuit.library import RealAmplitudes
 from qiskit.quantum_info import SparsePauliOp, Pauli
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
-from qiskit_ibm_runtime import Estimator, Session, EstimatorV2, EstimatorOptions
+from qiskit_ibm_runtime import Estimator, Session, EstimatorV2, EstimatorOptions, IBMInputValueError
 
 from .mock.fake_runtime_service import FakeRuntimeService
 from ..ibm_test_case import IBMTestCase
@@ -258,3 +258,22 @@ class TestEstimatorV2(IBMTestCase):
             with self.subTest(obs=obs):
                 with self.assertRaises(ValueError):
                     estimator.run((circuit, obs))
+
+    def test_unsupported_dynamical_decoupling_with_dynamic_circuits(self):
+        """Test that running on dynamic circuits with dynamical decoupling enabled is not allowed"""
+        dynamic_circuit = QuantumCircuit(3, 1)
+        dynamic_circuit.h(0)
+        dynamic_circuit.measure(0, 0)
+        dynamic_circuit.if_else(
+            (0, True), QuantumCircuit(3, 1), QuantumCircuit(3, 1), [0, 1, 2], [0]
+        )
+
+        in_pubs = [(dynamic_circuit, ["XXX"])]
+        backend = get_mocked_backend()
+        inst = EstimatorV2(backend=backend)
+        inst.options.dynamical_decoupling.enable = True
+        with self.assertRaisesRegex(
+            IBMInputValueError,
+            "Dynamical decoupling currently cannot be used with dynamic circuits",
+        ):
+            inst.run(in_pubs)
