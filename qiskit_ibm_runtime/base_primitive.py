@@ -139,9 +139,11 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
         primitive_inputs.update(primitive_options)
         runtime_options = self._options_class._get_runtime_options(options_dict)
 
-        for pub in pubs:
-            if getattr(self._backend, "target", None) and not is_simulator(self._backend):
-                validate_isa_circuits([pub.circuit], self._backend.target)
+        validate_no_dd_with_dynamic_circuits([pub.circuit for pub in pubs], self.options)
+        if self._backend:
+            for pub in pubs:
+                if getattr(self._backend, "target", None) and not is_simulator(self._backend):
+                    validate_isa_circuits([pub.circuit], self._backend.target)
 
             if isinstance(self._backend, IBMBackend):
                 self._backend.check_faulty(pub.circuit)
