@@ -49,6 +49,7 @@ class TestBackendEstimatorV2(IBMTestCase):
         self._precision = 5e-3
         self._rtol = 3e-1
         self._seed = 12
+        self._rng = np.random.default_rng(self._seed)
         self._options = {"default_precision": self._precision, "seed_simulator": self._seed}
         self.ansatz = RealAmplitudes(num_qubits=2, reps=2)
         self.observable = SparsePauliOp.from_list(
@@ -330,7 +331,7 @@ class TestBackendEstimatorV2(IBMTestCase):
         op = SparsePauliOp.from_list([("IZ", 1), ("XI", 2), ("ZY", -1)])
         op = op.apply_layout(qc.layout)
         k = 5
-        params_array = np.random.rand(k, qc.num_parameters)
+        params_array = self._rng.random((k, qc.num_parameters))
         params_list = params_array.tolist()
         params_list_array = list(params_array)
         statevector_estimator = StatevectorEstimator(seed=123)
@@ -384,8 +385,7 @@ class TestBackendEstimatorV2(IBMTestCase):
         qc = pm.run(qc)
         op = [SparsePauliOp("IX"), SparsePauliOp("YI")]
         shape = (3, 2)
-        rng = np.random.default_rng(seed)
-        params_array = rng.random(shape + (qc.num_parameters,))
+        params_array = self._rng.random(shape + (qc.num_parameters,))
         params_list = params_array.tolist()
         params_list_array = list(params_array)
         statevector_estimator = StatevectorEstimator(seed=seed)
