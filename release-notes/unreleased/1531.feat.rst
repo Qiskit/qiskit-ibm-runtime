@@ -1,5 +1,0 @@
-Add `block_ordering_callable: Optional[BlockOrderingCallableType]` argument to `BlockBasePadder`,
-`PadDynamicalDecoupling`, `PadDelay``, and `BaseDynamicCircuitAnalysis`. This allows the user
-to construct blocks using an algorithm of their choosing. No assumptions or checks are made on the
-validity of the output that the `block_ordering_callable` produces. The motivation for this argument is
-that for some families of circuits, the existing function `block_order_op_nodes` can be very slow.
