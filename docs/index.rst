@@ -6,9 +6,6 @@ Qiskit Runtime docs live at docs.quantum.ibm.com and come from https://github.co
 This site is only used to generate our API docs, which then get migrated to
 https://github.com/Qiskit/documentation.
 
-Next steps
-=================================
-
 .. toctree::
    :maxdepth: 1
    :hidden:
