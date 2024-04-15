@@ -35,7 +35,7 @@ from .runtime_job_v2 import RuntimeJobV2
 from .ibm_backend import IBMBackend
 from .utils.default_session import get_cm_session
 from .utils.deprecation import issue_deprecation_msg
-from .utils.utils import validate_isa_circuits, is_simulator
+from .utils.utils import validate_isa_circuits, is_simulator, validate_no_dd_with_dynamic_circuits
 from .constants import DEFAULT_DECODERS
 from .qiskit_runtime_service import QiskitRuntimeService
 from .fake_provider.local_service import QiskitRuntimeLocalService
@@ -148,6 +148,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
         primitive_inputs.update(primitive_options)
         runtime_options = self._options_class._get_runtime_options(options_dict)
 
+        validate_no_dd_with_dynamic_circuits([pub.circuit for pub in pubs], self.options)
         if self._backend:
             for pub in pubs:
                 if getattr(self._backend, "target", None) and not is_simulator(self._backend):
@@ -270,6 +271,14 @@ class BasePrimitiveV1(ABC):
         self._session: Optional[Session] = None
         self._service: QiskitRuntimeService | QiskitRuntimeLocalService = None
         self._backend: Optional[BackendV1 | BackendV2] = None
+
+        issue_deprecation_msg(
+            "The Sampler and Estimator V1 primitives have been deprecated",
+            "0.23.0",
+            "Please use the V2 Primitives. See the `V2 migration guide "
+            "<https://docs.quantum.ibm.com/api/migration-guides/v2-primitives>`_. for more details",
+            3,
+        )
 
         if options is None:
             self._options = asdict(Options())
