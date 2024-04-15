@@ -99,11 +99,11 @@ def validate_isa_circuits(circuits: Sequence[QuantumCircuit], target: Target) ->
             )
 
 
-def are_circuits_dynamic(circuits: List[QuantumCircuit]) -> bool:
+def are_circuits_dynamic(circuits: List[QuantumCircuit], qasm_default: bool = True) -> bool:
     """Checks if the input circuits are dynamic."""
     for circuit in circuits:
         if isinstance(circuit, str):
-            return False  # currently do not verify QASM inputs
+            return qasm_default  # currently do not verify QASM inputs
         for inst in circuit:
             if (
                 isinstance(inst.operation, ControlFlowOp)
@@ -123,7 +123,7 @@ def validate_no_dd_with_dynamic_circuits(circuits: List[QuantumCircuit], options
     """
     if not hasattr(options, "dynamical_decoupling") or not options.dynamical_decoupling.enable:
         return
-    if are_circuits_dynamic(circuits):
+    if are_circuits_dynamic(circuits, False):
         raise IBMInputValueError(
             "Dynamical decoupling currently cannot be used with dynamic circuits"
         )
