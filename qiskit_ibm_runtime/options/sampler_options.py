@@ -21,6 +21,7 @@ from .sampler_execution_options import SamplerExecutionOptionsV2
 from .options import OptionsV2
 from .utils import primitive_dataclass
 from .dynamical_decoupling_options import DynamicalDecouplingOptions
+from .twirling_options import TwirlingOptions
 
 
 @primitive_dataclass
@@ -36,6 +37,8 @@ class SamplerOptions(OptionsV2):
 
         execution: Execution time options. See :class:`ExecutionOptionsV2` for all available options.
 
+        twirling: Pauli twirling options. See :class:`TwirlingOptions` for all available options.
+
         experimental: Experimental options.
     """
 
@@ -47,4 +50,5 @@ class SamplerOptions(OptionsV2):
     execution: Union[SamplerExecutionOptionsV2, Dict] = Field(
         default_factory=SamplerExecutionOptionsV2
     )
+    twirling: Union[TwirlingOptions, Dict] = Field(default_factory=TwirlingOptions)
     experimental: Union[UnsetType, dict] = Unset
