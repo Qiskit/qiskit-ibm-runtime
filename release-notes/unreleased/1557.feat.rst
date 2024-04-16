@@ -1,2 +1,0 @@
-`SamplerV2` now supports twirling.
-Twirling will only be applied to those measurement registers not involved within a conditional logic.
