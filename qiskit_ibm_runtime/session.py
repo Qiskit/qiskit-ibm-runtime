@@ -247,7 +247,7 @@ class Session:
         """Return current session status.
 
         Returns:
-            The current status of the session, including:
+            Session status as a string.
 
             * Pending: Session is created but not active.
               It will become active when the next job of this session is dequeued.
@@ -274,7 +274,7 @@ class Session:
         """Return session details.
 
         Returns:
-            A dictionary with the sessions details, including:
+            A dictionary with the sessions details.
 
             * id: id of the session.
             * backend_name: backend used for the session.
