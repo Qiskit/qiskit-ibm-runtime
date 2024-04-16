@@ -62,6 +62,7 @@ class TestSamplerOptions(IBMTestCase):
         environment = {"log_level": "INFO"}
         dynamical_decoupling = {"enable": True, "sequence_type": "XX"}
         execution = {"init_qubits": True, "rep_delay": 0.01}
+        twirling = {"enable_gates": True, "enable_measure": True, "strategy": "active-circuit"}
 
         opt = SamplerOptions(
             max_execution_time=100,
@@ -69,6 +70,7 @@ class TestSamplerOptions(IBMTestCase):
             simulator=simulator,
             default_shots=1000,
             dynamical_decoupling=dynamical_decoupling,
+            twirling=twirling,
             execution=execution,
             experimental={"foo": "bar", "execution": {"secret": 88}},
         )
@@ -80,6 +82,11 @@ class TestSamplerOptions(IBMTestCase):
         options = {
             "default_shots": 1000,
             "dynamical_decoupling": dynamical_decoupling,
+            "twirling": {
+                "enable_gates": True,
+                "enable_measure": True,
+                "strategy": "active-circuit",
+            },
             "execution": execution,
             "experimental": {"foo": "bar"},
             "simulator": simulator,
@@ -97,6 +104,7 @@ class TestSamplerOptions(IBMTestCase):
         {"execution": {"init_qubits": True, "meas_type": "avg_kerneled"}},
         {"dynamical_decoupling": {"enable": True, "sequence_type": "XX"}},
         {"environment": {"log_level": "ERROR"}},
+        {"twirling": {"enable_gates": True, "strategy": "active"}},
     )
     def test_init_options_with_dictionary(self, opts_dict):
         """Test initializing options with dictionaries."""
@@ -117,6 +125,7 @@ class TestSamplerOptions(IBMTestCase):
             "sequence_type": "XX",
             "log_level": "INFO",
         },
+        {"twirling": {"enable_gates": True, "strategy": "active"}},
     )
     def test_update_options(self, new_opts):
         """Test update method."""

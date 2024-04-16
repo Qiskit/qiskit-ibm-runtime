@@ -178,7 +178,7 @@ class BackendSamplerV2(BaseSamplerV2):
             item.creg_name: BitArray(arrays[item.creg_name], item.num_bits) for item in meas_info
         }
         data_bin = data_bin_cls(**meas)
-        return PubResult(data_bin, metadata={})
+        return PubResult(data_bin, metadata=pub.circuit.metadata)
 
 
 def _analyze_circuit(circuit: QuantumCircuit) -> tuple[list[_MeasureInfo], int]:

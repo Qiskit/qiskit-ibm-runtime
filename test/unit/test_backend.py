@@ -164,11 +164,11 @@ class TestBackend(IBMTestCase):
                     backend.run(circuits=circuit, dynamic=False)
             self.assertIn(
                 "Parameter 'dynamic' is False, but the circuit contains dynamic constructs.",
-                str(warn[0].message),
+                str(warn[1].message),
             )
             self.assertIn(
                 f"The backend {backend.name} does not support dynamic circuits.",
-                str(warn[1].message),
+                str(warn[2].message),
             )
 
     @staticmethod
