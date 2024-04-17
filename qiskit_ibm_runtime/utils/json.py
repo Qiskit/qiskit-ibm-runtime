@@ -58,7 +58,6 @@ from qiskit.version import __version__ as _terra_version_string
 from qiskit.utils import optionals
 from qiskit.qpy import (
     _write_parameter_expression,
-    _read_parameter_expression,
     _read_parameter_expression_v3,
     load,
     dump,
@@ -331,13 +330,10 @@ class RuntimeDecoder(json.JSONDecoder):
     def __init__(self, *args: Any, **kwargs: Any):
         super().__init__(object_hook=self.object_hook, *args, **kwargs)
         self.__parameter_vectors: Dict[str, Tuple[ParameterVector, set]] = {}
-        self.__read_parameter_expression = (
-            functools.partial(
-                _read_parameter_expression_v3,
-                vectors=self.__parameter_vectors,
-            )
-            if _TERRA_VERSION >= (0, 19, 1)
-            else _read_parameter_expression
+        self.__read_parameter_expression = functools.partial(
+            _read_parameter_expression_v3,
+            vectors=self.__parameter_vectors,
+            use_symengine=bool(optionals.HAS_SYMENGINE),
         )
 
     def object_hook(self, obj: Any) -> Any:
@@ -406,7 +402,10 @@ class RuntimeDecoder(json.JSONDecoder):
                 shape = obj_val["shape"]
                 if shape is not None and isinstance(shape, list):
                     shape = tuple(shape)
-                data_bin_cls = make_data_bin(zip(field_names, field_types), shape=shape)
+                data_bin_cls = make_data_bin(
+                    zip(field_names, field_types) if field_names and field_types else None,
+                    shape=shape,
+                )
                 return data_bin_cls(**obj_val["fields"])
             if obj_type == "PubResult":
                 return PubResult(**obj_val)

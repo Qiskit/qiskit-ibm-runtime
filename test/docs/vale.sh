@@ -6,11 +6,13 @@ cd ./docs
 
 vale . || EXIT_CODE=$?
 
-echo
-echo "Linting notebooks using nbQA:"
 
 notebooks=$(find . -name "*.ipynb" -not -name "*checkpoint*" -not -path "./_**")
 
-python -m nbqa vale ${notebooks} --nbqa-shell --nbqa-md || EXIT_CODE=$?
+if [ -n "$notebooks" ]; then
+  echo
+  echo "Linting notebooks using nbQA:"
+  python -m nbqa vale ${notebooks} --nbqa-shell --nbqa-md || EXIT_CODE=$?
+fi
 
 exit $EXIT_CODE

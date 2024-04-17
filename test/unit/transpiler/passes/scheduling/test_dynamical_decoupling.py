@@ -116,18 +116,33 @@ class TestPadDynamicalDecoupling(IBMTestCase):
 
         self.assertEqual(ghz4_dd, expected)
 
-    def test_insert_dd_ghz_one_qubit(self):
+    @data(True, False)
+    def test_insert_dd_ghz_one_qubit(self, use_topological_ordering):
         """Test DD gates are inserted on only one qubit."""
         dd_sequence = [XGate(), XGate()]
+
+        if use_topological_ordering:
+
+            def _top_ord(dag):
+                return dag.topological_op_nodes()
+
+            block_ordering_callable = _top_ord
+        else:
+            block_ordering_callable = None
+
         pm = PassManager(
             [
-                ASAPScheduleAnalysis(self.durations),
+                ASAPScheduleAnalysis(
+                    durations=self.durations,
+                    block_ordering_callable=block_ordering_callable,
+                ),
                 PadDynamicalDecoupling(
                     self.durations,
                     dd_sequence,
                     qubits=[0],
                     pulse_alignment=1,
                     schedule_idle_qubits=True,
+                    block_ordering_callable=block_ordering_callable,
                 ),
             ]
         )
@@ -244,17 +259,32 @@ class TestPadDynamicalDecoupling(IBMTestCase):
 
         self.assertEqual(ghz4_dd, expected)
 
-    def test_insert_midmeas_hahn(self):
+    @data(True, False)
+    def test_insert_midmeas_hahn(self, use_topological_ordering):
         """Test a single X gate as Hahn echo can absorb in the upstream circuit."""
         dd_sequence = [RXGate(pi / 4)]
+
+        if use_topological_ordering:
+
+            def _top_ord(dag):
+                return dag.topological_op_nodes()
+
+            block_ordering_callable = _top_ord
+        else:
+            block_ordering_callable = None
+
         pm = PassManager(
             [
-                ASAPScheduleAnalysis(self.durations),
+                ASAPScheduleAnalysis(
+                    durations=self.durations,
+                    block_ordering_callable=block_ordering_callable,
+                ),
                 PadDynamicalDecoupling(
                     self.durations,
                     dd_sequence,
                     pulse_alignment=1,
                     schedule_idle_qubits=True,
+                    block_ordering_callable=block_ordering_callable,
                 ),
             ]
         )

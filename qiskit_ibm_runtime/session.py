@@ -22,12 +22,13 @@ import warnings
 from qiskit.providers.backend import BackendV1, BackendV2
 
 from qiskit_ibm_runtime import QiskitRuntimeService
+from .exceptions import IBMInputValueError
 from .runtime_job import RuntimeJob
 from .runtime_job_v2 import RuntimeJobV2
 from .utils.result_decoder import ResultDecoder
 from .ibm_backend import IBMBackend
 from .utils.default_session import set_cm_session
-from .utils.deprecation import deprecate_arguments, issue_deprecation_msg
+from .utils.deprecation import issue_deprecation_msg
 from .utils.converters import hms_to_seconds
 from .fake_provider.local_service import QiskitRuntimeLocalService
 
@@ -246,13 +247,14 @@ class Session:
         """Return current session status.
 
         Returns:
-            The current status of the session, including:
-            Pending: Session is created but not active.
-            It will become active when the next job of this session is dequeued.
-            In progress, accepting new jobs: session is active and accepting new jobs.
-            In progress, not accepting new jobs: session is active and not accepting new jobs.
-            Closed: max_time expired or session was explicitly closed.
-            None: status details are not available.
+            Session status as a string.
+
+            * ``Pending``: Session is created but not active.
+              It will become active when the next job of this session is dequeued.
+            * ``In progress, accepting new jobs``: session is active and accepting new jobs.
+            * ``In progress, not accepting new jobs``: session is active and not accepting new jobs.
+            * ``Closed``: max_time expired or session was explicitly closed.
+            * ``None``: status details are not available.
         """
         details = self.details()
         if details:
@@ -272,20 +274,24 @@ class Session:
         """Return session details.
 
         Returns:
-            A dictionary with the sessions details, including:
-            id: id of the session.
-            backend_name: backend used for the session.
-            interactive_timeout: The maximum idle time (in seconds) between jobs that
-            is allowed to occur before the session is deactivated.
-            max_time: Maximum allowed time (in seconds) for the session, subject to plan limits.
-            active_timeout: The maximum time (in seconds) a session can stay active.
-            state: State of the session - open, active, inactive, or closed.
-            accepting_jobs: Whether or not the session is accepting jobs.
-            last_job_started: Timestamp of when the last job in the session started.
-            last_job_completed: Timestamp of when the last job in the session completed.
-            started_at: Timestamp of when the session was started.
-            closed_at: Timestamp of when the session was closed.
-            activated_at: Timestamp of when the session state was changed to active.
+            A dictionary with the sessions details.
+
+            * ``id``: id of the session.
+            * ``backend_name``: backend used for the session.
+            * ``interactive_timeout``: The maximum idle time (in seconds) between jobs that
+              is allowed to occur before the session is deactivated.
+            * ``max_time``: Maximum allowed time (in seconds) for the session, subject to plan limits.
+            * ``active_timeout``: The maximum time (in seconds) a session can stay active.
+            * ``state``: State of the session - open, active, inactive, or closed.
+            * ``accepting_jobs``: Whether or not the session is accepting jobs.
+            * ``last_job_started``: Timestamp of when the last job in the session started.
+            * ``last_job_completed``: Timestamp of when the last job in the session completed.
+            * ``started_at``: Timestamp of when the session was started.
+            * ``closed_at``: Timestamp of when the session was closed.
+            * ``activated_at``: Timestamp of when the session state was changed to active.
+            * ``mode``: Execution mode of the session.
+            * ``usage_time``: The usage time, in seconds, of this Session or Batch.
+              Usage is defined as the time a quantum system is committed to complete a job.
         """
         if self._session_id and isinstance(self._service, QiskitRuntimeService):
             response = self._service._api_client.session_details(self._session_id)
@@ -303,6 +309,8 @@ class Session:
                     "started_at": response.get("started_at"),
                     "closed_at": response.get("closed_at"),
                     "activated_at": response.get("activated_at"),
+                    "mode": response.get("mode"),
+                    "usage_time": response.get("elapsed_time"),
                 }
         return None
 
@@ -329,7 +337,6 @@ class Session:
         cls,
         session_id: str,
         service: Optional[QiskitRuntimeService] = None,
-        backend: Optional[Union[str, IBMBackend]] = None,
     ) -> "Session":
         """Construct a Session object with a given session_id
 
@@ -337,15 +344,34 @@ class Session:
             session_id: the id of the session to be created. This must be an already
                 existing session id.
             service: instance of the ``QiskitRuntimeService`` class.
-            backend: instance of :class:`qiskit_ibm_runtime.IBMBackend` class or
-                string name of backend.
+                If ``None``, ``QiskitRuntimeService()`` is used to initialize your default saved account.
+
+         Raises:
+            IBMInputValueError: If given `session_id` does not exist.
 
         Returns:
             A new Session with the given ``session_id``
 
         """
-        if backend:
-            deprecate_arguments("backend", "0.15.0", "Sessions do not support multiple backends.")
+        if not service:
+            warnings.warn(
+                (
+                    "The `service` parameter will be required in a future release no sooner than "
+                    "3 months after the release of qiskit-ibm-runtime 0.23.0 ."
+                ),
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            service = QiskitRuntimeService()
+
+        response = service._api_client.session_details(session_id)
+        backend = response.get("backend_name")
+        mode = response.get("mode")
+        class_name = "dedicated" if cls.__name__.lower() == "session" else cls.__name__.lower()
+        if mode != class_name:
+            raise IBMInputValueError(
+                f"Input ID {session_id} has execution mode {mode} instead of {class_name}."
+            )
 
         session = cls(service, backend)
         session._session_id = session_id

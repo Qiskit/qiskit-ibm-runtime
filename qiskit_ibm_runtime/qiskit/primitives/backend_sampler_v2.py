@@ -178,7 +178,7 @@ class BackendSamplerV2(BaseSamplerV2):
             item.creg_name: BitArray(arrays[item.creg_name], item.num_bits) for item in meas_info
         }
         data_bin = data_bin_cls(**meas)
-        return PubResult(data_bin, metadata={})
+        return PubResult(data_bin, metadata=pub.circuit.metadata)
 
 
 def _analyze_circuit(circuit: QuantumCircuit) -> tuple[list[_MeasureInfo], int]:
@@ -187,7 +187,10 @@ def _analyze_circuit(circuit: QuantumCircuit) -> tuple[list[_MeasureInfo], int]:
     for creg in circuit.cregs:
         name = creg.name
         num_bits = creg.size
-        start = circuit.find_bit(creg[0]).index
+        if num_bits != 0:
+            start = circuit.find_bit(creg[0]).index
+        else:
+            start = 0
         meas_info.append(
             _MeasureInfo(
                 creg_name=name,
