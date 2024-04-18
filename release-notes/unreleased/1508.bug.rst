@@ -1,1 +1,0 @@
-Fixed a bug where custom headers were not being sent in the `/jobs` request.

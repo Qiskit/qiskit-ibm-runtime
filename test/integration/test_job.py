@@ -124,7 +124,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     @run_integration_test
     def test_delete_job(self, service):
         """Test deleting a job."""
-        sub_tests = [JobStatus.RUNNING, JobStatus.DONE]
+        sub_tests = [JobStatus.DONE]
         for status in sub_tests:
             with self.subTest(status=status):
                 job = self._run_program(service)

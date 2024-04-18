@@ -1,1 +1,0 @@
-Printing ``Options`` and ``OptionsV2`` will now be formatted as a table.

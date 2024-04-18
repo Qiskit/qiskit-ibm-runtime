@@ -22,6 +22,7 @@ from qiskit.circuit import QuantumCircuit
 from qiskit.primitives import BaseSampler
 from qiskit.primitives.base import BaseSamplerV2
 from qiskit.primitives.containers.sampler_pub import SamplerPub, SamplerPubLike
+from qiskit.providers import BackendV1, BackendV2
 
 from .options import Options
 from .runtime_job import RuntimeJob
@@ -31,6 +32,8 @@ from .base_primitive import BasePrimitiveV1, BasePrimitiveV2
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
+from .batch import Batch
+from .utils.deprecation import deprecate_arguments, issue_deprecation_msg
 from .utils.qctrl import validate as qctrl_validate
 from .utils.qctrl import validate_v2 as qctrl_validate_v2
 from .options import SamplerOptions
@@ -63,13 +66,23 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
 
     def __init__(
         self,
-        backend: Optional[Union[str, IBMBackend]] = None,
+        mode: Optional[Union[BackendV1, BackendV2, Session, Batch, str]] = None,
+        backend: Optional[Union[str, BackendV1, BackendV2]] = None,
         session: Optional[Session] = None,
         options: Optional[Union[Dict, SamplerOptions]] = None,
     ):
         """Initializes the Sampler primitive.
 
         Args:
+            mode: The execution mode used to make the primitive query. It can be:
+
+                * A :class:`Backend` if you are using job mode.
+                * A :class:`Session` if you are using session execution mode.
+                * A :class:`Batch` if you are using batch execution mode.
+
+                Refer to the `Qiskit Runtime documentation <https://docs.quantum.ibm.com/run>`_.
+                for more information about the ``Execution modes``.
+
             backend: Backend to run the primitive. This can be a backend name or an :class:`IBMBackend`
                 instance. If a name is specified, the default account (e.g. ``QiskitRuntimeService()``)
                 is used.
@@ -89,7 +102,29 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
         self.options: SamplerOptions
         BaseSamplerV2.__init__(self)
         Sampler.__init__(self)
-        BasePrimitiveV2.__init__(self, backend=backend, session=session, options=options)
+        if backend:
+            deprecate_arguments(
+                "backend",
+                "0.23.0",
+                "Please use the 'mode' parameter instead.",
+            )
+        if session:
+            deprecate_arguments(
+                "session",
+                "0.23.0",
+                "Please use the 'mode' parameter instead.",
+            )
+        if isinstance(mode, str) or isinstance(backend, str):
+            issue_deprecation_msg(
+                "The backend name as execution mode input has been deprecated.",
+                "0.23.0",
+                "A backend object should be provided instead. Get the backend directly from"
+                " the service using `QiskitRuntimeService().backend('ibm_backend')`",
+                3,
+            )
+        if mode is None:
+            mode = session if backend and session else backend if backend else session
+        BasePrimitiveV2.__init__(self, mode=mode, options=options)
 
     def run(self, pubs: Iterable[SamplerPubLike], *, shots: int | None = None) -> RuntimeJobV2:
         """Submit a request to the sampler primitive.
