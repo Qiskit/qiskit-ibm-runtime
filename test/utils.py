@@ -352,7 +352,8 @@ def submit_and_cancel(backend: IBMBackend, logger: logging.Logger) -> RuntimeJob
         Cancelled job.
     """
     circuit = transpile(bell(), backend=backend)
-    job = backend.run(circuit)
+    sampler = SamplerV2(backend)
+    job = sampler.run([circuit])
     cancel_job_safe(job, logger=logger)
     return job
 
