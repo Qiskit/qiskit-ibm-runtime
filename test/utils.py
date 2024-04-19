@@ -40,6 +40,7 @@ from qiskit_ibm_runtime import (
     SamplerV2,
     SamplerV1,
     EstimatorV1,
+    Batch,
 )
 from qiskit_ibm_runtime.fake_provider import FakeManila
 from qiskit_ibm_runtime.hub_group_project import HubGroupProject
@@ -330,6 +331,15 @@ def get_mocked_session(backend: Any = None) -> mock.MagicMock:
         spec=QiskitRuntimeService
     )
     return session
+
+
+def get_mocked_batch(backend: Any = None) -> mock.MagicMock:
+    """Return a mocked batch object."""
+    batch = mock.MagicMock(spec=Batch)
+    batch._instance = None
+    batch._backend = backend or get_mocked_backend()
+    batch._service = getattr(backend, "service", None) or mock.MagicMock(spec=QiskitRuntimeService)
+    return batch
 
 
 def submit_and_cancel(backend: IBMBackend, logger: logging.Logger) -> RuntimeJob:
