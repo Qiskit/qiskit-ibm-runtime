@@ -82,7 +82,15 @@ jobs:
     strategy:
       matrix:
         python-version: [3.8, 3.9, '3.10', '3.11', '3.12']
-        os: [ "macos-14", "ubuntu-latest", "windows-latest" ]
+        os: 
+          - name: ubuntu-latest:
+            python-versions: [3.8, 3.9, '3.10', '3.11', '3.12']
+          - name: windows-latest:
+            python-versions: [3.8, 3.9, '3.10', '3.11', '3.12']
+          - name: macos-latest:
+            python-versions: ['3.10', '3.11', '3.12']
+          - name: macos-13:
+            python-versions: [3.8, 3.9]
     env:
       LOG_LEVEL: DEBUG
       STREAM_LOG: True
