@@ -24,7 +24,9 @@ from .pec_options import PecOptions
 from .layer_noise_learning_options import LayerNoiseLearningOptions
 
 
-NoiseAmplifierType = Literal["LocalFoldingAmplifier",]
+NoiseAmplifierType = Literal[
+    "LocalFoldingAmplifier",
+]
 ExtrapolatorType = Literal[
     "LinearExtrapolator",
     "QuadraticExtrapolator",
