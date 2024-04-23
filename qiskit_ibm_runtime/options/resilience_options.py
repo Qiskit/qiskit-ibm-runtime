@@ -81,16 +81,16 @@ class ResilienceOptionsV2:
     def _validate_options(self) -> "ResilienceOptionsV2":
         """Validate the model."""
         if not self.measure_mitigation and any(
-            [value != Unset for value in asdict(self.measure_noise_learning).values()]
+            value != Unset for value in asdict(self.measure_noise_learning).values()
         ):
             raise ValueError(
                 "'measure_noise_learning' options are set, but 'measure_mitigation' is not set to True."
             )
 
-        if not self.zne_mitigation and any([value != Unset for value in asdict(self.zne).values()]):
+        if not self.zne_mitigation and any(value != Unset for value in asdict(self.zne).values()):
             raise ValueError("'zne' options are set, but 'zne_mitigation' is not set to True.")
 
-        if not self.pec_mitigation and any([value != Unset for value in asdict(self.pec).values()]):
+        if not self.pec_mitigation and any(value != Unset for value in asdict(self.pec).values()):
             raise ValueError("'pec' options are set, but 'pec_mitigation' is not set to True.")
 
         # Validate not ZNE+PEC
