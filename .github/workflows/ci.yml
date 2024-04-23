@@ -82,7 +82,7 @@ jobs:
     strategy:
       matrix:
         python-version: [3.8, 3.9, '3.10', '3.11', '3.12']
-        os: [ "macos-13", "ubuntu-latest", "windows-latest" ]
+        os: [ "macos-latest", "ubuntu-latest", "windows-latest" ]
         exclude:
           - os: "macos-latest"
             python-version: 3.8
