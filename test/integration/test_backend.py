@@ -21,7 +21,7 @@ from qiskit import QuantumCircuit
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 
 from qiskit_ibm_runtime.ibm_qubit_properties import IBMQubitProperties
-from qiskit_ibm_runtime.exceptions import IBMBackendValueError
+from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 from qiskit_ibm_runtime import QiskitRuntimeService, SamplerV2 as Sampler
 
@@ -282,7 +282,6 @@ class TestIBMBackend(IBMIntegrationTestCase):
         with self.assertRaises(QiskitBackendNotFoundError):
             self.service.backend("nonexistent_backend")
 
-    # TODO do the circuit checks in backend.run need to be in samplerv2?
     def test_too_many_qubits_in_circuit(self):
         """Check error message if circuit contains more qubits than supported on the backend."""
         if self.dependencies.channel == "ibm_cloud":
@@ -290,11 +289,11 @@ class TestIBMBackend(IBMIntegrationTestCase):
         num = len(self.backend.properties().qubits)
         num_qubits = num + 1
         circuit = QuantumCircuit(num_qubits, num_qubits)
-        with self.assertRaises(IBMBackendValueError) as err:
+        with self.assertRaises(IBMInputValueError) as err:
             sampler = Sampler(backend=self.backend)
-            job = sampler.run(circuit)
+            job = sampler.run([circuit])
             job.cancel()
         self.assertIn(
-            f"Circuit contains {num_qubits} qubits, but backend has only {num}.",
+            f"circuit has {num_qubits} qubits but the target system requires {num}",
             str(err.exception),
         )

@@ -50,9 +50,9 @@ class TestIBMJob(IBMIntegrationTestCase):
             quantum_circuit.cx(quantum_register[i], quantum_register[i + 1])
         quantum_circuit.measure(quantum_register, classical_register)
         num_jobs = 4
+        sampler = Sampler(backend=self.sim_backend)
         job_array = [
-            self.sim_backend.run(transpile([quantum_circuit] * 20), shots=2048)
-            for _ in range(num_jobs)
+            sampler.run(transpile([quantum_circuit] * 20), shots=2048) for _ in range(num_jobs)
         ]
         timeout = 30
         start_time = time.time()
@@ -220,7 +220,8 @@ class TestIBMJob(IBMIntegrationTestCase):
 
     def test_retrieve_jobs_order(self):
         """Test retrieving jobs with different orders."""
-        job = self.sim_backend.run(self.bell)
+        sampler = Sampler(backend=self.sim_backend)
+        job = sampler.run([self.bell])
         job.wait_for_final_state()
         newest_jobs = self.service.jobs(
             limit=20,
@@ -261,7 +262,8 @@ class TestIBMJob(IBMIntegrationTestCase):
         if self.dependencies.channel == "ibm_cloud":
             raise SkipTest("Cloud account does not have real backend.")
         backend = most_busy_backend(TestIBMJob.service)
-        job = backend.run(transpile(bell(), backend=backend))
+        sampler = Sampler(backend=backend)
+        job = sampler.run(transpile(bell(), backend=backend))
         try:
             self.assertRaises(RuntimeJobTimeoutError, job.wait_for_final_state, timeout=0.1)
         finally:
@@ -274,22 +276,10 @@ class TestIBMJob(IBMIntegrationTestCase):
         """Test job circuits."""
         self.assertEqual(str(self.bell), str(self.sim_job.inputs["circuits"][0]))
 
-    def test_job_options(self):
-        """Test job options."""
-        run_config = {"shots": 2048, "memory": True}
-        job = self.sim_backend.run(self.bell, **run_config)
-        self.assertLessEqual(run_config.items(), job.inputs.items())
-
-    def test_job_header(self):
-        """Test job header."""
-        custom_header = {"test": "test_job_header"}
-        job = self.sim_backend.run(self.bell, header=custom_header)
-        self.assertEqual(custom_header["test"], job.inputs["header"]["test"])
-        self.assertLessEqual(custom_header.items(), job.inputs["header"].items())
-
     def test_lazy_loading_params(self):
         """Test lazy loading job params."""
-        job = self.sim_backend.run(self.bell)
+        sampler = Sampler(backend=self.sim_backend)
+        job = sampler.run([self.bell])
         job.wait_for_final_state()
 
         rjob = self.service.job(job.job_id())
