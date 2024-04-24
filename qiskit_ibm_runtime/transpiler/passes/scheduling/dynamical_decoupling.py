@@ -34,6 +34,7 @@ except ImportError:
     from qiskit.synthesis import OneQubitEulerDecomposer
 
 from .block_base_padder import BlockBasePadder
+from .utils import BlockOrderingCallableType
 
 
 class PadDynamicalDecoupling(BlockBasePadder):
@@ -127,6 +128,7 @@ class PadDynamicalDecoupling(BlockBasePadder):
         alt_spacings: Optional[Union[List[List[float]], List[float]]] = None,
         schedule_idle_qubits: bool = False,
         dd_barrier: Optional[str] = None,
+        block_ordering_callable: Optional[BlockOrderingCallableType] = None,
     ):
         """Dynamical decoupling initializer.
 
@@ -184,6 +186,8 @@ class PadDynamicalDecoupling(BlockBasePadder):
                 for execution on large backends.
             dd_barrier: only apply DD to delays terminating with a barrier
                 whose label contains the specified string
+            block_ordering_callable: A callable used to produce an ordering of the nodes to minimize the
+                number of blocks needed. If not provided, :func:`~block_order_op_nodes` will be used.
         Raises:
             TranspilerError: When invalid DD sequence is specified.
             TranspilerError: When pulse gate with the duration which is
@@ -191,7 +195,10 @@ class PadDynamicalDecoupling(BlockBasePadder):
             TranspilerError: When the coupling map is not supported (i.e., if degree > 3)
         """
 
-        super().__init__(schedule_idle_qubits=schedule_idle_qubits)
+        super().__init__(
+            schedule_idle_qubits=schedule_idle_qubits,
+            block_ordering_callable=block_ordering_callable,
+        )
         self._durations = durations
 
         # Enforce list of DD sequences
@@ -414,6 +421,10 @@ class PadDynamicalDecoupling(BlockBasePadder):
                 block_idx, t_start, Delay(time_interval, self._block_dag.unit), qubit
             )
             return
+
+        if not self._skip_reset_qubits and qubit not in self._dirty_qubits:
+            # mark all qubits as dirty if skip_reset_qubits is False
+            self._dirty_qubits.update([qubit])
 
         if (
             not isinstance(prev_node, DAGInNode)

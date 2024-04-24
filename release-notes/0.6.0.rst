@@ -1,0 +1,29 @@
+0.6.0
+=====
+
+Upgrade Notes
+-------------
+
+-  When migrating from ``qiskit-ibmq-provider`` your ``ibm_quantum``
+   channel credentials will get automatically copied over from the
+   qiskitrc file and a qiskit-ibm.json file will get created if one
+   doesn’t exist. You have to just initialize
+   `QiskitRuntimeService <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService>`__
+   class without passing any parameters to use this copied over default
+   ``ibm_quantum`` account.
+
+   Ex:
+
+   .. code:: python
+
+      from qiskit_ibm_runtime import QiskitRuntimeService
+      service = QiskitRuntimeService()
+
+-  ``IBMEstimator`` class which was deprecated earlier is now removed.
+   Use `Estimator <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Estimator>`__ class going
+   forward.
+
+-  ``IBMRuntimeService`` class which was deprecated earlier is now
+   removed. Use
+   `QiskitRuntimeService <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService>`__
+   class going forward.

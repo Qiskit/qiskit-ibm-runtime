@@ -25,6 +25,8 @@ from qiskit.circuit.library.standard_gates import (
     ECRGate,
     CZGate,
 )
+from qiskit.circuit.controlflow import CONTROL_FLOW_OP_NAMES
+from qiskit.circuit import IfElseOp, WhileLoopOp, ForLoopOp, SwitchCaseOp
 from qiskit.circuit.parameter import Parameter
 from qiskit.circuit.delay import Delay
 from qiskit.circuit.gate import Gate
@@ -56,11 +58,17 @@ def convert_to_target(
         "reset": Reset(),
         "ecr": ECRGate(),
         "cz": CZGate(),
+        "if_else": IfElseOp,
+        "while_loop": WhileLoopOp,
+        "for_loop": ForLoopOp,
+        "switch_case": SwitchCaseOp,
     }
     custom_gates = {}
     target = None
+    faulty_qubits = set()
     # Parse from properties if it exists
     if properties is not None:
+        faulty_qubits = set(properties.faulty_qubits())
         qubit_properties = qubit_props_list_from_props(properties=properties)
         target = Target(num_qubits=configuration.n_qubits, qubit_properties=qubit_properties)
         # Parse instructions
@@ -128,11 +136,12 @@ def convert_to_target(
         target.min_length = configuration.timing_constraints.get("min_length")
         target.pulse_alignment = configuration.timing_constraints.get("pulse_alignment")
         target.acquire_alignment = configuration.timing_constraints.get("acquire_alignment")
+    supported_instructions = set(getattr(configuration, "supported_instructions", []))
+    control_flow_ops = CONTROL_FLOW_OP_NAMES.intersection(supported_instructions)
+    for op in control_flow_ops:
+        target.add_instruction(name_mapping[op], name=op)
     # If pulse defaults exists use that as the source of truth
     if defaults is not None:
-        faulty_qubits = set()
-        if properties is not None:
-            faulty_qubits = set(properties.faulty_qubits())
         inst_map = defaults.instruction_schedule_map
         for inst in inst_map.instructions:
             for qarg in inst_map.qubits_with_instruction(inst):
@@ -151,11 +160,11 @@ def convert_to_target(
                         if any(qubit in faulty_qubits for qubit in qarg):
                             continue
                         target[inst][qarg].calibration = sched
-        if "delay" not in target:
-            target.add_instruction(
-                Delay(Parameter("t")),
-                {(bit,): None for bit in range(target.num_qubits) if bit not in faulty_qubits},
-            )
+    if "delay" not in target:
+        target.add_instruction(
+            Delay(Parameter("t")),
+            {(bit,): None for bit in range(target.num_qubits) if bit not in faulty_qubits},
+        )
     return target
 
 

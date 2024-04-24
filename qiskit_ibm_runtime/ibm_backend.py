@@ -59,6 +59,7 @@ from .utils.backend_decoder import (
     defaults_from_server_data,
     properties_from_server_data,
 )
+from .utils.deprecation import issue_deprecation_msg
 from .utils.options import QASM2Options, QASM3Options
 from .api.exceptions import RequestsApiError
 from .utils import local_to_utc, are_circuits_dynamic
@@ -337,6 +338,7 @@ class IBMBackend(Backend):
 
     def target_history(self, datetime: Optional[python_datetime] = None) -> Target:
         """A :class:`qiskit.transpiler.Target` object for the backend.
+
         Returns:
             Target with properties found on `datetime`
         """
@@ -612,18 +614,17 @@ class IBMBackend(Backend):
                 If specified, ``init_num_resets`` is ignored. Applicable only if ``dynamic=True``
                 is specified.
             init_num_resets: The number of qubit resets to insert before each circuit execution.
-
-            The following parameters are applicable only if ``dynamic=False`` is specified or
-            defaulted to.
-
             header: User input that will be attached to the job and will be
                 copied to the corresponding result header. Headers do not affect the run.
-                This replaces the old ``Qobj`` header.
+                This replaces the old ``Qobj`` header. This parameter is applicable only
+                if ``dynamic=False`` is specified or defaulted to.
             shots: Number of repetitions of each circuit, for sampling. Default: 4000
                 or ``max_shots`` from the backend configuration, whichever is smaller.
+                This parameter is applicable only if ``dynamic=False`` is specified or defaulted to.
             memory: If ``True``, per-shot measurement bitstrings are returned as well
                 (provided the backend supports it). For OpenPulse jobs, only
-                measurement level 2 supports this option.
+                measurement level 2 supports this option. This parameter is applicable only if
+                ``dynamic=False`` is specified or defaulted to.
             meas_level: Level of the measurement output for pulse experiments. See
                 `OpenPulse specification <https://arxiv.org/pdf/1809.03452.pdf>`_ for details:
 
@@ -632,28 +633,36 @@ class IBMBackend(Backend):
                   measurement kernel to the measurement output signal)
                 * ``2`` (default), a discriminator is selected and the qubit state is stored (0 or 1)
 
+                This parameter is applicable only if ``dynamic=False`` is specified or defaulted to.
             meas_return: Level of measurement data for the backend to return. For ``meas_level`` 0 and 1:
 
                 * ``single`` returns information from every shot.
                 * ``avg`` returns average measurement output (averaged over number of shots).
 
+                This parameter is applicable only if ``dynamic=False`` is specified or defaulted to.
             rep_delay: Delay between primitives in seconds. Only supported on certain
                 backends (if ``backend.configuration().dynamic_reprate_enabled=True``).
                 If supported, ``rep_delay`` must be from the range supplied
                 by the backend (``backend.configuration().rep_delay_range``). Default is given by
-                ``backend.configuration().default_rep_delay``.
+                ``backend.configuration().default_rep_delay``. This parameter is applicable only if
+                ``dynamic=False`` is specified or defaulted to.
             init_qubits: Whether to reset the qubits to the ground state for each shot.
-                Default: ``True``.
+                Default: ``True``. This parameter is applicable only if ``dynamic=False`` is specified
+                or defaulted to.
             use_measure_esp: Whether to use excited state promoted (ESP) readout for measurements
                 which are the terminal instruction to a qubit. ESP readout can offer higher fidelity
                 than standard measurement sequences. See
                 `here <https://arxiv.org/pdf/2008.08571.pdf>`_.
                 Default: ``True`` if backend supports ESP readout, else ``False``. Backend support
                 for ESP readout is determined by the flag ``measure_esp_enabled`` in
-                ``backend.configuration()``.
-            noise_model: Noise model. (Simulators only)
-            seed_simulator: Random seed to control sampling. (Simulators only)
-            **run_config: Extra arguments used to configure the run.
+                ``backend.configuration()``. This parameter is applicable only if ``dynamic=False`` is
+                specified or defaulted to.
+            noise_model: Noise model (Simulators only). This parameter is applicable
+                only if ``dynamic=False`` is specified or defaulted to.
+            seed_simulator: Random seed to control sampling (Simulators only). This parameter
+                is applicable only if ``dynamic=False`` is specified or defaulted to.
+            **run_config: Extra arguments used to configure the run. This parameter is applicable
+                only if ``dynamic=False`` is specified or defaulted to.
 
         Returns:
             The job to be executed.
@@ -668,6 +677,13 @@ class IBMBackend(Backend):
                 - If ESP readout is used and the backend does not support this.
         """
         # pylint: disable=arguments-differ
+        issue_deprecation_msg(
+            msg="backend.run() and related sessions methods are deprecated ",
+            version="0.23",
+            remedy="More details can be found in the primitives migration "
+            "guide https://docs.quantum.ibm.com/api/migration-guides/qiskit-runtime.",
+            period="6 months",
+        )
         validate_job_tags(job_tags)
         if not isinstance(circuits, List):
             circuits = [circuits]
@@ -822,6 +838,13 @@ class IBMBackend(Backend):
 
     def open_session(self, max_time: Optional[Union[int, str]] = None) -> ProviderSession:
         """Open session"""
+        issue_deprecation_msg(
+            msg="backend.run() and related sessions methods are deprecated ",
+            version="0.23",
+            remedy="More details can be found in the primitives migration guide "
+            "https://docs.quantum.ibm.com/api/migration-guides/qiskit-runtime.",
+            period="6 months",
+        )
         if not self._configuration.simulator:
             new_session = self._service._api_client.create_session(
                 self.name, self._instance, max_time, self._service.channel
@@ -834,10 +857,24 @@ class IBMBackend(Backend):
     @property
     def session(self) -> ProviderSession:
         """Return session"""
+        issue_deprecation_msg(
+            msg="backend.run() and related sessions methods are deprecated ",
+            version="0.23",
+            remedy="More details can be found in the primitives migration "
+            "guide https://docs.quantum.ibm.com/api/migration-guides/qiskit-runtime.",
+            period="6 months",
+        )
         return self._session
 
     def cancel_session(self) -> None:
         """Cancel session. All pending jobs will be cancelled."""
+        issue_deprecation_msg(
+            msg="backend.run() and related sessions methods are deprecated ",
+            version="0.23",
+            remedy="More details can be found in the primitives migration "
+            "guide https://docs.quantum.ibm.com/api/migration-guides/qiskit-runtime.",
+            period="6 months",
+        )
         if self._session:
             self._session.cancel()
             if self._session.session_id:
@@ -849,6 +886,13 @@ class IBMBackend(Backend):
         """Close the session so new jobs will no longer be accepted, but existing
         queued or running jobs will run to completion. The session will be terminated once there
         are no more pending jobs."""
+        issue_deprecation_msg(
+            msg="backend.run() and related sessions methods are deprecated ",
+            version="0.23",
+            remedy="More details can be found in the primitives migration "
+            "guide https://docs.quantum.ibm.com/api/migration-guides/qiskit-runtime.",
+            period="6 months",
+        )
         if self._session:
             self._session.cancel()
             if self._session.session_id:

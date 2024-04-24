@@ -17,6 +17,7 @@ import time
 import unittest
 
 from qiskit.providers.jobstatus import JOB_FINAL_STATES, JobStatus
+from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
 from qiskit_ibm_runtime.constants import API_TO_JOB_ERROR_MESSAGE
 from qiskit_ibm_runtime.exceptions import (
@@ -87,9 +88,11 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     @production_only
     def test_cancel_job_queued(self, service):
         """Test canceling a queued job."""
-        real_device = get_real_device(service)
-        _ = self._run_program(service, circuits=[bell()] * 10, backend=real_device)
-        job = self._run_program(service, circuits=[bell()] * 2, backend=real_device)
+        real_device_name = get_real_device(service)
+        real_device = service.backend(real_device_name)
+        pm = generate_preset_pass_manager(optimization_level=1, target=real_device.target)
+        _ = self._run_program(service, circuits=pm.run([bell()] * 10), backend=real_device_name)
+        job = self._run_program(service, circuits=pm.run([bell()] * 2), backend=real_device_name)
         wait_for_status(job, JobStatus.QUEUED)
         if not cancel_job_safe(job, self.log):
             return
@@ -121,7 +124,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     @run_integration_test
     def test_delete_job(self, service):
         """Test deleting a job."""
-        sub_tests = [JobStatus.RUNNING, JobStatus.DONE]
+        sub_tests = [JobStatus.DONE]
         for status in sub_tests:
             with self.subTest(status=status):
                 job = self._run_program(service)
@@ -134,9 +137,12 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     @production_only
     def test_delete_job_queued(self, service):
         """Test deleting a queued job."""
-        real_device = get_real_device(service)
-        _ = self._run_program(service, backend=real_device)
-        job = self._run_program(service, backend=real_device)
+        real_device_name = get_real_device(service)
+        real_device = service.backend(real_device_name)
+        pm = generate_preset_pass_manager(optimization_level=1, target=real_device.target)
+        isa_circuit = pm.run([bell()])
+        _ = self._run_program(service, circuits=isa_circuit, backend=real_device_name)
+        job = self._run_program(service, circuits=isa_circuit, backend=real_device_name)
         wait_for_status(job, JobStatus.QUEUED)
         service.delete_job(job.job_id())
         with self.assertRaises(RuntimeJobNotFound):

@@ -40,8 +40,14 @@ from .converters import (
     local_to_utc,
     seconds_to_duration,
     duration_difference,
-    are_circuits_dynamic,
 )
-from .utils import to_python_identifier, is_crn, get_runtime_api_base_url, resolve_crn
+from .utils import (
+    to_python_identifier,
+    is_crn,
+    get_runtime_api_base_url,
+    resolve_crn,
+    are_circuits_dynamic,
+    validate_no_dd_with_dynamic_circuits,
+)
 from .json import RuntimeEncoder, RuntimeDecoder, to_base64_string
 from . import pubsub

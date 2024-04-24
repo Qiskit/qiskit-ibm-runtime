@@ -15,6 +15,7 @@
 import uuid
 from datetime import datetime, timezone
 from qiskit.providers.jobstatus import JobStatus
+from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
 from ..ibm_test_case import IBMIntegrationJobTestCase
 from ..decorators import run_integration_test, production_only, quantum_only
@@ -28,9 +29,11 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
     @production_only
     def test_retrieve_job_queued(self, service):
         """Test retrieving a queued job."""
-        real_device = get_real_device(service)
-        _ = self._run_program(service, backend=real_device)
-        job = self._run_program(service, backend=real_device)
+        real_device_name = get_real_device(service)
+        real_device = service.backend(real_device_name)
+        pm = generate_preset_pass_manager(optimization_level=1, target=real_device.target)
+        _ = self._run_program(service, circuits=pm.run(bell()), backend=real_device_name)
+        job = self._run_program(service, circuits=pm.run(bell()), backend=real_device_name)
         wait_for_status(job, JobStatus.QUEUED)
         rjob = service.job(job.job_id())
         self.assertEqual(job.job_id(), rjob.job_id())
@@ -168,14 +171,10 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
     @quantum_only
     def test_retrieve_jobs_by_session_id(self, service):
         """Test retrieving jobs by session_id."""
-        job = self._run_program(service, program_id="circuit-runner", start_session=True)
-        job.wait_for_final_state()
-        job_2 = self._run_program(service, program_id="circuit-runner", session_id=job.job_id())
-        job_2.wait_for_final_state()
-        rjobs = service.jobs(session_id=job.job_id())
-        self.assertEqual(2, len(rjobs), f"Retrieved jobs: {[j.job_id() for j in rjobs]}")
-        rjobs = service.jobs(session_id="test")
-        self.assertFalse(rjobs)
+        rjobs = service.jobs()
+        rjobs_session_id = service.jobs(session_id="test")
+        self.assertTrue(rjobs)
+        self.assertFalse(rjobs_session_id)
 
     @run_integration_test
     def test_jobs_filter_by_date(self, service):

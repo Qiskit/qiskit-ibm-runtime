@@ -32,7 +32,7 @@ from qiskit.dagcircuit import DAGCircuit, DAGNode, DAGOpNode
 from qiskit.transpiler.basepasses import TransformationPass
 from qiskit.transpiler.exceptions import TranspilerError
 
-from .utils import block_order_op_nodes
+from .utils import block_order_op_nodes, BlockOrderingCallableType
 
 
 class BlockBasePadder(TransformationPass):
@@ -62,7 +62,12 @@ class BlockBasePadder(TransformationPass):
     which may result in violation of hardware alignment constraints.
     """
 
-    def __init__(self, schedule_idle_qubits: bool = False) -> None:
+    def __init__(
+        self,
+        schedule_idle_qubits: bool = False,
+        block_ordering_callable: Optional[BlockOrderingCallableType] = None,
+    ) -> None:
+
         self._node_start_time = None
         self._node_block_dags = None
         self._idle_after: Optional[Dict[Qubit, int]] = None
@@ -86,6 +91,12 @@ class BlockBasePadder(TransformationPass):
         # Qubits that are dirty in the circuit.
         self._schedule_idle_qubits = schedule_idle_qubits
         self._idle_qubits: Set[Qubit] = set()
+
+        # Block ordering callable
+        self._block_ordering_callable = (
+            block_order_op_nodes if block_ordering_callable is None else block_ordering_callable
+        )
+
         super().__init__()
 
     def run(self, dag: DAGCircuit) -> DAGCircuit:
@@ -346,7 +357,7 @@ class BlockBasePadder(TransformationPass):
         self._block_duration = 0
         self._conditional_block = False
 
-        for node in block_order_op_nodes(block):
+        for node in self._block_ordering_callable(block):
             enable_dd_node = False
             # add DD if node is a named barrier
             if (
@@ -363,6 +374,7 @@ class BlockBasePadder(TransformationPass):
         prev_block_duration = self._block_duration
         prev_block_idx = self._current_block_idx
         self._terminate_block(self._block_duration, self._current_block_idx)
+        new_block_dag.duration = prev_block_duration
 
         # Edge-case: Add a barrier if the final node is a fast-path
         if self._prev_node in self._fast_path_nodes:

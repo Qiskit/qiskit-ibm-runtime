@@ -12,22 +12,20 @@
 
 """Tests for primitive classes."""
 
-import sys
 import copy
 import os
 from unittest.mock import MagicMock, patch
 from dataclasses import asdict
 from typing import Dict
-import warnings
 
 from ddt import data, ddt
 from qiskit import transpile, pulse
-from qiskit.circuit import QuantumCircuit
+from qiskit.circuit import QuantumCircuit, QuantumRegister, ClassicalRegister
 from qiskit.pulse.library import Gaussian
 from qiskit.quantum_info import SparsePauliOp
-from qiskit.providers.models.backendconfiguration import QasmBackendConfiguration
+from qiskit_aer.noise import NoiseModel
 
-from qiskit_ibm_runtime.fake_provider import FakeManila
+from qiskit_ibm_runtime.fake_provider import FakeManila, FakeSherbrooke
 from qiskit_ibm_runtime import (
     Sampler,
     Estimator,
@@ -36,6 +34,7 @@ from qiskit_ibm_runtime import (
 )
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.utils.default_session import _DEFAULT_SESSION
+from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import (
@@ -45,6 +44,7 @@ from ..utils import (
     create_faulty_backend,
     bell,
     get_mocked_backend,
+    get_primitive_inputs,
 )
 
 
@@ -82,17 +82,18 @@ class TestPrimitives(IBMTestCase):
             {"transpilation": {}},
         ]
         primitives = [Sampler, Estimator]
+        backend = get_mocked_backend()
         for cls in primitives:
             for options in options_vars:
                 with self.subTest(primitive=cls, options=options):
-                    inst = cls(session=MagicMock(spec=MockSession), options=options)
+                    inst = cls(backend=backend, options=options)
                     expected = asdict(Options())
                     self._update_dict(expected, copy.deepcopy(options))
                     self.assertDictEqual(expected, inst.options.__dict__)
 
     def test_runtime_options(self):
         """Test RuntimeOptions specified as primitive options."""
-        session = MagicMock(spec=MockSession)
+        backend = get_mocked_backend()
         primitives = [Sampler, Estimator]
         env_vars = [
             {"log_level": "DEBUG"},
@@ -102,51 +103,46 @@ class TestPrimitives(IBMTestCase):
             for env in env_vars:
                 with self.subTest(primitive=cls, env=env):
                     options = Options(environment=env)
-                    inst = cls(session=session, options=options)
-                    inst.run(self.qx, observables=self.obs)
-                    if sys.version_info >= (3, 8):
-                        run_options = session.run.call_args.kwargs["options"]
-                    else:
-                        _, kwargs = session.run.call_args
-                        run_options = kwargs["options"]
+                    inst = cls(backend=backend, options=options)
+                    inst.run(**get_primitive_inputs(inst, backend=backend))
+                    run_options = backend.service.run.call_args.kwargs["options"]
                     for key, val in env.items():
                         self.assertEqual(run_options[key], val)
 
     def test_options_copied(self):
         """Test modifying original options does not affect primitives."""
+        backend = get_mocked_backend()
         options = Options()
         primitives = [Sampler, Estimator]
         for cls in primitives:
             with self.subTest(primitive=cls):
                 options.transpilation.skip_transpilation = True
-                inst = cls(session=MagicMock(spec=MockSession), options=options)
+                inst = cls(backend=backend, options=options)
                 options.transpilation.skip_transpilation = False
                 self.assertTrue(inst.options.get("transpilation").get("skip_transpilation"))
 
-    def test_init_with_backend_str(self):
+    @data(Sampler, Estimator)
+    def test_init_with_backend_str(self, primitive):
         """Test initializing a primitive with a backend name."""
-        primitives = [Sampler, Estimator]
         backend_name = "ibm_gotham"
+        mock_backend = get_mocked_backend(name=backend_name)
+        mock_service_inst = mock_backend.service
 
-        for cls in primitives:
-            with self.subTest(primitive=cls), patch(
-                "qiskit_ibm_runtime.base_primitive.QiskitRuntimeService"
-            ) as mock_service:
-                mock_service.reset_mock()
-                mock_service_inst = MagicMock()
-                mock_service.return_value = mock_service_inst
-                mock_backend = MagicMock()
-                mock_backend.name = backend_name
-                mock_service.global_service = None
-                mock_service_inst.backend.return_value = mock_backend
+        class MockQRTService:
+            """Mock class used to create a new QiskitRuntimeService."""
 
-                inst = cls(backend=backend_name)
-                mock_service.assert_called_once()
-                self.assertIsNone(inst.session)
-                inst.run(self.qx, observables=self.obs)
-                mock_service_inst.run.assert_called_once()
-                runtime_options = mock_service_inst.run.call_args.kwargs["options"]
-                self.assertEqual(runtime_options["backend"], backend_name)
+            global_service = None
+
+            def __new__(cls, *args, **kwargs):  # pylint: disable=unused-argument
+                return mock_service_inst
+
+        with patch("qiskit_ibm_runtime.base_primitive.QiskitRuntimeService", new=MockQRTService):
+            inst = primitive(backend=backend_name)
+            self.assertIsNone(inst.session)
+            inst.run(self.qx, observables=self.obs)
+            mock_service_inst.run.assert_called_once()
+            runtime_options = mock_service_inst.run.call_args.kwargs["options"]
+            self.assertEqual(runtime_options["backend"], mock_backend)
 
     def test_init_with_session_backend_str(self):
         """Test initializing a primitive with a backend name using session."""
@@ -165,22 +161,18 @@ class TestPrimitives(IBMTestCase):
     def test_init_with_backend_instance(self):
         """Test initializing a primitive with a backend instance."""
         primitives = [Sampler, Estimator]
-        service = MagicMock()
-        model_backend = FakeManila()
-        backend = IBMBackend(
-            configuration=model_backend.configuration(), service=service, api_client=MagicMock()
-        )
-        backend.name = "ibm_gotham"
+        backend = get_mocked_backend()
+        service = backend.service
 
         for cls in primitives:
             with self.subTest(primitive=cls):
                 service.reset_mock()
                 inst = cls(backend=backend)
                 self.assertIsNone(inst.session)
-                inst.run(self.qx, observables=self.obs)
+                inst.run(**get_primitive_inputs(inst))
                 service.run.assert_called_once()
                 runtime_options = service.run.call_args.kwargs["options"]
-                self.assertEqual(runtime_options["backend"], backend.name)
+                self.assertEqual(runtime_options["backend"], backend)
 
                 with self.assertRaises(ValueError) as exc:
                     inst = cls(session=backend)
@@ -192,13 +184,15 @@ class TestPrimitives(IBMTestCase):
         primitives = [Sampler, Estimator]
         session = MagicMock(spec=MockSession)
         backend_name = "ibm_gotham"
+        backend = get_mocked_backend(backend_name)
+        session._backend = backend
 
         for cls in primitives:
             with self.subTest(primitive=cls):
                 session.reset_mock()
                 inst = cls(session=session, backend=backend_name)
                 self.assertIsNotNone(inst.session)
-                inst.run(self.qx, observables=self.obs)
+                inst.run(**get_primitive_inputs(inst, backend=backend))
                 session.run.assert_called_once()
 
     def test_init_with_no_backend_session_cloud(self):
@@ -232,39 +226,33 @@ class TestPrimitives(IBMTestCase):
 
     def test_default_session_context_manager(self):
         """Test getting default session within context manager."""
-        service = MagicMock()
-        backend = "ibm_gotham"
+        # service = MagicMock()
+        backend_name = "ibm_gotham"
+        backend = get_mocked_backend(backend_name)
         primitives = [Sampler, Estimator]
 
         for cls in primitives:
             with self.subTest(primitive=cls):
-                with Session(service=service, backend=backend) as session:
+                with Session(service=backend.service, backend=backend_name) as session:
                     inst = cls()
                     self.assertEqual(inst.session, session)
-                    self.assertEqual(inst.session.backend(), backend)
+                    self.assertEqual(inst.session.backend(), backend_name)
 
     def test_default_session_cm_new_backend(self):
         """Test using a different backend within context manager."""
-        cm_backend = "ibm_metropolis"
+        cm_backend_name = "ibm_metropolis"
         primitives = [Sampler, Estimator]
-        model_backend = FakeManila()
         for cls in primitives:
             with self.subTest(primitive=cls):
-                service = MagicMock()
-                backend = IBMBackend(
-                    configuration=model_backend.configuration(),
-                    service=service,
-                    api_client=MagicMock(),
-                )
-                backend.name = "ibm_gotham"
-
-                with Session(service=service, backend=cm_backend):
+                backend_name = "ibm_gotham"
+                backend = get_mocked_backend(name=backend_name)
+                with Session(service=backend.service, backend=cm_backend_name):
                     inst = cls(backend=backend)
                     self.assertIsNone(inst.session)
-                    inst.run(self.qx, observables=self.obs)
-                    service.run.assert_called_once()
-                    runtime_options = service.run.call_args.kwargs["options"]
-                    self.assertEqual(runtime_options["backend"], backend.name)
+                    inst.run(**get_primitive_inputs(inst, backend=backend))
+                    backend.service.run.assert_called_once()
+                    runtime_options = backend.service.run.call_args.kwargs["options"]
+                    self.assertEqual(runtime_options["backend"], backend)
 
     def test_no_session(self):
         """Test running without session."""
@@ -288,7 +276,7 @@ class TestPrimitives(IBMTestCase):
 
     def test_run_default_options(self):
         """Test run using default options."""
-        session = MagicMock(spec=MockSession)
+        backend = get_mocked_backend()
         options_vars = [
             (Options(resilience_level=1), {"resilience_settings": {"level": 1}}),
             (
@@ -310,29 +298,21 @@ class TestPrimitives(IBMTestCase):
         for cls in primitives:
             for options, expected in options_vars:
                 with self.subTest(primitive=cls, options=options):
-                    inst = cls(session=session, options=options)
-                    inst.run(self.qx, observables=self.obs)
-                    if sys.version_info >= (3, 8):
-                        inputs = session.run.call_args.kwargs["inputs"]
-                    else:
-                        _, kwargs = session.run.call_args
-                        inputs = kwargs["inputs"]
+                    inst = cls(backend=backend, options=options)
+                    inst.run(**get_primitive_inputs(inst, backend=backend))
+                    inputs = backend.service.run.call_args.kwargs["inputs"]
                     self._assert_dict_partially_equal(inputs, expected)
 
     def test_run_updated_default_options(self):
         """Test run using updated default options."""
-        session = MagicMock(spec=MockSession)
+        backend = get_mocked_backend()
         primitives = [Sampler, Estimator]
         for cls in primitives:
             with self.subTest(primitive=cls):
-                inst = cls(session=session)
+                inst = cls(backend=backend)
                 inst.set_options(resilience_level=1, optimization_level=2, shots=99)
-                inst.run(self.qx, observables=self.obs)
-                if sys.version_info >= (3, 8):
-                    inputs = session.run.call_args.kwargs["inputs"]
-                else:
-                    _, kwargs = session.run.call_args
-                    inputs = kwargs["inputs"]
+                inst.run(**get_primitive_inputs(inst, backend))
+                inputs = backend.service.run.call_args.kwargs["inputs"]
                 self._assert_dict_partially_equal(
                     inputs,
                     {
@@ -344,7 +324,7 @@ class TestPrimitives(IBMTestCase):
 
     def test_run_overwrite_options(self):
         """Test run using overwritten options."""
-        session = MagicMock(spec=MockSession)
+        backend = get_mocked_backend()
         options_vars = [
             ({"resilience_level": 1}, {"resilience_settings": {"level": 1}}),
             ({"shots": 200}, {"run_options": {"shots": 200}}),
@@ -366,19 +346,15 @@ class TestPrimitives(IBMTestCase):
         for cls in primitives:
             for options, expected in options_vars:
                 with self.subTest(primitive=cls, options=options):
-                    inst = cls(session=session)
-                    inst.run(self.qx, observables=self.obs, **options)
-                    if sys.version_info >= (3, 8):
-                        inputs = session.run.call_args.kwargs["inputs"]
-                    else:
-                        _, kwargs = session.run.call_args
-                        inputs = kwargs["inputs"]
+                    inst = cls(backend=backend)
+                    inst.run(**get_primitive_inputs(inst, backend), **options)
+                    inputs = backend.service.run.call_args.kwargs["inputs"]
                     self._assert_dict_partially_equal(inputs, expected)
                     self.assertDictEqual(inst.options.__dict__, asdict(Options()))
 
     def test_run_overwrite_runtime_options(self):
         """Test run using overwritten runtime options."""
-        session = MagicMock(spec=MockSession)
+        backend = get_mocked_backend()
         options_vars = [
             {"log_level": "DEBUG"},
             {"job_tags": ["foo", "bar"]},
@@ -389,40 +365,32 @@ class TestPrimitives(IBMTestCase):
         for cls in primitives:
             for options in options_vars:
                 with self.subTest(primitive=cls, options=options):
-                    inst = cls(session=session)
-                    inst.run(self.qx, observables=self.obs, **options)
-                    if sys.version_info >= (3, 8):
-                        rt_options = session.run.call_args.kwargs["options"]
-                    else:
-                        _, kwargs = session.run.call_args
-                        rt_options = kwargs["options"]
+                    inst = cls(backend=backend)
+                    inst.run(**get_primitive_inputs(inst, backend), **options)
+                    rt_options = backend.service.run.call_args.kwargs["options"]
                     self._assert_dict_partially_equal(rt_options, options)
 
     def test_run_kwarg_options(self):
         """Test specifying arbitrary options in run."""
-        session = MagicMock(spec=MockSession)
+        backend = get_mocked_backend()
         primitives = [Sampler, Estimator]
         for cls in primitives:
             with self.subTest(primitive=cls):
-                inst = cls(session=session)
-                inst.run(self.qx, observables=self.obs, foo="foo")
-                if sys.version_info >= (3, 8):
-                    inputs = session.run.call_args.kwargs["inputs"]
-                else:
-                    _, kwargs = session.run.call_args
-                    inputs = kwargs["inputs"]
+                inst = cls(backend=backend)
+                inst.run(**get_primitive_inputs(inst, backend), foo="foo")
+                inputs = backend.service.run.call_args.kwargs["inputs"]
                 self.assertEqual(inputs.get("foo"), "foo")
 
     def test_run_multiple_different_options(self):
         """Test multiple runs with different options."""
-        session = MagicMock(spec=MockSession)
+        backend = get_mocked_backend()
         primitives = [Sampler, Estimator]
         for cls in primitives:
             with self.subTest(primitive=cls):
-                inst = cls(session=session)
-                inst.run(self.qx, observables=self.obs, shots=100)
-                inst.run(self.qx, observables=self.obs, shots=200)
-                kwargs_list = session.run.call_args_list
+                inst = cls(backend=backend)
+                inst.run(**get_primitive_inputs(inst, backend), shots=100)
+                inst.run(**get_primitive_inputs(inst, backend), shots=200)
+                kwargs_list = backend.service.run.call_args_list
                 for idx, shots in zip([0, 1], [100, 200]):
                     self.assertEqual(kwargs_list[idx][1]["inputs"]["run_options"]["shots"], shots)
                 self.assertDictEqual(inst.options.__dict__, asdict(Options()))
@@ -431,12 +399,12 @@ class TestPrimitives(IBMTestCase):
         """Test multiple runs within a session."""
         num_runs = 5
         primitives = [Sampler, Estimator]
-        session = MagicMock(spec=MockSession)
+        backend = get_mocked_backend()
         for idx in range(num_runs):
             cls = primitives[idx % 2]
-            inst = cls(session=session)
-            inst.run(self.qx, observables=self.obs)
-        self.assertEqual(session.run.call_count, num_runs)
+            inst = cls(backend=backend)
+            inst.run(**get_primitive_inputs(inst, backend))
+        self.assertEqual(backend.service.run.call_count, num_runs)
 
     def test_set_options(self):
         """Test set options."""
@@ -446,12 +414,12 @@ class TestPrimitives(IBMTestCase):
             ({"optimization_level": 3, "shots": 200}, Options()),
         ]
 
-        session = MagicMock(spec=MockSession)
+        backend = get_mocked_backend()
         primitives = [Sampler, Estimator]
         for cls in primitives:
             for new_opt, new_str in new_options:
                 with self.subTest(primitive=cls, new_opt=new_opt):
-                    inst = cls(session=session, options=options)
+                    inst = cls(backend=backend, options=options)
                     inst.set_options(**new_opt)
                     # Make sure the values are equal.
                     inst_options = inst.options.__dict__
@@ -485,13 +453,13 @@ class TestPrimitives(IBMTestCase):
         expected_list[4].execution.shots = 100
         expected_list[4].resilience.noise_factors = (0, 2, 4)
 
-        session = MagicMock(spec=MockSession)
+        backend = get_mocked_backend()
         primitives = [Sampler, Estimator]
         for cls in primitives:
             for opts, expected in zip(options_dicts, expected_list):
                 with self.subTest(primitive=cls, options=opts):
-                    inst1 = cls(session=session, options=opts)
-                    inst2 = cls(session=session, options=expected)
+                    inst1 = cls(backend=backend, options=opts)
+                    inst2 = cls(backend=backend, options=expected)
                     # Make sure the values are equal.
                     inst1_options = inst1.options.__dict__
                     expected_dict = inst2.options.__dict__
@@ -507,26 +475,17 @@ class TestPrimitives(IBMTestCase):
 
     def test_default_error_levels(self):
         """Test the correct default error levels are used."""
-
-        session = MagicMock(spec=MockSession)
+        backend = get_mocked_backend()
         primitives = [Sampler, Estimator]
+        noise_model = NoiseModel.from_backend(FakeManila())
         for cls in primitives:
             with self.subTest(primitive=cls):
                 options = Options(
-                    simulator={"noise_model": "foo"},
+                    simulator={"noise_model": noise_model},
                 )
-                inst = cls(session=session, options=options)
-
-                if isinstance(inst, Estimator):
-                    inst.run(self.qx, observables=self.obs)
-                else:
-                    inst.run(self.qx)
-
-                if sys.version_info >= (3, 8):
-                    inputs = session.run.call_args.kwargs["inputs"]
-                else:
-                    _, kwargs = session.run.call_args
-                    inputs = kwargs["inputs"]
+                inst = cls(backend=backend, options=options)
+                inst.run(**get_primitive_inputs(inst, backend))
+                inputs = backend.service.run.call_args.kwargs["inputs"]
                 self.assertEqual(
                     inputs["transpilation_settings"]["optimization_settings"]["level"],
                     Options._DEFAULT_OPTIMIZATION_LEVEL,
@@ -536,14 +495,9 @@ class TestPrimitives(IBMTestCase):
                     Options._DEFAULT_RESILIENCE_LEVEL,
                 )
 
-                session.service.backend().configuration().simulator = False
-                inst = cls(session=session)
-                inst.run(self.qx, observables=self.obs)
-                if sys.version_info >= (3, 8):
-                    inputs = session.run.call_args.kwargs["inputs"]
-                else:
-                    _, kwargs = session.run.call_args
-                    inputs = kwargs["inputs"]
+                inst = cls(backend=backend)
+                inst.run(**get_primitive_inputs(inst, backend))
+                inputs = backend.service.run.call_args.kwargs["inputs"]
                 self.assertEqual(
                     inputs["transpilation_settings"]["optimization_settings"]["level"],
                     Options._DEFAULT_OPTIMIZATION_LEVEL,
@@ -553,14 +507,12 @@ class TestPrimitives(IBMTestCase):
                     Options._DEFAULT_RESILIENCE_LEVEL,
                 )
 
-                session.service.backend().configuration().simulator = True
-                inst = cls(session=session)
-                inst.run(self.qx, observables=self.obs)
-                if sys.version_info >= (3, 8):
-                    inputs = session.run.call_args.kwargs["inputs"]
-                else:
-                    _, kwargs = session.run.call_args
-                    inputs = kwargs["inputs"]
+                config = FakeManila().configuration().to_dict()
+                config["simulator"] = True
+                sim = get_mocked_backend(configuration=config)
+                inst = cls(backend=sim)
+                inst.run(**get_primitive_inputs(inst, sim))
+                inputs = sim.service.run.call_args.kwargs["inputs"]
                 self.assertEqual(
                     inputs["transpilation_settings"]["optimization_settings"]["level"],
                     1,
@@ -584,7 +536,7 @@ class TestPrimitives(IBMTestCase):
                 },
             },
         ]
-        session = MagicMock(spec=MockSession)
+        backend = get_mocked_backend()
         primitives = [Sampler, Estimator]
 
         for cls in primitives:
@@ -592,14 +544,14 @@ class TestPrimitives(IBMTestCase):
                 # When this environment variable is set, validation is turned off
                 try:
                     os.environ["QISKIT_RUNTIME_SKIP_OPTIONS_VALIDATION"] = "1"
-                    inst = cls(session=session, options=opts_dict)
-                    inst.run(self.qx, observables=self.obs)
+                    inst = cls(backend=backend, options=opts_dict)
+                    inst.run(**get_primitive_inputs(inst, backend))
                 finally:
                     # Delete environment variable to validate input
                     del os.environ["QISKIT_RUNTIME_SKIP_OPTIONS_VALIDATION"]
                 with self.assertRaises(ValueError) as exc:
-                    inst = cls(session=session, options=opts_dict)
-                    inst.run(self.qx, observables=self.obs)
+                    inst = cls(backend=backend, options=opts_dict)
+                    inst.run(**get_primitive_inputs(inst, backend))
                 self.assertIn(list(opts_dict["resilience"].values())[0], str(exc.exception))
                 if len(opts_dict["resilience"].keys()) > 1:
                     self.assertIn(list(opts_dict["resilience"].keys())[1], str(exc.exception))
@@ -609,7 +561,7 @@ class TestPrimitives(IBMTestCase):
         options_dicts = [
             {"environment": {"log_level": "NoLogLevel"}},
         ]
-        session = MagicMock(spec=MockSession)
+        backend = get_mocked_backend()
         primitives = [Sampler, Estimator]
 
         for cls in primitives:
@@ -617,14 +569,14 @@ class TestPrimitives(IBMTestCase):
                 # When this environment variable is set, validation is turned off
                 try:
                     os.environ["QISKIT_RUNTIME_SKIP_OPTIONS_VALIDATION"] = "1"
-                    inst = cls(session=session, options=opts_dict)
-                    inst.run(self.qx, observables=self.obs)
+                    inst = cls(backend=backend, options=opts_dict)
+                    inst.run(**get_primitive_inputs(inst, backend))
                 finally:
                     # Delete environment variable to validate input
                     del os.environ["QISKIT_RUNTIME_SKIP_OPTIONS_VALIDATION"]
                 with self.assertRaises(ValueError) as exc:
-                    inst = cls(session=session, options=opts_dict)
-                    inst.run(self.qx, observables=self.obs)
+                    inst = cls(backend=backend, options=opts_dict)
+                    inst.run(**get_primitive_inputs(inst, backend))
                 self.assertIn(list(opts_dict["environment"].values())[0], str(exc.exception))
 
     def test_transpilation_options(self):
@@ -634,7 +586,7 @@ class TestPrimitives(IBMTestCase):
             {"transpilation": {"routing_method": "NoRoutingMethod"}},
             {"transpilation": {"approximation_degree": 1.1}},
         ]
-        session = MagicMock(spec=MockSession)
+        backend = get_mocked_backend()
         primitives = [Sampler, Estimator]
 
         for cls in primitives:
@@ -642,22 +594,22 @@ class TestPrimitives(IBMTestCase):
                 # When this environment variable is set, validation is turned off
                 try:
                     os.environ["QISKIT_RUNTIME_SKIP_OPTIONS_VALIDATION"] = "1"
-                    inst = cls(session=session, options=opts_dict)
-                    inst.run(self.qx, observables=self.obs)
+                    inst = cls(backend=backend, options=opts_dict)
+                    inst.run(**get_primitive_inputs(inst, backend))
                 finally:
                     # Delete environment variable to validate input
                     del os.environ["QISKIT_RUNTIME_SKIP_OPTIONS_VALIDATION"]
                 with self.assertRaises(ValueError) as exc:
-                    inst = cls(session=session, options=opts_dict)
-                    inst.run(self.qx, observables=self.obs)
+                    inst = cls(backend=backend, options=opts_dict)
+                    inst.run(**get_primitive_inputs(inst, backend))
                 self.assertIn(list(opts_dict["transpilation"].keys())[0], str(exc.exception))
 
     def test_max_execution_time_options(self):
-        """Test transpilation options."""
+        """Test max execution time options."""
         options_dicts = [
             {"max_execution_time": Options._MAX_EXECUTION_TIME + 1},
         ]
-        session = MagicMock(spec=MockSession)
+        backend = get_mocked_backend()
         primitives = [Sampler, Estimator]
 
         for cls in primitives:
@@ -665,14 +617,14 @@ class TestPrimitives(IBMTestCase):
                 # When this environment variable is set, validation is turned off
                 try:
                     os.environ["QISKIT_RUNTIME_SKIP_OPTIONS_VALIDATION"] = "1"
-                    inst = cls(session=session, options=opts_dict)
-                    inst.run(self.qx, observables=self.obs)
+                    inst = cls(backend=backend, options=opts_dict)
+                    inst.run(**get_primitive_inputs(inst, backend))
                 finally:
                     # Delete environment variable to validate input
                     del os.environ["QISKIT_RUNTIME_SKIP_OPTIONS_VALIDATION"]
                 with self.assertRaises(ValueError) as exc:
-                    inst = cls(session=session, options=opts_dict)
-                    inst.run(self.qx, observables=self.obs)
+                    inst = cls(backend=backend, options=opts_dict)
+                    inst.run(**get_primitive_inputs(inst, backend))
                 self.assertIn(
                     "max_execution_time must be below 28800 seconds",
                     str(exc.exception),
@@ -692,7 +644,7 @@ class TestPrimitives(IBMTestCase):
         ibm_backend = create_faulty_backend(fake_backend, faulty_qubit=faulty_qubit)
         service = MagicMock()
         service.backend.return_value = ibm_backend
-        session = Session(service=service, backend=fake_backend.name)
+        session = Session(service=service, backend=fake_backend.name())
         sampler = Sampler(session=session)
         estimator = Estimator(session=session)
 
@@ -722,7 +674,7 @@ class TestPrimitives(IBMTestCase):
         ibm_backend = create_faulty_backend(fake_backend, faulty_qubit=faulty_qubit)
         service = MagicMock()
         service.backend.return_value = ibm_backend
-        session = Session(service=service, backend=fake_backend.name)
+        session = Session(service=service, backend=fake_backend.name())
         sampler = Sampler(session=session)
         estimator = Estimator(session=session)
 
@@ -751,7 +703,7 @@ class TestPrimitives(IBMTestCase):
         ibm_backend = create_faulty_backend(fake_backend, faulty_edge=("cx", edge_qubits))
         service = MagicMock()
         service.backend.return_value = ibm_backend
-        session = Session(service=service, backend=fake_backend.name)
+        session = Session(service=service, backend=fake_backend.name())
         sampler = Sampler(session=session)
         estimator = Estimator(session=session)
 
@@ -780,7 +732,7 @@ class TestPrimitives(IBMTestCase):
 
         service = MagicMock()
         service.backend.return_value = ibm_backend
-        session = Session(service=service, backend=fake_backend.name)
+        session = Session(service=service, backend=fake_backend.name())
         sampler = Sampler(session=session)
         estimator = Estimator(session=session)
 
@@ -809,7 +761,7 @@ class TestPrimitives(IBMTestCase):
 
         service = MagicMock()
         service.backend.return_value = ibm_backend
-        session = Session(service=service, backend=fake_backend.name)
+        session = Session(service=service, backend=fake_backend.name())
         sampler = Sampler(session=session)
         estimator = Estimator(session=session)
 
@@ -839,7 +791,7 @@ class TestPrimitives(IBMTestCase):
 
         service = MagicMock()
         service.backend.return_value = ibm_backend
-        session = Session(service=service, backend=fake_backend.name)
+        session = Session(service=service, backend=fake_backend.name())
         sampler = Sampler(session=session)
         estimator = Estimator(session=session)
 
@@ -866,7 +818,7 @@ class TestPrimitives(IBMTestCase):
         else:
             circ.measure_all()
 
-        with self.assertWarnsRegex(DeprecationWarning, "target hardware"):
+        with self.assertRaisesRegex(IBMInputValueError, "target hardware"):
             inst.run(**run_input)
 
     @data(Sampler, Estimator)
@@ -876,7 +828,6 @@ class TestPrimitives(IBMTestCase):
         config = FakeManila().configuration().to_dict()
         for gate in config["gates"]:
             gate.pop("coupling_map", None)
-        config = QasmBackendConfiguration.from_dict(config)
         backend = get_mocked_backend(configuration=config)
 
         inst = primitive(backend=backend)
@@ -889,10 +840,7 @@ class TestPrimitives(IBMTestCase):
         else:
             transpiled.measure_all()
 
-        with warnings.catch_warnings(record=True) as warns:
-            warnings.simplefilter("always")
-            inst.run(**run_input)
-            self.assertFalse(warns)
+        inst.run(**run_input)
 
     @data(Sampler, Estimator)
     def test_pulse_gates_is_isa(self, primitive):
@@ -912,10 +860,60 @@ class TestPrimitives(IBMTestCase):
         else:
             circuit.measure_all()
 
-        with warnings.catch_warnings(record=True) as warns:
-            warnings.simplefilter("always")
-            inst.run(**run_input)
-            self.assertFalse(warns)
+        inst.run(**run_input)
+
+    @data(Sampler, Estimator)
+    def test_dynamic_circuit_is_isa(self, primitive):
+        """Test passing dynmaic circuits is considered ISA."""
+        # pylint: disable=not-context-manager
+        # pylint: disable=invalid-name
+        sherbrooke = FakeSherbrooke()
+        config = sherbrooke._get_conf_dict_from_json()
+        config["supported_instructions"] += ["for_loop", "switch_case", "while_loop"]
+
+        backend = get_mocked_backend(
+            configuration=config,
+            properties=sherbrooke._set_props_dict_from_json(),
+            defaults=sherbrooke._set_defs_dict_from_json(),
+        )
+
+        inst = primitive(backend=backend)
+
+        qubits = QuantumRegister(3)
+        clbits = ClassicalRegister(3)
+        circuit = QuantumCircuit(qubits, clbits)
+        (q0, q1, q2) = qubits
+        (c0, c1, c2) = clbits
+
+        circuit.x(q0)
+        circuit.measure(q0, c0)
+        with circuit.if_test((c0, 1)):
+            circuit.x(q0)
+
+        circuit.measure(q1, c1)
+        with circuit.switch(c1) as case:
+            with case(0):
+                circuit.x(q0)
+            with case(1):
+                circuit.x(q1)
+
+        circuit.measure(q1, c1)
+        circuit.measure(q2, c2)
+        with circuit.while_loop((clbits, 0b111)):
+            circuit.rz(1.5, q1)
+            circuit.rz(1.5, q2)
+            circuit.measure(q1, c1)
+            circuit.measure(q2, c2)
+
+        with circuit.for_loop(range(2)) as _:
+            circuit.x(q0)
+
+        circuit = transpile(circuit, backend=backend)
+        run_input = {"circuits": circuit}
+        if isinstance(inst, Estimator):
+            run_input["observables"] = SparsePauliOp("ZZZ").apply_layout(circuit.layout)
+
+        inst.run(**run_input)
 
     def _update_dict(self, dict1, dict2):
         for key, val in dict1.items():
@@ -959,18 +957,14 @@ class TestPrimitives(IBMTestCase):
             # Skip transpilation level(issue warning)
             {"skip_transpilation": True},
         ]
-        session = MagicMock(spec=MockSession)
-        session.service._channel_strategy = "q-ctrl"
-        session.service.backend().configuration().simulator = False
+        backend = get_mocked_backend()
+        backend._service._channel_strategy = "q-ctrl"
         primitives = [Sampler, Estimator]
         for cls in primitives:
             for options in options_good:
                 with self.subTest(msg=f"{cls}, {options}"):
-                    inst = cls(session=session)
-                    if isinstance(inst, Estimator):
-                        _ = inst.run(self.qx, observables=self.obs, **options)
-                    else:
-                        _ = inst.run(self.qx, **options)
+                    inst = cls(backend=backend)
+                    _ = inst.run(**get_primitive_inputs(inst, backend), **options)
 
     def test_qctrl_unsupported_values_for_options(self):
         """Test exception when options levels are not supported."""
@@ -980,18 +974,30 @@ class TestPrimitives(IBMTestCase):
             # Bad optimization level
             ({"optimization_level": 0}, "optimization level"),
         ]
-        session = MagicMock(spec=MockSession)
-        session.service._channel_strategy = "q-ctrl"
-        session.service.backend().configuration().simulator = False
+        backend = get_mocked_backend()
+        backend._service._channel_strategy = "q-ctrl"
         primitives = [Sampler, Estimator]
         for cls in primitives:
             for bad_opt, expected_message in options_bad:
                 with self.subTest(msg=bad_opt):
-                    inst = cls(session=session)
+                    inst = cls(backend=backend)
                     with self.assertRaises(ValueError) as exc:
-                        if isinstance(inst, Sampler):
-                            _ = inst.run(self.qx, **bad_opt)
-                        else:
-                            _ = inst.run(self.qx, observables=self.obs, **bad_opt)
-
+                        _ = inst.run(**get_primitive_inputs(inst, backend), **bad_opt)
                         self.assertIn(expected_message, str(exc.exception))
+
+    @data(Sampler, Estimator)
+    def test_qctrl_abstract_circuit(self, primitive):
+        """Test q-ctrl can still accept abstract circuits."""
+        backend = get_mocked_backend()
+        backend._service._channel_strategy = "q-ctrl"
+        inst = primitive(backend=backend)
+
+        circ = QuantumCircuit(3, 3)
+        circ.cx(0, 2)
+        run_input = {"circuits": circ}
+        if isinstance(inst, Estimator):
+            run_input["observables"] = SparsePauliOp("ZZZ")
+        else:
+            circ.measure_all()
+
+        inst.run(**run_input)

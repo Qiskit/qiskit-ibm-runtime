@@ -15,11 +15,13 @@
 from unittest.mock import MagicMock, patch
 
 from qiskit_ibm_runtime.fake_provider import FakeManila
-from qiskit_ibm_runtime import Session
+from qiskit_ibm_runtime import Session, QiskitRuntimeService
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.utils.default_session import _DEFAULT_SESSION
+
 from .mock.fake_runtime_service import FakeRuntimeService
 from ..ibm_test_case import IBMTestCase
+from ..utils import get_mocked_backend
 
 
 class TestSession(IBMTestCase):
@@ -44,13 +46,19 @@ class TestSession(IBMTestCase):
         with self.assertRaises(ValueError):
             Session(service=service)
 
+    def test_missing_backend_cloud_warning(self):
+        """Test warning if no backend provided on cloud channel."""
+        service = MagicMock()
+        service.channel = "ibm_cloud"
+        with self.assertWarns(DeprecationWarning):
+            Session(service=service)
+
     def test_passing_ibm_backend(self):
         """Test passing in IBMBackend instance."""
-        backend = MagicMock(spec=IBMBackend)
-        backend._instance = None
-        backend.name = "ibm_gotham"
-        session = Session(service=MagicMock(), backend=backend)
-        self.assertEqual(session.backend(), "ibm_gotham")
+        backend_name = "ibm_gotham"
+        backend = get_mocked_backend(name=backend_name)
+        session = Session(service=backend.service, backend=backend)
+        self.assertEqual(session.backend(), backend_name)
 
     def test_using_ibm_backend_service(self):
         """Test using service from an IBMBackend instance."""
@@ -92,11 +100,12 @@ class TestSession(IBMTestCase):
 
     def test_run(self):
         """Test the run method."""
+        backend_name = "ibm_gotham"
+        backend = get_mocked_backend(backend_name)
         job = MagicMock()
         job.job_id.return_value = "12345"
-        service = MagicMock()
+        service = backend.service
         service.run.return_value = job
-        backend = "ibm_gotham"
         inputs = {"name": "bruce wayne"}
         options = {"log_level": "INFO"}
         program_id = "batman_begins"
@@ -115,7 +124,7 @@ class TestSession(IBMTestCase):
         self.assertDictEqual(kwargs["options"], {"backend": backend, **options})
         self.assertDictEqual(kwargs["inputs"], inputs)
         self.assertEqual(kwargs["result_decoder"], decoder)
-        self.assertEqual(session.backend(), backend)
+        self.assertEqual(session.backend(), backend_name)
 
     def test_context_manager(self):
         """Test session as a context manager."""
@@ -127,8 +136,8 @@ class TestSession(IBMTestCase):
     def test_default_backend(self):
         """Test default backend set."""
         job = MagicMock()
-        job.backend().name = "ibm_gotham"
-        service = MagicMock()
+        job.backend().name.return_value = "ibm_gotham"  # pylint: disable=no-value-for-parameter
+        service = MagicMock(spec=QiskitRuntimeService)
         service.run.return_value = job
         service.channel = "ibm_cloud"
 
@@ -152,7 +161,7 @@ class TestSession(IBMTestCase):
 
     def test_session_from_id(self):
         """Create session with given session_id"""
-        service = MagicMock()
+        service = FakeRuntimeService(channel="ibm_quantum", token="abc")
         session_id = "123"
         session = Session.from_id(session_id=session_id, service=service)
         session.run(program_id="foo", inputs={})

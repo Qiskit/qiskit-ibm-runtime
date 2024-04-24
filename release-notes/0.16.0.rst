@@ -1,0 +1,25 @@
+0.16.0
+======
+
+Prelude
+-------
+
+Sessions are now thread-safe and allow for multiple concurrent
+interactive experiments.
+
+New Features
+------------
+
+-  Sessions are now thread-safe.
+
+Upgrade Notes
+-------------
+
+-  Methods related to using custom programs are removed.
+
+Bug Fixes
+---------
+
+-  If a cloud instance that is ``q-ctrl`` enabled is used while
+   ``q-ctrl`` is not passed in as the ``channel_strategy``, an error
+   will be raised.

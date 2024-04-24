@@ -1,5 +1,0 @@
----
-fixes:
-  - |
-    Fixes the check for ISA circuits to allow pulse gates and circuits that
-    don't have layout.

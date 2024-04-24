@@ -1,0 +1,27 @@
+0.1.0rc2
+========
+
+New Features
+------------
+
+-  For convenience, you can now set the ``IBM Cloud service name`` as a
+   value for the account ``instance`` parameter. If you choose to set
+   the name instead of the ``CRN``, the initialization time of the
+   ``qiskit_ibm_runtime.IBMRuntimeService`` class is slightly higher
+   because the required ``CRN`` value is internally resolved via IBM
+   Cloud APIs.
+
+Bug Fixes
+---------
+
+-  `qiskit_ibm_runtime.utils.json.RuntimeEncoder <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeEncoder>`__
+   and
+   `qiskit_ibm_runtime.utils.json.RuntimeDecoder <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeDecoder>`__
+   have been updated to handle instances of the Instruction class.
+
+-  Fixed an issue where numpy ndarrays with object types could not be
+   serialized.
+   `qiskit_ibm_runtime.utils.json.RuntimeEncoder <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeEncoder>`__
+   and
+   `qiskit_ibm_runtime.utils.json.RuntimeDecoder <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeDecoder>`__
+   have been updated to handle these ndarrays.
