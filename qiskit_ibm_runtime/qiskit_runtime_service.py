@@ -31,6 +31,7 @@ from qiskit.providers.models import (
 
 from qiskit_ibm_runtime import ibm_backend
 from .proxies import ProxyConfiguration
+from .utils.deprecation import issue_deprecation_msg
 from .utils.hgp import to_instance_format, from_instance_format
 from .utils.backend_decoder import configuration_from_server_data
 
