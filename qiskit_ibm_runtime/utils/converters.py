@@ -15,10 +15,9 @@
 import re
 from datetime import datetime, timedelta, timezone
 from math import ceil
-from typing import Union, Tuple, Any, Optional, List
+from typing import Union, Tuple, Any, Optional
 
 from dateutil import tz, parser
-from qiskit.circuit import QuantumCircuit, ControlFlowOp
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 
@@ -223,17 +222,3 @@ def hms_to_seconds(hms: str, msg_prefix: str = "") -> int:
         raise IBMInputValueError(f"{msg_prefix} Invalid input: {parsed_time}")
 
     return total_seconds
-
-
-def are_circuits_dynamic(circuits: List[QuantumCircuit]) -> bool:
-    """Checks if the input circuits are dynamic."""
-    for circuit in circuits:
-        if isinstance(circuit, str):
-            return True
-        for inst in circuit:
-            if (
-                isinstance(inst.operation, ControlFlowOp)
-                or getattr(inst.operation, "condition", None) is not None
-            ):
-                return True
-    return False

@@ -40,7 +40,6 @@ from .base_runtime_job import BaseRuntimeJob
 logger = logging.getLogger(__name__)
 
 JobStatus = Literal["INITIALIZING", "QUEUED", "RUNNING", "CANCELLED", "DONE", "ERROR"]
-JOB_FINAL_STATES: Tuple[JobStatus, ...] = ("DONE", "CANCELLED", "ERROR")
 API_TO_JOB_STATUS: Dict[str, JobStatus] = {
     "QUEUED": "QUEUED",
     "RUNNING": "RUNNING",
@@ -52,6 +51,9 @@ API_TO_JOB_STATUS: Dict[str, JobStatus] = {
 
 class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob):
     """Representation of a runtime V2 primitive exeuction."""
+
+    JOB_FINAL_STATES: Tuple[JobStatus, ...] = ("DONE", "CANCELLED", "ERROR")
+    ERROR = "ERROR"
 
     def __init__(
         self,
@@ -172,7 +174,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         self._set_status_and_error_message()
         return self._status
 
-    def _status_from_job_response(self, response: Dict) -> JobStatus:
+    def _status_from_job_response(self, response: Dict) -> Union[JobStatus, str]:
         """Returns the job status from an API response.
 
         Args:
@@ -181,10 +183,13 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         Returns:
             Job status.
         """
-        mapped_job_status = API_TO_JOB_STATUS[response["state"]["status"].upper()]
-        if mapped_job_status == "CANCELLED" and self._reason == "RAN TOO LONG":
-            mapped_job_status = "ERROR"
-        return mapped_job_status
+        api_status = response["state"]["status"].upper()
+        if api_status in API_TO_JOB_STATUS:
+            mapped_job_status = API_TO_JOB_STATUS[api_status]
+            if mapped_job_status == "CANCELLED" and self._reason == "RAN TOO LONG":
+                mapped_job_status = "ERROR"
+            return mapped_job_status
+        return api_status
 
     def cancelled(self) -> bool:
         """Return whether the job has been cancelled."""
@@ -196,11 +201,11 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
 
     def errored(self) -> bool:
         """Return whether the job has failed."""
-        return self._status == "ERROR"
+        return self.status() == "ERROR"
 
     def in_final_state(self) -> bool:
         """Return whether the job is in a final job state such as ``DONE`` or ``ERROR``."""
-        return self._status in JOB_FINAL_STATES
+        return self.status() in self.JOB_FINAL_STATES
 
     def running(self) -> bool:
         """Return whether the job is actively running."""
@@ -218,7 +223,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         Raises:
             IBMRuntimeError: If a network error occurred.
         """
-        if self.status() not in JOB_FINAL_STATES:
+        if self.status() not in self.JOB_FINAL_STATES:
             logger.warning("Job logs are only available after the job finishes.")
         try:
             return self._api_client.job_logs(self.job_id())
@@ -244,14 +249,14 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         """
         try:
             start_time = time.time()
-            if self._status not in JOB_FINAL_STATES and not self._is_streaming():
+            if self._status not in self.JOB_FINAL_STATES and not self._is_streaming():
                 self._ws_client_future = self._executor.submit(self._start_websocket_client)
             if self._is_streaming():
                 self._ws_client_future.result(timeout)
             # poll for status after stream has closed until status is final
             # because status doesn't become final as soon as stream closes
             status = self.status()
-            while status not in JOB_FINAL_STATES:
+            while status not in self.JOB_FINAL_STATES:
                 elapsed_time = time.time() - start_time
                 if timeout is not None and elapsed_time >= timeout:
                     raise RuntimeJobTimeoutError(
@@ -298,7 +303,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
             RuntimeInvalidStateError: If a callback function is already streaming results or
                 if the job already finished.
         """
-        if self._status in JOB_FINAL_STATES:
+        if self._status in self.JOB_FINAL_STATES:
             raise RuntimeInvalidStateError("Job already finished.")
         if self._is_streaming():
             raise RuntimeInvalidStateError("A callback function is already streaming results.")
@@ -326,6 +331,6 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
             _decoder = decoder or self._interim_result_decoder
             interim_results_raw = self._api_client.job_interim_results(job_id=self.job_id())
             self._interim_results = _decoder.decode(interim_results_raw)
-            if self.status() in JOB_FINAL_STATES:
+            if self.status() in self.JOB_FINAL_STATES:
                 self._final_interim_results = True
         return self._interim_results

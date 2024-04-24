@@ -45,9 +45,8 @@ V2 Estimator options, respectively.
 
 .. note::
    If an option is not specified, the server default value is used. The
-   default values are subject to change. See the
-   `API Reference <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/options>`_
-   for the most up-to-date default values.
+   default values are subject to change. Refer to this current module's documentation
+   for the latest defaults.
 
 
 **V1 Primitives**

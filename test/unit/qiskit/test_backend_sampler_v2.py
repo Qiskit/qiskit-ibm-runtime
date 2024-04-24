@@ -142,6 +142,24 @@ class TestBackendSamplerV2(IBMTestCase):
             self.assertIsInstance(result[0].data.meas, BitArray)
             self._assert_allclose(result[0].data.meas, np.array([target, target, target]))
 
+        with self.subTest("with circuit metadata"):
+            sample_metadata = {
+                "user_metadata_field_1": "metadata_1",
+                "user_metadata_field_2": "metadata_2",
+            }
+            pqc, _, _ = self._cases[1]
+            pqc.metadata = sample_metadata
+            sampler = BackendSamplerV2(backend=backend, options=self._options)
+            pqc = pm.run(pqc)
+            job = sampler.run([pqc], shots=self._shots)
+            result = job.result()
+            self.assertIsInstance(result, PrimitiveResult)
+            self.assertIsInstance(result.metadata, dict)
+            self.assertEqual(len(result), 1)
+            self.assertIsInstance(result[0], PubResult)
+            self.assertIsInstance(result[0].metadata, dict)
+            self.assertEqual(result[0].metadata, sample_metadata)
+
     @combine(backend=BACKENDS)
     def test_sampler_run_multiple_times(self, backend):
         """Test run() returns the same results if the same input is given."""

@@ -1,0 +1,3 @@
+Related to the execution modes, Sampler and Estimator now include a `mode` argument. The `mode` param
+can be a Backend, Session, Batch, or None. Due to this, the backend name has been deprecated, and will
+no longer be supported as a valid execution mode.
