@@ -775,6 +775,15 @@ class QiskitRuntimeService(Provider):
             QiskitBackendNotFoundError: if no backend could be found.
         """
         # pylint: disable=arguments-differ, line-too-long
+        if not name:
+            warnings.warn(
+                (
+                    "The `name` parameter will be required in a future release no sooner than "
+                    "3 months after the release of qiskit-ibm-runtime 0.24.0 ."
+                ),
+                DeprecationWarning,
+                stacklevel=2,
+            )
         backends = self.backends(name, instance=instance)
         if not backends:
             cloud_msg_url = ""
