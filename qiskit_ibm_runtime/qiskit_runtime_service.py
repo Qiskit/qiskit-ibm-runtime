@@ -163,7 +163,7 @@ class QiskitRuntimeService(Provider):
             self._api_client = RuntimeClient(self._client_params)
             try:
                 self._hgps = self._initialize_hgps(auth_client)
-            except (json.decoder.JSONDecodeError):
+            except json.decoder.JSONDecodeError:
                 raise IBMApiError("Unexpected response received from server")
 
             for hgp in self._hgps.values():
