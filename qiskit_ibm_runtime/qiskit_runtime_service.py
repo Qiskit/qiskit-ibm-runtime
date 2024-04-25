@@ -832,7 +832,7 @@ class QiskitRuntimeService(Provider):
         """
         issue_deprecation_msg(
             msg="service.run is deprecated",
-            version="0.21.0",
+            version="0.24.0",
             remedy="service.run will instead be converted into a private method "
             "since it should not be called directly.",
             period="3 months",
@@ -923,6 +923,11 @@ class QiskitRuntimeService(Provider):
                 version=version,
             )
         return job
+    
+    def _run(self, *args: Any, **kwargs: Any) -> Union[RuntimeJob, RuntimeJobV2]:
+        """Private run method"""
+        return self.run(*args, **kwargs)
+
 
     def job(self, job_id: str) -> Union[RuntimeJob, RuntimeJobV2]:
         """Retrieve a runtime job.
