@@ -391,7 +391,7 @@ class BaseRuntimeJob(ABC):
             response = self._api_client.job_get(job_id=self.job_id(), exclude_params=False)
             self._params = response.get("params", {})
         return self._params
-    
+
     @property
     def primitive_id(self) -> str:
         """Primitive name.
@@ -412,7 +412,6 @@ class BaseRuntimeJob(ABC):
             version="0.24.0",
             remedy="Use Job.primitive_id instead.",
         )
-        return self._program_id
         return self._program_id
 
     @property

@@ -923,11 +923,10 @@ class QiskitRuntimeService(Provider):
                 version=version,
             )
         return job
-    
+
     def _run(self, *args: Any, **kwargs: Any) -> Union[RuntimeJob, RuntimeJobV2]:
         """Private run method"""
         return self.run(*args, **kwargs)
-
 
     def job(self, job_id: str) -> Union[RuntimeJob, RuntimeJobV2]:
         """Retrieve a runtime job.
