@@ -12,7 +12,6 @@
 
 """Tests for sampler class."""
 
-from unittest import skip
 from unittest.mock import MagicMock
 
 from ddt import data, ddt
@@ -21,10 +20,10 @@ import numpy as np
 from qiskit import QuantumCircuit, transpile
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.circuit.library import RealAmplitudes
-from qiskit_ibm_runtime import Sampler, Session, SamplerV2, SamplerOptions
+from qiskit_ibm_runtime import Sampler, Session, SamplerV2, SamplerOptions, IBMInputValueError
 
 from ..ibm_test_case import IBMTestCase
-from ..utils import bell, MockSession, dict_paritally_equal, get_mocked_backend
+from ..utils import bell, MockSession, dict_paritally_equal, get_mocked_backend, transpile_pubs
 from .mock.fake_runtime_service import FakeRuntimeService
 
 
@@ -51,7 +50,6 @@ class TestSampler(IBMTestCase):
                 self.assertIn(list(bad_opt.keys())[0], str(exc.exception))
 
 
-@skip("Skip until SamplerV2 is supported")
 @ddt
 class TestSamplerV2(IBMTestCase):
     """Class for testing the Estimator class."""
@@ -62,28 +60,33 @@ class TestSamplerV2(IBMTestCase):
 
     @data(
         [(RealAmplitudes(num_qubits=2, reps=1), [1, 2, 3, 4])],
-        [(RealAmplitudes(num_qubits=2, reps=1), [1, 2, 3, 4])],
         [(QuantumCircuit(2),)],
         [(RealAmplitudes(num_qubits=1, reps=1), [1, 2]), (QuantumCircuit(3),)],
     )
     def test_run_program_inputs(self, in_pubs):
         """Verify program inputs are correct."""
-        session = MagicMock(spec=MockSession)
-        inst = SamplerV2(session=session)
-        inst.run(in_pubs)
-        input_params = session.run.call_args.kwargs["inputs"]
+        backend = get_mocked_backend()
+        t_pubs = transpile_pubs(in_pubs, backend)
+        inst = SamplerV2(backend=backend)
+        inst.run(t_pubs)
+        input_params = backend.service.run.call_args.kwargs["inputs"]
         self.assertIn("pubs", input_params)
         pubs_param = input_params["pubs"]
-        for a_pub_param, an_in_taks in zip(pubs_param, in_pubs):
+        for a_pub_param, an_in_taks in zip(pubs_param, t_pubs):
             self.assertIsInstance(a_pub_param, SamplerPub)
             # Check circuit
             self.assertEqual(a_pub_param.circuit, an_in_taks[0])
             # Check parameter values
             an_input_params = an_in_taks[1] if len(an_in_taks) == 2 else []
-            np.allclose(a_pub_param.parameter_values.vals, an_input_params)
+            param_values_array = list(a_pub_param.parameter_values.data.values())
+            a_pub_param_values = param_values_array[0] if param_values_array else param_values_array
+            np.testing.assert_allclose(a_pub_param_values, an_input_params)
 
     @data(
-        {"optimization_level": 4}, {"resilience_level": 1}, {"resilience": {"zne_mitigation": True}}
+        {"optimization_level": 4},
+        {"resilience_level": 1},
+        {"resilience": {"zne_mitigation": True}},
+        {"execution": {"meas_type": "unclassified"}},
     )
     def test_unsupported_values_for_sampler_options(self, opt):
         """Test exception when options levels are not supported."""
@@ -96,26 +99,45 @@ class TestSamplerV2(IBMTestCase):
                 inst.options.update(**opt)
             self.assertIn(list(opt.keys())[0], str(exc.exception))
 
+    def test_unsupported_dynamical_decoupling_with_dynamic_circuits(self):
+        """Test that running on dynamic circuits with dynamical decoupling enabled is not allowed"""
+        dynamic_circuit = QuantumCircuit(3, 1)
+        dynamic_circuit.h(0)
+        dynamic_circuit.measure(0, 0)
+        dynamic_circuit.if_else(
+            (0, True), QuantumCircuit(3, 1), QuantumCircuit(3, 1), [0, 1, 2], [0]
+        )
+
+        in_pubs = [(dynamic_circuit,)]
+        backend = get_mocked_backend()
+        inst = SamplerV2(backend=backend)
+        inst.options.dynamical_decoupling.enable = True
+        with self.assertRaisesRegex(
+            IBMInputValueError,
+            "Dynamical decoupling currently cannot be used with dynamic circuits",
+        ):
+            inst.run(in_pubs)
+
     def test_run_default_options(self):
         """Test run using default options."""
-        session = MagicMock(spec=MockSession)
+        session = MagicMock(spec=MockSession, _backend="common_backend")
         options_vars = [
             (
-                SamplerOptions(dynamical_decoupling="XX"),  # pylint: disable=unexpected-keyword-arg
-                {"dynamical_decoupling": "XX"},
+                SamplerOptions(  # pylint: disable=unexpected-keyword-arg
+                    dynamical_decoupling={"sequence_type": "XX"}
+                ),
+                {"dynamical_decoupling": {"sequence_type": "XX"}},
             ),
             (
-                SamplerOptions(optimization_level=3),  # pylint: disable=unexpected-keyword-arg
-                {"transpilation": {"optimization_level": 3}},
+                SamplerOptions(default_shots=1000),  # pylint: disable=unexpected-keyword-arg
+                {"default_shots": 1000},
             ),
             (
                 {
-                    "transpilation": {"initial_layout": [1, 2]},
-                    "execution": {"shots": 100},
+                    "execution": {"init_qubits": True, "rep_delay": 0.01},
                 },
                 {
-                    "transpilation": {"initial_layout": [1, 2]},
-                    "execution": {"shots": 100},
+                    "execution": {"init_qubits": True, "rep_delay": 0.01},
                 },
             ),
         ]
@@ -123,7 +145,7 @@ class TestSamplerV2(IBMTestCase):
             with self.subTest(options=options):
                 inst = SamplerV2(session=session, options=options)
                 inst.run((self.circuit,))
-                inputs = session.run.call_args.kwargs["inputs"]
+                inputs = session.run.call_args.kwargs["inputs"]["options"]
                 self.assertTrue(
                     dict_paritally_equal(inputs, expected),
                     f"{inputs} and {expected} not partially equal.",

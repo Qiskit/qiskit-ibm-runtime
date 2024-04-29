@@ -13,7 +13,6 @@
 """Tests for primitive classes."""
 
 from dataclasses import asdict
-from unittest import skip
 from unittest.mock import MagicMock, patch
 
 from ddt import data, ddt
@@ -24,17 +23,13 @@ from qiskit.circuit import QuantumCircuit
 from qiskit.circuit.library import RealAmplitudes
 from qiskit.quantum_info import SparsePauliOp
 
-from qiskit_ibm_runtime import (
-    Sampler,
-    Estimator,
-    Session,
-)
+from qiskit_ibm_runtime import Session
 from qiskit_ibm_runtime.utils.default_session import _DEFAULT_SESSION
 from qiskit_ibm_runtime import EstimatorV2, SamplerV2
 from qiskit_ibm_runtime.estimator import Estimator as IBMBaseEstimator
 from qiskit_ibm_runtime.fake_provider import FakeManila
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
-
+from qiskit_ibm_runtime.options.utils import Unset
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import (
@@ -43,10 +38,11 @@ from ..utils import (
     dict_keys_equal,
     create_faulty_backend,
     combine,
-    MockSession,
     get_primitive_inputs,
     get_mocked_backend,
     bell,
+    get_mocked_session,
+    get_mocked_batch,
 )
 
 
@@ -75,8 +71,9 @@ class TestPrimitivesV2(IBMTestCase):
             },
             {"default_shots": 1000},
         ]
+        backend = get_mocked_backend()
         for options in options_vars:
-            inst = primitive(session=MagicMock(spec=MockSession), options=options)
+            inst = primitive(backend=backend, options=options)
             self.assertTrue(dict_paritally_equal(asdict(inst.options), options))
 
     @combine(
@@ -121,9 +118,10 @@ class TestPrimitivesV2(IBMTestCase):
     @data(EstimatorV2, SamplerV2)
     def test_options_copied(self, primitive):
         """Test modifying original options does not affect primitives."""
+        backend = get_mocked_backend()
         options = primitive._options_class()
         options.max_execution_time = 100
-        inst = primitive(session=MagicMock(spec=MockSession), options=options)
+        inst = primitive(backend=backend, options=options)
         options.max_execution_time = 200
         self.assertEqual(inst.options.max_execution_time, 100)
 
@@ -131,35 +129,32 @@ class TestPrimitivesV2(IBMTestCase):
     def test_init_with_backend_str(self, primitive):
         """Test initializing a primitive with a backend name."""
         backend_name = "ibm_gotham"
+        mock_backend = get_mocked_backend(name=backend_name)
+        mock_service_inst = mock_backend.service
 
-        with patch("qiskit_ibm_runtime.base_primitive.QiskitRuntimeService") as mock_service:
-            mock_service.reset_mock()
-            mock_service_inst = MagicMock()
-            mock_service.return_value = mock_service_inst
-            mock_backend = MagicMock()
-            mock_backend.name = backend_name
-            mock_backend.target = None
-            mock_service.global_service = None
-            mock_service_inst.backend.return_value = mock_backend
+        class MockQRTService:
+            """Mock class used to create a new QiskitRuntimeService."""
 
+            global_service = None
+
+            def __new__(cls, *args, **kwargs):  # pylint: disable=unused-argument
+                return mock_service_inst
+
+        with patch("qiskit_ibm_runtime.base_primitive.QiskitRuntimeService", new=MockQRTService):
             inst = primitive(backend=backend_name)
-            mock_service.assert_called_once()
-            self.assertIsNone(inst.session)
+            self.assertIsNone(inst.mode)
             inst.run(**get_primitive_inputs(inst))
             mock_service_inst.run.assert_called_once()
             runtime_options = mock_service_inst.run.call_args.kwargs["options"]
-            self.assertEqual(runtime_options["backend"], backend_name)
+            self.assertEqual(runtime_options["backend"], mock_backend)
 
-    @data(EstimatorV2, SamplerV2)
-    def test_init_with_session_backend_str(self, primitive):
-        """Test initializing a primitive with a backend name using session."""
-        backend_name = "ibm_gotham"
-
-        with patch("qiskit_ibm_runtime.base_primitive.QiskitRuntimeService"):
-            with self.assertRaises(ValueError) as exc:
-                inst = primitive(session=backend_name)
-                self.assertIsNone(inst.session)
-            self.assertIn("session must be of type Session or None", str(exc.exception))
+            mock_service_inst.reset_mock()
+            str_mode_inst = primitive(mode=backend_name)
+            self.assertIsNone(str_mode_inst.mode)
+            inst.run(**get_primitive_inputs(str_mode_inst))
+            mock_service_inst.run.assert_called_once()
+            runtime_options = mock_service_inst.run.call_args.kwargs["options"]
+            self.assertEqual(runtime_options["backend"], mock_backend)
 
     @data(EstimatorV2, SamplerV2)
     def test_init_with_backend_instance(self, primitive):
@@ -169,27 +164,21 @@ class TestPrimitivesV2(IBMTestCase):
 
         service.reset_mock()
         inst = primitive(backend=backend)
-        self.assertIsNone(inst.session)
+        self.assertIsNone(inst.mode)
         inst.run(**get_primitive_inputs(inst))
         service.run.assert_called_once()
         runtime_options = service.run.call_args.kwargs["options"]
-        self.assertEqual(runtime_options["backend"], backend.name)
-
-        with self.assertRaises(ValueError) as exc:
-            inst = primitive(session=backend)
-            self.assertIsNone(inst.session)
-        self.assertIn("session must be of type Session or None", str(exc.exception))
+        self.assertEqual(runtime_options["backend"], backend)
 
     @data(EstimatorV2, SamplerV2)
     def test_init_with_backend_session(self, primitive):
         """Test initializing a primitive with both backend and session."""
-        session = MagicMock(spec=MockSession)
         backend_name = "ibm_gotham"
+        session = get_mocked_session(get_mocked_backend(backend_name))
 
         session.reset_mock()
-        inst = primitive(session=session, backend=backend_name)
-        inst._backend.target = None
-        self.assertIsNotNone(inst.session)
+        inst = primitive(session=session)
+        self.assertIsNotNone(inst.mode)
         inst.run(**get_primitive_inputs(inst))
         session.run.assert_called_once()
 
@@ -204,7 +193,7 @@ class TestPrimitivesV2(IBMTestCase):
             mock_service.global_service = None
             inst = primitive()
             mock_service.assert_called_once()
-            self.assertIsNone(inst.session)
+            self.assertIsNone(inst.mode)
 
     @data(EstimatorV2, SamplerV2)
     def test_init_with_no_backend_session_quantum(self, primitive):
@@ -218,13 +207,13 @@ class TestPrimitivesV2(IBMTestCase):
     @data(EstimatorV2, SamplerV2)
     def test_default_session_context_manager(self, primitive):
         """Test getting default session within context manager."""
-        service = MagicMock()
-        backend = "ibm_gotham"
+        backend_name = "ibm_gotham"
+        backend = get_mocked_backend(name=backend_name)
 
-        with Session(service=service, backend=backend) as session:
+        with Session(service=backend.service, backend=backend_name) as session:
             inst = primitive()
-            self.assertEqual(inst.session, session)
-            self.assertEqual(inst.session.backend(), backend)
+            self.assertEqual(inst.mode, session)
+            self.assertEqual(inst.mode.backend(), backend_name)
 
     @data(EstimatorV2, SamplerV2)
     def test_default_session_cm_new_backend(self, primitive):
@@ -235,11 +224,11 @@ class TestPrimitivesV2(IBMTestCase):
 
         with Session(service=service, backend=cm_backend):
             inst = primitive(backend=backend)
-            self.assertIsNone(inst.session)
+            self.assertIsNone(inst.mode)
             inst.run(**get_primitive_inputs(inst))
             service.run.assert_called_once()
             runtime_options = service.run.call_args.kwargs["options"]
-            self.assertEqual(runtime_options["backend"], backend.name)
+            self.assertEqual(runtime_options["backend"], backend)
 
     @data(EstimatorV2, SamplerV2)
     def test_no_session(self, primitive):
@@ -248,11 +237,53 @@ class TestPrimitivesV2(IBMTestCase):
         service = backend.service
         inst = primitive(backend)
         inst.run(**get_primitive_inputs(inst))
-        self.assertIsNone(inst.session)
+        self.assertIsNone(inst.mode)
         service.run.assert_called_once()
         kwargs_list = service.run.call_args.kwargs
         self.assertNotIn("session_id", kwargs_list)
         self.assertNotIn("start_session", kwargs_list)
+
+    @data(SamplerV2, EstimatorV2)
+    def test_init_with_mode_as_backend(self, primitive):
+        """Test initializing a primitive with mode as a Backend."""
+        backend = get_mocked_backend()
+        service = backend.service
+
+        inst = primitive(mode=backend)
+        self.assertIsNotNone(inst)
+        inst.run(**get_primitive_inputs(inst))
+        service.run.assert_called_once()
+        runtime_options = service.run.call_args.kwargs["options"]
+        self.assertEqual(runtime_options["backend"], backend)
+
+    @data(SamplerV2, EstimatorV2)
+    def test_init_with_mode_as_session(self, primitive):
+        """Test initializing a primitive with mode as Session."""
+        backend = get_mocked_backend()
+        session = get_mocked_session(backend)
+        session.reset_mock()
+        session._backend = backend
+
+        inst = primitive(mode=session)
+        self.assertIsNotNone(inst.mode)
+        inst.run(**get_primitive_inputs(inst, backend=backend))
+        self.assertEqual(inst.mode, session)
+        session.run.assert_called_once()
+        self.assertEqual(session._backend, backend)
+
+    @data(SamplerV2, EstimatorV2)
+    def test_init_with_mode_as_batch(self, primitive):
+        """Test initializing a primitive with mode as a Batch"""
+        backend = get_mocked_backend()
+        batch = get_mocked_batch(backend)
+        batch.reset_mock()
+        batch._backend = backend
+
+        inst = primitive(mode=batch)
+        self.assertIsNotNone(inst.mode)
+        inst.run(**get_primitive_inputs(inst, backend=backend))
+        batch.run.assert_called_once()
+        self.assertEqual(batch._backend, backend)
 
     @data(EstimatorV2, SamplerV2)
     def test_parameters_single_circuit(self, primitive):
@@ -438,11 +469,10 @@ class TestPrimitivesV2(IBMTestCase):
         """Test multiple runs within a session."""
         num_runs = 5
         primitives = [EstimatorV2, SamplerV2]
-        session = MagicMock(spec=MockSession)
+        session = get_mocked_session()
         for idx in range(num_runs):
             cls = primitives[idx % len(primitives)]
             inst = cls(session=session)
-            inst._backend.target = None
             inst.run(**get_primitive_inputs(inst))
         self.assertEqual(session.run.call_count, num_runs)
 
@@ -457,9 +487,9 @@ class TestPrimitivesV2(IBMTestCase):
         """Test set options."""
         opt_cls = primitive._options_class
         options = opt_cls(default_shots=100)
+        backend = get_mocked_backend()
 
-        session = MagicMock(spec=MockSession)
-        inst = primitive(session=session, options=options)
+        inst = primitive(backend=backend, options=options)
         inst.options.update(**new_opts)
         # Make sure the values are equal.
         inst_options = asdict(inst.options)
@@ -489,12 +519,12 @@ class TestPrimitivesV2(IBMTestCase):
         expected_list[1].default_shots = 1024
         expected_list[2].simulator.seed_simulator = 123
         expected_list[3].environment.log_level = "ERROR"
+        backend = get_mocked_backend()
 
-        session = MagicMock(spec=MockSession)
         for opts, expected in zip(options_dicts, expected_list):
             with self.subTest(options=opts):
-                inst1 = primitive(session=session, options=opts)
-                inst2 = primitive(session=session, options=expected)
+                inst1 = primitive(backend=backend, options=opts)
+                inst2 = primitive(backend=backend, options=expected)
                 self.assertEqual(inst1.options, inst2.options)
 
     @data(EstimatorV2, SamplerV2)
@@ -512,7 +542,7 @@ class TestPrimitivesV2(IBMTestCase):
         ibm_backend = create_faulty_backend(fake_backend, faulty_qubit=faulty_qubit)
         service = MagicMock()
         service.backend.return_value = ibm_backend
-        session = Session(service=service, backend=fake_backend.name)
+        session = Session(service=service, backend=fake_backend.name())
 
         inst = primitive(session=session)
 
@@ -544,7 +574,7 @@ class TestPrimitivesV2(IBMTestCase):
         ibm_backend = create_faulty_backend(fake_backend, faulty_qubit=faulty_qubit)
         service = MagicMock()
         service.backend.return_value = ibm_backend
-        session = Session(service=service, backend=fake_backend.name)
+        session = Session(service=service, backend=fake_backend.name())
 
         inst = primitive(session=session)
         if isinstance(inst, IBMBaseEstimator):
@@ -573,7 +603,7 @@ class TestPrimitivesV2(IBMTestCase):
         ibm_backend = create_faulty_backend(fake_backend, faulty_edge=("cx", edge_qubits))
         service = MagicMock()
         service.backend.return_value = ibm_backend
-        session = Session(service=service, backend=fake_backend.name)
+        session = Session(service=service, backend=fake_backend.name())
 
         inst = primitive(session=session)
         if isinstance(inst, IBMBaseEstimator):
@@ -602,7 +632,7 @@ class TestPrimitivesV2(IBMTestCase):
 
         service = MagicMock()
         service.backend.return_value = ibm_backend
-        session = Session(service=service, backend=fake_backend.name)
+        session = Session(service=service, backend=fake_backend.name())
 
         inst = primitive(session=session)
         if isinstance(inst, IBMBaseEstimator):
@@ -632,7 +662,7 @@ class TestPrimitivesV2(IBMTestCase):
 
         service = MagicMock()
         service.backend.return_value = ibm_backend
-        session = Session(service=service, backend=fake_backend.name)
+        session = Session(service=service, backend=fake_backend.name())
 
         inst = primitive(session=session)
         if isinstance(inst, IBMBaseEstimator):
@@ -675,49 +705,62 @@ class TestPrimitivesV2(IBMTestCase):
             f"{dict1} and {dict2} not partially equal.",
         )
 
-    @skip("Q-Ctrl does not support v2 yet")
-    def test_qctrl_supported_values_for_options(self):
-        """Test exception when options levels not supported."""
+    def test_qctrl_supported_values_for_options_estimator(self):
+        """Test exception when options levels not supported for Estimator V2."""
         no_resilience_options = {
-            "noise_factors": None,
-            "extrapolator": None,
+            "measure_mitigation": Unset,
+            "measure_noise_learning": {},
+            "zne_mitigation": Unset,
+            "zne": {},
+            "pec_mitigation": Unset,
+            "pec": {},
+            "layer_noise_learning": {},
         }
 
         options_good = [
-            # Minium working settings
+            # Minimum working settings
             {},
             # No warnings, we need resilience options here because by default they are getting populated.
             {"resilience": no_resilience_options},
-            # Arbitrary approximation degree (issues warning)
-            {"approximation_degree": 1},
             # Arbitrary resilience options(issue warning)
             {
                 "resilience_level": 1,
-                "resilience": {"noise_factors": (1, 1, 3)},
-                "approximation_degree": 1,
+                "resilience": {"measure_mitigation": True},
             },
             # Resilience level > 1 (issue warning)
             {"resilience_level": 2},
-            # Optimization level = 1,2 (issue warning)
-            {"optimization_level": 1},
-            {"optimization_level": 2},
-            # Skip transpilation level(issue warning)
-            {"skip_transpilation": True},
+            # Twirling (issue warning)
+            {"twirling": {"strategy": "active"}},
+            # Dynamical_decoupling (issue warning)
+            {"dynamical_decoupling": {"sequence_type": "XY4"}},
         ]
-        session = MagicMock(spec=MockSession)
+        session = get_mocked_session()
         session.service._channel_strategy = "q-ctrl"
         session.service.backend().configuration().simulator = False
-        primitives = [Sampler, Estimator]
-        for cls in primitives:
-            for options in options_good:
-                with self.subTest(msg=f"{cls}, {options}"):
-                    inst = cls(session=session)
-                    if isinstance(inst, Estimator):
-                        _ = inst.run(self.circ, observables=self.obs, **options)
-                    else:
-                        _ = inst.run(self.circ, **options)
+        for options in options_good:
+            with self.subTest(msg=f"EstimatorV2, {options}"):
+                print(options)
+                inst = EstimatorV2(session=session, options=options)
+                _ = inst.run(**get_primitive_inputs(inst))
 
-    @skip("Q-Ctrl does not support v2 yet")
+    def test_qctrl_supported_values_for_options_sampler(self):
+        """Test exception when options levels not supported for Sampler V2."""
+
+        options_good = [
+            # Minimum working settings
+            {},
+            # Dynamical_decoupling (issue warning)
+            {"dynamical_decoupling": {"sequence_type": "XY4"}},
+        ]
+        session = get_mocked_session()
+        session.service._channel_strategy = "q-ctrl"
+        session.service.backend().configuration().simulator = False
+        for options in options_good:
+            with self.subTest(msg=f"SamplerV2, {options}"):
+                print(options)
+                inst = SamplerV2(session=session, options=options)
+                _ = inst.run(**get_primitive_inputs(inst))
+
     def test_qctrl_unsupported_values_for_options(self):
         """Test exception when options levels are not supported."""
         options_bad = [
@@ -726,18 +769,15 @@ class TestPrimitivesV2(IBMTestCase):
             # Bad optimization level
             ({"optimization_level": 0}, "optimization level"),
         ]
-        session = MagicMock(spec=MockSession)
+        session = get_mocked_session()
         session.service._channel_strategy = "q-ctrl"
         session.service.backend().configuration().simulator = False
-        primitives = [Sampler, Estimator]
+        primitives = [SamplerV2, EstimatorV2]
         for cls in primitives:
             for bad_opt, expected_message in options_bad:
                 with self.subTest(msg=bad_opt):
-                    inst = cls(session=session)
                     with self.assertRaises(ValueError) as exc:
-                        if isinstance(inst, Sampler):
-                            _ = inst.run(self.circ, **bad_opt)
-                        else:
-                            _ = inst.run(self.circ, observables=self.obs, **bad_opt)
+                        inst = cls(session=session, options=bad_opt)
+                        _ = inst.run(**get_primitive_inputs(inst))
 
                         self.assertIn(expected_message, str(exc.exception))

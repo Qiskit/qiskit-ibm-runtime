@@ -18,11 +18,11 @@ import time
 import itertools
 import unittest
 from unittest import mock
-from typing import Dict, Optional
+from typing import Dict, Optional, Any
 from datetime import datetime
 from ddt import data, unpack
 
-from qiskit.circuit import QuantumCircuit, QuantumRegister, ClassicalRegister
+from qiskit.circuit import QuantumCircuit, QuantumRegister, ClassicalRegister, Parameter
 from qiskit.compiler import transpile
 from qiskit.providers.jobstatus import JOB_FINAL_STATES, JobStatus
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
@@ -33,7 +33,15 @@ from qiskit.providers.models import (
 )
 from qiskit.providers.backend import Backend
 from qiskit.quantum_info import SparsePauliOp, Pauli
-from qiskit_ibm_runtime import QiskitRuntimeService, Session, EstimatorV2
+from qiskit_ibm_runtime import (
+    QiskitRuntimeService,
+    Session,
+    EstimatorV2,
+    SamplerV2,
+    SamplerV1,
+    EstimatorV1,
+    Batch,
+)
 from qiskit_ibm_runtime.fake_provider import FakeManila
 from qiskit_ibm_runtime.hub_group_project import HubGroupProject
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
@@ -292,6 +300,7 @@ def get_mocked_backend(
     mock_service = mock.MagicMock(spec=QiskitRuntimeService)
     mock_service._channel_strategy = None
     mock_api_client = mock.MagicMock()
+    mock_service._api_client = mock_api_client
 
     configuration = (
         FakeManila().configuration()
@@ -306,8 +315,31 @@ def get_mocked_backend(
     )
     mock_backend.name = name
     mock_backend._instance = None
+    mock_service.backend = (
+        lambda name, **kwargs: mock_backend if name == mock_backend.name else None
+    )
 
     return mock_backend
+
+
+def get_mocked_session(backend: Any = None) -> mock.MagicMock:
+    """Return a mocked session object."""
+    session = mock.MagicMock(spec=Session)
+    session._instance = None
+    session._backend = backend or get_mocked_backend()
+    session._service = getattr(backend, "service", None) or mock.MagicMock(
+        spec=QiskitRuntimeService
+    )
+    return session
+
+
+def get_mocked_batch(backend: Any = None) -> mock.MagicMock:
+    """Return a mocked batch object."""
+    batch = mock.MagicMock(spec=Batch)
+    batch._instance = None
+    batch._backend = backend or get_mocked_backend()
+    batch._service = getattr(backend, "service", None) or mock.MagicMock(spec=QiskitRuntimeService)
+    return batch
 
 
 def submit_and_cancel(backend: IBMBackend, logger: logging.Logger) -> RuntimeJob:
@@ -386,18 +418,33 @@ def get_transpiled_circuit(backend, num_qubits=2, measure=False):
 def get_primitive_inputs(primitive, backend=None, num_sets=1):
     """Return primitive specific inputs."""
     backend = backend or FakeManila()
-    circ = QuantumCircuit(2, 2)
+    theta = Parameter("θ")
+    circ = QuantumCircuit(2)
     circ.h(0)
     circ.cx(0, 1)
+    circ.ry(theta, 0)
+
     circ = transpile(circ, backend=backend)
     obs = SparsePauliOp.from_list([("IZ", 1)])
     obs = obs.apply_layout(circ.layout, num_qubits=circ.num_qubits)
+    param_val = [0.1]
 
     if isinstance(primitive, EstimatorV2):
-        return {"pubs": [(circ, [obs])] * num_sets}
-
-    circ.measure_all()
-    return {"pubs": [(circ,)] * num_sets}
+        return {"pubs": [(circ, [obs], [param_val])] * num_sets}
+    elif isinstance(primitive, SamplerV2):
+        circ.measure_all()
+        return {"pubs": [(circ, param_val)] * num_sets}
+    elif isinstance(primitive, EstimatorV1):
+        return {
+            "circuits": [circ] * num_sets,
+            "observables": [obs] * num_sets,
+            "parameter_values": [param_val] * num_sets,
+        }
+    elif isinstance(primitive, SamplerV1):
+        circ.measure_all()
+        return {"circuits": [circ] * num_sets, "parameter_values": [param_val] * num_sets}
+    else:
+        raise ValueError(f"Invalid primitive type {type(primitive)}")
 
 
 def transpile_pubs(in_pubs, backend):
@@ -405,11 +452,12 @@ def transpile_pubs(in_pubs, backend):
     t_pubs = []
     for pub in in_pubs:
         t_circ = transpile(pub[0], backend=backend)
-        t_obs = remap_observables(pub[1], t_circ)
-        t_pub = [t_circ, t_obs]
-        for elem in pub[2:]:
-            t_pub.append(elem)
-        t_pubs.append(tuple(t_pub))
+        if len(pub) > 2:
+            t_obs = remap_observables(pub[1], t_circ)
+            t_pub = [t_circ, t_obs]
+            for elem in pub[2:]:
+                t_pub.append(elem)
+            t_pubs.append(tuple(t_pub))
     return t_pubs
 
 

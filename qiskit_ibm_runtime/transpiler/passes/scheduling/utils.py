@@ -13,7 +13,8 @@
 """Utility functions for scheduling passes."""
 
 import warnings
-from typing import List, Generator, Optional, Tuple, Union
+from typing import Callable, Generator, Optional, Tuple, Union
+from functools import lru_cache
 
 from qiskit.circuit import ControlFlowOp, Measure, Reset, Parameter
 from qiskit.dagcircuit import DAGCircuit, DAGOpNode
@@ -24,6 +25,9 @@ from qiskit.transpiler.instruction_durations import (
 from qiskit.transpiler.target import Target
 from qiskit.transpiler.exceptions import TranspilerError
 from qiskit.providers import Backend, BackendV1
+
+
+BlockOrderingCallableType = Callable[[DAGCircuit], Generator[DAGOpNode, None, None]]
 
 
 def block_order_op_nodes(dag: DAGCircuit) -> Generator[DAGOpNode, None, None]:
@@ -40,10 +44,11 @@ def block_order_op_nodes(dag: DAGCircuit) -> Generator[DAGOpNode, None, None]:
         """Does this node trigger the end of a block?"""
         return isinstance(node.op, ControlFlowOp)
 
+    @lru_cache(maxsize=8192)
     def _emit(
         node: DAGOpNode,
-        grouped_measure: List[DAGOpNode],
-        block_triggers: List[DAGOpNode],
+        grouped_measure: Tuple[DAGOpNode],
+        block_triggers: Tuple[DAGOpNode],
     ) -> bool:
         """Should we emit this node?"""
         for measure in grouped_measure:
@@ -95,7 +100,7 @@ def block_order_op_nodes(dag: DAGCircuit) -> Generator[DAGOpNode, None, None]:
         for node in to_push:
             node_descendants = dag.descendants(node)
             if any(
-                _emit(descendant, yield_measures, yield_block_triggers)
+                _emit(descendant, tuple(yield_measures), tuple(yield_block_triggers))
                 for descendant in node_descendants
                 if isinstance(descendant, DAGOpNode)
             ):
@@ -121,6 +126,8 @@ def block_order_op_nodes(dag: DAGCircuit) -> Generator[DAGOpNode, None, None]:
         # Add to the front of the list to be processed next
         to_push.extend(next_nodes)
         next_nodes = to_push
+
+    _emit.cache_clear()
 
 
 InstrKey = Union[

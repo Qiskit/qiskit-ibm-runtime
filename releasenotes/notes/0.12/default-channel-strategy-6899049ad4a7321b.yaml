@@ -1,6 +1,0 @@
----
-features:
-  - |
-    Users can now pass in a value of ``default`` to the ``channel_strategy`` parameter 
-    in :class:`qiskit_ibm_runtime.QiskitRuntimeService`. Now, if an account is configured
-    with a certain channel strategy, the user can override it by passing in ``default``.

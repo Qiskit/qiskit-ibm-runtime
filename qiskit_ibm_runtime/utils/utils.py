@@ -11,12 +11,13 @@
 # that they have been altered from the originals.
 
 """General utility functions."""
+
+from __future__ import annotations
 import copy
 import keyword
 import logging
 import os
 import re
-import hashlib
 from queue import Queue
 from threading import Condition
 from typing import List, Optional, Any, Dict, Union, Tuple, Sequence
@@ -27,9 +28,24 @@ from ibm_cloud_sdk_core.authenticators import (  # pylint: disable=import-error
     IAMAuthenticator,
 )
 from ibm_platform_services import ResourceControllerV2  # pylint: disable=import-error
-from qiskit.circuit import QuantumCircuit
+from qiskit.circuit import QuantumCircuit, ControlFlowOp
 from qiskit.transpiler import Target
+from qiskit.providers.backend import BackendV1, BackendV2
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
+
+
+def is_simulator(backend: BackendV1 | BackendV2) -> bool:
+    """Return true if the backend is a simulator.
+
+    Args:
+        backend: Backend to check.
+
+    Returns:
+        True if backend is a simulator.
+    """
+    if hasattr(backend, "configuration"):
+        return getattr(backend.configuration(), "simulator", False)
+    return getattr(backend, "simulator", False)
 
 
 def is_isa_circuit(circuit: QuantumCircuit, target: Target) -> str:
@@ -81,6 +97,36 @@ def validate_isa_circuits(circuits: Sequence[QuantumCircuit], target: Target) ->
                 "the primitive examples (https://docs.quantum.ibm.com/run/primitives-examples) to see "
                 "this coupled with operator transformations."
             )
+
+
+def are_circuits_dynamic(circuits: List[QuantumCircuit], qasm_default: bool = True) -> bool:
+    """Checks if the input circuits are dynamic."""
+    for circuit in circuits:
+        if isinstance(circuit, str):
+            return qasm_default  # currently do not verify QASM inputs
+        for inst in circuit:
+            if (
+                isinstance(inst.operation, ControlFlowOp)
+                or getattr(inst.operation, "condition", None) is not None
+            ):
+                return True
+    return False
+
+
+def validate_no_dd_with_dynamic_circuits(circuits: List[QuantumCircuit], options: Any) -> None:
+    """Validate that if dynamical decoupling options are enabled,
+    no circuit in the pubs is dynamic
+
+    Args:
+        circuits: A list of QuantumCircuits.
+        options: The runtime options
+    """
+    if not hasattr(options, "dynamical_decoupling") or not options.dynamical_decoupling.enable:
+        return
+    if are_circuits_dynamic(circuits, False):
+        raise IBMInputValueError(
+            "Dynamical decoupling currently cannot be used with dynamic circuits"
+        )
 
 
 def validate_job_tags(job_tags: Optional[List[str]]) -> None:
@@ -308,13 +354,6 @@ def _filter_value(data: Dict[str, Any], filter_keys: List[Union[str, Tuple[str, 
                 data[filter_key[0]][filter_key[1]] = "..."
             elif isinstance(value, dict):
                 _filter_value(value, filter_keys)
-
-
-def _hash(hash_str: str) -> str:
-    """Hashes and returns a digest.
-    blake2s is supposedly faster than SHAs.
-    """
-    return hashlib.blake2s(hash_str.encode()).hexdigest()
 
 
 class RefreshQueue(Queue):

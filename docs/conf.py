@@ -27,7 +27,7 @@ language = 'en'
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = '0.22.0'
+release = '0.24.0'
 
 # -- General configuration ---------------------------------------------------
 
@@ -39,7 +39,6 @@ extensions = [
     "sphinx.ext.linkcode",
     'jupyter_sphinx',
     'sphinx_autodoc_typehints',
-    'reno.sphinxext',
     'nbsphinx',
     'sphinxcontrib.katex',
     'matplotlib.sphinxext.plot_directive',

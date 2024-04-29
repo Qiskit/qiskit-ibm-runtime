@@ -1,6 +1,0 @@
----
-features:
-  - |
-    Added a new method, :meth:`qiskit_ibm_runtime.QiskitRuntimeService.instances` that returns
-    all instances(hub/group/project) the user is in. This is only for the ``ibm_quantum`` channel
-    since the ``ibm_cloud`` channel does not have multiple instances.

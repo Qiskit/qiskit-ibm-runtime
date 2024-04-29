@@ -1,0 +1,27 @@
+0.12.2
+======
+
+New Features
+------------
+
+-  If using a ``channel_strategy``, only backends that support that
+   ``channel_strategy`` will be accessible to the user.
+
+-  Added the option to define a default account in the account json
+   file. To select an account as default, define ``set_as_default=True``
+   in ``QiskitRuntimeService.save_account()``.
+
+-  Added new method ``Session.from_id`` which creates a new session with
+   a given id.
+
+-  There will now be a warning if a user submits a job that is predicted
+   to exceed their system execution time monthly quota of 10 minutes.
+   This only applies to jobs run on real hardware in the instance
+   ``ibm-q/open/main``. If the job does end up exceeding the quota, it
+   will be canceled.
+
+Upgrade Notes
+-------------
+
+-  Job error messages now include the error code. Error codes can be
+   found in `errors <https://docs.quantum.ibm.com/errors>`__.

@@ -1,0 +1,54 @@
+0.11.0
+======
+
+New Features
+------------
+
+-  When retrieving a job with
+   ``qiskit_ibm_runtime.IBMRuntimeService.job()`` the ``params`` will no
+   longer be returned from the API. They will instead be loaded loazily
+   when they are actually needed in
+   `qiskit_ibm_runtime.RuntimeJob.inputs() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob#inputs>`__.
+
+-  Added warning when the backend is not active in
+   QiskitRuntimeService.run.
+
+-  Support input of type ``CouplingMap`` when given as simulator option.
+   Previously we supported, for example:
+
+   .. code:: python
+
+      options.simulator = {"coupling_map": [[0, 1], [1, 0]]}
+
+   Now we also support the following:
+
+   .. code:: python
+
+      options.simulator = {"coupling_map": CouplingMap.from_line(10)}
+
+Upgrade Notes
+-------------
+
+-  A default session is no longer open for you if you pass a backend
+   name or backend instance to
+   `qiskit_ibm_runtime.Sampler <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Sampler>`__ or
+   `qiskit_ibm_runtime.Estimator <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Estimator>`__
+   constructors. The primitive will instead run without a session. In
+   addition, you should now use the ``backend`` parameter to pass a
+   backend name or instance instead of the ``session`` parameter (which
+   can continue to be used to pass a session).
+
+-  The first parameter of the
+   `qiskit_ibm_runtime.Sampler <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Sampler>`__ and
+   `qiskit_ibm_runtime.Estimator <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Estimator>`__
+   constructors is now ``backend`` instead of ``session``.
+
+Deprecation Notes
+-----------------
+
+-  Passing a backend name or backend instance to the ``session``
+   parameter when initializing a
+   `qiskit_ibm_runtime.Sampler <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Sampler>`__ or
+   `qiskit_ibm_runtime.Estimator <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Estimator>`__
+   has been deprecated. Please use the ``backend`` parameter instead.
+   You can continue to pass a session using the ``session`` parameter.

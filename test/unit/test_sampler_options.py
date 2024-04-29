@@ -18,11 +18,18 @@ from ddt import data, ddt
 from pydantic import ValidationError
 
 from qiskit_aer.noise import NoiseModel
+from qiskit_ibm_runtime import SamplerV2 as Sampler
 from qiskit_ibm_runtime.options import SamplerOptions
 from qiskit_ibm_runtime.fake_provider import FakeManila
 
 from ..ibm_test_case import IBMTestCase
-from ..utils import dict_keys_equal, dict_paritally_equal, flat_dict_partially_equal
+from ..utils import (
+    dict_keys_equal,
+    dict_paritally_equal,
+    flat_dict_partially_equal,
+    get_mocked_backend,
+    get_primitive_inputs,
+)
 
 
 @ddt
@@ -42,7 +49,7 @@ class TestSamplerOptions(IBMTestCase):
         self.assertIn(list(val.keys())[0], str(exc.exception))
 
     def test_program_inputs(self):
-        """Test converting to program inputs from estimator options."""
+        """Test converting to program inputs from sampler options."""
         # pylint: disable=unexpected-keyword-arg
 
         noise_model = NoiseModel.from_backend(FakeManila())
@@ -55,6 +62,7 @@ class TestSamplerOptions(IBMTestCase):
         environment = {"log_level": "INFO"}
         dynamical_decoupling = {"enable": True, "sequence_type": "XX"}
         execution = {"init_qubits": True, "rep_delay": 0.01}
+        twirling = {"enable_gates": True, "enable_measure": True, "strategy": "active-circuit"}
 
         opt = SamplerOptions(
             max_execution_time=100,
@@ -62,6 +70,7 @@ class TestSamplerOptions(IBMTestCase):
             simulator=simulator,
             default_shots=1000,
             dynamical_decoupling=dynamical_decoupling,
+            twirling=twirling,
             execution=execution,
             experimental={"foo": "bar", "execution": {"secret": 88}},
         )
@@ -73,6 +82,11 @@ class TestSamplerOptions(IBMTestCase):
         options = {
             "default_shots": 1000,
             "dynamical_decoupling": dynamical_decoupling,
+            "twirling": {
+                "enable_gates": True,
+                "enable_measure": True,
+                "strategy": "active-circuit",
+            },
             "execution": execution,
             "experimental": {"foo": "bar"},
             "simulator": simulator,
@@ -87,9 +101,10 @@ class TestSamplerOptions(IBMTestCase):
         {"default_shots": 1000},
         {"simulator": {"seed_simulator": 42}},
         {"default_shots": 1, "environment": {"log_level": "WARNING"}},
-        {"execution": {"init_qubits": True}},
+        {"execution": {"init_qubits": True, "meas_type": "avg_kerneled"}},
         {"dynamical_decoupling": {"enable": True, "sequence_type": "XX"}},
         {"environment": {"log_level": "ERROR"}},
+        {"twirling": {"enable_gates": True, "strategy": "active"}},
     )
     def test_init_options_with_dictionary(self, opts_dict):
         """Test initializing options with dictionaries."""
@@ -110,6 +125,7 @@ class TestSamplerOptions(IBMTestCase):
             "sequence_type": "XX",
             "log_level": "INFO",
         },
+        {"twirling": {"enable_gates": True, "strategy": "active"}},
     )
     def test_update_options(self, new_opts):
         """Test update method."""
@@ -123,3 +139,15 @@ class TestSamplerOptions(IBMTestCase):
         )
         # Make sure the structure didn't change.
         self.assertTrue(dict_keys_equal(asdict(options), asdict(SamplerOptions())))
+
+    @data(
+        {"default_shots": 0},
+        {"execution": {"rep_delay": 0.0}},
+    )
+    def test_zero_values(self, opt_dict):
+        """Test options with values of 0."""
+        backend = get_mocked_backend()
+        sampler = Sampler(backend=backend, options=opt_dict)
+        _ = sampler.run(**get_primitive_inputs(sampler))
+        options = backend.service.run.call_args.kwargs["inputs"]["options"]
+        self.assertDictEqual(options, opt_dict)

@@ -1,5 +1,0 @@
----
-upgrade:
-  - |
-    `qiskit.providers.ibmq.runtime.IBMRuntimeService.logout` method in `qiskit-ibmq-provider`
-    which was used to clear authorization cache on the server has been removed.

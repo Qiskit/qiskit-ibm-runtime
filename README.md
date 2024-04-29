@@ -359,4 +359,4 @@ use the `Qiskit` tag in [Stack Exchange].
 [many people]: https://github.com/Qiskit/qiskit-ibm-runtime/graphs/contributors
 [BibTeX file]: https://github.com/Qiskit/qiskit/blob/master/Qiskit.bib
 [Apache License 2.0]: https://github.com/Qiskit/qiskit-ibm-runtime/blob/main/LICENSE.txt
-[tutorials]: https://github.com/Qiskit/qiskit-ibm-runtime/tree/main/docs/tutorials
+[tutorials]: https://learning.quantum.ibm.com/catalog/tutorials

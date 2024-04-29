@@ -1,0 +1,27 @@
+0.9.0
+=====
+
+Upgrade Notes
+-------------
+
+-  Changed the default values for ``optimization_level`` and for
+   ``resilience_level`` in ``qiskit_ibm_runtime.Options``. If their
+   values are defined by the user, they are not modified. If not set, if
+   the backend is a noiseless simulator then ``optimization_level`` is
+   set to 1 and ``resilience_level`` is set to 0; Otherwise, they are be
+   set to 3 and 1 respectively.
+
+-  `session_id() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob#session_id>`__ and
+   `tags() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob#tags>`__ were added for an
+   easy way to return the session_id and job_tags of a job.
+
+Bug Fixes
+---------
+
+-  Fixed a bug where jobs that did not run before a session closes are
+   not actually run as a part of that session. Jobs should run as a part
+   of a session even if that session is closed by the exit of the
+   context manager.
+
+-  Fixes the issue wherein submitting a large job fails due to write
+   operation timeout.

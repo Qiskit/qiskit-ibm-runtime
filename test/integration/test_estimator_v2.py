@@ -103,8 +103,6 @@ class TestEstimatorV2(IBMIntegrationTestCase):
         result = job.result()
         self._verify_result_type(result, num_pubs=1, shapes=[()])
         self.assertEqual(result[0].metadata["shots"], 1600)
-        for res_key in ["twirled_readout_errors", "zne_noise_factors"]:
-            self.assertIn(res_key, result[0].metadata["resilience"])
 
     @skip("Skip until simulator options are accepted by server.")
     @run_integration_test

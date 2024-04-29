@@ -1,0 +1,34 @@
+0.11.2
+======
+
+New Features
+------------
+
+-  If a job has been cancelled, and job.result() is requested, throw an
+   exception rather than returning None.
+
+-  A new method,
+   `qiskit_ibm_runtime.options.SimulatorOptions.set_backend() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.options.SimulatorOptions#set_backend>`__,
+   allows users to more easily set simulator options for a backend.
+
+   .. code:: python
+
+      from qiskit.providers.fake_provider import FakeManila
+      from qiskit_aer.noise import NoiseModel
+
+      # Make a noise model
+      fake_backend = FakeManila()
+
+      # Set options to include the noise model
+      options = Options()
+      options.simulator.set_backend(fake_backend)
+      options.simulator.seed_simulator = 42
+
+Bug Fixes
+---------
+
+-  Fixed infinite recursion when attempting to deepcopy an IBMBackend.
+   Added a method ``qiskit_ibm_runtime.IBMBackend.deepcopy()``.
+
+-  Fixed an issue where circuit metadata was not being serialized
+   correctly resulting in a type error.

@@ -13,8 +13,8 @@
 """Primitive options."""
 
 from abc import abstractmethod
-from typing import Optional, Union, ClassVar, Any
-from dataclasses import dataclass, fields, field
+from typing import Iterable, Optional, Tuple, Union, ClassVar, Any
+from dataclasses import dataclass, fields, field, asdict, is_dataclass
 import copy
 import warnings
 
@@ -37,6 +37,43 @@ from .simulator_options import SimulatorOptions
 from .transpilation_options import TranspilationOptions
 from .resilience_options import ResilienceOptions
 from ..runtime_options import RuntimeOptions
+
+
+def _make_data_row(indent: int, name: str, value: Any, is_section: bool) -> Iterable[str]:
+    """Yield HTML table rows to format an options entry."""
+    tag = "th" if is_section else "td"
+
+    weight = " font-weight: bold;" if is_section else ""
+    style = f"style='text-align: left; vertical-align: top;{weight}'"
+
+    marker = "▸" if is_section else ""
+    spacer_style = "display: inline-block; text-align: right; margin-right: 10px;"
+    spacer = f"<div style='width: {20*(1 + indent)}px; {spacer_style}'>{marker}</div>"
+
+    yield "  <tr>"
+    yield f"    <{tag} {style}>{spacer}{name}</{tag}>"
+    yield f"    <{tag} {style}>{type(value).__name__ if is_section else repr(value)}</{tag}>"
+    yield "  </tr>"
+
+
+def _iter_all_fields(
+    data_cls: Any, indent: int = 0, dict_form: Union[dict, None] = None
+) -> Iterable[Tuple[int, str, Any, bool]]:
+    """Recursively iterate over a dataclass, yielding (indent, name, value, is_dataclass) fields."""
+    # we pass dict_form through recursion simply to avoid calling asdict() more than once
+    dict_form = dict_form or asdict(data_cls)
+
+    suboptions = []
+    for name, val in dict_form.items():
+        if is_dataclass(subopt := getattr(data_cls, name)):
+            suboptions.append((name, subopt))
+        elif name != "_VERSION":
+            yield (indent, name, val, False)
+
+    # put all of the nested options at the bottom
+    for name, subopt in suboptions:
+        yield (indent, name, subopt, True)
+        yield from _iter_all_fields(subopt, indent + 1, dict_form[name])
 
 
 @dataclass
@@ -71,6 +108,14 @@ class BaseOptions:
             out["image"] = options_copy["experimental"]["image"]
 
         return out
+
+    def _repr_html_(self) -> str:
+        """Return a string that formats this instance as an HTML table."""
+        table_html = [f"<pre>{type(self).__name__}<{hex(id(self))}></pre>", "<table>"]
+        for row in _iter_all_fields(self):
+            table_html.extend(_make_data_row(*row))
+        table_html.append("</table>")
+        return "\n".join(table_html)
 
 
 @primitive_dataclass
@@ -163,7 +208,7 @@ class OptionsV2(BaseOptions):
         remove_empty_dict(output_options)
 
         inputs = {"options": output_options, "version": OptionsV2._VERSION, "support_qiskit": True}
-        if options_copy.get("resilience_level"):
+        if options_copy.get("resilience_level", Unset) != Unset:
             inputs["resilience_level"] = options_copy["resilience_level"]
 
         return inputs

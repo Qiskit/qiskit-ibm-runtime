@@ -58,7 +58,6 @@ from qiskit.version import __version__ as _terra_version_string
 from qiskit.utils import optionals
 from qiskit.qpy import (
     _write_parameter_expression,
-    _read_parameter_expression,
     _read_parameter_expression_v3,
     load,
     dump,
@@ -228,9 +227,7 @@ class RuntimeEncoder(json.JSONEncoder):
         if isinstance(obj, QuantumCircuit):
             kwargs: Dict[str, object] = {"use_symengine": bool(optionals.HAS_SYMENGINE)}
             if _TERRA_VERSION[0] >= 1:
-                # NOTE: This can be updated only after the server side has
-                # updated to a newer qiskit version.
-                kwargs["version"] = 10
+                kwargs["version"] = 11
             value = _serialize_and_encode(
                 data=obj,
                 serializer=lambda buff, data: dump(
@@ -258,9 +255,7 @@ class RuntimeEncoder(json.JSONEncoder):
         if isinstance(obj, Instruction):
             kwargs = {"use_symengine": bool(optionals.HAS_SYMENGINE)}
             if _TERRA_VERSION[0] >= 1:
-                # NOTE: This can be updated only after the server side has
-                # updated to a newer qiskit version.
-                kwargs["version"] = 10
+                kwargs["version"] = 11
             # Append instruction to empty circuit
             quantum_register = QuantumRegister(obj.num_qubits)
             quantum_circuit = QuantumCircuit(quantum_register)
@@ -335,13 +330,10 @@ class RuntimeDecoder(json.JSONDecoder):
     def __init__(self, *args: Any, **kwargs: Any):
         super().__init__(object_hook=self.object_hook, *args, **kwargs)
         self.__parameter_vectors: Dict[str, Tuple[ParameterVector, set]] = {}
-        self.__read_parameter_expression = (
-            functools.partial(
-                _read_parameter_expression_v3,
-                vectors=self.__parameter_vectors,
-            )
-            if _TERRA_VERSION >= (0, 19, 1)
-            else _read_parameter_expression
+        self.__read_parameter_expression = functools.partial(
+            _read_parameter_expression_v3,
+            vectors=self.__parameter_vectors,
+            use_symengine=bool(optionals.HAS_SYMENGINE),
         )
 
     def object_hook(self, obj: Any) -> Any:
@@ -373,7 +365,9 @@ class RuntimeDecoder(json.JSONDecoder):
                 # to deserialize load qpy circuit and return first instruction object in that circuit.
                 circuit = _decode_and_deserialize(obj_val, load)[0]
                 return circuit.data[0][0]
-            if obj_type == "settings":
+            if obj_type == "settings" and obj["__module__"].startswith(
+                "qiskit.quantum_info.operators"
+            ):
                 return _deserialize_from_settings(
                     mod_name=obj["__module__"],
                     class_name=obj["__class__"],
@@ -408,7 +402,10 @@ class RuntimeDecoder(json.JSONDecoder):
                 shape = obj_val["shape"]
                 if shape is not None and isinstance(shape, list):
                     shape = tuple(shape)
-                data_bin_cls = make_data_bin(zip(field_names, field_types), shape=shape)
+                data_bin_cls = make_data_bin(
+                    zip(field_names, field_types) if field_names and field_types else None,
+                    shape=shape,
+                )
                 return data_bin_cls(**obj_val["fields"])
             if obj_type == "PubResult":
                 return PubResult(**obj_val)

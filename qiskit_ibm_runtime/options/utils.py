@@ -23,7 +23,9 @@ from numbers import Real
 from pydantic import ConfigDict, ValidationInfo, field_validator
 from pydantic.dataclasses import dataclass
 
-from ..ibm_backend import IBMBackend
+from qiskit.providers.backend import Backend
+
+from ..utils.utils import is_simulator
 
 if TYPE_CHECKING:
     from ..options.options import BaseOptions
@@ -31,7 +33,7 @@ if TYPE_CHECKING:
 
 def set_default_error_levels(
     options: dict,
-    backend: IBMBackend,
+    backend: Backend,
     default_optimization_level: int,
     default_resilience_level: int,
 ) -> dict:
@@ -46,18 +48,16 @@ def set_default_error_levels(
     Returns:
         options with correct error level defaults.
     """
+    is_sim = is_simulator(backend)
+
     if options.get("optimization_level") is None:
-        if backend.configuration().simulator and not options.get("simulator", {}).get(
-            "noise_model"
-        ):
+        if is_sim and not options.get("simulator", {}).get("noise_model"):
             options["optimization_level"] = 1
         else:
             options["optimization_level"] = default_optimization_level
 
     if options.get("resilience_level") is None:
-        if backend.configuration().simulator and not options.get("simulator", {}).get(
-            "noise_model"
-        ):
+        if is_sim and not options.get("simulator", {}).get("noise_model"):
             options["resilience_level"] = 0
         else:
             options["resilience_level"] = default_resilience_level

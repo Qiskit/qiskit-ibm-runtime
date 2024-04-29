@@ -17,7 +17,6 @@ import os
 import subprocess
 import tempfile
 import warnings
-from unittest import skip
 from datetime import datetime
 
 import numpy as np
@@ -27,7 +26,7 @@ from qiskit.circuit import Parameter, ParameterVector, QuantumCircuit
 from qiskit.circuit.library import EfficientSU2, CXGate, PhaseGate, U2Gate
 
 import qiskit.quantum_info as qi
-from qiskit.quantum_info import SparsePauliOp, Pauli, Statevector
+from qiskit.quantum_info import SparsePauliOp, Pauli
 from qiskit.result import Result, Counts
 from qiskit.primitives.containers.bindings_array import BindingsArray
 from qiskit.primitives.containers.observables_array import ObservablesArray
@@ -107,7 +106,6 @@ class TestDataSerialization(IBMTestCase):
                     decoded = [decoded]
                 self.assertTrue(all(isinstance(item, QuantumCircuit) for item in decoded))
 
-    @skip("Skip until qiskit-ibm-provider/736 is merged")
     def test_coder_operators(self):
         """Test runtime encoder and decoder for operators."""
 
@@ -118,6 +116,7 @@ class TestDataSerialization(IBMTestCase):
             SparsePauliOp(Pauli("XYZX"), coeffs=[2]),
             SparsePauliOp(Pauli("XYZX"), coeffs=[coeff_y]),
             SparsePauliOp(Pauli("XYZX"), coeffs=[1 + 2j]),
+            Pauli("XYZ"),
         )
 
         for operator in subtests:
@@ -177,7 +176,6 @@ class TestDataSerialization(IBMTestCase):
             decoded = json.loads(encoded, cls=RuntimeDecoder)
             self.assertTrue(np.array_equal(decoded["ndarray"], obj["ndarray"]))
 
-    @skip("Skip until qiskit-ibm-provider/736 is merged")
     def test_encoder_instruction(self):
         """Test encoding and decoding instructions"""
         subtests = (
@@ -224,7 +222,7 @@ if __name__ == '__main__':
 
         subtests = (
             SparsePauliOp(Pauli("XYZX"), coeffs=[2]),
-            Statevector([1, 0]),
+            Pauli("XYZX"),
         )
         for operator in subtests:
             with self.subTest(operator=operator):
@@ -295,7 +293,7 @@ class TestContainerSerialization(IBMTestCase):
         barr2_str_keyed = _to_str_keyed(barr2.data)
         for key, val in barr1_str_keyed.items():
             self.assertIn(key, barr2_str_keyed)
-            self.assertTrue(np.allclose(val, barr2_str_keyed[key]))
+            np.testing.assert_allclose(val, barr2_str_keyed[key])
 
     def assert_data_bins_equal(self, dbin1, dbin2):
         """Compares two DataBins
@@ -311,7 +309,7 @@ class TestContainerSerialization(IBMTestCase):
             field_1 = getattr(dbin1, field_name)
             field_2 = getattr(dbin2, field_name)
             if isinstance(field_1, np.ndarray):
-                self.assertTrue(np.allclose(field_1, field_2))
+                np.testing.assert_allclose(field_1, field_2)
             else:
                 self.assertEqual(field_1, field_2)
 
@@ -405,6 +403,7 @@ class TestContainerSerialization(IBMTestCase):
         """Generates test data for PrimitiveResult test"""
         primitive_results = []
         data_bin_cls = make_data_bin([("alpha", np.ndarray), ("beta", np.ndarray)], shape=(10, 20))
+        empty_data_bin = make_data_bin([], shape=None)
 
         alpha = np.empty((10, 20), dtype=np.uint16)
         beta = np.empty((10, 20), dtype=int)
@@ -412,6 +411,7 @@ class TestContainerSerialization(IBMTestCase):
         pub_results = [
             PubResult(data_bin_cls(alpha, beta)),
             PubResult(data_bin_cls(alpha, beta)),
+            PubResult(empty_data_bin()),
         ]
         result = PrimitiveResult(pub_results, {"1": 2})
         primitive_results.append(result)
@@ -531,3 +531,16 @@ class TestContainerSerialization(IBMTestCase):
             decoded = json.loads(encoded, cls=RuntimeDecoder)["primitive_result"]
             self.assertIsInstance(decoded, PrimitiveResult)
             self.assert_primitive_results_equal(primitive_result, decoded)
+
+    def test_unknown_settings(self):
+        """Test settings not on whitelisted path."""
+        random_settings = {
+            "__type__": "settings",
+            "__module__": "subprocess",
+            "__class__": "Popen",
+            "__value__": {"args": ["echo", "hi"]},
+        }
+        encoded = json.dumps(random_settings)
+        decoded = json.loads(encoded, cls=RuntimeDecoder)
+        self.assertIsInstance(decoded, dict)
+        self.assertDictEqual(decoded, random_settings)
