@@ -160,10 +160,12 @@ class Session:
 
     def _create_session(self) -> Optional[str]:
         """Create a session."""
-        session = self._service._api_client.create_session(
-            self._backend, self._instance, self._max_time, self._service.channel, "dedicated"
-        )
-        return session.get("id")
+        if isinstance(self._service, QiskitRuntimeService):
+            session = self._service._api_client.create_session(
+                self.backend(), self._instance, self._max_time, self._service.channel, "dedicated"
+            )
+            return session.get("id")
+        return None
 
     @_active_session
     def run(
