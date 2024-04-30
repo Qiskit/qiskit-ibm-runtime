@@ -17,7 +17,9 @@ Transpiler passes (:mod:`qiskit_ibm_runtime.transpiler.passes`)
 
 .. currentmodule:: qiskit_ibm_runtime.transpiler.passes
 
-A collection of transpiler passes for IBM backends. Refer to https://docs.quantum.ibm.com/transpile to learn more about transpilation and passes.
+A collection of transpiler passes for IBM backends. Refer to
+https://docs.quantum.ibm.com/transpile to learn more about
+transpilation and passes.
 
 .. autosummary::
    :toctree: ../stubs/

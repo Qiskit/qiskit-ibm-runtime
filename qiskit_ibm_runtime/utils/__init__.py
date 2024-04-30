@@ -10,6 +10,8 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+"""Internal utilities."""
+
 from .converters import (
     utc_to_local,
     local_to_utc,

@@ -10,4 +10,6 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+"""Passes to layout circuits to IBM backend's instruction sets."""
+
 from .convert_id_to_delay import ConvertIdToDelay
