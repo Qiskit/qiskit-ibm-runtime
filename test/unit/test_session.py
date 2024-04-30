@@ -167,3 +167,9 @@ class TestSession(IBMTestCase):
         session = Session.from_id(session_id=session_id, service=service)
         session.run(program_id="foo", inputs={})
         self.assertEqual(session.session_id, session_id)
+
+    def test_correct_execution_mode(self):
+        """Test that the execution mode is correctly set."""
+        _ = FakeRuntimeService(channel="ibm_quantum", token="abc")
+        session = Session(backend="common_backend")
+        self.assertEqual(session.details()["mode"], "dedicated")
