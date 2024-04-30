@@ -22,7 +22,7 @@ import warnings
 from qiskit.providers.backend import BackendV1, BackendV2
 
 from qiskit_ibm_runtime import QiskitRuntimeService
-from .exceptions import IBMInputValueError
+from .exceptions import IBMInputValueError, IBMRuntimeError
 from .runtime_job import RuntimeJob
 from .runtime_job_v2 import RuntimeJobV2
 from .utils.result_decoder import ResultDecoder
@@ -39,7 +39,7 @@ def _active_session(func):  # type: ignore
     @wraps(func)
     def _wrapper(self, *args, **kwargs):  # type: ignore
         if not self._active:
-            raise RuntimeError("The session is closed.")
+            raise IBMRuntimeError("The session is closed.")
         return func(self, *args, **kwargs)
 
     return _wrapper
