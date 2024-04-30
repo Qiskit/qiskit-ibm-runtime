@@ -10,14 +10,6 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""
-==========================================================
-Basis (:mod:`qiskit_ibm_runtime.transpiler.passes.basis`)
-==========================================================
-
-.. currentmodule:: qiskit_ibm_runtime.transpiler.passes.basis
-
-Passes to layout circuits to IBM backend's instruction sets.
-"""
+"""Passes to layout circuits to IBM backend's instruction sets."""
 
 from .convert_id_to_delay import ConvertIdToDelay
