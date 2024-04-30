@@ -153,16 +153,11 @@ class Session:
             if not self._backend.configuration().simulator:
                 self._session_id = self._create_session()
 
-        if not self._session_id:
-            warnings.warn(
-                "Session is not supported in local testing mode or when using a simulator."
-            )
-
     def _create_session(self) -> Optional[str]:
         """Create a session."""
         if isinstance(self._service, QiskitRuntimeService):
             session = self._service._api_client.create_session(
-                self.backend(), self._instance, self._max_time, self._service.channel
+                self.backend(), self._instance, self._max_time, self._service.channel, "dedicated"
             )
             return session.get("id")
         return None
