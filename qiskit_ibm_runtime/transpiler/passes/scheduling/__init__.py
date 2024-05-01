@@ -11,9 +11,9 @@
 # that they have been altered from the originals.
 
 """
-====================================================================
-Scheduling (:mod:`qiskit_ibm_runtime.transpiler.passes.scheduling`)
-====================================================================
+=====================================================================================
+Transpiler scheduling passes (:mod:`qiskit_ibm_runtime.transpiler.passes.scheduling`)
+=====================================================================================
 
 .. currentmodule:: qiskit_ibm_runtime.transpiler.passes.scheduling
 
