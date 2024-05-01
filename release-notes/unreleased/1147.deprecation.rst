@@ -1,0 +1,3 @@
+``name`` will now be a required parameter in 
+ `backend() https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#backend`__.
+ ``backend()`` will no longer return the first backend out of all backends if ``name`` is not provided.

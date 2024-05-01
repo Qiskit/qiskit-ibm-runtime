@@ -24,7 +24,7 @@ from qiskit_ibm_runtime import (
     Sampler,
     SamplerV2,
     EstimatorV2,
-    Session,
+    Batch,
     Options,
     Estimator,
     QiskitRuntimeService,
@@ -55,7 +55,7 @@ class TestV2PrimitivesQCTRL(IBMIntegrationTestCase):
         pm = generate_preset_pass_manager(backend=self.backend, optimization_level=1)
         isa_circuit = pm.run(self.bell)
 
-        with Session(service, backend=self.backend):
+        with Batch(service, backend=self.backend):
             sampler = SamplerV2()
 
             result = sampler.run([isa_circuit], shots=shots).result()
@@ -78,8 +78,8 @@ class TestV2PrimitivesQCTRL(IBMIntegrationTestCase):
         theta2 = [0, 1, 1, 2, 3, 5, 8, 13]
         theta3 = [1, 2, 3, 4, 5, 6]
 
-        with Session(service, self.backend) as session:
-            estimator = EstimatorV2(session=session)
+        with Batch(service, self.backend):
+            estimator = EstimatorV2()
 
             job = estimator.run([(psi1, H1, [theta1])])
             result = job.result()
@@ -151,9 +151,9 @@ class TestQCTRL(IBMIntegrationTestCase):
     @run_integration_test
     def test_cancel_qctrl_job(self, service):
         """Test canceling qctrl job."""
-        with Session(service, self.backend) as session:
+        with Batch(service, self.backend):
             options = Options(resilience_level=1)
-            sampler = Sampler(session=session, options=options)
+            sampler = Sampler(options=options)
 
             job = sampler.run([self.bell] * 10)
 
@@ -178,7 +178,7 @@ class TestQCTRL(IBMIntegrationTestCase):
         bell_circuit_sampler.measure_active()
 
         # Execute circuit in a session with sampler
-        with Session(service, backend=self.backend):
+        with Batch(service, backend=self.backend):
             options = Options(resilience_level=1)
             sampler = Sampler(options=options)
 
@@ -209,7 +209,7 @@ class TestQCTRL(IBMIntegrationTestCase):
         ghz_circuit_sampler.measure_active()
 
         # Execute circuit in a session with sampler
-        with Session(service, backend=self.backend):
+        with Batch(service, backend=self.backend):
             options = Options(resilience_level=1)
             sampler = Sampler(options=options)
 
@@ -239,7 +239,7 @@ class TestQCTRL(IBMIntegrationTestCase):
         superposition_circuit_sampler.measure_active()
 
         # Execute circuit in a session with sampler
-        with Session(service, backend=self.backend):
+        with Batch(service, backend=self.backend):
             options = Options(resilience_level=1)
             sampler = Sampler(options=options)
 
@@ -280,7 +280,7 @@ class TestQCTRL(IBMIntegrationTestCase):
             computational_states_sampler_circuits.append(circuit_sampler)
 
         # Execute circuit in a session with sampler
-        with Session(service, backend=self.backend):
+        with Batch(service, backend=self.backend):
             options = Options(resilience_level=1)
             sampler = Sampler(options=options)
 
@@ -317,7 +317,7 @@ class TestQCTRL(IBMIntegrationTestCase):
         observables = [SparsePauliOp("ZZ"), SparsePauliOp("IZ"), SparsePauliOp("ZI")]
 
         # Execute circuit in a session with estimator
-        with Session(service, backend=self.backend):
+        with Batch(service, backend=self.backend):
             estimator = Estimator()
 
             result = estimator.run(
@@ -356,7 +356,7 @@ class TestQCTRL(IBMIntegrationTestCase):
         ]
 
         # Execute circuit in a session with estimator
-        with Session(service, backend=self.backend):
+        with Batch(service, backend=self.backend):
             estimator = Estimator()
 
             result = estimator.run(
@@ -397,7 +397,7 @@ class TestQCTRL(IBMIntegrationTestCase):
         observables = [SparsePauliOp(obs) for obs in obs_labels]
 
         # Execute circuit in a session with estimator
-        with Session(service, backend=self.backend):
+        with Batch(service, backend=self.backend):
             estimator = Estimator()
 
             result = estimator.run(
@@ -447,7 +447,7 @@ class TestQCTRL(IBMIntegrationTestCase):
             observables_estimator += observables
 
         # Execute circuit in a session with estimator
-        with Session(service, self.backend):
+        with Batch(service, self.backend):
             estimator = Estimator()
             result = estimator.run(
                 computational_states_circuits_estimator,

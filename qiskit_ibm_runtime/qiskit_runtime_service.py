@@ -42,11 +42,7 @@ from .api.clients.runtime import RuntimeClient
 from .api.exceptions import RequestsApiError
 from .constants import QISKIT_IBM_RUNTIME_API_URL
 from .exceptions import IBMNotAuthorizedError, IBMInputValueError, IBMAccountError
-from .exceptions import (
-    IBMRuntimeError,
-    RuntimeProgramNotFound,
-    RuntimeJobNotFound,
-)
+from .exceptions import IBMRuntimeError, RuntimeProgramNotFound, RuntimeJobNotFound, IBMApiError
 from .hub_group_project import HubGroupProject  # pylint: disable=cyclic-import
 from .utils.result_decoder import ResultDecoder
 from .runtime_job import RuntimeJob
@@ -158,14 +154,13 @@ class QiskitRuntimeService(Provider):
             auth_client = self._authenticate_ibm_quantum_account(self._client_params)
             # Update client parameters to use authenticated values.
             self._client_params.url = auth_client.current_service_urls()["services"]["runtime"]
-            if self._client_params.url == "https://api.de.quantum-computing.ibm.com/runtime":
-                warnings.warn(
-                    "Features in versions of qiskit-ibm-runtime greater than and including "
-                    "0.13.0 may not be supported in this environment"
-                )
             self._client_params.token = auth_client.current_access_token()
             self._api_client = RuntimeClient(self._client_params)
-            self._hgps = self._initialize_hgps(auth_client)
+            try:
+                self._hgps = self._initialize_hgps(auth_client)
+            except json.decoder.JSONDecodeError:
+                raise IBMApiError("Unexpected response received from server")
+
             for hgp in self._hgps.values():
                 for backend_name in hgp.backends:
                     if backend_name not in self._backends:
@@ -775,6 +770,15 @@ class QiskitRuntimeService(Provider):
             QiskitBackendNotFoundError: if no backend could be found.
         """
         # pylint: disable=arguments-differ, line-too-long
+        if not name:
+            warnings.warn(
+                (
+                    "The `name` parameter will be required in a future release no sooner than "
+                    "3 months after the release of qiskit-ibm-runtime 0.24.0 ."
+                ),
+                DeprecationWarning,
+                stacklevel=2,
+            )
         backends = self.backends(name, instance=instance)
         if not backends:
             cloud_msg_url = ""
