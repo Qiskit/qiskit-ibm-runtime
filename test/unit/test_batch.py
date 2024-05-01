@@ -16,6 +16,7 @@ from unittest.mock import MagicMock
 
 from qiskit_ibm_runtime import Batch
 from qiskit_ibm_runtime.utils.default_session import _DEFAULT_SESSION
+from qiskit_ibm_runtime.exceptions import IBMRuntimeError
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import get_mocked_backend
@@ -46,7 +47,7 @@ class TestBatch(IBMTestCase):
         """Test running after session is closed."""
         session = Batch(service=MagicMock(), backend="ibm_gotham")
         session.cancel()
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(IBMRuntimeError):
             session.run(program_id="program_id", inputs={})
 
     def test_context_manager(self):
