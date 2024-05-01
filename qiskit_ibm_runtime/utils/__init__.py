@@ -10,30 +10,7 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""
-==============================================================================
-Utilities (:mod:`qiskit_ibm_runtime.utils`)
-==============================================================================
-
-.. currentmodule:: qiskit_ibm_runtime.utils
-
-Utility functions related to the IBM Runtime Services.
-
-Conversion
-==========
-.. autosummary::
-    :toctree: ../stubs/
-
-    seconds_to_duration
-    utc_to_local
-
-Misc Functions
-==============
-.. autosummary::
-    :toctree: ../stubs/
-
-    to_python_identifier
-"""
+"""Internal utilities."""
 
 from .converters import (
     utc_to_local,

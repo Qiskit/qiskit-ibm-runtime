@@ -180,7 +180,7 @@ class TestLocalModeV2(IBMTestCase):
     @combine(
         primitive=[SamplerV2, EstimatorV2], backend=[FakeManila(), FakeManilaV2(), AerSimulator()]
     )
-    def test_primitve_v2_with_not_accepted_options(self, primitive, backend):
+    def test_primitive_v2_with_not_accepted_options(self, primitive, backend):
         """Test V1 primitive with accepted options."""
         options = {
             "max_execution_time": 200,
@@ -223,7 +223,7 @@ class TestLocalModeV2(IBMTestCase):
                 self.assertIsInstance(pub_result.metadata, dict)
 
     @data(FakeManila(), FakeManilaV2(), AerSimulator())
-    def test_non_primitve(self, backend):
+    def test_non_primitive(self, backend):
         """Test calling non-primitive in local mode."""
         session = Session(backend=backend)
         with self.assertRaisesRegex(ValueError, "Only sampler and estimator"):

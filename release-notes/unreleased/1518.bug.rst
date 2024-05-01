@@ -1,0 +1,1 @@
+To avoid network disruptions during long job processes, websocket errors will no longer be raised.

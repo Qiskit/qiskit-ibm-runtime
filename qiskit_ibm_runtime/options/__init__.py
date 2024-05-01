@@ -19,7 +19,8 @@ Primitive options (:mod:`qiskit_ibm_runtime.options`)
 
 Options that can be passed to the primitives.
 
-**V2 Primitives**
+V2 Primitives
+=============
 
 ``SamplerV2`` and ``EstimatorV2`` each have their own options. You can use the
 ``options`` attribute to set the options. For example::
@@ -45,12 +46,12 @@ V2 Estimator options, respectively.
 
 .. note::
    If an option is not specified, the server default value is used. The
-   default values are subject to change. See the
-   `API Reference <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/options>`_
-   for the most up-to-date default values.
+   default values are subject to change. Refer to this current module's documentation
+   for the latest defaults.
 
 
-**V1 Primitives**
+V1 Primitives
+=============
 
 The :class:`Options` class encapsulates all the options you can specify
 when invoking a V1 primitive. It includes frequently used options,
@@ -72,7 +73,8 @@ You can also pass dictionaries to each sub-category, for example::
 
 
 Classes
-==========================
+=======
+
 .. autosummary::
    :toctree: ../stubs/
 
