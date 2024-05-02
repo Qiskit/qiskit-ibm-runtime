@@ -22,7 +22,7 @@ import warnings
 from qiskit.providers.backend import BackendV1, BackendV2
 
 from qiskit_ibm_runtime import QiskitRuntimeService
-from .exceptions import IBMInputValueError
+from .exceptions import IBMInputValueError, IBMRuntimeError
 from .runtime_job import RuntimeJob
 from .runtime_job_v2 import RuntimeJobV2
 from .utils.result_decoder import ResultDecoder
@@ -39,7 +39,7 @@ def _active_session(func):  # type: ignore
     @wraps(func)
     def _wrapper(self, *args, **kwargs):  # type: ignore
         if not self._active:
-            raise RuntimeError("The session is closed.")
+            raise IBMRuntimeError("The session is closed.")
         return func(self, *args, **kwargs)
 
     return _wrapper
@@ -153,16 +153,11 @@ class Session:
             if not self._backend.configuration().simulator:
                 self._session_id = self._create_session()
 
-        if not self._session_id:
-            warnings.warn(
-                "Session is not supported in local testing mode or when using a simulator."
-            )
-
     def _create_session(self) -> Optional[str]:
         """Create a session."""
         if isinstance(self._service, QiskitRuntimeService):
             session = self._service._api_client.create_session(
-                self.backend(), self._instance, self._max_time, self._service.channel
+                self.backend(), self._instance, self._max_time, self._service.channel, "dedicated"
             )
             return session.get("id")
         return None
