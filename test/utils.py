@@ -239,6 +239,7 @@ def create_faulty_backend(
     model_backend: Backend,
     faulty_qubit: Optional[int] = None,
     faulty_edge: Optional[tuple] = None,
+    faulty_q1_property: Optional[int] = None,
 ) -> IBMBackend:
     """Create an IBMBackend that has faulty qubits and/or edges.
 
@@ -246,6 +247,7 @@ def create_faulty_backend(
         model_backend: Fake backend to model after.
         faulty_qubit: Faulty qubit.
         faulty_edge: Faulty edge, a tuple of (gate, qubits)
+        faulty_q1_property: Faulty Q1 property.
 
     Returns:
         An IBMBackend with faulty qubits/edges.
@@ -270,6 +272,11 @@ def create_faulty_backend(
                         "value": 0,
                     }
                 )
+
+    if faulty_q1_property:
+        properties["qubits"][faulty_q1_property] = [
+            q for q in properties["qubits"][faulty_q1_property] if q["name"] != "T1"
+        ]
 
     out_backend = IBMBackend(
         configuration=model_backend.configuration(),

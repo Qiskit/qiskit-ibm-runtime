@@ -87,6 +87,10 @@ class TestEstimatorOptions(IBMTestCase):
             {"resilience": {"zne": {"noise_factors": [1, 3, 5]}}},
             "'zne' options are set, but 'zne_mitigation' is not set to True",
         ),
+        (
+            {"resilience": {"pec": {"max_overhead": None, "noise_gain": 0}}},
+            "'pec' options are set, but 'pec_mitigation' is not set to True",
+        ),
     )
     def test_bad_inputs(self, val):
         """Test invalid inputs."""
