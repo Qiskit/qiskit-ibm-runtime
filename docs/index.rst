@@ -11,7 +11,7 @@ https://github.com/Qiskit/documentation.
    :hidden:
    :caption: Reference
 
-    API Reference <apidocs/ibm-runtime>
+    API Reference <apidocs/index>
     Release Notes <release_notes>
 
 .. Hiding - Indices and tables

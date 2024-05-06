@@ -1,0 +1,4 @@
+Fixed the combination of `insert_multiple_cycles` and `coupling_map` options in
+ :class:`.PadDynamicalDecoupling`. This combination allows to select staggered 
+ dynamical decoupling with multiple sequence cycles in each delay that crosses 
+ the threshold set by `sequence_min_length_ratios`. 
