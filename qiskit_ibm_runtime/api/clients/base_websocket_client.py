@@ -25,7 +25,7 @@ import enum
 from websocket import WebSocketApp, STATUS_NORMAL, STATUS_ABNORMAL_CLOSED
 
 from ..client_parameters import ClientParameters
-from ..exceptions import WebsocketError, WebsocketTimeoutError
+from ..exceptions import WebsocketTimeoutError
 
 logger = logging.getLogger(__name__)
 
@@ -219,7 +219,8 @@ class BaseWebsocketClient(ABC):
                     if self._error:
                         error_message += f" Error: {self._error}"
 
-                    raise WebsocketError(error_message)
+                    logger.info(error_message)
+
             finally:
                 self.disconnect(None)
 
@@ -239,7 +240,7 @@ class BaseWebsocketClient(ABC):
         )
 
         logger.info(exception_message)
-        raise WebsocketError(exception_message)
+        return None
 
     @abstractmethod
     def _handle_stream_iteration(self) -> None:

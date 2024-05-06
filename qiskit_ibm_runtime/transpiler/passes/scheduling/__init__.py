@@ -11,9 +11,9 @@
 # that they have been altered from the originals.
 
 """
-====================================================================
-Scheduling (:mod:`qiskit_ibm_runtime.transpiler.passes.scheduling`)
-====================================================================
+=====================================================================================
+Transpiler scheduling passes (:mod:`qiskit_ibm_runtime.transpiler.passes.scheduling`)
+=====================================================================================
 
 .. currentmodule:: qiskit_ibm_runtime.transpiler.passes.scheduling
 
@@ -28,6 +28,21 @@ of measurement results.
     dynamic circuits. This includes setting ``scheduling_method`` in
     :func:`~qiskit.compiler.transpile` or
     :func:`~qiskit.transpiler.preset_passmanagers.generate_preset_pass_manager`.
+
+Classes
+=======
+.. autosummary::
+   :toctree: ../stubs/
+
+    BlockBasePadder
+    ALAPScheduleAnalysis
+    ASAPScheduleAnalysis
+    DynamicCircuitInstructionDurations
+    PadDelay
+    PadDynamicalDecoupling
+
+Example usage
+=============
 
 Below we demonstrate how to schedule and pad a teleportation circuit with delays
 for a dynamic circuit backend's execution model:
@@ -114,7 +129,7 @@ This returns instances of :class:`~qiskit.transpiler.StagedPassManager`, which c
 
 
 Scheduling old format ``c_if`` conditioned gates
-------------------------------------------------
+================================================
 
 Scheduling with old format ``c_if`` conditioned gates is not supported.
 
@@ -171,7 +186,7 @@ prior to your scheduling pass.
 
 
 Exploiting IBM backend's local parallel "fast-path"
----------------------------------------------------
+===================================================
 
 IBM quantum hardware supports a localized "fast-path" which enables a block of gates
 applied to a *single qubit* that are conditional on an immediately predecessor measurement
@@ -375,18 +390,6 @@ be padded out by the scheduler to ensure they are of the same duration in Qiskit
 
         qc.draw(output="mpl", style="iqp")
 
-
-Scheduling & Dynamical Decoupling
-=================================
-.. autosummary::
-   :toctree: ../stubs/
-
-    BlockBasePadder
-    ALAPScheduleAnalysis
-    ASAPScheduleAnalysis
-    DynamicCircuitInstructionDurations
-    PadDelay
-    PadDynamicalDecoupling
 """
 
 from .block_base_padder import BlockBasePadder
