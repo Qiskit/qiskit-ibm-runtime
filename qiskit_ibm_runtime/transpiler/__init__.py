@@ -10,22 +10,4 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""
-====================================================================
-IBM Backend Transpiler Tools (:mod:`qiskit_ibm_runtime.transpiler`)
-====================================================================
-
-A collection of transpiler tools for working with IBM Quantum's
-next-generation backends that support advanced "dynamic circuit"
-capabilities. Ie., circuits with support for classical
-compute and control-flow/feedback based off of measurement results.
-
-Transpiler Passes
-==================
-
-.. autosummary::
-    :toctree: ../stubs/
-
-    passes
-
-"""
+"""Tools for transpilation."""
