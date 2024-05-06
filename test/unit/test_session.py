@@ -17,6 +17,7 @@ from unittest.mock import MagicMock, patch
 from qiskit_ibm_runtime.fake_provider import FakeManila
 from qiskit_ibm_runtime import Session, QiskitRuntimeService
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
+from qiskit_ibm_runtime.exceptions import IBMRuntimeError
 from qiskit_ibm_runtime.utils.default_session import _DEFAULT_SESSION
 
 from .mock.fake_runtime_service import FakeRuntimeService
@@ -95,7 +96,7 @@ class TestSession(IBMTestCase):
         """Test running after session is closed."""
         session = Session(service=MagicMock(), backend="ibm_gotham")
         session.cancel()
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(IBMRuntimeError):
             session.run(program_id="program_id", inputs={})
 
     def test_run(self):

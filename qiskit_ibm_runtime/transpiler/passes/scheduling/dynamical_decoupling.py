@@ -448,9 +448,7 @@ class PadDynamicalDecoupling(BlockBasePadder):
             seq_length = np.sum(seq_lengths)
             seq_ratio = self._sequence_min_length_ratios[sequence_idx]
             spacings = self._spacings[sequence_idx]
-            alt_spacings = (
-                np.asarray(self._alt_spacings[sequence_idx]) if self._coupling_map else None
-            )
+            alt_spacings = self._alt_spacings[sequence_idx] if self._coupling_map else None
 
             # Verify the delay duration exceeds the minimum time to insert
             if time_interval / seq_length <= seq_ratio:
@@ -474,8 +472,12 @@ class PadDynamicalDecoupling(BlockBasePadder):
                 seq_lengths = seq_lengths * num_sequences
                 seq_length = np.sum(seq_lengths)
                 spacings = spacings * num_sequences
+                if alt_spacings is not None:
+                    alt_spacings = alt_spacings * num_sequences
 
             spacings = np.asarray(spacings) / num_sequences
+            if alt_spacings is not None:
+                alt_spacings = np.asarray(alt_spacings) / num_sequences
             slack = time_interval - seq_length
             sequence_gphase = self._sequence_phase
 

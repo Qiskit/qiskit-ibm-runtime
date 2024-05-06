@@ -25,8 +25,8 @@ transpilation and passes.
    :toctree: ../stubs/
 
    ConvertIdToDelay
-   scheduling
 
+See :mod:`qiskit_ibm_runtime.transpiler.passes.scheduling` for a collection of scheduling passes.
 """
 
 from .basis import ConvertIdToDelay

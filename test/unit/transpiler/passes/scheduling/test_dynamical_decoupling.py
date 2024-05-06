@@ -989,6 +989,69 @@ class TestPadDynamicalDecoupling(IBMTestCase):
 
         self.assertEqual(qc_dd, expected)
 
+    def test_staggered_dd_multiple_cycles(self):
+        """Test staggered DD with multiple cycles in a single delay"""
+        dd_sequence = [XGate(), XGate()]
+        pm = PassManager(
+            [
+                ASAPScheduleAnalysis(self.durations),
+                PadDynamicalDecoupling(
+                    self.durations,
+                    dd_sequence,
+                    coupling_map=self.coupling_map,
+                    alt_spacings=[0.1, 0.8, 0.1],
+                    sequence_min_length_ratios=[4.0],
+                    insert_multiple_cycles=True,
+                    schedule_idle_qubits=True,
+                ),
+            ]
+        )
+
+        qc_barriers = QuantumCircuit(3, 1)
+        qc_barriers.x(0)
+        qc_barriers.x(1)
+        qc_barriers.x(2)
+        qc_barriers.barrier()
+        qc_barriers.measure(0, 0)
+        qc_barriers.delay(14, 0)
+        qc_barriers.x(1)
+        qc_barriers.x(2)
+        qc_barriers.barrier()
+
+        qc_dd = pm.run(qc_barriers)
+
+        expected = QuantumCircuit(3, 1)
+        expected.x(0)
+        expected.x(1)
+        expected.x(2)
+        expected.barrier()
+        expected.x(1)
+        expected.delay(80, 1)
+        expected.x(1)
+        expected.delay(176, 1)
+        expected.x(1)
+        expected.delay(160, 1)
+        expected.delay(80, 1)
+        expected.x(1)
+        expected.delay(176, 1)
+        expected.x(1)
+        expected.delay(92, 1)
+        expected.x(2)
+        expected.delay(32, 2)
+        expected.x(2)
+        expected.delay(304, 2)
+        expected.x(2)
+        expected.delay(48, 2)
+        expected.delay(32, 2)
+        expected.x(2)
+        expected.delay(304, 2)
+        expected.x(2)
+        expected.delay(44, 2)
+        expected.measure(0, 0)
+        expected.delay(14, 0)
+        expected.barrier()
+        self.assertEqual(qc_dd, expected)
+
     def test_insert_dd_bad_spacings(self):
         """Test DD raises when spacings don't add up to 1."""
         dd_sequence = [XGate(), XGate()]

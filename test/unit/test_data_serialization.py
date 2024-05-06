@@ -346,7 +346,7 @@ class TestContainerSerialization(IBMTestCase):
         data_bin_cls = make_data_bin([("alpha", np.ndarray), ("beta", np.ndarray)], shape=(10, 20))
         alpha = np.empty((10, 20), dtype=np.uint16)
         beta = np.empty((10, 20), dtype=int)
-        my_bin = data_bin_cls(alpha, beta)
+        my_bin = data_bin_cls(alpha=alpha, beta=beta)
         result_bins.append(my_bin)
         return result_bins
 
@@ -409,8 +409,8 @@ class TestContainerSerialization(IBMTestCase):
         beta = np.empty((10, 20), dtype=int)
 
         pub_results = [
-            PubResult(data_bin_cls(alpha, beta)),
-            PubResult(data_bin_cls(alpha, beta)),
+            PubResult(data_bin_cls(alpha=alpha, beta=beta)),
+            PubResult(data_bin_cls(alpha=alpha, beta=beta)),
             PubResult(empty_data_bin()),
         ]
         result = PrimitiveResult(pub_results, {"1": 2})
