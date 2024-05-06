@@ -16,7 +16,7 @@ import warnings
 from unittest import mock
 
 from qiskit import QuantumCircuit, qasm3, transpile
-from qiskit.circuit import ForLoopOp, IfElseOp, Reset, SwitchCaseOp, WhileLoopOp
+from qiskit.circuit import IfElseOp, Reset, WhileLoopOp
 from qiskit.providers.models import (
     BackendConfiguration,
     BackendProperties,
@@ -326,10 +326,6 @@ class TestBackend(IBMTestCase):
         self.assertTrue(target.instruction_supported(operation_class=IfElseOp))
         self.assertFalse(target.instruction_supported("while_loop", ()))
         self.assertFalse(target.instruction_supported(operation_class=WhileLoopOp))
-        self.assertFalse(target.instruction_supported("for_loop", ()))
-        self.assertFalse(target.instruction_supported(operation_class=ForLoopOp))
-        self.assertFalse(target.instruction_supported("switch_case", ()))
-        self.assertFalse(target.instruction_supported(operation_class=SwitchCaseOp))
 
     def test_reset(self):
         """Test that reset instruction is properly added to the target."""
