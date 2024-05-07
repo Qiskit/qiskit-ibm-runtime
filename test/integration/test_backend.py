@@ -19,8 +19,8 @@ import copy
 from qiskit.transpiler.target import Target
 from qiskit import QuantumCircuit
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
+from qiskit.providers.backend import QubitProperties
 
-from qiskit_ibm_runtime.ibm_qubit_properties import IBMQubitProperties
 from qiskit_ibm_runtime.exceptions import IBMBackendValueError
 
 from qiskit_ibm_runtime import QiskitRuntimeService
@@ -243,7 +243,7 @@ class TestIBMBackend(IBMIntegrationTestCase):
         qubit_properties = self.backend.qubit_properties(qubits)
         self.assertEqual(len(qubit_properties), num_qubits)
         for i in qubits:
-            self.assertIsInstance(qubit_properties[i], IBMQubitProperties)
+            self.assertIsInstance(qubit_properties[i], QubitProperties)
 
     def test_sim_backend_options(self):
         """Test simulator backend options."""
