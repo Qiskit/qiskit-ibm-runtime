@@ -12,6 +12,7 @@
 
 """Test the dynamic circuits scheduling analysis"""
 
+from unittest import skip
 from unittest.mock import patch
 
 from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister, transpile
@@ -870,6 +871,7 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
 
         self.assertEqual(expected, scheduled)
 
+    @skip("Plugin method no longer patched after Qiskit/11996")
     def test_c_if_plugin_conversion_with_transpile(self):
         """Verify that old format c_if may be converted and scheduled
         after transpilation with the plugin."""
@@ -2034,6 +2036,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
                     expected.delay(160, qr[q_ind])
         self.assertEqual(expected, scheduled)
 
+    @skip("Plugin method no longer patched after Qiskit/11996")
     def test_c_if_plugin_conversion_with_transpile(self):
         """Verify that old format c_if may be converted and scheduled after
         transpilation with the plugin."""
