@@ -19,4 +19,4 @@ Deprecation Notes
    and will be removed on November 27, 2023. Users can instead convert
    their custom programs to use Qiskit Runtime primitives with Qiskit
    Serverless. Refer to the migration guide for instructions:
-   https://qiskit-extensions.github.io/qiskit-serverless/migration/migration_from_qiskit_runtime_programs.html
+   https://qiskit.github.io/qiskit-serverless/migration/migration_from_qiskit_runtime_programs.html

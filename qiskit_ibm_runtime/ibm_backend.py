@@ -897,6 +897,10 @@ class IBMBackend(Backend):
                 self._api_client.close_session(self._session.session_id)
         self._session = None
 
+    def get_translation_stage_plugin(self) -> str:
+        """Return the default translation stage plugin name for IBM backends."""
+        return "ibm_dynamic_circuits"
+
 
 class IBMRetiredBackend(IBMBackend):
     """Backend class interfacing with an IBM Quantum device no longer available."""
