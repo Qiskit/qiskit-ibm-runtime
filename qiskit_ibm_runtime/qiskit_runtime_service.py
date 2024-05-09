@@ -31,6 +31,7 @@ from qiskit.providers.models import (
 
 from qiskit_ibm_runtime import ibm_backend
 from .proxies import ProxyConfiguration
+from .utils.deprecation import issue_deprecation_msg
 from .utils.hgp import to_instance_format, from_instance_format
 from .utils.backend_decoder import configuration_from_server_data
 
@@ -837,6 +838,13 @@ class QiskitRuntimeService(Provider):
             RuntimeProgramNotFound: If the program cannot be found.
             IBMRuntimeError: An error occurred running the program.
         """
+        issue_deprecation_msg(
+            msg="service.run is deprecated",
+            version="0.24.0",
+            remedy="service.run will instead be converted into a private method "
+            "since it should not be called directly.",
+            period="3 months",
+        )
         qrt_options: RuntimeOptions = options
         if options is None:
             qrt_options = RuntimeOptions()
@@ -923,6 +931,10 @@ class QiskitRuntimeService(Provider):
                 version=version,
             )
         return job
+
+    def _run(self, *args: Any, **kwargs: Any) -> Union[RuntimeJob, RuntimeJobV2]:
+        """Private run method"""
+        return self.run(*args, **kwargs)
 
     def job(self, job_id: str) -> Union[RuntimeJob, RuntimeJobV2]:
         """Retrieve a runtime job.

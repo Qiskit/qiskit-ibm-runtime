@@ -156,7 +156,7 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
         return self._run(coerced_pubs)  # type: ignore[arg-type]
 
     def _validate_options(self, options: dict) -> None:
-        """Validate that program inputs (options) are valid
+        """Validate that primitive inputs (options) are valid
 
         Raises:
             ValidationError: if validation fails.
@@ -302,7 +302,7 @@ class SamplerV1(BasePrimitiveV1, Sampler, BaseSampler):
         )
 
     def _validate_options(self, options: dict) -> None:
-        """Validate that program inputs (options) are valid
+        """Validate that primitive inputs (options) are valid
         Raises:
             ValueError: if resilience_level is out of the allowed range.
         """

@@ -182,12 +182,7 @@ class IBMIntegrationTestCase(IBMTestCase):
     def tearDown(self) -> None:
         """Test level teardown."""
         super().tearDown()
-        # Delete programs
         service = self.service
-        for prog in self.to_delete[service.channel]:
-            with suppress(Exception):
-                if "qiskit-test" in prog:
-                    service.delete_program(prog)
 
         # Cancel and delete jobs.
         for job in self.to_cancel[service.channel]:

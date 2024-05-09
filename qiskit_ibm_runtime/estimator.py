@@ -187,7 +187,7 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
         return self._run(coerced_pubs)  # type: ignore[arg-type]
 
     def _validate_options(self, options: dict) -> None:
-        """Validate that program inputs (options) are valid
+        """Validate that primitive inputs (options) are valid
 
         Raises:
             ValidationError: if validation fails.
@@ -364,7 +364,7 @@ class EstimatorV1(BasePrimitiveV1, Estimator, BaseEstimator):
         )
 
     def _validate_options(self, options: dict) -> None:
-        """Validate that program inputs (options) are valid
+        """Validate that primitive inputs (options) are valid
         Raises:
             ValueError: if resilience_level is out of the allowed range.
             ValueError: if resilience_level==3, backend is simulator and no coupling map

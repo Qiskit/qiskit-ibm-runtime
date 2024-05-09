@@ -43,15 +43,15 @@ logger = logging.getLogger(__name__)
 
 
 class RuntimeJob(Job, BaseRuntimeJob):
-    """Representation of a runtime program execution.
+    """Representation of a runtime primitive execution.
 
     A new ``RuntimeJob`` instance is returned when you call
     :meth:`QiskitRuntimeService.run<qiskit_ibm_runtime.QiskitRuntimeService.run>`
-    to execute a runtime program, or
+    to execute a runtime primitive, or
     :meth:`QiskitRuntimeService.job<qiskit_ibm_runtime.QiskitRuntimeService.job>`
     to retrieve a previously executed job.
 
-    If the program execution is successful, you can inspect the job's status by
+    If the primitive execution is successful, you can inspect the job's status by
     calling :meth:`status()`. Job status can be one of the
     :class:`~qiskit.providers.JobStatus` members.
 
@@ -67,7 +67,7 @@ class RuntimeJob(Job, BaseRuntimeJob):
         except RuntimeJobFailureError as ex:
             print("Job failed!: {}".format(ex))
 
-    If the program has any interim results, you can use the ``callback``
+    If the primitive has any interim results, you can use the ``callback``
     parameter of the
     :meth:`~qiskit_ibm_runtime.QiskitRuntimeService.run`
     method to stream the interim results along with the final result.
