@@ -235,7 +235,7 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
     @run_integration_test
     def test_retrieve_correct_job_version(self, service):
         """Test retrieving the correct job version."""
-        job = self._run_program(service, program_id="sampler")
+        job = self._run_program(service)
         job.wait_for_final_state()
         rjob = service.job(job.job_id())
         job_v2 = self._run_program(service, program_id="samplerv2")
