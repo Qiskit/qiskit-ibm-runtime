@@ -19,7 +19,6 @@ from unittest import SkipTest
 from dateutil import tz
 from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister
 from qiskit.compiler import transpile
-from qiskit.providers.jobstatus import JobStatus, JOB_FINAL_STATES
 
 from qiskit_ibm_runtime import SamplerV2 as Sampler
 from qiskit_ibm_runtime.exceptions import RuntimeJobTimeoutError, RuntimeJobNotFound
@@ -57,11 +56,11 @@ class TestIBMJob(IBMIntegrationTestCase):
         timeout = 30
         start_time = time.time()
         while True:
-            check = sum(job.status() is JobStatus.RUNNING for job in job_array)
+            check = sum(job.status() == "RUNNING" for job in job_array)
             if check >= 2:
                 self.log.info("found %d simultaneous jobs", check)
                 break
-            if all((job.status() is JobStatus.DONE for job in job_array)):
+            if all((job.status() == "DONE" for job in job_array)):
                 # done too soon? don't generate error
                 self.log.warning("all jobs completed before simultaneous jobs could be detected")
                 break
@@ -69,7 +68,7 @@ class TestIBMJob(IBMIntegrationTestCase):
                 self.log.info(
                     "%s %s %s %s",
                     job.status(),
-                    job.status() is JobStatus.RUNNING,
+                    job.status() == "RUNNING",
                     check,
                     job.job_id(),
                 )
@@ -83,8 +82,8 @@ class TestIBMJob(IBMIntegrationTestCase):
         result_array = [job.result() for job in job_array]
         self.log.info("got back all job results")
         # Ensure all jobs have finished.
-        self.assertTrue(all((job.status() is JobStatus.DONE for job in job_array)))
-        self.assertTrue(all((result.success for result in result_array)))
+        self.assertTrue(all((job.status() == "DONE" for job in job_array)))
+        self.assertTrue(all((result.metadata for result in result_array)))
 
         # Ensure job ids are unique.
         job_ids = [job.job_id() for job in job_array]
@@ -116,20 +115,19 @@ class TestIBMJob(IBMIntegrationTestCase):
             backend_name=self.sim_backend.name, limit=3, pending=False
         )
         for job in completed_job_list:
-            self.assertTrue(job.status() in [JobStatus.DONE, JobStatus.CANCELLED, JobStatus.ERROR])
+            self.assertTrue(job.status() in ["DONE", "CANCELLED", "ERROR"])
 
     def test_retrieve_pending_jobs(self):
         """Test retrieving jobs with the pending filter."""
         pending_job_list = self.service.jobs(program_id="sampler", limit=3, pending=True)
         for job in pending_job_list:
-            self.assertTrue(job.status() in [JobStatus.QUEUED, JobStatus.RUNNING])
+            self.assertTrue(job.status() in ["QUEUED", "RUNNING"])
 
     def test_retrieve_job(self):
         """Test retrieving a single job."""
         retrieved_job = self.service.job(self.sim_job.job_id())
         self.assertEqual(self.sim_job.job_id(), retrieved_job.job_id())
-        self.assertEqual(self.sim_job.inputs["circuits"], retrieved_job.inputs["circuits"])
-        self.assertEqual(self.sim_job.result().get_counts(), retrieved_job.result().get_counts())
+        self.assertEqual(self.sim_job.result().metadata, retrieved_job.result().metadata)
 
     def test_retrieve_job_error(self):
         """Test retrieving an invalid job."""
@@ -148,7 +146,7 @@ class TestIBMJob(IBMIntegrationTestCase):
 
         for job in backend_jobs:
             self.assertTrue(
-                job.status() in JOB_FINAL_STATES,
+                job.status() in ["DONE", "CANCELLED", "ERROR"],
                 "Job {} has status {} when it should be DONE, CANCELLED, or ERROR".format(
                     job.job_id(), job.status()
                 ),
@@ -244,18 +242,18 @@ class TestIBMJob(IBMIntegrationTestCase):
         result = self.sim_job.result()
 
         # Save original cached results.
-        cached_result = copy.deepcopy(result.to_dict())
+        cached_result = copy.deepcopy(result.metadata)
         self.assertTrue(cached_result)
 
         # Modify cached results.
-        result.results[0].header.name = "modified_result"
-        self.assertNotEqual(cached_result, result.to_dict())
-        self.assertEqual(result.results[0].header.name, "modified_result")
+        result.metadata["test"] = "modified_result"
+        self.assertNotEqual(cached_result, result.metadata)
+        self.assertEqual(result.metadata["test"], "modified_result")
 
         # Re-retrieve result.
         result = self.sim_job.result()
-        self.assertDictEqual(cached_result, result.to_dict())
-        self.assertNotEqual(result.results[0].header.name, "modified_result")
+        self.assertDictEqual(cached_result, result.metadata)
+        self.assertFalse("test" in result.metadata)
 
     def test_wait_for_final_state_timeout(self):
         """Test waiting for job to reach final state times out."""
@@ -263,7 +261,7 @@ class TestIBMJob(IBMIntegrationTestCase):
             raise SkipTest("Cloud account does not have real backend.")
         backend = most_busy_backend(TestIBMJob.service)
         sampler = Sampler(backend=backend)
-        job = sampler.run(transpile(bell(), backend=backend))
+        job = sampler.run([transpile(bell(), backend=backend)])
         try:
             self.assertRaises(RuntimeJobTimeoutError, job.wait_for_final_state, timeout=0.1)
         finally:
@@ -274,4 +272,4 @@ class TestIBMJob(IBMIntegrationTestCase):
 
     def test_job_circuits(self):
         """Test job circuits."""
-        self.assertEqual(str(self.bell), str(self.sim_job.inputs["circuits"][0]))
+        self.assertEqual(str(self.bell), str(self.sim_job.inputs["pubs"][0][0]))

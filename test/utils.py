@@ -150,7 +150,7 @@ def cancel_job_safe(job: RuntimeJob, logger: logging.Logger) -> bool:
         job.cancel()
         status = job.status()
         assert (
-            status is JobStatus.CANCELLED
+            status is JobStatus.CANCELLED or status == "CANCELLED"
         ), "cancel() was successful for job {} but its " "status is {}.".format(
             job.job_id(), status
         )

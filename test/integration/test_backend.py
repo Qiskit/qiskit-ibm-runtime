@@ -20,7 +20,6 @@ from qiskit.transpiler.target import Target
 from qiskit import QuantumCircuit
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.backend import QubitProperties
-
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 from qiskit_ibm_runtime import QiskitRuntimeService, SamplerV2 as Sampler
