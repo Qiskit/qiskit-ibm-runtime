@@ -25,6 +25,7 @@ from .execution_options import ExecutionOptionsV2
 from .resilience_options import ResilienceOptionsV2
 from .twirling_options import TwirlingOptions
 from .dynamical_decoupling_options import DynamicalDecouplingOptions
+from .experimental_options import ExperimentalOptionsV2
 from .options import OptionsV2
 from .utils import primitive_dataclass, make_constraint_validator
 
@@ -117,7 +118,7 @@ class EstimatorOptions(OptionsV2):
     resilience: Union[ResilienceOptionsV2, Dict] = Field(default_factory=ResilienceOptionsV2)
     execution: Union[ExecutionOptionsV2, Dict] = Field(default_factory=ExecutionOptionsV2)
     twirling: Union[TwirlingOptions, Dict] = Field(default_factory=TwirlingOptions)
-    experimental: Union[UnsetType, dict] = Unset
+    experimental: Union[ExperimentalOptionsV2, Dict] = Field(default_factory=ExperimentalOptionsV2)
 
     _gt0 = make_constraint_validator("default_precision", gt=0)
     _ge0 = make_constraint_validator("default_shots", ge=0)
