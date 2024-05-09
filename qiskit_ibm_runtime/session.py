@@ -184,6 +184,14 @@ class Session:
         Returns:
             Submitted job.
         """
+        issue_deprecation_msg(
+            msg="session.run is deprecated",
+            version="0.24.0",
+            remedy="session.run will instead be converted into a private method "
+            "since it should not be called directly.",
+            period="3 months",
+            stacklevel=3,
+        )
 
         options = options or {}
 
@@ -213,6 +221,11 @@ class Session:
             )
 
         return job
+
+    @_active_session
+    def _run(self, *args: Any, **kwargs: Any) -> RuntimeJob:
+        """Private run method"""
+        return self.run(*args, **kwargs)
 
     def cancel(self) -> None:
         """Cancel all pending jobs in a session."""

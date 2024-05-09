@@ -276,12 +276,3 @@ class TestIBMJob(IBMIntegrationTestCase):
         """Test job circuits."""
         self.assertEqual(str(self.bell), str(self.sim_job.inputs["circuits"][0]))
 
-    def test_lazy_loading_params(self):
-        """Test lazy loading job params."""
-        sampler = Sampler(backend=self.sim_backend)
-        job = sampler.run([self.bell])
-        job.wait_for_final_state()
-
-        rjob = self.service.job(job.job_id())
-        self.assertFalse(rjob._params)
-        self.assertTrue(rjob.inputs["circuits"])

@@ -14,12 +14,12 @@
 import copy
 from unittest import mock
 
-from qiskit import transpile, qasm3, QuantumCircuit
-from qiskit.circuit import IfElseOp
+from qiskit import QuantumCircuit, qasm3, transpile
+from qiskit.circuit import ForLoopOp, IfElseOp, Reset, SwitchCaseOp, WhileLoopOp
 from qiskit.providers.models import (
-    BackendStatus,
     BackendConfiguration,
     BackendProperties,
+    BackendStatus,
     PulseDefaults,
 )
 
@@ -29,9 +29,7 @@ from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.utils.backend_converter import convert_to_target
 
 from ..ibm_test_case import IBMTestCase
-from ..utils import (
-    create_faulty_backend,
-)
+from ..utils import create_faulty_backend
 
 
 class TestBackend(IBMTestCase):
@@ -272,3 +270,63 @@ class TestBackend(IBMTestCase):
         )
         self.assertTrue(target.instruction_supported("if_else", ()))
         self.assertTrue(target.instruction_supported(operation_class=IfElseOp))
+        self.assertFalse(target.instruction_supported("while_loop", ()))
+        self.assertFalse(target.instruction_supported(operation_class=WhileLoopOp))
+        self.assertFalse(target.instruction_supported("for_loop", ()))
+        self.assertFalse(target.instruction_supported(operation_class=ForLoopOp))
+        self.assertFalse(target.instruction_supported("switch_case", ()))
+        self.assertFalse(target.instruction_supported(operation_class=SwitchCaseOp))
+
+    def test_reset(self):
+        """Test that reset instruction is properly added to the target."""
+        backend = FakeSherbrooke()
+        backend._get_conf_dict_from_json()
+        backend._set_props_dict_from_json()
+        backend._set_defs_dict_from_json()
+        target = convert_to_target(
+            BackendConfiguration.from_dict(backend._conf_dict),
+            BackendProperties.from_dict(backend._props_dict),
+            PulseDefaults.from_dict(backend._defs_dict),
+        )
+        self.assertTrue(target.instruction_supported("reset"))
+        self.assertTrue(target.instruction_supported(operation_class=Reset))
+
+    def test_convert_to_target_with_filter(self):
+        """Test converting legacy data structure to V2 target model with faulty qubits.
+
+        Measure and Delay are automatically added to the output Target
+        even though instruction is not provided by the backend,
+        since these are the necessary instructions that the transpiler may assume.
+        """
+
+        # Filter out faulty Q1
+        fake_backend = FakeManila()
+        faulty_qubit = 1
+        faulty_backend = create_faulty_backend(fake_backend, faulty_qubit=faulty_qubit)
+        target = convert_to_target(
+            configuration=faulty_backend.configuration(),
+            properties=faulty_backend.properties(),
+        )
+        self.assertFalse(target.instruction_supported(operation_name="measure", qargs=(1,)))
+        self.assertFalse(target.instruction_supported(operation_name="delay", qargs=(1,)))
+
+    def test_convert_to_target(self):
+        """Test converting legacy data structure to V2 target model with missing qubit property."""
+
+        fake_backend = FakeManila()
+        faulty_qubit = 1
+        faulty_backend = create_faulty_backend(fake_backend, faulty_q1_property=faulty_qubit)
+        target = convert_to_target(
+            configuration=faulty_backend.configuration(),
+            properties=faulty_backend.properties(),
+        )
+
+        self.assertIsNone(target.qubit_properties[1].t1)
+        self.assertEqual(
+            target.qubit_properties[1].t2,
+            faulty_backend.properties().t2(1),
+        )
+        self.assertEqual(
+            target.qubit_properties[1].frequency,
+            faulty_backend.properties().frequency(1),
+        )

@@ -51,9 +51,7 @@ from .runtime_job import RuntimeJob
 
 from .api.clients import RuntimeClient
 from .exceptions import IBMBackendApiProtocolError, IBMBackendValueError, IBMBackendApiError
-from .utils.backend_converter import (
-    convert_to_target,
-)
+from .utils.backend_converter import convert_to_target
 from .utils.default_session import get_cm_session as get_cm_primitive_session
 from .utils.backend_decoder import (
     defaults_from_server_data,
@@ -109,7 +107,7 @@ class IBMBackend(Backend):
         * max_shots: maximum number of shots supported.
         * coupling_map (list): The coupling map for the device
         * supported_instructions (List[str]): Instructions supported by the backend.
-        * dynamic_reprate_enabled (bool): whether delay between programs can be set dynamically
+        * dynamic_reprate_enabled (bool): whether delay between primitives can be set dynamically
           (ie via ``rep_delay``). Defaults to False.
         * rep_delay_range (List[float]): 2d list defining supported range of repetition
           delays for backend in μs. First entry is lower end of the range, second entry is
@@ -640,7 +638,7 @@ class IBMBackend(Backend):
                 * ``avg`` returns average measurement output (averaged over number of shots).
 
                 This parameter is applicable only if ``dynamic=False`` is specified or defaulted to.
-            rep_delay: Delay between programs in seconds. Only supported on certain
+            rep_delay: Delay between primitives in seconds. Only supported on certain
                 backends (if ``backend.configuration().dynamic_reprate_enabled=True``).
                 If supported, ``rep_delay`` must be from the range supplied
                 by the backend (``backend.configuration().rep_delay_range``). Default is given by
@@ -898,6 +896,10 @@ class IBMBackend(Backend):
             if self._session.session_id:
                 self._api_client.close_session(self._session.session_id)
         self._session = None
+
+    def get_translation_stage_plugin(self) -> str:
+        """Return the default translation stage plugin name for IBM backends."""
+        return "ibm_dynamic_circuits"
 
 
 class IBMRetiredBackend(IBMBackend):
