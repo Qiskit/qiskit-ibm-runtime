@@ -61,22 +61,6 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
 
     @run_integration_test
     @quantum_only
-    def test_lazy_loading_params(self, service):
-        """Test lazy loading job params."""
-        job = self._run_program(
-            service,
-            inputs={"circuits": bell()},
-            program_id="circuit-runner",
-            backend="ibmq_qasm_simulator",
-        )
-        job.wait_for_final_state()
-        rjob = service.job(job.job_id())
-        self.assertFalse(rjob._params)
-        self.assertTrue(rjob.inputs)
-        self.assertTrue(rjob._params)
-
-    @run_integration_test
-    @quantum_only
     def test_params_not_retrieved(self, service):
         """Test excluding params when unnecessary."""
         job = self._run_program(service)

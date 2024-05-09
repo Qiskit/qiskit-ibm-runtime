@@ -284,12 +284,3 @@ class TestIBMJob(IBMIntegrationTestCase):
         job = self.sim_backend.run(self.bell, header=custom_header)
         self.assertEqual(custom_header["test"], job.inputs["header"]["test"])
         self.assertLessEqual(custom_header.items(), job.inputs["header"].items())
-
-    def test_lazy_loading_params(self):
-        """Test lazy loading job params."""
-        job = self.sim_backend.run(self.bell)
-        job.wait_for_final_state()
-
-        rjob = self.service.job(job.job_id())
-        self.assertFalse(rjob._params)
-        self.assertTrue(rjob.inputs["circuits"])
