@@ -275,4 +275,3 @@ class TestIBMJob(IBMIntegrationTestCase):
     def test_job_circuits(self):
         """Test job circuits."""
         self.assertEqual(str(self.bell), str(self.sim_job.inputs["circuits"][0]))
-
