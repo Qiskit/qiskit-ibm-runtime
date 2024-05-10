@@ -123,7 +123,7 @@ class TestIBMJob(IBMIntegrationTestCase):
         pending_job_list = self.service.jobs(program_id="sampler", limit=3, pending=True)
         for job in pending_job_list:
             self.assertTrue(
-                job.status() in ["QUEUED", "RUNNING", JobStatus.QUEUED, JobStatus.Running]
+                job.status() in ["QUEUED", "RUNNING", JobStatus.QUEUED, JobStatus.RUNNING]
             )
 
     def test_retrieve_job(self):
