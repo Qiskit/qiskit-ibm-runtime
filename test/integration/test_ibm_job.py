@@ -19,6 +19,7 @@ from unittest import SkipTest
 from dateutil import tz
 from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister
 from qiskit.compiler import transpile
+from qiskit.providers.jobstatus import JobStatus
 
 from qiskit_ibm_runtime import SamplerV2 as Sampler
 from qiskit_ibm_runtime.exceptions import RuntimeJobTimeoutError, RuntimeJobNotFound
@@ -121,7 +122,9 @@ class TestIBMJob(IBMIntegrationTestCase):
         """Test retrieving jobs with the pending filter."""
         pending_job_list = self.service.jobs(program_id="sampler", limit=3, pending=True)
         for job in pending_job_list:
-            self.assertTrue(job.status() in ["QUEUED", "RUNNING"])
+            self.assertTrue(
+                job.status() in ["QUEUED", "RUNNING", JobStatus.QUEUED, JobStatus.Running]
+            )
 
     def test_retrieve_job(self):
         """Test retrieving a single job."""
