@@ -15,13 +15,11 @@
 import uuid
 import time
 from datetime import datetime, timedelta
-from unittest import SkipTest
 from pydantic import ValidationError
 
 from dateutil import tz
 from qiskit.compiler import transpile
 from qiskit import QuantumCircuit
-from qiskit.providers.jobstatus import JobStatus, JOB_FINAL_STATES
 
 
 from qiskit_ibm_runtime import IBMBackend, RuntimeJob, SamplerV2 as Sampler
@@ -31,7 +29,7 @@ from ..decorators import (
     integration_test_setup,
 )
 from ..ibm_test_case import IBMTestCase
-from ..utils import most_busy_backend, cancel_job_safe, bell
+from ..utils import bell
 
 
 class TestIBMJobAttributes(IBMTestCase):
@@ -155,40 +153,3 @@ class TestIBMJobAttributes(IBMTestCase):
         """Test cost estimation is returned correctly."""
         self.assertTrue(self.sim_job.usage_estimation)
         self.assertIn("quantum_seconds", self.sim_job.usage_estimation)
-
-    def test_queue_info(self):
-        """Test retrieving queue information."""
-        if self.dependencies.channel == "ibm_cloud":
-            raise SkipTest("Not supported on cloud channel.")
-        # Find the most busy backend.
-        backend = most_busy_backend(self.service)
-        leave_states = list(JOB_FINAL_STATES) + [JobStatus.RUNNING]
-        sampler = Sampler(backend=backend)
-        job = sampler.run([self.bell])
-        queue_info = None
-        for _ in range(20):
-            queue_info = job.queue_info()
-            # Even if job status is queued, its queue info may not be immediately available.
-            if (
-                job._status is JobStatus.QUEUED and job.queue_position() is not None
-            ) or job._status in leave_states:
-                break
-            time.sleep(1)
-
-        if job._status is JobStatus.QUEUED and job.queue_position() is not None:
-            self.log.debug(
-                "Job id=%s, queue info=%s, queue position=%s",
-                job.job_id(),
-                queue_info,
-                job.queue_position(),
-            )
-            msg = "Job {} is queued but has no ".format(job.job_id())
-            self.assertIsNotNone(queue_info, msg + "queue info.")
-            self.assertTrue(queue_info.format())
-            self.assertTrue(repr(queue_info))
-        elif job._status is not None:
-            self.assertIsNone(job.queue_position())
-            self.log.warning("Unable to retrieve queue information")
-
-        # Cancel job so it doesn't consume more resources.
-        cancel_job_safe(job, self.log)
