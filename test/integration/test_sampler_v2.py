@@ -16,7 +16,6 @@
 from __future__ import annotations
 
 import unittest
-from dataclasses import astuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -514,7 +513,7 @@ class TestSampler(IBMIntegrationTestCase):
                     result = sampler.run([qc]).result()
                     self.assertEqual(len(result), 1)
                     data = result[0].data
-                    self.assertEqual(len(astuple(data)), 3)
+                    self.assertEqual(len(data._FIELDS), 3)
                     for creg in qc.cregs:
                         self.assertTrue(hasattr(data, creg.name))
                         self._assert_allclose(getattr(data, creg.name), np.array(target[creg.name]))
