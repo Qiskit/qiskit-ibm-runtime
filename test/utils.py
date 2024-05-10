@@ -150,7 +150,7 @@ def cancel_job_safe(job: RuntimeJob, logger: logging.Logger) -> bool:
         job.cancel()
         status = job.status()
         assert (
-            status is JobStatus.CANCELLED
+            status is JobStatus.CANCELLED or status == "CANCELLED"
         ), "cancel() was successful for job {} but its " "status is {}.".format(
             job.job_id(), status
         )
@@ -359,7 +359,8 @@ def submit_and_cancel(backend: IBMBackend, logger: logging.Logger) -> RuntimeJob
         Cancelled job.
     """
     circuit = transpile(bell(), backend=backend)
-    job = backend.run(circuit)
+    sampler = SamplerV2(backend)
+    job = sampler.run([circuit])
     cancel_job_safe(job, logger=logger)
     return job
 

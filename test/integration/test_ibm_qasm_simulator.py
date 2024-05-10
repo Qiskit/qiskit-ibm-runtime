@@ -12,12 +12,9 @@
 
 """Test IBM Quantum online QASM simulator."""
 
-from unittest import mock
-from unittest import skip
-
 from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister
 from qiskit.compiler import transpile
-from ..utils import bell
+from qiskit_ibm_runtime import SamplerV2
 
 from ..ibm_test_case import IBMIntegrationTestCase
 
@@ -28,6 +25,7 @@ class TestIBMQasmSimulator(IBMIntegrationTestCase):
     def test_execute_one_circuit_simulator_online(self):
         """Test execute_one_circuit_simulator_online."""
         backend = self.service.get_backend("ibmq_qasm_simulator")
+        sampler = SamplerV2(backend)
         quantum_register = QuantumRegister(1)
         classical_register = ClassicalRegister(1)
         quantum_circuit = QuantumCircuit(quantum_register, classical_register, name="qc")
@@ -35,9 +33,9 @@ class TestIBMQasmSimulator(IBMIntegrationTestCase):
         quantum_circuit.measure(quantum_register[0], classical_register[0])
         circs = transpile(quantum_circuit, backend=backend)
         shots = 1024
-        job = backend.run(circs, shots=shots)
-        result = job.result()
-        counts = result.get_counts(quantum_circuit)
+        job = sampler.run([circs], shots=shots)
+        pub_result = job.result()[0]
+        counts = pub_result.data.c0.get_counts()
         target = {"0": shots / 2, "1": shots / 2}
         threshold = 0.1 * shots
         self.assert_dict_almost_equal(counts, target, threshold)
@@ -45,6 +43,7 @@ class TestIBMQasmSimulator(IBMIntegrationTestCase):
     def test_execute_several_circuits_simulator_online(self):
         """Test execute_several_circuits_simulator_online."""
         backend = self.service.get_backend("ibmq_qasm_simulator")
+        sampler = SamplerV2(backend)
         quantum_register = QuantumRegister(2)
         classical_register = ClassicalRegister(2)
         qcr1 = QuantumCircuit(quantum_register, classical_register, name="qc1")
@@ -58,19 +57,21 @@ class TestIBMQasmSimulator(IBMIntegrationTestCase):
         qcr2.measure(quantum_register[1], classical_register[1])
         shots = 1024
         circs = transpile([qcr1, qcr2], backend=backend)
-        job = backend.run(circs, shots=shots)
-        result = job.result()
-        counts1 = result.get_counts(qcr1)
-        counts2 = result.get_counts(qcr2)
+        job = sampler.run(circs, shots=shots)
+        pub_result = job.result()[0]
+        pub_result2 = job.result()[1]
+        counts = pub_result.data.c1.get_counts()
+        counts2 = pub_result2.data.c1.get_counts()
         target1 = {"00": shots / 4, "01": shots / 4, "10": shots / 4, "11": shots / 4}
         target2 = {"00": shots / 2, "11": shots / 2}
         threshold = 0.1 * shots
-        self.assert_dict_almost_equal(counts1, target1, threshold)
+        self.assert_dict_almost_equal(counts, target1, threshold)
         self.assert_dict_almost_equal(counts2, target2, threshold)
 
     def test_online_qasm_simulator_two_registers(self):
         """Test online_qasm_simulator_two_registers."""
         backend = self.service.get_backend("ibmq_qasm_simulator")
+        sampler = SamplerV2(backend)
         qr1 = QuantumRegister(2)
         cr1 = ClassicalRegister(2)
         qr2 = QuantumRegister(2)
@@ -88,57 +89,10 @@ class TestIBMQasmSimulator(IBMIntegrationTestCase):
         qcr2.measure(qr2[0], cr2[0])
         qcr2.measure(qr2[1], cr2[1])
         circs = transpile([qcr1, qcr2], backend)
-        job = backend.run(circs, shots=1024)
-        result = job.result()
-        result1 = result.get_counts(qcr1)
-        result2 = result.get_counts(qcr2)
-        self.assertEqual(result1, {"00 01": 1024})
-        self.assertEqual(result2, {"10 00": 1024})
-
-    @skip("TODO refactor to use backend._runtime_run")
-    def test_new_sim_method(self):
-        """Test new simulator methods."""
-
-        def _new_submit(qobj, *args, **kwargs):
-            # pylint: disable=unused-argument
-            self.assertEqual(
-                qobj.config.method, "extended_stabilizer", f"qobj header={qobj.header}"
-            )
-            return mock.MagicMock()
-
-        backend = self.sim_backend
-
-        sim_method = backend._configuration._data.get("simulation_method", None)
-        submit_fn = backend._submit_job
-
-        try:
-            backend._configuration._data["simulation_method"] = "extended_stabilizer"
-            backend._submit_job = _new_submit
-            circ = transpile(bell(), backend=backend)
-            backend.run(circ, header={"test": "circuits"})
-        finally:
-            backend._configuration._data["simulation_method"] = sim_method
-            backend._submit_job = submit_fn
-
-    @skip("TODO refactor to use backend._runtime_run")
-    def test_new_sim_method_no_overwrite(self):
-        """Test custom method option is not overwritten."""
-
-        def _new_submit(qobj, *args, **kwargs):
-            # pylint: disable=unused-argument
-            self.assertEqual(qobj.config.method, "my_method", f"qobj header={qobj.header}")
-            return mock.MagicMock()
-
-        backend = self.sim_backend
-
-        sim_method = backend._configuration._data.get("simulation_method", None)
-        submit_fn = backend._submit_job
-
-        try:
-            backend._configuration._data["simulation_method"] = "extended_stabilizer"
-            backend._submit_job = _new_submit
-            circ = transpile(bell(), backend=backend)
-            backend.run(circ, method="my_method", header={"test": "circuits"})
-        finally:
-            backend._configuration._data["simulation_method"] = sim_method
-            backend._submit_job = submit_fn
+        job = sampler.run(circs, shots=1024)
+        pub_result = job.result()[0]
+        pub_result2 = job.result()[1]
+        counts = pub_result.data.c2.get_counts()
+        counts2 = pub_result2.data.c2.get_counts()
+        self.assertEqual(counts, {"01": 1024})
+        self.assertEqual(counts2, {"00": 1024})
