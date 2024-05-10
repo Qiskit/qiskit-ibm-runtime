@@ -16,6 +16,7 @@ import uuid
 import time
 from datetime import datetime, timedelta
 from unittest import SkipTest
+from pydantic import ValidationError
 
 from dateutil import tz
 from qiskit.compiler import transpile
@@ -23,7 +24,7 @@ from qiskit import QuantumCircuit
 from qiskit.providers.jobstatus import JobStatus, JOB_FINAL_STATES
 
 
-from qiskit_ibm_runtime import IBMBackend, RuntimeJob, Options, SamplerV2 as Sampler
+from qiskit_ibm_runtime import IBMBackend, RuntimeJob, SamplerV2 as Sampler
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from ..decorators import (
     IntegrationTestDependencies,
@@ -94,9 +95,8 @@ class TestIBMJobAttributes(IBMTestCase):
             uuid.uuid4().hex[0:16],
             uuid.uuid4().hex[0:16],
         ]
-        options = Options()
-        options.environment.job_tags = job_tags
-        sampler = Sampler(backend=self.sim_backend, options=options)
+        sampler = Sampler(backend=self.sim_backend)
+        sampler.options.environment.job_tags = job_tags
         job = sampler.run([self.bell])
 
         no_rjobs_tags = [job_tags[0:1] + ["phantom_tags"], ["phantom_tag"]]
@@ -120,9 +120,8 @@ class TestIBMJobAttributes(IBMTestCase):
     def test_job_tags_replace(self):
         """Test updating job tags by replacing a job's existing tags."""
         initial_job_tags = [uuid.uuid4().hex[:16]]
-        options = Options()
-        options.environment.job_tags = initial_job_tags
-        sampler = Sampler(backend=self.sim_backend, options=options)
+        sampler = Sampler(backend=self.sim_backend)
+        sampler.options.environment.job_tags = initial_job_tags
         job = sampler.run([self.bell])
 
         tags_to_replace_subtests = [
@@ -141,7 +140,11 @@ class TestIBMJobAttributes(IBMTestCase):
 
     def test_invalid_job_tags(self):
         """Test using job tags with an and operator."""
-        self.assertRaises(IBMInputValueError, self.sim_backend.run, self.bell, job_tags={"foo"})
+
+        with self.assertRaises(ValidationError):
+            sampler = Sampler(backend=self.sim_backend)
+            sampler.options.environment.job_tags = "foo"
+
         self.assertRaises(
             IBMInputValueError,
             self.service.jobs,

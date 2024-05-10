@@ -60,8 +60,8 @@ class TestIBMQasmSimulator(IBMIntegrationTestCase):
         job = sampler.run(circs, shots=shots)
         pub_result = job.result()[0]
         pub_result2 = job.result()[1]
-        counts = pub_result.data.c0.get_counts()
-        counts2 = pub_result2.data.c0.get_counts()
+        counts = pub_result.data.c1.get_counts()
+        counts2 = pub_result2.data.c1.get_counts()
         target1 = {"00": shots / 4, "01": shots / 4, "10": shots / 4, "11": shots / 4}
         target2 = {"00": shots / 2, "11": shots / 2}
         threshold = 0.1 * shots
@@ -92,7 +92,7 @@ class TestIBMQasmSimulator(IBMIntegrationTestCase):
         job = sampler.run(circs, shots=1024)
         pub_result = job.result()[0]
         pub_result2 = job.result()[1]
-        counts = pub_result.data.c0.get_counts()
-        counts2 = pub_result2.data.c0.get_counts()
+        counts = pub_result.data.c2.get_counts()
+        counts2 = pub_result2.data.c2.get_counts()
         self.assertEqual(counts, {"01": 1024})
         self.assertEqual(counts2, {"00": 1024})
