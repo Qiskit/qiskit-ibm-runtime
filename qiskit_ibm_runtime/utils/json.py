@@ -61,6 +61,7 @@ from qiskit.qpy import (
     _read_parameter_expression_v3,
     load,
     dump,
+    QPY_VERSION,
 )
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.primitives.containers.sampler_pub import SamplerPub
@@ -243,12 +244,21 @@ class RuntimeEncoder(json.JSONEncoder):
             )
             return {"__type__": "Parameter", "__value__": value}
         if isinstance(obj, ParameterExpression):
-            value = _serialize_and_encode(
-                data=obj,
-                serializer=_write_parameter_expression,
-                compress=False,
-                use_symengine=bool(optionals.HAS_SYMENGINE),
-            )
+            if QPY_VERSION >= 12:
+                value = _serialize_and_encode(
+                    data=obj,
+                    serializer=_write_parameter_expression,
+                    compress=False,
+                    use_symengine=bool(optionals.HAS_SYMENGINE),
+                    version=QPY_VERSION,
+                )
+            else:
+                value = _serialize_and_encode(
+                    data=obj,
+                    serializer=_write_parameter_expression,
+                    compress=False,
+                    use_symengine=bool(optionals.HAS_SYMENGINE),
+                )
             return {"__type__": "ParameterExpression", "__value__": value}
         if isinstance(obj, ParameterView):
             return obj.data
