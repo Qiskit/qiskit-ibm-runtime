@@ -28,17 +28,20 @@ from qiskit.primitives.backend_estimator import (
     _run_circuits,
 )
 from qiskit.primitives.base import BaseEstimatorV2
-from qiskit.primitives.containers import EstimatorPubLike, PrimitiveResult, PubResult
+from qiskit.primitives.containers import (
+    EstimatorPubLike,
+    PrimitiveResult,
+    PubResult,
+    make_data_bin,
+)
 from qiskit.primitives.containers.bindings_array import BindingsArray
+from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.primitives.primitive_job import PrimitiveJob
 from qiskit.providers import BackendV1, BackendV2
 from qiskit.quantum_info import Pauli, PauliList
 from qiskit.result import Counts
 from qiskit.transpiler import PassManager, PassManagerConfig
 from qiskit.transpiler.passes import Optimize1qGatesDecomposition
-
-from .containers.data_bin import DataBin
-from .containers.estimator_pub import EstimatorPub
 
 
 @dataclass
@@ -263,7 +266,9 @@ class BackendEstimatorV2(BaseEstimatorV2):
                 evs[index] += expval * coeff
                 variances[index] += variance * coeff**2
         stds = np.sqrt(variances / shots)
-        data_bin = DataBin(evs=evs, stds=stds, shape=evs.shape)
+
+        data_bin_cls = make_data_bin([("evs", np.ndarray), ("stds", np.ndarray)], shape=evs.shape)
+        data_bin = data_bin_cls(evs=evs, stds=stds)
         return PubResult(data_bin, metadata={"target_precision": pub.precision})
 
     def _bind_and_add_measurements(

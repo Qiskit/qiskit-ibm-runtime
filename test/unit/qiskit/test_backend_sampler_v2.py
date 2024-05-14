@@ -27,6 +27,7 @@ from qiskit.circuit import Parameter
 from qiskit.circuit.library import RealAmplitudes, UnitaryGate
 from qiskit.primitives import PrimitiveResult, PubResult, StatevectorSampler
 from qiskit.primitives.containers import BitArray
+from qiskit.primitives.containers.data_bin import DataBin
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.providers import JobStatus
 from qiskit.providers.backend_compat import BackendV2Converter
@@ -35,7 +36,6 @@ from qiskit.providers.fake_provider import Fake7QPulseV1, GenericBackendV2
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
 from qiskit_ibm_runtime.qiskit.primitives import BackendSamplerV2
-from qiskit_ibm_runtime.qiskit.primitives.containers.data_bin import DataBin
 
 BACKENDS = [BasicSimulator(), Fake7QPulseV1(), BackendV2Converter(Fake7QPulseV1())]
 
@@ -357,12 +357,13 @@ class TestBackendSamplerV2(IBMTestCase):
         with self.subTest("zero shots, pub"):
             with self.assertRaises(ValueError):
                 _ = sampler.run([SamplerPub(qc1, shots=0)]).result()
-        with self.subTest("missing []"):
-            with self.assertRaisesRegex(ValueError, "An invalid Sampler pub-like was given"):
-                _ = sampler.run(qc1).result()
-        with self.subTest("missing [] for pqc"):
-            with self.assertRaisesRegex(ValueError, "Note that if you want to run a single pub,"):
-                _ = sampler.run((qc2, [0, 1])).result()
+        # The following tests require Qiskit 1.1
+        # with self.subTest("missing []"):
+        #     with self.assertRaisesRegex(ValueError, "An invalid Sampler pub-like was given"):
+        #         _ = sampler.run(qc1).result()
+        # with self.subTest("missing [] for pqc"):
+        #     with self.assertRaisesRegex(ValueError, "Note that if you want to run a single pub,"):
+        #         _ = sampler.run((qc2, [0, 1])).result()
 
     @combine(backend=BACKENDS)
     def test_run_empty_parameter(self, backend):

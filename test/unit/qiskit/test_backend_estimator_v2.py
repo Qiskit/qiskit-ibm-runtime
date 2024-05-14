@@ -327,9 +327,10 @@ class TestBackendEstimatorV2(IBMTestCase):
             est.run([(qc, op, None, -1)]).result()
         with self.assertRaises(ValueError):
             est.run([(qc, op)], precision=-1).result()
-        with self.subTest("missing []"):
-            with self.assertRaisesRegex(ValueError, "An invalid Estimator pub-like was given"):
-                _ = est.run((qc, op)).result()
+        # The following test requires Qiskit 1.1
+        # with self.subTest("missing []"):
+        #     with self.assertRaisesRegex(ValueError, "An invalid Estimator pub-like was given"):
+        #         _ = est.run((qc, op)).result()
 
     @combine(backend=BACKENDS, abelian_grouping=[True, False])
     def test_run_numpy_params(self, backend, abelian_grouping):
