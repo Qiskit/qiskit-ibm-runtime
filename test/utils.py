@@ -322,8 +322,8 @@ def get_mocked_backend(
     )
     mock_backend.name = name
     mock_backend._instance = None
-    mock_service.backend = (
-        lambda name, **kwargs: mock_backend if name == mock_backend.name else None
+    mock_service.backend = lambda name, **kwargs: (
+        mock_backend if name == mock_backend.name else None
     )
 
     return mock_backend
