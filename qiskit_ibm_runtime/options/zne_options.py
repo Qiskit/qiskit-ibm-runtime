@@ -65,19 +65,6 @@ class ZneOptions:
     amplifier: Union[
         UnsetType, Literal["gate_folding", "gate_folding_front", "gate_folding_back"]
     ] = Unset
-    """
-    
-    * `"pea"` corresponds to probabilistic error amplification based on learned
-      layer noise models will be used.
-    * `"gate_folding"` uses 2-qubit gate folding to amplify noise. If the noise
-      factor requires amplifying a the subset gates these gates are chosen randomly.
-    * `"gate_folding_front"` uses 2-qubit gate folding to amplify noise. If the noise
-      factor requires amplifying a the subset gates these gates are selected from the
-      front of the topologically ordered DAG circuit.
-    * `"gate_folding_back"` uses 2-qubit gate folding to amplify noise. If the noise
-      factor requires amplifying a the subset gates these gates are selected from the
-      back of the topologically ordered DAG circuit.
-    """
     noise_factors: Union[UnsetType, Sequence[float]] = Unset
     extrapolator: Union[UnsetType, ExtrapolatorType, Sequence[ExtrapolatorType]] = Unset
 
