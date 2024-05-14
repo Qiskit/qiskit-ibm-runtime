@@ -35,7 +35,7 @@ class QueueInfo:
         group_priority: Optional[float] = None,
         project_priority: Optional[float] = None,
         job_id: Optional[str] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> None:
         """QueueInfo constructor.
 
