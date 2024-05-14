@@ -1,0 +1,11 @@
+The `ZneOptions.amplifier` option was added, which can be one of these strings:
+
+* `"gate_folding"` (default) uses 2-qubit gate folding to amplify noise. If the noise
+  factor requires amplifying only a subset of the gates, then these gates are chosen
+  randomly.
+* `"gate_folding_front"` uses 2-qubit gate folding to amplify noise. If the noise
+  factor requires amplifying only a subset of the gates, then these gates are selected
+  from the front of the topologically ordered DAG circuit.
+* `"gate_folding_back"` uses 2-qubit gate folding to amplify noise. If the noise
+  factor requires amplifying only a subset of the gates, then these gates are selected
+  from the back of the topologically ordered DAG circuit.
