@@ -63,7 +63,7 @@ class DataBin(ShapedMixin):
         }
     )
 
-    def __init__(self, *, shape: ShapeInput = (), **data):
+    def __init__(self, *, shape: ShapeInput = (), **data: dict):
         """
         Args:
             data: Name/value data to place in the data bin.
@@ -90,13 +90,13 @@ class DataBin(ShapedMixin):
 
         super().__init__()
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._data)
 
-    def __setattr__(self, *_):
+    def __setattr__(self, *_: Any) -> None:
         raise NotImplementedError
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         vals = [f"{name}={_value_repr(val)}" for name, val in self.items()]
         if self.ndim:
             vals.append(f"shape={self.shape}")

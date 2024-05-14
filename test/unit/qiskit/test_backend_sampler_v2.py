@@ -9,6 +9,7 @@
 # Any modifications or derivative works of this code must retain this
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
+# type: ignore
 
 """Tests for Backend Sampler V2."""
 
@@ -74,7 +75,9 @@ class TestBackendSamplerV2(IBMTestCase):
             (pqc2, [0, 1, 2, 3, 4, 5, 6, 7], {0: 1898, 1: 6864, 2: 928, 3: 311})
         )  # case 6
 
-    def _assert_allclose(self, bitarray: BitArray, target: NDArray | BitArray, rtol=1e-1, atol=5e2):
+    def _assert_allclose(
+        self, bitarray: BitArray, target: NDArray | BitArray, rtol: float = 1e-1, atol: float = 5e2
+    ) -> None:
         self.assertEqual(bitarray.shape, target.shape)
         for idx in np.ndindex(bitarray.shape):
             int_counts = bitarray.get_int_counts(idx)
