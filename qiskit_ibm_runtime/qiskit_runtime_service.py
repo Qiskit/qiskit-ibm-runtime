@@ -884,9 +884,9 @@ class QiskitRuntimeService(Provider):
                 max_execution_time=qrt_options.max_execution_time,
                 start_session=start_session,
                 session_time=qrt_options.session_time,
-                channel_strategy=None
-                if self._channel_strategy == "default"
-                else self._channel_strategy,
+                channel_strategy=(
+                    None if self._channel_strategy == "default" else self._channel_strategy
+                ),
             )
             if self._channel == "ibm_quantum":
                 messages = response.get("messages")
