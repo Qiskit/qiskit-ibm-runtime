@@ -82,6 +82,7 @@ class TestEstimatorV2(IBMIntegrationTestCase):
         estimator.options.seed_estimator = 42
         estimator.options.resilience.measure_mitigation = True
         estimator.options.resilience.zne_mitigation = True
+        estimator.options.resilience.zne.amplifier = "gate_folding_back"
         estimator.options.resilience.zne.noise_factors = [3, 5]
         estimator.options.resilience.zne.extrapolator = "linear"
         estimator.options.resilience.pec_mitigation = False

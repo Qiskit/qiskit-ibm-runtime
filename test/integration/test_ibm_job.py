@@ -120,7 +120,9 @@ class TestIBMJob(IBMIntegrationTestCase):
 
     def test_retrieve_pending_jobs(self):
         """Test retrieving jobs with the pending filter."""
-        pending_job_list = self.service.jobs(program_id="sampler", limit=3, pending=True)
+        pending_job_list = self.service.jobs(
+            program_id="sampler", limit=3, pending=True, created_after=self.last_month
+        )
         for job in pending_job_list:
             self.assertTrue(
                 job.status() in ["QUEUED", "RUNNING", JobStatus.QUEUED, JobStatus.RUNNING]
