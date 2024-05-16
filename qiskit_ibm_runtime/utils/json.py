@@ -25,7 +25,7 @@ import re
 import warnings
 import zlib
 from datetime import date
-from typing import Any, Callable, Dict, List, Union, Tuple
+from typing import Any, Callable, Dict, List, Union, Tuple, get_args
 
 import dateutil.parser
 import numpy as np
@@ -74,6 +74,7 @@ from qiskit.primitives.containers import (
     PubResult,
     PrimitiveResult,
 )
+from qiskit_ibm_runtime.options.zne_options import ExtrapolatorType
 
 _TERRA_VERSION = tuple(
     int(x) for x in re.match(r"\d+\.\d+\.\d", _terra_version_string).group(0).split(".")[:3]
@@ -214,8 +215,6 @@ class RuntimeEncoder(json.JSONEncoder):
         if isinstance(obj, np.ndarray):
             if obj.dtype == object:
                 return {"__type__": "ndarray", "__value__": obj.tolist()}
-            elif obj.size == 0:
-                return obj.tolist()
             value = _serialize_and_encode(obj, np.save, allow_pickle=False)
             return {"__type__": "ndarray", "__value__": value}
         if isinstance(obj, np.int64):
@@ -349,6 +348,8 @@ class RuntimeDecoder(json.JSONDecoder):
             if obj_type == "complex":
                 return obj_val[0] + 1j * obj_val[1]
             if obj_type == "ndarray":
+                if obj_val in get_args(ExtrapolatorType):
+                    return obj_val
                 if isinstance(obj_val, list):
                     return np.array(obj_val)
                 return _decode_and_deserialize(obj_val, np.load)
