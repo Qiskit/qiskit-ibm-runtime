@@ -1,0 +1,2 @@
+:meth:`qiskit_ibm_runtime.QiskitRuntimeService.get_backend` is deprecated. Please
+:meth:`qiskit_ibm_runtime.QiskitRuntimeService.backend` use instead.
