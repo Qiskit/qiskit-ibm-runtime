@@ -1198,3 +1198,11 @@ class QiskitRuntimeService:
 
     def __repr__(self) -> str:
         return "<{}>".format(self.__class__.__name__)
+
+    def __eq__(self, other: Any) -> bool:
+        return (
+            self._channel == other._channel
+            and self._account.instance == other._account.instance
+            and self._account.token == other._account.token
+            and self._channel_strategy == other._channel_strategy
+        )
