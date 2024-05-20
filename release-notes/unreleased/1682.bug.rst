@@ -1,0 +1,1 @@
+Fixed a serialization issue where decoding job metadata resulted in an error.
