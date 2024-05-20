@@ -461,7 +461,6 @@ class FakeBackend(BackendV1):
             configuration (BackendConfiguration): backend configuration
             time_alive (int): time to wait before returning result
         """
-        print("hi")
         issue_deprecation_msg(
             "V1 fake backends are deprecated",
             "0.24",
