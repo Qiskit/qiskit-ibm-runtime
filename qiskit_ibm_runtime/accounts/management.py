@@ -215,7 +215,7 @@ class AccountManager:
         """Read account from environment variable."""
         token = os.getenv("QISKIT_IBM_TOKEN")
         url = os.getenv("QISKIT_IBM_URL")
-        if not (token and url):
+        if not token:
             return None
         return Account.create_account(
             token=token,
