@@ -92,6 +92,7 @@ class FakeProviderForBackendV2:
         return self.backend(name, **kwargs)
 
     def backends(self, name: str = None, **kwargs: Any) -> List[FakeBackendV2]:
+        """Return all backends accessible via this account."""
         return self._backends
 
     def __init__(self) -> None:
