@@ -163,6 +163,7 @@ class TestDataSerialization(IBMTestCase):
         """Test encoding and decoding a numpy ndarray."""
         subtests = (
             {"ndarray": np.array([[1, 2, 3], [{"obj": 123}, 5, 6]], dtype=object)},
+            {"ndarray": np.array([1, {"obj": 123}], dtype=object)},
             {"ndarray": np.array([[1, 2, 3], [{"obj": 123}, 5, 6]])},
             {"ndarray": np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]], dtype=int)},
         )
