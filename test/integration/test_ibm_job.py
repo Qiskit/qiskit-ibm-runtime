@@ -95,6 +95,7 @@ class TestIBMJob(IBMIntegrationTestCase):
         if self.dependencies.channel == "ibm_cloud":
             raise SkipTest("Cloud account does not have real backend.")
         # Find the most busy backend
+        self.service._account.instance = None  # set instance to none to avoid filtering
         backend = most_busy_backend(self.service)
         submit_and_cancel(backend, self.log)
 
@@ -264,6 +265,7 @@ class TestIBMJob(IBMIntegrationTestCase):
         """Test waiting for job to reach final state times out."""
         if self.dependencies.channel == "ibm_cloud":
             raise SkipTest("Cloud account does not have real backend.")
+        self.service._account.instance = None  # set instance to none to avoid filtering
         backend = most_busy_backend(TestIBMJob.service)
         sampler = Sampler(backend=backend)
         job = sampler.run([transpile(bell(), backend=backend)])
