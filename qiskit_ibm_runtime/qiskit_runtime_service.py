@@ -686,6 +686,7 @@ class QiskitRuntimeService(Provider):
         overwrite: Optional[bool] = False,
         channel_strategy: Optional[str] = None,
         set_as_default: Optional[bool] = None,
+        private_endpoint: Optional[bool] = False,
     ) -> None:
         """Save the account to disk for future use.
 
@@ -708,6 +709,7 @@ class QiskitRuntimeService(Provider):
             channel_strategy: Error mitigation strategy.
             set_as_default: If ``True``, the account is saved in filename,
                 as the default account.
+            private_endpoint: Connect to private API URL.
         """
 
         AccountManager.save(
@@ -722,6 +724,7 @@ class QiskitRuntimeService(Provider):
             overwrite=overwrite,
             channel_strategy=channel_strategy,
             set_as_default=set_as_default,
+            private_endpoint=private_endpoint,
         )
 
     @staticmethod

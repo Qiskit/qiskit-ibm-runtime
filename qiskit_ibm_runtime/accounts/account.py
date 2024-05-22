@@ -30,6 +30,7 @@ ChannelType = Optional[Literal["ibm_cloud", "ibm_quantum"]]
 
 IBM_QUANTUM_API_URL = "https://auth.quantum-computing.ibm.com/api"
 IBM_CLOUD_API_URL = "https://cloud.ibm.com"
+PRIVATE_EU_API_URL = "https://private.eu-de.quantum-computing.cloud.ibm.com/"
 logger = logging.getLogger(__name__)
 
 
@@ -101,6 +102,7 @@ class Account:
         proxies: Optional[ProxyConfiguration] = None,
         verify: Optional[bool] = True,
         channel_strategy: Optional[str] = None,
+        private_endpoint: Optional[bool] = False,
     ) -> "Account":
         """Creates an account for a specific channel."""
         if channel == "ibm_quantum":
@@ -120,6 +122,7 @@ class Account:
                 proxies=proxies,
                 verify=verify,
                 channel_strategy=channel_strategy,
+                private_endpoint=private_endpoint,
             )
         else:
             raise InvalidAccountError(
@@ -268,6 +271,7 @@ class CloudAccount(Account):
         proxies: Optional[ProxyConfiguration] = None,
         verify: Optional[bool] = True,
         channel_strategy: Optional[str] = None,
+        private_endpoint: Optional[bool] = False,
     ):
         """Account constructor.
 
@@ -278,9 +282,13 @@ class CloudAccount(Account):
             proxies: Proxy configuration.
             verify: Whether to verify server's TLS certificate.
             channel_strategy: Error mitigation strategy.
+            private_endpoint: Connect to private API URL.
         """
         super().__init__(token, instance, proxies, verify, channel_strategy)
-        resolved_url = url or IBM_CLOUD_API_URL
+        if private_endpoint:
+            resolved_url = PRIVATE_EU_API_URL
+        else:
+            resolved_url = url or IBM_CLOUD_API_URL
         self.channel = "ibm_cloud"
         self.url = resolved_url
 
