@@ -23,7 +23,7 @@ from numpy.typing import NDArray
 from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister, transpile
 from qiskit.circuit import Parameter
 from qiskit.circuit.library import RealAmplitudes, UnitaryGate
-from qiskit.primitives import PrimitiveResult, PubResult
+from qiskit.primitives import PrimitiveResult, SamplerPubResult
 from qiskit.primitives.containers import BitArray
 from qiskit.primitives.containers.data_bin import DataBin
 from qiskit.primitives.containers.sampler_pub import SamplerPub
@@ -556,7 +556,7 @@ class TestSampler(IBMIntegrationTestCase):
         self.assertIsInstance(result.metadata, dict)
         self.assertEqual(len(result), num_pubs)
         for idx, pub_result in enumerate(result):
-            self.assertIsInstance(pub_result, PubResult)
+            self.assertIsInstance(pub_result, SamplerPubResult)
             self.assertIsInstance(pub_result.data, DataBin)
             self.assertIsInstance(pub_result.metadata, dict)
             if targets:

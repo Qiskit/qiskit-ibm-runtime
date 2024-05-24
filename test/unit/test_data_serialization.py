@@ -35,8 +35,8 @@ from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.primitives.containers import (
     BitArray,
     DataBin,
-    make_data_bin,
     PubResult,
+    SamplerPubResult,
     PrimitiveResult,
 )
 from qiskit_aer.noise import NoiseModel
@@ -340,10 +340,9 @@ class TestContainerSerialization(IBMTestCase):
     def make_test_data_bins(self):
         """Generates test data for DataBin test"""
         result_bins = []
-        data_bin_cls = make_data_bin([("alpha", np.ndarray), ("beta", np.ndarray)], shape=(10, 20))
         alpha = np.empty((10, 20), dtype=np.uint16)
         beta = np.empty((10, 20), dtype=int)
-        my_bin = data_bin_cls(alpha=alpha, beta=beta)
+        my_bin = DataBin(alpha=alpha, beta=beta, shape=(10, 20))
         result_bins.append(my_bin)
         return result_bins
 
@@ -386,29 +385,26 @@ class TestContainerSerialization(IBMTestCase):
         pubs.append(pub)
         return pubs
 
-    def make_test_pub_results(self):
-        """Generates test data for PubResult test"""
+    def make_test_sampler_pub_results(self):
+        """Generates test data for SamplerPubResult test"""
         pub_results = []
-        data_bin = make_data_bin((("a", float), ("b", int)))
-        pub_result = PubResult(data_bin(a=1.0, b=2))
+        pub_result = SamplerPubResult(DataBin(a=1.0, b=2))
         pub_results.append(pub_result)
-        pub_result = PubResult(data_bin(a=1.0, b=2), {"x": 1})
+        pub_result = SamplerPubResult(DataBin(a=1.0, b=2), {"x": 1})
         pub_results.append(pub_result)
         return pub_results
 
     def make_test_primitive_results(self):
         """Generates test data for PrimitiveResult test"""
         primitive_results = []
-        data_bin_cls = make_data_bin([("alpha", np.ndarray), ("beta", np.ndarray)], shape=(10, 20))
-        empty_data_bin = make_data_bin([], shape=None)
 
         alpha = np.empty((10, 20), dtype=np.uint16)
         beta = np.empty((10, 20), dtype=int)
 
         pub_results = [
-            PubResult(data_bin_cls(alpha=alpha, beta=beta)),
-            PubResult(data_bin_cls(alpha=alpha, beta=beta)),
-            PubResult(empty_data_bin()),
+            PubResult(DataBin(alpha=alpha, beta=beta, shape=(10, 20))),
+            PubResult(DataBin(alpha=alpha, beta=beta, shape=(10, 20))),
+            PubResult(DataBin()),
         ]
         result = PrimitiveResult(pub_results, {"1": 2})
         primitive_results.append(result)
@@ -513,10 +509,10 @@ class TestContainerSerialization(IBMTestCase):
 
     def test_pub_result(self):
         """Test encoding and decoding PubResult"""
-        for pub_result in self.make_test_pub_results():
-            payload = {"pub_result": pub_result}
+        for pub_result in self.make_test_sampler_pub_results():
+            payload = {"sampler_pub_result": pub_result}
             encoded = json.dumps(payload, cls=RuntimeEncoder)
-            decoded = json.loads(encoded, cls=RuntimeDecoder)["pub_result"]
+            decoded = json.loads(encoded, cls=RuntimeDecoder)["sampler_pub_result"]
             self.assertIsInstance(decoded, PubResult)
             self.assert_pub_results_equal(pub_result, decoded)
 
