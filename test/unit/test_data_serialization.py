@@ -381,6 +381,15 @@ class TestContainerSerialization(IBMTestCase):
         pubs.append(pub)
         return pubs
 
+    def make_test_pub_results(self):
+        """Generates test data for PubResult test"""
+        pub_results = []
+        pub_result = PubResult(DataBin(a=1.0, b=2))
+        pub_results.append(pub_result)
+        pub_result = PubResult(DataBin(a=1.0, b=2), {"x": 1})
+        pub_results.append(pub_result)
+        return pub_results
+
     def make_test_sampler_pub_results(self):
         """Generates test data for SamplerPubResult test"""
         pub_results = []
@@ -505,11 +514,20 @@ class TestContainerSerialization(IBMTestCase):
 
     def test_pub_result(self):
         """Test encoding and decoding PubResult"""
+        for pub_result in self.make_test_pub_results():
+            payload = {"pub_result": pub_result}
+            encoded = json.dumps(payload, cls=RuntimeEncoder)
+            decoded = json.loads(encoded, cls=RuntimeDecoder)["pub_result"]
+            self.assertIsInstance(decoded, PubResult)
+            self.assert_pub_results_equal(pub_result, decoded)
+
+    def test_sampler_pub_result(self):
+        """Test encoding and decoding SamplerPubResult"""
         for pub_result in self.make_test_sampler_pub_results():
             payload = {"sampler_pub_result": pub_result}
             encoded = json.dumps(payload, cls=RuntimeEncoder)
             decoded = json.loads(encoded, cls=RuntimeDecoder)["sampler_pub_result"]
-            self.assertIsInstance(decoded, PubResult)
+            self.assertIsInstance(decoded, SamplerPubResult)
             self.assert_pub_results_equal(pub_result, decoded)
 
     def test_primitive_result(self):

@@ -17,7 +17,13 @@ import warnings
 from ddt import data, ddt
 
 from qiskit_aer import AerSimulator
-from qiskit.primitives import EstimatorResult, SamplerResult, PrimitiveResult, PubResult, SamplerPubResult
+from qiskit.primitives import (
+    EstimatorResult,
+    SamplerResult,
+    PrimitiveResult,
+    PubResult,
+    SamplerPubResult,
+)
 from qiskit.primitives.containers.data_bin import DataBin
 
 from qiskit_ibm_runtime.fake_provider import FakeManila, FakeManilaV2
