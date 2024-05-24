@@ -296,15 +296,11 @@ class TestContainerSerialization(IBMTestCase):
         """Compares two DataBins
         Field types are compared up to their string representation
         """
-        self.assertEqual(dbin1._FIELDS, dbin2._FIELDS)
-        self.assertEqual(
-            [str(field_type) for field_type in dbin1._FIELD_TYPES],
-            [str(field_type) for field_type in dbin2._FIELD_TYPES],
-        )
-        self.assertEqual(dbin1._SHAPE, dbin2._SHAPE)
-        for field_name in dbin1._FIELDS:
-            field_1 = getattr(dbin1, field_name)
-            field_2 = getattr(dbin2, field_name)
+        self.assertEqual(tuple(dbin1), tuple(dbin2))
+        self.assertEqual(dbin1.shape, dbin2.shape)
+        for field_name in dbin1:
+            field_1 = dbin1[field_name]
+            field_2 = dbin2[field_name]
             if isinstance(field_1, np.ndarray):
                 np.testing.assert_allclose(field_1, field_2)
             else:

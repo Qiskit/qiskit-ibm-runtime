@@ -270,10 +270,9 @@ class RuntimeEncoder(json.JSONEncoder):
             return {"__type__": "BitArray", "__value__": out_val}
         if isinstance(obj, DataBin):
             out_val = {
-                "field_names": obj._FIELDS,
-                "field_types": [str(field_type) for field_type in obj._FIELD_TYPES],
-                "shape": obj._SHAPE,
-                "fields": {field_name: getattr(obj, field_name) for field_name in obj._FIELDS},
+                "field_names": list(obj),
+                "shape": obj.shape,
+                "fields": dict(obj.items()),
             }
             return {"__type__": "DataBin", "__value__": out_val}
         if isinstance(obj, EstimatorPub):

@@ -513,10 +513,10 @@ class TestSampler(IBMIntegrationTestCase):
                     result = sampler.run([qc]).result()
                     self.assertEqual(len(result), 1)
                     data = result[0].data
-                    self.assertEqual(len(data._FIELDS), 3)
+                    self.assertEqual(len(data), 3)
                     for creg in qc.cregs:
-                        self.assertTrue(hasattr(data, creg.name))
-                        self._assert_allclose(getattr(data, creg.name), np.array(target[creg.name]))
+                        self.assertIn(creg.name, data)
+                        self._assert_allclose(data[creg.name], np.array(target[creg.name]))
 
     @run_integration_test
     def test_samplerv2_options(self, service):
