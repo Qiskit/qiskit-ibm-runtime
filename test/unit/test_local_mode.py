@@ -163,9 +163,7 @@ class TestLocalModeV2(IBMTestCase):
         job = inst.run(**get_primitive_inputs(inst, backend=backend))
         pub_result = job.result()[0]
         self.assertEqual(pub_result.data.meas.num_shots, 10)
-        self.assertDictEqual(
-            pub_result.data.meas.get_counts(), {"00011": 3, "00000": 7}
-        )
+        self.assertDictEqual(pub_result.data.meas.get_counts(), {"00011": 3, "00000": 7})
 
     @data(FakeManila(), FakeManilaV2(), AerSimulator.from_backend(FakeManila()))
     def test_v2_estimator_with_accepted_options(self, backend):
