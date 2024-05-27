@@ -23,7 +23,7 @@ from qiskit.transpiler.exceptions import TranspilerError
 from qiskit.converters import circuit_to_dag
 from qiskit.circuit import Delay
 
-from qiskit_ibm_runtime.fake_provider import FakeJakarta
+from qiskit_ibm_runtime.fake_provider import FakeJakartaV2
 from qiskit_ibm_runtime.transpiler.passes.scheduling.pad_delay import PadDelay
 from qiskit_ibm_runtime.transpiler.passes.scheduling.scheduler import (
     ALAPScheduleAnalysis,
@@ -877,14 +877,12 @@ class TestASAPSchedulingAndPaddingPass(IBMTestCase):
         after transpilation with the plugin."""
         # Patch the test backend with the plugin
         with patch.object(
-            FakeJakarta,
+            FakeJakartaV2,
             "get_translation_stage_plugin",
             return_value="ibm_dynamic_circuits",
             create=True,
         ):
-            backend = FakeJakarta()
-            # Temporary workaround for mock backends. For real backends this is not required.
-            backend.configuration().basis_gates.append("if_else")
+            backend = FakeJakartaV2()
 
             durations = DynamicCircuitInstructionDurations.from_backend(backend)
             pm = PassManager(
@@ -1945,10 +1943,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
     def test_transpile_mock_backend(self):
         """Test scheduling works with transpilation."""
-        backend = FakeJakarta()
-        # Temporary workaround for mock backends. For real backends this is not required.
-        backend.configuration().basis_gates.append("if_else")
-        backend.configuration().basis_gates.append("while_loop")
+        backend = FakeJakartaV2()
 
         durations = DynamicCircuitInstructionDurations.from_backend(backend)
         pm = PassManager(
@@ -1962,7 +1957,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
         cr = ClassicalRegister(2)
 
         qc = QuantumCircuit(qr, cr)
-        with qc.while_loop((cr[0], 1)):
+        with qc.for_loop((cr[0], 1)):
             qc.x(qr[2])
             with qc.if_test((cr[0], 1)):
                 qc.x(qr[1])
@@ -1974,7 +1969,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
         qr = QuantumRegister(7, name="q")
         expected = QuantumCircuit(qr, cr)
-        with expected.while_loop((cr[0], 1)):
+        with expected.for_loop((cr[0], 1)):
             with expected.if_test((cr[0], 1)):
                 expected.delay(160, qr[0])
                 expected.x(qr[1])
@@ -1996,9 +1991,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
 
     def test_transpile_both_paths(self):
         """Test scheduling works with both fast- and standard path after transpiling."""
-        backend = FakeJakarta()
-        # Temporary workaround for mock backends. For real backends this is not required.
-        backend.configuration().basis_gates.append("if_else")
+        backend = FakeJakartaV2()
 
         durations = DynamicCircuitInstructionDurations.from_backend(backend)
         pm = PassManager(
@@ -2042,14 +2035,12 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
         transpilation with the plugin."""
         # Patch the test backend with the plugin
         with patch.object(
-            FakeJakarta,
+            FakeJakartaV2,
             "get_translation_stage_plugin",
             return_value="ibm_dynamic_circuits",
             create=True,
         ):
-            backend = FakeJakarta()
-            # Temporary workaround for mock backends. For real backends this is not required.
-            backend.configuration().basis_gates.append("if_else")
+            backend = FakeJakartaV2()
 
             durations = DynamicCircuitInstructionDurations.from_backend(backend)
             pm = PassManager(
@@ -2112,8 +2103,8 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
         """Test that scheduling withing control flow blocks uses the
         instruction durations on the correct qubit indices"""
 
-        backend = FakeJakarta()
-        backend.configuration().basis_gates.append("if_else")
+        backend = FakeJakartaV2()
+
         durations = DynamicCircuitInstructionDurations(
             [("cx", (0, 1), 250), ("cx", (1, 3), 4000), ("measure", None, 2600)]
         )
