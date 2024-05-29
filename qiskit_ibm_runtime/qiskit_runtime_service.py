@@ -725,7 +725,7 @@ class QiskitRuntimeService(Provider):
             overwrite=overwrite,
             channel_strategy=channel_strategy,
             set_as_default=set_as_default,
-            private_endpoint=private_endpoint if not url else False,
+            private_endpoint=private_endpoint,
         )
 
     @staticmethod

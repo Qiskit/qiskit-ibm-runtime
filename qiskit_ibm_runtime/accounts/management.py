@@ -62,7 +62,7 @@ class AccountManager:
             proxies=proxies,
             verify=verify,
             channel_strategy=channel_strategy,
-            private_endpoint=private_endpoint,
+            private_endpoint=private_endpoint if not url else False,
         )
         return save_config(
             filename=filename,
