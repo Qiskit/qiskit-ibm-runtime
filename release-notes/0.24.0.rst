@@ -1,0 +1,55 @@
+0.24.0 (2024-05-29)
+===================
+
+Deprecation Notes
+-----------------
+
+- ``name`` will now be a required parameter in 
+   `backend() https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#backend`__.
+   ``backend()`` will no longer return the first backend out of all backends if ``name`` is not provided. (`1147 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1147>`__)
+- After the removal of custom programs, the following methods are being deprecated and renamed.
+  :meth:`qiskit_ibm_runtime.QiskitRuntimeService.run` is deprecated and will be replaced by a private method
+  :meth:`qiskit_ibm_runtime.QiskitRuntimeService._run`.
+
+  :meth:`qiskit_ibm_runtime.Session.run` is deprecated and will be replaced by a private method
+  :meth:`qiskit_ibm_runtime.Session._run`.
+
+  :meth:`qiskit_ibm_runtime.RuntimeJob.program_id` is deprecated and will be replaced by
+  :meth:`qiskit_ibm_runtime.RuntimeJob.primitive_id`. (`1238 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1238>`__)
+- `backend` argument in `Sampler <https://docs.quantum.ibm.com/run/primitives-get-started#3-initialize-the-qiskit-runtime-sampler>`__ and `Estimator <https://docs.quantum.ibm.com/run/primitives-get-started#3-initialize-qiskit-runtime-estimator>`__ has been deprecated . Please use the new `mode` argument instead.
+  `session` argument in `Sampler <https://docs.quantum.ibm.com/run/primitives-get-started#3-initialize-the-qiskit-runtime-sampler>`__ and `Estimator <https://docs.quantum.ibm.com/run/primitives-get-started#3-initialize-qiskit-runtime-estimator>`__ has been deprecated . Please use the new `mode` argument instead. (`1556 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1556>`__)
+
+
+New Features
+------------
+
+- Related to the execution modes, Sampler and Estimator now include a `mode` argument. The `mode` param
+  can be a Backend, Session, Batch, or None. Due to this, the backend name has been deprecated, and will
+  no longer be supported as a valid execution mode. (`1556 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1556>`__)
+- The `ZneOptions.amplifier` option was added, which can be one of these strings:
+
+  * `"gate_folding"` (default) uses 2-qubit gate folding to amplify noise. If the noise
+    factor requires amplifying only a subset of the gates, then these gates are chosen
+    randomly.
+  * `"gate_folding_front"` uses 2-qubit gate folding to amplify noise. If the noise
+    factor requires amplifying only a subset of the gates, then these gates are selected
+    from the front of the topologically ordered DAG circuit.
+  * `"gate_folding_back"` uses 2-qubit gate folding to amplify noise. If the noise
+    factor requires amplifying only a subset of the gates, then these gates are selected
+    from the back of the topologically ordered DAG circuit. (`1679 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1679>`__)
+
+
+Bug Fixes
+---------
+
+- Fixed an issue where retrieving jobs with 
+  `job() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#job>`__
+  and `jobs() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#jobs>`__
+  would only return ``RuntimeJob`` instances, even if the job was run with a V2 primitive. Now, 
+  V2 primitive jobs will be returned correctly as ``RuntimeJobV2`` instances. (`1471 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1471>`__)
+- To avoid network disruptions during long job processes, websocket errors will no longer be raised. (`1518 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1518>`__)
+- Fixed the combination of `insert_multiple_cycles` and `coupling_map` options in
+   :class:`.PadDynamicalDecoupling`. This combination allows to select staggered 
+   dynamical decoupling with multiple sequence cycles in each delay that crosses 
+   the threshold set by `sequence_min_length_ratios`. (`1630 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1630>`__)
+- Fixed a serialization issue where decoding job metadata resulted in an error. (`1682 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1682>`__)
