@@ -137,6 +137,7 @@ class QiskitRuntimeService(Provider):
             instance=self._account.instance,
             proxies=self._account.proxies,
             verify=self._account.verify,
+            private_endpoint=self._account.private_endpoint,
         )
 
         self._channel_strategy = channel_strategy or self._account.channel_strategy
@@ -724,7 +725,7 @@ class QiskitRuntimeService(Provider):
             overwrite=overwrite,
             channel_strategy=channel_strategy,
             set_as_default=set_as_default,
-            private_endpoint=private_endpoint,
+            private_endpoint=private_endpoint if not url else False,
         )
 
     @staticmethod

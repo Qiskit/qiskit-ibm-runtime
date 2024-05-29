@@ -30,7 +30,6 @@ ChannelType = Optional[Literal["ibm_cloud", "ibm_quantum"]]
 
 IBM_QUANTUM_API_URL = "https://auth.quantum-computing.ibm.com/api"
 IBM_CLOUD_API_URL = "https://cloud.ibm.com"
-PRIVATE_EU_API_URL = "https://private.eu-de.quantum-computing.cloud.ibm.com/"
 logger = logging.getLogger(__name__)
 
 
@@ -63,6 +62,7 @@ class Account:
         self.proxies = proxies
         self.verify = verify
         self.channel_strategy = channel_strategy
+        self.private_endpoint: bool = False
 
     def to_saved_format(self) -> dict:
         """Returns a dictionary that represents how the account is saved on disk."""
@@ -82,6 +82,7 @@ class Account:
         instance = data.get("instance")
         verify = data.get("verify", True)
         channel_strategy = data.get("channel_strategy")
+        private_endpoint = data.get("private_endpoint", False)
         return cls.create_account(
             channel=channel,
             url=url,
@@ -90,6 +91,7 @@ class Account:
             proxies=proxies,
             verify=verify,
             channel_strategy=channel_strategy,
+            private_endpoint=private_endpoint,
         )
 
     @classmethod
@@ -285,12 +287,10 @@ class CloudAccount(Account):
             private_endpoint: Connect to private API URL.
         """
         super().__init__(token, instance, proxies, verify, channel_strategy)
-        if private_endpoint:
-            resolved_url = PRIVATE_EU_API_URL
-        else:
-            resolved_url = url or IBM_CLOUD_API_URL
+        resolved_url = url or IBM_CLOUD_API_URL
         self.channel = "ibm_cloud"
         self.url = resolved_url
+        self.private_endpoint = private_endpoint
 
     def get_auth_handler(self) -> AuthBase:
         """Returns the Cloud authentication handler."""
