@@ -270,9 +270,9 @@ class Session:
             accepting_jobs = details["accepting_jobs"]
             if state in ["open", "inactive"]:
                 return "Pending"
-            if state == "active" and accepting_jobs:
+            if (state == "active" and accepting_jobs) or state == "pending_inactive":
                 return "In progress, accepting new jobs"
-            if state == "active" and not accepting_jobs:
+            if (state == "active" and not accepting_jobs) or state == "pending_closed":
                 return "In progress, not accepting new jobs"
             return state.capitalize()
 
