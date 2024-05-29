@@ -489,6 +489,8 @@ class QiskitRuntimeService(Provider):
         instance: Optional[str] = None,
         dynamic_circuits: Optional[bool] = None,
         filters: Optional[Callable[[List["ibm_backend.IBMBackend"]], bool]] = None,
+        *,
+        use_fractional_gates: Optional[bool] = True,
         **kwargs: Any,
     ) -> List["ibm_backend.IBMBackend"]:
         """Return all backends accessible via this account, subject to optional filtering.
@@ -506,6 +508,15 @@ class QiskitRuntimeService(Provider):
                         filters=lambda b: b.max_shots > 50000)
                     QiskitRuntimeService.backends(
                         filters=lambda x: ("rz" in x.basis_gates )
+            use_fractional_gates: Set True to allow for the target backend to use 
+                the fractional gate feature. Currently this feature is experimental
+                and cannot be used simulataneously with the dynamic circuits.
+                When this flag is set, control flow operations are automatically
+                removed from the backend Target instructions.
+                When you use the dynamic circuits feature (e.g. if_else) in your
+                algorithm, you must disable this flag to create valid ISA circuits.
+                This flag might be removed without any notification when our backend
+                supports dynamic circuits and fractioanl gates simulataneously.
 
             **kwargs: Simple filters that require a specific value for an attribute in
                 backend configuration or status.
@@ -530,6 +541,11 @@ class QiskitRuntimeService(Provider):
             IBMInputValueError: If an input is invalid.
             QiskitBackendNotFoundError: If the backend is not in any instance.
         """
+        if dynamic_circuits is True and use_fractional_gates:
+            raise QiskitBackendNotFoundError(
+                "Currently fractional_gates and dynamic_circuits feature cannot be "
+                "simulutaneously enabled. Consider disabling one or the other."
+            )
         backends: List[IBMBackend] = []
         instance_filter = instance if instance else self._account.instance
         if self._channel == "ibm_quantum":
@@ -589,6 +605,11 @@ class QiskitRuntimeService(Provider):
                     backends,
                 )
             )
+        
+        # Set fractional gate feature before Target object is created.
+        for backend in backends:
+            backend.options.use_fractional_gates = use_fractional_gates
+            backend._convert_to_target(refresh=True)
         return filter_backends(backends, filters=filters, **kwargs)
 
     def _set_backend_config(self, backend_name: str, instance: Optional[str] = None) -> None:
