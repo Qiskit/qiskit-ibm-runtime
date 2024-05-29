@@ -5,7 +5,7 @@ Deprecation Notes
 -----------------
 
 - ``name`` will now be a required parameter in 
-   `backend() https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#backend`__.
+   `backend() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#backend>`__.
    ``backend()`` will no longer return the first backend out of all backends if ``name`` is not provided. (`1147 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1147>`__)
 - After the removal of custom programs, the following methods are being deprecated and renamed.
   :meth:`qiskit_ibm_runtime.QiskitRuntimeService.run` is deprecated and will be replaced by a private method
