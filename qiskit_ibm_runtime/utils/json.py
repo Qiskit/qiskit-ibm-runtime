@@ -332,7 +332,7 @@ class RuntimeDecoder(json.JSONDecoder):
             if obj_type == "ndarray":
                 if obj_val in get_args(ExtrapolatorType):
                     return obj_val
-                if isinstance(obj_val, list):
+                if isinstance(obj_val, (int, list)):
                     return np.array(obj_val)
                 return _decode_and_deserialize(obj_val, np.load)
             if obj_type == "set":
