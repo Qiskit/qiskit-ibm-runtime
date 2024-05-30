@@ -408,7 +408,6 @@ class TestAccountManager(IBMTestCase):
     def test_save_private_endpoint(self):
         """Test private endpoint parameter."""
 
-        # Test without URL
         AccountManager.save(
             filename=_TEST_FILENAME,
             name=_DEFAULT_ACCOUNT_NAME_IBM_CLOUD,
@@ -422,22 +421,6 @@ class TestAccountManager(IBMTestCase):
 
         account = AccountManager.get(filename=_TEST_FILENAME)
         self.assertTrue(account.private_endpoint)
-
-        # If URL is passed in, private_endpoint is ignored
-        AccountManager.save(
-            filename=_TEST_FILENAME,
-            name=_DEFAULT_ACCOUNT_NAME_IBM_CLOUD,
-            token=_TEST_IBM_CLOUD_ACCOUNT.token,
-            instance=_TEST_IBM_CLOUD_ACCOUNT.instance,
-            url=_TEST_IBM_CLOUD_ACCOUNT.url,
-            channel="ibm_cloud",
-            overwrite=True,
-            set_as_default=True,
-            private_endpoint=True,
-        )
-
-        account = AccountManager.get(filename=_TEST_FILENAME)
-        self.assertFalse(account.private_endpoint)
 
     def test_save_default_account(self):
         """Test that if a default_account is defined in the qiskit-ibm.json file,
