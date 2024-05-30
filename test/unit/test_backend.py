@@ -272,10 +272,10 @@ class TestBackend(IBMTestCase):
         self.assertTrue(target.instruction_supported(operation_class=IfElseOp))
         self.assertFalse(target.instruction_supported("while_loop", ()))
         self.assertFalse(target.instruction_supported(operation_class=WhileLoopOp))
-        self.assertFalse(target.instruction_supported("for_loop", ()))
-        self.assertFalse(target.instruction_supported(operation_class=ForLoopOp))
-        self.assertFalse(target.instruction_supported("switch_case", ()))
-        self.assertFalse(target.instruction_supported(operation_class=SwitchCaseOp))
+        self.assertTrue(target.instruction_supported("for_loop", ()))
+        self.assertTrue(target.instruction_supported(operation_class=ForLoopOp))
+        self.assertTrue(target.instruction_supported("switch_case", ()))
+        self.assertTrue(target.instruction_supported(operation_class=SwitchCaseOp))
 
     def test_reset(self):
         """Test that reset instruction is properly added to the target."""
