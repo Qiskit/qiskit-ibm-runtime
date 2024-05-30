@@ -21,7 +21,6 @@ from collections import OrderedDict
 from typing import Dict, Callable, Optional, Union, List, Any, Type, Sequence
 
 from qiskit.providers.backend import BackendV2 as Backend
-from qiskit.providers.provider import ProviderV1 as Provider
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.providerutils import filter_backends
 from qiskit.providers.models import (
@@ -31,7 +30,7 @@ from qiskit.providers.models import (
 
 from qiskit_ibm_runtime import ibm_backend
 from .proxies import ProxyConfiguration
-from .utils.deprecation import issue_deprecation_msg
+from .utils.deprecation import issue_deprecation_msg, deprecate_function
 from .utils.hgp import to_instance_format, from_instance_format
 from .utils.backend_decoder import configuration_from_server_data
 
@@ -58,7 +57,7 @@ logger = logging.getLogger(__name__)
 SERVICE_NAME = "runtime"
 
 
-class QiskitRuntimeService(Provider):
+class QiskitRuntimeService:
     """Class for interacting with the Qiskit Runtime service."""
 
     global_service = None
@@ -795,7 +794,9 @@ class QiskitRuntimeService(Provider):
             raise QiskitBackendNotFoundError("No backend matches the criteria." + cloud_msg_url)
         return backends[0]
 
+    @deprecate_function("get_backend()", "0.24", "Please use backend() instead.", stacklevel=1)
     def get_backend(self, name: str = None, **kwargs: Any) -> Backend:
+        """Return a single backend matching the specified filtering."""
         return self.backend(name, **kwargs)
 
     def run(
@@ -1197,3 +1198,11 @@ class QiskitRuntimeService(Provider):
 
     def __repr__(self) -> str:
         return "<{}>".format(self.__class__.__name__)
+
+    def __eq__(self, other: Any) -> bool:
+        return (
+            self._channel == other._channel
+            and self._account.instance == other._account.instance
+            and self._account.token == other._account.token
+            and self._channel_strategy == other._channel_strategy
+        )
