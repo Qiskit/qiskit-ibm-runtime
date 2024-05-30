@@ -22,6 +22,10 @@ Deprecation Notes
   The ``session`` argument in `Sampler <https://docs.quantum.ibm.com/run/primitives-get-started#3-initialize-the-qiskit-runtime-sampler>`__ and 
   `Estimator <https://docs.quantum.ibm.com/run/primitives-get-started#3-initialize-qiskit-runtime-estimator>`__ has also been deprecated. 
   Please use ``mode`` instead. (`1556 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1556>`__)
+- :meth:`qiskit_ibm_runtime.QiskitRuntimeService.get_backend` is deprecated. Please
+  :meth:`qiskit_ibm_runtime.QiskitRuntimeService.backend` use instead.
+  The V1 fake backends, :class:`.FakeBackend`, along with :class:`.FakeProvider` are also
+  being deprecated in favor of the V2 fake backends and :class:`.FakeProviderForBackendV2`. (`1689 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1689>`__)
   
 
 
@@ -60,4 +64,4 @@ Bug Fixes
 - Fixed a serialization issue where decoding job metadata resulted in an error. (`1682 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1682>`__)
 - The backend utils method ``convert_to_target`` has been replaced with the 
   `convert_to_target <https://docs.quantum.ibm.com/api/qiskit/qiskit.providers.convert_to_target>`__ method from Qiskit.
-  This fixes some issues related to target generation and calibration data.
+  This fixes some issues related to target generation and calibration data. (`1600 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1600>`__)
