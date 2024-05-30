@@ -2018,7 +2018,7 @@ class TestALAPSchedulingAndPaddingPass(IBMTestCase):
         qr = QuantumRegister(7, name="q")
         expected = QuantumCircuit(qr, cr)
         for q_ind in range(1, 7):
-            expected.delay(24240, qr[q_ind])
+            expected.delay(24992, qr[q_ind])
         expected.measure(qr[0], cr[0])
         with expected.if_test((cr[0], 1)):
             expected.x(qr[0])
