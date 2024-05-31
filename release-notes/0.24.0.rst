@@ -46,6 +46,8 @@ New Features
   * ``"gate_folding_back"`` uses 2-qubit gate folding to amplify noise. If the noise
     factor requires amplifying only a subset of the gates, then these gates are selected
     from the back of the topologically ordered DAG circuit. (`1679 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1679>`__)
+- When saving an account, there is a new parameter, ``private_endpoint`` that if set to ``True``, allows
+  users to connect to a private IBM Cloud API. (`1699 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1699>`__)
 - Qiskit version ``1.1`` is now supported and required. (`1700 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1700>`__)
 
 Bug Fixes
