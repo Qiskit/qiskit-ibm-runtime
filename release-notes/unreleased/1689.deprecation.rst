@@ -1,0 +1,4 @@
+:meth:`qiskit_ibm_runtime.QiskitRuntimeService.get_backend` is deprecated. Please
+:meth:`qiskit_ibm_runtime.QiskitRuntimeService.backend` use instead.
+The V1 fake backends, :class:`.FakeBackend`, along with :class:`.FakeProvider` are also
+being deprecated in favor of the V2 fake backends and :class:`.FakeProviderForBackendV2`.

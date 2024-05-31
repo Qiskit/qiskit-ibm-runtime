@@ -16,10 +16,13 @@
 Fake provider class that provides access to fake backends.
 """
 
+from typing import Any, List
 from qiskit.providers.provider import ProviderV1
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 
 from .backends import *
+from .fake_backend import FakeBackendV2
+from ..utils.deprecation import issue_deprecation_msg, deprecate_function
 
 
 class FakeProviderFactory:
@@ -62,14 +65,14 @@ class FakeProviderFactory:
         return self.fake_provider
 
 
-class FakeProviderForBackendV2(ProviderV1):
+class FakeProviderForBackendV2:
     """Fake provider containing fake V2 backends.
 
     Only filtering backends by name is implemented. This class contains all fake V2 backends
     available in the :mod:`qiskit_ibm_runtime.fake_provider`.
     """
 
-    def backend(self, name=None, **kwargs):  # type: ignore
+    def backend(self, name: str = None, **kwargs: Any) -> FakeBackendV2:
         """
         Filter backends in provider by name.
         """
@@ -83,7 +86,13 @@ class FakeProviderForBackendV2(ProviderV1):
 
         return backend
 
-    def backends(self, name=None, **kwargs):  # type: ignore
+    @deprecate_function("get_backend()", "0.24", "Please use backend() instead.", stacklevel=1)
+    def get_backend(self, name: str = None, **kwargs: Any) -> FakeBackendV2:
+        """Return a single backend matching the specified filtering."""
+        return self.backend(name, **kwargs)
+
+    def backends(self, name: str = None, **kwargs: Any) -> List[FakeBackendV2]:
+        """Return all backends accessible via this account."""
         return self._backends
 
     def __init__(self) -> None:
@@ -171,6 +180,11 @@ class FakeProvider(ProviderV1):
         return self._backends
 
     def __init__(self) -> None:
+        issue_deprecation_msg(
+            "V1 fake backends and FakeProvider() are deprecated",
+            "0.24",
+            "Please use FakeProviderForBackendV2() instead.",
+        )
         self._backends = [
             FakeAlmaden(),  # type: ignore
             FakeArmonk(),  # type: ignore

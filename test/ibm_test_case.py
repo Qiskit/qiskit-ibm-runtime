@@ -211,16 +211,6 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
     def tearDownClass(cls) -> None:
         """Class level teardown."""
         super().tearDownClass()
-        # Delete default program.
-        with suppress(Exception):
-            service = cls.service
-            if "qiskit-test" in cls.program_ids[service.channel]:
-                service.delete_program(cls.program_ids[service.channel])
-                cls.log.debug(
-                    "Deleted %s program %s",
-                    service.channel,
-                    cls.program_ids[service.channel],
-                )
 
     @classmethod
     def _find_sim_backends(cls):
@@ -261,7 +251,7 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
             "max_execution_time": max_execution_time,
         }
         if pid == "sampler":
-            backend = service.get_backend(backend_name)
+            backend = service.backend(backend_name)
             options = Options()
             if log_level:
                 options.environment.log_level = log_level
@@ -272,7 +262,7 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
             sampler = Sampler(backend=backend, options=options)
             job = sampler.run(circuits or bell(), callback=callback)
         elif pid == "samplerv2":
-            backend = service.get_backend(backend_name)
+            backend = service.backend(backend_name)
             sampler = SamplerV2(backend=backend)
             pm = generate_preset_pass_manager(backend=backend, optimization_level=1)
             isa_qc = pm.run(bell())
