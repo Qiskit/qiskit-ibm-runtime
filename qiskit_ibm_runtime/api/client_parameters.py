@@ -33,6 +33,7 @@ class ClientParameters:
         instance: Optional[str] = None,
         proxies: Optional[ProxyConfiguration] = None,
         verify: bool = True,
+        private_endpoint: Optional[bool] = False,
     ) -> None:
         """ClientParameters constructor.
 
@@ -43,6 +44,7 @@ class ClientParameters:
             instance: Service instance to use.
             proxies: Proxy configuration.
             verify: If ``False``, ignores SSL certificates errors.
+            private_endpoint: Connect to private API URL.
         """
         self.token = token
         self.instance = instance
@@ -50,6 +52,7 @@ class ClientParameters:
         self.url = url
         self.proxies = proxies
         self.verify = verify
+        self.private_endpoint = private_endpoint
 
     def get_auth_handler(self) -> Union[CloudAuth, QuantumAuth]:
         """Returns the respective authentication handler."""
@@ -60,7 +63,7 @@ class ClientParameters:
 
     def get_runtime_api_base_url(self) -> str:
         """Returns the Runtime API base url."""
-        return get_runtime_api_base_url(self.url, self.instance)
+        return get_runtime_api_base_url(self.url, self.instance, self.private_endpoint)
 
     def connection_parameters(self) -> Dict[str, Any]:
         """Construct connection related parameters.
