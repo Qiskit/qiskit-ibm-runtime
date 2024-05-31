@@ -609,7 +609,6 @@ class QiskitRuntimeService(Provider):
         # Set fractional gate feature before Target object is created.
         for backend in backends:
             backend.options.use_fractional_gates = use_fractional_gates
-            backend._convert_to_target(refresh=True)
         return filter_backends(backends, filters=filters, **kwargs)
 
     def _set_backend_config(self, backend_name: str, instance: Optional[str] = None) -> None:

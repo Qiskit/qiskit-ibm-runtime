@@ -15,7 +15,7 @@ from typing import Optional
 from datetime import datetime as python_datetime
 from dataclasses import dataclass
 
-from qiskit_ibm_runtime.fake_provider import FakeLima
+from qiskit_ibm_runtime.fake_provider import backends, FakeLima
 
 
 @dataclass
@@ -23,6 +23,12 @@ class FakeApiBackendSpecs:
     """FakeApiBackend specs."""
 
     backend_name: str
+    """Backend name.
+
+    If it matches with any class name in qiskit_ibm_runtime.fake_provider.backends,
+    fake backend class is imported and used as a model of
+    backend configuration, properties and deafults.
+    """
     configuration: dict = None
     """Backend configuration to overwrite."""
     status: dict = None
@@ -35,18 +41,30 @@ class FakeApiBackend:
     """Fake backend."""
 
     def __init__(self, specs: Optional[FakeApiBackendSpecs] = None):
-        fake_backend = FakeLima()
-        self.properties = fake_backend.properties().to_dict()
-        self.defaults = fake_backend.defaults().to_dict()
+        if hasattr(backends, specs.backend_name):
+            model_backend = getattr(backends, specs.backend_name)()
+            self.configuration = model_backend.configuration().to_dict()
+            self.properties = model_backend.properties().to_dict()
+            self.defaults = model_backend.defaults().to_dict()
+        else:
+            model_backend = FakeLima()
+            # FakeApiBackend can modify arbitrary configuration field.
+            # Modified configuration may not match with the
+            # model description for Lima device in the properties and defaults.
+            # convert_to_target function may fail when its target is accessed
+            # for the first time because of this mismatch.
+            # To avoid unexpected errors, the properties and defaults are removed.
+            self.configuration = model_backend.configuration().to_dict()
+            self.configuration["backend_name"] = specs.backend_name
+            self.properties = None
+            self.defaults = None
 
-        self.configuration = fake_backend.configuration().to_dict()
         self.configuration["online_date"] = python_datetime.now().isoformat()
-        self.configuration["backend_name"] = specs.backend_name
         if specs.configuration:
             self.configuration.update(**specs.configuration)
         self.name = self.configuration["backend_name"]
 
-        self.status = fake_backend.status().to_dict()
+        self.status = model_backend.status().to_dict()
         if specs.status:
             self.status.update(**specs.status)
 
