@@ -508,14 +508,14 @@ class QiskitRuntimeService(Provider):
                         filters=lambda b: b.max_shots > 50000)
                     QiskitRuntimeService.backends(
                         filters=lambda x: ("rz" in x.basis_gates )
-            use_fractional_gates: Set True to allow for the target backend to use 
-                the fractional gate feature. Currently this feature is experimental
-                and cannot be used simulataneously with the dynamic circuits.
-                When this flag is set, control flow operations are automatically
-                removed from the backend Target instructions.
+            use_fractional_gates: Set True to allow for the backends to include
+                fractional gates in target. Currently this feature cannot be used
+                simulataneously with the dynamic circuits.
+                When this flag is set, control flow instructions are automatically
+                removed from the backend target.
                 When you use the dynamic circuits feature (e.g. if_else) in your
-                algorithm, you must disable this flag to create valid ISA circuits.
-                This flag might be removed without any notification when our backend
+                algorithm, you must disable this flag to create executable ISA circuits.
+                This flag might be modified or removed when our backend
                 supports dynamic circuits and fractioanl gates simulataneously.
 
             **kwargs: Simple filters that require a specific value for an attribute in
@@ -605,7 +605,7 @@ class QiskitRuntimeService(Provider):
                     backends,
                 )
             )
-        
+
         # Set fractional gate feature before Target object is created.
         for backend in backends:
             backend.options.use_fractional_gates = use_fractional_gates

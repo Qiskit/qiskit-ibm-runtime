@@ -27,7 +27,7 @@ from qiskit.circuit.controlflow import (
 )
 from qiskit.circuit.gate import Gate
 from qiskit.circuit.library.standard_gates import (
-    get_standard_gate_name_mapping, 
+    get_standard_gate_name_mapping,
     RZGate,
     U1Gate,
     PhaseGate,
@@ -346,9 +346,7 @@ def qubit_props_list_from_props(
     return qubit_props
 
 
-def is_fractional_gate(
-    gate: Gate
-) -> bool:
+def is_fractional_gate(gate: Gate) -> bool:
     """Test if gate is fractional gate familiy."""
     # In IBM architecture these gates are virtual-Z and delay,
     # which don't change control parameter with its gate parameter.

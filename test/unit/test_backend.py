@@ -352,11 +352,11 @@ class TestBackend(IBMTestCase):
         )
 
         self.assertEqual(
-            "rx" in target, 
+            "rx" in target,
             use_fractional,
         )
         self.assertEqual(
-            "rzx" in target, 
+            "rzx" in target,
             use_fractional,
         )
         self.assertEqual(
