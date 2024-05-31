@@ -36,3 +36,23 @@ class FakeLima(fake_pulse_backend.FakePulseBackend):
     props_filename = "props_lima.json"  # type: ignore
     defs_filename = "defs_lima.json"  # type: ignore
     backend_name = "fake_lima"  # type: ignore
+
+
+class FakeAltLima(fake_pulse_backend.FakePulseBackend):
+    """A fake 5 qubit backend with dynamic and fractional feature."""
+
+    dirname = os.path.dirname(__file__)  # type: ignore
+    conf_filename = "conf_alt_lima.json"  # type: ignore
+    props_filename = "props_alt_lima.json"  # type: ignore
+    defs_filename = "defs_lima.json"  # type: ignore
+    backend_name = "fake_alt_lima"  # type: ignore
+
+
+class FakeAltLimaV2(fake_backend.FakeBackendV2):
+    """A fake 5 qubit backend with dynamic and fractional feature."""
+
+    dirname = os.path.dirname(__file__)  # type: ignore
+    conf_filename = "conf_alt_lima.json"  # type: ignore
+    props_filename = "props_alt_lima.json"  # type: ignore
+    defs_filename = "defs_lima.json"  # type: ignore
+    backend_name = "fake_alt_lima"  # type: ignore

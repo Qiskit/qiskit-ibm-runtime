@@ -48,7 +48,9 @@ def convert_to_target(
     configuration: BackendConfiguration,
     properties: BackendProperties = None,
     defaults: PulseDefaults = None,
-    use_fractional_gates: bool = False,
+    *,
+    include_control_flow: bool = True,
+    include_fractional_gates: bool = True,
 ) -> Target:
     """Decode transpiler target from backend data set.
 
@@ -60,8 +62,8 @@ def convert_to_target(
         configuration: Backend configuration as ``BackendConfiguration``
         properties: Backend property dictionary or ``BackendProperties``
         defaults: Backend pulse defaults dictionary or ``PulseDefaults``
-        use_fractional_gates: Set True to include fractioanl gates.
-            When set to True, it automatically excludes control flow instructions.
+        include_control_flow: Set True to include control flow instructions.
+        include_fractional_gates: Set True to include fractioanl gates.
 
     Returns:
         A ``Target`` instance.
@@ -109,12 +111,12 @@ def convert_to_target(
             continue
         if name in qiskit_inst_mapping:
             qiskit_gate = qiskit_inst_mapping[name]
-            if (not use_fractional_gates) and is_fractional_gate(qiskit_gate):
+            if (not include_fractional_gates) and is_fractional_gate(qiskit_gate):
                 # Remove gate if this is fractional gate and fractional gate feature is disabled.
-                warnings.warn(
-                    f"Gate {name} is found but the fractional gate feature is disabled for this backend. "
+                logger.info(
+                    "Gate %s is found but the fractional gates are disabled for this backend. "
                     "This gate is excluded from the backend Target.",
-                    RuntimeWarning,
+                    name,
                 )
                 unsupported_instructions.append(name)
                 continue
@@ -293,8 +295,12 @@ def convert_to_target(
         if inst_name == "delay" and not add_delay:
             continue
         if inst_name in qiskit_control_flow_mapping:
-            if use_fractional_gates:
-                # Control flow can be added only when the fractional gates feature is not used.
+            if not include_control_flow:
+                logger.info(
+                    "Control flow %s is found but the dynamic gates are disabled for this backend. "
+                    "This instruction is excluded from the backend Target.",
+                    inst_name,
+                )
                 continue
             # Control flow operator doesn't have gate property.
             target.add_instruction(
