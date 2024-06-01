@@ -510,7 +510,7 @@ class QiskitRuntimeService(Provider):
                         filters=lambda x: ("rz" in x.basis_gates )
             use_fractional_gates: Set True to allow for the backends to include
                 fractional gates in target. Currently this feature cannot be used
-                simulataneously with the dynamic circuits.
+                simulataneously with the dynamic circuits, PEC, or PEA.
                 When this flag is set, control flow instructions are automatically
                 removed from the backend target.
                 When you use the dynamic circuits feature (e.g. if_else) in your
@@ -778,6 +778,7 @@ class QiskitRuntimeService(Provider):
         self,
         name: str = None,
         instance: Optional[str] = None,
+        use_fractional_gates: bool = True,
     ) -> Backend:
         """Return a single backend matching the specified filtering.
 
@@ -787,6 +788,15 @@ class QiskitRuntimeService(Provider):
                 hub/group/project format. If an instance is not given, among the providers
                 with access to the backend, a premium provider will be prioritized.
                 For users without access to a premium provider, the default open provider will be used.
+            use_fractional_gates: Set True to allow for the backends to include
+                fractional gates in target. Currently this feature cannot be used
+                simulataneously with the dynamic circuits, PEC, or PEA.
+                When this flag is set, control flow instructions are automatically
+                removed from the backend target.
+                When you use the dynamic circuits feature (e.g. if_else) in your
+                algorithm, you must disable this flag to create executable ISA circuits.
+                This flag might be modified or removed when our backend
+                supports dynamic circuits and fractioanl gates simulataneously.
 
         Returns:
             Backend: A backend matching the filtering.
@@ -804,7 +814,7 @@ class QiskitRuntimeService(Provider):
                 DeprecationWarning,
                 stacklevel=2,
             )
-        backends = self.backends(name, instance=instance)
+        backends = self.backends(name, instance=instance, use_fractional_gates=use_fractional_gates)
         if not backends:
             cloud_msg_url = ""
             if self._channel == "ibm_cloud":
