@@ -16,6 +16,7 @@ from datetime import datetime as python_datetime
 from dataclasses import dataclass
 
 from qiskit_ibm_runtime.fake_provider import backends, FakeLima
+from qiskit_ibm_runtime.fake_provider.fake_backend import FakeBackendV2
 
 
 @dataclass
@@ -43,9 +44,26 @@ class FakeApiBackend:
     def __init__(self, specs: Optional[FakeApiBackendSpecs] = None):
         if hasattr(backends, specs.backend_name):
             model_backend = getattr(backends, specs.backend_name)()
-            self.configuration = model_backend.configuration().to_dict()
-            self.properties = model_backend.properties().to_dict()
-            self.defaults = model_backend.defaults().to_dict()
+            if isinstance(model_backend, FakeBackendV2):
+                model_backend._set_props_dict_from_json()
+                model_backend._set_defs_dict_from_json()
+                self.configuration = model_backend._conf_dict
+                self.properties = model_backend._props_dict
+                self.defaults = model_backend._defs_dict
+                # BackendV2 doesn't implement .status.
+                # This is a copy of default definition in Qiskit.
+                self.status = {
+                    "backend_name": model_backend.name,
+                    "backend_version": "1",
+                    "operational": True,
+                    "pending_jobs": 0,
+                    "status_msg": "",
+                }
+            else:
+                self.configuration = model_backend.configuration().to_dict()
+                self.properties = model_backend.properties().to_dict()
+                self.defaults = model_backend.defaults().to_dict()
+                self.status = model_backend.status().to_dict()
         else:
             model_backend = FakeLima()
             # FakeApiBackend can modify arbitrary configuration field.
@@ -56,6 +74,7 @@ class FakeApiBackend:
             # To avoid unexpected errors, the properties and defaults are removed.
             self.configuration = model_backend.configuration().to_dict()
             self.configuration["backend_name"] = specs.backend_name
+            self.status = model_backend.status().to_dict()
             self.properties = None
             self.defaults = None
 
@@ -64,7 +83,6 @@ class FakeApiBackend:
             self.configuration.update(**specs.configuration)
         self.name = self.configuration["backend_name"]
 
-        self.status = model_backend.status().to_dict()
         if specs.status:
             self.status.update(**specs.status)
 

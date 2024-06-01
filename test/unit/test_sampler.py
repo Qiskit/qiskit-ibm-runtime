@@ -21,7 +21,7 @@ from qiskit import QuantumCircuit, transpile
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.circuit.library import RealAmplitudes
 from qiskit_ibm_runtime import Sampler, Session, SamplerV2, SamplerOptions, IBMInputValueError
-from qiskit_ibm_runtime.fake_provider import FakeAltLima
+from qiskit_ibm_runtime.fake_provider import FakeFractionalBackend
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import bell, MockSession, dict_paritally_equal, get_mocked_backend, transpile_pubs
@@ -154,11 +154,12 @@ class TestSamplerV2(IBMTestCase):
 
     def test_run_dynamic_circuit_with_fractional_opted(self):
         """Fractional opted backend cannot run dynamic circuits."""
-        model_backend = FakeAltLima()
+        model_backend = FakeFractionalBackend()
+        model_backend._set_props_dict_from_json()
         backend = get_mocked_backend(
-            name="fake_alt_lima",
-            configuration=model_backend.configuration().to_dict(),
-            properties=model_backend.properties().to_dict(),
+            name="fake_fractional",
+            configuration=model_backend._conf_dict,
+            properties=model_backend._props_dict,
         )
         backend.options.use_fractional_gates = True
 
@@ -174,11 +175,12 @@ class TestSamplerV2(IBMTestCase):
 
     def test_run_fractional_circuit_without_fractional_opted(self):
         """Fractional non-opted backend cannot run fractional circuits."""
-        model_backend = FakeAltLima()
+        model_backend = FakeFractionalBackend()
+        model_backend._set_props_dict_from_json()
         backend = get_mocked_backend(
-            name="fake_alt_lima",
-            configuration=model_backend.configuration().to_dict(),
-            properties=model_backend.properties().to_dict(),
+            name="fake_fractional",
+            configuration=model_backend._conf_dict,
+            properties=model_backend._props_dict,
         )
         backend.options.use_fractional_gates = False
 
@@ -196,11 +198,12 @@ class TestSamplerV2(IBMTestCase):
     )
     def test_run_fractional_dynamic_mix(self, use_fractional):
         """Any backend cannot run mixture of fractional and dynamic circuits."""
-        model_backend = FakeAltLima()
+        model_backend = FakeFractionalBackend()
+        model_backend._set_props_dict_from_json()
         backend = get_mocked_backend(
-            name="fake_alt_lima",
-            configuration=model_backend.configuration().to_dict(),
-            properties=model_backend.properties().to_dict(),
+            name="fake_fractional",
+            configuration=model_backend._conf_dict,
+            properties=model_backend._props_dict,
         )
         backend.options.use_fractional_gates = use_fractional
 

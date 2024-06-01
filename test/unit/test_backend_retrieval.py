@@ -277,9 +277,9 @@ class TestGetBackend(IBMTestCase):
         service = FakeRuntimeService(
             channel="ibm_quantum",
             token="my_token",
-            backend_specs=[FakeApiBackendSpecs(backend_name="FakeAltLima")],
+            backend_specs=[FakeApiBackendSpecs(backend_name="FakeFractionalBackend")],
         )
-        test_backend = service.backends("fake_alt_lima", use_fractional_gates=use_fractional)[0]
+        test_backend = service.backends("fake_fractional", use_fractional_gates=use_fractional)[0]
         self.assertEqual(
             "rx" in test_backend.target,
             use_fractional,

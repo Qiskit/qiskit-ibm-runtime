@@ -25,7 +25,7 @@ from qiskit.providers.models import (
 )
 
 from qiskit_ibm_runtime import SamplerV2
-from qiskit_ibm_runtime.fake_provider import FakeManila, FakeSherbrooke, FakeAltLima
+from qiskit_ibm_runtime.fake_provider import FakeManila, FakeSherbrooke, FakeFractionalBackend
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.utils.backend_converter import convert_to_target
 
@@ -342,11 +342,14 @@ class TestBackend(IBMTestCase):
     def test_convert_to_target_with_features(self, options):
         """Test converting into Target model with selective features."""
         use_dynamic, use_fractional = options
-        backend = FakeAltLima()
+        backend = FakeFractionalBackend()
+        backend._set_props_dict_from_json()
+        configuration = BackendConfiguration.from_dict(backend._conf_dict)
+        properties = BackendProperties.from_dict(backend._props_dict)
 
         target = convert_to_target(
-            configuration=backend.configuration(),
-            properties=backend.properties(),
+            configuration=configuration,
+            properties=properties,
             include_control_flow=use_dynamic,
             include_fractional_gates=use_fractional,
         )

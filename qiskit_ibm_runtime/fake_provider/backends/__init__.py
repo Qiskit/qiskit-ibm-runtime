@@ -32,6 +32,7 @@ from .cambridge import FakeCambridgeV2
 from .casablanca import FakeCasablancaV2
 from .cusco import FakeCusco
 from .essex import FakeEssexV2
+from .fractional import FakeFractionalBackend
 from .geneva import FakeGeneva
 from .guadalupe import FakeGuadalupeV2
 from .hanoi import FakeHanoiV2
@@ -42,7 +43,7 @@ from .kolkata import FakeKolkataV2
 from .kyiv import FakeKyiv
 from .kyoto import FakeKyoto
 from .lagos import FakeLagosV2
-from .lima import FakeLimaV2, FakeAltLimaV2
+from .lima import FakeLimaV2
 from .london import FakeLondonV2
 from .manhattan import FakeManhattanV2
 from .manila import FakeManilaV2
@@ -93,7 +94,7 @@ from .jakarta import FakeJakarta
 from .johannesburg import FakeJohannesburg
 from .kolkata import FakeKolkata
 from .lagos import FakeLagos
-from .lima import FakeLima, FakeAltLima
+from .lima import FakeLima
 from .london import FakeLondon
 from .manhattan import FakeManhattan
 from .manila import FakeManila
