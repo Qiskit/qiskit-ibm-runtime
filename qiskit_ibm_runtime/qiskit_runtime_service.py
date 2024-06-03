@@ -516,7 +516,7 @@ class QiskitRuntimeService(Provider):
                 When you use the dynamic circuits feature (e.g. if_else) in your
                 algorithm, you must disable this flag to create executable ISA circuits.
                 This flag might be modified or removed when our backend
-                supports dynamic circuits and fractioanl gates simulataneously.
+                supports dynamic circuits and fractional gates simultaneously.
 
             **kwargs: Simple filters that require a specific value for an attribute in
                 backend configuration or status.
@@ -796,7 +796,7 @@ class QiskitRuntimeService(Provider):
                 When you use the dynamic circuits feature (e.g. if_else) in your
                 algorithm, you must disable this flag to create executable ISA circuits.
                 This flag might be modified or removed when our backend
-                supports dynamic circuits and fractioanl gates simulataneously.
+                supports dynamic circuits and fractional gates simultaneously.
 
         Returns:
             Backend: A backend matching the filtering.

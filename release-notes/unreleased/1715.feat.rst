@@ -1,6 +1,6 @@
-New opt-in feature to support fractioanl gates is added to :class:`.IBMBackend`.
+New opt-in feature to support fractional gates is added to :class:`.IBMBackend`.
 IBM backends currently support dynamic circuits and fractional gates exclusively and
-two features cannot be used in the same primitive job.
+the two features cannot be used in the same primitive job.
 In addition, some error mitigation protocols you can use with the estimator primitive, 
 such as PEC or PEA, may not support gate twirling with the fractional gates.
 Since Qiskit Target model doesn't represent such constraint,
