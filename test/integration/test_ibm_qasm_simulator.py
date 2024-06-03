@@ -24,7 +24,7 @@ class TestIBMQasmSimulator(IBMIntegrationTestCase):
 
     def test_execute_one_circuit_simulator_online(self):
         """Test execute_one_circuit_simulator_online."""
-        backend = self.service.get_backend("ibmq_qasm_simulator")
+        backend = self.service.backend("ibmq_qasm_simulator")
         sampler = SamplerV2(backend)
         quantum_register = QuantumRegister(1)
         classical_register = ClassicalRegister(1)
@@ -42,7 +42,7 @@ class TestIBMQasmSimulator(IBMIntegrationTestCase):
 
     def test_execute_several_circuits_simulator_online(self):
         """Test execute_several_circuits_simulator_online."""
-        backend = self.service.get_backend("ibmq_qasm_simulator")
+        backend = self.service.backend("ibmq_qasm_simulator")
         sampler = SamplerV2(backend)
         quantum_register = QuantumRegister(2)
         classical_register = ClassicalRegister(2)
@@ -70,7 +70,7 @@ class TestIBMQasmSimulator(IBMIntegrationTestCase):
 
     def test_online_qasm_simulator_two_registers(self):
         """Test online_qasm_simulator_two_registers."""
-        backend = self.service.get_backend("ibmq_qasm_simulator")
+        backend = self.service.backend("ibmq_qasm_simulator")
         sampler = SamplerV2(backend)
         qr1 = QuantumRegister(2)
         cr1 = ClassicalRegister(2)
