@@ -17,13 +17,7 @@ from qiskit.quantum_info import Statevector, hellinger_fidelity
 from qiskit.providers.jobstatus import JobStatus
 from qiskit.quantum_info import SparsePauliOp
 from qiskit.circuit.library import RealAmplitudes
-from qiskit.primitives.containers import (
-    PrimitiveResult,
-    PubResult,
-    SamplerPubResult,
-    DataBin,
-    BitArray,
-)
+from qiskit.primitives.containers import PrimitiveResult, PubResult, DataBin, BitArray
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
 from qiskit_ibm_runtime import (
@@ -105,7 +99,9 @@ class TestV2PrimitivesQCTRL(IBMIntegrationTestCase):
         self.assertIsInstance(result.metadata, dict)
         self.assertEqual(len(result), num_pubs)
         for idx, pub_result in enumerate(result):
-            self.assertIsInstance(pub_result, SamplerPubResult)
+            # TODO: We need to update the following test to check `SamplerPubResult`
+            # when the server side is upgraded to Qiskit 1.1.
+            self.assertIsInstance(pub_result, PubResult)
             self.assertIsInstance(pub_result.data, DataBin)
             self.assertIsInstance(pub_result.metadata, dict)
             if targets:
