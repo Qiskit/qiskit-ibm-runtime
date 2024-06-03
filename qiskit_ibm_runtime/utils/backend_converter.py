@@ -108,11 +108,19 @@ def convert_to_target(
     # Create name to Qiskit instruction object repr mapping
     for name in all_instructions:
         if name in qiskit_control_flow_mapping:
+            if not include_control_flow:
+                # Remove name if this is control flow and dynamic circuits feature is disabled.
+                logger.info(
+                    "Control flow %s is found but the dynamic circuits are disabled for this backend. "
+                    "This instruction is excluded from the backend Target.",
+                    name,
+                )
+                unsupported_instructions.append(name)
             continue
         if name in qiskit_inst_mapping:
             qiskit_gate = qiskit_inst_mapping[name]
             if (not include_fractional_gates) and is_fractional_gate(qiskit_gate):
-                # Remove gate if this is fractional gate and fractional gate feature is disabled.
+                # Remove name if this is fractional gate and fractional gate feature is disabled.
                 logger.info(
                     "Gate %s is found but the fractional gates are disabled for this backend. "
                     "This gate is excluded from the backend Target.",
@@ -295,13 +303,6 @@ def convert_to_target(
         if inst_name == "delay" and not add_delay:
             continue
         if inst_name in qiskit_control_flow_mapping:
-            if not include_control_flow:
-                logger.info(
-                    "Control flow %s is found but the dynamic gates are disabled for this backend. "
-                    "This instruction is excluded from the backend Target.",
-                    inst_name,
-                )
-                continue
             # Control flow operator doesn't have gate property.
             target.add_instruction(
                 instruction=qiskit_control_flow_mapping[inst_name],
