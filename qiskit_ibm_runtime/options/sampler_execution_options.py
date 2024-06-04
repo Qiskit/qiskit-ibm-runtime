@@ -23,7 +23,7 @@ class SamplerExecutionOptionsV2(ExecutionOptionsV2):
     meas_type: Union[UnsetType, Literal["classified", "kerneled", "avg_kerneled"]] = Unset
     r"""How to process and return measurement results.
 
-    This option sets the return type of all classical registers in all :class:`~.PubResult`\s.
+    This option sets the return type of all classical registers in all :class:`~.SamplerPubResult`\s.
     If a sampler pub with shape ``pub_shape`` has a circuit that contains a classical register 
     with size ``creg_size``, then the returned data associated with this register will have one of
     the following formats depending on the value of this option.
