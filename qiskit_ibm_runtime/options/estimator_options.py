@@ -102,7 +102,12 @@ class EstimatorOptions(OptionsV2):
 
         twirling: Pauli twirling options. See :class:`TwirlingOptions` for all available options.
 
-        experimental: Experimental options.
+        experimental: Experimental options. These options are subject to change without notification, and
+            stability is not guaranteed. Currently, the available options are:
+
+            * Probabilistic Error Amplification (PEA). To enable PEA, set::
+
+                estimator_options.experimental = {"resilience": {"zne": {"amplifier": "pea"}}}
     """
 
     # Sadly we cannot use pydantic's built in validation because it won't work on Unset.
