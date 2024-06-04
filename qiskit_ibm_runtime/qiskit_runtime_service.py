@@ -73,7 +73,7 @@ class QiskitRuntimeService:
         proxies: Optional[dict] = None,
         verify: Optional[bool] = None,
         channel_strategy: Optional[str] = None,
-        private_endpoint: Optional[bool] = False,
+        private_endpoint: Optional[bool] = None,
     ) -> None:
         """QiskitRuntimeService constructor
 
@@ -131,6 +131,9 @@ class QiskitRuntimeService:
             channel_strategy=channel_strategy,
         )
 
+        if private_endpoint is not None:
+            self._account.private_endpoint = private_endpoint
+
         self._client_params = ClientParameters(
             channel=self._account.channel,
             token=self._account.token,
@@ -138,7 +141,7 @@ class QiskitRuntimeService:
             instance=self._account.instance,
             proxies=self._account.proxies,
             verify=self._account.verify,
-            private_endpoint=private_endpoint or self._account.private_endpoint,
+            private_endpoint=self._account.private_endpoint,
         )
 
         self._channel_strategy = channel_strategy or self._account.channel_strategy
