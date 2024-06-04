@@ -73,6 +73,7 @@ class QiskitRuntimeService:
         proxies: Optional[dict] = None,
         verify: Optional[bool] = None,
         channel_strategy: Optional[str] = None,
+        private_endpoint: Optional[bool] = None,
     ) -> None:
         """QiskitRuntimeService constructor
 
@@ -108,6 +109,7 @@ class QiskitRuntimeService:
                 authentication)
             verify: Whether to verify the server's TLS certificate.
             channel_strategy: Error mitigation strategy.
+            private_endpoint: Connect to private API URL.
 
         Returns:
             An instance of QiskitRuntimeService.
@@ -128,6 +130,9 @@ class QiskitRuntimeService:
             verify=verify,
             channel_strategy=channel_strategy,
         )
+
+        if private_endpoint is not None:
+            self._account.private_endpoint = private_endpoint
 
         self._client_params = ClientParameters(
             channel=self._account.channel,
