@@ -264,7 +264,6 @@ class BaseFakeRuntimeClient:
     ):
         """Initialize a fake runtime client."""
         # pylint: disable=unused-argument
-        self._programs = {}
         self._jobs = {}
         self._job_classes = job_classes or []
         self._final_status = final_status
@@ -477,6 +476,10 @@ class BaseFakeRuntimeClient:
         if session_id not in self._sessions:
             raise ValueError(f"Session {session_id} not found.")
         self._sessions.remove(session_id)
+
+    def session_details(self, session_id: str) -> Dict[str, Any]:
+        """Return the details of the session."""
+        return {"id": session_id, "mode": "dedicated", "backend_name": "common_backend"}
 
     def _find_backend(self, backend_name):
         for back in self._backends:

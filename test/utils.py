@@ -40,6 +40,7 @@ from qiskit_ibm_runtime import (
     SamplerV2,
     SamplerV1,
     EstimatorV1,
+    Batch,
 )
 from qiskit_ibm_runtime.fake_provider import FakeManila
 from qiskit_ibm_runtime.hub_group_project import HubGroupProject
@@ -149,7 +150,7 @@ def cancel_job_safe(job: RuntimeJob, logger: logging.Logger) -> bool:
         job.cancel()
         status = job.status()
         assert (
-            status is JobStatus.CANCELLED
+            status is JobStatus.CANCELLED or status == "CANCELLED"
         ), "cancel() was successful for job {} but its " "status is {}.".format(
             job.job_id(), status
         )
@@ -238,6 +239,7 @@ def create_faulty_backend(
     model_backend: Backend,
     faulty_qubit: Optional[int] = None,
     faulty_edge: Optional[tuple] = None,
+    faulty_q1_property: Optional[int] = None,
 ) -> IBMBackend:
     """Create an IBMBackend that has faulty qubits and/or edges.
 
@@ -245,6 +247,7 @@ def create_faulty_backend(
         model_backend: Fake backend to model after.
         faulty_qubit: Faulty qubit.
         faulty_edge: Faulty edge, a tuple of (gate, qubits)
+        faulty_q1_property: Faulty Q1 property.
 
     Returns:
         An IBMBackend with faulty qubits/edges.
@@ -269,6 +272,11 @@ def create_faulty_backend(
                         "value": 0,
                     }
                 )
+
+    if faulty_q1_property:
+        properties["qubits"][faulty_q1_property] = [
+            q for q in properties["qubits"][faulty_q1_property] if q["name"] != "T1"
+        ]
 
     out_backend = IBMBackend(
         configuration=model_backend.configuration(),
@@ -314,8 +322,8 @@ def get_mocked_backend(
     )
     mock_backend.name = name
     mock_backend._instance = None
-    mock_service.backend = (
-        lambda name, **kwargs: mock_backend if name == mock_backend.name else None
+    mock_service.backend = lambda name, **kwargs: (
+        mock_backend if name == mock_backend.name else None
     )
 
     return mock_backend
@@ -332,6 +340,15 @@ def get_mocked_session(backend: Any = None) -> mock.MagicMock:
     return session
 
 
+def get_mocked_batch(backend: Any = None) -> mock.MagicMock:
+    """Return a mocked batch object."""
+    batch = mock.MagicMock(spec=Batch)
+    batch._instance = None
+    batch._backend = backend or get_mocked_backend()
+    batch._service = getattr(backend, "service", None) or mock.MagicMock(spec=QiskitRuntimeService)
+    return batch
+
+
 def submit_and_cancel(backend: IBMBackend, logger: logging.Logger) -> RuntimeJob:
     """Submit and cancel a job.
 
@@ -342,7 +359,8 @@ def submit_and_cancel(backend: IBMBackend, logger: logging.Logger) -> RuntimeJob
         Cancelled job.
     """
     circuit = transpile(bell(), backend=backend)
-    job = backend.run(circuit)
+    sampler = SamplerV2(backend)
+    job = sampler.run([circuit])
     cancel_job_safe(job, logger=logger)
     return job
 

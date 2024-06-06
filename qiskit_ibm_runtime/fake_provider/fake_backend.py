@@ -31,7 +31,6 @@ from qiskit.exceptions import QiskitError
 from qiskit.utils import optionals as _optionals
 from qiskit.transpiler import Target
 from qiskit.providers import Options
-from qiskit.providers.backend_compat import convert_to_target
 from qiskit.providers.fake_provider.utils.json_decoder import (
     decode_backend_configuration,
     decode_backend_properties,
@@ -39,6 +38,10 @@ from qiskit.providers.fake_provider.utils.json_decoder import (
 )
 
 from qiskit.providers.basic_provider import BasicSimulator
+
+from qiskit_ibm_runtime.utils.backend_converter import convert_to_target
+
+from ..utils.deprecation import issue_deprecation_msg
 
 
 class _Credentials:
@@ -178,9 +181,7 @@ class FakeBackendV2(BackendV2):
             if self._defs_dict is not None:
                 defaults = PulseDefaults.from_dict(self._defs_dict)  # type: ignore
 
-            self._target = convert_to_target(
-                conf, props, defaults, add_delay=True, filter_faulty=True
-            )
+            self._target = convert_to_target(conf, props, defaults)
 
         return self._target
 
@@ -460,6 +461,12 @@ class FakeBackend(BackendV1):
             configuration (BackendConfiguration): backend configuration
             time_alive (int): time to wait before returning result
         """
+        issue_deprecation_msg(
+            "V1 fake backends are deprecated",
+            "0.24",
+            "Please use V2 fake backends instead.",
+            stacklevel=3,
+        )
         super().__init__(configuration)
         self.time_alive = time_alive
         self._credentials = _Credentials()

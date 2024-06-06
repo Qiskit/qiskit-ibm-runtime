@@ -15,23 +15,21 @@
 import uuid
 import time
 from datetime import datetime, timedelta
-from unittest import skip, SkipTest
+from pydantic import ValidationError
 
 from dateutil import tz
 from qiskit.compiler import transpile
 from qiskit import QuantumCircuit
-from qiskit.providers.jobstatus import JobStatus, JOB_FINAL_STATES
 
-from qiskit_ibm_runtime.exceptions import IBMBackendValueError
 
-from qiskit_ibm_runtime import IBMBackend, RuntimeJob
+from qiskit_ibm_runtime import IBMBackend, RuntimeJob, SamplerV2 as Sampler
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 from ..decorators import (
     IntegrationTestDependencies,
     integration_test_setup,
 )
 from ..ibm_test_case import IBMTestCase
-from ..utils import most_busy_backend, cancel_job_safe, bell
+from ..utils import bell
 
 
 class TestIBMJobAttributes(IBMTestCase):
@@ -52,7 +50,8 @@ class TestIBMJobAttributes(IBMTestCase):
         cls.service = dependencies.service
         cls.sim_backend = dependencies.service.backend("ibmq_qasm_simulator")
         cls.bell = transpile(bell(), cls.sim_backend)
-        cls.sim_job = cls.sim_backend.run(cls.bell)
+        sampler = Sampler(backend=cls.sim_backend)
+        cls.sim_job = sampler.run([cls.bell])
         cls.last_week = datetime.now() - timedelta(days=7)
 
     def setUp(self):
@@ -72,7 +71,8 @@ class TestIBMJobAttributes(IBMTestCase):
         """Test retrieving creation date, while ensuring it is in local time."""
         # datetime, before running the job, in local time.
         start_datetime = datetime.now().replace(tzinfo=tz.tzlocal()) - timedelta(seconds=1)
-        job = self.sim_backend.run(self.bell)
+        sampler = Sampler(backend=self.sim_backend)
+        job = sampler.run([self.bell])
         job.result()
         # datetime, after the job is done running, in local time.
         end_datetime = datetime.now().replace(tzinfo=tz.tzlocal()) + timedelta(seconds=1)
@@ -85,40 +85,6 @@ class TestIBMJobAttributes(IBMTestCase):
             ),
         )
 
-    def test_esp_readout_not_enabled(self):
-        """Test that an error is thrown if ESP readout is used and the backend does not support it."""
-        # sim backend does not have ``measure_esp_enabled`` flag: defaults to ``False``
-        with self.assertRaises(IBMBackendValueError) as context_manager:
-            self.sim_backend.run(self.bell, use_measure_esp=True)
-        self.assertIn(
-            "ESP readout not supported on this device. Please make sure the flag "
-            "'use_measure_esp' is unset or set to 'False'.",
-            context_manager.exception.message,
-        )
-
-    def test_esp_readout_enabled(self):
-        """Test that ESP readout can be used when the backend supports it."""
-        try:
-            setattr(self.sim_backend._configuration, "measure_esp_enabled", True)
-            job = self.sim_backend.run(self.bell, use_measure_esp=True)
-            self.assertEqual(job.inputs["use_measure_esp"], True)
-        finally:
-            delattr(self.sim_backend._configuration, "measure_esp_enabled")
-
-    def test_esp_readout_default_value(self):
-        """Test that ESP readout is set to backend support value if not specified."""
-        try:
-            # ESP readout not enabled on backend
-            setattr(self.sim_backend._configuration, "measure_esp_enabled", False)
-            job = self.sim_backend.run(self.bell)
-            self.assertIsNone(getattr(job.inputs, "use_measure_esp", None))
-            # ESP readout enabled on backend
-            setattr(self.sim_backend._configuration, "measure_esp_enabled", True)
-            job = self.sim_backend.run(self.bell, use_measure_esp=True)
-            self.assertEqual(job.inputs["use_measure_esp"], True)
-        finally:
-            delattr(self.sim_backend._configuration, "measure_esp_enabled")
-
     def test_job_tags(self):
         """Test using job tags."""
         # Use a unique tag.
@@ -127,7 +93,9 @@ class TestIBMJobAttributes(IBMTestCase):
             uuid.uuid4().hex[0:16],
             uuid.uuid4().hex[0:16],
         ]
-        job = self.sim_backend.run(self.bell, job_tags=job_tags)
+        sampler = Sampler(backend=self.sim_backend)
+        sampler.options.environment.job_tags = job_tags
+        job = sampler.run([self.bell])
 
         no_rjobs_tags = [job_tags[0:1] + ["phantom_tags"], ["phantom_tag"]]
         for tags in no_rjobs_tags:
@@ -150,7 +118,9 @@ class TestIBMJobAttributes(IBMTestCase):
     def test_job_tags_replace(self):
         """Test updating job tags by replacing a job's existing tags."""
         initial_job_tags = [uuid.uuid4().hex[:16]]
-        job = self.sim_backend.run(self.bell, job_tags=initial_job_tags)
+        sampler = Sampler(backend=self.sim_backend)
+        sampler.options.environment.job_tags = initial_job_tags
+        job = sampler.run([self.bell])
 
         tags_to_replace_subtests = [
             [],  # empty tags.
@@ -168,7 +138,11 @@ class TestIBMJobAttributes(IBMTestCase):
 
     def test_invalid_job_tags(self):
         """Test using job tags with an and operator."""
-        self.assertRaises(IBMInputValueError, self.sim_backend.run, self.bell, job_tags={"foo"})
+
+        with self.assertRaises(ValidationError):
+            sampler = Sampler(backend=self.sim_backend)
+            sampler.options.environment.job_tags = "foo"
+
         self.assertRaises(
             IBMInputValueError,
             self.service.jobs,
@@ -179,61 +153,3 @@ class TestIBMJobAttributes(IBMTestCase):
         """Test cost estimation is returned correctly."""
         self.assertTrue(self.sim_job.usage_estimation)
         self.assertIn("quantum_seconds", self.sim_job.usage_estimation)
-
-    @skip("time_per_step supported in provider but not in runtime")
-    def test_time_per_step(self):
-        """Test retrieving time per step, while ensuring the date times are in local time."""
-        # datetime, before running the job, in local time.
-        start_datetime = datetime.now().replace(tzinfo=tz.tzlocal()) - timedelta(seconds=1)
-        job = self.sim_backend.run(self.bell)
-        job.result()
-        # datetime, after the job is done running, in local time.
-        end_datetime = datetime.now().replace(tzinfo=tz.tzlocal()) + timedelta(seconds=1)
-
-        self.assertTrue(job.time_per_step())
-        for step, time_data in job.time_per_step().items():
-            self.assertTrue(
-                (start_datetime <= time_data <= end_datetime),
-                'job time step "{}={}" is not '
-                "between the start date time {} and end date time {}".format(
-                    step, time_data, start_datetime, end_datetime
-                ),
-            )
-        rjob = self.service.job(job.job_id())
-        self.assertTrue(rjob.time_per_step())
-
-    def test_queue_info(self):
-        """Test retrieving queue information."""
-        if self.dependencies.channel == "ibm_cloud":
-            raise SkipTest("Not supported on cloud channel.")
-        # Find the most busy backend.
-        backend = most_busy_backend(self.service)
-        leave_states = list(JOB_FINAL_STATES) + [JobStatus.RUNNING]
-        job = backend.run(self.bell)
-        queue_info = None
-        for _ in range(20):
-            queue_info = job.queue_info()
-            # Even if job status is queued, its queue info may not be immediately available.
-            if (
-                job._status is JobStatus.QUEUED and job.queue_position() is not None
-            ) or job._status in leave_states:
-                break
-            time.sleep(1)
-
-        if job._status is JobStatus.QUEUED and job.queue_position() is not None:
-            self.log.debug(
-                "Job id=%s, queue info=%s, queue position=%s",
-                job.job_id(),
-                queue_info,
-                job.queue_position(),
-            )
-            msg = "Job {} is queued but has no ".format(job.job_id())
-            self.assertIsNotNone(queue_info, msg + "queue info.")
-            self.assertTrue(queue_info.format())
-            self.assertTrue(repr(queue_info))
-        elif job._status is not None:
-            self.assertIsNone(job.queue_position())
-            self.log.warning("Unable to retrieve queue information")
-
-        # Cancel job so it doesn't consume more resources.
-        cancel_job_safe(job, self.log)

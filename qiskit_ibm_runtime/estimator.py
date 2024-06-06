@@ -18,24 +18,28 @@ from typing import Optional, Dict, Sequence, Any, Union, Iterable
 import logging
 
 from qiskit.circuit import QuantumCircuit
+from qiskit.providers import BackendV1, BackendV2
 from qiskit.quantum_info.operators.base_operator import BaseOperator
 from qiskit.quantum_info.operators import SparsePauliOp
 from qiskit.primitives import BaseEstimator
 from qiskit.primitives.base import BaseEstimatorV2
 from qiskit.primitives.containers import EstimatorPubLike
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
+
 from .runtime_job import RuntimeJob
 from .runtime_job_v2 import RuntimeJobV2
 from .ibm_backend import IBMBackend
 from .options import Options
 from .options.estimator_options import EstimatorOptions
 from .base_primitive import BasePrimitiveV1, BasePrimitiveV2
+from .utils.deprecation import deprecate_arguments, issue_deprecation_msg
 from .utils.qctrl import validate as qctrl_validate
 from .utils.qctrl import validate_v2 as qctrl_validate_v2
 
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
+from .batch import Batch
 
 logger = logging.getLogger(__name__)
 
@@ -104,13 +108,23 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
 
     def __init__(
         self,
-        backend: Optional[Union[str, IBMBackend]] = None,
+        mode: Optional[Union[BackendV1, BackendV2, Session, Batch, str]] = None,
+        backend: Optional[Union[str, BackendV1, BackendV2]] = None,
         session: Optional[Session] = None,
         options: Optional[Union[Dict, EstimatorOptions]] = None,
     ):
         """Initializes the Estimator primitive.
 
         Args:
+            mode: The execution mode used to make the primitive query. It can be:
+
+                * A :class:`Backend` if you are using job mode.
+                * A :class:`Session` if you are using session execution mode.
+                * A :class:`Batch` if you are using batch execution mode.
+
+                Refer to the `Qiskit Runtime documentation <https://docs.quantum.ibm.com/run>`_.
+                for more information about the ``Execution modes``.
+
             backend: Backend to run the primitive. This can be a backend name or an :class:`IBMBackend`
                 instance. If a name is specified, the default account (e.g. ``QiskitRuntimeService()``)
                 is used.
@@ -129,7 +143,29 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
         """
         BaseEstimatorV2.__init__(self)
         Estimator.__init__(self)
-        BasePrimitiveV2.__init__(self, backend=backend, session=session, options=options)
+        if backend:
+            deprecate_arguments(
+                "backend",
+                "0.23.0",
+                "Please use the 'mode' parameter instead.",
+            )
+        if session:
+            deprecate_arguments(
+                "session",
+                "0.23.0",
+                "Please use the 'mode' parameter instead.",
+            )
+        if isinstance(mode, str) or isinstance(backend, str):
+            issue_deprecation_msg(
+                "The backend name as execution mode input has been deprecated.",
+                "0.23.0",
+                "A backend object should be provided instead. Get the backend directly from"
+                " the service using `QiskitRuntimeService().backend('ibm_backend')`",
+                3,
+            )
+        if mode is None:
+            mode = session if backend and session else backend if backend else session
+        BasePrimitiveV2.__init__(self, mode=mode, options=options)
 
     def run(
         self, pubs: Iterable[EstimatorPubLike], *, precision: float | None = None
@@ -151,7 +187,7 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
         return self._run(coerced_pubs)  # type: ignore[arg-type]
 
     def _validate_options(self, options: dict) -> None:
-        """Validate that program inputs (options) are valid
+        """Validate that primitive inputs (options) are valid
 
         Raises:
             ValidationError: if validation fails.
@@ -328,7 +364,7 @@ class EstimatorV1(BasePrimitiveV1, Estimator, BaseEstimator):
         )
 
     def _validate_options(self, options: dict) -> None:
-        """Validate that program inputs (options) are valid
+        """Validate that primitive inputs (options) are valid
         Raises:
             ValueError: if resilience_level is out of the allowed range.
             ValueError: if resilience_level==3, backend is simulator and no coupling map

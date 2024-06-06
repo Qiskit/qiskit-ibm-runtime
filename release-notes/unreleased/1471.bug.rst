@@ -1,0 +1,5 @@
+Fixed an issue where retrieving jobs with 
+`job() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#job>`__
+and `jobs() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService#jobs>`__
+would only return ``RuntimeJob`` instances, even if the job was run with a V2 primitive. Now, 
+V2 primitive jobs will be returned correctly as ``RuntimeJobV2`` instances.

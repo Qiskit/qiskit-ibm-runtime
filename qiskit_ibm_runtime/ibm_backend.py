@@ -51,14 +51,13 @@ from .runtime_job import RuntimeJob
 
 from .api.clients import RuntimeClient
 from .exceptions import IBMBackendApiProtocolError, IBMBackendValueError, IBMBackendApiError
-from .utils.backend_converter import (
-    convert_to_target,
-)
+from .utils.backend_converter import convert_to_target
 from .utils.default_session import get_cm_session as get_cm_primitive_session
 from .utils.backend_decoder import (
     defaults_from_server_data,
     properties_from_server_data,
 )
+from .utils.deprecation import issue_deprecation_msg
 from .utils.options import QASM2Options, QASM3Options
 from .api.exceptions import RequestsApiError
 from .utils import local_to_utc, are_circuits_dynamic
@@ -108,7 +107,7 @@ class IBMBackend(Backend):
         * max_shots: maximum number of shots supported.
         * coupling_map (list): The coupling map for the device
         * supported_instructions (List[str]): Instructions supported by the backend.
-        * dynamic_reprate_enabled (bool): whether delay between programs can be set dynamically
+        * dynamic_reprate_enabled (bool): whether delay between primitives can be set dynamically
           (ie via ``rep_delay``). Defaults to False.
         * rep_delay_range (List[float]): 2d list defining supported range of repetition
           delays for backend in μs. First entry is lower end of the range, second entry is
@@ -337,6 +336,7 @@ class IBMBackend(Backend):
 
     def target_history(self, datetime: Optional[python_datetime] = None) -> Target:
         """A :class:`qiskit.transpiler.Target` object for the backend.
+
         Returns:
             Target with properties found on `datetime`
         """
@@ -638,7 +638,7 @@ class IBMBackend(Backend):
                 * ``avg`` returns average measurement output (averaged over number of shots).
 
                 This parameter is applicable only if ``dynamic=False`` is specified or defaulted to.
-            rep_delay: Delay between programs in seconds. Only supported on certain
+            rep_delay: Delay between primitives in seconds. Only supported on certain
                 backends (if ``backend.configuration().dynamic_reprate_enabled=True``).
                 If supported, ``rep_delay`` must be from the range supplied
                 by the backend (``backend.configuration().rep_delay_range``). Default is given by
@@ -675,6 +675,13 @@ class IBMBackend(Backend):
                 - If ESP readout is used and the backend does not support this.
         """
         # pylint: disable=arguments-differ
+        issue_deprecation_msg(
+            msg="backend.run() and related sessions methods are deprecated ",
+            version="0.23",
+            remedy="More details can be found in the primitives migration "
+            "guide https://docs.quantum.ibm.com/api/migration-guides/qiskit-runtime.",
+            period="6 months",
+        )
         validate_job_tags(job_tags)
         if not isinstance(circuits, List):
             circuits = [circuits]
@@ -829,6 +836,13 @@ class IBMBackend(Backend):
 
     def open_session(self, max_time: Optional[Union[int, str]] = None) -> ProviderSession:
         """Open session"""
+        issue_deprecation_msg(
+            msg="backend.run() and related sessions methods are deprecated ",
+            version="0.23",
+            remedy="More details can be found in the primitives migration guide "
+            "https://docs.quantum.ibm.com/api/migration-guides/qiskit-runtime.",
+            period="6 months",
+        )
         if not self._configuration.simulator:
             new_session = self._service._api_client.create_session(
                 self.name, self._instance, max_time, self._service.channel
@@ -841,10 +855,24 @@ class IBMBackend(Backend):
     @property
     def session(self) -> ProviderSession:
         """Return session"""
+        issue_deprecation_msg(
+            msg="backend.run() and related sessions methods are deprecated ",
+            version="0.23",
+            remedy="More details can be found in the primitives migration "
+            "guide https://docs.quantum.ibm.com/api/migration-guides/qiskit-runtime.",
+            period="6 months",
+        )
         return self._session
 
     def cancel_session(self) -> None:
         """Cancel session. All pending jobs will be cancelled."""
+        issue_deprecation_msg(
+            msg="backend.run() and related sessions methods are deprecated ",
+            version="0.23",
+            remedy="More details can be found in the primitives migration "
+            "guide https://docs.quantum.ibm.com/api/migration-guides/qiskit-runtime.",
+            period="6 months",
+        )
         if self._session:
             self._session.cancel()
             if self._session.session_id:
@@ -856,11 +884,22 @@ class IBMBackend(Backend):
         """Close the session so new jobs will no longer be accepted, but existing
         queued or running jobs will run to completion. The session will be terminated once there
         are no more pending jobs."""
+        issue_deprecation_msg(
+            msg="backend.run() and related sessions methods are deprecated ",
+            version="0.23",
+            remedy="More details can be found in the primitives migration "
+            "guide https://docs.quantum.ibm.com/api/migration-guides/qiskit-runtime.",
+            period="6 months",
+        )
         if self._session:
             self._session.cancel()
             if self._session.session_id:
                 self._api_client.close_session(self._session.session_id)
         self._session = None
+
+    def get_translation_stage_plugin(self) -> str:
+        """Return the default translation stage plugin name for IBM backends."""
+        return "ibm_dynamic_circuits"
 
 
 class IBMRetiredBackend(IBMBackend):

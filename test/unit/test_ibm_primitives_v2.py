@@ -42,6 +42,7 @@ from ..utils import (
     get_mocked_backend,
     bell,
     get_mocked_session,
+    get_mocked_batch,
 )
 
 
@@ -141,22 +142,19 @@ class TestPrimitivesV2(IBMTestCase):
 
         with patch("qiskit_ibm_runtime.base_primitive.QiskitRuntimeService", new=MockQRTService):
             inst = primitive(backend=backend_name)
-            self.assertIsNone(inst.session)
+            self.assertIsNone(inst.mode)
             inst.run(**get_primitive_inputs(inst))
             mock_service_inst.run.assert_called_once()
             runtime_options = mock_service_inst.run.call_args.kwargs["options"]
             self.assertEqual(runtime_options["backend"], mock_backend)
 
-    @data(EstimatorV2, SamplerV2)
-    def test_init_with_session_backend_str(self, primitive):
-        """Test initializing a primitive with a backend name using session."""
-        backend_name = "ibm_gotham"
-
-        with patch("qiskit_ibm_runtime.base_primitive.QiskitRuntimeService"):
-            with self.assertRaises(ValueError) as exc:
-                inst = primitive(session=backend_name)
-                self.assertIsNone(inst.session)
-            self.assertIn("session must be of type Session or None", str(exc.exception))
+            mock_service_inst.reset_mock()
+            str_mode_inst = primitive(mode=backend_name)
+            self.assertIsNone(str_mode_inst.mode)
+            inst.run(**get_primitive_inputs(str_mode_inst))
+            mock_service_inst.run.assert_called_once()
+            runtime_options = mock_service_inst.run.call_args.kwargs["options"]
+            self.assertEqual(runtime_options["backend"], mock_backend)
 
     @data(EstimatorV2, SamplerV2)
     def test_init_with_backend_instance(self, primitive):
@@ -166,16 +164,11 @@ class TestPrimitivesV2(IBMTestCase):
 
         service.reset_mock()
         inst = primitive(backend=backend)
-        self.assertIsNone(inst.session)
+        self.assertIsNone(inst.mode)
         inst.run(**get_primitive_inputs(inst))
         service.run.assert_called_once()
         runtime_options = service.run.call_args.kwargs["options"]
         self.assertEqual(runtime_options["backend"], backend)
-
-        with self.assertRaises(ValueError) as exc:
-            inst = primitive(session=backend)
-            self.assertIsNone(inst.session)
-        self.assertIn("session must be of type Session or None", str(exc.exception))
 
     @data(EstimatorV2, SamplerV2)
     def test_init_with_backend_session(self, primitive):
@@ -184,8 +177,8 @@ class TestPrimitivesV2(IBMTestCase):
         session = get_mocked_session(get_mocked_backend(backend_name))
 
         session.reset_mock()
-        inst = primitive(session=session, backend=backend_name)
-        self.assertIsNotNone(inst.session)
+        inst = primitive(session=session)
+        self.assertIsNotNone(inst.mode)
         inst.run(**get_primitive_inputs(inst))
         session.run.assert_called_once()
 
@@ -200,7 +193,7 @@ class TestPrimitivesV2(IBMTestCase):
             mock_service.global_service = None
             inst = primitive()
             mock_service.assert_called_once()
-            self.assertIsNone(inst.session)
+            self.assertIsNone(inst.mode)
 
     @data(EstimatorV2, SamplerV2)
     def test_init_with_no_backend_session_quantum(self, primitive):
@@ -219,8 +212,8 @@ class TestPrimitivesV2(IBMTestCase):
 
         with Session(service=backend.service, backend=backend_name) as session:
             inst = primitive()
-            self.assertEqual(inst.session, session)
-            self.assertEqual(inst.session.backend(), backend_name)
+            self.assertEqual(inst.mode, session)
+            self.assertEqual(inst.mode.backend(), backend_name)
 
     @data(EstimatorV2, SamplerV2)
     def test_default_session_cm_new_backend(self, primitive):
@@ -231,7 +224,7 @@ class TestPrimitivesV2(IBMTestCase):
 
         with Session(service=service, backend=cm_backend):
             inst = primitive(backend=backend)
-            self.assertIsNone(inst.session)
+            self.assertIsNone(inst.mode)
             inst.run(**get_primitive_inputs(inst))
             service.run.assert_called_once()
             runtime_options = service.run.call_args.kwargs["options"]
@@ -244,11 +237,53 @@ class TestPrimitivesV2(IBMTestCase):
         service = backend.service
         inst = primitive(backend)
         inst.run(**get_primitive_inputs(inst))
-        self.assertIsNone(inst.session)
+        self.assertIsNone(inst.mode)
         service.run.assert_called_once()
         kwargs_list = service.run.call_args.kwargs
         self.assertNotIn("session_id", kwargs_list)
         self.assertNotIn("start_session", kwargs_list)
+
+    @data(SamplerV2, EstimatorV2)
+    def test_init_with_mode_as_backend(self, primitive):
+        """Test initializing a primitive with mode as a Backend."""
+        backend = get_mocked_backend()
+        service = backend.service
+
+        inst = primitive(mode=backend)
+        self.assertIsNotNone(inst)
+        inst.run(**get_primitive_inputs(inst))
+        service.run.assert_called_once()
+        runtime_options = service.run.call_args.kwargs["options"]
+        self.assertEqual(runtime_options["backend"], backend)
+
+    @data(SamplerV2, EstimatorV2)
+    def test_init_with_mode_as_session(self, primitive):
+        """Test initializing a primitive with mode as Session."""
+        backend = get_mocked_backend()
+        session = get_mocked_session(backend)
+        session.reset_mock()
+        session._backend = backend
+
+        inst = primitive(mode=session)
+        self.assertIsNotNone(inst.mode)
+        inst.run(**get_primitive_inputs(inst, backend=backend))
+        self.assertEqual(inst.mode, session)
+        session.run.assert_called_once()
+        self.assertEqual(session._backend, backend)
+
+    @data(SamplerV2, EstimatorV2)
+    def test_init_with_mode_as_batch(self, primitive):
+        """Test initializing a primitive with mode as a Batch"""
+        backend = get_mocked_backend()
+        batch = get_mocked_batch(backend)
+        batch.reset_mock()
+        batch._backend = backend
+
+        inst = primitive(mode=batch)
+        self.assertIsNotNone(inst.mode)
+        inst.run(**get_primitive_inputs(inst, backend=backend))
+        batch.run.assert_called_once()
+        self.assertEqual(batch._backend, backend)
 
     @data(EstimatorV2, SamplerV2)
     def test_parameters_single_circuit(self, primitive):

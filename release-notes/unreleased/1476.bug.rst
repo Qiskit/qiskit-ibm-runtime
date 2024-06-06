@@ -1,3 +1,0 @@
-:class:`qiskit_ibm_runtime.RuntimeJobV2` will no longer 
-error when the API returns an unknown status. Instead, the status 
-from the API will directly be returned.

@@ -16,6 +16,8 @@ import uuid
 from datetime import datetime, timezone
 from qiskit.providers.jobstatus import JobStatus
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
+from qiskit_ibm_runtime import RuntimeJob, RuntimeJobV2
+
 
 from ..ibm_test_case import IBMIntegrationJobTestCase
 from ..decorators import run_integration_test, production_only, quantum_only
@@ -56,22 +58,6 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         rjob = service.job(job.job_id())
         self.assertEqual(job.job_id(), rjob.job_id())
         self.assertEqual(self.program_ids[service.channel], rjob.program_id)
-
-    @run_integration_test
-    @quantum_only
-    def test_lazy_loading_params(self, service):
-        """Test lazy loading job params."""
-        job = self._run_program(
-            service,
-            inputs={"circuits": bell()},
-            program_id="circuit-runner",
-            backend="ibmq_qasm_simulator",
-        )
-        job.wait_for_final_state()
-        rjob = service.job(job.job_id())
-        self.assertFalse(rjob._params)
-        self.assertTrue(rjob.inputs)
-        self.assertTrue(rjob._params)
 
     @run_integration_test
     @quantum_only
@@ -229,3 +215,15 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         jobs = service.jobs(backend_name=backend)
         for job in jobs:
             self.assertEqual(backend, job.backend().name)
+
+    @run_integration_test
+    def test_retrieve_correct_job_version(self, service):
+        """Test retrieving the correct job version."""
+        job = self._run_program(service)
+        job.wait_for_final_state()
+        rjob = service.job(job.job_id())
+        job_v2 = self._run_program(service, program_id="samplerv2")
+        job_v2.wait_for_final_state()
+        rjob_v2 = service.job(job_v2.job_id())
+        self.assertIsInstance(rjob, RuntimeJob)
+        self.assertIsInstance(rjob_v2, RuntimeJobV2)

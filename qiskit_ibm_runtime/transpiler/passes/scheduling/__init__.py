@@ -11,9 +11,9 @@
 # that they have been altered from the originals.
 
 """
-====================================================================
-Scheduling (:mod:`qiskit_ibm_runtime.transpiler.passes.scheduling`)
-====================================================================
+=====================================================================================
+Transpiler scheduling passes (:mod:`qiskit_ibm_runtime.transpiler.passes.scheduling`)
+=====================================================================================
 
 .. currentmodule:: qiskit_ibm_runtime.transpiler.passes.scheduling
 
@@ -29,6 +29,21 @@ of measurement results.
     :func:`~qiskit.compiler.transpile` or
     :func:`~qiskit.transpiler.preset_passmanagers.generate_preset_pass_manager`.
 
+Classes
+=======
+.. autosummary::
+   :toctree: ../stubs/
+
+    BlockBasePadder
+    ALAPScheduleAnalysis
+    ASAPScheduleAnalysis
+    DynamicCircuitInstructionDurations
+    PadDelay
+    PadDynamicalDecoupling
+
+Example usage
+=============
+
 Below we demonstrate how to schedule and pad a teleportation circuit with delays
 for a dynamic circuit backend's execution model:
 
@@ -41,13 +56,9 @@ for a dynamic circuit backend's execution model:
     from qiskit_ibm_runtime.transpiler.passes.scheduling import DynamicCircuitInstructionDurations
     from qiskit_ibm_runtime.transpiler.passes.scheduling import ALAPScheduleAnalysis
     from qiskit_ibm_runtime.transpiler.passes.scheduling import PadDelay
-    from qiskit_ibm_runtime.fake_provider import FakeJakarta
+    from qiskit_ibm_runtime.fake_provider import FakeJakartaV2
 
-    backend = FakeJakarta()
-
-    # Temporary workaround for mock backends. For real backends this is not required.
-    backend.configuration().basis_gates.append("if_else")
-
+    backend = FakeJakartaV2()
 
     # Use this duration class to get appropriate durations for dynamic
     # circuit backend scheduling
@@ -114,7 +125,7 @@ This returns instances of :class:`~qiskit.transpiler.StagedPassManager`, which c
 
 
 Scheduling old format ``c_if`` conditioned gates
-------------------------------------------------
+================================================
 
 Scheduling with old format ``c_if`` conditioned gates is not supported.
 
@@ -171,7 +182,7 @@ prior to your scheduling pass.
 
 
 Exploiting IBM backend's local parallel "fast-path"
----------------------------------------------------
+===================================================
 
 IBM quantum hardware supports a localized "fast-path" which enables a block of gates
 applied to a *single qubit* that are conditional on an immediately predecessor measurement
@@ -375,18 +386,6 @@ be padded out by the scheduler to ensure they are of the same duration in Qiskit
 
         qc.draw(output="mpl", style="iqp")
 
-
-Scheduling & Dynamical Decoupling
-=================================
-.. autosummary::
-   :toctree: ../stubs/
-
-    BlockBasePadder
-    ALAPScheduleAnalysis
-    ASAPScheduleAnalysis
-    DynamicCircuitInstructionDurations
-    PadDelay
-    PadDynamicalDecoupling
 """
 
 from .block_base_padder import BlockBasePadder

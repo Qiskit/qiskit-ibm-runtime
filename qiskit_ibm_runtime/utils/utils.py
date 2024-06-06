@@ -28,7 +28,7 @@ from ibm_cloud_sdk_core.authenticators import (  # pylint: disable=import-error
     IAMAuthenticator,
 )
 from ibm_platform_services import ResourceControllerV2  # pylint: disable=import-error
-from qiskit.circuit import QuantumCircuit
+from qiskit.circuit import QuantumCircuit, ControlFlowOp
 from qiskit.transpiler import Target
 from qiskit.providers.backend import BackendV1, BackendV2
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
@@ -99,6 +99,36 @@ def validate_isa_circuits(circuits: Sequence[QuantumCircuit], target: Target) ->
             )
 
 
+def are_circuits_dynamic(circuits: List[QuantumCircuit], qasm_default: bool = True) -> bool:
+    """Checks if the input circuits are dynamic."""
+    for circuit in circuits:
+        if isinstance(circuit, str):
+            return qasm_default  # currently do not verify QASM inputs
+        for inst in circuit:
+            if (
+                isinstance(inst.operation, ControlFlowOp)
+                or getattr(inst.operation, "condition", None) is not None
+            ):
+                return True
+    return False
+
+
+def validate_no_dd_with_dynamic_circuits(circuits: List[QuantumCircuit], options: Any) -> None:
+    """Validate that if dynamical decoupling options are enabled,
+    no circuit in the pubs is dynamic
+
+    Args:
+        circuits: A list of QuantumCircuits.
+        options: The runtime options
+    """
+    if not hasattr(options, "dynamical_decoupling") or not options.dynamical_decoupling.enable:
+        return
+    if are_circuits_dynamic(circuits, False):
+        raise IBMInputValueError(
+            "Dynamical decoupling currently cannot be used with dynamic circuits"
+        )
+
+
 def validate_job_tags(job_tags: Optional[List[str]]) -> None:
     """Validates input job tags.
 
@@ -162,12 +192,13 @@ def is_crn(locator: str) -> bool:
     return isinstance(locator, str) and locator.startswith("crn:")
 
 
-def get_runtime_api_base_url(url: str, instance: str) -> str:
+def get_runtime_api_base_url(url: str, instance: str, private_endpoint: bool = False) -> str:
     """Computes the Runtime API base URL based on the provided input parameters.
 
     Args:
         url: The URL.
         instance: The instance.
+        private_endpoint: Connect to private API URL.
 
     Returns:
         Runtime API base URL
@@ -179,10 +210,16 @@ def get_runtime_api_base_url(url: str, instance: str) -> str:
     # cloud: compute runtime API URL based on crn and URL
     if is_crn(instance) and not _is_experimental_runtime_url(url):
         parsed_url = urlparse(url)
-        api_host = (
-            f"{parsed_url.scheme}://{_location_from_crn(instance)}"
-            f".quantum-computing.{parsed_url.hostname}"
-        )
+        if private_endpoint:
+            api_host = (
+                f"{parsed_url.scheme}://private.{_location_from_crn(instance)}"
+                f".quantum-computing.{parsed_url.hostname}"
+            )
+        else:
+            api_host = (
+                f"{parsed_url.scheme}://{_location_from_crn(instance)}"
+                f".quantum-computing.{parsed_url.hostname}"
+            )
 
     return api_host
 

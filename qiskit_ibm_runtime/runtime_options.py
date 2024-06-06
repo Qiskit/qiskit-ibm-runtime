@@ -51,7 +51,7 @@ class RuntimeOptions:
 
         Args:
             backend: target backend to run on. This is required for ``ibm_quantum`` channel.
-            image: the runtime image used to execute the program, specified in
+            image: the runtime image used to execute the primitive, specified in
                 the form of ``image_name:tag``. Not all accounts are
                 authorized to select a different image.
             log_level: logging level to set in the execution environment. The valid

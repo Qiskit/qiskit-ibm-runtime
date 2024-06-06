@@ -25,6 +25,9 @@ from qiskit.circuit.library import (
     CZGate,
     ECRGate,
 )
+from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
+
+from qiskit_ibm_runtime import SamplerV2 as Sampler
 
 from qiskit_ibm_runtime.fake_provider import (
     FakeProviderForBackendV2,
@@ -63,11 +66,13 @@ class TestFakeBackends(IBMTestCase):
     def test_circuit_on_fake_backend_v2(self, backend, optimization_level):
         if not optionals.HAS_AER and backend.num_qubits > 20:
             self.skipTest("Unable to run fake_backend %s without qiskit-aer" % backend.backend_name)
-        circuit = transpile(self.circuit, optimization_level=optimization_level, seed_transpiler=42)
         backend.set_options(seed_simulator=42)
-        job = backend.run(circuit)
-        result = job.result()
-        counts = result.get_counts()
+        pm = generate_preset_pass_manager(backend=backend, optimization_level=optimization_level)
+        isa_circuit = pm.run(self.circuit)
+        sampler = Sampler(backend)
+        job = sampler.run([isa_circuit])
+        pub_result = job.result()[0]
+        counts = pub_result.data.meas.get_counts()
         max_count = max(counts.items(), key=operator.itemgetter(1))[0]
         self.assertEqual(max_count, "11")
 
@@ -84,11 +89,13 @@ class TestFakeBackends(IBMTestCase):
                 "Unable to run fake_backend %s without qiskit-aer"
                 % backend.configuration().backend_name
             )
-        circuit = transpile(self.circuit, optimization_level=optimization_level, seed_transpiler=42)
         backend.set_options(seed_simulator=42)
-        job = backend.run(circuit)
-        result = job.result()
-        counts = result.get_counts()
+        pm = generate_preset_pass_manager(backend=backend, optimization_level=optimization_level)
+        isa_circuit = pm.run(self.circuit)
+        sampler = Sampler(backend)
+        job = sampler.run([isa_circuit])
+        pub_result = job.result()[0]
+        counts = pub_result.data.meas.get_counts()
         max_count = max(counts.items(), key=operator.itemgetter(1))[0]
         self.assertEqual(max_count, "11")
 

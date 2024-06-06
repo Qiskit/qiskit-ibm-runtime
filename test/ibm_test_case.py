@@ -22,8 +22,9 @@ from contextlib import suppress
 from collections import defaultdict
 from typing import DefaultDict, Dict
 
+from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit_ibm_runtime import QISKIT_IBM_RUNTIME_LOGGER_NAME
-from qiskit_ibm_runtime import QiskitRuntimeService, Sampler, Options
+from qiskit_ibm_runtime import QiskitRuntimeService, Sampler, SamplerV2, Options
 
 from .utils import setup_test_logging, bell
 from .decorators import IntegrationTestDependencies, integration_test_setup
@@ -181,12 +182,7 @@ class IBMIntegrationTestCase(IBMTestCase):
     def tearDown(self) -> None:
         """Test level teardown."""
         super().tearDown()
-        # Delete programs
         service = self.service
-        for prog in self.to_delete[service.channel]:
-            with suppress(Exception):
-                if "qiskit-test" in prog:
-                    service.delete_program(prog)
 
         # Cancel and delete jobs.
         for job in self.to_cancel[service.channel]:
@@ -215,16 +211,6 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
     def tearDownClass(cls) -> None:
         """Class level teardown."""
         super().tearDownClass()
-        # Delete default program.
-        with suppress(Exception):
-            service = cls.service
-            if "qiskit-test" in cls.program_ids[service.channel]:
-                service.delete_program(cls.program_ids[service.channel])
-                cls.log.debug(
-                    "Deleted %s program %s",
-                    service.channel,
-                    cls.program_ids[service.channel],
-                )
 
     @classmethod
     def _find_sim_backends(cls):
@@ -265,7 +251,7 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
             "max_execution_time": max_execution_time,
         }
         if pid == "sampler":
-            backend = service.get_backend(backend_name)
+            backend = service.backend(backend_name)
             options = Options()
             if log_level:
                 options.environment.log_level = log_level
@@ -275,6 +261,12 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
                 options.max_execution_time = max_execution_time
             sampler = Sampler(backend=backend, options=options)
             job = sampler.run(circuits or bell(), callback=callback)
+        elif pid == "samplerv2":
+            backend = service.backend(backend_name)
+            sampler = SamplerV2(backend=backend)
+            pm = generate_preset_pass_manager(backend=backend, optimization_level=1)
+            isa_qc = pm.run(bell())
+            job = sampler.run([isa_qc])
         else:
             job = service.run(
                 program_id=pid,

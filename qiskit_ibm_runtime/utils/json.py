@@ -16,7 +16,6 @@
 
 import base64
 import copy
-import functools
 import importlib
 import inspect
 import io
@@ -25,7 +24,8 @@ import re
 import warnings
 import zlib
 from datetime import date
-from typing import Any, Callable, Dict, List, Union, Tuple
+
+from typing import Any, Callable, Dict, List, Union, get_args
 
 import dateutil.parser
 import numpy as np
@@ -47,8 +47,6 @@ except ImportError:
 from qiskit.circuit import (
     Instruction,
     Parameter,
-    ParameterExpression,
-    ParameterVector,
     QuantumCircuit,
     QuantumRegister,
 )
@@ -57,8 +55,6 @@ from qiskit.result import Result
 from qiskit.version import __version__ as _terra_version_string
 from qiskit.utils import optionals
 from qiskit.qpy import (
-    _write_parameter_expression,
-    _read_parameter_expression_v3,
     load,
     dump,
 )
@@ -70,10 +66,11 @@ from qiskit.primitives.containers.observables_array import ObservablesArray
 from qiskit.primitives.containers import (
     BitArray,
     DataBin,
-    make_data_bin,
     PubResult,
+    SamplerPubResult,
     PrimitiveResult,
 )
+from qiskit_ibm_runtime.options.zne_options import ExtrapolatorType
 
 _TERRA_VERSION = tuple(
     int(x) for x in re.match(r"\d+\.\d+\.\d", _terra_version_string).group(0).split(".")[:3]
@@ -242,14 +239,6 @@ class RuntimeEncoder(json.JSONEncoder):
                 compress=False,
             )
             return {"__type__": "Parameter", "__value__": value}
-        if isinstance(obj, ParameterExpression):
-            value = _serialize_and_encode(
-                data=obj,
-                serializer=_write_parameter_expression,
-                compress=False,
-                use_symengine=bool(optionals.HAS_SYMENGINE),
-            )
-            return {"__type__": "ParameterExpression", "__value__": value}
         if isinstance(obj, ParameterView):
             return obj.data
         if isinstance(obj, Instruction):
@@ -281,10 +270,9 @@ class RuntimeEncoder(json.JSONEncoder):
             return {"__type__": "BitArray", "__value__": out_val}
         if isinstance(obj, DataBin):
             out_val = {
-                "field_names": obj._FIELDS,
-                "field_types": [str(field_type) for field_type in obj._FIELD_TYPES],
-                "shape": obj._SHAPE,
-                "fields": {field_name: getattr(obj, field_name) for field_name in obj._FIELDS},
+                "field_names": list(obj),
+                "shape": obj.shape,
+                "fields": dict(obj.items()),
             }
             return {"__type__": "DataBin", "__value__": out_val}
         if isinstance(obj, EstimatorPub):
@@ -300,6 +288,9 @@ class RuntimeEncoder(json.JSONEncoder):
                 obj.parameter_values.as_array(obj.circuit.parameters),
                 obj.shots,
             )
+        if isinstance(obj, SamplerPubResult):
+            out_val = {"data": obj.data, "metadata": obj.metadata}
+            return {"__type__": "SamplerPubResult", "__value__": out_val}
         if isinstance(obj, PubResult):
             out_val = {"data": obj.data, "metadata": obj.metadata}
             return {"__type__": "PubResult", "__value__": out_val}
@@ -329,12 +320,6 @@ class RuntimeDecoder(json.JSONDecoder):
 
     def __init__(self, *args: Any, **kwargs: Any):
         super().__init__(object_hook=self.object_hook, *args, **kwargs)
-        self.__parameter_vectors: Dict[str, Tuple[ParameterVector, set]] = {}
-        self.__read_parameter_expression = functools.partial(
-            _read_parameter_expression_v3,
-            vectors=self.__parameter_vectors,
-            use_symengine=bool(optionals.HAS_SYMENGINE),
-        )
 
     def object_hook(self, obj: Any) -> Any:
         """Called to decode object."""
@@ -347,7 +332,9 @@ class RuntimeDecoder(json.JSONDecoder):
             if obj_type == "complex":
                 return obj_val[0] + 1j * obj_val[1]
             if obj_type == "ndarray":
-                if isinstance(obj_val, list):
+                if obj_val in get_args(ExtrapolatorType):
+                    return obj_val
+                if isinstance(obj_val, (int, list)):
                     return np.array(obj_val)
                 return _decode_and_deserialize(obj_val, np.load)
             if obj_type == "set":
@@ -356,10 +343,6 @@ class RuntimeDecoder(json.JSONDecoder):
                 return _decode_and_deserialize(obj_val, load)[0]
             if obj_type == "Parameter":
                 return _decode_and_deserialize(obj_val, _read_parameter, False)
-            if obj_type == "ParameterExpression":
-                return _decode_and_deserialize(
-                    obj_val, self.__read_parameter_expression, False  # type: ignore[arg-type]
-                )
             if obj_type == "Instruction":
                 # Standalone instructions are encoded as the sole instruction in a QPY serialized circuit
                 # to deserialize load qpy circuit and return first instruction object in that circuit.
@@ -395,15 +378,12 @@ class RuntimeDecoder(json.JSONDecoder):
             if obj_type == "BitArray":
                 return BitArray(**obj_val)
             if obj_type == "DataBin":
-                field_names = obj_val["field_names"]
-                field_types = [
-                    globals().get(field_type, field_type) for field_type in obj_val["field_types"]
-                ]
                 shape = obj_val["shape"]
                 if shape is not None and isinstance(shape, list):
                     shape = tuple(shape)
-                data_bin_cls = make_data_bin(zip(field_names, field_types), shape=shape)
-                return data_bin_cls(**obj_val["fields"])
+                return DataBin(shape=shape, **obj_val["fields"])
+            if obj_type == "SamplerPubResult":
+                return SamplerPubResult(**obj_val)
             if obj_type == "PubResult":
                 return PubResult(**obj_val)
             if obj_type == "PrimitiveResult":
