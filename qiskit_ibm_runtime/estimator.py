@@ -35,7 +35,7 @@ from .base_primitive import BasePrimitiveV1, BasePrimitiveV2
 from .utils.deprecation import deprecate_arguments, issue_deprecation_msg
 from .utils.qctrl import validate as qctrl_validate
 from .utils.qctrl import validate_v2 as qctrl_validate_v2
-
+from .utils.validations import validate_estimator_pubs
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
@@ -184,6 +184,7 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
 
         """
         coerced_pubs = [EstimatorPub.coerce(pub, precision) for pub in pubs]
+        validate_estimator_pubs(coerced_pubs)
         return self._run(coerced_pubs)  # type: ignore[arg-type]
 
     def _validate_options(self, options: dict) -> None:

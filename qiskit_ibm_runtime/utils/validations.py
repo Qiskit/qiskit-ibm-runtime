@@ -15,10 +15,11 @@ from typing import List
 import warnings
 import keyword
 from qiskit.primitives.containers.sampler_pub import SamplerPub
-def validate_classical_registers(
-    pubs: List[SamplerPub]
-):
-    """Validates the classical registers in the pub won't cause problems.
+from qiskit.primitives.containers.estimator_pub import EstimatorPub
+
+
+def validate_classical_registers(pubs: List[SamplerPub]):
+    """Validates the classical registers in the pub won't cause problems that can be caught client-side.
 
     Args:
         pubs: The list of pubs to validate
@@ -33,7 +34,8 @@ def validate_classical_registers(
         if len(pub.circuit.cregs) == 0:
             warnings.warn(
                 f"The {index}-th circuit has no output classical registers so the result "
-                "will be empty. Did you mean to add measurement instructions?", UserWarning
+                "will be empty. Did you mean to add measurement instructions?",
+                UserWarning,
             )
 
         for reg in pubs.circuit.cregs:
@@ -54,3 +56,17 @@ def validate_classical_registers(
                     f"is such a keyword. You can see the Python keyword list here: "
                     f"https://docs.python.org/3/reference/lexical_analysis.html#keywords"
                 )
+
+
+def validate_estimator_pubs(pubs: List[EstimatorPub]):
+    """Validates the estimator pubs won't cause problems that can be caught client-side.
+
+    Args:
+        pubs: The list of pubs to validate
+
+    Raises:
+        ValueError: If any observable array is of size 0
+    """
+    for pub in pubs:
+        if pub.observables.shape == (0,):
+            raise ValueError("Empty observables array is not allowed")
