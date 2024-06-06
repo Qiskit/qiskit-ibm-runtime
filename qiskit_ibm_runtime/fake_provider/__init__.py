@@ -78,7 +78,7 @@ Here is an example of using a fake backend for transpilation and simulation.
 
         # get a real backend from the runtime service
         service = QiskitRuntimeService()
-        backend = service.get_backend('ibmq_manila')
+        backend = service.backend('ibmq_manila')
 
         # generate a simulator that mimics the real quantum system with the latest calibration results
         backend_sim = AerSimulator.from_backend(backend)

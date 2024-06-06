@@ -47,6 +47,7 @@ class AccountManager:
         overwrite: Optional[bool] = False,
         channel_strategy: Optional[str] = None,
         set_as_default: Optional[bool] = None,
+        private_endpoint: Optional[bool] = False,
     ) -> None:
         """Save account on disk."""
         channel = channel or os.getenv("QISKIT_IBM_CHANNEL") or _DEFAULT_CHANNEL_TYPE
@@ -61,6 +62,7 @@ class AccountManager:
             proxies=proxies,
             verify=verify,
             channel_strategy=channel_strategy,
+            private_endpoint=private_endpoint,
         )
         return save_config(
             filename=filename,

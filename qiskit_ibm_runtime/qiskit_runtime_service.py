@@ -21,7 +21,6 @@ from collections import OrderedDict
 from typing import Dict, Callable, Optional, Union, List, Any, Type, Sequence
 
 from qiskit.providers.backend import BackendV2 as Backend
-from qiskit.providers.provider import ProviderV1 as Provider
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.providerutils import filter_backends
 from qiskit.providers.models import (
@@ -31,7 +30,7 @@ from qiskit.providers.models import (
 
 from qiskit_ibm_runtime import ibm_backend
 from .proxies import ProxyConfiguration
-from .utils.deprecation import issue_deprecation_msg
+from .utils.deprecation import issue_deprecation_msg, deprecate_function
 from .utils.hgp import to_instance_format, from_instance_format
 from .utils.backend_decoder import configuration_from_server_data
 
@@ -58,7 +57,7 @@ logger = logging.getLogger(__name__)
 SERVICE_NAME = "runtime"
 
 
-class QiskitRuntimeService(Provider):
+class QiskitRuntimeService:
     """Class for interacting with the Qiskit Runtime service."""
 
     global_service = None
@@ -74,6 +73,7 @@ class QiskitRuntimeService(Provider):
         proxies: Optional[dict] = None,
         verify: Optional[bool] = None,
         channel_strategy: Optional[str] = None,
+        private_endpoint: Optional[bool] = None,
     ) -> None:
         """QiskitRuntimeService constructor
 
@@ -109,6 +109,7 @@ class QiskitRuntimeService(Provider):
                 authentication)
             verify: Whether to verify the server's TLS certificate.
             channel_strategy: Error mitigation strategy.
+            private_endpoint: Connect to private API URL.
 
         Returns:
             An instance of QiskitRuntimeService.
@@ -130,6 +131,9 @@ class QiskitRuntimeService(Provider):
             channel_strategy=channel_strategy,
         )
 
+        if private_endpoint is not None:
+            self._account.private_endpoint = private_endpoint
+
         self._client_params = ClientParameters(
             channel=self._account.channel,
             token=self._account.token,
@@ -137,6 +141,7 @@ class QiskitRuntimeService(Provider):
             instance=self._account.instance,
             proxies=self._account.proxies,
             verify=self._account.verify,
+            private_endpoint=self._account.private_endpoint,
         )
 
         self._channel_strategy = channel_strategy or self._account.channel_strategy
@@ -706,6 +711,7 @@ class QiskitRuntimeService(Provider):
         overwrite: Optional[bool] = False,
         channel_strategy: Optional[str] = None,
         set_as_default: Optional[bool] = None,
+        private_endpoint: Optional[bool] = False,
     ) -> None:
         """Save the account to disk for future use.
 
@@ -728,6 +734,7 @@ class QiskitRuntimeService(Provider):
             channel_strategy: Error mitigation strategy.
             set_as_default: If ``True``, the account is saved in filename,
                 as the default account.
+            private_endpoint: Connect to private API URL.
         """
 
         AccountManager.save(
@@ -742,6 +749,7 @@ class QiskitRuntimeService(Provider):
             overwrite=overwrite,
             channel_strategy=channel_strategy,
             set_as_default=set_as_default,
+            private_endpoint=private_endpoint,
         )
 
     @staticmethod
@@ -825,7 +833,9 @@ class QiskitRuntimeService(Provider):
             raise QiskitBackendNotFoundError("No backend matches the criteria." + cloud_msg_url)
         return backends[0]
 
+    @deprecate_function("get_backend()", "0.24", "Please use backend() instead.", stacklevel=1)
     def get_backend(self, name: str = None, **kwargs: Any) -> Backend:
+        """Return a single backend matching the specified filtering."""
         return self.backend(name, **kwargs)
 
     def run(
@@ -1227,3 +1237,11 @@ class QiskitRuntimeService(Provider):
 
     def __repr__(self) -> str:
         return "<{}>".format(self.__class__.__name__)
+
+    def __eq__(self, other: Any) -> bool:
+        return (
+            self._channel == other._channel
+            and self._account.instance == other._account.instance
+            and self._account.token == other._account.token
+            and self._channel_strategy == other._channel_strategy
+        )

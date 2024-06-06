@@ -99,6 +99,8 @@ class TestV2PrimitivesQCTRL(IBMIntegrationTestCase):
         self.assertIsInstance(result.metadata, dict)
         self.assertEqual(len(result), num_pubs)
         for idx, pub_result in enumerate(result):
+            # TODO: We need to update the following test to check `SamplerPubResult`
+            # when the server side is upgraded to Qiskit 1.1.
             self.assertIsInstance(pub_result, PubResult)
             self.assertIsInstance(pub_result.data, DataBin)
             self.assertIsInstance(pub_result.metadata, dict)

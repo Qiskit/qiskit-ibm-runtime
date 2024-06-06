@@ -41,6 +41,8 @@ from qiskit.providers.basic_provider import BasicSimulator
 
 from qiskit_ibm_runtime.utils.backend_converter import convert_to_target
 
+from ..utils.deprecation import issue_deprecation_msg
+
 
 class _Credentials:
     def __init__(self, token: str = "123456", url: str = "https://") -> None:
@@ -467,6 +469,12 @@ class FakeBackend(BackendV1):
             configuration (BackendConfiguration): backend configuration
             time_alive (int): time to wait before returning result
         """
+        issue_deprecation_msg(
+            "V1 fake backends are deprecated",
+            "0.24",
+            "Please use V2 fake backends instead.",
+            stacklevel=3,
+        )
         super().__init__(configuration)
         self.time_alive = time_alive
         self._credentials = _Credentials()

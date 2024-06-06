@@ -66,8 +66,8 @@ from qiskit.primitives.containers.observables_array import ObservablesArray
 from qiskit.primitives.containers import (
     BitArray,
     DataBin,
-    make_data_bin,
     PubResult,
+    SamplerPubResult,
     PrimitiveResult,
 )
 from qiskit_ibm_runtime.options.zne_options import ExtrapolatorType
@@ -270,10 +270,9 @@ class RuntimeEncoder(json.JSONEncoder):
             return {"__type__": "BitArray", "__value__": out_val}
         if isinstance(obj, DataBin):
             out_val = {
-                "field_names": obj._FIELDS,
-                "field_types": [str(field_type) for field_type in obj._FIELD_TYPES],
-                "shape": obj._SHAPE,
-                "fields": {field_name: getattr(obj, field_name) for field_name in obj._FIELDS},
+                "field_names": list(obj),
+                "shape": obj.shape,
+                "fields": dict(obj.items()),
             }
             return {"__type__": "DataBin", "__value__": out_val}
         if isinstance(obj, EstimatorPub):
@@ -289,6 +288,9 @@ class RuntimeEncoder(json.JSONEncoder):
                 obj.parameter_values.as_array(obj.circuit.parameters),
                 obj.shots,
             )
+        if isinstance(obj, SamplerPubResult):
+            out_val = {"data": obj.data, "metadata": obj.metadata}
+            return {"__type__": "SamplerPubResult", "__value__": out_val}
         if isinstance(obj, PubResult):
             out_val = {"data": obj.data, "metadata": obj.metadata}
             return {"__type__": "PubResult", "__value__": out_val}
@@ -376,18 +378,12 @@ class RuntimeDecoder(json.JSONDecoder):
             if obj_type == "BitArray":
                 return BitArray(**obj_val)
             if obj_type == "DataBin":
-                field_names = obj_val["field_names"]
-                field_types = [
-                    globals().get(field_type, field_type) for field_type in obj_val["field_types"]
-                ]
                 shape = obj_val["shape"]
                 if shape is not None and isinstance(shape, list):
                     shape = tuple(shape)
-                data_bin_cls = make_data_bin(
-                    zip(field_names, field_types) if field_names and field_types else None,
-                    shape=shape,
-                )
-                return data_bin_cls(**obj_val["fields"])
+                return DataBin(shape=shape, **obj_val["fields"])
+            if obj_type == "SamplerPubResult":
+                return SamplerPubResult(**obj_val)
             if obj_type == "PubResult":
                 return PubResult(**obj_val)
             if obj_type == "PrimitiveResult":

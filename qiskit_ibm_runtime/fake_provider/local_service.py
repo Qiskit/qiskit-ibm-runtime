@@ -14,20 +14,24 @@
 
 from __future__ import annotations
 
-import logging
 import copy
-from typing import Dict, Union, Literal
+import logging
 import warnings
 from dataclasses import asdict
+from typing import Dict, Literal, Union
 
-from qiskit.utils import optionals
-from qiskit.providers.backend import BackendV1, BackendV2
-from qiskit.primitives import BackendSampler, BackendEstimator
+from qiskit.primitives import (
+    BackendEstimator,
+    BackendEstimatorV2,
+    BackendSampler,
+    BackendSamplerV2,
+)
 from qiskit.primitives.primitive_job import PrimitiveJob
+from qiskit.providers.backend import BackendV1, BackendV2
+from qiskit.utils import optionals
 
-from ..runtime_options import RuntimeOptions
 from ..ibm_backend import IBMBackend
-from ..qiskit.primitives import BackendEstimatorV2, BackendSamplerV2  # type: ignore[attr-defined]
+from ..runtime_options import RuntimeOptions
 
 logger = logging.getLogger(__name__)
 
@@ -137,7 +141,7 @@ class QiskitRuntimeLocalService:
             The job object of the result of the primitive.
         """
         # pylint: disable=import-outside-toplevel
-        from qiskit_aer.primitives import Sampler, Estimator
+        from qiskit_aer.primitives import Estimator, Sampler
 
         # TODO: issue warning if extra options are used
         options_copy = copy.deepcopy(options)
