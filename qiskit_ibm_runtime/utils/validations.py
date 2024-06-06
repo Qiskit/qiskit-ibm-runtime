@@ -30,7 +30,7 @@ def validate_classical_registers(pubs: List[SamplerPub]):
         ValueError: If any circuit has a creg whose name is a Python keyword.
     """
 
-    for pub, index in enumerate(pubs):
+    for index, pub in enumerate(pubs):
         if len(pub.circuit.cregs) == 0:
             warnings.warn(
                 f"The {index}-th circuit has no output classical registers so the result "
@@ -38,7 +38,7 @@ def validate_classical_registers(pubs: List[SamplerPub]):
                 UserWarning,
             )
 
-        for reg in pubs.circuit.cregs:
+        for reg in pub.circuit.cregs:
             # size 0 classical register will crash the server-side sampler
             if reg.size == 0:
                 raise ValueError(
@@ -46,13 +46,13 @@ def validate_classical_registers(pubs: List[SamplerPub]):
                 )
             if not reg.name.isidentifier():
                 raise ValueError(
-                    f"Classical register names must be valid identifiers, but {reg.name}"
+                    f"Classical register names must be valid identifiers, but {reg.name} "
                     f"is not. Valid identifiers contain only alphanumeric letters "
                     f"(a-z and A-Z), decimal digits (0-9), or underscores (_)"
                 )
             if keyword.iskeyword(reg.name):
                 raise ValueError(
-                    f"Classical register names not be Python keywords, but {reg.name}"
+                    f"Classical register names cannot be Python keywords, but {reg.name} "
                     f"is such a keyword. You can see the Python keyword list here: "
                     f"https://docs.python.org/3/reference/lexical_analysis.html#keywords"
                 )

@@ -146,7 +146,7 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
         """
         coerced_pubs = [SamplerPub.coerce(pub, shots) for pub in pubs]
 
-        validate_classical_registers(pubs)
+        validate_classical_registers(coerced_pubs)
 
         return self._run(coerced_pubs)  # type: ignore[arg-type]
 
