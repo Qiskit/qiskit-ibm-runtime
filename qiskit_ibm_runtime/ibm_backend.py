@@ -262,6 +262,10 @@ class IBMBackend(Backend):
                 configuration=self._configuration,
                 properties=self._properties,
                 defaults=self._defaults,
+                # In IBM backend architecture as of today
+                # these features can be only exclusively supported.
+                include_control_flow=not self.options.use_fractional_gates,
+                include_fractional_gates=self.options.use_fractional_gates,
             )
 
     @classmethod
@@ -278,6 +282,7 @@ class IBMBackend(Backend):
             rep_delay=None,
             init_qubits=True,
             use_measure_esp=None,
+            use_fractional_gates=False,
             # Simulator only
             noise_model=None,
             seed_simulator=None,
