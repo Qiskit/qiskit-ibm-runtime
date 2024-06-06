@@ -181,7 +181,15 @@ class FakeBackendV2(BackendV2):
             if self._defs_dict is not None:
                 defaults = PulseDefaults.from_dict(self._defs_dict)  # type: ignore
 
-            self._target = convert_to_target(conf, props, defaults)
+            self._target = convert_to_target(
+                configuration=conf,
+                properties=props,
+                defaults=defaults,
+                # Fake backends use the simulator backend.
+                # This doesn't have the exclusive constraint.
+                include_control_flow=True,
+                include_fractional_gates=True,
+            )
 
         return self._target
 
