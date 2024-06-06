@@ -217,11 +217,11 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
             except ValidationError:
                 self._options = self._options_class(**merge_options(default_options, options))
                 issue_deprecation_msg(
-                    "Specifying options without the full dictionary structure has been deprecated",
+                    "Specifying options without the full dictionary structure is deprecated",
                     "0.24.0",
-                    "Instead, pass in a fully structured dictionary. For example, use " \
+                    "Instead, pass in a fully structured dictionary. For example, use "
                     "{'environment': {'log_level': 'INFO'}} instead of {'log_level': 'INFO'}.",
-                    3,
+                    4,
                 )
 
         elif isinstance(options, self._options_class):

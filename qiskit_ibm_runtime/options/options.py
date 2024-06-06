@@ -19,7 +19,7 @@ import copy
 import warnings
 
 from qiskit.transpiler import CouplingMap
-from pydantic import Field
+from pydantic import Field, ValidationError
 
 from .utils import (
     Dict,
@@ -152,7 +152,8 @@ class OptionsV2(BaseOptions):
 
     def update(self, **kwargs: Any) -> None:
         """Update the options."""
-        def _set_attr(_merged):
+
+        def _set_attr(_merged: dict) -> None:
             for key, val in _merged.items():
                 if not key.startswith("_"):
                     setattr(self, key, val)
@@ -160,15 +161,15 @@ class OptionsV2(BaseOptions):
         try:
             merged = merge_options_v2(self, kwargs)
             _set_attr(merged)
-        except:
+        except ValidationError:
             merged = merge_options(self, kwargs)
             _set_attr(merged)
             issue_deprecation_msg(
-                "Specifying options without the full dictionary structure has been deprecated",
+                "Specifying options without the full dictionary structure is deprecated",
                 "0.24.0",
-                "Instead, pass in a fully structured dictionary. For example, use " \
+                "Instead, pass in a fully structured dictionary. For example, use "
                 "{'environment': {'log_level': 'INFO'}} instead of {'log_level': 'INFO'}.",
-                3,
+                2,
             )
 
     @staticmethod

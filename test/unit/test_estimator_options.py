@@ -203,9 +203,7 @@ class TestEstimatorOptions(IBMTestCase):
             "optimization_level": 1,
             "environment": {"log_level": "INFO"},
         },
-        {"resilience":
-            {"zne_mitigation": True, "zne": {"noise_factors": [1, 2, 3]}}
-        },
+        {"resilience": {"zne_mitigation": True, "zne": {"noise_factors": [1, 2, 3]}}},
     )
     def test_update_options(self, new_opts):
         """Test update method."""

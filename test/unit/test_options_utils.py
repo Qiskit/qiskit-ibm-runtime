@@ -82,13 +82,10 @@ class TestOptionsUtils(IBMTestCase):
                 }
             },
             {
-                "resilience": {
-                    "zne_mitigation": True,
-                    "zne": {"noise_factors": [1, 1.5, 2]}
-                },
+                "resilience": {"zne_mitigation": True, "zne": {"noise_factors": [1, 1.5, 2]}},
                 "experimental": {
                     "resilience": {"zne": {"extrapolator": ["linear"]}},
-                }
+                },
             },
         ]
         for new_ops in options_vars:
@@ -112,7 +109,7 @@ class TestOptionsUtils(IBMTestCase):
         {"default_shots": 1000},
         {"environment": {"log_level": "INFO"}, "dynamical_decoupling": {"enable": True}},
         {"execution": {"init_qubits": False}},
-        {"twirling": {"enable_gates": True}, "experimental": {"twirling": {"foo": "bar"}}}
+        {"twirling": {"enable_gates": True}, "experimental": {"twirling": {"foo": "bar"}}},
     )
     def test_merge_sampler_options(self, new_ops):
         """Test merging sampler options."""
@@ -130,12 +127,11 @@ class TestOptionsUtils(IBMTestCase):
             f"options={options}, combined={combined}",
         )
 
-
     def test_merge_options_v2_no_flat(self):
         """Test merge_options_v2 does not combine keys at different level."""
         old_dict = {"nested_foo": {"foo": "bar1"}}
         new_dict = {"foo": "bar2"}
-        expected = {'nested_foo': {'foo': 'bar1'}, 'foo': 'bar2'}
+        expected = {"nested_foo": {"foo": "bar1"}, "foo": "bar2"}
         combined = merge_options_v2(old_dict, new_dict)
         self.assertDictEqual(combined, expected)
 

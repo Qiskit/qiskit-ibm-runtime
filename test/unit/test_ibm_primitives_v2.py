@@ -86,7 +86,7 @@ class TestPrimitivesV2(IBMTestCase):
     def test_flat_dict_options(self, primitive, options):
         """Test flat dictionary options."""
         backend = get_mocked_backend()
-        with self.assertWarnsRegex(DeprecationWarning, r'.*full dictionary structure.*'):
+        with self.assertWarnsRegex(DeprecationWarning, r".*full dictionary structure.*"):
             primitive(backend=backend, options=options)
 
     @combine(
