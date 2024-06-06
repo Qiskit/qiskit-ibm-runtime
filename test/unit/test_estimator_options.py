@@ -197,13 +197,15 @@ class TestEstimatorOptions(IBMTestCase):
         {"resilience_level": 2},
         {"max_execution_time": 200},
         {"resilience_level": 2, "optimization_level": 1},
-        {"default_shots": 1024, "seed_simulator": 42},
+        {"default_shots": 1024, "simulator": {"seed_simulator": 42}},
         {"resilience_level": 2, "default_shots": 2048},
         {
             "optimization_level": 1,
-            "log_level": "INFO",
+            "environment": {"log_level": "INFO"},
         },
-        {"zne_mitigation": True, "noise_factors": [1, 2, 3]},
+        {"resilience":
+            {"zne_mitigation": True, "zne": {"noise_factors": [1, 2, 3]}}
+        },
     )
     def test_update_options(self, new_opts):
         """Test update method."""

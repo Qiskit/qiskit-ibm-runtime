@@ -20,6 +20,8 @@ import logging
 from dataclasses import asdict, replace
 import warnings
 
+from pydantic import ValidationError
+
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.providers.options import Options as TerraOptions
@@ -29,7 +31,7 @@ from .provider_session import get_cm_session as get_cm_provider_session
 
 from .options import Options
 from .options.options import BaseOptions, OptionsV2
-from .options.utils import merge_options, set_default_error_levels
+from .options.utils import merge_options, set_default_error_levels, merge_options_v2
 from .runtime_job import RuntimeJob
 from .runtime_job_v2 import RuntimeJobV2
 from .ibm_backend import IBMBackend
@@ -210,7 +212,18 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
             self._options = self._options_class()
         elif isinstance(options, dict):
             default_options = self._options_class()
-            self._options = self._options_class(**merge_options(default_options, options))
+            try:
+                self._options = self._options_class(**merge_options_v2(default_options, options))
+            except ValidationError:
+                self._options = self._options_class(**merge_options(default_options, options))
+                issue_deprecation_msg(
+                    "Specifying options without the full dictionary structure has been deprecated",
+                    "0.24.0",
+                    "Instead, pass in a fully structured dictionary. For example, use " \
+                    "{'environment': {'log_level': 'INFO'}} instead of {'log_level': 'INFO'}.",
+                    3,
+                )
+
         elif isinstance(options, self._options_class):
             self._options = replace(options)
         else:

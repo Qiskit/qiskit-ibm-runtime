@@ -151,6 +151,62 @@ def merge_options(
     return combined
 
 
+def merge_options_v2(
+    old_options: Union[dict, "BaseOptions"], new_options: Optional[dict] = None
+) -> dict:
+    """Merge current options with the new ones for V2 primitives.
+
+    Unlike ``merge_options``, this function does not attempt to
+    merge values of the same keys from different nesting levels.
+
+    For example, if
+    ``old_options`` is ``{"nested_foo": {"foo": "bar1"}}`` and
+    ``new_options`` is ``{"foo": "bar2"}``, then
+    ``merge_options()`` would return {'nested_foo': {'foo': 'bar2'}}
+    but ``merge_options_v2()`` would return ``{'nested_foo': {'foo': 'bar1'}, 'foo': 'bar2'}``.
+
+    Args:
+        new_options: New options to merge.
+
+    Returns:
+        Merged dictionary.
+
+    Raises:
+        TypeError: if input type is invalid.
+    """
+
+    def _update_options(old: dict, new: dict) -> None:
+        if not new:
+            return
+
+        # Update values of existing keys
+        for key, val in old.items():
+            if key in new.keys():
+                if isinstance(val, dict):
+                    _update_options(val, new.pop(key))
+                else:
+                    old[key] = new.pop(key)
+
+        # Add new keys.
+        for key in list(new.keys()):
+            old[key] = new.pop(key)
+
+    if is_dataclass(old_options):
+        combined = asdict(old_options)
+    elif isinstance(old_options, dict):
+        combined = copy.deepcopy(old_options)
+    else:
+        raise TypeError("'old_options' can only be a dictionary or dataclass.")
+
+    if not new_options:
+        return combined
+    new_options_copy = copy.deepcopy(new_options)
+
+    _update_options(combined, new_options_copy)
+
+    return combined
+
+
 def skip_unset_validation(func: Callable) -> Callable:
     """Decorator used to skip unset value"""
 

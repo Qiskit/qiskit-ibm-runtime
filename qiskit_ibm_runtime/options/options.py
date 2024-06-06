@@ -28,6 +28,7 @@ from .utils import (
     Unset,
     remove_dict_unset_values,
     merge_options,
+    merge_options_v2,
     primitive_dataclass,
     remove_empty_dict,
 )
@@ -37,6 +38,7 @@ from .simulator_options import SimulatorOptions
 from .transpilation_options import TranspilationOptions
 from .resilience_options import ResilienceOptions
 from ..runtime_options import RuntimeOptions
+from ..utils.deprecation import issue_deprecation_msg
 
 
 def _make_data_row(indent: int, name: str, value: Any, is_section: bool) -> Iterable[str]:
@@ -150,10 +152,24 @@ class OptionsV2(BaseOptions):
 
     def update(self, **kwargs: Any) -> None:
         """Update the options."""
-        merged = merge_options(self, kwargs)
-        for key, val in merged.items():
-            if not key.startswith("_"):
-                setattr(self, key, val)
+        def _set_attr(_merged):
+            for key, val in _merged.items():
+                if not key.startswith("_"):
+                    setattr(self, key, val)
+
+        try:
+            merged = merge_options_v2(self, kwargs)
+            _set_attr(merged)
+        except:
+            merged = merge_options(self, kwargs)
+            _set_attr(merged)
+            issue_deprecation_msg(
+                "Specifying options without the full dictionary structure has been deprecated",
+                "0.24.0",
+                "Instead, pass in a fully structured dictionary. For example, use " \
+                "{'environment': {'log_level': 'INFO'}} instead of {'log_level': 'INFO'}.",
+                3,
+            )
 
     @staticmethod
     def _get_program_inputs(options: dict) -> dict:
@@ -197,7 +213,7 @@ class OptionsV2(BaseOptions):
             for key in list(experimental.keys()):
                 if key not in output_options:
                     new_keys[key] = experimental.pop(key)
-            output_options = merge_options(output_options, experimental)
+            output_options = merge_options_v2(output_options, experimental)
             if new_keys:
                 output_options["experimental"] = new_keys
 
