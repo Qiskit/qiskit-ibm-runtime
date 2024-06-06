@@ -33,6 +33,7 @@ from .base_primitive import BasePrimitiveV1, BasePrimitiveV2
 from .session import Session
 from .utils.qctrl import validate as qctrl_validate
 from .utils.qctrl import validate_v2 as qctrl_validate_v2
+from .utils.validations import validate_classical_registers
 from .options import SamplerOptions
 
 logger = logging.getLogger(__name__)
@@ -111,12 +112,7 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
         """
         coerced_pubs = [SamplerPub.coerce(pub, shots) for pub in pubs]
 
-        if any(len(pub.circuit.cregs) == 0 for pub in coerced_pubs):
-            warnings.warn(
-                "One of your circuits has no output classical registers and so the result "
-                "will be empty. Did you mean to add measurement instructions?",
-                UserWarning,
-            )
+        validate_classical_registers(pubs)
 
         return self._run(coerced_pubs)  # type: ignore[arg-type]
 
