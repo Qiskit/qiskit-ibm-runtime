@@ -16,7 +16,6 @@ from __future__ import annotations
 import os
 from typing import Dict, Optional, Sequence, Any, Union, Iterable
 import logging
-import warnings
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.primitives import BaseSampler
