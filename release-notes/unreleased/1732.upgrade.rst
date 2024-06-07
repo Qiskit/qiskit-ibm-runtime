@@ -1,0 +1,4 @@
+Backend object cache in the :class:`.QiskitRuntimeService` was removed.
+This indicates retrieving the backend from the same service instance incurs communication costs with the server each time.
+You can always reuse the same backend instance to build primitives to run,
+instead of retrieving the backend object from the service multiple times.
