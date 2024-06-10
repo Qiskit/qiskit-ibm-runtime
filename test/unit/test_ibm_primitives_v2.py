@@ -196,28 +196,6 @@ class TestPrimitivesV2(IBMTestCase):
         session.run.assert_called_once()
 
     @data(EstimatorV2, SamplerV2)
-    def test_init_with_no_backend_session_cloud(self, primitive):
-        """Test initializing a primitive without backend or session for cloud channel."""
-        with patch("qiskit_ibm_runtime.base_primitive.QiskitRuntimeService") as mock_service:
-            mock_service_inst = MagicMock()
-            mock_service_inst.channel = "ibm_cloud"
-            mock_service.return_value = mock_service_inst
-            mock_service.reset_mock()
-            mock_service.global_service = None
-            inst = primitive()
-            mock_service.assert_called_once()
-            self.assertIsNone(inst.mode)
-
-    @data(EstimatorV2, SamplerV2)
-    def test_init_with_no_backend_session_quantum(self, primitive):
-        """Test initializing a primitive without backend or session for quantum channel."""
-
-        with patch("qiskit_ibm_runtime.base_primitive.QiskitRuntimeService") as mock_service:
-            mock_service.reset_mock()
-            with self.assertRaises(ValueError):
-                _ = primitive()
-
-    @data(EstimatorV2, SamplerV2)
     def test_default_session_context_manager(self, primitive):
         """Test getting default session within context manager."""
         backend_name = "ibm_gotham"

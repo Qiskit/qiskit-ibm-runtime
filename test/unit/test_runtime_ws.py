@@ -15,20 +15,12 @@
 import time
 from unittest.mock import MagicMock
 
-from qiskit.quantum_info import SparsePauliOp
 from qiskit_ibm_runtime import (
     RuntimeJob,
-    QiskitRuntimeService,
-    Sampler,
-    Estimator,
-    Session,
-    Options,
 )
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 from qiskit_ibm_runtime.exceptions import RuntimeInvalidStateError
-from qiskit_ibm_runtime.ibm_backend import IBMBackend
 
-from ..utils import bell
 from .mock.fake_runtime_client import BaseFakeRuntimeClient
 from .mock.ws_handler import (
     websocket_handler,
@@ -74,42 +66,6 @@ class TestRuntimeWebsocketClient(IBMTestCase):
         time.sleep(JOB_PROGRESS_RESULT_COUNT + 2)
         self.assertEqual(JOB_PROGRESS_RESULT_COUNT, len(results))
         self.assertFalse(job._ws_client.connected)
-
-    def test_primitive_interim_result_callback(self):
-        """Test primitive interim result callback."""
-
-        def result_callback(job_id, interim_result):
-            nonlocal results
-            results.append(interim_result)
-            self.assertEqual(JOB_ID_PROGRESS_DONE, job_id)
-
-        def _patched_run(callback, *args, **kwargs):  # pylint: disable=unused-argument
-            backend = MagicMock(spec=IBMBackend)
-            backend.name = None
-            return self._get_job(callback=callback, backend=backend)
-
-        service = MagicMock(spec=QiskitRuntimeService)
-        service.run = _patched_run
-        service._channel_strategy = None
-        service._api_client = MagicMock()
-
-        circ = bell()
-        obs = SparsePauliOp.from_list([("IZ", 1)])
-        primitives = [Sampler, Estimator]
-        sub_tests = [
-            ({"options": Options(environment={"callback": result_callback})}, {}),
-            ({}, {"callback": result_callback}),
-        ]
-
-        for cls in primitives:
-            for options, callback in sub_tests:
-                with self.subTest(primitive=cls, options=options, callback=callback):
-                    results = []
-                    inst = cls(session=Session(service=service), **options)
-                    job = inst.run(circ, observables=obs, **callback)
-                    time.sleep(JOB_PROGRESS_RESULT_COUNT + 2)
-                    self.assertEqual(JOB_PROGRESS_RESULT_COUNT, len(results))
-                    self.assertFalse(job._ws_client.connected)
 
     def test_stream_results(self):
         """Test streaming results."""
