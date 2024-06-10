@@ -465,7 +465,7 @@ class FakeBackendV2(BackendV2):
     def refresh(self, service: QiskitRuntimeService):
         """Updated the data files from its real counterpart"""
         version = self.backend_version
-        prod_name = self.backend_name.replace('fake', 'ibm')
+        prod_name = self.backend_name.replace("fake", "ibm")
         backends = service.backends(prod_name)
         if backends:
             real_backend = backends[0]
@@ -494,10 +494,13 @@ class FakeBackendV2(BackendV2):
                             with open(defs_path, "w") as fd:
                                 fd.write(json.dumps(real_defs.to_dict(), cls=BackendEncoder))
 
-                        logger.info(f"The backend {self.backend_name} has been updated from {version} to"
-                                    f" {real_props.backend_version} version.")
+                        logger.info(
+                            f"The backend {self.backend_name} has been updated from {version} to"
+                            f" {real_props.backend_version} version."
+                        )
                     else:
                         logger.info(f"There are no new available updates for {self.backend_name}.")
+
 
 class FakeBackend(BackendV1):
     """This is a dummy backend just for testing purposes."""
