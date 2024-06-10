@@ -471,28 +471,33 @@ class FakeBackendV2(BackendV2):
             real_backend = backends[0]
             if real_backend:
 
-                real_config = real_backend.configuration()
                 real_props = real_backend.properties()
+                real_config = real_backend.configuration()
                 real_defs = real_backend.defaults()
 
-                if real_config:
-                    config_path = os.path.join(self.dirname, self.conf_filename)
-                    config_dict = real_config.to_dict()
-                    with open(config_path, "w") as fd:
-                        fd.write(json.dumps(config_dict, cls=BackendEncoder))
-
                 if real_props:
-                    props_path = os.path.join(self.dirname, self.props_filename)
-                    with open(props_path, "w") as fd:
-                        fd.write(json.dumps(real_props.to_dict(), cls=BackendEncoder))
+                    new_version = real_props.backend_version
 
-                if real_defs:
-                    defs_path = os.path.join(self.dirname, self.defs_filename)
-                    with open(defs_path, "w") as fd:
-                        fd.write(json.dumps(real_defs.to_dict(), cls=BackendEncoder))
-            logger.info(f"The backend {self.backend_name} has been updated from {version} to "
-                        f"{real_props.backend_version} version.")
+                    if new_version > version:
+                        props_path = os.path.join(self.dirname, self.props_filename)
+                        with open(props_path, "w") as fd:
+                            fd.write(json.dumps(real_props.to_dict(), cls=BackendEncoder))
 
+                        if real_config:
+                            config_path = os.path.join(self.dirname, self.conf_filename)
+                            config_dict = real_config.to_dict()
+                            with open(config_path, "w") as fd:
+                                fd.write(json.dumps(config_dict, cls=BackendEncoder))
+
+                        if real_defs:
+                            defs_path = os.path.join(self.dirname, self.defs_filename)
+                            with open(defs_path, "w") as fd:
+                                fd.write(json.dumps(real_defs.to_dict(), cls=BackendEncoder))
+
+                        logger.info(f"The backend {self.backend_name} has been updated from {version} to"
+                                    f" {real_props.backend_version} version.")
+                    else:
+                        logger.info(f"There are no new available updates for {self.backend_name}.")
 
 class FakeBackend(BackendV1):
     """This is a dummy backend just for testing purposes."""
