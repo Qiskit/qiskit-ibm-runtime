@@ -1,0 +1,3 @@
+Specifying options without the full dictionary structure is deprecated. Instead, pass
+in a fully structured dictionary. For example, use ``{'environment': {'log_level': 'INFO'}}``
+instead of ``{'log_level': 'INFO'}``.
