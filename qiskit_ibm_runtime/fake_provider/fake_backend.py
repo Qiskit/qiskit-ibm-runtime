@@ -462,7 +462,7 @@ class FakeBackendV2(BackendV2):
 
         return noise_model
 
-    def refresh(self, service: QiskitRuntimeService):
+    def refresh(self, service: QiskitRuntimeService) -> None:
         """Updated the data files from its real counterpart"""
         version = self.backend_version
         prod_name = self.backend_name.replace("fake", "ibm")
@@ -480,26 +480,27 @@ class FakeBackendV2(BackendV2):
 
                     if new_version > version:
                         props_path = os.path.join(self.dirname, self.props_filename)
-                        with open(props_path, "w") as fd:
+                        with open(props_path, "w", encoding="utf-8") as fd:
                             fd.write(json.dumps(real_props.to_dict(), cls=BackendEncoder))
 
                         if real_config:
                             config_path = os.path.join(self.dirname, self.conf_filename)
                             config_dict = real_config.to_dict()
-                            with open(config_path, "w") as fd:
+                            with open(config_path, "w", encoding="utf-8") as fd:
                                 fd.write(json.dumps(config_dict, cls=BackendEncoder))
 
                         if real_defs:
                             defs_path = os.path.join(self.dirname, self.defs_filename)
-                            with open(defs_path, "w") as fd:
+                            with open(defs_path, "w", encoding="utf-8") as fd:
                                 fd.write(json.dumps(real_defs.to_dict(), cls=BackendEncoder))
 
                         logger.info(
-                            f"The backend {self.backend_name} has been updated from {version} to"
-                            f" {real_props.backend_version} version."
+                            "The backend %s has been updated from {version} to %s version.",
+                            self.backend_name,
+                            real_props.backend_version,
                         )
                     else:
-                        logger.info(f"There are no new available updates for {self.backend_name}.")
+                        logger.info("There are no new available updates for %s.", self.backend_name)
 
 
 class FakeBackend(BackendV1):

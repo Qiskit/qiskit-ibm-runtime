@@ -21,6 +21,7 @@ class BackendEncoder(json.JSONEncoder):
     """A json encoder for qobj"""
 
     def default(self, o):
+        """Default encoding"""
         # Convert numpy arrays:
         if hasattr(o, "tolist"):
             return o.tolist()
