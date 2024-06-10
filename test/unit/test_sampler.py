@@ -152,7 +152,6 @@ class TestSamplerV2(IBMTestCase):
                     f"{inputs} and {expected} not partially equal.",
                 )
 
-
     def test_sampler_validations(self):
         """Test exceptions when failing client-side validations."""
         with Session(
@@ -177,7 +176,7 @@ class TestSamplerV2(IBMTestCase):
                 ValueError, "Classical register names cannot be Python keywords"
             ):
                 inst.run([(circ,)])
-                
+
     def test_run_dynamic_circuit_with_fractional_opted(self):
         """Fractional opted backend cannot run dynamic circuits."""
         model_backend = FakeFractionalBackend()
@@ -246,4 +245,3 @@ class TestSamplerV2(IBMTestCase):
         inst = SamplerV2(mode=backend)
         with self.assertRaises(IBMInputValueError):
             inst.run([dynamic_circuit, fractional_circuit])
-

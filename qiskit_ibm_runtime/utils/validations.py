@@ -18,7 +18,7 @@ from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
 
-def validate_classical_registers(pubs: List[SamplerPub]):
+def validate_classical_registers(pubs: List[SamplerPub]) -> None:
     """Validates the classical registers in the pub won't cause problems that can be caught client-side.
 
     Args:
@@ -58,7 +58,7 @@ def validate_classical_registers(pubs: List[SamplerPub]):
                 )
 
 
-def validate_estimator_pubs(pubs: List[EstimatorPub]):
+def validate_estimator_pubs(pubs: List[EstimatorPub]) -> None:
     """Validates the estimator pubs won't cause problems that can be caught client-side.
 
     Args:
