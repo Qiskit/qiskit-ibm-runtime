@@ -43,7 +43,7 @@ from .hub_group_project import HubGroupProject  # pylint: disable=cyclic-import
 from .utils.result_decoder import ResultDecoder
 from .runtime_job import RuntimeJob
 from .runtime_job_v2 import RuntimeJobV2
-from .utils import RuntimeDecoder, RuntimeEncoder, to_python_identifier
+from .utils import RuntimeDecoder, RuntimeEncoder
 from .api.client_parameters import ClientParameters
 from .runtime_options import RuntimeOptions
 from .ibm_backend import IBMBackend
@@ -170,10 +170,6 @@ class QiskitRuntimeService:
                 self._current_instance = self._get_hgp().name
                 logger.info("Default instance: %s", self._current_instance)
         QiskitRuntimeService.global_service = self
-
-        # TODO - it'd be nice to allow some kind of autocomplete, but `service.ibmq_foo`
-        # just seems wrong since backends are not runtime service instances.
-        # self._discover_backends()
 
     def _discover_account(
         self,
@@ -452,16 +448,6 @@ class QiskitRuntimeService:
             )
 
         raise QiskitBackendNotFoundError(error_message)
-
-    def _discover_backends(self) -> None:
-        """Discovers the remote backends for this account, if not already known."""
-        for backend_name in self._discover_cloud_backends():
-            backend = self._create_backend_obj(backend_name)
-            attr_backend_name = to_python_identifier(backend_name)
-            # Append _ if duplicate
-            while attr_backend_name in self.__dict__:
-                attr_backend_name += "_"
-            setattr(self, attr_backend_name, backend)
 
     # pylint: disable=arguments-differ
     def backends(
