@@ -14,7 +14,7 @@
 """
 Base class for dummy backends.
 """
-
+import logging
 import warnings
 import collections
 import json
@@ -40,8 +40,12 @@ from qiskit.providers.fake_provider.utils.json_decoder import (
 from qiskit.providers.basic_provider import BasicSimulator
 
 from qiskit_ibm_runtime.utils.backend_converter import convert_to_target
+from .. import QiskitRuntimeService
+from ..utils.backend_encoder import BackendEncoder
 
 from ..utils.deprecation import issue_deprecation_msg
+
+logger = logging.getLogger(__name__)
 
 
 class _Credentials:
@@ -457,6 +461,37 @@ class FakeBackendV2(BackendV2):
                 pass
 
         return noise_model
+
+    def refresh(self, service: QiskitRuntimeService):
+        """Updated the data files from its real counterpart"""
+        version = self.backend_version
+        prod_name = self.backend_name.replace('fake', 'ibm')
+        backends = service.backends(prod_name)
+        if backends:
+            real_backend = backends[0]
+            if real_backend:
+
+                real_config = real_backend.configuration()
+                real_props = real_backend.properties()
+                real_defs = real_backend.defaults()
+
+                if real_config:
+                    config_path = os.path.join(self.dirname, self.conf_filename)
+                    config_dict = real_config.to_dict()
+                    with open(config_path, "w") as fd:
+                        fd.write(json.dumps(config_dict, cls=BackendEncoder))
+
+                if real_props:
+                    props_path = os.path.join(self.dirname, self.props_filename)
+                    with open(props_path, "w") as fd:
+                        fd.write(json.dumps(real_props.to_dict(), cls=BackendEncoder))
+
+                if real_defs:
+                    defs_path = os.path.join(self.dirname, self.defs_filename)
+                    with open(defs_path, "w") as fd:
+                        fd.write(json.dumps(real_defs.to_dict(), cls=BackendEncoder))
+            logger.info(f"The backend {self.backend_name} has been updated from {version} to "
+                        f"{real_props.backend_version} version.")
 
 
 class FakeBackend(BackendV1):
