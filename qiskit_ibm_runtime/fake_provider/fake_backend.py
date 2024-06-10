@@ -500,7 +500,7 @@ class FakeBackendV2(BackendV2):
                             real_props.backend_version,
                         )
                     else:
-                        logger.info("There are no new available updates for %s.", self.backend_name)
+                        logger.info("There are no available new updates for %s.", self.backend_name)
 
 
 class FakeBackend(BackendV1):

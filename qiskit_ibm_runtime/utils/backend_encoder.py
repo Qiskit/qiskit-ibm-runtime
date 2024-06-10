@@ -13,6 +13,7 @@
 """Utilities for working with IBM Quantum backends."""
 import json
 from datetime import datetime
+from typing import Any
 
 from qiskit.circuit import ParameterExpression
 
@@ -20,16 +21,16 @@ from qiskit.circuit import ParameterExpression
 class BackendEncoder(json.JSONEncoder):
     """A json encoder for qobj"""
 
-    def default(self, o):
+    def default(self, obj: Any) -> Any:  # pylint: disable=arguments-differ
         """Default encoding"""
         # Convert numpy arrays:
-        if hasattr(o, "tolist"):
-            return o.tolist()
+        if hasattr(obj, "tolist"):
+            return obj.tolist()
         # Use Qobj complex json format:
-        if isinstance(o, complex):
-            return [o.real, o.imag]
-        if isinstance(o, ParameterExpression):
-            return float(o)
-        if isinstance(o, datetime):
-            return o.isoformat()
-        return json.JSONEncoder.default(self, o)
+        if isinstance(obj, complex):
+            return [obj.real, obj.imag]
+        if isinstance(obj, ParameterExpression):
+            return float(obj)
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        return json.JSONEncoder.default(self, obj)
