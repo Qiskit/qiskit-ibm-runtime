@@ -148,7 +148,6 @@ class QiskitRuntimeService:
             self._api_client = RuntimeClient(self._client_params)
             self._backend_allowed_list = self._discover_cloud_backends()
             self._validate_channel_strategy()
-            return
         else:
             auth_client = self._authenticate_ibm_quantum_account(self._client_params)
             # Update client parameters to use authenticated values.
