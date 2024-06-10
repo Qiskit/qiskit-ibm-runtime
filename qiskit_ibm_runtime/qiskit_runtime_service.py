@@ -494,6 +494,8 @@ class QiskitRuntimeService:
         instance: Optional[str] = None,
         dynamic_circuits: Optional[bool] = None,
         filters: Optional[Callable[[List["ibm_backend.IBMBackend"]], bool]] = None,
+        *,
+        use_fractional_gates: Optional[bool] = True,
         **kwargs: Any,
     ) -> List["ibm_backend.IBMBackend"]:
         """Return all backends accessible via this account, subject to optional filtering.
@@ -511,6 +513,15 @@ class QiskitRuntimeService:
                         filters=lambda b: b.max_shots > 50000)
                     QiskitRuntimeService.backends(
                         filters=lambda x: ("rz" in x.basis_gates )
+            use_fractional_gates: Set True to allow for the backends to include
+                fractional gates in target. Currently this feature cannot be used
+                simulataneously with the dynamic circuits, PEC, or PEA.
+                When this flag is set, control flow instructions are automatically
+                removed from the backend target.
+                When you use the dynamic circuits feature (e.g. if_else) in your
+                algorithm, you must disable this flag to create executable ISA circuits.
+                This flag might be modified or removed when our backend
+                supports dynamic circuits and fractional gates simultaneously.
 
             **kwargs: Simple filters that require a specific value for an attribute in
                 backend configuration or status.
@@ -535,6 +546,11 @@ class QiskitRuntimeService:
             IBMInputValueError: If an input is invalid.
             QiskitBackendNotFoundError: If the backend is not in any instance.
         """
+        if dynamic_circuits is True and use_fractional_gates:
+            raise QiskitBackendNotFoundError(
+                "Currently fractional_gates and dynamic_circuits feature cannot be "
+                "simulutaneously enabled. Consider disabling one or the other."
+            )
         backends: List[IBMBackend] = []
         instance_filter = instance if instance else self._account.instance
         if self._channel == "ibm_quantum":
@@ -594,6 +610,10 @@ class QiskitRuntimeService:
                     backends,
                 )
             )
+
+        # Set fractional gate feature before Target object is created.
+        for backend in backends:
+            backend.options.use_fractional_gates = use_fractional_gates
         return filter_backends(backends, filters=filters, **kwargs)
 
     def _set_backend_config(self, backend_name: str, instance: Optional[str] = None) -> None:
@@ -766,6 +786,7 @@ class QiskitRuntimeService:
         self,
         name: str = None,
         instance: Optional[str] = None,
+        use_fractional_gates: bool = True,
     ) -> Backend:
         """Return a single backend matching the specified filtering.
 
@@ -775,6 +796,15 @@ class QiskitRuntimeService:
                 hub/group/project format. If an instance is not given, among the providers
                 with access to the backend, a premium provider will be prioritized.
                 For users without access to a premium provider, the default open provider will be used.
+            use_fractional_gates: Set True to allow for the backends to include
+                fractional gates in target. Currently this feature cannot be used
+                simulataneously with the dynamic circuits, PEC, or PEA.
+                When this flag is set, control flow instructions are automatically
+                removed from the backend target.
+                When you use the dynamic circuits feature (e.g. if_else) in your
+                algorithm, you must disable this flag to create executable ISA circuits.
+                This flag might be modified or removed when our backend
+                supports dynamic circuits and fractional gates simultaneously.
 
         Returns:
             Backend: A backend matching the filtering.
@@ -792,7 +822,7 @@ class QiskitRuntimeService:
                 DeprecationWarning,
                 stacklevel=2,
             )
-        backends = self.backends(name, instance=instance)
+        backends = self.backends(name, instance=instance, use_fractional_gates=use_fractional_gates)
         if not backends:
             cloud_msg_url = ""
             if self._channel == "ibm_cloud":

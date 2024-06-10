@@ -13,6 +13,7 @@
 """Backends Filtering Test."""
 
 import uuid
+from ddt import ddt, named_data
 
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit_ibm_runtime.fake_provider import FakeLima
@@ -214,6 +215,7 @@ class TestBackendFilters(IBMTestCase):
         return [ibm_quantum_service, cloud_service]
 
 
+@ddt
 class TestGetBackend(IBMTestCase):
     """Test getting a backend via ibm_quantum api."""
 
@@ -258,3 +260,39 @@ class TestGetBackend(IBMTestCase):
         service = FakeRuntimeService(channel="ibm_quantum", token="my_token")
         with self.assertRaises(QiskitBackendNotFoundError):
             _ = service.backend(backend_name, instance=hgp)
+
+    @named_data(
+        ("with_fractional", True),
+        ("without_fractional", False),
+    )
+    def test_get_backend_with_fractional_optin(self, use_fractional):
+        """Test getting backend with fractional gate opt-in.
+
+        This test can be modified when the IBM backend architecture changes in future.
+        In our backend as of today, fractional gates and dynamic circuits are
+        only exclusively supported.
+
+        This test is originally written in 2024.05.31
+        """
+        service = FakeRuntimeService(
+            channel="ibm_quantum",
+            token="my_token",
+            backend_specs=[FakeApiBackendSpecs(backend_name="FakeFractionalBackend")],
+        )
+        test_backend = service.backends("fake_fractional", use_fractional_gates=use_fractional)[0]
+        self.assertEqual(
+            "rx" in test_backend.target,
+            use_fractional,
+        )
+        self.assertEqual(
+            "rzx" in test_backend.target,
+            use_fractional,
+        )
+        self.assertEqual(
+            "if_else" in test_backend.target.operation_names,
+            not use_fractional,
+        )
+        self.assertEqual(
+            "while_loop" in test_backend.target.operation_names,
+            not use_fractional,
+        )

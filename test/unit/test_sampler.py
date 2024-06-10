@@ -14,13 +14,14 @@
 
 from unittest.mock import MagicMock
 
-from ddt import data, ddt
+from ddt import data, ddt, named_data
 import numpy as np
 
 from qiskit import QuantumCircuit, transpile, QuantumRegister, ClassicalRegister
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.circuit.library import RealAmplitudes
 from qiskit_ibm_runtime import Sampler, Session, SamplerV2, SamplerOptions, IBMInputValueError
+from qiskit_ibm_runtime.fake_provider import FakeFractionalBackend
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import bell, MockSession, dict_paritally_equal, get_mocked_backend, transpile_pubs
@@ -151,6 +152,7 @@ class TestSamplerV2(IBMTestCase):
                     f"{inputs} and {expected} not partially equal.",
                 )
 
+
     def test_sampler_validations(self):
         """Test exceptions when failing client-side validations."""
         with Session(
@@ -175,3 +177,73 @@ class TestSamplerV2(IBMTestCase):
                 ValueError, "Classical register names cannot be Python keywords"
             ):
                 inst.run([(circ,)])
+                
+    def test_run_dynamic_circuit_with_fractional_opted(self):
+        """Fractional opted backend cannot run dynamic circuits."""
+        model_backend = FakeFractionalBackend()
+        model_backend._set_props_dict_from_json()
+        backend = get_mocked_backend(
+            name="fake_fractional",
+            configuration=model_backend._conf_dict,
+            properties=model_backend._props_dict,
+        )
+        backend.options.use_fractional_gates = True
+
+        dynamic_circuit = QuantumCircuit(3, 1)
+        dynamic_circuit.measure(0, 0)
+        dynamic_circuit.if_else(
+            (0, True), QuantumCircuit(3, 1), QuantumCircuit(3, 1), [0, 1, 2], [0]
+        )
+
+        inst = SamplerV2(mode=backend)
+        with self.assertRaises(IBMInputValueError):
+            inst.run([dynamic_circuit])
+
+    def test_run_fractional_circuit_without_fractional_opted(self):
+        """Fractional non-opted backend cannot run fractional circuits."""
+        model_backend = FakeFractionalBackend()
+        model_backend._set_props_dict_from_json()
+        backend = get_mocked_backend(
+            name="fake_fractional",
+            configuration=model_backend._conf_dict,
+            properties=model_backend._props_dict,
+        )
+        backend.options.use_fractional_gates = False
+
+        fractional_circuit = QuantumCircuit(1, 1)
+        fractional_circuit.rx(1.23, 0)
+        fractional_circuit.measure(0, 0)
+
+        inst = SamplerV2(mode=backend)
+        with self.assertRaises(IBMInputValueError):
+            inst.run([fractional_circuit])
+
+    @named_data(
+        ("with_fractional", True),
+        ("without_fractional", False),
+    )
+    def test_run_fractional_dynamic_mix(self, use_fractional):
+        """Any backend cannot run mixture of fractional and dynamic circuits."""
+        model_backend = FakeFractionalBackend()
+        model_backend._set_props_dict_from_json()
+        backend = get_mocked_backend(
+            name="fake_fractional",
+            configuration=model_backend._conf_dict,
+            properties=model_backend._props_dict,
+        )
+        backend.options.use_fractional_gates = use_fractional
+
+        dynamic_circuit = QuantumCircuit(3, 1)
+        dynamic_circuit.measure(0, 0)
+        dynamic_circuit.if_else(
+            (0, True), QuantumCircuit(3, 1), QuantumCircuit(3, 1), [0, 1, 2], [0]
+        )
+
+        fractional_circuit = QuantumCircuit(1, 1)
+        fractional_circuit.rx(1.23, 0)
+        fractional_circuit.measure(0, 0)
+
+        inst = SamplerV2(mode=backend)
+        with self.assertRaises(IBMInputValueError):
+            inst.run([dynamic_circuit, fractional_circuit])
+
