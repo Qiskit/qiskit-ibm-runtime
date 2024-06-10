@@ -45,7 +45,7 @@ class RuntimeClient(BaseBackendClient):
             **params.connection_parameters(),
         )
         self._api = Runtime(self._session)
-        self._configuration_registry = {}
+        self._configuration_registry: Dict[str, Dict[str, Any]] = {}
 
     def program_run(
         self,
