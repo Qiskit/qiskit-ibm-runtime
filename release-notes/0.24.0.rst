@@ -83,6 +83,16 @@ New Features
 - You can now use the experimental option in :class:`qiskit_ibm_runtime.options.EstimatorOptions` to enable Probabilistic Error Amplification (PEA) error mitigation method for your estimator jobs. (`1728 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1728>`__)
 - Qiskit version ``1.1`` is now supported and required. (`1700 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1700>`__)
 
+Upgrade Notes
+-------------
+
+- :meth:`.QiskitRuntimeService.backends` now always returns a
+  new :class:`IBMBackend` instance even when the same query is used.
+  The backend properties and defaults data are retrieved from the server
+  for every instance when they are accessed for the first time,
+  while the configuration data is cached internally in the service instance. (`1732 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1732>`__)
+
+
 Bug Fixes
 ---------
 

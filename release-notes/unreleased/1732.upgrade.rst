@@ -1,5 +1,0 @@
-The :meth:`.QiskitRuntimeService.backends` now always returns
-new :class:`IBMBackend` instance even for the same query.
-The backend properties and defaults data are retrieved from the server
-for every instance when they are accessed for the first time,
-while the configuration data is cached internally in the service instance.
