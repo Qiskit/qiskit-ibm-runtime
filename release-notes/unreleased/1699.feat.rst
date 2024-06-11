@@ -1,2 +1,0 @@
-When saving an account, there is a new parameter, ``private_endpoint`` that if set to ``True``, allows
-users to connect to a private IBM Cloud API. 
