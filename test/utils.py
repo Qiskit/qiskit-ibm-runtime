@@ -223,9 +223,21 @@ def flat_dict_partially_equal(dict1: dict, dict2: dict) -> bool:
     return True
 
 
-def dict_keys_equal(dict1: dict, dict2: dict) -> bool:
-    """Determine whether the dictionaries have the same keys."""
+def dict_keys_equal(dict1: dict, dict2: dict, exclude_keys: list = None) -> bool:
+    """Recursively determine whether the dictionaries have the same keys.
+
+    Args:
+        dict1: First dictionary.
+        dict2: Second dictionary.
+        exclude_keys: A list of keys in dictionary 1 to be excluded.
+
+    Returns:
+        Whether the two dictionaries have the same keys.
+    """
+    exclude_keys = exclude_keys or []
     for key, val in dict1.items():
+        if key in exclude_keys:
+            continue
         if key not in dict2:
             return False
         if isinstance(val, dict):
