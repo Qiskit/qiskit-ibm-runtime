@@ -120,10 +120,10 @@ class TestSamplerOptions(IBMTestCase):
     @data(
         {"default_shots": 4000},
         {"max_execution_time": 200},
-        {"default_shots": 1024, "seed_simulator": 42},
+        {"default_shots": 1024, "simulator": {"seed_simulator": 42}},
         {
-            "sequence_type": "XX",
-            "log_level": "INFO",
+            "dynamical_decoupling": {"sequence_type": "XX"},
+            "environment": {"log_level": "INFO"},
         },
         {"twirling": {"enable_gates": True, "strategy": "active"}},
     )
