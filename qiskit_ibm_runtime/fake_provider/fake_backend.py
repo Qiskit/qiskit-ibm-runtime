@@ -502,7 +502,7 @@ class FakeBackendV2(BackendV2):
                     logger.info("There are no available new updates for %s.", self.backend_name)
 
         except Exception as ex:
-            logger.info("The refreshing of %s has failed: %s", self.backend_name,  str(ex))
+            logger.info("The refreshing of %s has failed: %s", self.backend_name, str(ex))
 
 
 class FakeBackend(BackendV1):
