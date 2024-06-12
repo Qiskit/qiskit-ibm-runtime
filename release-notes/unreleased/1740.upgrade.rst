@@ -1,0 +1,4 @@
+The instances of :class:`FakeBackend` can now be updated from
+their real counterpart using the :meth:`FakeBackendV2.refresh`.
+To pull the latest backend data files the access permission is
+required.
