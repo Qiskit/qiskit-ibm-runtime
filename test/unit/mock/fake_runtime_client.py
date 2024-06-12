@@ -441,7 +441,9 @@ class BaseFakeRuntimeClient:
 
     def backend_configuration(self, backend_name: str) -> Dict[str, Any]:
         """Return the configuration a backend."""
-        return self._find_backend(backend_name).configuration
+        if ret := self._find_backend(backend_name).configuration:
+            return ret.copy()
+        return None
 
     def backend_status(self, backend_name: str) -> Dict[str, Any]:
         """Return the status of a backend."""
@@ -451,11 +453,15 @@ class BaseFakeRuntimeClient:
         """Return the properties of a backend."""
         if datetime:
             raise NotImplementedError("'datetime' is not supported.")
-        return self._find_backend(backend_name).properties
+        if ret := self._find_backend(backend_name).properties:
+            return ret.copy()
+        return None
 
     def backend_pulse_defaults(self, backend_name: str) -> Dict[str, Any]:
         """Return the pulse defaults of a backend."""
-        return self._find_backend(backend_name).defaults
+        if ret := self._find_backend(backend_name).defaults:
+            return ret.copy()
+        return None
 
     # pylint: disable=unused-argument
     def create_session(

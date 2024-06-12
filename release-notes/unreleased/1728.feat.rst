@@ -1,1 +1,0 @@
-You can now use the experimental option in :class:`qiskit_ibm_runtime.options.EstimatorOptions` to enable Probabilistic Error Amplification (PEA) error mitigation method for your estimator jobs.

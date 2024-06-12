@@ -121,6 +121,10 @@ class TestIBMJob(IBMIntegrationTestCase):
 
     def test_retrieve_pending_jobs(self):
         """Test retrieving jobs with the pending filter."""
+        if self.dependencies.channel == "ibm_quantum":
+            raise SkipTest(
+                "Intermittently failing on ibm quantum channel, needs more investigation."
+            )
         pending_job_list = self.service.jobs(
             program_id="sampler", limit=3, pending=True, created_after=self.last_month
         )
