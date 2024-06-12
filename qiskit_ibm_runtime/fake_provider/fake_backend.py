@@ -466,41 +466,43 @@ class FakeBackendV2(BackendV2):
         """Updated the data files from its real counterpart"""
         version = self.backend_version
         prod_name = self.backend_name.replace("fake", "ibm")
-        backends = service.backends(prod_name)
-        if backends:
+        try:
+            backends = service.backends(prod_name)
             real_backend = backends[0]
-            if real_backend:
 
-                real_props = real_backend.properties()
-                real_config = real_backend.configuration()
-                real_defs = real_backend.defaults()
+            real_props = real_backend.properties()
+            real_config = real_backend.configuration()
+            real_defs = real_backend.defaults()
 
-                if real_props:
-                    new_version = real_props.backend_version
+            if real_props:
+                new_version = real_props.backend_version
 
-                    if new_version > version:
-                        props_path = os.path.join(self.dirname, self.props_filename)
-                        with open(props_path, "w", encoding="utf-8") as fd:
-                            fd.write(json.dumps(real_props.to_dict(), cls=BackendEncoder))
+                if new_version > version:
+                    props_path = os.path.join(self.dirname, self.props_filename)
+                    with open(props_path, "w", encoding="utf-8") as fd:
+                        fd.write(json.dumps(real_props.to_dict(), cls=BackendEncoder))
 
-                        if real_config:
-                            config_path = os.path.join(self.dirname, self.conf_filename)
-                            config_dict = real_config.to_dict()
-                            with open(config_path, "w", encoding="utf-8") as fd:
-                                fd.write(json.dumps(config_dict, cls=BackendEncoder))
+                    if real_config:
+                        config_path = os.path.join(self.dirname, self.conf_filename)
+                        config_dict = real_config.to_dict()
+                        with open(config_path, "w", encoding="utf-8") as fd:
+                            fd.write(json.dumps(config_dict, cls=BackendEncoder))
 
-                        if real_defs:
-                            defs_path = os.path.join(self.dirname, self.defs_filename)
-                            with open(defs_path, "w", encoding="utf-8") as fd:
-                                fd.write(json.dumps(real_defs.to_dict(), cls=BackendEncoder))
+                    if real_defs:
+                        defs_path = os.path.join(self.dirname, self.defs_filename)
+                        with open(defs_path, "w", encoding="utf-8") as fd:
+                            fd.write(json.dumps(real_defs.to_dict(), cls=BackendEncoder))
 
-                        logger.info(
-                            "The backend %s has been updated from {version} to %s version.",
-                            self.backend_name,
-                            real_props.backend_version,
-                        )
-                    else:
-                        logger.info("There are no available new updates for %s.", self.backend_name)
+                    logger.info(
+                        "The backend %s has been updated from {version} to %s version.",
+                        self.backend_name,
+                        real_props.backend_version,
+                    )
+                else:
+                    logger.info("There are no available new updates for %s.", self.backend_name)
+
+        except Exception as ex:
+            logger.info("The refreshing of %s has failed: %s", self.backend_name,  str(ex))
 
 
 class FakeBackend(BackendV1):

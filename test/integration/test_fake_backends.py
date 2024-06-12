@@ -14,7 +14,6 @@
 # pylint: disable=missing-module-docstring
 
 import itertools
-import logging
 import operator
 
 from ddt import ddt, data, idata, unpack
@@ -44,7 +43,7 @@ FAKE_PROVIDER = FakeProvider()
 
 
 @ddt
-class TestFakeBackends(IBMIntegrationTestCase):
+class TestFakeBackends(IBMTestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -172,6 +171,13 @@ class TestFakeBackends(IBMIntegrationTestCase):
         self.assertIsInstance(backend.target.operation_from_name("cz"), CZGate)
         backend = FakeSherbrooke()
         self.assertIsInstance(backend.target.operation_from_name("ecr"), ECRGate)
+
+
+class TestRefreshFakeBackends(IBMIntegrationTestCase):
+
+    @classmethod
+    def setUpClass(cls):  # pylint: disable=arguments-differ
+        super().setUpClass()
 
     def test_refresh_method(self):
         """Test refresh method"""
