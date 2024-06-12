@@ -176,7 +176,9 @@ class TestFakeBackends(IBMTestCase):
 class TestRefreshFakeBackends(IBMIntegrationTestCase):
 
     @classmethod
-    def setUpClass(cls):  # pylint: disable=arguments-differ
+    def setUpClass(cls):
+        # pylint: disable=arguments-differ
+        # pylint: disable=no-value-for-parameter
         super().setUpClass()
 
     def test_refresh_method(self):
