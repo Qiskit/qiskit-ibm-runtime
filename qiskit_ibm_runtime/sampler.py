@@ -105,19 +105,19 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
         if backend:
             deprecate_arguments(
                 "backend",
-                "0.23.0",
+                "0.24.0",
                 "Please use the 'mode' parameter instead.",
             )
         if session:
             deprecate_arguments(
                 "session",
-                "0.23.0",
+                "0.24.0",
                 "Please use the 'mode' parameter instead.",
             )
         if isinstance(mode, str) or isinstance(backend, str):
             issue_deprecation_msg(
                 "The backend name as execution mode input has been deprecated.",
-                "0.23.0",
+                "0.24.0",
                 "A backend object should be provided instead. Get the backend directly from"
                 " the service using `QiskitRuntimeService().backend('ibm_backend')`",
                 3,
