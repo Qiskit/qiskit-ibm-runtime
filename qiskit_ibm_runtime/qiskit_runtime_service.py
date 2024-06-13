@@ -456,7 +456,7 @@ class QiskitRuntimeService:
         min_num_qubits: Optional[int] = None,
         instance: Optional[str] = None,
         dynamic_circuits: Optional[bool] = None,
-        filters: Optional[Callable[[List["ibm_backend.IBMBackend"]], bool]] = None,
+        filters: Optional[Callable[["ibm_backend.IBMBackend"], bool]] = None,
         *,
         use_fractional_gates: Optional[bool] = True,
         **kwargs: Any,
@@ -1134,7 +1134,7 @@ class QiskitRuntimeService:
         self,
         min_num_qubits: Optional[int] = None,
         instance: Optional[str] = None,
-        filters: Optional[Callable[[List["ibm_backend.IBMBackend"]], bool]] = None,
+        filters: Optional[Callable[["ibm_backend.IBMBackend"], bool]] = None,
         **kwargs: Any,
     ) -> ibm_backend.IBMBackend:
         """Return the least busy available backend.
