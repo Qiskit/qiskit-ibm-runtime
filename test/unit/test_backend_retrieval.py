@@ -296,3 +296,23 @@ class TestGetBackend(IBMTestCase):
             "while_loop" in test_backend.target.operation_names,
             not use_fractional,
         )
+
+    def test_backend_with_and_without_fractional_from_same_service(self):
+        """Test getting backend with and without fractional gates from the same service.
+
+        Backend with and without opt-in must be different object.
+        """
+        service = FakeRuntimeService(
+            channel="ibm_quantum",
+            token="my_token",
+            backend_specs=[FakeApiBackendSpecs(backend_name="FakeFractionalBackend")],
+        )
+
+        backend_with_fg = service.backend("fake_fractional", use_fractional_gates=True)
+        self.assertIn("rx", backend_with_fg.target)
+
+        backend_without_fg = service.backend("fake_fractional", use_fractional_gates=False)
+        self.assertNotIn("rx", backend_without_fg.target)
+        self.assertIn("rx", backend_with_fg.target)
+
+        self.assertIsNot(backend_with_fg, backend_without_fg)

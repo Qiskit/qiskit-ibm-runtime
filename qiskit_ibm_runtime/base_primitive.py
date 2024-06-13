@@ -109,21 +109,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
                 name=self._mode.backend(), instance=self._mode._instance
             )
         else:
-            self._service = (
-                QiskitRuntimeService()
-                if QiskitRuntimeService.global_service is None
-                else QiskitRuntimeService.global_service
-            )
-            if self._service.channel != "ibm_cloud":
-                raise ValueError(
-                    "A backend or session must be specified when not using ibm_cloud channel."
-                )
-            issue_deprecation_msg(
-                "Not providing a backend is deprecated",
-                "0.22.0",
-                "Passing in a backend will be required, please provide a backend.",
-                3,
-            )
+            raise ValueError("A backend or session must be specified.")
 
     def _run(self, pubs: Union[list[EstimatorPub], list[SamplerPub]]) -> RuntimeJobV2:
         """Run the primitive.
@@ -189,7 +175,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
         Returns:
             Session used by this primitive, or ``None`` if session is not used.
         """
-        deprecate_function("session", "0.23.0", "Please use the 'mode' property instead.")
+        deprecate_function("session", "0.24.0", "Please use the 'mode' property instead.")
         return self._mode
 
     @property
@@ -332,21 +318,8 @@ class BasePrimitiveV1(ABC):
                 name=self._session.backend(), instance=self._session._instance
             )
         else:
-            self._service = (
-                QiskitRuntimeService()
-                if QiskitRuntimeService.global_service is None
-                else QiskitRuntimeService.global_service
-            )
-            if self._service.channel != "ibm_cloud":
-                raise ValueError(
-                    "A backend or session must be specified when not using ibm_cloud channel."
-                )
-            issue_deprecation_msg(
-                "Not providing a backend is deprecated",
-                "0.21.0",
-                "Passing in a backend will be required, please provide a backend.",
-                3,
-            )
+            raise ValueError("A backend or session must be specified.")
+
         # Check if initialized within a IBMBackend session. If so, issue a warning.
         if get_cm_provider_session():
             warnings.warn(
