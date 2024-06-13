@@ -47,17 +47,6 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         self.assertTrue(job.result())
 
     @run_integration_test
-    @production_only
-    def test_run_program_cloud_no_backend(self, service):
-        """Test running a cloud program with no backend."""
-
-        if self.dependencies.channel == "ibm_quantum":
-            self.skipTest("Not supported on ibm_quantum")
-
-        job = self._run_program(service, backend="")
-        self.assertTrue(job.backend(), f"Job {job.job_id()} has no backend.")
-
-    @run_integration_test
     @quantum_only
     def test_run_program_log_level(self, service):
         """Test running with a custom log level."""

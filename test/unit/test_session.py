@@ -15,7 +15,7 @@
 from unittest.mock import MagicMock, patch
 
 from qiskit_ibm_runtime.fake_provider import FakeManila
-from qiskit_ibm_runtime import Session, QiskitRuntimeService
+from qiskit_ibm_runtime import Session
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.exceptions import IBMRuntimeError
 from qiskit_ibm_runtime.utils.default_session import _DEFAULT_SESSION
@@ -47,11 +47,8 @@ class TestSession(IBMTestCase):
         with self.assertRaises(ValueError):
             Session(service=service)
 
-    def test_missing_backend_cloud_warning(self):
-        """Test warning if no backend provided on cloud channel."""
-        service = MagicMock()
         service.channel = "ibm_cloud"
-        with self.assertWarns(DeprecationWarning):
+        with self.assertRaises(ValueError):
             Session(service=service)
 
     def test_passing_ibm_backend(self):
@@ -133,18 +130,6 @@ class TestSession(IBMTestCase):
             session.run(program_id="foo", inputs={})
             session.cancel()
         self.assertFalse(session._active)
-
-    def test_default_backend(self):
-        """Test default backend set."""
-        job = MagicMock()
-        job.backend().name.return_value = "ibm_gotham"  # pylint: disable=no-value-for-parameter
-        service = MagicMock(spec=QiskitRuntimeService)
-        service.run.return_value = job
-        service.channel = "ibm_cloud"
-
-        session = Session(service=service)
-        session.run(program_id="foo", inputs={})
-        self.assertEqual(session.backend(), "ibm_gotham")
 
     def test_global_service(self):
         """Test that global service is used in Session"""
