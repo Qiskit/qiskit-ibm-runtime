@@ -209,7 +209,7 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
                 "a coupling map is required."
             )
 
-        if "optimization_level" in options:
+        if options.get("optimization_level", None):
             issue_deprecation_msg(
                 msg="The 'optimization_level' option is deprecated",
                 version="0.25.0",
