@@ -214,9 +214,9 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
                 msg="The 'optimization_level' option is deprecated",
                 version="0.25.0",
                 remedy="Instead, you can perform circuit optimization using Qiskit transpiler "
-                    "or Qiskit transpiler service. "
-                    "See https://docs.quantum.ibm.com/transpile for more information."
-                )
+                "or Qiskit transpiler service. "
+                "See https://docs.quantum.ibm.com/transpile for more information.",
+            )
 
     @classmethod
     def _program_id(cls) -> str:

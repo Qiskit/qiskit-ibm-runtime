@@ -256,5 +256,5 @@ class TestEstimatorOptions(IBMTestCase):
         """Test optimization level being deprecated."""
         backend = get_mocked_backend()
         estimator = Estimator(backend=backend, options={"optimization_level": 1})
-        with self.assertWarnsRegex(DeprecationWarning, r'.*optimization_level.*'):
+        with self.assertWarnsRegex(DeprecationWarning, r".*optimization_level.*"):
             _ = estimator.run(**get_primitive_inputs(estimator))
