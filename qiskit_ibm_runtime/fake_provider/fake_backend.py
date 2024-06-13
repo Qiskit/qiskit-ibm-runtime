@@ -463,7 +463,24 @@ class FakeBackendV2(BackendV2):
         return noise_model
 
     def refresh(self, service: QiskitRuntimeService) -> None:
-        """Updated the data files from its real counterpart"""
+        """Update the data files from its real counterpart
+
+        This method pulls the latest backend data files from their real counterpart and
+        overwrites the following local files:
+           *  ./fake_provider/backends/{backend_name}/conf_{backend_name}.json
+           *  ./fake_provider/backends/{backend_name}/defs_{backend_name}.json
+           *  ./fake_provider/backends/{backend_name}/props_{backend_name}.json
+
+        The new data files will persist through sessions so, the update will continue unless they
+         were reverted manually from the local or qiskit-ibm-runtime will be upgraded/reinstalled.
+
+        Args:
+            service: A :class:`QiskitRuntimeService` instance
+
+        Raises:
+            Exception: If the real target doesn't exist or can't be accessed
+        """
+
         version = self.backend_version
         prod_name = self.backend_name.replace("fake", "ibm")
         try:
