@@ -90,7 +90,7 @@ class EstimatorOptions(OptionsV2):
 
             Default: 1.
 
-        seed_estimator: Seed used to control sampling.
+        seed_estimator: Seed used to control sampling. Default: ``None``.
 
         dynamical_decoupling: Suboptions for dynamical decoupling. See
             :class:`DynamicalDecouplingOptions` for all available options.
