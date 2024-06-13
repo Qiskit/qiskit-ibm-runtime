@@ -175,7 +175,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
         Returns:
             Session used by this primitive, or ``None`` if session is not used.
         """
-        deprecate_function("session", "0.23.0", "Please use the 'mode' property instead.")
+        deprecate_function("session", "0.24.0", "Please use the 'mode' property instead.")
         return self._mode
 
     @property

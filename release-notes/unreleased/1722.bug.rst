@@ -1,1 +1,0 @@
-Fixed measurement twirling docstring which incorrectly indicated it's enabled by default for Sampler.
