@@ -12,58 +12,15 @@
 
 """Utilities for working with IBM Quantum backends."""
 
-from typing import List, Dict, Union, Optional
+from typing import List, Dict, Union
 import logging
-import traceback
 
 import dateutil.parser
-from qiskit.providers.models import (
-    BackendProperties,
-    PulseDefaults,
-    PulseBackendConfiguration,
-    QasmBackendConfiguration,
-)
+from qiskit.providers.models import BackendProperties, PulseDefaults
 
 from .converters import utc_to_local_all
 
 logger = logging.getLogger(__name__)
-
-
-def configuration_from_server_data(
-    raw_config: Dict,
-    instance: str = "",
-) -> Optional[Union[QasmBackendConfiguration, PulseBackendConfiguration]]:
-    """Create an IBMBackend instance from raw server data.
-
-    Args:
-        raw_config: Raw configuration.
-        instance: Service instance.
-
-    Returns:
-        Backend configuration.
-    """
-    # Make sure the raw_config is of proper type
-    if not isinstance(raw_config, dict):
-        logger.warning(  # type: ignore[unreachable]
-            "An error occurred when retrieving backend "
-            "information. Some backends might not be available."
-        )
-        return None
-    try:
-        _decode_backend_configuration(raw_config)
-        try:
-            return PulseBackendConfiguration.from_dict(raw_config)
-        except (KeyError, TypeError):
-            return QasmBackendConfiguration.from_dict(raw_config)
-    except Exception:  # pylint: disable=broad-except
-        logger.warning(
-            'Remote backend "%s" for service instance %s could not be instantiated due '
-            "to an invalid server-side configuration",
-            raw_config.get("backend_name", raw_config.get("name", "unknown")),
-            repr(instance),
-        )
-        logger.debug("Invalid device configuration: %s", traceback.format_exc())
-    return None
 
 
 def defaults_from_server_data(defaults: Dict) -> PulseDefaults:
@@ -108,21 +65,6 @@ def properties_from_server_data(properties: Dict) -> BackendProperties:
 
     properties = utc_to_local_all(properties)
     return BackendProperties.from_dict(properties)
-
-
-def _decode_backend_configuration(config: Dict) -> None:
-    """Decode backend configuration.
-
-    Args:
-        config: A ``QasmBackendConfiguration`` or ``PulseBackendConfiguration``
-            in dictionary format.
-    """
-    config["online_date"] = dateutil.parser.isoparse(config["online_date"])
-
-    if "u_channel_lo" in config:
-        for u_channel_list in config["u_channel_lo"]:
-            for u_channel_lo in u_channel_list:
-                u_channel_lo["scale"] = _to_complex(u_channel_lo["scale"])
 
 
 def _to_complex(value: Union[List[float], complex]) -> complex:

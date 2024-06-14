@@ -23,12 +23,12 @@ from typing import Dict, Callable, Optional, Union, List, Any, Type, Sequence
 from qiskit.providers.backend import BackendV2 as Backend
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.providerutils import filter_backends
+from pydantic import ValidationError
 
 from qiskit_ibm_runtime import ibm_backend
 from .proxies import ProxyConfiguration
 from .utils.deprecation import issue_deprecation_msg, deprecate_function
 from .utils.hgp import to_instance_format, from_instance_format
-from .utils.backend_decoder import configuration_from_server_data
 
 
 from .utils.utils import validate_job_tags
@@ -47,6 +47,7 @@ from .utils import RuntimeDecoder, RuntimeEncoder
 from .api.client_parameters import ClientParameters
 from .runtime_options import RuntimeOptions
 from .ibm_backend import IBMBackend
+from .models.backend_configuration import IBMBackendConfiguration
 
 logger = logging.getLogger(__name__)
 
@@ -580,44 +581,56 @@ class QiskitRuntimeService:
         Raises:
             QiskitBackendNotFoundError: if the backend is not in the hgp passed in.
         """
-        if config := configuration_from_server_data(
-            raw_config=self._api_client.backend_configuration(backend_name),
-            instance=instance,
-        ):
-            if self._channel == "ibm_quantum":
-                if not instance:
-                    for hgp in list(self._hgps.values()):
-                        if config.backend_name in hgp.backends:
-                            instance = to_instance_format(hgp._hub, hgp._group, hgp._project)
-                            break
+        raw_config = self._api_client.backend_configuration(backend_name)
+        if not isinstance(raw_config, dict):
+            logger.warning(  # type: ignore[unreachable]
+                "An error occurred when retrieving backend "
+                "information. Some backends might not be available."
+            )
+            return None
+        try:
+            config = IBMBackendConfiguration(**raw_config)
+        except ValidationError:
+            logger.warning(
+                'Remote backend "%s" for service instance %s could not be instantiated due '
+                "to an invalid server-side configuration",
+                raw_config.get("backend_name", raw_config.get("name", "unknown")),
+                repr(instance),
+            )
+            logger.debug("Invalid device configuration: %s", traceback.format_exc())
+            return None
+        if self._channel == "ibm_quantum":
+            if not instance:
+                for hgp in list(self._hgps.values()):
+                    if config.backend_name in hgp.backends:
+                        instance = to_instance_format(hgp._hub, hgp._group, hgp._project)
+                        break
 
-                elif config.backend_name not in self._get_hgp(instance=instance).backends:
-                    hgps_with_backend = []
-                    for hgp in list(self._hgps.values()):
-                        if config.backend_name in hgp.backends:
-                            hgps_with_backend.append(
-                                to_instance_format(hgp._hub, hgp._group, hgp._project)
-                            )
-                    raise QiskitBackendNotFoundError(
-                        f"Backend {config.backend_name} is not in "
-                        f"{instance}. Please try a different instance. "
-                        f"{config.backend_name} is in the following instances you have access to: "
-                        f"{hgps_with_backend}"
-                    )
-                return ibm_backend.IBMBackend(
-                    instance=instance,
-                    configuration=config,
-                    service=self,
-                    api_client=self._api_client,
+            elif config.backend_name not in self._get_hgp(instance=instance).backends:
+                hgps_with_backend = []
+                for hgp in list(self._hgps.values()):
+                    if config.backend_name in hgp.backends:
+                        hgps_with_backend.append(
+                            to_instance_format(hgp._hub, hgp._group, hgp._project)
+                        )
+                raise QiskitBackendNotFoundError(
+                    f"Backend {config.backend_name} is not in "
+                    f"{instance}. Please try a different instance. "
+                    f"{config.backend_name} is in the following instances you have access to: "
+                    f"{hgps_with_backend}"
                 )
-            else:
-                # cloud backend doesn't set hgp instance
-                return ibm_backend.IBMBackend(
-                    configuration=config,
-                    service=self,
-                    api_client=self._api_client,
-                )
-        return None
+            return ibm_backend.IBMBackend(
+                instance=instance,
+                configuration=config,
+                service=self,
+                api_client=self._api_client,
+            )
+        # cloud backend doesn't set hgp instance
+        return ibm_backend.IBMBackend(
+            configuration=config,
+            service=self,
+            api_client=self._api_client,
+        )
 
     def active_account(self) -> Optional[Dict[str, str]]:
         """Return the IBM Quantum account currently in use for the session.
