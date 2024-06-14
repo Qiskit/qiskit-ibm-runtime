@@ -466,10 +466,10 @@ class FakeBackendV2(BackendV2):
         """Update the data files from its real counterpart
 
         This method pulls the latest backend data files from their real counterpart and
-        overwrites the following local files:
-           *  ./fake_provider/backends/{backend_name}/conf_{backend_name}.json
-           *  ./fake_provider/backends/{backend_name}/defs_{backend_name}.json
-           *  ./fake_provider/backends/{backend_name}/props_{backend_name}.json
+        overwrites the corresponding files in the local installation:
+        *  ../fake_provider/backends/{backend_name}/conf_{backend_name}.json
+        *  ../fake_provider/backends/{backend_name}/defs_{backend_name}.json
+        *  ../fake_provider/backends/{backend_name}/props_{backend_name}.json
 
         The new data files will persist through sessions so, the update will continue unless they
          were reverted manually from the local or qiskit-ibm-runtime will be upgraded/reinstalled.
