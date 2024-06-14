@@ -34,7 +34,7 @@ ExtrapolatorType = Literal[
 
 @primitive_dataclass
 class ZneOptions:
-    """Zero noise extrapolation mitigation options.
+    """Zero noise extrapolation mitigation options. This is only used by V2 Estimator.
 
     Args:
         amplifier: Which technique to use for amplifying noise. One of:

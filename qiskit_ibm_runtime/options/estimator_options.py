@@ -41,7 +41,7 @@ class EstimatorOptions(OptionsV2):
             call that does not specify one.
             Each estimator pub can specify its own precision. If the ``run()`` method
             is given a precision, then that value is used for all PUBs in the ``run()``
-            call that do not specify their own. Default: 0.015625 (1 / sqrt(4096).
+            call that do not specify their own. Default: 0.015625 (1 / sqrt(4096)).
 
         default_shots: The total number of shots to use per circuit per configuration.
 
