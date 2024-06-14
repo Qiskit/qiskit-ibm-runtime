@@ -22,7 +22,7 @@ class ExecutionOptionsV2:
     """Execution options for V2 primitives."""
 
     init_qubits: Union[UnsetType, bool] = Unset
-    r"""Whether to reset the qubits to the ground state for each shot. Default: ``True``.
+    r"""Whether to reset the qubits to the ground state for each shot. Default is ``True``.
     """
 
     rep_delay: Union[UnsetType, float] = Unset

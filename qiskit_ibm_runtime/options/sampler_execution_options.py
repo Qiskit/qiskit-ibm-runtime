@@ -44,6 +44,6 @@ class SamplerExecutionOptionsV2(ExecutionOptionsV2):
 
     Default: "classified".
 
-    See `Here <https://pubs.aip.org/aip/rsi/article/88/10/104703/836456>`_ for
+    See `here <https://pubs.aip.org/aip/rsi/article/88/10/104703/836456>`_ for
     a description of kerneling.
     """
