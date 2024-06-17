@@ -37,12 +37,19 @@ class TwirlingOptions:
          Default: True for Estimator, false for Sampler.
 
         num_randomizations: The number of random samples to use when twirling or
-            peforming sampled mitigation. If "auto", the value will be chosen automatically
-            based on the input PUBs. Default: "auto".
+            peforming sampled mitigation. If `num_randomizations` is "auto":
+                - If `shots_per_randomization` is not "auto", the value is set to `shots/shots_per_randomization`,
+                  where `shots` is the total number of shots.
+                - If `shots_per_randomization` is "auto", first `shots_per_randomization` is set as described
+                  below, then `num_randomizations` is set as `shots/shots_per_randomization`.
+            Default: "auto".
 
-        shots_per_randomization: The number of shots to run for each random sample.
-          If "auto", the value will be chosen automatically based on the input PUBs.
-          Default: "auto".
+        shots_per_randomization: The number of shots to run for each random sample. If "auto":
+                - If `num_randomizations` is not "auto", the value is set to `shots/num_randomizations`,
+                  where `shots` is the total number of shots.
+                - If `num_randomizations` is "auto", it is set to `64` for PEC circuits and to `max(64, shots / 32)`
+                  for all other circuits
+            Default: "auto".
 
         strategy: Specify the strategy of twirling qubits in identified layers of
             2-qubit twirled gates. Allowed values are
