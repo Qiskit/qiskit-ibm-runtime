@@ -18,7 +18,9 @@ from .utils import primitive_dataclass, Unset, UnsetType
 
 @primitive_dataclass
 class SamplerExecutionOptionsV2(ExecutionOptionsV2):
-    r"""Extension of :class:`~qiskit_ibm_runtime.options.ExecutionOptionsV2` for the sampler primitive."""
+    r"""Extension of :class:`~qiskit_ibm_runtime.options.ExecutionOptionsV2`
+    for the sampler primitive.
+    """
 
     meas_type: Union[UnsetType, Literal["classified", "kerneled", "avg_kerneled"]] = Unset
     r"""How to process and return measurement results.
