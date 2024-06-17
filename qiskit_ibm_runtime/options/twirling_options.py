@@ -40,7 +40,7 @@ class TwirlingOptions:
           mitigation. If ``num_randomizations`` is "auto", for every pub executed ``shots`` times:
 
           * If ``shots_per_randomization`` is "auto", ``shots_per_randomization`` is set first as
-            described below, then `num_randomizations` is set as
+            described below, then ``num_randomizations`` is set as
             ``ceil(shots/shots_per_randomization)``, where ``ceil`` is the ceiling function.
           * If ``shots_per_randomization`` is not "auto", the value is set to
             ``ceil(shots/shots_per_randomization)``.
