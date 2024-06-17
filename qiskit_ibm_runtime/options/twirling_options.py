@@ -36,11 +36,12 @@ class TwirlingOptions:
          those measurement registers not involved within a conditional logic.
          Default: True for Estimator, false for Sampler.
 
-        num_randomizations: The number of random samples to use when twirling or peforming sampled mitigation.
-          If `num_randomizations` is "auto":
+        num_randomizations: The number of random samples to use when twirling or peforming sampled
+          mitigation. If `num_randomizations` is "auto":
 
-          * If `shots_per_randomization` is not "auto", the value is set to `ceil(shots/shots_per_randomization)`,
-            where `shots` is the total number of shots per circuit and `ceil` is the ceiling function.
+          * If `shots_per_randomization` is not "auto", the value is set to
+            `ceil(shots/shots_per_randomization)`, where `shots` is the total number of shots per
+            circuit and `ceil` is the ceiling function.
           * If `shots_per_randomization` is "auto", first `shots_per_randomization` is set as described
             below, then `num_randomizations` is set as `ceil(shots/shots_per_randomization)`.
 
@@ -50,8 +51,8 @@ class TwirlingOptions:
 
           * If `num_randomizations` is not "auto", the value is set to `ceil(shots/num_randomizations)`,
             where `shots` is the total number of shots per circuit and `ceil` is the ceiling function.
-          * If `num_randomizations` is "auto", it is set to `64` for PEC circuits and to `max(64, ceil(shots / 32))`
-            for all other circuits
+          * If `num_randomizations` is "auto", it is set to `64` for PEC circuits and to
+            `max(64, ceil(shots / 32))` for all other circuits
 
           Default: "auto".
 
