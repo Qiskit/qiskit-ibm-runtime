@@ -11,10 +11,11 @@
 # that they have been altered from the originals.
 
 """Utilities for data validation."""
-from typing import List, Sequence, Optional
+from typing import List, Sequence, Optional, Any
 import warnings
 import keyword
 from qiskit import QuantumCircuit
+from qiskit.transpiler import Target
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit_ibm_runtime.utils.utils import is_isa_circuit, are_circuits_dynamic

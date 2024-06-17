@@ -20,7 +20,7 @@ import os
 import re
 from queue import Queue
 from threading import Condition
-from typing import List, Optional, Any, Dict, Union, Tuple, Sequence
+from typing import List, Optional, Any, Dict, Union, Tuple
 from urllib.parse import urlparse
 
 import requests
