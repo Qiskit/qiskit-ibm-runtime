@@ -11,11 +11,14 @@
 # that they have been altered from the originals.
 
 """Utilities for data validation."""
-from typing import List
+from typing import List, Sequence, Optional
 import warnings
 import keyword
+from qiskit import QuantumCircuit
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
+from qiskit_ibm_runtime.utils.utils import is_isa_circuit, are_circuits_dynamic
+from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 
 def validate_classical_registers(pubs: List[SamplerPub]) -> None:
@@ -70,3 +73,54 @@ def validate_estimator_pubs(pubs: List[EstimatorPub]) -> None:
     for pub in pubs:
         if pub.observables.shape == (0,):
             raise ValueError("Empty observables array is not allowed")
+
+
+def validate_isa_circuits(circuits: Sequence[QuantumCircuit], target: Target) -> None:
+    """Validate if all circuits are ISA circuits
+
+    Args:
+        circuits: A list of QuantumCircuits.
+        target: The backend target
+    """
+    for circuit in circuits:
+        message = is_isa_circuit(circuit, target)
+        if message:
+            raise IBMInputValueError(
+                message
+                + " Circuits that do not match the target hardware definition are no longer "
+                "supported after March 4, 2024. See the transpilation documentation "
+                "(https://docs.quantum.ibm.com/transpile) for instructions to transform circuits and "
+                "the primitive examples (https://docs.quantum.ibm.com/run/primitives-examples) to see "
+                "this coupled with operator transformations."
+            )
+
+
+def validate_no_dd_with_dynamic_circuits(circuits: List[QuantumCircuit], options: Any) -> None:
+    """Validate that if dynamical decoupling options are enabled,
+    no circuit in the pubs is dynamic
+
+    Args:
+        circuits: A list of QuantumCircuits.
+        options: The runtime options
+    """
+    if not hasattr(options, "dynamical_decoupling") or not options.dynamical_decoupling.enable:
+        return
+    if are_circuits_dynamic(circuits, False):
+        raise IBMInputValueError(
+            "Dynamical decoupling currently cannot be used with dynamic circuits"
+        )
+
+
+def validate_job_tags(job_tags: Optional[List[str]]) -> None:
+    """Validates input job tags.
+
+    Args:
+        job_tags: Job tags to be validated.
+
+    Raises:
+        IBMInputValueError: If the job tags are invalid.
+    """
+    if job_tags and (
+        not isinstance(job_tags, list) or not all(isinstance(tag, str) for tag in job_tags)
+    ):
+        raise IBMInputValueError("job_tags needs to be a list of strings.")

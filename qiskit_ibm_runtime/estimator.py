@@ -35,7 +35,7 @@ from .base_primitive import BasePrimitiveV1, BasePrimitiveV2
 from .utils.deprecation import deprecate_arguments, issue_deprecation_msg
 from .utils.qctrl import validate as qctrl_validate
 from .utils.qctrl import validate_v2 as qctrl_validate_v2
-from .utils.validations import validate_estimator_pubs
+from .utils import validate_estimator_pubs
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session

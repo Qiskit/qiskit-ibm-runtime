@@ -35,7 +35,7 @@ from .batch import Batch
 from .utils.deprecation import deprecate_arguments, issue_deprecation_msg
 from .utils.qctrl import validate as qctrl_validate
 from .utils.qctrl import validate_v2 as qctrl_validate_v2
-from .utils.validations import validate_classical_registers
+from .utils import validate_classical_registers
 from .options import SamplerOptions
 
 logger = logging.getLogger(__name__)
