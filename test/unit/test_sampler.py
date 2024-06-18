@@ -17,7 +17,7 @@ from unittest.mock import MagicMock
 from ddt import data, ddt, named_data
 import numpy as np
 
-from qiskit import QuantumCircuit, transpile
+from qiskit import QuantumCircuit, transpile, QuantumRegister, ClassicalRegister
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.circuit.library import RealAmplitudes
 from qiskit_ibm_runtime import Sampler, Session, SamplerV2, SamplerOptions, IBMInputValueError
@@ -151,6 +151,31 @@ class TestSamplerV2(IBMTestCase):
                     dict_paritally_equal(inputs, expected),
                     f"{inputs} and {expected} not partially equal.",
                 )
+
+    def test_sampler_validations(self):
+        """Test exceptions when failing client-side validations."""
+        with Session(
+            service=FakeRuntimeService(channel="ibm_quantum", token="abc"),
+            backend="common_backend",
+        ) as session:
+            inst = SamplerV2(session=session)
+            circ = QuantumCircuit(QuantumRegister(2), ClassicalRegister(0))
+            with self.assertRaisesRegex(ValueError, "Classical register .* is of size 0"):
+                inst.run([(circ,)])
+
+            creg = ClassicalRegister(2, "not-an-identifier")
+            circ = QuantumCircuit(QuantumRegister(2), creg)
+            with self.assertRaisesRegex(
+                ValueError, "Classical register names must be valid identifiers"
+            ):
+                inst.run([(circ,)])
+
+            creg = ClassicalRegister(2, "lambda")
+            circ = QuantumCircuit(QuantumRegister(2), creg)
+            with self.assertRaisesRegex(
+                ValueError, "Classical register names cannot be Python keywords"
+            ):
+                inst.run([(circ,)])
 
     def test_run_dynamic_circuit_with_fractional_opted(self):
         """Fractional opted backend cannot run dynamic circuits."""

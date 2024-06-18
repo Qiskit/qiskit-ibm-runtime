@@ -30,8 +30,6 @@ from .utils.deprecation import issue_deprecation_msg, deprecate_function
 from .utils.hgp import to_instance_format, from_instance_format
 from .utils.backend_decoder import configuration_from_server_data
 
-
-from .utils.utils import validate_job_tags
 from .accounts import AccountManager, Account, ChannelType
 from .api.clients import AuthClient, VersionClient
 from .api.clients.runtime import RuntimeClient
@@ -43,7 +41,7 @@ from .hub_group_project import HubGroupProject  # pylint: disable=cyclic-import
 from .utils.result_decoder import ResultDecoder
 from .runtime_job import RuntimeJob
 from .runtime_job_v2 import RuntimeJobV2
-from .utils import RuntimeDecoder, RuntimeEncoder
+from .utils import RuntimeDecoder, RuntimeEncoder, validate_job_tags
 from .api.client_parameters import ClientParameters
 from .runtime_options import RuntimeOptions
 from .ibm_backend import IBMBackend
