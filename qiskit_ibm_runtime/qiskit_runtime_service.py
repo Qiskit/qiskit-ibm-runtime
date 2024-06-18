@@ -458,7 +458,7 @@ class QiskitRuntimeService:
         dynamic_circuits: Optional[bool] = None,
         filters: Optional[Callable[[List["ibm_backend.IBMBackend"]], bool]] = None,
         *,
-        use_fractional_gates: Optional[bool] = True,
+        use_fractional_gates: bool = False,
         **kwargs: Any,
     ) -> List["ibm_backend.IBMBackend"]:
         """Return all backends accessible via this account, subject to optional filtering.
@@ -735,7 +735,7 @@ class QiskitRuntimeService:
         self,
         name: str = None,
         instance: Optional[str] = None,
-        use_fractional_gates: bool = True,
+        use_fractional_gates: bool = False,
     ) -> Backend:
         """Return a single backend matching the specified filtering.
 
