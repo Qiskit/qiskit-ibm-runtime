@@ -27,7 +27,7 @@ from .utils import (
 
 @primitive_dataclass
 class LayerNoiseLearningOptions:
-    """Options for learning layer noise.
+    """Options for learning layer noise. This is only used by V2 Estimator.
 
     .. note::
         These options are only used when the resilience level or options specify a

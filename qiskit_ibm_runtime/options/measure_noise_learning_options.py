@@ -19,7 +19,7 @@ from .utils import Unset, UnsetType, primitive_dataclass, make_constraint_valida
 
 @primitive_dataclass
 class MeasureNoiseLearningOptions:
-    """Options for measurement noise learning.
+    """Options for measurement noise learning. This is only used by V2 Estimator.
 
     .. note::
         These options are only used when the resilience level or options specify a

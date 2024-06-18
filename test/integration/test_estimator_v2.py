@@ -78,7 +78,6 @@ class TestEstimatorV2(IBMIntegrationTestCase):
         estimator.options.default_precision = 0.05
         estimator.options.default_shots = 400
         estimator.options.resilience_level = 1
-        estimator.options.optimization_level = 1
         estimator.options.seed_estimator = 42
         estimator.options.resilience.measure_mitigation = True
         estimator.options.resilience.zne_mitigation = True
@@ -116,7 +115,6 @@ class TestEstimatorV2(IBMIntegrationTestCase):
 
         estimator = EstimatorV2(backend=backend)
         estimator.options.resilience_level = 0
-        estimator.options.optimization_level = 0
         estimator.options.resilience.pec_mitigation = True
         estimator.options.resilience.pec_max_overhead = 200
         estimator.options.simulator.set_backend(FakeAuckland())
