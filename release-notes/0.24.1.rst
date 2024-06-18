@@ -1,0 +1,7 @@
+0.24.1 (2024-06-18)
+===================
+
+Bug Fixes
+---------
+
+- Disallowing fractional gates by default, so backend target would not exclude control flow. (`1755 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1755>`__)
