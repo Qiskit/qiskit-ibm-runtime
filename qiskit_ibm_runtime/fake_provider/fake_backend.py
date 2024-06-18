@@ -14,7 +14,7 @@
 """
 Base class for dummy backends.
 """
-
+import logging
 import warnings
 import collections
 import json
@@ -40,8 +40,12 @@ from qiskit.providers.fake_provider.utils.json_decoder import (
 from qiskit.providers.basic_provider import BasicSimulator
 
 from qiskit_ibm_runtime.utils.backend_converter import convert_to_target
+from .. import QiskitRuntimeService
+from ..utils.backend_encoder import BackendEncoder
 
 from ..utils.deprecation import issue_deprecation_msg
+
+logger = logging.getLogger(__name__)
 
 
 class _Credentials:
@@ -457,6 +461,65 @@ class FakeBackendV2(BackendV2):
                 pass
 
         return noise_model
+
+    def refresh(self, service: QiskitRuntimeService) -> None:
+        """Update the data files from its real counterpart
+
+        This method pulls the latest backend data files from their real counterpart and
+        overwrites the corresponding files in the local installation:
+        *  ../fake_provider/backends/{backend_name}/conf_{backend_name}.json
+        *  ../fake_provider/backends/{backend_name}/defs_{backend_name}.json
+        *  ../fake_provider/backends/{backend_name}/props_{backend_name}.json
+
+        The new data files will persist through sessions so the files will stay updated unless they
+         are manually reverted locally or when qiskit-ibm-runtime is upgraded/reinstalled.
+
+        Args:
+            service: A :class:`QiskitRuntimeService` instance
+
+        Raises:
+            Exception: If the real target doesn't exist or can't be accessed
+        """
+
+        version = self.backend_version
+        prod_name = self.backend_name.replace("fake", "ibm")
+        try:
+            backends = service.backends(prod_name)
+            real_backend = backends[0]
+
+            real_props = real_backend.properties()
+            real_config = real_backend.configuration()
+            real_defs = real_backend.defaults()
+
+            if real_props:
+                new_version = real_props.backend_version
+
+                if new_version > version:
+                    props_path = os.path.join(self.dirname, self.props_filename)
+                    with open(props_path, "w", encoding="utf-8") as fd:
+                        fd.write(json.dumps(real_props.to_dict(), cls=BackendEncoder))
+
+                    if real_config:
+                        config_path = os.path.join(self.dirname, self.conf_filename)
+                        config_dict = real_config.to_dict()
+                        with open(config_path, "w", encoding="utf-8") as fd:
+                            fd.write(json.dumps(config_dict, cls=BackendEncoder))
+
+                    if real_defs:
+                        defs_path = os.path.join(self.dirname, self.defs_filename)
+                        with open(defs_path, "w", encoding="utf-8") as fd:
+                            fd.write(json.dumps(real_defs.to_dict(), cls=BackendEncoder))
+
+                    logger.info(
+                        "The backend %s has been updated from {version} to %s version.",
+                        self.backend_name,
+                        real_props.backend_version,
+                    )
+                else:
+                    logger.info("There are no available new updates for %s.", self.backend_name)
+
+        except Exception as ex:
+            logger.info("The refreshing of %s has failed: %s", self.backend_name, str(ex))
 
 
 class FakeBackend(BackendV1):

@@ -35,9 +35,10 @@ from .options.utils import merge_options, set_default_error_levels, merge_option
 from .runtime_job import RuntimeJob
 from .runtime_job_v2 import RuntimeJobV2
 from .ibm_backend import IBMBackend
+from .utils import validate_isa_circuits, validate_no_dd_with_dynamic_circuits
 from .utils.default_session import get_cm_session
 from .utils.deprecation import issue_deprecation_msg, deprecate_function
-from .utils.utils import validate_isa_circuits, is_simulator, validate_no_dd_with_dynamic_circuits
+from .utils.utils import is_simulator
 from .constants import DEFAULT_DECODERS
 from .qiskit_runtime_service import QiskitRuntimeService
 from .fake_provider.local_service import QiskitRuntimeLocalService

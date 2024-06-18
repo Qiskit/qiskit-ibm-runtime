@@ -27,7 +27,7 @@ LogLevelType = Literal[
 
 @primitive_dataclass
 class EnvironmentOptions:
-    """Options related to the execution environment.
+    """Options related to the execution environment. This applies to both V1 and V2 primitives.
 
     Args:
         log_level: logging level to set in the execution environment. The valid
@@ -40,9 +40,11 @@ class EnvironmentOptions:
                 1. Job ID
                 2. Job result.
 
+            Default: ``None``.
+
         job_tags: Tags to be assigned to the job. The tags can subsequently be used
             as a filter in the :meth:`qiskit_ibm_runtime.qiskit_runtime_service.jobs()`
-            function call.
+            function call. Default: ``None``.
     """
 
     log_level: LogLevelType = "WARNING"

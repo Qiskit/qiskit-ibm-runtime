@@ -36,7 +36,7 @@ from qiskit_ibm_runtime.fake_provider import (
     FakeSherbrooke,
     FakePrague,
 )
-from ..ibm_test_case import IBMTestCase
+from ..ibm_test_case import IBMTestCase, IBMIntegrationTestCase
 
 FAKE_PROVIDER_FOR_BACKEND_V2 = FakeProviderForBackendV2()
 FAKE_PROVIDER = FakeProvider()
@@ -171,3 +171,20 @@ class TestFakeBackends(IBMTestCase):
         self.assertIsInstance(backend.target.operation_from_name("cz"), CZGate)
         backend = FakeSherbrooke()
         self.assertIsInstance(backend.target.operation_from_name("ecr"), ECRGate)
+
+
+class TestRefreshFakeBackends(IBMIntegrationTestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        # pylint: disable=arguments-differ
+        # pylint: disable=no-value-for-parameter
+        super().setUpClass()
+
+    def test_refresh_method(self):
+        """Test refresh method"""
+        old_backend = FakeSherbrooke()
+        with self.assertLogs("qiskit_ibm_runtime", level="INFO"):
+            old_backend.refresh(self.service)
+        new_backend = FakeSherbrooke()
+        self.assertGreaterEqual(old_backend.backend_version, new_backend.backend_version)

@@ -35,7 +35,8 @@ class SamplerOptions(OptionsV2):
         dynamical_decoupling: Suboptions for dynamical decoupling. See
             :class:`DynamicalDecouplingOptions` for all available options.
 
-        execution: Execution time options. See :class:`ExecutionOptionsV2` for all available options.
+        execution: Execution time options. See :class:`SamplerExecutionOptionsV2`
+            for all available options.
 
         twirling: Pauli twirling options. See :class:`TwirlingOptions` for all available options.
 

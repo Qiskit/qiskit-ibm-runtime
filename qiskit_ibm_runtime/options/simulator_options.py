@@ -38,17 +38,19 @@ class SimulatorOptions:
     basis gates and coupling map of that backend.
 
     Args:
-        noise_model: Noise model for the simulator.
+        noise_model: Noise model for the simulator. Default: ``None``.
 
-        seed_simulator: Random seed to control sampling.
+        seed_simulator: Random seed to control sampling. Default: ``None``.
 
         coupling_map: Directed coupling map to target in mapping. If
             the coupling map is symmetric, both directions need to be specified.
             Each entry in the list specifies a directed two-qubit interactions,
-            e.g: ``[[0, 1], [0, 3], [1, 2], [1, 5], [2, 5], [4, 1], [5, 3]]``
+            e.g: ``[[0, 1], [0, 3], [1, 2], [1, 5], [2, 5], [4, 1], [5, 3]]``.
+            Default: ``None``, which implies no connectivity constraints.
 
         basis_gates: List of basis gate names to unroll to. For example,
             ``['u1', 'u2', 'u3', 'cx']``. Unrolling is not done if not set.
+            Default: all basis gates supported by the simulator.
     """
 
     noise_model: Optional[Union[UnsetType, dict, NoiseModel]] = Unset

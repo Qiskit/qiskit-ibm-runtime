@@ -27,7 +27,7 @@ TwirlingStrategyType = Literal[
 
 @primitive_dataclass
 class TwirlingOptions:
-    """Twirling options.
+    """Twirling options. This is only used by V2 primitives.
 
     Args:
         enable_gates: Whether to apply 2-qubit gate twirling. Default: False.
