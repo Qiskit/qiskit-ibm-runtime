@@ -60,19 +60,14 @@ class EstimatorOptions(OptionsV2):
 
             Default: ``None``.
 
-        optimization_level: How much optimization to perform on the circuits.
+        optimization_level: (DEPRECATED) How much optimization to perform on the circuits.
             Higher levels generate more optimized circuits,
             at the expense of longer processing times.
 
             * 0: no optimization
             * 1: light optimization
 
-            Refer to the
-            `Configure runtime compilation for Qiskit Runtime
-            <https://docs.quantum.ibm.com/run/configure-runtime-compilation>`_.
-            for more information about the optimization levels.
-
-            Default: 1.
+            Default: 0.
 
         resilience_level: How much resilience to build against errors.
             Higher levels generate more accurate results,
