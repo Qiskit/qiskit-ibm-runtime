@@ -37,7 +37,7 @@ MAX_OPTIMIZATION_LEVEL: int = 1
 
 @primitive_dataclass
 class TranspilationOptions:
-    """Transpilation options.
+    """Transpilation options. This is only used by V1 primitives.
 
     Args:
 

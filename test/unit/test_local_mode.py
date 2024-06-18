@@ -185,7 +185,7 @@ class TestLocalModeV2(IBMTestCase):
         primitive=[SamplerV2, EstimatorV2], backend=[FakeManila(), FakeManilaV2(), AerSimulator()]
     )
     def test_primitive_v2_with_not_accepted_options(self, primitive, backend):
-        """Test V1 primitive with accepted options."""
+        """Test V2 primitive with not accepted options."""
         options = {
             "max_execution_time": 200,
             "dynamical_decoupling": {"enable": True},

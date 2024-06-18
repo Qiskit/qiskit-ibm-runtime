@@ -41,7 +41,7 @@ class EstimatorOptions(OptionsV2):
             call that does not specify one.
             Each estimator pub can specify its own precision. If the ``run()`` method
             is given a precision, then that value is used for all PUBs in the ``run()``
-            call that do not specify their own. Default: 0.015625 (1 / sqrt(4096).
+            call that do not specify their own. Default: 0.015625 (1 / sqrt(4096)).
 
         default_shots: The total number of shots to use per circuit per configuration.
 
@@ -60,19 +60,14 @@ class EstimatorOptions(OptionsV2):
 
             Default: ``None``.
 
-        optimization_level: How much optimization to perform on the circuits.
+        optimization_level: (DEPRECATED) How much optimization to perform on the circuits.
             Higher levels generate more optimized circuits,
             at the expense of longer processing times.
 
             * 0: no optimization
             * 1: light optimization
 
-            Refer to the
-            `Configure runtime compilation for Qiskit Runtime
-            <https://docs.quantum.ibm.com/run/configure-runtime-compilation>`_.
-            for more information about the optimization levels.
-
-            Default: 1.
+            Default: 0.
 
         resilience_level: How much resilience to build against errors.
             Higher levels generate more accurate results,
@@ -90,7 +85,7 @@ class EstimatorOptions(OptionsV2):
 
             Default: 1.
 
-        seed_estimator: Seed used to control sampling.
+        seed_estimator: Seed used to control sampling. Default: ``None``.
 
         dynamical_decoupling: Suboptions for dynamical decoupling. See
             :class:`DynamicalDecouplingOptions` for all available options.

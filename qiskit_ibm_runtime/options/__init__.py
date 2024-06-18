@@ -94,6 +94,7 @@ Classes
    ExecutionOptions
    EnvironmentOptions
    SimulatorOptions
+   SamplerExecutionOptionsV2
 
 """
 
@@ -113,3 +114,4 @@ from .layer_noise_learning_options import LayerNoiseLearningOptions
 from .measure_noise_learning_options import MeasureNoiseLearningOptions
 from .pec_options import PecOptions
 from .zne_options import ZneOptions
+from .sampler_execution_options import SamplerExecutionOptionsV2
