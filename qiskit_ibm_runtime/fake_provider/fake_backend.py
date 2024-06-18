@@ -471,8 +471,8 @@ class FakeBackendV2(BackendV2):
         *  ../fake_provider/backends/{backend_name}/defs_{backend_name}.json
         *  ../fake_provider/backends/{backend_name}/props_{backend_name}.json
 
-        The new data files will persist through sessions so, the update will continue unless they
-         were reverted manually from the local or qiskit-ibm-runtime will be upgraded/reinstalled.
+        The new data files will persist through sessions so the files will stay updated unless they
+         are manually reverted locally or when qiskit-ibm-runtime is upgraded/reinstalled.
 
         Args:
             service: A :class:`QiskitRuntimeService` instance
