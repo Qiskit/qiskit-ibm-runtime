@@ -36,12 +36,24 @@ class TwirlingOptions:
          those measurement registers not involved within a conditional logic.
          Default: True for Estimator, false for Sampler.
 
-        num_randomizations: The number of random samples to use when twirling or
-            peforming sampled mitigation. If "auto", the value will be chosen automatically
-            based on the input PUBs. Default: "auto".
+        num_randomizations: The number of random samples to use when twirling or peforming sampled
+          mitigation. If ``num_randomizations`` is "auto", for every pub executed ``shots`` times:
 
-        shots_per_randomization: The number of shots to run for each random sample.
-          If "auto", the value will be chosen automatically based on the input PUBs.
+          * If ``shots_per_randomization`` is also "auto", ``shots_per_randomization`` is set first
+            as described below, then ``num_randomizations`` is set as
+            ``ceil(shots/shots_per_randomization)``, where ``ceil`` is the ceiling function.
+          * Otherwise, the value is set to ``ceil(shots/shots_per_randomization)``.
+
+          Default: "auto".
+
+        shots_per_randomization: The number of shots to run for each random sample. If "auto", for
+          every pub executed ``shots`` times:
+
+          * If ``num_randomizations`` is also "auto", the value is set to ``64`` for PEC mitigation
+            or to ``max(64, ceil(shots / 32))`` in all other cases, where ``ceil`` is the ceiling
+            function.
+          * Otherwise, the value is set to ``ceil(shots/num_randomizations)``.
+
           Default: "auto".
 
         strategy: Specify the strategy of twirling qubits in identified layers of
