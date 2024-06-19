@@ -54,7 +54,7 @@ class Batch(Session):
         pm = generate_preset_pass_manager(backend=backend, optimization_level=1)
 
         # generate fifty unique three-qubit random circuits
-        circuits = [pm.run(random_circuit(3, 2, measure=True)) for _ in range(100)]
+        circuits = [pm.run(random_circuit(3, 2, measure=True)) for _ in range(50)]
 
         # split up the list of circuits into partitions
         max_circuits = 10
