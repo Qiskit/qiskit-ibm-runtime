@@ -158,8 +158,8 @@ class RuntimeJob(Job, BaseRuntimeJob):
         self.wait_for_final_state(timeout=timeout)
         if self._status == self.ERROR:
             error_message = self._reason if self._reason else self._error_message
-            if self._reason == "RAN TOO LONG":
-                raise RuntimeJobMaxTimeoutError(error_message)
+            if self._reason_code == 1305:
+                raise RuntimeJobMaxTimeoutError(self._error_message)
             raise RuntimeJobFailureError(f"Unable to retrieve job result. {error_message}")
         if self._status is JobStatus.CANCELLED:
             raise RuntimeInvalidStateError(
@@ -215,7 +215,7 @@ class RuntimeJob(Job, BaseRuntimeJob):
             Job status.
         """
         mapped_job_status = API_TO_JOB_STATUS[response["state"]["status"].upper()]
-        if mapped_job_status == JobStatus.CANCELLED and self._reason == "RAN TOO LONG":
+        if mapped_job_status == JobStatus.CANCELLED and self._reason_code == 1305:
             mapped_job_status = self.ERROR
         return mapped_job_status
 
