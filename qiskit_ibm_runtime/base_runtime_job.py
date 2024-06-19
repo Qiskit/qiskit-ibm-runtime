@@ -101,6 +101,7 @@ class BaseRuntimeJob(ABC):
         self._creation_date = creation_date
         self._program_id = program_id
         self._reason: Optional[str] = None
+        self._reason_code: Optional[int] = None
         self._error_message: Optional[str] = None
         self._image = image
         self._final_interim_results = False
