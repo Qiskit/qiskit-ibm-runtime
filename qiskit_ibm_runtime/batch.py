@@ -69,6 +69,8 @@ class Batch(Session):
                 print(f"Sampler job ID: {job.job_id()}")
                 print(f"Counts: {pub_result.data.cr.get_counts()}")
 
+    For more details, check the "`Run jobs in a batch
+    <https://docs.quantum.ibm.com/run/run-jobs-batch>`_" tutorial.
     """
 
     def __init__(
