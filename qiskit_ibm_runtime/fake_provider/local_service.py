@@ -131,8 +131,6 @@ class QiskitRuntimeLocalService:
 
         Args:
             min_num_qubits: Minimum number of qubits the fake backend has to have.
-            instance: This is only supported for ``ibm_quantum`` runtime and is in the
-                hub/group/project format.
             filters: More complex filters, such as lambda functions, that can be defined as for the
                 :meth:`backends` method.
 
