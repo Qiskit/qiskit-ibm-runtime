@@ -19,7 +19,7 @@ import logging
 import warnings
 from dataclasses import asdict
 from random import choice
-from typing import Any, Callable, Dict, List, Literal, Optional, Union
+from typing import Callable, Dict, List, Literal, Optional, Union
 
 from qiskit.primitives import (
     BackendEstimator,
