@@ -30,7 +30,7 @@ class Batch(Session):
         - The jobs' classical computation, such as compilation, is run in parallel.
           Thus, running multiple jobs in a batch is significantly faster than running them serially.
 
-        - There is minimal delay between job, which can help avoid drift.
+        - There is usually minimal delay between job, which can help avoid drift.
 
         - If you partition your workload into multiple jobs and run them in ``batch`` mode, you can
           get results from individual jobs, which makes them more flexible to work with. For example,
