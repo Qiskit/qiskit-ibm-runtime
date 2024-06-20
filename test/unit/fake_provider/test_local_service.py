@@ -26,65 +26,73 @@ from ...ibm_test_case import IBMTestCase
 class QiskitRuntimeLocalServiceTest(IBMTestCase):
     """Qiskit runtime local service test."""
 
-    service = QiskitRuntimeLocalService()
-
     def test_backend(self):
         """Tests the ``backend`` method."""
-        assert isinstance(self.service.backend(), FakeBackendV2)
-        assert isinstance(self.service.backend("fake_algiers"), FakeAlgiers)
-        assert isinstance(self.service.backend("fake_torino"), FakeTorino)
+        service = QiskitRuntimeLocalService()
+        assert isinstance(service.backend(), FakeBackendV2)
+        assert isinstance(service.backend("fake_algiers"), FakeAlgiers)
+        assert isinstance(service.backend("fake_torino"), FakeTorino)
 
     def test_backends(self):
         """Tests the ``backends`` method."""
-        all_backends = self.service.backends()
+        all_backends = QiskitRuntimeLocalService().backends()
         expected = FakeProviderForBackendV2().backends()
         assert len(all_backends) == len(expected)
-        
+
         for b1, b2 in zip(all_backends, expected):
             assert isinstance(b1, b2.__class__)
 
     def test_backends_name_filter(self):
         """Tests the ``name`` filter of the ``backends`` method."""
-        backends = self.service.backends("fake_torino")
+        backends = QiskitRuntimeLocalService().backends("fake_torino")
         assert len(backends) == 1
         assert isinstance(backends[0], FakeTorino)
 
     def test_backends_min_num_qubits_filter(self):
         """Tests the ``min_num_qubits`` filter of the ``backends`` method."""
-        for b in self.service.backends(min_num_qubits=27):
+        for b in QiskitRuntimeLocalService().backends(min_num_qubits=27):
             assert b.num_qubits >= 27
 
     @data(False, True)
     def test_backends_dynamic_circuits_filter(self, supports):
         """Tests the ``dynamic_circuits`` filter of the ``backends`` method."""
-        for b in self.service.backends(dynamic_circuits=supports):
+        for b in QiskitRuntimeLocalService().backends(dynamic_circuits=supports):
             assert b._supports_dynamic_circuits() == supports
 
     def test_backends_filters(self):
         """Tests the ``filters`` argument of the ``backends`` method."""
-        for b in self.service.backends(filters=lambda b: (b.online_date.year == 2021)):
+        for b in QiskitRuntimeLocalService().backends(
+            filters=lambda b: (b.online_date.year == 2021)
+        ):
             assert b.online_date.year == 2021
-        
-        for b in self.service.backends(filters=lambda b: (b.num_qubits > 30 and b.num_qubits < 100)):
+
+        for b in QiskitRuntimeLocalService().backends(
+            filters=lambda b: (b.num_qubits > 30 and b.num_qubits < 100)
+        ):
             assert b.num_qubits > 30 and b.num_qubits < 100
 
     def test_backends_filters_combined(self):
         """Tests the ``backends`` method with more than one filter."""
-        backends1 = self.service.backends(name="fake_torino", min_num_qubits=27)
+        service = QiskitRuntimeLocalService()
+
+        backends1 = service.backends(name="fake_torino", min_num_qubits=27)
         assert len(backends1) == 1
         assert isinstance(backends1[0], FakeTorino)
 
-        backends2 = self.service.backends(min_num_qubits=27, filters=lambda b: (b.online_date.year == 2021))
+        backends2 = service.backends(
+            min_num_qubits=27, filters=lambda b: (b.online_date.year == 2021)
+        )
         assert len(backends2) == 7
 
     def test_backends_errors(self):
         """Tests the errors raised by the ``backends`` method."""
-        with self.assertRaises(QiskitBackendNotFoundError):
-            self.service.backends("torino")
+        service = QiskitRuntimeLocalService()
 
         with self.assertRaises(QiskitBackendNotFoundError):
-            self.service.backends("fake_torino", filters=lambda b: (b.online_date.year == 1992))
+            service.backends("torino")
+        with self.assertRaises(QiskitBackendNotFoundError):
+            service.backends("fake_torino", filters=lambda b: (b.online_date.year == 1992))
 
     def test_least_busy(self):
         """Tests the ``least_busy`` method."""
-        assert isinstance(self.service.least_busy(), FakeBackendV2)
+        assert isinstance(QiskitRuntimeLocalService().least_busy(), FakeBackendV2)

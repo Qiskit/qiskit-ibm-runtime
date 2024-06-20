@@ -107,20 +107,20 @@ class QiskitRuntimeLocalService:
                     break
             else:
                 raise err
-            
+
         if min_num_qubits:
             backends = [b for b in backends if b.num_qubits >= min_num_qubits]
 
-        if dynamic_circuits is not None:            
+        if dynamic_circuits is not None:
             backends = [b for b in backends if b._supports_dynamic_circuits() == dynamic_circuits]
 
         backends = filter_backends(backends, filters=filters)
 
         if not backends:
             raise err
-        
+
         return backends
-    
+
     def least_busy(
         self,
         min_num_qubits: Optional[int] = None,
