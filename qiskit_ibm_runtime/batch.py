@@ -67,7 +67,7 @@ class Batch(Session):
                 job = sampler.run(partition)
                 pub_result = job.result()[0]
                 print(f"Sampler job ID: {job.job_id()}")
-                print(f"Counts: {pub_result.data.cr.get_counts()}")
+                print(f"Counts for the first PUB: {pub_result.data.cr.get_counts()}")
 
     For more details, check the "`Run jobs in a batch
     <https://docs.quantum.ibm.com/run/run-jobs-batch>`_" tutorial.
