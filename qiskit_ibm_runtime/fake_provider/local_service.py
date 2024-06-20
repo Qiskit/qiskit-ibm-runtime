@@ -98,20 +98,24 @@ class QiskitRuntimeLocalService:
                 filters.
         """
         backends = FakeProviderForBackendV2().backends(name)
+        err = QiskitBackendNotFoundError("No backend matches the criteria.")
 
         if name:
             for b in backends:
                 if b.name == name:
                     return [b]
+            raise err
             
         if min_num_qubits:
             backends = [b for b in backends if b.num_qubits >= min_num_qubits]
 
-        if dynamic_circuits:            
-            backends = list(filter(lambda b: b._supports_dynamic_circuits() == dynamic_circuits, backends))  
+        if dynamic_circuits is not None:            
+            backends = [b for b in backends if b._supports_dynamic_circuits() == dynamic_circuits]
+
+        backends = filter_backends(backends, filters=filters)
 
         if not backends:
-            raise QiskitBackendNotFoundError("No backend matches the criteria.")
+            raise err
         
         return backends
     
