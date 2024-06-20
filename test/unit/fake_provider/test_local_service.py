@@ -49,11 +49,6 @@ class QiskitRuntimeLocalServiceTest(IBMTestCase):
         assert len(backends) == 1
         assert isinstance(backends[0], FakeTorino)
 
-    def test_backends_name_filter_error(self):
-        """Tests the error raised by an invalid name passed to the ``backends`` method."""
-        with self.assertRaises(QiskitBackendNotFoundError):
-            self.service.backends("torino")
-
     def test_backends_min_num_qubits_filter(self):
         """Tests the ``min_num_qubits`` filter of the ``backends`` method."""
         for b in self.service.backends(min_num_qubits=27):
@@ -72,6 +67,23 @@ class QiskitRuntimeLocalServiceTest(IBMTestCase):
         
         for b in self.service.backends(filters=lambda b: (b.num_qubits > 30 and b.num_qubits < 100)):
             assert b.num_qubits > 30 and b.num_qubits < 100
+
+    def test_backends_filters_combined(self):
+        """Tests the ``backends`` method with more than one filter."""
+        backends1 = self.service.backends(name="fake_torino", min_num_qubits=27)
+        assert len(backends1) == 1
+        assert isinstance(backends1[0], FakeTorino)
+
+        backends2 = self.service.backends(min_num_qubits=27, filters=lambda b: (b.online_date.year == 2021))
+        assert len(backends2) == 7
+
+    def test_backends_errors(self):
+        """Tests the errors raised by the ``backends`` method."""
+        with self.assertRaises(QiskitBackendNotFoundError):
+            self.service.backends("torino")
+
+        with self.assertRaises(QiskitBackendNotFoundError):
+            self.service.backends("fake_torino", filters=lambda b: (b.online_date.year == 1992))
 
     def test_least_busy(self):
         """Tests the ``least_busy`` method."""

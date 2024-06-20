@@ -103,8 +103,10 @@ class QiskitRuntimeLocalService:
         if name:
             for b in backends:
                 if b.name == name:
-                    return [b]
-            raise err
+                    backends = [b]
+                    break
+            else:
+                raise err
             
         if min_num_qubits:
             backends = [b for b in backends if b.num_qubits >= min_num_qubits]
