@@ -33,8 +33,8 @@ from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.providerutils import filter_backends
 from qiskit.utils import optionals
 
-from .fake_backend import FakeBackendV2
-from .fake_provider import FakeProviderForBackendV2
+from .fake_backend import FakeBackendV2  # pylint: disable=cyclic-import
+from .fake_provider import FakeProviderForBackendV2  # pylint: disable=unused-import, cyclic-import
 from ..ibm_backend import IBMBackend
 from ..runtime_options import RuntimeOptions
 
