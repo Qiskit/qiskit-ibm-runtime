@@ -75,7 +75,14 @@ def _get_integration_test_config():
         os.getenv("QISKIT_IBM_INSTANCE"),
         os.getenv("CHANNEL_STRATEGY"),
     )
-    channel: Any = "ibm_quantum" if url.find("quantum-computing.ibm.com") >= 0 else "ibm_cloud"
+    channel = "ibm_cloud"
+    if url is None:
+        return channel, token, url, instance, channel_strategy
+
+    url_is_localhost = url.find("localhost") >= 0 or url.find("127.0.0.1") >= 0
+    url_is_ibm_quantum = url.find("quantum-computing.ibm.com") >= 0
+    if url_is_ibm_quantum or url_is_localhost:
+        channel = "ibm_quantum"
     return channel, token, url, instance, channel_strategy
 
 

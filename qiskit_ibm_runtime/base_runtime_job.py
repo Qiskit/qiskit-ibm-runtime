@@ -123,7 +123,7 @@ class BaseRuntimeJob(ABC):
         self._ws_client_future = None  # type: Optional[futures.Future]
         self._result_queue = queue.Queue()  # type: queue.Queue
         self._ws_client = RuntimeWebsocketClient(
-            websocket_url=client_params.get_runtime_api_base_url().replace("https", "wss"),
+            websocket_url=client_params.get_runtime_api_base_url().replace("https", "wss").replace("http", "ws"),
             client_params=client_params,
             job_id=job_id,
             message_queue=self._result_queue,
@@ -141,8 +141,10 @@ class BaseRuntimeJob(ABC):
         """
         try:
             result_url_json = json.loads(response)
+            print('downloading result', result_url_json)
             if "url" in result_url_json:
                 url = result_url_json["url"]
+                print('getting result json', url, result_url_json)
                 result_response = requests.get(url, timeout=10)
                 return result_response.text
             return response
@@ -225,6 +227,7 @@ class BaseRuntimeJob(ABC):
         """Fetch and set status and error message."""
         if self._status not in self.JOB_FINAL_STATES:
             response = self._api_client.job_get(job_id=self.job_id())
+            print('\ngetting job status!', response, '\n\n')
             self._set_status(response)
             self._set_error_message(response)
 
@@ -338,7 +341,10 @@ class BaseRuntimeJob(ABC):
         _decoder = decoder or self._interim_result_decoder
         while True:
             try:
+                # logger.debug("\n\nFetching Queue response...")
                 response = result_queue.get()
+                # print('\n\nxx queue response:', response, '\n\n')
+                # logger.debug("\n\nQueue response: %s", response)
                 if response == self._POISON_PILL:
                     self._empty_result_queue(result_queue)
                     return
