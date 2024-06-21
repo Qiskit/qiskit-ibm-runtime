@@ -35,8 +35,8 @@ from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.primitives.containers import (
     BitArray,
     DataBin,
-    make_data_bin,
     PubResult,
+    SamplerPubResult,
     PrimitiveResult,
 )
 from qiskit_aer.noise import NoiseModel
@@ -296,15 +296,11 @@ class TestContainerSerialization(IBMTestCase):
         """Compares two DataBins
         Field types are compared up to their string representation
         """
-        self.assertEqual(dbin1._FIELDS, dbin2._FIELDS)
-        self.assertEqual(
-            [str(field_type) for field_type in dbin1._FIELD_TYPES],
-            [str(field_type) for field_type in dbin2._FIELD_TYPES],
-        )
-        self.assertEqual(dbin1._SHAPE, dbin2._SHAPE)
-        for field_name in dbin1._FIELDS:
-            field_1 = getattr(dbin1, field_name)
-            field_2 = getattr(dbin2, field_name)
+        self.assertEqual(tuple(dbin1), tuple(dbin2))
+        self.assertEqual(dbin1.shape, dbin2.shape)
+        for field_name in dbin1:
+            field_1 = dbin1[field_name]
+            field_2 = dbin2[field_name]
             if isinstance(field_1, np.ndarray):
                 np.testing.assert_allclose(field_1, field_2)
             else:
@@ -340,10 +336,9 @@ class TestContainerSerialization(IBMTestCase):
     def make_test_data_bins(self):
         """Generates test data for DataBin test"""
         result_bins = []
-        data_bin_cls = make_data_bin([("alpha", np.ndarray), ("beta", np.ndarray)], shape=(10, 20))
         alpha = np.empty((10, 20), dtype=np.uint16)
         beta = np.empty((10, 20), dtype=int)
-        my_bin = data_bin_cls(alpha=alpha, beta=beta)
+        my_bin = DataBin(alpha=alpha, beta=beta, shape=(10, 20))
         result_bins.append(my_bin)
         return result_bins
 
@@ -389,26 +384,32 @@ class TestContainerSerialization(IBMTestCase):
     def make_test_pub_results(self):
         """Generates test data for PubResult test"""
         pub_results = []
-        data_bin = make_data_bin((("a", float), ("b", int)))
-        pub_result = PubResult(data_bin(a=1.0, b=2))
+        pub_result = PubResult(DataBin(a=1.0, b=2))
         pub_results.append(pub_result)
-        pub_result = PubResult(data_bin(a=1.0, b=2), {"x": 1})
+        pub_result = PubResult(DataBin(a=1.0, b=2), {"x": 1})
+        pub_results.append(pub_result)
+        return pub_results
+
+    def make_test_sampler_pub_results(self):
+        """Generates test data for SamplerPubResult test"""
+        pub_results = []
+        pub_result = SamplerPubResult(DataBin(a=1.0, b=2))
+        pub_results.append(pub_result)
+        pub_result = SamplerPubResult(DataBin(a=1.0, b=2), {"x": 1})
         pub_results.append(pub_result)
         return pub_results
 
     def make_test_primitive_results(self):
         """Generates test data for PrimitiveResult test"""
         primitive_results = []
-        data_bin_cls = make_data_bin([("alpha", np.ndarray), ("beta", np.ndarray)], shape=(10, 20))
-        empty_data_bin = make_data_bin([], shape=None)
 
         alpha = np.empty((10, 20), dtype=np.uint16)
         beta = np.empty((10, 20), dtype=int)
 
         pub_results = [
-            PubResult(data_bin_cls(alpha=alpha, beta=beta)),
-            PubResult(data_bin_cls(alpha=alpha, beta=beta)),
-            PubResult(empty_data_bin()),
+            PubResult(DataBin(alpha=alpha, beta=beta, shape=(10, 20))),
+            PubResult(DataBin(alpha=alpha, beta=beta, shape=(10, 20))),
+            PubResult(DataBin()),
         ]
         result = PrimitiveResult(pub_results, {"1": 2})
         primitive_results.append(result)
@@ -518,6 +519,15 @@ class TestContainerSerialization(IBMTestCase):
             encoded = json.dumps(payload, cls=RuntimeEncoder)
             decoded = json.loads(encoded, cls=RuntimeDecoder)["pub_result"]
             self.assertIsInstance(decoded, PubResult)
+            self.assert_pub_results_equal(pub_result, decoded)
+
+    def test_sampler_pub_result(self):
+        """Test encoding and decoding SamplerPubResult"""
+        for pub_result in self.make_test_sampler_pub_results():
+            payload = {"sampler_pub_result": pub_result}
+            encoded = json.dumps(payload, cls=RuntimeEncoder)
+            decoded = json.loads(encoded, cls=RuntimeDecoder)["sampler_pub_result"]
+            self.assertIsInstance(decoded, SamplerPubResult)
             self.assert_pub_results_equal(pub_result, decoded)
 
     def test_primitive_result(self):

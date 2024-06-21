@@ -22,7 +22,7 @@ from typing import Optional, List
 from qiskit.providers.backend import Backend
 
 from .exceptions import IBMInputValueError
-from .utils.utils import validate_job_tags
+from .utils import validate_job_tags
 
 
 @dataclass(init=False)

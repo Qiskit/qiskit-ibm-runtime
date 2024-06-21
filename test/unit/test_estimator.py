@@ -277,3 +277,12 @@ class TestEstimatorV2(IBMTestCase):
             "Dynamical decoupling currently cannot be used with dynamic circuits",
         ):
             inst.run(in_pubs)
+
+    def test_estimator_validations(self):
+        """Test exceptions when failing client-side validations."""
+        backend = get_mocked_backend()
+        inst = EstimatorV2(backend=backend)
+        circ = QuantumCircuit(2)
+        obs = []
+        with self.assertRaisesRegex(ValueError, "Empty observables array is not allowed"):
+            inst.run(pubs=[(circ, obs)])

@@ -197,13 +197,13 @@ class TestEstimatorOptions(IBMTestCase):
         {"resilience_level": 2},
         {"max_execution_time": 200},
         {"resilience_level": 2, "optimization_level": 1},
-        {"default_shots": 1024, "seed_simulator": 42},
+        {"default_shots": 1024, "simulator": {"seed_simulator": 42}},
         {"resilience_level": 2, "default_shots": 2048},
         {
             "optimization_level": 1,
-            "log_level": "INFO",
+            "environment": {"log_level": "INFO"},
         },
-        {"zne_mitigation": True, "noise_factors": [1, 2, 3]},
+        {"resilience": {"zne_mitigation": True, "zne": {"noise_factors": [1, 2, 3]}}},
     )
     def test_update_options(self, new_opts):
         """Test update method."""
@@ -251,3 +251,10 @@ class TestEstimatorOptions(IBMTestCase):
         options = backend.service.run.call_args.kwargs["inputs"]
         self.assertIn("resilience_level", options)
         self.assertEqual(options["resilience_level"], 0)
+
+    def test_optimization_level_deprecation(self):
+        """Test optimization level being deprecated."""
+        backend = get_mocked_backend()
+        estimator = Estimator(backend=backend, options={"optimization_level": 1})
+        with self.assertWarnsRegex(DeprecationWarning, r".*optimization_level.*"):
+            _ = estimator.run(**get_primitive_inputs(estimator))

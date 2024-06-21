@@ -513,10 +513,10 @@ class TestSampler(IBMIntegrationTestCase):
                     result = sampler.run([qc]).result()
                     self.assertEqual(len(result), 1)
                     data = result[0].data
-                    self.assertEqual(len(data._FIELDS), 3)
+                    self.assertEqual(len(data), 3)
                     for creg in qc.cregs:
-                        self.assertTrue(hasattr(data, creg.name))
-                        self._assert_allclose(getattr(data, creg.name), np.array(target[creg.name]))
+                        self.assertIn(creg.name, data)
+                        self._assert_allclose(data[creg.name], np.array(target[creg.name]))
 
     @run_integration_test
     def test_samplerv2_options(self, service):
@@ -556,6 +556,8 @@ class TestSampler(IBMIntegrationTestCase):
         self.assertIsInstance(result.metadata, dict)
         self.assertEqual(len(result), num_pubs)
         for idx, pub_result in enumerate(result):
+            # TODO: We need to update the following test to check `SamplerPubResult`
+            # when the server side is upgraded to Qiskit 1.1.
             self.assertIsInstance(pub_result, PubResult)
             self.assertIsInstance(pub_result.data, DataBin)
             self.assertIsInstance(pub_result.metadata, dict)

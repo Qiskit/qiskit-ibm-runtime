@@ -45,7 +45,6 @@ from .provider_session import (
     Session as ProviderSession,
 )
 
-from .utils.utils import validate_job_tags
 from . import qiskit_runtime_service  # pylint: disable=unused-import,cyclic-import
 from .runtime_job import RuntimeJob
 
@@ -60,7 +59,7 @@ from .utils.backend_decoder import (
 from .utils.deprecation import issue_deprecation_msg
 from .utils.options import QASM2Options, QASM3Options
 from .api.exceptions import RequestsApiError
-from .utils import local_to_utc, are_circuits_dynamic
+from .utils import local_to_utc, are_circuits_dynamic, validate_job_tags
 
 from .utils.pubsub import Publisher
 
@@ -262,6 +261,10 @@ class IBMBackend(Backend):
                 configuration=self._configuration,
                 properties=self._properties,
                 defaults=self._defaults,
+                # In IBM backend architecture as of today
+                # these features can be only exclusively supported.
+                include_control_flow=not self.options.use_fractional_gates,
+                include_fractional_gates=self.options.use_fractional_gates,
             )
 
     @classmethod
@@ -278,6 +281,7 @@ class IBMBackend(Backend):
             rep_delay=None,
             init_qubits=True,
             use_measure_esp=None,
+            use_fractional_gates=False,
             # Simulator only
             noise_model=None,
             seed_simulator=None,

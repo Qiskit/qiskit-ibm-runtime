@@ -17,7 +17,13 @@ import warnings
 from ddt import data, ddt
 
 from qiskit_aer import AerSimulator
-from qiskit.primitives import EstimatorResult, SamplerResult, PrimitiveResult, PubResult
+from qiskit.primitives import (
+    EstimatorResult,
+    SamplerResult,
+    PrimitiveResult,
+    PubResult,
+    SamplerPubResult,
+)
 from qiskit.primitives.containers.data_bin import DataBin
 
 from qiskit_ibm_runtime.fake_provider import FakeManila, FakeManilaV2
@@ -138,7 +144,7 @@ class TestLocalModeV2(IBMTestCase):
         self.assertIsInstance(result, PrimitiveResult)
         self.assertEqual(len(result), num_sets)
         for pub_result in result:
-            self.assertIsInstance(pub_result, PubResult)
+            self.assertIsInstance(pub_result, SamplerPubResult)
             self.assertIsInstance(pub_result.data, DataBin)
             self.assertIsInstance(pub_result.metadata, dict)
 
@@ -179,7 +185,7 @@ class TestLocalModeV2(IBMTestCase):
         primitive=[SamplerV2, EstimatorV2], backend=[FakeManila(), FakeManilaV2(), AerSimulator()]
     )
     def test_primitive_v2_with_not_accepted_options(self, primitive, backend):
-        """Test V1 primitive with accepted options."""
+        """Test V2 primitive with not accepted options."""
         options = {
             "max_execution_time": 200,
             "dynamical_decoupling": {"enable": True},

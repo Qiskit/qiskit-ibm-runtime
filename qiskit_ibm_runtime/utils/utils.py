@@ -20,7 +20,7 @@ import os
 import re
 from queue import Queue
 from threading import Condition
-from typing import List, Optional, Any, Dict, Union, Tuple, Sequence
+from typing import List, Optional, Any, Dict, Union, Tuple
 from urllib.parse import urlparse
 
 import requests
@@ -31,7 +31,6 @@ from ibm_platform_services import ResourceControllerV2  # pylint: disable=import
 from qiskit.circuit import QuantumCircuit, ControlFlowOp
 from qiskit.transpiler import Target
 from qiskit.providers.backend import BackendV1, BackendV2
-from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 
 def is_simulator(backend: BackendV1 | BackendV2) -> bool:
@@ -79,26 +78,6 @@ def is_isa_circuit(circuit: QuantumCircuit, target: Target) -> str:
     return ""
 
 
-def validate_isa_circuits(circuits: Sequence[QuantumCircuit], target: Target) -> None:
-    """Validate if all circuits are ISA circuits
-
-    Args:
-        circuits: A list of QuantumCircuits.
-        target: The backend target
-    """
-    for circuit in circuits:
-        message = is_isa_circuit(circuit, target)
-        if message:
-            raise IBMInputValueError(
-                message
-                + " Circuits that do not match the target hardware definition are no longer "
-                "supported after March 4, 2024. See the transpilation documentation "
-                "(https://docs.quantum.ibm.com/transpile) for instructions to transform circuits and "
-                "the primitive examples (https://docs.quantum.ibm.com/run/primitives-examples) to see "
-                "this coupled with operator transformations."
-            )
-
-
 def are_circuits_dynamic(circuits: List[QuantumCircuit], qasm_default: bool = True) -> bool:
     """Checks if the input circuits are dynamic."""
     for circuit in circuits:
@@ -111,37 +90,6 @@ def are_circuits_dynamic(circuits: List[QuantumCircuit], qasm_default: bool = Tr
             ):
                 return True
     return False
-
-
-def validate_no_dd_with_dynamic_circuits(circuits: List[QuantumCircuit], options: Any) -> None:
-    """Validate that if dynamical decoupling options are enabled,
-    no circuit in the pubs is dynamic
-
-    Args:
-        circuits: A list of QuantumCircuits.
-        options: The runtime options
-    """
-    if not hasattr(options, "dynamical_decoupling") or not options.dynamical_decoupling.enable:
-        return
-    if are_circuits_dynamic(circuits, False):
-        raise IBMInputValueError(
-            "Dynamical decoupling currently cannot be used with dynamic circuits"
-        )
-
-
-def validate_job_tags(job_tags: Optional[List[str]]) -> None:
-    """Validates input job tags.
-
-    Args:
-        job_tags: Job tags to be validated.
-
-    Raises:
-        IBMInputValueError: If the job tags are invalid.
-    """
-    if job_tags and (
-        not isinstance(job_tags, list) or not all(isinstance(tag, str) for tag in job_tags)
-    ):
-        raise IBMInputValueError("job_tags needs to be a list of strings.")
 
 
 def get_iam_api_url(cloud_url: str) -> str:

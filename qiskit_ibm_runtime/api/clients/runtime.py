@@ -45,6 +45,7 @@ class RuntimeClient(BaseBackendClient):
             **params.connection_parameters(),
         )
         self._api = Runtime(self._session)
+        self._configuration_registry: Dict[str, Dict[str, Any]] = {}
 
     def program_run(
         self,
@@ -301,7 +302,11 @@ class RuntimeClient(BaseBackendClient):
         Returns:
             Backend configuration.
         """
-        return self._api.backend(backend_name).configuration()
+        if backend_name not in self._configuration_registry:
+            self._configuration_registry[backend_name] = self._api.backend(
+                backend_name
+            ).configuration()
+        return self._configuration_registry[backend_name].copy()
 
     def backend_status(self, backend_name: str) -> Dict[str, Any]:
         """Return the status of the IBM backend.

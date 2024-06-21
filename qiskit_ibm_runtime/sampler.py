@@ -16,7 +16,6 @@ from __future__ import annotations
 import os
 from typing import Dict, Optional, Sequence, Any, Union, Iterable
 import logging
-import warnings
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.primitives import BaseSampler
@@ -36,6 +35,7 @@ from .batch import Batch
 from .utils.deprecation import deprecate_arguments, issue_deprecation_msg
 from .utils.qctrl import validate as qctrl_validate
 from .utils.qctrl import validate_v2 as qctrl_validate_v2
+from .utils import validate_classical_registers
 from .options import SamplerOptions
 
 logger = logging.getLogger(__name__)
@@ -105,19 +105,19 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
         if backend:
             deprecate_arguments(
                 "backend",
-                "0.23.0",
+                "0.24.0",
                 "Please use the 'mode' parameter instead.",
             )
         if session:
             deprecate_arguments(
                 "session",
-                "0.23.0",
+                "0.24.0",
                 "Please use the 'mode' parameter instead.",
             )
         if isinstance(mode, str) or isinstance(backend, str):
             issue_deprecation_msg(
                 "The backend name as execution mode input has been deprecated.",
-                "0.23.0",
+                "0.24.0",
                 "A backend object should be provided instead. Get the backend directly from"
                 " the service using `QiskitRuntimeService().backend('ibm_backend')`",
                 3,
@@ -146,12 +146,7 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
         """
         coerced_pubs = [SamplerPub.coerce(pub, shots) for pub in pubs]
 
-        if any(len(pub.circuit.cregs) == 0 for pub in coerced_pubs):
-            warnings.warn(
-                "One of your circuits has no output classical registers and so the result "
-                "will be empty. Did you mean to add measurement instructions?",
-                UserWarning,
-            )
+        validate_classical_registers(coerced_pubs)
 
         return self._run(coerced_pubs)  # type: ignore[arg-type]
 

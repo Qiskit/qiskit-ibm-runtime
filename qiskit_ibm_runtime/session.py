@@ -132,13 +132,7 @@ class Session:
             if isinstance(backend, str):
                 self._backend = self._service.backend(backend)
             elif backend is None:
-                if self._service.channel == "ibm_quantum":
-                    raise ValueError('"backend" is required for ``ibm_quantum`` channel.')
-                issue_deprecation_msg(
-                    "Not providing a backend is deprecated",
-                    "0.21.0",
-                    "Passing in a backend will be required, please provide a backend.",
-                )
+                raise ValueError('"backend" is required')
             else:
                 raise ValueError(f"Invalid backend type {type(backend)}")
 

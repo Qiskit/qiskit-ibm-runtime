@@ -20,6 +20,8 @@ import logging
 from dataclasses import asdict, replace
 import warnings
 
+from pydantic import ValidationError
+
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.providers.options import Options as TerraOptions
@@ -29,13 +31,14 @@ from .provider_session import get_cm_session as get_cm_provider_session
 
 from .options import Options
 from .options.options import BaseOptions, OptionsV2
-from .options.utils import merge_options, set_default_error_levels
+from .options.utils import merge_options, set_default_error_levels, merge_options_v2
 from .runtime_job import RuntimeJob
 from .runtime_job_v2 import RuntimeJobV2
 from .ibm_backend import IBMBackend
+from .utils import validate_isa_circuits, validate_no_dd_with_dynamic_circuits
 from .utils.default_session import get_cm_session
 from .utils.deprecation import issue_deprecation_msg, deprecate_function
-from .utils.utils import validate_isa_circuits, is_simulator, validate_no_dd_with_dynamic_circuits
+from .utils.utils import is_simulator
 from .constants import DEFAULT_DECODERS
 from .qiskit_runtime_service import QiskitRuntimeService
 from .fake_provider.local_service import QiskitRuntimeLocalService
@@ -107,21 +110,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
                 name=self._mode.backend(), instance=self._mode._instance
             )
         else:
-            self._service = (
-                QiskitRuntimeService()
-                if QiskitRuntimeService.global_service is None
-                else QiskitRuntimeService.global_service
-            )
-            if self._service.channel != "ibm_cloud":
-                raise ValueError(
-                    "A backend or session must be specified when not using ibm_cloud channel."
-                )
-            issue_deprecation_msg(
-                "Not providing a backend is deprecated",
-                "0.22.0",
-                "Passing in a backend will be required, please provide a backend.",
-                3,
-            )
+            raise ValueError("A backend or session must be specified.")
 
     def _run(self, pubs: Union[list[EstimatorPub], list[SamplerPub]]) -> RuntimeJobV2:
         """Run the primitive.
@@ -187,7 +176,7 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
         Returns:
             Session used by this primitive, or ``None`` if session is not used.
         """
-        deprecate_function("session", "0.23.0", "Please use the 'mode' property instead.")
+        deprecate_function("session", "0.24.0", "Please use the 'mode' property instead.")
         return self._mode
 
     @property
@@ -210,7 +199,18 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
             self._options = self._options_class()
         elif isinstance(options, dict):
             default_options = self._options_class()
-            self._options = self._options_class(**merge_options(default_options, options))
+            try:
+                self._options = self._options_class(**merge_options_v2(default_options, options))
+            except ValidationError:
+                self._options = self._options_class(**merge_options(default_options, options))
+                issue_deprecation_msg(
+                    "Specifying options without the full dictionary structure is deprecated",
+                    "0.24.0",
+                    "Instead, pass in a fully structured dictionary. For example, use "
+                    "{'environment': {'log_level': 'INFO'}} instead of {'log_level': 'INFO'}.",
+                    4,
+                )
+
         elif isinstance(options, self._options_class):
             self._options = replace(options)
         else:
@@ -319,21 +319,8 @@ class BasePrimitiveV1(ABC):
                 name=self._session.backend(), instance=self._session._instance
             )
         else:
-            self._service = (
-                QiskitRuntimeService()
-                if QiskitRuntimeService.global_service is None
-                else QiskitRuntimeService.global_service
-            )
-            if self._service.channel != "ibm_cloud":
-                raise ValueError(
-                    "A backend or session must be specified when not using ibm_cloud channel."
-                )
-            issue_deprecation_msg(
-                "Not providing a backend is deprecated",
-                "0.21.0",
-                "Passing in a backend will be required, please provide a backend.",
-                3,
-            )
+            raise ValueError("A backend or session must be specified.")
+
         # Check if initialized within a IBMBackend session. If so, issue a warning.
         if get_cm_provider_session():
             warnings.warn(

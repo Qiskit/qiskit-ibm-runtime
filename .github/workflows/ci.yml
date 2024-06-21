@@ -88,11 +88,6 @@ jobs:
             python-version: 3.8
           - os: "macos-latest"
             python-version: 3.9
-        include:
-          - os: "macos-13"
-            python-version: 3.8
-          - os: "macos-13"
-            python-version: 3.9
     env:
       LOG_LEVEL: DEBUG
       STREAM_LOG: True

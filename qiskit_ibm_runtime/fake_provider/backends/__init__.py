@@ -32,6 +32,7 @@ from .cambridge import FakeCambridgeV2
 from .casablanca import FakeCasablancaV2
 from .cusco import FakeCusco
 from .essex import FakeEssexV2
+from .fractional import FakeFractionalBackend
 from .geneva import FakeGeneva
 from .guadalupe import FakeGuadalupeV2
 from .hanoi import FakeHanoiV2

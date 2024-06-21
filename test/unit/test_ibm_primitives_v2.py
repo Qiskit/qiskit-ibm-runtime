@@ -78,6 +78,19 @@ class TestPrimitivesV2(IBMTestCase):
 
     @combine(
         primitive=[EstimatorV2, SamplerV2],
+        options=[
+            {"log_level": "DEBUG", "max_execution_time": 20},
+            {"sequence_type": "XX", "seed_simulator": 42},
+        ],
+    )
+    def test_flat_dict_options(self, primitive, options):
+        """Test flat dictionary options."""
+        backend = get_mocked_backend()
+        with self.assertWarnsRegex(DeprecationWarning, r".*full dictionary structure.*"):
+            primitive(backend=backend, options=options)
+
+    @combine(
+        primitive=[EstimatorV2, SamplerV2],
         env_var=[
             {"log_level": "DEBUG"},
             {"job_tags": ["foo", "bar"]},
@@ -181,28 +194,6 @@ class TestPrimitivesV2(IBMTestCase):
         self.assertIsNotNone(inst.mode)
         inst.run(**get_primitive_inputs(inst))
         session.run.assert_called_once()
-
-    @data(EstimatorV2, SamplerV2)
-    def test_init_with_no_backend_session_cloud(self, primitive):
-        """Test initializing a primitive without backend or session for cloud channel."""
-        with patch("qiskit_ibm_runtime.base_primitive.QiskitRuntimeService") as mock_service:
-            mock_service_inst = MagicMock()
-            mock_service_inst.channel = "ibm_cloud"
-            mock_service.return_value = mock_service_inst
-            mock_service.reset_mock()
-            mock_service.global_service = None
-            inst = primitive()
-            mock_service.assert_called_once()
-            self.assertIsNone(inst.mode)
-
-    @data(EstimatorV2, SamplerV2)
-    def test_init_with_no_backend_session_quantum(self, primitive):
-        """Test initializing a primitive without backend or session for quantum channel."""
-
-        with patch("qiskit_ibm_runtime.base_primitive.QiskitRuntimeService") as mock_service:
-            mock_service.reset_mock()
-            with self.assertRaises(ValueError):
-                _ = primitive()
 
     @data(EstimatorV2, SamplerV2)
     def test_default_session_context_manager(self, primitive):
@@ -402,18 +393,19 @@ class TestPrimitivesV2(IBMTestCase):
         """Test run using overwritten runtime options."""
         backend = get_mocked_backend()
         options_vars = [
-            {"log_level": "DEBUG"},
-            {"job_tags": ["foo", "bar"]},
+            {"environment": {"log_level": "DEBUG"}},
+            {"environment": {"job_tags": ["foo", "bar"]}},
             {"max_execution_time": 600},
-            {"log_level": "INFO", "max_execution_time": 800},
+            {"environment": {"log_level": "INFO"}, "max_execution_time": 800},
         ]
         for options in options_vars:
             with self.subTest(options=options):
                 inst = primitive(backend=backend)
                 inst.options.update(**options)
                 inst.run(**get_primitive_inputs(inst))
+                runtime_options = primitive._options_class._get_runtime_options(options)
                 rt_options = backend.service.run.call_args.kwargs["options"]
-                self._assert_dict_partially_equal(rt_options, options)
+                self._assert_dict_partially_equal(rt_options, runtime_options)
 
     @combine(
         primitive=[EstimatorV2, SamplerV2],
@@ -502,30 +494,6 @@ class TestPrimitivesV2(IBMTestCase):
             dict_keys_equal(inst_options, asdict(opt_cls())),
             f"inst_options={inst_options}, original={opt_cls()}",
         )
-
-    @data(EstimatorV2, SamplerV2)
-    def test_accept_level_1_options(self, primitive):
-        """Test initializing options properly when given on level 1."""
-
-        opt_cls = primitive._options_class
-        options_dicts = [
-            {},
-            {"default_shots": 1024},
-            {"seed_simulator": 123},
-            {"log_level": "ERROR"},
-        ]
-
-        expected_list = [opt_cls() for _ in range(len(options_dicts))]
-        expected_list[1].default_shots = 1024
-        expected_list[2].simulator.seed_simulator = 123
-        expected_list[3].environment.log_level = "ERROR"
-        backend = get_mocked_backend()
-
-        for opts, expected in zip(options_dicts, expected_list):
-            with self.subTest(options=opts):
-                inst1 = primitive(backend=backend, options=opts)
-                inst2 = primitive(backend=backend, options=expected)
-                self.assertEqual(inst1.options, inst2.options)
 
     @data(EstimatorV2, SamplerV2)
     def test_raise_faulty_qubits(self, primitive):

@@ -35,7 +35,7 @@ from .base_primitive import BasePrimitiveV1, BasePrimitiveV2
 from .utils.deprecation import deprecate_arguments, issue_deprecation_msg
 from .utils.qctrl import validate as qctrl_validate
 from .utils.qctrl import validate_v2 as qctrl_validate_v2
-
+from .utils import validate_estimator_pubs
 
 # pylint: disable=unused-import,cyclic-import
 from .session import Session
@@ -146,19 +146,19 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
         if backend:
             deprecate_arguments(
                 "backend",
-                "0.23.0",
+                "0.24.0",
                 "Please use the 'mode' parameter instead.",
             )
         if session:
             deprecate_arguments(
                 "session",
-                "0.23.0",
+                "0.24.0",
                 "Please use the 'mode' parameter instead.",
             )
         if isinstance(mode, str) or isinstance(backend, str):
             issue_deprecation_msg(
                 "The backend name as execution mode input has been deprecated.",
-                "0.23.0",
+                "0.24.0",
                 "A backend object should be provided instead. Get the backend directly from"
                 " the service using `QiskitRuntimeService().backend('ibm_backend')`",
                 3,
@@ -184,6 +184,7 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
 
         """
         coerced_pubs = [EstimatorPub.coerce(pub, precision) for pub in pubs]
+        validate_estimator_pubs(coerced_pubs)
         return self._run(coerced_pubs)  # type: ignore[arg-type]
 
     def _validate_options(self, options: dict) -> None:
@@ -207,6 +208,15 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
             raise ValueError(
                 "When the backend is a simulator and pec_mitigation is enabled, "
                 "a coupling map is required."
+            )
+
+        if options.get("optimization_level", None):
+            issue_deprecation_msg(
+                msg="The 'optimization_level' option is deprecated",
+                version="0.25.0",
+                remedy="Instead, you can perform circuit optimization using Qiskit transpiler "
+                "or Qiskit transpiler service. "
+                "See https://docs.quantum.ibm.com/transpile for more information.",
             )
 
     @classmethod

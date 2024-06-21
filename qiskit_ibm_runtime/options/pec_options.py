@@ -19,7 +19,7 @@ from .utils import Unset, UnsetType, primitive_dataclass, make_constraint_valida
 
 @primitive_dataclass
 class PecOptions:
-    """Probabalistic error cancellation mitigation options.
+    """Probabalistic error cancellation mitigation options. This is only used by V2 Estimator.
 
     Args:
         max_overhead: The maximum circuit sampling overhead allowed, or
@@ -32,7 +32,7 @@ class PecOptions:
             * A value between 0 and 1 corresponds to partially removing the learned noise.
             * A value greater than one corresponds to amplifying the learned noise.
 
-            If "auto", the value in the range ``[0, 1)`` will be chosen automatically
+            If "auto", the value in the range ``[0, 1]`` will be chosen automatically
             for each input PUB based on the learned noise strength, ``max_overhead``,
             and the depth of the PUB. Default: "auto".
     """

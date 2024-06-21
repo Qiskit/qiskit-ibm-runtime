@@ -23,10 +23,6 @@ from typing import Dict, Callable, Optional, Union, List, Any, Type, Sequence
 from qiskit.providers.backend import BackendV2 as Backend
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.providerutils import filter_backends
-from qiskit.providers.models import (
-    PulseBackendConfiguration,
-    QasmBackendConfiguration,
-)
 
 from qiskit_ibm_runtime import ibm_backend
 from .proxies import ProxyConfiguration
@@ -34,8 +30,6 @@ from .utils.deprecation import issue_deprecation_msg, deprecate_function
 from .utils.hgp import to_instance_format, from_instance_format
 from .utils.backend_decoder import configuration_from_server_data
 
-
-from .utils.utils import validate_job_tags
 from .accounts import AccountManager, Account, ChannelType
 from .api.clients import AuthClient, VersionClient
 from .api.clients.runtime import RuntimeClient
@@ -47,7 +41,7 @@ from .hub_group_project import HubGroupProject  # pylint: disable=cyclic-import
 from .utils.result_decoder import ResultDecoder
 from .runtime_job import RuntimeJob
 from .runtime_job_v2 import RuntimeJobV2
-from .utils import RuntimeDecoder, RuntimeEncoder, to_python_identifier
+from .utils import RuntimeDecoder, RuntimeEncoder, validate_job_tags
 from .api.client_parameters import ClientParameters
 from .runtime_options import RuntimeOptions
 from .ibm_backend import IBMBackend
@@ -73,6 +67,7 @@ class QiskitRuntimeService:
         proxies: Optional[dict] = None,
         verify: Optional[bool] = None,
         channel_strategy: Optional[str] = None,
+        private_endpoint: Optional[bool] = None,
     ) -> None:
         """QiskitRuntimeService constructor
 
@@ -108,6 +103,7 @@ class QiskitRuntimeService:
                 authentication)
             verify: Whether to verify the server's TLS certificate.
             channel_strategy: Error mitigation strategy.
+            private_endpoint: Connect to private API URL.
 
         Returns:
             An instance of QiskitRuntimeService.
@@ -129,6 +125,9 @@ class QiskitRuntimeService:
             channel_strategy=channel_strategy,
         )
 
+        if private_endpoint is not None:
+            self._account.private_endpoint = private_endpoint
+
         self._client_params = ClientParameters(
             channel=self._account.channel,
             token=self._account.token,
@@ -141,16 +140,12 @@ class QiskitRuntimeService:
 
         self._channel_strategy = channel_strategy or self._account.channel_strategy
         self._channel = self._account.channel
-        self._backends: Dict[str, "ibm_backend.IBMBackend"] = {}
-        self._backend_configs: Dict[str, Any] = {}
+        self._backend_allowed_list: List[str] = []
 
         if self._channel == "ibm_cloud":
             self._api_client = RuntimeClient(self._client_params)
-            # TODO: We can make the backend discovery lazy
-            self._backends = self._discover_cloud_backends()
-            QiskitRuntimeService.global_service = self
+            self._backend_allowed_list = self._discover_cloud_backends()
             self._validate_channel_strategy()
-            return
         else:
             auth_client = self._authenticate_ibm_quantum_account(self._client_params)
             # Update client parameters to use authenticated values.
@@ -165,20 +160,14 @@ class QiskitRuntimeService:
                     "Please check if the service is in maintenance mode "
                     "https://docs.quantum.ibm.com/announcements/service-alerts."
                 )
-
-            for hgp in self._hgps.values():
-                for backend_name in hgp.backends:
-                    if backend_name not in self._backends:
-                        self._backends[backend_name] = None
+            self._backend_allowed_list = sorted(
+                set(sum([hgp.backends for hgp in self._hgps.values()], []))
+            )
             self._current_instance = self._account.instance
             if not self._current_instance:
                 self._current_instance = self._get_hgp().name
                 logger.info("Default instance: %s", self._current_instance)
         QiskitRuntimeService.global_service = self
-
-        # TODO - it'd be nice to allow some kind of autocomplete, but `service.ibmq_foo`
-        # just seems wrong since backends are not runtime service instances.
-        # self._discover_backends()
 
     def _discover_account(
         self,
@@ -284,27 +273,13 @@ class QiskitRuntimeService:
                     "To use this instance, set channel_strategy='q-ctrl'."
                 )
 
-    def _discover_cloud_backends(self) -> Dict[str, "ibm_backend.IBMBackend"]:
+    def _discover_cloud_backends(self) -> List[str]:
         """Return the remote backends available for this service instance.
 
         Returns:
-            A dict of the remote backend instances, keyed by backend name.
+            A list of the remote backend names.
         """
-        ret = OrderedDict()  # type: ignore[var-annotated]
-        backends_list = self._api_client.list_backends(channel_strategy=self._channel_strategy)
-        for backend_name in backends_list:
-            raw_config = self._api_client.backend_configuration(backend_name=backend_name)
-            config = configuration_from_server_data(
-                raw_config=raw_config, instance=self._account.instance
-            )
-            if not config:
-                continue
-            ret[config.backend_name] = ibm_backend.IBMBackend(
-                configuration=config,
-                service=self,
-                api_client=self._api_client,
-            )
-        return ret
+        return self._api_client.list_backends(channel_strategy=self._channel_strategy)
 
     def _resolve_crn(self, account: Account) -> None:
         account.resolve_crn()
@@ -472,15 +447,6 @@ class QiskitRuntimeService:
 
         raise QiskitBackendNotFoundError(error_message)
 
-    def _discover_backends(self) -> None:
-        """Discovers the remote backends for this account, if not already known."""
-        for backend in self._backends.values():
-            backend_name = to_python_identifier(backend.name)
-            # Append _ if duplicate
-            while backend_name in self.__dict__:
-                backend_name += "_"
-            setattr(self, backend_name, backend)
-
     # pylint: disable=arguments-differ
     def backends(
         self,
@@ -488,7 +454,9 @@ class QiskitRuntimeService:
         min_num_qubits: Optional[int] = None,
         instance: Optional[str] = None,
         dynamic_circuits: Optional[bool] = None,
-        filters: Optional[Callable[[List["ibm_backend.IBMBackend"]], bool]] = None,
+        filters: Optional[Callable[["ibm_backend.IBMBackend"], bool]] = None,
+        *,
+        use_fractional_gates: bool = False,
         **kwargs: Any,
     ) -> List["ibm_backend.IBMBackend"]:
         """Return all backends accessible via this account, subject to optional filtering.
@@ -506,6 +474,15 @@ class QiskitRuntimeService:
                         filters=lambda b: b.max_shots > 50000)
                     QiskitRuntimeService.backends(
                         filters=lambda x: ("rz" in x.basis_gates )
+            use_fractional_gates: Set True to allow for the backends to include
+                fractional gates in target. Currently this feature cannot be used
+                simulataneously with the dynamic circuits, PEC, or PEA.
+                When this flag is set, control flow instructions are automatically
+                removed from the backend target.
+                When you use the dynamic circuits feature (e.g. if_else) in your
+                algorithm, you must disable this flag to create executable ISA circuits.
+                This flag might be modified or removed when our backend
+                supports dynamic circuits and fractional gates simultaneously.
 
             **kwargs: Simple filters that require a specific value for an attribute in
                 backend configuration or status.
@@ -530,49 +507,39 @@ class QiskitRuntimeService:
             IBMInputValueError: If an input is invalid.
             QiskitBackendNotFoundError: If the backend is not in any instance.
         """
-        backends: List[IBMBackend] = []
-        instance_filter = instance if instance else self._account.instance
-        if self._channel == "ibm_quantum":
-            if name:
-                if name not in self._backends:
-                    raise QiskitBackendNotFoundError("No backend matches the criteria.")
-                if not self._backends[name] or instance_filter != self._backends[name]._instance:
-                    self._set_backend_config(name)
-                    self._backends[name] = self._create_backend_obj(
-                        self._backend_configs[name],
-                        instance_filter,
-                    )
-                if self._backends[name]:
-                    backends.append(self._backends[name])
-            elif instance_filter:
-                hgp = self._get_hgp(instance=instance_filter)
-                for backend_name in hgp.backends:
-                    if (
-                        not self._backends[backend_name]
-                        or instance_filter != self._backends[backend_name]._instance
-                    ):
-                        self._set_backend_config(backend_name, instance_filter)
-                        self._backends[backend_name] = self._create_backend_obj(
-                            self._backend_configs[backend_name], instance_filter
-                        )
-                    if self._backends[backend_name]:
-                        backends.append(self._backends[backend_name])
-            else:
-                for backend_name, backend_config in self._backends.items():
-                    if not backend_config:
-                        self._set_backend_config(backend_name)
-                        self._backends[backend_name] = self._create_backend_obj(
-                            self._backend_configs[backend_name]
-                        )
-                    if self._backends[backend_name]:
-                        backends.append(self._backends[backend_name])
+        if dynamic_circuits is True and use_fractional_gates:
+            raise QiskitBackendNotFoundError(
+                "Currently fractional_gates and dynamic_circuits feature cannot be "
+                "simulutaneously enabled. Consider disabling one or the other."
+            )
 
+        backends: List[IBMBackend] = []
+        if self._channel == "ibm_quantum":
+            instance_filter = instance if instance else self._account.instance
+            if name:
+                if name not in self._backend_allowed_list:
+                    raise QiskitBackendNotFoundError("No backend matches the criteria.")
+                backend_names = [name]
+                hgp = instance_filter
+            elif instance_filter:
+                backend_names = self._get_hgp(instance=instance_filter).backends
+                hgp = instance_filter
+            else:
+                backend_names = self._backend_allowed_list
+                hgp = None
+            for backend_name in backend_names:
+                if backend := self._create_backend_obj(backend_name, instance=hgp):
+                    backends.append(backend)
         else:
             if instance:
                 raise IBMInputValueError(
                     "The 'instance' keyword is only supported for ``ibm_quantum`` runtime."
                 )
-            backends = list(self._backends.values())
+            for backend_name in self._backend_allowed_list:
+                if backend := self._create_backend_obj(
+                    backend_name, instance=self._account.instance
+                ):
+                    backends.append(backend)
 
         if name:
             kwargs["backend_name"] = name
@@ -580,7 +547,6 @@ class QiskitRuntimeService:
             backends = list(
                 filter(lambda b: b.configuration().n_qubits >= min_num_qubits, backends)
             )
-
         if dynamic_circuits is not None:
             backends = list(
                 filter(
@@ -589,60 +555,66 @@ class QiskitRuntimeService:
                     backends,
                 )
             )
-        return filter_backends(backends, filters=filters, **kwargs)
 
-    def _set_backend_config(self, backend_name: str, instance: Optional[str] = None) -> None:
-        """Retrieve backend configuration and add to backend_configs.
-        Args:
-            backend_name: backend name that will be returned.
-            instance: the current h/g/p.
-        """
-        if backend_name not in self._backend_configs:
-            raw_config = self._api_client.backend_configuration(backend_name)
-            config = configuration_from_server_data(raw_config=raw_config, instance=instance)
-            self._backend_configs[backend_name] = config
+        # Set fractional gate feature before Target object is created.
+        for backend in backends:
+            backend.options.use_fractional_gates = use_fractional_gates
+        return filter_backends(backends, filters=filters, **kwargs)
 
     def _create_backend_obj(
         self,
-        config: Union[QasmBackendConfiguration, PulseBackendConfiguration],
+        backend_name: str,
         instance: Optional[str] = None,
     ) -> IBMBackend:
         """Given a backend configuration return the backend object.
+
         Args:
-            config: backend configuration.
+            backend_name: Name of backend to instantiate.
             instance: the current h/g/p.
+
         Returns:
             A backend object.
+
         Raises:
             QiskitBackendNotFoundError: if the backend is not in the hgp passed in.
         """
-        if config:
-            if not instance:
-                for hgp in list(self._hgps.values()):
-                    if config.backend_name in hgp.backends:
-                        instance = to_instance_format(hgp._hub, hgp._group, hgp._project)
-                        break
+        if config := configuration_from_server_data(
+            raw_config=self._api_client.backend_configuration(backend_name),
+            instance=instance,
+        ):
+            if self._channel == "ibm_quantum":
+                if not instance:
+                    for hgp in list(self._hgps.values()):
+                        if config.backend_name in hgp.backends:
+                            instance = to_instance_format(hgp._hub, hgp._group, hgp._project)
+                            break
 
-            elif config.backend_name not in self._get_hgp(instance=instance).backends:
-                hgps_with_backend = []
-                for hgp in list(self._hgps.values()):
-                    if config.backend_name in hgp.backends:
-                        hgps_with_backend.append(
-                            to_instance_format(hgp._hub, hgp._group, hgp._project)
-                        )
-                raise QiskitBackendNotFoundError(
-                    f"Backend {config.backend_name} is not in "
-                    f"{instance}. Please try a different instance. "
-                    f"{config.backend_name} is in the following instances you have access to: "
-                    f"{hgps_with_backend}"
+                elif config.backend_name not in self._get_hgp(instance=instance).backends:
+                    hgps_with_backend = []
+                    for hgp in list(self._hgps.values()):
+                        if config.backend_name in hgp.backends:
+                            hgps_with_backend.append(
+                                to_instance_format(hgp._hub, hgp._group, hgp._project)
+                            )
+                    raise QiskitBackendNotFoundError(
+                        f"Backend {config.backend_name} is not in "
+                        f"{instance}. Please try a different instance. "
+                        f"{config.backend_name} is in the following instances you have access to: "
+                        f"{hgps_with_backend}"
+                    )
+                return ibm_backend.IBMBackend(
+                    instance=instance,
+                    configuration=config,
+                    service=self,
+                    api_client=self._api_client,
                 )
-
-            return ibm_backend.IBMBackend(
-                instance=instance,
-                configuration=config,
-                service=self,
-                api_client=self._api_client,
-            )
+            else:
+                # cloud backend doesn't set hgp instance
+                return ibm_backend.IBMBackend(
+                    configuration=config,
+                    service=self,
+                    api_client=self._api_client,
+                )
         return None
 
     def active_account(self) -> Optional[Dict[str, str]]:
@@ -761,6 +733,7 @@ class QiskitRuntimeService:
         self,
         name: str = None,
         instance: Optional[str] = None,
+        use_fractional_gates: bool = False,
     ) -> Backend:
         """Return a single backend matching the specified filtering.
 
@@ -770,6 +743,15 @@ class QiskitRuntimeService:
                 hub/group/project format. If an instance is not given, among the providers
                 with access to the backend, a premium provider will be prioritized.
                 For users without access to a premium provider, the default open provider will be used.
+            use_fractional_gates: Set True to allow for the backends to include
+                fractional gates in target. Currently this feature cannot be used
+                simulataneously with the dynamic circuits, PEC, or PEA.
+                When this flag is set, control flow instructions are automatically
+                removed from the backend target.
+                When you use the dynamic circuits feature (e.g. if_else) in your
+                algorithm, you must disable this flag to create executable ISA circuits.
+                This flag might be modified or removed when our backend
+                supports dynamic circuits and fractional gates simultaneously.
 
         Returns:
             Backend: A backend matching the filtering.
@@ -787,7 +769,7 @@ class QiskitRuntimeService:
                 DeprecationWarning,
                 stacklevel=2,
             )
-        backends = self.backends(name, instance=instance)
+        backends = self.backends(name, instance=instance, use_fractional_gates=use_fractional_gates)
         if not backends:
             cloud_msg_url = ""
             if self._channel == "ibm_cloud":
@@ -858,17 +840,21 @@ class QiskitRuntimeService:
 
         qrt_options.validate(channel=self.channel)
 
-        hgp_name = None
         if self._channel == "ibm_quantum":
             # Find the right hgp
-            hgp = self._get_hgp(
+            hgp_name = self._get_hgp(
                 instance=qrt_options.instance, backend_name=qrt_options.get_backend_name()
-            )
-            hgp_name = hgp.name
+            ).name
             if hgp_name != self._current_instance:
                 self._current_instance = hgp_name
                 logger.info("Instance selected: %s", self._current_instance)
-        backend = self.backend(name=qrt_options.get_backend_name(), instance=hgp_name)
+        else:
+            hgp_name = None
+        backend = qrt_options.backend
+        if isinstance(backend, str) or (
+            hgp_name and isinstance(backend, IBMBackend) and backend._instance != hgp_name
+        ):
+            backend = self.backend(name=qrt_options.get_backend_name(), instance=hgp_name)
         status = backend.status()
         if status.operational is True and status.status_msg != "active":
             warnings.warn(
@@ -903,11 +889,9 @@ class QiskitRuntimeService:
             if ex.status_code == 404:
                 raise RuntimeProgramNotFound(f"Program not found: {ex.message}") from None
             raise IBMRuntimeError(f"Failed to run program: {ex}") from None
-        backend = (
-            self.backend(name=response["backend"], instance=hgp_name)
-            if response["backend"]
-            else qrt_options.get_backend_name()
-        )
+
+        if response["backend"] and response["backend"] != qrt_options.get_backend_name():
+            backend = self.backend(name=response["backend"], instance=hgp_name)
 
         if version == 2:
             job = RuntimeJobV2(
@@ -1148,7 +1132,7 @@ class QiskitRuntimeService:
         self,
         min_num_qubits: Optional[int] = None,
         instance: Optional[str] = None,
-        filters: Optional[Callable[[List["ibm_backend.IBMBackend"]], bool]] = None,
+        filters: Optional[Callable[["ibm_backend.IBMBackend"], bool]] = None,
         **kwargs: Any,
     ) -> ibm_backend.IBMBackend:
         """Return the least busy available backend.

@@ -65,24 +65,6 @@ class TestIntegrationBackend(IBMIntegrationTestCase):
                 service.backend(unique_backend, instance=hgp_1)
 
     @run_integration_test
-    @quantum_only
-    def test_backends_no_config(self, service):
-        """Test retrieving backends when a config is missing."""
-        service._backend_configs = {}
-        instance = service._account.instance
-        backends = service.backends(instance=instance)
-        configs = service._backend_configs
-        configs["test_backend"] = None
-        backend_names = [backend.name for backend in backends]
-        # check filters still work
-        service.backends(instance=instance, simulator=True)
-
-        for config in configs.values():
-            backend = service._create_backend_obj(config, instance=instance)
-            if backend:
-                self.assertTrue(backend.name in backend_names)
-
-    @run_integration_test
     def test_get_backend(self, service):
         """Test getting a backend."""
         backends = service.backends()
@@ -220,7 +202,9 @@ class TestIBMBackend(IBMIntegrationTestCase):
                     backend.properties().last_update_date,
                 )
             self.assertEqual(backend_copy._instance, backend._instance)
-            self.assertEqual(backend_copy._service._backends, backend._service._backends)
+            self.assertEqual(
+                backend_copy._service._backend_allowed_list, backend._service._backend_allowed_list
+            )
             self.assertEqual(backend_copy._get_defaults(), backend._get_defaults())
             self.assertEqual(
                 backend_copy._api_client._session.base_url,
@@ -238,6 +222,8 @@ class TestIBMBackend(IBMIntegrationTestCase):
         """Check retrieving properties of all qubits"""
         if self.dependencies.channel == "ibm_cloud":
             raise SkipTest("Cloud channel does not have instance.")
+        if not self.backend.properties():
+            raise SkipTest("Simulators and fake backends do not have qubit properties.")
         num_qubits = self.backend.num_qubits
         qubits = list(range(num_qubits))
         qubit_properties = self.backend.qubit_properties(qubits)
@@ -293,6 +279,8 @@ class TestIBMBackend(IBMIntegrationTestCase):
         """Check error message if circuit contains more qubits than supported on the backend."""
         if self.dependencies.channel == "ibm_cloud":
             raise SkipTest("Cloud channel does not have instance.")
+        if not self.backend.properties():
+            raise SkipTest("Simulators and fake backends do not have qubit properties.")
         num = len(self.backend.properties().qubits)
         num_qubits = num + 1
         circuit = QuantumCircuit(num_qubits, num_qubits)
