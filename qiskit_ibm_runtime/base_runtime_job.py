@@ -140,14 +140,27 @@ class BaseRuntimeJob(ABC):
             response: Response to check for url keyword, if available, download result from given URL
         """
         try:
-            result_url_json = json.loads(response)
+            result_url_json = self._parse_nested_response_body(response)
+
             if "url" in result_url_json:
                 url = result_url_json["url"]
                 result_response = requests.get(url, timeout=10)
                 return result_response.text
-            return response
+            return json.dumps(result_url_json)
         except json.JSONDecodeError:
             return response
+
+    def _parse_nested_response_body(self, http_response_body: str) -> Any:
+        response_data = json.loads(http_response_body)
+        try:
+            response_data = json.loads(response_data)
+            try:
+                response_data = json.loads(response_data)
+            except json.JSONDecodeError:
+                pass
+        except json.JSONDecodeError:
+            pass
+        return response_data
 
     def cancel_result_streaming(self) -> None:
         """Cancel result streaming."""
