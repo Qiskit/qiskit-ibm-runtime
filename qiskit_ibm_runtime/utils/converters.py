@@ -12,12 +12,13 @@
 
 """Utilities related to conversion."""
 
-from typing import Union, Tuple, Any, Optional
+import re
 from datetime import datetime, timedelta, timezone
 from math import ceil
+from typing import Union, Tuple, Any, Optional
 
-import dateutil.parser
-from dateutil import tz
+from dateutil import tz, parser
+from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 
 def utc_to_local(utc_dt: Union[datetime, str]) -> datetime:
@@ -33,7 +34,7 @@ def utc_to_local(utc_dt: Union[datetime, str]) -> datetime:
         TypeError: If the input parameter value is not valid.
     """
     if isinstance(utc_dt, str):
-        utc_dt = dateutil.parser.parse(utc_dt)
+        utc_dt = parser.parse(utc_dt)
     if not isinstance(utc_dt, datetime):
         raise TypeError("Input `utc_dt` is not string or datetime.")
     utc_dt = utc_dt.replace(tzinfo=timezone.utc)  # type: ignore[arg-type]
@@ -54,7 +55,7 @@ def local_to_utc(local_dt: Union[datetime, str]) -> datetime:
         TypeError: If the input parameter value is not valid.
     """
     if isinstance(local_dt, str):
-        local_dt = dateutil.parser.parse(local_dt)
+        local_dt = parser.parse(local_dt)
     if not isinstance(local_dt, datetime):
         raise TypeError("Input `local_dt` is not string or datetime.")
 
@@ -63,6 +64,40 @@ def local_to_utc(local_dt: Union[datetime, str]) -> datetime:
         local_dt = local_dt.replace(tzinfo=tz.tzlocal())
         return local_dt.astimezone(tz.UTC)
     return local_dt  # Already in UTC.
+
+
+def local_to_utc_str(local_dt: Union[datetime, str], suffix: str = "Z") -> str:
+    """Convert a local ``datetime`` object or string to a UTC string.
+
+    Args:
+        local_dt: Input local ``datetime`` or string.
+        suffix: ``Z`` or ``+``, indicating whether the suffix should be ``Z`` or
+            ``+00:00``.
+
+    Returns:
+        UTC datetime in ISO format.
+    """
+    utc_dt_str = local_to_utc(local_dt).isoformat()
+    if suffix == "Z":
+        utc_dt_str = utc_dt_str.replace("+00:00", "Z")
+    return utc_dt_str
+
+
+def convert_tz(input_dt: Optional[datetime], to_utc: bool) -> Optional[datetime]:
+    """Convert input timestamp timezone.
+
+    Args:
+        input_dt: Timestamp to be converted.
+        to_utc: True if to convert to UTC, otherwise to local timezone.
+
+    Returns:
+        Converted timestamp, or ``None`` if input is ``None``.
+    """
+    if input_dt is None:
+        return None
+    if to_utc:
+        return local_to_utc(input_dt)
+    return utc_to_local(input_dt)
 
 
 def utc_to_local_all(data: Any) -> Any:
@@ -84,6 +119,21 @@ def utc_to_local_all(data: Any) -> Any:
     elif isinstance(data, dict):
         return {key: utc_to_local_all(elem) for key, elem in data.items()}
     return data
+
+
+def str_to_utc(utc_dt: Optional[str]) -> Optional[datetime]:
+    """Convert a UTC string to a ``datetime`` object with UTC timezone.
+
+    Args:
+        utc_dt: Input UTC string in ISO format.
+
+    Returns:
+        A ``datetime`` with the UTC timezone, or ``None`` if the input is ``None``.
+    """
+    if not utc_dt:
+        return None
+    parsed_dt = parser.isoparse(utc_dt)
+    return parsed_dt.replace(tzinfo=timezone.utc)
 
 
 def seconds_to_duration(seconds: float) -> Tuple[int, int, int, int, int]:
@@ -135,3 +185,40 @@ def duration_difference(date_time: datetime) -> str:
     elif time_tuple[3]:
         time_str += "{} sec".format(time_tuple[3])
     return time_str
+
+
+def hms_to_seconds(hms: str, msg_prefix: str = "") -> int:
+    """Convert duration specified as hours minutes seconds to seconds.
+
+    Args:
+        hms: The string input duration (in hours minutes seconds). Ex: 2h 10m 20s
+        msg_prefix: Additional message to prefix the error.
+
+    Returns:
+        Total seconds (int) in the duration.
+
+    Raises:
+        IBMInputValueError: when the given hms string is in an invalid format
+    """
+
+    parsed_time = re.findall(r"(\d+[dhms])", hms)
+    total_seconds = 0
+
+    if parsed_time:
+        for time_unit in parsed_time:
+            unit = time_unit[-1]
+            value = int(time_unit[:-1])
+            if unit == "d":
+                total_seconds += value * 86400
+            elif unit == "h":
+                total_seconds += value * 3600
+            elif unit == "m":
+                total_seconds += value * 60
+            elif unit == "s":
+                total_seconds += value
+            else:
+                raise IBMInputValueError(f"{msg_prefix} Invalid input: {unit}")
+    else:
+        raise IBMInputValueError(f"{msg_prefix} Invalid input: {parsed_time}")
+
+    return total_seconds

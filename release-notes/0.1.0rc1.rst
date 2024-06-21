@@ -1,0 +1,40 @@
+0.1.0rc1
+========
+
+New Features
+------------
+
+-  You can now pass ``instance`` parameter in the hub/group/project
+   format to ``qiskit_ibm_runtime.IBMRuntimeService.jobs()`` to filter
+   jobs. Currently only supported for legacy authentication.
+
+-  You can now use the
+   `qiskit_ibm_runtime.RuntimeJob.interim_results() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob#interim_results>`__
+   method to retrieve runtime program interim results. Note that interim
+   results will only be available for up to two days.
+
+Upgrade Notes
+-------------
+
+-  In order to be consistent with other properties in
+   `qiskit_ibm_runtime.RuntimeJob <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob>`__
+   class the job_id and backend methods have been converted to
+   properties.
+
+-  When uploading a program with
+   ``qiskit_ibm_runtime.IBMRuntimeService.upload_program()``, the
+   program description is now optional.
+
+-  When printing programs with
+   ``qiskit_ibm_runtime.IBMRuntimeService.pprint_programs()``,
+   ``backend_requirements`` will now be listed.
+
+Bug Fixes
+---------
+
+-  Fixed an issue with JSON encoding and decoding when using
+   ``ParameterExpression``\ s in conjunction with Qiskit Terra 0.19.1
+   and above. Previously, the ``Parameter`` instances reconstructed from
+   the JSON output would have different unique identifiers, causing them
+   to seem unequal to the input. They will now have the correct backing
+   identities.

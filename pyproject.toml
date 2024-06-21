@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.black]
+line-length = 100
+target-version = ['py38', 'py39', 'py310', 'py311', 'py312']
+
+[tool.towncrier]
+single_file = false
+filename = "release-notes/{version}.rst"
+directory = "release-notes/unreleased"
+title_format = "{version} ({project_date})"
+issue_format = "`{issue} <https://github.com/Qiskit/qiskit-ibm-runtime/pull/{issue}>`__"
+
+    [[tool.towncrier.type]]
+    directory = "upgrade"
+    name = "Upgrade Notes"
+    showcontent = true
+
+    [[tool.towncrier.type]]
+    directory = "deprecation"
+    name = "Deprecation Notes"
+    showcontent = true
+
+    [[tool.towncrier.type]]
+    directory = "feat"
+    name = "New Features"
+    showcontent = true
+
+    [[tool.towncrier.type]]
+    directory = "bug"
+    name = "Bug Fixes"
+    showcontent = true
+
+    [[tool.towncrier.type]]
+    directory = "other"
+    name = "Other Notes"
+    showcontent = true

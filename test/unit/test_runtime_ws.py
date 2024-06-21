@@ -13,12 +13,14 @@
 """Test for the Websocket client."""
 
 import time
+from unittest.mock import MagicMock
 
-from qiskit.test.mock.fake_qasm_simulator import FakeQasmSimulator
-
-from qiskit_ibm_runtime import RuntimeJob
+from qiskit_ibm_runtime import (
+    RuntimeJob,
+)
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 from qiskit_ibm_runtime.exceptions import RuntimeInvalidStateError
+
 from .mock.fake_runtime_client import BaseFakeRuntimeClient
 from .mock.ws_handler import (
     websocket_handler,
@@ -184,15 +186,16 @@ class TestRuntimeWebsocketClient(IBMTestCase):
         self.assertEqual(0, len(results))
         self.assertFalse(job._ws_client.connected)
 
-    def _get_job(self, callback=None, job_id=JOB_ID_PROGRESS_DONE):
+    def _get_job(self, callback=None, job_id=JOB_ID_PROGRESS_DONE, backend=None):
         """Get a runtime job."""
         params = ClientParameters(
             channel="ibm_quantum", token="my_token", url=MockWsServer.VALID_WS_URL
         )
         job = RuntimeJob(
-            backend=FakeQasmSimulator(),
+            backend=backend,
             api_client=BaseFakeRuntimeClient(),
             client_params=params,
+            service=MagicMock(),
             job_id=job_id,
             program_id="my-program",
             user_callback=callback,

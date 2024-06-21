@@ -14,13 +14,11 @@
 
 from typing import Dict, Union, Any
 
-from ..session import RetrySession
 from ..rest.root import Api
+from ..session import RetrySession
 
-from .base import BaseClient
 
-
-class VersionClient(BaseClient):
+class VersionClient:
     """Client for determining the version of an IBM Quantum service."""
 
     def __init__(self, url: str, **request_kwargs: Any) -> None:

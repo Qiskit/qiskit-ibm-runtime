@@ -17,12 +17,10 @@ from typing import Dict, Any, Optional
 from datetime import datetime as python_datetime
 from abc import ABC, abstractmethod
 
-from .base import BaseClient
-
 logger = logging.getLogger(__name__)
 
 
-class BaseBackendClient(BaseClient, ABC):
+class BaseBackendClient(ABC):
     """Client for accessing backend information."""
 
     @abstractmethod

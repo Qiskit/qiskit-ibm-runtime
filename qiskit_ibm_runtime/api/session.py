@@ -12,11 +12,14 @@
 
 """Session customized for IBM Quantum access."""
 
+import inspect
 import os
 import re
 import logging
+import sys
 from typing import Dict, Optional, Any, Tuple, Union
-import pkg_resources
+from pathlib import PurePath
+import importlib.metadata
 
 from requests import Session, RequestException, Response
 from requests.adapters import HTTPAdapter
@@ -26,6 +29,7 @@ from urllib3.util.retry import Retry
 from qiskit_ibm_runtime.utils.utils import filter_data
 
 from .exceptions import RequestsApiError
+from ..exceptions import IBMNotAuthorizedError
 from ..version import __version__ as ibm_runtime_version
 
 STATUS_FORCELIST = (
@@ -39,6 +43,9 @@ STATUS_FORCELIST = (
     524,  # Cloudflare Timeout
 )
 CUSTOM_HEADER_ENV_VAR = "QISKIT_IBM_RUNTIME_CUSTOM_CLIENT_APP_HEADER"
+QE_PROVIDER_HEADER_ENV_VAR = "QE_CUSTOM_CLIENT_APP_HEADER"
+USAGE_DATA_OPT_OUT_ENV_VAR = "USAGE_DATA_OPT_OUT"
+
 logger = logging.getLogger(__name__)
 # Regex used to match the `/backends` endpoint, capturing the device name as group(2).
 # The number of letters for group(2) must be greater than 1, so it does not match
@@ -49,20 +56,34 @@ RE_BACKENDS_ENDPOINT = re.compile(r"^(.*/backends/)([^/}]{2,})(.*)$", re.IGNOREC
 
 def _get_client_header() -> str:
     """Return the client version."""
-    try:
-        client_header = "qiskit/" + pkg_resources.get_distribution("qiskit").version
-        return client_header
-    except Exception:  # pylint: disable=broad-except
-        pass
 
-    qiskit_pkgs = ["qiskit-terra", "qiskit-aer", "qiskit-ignis", "qiskit-aqua"]
-    pkg_versions = {"qiskit-ibm-runtime": ibm_runtime_version}
+    if os.getenv(USAGE_DATA_OPT_OUT_ENV_VAR, "False") == "True":
+        return ""
+
+    qiskit_pkgs = [
+        "qiskit",
+        "qiskit_terra",
+        "qiskit_aer",
+        "qiskit_experiments",
+        "qiskit_nature",
+        "qiskit_machine_learning",
+        "qiskit_optimization",
+        "qiskit_finance",
+        "circuit_knitting_toolbox",
+    ]
+
+    pkg_versions = {"qiskit_ibm_runtime": f"qiskit_ibm_runtime-{ibm_runtime_version}"}
     for pkg_name in qiskit_pkgs:
         try:
-            pkg_versions[pkg_name] = pkg_resources.get_distribution(pkg_name).version
+            version_info = f"{pkg_name}-{importlib.metadata.version(pkg_name)}"
+
+            if pkg_name in sys.modules:
+                version_info += "*"
+
+            pkg_versions[pkg_name] = version_info
         except Exception:  # pylint: disable=broad-except
             pass
-    return ",".join(pkg_versions.keys()) + "/" + ",".join(pkg_versions.values())
+    return f"qiskit-version-2/{','.join(pkg_versions.values())}"
 
 
 CLIENT_APPLICATION = _get_client_header()
@@ -111,9 +132,7 @@ class PostForcelistRetry(Retry):
             _stacktrace=_stacktrace,
         )
 
-    def is_retry(
-        self, method: str, status_code: int, has_retry_after: bool = False
-    ) -> bool:
+    def is_retry(self, method: str, status_code: int, has_retry_after: bool = False) -> bool:
         """Indicate whether the request should be retried.
 
         Args:
@@ -164,7 +183,7 @@ class RetrySession(Session):
         super().__init__()
 
         self.base_url = base_url
-
+        self.custom_header: Optional[str] = None
         self._initialize_retry(retries_total, retries_connect, backoff_factor)
         self._initialize_session_parameters(verify, proxies or {}, auth)
         self._timeout = timeout
@@ -208,15 +227,9 @@ class RetrySession(Session):
             proxies: Proxy URLs mapped by protocol.
             auth: Authentication handler.
         """
-        client_app_header = CLIENT_APPLICATION
-
-        # Append custom header to the end if specified
-        custom_header = os.getenv(CUSTOM_HEADER_ENV_VAR)
-        if custom_header:
-            client_app_header += "/" + custom_header
-
-        self.headers.update({"X-Qx-Client-Application": client_app_header})
-
+        self.custom_header = os.getenv(CUSTOM_HEADER_ENV_VAR) or os.getenv(
+            QE_PROVIDER_HEADER_ENV_VAR
+        )
         self.auth = auth
         self.proxies = proxies or {}
         self.verify = verify
@@ -241,6 +254,7 @@ class RetrySession(Session):
 
         Raises:
             RequestsApiError: If the request failed.
+            IBMNotAuthorizedError: If the auth token is invalid.
         """
         # pylint: disable=arguments-differ
         if bare:
@@ -256,8 +270,58 @@ class RetrySession(Session):
         if not self.proxies and "timeout" not in kwargs:
             kwargs.update({"timeout": self._timeout})
 
-        headers = self.headers.copy()
+        headers = self.headers.copy()  # type: ignore
         headers.update(kwargs.pop("headers", {}))
+
+        # Set default caller
+        headers.update({"X-Qx-Client-Application": f"{CLIENT_APPLICATION}/qiskit"})
+
+        if not os.getenv(USAGE_DATA_OPT_OUT_ENV_VAR, "False") == "True":
+            # Use PurePath in order to support arbitrary path formats
+            callers = {
+                PurePath("qiskit/algorithms"),
+                PurePath("qiskit_ibm_runtime/sampler.py"),
+                PurePath("qiskit_ibm_runtime/estimator.py"),
+                "qiskit_machine_learning",
+                "qiskit_nature",
+                "qiskit_optimization",
+                "qiskit_experiments",
+                "qiskit_finance",
+                "circuit_knitting_toolbox",
+            }
+            stack = inspect.stack()
+            stack.reverse()
+
+            found_caller = False
+            for frame in stack:
+                frame_path = str(PurePath(frame.filename))
+                for caller in callers:
+                    if str(caller) in frame_path:
+                        caller_str = str(caller) + frame_path.split(str(caller), 1)[-1]
+                        if os.name == "nt":
+                            sanitized_caller_str = caller_str.replace("\\", "~")
+                        else:
+                            sanitized_caller_str = caller_str.replace("/", "~")
+                        if self.custom_header:
+                            headers.update(
+                                {
+                                    "X-Qx-Client-Application": f"{CLIENT_APPLICATION}/"
+                                    f"{sanitized_caller_str}/{self.custom_header}"
+                                }
+                            )
+                        else:
+                            headers.update(
+                                {
+                                    "X-Qx-Client-Application": f"{CLIENT_APPLICATION}"
+                                    f"/{sanitized_caller_str}"
+                                }
+                            )
+                        found_caller = True
+                        break  # break out of the inner loop
+                if found_caller:
+                    break  # break out of the outer loop
+        self.headers = headers
+        self._set_custom_header()
 
         try:
             self._log_request_info(final_url, method, kwargs)
@@ -282,14 +346,13 @@ class RetrySession(Session):
                 except Exception:  # pylint: disable=broad-except
                     # the response did not contain the expected json.
                     message += f". {ex.response.text}"
-
+            if status_code == 401:
+                raise IBMNotAuthorizedError(message) from ex
             raise RequestsApiError(message, status_code) from ex
 
         return response
 
-    def _log_request_info(
-        self, url: str, method: str, request_data: Dict[str, Any]
-    ) -> None:
+    def _log_request_info(self, url: str, method: str, request_data: Dict[str, Any]) -> None:
         """Log the request data, filtering out specific information.
 
         Note:
@@ -319,9 +382,7 @@ class RetrySession(Session):
                     request_data_to_log = ""
                     if filtered_url in ("/devices/.../properties", "/Jobs"):
                         # Log filtered request data for these endpoints.
-                        request_data_to_log = "Request Data: {}.".format(
-                            filter_data(request_data)
-                        )
+                        request_data_to_log = "Request Data: {}.".format(filter_data(request_data))
                     logger.debug(
                         "Endpoint: %s. Method: %s. %s",
                         filtered_url,
@@ -330,9 +391,7 @@ class RetrySession(Session):
                     )
             except Exception as ex:  # pylint: disable=broad-except
                 # Catch general exception so as not to disturb the program if filtering fails.
-                logger.info(
-                    "Filtering failed when logging request information: %s", str(ex)
-                )
+                logger.info("Filtering failed when logging request information: %s", str(ex))
 
     def _is_worth_logging(self, endpoint_url: str) -> bool:
         """Returns whether the endpoint URL should be logged.
@@ -366,6 +425,15 @@ class RetrySession(Session):
             return False
 
         return True
+
+    def _set_custom_header(self) -> None:
+        """Set custom header."""
+        headers = self.headers.copy()  # type: ignore
+        if self.custom_header:
+            current = headers["X-Qx-Client-Application"]
+            if self.custom_header not in current:
+                headers.update({"X-Qx-Client-Application": f"{current}/{self.custom_header}"})
+                self.headers = headers
 
     def __getstate__(self) -> Dict:
         """Overwrite Session's getstate to include all attributes."""

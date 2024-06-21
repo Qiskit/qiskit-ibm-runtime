@@ -21,7 +21,9 @@ from .exceptions import AccountAlreadyExistsError
 logger = logging.getLogger(__name__)
 
 
-def save_config(filename: str, name: str, config: dict, overwrite: bool) -> None:
+def save_config(
+    filename: str, name: str, config: dict, overwrite: bool, set_as_default: Optional[bool] = None
+) -> None:
     """Save configuration data in a JSON file under the given name."""
     logger.debug("Save configuration data for '%s' in '%s'", name, filename)
     _ensure_file_exists(filename)
@@ -31,12 +33,27 @@ def save_config(filename: str, name: str, config: dict, overwrite: bool) -> None
 
     if data.get(name) and not overwrite:
         raise AccountAlreadyExistsError(
-            f"Named account ({name}) already exists. "
-            f"Set overwrite=True to overwrite."
+            f"Named account ({name}) already exists. " f"Set overwrite=True to overwrite."
         )
 
+    data[name] = config
+
+    # if set_as_default, but another account is defined as default, user must specify overwrite to change
+    # the default account.
+    if set_as_default:
+        data[name]["is_default_account"] = True
+        for account_name in data:
+            account = data[account_name]
+            if account_name != name and account.get("is_default_account"):
+                if overwrite:
+                    del account["is_default_account"]
+                else:
+                    raise AccountAlreadyExistsError(
+                        f"default_account ({name}) already exists. "
+                        f"Set overwrite=True to overwrite."
+                    )
+
     with open(filename, mode="w", encoding="utf-8") as json_out:
-        data[name] = config
         json.dump(data, json_out, sort_keys=True, indent=4)
 
 

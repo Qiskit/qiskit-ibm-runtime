@@ -1,0 +1,28 @@
+0.11.3
+======
+
+New Features
+------------
+
+-  Added reason for failure when invoking the method
+   `error_message() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob#error_message>`__.
+
+-  Added a new property,
+   `usage_estimation() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob#usage_estimation>`__
+   that returns the estimated system execution time,
+   ``quantum_seconds``. System execution time represents the amount of
+   time that the system is dedicated to processing your job.
+
+-  Raise an exception if the number of circuits passed to
+   ``_run_primitive()`` exceeds the number of circuits supported on the
+   backend.
+
+-  There is a new method
+   `update_tags() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob#update_tags>`__
+   that can be used to update the ``job_tags`` of a job.
+
+-  If ``instance`` is provided as parameter to
+   `qiskit_ibm_runtime.QiskitRuntimeService <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService>`__,
+   then this is used as a filter in ``QiskitRuntimeService.backends()``.
+   If ``instance`` is not recognized as one of the provider instances,
+   an exception will be raised. Previously, we only issued a warning.

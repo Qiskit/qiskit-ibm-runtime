@@ -1,0 +1,8 @@
+0.21.1
+======
+
+Bug Fixes
+---------
+
+-  Fixed a bug where ``SamplerV1`` and ``EstimatorV1`` could not be
+   imported because of an issue with how the aliases were defined.

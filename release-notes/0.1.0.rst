@@ -1,0 +1,121 @@
+0.1.0
+=====
+
+Prelude
+-------
+
+qiskit-ibm-runtime is a new Python API client for accessing the quantum
+programs, systems and simulators at IBM Quantum via the Qiskit Runtime
+Service.
+
+This new package is built upon the work already done in
+qiskit.providers.ibmq.runtime module in the qiskit-ibmq-provider package
+and replaces it going forward. The runtime module in
+qiskit-ibmq-provider package is now deprecated.
+
+qiskit-ibm-runtime is not included as part of Qiskit meta package and
+thereby you have to install it separately using
+``pip install qiskit-ibm-runtime``.
+
+New Features
+------------
+
+-  ``qiskit_ibm_runtime.IBMRuntimeService.least_busy()`` will now allow
+   you find the least busy backend.
+
+Upgrade Notes
+-------------
+
+-  qiskit-ibm-runtime package no longer uses the $HOME/.qiskit/qiskitrc
+   file used by qiskit-ibmq-provider to save credentials. Credentials
+   are now stored in a JSON format in $HOME/.qiskit/qiskit-ibm.json file
+   when you use ``qiskit_ibm_runtime.IBMRuntimeService.save_account()``
+   method.
+
+   You can now save multiple credentials and give an optional name for
+   each credential.
+
+-  Qiskit Runtime service is accessible using an IBM Quantum (legacy)
+   account or an IBM Cloud (cloud) account. qiskit-ibm-runtime enables
+   you to connect to either of these accounts:
+
+   .. code:: python
+
+      # Legacy
+      from qiskit_ibm_runtime import IBMRuntimeService
+      service = IBMRuntimeService(auth="legacy", token="abc")
+
+      # Cloud
+      from qiskit_ibm_runtime import IBMRuntimeService
+      service = IBMRuntimeService(auth="cloud", token="abc", instance="IBM Cloud CRN or Service instance name")
+
+-  `qiskit_ibm_runtime.IBMBackend <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.IBMBackend>`__
+   class now implements the ``qiskit.providers.BackendV2`` interface and
+   provides flatter access to the configuration of a backend, for
+   example:
+
+   .. code:: python
+
+      # BackendV1:
+      backend.configuration().n_qubits
+
+      # BackendV2:
+      backend.num_qubits
+
+   Only breaking change when compared to BackendV1 is backend.name is
+   now an attribute instead of a method.
+
+   Refer to the
+   `qiskit_ibm_runtime.IBMBackend <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.IBMBackend>`__
+   class doc string for a list of all available attributes.
+
+-  If you used qiskit.providers.ibmq.AccountProvider.get_backend method
+   (for example, ``provider.get_backend("ibmq_qasm_simulator")``) in the
+   qiskit-ibmq-provider package, it’s equivalent method in this new
+   package is ``qiskit_ibm_runtime.IBMRuntimeService.backend()``:
+
+   .. code:: python
+
+      service = IBMRuntimeService()
+      backend = service.backend("ibmq_qasm_simulator")
+
+-  It is now optional to specify a hub/group/project upfront when
+   connecting to the legacy IBM Quantum account. The hub/group/project
+   is selected in the following order.
+
+      -  hub/group/project if passed via ``instance`` parameter when
+         initializing ``qiskit_ibm_runtime.IBMRuntimeService``
+      -  the specific hub/group/project required by the backend
+         specified when calling
+         ``qiskit_ibm_runtime.IBMRuntimeService.run()``
+      -  the default set previously via
+         ``qiskit_ibm_runtime.IBMRuntimeService.save_account()``
+      -  a premium hub/group/project in your account
+      -  open access hub/group/project
+
+-  It is now optional to specify backend_name in options when executing
+   ``qiskit_ibm_runtime.IBMRuntimeService.run()`` method when using
+   cloud runtime (IBM Cloud only). The server will automatically pick a
+   backend and return the name.
+
+-  qiskit.providers.ibmq.runtime.IBMRuntimeService.logout method in
+   qiskit-ibmq-provider which was used to clear authorization cache on
+   the server has been removed.
+
+-  Python 3.6 has reached end of life and will no longer be supported in
+   the new qiskit-ibm-runtime package.
+
+-  qiskit.providers.ibmq.runtime.IBMRuntimeService.run_circuits method
+   in qiskit-ibmq-provider has been removed and will be replaced by the
+   ``Sampler`` primitive program.
+
+-  ``qiskit_ibm_runtime.IBMRuntimeService.run()`` method now accepts
+   runtime execution options as
+   `qiskit_ibm_runtime.RuntimeOptions <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeOptions>`__
+   class in addition to already supported Dict. backend_name, image and
+   log_level are the currently available options.
+
+-  Final result is also streamed now after interim results when you
+   specify a ``callback`` to
+   ``qiskit_ibm_runtime.IBMRuntimeService.run()`` or
+   `qiskit_ibm_runtime.RuntimeJob.stream_results() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob#stream_results>`__.

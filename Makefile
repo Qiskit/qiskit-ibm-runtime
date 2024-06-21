@@ -21,7 +21,7 @@ mypy:
 	mypy --module qiskit_ibm_runtime --package test
 
 style:
-	black --check qiskit_ibm_runtime setup.py test docs/tutorials program_source
+	black --check qiskit_ibm_runtime setup.py test
 
 unit-test:
 	python -m unittest discover --verbose --top-level-directory . --start-directory test/unit
@@ -32,9 +32,12 @@ integration-test:
 e2e-test:
 	python -m unittest discover --verbose --top-level-directory . --start-directory test/e2e
 
+docs-test:
+	./test/docs/vale.sh
+
 unit-test-coverage:
 	coverage run -m unittest discover --verbose --top-level-directory . --start-directory test/unit
 	coverage lcov
 
 black:
-	black qiskit_ibm_runtime setup.py test docs/tutorials program_source
+	black qiskit_ibm_runtime setup.py test

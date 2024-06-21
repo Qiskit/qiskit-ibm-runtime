@@ -13,24 +13,24 @@
 """Custom TestCase for IBM Provider."""
 
 import os
-import copy
 import logging
 import inspect
-import unittest
+import warnings
+from unittest import TestCase
+from unittest.util import safe_repr
 from contextlib import suppress
 from collections import defaultdict
 from typing import DefaultDict, Dict
 
+from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit_ibm_runtime import QISKIT_IBM_RUNTIME_LOGGER_NAME
-from qiskit_ibm_runtime.exceptions import IBMNotAuthorizedError
-from qiskit_ibm_runtime import QiskitRuntimeService
+from qiskit_ibm_runtime import QiskitRuntimeService, Sampler, SamplerV2, Options
 
-from .utils import setup_test_logging
+from .utils import setup_test_logging, bell
 from .decorators import IntegrationTestDependencies, integration_test_setup
-from .templates import RUNTIME_PROGRAM, RUNTIME_PROGRAM_METADATA, PROGRAM_PREFIX
 
 
-class IBMTestCase(unittest.TestCase):
+class IBMTestCase(TestCase):
     """Custom TestCase for use with qiskit-ibm-runtime."""
 
     log: logging.Logger
@@ -45,6 +45,8 @@ class IBMTestCase(unittest.TestCase):
         filename = "%s.log" % os.path.splitext(inspect.getfile(cls))[0]
         setup_test_logging(cls.log, filename)
         cls._set_logging_level(logging.getLogger(QISKIT_IBM_RUNTIME_LOGGER_NAME))
+        # fail test on deprecation warnings from qiskit
+        warnings.filterwarnings("error", category=DeprecationWarning, module=r"^qiskit$")
 
     @classmethod
     def _set_logging_level(cls, logger: logging.Logger) -> None:
@@ -63,11 +65,100 @@ class IBMTestCase(unittest.TestCase):
                     os.getenv("LOG_LEVEL"),
                     str(ex),
                 )
-        if not any(
-            isinstance(handler, logging.StreamHandler) for handler in logger.handlers
-        ):
+        if not any(isinstance(handler, logging.StreamHandler) for handler in logger.handlers):
             logger.addHandler(logging.StreamHandler())
             logger.propagate = False
+
+    def assert_dict_almost_equal(
+        self, dict1, dict2, delta=None, msg=None, places=None, default_value=0
+    ):
+        """Assert two dictionaries with numeric values are almost equal.
+
+        Fail if the two dictionaries are unequal as determined by
+        comparing that the difference between values with the same key are
+        not greater than delta (default 1e-8), or that difference rounded
+        to the given number of decimal places is not zero. If a key in one
+        dictionary is not in the other the default_value keyword argument
+        will be used for the missing value (default 0). If the two objects
+        compare equal then they will automatically compare almost equal.
+
+        Args:
+            dict1 (dict): a dictionary.
+            dict2 (dict): a dictionary.
+            delta (number): threshold for comparison (defaults to 1e-8).
+            msg (str): return a custom message on failure.
+            places (int): number of decimal places for comparison.
+            default_value (number): default value for missing keys.
+
+        Raises:
+            TypeError: if the arguments are not valid (both `delta` and
+                `places` are specified).
+            AssertionError: if the dictionaries are not almost equal.
+        """
+
+        error_msg = self.dicts_almost_equal(dict1, dict2, delta, places, default_value)
+
+        if error_msg:
+            msg = self._formatMessage(msg, error_msg)
+            raise self.failureException(msg)
+
+    def dicts_almost_equal(self, dict1, dict2, delta=None, places=None, default_value=0):
+        """Test if two dictionaries with numeric values are almost equal.
+
+        Fail if the two dictionaries are unequal as determined by
+        comparing that the difference between values with the same key are
+        not greater than delta (default 1e-8), or that difference rounded
+        to the given number of decimal places is not zero. If a key in one
+        dictionary is not in the other the default_value keyword argument
+        will be used for the missing value (default 0). If the two objects
+        compare equal then they will automatically compare almost equal.
+
+        Args:
+            dict1 (dict): a dictionary.
+            dict2 (dict): a dictionary.
+            delta (number): threshold for comparison (defaults to 1e-8).
+            places (int): number of decimal places for comparison.
+            default_value (number): default value for missing keys.
+
+        Raises:
+            TypeError: if the arguments are not valid (both `delta` and
+                `places` are specified).
+
+        Returns:
+            String: Empty string if dictionaries are almost equal. A description
+                of their difference if they are deemed not almost equal.
+        """
+
+        def valid_comparison(value):
+            """compare value to delta, within places accuracy"""
+            if places is not None:
+                return round(value, places) == 0
+            else:
+                return value < delta
+
+        # Check arguments.
+        if dict1 == dict2:
+            return ""
+        if places is not None:
+            if delta is not None:
+                raise TypeError("specify delta or places not both")
+            msg_suffix = " within %s places" % places
+        else:
+            delta = delta or 1e-8
+            msg_suffix = " within %s delta" % delta
+
+        # Compare all keys in both dicts, populating error_msg.
+        error_msg = ""
+        for key in set(dict1.keys()) | set(dict2.keys()):
+            val1 = dict1.get(key, default_value)
+            val2 = dict2.get(key, default_value)
+            if not valid_comparison(abs(val1 - val2)):
+                error_msg += f"({safe_repr(key)}: {safe_repr(val1)} != {safe_repr(val2)}), "
+
+        if error_msg:
+            return error_msg[:-2] + msg_suffix
+        else:
+            return ""
 
 
 class IBMIntegrationTestCase(IBMTestCase):
@@ -91,37 +182,14 @@ class IBMIntegrationTestCase(IBMTestCase):
     def tearDown(self) -> None:
         """Test level teardown."""
         super().tearDown()
-        # Delete programs
         service = self.service
-        for prog in self.to_delete[service.channel]:
-            with suppress(Exception):
-                service.delete_program(prog)
 
         # Cancel and delete jobs.
         for job in self.to_cancel[service.channel]:
             with suppress(Exception):
                 job.cancel()
             with suppress(Exception):
-                service.delete_job(job.job_id)
-
-    def _upload_program(
-        self,
-        service: QiskitRuntimeService,
-        name: str = None,
-        max_execution_time: int = 300,
-        data: str = None,
-        is_public: bool = False,
-    ) -> str:
-        """Upload a new program."""
-        name = name or PROGRAM_PREFIX
-        data = data or RUNTIME_PROGRAM
-        metadata = copy.deepcopy(RUNTIME_PROGRAM_METADATA)
-        metadata["name"] = name
-        metadata["max_execution_time"] = max_execution_time
-        metadata["is_public"] = is_public
-        program_id = service.upload_program(data=data, metadata=metadata)
-        self.to_delete[service.channel].append(program_id)
-        return program_id
+                service.delete_job(job.job_id())
 
 
 class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
@@ -133,59 +201,36 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
         # pylint: disable=arguments-differ
         # pylint: disable=no-value-for-parameter
         super().setUpClass()
-        cls._create_default_program()
+        cls.program_ids = {}
+        cls.sim_backends = {}
+        service = cls.service
+        cls.program_ids[service.channel] = "sampler"
         cls._find_sim_backends()
 
     @classmethod
     def tearDownClass(cls) -> None:
         """Class level teardown."""
         super().tearDownClass()
-        # Delete default program.
-        with suppress(Exception):
-            service = cls.service
-            service.delete_program(cls.program_ids[service.channel])
-            cls.log.debug(
-                "Deleted %s program %s",
-                service.channel,
-                cls.program_ids[service.channel],
-            )
-
-    @classmethod
-    def _create_default_program(cls):
-        """Create a default program."""
-        metadata = copy.deepcopy(RUNTIME_PROGRAM_METADATA)
-        metadata["name"] = PROGRAM_PREFIX
-        cls.program_ids = {}
-        cls.sim_backends = {}
-        service = cls.service
-        try:
-            prog_id = service.upload_program(data=RUNTIME_PROGRAM, metadata=metadata)
-            cls.log.debug("Uploaded %s program %s", service.channel, prog_id)
-            cls.program_ids[service.channel] = prog_id
-        except IBMNotAuthorizedError:
-            raise unittest.SkipTest("No upload access.")
 
     @classmethod
     def _find_sim_backends(cls):
         """Find a simulator backend for each service."""
-        cls.sim_backends[cls.service.channel] = cls.service.backends(simulator=True)[
-            0
-        ].name
+        cls.sim_backends[cls.service.channel] = cls.service.backends(simulator=True)[0].name
 
     def _run_program(
         self,
         service,
         program_id=None,
-        iterations=1,
         inputs=None,
         interim_results=None,
-        final_result=None,
+        circuits=None,
         callback=None,
         backend=None,
         log_level=None,
         job_tags=None,
         max_execution_time=None,
         session_id=None,
+        start_session=False,
     ):
         """Run a program."""
         self.log.debug("Running program on %s", service.channel)
@@ -193,25 +238,44 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
             inputs
             if inputs is not None
             else {
-                "iterations": iterations,
                 "interim_results": interim_results or {},
-                "final_result": final_result or {},
+                "circuits": circuits or bell(),
             }
         )
         pid = program_id or self.program_ids[service.channel]
-        backend_name = (
-            backend if backend is not None else self.sim_backends[service.channel]
-        )
-        options = {"backend_name": backend_name, "log_level": log_level}
-        job = service.run(
-            program_id=pid,
-            inputs=inputs,
-            options=options,
-            job_tags=job_tags,
-            max_execution_time=max_execution_time,
-            session_id=session_id,
-            callback=callback,
-        )
-        self.log.info("Runtime job %s submitted.", job.job_id)
+        backend_name = backend if backend is not None else self.sim_backends[service.channel]
+        options = {
+            "backend": backend_name,
+            "log_level": log_level,
+            "job_tags": job_tags,
+            "max_execution_time": max_execution_time,
+        }
+        if pid == "sampler":
+            backend = service.backend(backend_name)
+            options = Options()
+            if log_level:
+                options.environment.log_level = log_level
+            if job_tags:
+                options.environment.job_tags = job_tags
+            if max_execution_time:
+                options.max_execution_time = max_execution_time
+            sampler = Sampler(backend=backend, options=options)
+            job = sampler.run(circuits or bell(), callback=callback)
+        elif pid == "samplerv2":
+            backend = service.backend(backend_name)
+            sampler = SamplerV2(backend=backend)
+            pm = generate_preset_pass_manager(backend=backend, optimization_level=1)
+            isa_qc = pm.run(bell())
+            job = sampler.run([isa_qc])
+        else:
+            job = service.run(
+                program_id=pid,
+                inputs=inputs,
+                options=options,
+                session_id=session_id,
+                callback=callback,
+                start_session=start_session,
+            )
+        self.log.info("Runtime job %s submitted.", job.job_id())
         self.to_cancel[service.channel].append(job)
         return job

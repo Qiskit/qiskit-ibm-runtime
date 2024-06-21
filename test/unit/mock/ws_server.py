@@ -43,9 +43,7 @@ class MockWsServer:
     def start(self):
         """Start the server."""
         start_event = threading.Event()
-        self._ws_future = self._executor.submit(
-            self._server_thread, start_event=start_event
-        )
+        self._ws_future = self._executor.submit(self._server_thread, start_event=start_event)
         start_event.wait(5)
         if not start_event.is_set():
             raise RuntimeError("Unable to start websocket server")

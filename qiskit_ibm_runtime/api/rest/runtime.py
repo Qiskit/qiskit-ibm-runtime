@@ -17,11 +17,12 @@ from datetime import datetime
 from typing import Dict, Any, List, Union, Optional
 import json
 
-from .base import RestAdapterBase
-from .program import Program
-from .program_job import ProgramJob
+from qiskit_ibm_runtime.api.rest.base import RestAdapterBase
+from qiskit_ibm_runtime.api.rest.program_job import ProgramJob
+from qiskit_ibm_runtime.utils import local_to_utc
+from .runtime_session import RuntimeSession
+
 from ...utils import RuntimeEncoder
-from ...utils.converters import local_to_utc
 from .cloud_backend import CloudBackend
 
 logger = logging.getLogger(__name__)
@@ -34,18 +35,8 @@ class Runtime(RestAdapterBase):
         "programs": "/programs",
         "jobs": "/jobs",
         "backends": "/backends",
+        "cloud_instance": "/instance",
     }
-
-    def program(self, program_id: str) -> "Program":
-        """Return an adapter for the program.
-
-        Args:
-            program_id: ID of the program.
-
-        Returns:
-            The program adapter.
-        """
-        return Program(self.session, program_id)
 
     def program_job(self, job_id: str) -> "ProgramJob":
         """Return an adapter for the job.
@@ -58,58 +49,16 @@ class Runtime(RestAdapterBase):
         """
         return ProgramJob(self.session, job_id)
 
-    def list_programs(self, limit: int = None, skip: int = None) -> Dict[str, Any]:
-        """Return a list of runtime programs.
+    def runtime_session(self, session_id: str = None) -> "RuntimeSession":
+        """Return an adapter for the session.
 
         Args:
-            limit: The number of programs to return.
-            skip: The number of programs to skip.
+            session_id: Job ID of the first job in a session.
 
         Returns:
-            A list of runtime programs.
+            The session adapter.
         """
-        url = self.get_url("programs")
-        payload: Dict[str, int] = {}
-        if limit:
-            payload["limit"] = limit
-        if skip:
-            payload["offset"] = skip
-        return self.session.get(url, params=payload).json()
-
-    def create_program(
-        self,
-        program_data: str,
-        name: str,
-        description: str,
-        max_execution_time: int,
-        is_public: Optional[bool] = False,
-        spec: Optional[Dict] = None,
-    ) -> Dict:
-        """Upload a new program.
-
-        Args:
-            program_data: Program data (base64 encoded).
-            name: Name of the program.
-            description: Program description.
-            max_execution_time: Maximum execution time.
-            is_public: Whether the program should be public.
-            spec: Backend requirements, parameters, interim results, return values, etc.
-
-        Returns:
-            JSON response.
-        """
-        url = self.get_url("programs")
-        payload = {
-            "name": name,
-            "data": program_data,
-            "cost": max_execution_time,
-            "description": description,
-            "is_public": is_public,
-        }
-        if spec is not None:
-            payload["spec"] = spec
-        data = json.dumps(payload)
-        return self.session.post(url, data=data).json()
+        return RuntimeSession(self.session, session_id)
 
     def program_run(
         self,
@@ -124,6 +73,9 @@ class Runtime(RestAdapterBase):
         session_id: Optional[str] = None,
         job_tags: Optional[List[str]] = None,
         max_execution_time: Optional[int] = None,
+        start_session: Optional[bool] = False,
+        session_time: Optional[int] = None,
+        channel_strategy: Optional[str] = None,
     ) -> Dict:
         """Execute the program.
 
@@ -139,6 +91,9 @@ class Runtime(RestAdapterBase):
             session_id: ID of the first job in a runtime session.
             job_tags: Tags to be assigned to the job.
             max_execution_time: Maximum execution time in seconds.
+            start_session: Set to True to explicitly start a runtime session. Defaults to False.
+            session_time: Length of session in seconds.
+            channel_strategy: Error mitigation strategy.
 
         Returns:
             JSON response.
@@ -160,17 +115,23 @@ class Runtime(RestAdapterBase):
             payload["tags"] = job_tags
         if max_execution_time:
             payload["cost"] = max_execution_time
+        if start_session:
+            payload["start_session"] = start_session
+            payload["session_time"] = session_time
         if all([hub, group, project]):
             payload["hub"] = hub
             payload["group"] = group
             payload["project"] = project
+        if channel_strategy:
+            payload["channel_strategy"] = channel_strategy
         data = json.dumps(payload, cls=RuntimeEncoder)
-        return self.session.post(url, data=data).json()
+        return self.session.post(url, data=data, timeout=900).json()
 
     def jobs_get(
         self,
         limit: int = None,
         skip: int = None,
+        backend_name: str = None,
         pending: bool = None,
         program_id: str = None,
         hub: str = None,
@@ -187,6 +148,7 @@ class Runtime(RestAdapterBase):
         Args:
             limit: Number of results to return.
             skip: Number of results to skip.
+            backend_name: Name of the backend to retrieve jobs from.
             pending: Returns 'QUEUED' and 'RUNNING' jobs if True,
                 returns 'DONE', 'CANCELLED' and 'ERROR' jobs if False.
             program_id: Filter by Program ID.
@@ -209,10 +171,13 @@ class Runtime(RestAdapterBase):
         """
         url = self.get_url("jobs")
         payload: Dict[str, Union[int, str, List[str]]] = {}
+        payload["exclude_params"] = False
         if limit:
             payload["limit"] = limit
         if skip:
             payload["offset"] = skip
+        if backend_name:
+            payload["backend"] = backend_name
         if pending is not None:
             payload["pending"] = "true" if pending else "false"
         if program_id:
@@ -231,10 +196,8 @@ class Runtime(RestAdapterBase):
             payload["provider"] = f"{hub}/{group}/{project}"
         return self.session.get(url, params=payload).json()
 
-    # IBM Cloud only functions
-
     def backend(self, backend_name: str) -> CloudBackend:
-        """Return an adapter for the IBM Cloud backend.
+        """Return an adapter for the IBM backend.
 
         Args:
             backend_name: Name of the backend.
@@ -244,14 +207,35 @@ class Runtime(RestAdapterBase):
         """
         return CloudBackend(self.session, backend_name)
 
-    def backends(self, timeout: Optional[float] = None) -> Dict[str, List[str]]:
-        """Return a list of IBM Cloud backends.
+    def backends(
+        self,
+        hgp: Optional[str] = None,
+        timeout: Optional[float] = None,
+        channel_strategy: Optional[str] = None,
+    ) -> Dict[str, List[str]]:
+        """Return a list of IBM backends.
 
         Args:
+            hgp: The service instance to use, only for ``ibm_quantum`` channel, in h/g/p format.
             timeout: Number of seconds to wait for the request.
+            channel_strategy: Error mitigation strategy.
 
         Returns:
             JSON response.
         """
         url = self.get_url("backends")
-        return self.session.get(url, timeout=timeout).json()
+        params = {}
+        if hgp:
+            params["provider"] = hgp
+        if channel_strategy:
+            params["channel_strategy"] = channel_strategy
+        return self.session.get(url, params=params, timeout=timeout).json()
+
+    def is_qctrl_enabled(self) -> bool:
+        """Return boolean of whether or not the instance has q-ctrl enabled.
+
+        Returns:
+            Boolean value.
+        """
+        url = self.get_url("cloud_instance")
+        return self.session.get(url).json().get("qctrl_enabled")

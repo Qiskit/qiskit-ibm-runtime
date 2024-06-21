@@ -1,0 +1,154 @@
+0.7.0rc1
+========
+
+Prelude
+-------
+
+There are significant changes to how primitives are invoked within a
+session, and the options available to the primitives. Please review the
+rest of the release notes and the tutorials for full information.
+
+New Features
+------------
+
+-  You can now invoke the same or different primitive programs multiple
+   times within a session. For example:
+
+   .. code:: python
+
+      from qiskit_ibm_runtime import QiskitRuntimeService, Session, Sampler, Estimator, Options
+      from qiskit.test.reference_circuits import ReferenceCircuits
+      from qiskit.circuit.library import RealAmplitudes
+      from qiskit.quantum_info import SparsePauliOp
+
+      # Initialize account.
+      service = QiskitRuntimeService()
+
+      # Set options, which can be overwritten at job level.
+      options = Options(optimization_level=1)
+
+      # Prepare inputs.
+      bell = ReferenceCircuits.bell()
+      psi = RealAmplitudes(num_qubits=2, reps=2)
+      H1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
+      theta = [0, 1, 1, 2, 3, 5]
+
+      with Session(service=service, backend="ibmq_qasm_simulator") as session:
+          # Submit a request to the Sampler primitive within the session.
+          sampler = Sampler(session=session, options=options)
+          job = sampler.run(circuits=bell)
+          print(f"Sampler results: {job.result()}")
+
+          # Submit a request to the Estimator primitive within the session.
+          estimator = Estimator(session=session, options=options)
+          job = estimator.run(
+              circuits=[psi], observables=[H1], parameter_values=[theta]
+          )
+          print(f"Estimator results: {job.result()}")
+
+-  A new ``qiskit_ibm_runtime.Options`` class is introduced. This class
+   allows you to auto-complete options related to primitive programs.
+   For example:
+
+   .. code:: python
+
+      from qiskit_ibm_runtime import Session, Sampler, Options
+      from qiskit.test.reference_circuits import ReferenceCircuits
+
+      options = Options()
+      options.optimization_level = 3  # This can be done using auto-complete.
+
+      with Session(backend="ibmq_qasm_simulator") as session:
+        # Pass the options to Sampler.
+        sampler = Sampler(session=session, options=options)
+
+        # Or at job level.
+        job = sampler.run(circuits=ReferenceCircuits.bell(), shots=4000)
+
+-  `qiskit_ibm_runtime.RuntimeJob <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob>`__
+   has a new method
+   `metrics() <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.RuntimeJob#metrics>`__. This
+   method returns the metrics of a job, which includes timestamp
+   information.
+
+-  The
+   `qiskit_ibm_runtime.QiskitRuntimeService <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.QiskitRuntimeService>`__
+   ``channel`` can now be stored as an environment variable,
+   ``QISKIT_IBM_CHANNEL``. This way, when using Runtime Primitives, the
+   service does not have to be instantiated manually and can instead be
+   created directly from environment variables.
+
+Upgrade Notes
+-------------
+
+-  Raise ``RuntimeJobMaxTimeoutError`` when a job runs for too long so
+   that it can be handled appropriately by programs.
+
+-  The experimental parameters ``transpilation_settings``,
+   ``resilience_settings``, and ``max_time`` to the
+   :class:\`qiskit_ibm_runtime.Sampler and
+   `qiskit_ibm_runtime.Estimator <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Estimator>`__
+   constructors have been removed. You can instead use the
+   ``qiskit_ibm_runtime.Options`` class to specify the settings, and
+   ``max_time`` can be specified when starting a new session. For
+   example:
+
+   .. code:: python
+
+      from qiskit_ibm_runtime import Session, Sampler, Options
+
+      options = Options()
+      # This can be done using auto-complete.
+      option.optimization_level = 3
+      options.resilience_level = 1
+
+      with Session(max_time="2h") as session:
+        # Pass the options to Sampler.
+        sampler = Sampler(session=session, options=options)
+
+-  Since some accounts have many runtime programs, caching a list of all
+   programs on the first call of ``programs()`` has been removed.
+   Instead, programs will only be cached up to the ``limit`` given,
+   which has a default value of 20.
+
+Deprecation Notes
+-----------------
+
+-  Invoking
+   `qiskit_ibm_runtime.Sampler <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Sampler>`__ and
+   `qiskit_ibm_runtime.Estimator <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Estimator>`__
+   as context managers has been deprecated. You can instead use the
+   qiskit_ibm_runtime.Session class to create a new session and invoke
+   one or more primitives within the session.
+
+   As a result, passing input parameters, such as ``circuits``,
+   ``observables``, and ``parameter_values``, as well as ``service`` to
+   the constructors of ``Sampler`` and ``Estimator`` has also been
+   deprecated. The inputs can now be passed to the ``run()`` method of
+   the primitive classes, and ``service`` can be passed to
+   `qiskit_ibm_runtime.Session <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Session>`__ when
+   starting a new session.
+
+-  Passing ``skip_transpilation`` to the
+   :class:\`qiskit_ibm_runtime.Sampler and
+   `qiskit_ibm_runtime.Estimator <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Estimator>`__
+   constructors has been deprecated. You can instead use the
+   ``qiskit_ibm_runtime.Options`` class to specify this option. For
+   example:
+
+   .. code:: python
+
+      from qiskit_ibm_runtime import Options
+
+      options = Options()
+      # This can be done using auto-complete.
+      options.transpilation.skip_transpilation = True
+
+Bug Fixes
+---------
+
+-  Fixes issue
+   `#428 <https://github.com/Qiskit/qiskit-ibm-runtime/issues/428>`__ by
+   raising the minimum required ``qiskit-terra`` version to ``0.21.0``,
+   since latest version of ``qiskit-ibm-runtime`` is not compatible with
+   ``0.20.0`` or earlier of ``qiskit-terra``.

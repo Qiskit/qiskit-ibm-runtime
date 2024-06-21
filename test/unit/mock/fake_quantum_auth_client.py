@@ -44,9 +44,7 @@ class BaseFakeAuthClient:
 
         hubs = []
         for idx in range(2):
-            hubs.append(
-                {"hub": f"hub{idx}", "group": f"group{idx}", "project": f"project{idx}"}
-            )
+            hubs.append({"hub": f"hub{idx}", "group": f"group{idx}", "project": f"project{idx}"})
         return hubs
 
     def api_version(self) -> Dict[str, Union[str, bool]]:

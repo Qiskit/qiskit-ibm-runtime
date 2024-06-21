@@ -12,61 +12,7 @@
 
 """Utility functions for runtime testing."""
 
-import uuid
-import copy
 from datetime import datetime, timezone
-from qiskit_ibm_runtime import QiskitRuntimeService
-
-
-DEFAULT_DATA = "def main() {}"
-DEFAULT_METADATA = {
-    "name": "qiskit-test",
-    "description": "Test program.",
-    "max_execution_time": 300,
-    "spec": {
-        "backend_requirements": {"min_num_qubits": 5},
-        "parameters": {
-            "properties": {
-                "param1": {
-                    "description": "Desc 1",
-                    "type": "string",
-                    "enum": ["a", "b", "c"],
-                },
-                "param2": {"description": "Desc 2", "type": "integer", "min": 0},
-            },
-            "required": ["param1"],
-        },
-        "return_values": {
-            "type": "object",
-            "description": "Return values",
-            "properties": {
-                "ret_val": {"description": "Some return value.", "type": "string"}
-            },
-        },
-        "interim_results": {
-            "properties": {
-                "int_res": {"description": "Some interim result", "type": "string"}
-            }
-        },
-    },
-}
-
-
-def upload_program(
-    service: QiskitRuntimeService,
-    name: str = None,
-    max_execution_time: int = 300,
-    is_public: bool = False,
-) -> str:
-    """Upload a new program."""
-    name = name or uuid.uuid4().hex
-    data = DEFAULT_DATA
-    metadata = copy.deepcopy(DEFAULT_METADATA)
-    metadata.update(name=name)
-    metadata.update(is_public=is_public)
-    metadata.update(max_execution_time=max_execution_time)
-    program_id = service.upload_program(data=data, metadata=metadata)
-    return program_id
 
 
 def run_program(
@@ -86,21 +32,26 @@ def run_program(
 ):
     """Run a program."""
     backend_name = backend_name if backend_name is not None else "common_backend"
-    options = {"backend_name": backend_name, "image": image, "log_level": log_level}
+    options = {
+        "backend": backend_name,
+        "image": image,
+        "log_level": log_level,
+        "job_tags": job_tags,
+        "max_execution_time": max_execution_time,
+        "instance": instance,
+        "session_time": None,
+    }
     if final_status is not None:
         service._api_client.set_final_status(final_status)
     elif job_classes:
         service._api_client.set_job_classes(job_classes)
-    if program_id is None:
-        program_id = upload_program(service)
+    if not program_id:
+        program_id = "sampler"
     job = service.run(
         program_id=program_id,
         options=options,
         inputs=inputs,
         result_decoder=decoder,
-        instance=instance,
-        job_tags=job_tags,
-        max_execution_time=max_execution_time,
         session_id=session_id,
     )
     job._creation_date = datetime.now(timezone.utc)

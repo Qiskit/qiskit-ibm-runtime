@@ -12,9 +12,10 @@
 
 """IBM Cloud Backend REST adapter."""
 
-from typing import Dict, Any
+from typing import Dict, Any, Optional
+from datetime import datetime as python_datetime
 
-from .base import RestAdapterBase
+from qiskit_ibm_runtime.api.rest.base import RestAdapterBase
 from ..session import RetrySession
 
 
@@ -28,9 +29,7 @@ class CloudBackend(RestAdapterBase):
         "status": "/status",
     }
 
-    def __init__(
-        self, session: RetrySession, backend_name: str, url_prefix: str = ""
-    ) -> None:
+    def __init__(self, session: RetrySession, backend_name: str, url_prefix: str = "") -> None:
         """Backend constructor.
 
         Args:
@@ -50,14 +49,19 @@ class CloudBackend(RestAdapterBase):
         url = self.get_url("configuration")
         return self.session.get(url).json()
 
-    def properties(self) -> Dict[str, Any]:
+    def properties(self, datetime: Optional[python_datetime] = None) -> Dict[str, Any]:
         """Return backend properties.
 
         Returns:
             JSON response of backend properties.
         """
         url = self.get_url("properties")
-        response = self.session.get(url).json()
+
+        params = {}
+        if datetime:
+            params["updated_before"] = datetime.isoformat()
+
+        response = self.session.get(url, params=params).json()
         # Adjust name of the backend.
         if response:
             response["backend_name"] = self.backend_name
@@ -92,7 +96,4 @@ class CloudBackend(RestAdapterBase):
             ret["pending_jobs"] = max(response["length_queue"], 0)
         else:
             ret["pending_jobs"] = 0
-        # Not part of the schema.
-        if "busy" in response:
-            ret["dedicated"] = response["busy"]
         return ret

@@ -33,8 +33,7 @@ def from_instance_format(instance: str) -> Tuple[str, str, str]:
         return hub, group, project
     except (ValueError, AttributeError):
         raise IBMInputValueError(
-            f"Input instance value {instance} is not in the"
-            f"correct hub/group/project format."
+            f"Input instance value {instance} is not in the" f"correct hub/group/project format."
         )
 
 

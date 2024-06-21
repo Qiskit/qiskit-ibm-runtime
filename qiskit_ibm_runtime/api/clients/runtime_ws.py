@@ -16,7 +16,7 @@ import logging
 from typing import Optional
 from queue import Queue
 
-from .base import BaseWebsocketClient
+from .base_websocket_client import BaseWebsocketClient
 from ..client_parameters import ClientParameters
 
 logger = logging.getLogger(__name__)

@@ -57,12 +57,12 @@ def configuration_from_server_data(
             return QasmBackendConfiguration.from_dict(raw_config)
     except Exception:  # pylint: disable=broad-except
         logger.warning(
-            'Remote backend "%s" for service instance %s could not be instantiated due to an '
-            "invalid config: %s",
+            'Remote backend "%s" for service instance %s could not be instantiated due '
+            "to an invalid server-side configuration",
             raw_config.get("backend_name", raw_config.get("name", "unknown")),
             repr(instance),
-            traceback.format_exc(),
         )
+        logger.debug("Invalid device configuration: %s", traceback.format_exc())
     return None
 
 
@@ -95,17 +95,16 @@ def properties_from_server_data(properties: Dict) -> BackendProperties:
     Returns:
         A ``BackendProperties`` instance.
     """
-    properties["last_update_date"] = dateutil.parser.isoparse(
-        properties["last_update_date"]
-    )
-    for qubit in properties["qubits"]:
-        for nduv in qubit:
-            nduv["date"] = dateutil.parser.isoparse(nduv["date"])
-    for gate in properties["gates"]:
-        for param in gate["parameters"]:
-            param["date"] = dateutil.parser.isoparse(param["date"])
-    for gen in properties["general"]:
-        gen["date"] = dateutil.parser.isoparse(gen["date"])
+    if isinstance(properties["last_update_date"], str):
+        properties["last_update_date"] = dateutil.parser.isoparse(properties["last_update_date"])
+        for qubit in properties["qubits"]:
+            for nduv in qubit:
+                nduv["date"] = dateutil.parser.isoparse(nduv["date"])
+        for gate in properties["gates"]:
+            for param in gate["parameters"]:
+                param["date"] = dateutil.parser.isoparse(param["date"])
+        for gen in properties["general"]:
+            gen["date"] = dateutil.parser.isoparse(gen["date"])
 
     properties = utc_to_local_all(properties)
     return BackendProperties.from_dict(properties)
@@ -121,9 +120,9 @@ def _decode_backend_configuration(config: Dict) -> None:
     config["online_date"] = dateutil.parser.isoparse(config["online_date"])
 
     if "u_channel_lo" in config:
-        for u_channle_list in config["u_channel_lo"]:
-            for u_channle_lo in u_channle_list:
-                u_channle_lo["scale"] = _to_complex(u_channle_lo["scale"])
+        for u_channel_list in config["u_channel_lo"]:
+            for u_channel_lo in u_channel_list:
+                u_channel_lo["scale"] = _to_complex(u_channel_lo["scale"])
 
 
 def _to_complex(value: Union[List[float], complex]) -> complex:
@@ -166,6 +165,4 @@ def _decode_pulse_qobj_instr(pulse_qobj_instr: Dict) -> None:
     if "val" in pulse_qobj_instr:
         pulse_qobj_instr["val"] = _to_complex(pulse_qobj_instr["val"])
     if "parameters" in pulse_qobj_instr and "amp" in pulse_qobj_instr["parameters"]:
-        pulse_qobj_instr["parameters"]["amp"] = _to_complex(
-            pulse_qobj_instr["parameters"]["amp"]
-        )
+        pulse_qobj_instr["parameters"]["amp"] = _to_complex(pulse_qobj_instr["parameters"]["amp"])

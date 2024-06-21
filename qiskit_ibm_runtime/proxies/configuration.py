@@ -43,8 +43,7 @@ class ProxyConfiguration:
         """
         if not any(
             [
-                isinstance(self.username_ntlm, str)
-                and isinstance(self.password_ntlm, str),
+                isinstance(self.username_ntlm, str) and isinstance(self.password_ntlm, str),
                 self.username_ntlm is None and self.password_ntlm is None,
             ]
         ):
@@ -79,9 +78,7 @@ class ProxyConfiguration:
             request_kwargs["proxies"] = self.urls
 
         if self.username_ntlm and self.password_ntlm:
-            request_kwargs["auth"] = HttpNtlmAuth(
-                self.username_ntlm, self.password_ntlm
-            )
+            request_kwargs["auth"] = HttpNtlmAuth(self.username_ntlm, self.password_ntlm)
 
         return request_kwargs
 
@@ -115,9 +112,7 @@ class ProxyConfiguration:
                     out["http_proxy_host"] = proxy_parts.hostname
                     out["http_proxy_port"] = proxy_parts.port
                     out["proxy_type"] = (
-                        "http"
-                        if proxy_parts.scheme.startswith("http")
-                        else proxy_parts.scheme
+                        "http" if proxy_parts.scheme.startswith("http") else proxy_parts.scheme
                     )
                     if proxy_parts.username and proxy_parts.password:
                         out["http_proxy_auth"] = (

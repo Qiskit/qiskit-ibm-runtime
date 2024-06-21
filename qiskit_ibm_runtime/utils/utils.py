@@ -11,6 +11,8 @@
 # that they have been altered from the originals.
 
 """General utility functions."""
+
+from __future__ import annotations
 import copy
 import keyword
 import logging
@@ -18,31 +20,76 @@ import os
 import re
 from queue import Queue
 from threading import Condition
-from typing import List, Optional, Any, Dict, Union, Tuple, Type
+from typing import List, Optional, Any, Dict, Union, Tuple
 from urllib.parse import urlparse
 
 import requests
-from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
-from ibm_platform_services import ResourceControllerV2
+from ibm_cloud_sdk_core.authenticators import (  # pylint: disable=import-error
+    IAMAuthenticator,
+)
+from ibm_platform_services import ResourceControllerV2  # pylint: disable=import-error
+from qiskit.circuit import QuantumCircuit, ControlFlowOp
+from qiskit.transpiler import Target
+from qiskit.providers.backend import BackendV1, BackendV2
 
 
-def validate_job_tags(
-    job_tags: Optional[List[str]], exception: Type[Exception]
-) -> None:
-    """Validates input job tags.
+def is_simulator(backend: BackendV1 | BackendV2) -> bool:
+    """Return true if the backend is a simulator.
 
     Args:
-        job_tags: Job tags to be validated.
-        exception: Exception to raise if the tags are invalid.
+        backend: Backend to check.
 
-    Raises:
-        Exception: If the job tags are invalid.
+    Returns:
+        True if backend is a simulator.
     """
-    if job_tags and (
-        not isinstance(job_tags, list)
-        or not all(isinstance(tag, str) for tag in job_tags)
-    ):
-        raise exception("job_tags needs to be a list of strings.")
+    if hasattr(backend, "configuration"):
+        return getattr(backend.configuration(), "simulator", False)
+    return getattr(backend, "simulator", False)
+
+
+def is_isa_circuit(circuit: QuantumCircuit, target: Target) -> str:
+    """Checks if the circuit is an ISA circuit, meaning that it has a layout and that it
+    only uses instructions that exist in the target.
+
+    Args:
+        circuit: A single QuantumCircuit
+        target: The backend target
+
+    Returns:
+        Message on why the circuit is not an ISA circuit, if applicable.
+    """
+    if circuit.num_qubits > target.num_qubits:
+        return (
+            f"The circuit has {circuit.num_qubits} qubits "
+            f"but the target system requires {target.num_qubits} qubits."
+        )
+
+    for instruction in circuit.data:
+        name = instruction.operation.name
+        qargs = tuple(circuit.find_bit(x).index for x in instruction.qubits)
+        if (
+            not target.instruction_supported(name, qargs)
+            and name != "barrier"
+            and not circuit.has_calibration_for(instruction)
+        ):
+            return (
+                f"The instruction {name} on qubits {qargs} is not supported by the target system."
+            )
+    return ""
+
+
+def are_circuits_dynamic(circuits: List[QuantumCircuit], qasm_default: bool = True) -> bool:
+    """Checks if the input circuits are dynamic."""
+    for circuit in circuits:
+        if isinstance(circuit, str):
+            return qasm_default  # currently do not verify QASM inputs
+        for inst in circuit:
+            if (
+                isinstance(inst.operation, ControlFlowOp)
+                or getattr(inst.operation, "condition", None) is not None
+            ):
+                return True
+    return False
 
 
 def get_iam_api_url(cloud_url: str) -> str:
@@ -93,12 +140,13 @@ def is_crn(locator: str) -> bool:
     return isinstance(locator, str) and locator.startswith("crn:")
 
 
-def get_runtime_api_base_url(url: str, instance: str) -> str:
+def get_runtime_api_base_url(url: str, instance: str, private_endpoint: bool = False) -> str:
     """Computes the Runtime API base URL based on the provided input parameters.
 
     Args:
         url: The URL.
         instance: The instance.
+        private_endpoint: Connect to private API URL.
 
     Returns:
         Runtime API base URL
@@ -108,14 +156,30 @@ def get_runtime_api_base_url(url: str, instance: str) -> str:
     api_host = url
 
     # cloud: compute runtime API URL based on crn and URL
-    if is_crn(instance):
+    if is_crn(instance) and not _is_experimental_runtime_url(url):
         parsed_url = urlparse(url)
-        api_host = (
-            f"{parsed_url.scheme}://{_location_from_crn(instance)}"
-            f".quantum-computing.{parsed_url.hostname}"
-        )
+        if private_endpoint:
+            api_host = (
+                f"{parsed_url.scheme}://private.{_location_from_crn(instance)}"
+                f".quantum-computing.{parsed_url.hostname}"
+            )
+        else:
+            api_host = (
+                f"{parsed_url.scheme}://{_location_from_crn(instance)}"
+                f".quantum-computing.{parsed_url.hostname}"
+            )
 
     return api_host
+
+
+def _is_experimental_runtime_url(url: str) -> bool:
+    """Checks if the provided url points to an experimental runtime cluster.
+    This type of URLs is used for internal development purposes only.
+
+    Args:
+        url: The URL.
+    """
+    return isinstance(url, str) and "experimental" in url
 
 
 def _location_from_crn(crn: str) -> str:
@@ -147,9 +211,7 @@ def to_python_identifier(name: str) -> str:
         name = re.sub(pattern, "_", name)
 
     # Convert to snake case
-    name = re.sub(
-        "((?<=[a-z0-9])[A-Z]|(?!^)(?<!_)[A-Z](?=[a-z]))", r"_\1", name
-    ).lower()
+    name = re.sub("((?<=[a-z0-9])[A-Z]|(?!^)(?<!_)[A-Z](?=[a-z]))", r"_\1", name).lower()
 
     while keyword.iskeyword(name):
         name += "_"
@@ -229,9 +291,7 @@ def filter_data(data: Dict[str, Any]) -> Dict[str, Any]:
     return data_to_filter
 
 
-def _filter_value(
-    data: Dict[str, Any], filter_keys: List[Union[str, Tuple[str, str]]]
-) -> None:
+def _filter_value(data: Dict[str, Any], filter_keys: List[Union[str, Tuple[str, str]]]) -> None:
     """Recursive function to filter out the values of the input keys.
 
     Args:
@@ -309,4 +369,11 @@ class RefreshQueue(Queue):
     def notify_all(self) -> None:
         """Wake up all threads waiting for items on the queued."""
         with self.condition:
-            self.condition.notifyAll()
+            self.condition.notify_all()
+
+
+class CallableStr(str):
+    """A callable string."""
+
+    def __call__(self) -> str:
+        return self

@@ -64,9 +64,7 @@ class no_envs(ContextDecorator):
     def __enter__(self):
         # Remove the original variables from `os.environ`.
         modified_environ = {
-            key: value
-            for key, value in os.environ.items()
-            if key not in self.vars_to_remove
+            key: value for key, value in os.environ.items() if key not in self.vars_to_remove
         }
         os.environ = modified_environ
 
@@ -99,15 +97,13 @@ class no_file(ContextDecorator):
 
 
 class temporary_account_config_file(ContextDecorator):
-    """Context manager that uses a temporary qiskitrc."""
+    """Context manager that uses a temporary json file."""
 
     # pylint: disable=invalid-name
 
     def __init__(self, contents=None, **kwargs):
         # Create a temporary file with the contents.
-        contents = (
-            contents if contents is not None else get_account_config_contents(**kwargs)
-        )
+        contents = contents if contents is not None else get_account_config_contents(**kwargs)
 
         self.tmp_file = NamedTemporaryFile(mode="w+")
         json.dump(contents, self.tmp_file)
@@ -133,8 +129,9 @@ def get_account_config_contents(
     instance=None,
     verify=None,
     proxies=None,
+    set_default=None,
 ):
-    """Generate qiskitrc content"""
+    """Generate account config file content"""
     if instance is None:
         instance = "some_instance" if channel == "ibm_cloud" else "hub/group/project"
     token = token or uuid.uuid4().hex
@@ -158,4 +155,6 @@ def get_account_config_contents(
         out[name]["verify"] = verify
     if proxies is not None:
         out[name]["proxies"] = proxies
+    if set_default:
+        out[name]["is_default_account"] = True
     return out

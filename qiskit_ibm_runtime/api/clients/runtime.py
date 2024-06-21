@@ -15,6 +15,7 @@
 import logging
 from typing import Any, Dict, List, Optional
 from datetime import datetime as python_datetime
+from requests import Response
 
 from qiskit_ibm_runtime.api.session import RetrySession
 
@@ -41,77 +42,10 @@ class RuntimeClient(BaseBackendClient):
         self._session = RetrySession(
             base_url=params.get_runtime_api_base_url(),
             auth=params.get_auth_handler(),
-            **params.connection_parameters()
+            **params.connection_parameters(),
         )
         self._api = Runtime(self._session)
-
-    def list_programs(self, limit: int = None, skip: int = None) -> Dict[str, Any]:
-        """Return a list of runtime programs.
-
-        Args:
-            limit: The number of programs to return.
-            skip: The number of programs to skip.
-
-        Returns:
-            A list of runtime programs.
-        """
-        return self._api.list_programs(limit, skip)
-
-    def program_create(
-        self,
-        program_data: str,
-        name: str,
-        description: str,
-        max_execution_time: int,
-        is_public: Optional[bool] = False,
-        spec: Optional[Dict] = None,
-    ) -> Dict:
-        """Create a new program.
-
-        Args:
-            name: Name of the program.
-            program_data: Program data (base64 encoded).
-            description: Program description.
-            max_execution_time: Maximum execution time.
-            is_public: Whether the program should be public.
-            spec: Backend requirements, parameters, interim results, return values, etc.
-
-        Returns:
-            Server response.
-        """
-        return self._api.create_program(
-            program_data=program_data,
-            name=name,
-            description=description,
-            max_execution_time=max_execution_time,
-            is_public=is_public,
-            spec=spec,
-        )
-
-    def program_get(self, program_id: str) -> Dict:
-        """Return a specific program.
-
-        Args:
-            program_id: Program ID.
-
-        Returns:
-            Program information.
-        """
-        return self._api.program(program_id).get()
-
-    def set_program_visibility(self, program_id: str, public: bool) -> None:
-        """Sets a program's visibility.
-
-        Args:
-            program_id: Program ID.
-            public: If ``True``, make the program visible to all.
-                If ``False``, make the program visible to just your account.
-
-        """
-        if public:
-            self._api.program(program_id).make_public()
-        else:
-            self._api.program(program_id).make_private()
+        self._configuration_registry: Dict[str, Dict[str, Any]] = {}
 
     def program_run(
         self,
@@ -124,6 +58,9 @@ class RuntimeClient(BaseBackendClient):
         session_id: Optional[str],
         job_tags: Optional[List[str]] = None,
         max_execution_time: Optional[int] = None,
+        start_session: Optional[bool] = False,
+        session_time: Optional[int] = None,
+        channel_strategy: Optional[str] = None,
     ) -> Dict:
         """Run the specified program.
 
@@ -137,6 +74,9 @@ class RuntimeClient(BaseBackendClient):
             session_id: Job ID of the first job in a runtime session.
             job_tags: Tags to be assigned to the job.
             max_execution_time: Maximum execution time in seconds.
+            start_session: Set to True to explicitly start a runtime session. Defaults to False.
+            session_time: Length of session in seconds.
+            channel_strategy: Error mitigation strategy.
 
         Returns:
             JSON response.
@@ -154,48 +94,13 @@ class RuntimeClient(BaseBackendClient):
             session_id=session_id,
             job_tags=job_tags,
             max_execution_time=max_execution_time,
-            **hgp_dict
+            start_session=start_session,
+            session_time=session_time,
+            channel_strategy=channel_strategy,
+            **hgp_dict,
         )
 
-    def program_delete(self, program_id: str) -> None:
-        """Delete the specified program.
-
-        Args:
-            program_id: Program ID.
-        """
-        self._api.program(program_id).delete()
-
-    def program_update(
-        self,
-        program_id: str,
-        program_data: str = None,
-        name: str = None,
-        description: str = None,
-        max_execution_time: int = None,
-        spec: Optional[Dict] = None,
-    ) -> None:
-        """Update a program.
-
-        Args:
-            program_id: Program ID.
-            program_data: Program data (base64 encoded).
-            name: Name of the program.
-            description: Program description.
-            max_execution_time: Maximum execution time.
-            spec: Backend requirements, parameters, interim results, return values, etc.
-        """
-        if program_data:
-            self._api.program(program_id).update_data(program_data)
-
-        if any([name, description, max_execution_time, spec]):
-            self._api.program(program_id).update_metadata(
-                name=name,
-                description=description,
-                max_execution_time=max_execution_time,
-                spec=spec,
-            )
-
-    def job_get(self, job_id: str) -> Dict:
+    def job_get(self, job_id: str, exclude_params: bool = True) -> Dict:
         """Get job data.
 
         Args:
@@ -204,7 +109,7 @@ class RuntimeClient(BaseBackendClient):
         Returns:
             JSON response.
         """
-        response = self._api.program_job(job_id).get()
+        response = self._api.program_job(job_id).get(exclude_params=exclude_params)
         logger.debug("Runtime job get response: %s", response)
         return response
 
@@ -212,6 +117,7 @@ class RuntimeClient(BaseBackendClient):
         self,
         limit: int = None,
         skip: int = None,
+        backend_name: str = None,
         pending: bool = None,
         program_id: str = None,
         hub: str = None,
@@ -228,6 +134,7 @@ class RuntimeClient(BaseBackendClient):
         Args:
             limit: Number of results to return.
             skip: Number of results to skip.
+            backend_name: Name of the backend to retrieve jobs from.
             pending: Returns 'QUEUED' and 'RUNNING' jobs if True,
                 returns 'DONE', 'CANCELLED' and 'ERROR' jobs if False.
             program_id: Filter by Program ID.
@@ -251,6 +158,7 @@ class RuntimeClient(BaseBackendClient):
         return self._api.jobs_get(
             limit=limit,
             skip=skip,
+            backend_name=backend_name,
             pending=pending,
             program_id=program_id,
             hub=hub,
@@ -312,32 +220,99 @@ class RuntimeClient(BaseBackendClient):
         """
         return self._api.program_job(job_id).logs()
 
-    # IBM Cloud only functions
-
-    def list_backends(self) -> List[str]:
-        """Return IBM Cloud backends available for this service instance.
-
-        Returns:
-            IBM Cloud backends available for this service instance.
-        """
-        return self._api.backends()["devices"]
-
-    def backend_configuration(self, backend_name: str) -> Dict[str, Any]:
-        """Return the configuration of the IBM Cloud backend.
+    def job_metadata(self, job_id: str) -> Dict[str, Any]:
+        """Get job metadata.
 
         Args:
-            backend_name: The name of the IBM Cloud backend.
+            job_id: Program job ID.
+
+        Returns:
+            Job metadata.
+        """
+        return self._api.program_job(job_id).metadata()
+
+    def create_session(
+        self,
+        backend: Optional[str] = None,
+        instance: Optional[str] = None,
+        max_time: Optional[int] = None,
+        channel: Optional[str] = None,
+        mode: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Create a session.
+
+        Args:
+            mode: Execution mode.
+        """
+        return self._api.runtime_session(session_id=None).create(
+            backend, instance, max_time, channel, mode
+        )
+
+    def cancel_session(self, session_id: str) -> None:
+        """Close all jobs in the runtime session.
+
+        Args:
+            session_id: Session ID.
+        """
+        self._api.runtime_session(session_id=session_id).cancel()
+
+    def close_session(self, session_id: str) -> None:
+        """Update session so jobs can no longer be submitted."""
+        self._api.runtime_session(session_id=session_id).close()
+
+    def session_details(self, session_id: str) -> Dict[str, Any]:
+        """Get session details.
+
+        Args:
+            session_id: Session ID.
+
+        Returns:
+            Session details.
+        """
+        return self._api.runtime_session(session_id=session_id).details()
+
+    def list_backends(
+        self, hgp: Optional[str] = None, channel_strategy: Optional[str] = None
+    ) -> List[str]:
+        """Return IBM backends available for this service instance.
+
+        Args:
+            hgp: Filter by hub/group/project.
+            channel_strategy: Filter by channel strategy.
+
+        Returns:
+            IBM backends available for this service instance.
+        """
+        return self._api.backends(hgp=hgp, channel_strategy=channel_strategy)["devices"]
+
+    def is_qctrl_enabled(self) -> bool:
+        """Returns a boolean of whether or not the instance has q-ctrl enabled.
+
+        Returns:
+            Boolean value.
+        """
+        return self._api.is_qctrl_enabled()
+
+    def backend_configuration(self, backend_name: str) -> Dict[str, Any]:
+        """Return the configuration of the IBM backend.
+
+        Args:
+            backend_name: The name of the IBM backend.
 
         Returns:
             Backend configuration.
         """
-        return self._api.backend(backend_name).configuration()
+        if backend_name not in self._configuration_registry:
+            self._configuration_registry[backend_name] = self._api.backend(
+                backend_name
+            ).configuration()
+        return self._configuration_registry[backend_name].copy()
 
     def backend_status(self, backend_name: str) -> Dict[str, Any]:
-        """Return the status of the IBM Cloud backend.
+        """Return the status of the IBM backend.
 
         Args:
-            backend_name: The name of the IBM Cloud backend.
+            backend_name: The name of the IBM backend.
 
         Returns:
             Backend status.
@@ -347,10 +322,10 @@ class RuntimeClient(BaseBackendClient):
     def backend_properties(
         self, backend_name: str, datetime: Optional[python_datetime] = None
     ) -> Dict[str, Any]:
-        """Return the properties of the IBM Cloud backend.
+        """Return the properties of the IBM backend.
 
         Args:
-            backend_name: The name of the IBM Cloud backend.
+            backend_name: The name of the IBM backend.
             datetime: Date and time for additional filtering of backend properties.
 
         Returns:
@@ -359,17 +334,27 @@ class RuntimeClient(BaseBackendClient):
         Raises:
             NotImplementedError: If `datetime` is specified.
         """
-        if datetime:
-            raise NotImplementedError("'datetime' is not supported with cloud runtime.")
-        return self._api.backend(backend_name).properties()
+        return self._api.backend(backend_name).properties(datetime=datetime)
 
     def backend_pulse_defaults(self, backend_name: str) -> Dict:
-        """Return the pulse defaults of the IBM Cloud backend.
+        """Return the pulse defaults of the IBM backend.
 
         Args:
-            backend_name: The name of the IBM Cloud backend.
+            backend_name: The name of the IBM backend.
 
         Returns:
             Backend pulse defaults.
         """
         return self._api.backend(backend_name).pulse_defaults()
+
+    def update_tags(self, job_id: str, tags: list) -> Response:
+        """Update the tags of the job.
+
+        Args:
+            job_id: The ID of the job.
+            tags: The new tags to be assigned to the job.
+
+        Returns:
+            API Response.
+        """
+        return self._api.program_job(job_id).update_tags(tags)

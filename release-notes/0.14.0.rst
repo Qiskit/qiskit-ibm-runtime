@@ -1,0 +1,22 @@
+0.14.0
+======
+
+New Features
+------------
+
+-  There is a new class, ``qiskit_ibm_runtime.Batch`` that currently
+   works the same way as
+   `qiskit_ibm_runtime.Session <https://docs.quantum.ibm.com/api/qiskit-ibm-runtime/qiskit_ibm_runtime.Session>`__ but
+   will later be updated to better support submitting multiple jobs at
+   once.
+
+-  Arbitrary keys and values are no longer allowed in ``Options``.
+
+Deprecation Notes
+-----------------
+
+-  Custom programs are being deprecated as of qiskit-ibm-runtime 0.14.0
+   and will be removed on November 27, 2023. Users can instead convert
+   their custom programs to use Qiskit Runtime primitives with Qiskit
+   Serverless. Refer to the migration guide for instructions:
+   https://qiskit.github.io/qiskit-serverless/migration/migration_from_qiskit_runtime_programs.html

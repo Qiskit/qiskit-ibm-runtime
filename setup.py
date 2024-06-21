@@ -19,21 +19,19 @@ import os
 import setuptools
 
 REQUIREMENTS = [
-    "qiskit-terra>=0.20.0",
     "requests>=2.19",
     "requests-ntlm>=1.1.0",
     "numpy>=1.13",
     "urllib3>=1.21.1",
     "python-dateutil>=2.8.0",
-    "websocket-client>=1.0.1",
-    "typing-extensions>=4.0.0",  # remove when support for Python 3.7 is dropped (use "from typing import" instead)
+    "websocket-client>=1.5.1",
     "ibm-platform-services>=0.22.6",
+    "pydantic>=2.5.0",
+    "qiskit>=1.1.0",
 ]
 
 # Handle version.
-VERSION_PATH = os.path.join(
-    os.path.dirname(__file__), "qiskit_ibm_runtime", "VERSION.txt"
-)
+VERSION_PATH = os.path.join(os.path.dirname(__file__), "qiskit_ibm_runtime", "VERSION.txt")
 with open(VERSION_PATH, "r") as version_file:
     VERSION = version_file.read().strip()
 
@@ -51,7 +49,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/Qiskit/qiskit-ibm-runtime",
     author="Qiskit Development Team",
-    author_email="hello@qiskit.org",
+    author_email="qiskit@us.ibm.com",
     license="Apache 2.0",
     classifiers=[
         "Environment :: Console",
@@ -62,20 +60,28 @@ setuptools.setup(
         "Operating System :: MacOS",
         "Operating System :: POSIX :: Linux",
         "Programming Language :: Python :: 3 :: Only",
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
         "Topic :: Scientific/Engineering",
     ],
     keywords="qiskit sdk quantum api runtime ibm",
     packages=setuptools.find_packages(exclude=["test*"]),
     install_requires=REQUIREMENTS,
     include_package_data=True,
-    python_requires=">=3.7",
+    python_requires=">=3.8",
     zip_safe=False,
     project_urls={
         "Bug Tracker": "https://github.com/Qiskit/qiskit-ibm-runtime/issues",
-        "Documentation": "https://qiskit.org/documentation/",
+        "Documentation": "https://docs.quantum.ibm.com/",
         "Source Code": "https://github.com/Qiskit/qiskit-ibm-runtime",
+    },
+    entry_points={
+        "qiskit.transpiler.translation": [
+            "ibm_backend = qiskit_ibm_runtime.transpiler.plugin:IBMTranslationPlugin",
+            "ibm_dynamic_circuits = qiskit_ibm_runtime.transpiler.plugin:IBMDynamicTranslationPlugin",
+        ]
     },
 )

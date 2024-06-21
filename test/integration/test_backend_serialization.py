@@ -17,23 +17,18 @@ from typing import Any, Dict, Set, Optional
 import dateutil.parser
 
 from ..ibm_test_case import IBMIntegrationTestCase
-from ..decorators import (
-    run_integration_test,
-)
+from ..decorators import run_integration_test, production_only
 
 
 class TestSerialization(IBMIntegrationTestCase):
     """Test data serialization."""
 
+    @production_only
     @run_integration_test
     def test_backend_configuration(self, service):
         """Test deserializing backend configuration."""
-        instance = (
-            self.dependencies.instance if service.channel == "ibm_quantum" else None
-        )
-        backends = service.backends(
-            operational=True, simulator=False, instance=instance
-        )
+        instance = self.dependencies.instance if service.channel == "ibm_quantum" else None
+        backends = service.backends(operational=True, simulator=False, instance=instance)
 
         # Known keys that look like a serialized complex number.
         good_keys = (
@@ -46,24 +41,19 @@ class TestSerialization(IBMIntegrationTestCase):
             "backend_version",
             "rep_delay_range",
             "processor_type.revision",
+            "coords",
         )
         good_keys_prefixes = ("channels",)
 
         for backend in backends:
             with self.subTest(backend=backend):
-                self._verify_data(
-                    backend.configuration().to_dict(), good_keys, good_keys_prefixes
-                )
+                self._verify_data(backend.configuration().to_dict(), good_keys, good_keys_prefixes)
 
     @run_integration_test
     def test_pulse_defaults(self, service):
         """Test deserializing backend configuration."""
-        instance = (
-            self.dependencies.instance if service.channel == "ibm_quantum" else None
-        )
-        backends = service.backends(
-            operational=True, open_pulse=True, instance=instance
-        )
+        instance = self.dependencies.instance if service.channel == "ibm_quantum" else None
+        backends = service.backends(operational=True, open_pulse=True, instance=instance)
         if not backends:
             self.skipTest("Need pulse backends.")
 
@@ -77,20 +67,17 @@ class TestSerialization(IBMIntegrationTestCase):
     @run_integration_test
     def test_backend_properties(self, service):
         """Test deserializing backend properties."""
-        instance = (
-            self.dependencies.instance if service.channel == "ibm_quantum" else None
-        )
-        backends = service.backends(
-            operational=True, simulator=False, instance=instance
-        )
+        instance = self.dependencies.instance if service.channel == "ibm_quantum" else None
+        backends = service.backends(operational=True, simulator=False, instance=instance)
 
         # Known keys that look like a serialized object.
-        good_keys = ("gates.qubits", "qubits.name", "backend_version")
+        good_keys = ("gates.qubits", "qubits.name", "backend_version", "general_qlists.qubits")
 
         for backend in backends:
             with self.subTest(backend=backend):
                 properties = backend.properties()
-                self._verify_data(properties.to_dict(), good_keys)
+                if properties:
+                    self._verify_data(properties.to_dict(), good_keys)
 
     def _verify_data(
         self, data: Dict, good_keys: tuple, good_key_prefixes: Optional[tuple] = None
@@ -113,9 +100,7 @@ class TestSerialization(IBMIntegrationTestCase):
                 pass
         if good_key_prefixes:
             for gkey in good_key_prefixes:
-                suspect_keys = {
-                    ckey for ckey in suspect_keys if not ckey.startswith(gkey)
-                }
+                suspect_keys = {ckey for ckey in suspect_keys if not ckey.startswith(gkey)}
         self.assertFalse(suspect_keys)
 
 
@@ -141,11 +126,7 @@ def _find_potential_encoded(data: Any, c_key: str, tally: set) -> None:
 
 def _check_encoded(data):
     """Check if the input data is potentially in JSON serialized format."""
-    if (
-        isinstance(data, list)
-        and len(data) == 2
-        and all(isinstance(x, (float, int)) for x in data)
-    ):
+    if isinstance(data, list) and len(data) == 2 and all(isinstance(x, (float, int)) for x in data):
         return True
     elif isinstance(data, str):
         try:

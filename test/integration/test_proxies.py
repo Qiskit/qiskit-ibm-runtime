@@ -17,12 +17,13 @@ import urllib
 
 from requests.exceptions import ProxyError
 
+from qiskit_ibm_runtime.proxies import ProxyConfiguration
 from qiskit_ibm_runtime import QiskitRuntimeService
 from qiskit_ibm_runtime.api.client_parameters import ClientParameters
 from qiskit_ibm_runtime.api.clients import AuthClient, VersionClient
 from qiskit_ibm_runtime.api.clients.runtime import RuntimeClient
 from qiskit_ibm_runtime.api.exceptions import RequestsApiError
-from qiskit_ibm_runtime.proxies import ProxyConfiguration
+
 from ..ibm_test_case import IBMTestCase
 from ..decorators import IntegrationTestDependencies, integration_test_setup
 
@@ -56,15 +57,13 @@ class TestProxies(IBMTestCase):
             self.proxy_process.wait()
 
     @integration_test_setup(supported_channel=["ibm_cloud"])
-    def test_proxies_cloud_runtime_client(
-        self, dependencies: IntegrationTestDependencies
-    ) -> None:
+    def test_proxies_cloud_runtime_client(self, dependencies: IntegrationTestDependencies) -> None:
         """Should reach the proxy using RuntimeClient."""
         # pylint: disable=unused-argument
         params = dependencies.service._client_params
         params.proxies = ProxyConfiguration(urls=VALID_PROXIES)
         client = RuntimeClient(params)
-        client.list_programs(limit=1)
+        client.jobs_get(limit=1)
         api_line = pproxy_desired_access_log_line(params.url)
         self.proxy_process.terminate()  # kill to be able of reading the output
         proxy_output = self.proxy_process.stdout.read().decode("utf-8")
@@ -81,10 +80,10 @@ class TestProxies(IBMTestCase):
             url=dependencies.url,
             proxies={"urls": VALID_PROXIES},
         )
-        service.programs(limit=1)
+        service.jobs(limit=1)
 
         auth_line = pproxy_desired_access_log_line(dependencies.url)
-        api_line = list(service._hgps.values())[0]._api_client._session.base_url
+        api_line = list(service._hgps.values())[0]._runtime_client._session.base_url
         api_line = pproxy_desired_access_log_line(api_line)
         self.proxy_process.terminate()  # kill to be able of reading the output
         proxy_output = self.proxy_process.stdout.read().decode("utf-8")
@@ -95,9 +94,7 @@ class TestProxies(IBMTestCase):
         self.assertIn(api_line, proxy_output)
 
     @integration_test_setup(supported_channel=["ibm_quantum"], init_service=False)
-    def test_proxies_account_client(
-        self, dependencies: IntegrationTestDependencies
-    ) -> None:
+    def test_proxies_account_client(self, dependencies: IntegrationTestDependencies) -> None:
         """Should reach the proxy using AccountClient."""
         service = QiskitRuntimeService(
             channel="ibm_quantum",
@@ -109,7 +106,7 @@ class TestProxies(IBMTestCase):
         self.proxy_process.terminate()  # kill to be able of reading the output
 
         auth_line = pproxy_desired_access_log_line(dependencies.url)
-        api_line = list(service._hgps.values())[0]._api_client._session.base_url
+        api_line = list(service._hgps.values())[0]._runtime_client._session.base_url
         api_line = pproxy_desired_access_log_line(api_line)
         proxy_output = self.proxy_process.stdout.read().decode("utf-8")
 
@@ -119,13 +116,9 @@ class TestProxies(IBMTestCase):
         self.assertIn(api_line, proxy_output)
 
     @integration_test_setup(supported_channel=["ibm_quantum"], init_service=False)
-    def test_proxies_authclient(
-        self, dependencies: IntegrationTestDependencies
-    ) -> None:
+    def test_proxies_authclient(self, dependencies: IntegrationTestDependencies) -> None:
         """Should reach the proxy using AuthClient."""
-        pproxy_desired_access_log_line_ = pproxy_desired_access_log_line(
-            dependencies.url
-        )
+        pproxy_desired_access_log_line_ = pproxy_desired_access_log_line(dependencies.url)
         params = ClientParameters(
             channel="ibm_quantum",
             token=dependencies.token,
@@ -142,13 +135,9 @@ class TestProxies(IBMTestCase):
         )
 
     @integration_test_setup(supported_channel=["ibm_quantum"], init_service=False)
-    def test_proxies_versionclient(
-        self, dependencies: IntegrationTestDependencies
-    ) -> None:
+    def test_proxies_versionclient(self, dependencies: IntegrationTestDependencies) -> None:
         """Should reach the proxy using IBMVersionFinder."""
-        pproxy_desired_access_log_line_ = pproxy_desired_access_log_line(
-            dependencies.url
-        )
+        pproxy_desired_access_log_line_ = pproxy_desired_access_log_line(dependencies.url)
 
         version_finder = VersionClient(dependencies.url, proxies=VALID_PROXIES)
         version_finder.version()
@@ -172,13 +161,11 @@ class TestProxies(IBMTestCase):
         )
         with self.assertRaises(RequestsApiError) as context_manager:
             client = RuntimeClient(params)
-            client.list_programs(limit=1)
+            client.jobs_get(limit=1)
         self.assertIsInstance(context_manager.exception.__cause__, ProxyError)
 
     @integration_test_setup(supported_channel=["ibm_quantum"], init_service=False)
-    def test_invalid_proxy_port_authclient(
-        self, dependencies: IntegrationTestDependencies
-    ) -> None:
+    def test_invalid_proxy_port_authclient(self, dependencies: IntegrationTestDependencies) -> None:
         """Should raise RequestApiError with ProxyError using AuthClient."""
         params = ClientParameters(
             channel="ibm_quantum",
@@ -197,9 +184,7 @@ class TestProxies(IBMTestCase):
     ) -> None:
         """Should raise RequestApiError with ProxyError using VersionClient."""
         with self.assertRaises(RequestsApiError) as context_manager:
-            version_finder = VersionClient(
-                dependencies.url, proxies=INVALID_PORT_PROXIES
-            )
+            version_finder = VersionClient(dependencies.url, proxies=INVALID_PORT_PROXIES)
             version_finder.version()
 
         self.assertIsInstance(context_manager.exception.__cause__, ProxyError)
@@ -217,7 +202,7 @@ class TestProxies(IBMTestCase):
         )
         with self.assertRaises(RequestsApiError) as context_manager:
             client = RuntimeClient(params)
-            client.list_programs(limit=1)
+            client.jobs_get(limit=1)
 
         self.assertIsInstance(context_manager.exception.__cause__, ProxyError)
 
@@ -243,9 +228,7 @@ class TestProxies(IBMTestCase):
     ) -> None:
         """Should raise RequestApiError with ProxyError using VersionClient."""
         with self.assertRaises(RequestsApiError) as context_manager:
-            version_finder = VersionClient(
-                dependencies.url, proxies=INVALID_ADDRESS_PROXIES
-            )
+            version_finder = VersionClient(dependencies.url, proxies=INVALID_ADDRESS_PROXIES)
             version_finder.version()
 
         self.assertIsInstance(context_manager.exception.__cause__, ProxyError)
@@ -266,9 +249,7 @@ class TestProxies(IBMTestCase):
                     url=dependencies.url,
                     proxies=ProxyConfiguration(urls={"https": proxy_url}),
                 )
-                version_finder = VersionClient(
-                    params.url, **params.connection_parameters()
-                )
+                version_finder = VersionClient(params.url, **params.connection_parameters())
                 version_finder.version()
 
 

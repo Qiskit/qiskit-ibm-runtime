@@ -1,0 +1,109 @@
+extends: substitution
+message: Use '%s' rather than '%s' for consistency across IBM Quantum.
+link: 'https://ibmdocs-test.dcs.ibm.com/docs/en/ibm-style?topic=word-usage'
+level: warning
+ignorecase: true
+action:
+  name: replace
+# swap maps tokens in form of bad: good
+swap:
+  # Quantum-specific: See https://github.com/IBM/ibm-quantum-style-guide/issues?q=is%3Aissue+label%3Arequest
+  'quasi(?:-)?probabilities': quasi-probability distribution
+  quasi-distribution: quasi-probability distribution
+
+  # General IBM: See https://ibmdocs-test.dcs.ibm.com/docs/en/ibm-style?topic=word-usage
+  'backward(?:-)?compatible': compatible with earlier versions  
+  'mash(?: )?up': create  
+  'pop-up (?:blocker|killer)': software to block pop-up ad windows  
+  're(?:-)?occur': recur  
+  'sort(?:-|/)?merge': sort|merge  
+  CRUD: create retrieve update and delete  
+  EUI: graphical user interface|interface  
+  abort: cancel|stop  
+  administrate: administer  
+  all caps: uppercase  
+  and/or: a or b|a, b, or both  
+  as per: according to|as|as in  
+  case insensitive: case-insensitive  
+  catastrophic error: unrecoverable error  
+  comes with: includes  
+  componentization: component-based development|component model|component architecture|shared components  
+  componentize: develop components  
+  crash: fail|lock up|stop|stop responding  
+  customer: client  
+  datum: data  
+  debuggable: debug  
+  deconfigure: unconfigure  
+  deinstall: uninstall  
+  deinstallation: uninstallation  
+  demo: demonstration  
+  deregister: unregister  
+  desire: want|required  
+  destroy: delete (data)
+  dismount: demount|unmount|remove  
+  downgrade: upgrade|fallback|fall back|rollback|roll back  
+  downward compatible: compatible with earlier versions  
+  e-fix: fix|interim fix  
+  eFix: fix|interim fix  
+  end user: user  
+  end-user interface: graphical interface|interface  
+  expose: display|show|make available  
+  flavor: version|method  
+  forward compatible: compatible with later versions  
+  gzip: compress  
+  gzipped: archive|compressed file  
+  hard drive: hard disk|hard disk drive  
+  hard file: hard disk|hard disk drive  
+  IBM's: IBM
+  i-fix: interim fix  
+  ifix: interim fix  
+  inactivate: deactivate  
+  information on: information about  
+  information technology: IT  
+  internet address: IP address|URL|Internet email address|web address  
+  irrecoverable: unrecoverable  
+  jar: compress|archive  
+  line cord: power cable|power cord  
+  main directory: root directory  
+  memory stick: USB flash drive  
+  microcomputer: PC  
+  motherboard: system board  
+  network-centric computing: network computing  
+  non-English: in languages other than English|non-English-language  
+  nonrecoverable: unrecoverable  
+  notion: concept  
+  off-premise: on-premises|off-premises|onsite|offsite  
+  okay: OK  
+  on ramp: access method  
+  on-premise: on-premises|off-premises|onsite|offsite  
+  on-ramp: access method  
+  parent task: parent process  
+  patch: fix|test fix|interim fix|fix pack|program temporary fix  
+  preload: preinstall|preinstalled  
+  preloaded: preinstall|preinstalled  
+  sanity check: test|evaluate  
+  secondary storage: auxiliary storage  
+  serial database: nonpartitioned database environment  
+  set-up: setup  
+  ship: include|included  
+  single quote mark: single quotation mark  
+  single quote: single quotation mark  
+  start up: start  
+  sunset: withdraw from service|withdraw from marketing|discontinue|no longer support  
+  tar: compress|archive  
+  tarball: tar file  
+  thru: through  
+  thumbstick: USB flash drive  
+  tooling: tools  
+  typo: typing error
+  uncompress: decompress  
+  undeploy: remove|withdraw  
+  unjar: extract  
+  untar: extract  
+  unzip: unzip  
+  upward compatible: compatible with later versions  
+  warning notice: attention notice  
+  web-enable: enable for the web  
+  webinar: webinar|webcast|web seminar|web-based event  
+  wish: want  
+  zero out: zero  

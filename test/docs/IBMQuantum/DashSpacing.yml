@@ -1,0 +1,13 @@
+extends: existence
+message: "Add spaces around the dash in '%s'."
+link: 'https://ibmdocs-test.dcs.ibm.com/docs/en/ibm-style?topic=punctuation-dashes'
+ignorecase: true
+nonword: true
+level: error
+action:
+  name: edit
+  params:
+    - remove
+    - ' '
+tokens:
+  - '[^\s][—–][^\s]'

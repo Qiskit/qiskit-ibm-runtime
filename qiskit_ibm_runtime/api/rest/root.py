@@ -13,10 +13,11 @@
 """Root REST adapter."""
 
 import logging
-from typing import Dict, List, Any, Union, Optional
+from typing import Dict, List, Any, Union
 import json
 
 from .base import RestAdapterBase
+from .program_job import ProgramJob
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +32,17 @@ class Api(RestAdapterBase):
         "version": "/version",
         "bookings": "/Network/bookings/v2",
     }
+
+    def job(self, job_id: str) -> ProgramJob:
+        """Return an adapter for the job.
+
+        Args:
+            job_id: ID of the job.
+
+        Returns:
+            The backend adapter.
+        """
+        return ProgramJob(self.session, job_id)
 
     # Client functions.
 
@@ -89,12 +101,3 @@ class Api(RestAdapterBase):
         response = self.session.get(url).json()
 
         return response
-
-    def reservations(self) -> List:
-        """Return reservation information.
-
-        Returns:
-            JSON response.
-        """
-        url = self.get_url("bookings")
-        return self.session.get(url).json()

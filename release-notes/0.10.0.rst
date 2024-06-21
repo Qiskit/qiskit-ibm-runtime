@@ -1,0 +1,25 @@
+0.10.0
+======
+
+New Features
+------------
+
+-  Python 3.11 is now supported.
+
+Upgrade Notes
+-------------
+
+-  Added error messages in case the user defines unsupported values for
+   ‘max_execution_time’. Previously, this validation was done on the
+   server side.
+
+Bug Fixes
+---------
+
+-  Added deserialization of the params of RuntimeJob.inputs. Previously,
+   the circuits were returned in serialized format. Fixes issue
+   `#829 <https://github.com/Qiskit/qiskit-ibm-runtime/issues/829>`__.
+
+-  Allow for users to retrieve all backends even if one of the backends
+   has a missing configuration. The backend without a configuration will
+   not be returned.

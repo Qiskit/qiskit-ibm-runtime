@@ -13,6 +13,7 @@
 """Exceptions related to the IBM Runtime service."""
 
 from qiskit.exceptions import QiskitError
+from qiskit.providers.exceptions import JobTimeoutError, JobError
 
 
 class IBMError(QiskitError):
@@ -27,8 +28,26 @@ class IBMAccountError(IBMError):
     pass
 
 
-class IBMBackendApiProtocolError(IBMError):
+class IBMBackendError(IBMError):
+    """Base class for errors raised by the backend modules."""
+
+    pass
+
+
+class IBMBackendApiProtocolError(IBMBackendError):
     """Errors raised when an unexpected value is received from the server."""
+
+    pass
+
+
+class IBMBackendValueError(IBMBackendError, ValueError):
+    """Value errors raised by the backend modules."""
+
+    pass
+
+
+class IBMBackendApiError(IBMBackendError):
+    """Errors that occur unexpectedly when querying the server."""
 
     pass
 
@@ -57,19 +76,13 @@ class IBMRuntimeError(IBMError):
     pass
 
 
-class RuntimeDuplicateProgramError(IBMRuntimeError):
-    """Error raised when a program being uploaded already exists."""
-
-    pass
-
-
 class RuntimeProgramNotFound(IBMRuntimeError):
     """Error raised when a program is not found."""
 
     pass
 
 
-class RuntimeJobFailureError(IBMRuntimeError):
+class RuntimeJobFailureError(JobError):
     """Error raised when a runtime job failed."""
 
     pass
@@ -87,7 +100,13 @@ class RuntimeInvalidStateError(IBMRuntimeError):
     pass
 
 
-class RuntimeJobTimeoutError(IBMRuntimeError):
+class RuntimeJobTimeoutError(JobTimeoutError):
     """Error raised when waiting for job times out."""
+
+    pass
+
+
+class RuntimeJobMaxTimeoutError(IBMRuntimeError):
+    """Error raised when a job times out."""
 
     pass
