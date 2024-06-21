@@ -1,5 +1,9 @@
 0.24.1 (2024-06-18)
 ===================
+New Features
+------------
+
+- Added ``backend``, ``backends``, and ``least_busy`` methods to ``QiskitRuntimeLocalService``. (`1764 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1764>`__)
 
 Bug Fixes
 ---------
