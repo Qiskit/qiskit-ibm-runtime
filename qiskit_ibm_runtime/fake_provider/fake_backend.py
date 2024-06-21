@@ -518,7 +518,7 @@ class FakeBackendV2(BackendV2):
                 else:
                     logger.info("There are no available new updates for %s.", self.backend_name)
 
-        except Exception as ex:
+        except Exception as ex:  # pylint: disable=broad-except
             logger.info("The refreshing of %s has failed: %s", self.backend_name, str(ex))
 
 
