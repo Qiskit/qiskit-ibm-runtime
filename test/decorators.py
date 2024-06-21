@@ -80,7 +80,7 @@ def _get_integration_test_config():
         return channel, token, url, instance, channel_strategy
 
     url_is_localhost = url.find("localhost") >= 0 or url.find("127.0.0.1") >= 0
-    url_is_ibm_quantum = url.find("quantum-computing.ibm.com") >= 0
+    url_is_ibm_quantum = url.find("quantum-computing.ibm.com") >= 0 or url.find("quantum.ibm.com") >= 0
     if url_is_ibm_quantum or url_is_localhost:
         channel = "ibm_quantum"
     return channel, token, url, instance, channel_strategy
