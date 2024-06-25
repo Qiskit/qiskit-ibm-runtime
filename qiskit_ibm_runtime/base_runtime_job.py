@@ -468,6 +468,11 @@ class BaseRuntimeJob(ABC):
 
         return self._usage_estimation
 
+    @property
+    def instance(self) -> Optional[str]:
+        """Return the instance the job was run on"""
+        return self._backend._instance
+
     @abstractmethod
     def in_final_state(self) -> bool:
         """Return whether the job is in a final job state such as ``DONE`` or ``ERROR``."""
