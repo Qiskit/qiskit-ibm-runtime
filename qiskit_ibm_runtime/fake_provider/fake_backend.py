@@ -201,15 +201,31 @@ class FakeBackendV2(BackendV2):
 
         return BackendStatus.from_dict(api_status)
 
-    def properties(self) -> BackendProperties:
-        """Return the backend properties"""
-        if self._props_dict is None:
+    def properties(self, refresh: bool = False) -> BackendProperties:
+        """Return the backend properties
+
+        Args:
+            refresh: If ``True``, re-retrieve the backend properties
+            from the local file.
+
+        Returns:
+            The backend properties.
+        """
+        if refresh or (self._props_dict is None):
             self._set_props_dict_from_json()
         return BackendProperties.from_dict(self._props_dict)
 
-    def defaults(self) -> PulseDefaults:
-        """Return the pulse defaults for the backend"""
-        if self._defs_dict is None:
+    def defaults(self, refresh: bool = False) -> PulseDefaults:
+        """Return the pulse defaults for the backend
+
+        Args:
+            refresh: If ``True``, re-retrieve the backend defaults from the
+            local file.
+
+        Returns:
+            The backend pulse defaults or ``None`` if the backend does not support pulse.
+        """
+        if refresh or self._defs_dict is None:
             self._set_defs_dict_from_json()
         if self._defs_dict:
             return PulseDefaults.from_dict(self._defs_dict)  # type: ignore[unreachable]
