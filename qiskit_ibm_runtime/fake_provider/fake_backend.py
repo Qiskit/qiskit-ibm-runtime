@@ -211,7 +211,9 @@ class FakeBackendV2(BackendV2):
         """Return the pulse defaults for the backend"""
         if self._defs_dict is None:
             self._set_defs_dict_from_json()
-        return PulseDefaults.from_dict(self._defs_dict)
+        if self._defs_dict:
+            return PulseDefaults.from_dict(self._defs_dict)  # type: ignore[unreachable]
+        return None
 
     def configuration(self) -> Union[QasmBackendConfiguration, PulseBackendConfiguration]:
         """Return the backend configuration."""
