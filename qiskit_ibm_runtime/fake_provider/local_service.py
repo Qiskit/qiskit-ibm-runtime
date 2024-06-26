@@ -18,7 +18,6 @@ import copy
 import logging
 import warnings
 from dataclasses import asdict
-from random import choice
 from typing import Callable, Dict, List, Literal, Optional, Union
 
 from qiskit.primitives import (
@@ -137,7 +136,7 @@ class QiskitRuntimeLocalService:
         Returns:
             A fake backend.
         """
-        return choice(self.backends(min_num_qubits=min_num_qubits, filters=filters))
+        return self.backends(min_num_qubits=min_num_qubits, filters=filters)[0]
 
     def run(
         self,
