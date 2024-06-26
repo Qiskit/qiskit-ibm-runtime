@@ -65,7 +65,7 @@ class TestIBMJobAttributes(IBMTestCase):
 
     def test_job_instance(self):
         """Test getting job instance."""
-        self.assertTrue(self.dependencies.instance, self.sim_job.instance)
+        self.assertEqual(self.dependencies.instance, self.sim_job.instance)
 
     def test_get_backend_name(self):
         """Test getting a backend name."""
