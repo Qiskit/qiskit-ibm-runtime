@@ -481,7 +481,6 @@ class FakeBackendV2(BackendV2):
             Exception: If the real target doesn't exist or can't be accessed
         """
 
-        version = self.backend_version
         prod_name = self.backend_name.replace("fake", "ibm")
         try:
             backends = service.backends(prod_name)
@@ -491,35 +490,39 @@ class FakeBackendV2(BackendV2):
             real_config = real_backend.configuration()
             real_defs = real_backend.defaults()
 
+            if real_config:
+                config_path = os.path.join(self.dirname, self.conf_filename)
+                with open(config_path, "w", encoding="utf-8") as fd:
+                    fd.write(json.dumps(real_config.to_dict(), cls=BackendEncoder))
+
             if real_props:
-                new_version = real_props.backend_version
+                props_path = os.path.join(self.dirname, self.props_filename)
+                with open(props_path, "w", encoding="utf-8") as fd:
+                    fd.write(json.dumps(real_props.to_dict(), cls=BackendEncoder))
 
-                if new_version > version:
-                    props_path = os.path.join(self.dirname, self.props_filename)
-                    with open(props_path, "w", encoding="utf-8") as fd:
-                        fd.write(json.dumps(real_props.to_dict(), cls=BackendEncoder))
+            if real_defs:
+                defs_path = os.path.join(self.dirname, self.defs_filename)
+                with open(defs_path, "w", encoding="utf-8") as fd:
+                    fd.write(json.dumps(real_defs.to_dict(), cls=BackendEncoder))
 
-                    if real_config:
-                        config_path = os.path.join(self.dirname, self.conf_filename)
-                        config_dict = real_config.to_dict()
-                        with open(config_path, "w", encoding="utf-8") as fd:
-                            fd.write(json.dumps(config_dict, cls=BackendEncoder))
+            if self._target:
+                self._conf_dict = self._get_conf_dict_from_json()
+                self._props_dict = real_props.to_dict()
+                self._defs_dict = real_defs.to_dict()
 
-                    if real_defs:
-                        defs_path = os.path.join(self.dirname, self.defs_filename)
-                        with open(defs_path, "w", encoding="utf-8") as fd:
-                            fd.write(json.dumps(real_defs.to_dict(), cls=BackendEncoder))
+                updated_configuration = BackendConfiguration.from_dict(self._conf_dict)
+                updated_properties = BackendProperties.from_dict(self._props_dict)  # type: ignore
+                updated_defaults = PulseDefaults.from_dict(self._defs_dict)  # type: ignore
 
-                    logger.info(
-                        "The backend %s has been updated from {version} to %s version.",
-                        self.backend_name,
-                        real_props.backend_version,
-                    )
-                else:
-                    logger.info("There are no available new updates for %s.", self.backend_name)
-
+                self._target = convert_to_target(
+                    configuration=updated_configuration,
+                    properties=updated_properties,
+                    defaults=updated_defaults,
+                    include_control_flow=True,
+                    include_fractional_gates=True,
+                )
         except Exception as ex:  # pylint: disable=broad-except
-            logger.info("The refreshing of %s has failed: %s", self.backend_name, str(ex))
+            logger.warning("The refreshing of %s has failed: %s", self.backend_name, str(ex))
 
 
 class FakeBackend(BackendV1):
