@@ -332,5 +332,7 @@ class CloudAccount(Account):
         """Assert that the instance name is valid for the given account type."""
         if not (isinstance(instance, str) and len(instance) > 0):
             raise InvalidAccountError(
-                f"Invalid `instance` value. Expected a non-empty string, got '{instance}'."
+                f"Invalid `instance` value. Expected a non-empty string, got '{instance}'. "
+                "If using the ibm_quantum channel,",
+                "please specify the channel when saving your account with `channel = 'ibm_quantum'`.",
             )
