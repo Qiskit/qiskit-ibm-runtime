@@ -18,7 +18,7 @@ import copy
 import logging
 import warnings
 from dataclasses import asdict
-from typing import Dict, Literal, Union
+from typing import Callable, Dict, List, Literal, Optional, Union
 
 from qiskit.primitives import (
     BackendEstimator,
@@ -28,8 +28,12 @@ from qiskit.primitives import (
 )
 from qiskit.primitives.primitive_job import PrimitiveJob
 from qiskit.providers.backend import BackendV1, BackendV2
+from qiskit.providers.exceptions import QiskitBackendNotFoundError
+from qiskit.providers.providerutils import filter_backends
 from qiskit.utils import optionals
 
+from .fake_backend import FakeBackendV2  # pylint: disable=cyclic-import
+from .fake_provider import FakeProviderForBackendV2  # pylint: disable=unused-import, cyclic-import
 from ..ibm_backend import IBMBackend
 from ..runtime_options import RuntimeOptions
 
@@ -39,9 +43,7 @@ logger = logging.getLogger(__name__)
 class QiskitRuntimeLocalService:
     """Class for local testing mode."""
 
-    def __init__(
-        self,
-    ) -> None:
+    def __init__(self) -> None:
         """QiskitRuntimeLocalService constructor.
 
 
@@ -50,6 +52,91 @@ class QiskitRuntimeLocalService:
 
         """
         self._channel_strategy = None
+
+    def backend(self, name: str = None) -> FakeBackendV2:
+        """Return a single fake backend matching the specified filters.
+
+        Args:
+            name: The name of the backend.
+
+        Returns:
+            Backend: A backend matching the filtering.
+        """
+        return self.backends(name=name)[0]
+
+    def backends(
+        self,
+        name: Optional[str] = None,
+        min_num_qubits: Optional[int] = None,
+        dynamic_circuits: Optional[bool] = None,
+        filters: Optional[Callable[[FakeBackendV2], bool]] = None,
+    ) -> List[FakeBackendV2]:
+        """Return all the available fake backends, subject to optional filtering.
+
+        Args:
+            name: Backend name to filter by.
+            min_num_qubits: Minimum number of qubits the fake backend has to have.
+            dynamic_circuits: Filter by whether the fake backend supports dynamic circuits.
+            filters: More complex filters, such as lambda functions.
+                For example::
+
+                    from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
+
+                    QiskitRuntimeService.backends(
+                        filters=lambda backend: (backend.online_date.year == 2021)
+                    )
+                    QiskitRuntimeLocalService.backends(
+                        filters=lambda backend: (backend.num_qubits > 30 and backend.num_qubits < 100)
+                    )
+
+        Returns:
+            The list of available fake backends that match the filters.
+
+        Raises:
+            QiskitBackendNotFoundError: If none of the available fake backends matches the given
+                filters.
+        """
+        backends = FakeProviderForBackendV2().backends(name)
+        err = QiskitBackendNotFoundError("No backend matches the criteria.")
+
+        if name:
+            for b in backends:
+                if b.name == name:
+                    backends = [b]
+                    break
+            else:
+                raise err
+
+        if min_num_qubits:
+            backends = [b for b in backends if b.num_qubits >= min_num_qubits]
+
+        if dynamic_circuits is not None:
+            backends = [b for b in backends if b._supports_dynamic_circuits() == dynamic_circuits]
+
+        backends = filter_backends(backends, filters=filters)
+
+        if not backends:
+            raise err
+
+        return backends
+
+    def least_busy(
+        self,
+        min_num_qubits: Optional[int] = None,
+        filters: Optional[Callable[[FakeBackendV2], bool]] = None,
+    ) -> FakeBackendV2:
+        """Mimics the :meth:`QiskitRuntimeService.least_busy` method by returning a randomly-chosen
+        fake backend.
+
+        Args:
+            min_num_qubits: Minimum number of qubits the fake backend has to have.
+            filters: More complex filters, such as lambda functions, that can be defined as for the
+                :meth:`backends` method.
+
+        Returns:
+            A fake backend.
+        """
+        return self.backends(min_num_qubits=min_num_qubits, filters=filters)[0]
 
     def run(
         self,
