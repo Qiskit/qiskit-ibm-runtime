@@ -1,0 +1,2 @@
+:meth:`qiskit_ibm_runtime.RuntimeJobV2.interim_results` and :meth:`qiskit_ibm_runtime.RuntimeJobV2.stream_results`
+are now both deprecated.
