@@ -268,7 +268,7 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
             isa_qc = pm.run(bell())
             job = sampler.run([isa_qc])
         else:
-            job = service.run(
+            job = service._run(
                 program_id=pid,
                 inputs=inputs,
                 options=options,
