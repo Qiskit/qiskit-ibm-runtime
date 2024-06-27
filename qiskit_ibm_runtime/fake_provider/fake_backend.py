@@ -511,13 +511,13 @@ class FakeBackendV2(BackendV2):
                         fd.write(json.dumps(real_defs.to_dict(), cls=BackendEncoder))
 
                 if self._target is not None:
-                    self._conf_dict = self._get_conf_dict_from_json()
+                    self._conf_dict = self._get_conf_dict_from_json()  # type: ignore[unreachable]
                     self._set_props_dict_from_json()
                     self._set_defs_dict_from_json()
 
                     updated_configuration = BackendConfiguration.from_dict(self._conf_dict)
-                    updated_properties = BackendProperties.from_dict(self._props_dict)  # type: ignore
-                    updated_defaults = PulseDefaults.from_dict(self._defs_dict)  # type: ignore
+                    updated_properties = BackendProperties.from_dict(self._props_dict)
+                    updated_defaults = PulseDefaults.from_dict(self._defs_dict)
 
                     self._target = convert_to_target(
                         configuration=updated_configuration,
