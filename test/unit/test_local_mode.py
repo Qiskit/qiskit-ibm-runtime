@@ -173,13 +173,22 @@ class TestLocalModeV2(IBMTestCase):
 
     @data(FakeManila(), FakeManilaV2(), AerSimulator.from_backend(FakeManila()))
     def test_v2_estimator_with_accepted_options(self, backend):
-        """Test V1 estimator with accepted options."""
+        """Test V2 estimator with accepted options."""
         options = {"default_precision": 0.03125, "simulator": {"seed_simulator": 42}}
         inst = EstimatorV2(backend=backend, options=options)
         job = inst.run(**get_primitive_inputs(inst, backend=backend))
         pub_result = job.result()[0]
         self.assertDictEqual(pub_result.metadata, {"target_precision": 0.03125})
         self.assertEqual(pub_result.data.evs[0], 0.056640625)
+
+    @data(FakeManila(), FakeManilaV2(), AerSimulator.from_backend(FakeManila()))
+    def test_v2_estimator_with_default_shots_option(self, backend):
+        """Test V2 estimator with default shots converted to precision."""
+        options = {"default_shots": 100}
+        inst = EstimatorV2(backend=backend, options=options)
+        job = inst.run(**get_primitive_inputs(inst, backend=backend))
+        pub_result = job.result()[0]
+        self.assertDictEqual(pub_result.metadata, {"target_precision": 0.1})
 
     @combine(
         primitive=[SamplerV2, EstimatorV2], backend=[FakeManila(), FakeManilaV2(), AerSimulator()]
