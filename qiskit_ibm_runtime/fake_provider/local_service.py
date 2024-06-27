@@ -14,6 +14,7 @@
 
 from __future__ import annotations
 
+import math
 import copy
 import logging
 import warnings
@@ -326,6 +327,8 @@ class QiskitRuntimeLocalService:
                 prim_options["default_shots"] = default_shots
             primitive_inst = BackendSamplerV2(backend=backend, options=prim_options)
         else:
+            if default_shots := options_copy.pop("default_shots", None):
+                inputs["precision"] = 1 / math.sqrt(default_shots)
             if default_precision := options_copy.pop("default_precision", None):
                 prim_options["default_precision"] = default_precision
             primitive_inst = BackendEstimatorV2(backend=backend, options=prim_options)
