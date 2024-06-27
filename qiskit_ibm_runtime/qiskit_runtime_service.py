@@ -471,9 +471,11 @@ class QiskitRuntimeService:
                 For example::
 
                     QiskitRuntimeService.backends(
-                        filters=lambda b: b.max_shots > 50000)
+                        filters=lambda b: b.max_shots > 50000
+                    )
                     QiskitRuntimeService.backends(
                         filters=lambda x: ("rz" in x.basis_gates )
+                    )
             use_fractional_gates: Set True to allow for the backends to include
                 fractional gates in target. Currently this feature cannot be used
                 simulataneously with the dynamic circuits, PEC, or PEA.
