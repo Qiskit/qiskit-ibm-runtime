@@ -186,7 +186,7 @@ class TestRefreshFakeBackends(IBMIntegrationTestCase):
         # to verify the data files will be updated
         old_backend = FakeSherbrooke()
         # change some configuration
-        old_backend.backend_version = 'fake_version'
+        old_backend.backend_version = "fake_version"
         with self.assertLogs("qiskit_ibm_runtime", level="INFO") as logs:
             old_backend.refresh(self.service)
         self.assertIn("The backend fake_sherbrooke has been updated", logs.output[0])
@@ -201,9 +201,7 @@ class TestRefreshFakeBackends(IBMIntegrationTestCase):
         # to verify the refresh can't be done
         wrong_backend = FakeSherbrooke()
         # set a non-existent backend name
-        wrong_backend.backend_name = 'wrong_fake_sherbrooke'
+        wrong_backend.backend_name = "wrong_fake_sherbrooke"
         with self.assertLogs("qiskit_ibm_runtime", level="WARNING") as logs:
             wrong_backend.refresh(self.service)
         self.assertIn("The refreshing of wrong_fake_sherbrooke has failed", logs.output[0])
-
-

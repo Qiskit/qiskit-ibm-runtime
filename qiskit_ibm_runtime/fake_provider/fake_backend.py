@@ -491,7 +491,7 @@ class FakeBackendV2(BackendV2):
             real_defs = real_backend.defaults()
 
             updated_config = real_config.to_dict()
-            updated_config['backend_name'] = self.backend_name
+            updated_config["backend_name"] = self.backend_name
 
             if updated_config != self._conf_dict:
 
