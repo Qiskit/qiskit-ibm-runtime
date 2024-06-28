@@ -484,7 +484,7 @@ class FakeBackendV2(BackendV2):
         Raises:
             Exception: If the real target doesn't exist or can't be accessed
         """
-        old_version = self.backend_version
+        version = self.backend_version
         prod_name = self.backend_name.replace("fake", "ibm")
         try:
             backends = service.backends(prod_name)
@@ -534,7 +534,7 @@ class FakeBackendV2(BackendV2):
                 logger.info(
                     "The backend %s has been updated from version %s to %s version.",
                     self.backend_name,
-                    old_version,
+                    version,
                     real_props.backend_version,
                 )
             else:
