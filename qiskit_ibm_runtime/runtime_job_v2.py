@@ -236,7 +236,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         self,
         timeout: Optional[float] = None,
     ) -> None:
-        """Use the websocket server to wait for the final the state of a job.
+        """Use the websocket server to wait for the final state of a job.
 
         The server will remain open if the job is still running and the connection will
         be terminated once the job completes. Then update and return the status of the job.
