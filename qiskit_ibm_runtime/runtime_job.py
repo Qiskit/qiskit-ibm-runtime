@@ -34,6 +34,7 @@ from .exceptions import (
 )
 from .utils.result_decoder import ResultDecoder
 from .utils.queueinfo import QueueInfo
+from .utils.deprecation import deprecate_function
 from .api.clients import RuntimeClient
 from .api.exceptions import RequestsApiError
 from .api.client_parameters import ClientParameters
@@ -359,6 +360,7 @@ class RuntimeJob(Job, BaseRuntimeJob):
                 raise IBMRuntimeError(f"Failed to get job backend: {err}") from None
         return self._backend
 
+    @deprecate_function("stream_results()", "0.25", "", stacklevel=1)
     def stream_results(
         self, callback: Callable, decoder: Optional[Type[ResultDecoder]] = None
     ) -> None:
@@ -389,6 +391,7 @@ class RuntimeJob(Job, BaseRuntimeJob):
             decoder=decoder,
         )
 
+    @deprecate_function("interim_results()", "0.25", "", stacklevel=1)
     def interim_results(self, decoder: Optional[Type[ResultDecoder]] = None) -> Any:
         """Return the interim results of the job.
 
