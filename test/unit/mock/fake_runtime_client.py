@@ -99,7 +99,6 @@ class BaseFakeRuntimeJob:
         project,
         backend_name,
         final_status,
-        params,
         image,
         job_tags=None,
         log_level=None,
@@ -117,7 +116,6 @@ class BaseFakeRuntimeJob:
         self._group = group
         self._project = project
         self._backend_name = backend_name
-        self._params = params
         self._image = image
         self._interim_results = json.dumps({"quasi_dists": [{0: 0.5, 3: 0.5}], "metadata": []})
         self._job_tags = job_tags
@@ -152,7 +150,6 @@ class BaseFakeRuntimeJob:
             "project": self._project,
             "backend": self._backend_name,
             "state": {"status": self._status, "reason": self._reason},
-            "params": self._params,
             "program": {"id": self._program_id},
             "image": self._image,
         }

@@ -86,7 +86,6 @@ class RuntimeJob(Job, BaseRuntimeJob):
         job_id: str,
         program_id: str,
         service: "qiskit_runtime_service.QiskitRuntimeService",
-        params: Optional[Dict] = None,
         creation_date: Optional[str] = None,
         user_callback: Optional[Callable] = None,
         result_decoder: Optional[Union[Type[ResultDecoder], Sequence[Type[ResultDecoder]]]] = None,
@@ -103,7 +102,6 @@ class RuntimeJob(Job, BaseRuntimeJob):
             client_params: Parameters used for server connection.
             job_id: Job ID.
             program_id: ID of the program this job is for.
-            params: Job parameters.
             creation_date: Job creation date, in UTC.
             user_callback: User callback function.
             result_decoder: A :class:`ResultDecoder` subclass used to decode job results.
@@ -122,7 +120,6 @@ class RuntimeJob(Job, BaseRuntimeJob):
             job_id=job_id,
             program_id=program_id,
             service=service,
-            params=params,
             creation_date=creation_date,
             user_callback=user_callback,
             result_decoder=result_decoder,

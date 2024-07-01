@@ -66,7 +66,6 @@ class BaseRuntimeJob(ABC):
         job_id: str,
         program_id: str,
         service: "qiskit_runtime_service.QiskitRuntimeService",
-        params: Optional[Dict] = None,
         creation_date: Optional[str] = None,
         user_callback: Optional[Callable] = None,
         result_decoder: Optional[Union[Type[ResultDecoder], Sequence[Type[ResultDecoder]]]] = None,
@@ -83,7 +82,6 @@ class BaseRuntimeJob(ABC):
             client_params: Parameters used for server connection.
             job_id: Job ID.
             program_id: ID of the program this job is for.
-            params: Job parameters.
             creation_date: Job creation date, in UTC.
             user_callback: User callback function.
             result_decoder: A :class:`ResultDecoder` subclass used to decode job results.
@@ -97,7 +95,6 @@ class BaseRuntimeJob(ABC):
         self._job_id = job_id
         self._api_client = api_client
         self._interim_results: Optional[Any] = None
-        self._params = params or {}
         self._creation_date = creation_date
         self._program_id = program_id
         self._reason: Optional[str] = None
@@ -386,10 +383,9 @@ class BaseRuntimeJob(ABC):
         Returns:
             Input parameters used in this job.
         """
-        if not self._params:
-            response = self._api_client.job_get(job_id=self.job_id(), exclude_params=False)
-            self._params = response.get("params", {})
-        return self._params
+
+        response = self._api_client.job_get(job_id=self.job_id(), exclude_params=False)
+        return response.get("params", {})
 
     @property
     def primitive_id(self) -> str:
