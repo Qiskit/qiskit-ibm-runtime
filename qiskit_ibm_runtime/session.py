@@ -369,6 +369,7 @@ class Session:
         response = service._api_client.session_details(session_id)
         backend = response.get("backend_name")
         mode = response.get("mode")
+        state = response.get("state")
         class_name = "dedicated" if cls.__name__.lower() == "session" else cls.__name__.lower()
         if mode != class_name:
             raise IBMInputValueError(
@@ -376,6 +377,8 @@ class Session:
             )
 
         session = cls(service, backend)
+        if state == "closed":
+            session._active = False
         session._session_id = session_id
         return session
 
