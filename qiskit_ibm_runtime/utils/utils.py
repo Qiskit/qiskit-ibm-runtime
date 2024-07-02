@@ -47,6 +47,34 @@ def is_simulator(backend: BackendV1 | BackendV2) -> bool:
     return getattr(backend, "simulator", False)
 
 
+def _is_isa_circuit_helper(circuit: QuantumCircuit, target: Target) -> str:
+    """
+    A section of is_isa_circuit, separated to allow recursive calls
+    within blocks of conditional operations.
+    """
+    for instruction in circuit.data:
+        operation = instruction.operation
+
+        name = operation.name
+        qargs = tuple(circuit.find_bit(x).index for x in instruction.qubits)
+        if (
+            not target.instruction_supported(name, qargs)
+            and name != "barrier"
+            and not circuit.has_calibration_for(instruction)
+        ):
+            return (
+                f"The instruction {name} on qubits {qargs} is not supported by the target system."
+            )
+
+        if isinstance(operation, ControlFlowOp):
+            for sub_circ in operation.blocks:
+                sub_string = _is_isa_circuit_helper(sub_circ, target)
+                if sub_string:
+                    return sub_string
+
+    return ""
+
+
 def is_isa_circuit(circuit: QuantumCircuit, target: Target) -> str:
     """Checks if the circuit is an ISA circuit, meaning that it has a layout and that it
     only uses instructions that exist in the target.
@@ -64,18 +92,7 @@ def is_isa_circuit(circuit: QuantumCircuit, target: Target) -> str:
             f"but the target system requires {target.num_qubits} qubits."
         )
 
-    for instruction in circuit.data:
-        name = instruction.operation.name
-        qargs = tuple(circuit.find_bit(x).index for x in instruction.qubits)
-        if (
-            not target.instruction_supported(name, qargs)
-            and name != "barrier"
-            and not circuit.has_calibration_for(instruction)
-        ):
-            return (
-                f"The instruction {name} on qubits {qargs} is not supported by the target system."
-            )
-    return ""
+    return _is_isa_circuit_helper(circuit, target)
 
 
 def are_circuits_dynamic(circuits: List[QuantumCircuit], qasm_default: bool = True) -> bool:
