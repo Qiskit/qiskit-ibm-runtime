@@ -1,2 +1,0 @@
-``default_shots`` are now a supported option when using ``EstimatorV2`` in 
-local testing mode.

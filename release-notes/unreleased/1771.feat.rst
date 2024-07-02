@@ -1,2 +1,0 @@
-Added an ``instance`` property to :class:`BaseRuntimeJob` which returns the instance
-where the job was run.
