@@ -50,7 +50,7 @@ def is_simulator(backend: BackendV1 | BackendV2) -> bool:
 def _is_isa_circuit_helper(circuit: QuantumCircuit, target: Target) -> str:
     """
     A section of is_isa_circuit, separated to allow recursive calls
-    within blocks of conditional operatiosn.
+    within blocks of conditional operations.
     """
     for instruction in circuit.data:
         operation = instruction.operation
