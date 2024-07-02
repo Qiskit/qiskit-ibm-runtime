@@ -32,6 +32,7 @@ from .exceptions import (
     RuntimeJobTimeoutError,
 )
 from .utils.result_decoder import ResultDecoder
+from .utils.deprecation import deprecate_function
 from .api.clients import RuntimeClient
 from .api.exceptions import RequestsApiError
 from .api.client_parameters import ClientParameters
@@ -236,10 +237,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         self,
         timeout: Optional[float] = None,
     ) -> None:
-        """Use the websocket server to wait for the final the state of a job.
-
-        The server will remain open if the job is still running and the connection will
-        be terminated once the job completes. Then update and return the status of the job.
+        """Poll for the job status from the API until the status is in a final state.
 
         Args:
             timeout: Seconds to wait for the job. If ``None``, wait indefinitely.
@@ -249,12 +247,6 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         """
         try:
             start_time = time.time()
-            if self._status not in self.JOB_FINAL_STATES and not self._is_streaming():
-                self._ws_client_future = self._executor.submit(self._start_websocket_client)
-            if self._is_streaming():
-                self._ws_client_future.result(timeout)
-            # poll for status after stream has closed until status is final
-            # because status doesn't become final as soon as stream closes
             status = self.status()
             while status not in self.JOB_FINAL_STATES:
                 elapsed_time = time.time() - start_time
@@ -285,6 +277,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
                 raise IBMRuntimeError(f"Failed to get job backend: {err}") from None
         return self._backend
 
+    @deprecate_function("stream_results()", "0.25", "", stacklevel=1)
     def stream_results(
         self, callback: Callable, decoder: Optional[Type[ResultDecoder]] = None
     ) -> None:
@@ -315,6 +308,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
             decoder=decoder,
         )
 
+    @deprecate_function("interim_results()", "0.25", "", stacklevel=1)
     def interim_results(self, decoder: Optional[Type[ResultDecoder]] = None) -> Any:
         """Return the interim results of the job.
 
