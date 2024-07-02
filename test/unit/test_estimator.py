@@ -290,6 +290,7 @@ class TestEstimatorV2(IBMTestCase):
 
     def test_gate_not_in_target(self):
         """Test exception when circuits contain gates that are not basis gates"""
+        # pylint: disable=invalid-name,not-context-manager
         backend = FakeSherbrooke()
         estimator = EstimatorV2(backend=backend)
         observable = SparsePauliOp("Z")
