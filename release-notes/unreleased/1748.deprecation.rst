@@ -1,2 +1,0 @@
-The ``optimization_level`` option in ``EstimatorV2`` is deprecated.
-Instead, you can perform circuit optimization using the Qiskit transpiler or Qiskit transpiler service.
