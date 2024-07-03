@@ -107,6 +107,9 @@ class TestIntegrationSession(IBMIntegrationTestCase):
 
         new_session = Session.from_id(session_id=session._session_id, service=service)
         self.assertEqual(session._session_id, new_session._session_id)
+        self.assertTrue(new_session._active)
+        new_session.close()
+        self.assertFalse(new_session._active)
 
         with self.assertRaises(IBMInputValueError):
             Batch.from_id(session_id=session._session_id, service=service)
