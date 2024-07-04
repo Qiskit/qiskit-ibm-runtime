@@ -1,1 +1,0 @@
-Added ``backend``, ``backends``, and ``least_busy`` methods to ``QiskitRuntimeLocalService``.
