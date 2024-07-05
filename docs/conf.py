@@ -76,7 +76,6 @@ intersphinx_mapping = {
     "qiskit-aer": ("https://qiskit.github.io/qiskit-aer/", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
     "matplotlib": ("https://matplotlib.org/stable/", None),
-    "python": ("https://docs.python.org/3/", None),
 }
 
 # -----------------------------------------------------------------------------
