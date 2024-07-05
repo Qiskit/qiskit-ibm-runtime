@@ -47,7 +47,6 @@ from qiskit.providers.fake_provider.utils.json_decoder import (
 from qiskit.providers.basic_provider import BasicSimulator
 
 from qiskit_ibm_runtime.utils.backend_converter import convert_to_target
-from .local_service import QiskitRuntimeLocalService
 from .. import QiskitRuntimeService
 from ..utils.backend_encoder import BackendEncoder
 
@@ -100,7 +99,6 @@ class FakeBackendV2(BackendV2):
         )
         self._target = None
         self.sim = None
-        self._service = QiskitRuntimeLocalService()
 
         if "channels" in self._conf_dict:
             self._parse_channels(self._conf_dict["channels"])
@@ -177,15 +175,6 @@ class FakeBackendV2(BackendV2):
         ) as f_json:
             the_json = json.load(f_json)
         return the_json
-
-    @property
-    def service(self) -> QiskitRuntimeLocalService:
-        """Return the ``service`` object
-
-        Returns:
-            service: instance of QiskitRuntimeLocalService
-        """
-        return self._service
 
     def status(self) -> BackendStatus:
         """Return the backend status.
