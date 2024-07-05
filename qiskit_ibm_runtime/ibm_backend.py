@@ -346,8 +346,15 @@ class IBMBackend(Backend):
         """
         self._get_properties(datetime=datetime)
         self._get_defaults()
-        self._convert_to_target(refresh=True)
-        return self._target
+        return convert_to_target(
+            configuration=self._configuration,
+            properties=self._properties,
+            defaults=self._defaults,
+            # In IBM backend architecture as of today
+            # these features can be only exclusively supported.
+            include_control_flow=not self.options.use_fractional_gates,
+            include_fractional_gates=self.options.use_fractional_gates,
+        )
 
     def properties(
         self, refresh: bool = False, datetime: Optional[python_datetime] = None
