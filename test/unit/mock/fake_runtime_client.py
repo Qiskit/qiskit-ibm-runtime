@@ -268,6 +268,7 @@ class BaseFakeRuntimeClient:
         self._channel = channel
         self.session_time = 0
         self._sessions = set()
+        self._params = {}
 
         # Setup the available backends
         if not backend_specs:
@@ -294,6 +295,7 @@ class BaseFakeRuntimeClient:
         self,
         program_id: str,
         backend_name: Optional[str],
+        params: dict,
         image: str,
         hgp: Optional[str],
         log_level: Optional[str],
@@ -336,6 +338,7 @@ class BaseFakeRuntimeClient:
             **self._job_kwargs,
         )
         self.session_time = session_time
+        self._params = params
         self._jobs[job_id] = job
         if start_session:
             self._sessions.add(job_id)
