@@ -21,6 +21,7 @@ from qiskit.quantum_info import SparsePauliOp, Pauli
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
 from qiskit_ibm_runtime import Estimator, Session, EstimatorV2, EstimatorOptions, IBMInputValueError
+from qiskit_ibm_runtime.fake_provider import FakeSherbrooke
 
 from .mock.fake_runtime_service import FakeRuntimeService
 from ..ibm_test_case import IBMTestCase
@@ -286,3 +287,23 @@ class TestEstimatorV2(IBMTestCase):
         obs = []
         with self.assertRaisesRegex(ValueError, "Empty observables array is not allowed"):
             inst.run(pubs=[(circ, obs)])
+
+    def test_gate_not_in_target(self):
+        """Test exception when circuits contain gates that are not basis gates"""
+        # pylint: disable=invalid-name,not-context-manager
+        backend = FakeSherbrooke()
+        estimator = EstimatorV2(backend=backend)
+        observable = SparsePauliOp("Z")
+
+        circ = QuantumCircuit(1, 1)
+        circ.x(0)
+        circ.measure(0, 0)
+        with circ.if_test((0, 1)):
+            with circ.if_test((0, 0)) as else_:
+                circ.x(0)
+            with else_:
+                circ.h(0)
+        circ.measure(0, 0)
+
+        with self.assertRaisesRegex(IBMInputValueError, " h "):
+            estimator.run(pubs=[(circ, observable)])

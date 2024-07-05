@@ -133,7 +133,7 @@ needed so that users will understand what has changed, why it changed, and how
 they'll have to update their code.
 
 Towncrier will automatically add a link to the PR or Issue number you used in
-the file name once we build the relesae notes during the release.
+the file name once we build the release notes during the release.
 
 After you've finished writing your release note, you need to add the note
 file to your commit with `git add` and commit them to your PR branch to make
