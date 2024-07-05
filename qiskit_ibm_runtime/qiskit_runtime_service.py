@@ -57,20 +57,21 @@ class QiskitRuntimeService:
     global_service = None
 
     def __new__(
-            cls,
-            channel: Optional[ChannelType] = None,
-            token: Optional[str] = None,
-            url: Optional[str] = None,
-            filename: Optional[str] = None,
-            name: Optional[str] = None,
-            instance: Optional[str] = None,
-            proxies: Optional[dict] = None,
-            verify: Optional[bool] = None,
-            channel_strategy: Optional[str] = None,
-            private_endpoint: Optional[bool] = None,
+        cls,
+        channel: Optional[ChannelType] = None,
+        token: Optional[str] = None,
+        url: Optional[str] = None,
+        filename: Optional[str] = None,
+        name: Optional[str] = None,
+        instance: Optional[str] = None,
+        proxies: Optional[dict] = None,
+        verify: Optional[bool] = None,
+        channel_strategy: Optional[str] = None,
+        private_endpoint: Optional[bool] = None,
     ):
         if channel == "local":
             from .fake_provider.local_service import QiskitRuntimeLocalService
+
             return super().__new__(QiskitRuntimeLocalService)
         else:
             return super().__new__(cls)
