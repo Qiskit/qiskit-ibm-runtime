@@ -27,7 +27,7 @@ language = 'en'
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = '0.25.0'
+release = '0.26.0'
 
 # -- General configuration ---------------------------------------------------
 
@@ -35,6 +35,7 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
+    'sphinx.ext.intersphinx',
     # This is used by qiskit/documentation to generate links to github.com.
     "sphinx.ext.linkcode",
     'jupyter_sphinx',
@@ -64,6 +65,18 @@ nbsphinx_prolog = """
 vers = release.split(".")
 link_str = f" https://github.com/Qiskit/qiskit-ibm-runtime/blob/stable/{vers[0]}.{vers[1]}/docs/"
 nbsphinx_prolog += link_str + "{{ docname }}"
+
+# ----------------------------------------------------------------------------------
+# Intersphinx
+# ----------------------------------------------------------------------------------
+
+intersphinx_mapping = {
+    "rustworkx": ("https://www.rustworkx.org/", None),
+    "qiskit": ("https://docs.quantum.ibm.com/api/qiskit/", None),
+    "qiskit-aer": ("https://qiskit.github.io/qiskit-aer/", None),
+    "numpy": ("https://numpy.org/doc/stable/", None),
+    "matplotlib": ("https://matplotlib.org/stable/", None),
+}
 
 # -----------------------------------------------------------------------------
 # Autosummary
