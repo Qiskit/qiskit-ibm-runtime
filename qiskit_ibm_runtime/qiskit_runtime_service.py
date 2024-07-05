@@ -56,6 +56,25 @@ class QiskitRuntimeService:
 
     global_service = None
 
+    def __new__(
+            cls,
+            channel: Optional[ChannelType] = None,
+            token: Optional[str] = None,
+            url: Optional[str] = None,
+            filename: Optional[str] = None,
+            name: Optional[str] = None,
+            instance: Optional[str] = None,
+            proxies: Optional[dict] = None,
+            verify: Optional[bool] = None,
+            channel_strategy: Optional[str] = None,
+            private_endpoint: Optional[bool] = None,
+    ):
+        if channel == "local":
+            from .fake_provider.local_service import QiskitRuntimeLocalService
+            return super().__new__(QiskitRuntimeLocalService)
+        else:
+            return super().__new__(cls)
+
     def __init__(
         self,
         channel: Optional[ChannelType] = None,
@@ -85,7 +104,7 @@ class QiskitRuntimeService:
         values in the loaded account.
 
         Args:
-            channel: Channel type. ``ibm_cloud`` or ``ibm_quantum``.
+            channel: Channel type. ``ibm_cloud``, ``ibm_quantum`` or ``local``.
             token: IBM Cloud API key or IBM Quantum API token.
             url: The API URL.
                 Defaults to https://cloud.ibm.com (ibm_cloud) or
@@ -106,7 +125,7 @@ class QiskitRuntimeService:
             private_endpoint: Connect to private API URL.
 
         Returns:
-            An instance of QiskitRuntimeService.
+            An instance of QiskitRuntimeService or QiskitRuntimeLocalService for local channel.
 
         Raises:
             IBMInputValueError: If an input is invalid.

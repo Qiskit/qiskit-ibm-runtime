@@ -40,7 +40,7 @@ from qiskit.providers.fake_provider.utils.json_decoder import (
 from qiskit.providers.basic_provider import BasicSimulator
 
 from qiskit_ibm_runtime.utils.backend_converter import convert_to_target
-from .. import QiskitRuntimeService
+from qiskit_ibm_runtime import QiskitRuntimeService
 from ..utils.backend_encoder import BackendEncoder
 
 from ..utils.deprecation import issue_deprecation_msg
