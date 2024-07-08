@@ -863,6 +863,21 @@ class QiskitRuntimeService:
                 f"The backend {backend.name} currently has a status of {status.status_msg}."
             )
 
+        if hgp_name == "ibm-q/open/main":
+            try:
+                usage = self.usage().get("byInstance")[0]
+                pending_jobs = usage.get("pendingJobs")
+                max_pending_jobs = usage.get("maxPendingJobs")
+                if pending_jobs >= max_pending_jobs:
+                    logger.warning(
+                        "The maximum number of pending jobs on the open plan is %s. "
+                        "You currently have %s pending jobs. Please wait until a job finishes.",
+                        max_pending_jobs,
+                        pending_jobs,
+                    )
+            except RequestsApiError as ex:
+                logger.warning("Unable to retrieve open plan usage information. %s", ex)
+
         version = inputs.get("version", 1) if inputs else 1
         try:
             response = self._api_client.program_run(
