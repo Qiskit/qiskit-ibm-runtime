@@ -457,8 +457,6 @@ class BaseFakeRuntimeClient:
 
     def backend_properties(self, backend_name: str, datetime: Any = None) -> Dict[str, Any]:
         """Return the properties of a backend."""
-        if datetime:
-            raise NotImplementedError("'datetime' is not supported.")
         if ret := self._find_backend(backend_name).properties:
             return ret.copy()
         return None
