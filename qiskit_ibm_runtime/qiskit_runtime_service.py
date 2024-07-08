@@ -70,9 +70,8 @@ class QiskitRuntimeService:
         private_endpoint: Optional[bool] = None,
     ):
         if channel == "local":
-            from .fake_provider.local_service import (
-                QiskitRuntimeLocalService,
-            )  # pylint: disable=import-outside-toplevel
+            # pylint: disable=import-outside-toplevel
+            from .fake_provider.local_service import QiskitRuntimeLocalService
 
             return super().__new__(QiskitRuntimeLocalService)
         else:
