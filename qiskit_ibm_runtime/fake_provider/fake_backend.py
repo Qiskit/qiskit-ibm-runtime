@@ -158,6 +158,10 @@ class FakeBackendV2(BackendV2):
             decode_pulse_defaults(defs_dict)
             self._defs_dict = defs_dict
 
+    def _supports_dynamic_circuits(self) -> bool:
+        supported_features = self._conf_dict.get("supported_features") or []
+        return "qasm3" in supported_features
+
     def _load_json(self, filename: str) -> dict:
         with open(  # pylint: disable=unspecified-encoding
             os.path.join(self.dirname, filename)

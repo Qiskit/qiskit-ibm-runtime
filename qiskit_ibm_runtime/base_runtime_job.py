@@ -466,6 +466,13 @@ class BaseRuntimeJob(ABC):
 
         return self._usage_estimation
 
+    @property
+    def instance(self) -> Optional[str]:
+        """For ibm_quantum channel jobs, return the instance where the job was run.
+        For ibm_cloud, `None` is returned.
+        """
+        return self._backend._instance
+
     @abstractmethod
     def in_final_state(self) -> bool:
         """Return whether the job is in a final job state such as ``DONE`` or ``ERROR``."""
