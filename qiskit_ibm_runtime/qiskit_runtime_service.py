@@ -1063,6 +1063,21 @@ class QiskitRuntimeService:
                 raise RuntimeJobNotFound(f"Job not found: {ex.message}") from None
             raise IBMRuntimeError(f"Failed to delete job: {ex}") from None
 
+    def usage(self) -> Dict[str, Any]:
+        """Return monthly open plan usage information.
+
+        Returns:
+            Dict with usage details.
+
+        Raises:
+            IBMInputValueError: If method is called when using the ibm_cloud channel
+        """
+        if self._channel == "ibm_cloud":
+            raise IBMInputValueError(
+                "Usage is only available for the ``ibm_quantum`` channel open plan."
+            )
+        return self._api_client.usage()
+
     def _decode_job(self, raw_data: Dict) -> Union[RuntimeJob, RuntimeJobV2]:
         """Decode job data received from the server.
 

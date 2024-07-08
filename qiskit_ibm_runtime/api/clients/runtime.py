@@ -358,3 +358,11 @@ class RuntimeClient(BaseBackendClient):
             API Response.
         """
         return self._api.program_job(job_id).update_tags(tags)
+
+    def usage(self) -> Dict[str, Any]:
+        """Return monthly open plan usage information.
+
+        Returns:
+            API Response.
+        """
+        return self._api.usage()
