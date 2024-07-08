@@ -240,7 +240,9 @@ class BaseRuntimeJob(ABC):
         """
         try:
             reason = job_response["state"].get("reason")
-            reason_code = job_response["state"].get("reasonCode")
+            reason_code = job_response["state"].get("reasonCode") or job_response["state"].get(
+                "reason_code"
+            )
             if reason:
                 self._reason = reason
                 if reason_code:
