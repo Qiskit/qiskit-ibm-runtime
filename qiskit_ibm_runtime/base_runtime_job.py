@@ -101,6 +101,7 @@ class BaseRuntimeJob(ABC):
         self._creation_date = creation_date
         self._program_id = program_id
         self._reason: Optional[str] = None
+        self._reason_code: Optional[int] = None
         self._error_message: Optional[str] = None
         self._image = image
         self._final_interim_results = False
@@ -239,15 +240,14 @@ class BaseRuntimeJob(ABC):
         """
         try:
             reason = job_response["state"].get("reason")
-            reason_code = job_response["state"].get("reason_code")
+            reason_code = job_response["state"].get("reasonCode") or job_response["state"].get(
+                "reason_code"
+            )
             if reason:
-                # TODO remove this in https://github.com/Qiskit/qiskit-ibm-runtime/issues/989
-                if reason.upper() == "RAN TOO LONG":
-                    self._reason = reason.upper()
-                else:
-                    self._reason = reason
+                self._reason = reason
                 if reason_code:
                     self._reason = f"Error code {reason_code}; {self._reason}"
+                    self._reason_code = reason_code
             self._status = self._status_from_job_response(job_response)
         except KeyError:
             raise IBMError(f"Unknown status: {job_response['state']['status']}")
@@ -286,7 +286,7 @@ class BaseRuntimeJob(ABC):
         if index != -1:
             job_result_raw = job_result_raw[index:]
 
-        if status == "CANCELLED" and self._reason == "RAN TOO LONG":
+        if status == "CANCELLED" and self._reason_code == 1305:
             error_msg = API_TO_JOB_ERROR_MESSAGE["CANCELLED - RAN TOO LONG"]
             return error_msg.format(self.job_id(), job_result_raw)
         else:
