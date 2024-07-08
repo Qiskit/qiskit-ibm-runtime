@@ -333,9 +333,9 @@ class IBMBackend(Backend):
         Returns:
             Target
         """
-        self._get_properties()
+        self._get_properties(datetime=python_datetime.now())
         self._get_defaults()
-        self._convert_to_target()
+        self._convert_to_target(refresh=True)
         return self._target
 
     def target_history(self, datetime: Optional[python_datetime] = None) -> Target:
@@ -346,15 +346,8 @@ class IBMBackend(Backend):
         """
         self._get_properties(datetime=datetime)
         self._get_defaults()
-        return convert_to_target(
-            configuration=self._configuration,
-            properties=self._properties,
-            defaults=self._defaults,
-            # In IBM backend architecture as of today
-            # these features can be only exclusively supported.
-            include_control_flow=not self.options.use_fractional_gates,
-            include_fractional_gates=self.options.use_fractional_gates,
-        )
+        self._convert_to_target(refresh=True)
+        return self._target
 
     def properties(
         self, refresh: bool = False, datetime: Optional[python_datetime] = None
