@@ -111,6 +111,7 @@ class BaseFakeRuntimeJob:
         self._job_id = job_id
         self._status = final_status or "QUEUED"
         self._reason: Optional[str] = None
+        self._reason_code: Optional[int] = None
         self._program_id = program_id
         self._hub = hub
         self._group = group
@@ -149,7 +150,11 @@ class BaseFakeRuntimeJob:
             "group": self._group,
             "project": self._project,
             "backend": self._backend_name,
-            "state": {"status": self._status, "reason": self._reason},
+            "state": {
+                "status": self._status,
+                "reason": self._reason,
+                "reasonCode": self._reason_code,
+            },
             "program": {"id": self._program_id},
             "image": self._image,
         }
@@ -191,6 +196,7 @@ class FailedRanTooLongRuntimeJob(BaseFakeRuntimeJob):
 
         if self._status == "CANCELLED":
             self._reason = "RAN TOO LONG"
+            self._reason_code = 1305
             self._result = "Kaboom!"
 
 
