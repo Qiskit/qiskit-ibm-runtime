@@ -54,7 +54,9 @@ class QiskitRuntimeLocalService:
         """
         self._channel_strategy = None
 
-    def backend(self, name: str = None) -> FakeBackendV2:
+    def backend(
+        self, name: str = None, instance: str = None  # pylint: disable=unused-argument
+    ) -> FakeBackendV2:
         """Return a single fake backend matching the specified filters.
 
         Args:

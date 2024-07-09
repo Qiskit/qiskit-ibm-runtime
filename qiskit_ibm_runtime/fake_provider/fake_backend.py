@@ -21,10 +21,17 @@ import json
 import os
 import re
 
-from typing import List, Iterable
+from typing import List, Iterable, Union
 
-from qiskit import circuit
-from qiskit.providers.models import BackendProperties, BackendConfiguration, PulseDefaults
+from qiskit import circuit, QuantumCircuit
+from qiskit.providers.models import (
+    BackendProperties,
+    BackendConfiguration,
+    PulseDefaults,
+    BackendStatus,
+    QasmBackendConfiguration,
+    PulseBackendConfiguration,
+)
 from qiskit.providers import BackendV2, BackendV1
 from qiskit import pulse
 from qiskit.exceptions import QiskitError
@@ -168,6 +175,92 @@ class FakeBackendV2(BackendV2):
         ) as f_json:
             the_json = json.load(f_json)
         return the_json
+
+    def status(self) -> BackendStatus:
+        """Return the backend status.
+
+        Returns:
+            The status of the backend.
+
+        """
+
+        api_status = {
+            "backend_name": self.name,
+            "backend_version": "",
+            "status_msg": "active",
+            "operational": True,
+            "pending_jobs": 0,
+        }
+
+        return BackendStatus.from_dict(api_status)
+
+    def properties(self, refresh: bool = False) -> BackendProperties:
+        """Return the backend properties
+
+        Args:
+            refresh: If ``True``, re-retrieve the backend properties
+            from the local file.
+
+        Returns:
+            The backend properties.
+        """
+        if refresh or (self._props_dict is None):
+            self._set_props_dict_from_json()
+        return BackendProperties.from_dict(self._props_dict)
+
+    def defaults(self, refresh: bool = False) -> PulseDefaults:
+        """Return the pulse defaults for the backend
+
+        Args:
+            refresh: If ``True``, re-retrieve the backend defaults from the
+            local file.
+
+        Returns:
+            The backend pulse defaults or ``None`` if the backend does not support pulse.
+        """
+        if refresh or self._defs_dict is None:
+            self._set_defs_dict_from_json()
+        if self._defs_dict:
+            return PulseDefaults.from_dict(self._defs_dict)  # type: ignore[unreachable]
+        return None
+
+    def configuration(self) -> Union[QasmBackendConfiguration, PulseBackendConfiguration]:
+        """Return the backend configuration."""
+        return BackendConfiguration.from_dict(self._conf_dict)
+
+    def check_faulty(self, circuit: QuantumCircuit) -> None:  # pylint: disable=redefined-outer-name
+        """Check if the input circuit uses faulty qubits or edges.
+
+        Args:
+            circuit: Circuit to check.
+
+        Raises:
+            ValueError: If an instruction operating on a faulty qubit or edge is found.
+        """
+        if not self.properties():
+            return
+
+        faulty_qubits = self.properties().faulty_qubits()
+        faulty_gates = self.properties().faulty_gates()
+        faulty_edges = [tuple(gate.qubits) for gate in faulty_gates if len(gate.qubits) > 1]
+
+        for instr in circuit.data:
+            if instr.operation.name == "barrier":
+                continue
+            qubit_indices = tuple(circuit.find_bit(x).index for x in instr.qubits)
+
+            for circ_qubit in qubit_indices:
+                if circ_qubit in faulty_qubits:
+                    raise ValueError(
+                        f"Circuit {circuit.name} contains instruction "
+                        f"{instr} operating on a faulty qubit {circ_qubit}."
+                    )
+
+            if len(qubit_indices) == 2 and qubit_indices in faulty_edges:
+                raise ValueError(
+                    f"Circuit {circuit.name} contains instruction "
+                    f"{instr} operating on a faulty edge {qubit_indices}"
+                )
 
     @property
     def target(self) -> Target:
