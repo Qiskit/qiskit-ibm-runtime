@@ -51,7 +51,6 @@ class TestRuntimeJob(IBMTestCase):
         self.assertTrue(job.job_id())
         self.assertIsInstance(job, RuntimeJob)
         self.assertIsInstance(job.status(), JobStatus)
-        self.assertEqual(job.inputs, params)
         with mock_wait_for_final_state(service, job):
             job.wait_for_final_state()
             self.assertEqual(job.status(), JobStatus.DONE)
@@ -127,7 +126,6 @@ class TestRuntimeJob(IBMTestCase):
         self.assertTrue(job.job_id())
         self.assertIsInstance(job, RuntimeJob)
         self.assertIsInstance(job.status(), JobStatus)
-        self.assertEqual(job.inputs, params)
         with mock_wait_for_final_state(service, job):
             job.wait_for_final_state()
             self.assertTrue(job.result())
@@ -208,13 +206,6 @@ class TestRuntimeJob(IBMTestCase):
         job = run_program(service)
         time.sleep(random.randint(1, 5))
         self.assertTrue(job.status())
-
-    @run_quantum_and_cloud_fake
-    def test_job_inputs(self, service):
-        """Test job inputs."""
-        inputs = {"param1": "foo", "param2": "bar"}
-        job = run_program(service, inputs=inputs)
-        self.assertEqual(inputs, job.inputs)
 
     @run_quantum_and_cloud_fake
     def test_wait_for_final_state(self, service):

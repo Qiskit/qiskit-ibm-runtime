@@ -265,7 +265,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         """Test that circuits are not automatically stored in the job params."""
         job = self._run_program(service)
         job.wait_for_final_state()
-        self.assertFalse(job._params)
+        self.assertFalse(hasattr(job, "_params"))
         self.assertTrue(job.inputs)
 
     def _assert_complex_types_equal(self, expected, received):

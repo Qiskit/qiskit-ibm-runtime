@@ -85,12 +85,6 @@ class ResilienceOptionsV2:
                 "'measure_noise_learning' options are set, but 'measure_mitigation' is not set to True."
             )
 
-        if not self.zne_mitigation and any(value != Unset for value in asdict(self.zne).values()):
-            raise ValueError("'zne' options are set, but 'zne_mitigation' is not set to True.")
-
-        if not self.pec_mitigation and any(value != Unset for value in asdict(self.pec).values()):
-            raise ValueError("'pec' options are set, but 'pec_mitigation' is not set to True.")
-
         # Validate not ZNE+PEC
         if self.pec_mitigation is True and self.zne_mitigation is True:
             raise ValueError(
