@@ -945,20 +945,20 @@ class QiskitRuntimeService:
                     max_pending_jobs,
                     pending_jobs,
                 )
-                try:
-                    oldest_running = self.jobs(limit=1, descending=False, pending=True)
-                    if oldest_running:
+                oldest_running = self.jobs(limit=1, descending=False, pending=True)
+                if oldest_running:
+                    try:
                         oldest_running[0].wait_for_final_state(timeout=300)
 
-                except Exception as ex:  # pylint: disable=broad-except
-                    logger.debug(
-                        "An error occurred while waiting for job %s to finish: %s",
-                        oldest_running[0].job_id(),
-                        ex,
-                    )
+                    except Exception as ex:  # pylint: disable=broad-except
+                        logger.debug(
+                            "An error occurred while waiting for job %s to finish: %s",
+                            oldest_running[0].job_id(),
+                            ex,
+                        )
 
         except Exception as ex:  # pylint: disable=broad-except
-            logger.warning("Unable to retrieve open plan usage information. %s", ex)
+            logger.warning("Unable to retrieve open plan pending jobs details. %s", ex)
 
     def job(self, job_id: str) -> Union[RuntimeJob, RuntimeJobV2]:
         """Retrieve a runtime job.
