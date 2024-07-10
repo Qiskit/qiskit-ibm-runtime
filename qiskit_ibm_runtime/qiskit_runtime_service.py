@@ -864,19 +864,7 @@ class QiskitRuntimeService:
             )
 
         if hgp_name == "ibm-q/open/main":
-            try:
-                usage = self.usage().get("byInstance")[0]
-                pending_jobs = usage.get("pendingJobs")
-                max_pending_jobs = usage.get("maxPendingJobs")
-                if pending_jobs >= max_pending_jobs:
-                    logger.warning(
-                        "The maximum number of pending jobs on the open plan is %s. "
-                        "You currently have %s pending jobs. Please wait until a job finishes.",
-                        max_pending_jobs,
-                        pending_jobs,
-                    )
-            except RequestsApiError as ex:
-                logger.warning("Unable to retrieve open plan usage information. %s", ex)
+            self.check_pending_jobs()
 
         version = inputs.get("version", 1) if inputs else 1
         try:
@@ -941,6 +929,36 @@ class QiskitRuntimeService:
     def _run(self, *args: Any, **kwargs: Any) -> Union[RuntimeJob, RuntimeJobV2]:
         """Private run method"""
         return self.run(*args, **kwargs)
+
+    def check_pending_jobs(self) -> None:
+        """Check the number of pending jobs and wait for the oldest pending job if
+        the maximum number of pending jobs has been reached.
+        """
+        try:
+            usage = self.usage().get("byInstance")[0]
+            pending_jobs = usage.get("pendingJobs")
+            max_pending_jobs = usage.get("maxPendingJobs")
+            if pending_jobs >= max_pending_jobs:
+                logger.warning(
+                    "The maximum number of pending jobs on the open plan is %s. "
+                    "You currently have %s pending jobs. Waiting for a pending job to complete.",
+                    max_pending_jobs,
+                    pending_jobs,
+                )
+                try:
+                    oldest_running = self.jobs(limit=1, descending=False, pending=True)
+                    if oldest_running:
+                        oldest_running[0].wait_for_final_state(timeout=300)
+
+                except Exception as ex:  # pylint: disable=broad-except
+                    logger.debug(
+                        "An error occurred while waiting for job %s to finish: %s",
+                        oldest_running[0].job_id(),
+                        ex,
+                    )
+
+        except Exception as ex:  # pylint: disable=broad-except
+            logger.warning("Unable to retrieve open plan usage information. %s", ex)
 
     def job(self, job_id: str) -> Union[RuntimeJob, RuntimeJobV2]:
         """Retrieve a runtime job.
