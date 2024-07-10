@@ -99,7 +99,7 @@ class TestFakeBackends(IBMTestCase):
         max_count = max(counts.items(), key=operator.itemgetter(1))[0]
         self.assertEqual(max_count, "11")
 
-    @data(*FAKE_PROVIDER.backends())
+    @data(*FAKE_PROVIDER.backends(), *FAKE_PROVIDER_FOR_BACKEND_V2.backends())
     def test_to_dict_properties(self, backend):
         properties = backend.properties()
         if properties:
@@ -118,7 +118,7 @@ class TestFakeBackends(IBMTestCase):
         if backend.dtm:
             self.assertLess(backend.dtm, 1e-6)
 
-    @data(*FAKE_PROVIDER.backends())
+    @data(*FAKE_PROVIDER.backends(), *FAKE_PROVIDER_FOR_BACKEND_V2.backends())
     def test_to_dict_configuration(self, backend):
         configuration = backend.configuration()
         if configuration.open_pulse:
@@ -140,19 +140,20 @@ class TestFakeBackends(IBMTestCase):
 
         self.assertIsInstance(configuration.to_dict(), dict)
 
-    @data(*FAKE_PROVIDER.backends())
+    @data(*FAKE_PROVIDER.backends(), *FAKE_PROVIDER_FOR_BACKEND_V2.backends())
     def test_defaults_to_dict(self, backend):
         if hasattr(backend, "defaults"):
             defaults = backend.defaults()
-            self.assertIsInstance(defaults.to_dict(), dict)
+            if defaults:
+                self.assertIsInstance(defaults.to_dict(), dict)
 
-            for i in defaults.qubit_freq_est:
-                self.assertGreater(i, 1e6)
-                self.assertGreater(i, 1e6)
+                for i in defaults.qubit_freq_est:
+                    self.assertGreater(i, 1e6)
+                    self.assertGreater(i, 1e6)
 
-            for i in defaults.meas_freq_est:
-                self.assertGreater(i, 1e6)
-                self.assertGreater(i, 1e6)
+                for i in defaults.meas_freq_est:
+                    self.assertGreater(i, 1e6)
+                    self.assertGreater(i, 1e6)
         else:
             self.skipTest("Backend %s does not have defaults" % backend)
 
@@ -183,8 +184,25 @@ class TestRefreshFakeBackends(IBMIntegrationTestCase):
 
     def test_refresh_method(self):
         """Test refresh method"""
+        # to verify the data files will be updated
         old_backend = FakeSherbrooke()
-        with self.assertLogs("qiskit_ibm_runtime", level="INFO"):
+        # change some configuration
+        old_backend.backend_version = "fake_version"
+        with self.assertLogs("qiskit_ibm_runtime", level="INFO") as logs:
             old_backend.refresh(self.service)
+        self.assertIn("The backend fake_sherbrooke has been updated", logs.output[0])
+
+        # to verify the data files are currently updated that there is nothing to refresh
+        # create another instance of FakeSherbrooke updated above
         new_backend = FakeSherbrooke()
-        self.assertGreaterEqual(old_backend.backend_version, new_backend.backend_version)
+        with self.assertLogs("qiskit_ibm_runtime", level="INFO") as logs:
+            new_backend.refresh(self.service)
+        self.assertIn("There are no available new updates for fake_sherbrooke", logs.output[0])
+
+        # to verify the refresh can't be done
+        wrong_backend = FakeSherbrooke()
+        # set a non-existent backend name
+        wrong_backend.backend_name = "wrong_fake_sherbrooke"
+        with self.assertLogs("qiskit_ibm_runtime", level="WARNING") as logs:
+            wrong_backend.refresh(self.service)
+        self.assertIn("The refreshing of wrong_fake_sherbrooke has failed", logs.output[0])
