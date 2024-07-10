@@ -20,6 +20,7 @@ from ibm_platform_services import ResourceControllerV2  # pylint: disable=import
 
 from qiskit_ibm_runtime import QiskitRuntimeService
 from qiskit_ibm_runtime.accounts import CloudResourceNameResolutionError
+from qiskit_ibm_runtime.fake_provider.local_service import QiskitRuntimeLocalService
 from qiskit_ibm_runtime.utils.utils import (
     get_resource_controller_api_url,
     get_iam_api_url,
@@ -73,6 +74,11 @@ class TestIntegrationAccount(IBMIntegrationTestCase):
             channel_strategy="default",
         )
         self.assertTrue(service)
+        # test local channel
+        local_service = QiskitRuntimeService(
+            channel="local",
+        )
+        self.assertIsInstance(local_service, QiskitRuntimeLocalService)
 
     def test_resolve_crn_for_valid_service_instance_name(self):
         """Verify if CRN is transparently resolved based for an existing service instance name."""
