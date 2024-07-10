@@ -170,6 +170,12 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
 class SamplerV1(BasePrimitiveV1, Sampler, BaseSampler):
     """Class for interacting with Qiskit Runtime Sampler primitive service.
 
+    .. deprecated:: 0.23
+       The ``SamplerV1`` primitives have been deprecated in 0.23, released on April 15, 2024.
+       See the `V2 migration guide <https://docs.quantum.ibm.com/api/migration-guides/v2-primitives>`_.
+       for more details.
+       The ``SamplerV1`` support will be removed no earlier than July 15, 2024.
+
     Qiskit Runtime Sampler primitive service calculates quasi-probability distribution
     of bitstrings from quantum circuits.
 
