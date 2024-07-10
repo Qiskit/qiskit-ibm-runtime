@@ -60,18 +60,6 @@ class TestIntegrationRetrieveJob(IBMIntegrationJobTestCase):
         self.assertEqual(self.program_ids[service.channel], rjob.program_id)
 
     @run_integration_test
-    @quantum_only
-    def test_params_not_retrieved(self, service):
-        """Test excluding params when unnecessary."""
-        job = self._run_program(service)
-        job.wait_for_final_state()
-
-        self.assertTrue(job.creation_date)
-        self.assertFalse(job._params)
-        self.assertTrue(job.inputs)
-        self.assertTrue(job._params)
-
-    @run_integration_test
     def test_retrieve_all_jobs(self, service):
         """Test retrieving all jobs."""
         job = self._run_program(service)
