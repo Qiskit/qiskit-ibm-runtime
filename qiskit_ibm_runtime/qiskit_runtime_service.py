@@ -57,7 +57,7 @@ class QiskitRuntimeService:
     global_service = None
 
     def __new__(  # type: ignore[no-untyped-def]
-        cls: Type['QiskitRuntimeService'],
+        cls,
         channel: Optional[ChannelType] = None,
         token: Optional[str] = None,
         url: Optional[str] = None,
