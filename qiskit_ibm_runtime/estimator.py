@@ -228,6 +228,12 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
 class EstimatorV1(BasePrimitiveV1, Estimator, BaseEstimator):
     """Class for interacting with Qiskit Runtime Estimator primitive service.
 
+    .. deprecated:: 0.23
+       The ``EstimatorV1`` primitives have been deprecated in 0.23, released on April 15, 2024.
+       See the `V2 migration guide <https://docs.quantum.ibm.com/api/migration-guides/v2-primitives>`_.
+       for more details.
+       The ``EstimatorV1`` support will be removed no earlier than July 15, 2024.
+
     Qiskit Runtime Estimator primitive service estimates expectation values of quantum circuits and
     observables.
 
