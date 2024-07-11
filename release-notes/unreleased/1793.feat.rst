@@ -1,6 +1,6 @@
 The :class:`QiskitRuntimeLocalService` was created to support a local
-testing mode. To avoid the user creating separately the class the "local"
-has been added to the valid :class:`QiskitRuntimeService` channels.
+testing mode. To avoid having to initialize a separate class, "local"
+has been added to the valid :class:`QiskitRuntimeService` channel.
 
 .. code:: python
     service=QiskitRuntimeService(channel="local")
