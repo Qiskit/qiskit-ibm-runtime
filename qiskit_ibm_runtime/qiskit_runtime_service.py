@@ -56,19 +56,8 @@ class QiskitRuntimeService:
 
     global_service = None
 
-    def __new__(  # type: ignore[no-untyped-def]
-        cls,
-        channel: Optional[ChannelType] = None,
-        token: Optional[str] = None,
-        url: Optional[str] = None,
-        filename: Optional[str] = None,
-        name: Optional[str] = None,
-        instance: Optional[str] = None,
-        proxies: Optional[dict] = None,
-        verify: Optional[bool] = None,
-        channel_strategy: Optional[str] = None,
-        private_endpoint: Optional[bool] = None,
-    ):
+    def __new__(cls, *args, **kwargs):  # type: ignore[no-untyped-def]
+        channel = kwargs.get("channel", None)
         if channel == "local":
             # pylint: disable=import-outside-toplevel
             from .fake_provider.local_service import QiskitRuntimeLocalService
