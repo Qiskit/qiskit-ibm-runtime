@@ -17,13 +17,12 @@ Fake Tokyo device (20 qubit).
 import os
 import json
 
-from qiskit.providers.models import (
+from qiskit.providers.fake_provider.fake_backend import FakeBackend
+from ....providers.models import (
     GateConfig,
     QasmBackendConfiguration,
     BackendProperties,
 )
-from qiskit.providers.fake_provider.fake_backend import FakeBackend
-
 
 class FakeTokyo(FakeBackend):
     """A fake 20 qubit backend."""
