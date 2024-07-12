@@ -24,7 +24,7 @@ from qiskit.qobj.utils import MeasLevel, MeasReturnType
 
 from qiskit.providers.backend import BackendV2 as Backend
 from qiskit.providers.options import Options
-from qiskit.providers.models import (
+from .providers.models import (
     BackendStatus,
     BackendProperties,
     PulseDefaults,
