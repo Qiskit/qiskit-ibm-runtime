@@ -24,6 +24,14 @@ from qiskit.qobj.utils import MeasLevel, MeasReturnType
 
 from qiskit.providers.backend import BackendV2 as Backend
 from qiskit.providers.options import Options
+from qiskit.pulse.channels import (
+    AcquireChannel,
+    ControlChannel,
+    DriveChannel,
+    MeasureChannel,
+)
+from qiskit.transpiler.target import Target
+
 from .providers.models import (
     BackendStatus,
     BackendProperties,
@@ -32,13 +40,6 @@ from .providers.models import (
     QasmBackendConfiguration,
     PulseBackendConfiguration,
 )
-from qiskit.pulse.channels import (
-    AcquireChannel,
-    ControlChannel,
-    DriveChannel,
-    MeasureChannel,
-)
-from qiskit.transpiler.target import Target
 
 # temporary until we unite the 2 Session classes
 from .provider_session import (
