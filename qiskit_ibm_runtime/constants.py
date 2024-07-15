@@ -39,6 +39,7 @@ API_TO_JOB_ERROR_MESSAGE = {
 DEFAULT_DECODERS = {
     "sampler": [ResultDecoder, SamplerResultDecoder],
     "estimator": [ResultDecoder, EstimatorResultDecoder],
+    "noise-learner": [EstimatorResultDecoder],
     "circuit-runner": RunnerResult,
     "qasm3-runner": RunnerResult,
 }
