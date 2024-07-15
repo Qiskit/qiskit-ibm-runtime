@@ -99,7 +99,6 @@ class BaseFakeRuntimeJob:
         project,
         backend_name,
         final_status,
-        params,
         image,
         job_tags=None,
         log_level=None,
@@ -118,7 +117,6 @@ class BaseFakeRuntimeJob:
         self._group = group
         self._project = project
         self._backend_name = backend_name
-        self._params = params
         self._image = image
         self._interim_results = json.dumps({"quasi_dists": [{0: 0.5, 3: 0.5}], "metadata": []})
         self._job_tags = job_tags
@@ -157,7 +155,6 @@ class BaseFakeRuntimeJob:
                 "reason": self._reason,
                 "reasonCode": self._reason_code,
             },
-            "params": self._params,
             "program": {"id": self._program_id},
             "image": self._image,
         }
@@ -277,6 +274,7 @@ class BaseFakeRuntimeClient:
         self._channel = channel
         self.session_time = 0
         self._sessions = set()
+        self._params = {}
 
         # Setup the available backends
         if not backend_specs:
@@ -303,7 +301,7 @@ class BaseFakeRuntimeClient:
         self,
         program_id: str,
         backend_name: Optional[str],
-        params: Dict,
+        params: dict,
         image: str,
         hgp: Optional[str],
         log_level: Optional[str],
@@ -335,7 +333,6 @@ class BaseFakeRuntimeClient:
             group=group,
             project=project,
             backend_name=backend_name,
-            params=params,
             final_status=self._final_status,
             image=image,
             log_level=log_level,
@@ -347,6 +344,7 @@ class BaseFakeRuntimeClient:
             **self._job_kwargs,
         )
         self.session_time = session_time
+        self._params = params
         self._jobs[job_id] = job
         if start_session:
             self._sessions.add(job_id)
