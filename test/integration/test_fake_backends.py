@@ -16,6 +16,7 @@
 import itertools
 import operator
 
+from unittest import SkipTest
 from ddt import ddt, data, idata, unpack
 
 from qiskit.circuit import QuantumCircuit
@@ -37,6 +38,7 @@ from qiskit_ibm_runtime.fake_provider import (
     FakePrague,
 )
 from ..ibm_test_case import IBMTestCase, IBMIntegrationTestCase
+from ..decorators import production_only
 
 FAKE_PROVIDER_FOR_BACKEND_V2 = FakeProviderForBackendV2()
 FAKE_PROVIDER = FakeProvider()
@@ -182,12 +184,18 @@ class TestRefreshFakeBackends(IBMIntegrationTestCase):
         # pylint: disable=no-value-for-parameter
         super().setUpClass()
 
+    @production_only
     def test_refresh_method(self):
         """Test refresh method"""
+        if self.dependencies.channel == "ibm_cloud":
+            raise SkipTest("Cloud account does not have real backends.")
         # to verify the data files will be updated
         old_backend = FakeSherbrooke()
         # change some configuration
         old_backend.backend_version = "fake_version"
+        # set instance to none to access real backend
+        self.service._account.instance = None
+
         with self.assertLogs("qiskit_ibm_runtime", level="INFO") as logs:
             old_backend.refresh(self.service)
         self.assertIn("The backend fake_sherbrooke has been updated", logs.output[0])
