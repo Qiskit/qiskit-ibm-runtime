@@ -14,13 +14,11 @@
 
 from abc import ABC, abstractmethod
 from typing import Any, Optional, Callable, Dict, Type, Union, Sequence, List, Tuple
-import json
 import logging
 from concurrent import futures
 import traceback
 import queue
 from datetime import datetime
-import requests
 
 from qiskit.providers.backend import Backend
 from qiskit.providers.models import BackendProperties
@@ -130,22 +128,6 @@ class BaseRuntimeJob(ABC):
     def job_id(self) -> str:
         """Return a unique id identifying the job."""
         return self._job_id
-
-    def _download_external_result(self, response: Any) -> Any:
-        """Download result from external URL.
-
-        Args:
-            response: Response to check for url keyword, if available, download result from given URL
-        """
-        try:
-            result_url_json = json.loads(response)
-            if "url" in result_url_json:
-                url = result_url_json["url"]
-                result_response = requests.get(url, timeout=10)
-                return result_response.text
-            return response
-        except json.JSONDecodeError:
-            return response
 
     def cancel_result_streaming(self) -> None:
         """Cancel result streaming."""
@@ -276,9 +258,8 @@ class BaseRuntimeJob(ABC):
         """
         status = response["state"]["status"].upper()
 
-        job_result_raw = self._download_external_result(
-            self._api_client.job_results(job_id=self.job_id())
-        )
+        job_result_raw = self._api_client.job_results(job_id=self.job_id())
+
         index = job_result_raw.rfind("Traceback")
         if index != -1:
             job_result_raw = job_result_raw[index:]
@@ -339,8 +320,6 @@ class BaseRuntimeJob(ABC):
                 if response == self._POISON_PILL:
                     self._empty_result_queue(result_queue)
                     return
-
-                response = self._download_external_result(response)
 
                 user_callback(self.job_id(), _decoder.decode(response))
             except Exception:  # pylint: disable=broad-except

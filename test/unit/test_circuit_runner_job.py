@@ -62,9 +62,6 @@ class FakeCircuitRunnerJob(RuntimeJob):
         """
         return JOB_FINAL_STATES
 
-    def _download_external_result(self, response: Any) -> Any:
-        return self._data
-
     def submit(self) -> None:
         """Fake submit"""
         pass
