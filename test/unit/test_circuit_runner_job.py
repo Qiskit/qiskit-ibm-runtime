@@ -34,6 +34,7 @@ class FakeCircuitRunnerJob(RuntimeJob):
         """
         self._data = data
         api_client = MagicMock()
+        api_client.job_results = MagicMock(return_value=self._data)
         client_params = MagicMock()
         backend = job_id = program_id = service = None
         super().__init__(
