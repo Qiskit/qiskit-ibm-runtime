@@ -36,10 +36,10 @@ from qiskit.circuit.delay import Delay
 from qiskit.circuit.parameter import Parameter
 from qiskit.providers.backend import QubitProperties
 from qiskit.providers.exceptions import BackendPropertyError
-from qiskit.providers.models.backendconfiguration import BackendConfiguration
-from qiskit.providers.models.backendproperties import BackendProperties
-from qiskit.providers.models.pulsedefaults import PulseDefaults
 from qiskit.transpiler.target import InstructionProperties, Target
+
+from ..providers.models import BackendConfiguration, BackendProperties, PulseDefaults
+
 
 logger = logging.getLogger(__name__)
 

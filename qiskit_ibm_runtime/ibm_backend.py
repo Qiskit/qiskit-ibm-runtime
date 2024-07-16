@@ -82,7 +82,7 @@ class IBMBackend(Backend):
 
     This class represents an IBM Quantum backend. Its attributes and methods provide
     information about the backend. For example, the :meth:`status()` method
-    returns a :class:`BackendStatus<qiskit.providers.models.BackendStatus>` instance.
+    returns a :class:`BackendStatus<~.providers.models.BackendStatus>` instance.
     The instance contains the ``operational`` and ``pending_jobs`` attributes, which state whether
     the backend is operational and also the number of jobs in the server queue for the backend,
     respectively::
@@ -367,7 +367,7 @@ class IBMBackend(Backend):
             refresh: If ``True``, re-query the server for the backend properties.
                 Otherwise, return a cached version.
             datetime: By specifying `datetime`, this function returns an instance
-                of the :class:`BackendProperties<qiskit.providers.models.BackendProperties>`
+                of the :class:`BackendProperties<~.providers.models.BackendProperties>`
                 whose timestamp is closest to, but older than, the specified `datetime`.
                 Note that this is only supported using ``ibm_quantum`` runtime.
 
@@ -406,7 +406,7 @@ class IBMBackend(Backend):
         """Return the backend status.
 
         Note:
-            If the returned :class:`~qiskit.providers.models.BackendStatus`
+            If the returned :class:`~.providers.models.BackendStatus`
             instance has ``operational=True`` but ``status_msg="internal"``,
             then the backend is accepting jobs but not processing them.
 

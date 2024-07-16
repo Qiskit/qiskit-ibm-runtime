@@ -33,7 +33,7 @@ class Nduv:
         value: value.
     """
 
-    def __init__(self, date, name, unit, value):
+    def __init__(self, date: datetime.datetime, name: str, unit: str, value: float) -> None:
         """Initialize a new name-date-unit-value object
 
         Args:
@@ -48,7 +48,7 @@ class Nduv:
         self.value = value
 
     @classmethod
-    def from_dict(cls, data):
+    def from_dict(cls, data: dict):
         """Create a new Nduv object from a dictionary.
 
         Args:
@@ -61,7 +61,7 @@ class Nduv:
         """
         return cls(**data)
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         """Return a dictionary format representation of the object.
 
         Returns:
@@ -75,13 +75,13 @@ class Nduv:
         }
         return out_dict
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if isinstance(other, Nduv):
             if self.to_dict() == other.to_dict():
                 return True
         return False
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"Nduv({repr(self.date)}, {self.name}, {self.unit}, {self.value})"
 
 
@@ -96,7 +96,7 @@ class GateProperties:
 
     _data = {}
 
-    def __init__(self, qubits, gate, parameters, **kwargs):
+    def __init__(self, qubits, gate, parameters, **kwargs) -> None:
         """Initialize a new :class:`GateProperties` object
 
         Args:
@@ -112,7 +112,7 @@ class GateProperties:
         self.parameters = parameters
         self._data.update(kwargs)
 
-    def __getattr__(self, name):
+    def __getattr__(self, name) -> str:
         try:
             return self._data[name]
         except KeyError as ex:
@@ -138,7 +138,7 @@ class GateProperties:
                 in_data[key] = value
         return cls(**in_data)
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         """Return a dictionary format representation of the BackendStatus.
 
         Returns:
@@ -151,7 +151,7 @@ class GateProperties:
         out_dict.update(self._data)
         return out_dict
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if isinstance(other, GateProperties):
             if self.to_dict() == other.to_dict():
                 return True
@@ -174,7 +174,7 @@ class BackendProperties:
 
     def __init__(
         self, backend_name, backend_version, last_update_date, qubits, gates, general, **kwargs
-    ):
+    ) -> None:
         """Initialize a BackendProperties instance.
 
         Args:
@@ -219,7 +219,7 @@ class BackendProperties:
             self._gates[gate.gate][tuple(gate.qubits)] = formatted_props
         self._data.update(kwargs)
 
-    def __getattr__(self, name):
+    def __getattr__(self, name) -> str:
         try:
             return self._data[name]
         except KeyError as ex:
@@ -252,7 +252,7 @@ class BackendProperties:
             backend_name, backend_version, last_update_date, qubits, gates, general, **in_data
         )
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         """Return a dictionary format representation of the BackendProperties.
 
         Returns:
@@ -274,7 +274,7 @@ class BackendProperties:
         out_dict.update(self._data)
         return out_dict
 
-    def __eq__(self, other):
+    def __eq__(self, other) -> bool:
         if isinstance(other, BackendProperties):
             if self.to_dict() == other.to_dict():
                 return True
@@ -319,7 +319,7 @@ class BackendProperties:
             raise BackendPropertyError(f"Could not find the desired property for {gate}") from ex
         return result
 
-    def faulty_qubits(self):
+    def faulty_qubits(self) -> list:
         """Return a list of faulty qubits."""
         faulty = []
         for qubit in self._qubits:
@@ -327,7 +327,7 @@ class BackendProperties:
                 faulty.append(qubit)
         return faulty
 
-    def faulty_gates(self):
+    def faulty_gates(self) -> list:
         """Return a list of faulty gates."""
         faulty = []
         for gate in self.gates:

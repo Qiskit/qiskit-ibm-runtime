@@ -24,6 +24,7 @@ from ....providers.models import (
     BackendProperties,
 )
 
+
 class FakeTokyo(FakeBackend):
     """A fake 20 qubit backend."""
 
