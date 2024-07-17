@@ -863,6 +863,9 @@ class QiskitRuntimeService:
                 f"The backend {backend.name} currently has a status of {status.status_msg}."
             )
 
+        if hgp_name == "ibm-q/open/main":
+            self.check_pending_jobs()
+
         version = inputs.get("version", 1) if inputs else 1
         try:
             response = self._api_client.program_run(
@@ -926,6 +929,35 @@ class QiskitRuntimeService:
     def _run(self, *args: Any, **kwargs: Any) -> Union[RuntimeJob, RuntimeJobV2]:
         """Private run method"""
         return self.run(*args, **kwargs)
+
+    def check_pending_jobs(self) -> None:
+        """Check the number of pending jobs and wait for the oldest pending job if
+        the maximum number of pending jobs has been reached.
+        """
+        try:
+            usage = self.usage().get("byInstance")[0]
+            pending_jobs = usage.get("pendingJobs")
+            max_pending_jobs = usage.get("maxPendingJobs")
+            if pending_jobs >= max_pending_jobs:
+                oldest_running = self.jobs(limit=1, descending=False, pending=True)
+                if oldest_running:
+                    logger.warning(
+                        "The pending jobs limit has been reached. "
+                        "Waiting for job %s to finish before submitting the next one.",
+                        oldest_running[0],
+                    )
+                    try:
+                        oldest_running[0].wait_for_final_state(timeout=300)
+
+                    except Exception as ex:  # pylint: disable=broad-except
+                        logger.debug(
+                            "An error occurred while waiting for job %s to finish: %s",
+                            oldest_running[0].job_id(),
+                            ex,
+                        )
+
+        except Exception as ex:  # pylint: disable=broad-except
+            logger.warning("Unable to retrieve open plan pending jobs details. %s", ex)
 
     def job(self, job_id: str) -> Union[RuntimeJob, RuntimeJobV2]:
         """Retrieve a runtime job.
@@ -1062,6 +1094,21 @@ class QiskitRuntimeService:
             if ex.status_code == 404:
                 raise RuntimeJobNotFound(f"Job not found: {ex.message}") from None
             raise IBMRuntimeError(f"Failed to delete job: {ex}") from None
+
+    def usage(self) -> Dict[str, Any]:
+        """Return monthly open plan usage information.
+
+        Returns:
+            Dict with usage details.
+
+        Raises:
+            IBMInputValueError: If method is called when using the ibm_cloud channel
+        """
+        if self._channel == "ibm_cloud":
+            raise IBMInputValueError(
+                "Usage is only available for the ``ibm_quantum`` channel open plan."
+            )
+        return self._api_client.usage()
 
     def _decode_job(self, raw_data: Dict) -> Union[RuntimeJob, RuntimeJobV2]:
         """Decode job data received from the server.
