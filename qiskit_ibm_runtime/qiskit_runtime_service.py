@@ -939,14 +939,13 @@ class QiskitRuntimeService:
             pending_jobs = usage.get("pendingJobs")
             max_pending_jobs = usage.get("maxPendingJobs")
             if pending_jobs >= max_pending_jobs:
-                logger.warning(
-                    "The maximum number of pending jobs on the open plan is %s. "
-                    "You currently have %s pending jobs. Waiting for a pending job to complete.",
-                    max_pending_jobs,
-                    pending_jobs,
-                )
                 oldest_running = self.jobs(limit=1, descending=False, pending=True)
                 if oldest_running:
+                    logger.warning(
+                        "The pending jobs limit has been reached. "
+                        "Waiting for job %s to finish before submitting the next one.",
+                        oldest_running[0],
+                    )
                     try:
                         oldest_running[0].wait_for_final_state(timeout=300)
 
