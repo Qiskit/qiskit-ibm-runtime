@@ -75,7 +75,7 @@ You can also pass dictionaries to each sub-category, for example::
 Classes
 =======
 
-Base Primitive Options
+Base primitive options
 ----------------------
 
 .. autosummary::
