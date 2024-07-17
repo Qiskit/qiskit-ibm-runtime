@@ -16,7 +16,6 @@ from __future__ import annotations
 
 from dataclasses import asdict
 from typing import Any, Dict, Iterable, Optional, Union
-import copy
 import logging
 
 from qiskit.circuit import QuantumCircuit
@@ -29,7 +28,7 @@ from .runtime_job_v2 import RuntimeJobV2
 from .ibm_backend import IBMBackend
 from .options.estimator_options import EstimatorOptions
 from .options.noise_learner_options import NoiseLearnerOptions
-from .options.utils import Unset, merge_options_v2, remove_dict_unset_values, remove_empty_dict
+from .options.utils import remove_dict_unset_values, remove_empty_dict
 from .utils import validate_isa_circuits
 from .utils.utils import is_simulator
 
