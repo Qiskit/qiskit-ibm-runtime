@@ -61,6 +61,9 @@ class NoiseLearnerOptions(OptionsV2):
             * ``"all"``: in each individual twirled layer, all qubits in the input circuit are twirled.
 
             Default: "active-accum".
+
+        experimental: Experimental options. These options are subject to change without notification, and
+            stability is not guaranteed.
     """
 
     max_layers_to_learn: Union[UnsetType, int, None] = Unset
@@ -68,10 +71,11 @@ class NoiseLearnerOptions(OptionsV2):
     num_randomizations: Union[UnsetType, int] = Unset
     layer_pair_depths: Union[UnsetType, List[int]] = Unset
     twirling_strategy: Union[UnsetType, TwirlingStrategyType] = Unset
+    experimental: Union[UnsetType, dict] = Unset
 
     _gt0 = make_constraint_validator("max_layers_to_learn", gt=0)
     _ge0 = make_constraint_validator("shots_per_randomization", "num_randomizations", ge=1)
-    
+
     @field_validator("layer_pair_depths", mode="after")
     @classmethod
     @skip_unset_validation
