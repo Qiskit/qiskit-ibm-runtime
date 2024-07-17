@@ -177,7 +177,7 @@ class NoiseLearner:
             Submitted job.
 
         """
-        if not all([isinstance(t, QuantumCircuit) for t in tasks]):
+        if not all(isinstance(t, QuantumCircuit) for t in tasks):
             coerced_pubs = [EstimatorPub.coerce(pub) for pub in tasks]
             tasks = [p.circuit for p in coerced_pubs]
 
