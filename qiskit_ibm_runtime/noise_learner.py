@@ -189,9 +189,6 @@ class NoiseLearner:
         # Define the program inputs
         inputs = {"circuits": tasks}
         inputs.update(learner_options)
-        print(inputs, "\n")
-        print(runtime_options)
-        # assert False
 
         if self._backend:
             for task in tasks:
