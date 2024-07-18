@@ -35,7 +35,7 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
     def setUp(self) -> None:
         super().setUp()
         self.backend = "ibmq_qasm_simulator"
-        
+
         c1 = QuantumCircuit(2)
         c1.cx(0, 1)
 

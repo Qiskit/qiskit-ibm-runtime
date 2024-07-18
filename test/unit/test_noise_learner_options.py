@@ -20,11 +20,7 @@ from pydantic import ValidationError
 from qiskit_ibm_runtime.options import NoiseLearnerOptions
 
 from ..ibm_test_case import IBMTestCase
-from ..utils import (
-    dict_keys_equal,
-    dict_paritally_equal,
-    flat_dict_partially_equal
-)
+from ..utils import dict_keys_equal, dict_paritally_equal, flat_dict_partially_equal
 
 
 @ddt
@@ -36,7 +32,10 @@ class TestEstimatorOptions(IBMTestCase):
         ({"shots_per_randomization": 0}, "shots_per_randomization must be >=1"),
         ({"num_randomizations": 0}, "num_randomizations must be >=1"),
         ({"layer_pair_depths": [-2, 0, 0]}, "must all be >= 0"),
-        ({"twirling_strategy": "my_strategy"}, "'active', 'active-accum', 'active-circuit' or 'all'"),
+        (
+            {"twirling_strategy": "my_strategy"},
+            "'active', 'active-accum', 'active-circuit' or 'all'",
+        ),
     )
     def test_bad_inputs(self, val):
         """Test invalid inputs."""
@@ -51,7 +50,11 @@ class TestEstimatorOptions(IBMTestCase):
         {"num_randomizations": 1, "environment": {"log_level": "WARNING"}},
         {"layer_pair_depths": [0, 2, 4]},
         {"twirling_strategy": "all"},
-        {"environment": {"log_level": "ERROR"}, "shots_per_randomization": 20, "max_layers_to_learn": 5},
+        {
+            "environment": {"log_level": "ERROR"},
+            "shots_per_randomization": 20,
+            "max_layers_to_learn": 5,
+        },
     )
     def test_init_options_with_dictionary(self, opts_dict):
         """Test initializing options with dictionaries."""
@@ -61,7 +64,9 @@ class TestEstimatorOptions(IBMTestCase):
             f"options={options}, opts_dict={opts_dict}",
         )
 
-        self.assertTrue(dict_keys_equal(asdict(NoiseLearnerOptions()), options), f"options={options}")
+        self.assertTrue(
+            dict_keys_equal(asdict(NoiseLearnerOptions()), options), f"options={options}"
+        )
 
     @data(
         {},
@@ -70,7 +75,11 @@ class TestEstimatorOptions(IBMTestCase):
         {"num_randomizations": 1, "environment": {"log_level": "WARNING"}},
         {"layer_pair_depths": [0, 2, 4]},
         {"twirling_strategy": "all"},
-        {"environment": {"log_level": "ERROR"}, "shots_per_randomization": 20, "max_layers_to_learn": 5},
+        {
+            "environment": {"log_level": "ERROR"},
+            "shots_per_randomization": 20,
+            "max_layers_to_learn": 5,
+        },
     )
     def test_update_options(self, new_opts):
         """Test update method."""

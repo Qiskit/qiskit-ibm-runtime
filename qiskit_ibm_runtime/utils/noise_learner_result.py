@@ -78,10 +78,12 @@ class NoiseLearnerResult:
             noise_model = resilience["layer_noise_model"]
         except KeyError:
             return NoiseLearnerResult(data=[])
-        
+
         data = []
         for layer in noise_model:
-            datum = NoiseLearnerDatum(layer[0]["circuit"], layer[0]["qubits"], layer[1]["generators"], layer[1]["rates"])
+            datum = NoiseLearnerDatum(
+                layer[0]["circuit"], layer[0]["qubits"], layer[1]["generators"], layer[1]["rates"]
+            )
             data.append(datum)
         return NoiseLearnerResult(data)
 

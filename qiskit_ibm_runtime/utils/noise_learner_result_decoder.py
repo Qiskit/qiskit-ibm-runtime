@@ -30,7 +30,9 @@ class NoiseLearnerResultDecoder(ResultDecoder):
 
         data = []
         for layer in decoded["data"]:
-            datum = NoiseLearnerDatum(layer[0]["circuit"], layer[0]["qubits"], layer[1]["generators"], layer[1]["rates"])
+            datum = NoiseLearnerDatum(
+                layer[0]["circuit"], layer[0]["qubits"], layer[1]["generators"], layer[1]["rates"]
+            )
             data.append(datum)
-        
+
         return NoiseLearnerResult(data=data, metadata=decoded["metadata"])
