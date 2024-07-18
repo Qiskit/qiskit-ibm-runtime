@@ -12,7 +12,6 @@
 
 """Tests for the noise learner."""
 
-import numpy as np
 from ddt import ddt
 
 from qiskit import QuantumCircuit, transpile
@@ -104,8 +103,24 @@ class TestEstimatorV2(IBMTestCase):
         self.assertIn("circuits", input_params)
         self.assertEqual(input_params["circuits"], [QuantumCircuit(3)])
 
+    def test_irrelevant_options_are_ignored(self):
+        """Test that irrelevant estimator options are ignored."""
+        backend = get_mocked_backend()
+
+        options = EstimatorOptions()
+        options.default_shots = 10
+        options.dynamical_decoupling.enable = True
+        options.default_precision = 0.1
+        options.resilience.layer_noise_learning.num_randomizations = 2
+
+        expected = NoiseLearnerOptions()
+        expected.num_randomizations = 2
+
+        inst = NoiseLearner(backend, options)
+        self.assertEqual(inst.options, expected)
+
     def test_not_isa_circuit(self):
-        """Test exception when circuits is not ISA"""
+        """Test exception when circuits is not ISA."""
         backend = FakeSherbrooke()
 
         circuit = QuantumCircuit(1)

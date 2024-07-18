@@ -18,25 +18,39 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import Any
 
+from qiskit.circuit import QuantumCircuit
+from qiskit.quantum_info import PauliList
+from qiskit.primitives import EstimatorResult
+
 
 @dataclass(frozen=True)
 class NoiseLearnerDatum:
     """A container for a single noise learner datum.
 
     Args:
-        blocks: A dictionary that stores a circuit and the list of its qubits.
-        errors: A dictionary that stores the error generators and the associated rates.
+        circuit: A circuit whose noise has been learnt.
+        qubits: The labels of the qubits in the given circuit.
+        generators: The list of generators for the Pauli errors.
+        rates: The rates for the given Pauli error generators.
 
     Raises:
-        # TODO
+        ValueError: If ``circuit``, ``qubits``, and ``generators`` have mismatching number of
+            qubits.
+        ValueError: If ``generators`` and ``rates`` have different lengths.
     """
 
-    blocks: dict[Any, Any]
-    errors: dict[Any, Any]
+    circuit: QuantumCircuit
+    qubits: Iterable[int]
+    generators: PauliList
+    rates: Iterable[float]
 
     def __post_init__(self):
-        # TODO validation
-        pass
+        if len({self.circuit.num_qubits, len(self.qubits), self.generators.num_qubits}) != 1:
+            raise ValueError("Mistmatching numbers of qubits.")
+        if len(self.generators) != len(self.rates):
+            msg = f"``generators`` has length {len(self.generators)}, but "
+            msg += f"``rates`` has length {len(self.rates)}."
+            raise ValueError(msg)
 
 
 class NoiseLearnerResult:
@@ -49,22 +63,46 @@ class NoiseLearnerResult:
             metadata: Metadata that is common to all pub results; metadata specific to particular
                 pubs should be placed in their metadata fields. Keys are expected to be strings.
         """
-        self._data = [NoiseLearnerDatum(datum[0], datum[1]) for datum in data]
+        self._data = data
         self._metadata = metadata or {}
+
+    @classmethod
+    def from_estimator_result(cls, result: EstimatorResult) -> NoiseLearnerResult:
+        """Construct noise learner results from estimator results.
+
+        Args:
+            result: The estimator results.
+        """
+        resilience = result.metadata["resilience"]
+        try:
+            noise_model = resilience["layer_noise_model"]
+        except KeyError:
+            return NoiseLearnerResult(data=[])
+        
+        data = []
+        for layer in noise_model:
+            datum = NoiseLearnerDatum(layer[0]["circuit"], layer[0]["qubits"], layer[1]["generators"], layer[1]["rates"])
+            data.append(datum)
+        return NoiseLearnerResult(data)
+
+    @property
+    def data(self) -> dict[str, Any]:
+        """The data of this noise learner result."""
+        return self._data
 
     @property
     def metadata(self) -> dict[str, Any]:
-        """The metadata of this primitive result."""
+        """The metadata of this noise learner result."""
         return self._metadata
 
     def __getitem__(self, index) -> NoiseLearnerDatum:
-        return self._data[index]
+        return self.data[index]
 
     def __len__(self) -> int:
-        return len(self._data)
+        return len(self.data)
 
     def __repr__(self) -> str:
-        return f"NoiseLearnerResult(data={self._data}, metadata={self.metadata})"
+        return f"NoiseLearnerResult(data={self.data}, metadata={self.metadata})"
 
     def __iter__(self) -> Iterable[NoiseLearnerDatum]:
-        return iter(self._data)
+        return iter(self.data)

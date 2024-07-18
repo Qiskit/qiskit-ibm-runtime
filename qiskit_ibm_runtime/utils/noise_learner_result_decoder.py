@@ -12,12 +12,9 @@
 
 """NoiseLearner result decoder."""
 
-from typing import Dict, Union
-import numpy as np
+from typing import Dict
 
-from qiskit.primitives.containers import PrimitiveResult
-
-from .noise_learner_result import NoiseLearnerResult
+from .noise_learner_result import NoiseLearnerDatum, NoiseLearnerResult
 from .result_decoder import ResultDecoder
 
 
@@ -27,13 +24,13 @@ class NoiseLearnerResultDecoder(ResultDecoder):
     @classmethod
     def decode(  # type: ignore # pylint: disable=arguments-differ
         cls, raw_result: str
-    ) -> Union[NoiseLearnerResult, PrimitiveResult]:
-        """Convert the result to EstimatorResult."""
+    ) -> NoiseLearnerResult:
+        """Convert the result to NoiseLearnerResult."""
         decoded: Dict = super().decode(raw_result)
-        if isinstance(decoded, PrimitiveResult):
-            return decoded
-        else:
-            return NoiseLearnerResult(
-                data=decoded["data"],
-                metadata=decoded["metadata"],
-            )
+
+        data = []
+        for layer in decoded["data"]:
+            datum = NoiseLearnerDatum(layer[0]["circuit"], layer[0]["qubits"], layer[1]["generators"], layer[1]["rates"])
+            data.append(datum)
+        
+        return NoiseLearnerResult(data=data, metadata=decoded["metadata"])
