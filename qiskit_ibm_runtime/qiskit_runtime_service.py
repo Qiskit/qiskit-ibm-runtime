@@ -817,7 +817,6 @@ class QiskitRuntimeService:
             inputs: Program input parameters. These input values are passed
                 to the runtime program.
             options: Runtime options that control the execution environment.
-                See :class:`RuntimeOptions` for all available options.
 
             callback: Callback function to be invoked for any interim results and final result.
                 The callback function will receive 2 positional parameters:
