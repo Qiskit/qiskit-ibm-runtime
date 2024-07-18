@@ -163,7 +163,7 @@ class NoiseLearner:
         """The options in this noise learner."""
         return self._options
 
-    def run(self, tasks: Iterable[QuantumCircuit, EstimatorPubLike]) -> RuntimeJobV2:
+    def run(self, tasks: Iterable[Union[QuantumCircuit, EstimatorPubLike]]) -> RuntimeJobV2:
         """Submit a request to the noise learner program.
 
         Args:

@@ -44,7 +44,7 @@ class NoiseLearnerDatum:
     generators: PauliList
     rates: Iterable[float]
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if len({self.circuit.num_qubits, len(self.qubits), self.generators.num_qubits}) != 1:
             raise ValueError("Mistmatching numbers of qubits.")
         if len(self.generators) != len(self.rates):
