@@ -73,7 +73,7 @@ class NoiseLearnerOptions(OptionsV2):
     twirling_strategy: Union[UnsetType, TwirlingStrategyType] = Unset
     experimental: Union[UnsetType, dict] = Unset
 
-    _gt0 = make_constraint_validator("max_layers_to_learn", gt=0)
+    _gt0 = make_constraint_validator("max_layers_to_learn", ge=0)
     _ge0 = make_constraint_validator("shots_per_randomization", "num_randomizations", ge=1)
 
     @field_validator("layer_pair_depths", mode="after")
