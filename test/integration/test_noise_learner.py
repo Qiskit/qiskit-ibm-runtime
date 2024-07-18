@@ -12,21 +12,11 @@
 
 """Integration tests for NoiseLearner."""
 
-import numpy as np
-
-from qiskit.circuit import QuantumCircuit, Parameter
-from qiskit.circuit.library import RealAmplitudes
-from qiskit.primitives import Estimator as TerraEstimator
-from qiskit.quantum_info import SparsePauliOp
-from qiskit.primitives import BaseEstimator, EstimatorResult
-from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
-from qiskit.providers.exceptions import QiskitBackendNotFoundError
-
-from qiskit_ibm_runtime import Estimator, Session, NoiseLearner
+from qiskit.circuit import QuantumCircuit
+from qiskit_ibm_runtime import NoiseLearner
 
 from ..decorators import run_integration_test
 from ..ibm_test_case import IBMIntegrationTestCase
-from ..utils import bell
 
 
 class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
@@ -46,10 +36,8 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
         self.circuits = [c1, c2]
 
     @run_integration_test
-    def test_estimator_session(self, service):
+    def test_noise_learner_session(self):
         """Verify if estimator primitive returns expected results"""
 
         learner = NoiseLearner(self.backend)
         learner.run(self.circuits)
-
-        self.assertTrue(True)

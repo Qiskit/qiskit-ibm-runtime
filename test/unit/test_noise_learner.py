@@ -109,7 +109,6 @@ class TestEstimatorV2(IBMTestCase):
 
         options = EstimatorOptions()
         options.default_shots = 10
-        options.dynamical_decoupling.enable = True
         options.default_precision = 0.1
         options.resilience.layer_noise_learning.num_randomizations = 2
 
