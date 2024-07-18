@@ -39,7 +39,7 @@ class ResilienceOptionsV2:
 
     Args:
         measure_mitigation: Whether to enable measurement error mitigation method.
-            Further suboptions are available in :attr:`~measure_noise_learning`.
+            Further suboptions are available in :attr:`~measure_mitigation`.
             Default: True.
 
         measure_noise_learning: Additional measurement noise learning options.
