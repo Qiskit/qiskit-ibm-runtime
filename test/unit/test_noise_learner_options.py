@@ -10,25 +10,20 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-"""Tests for EstimatorOptions class."""
+"""Tests for NoiseLearnerOptions class."""
 
 from dataclasses import asdict
 
 from ddt import data, ddt
 from pydantic import ValidationError
 
-from qiskit_aer.noise import NoiseModel
-from qiskit_ibm_runtime import EstimatorV2 as Estimator
-from qiskit_ibm_runtime.options import EstimatorOptions, NoiseLearnerOptions
-from qiskit_ibm_runtime.fake_provider import FakeManila
+from qiskit_ibm_runtime.options import NoiseLearnerOptions
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import (
     dict_keys_equal,
     dict_paritally_equal,
-    flat_dict_partially_equal,
-    get_mocked_backend,
-    get_primitive_inputs,
+    flat_dict_partially_equal
 )
 
 
