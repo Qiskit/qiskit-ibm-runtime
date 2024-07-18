@@ -178,7 +178,6 @@ class Session:
             inputs: Program input parameters. These input values are passed
                 to the runtime program.
             options: Runtime options that control the execution environment.
-                See :class:`qiskit_ibm_runtime.RuntimeOptions` for all available options.
             callback: Callback function to be invoked for any interim results and final result.
 
         Returns:
