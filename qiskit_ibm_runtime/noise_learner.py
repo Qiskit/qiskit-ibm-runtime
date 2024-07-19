@@ -123,8 +123,8 @@ class NoiseLearner:
                 Otherwise if IBM Cloud channel is used, a default backend is selected.
 
             options: :class:`NoiseLearnerOptions`. Alternatively, :class:`EstimatorOptions` can be
-                provided for convenience, in which case the estimator options get reformatted into noise learner options
-                and all the irrelevant fields are ignored.
+                provided for convenience, in which case the estimator options get reformatted into
+                noise learner options and all the irrelevant fields are ignored.
         """
         self._mode: Optional[Union[Session, Batch]] = None
         self._service: QiskitRuntimeService | QiskitRuntimeLocalService = None
@@ -246,10 +246,10 @@ class NoiseLearner:
         elif isinstance(options, NoiseLearnerOptions):
             self._options = options
         elif isinstance(options, EstimatorOptions):
-            options_d = asdict(options.resilience.layer_noise_learning)  # type: ignore[union-attr]
-            options_d.update({"twirling_strategy": options.twirling.strategy})  # type: ignore[union-attr]
-            options_d.update({"max_execution_time": options.max_execution_time})
-            self._options = NoiseLearnerOptions(**options_d)
+            d = asdict(options.resilience.layer_noise_learning)  # type: ignore[union-attr]
+            d.update({"twirling_strategy": options.twirling.strategy})  # type: ignore[union-attr]
+            d.update({"max_execution_time": options.max_execution_time})
+            self._options = NoiseLearnerOptions(**d)
         else:
             self._options = NoiseLearnerOptions(**options)
 

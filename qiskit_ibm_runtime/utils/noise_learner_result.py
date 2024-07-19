@@ -14,9 +14,8 @@
 
 from __future__ import annotations
 
-# from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Any, Iterator, Sequence, Iterable
+from typing import Any, Iterator, Sequence
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info import PauliList
