@@ -18,6 +18,7 @@ from qiskit.providers.backend import BackendV1, BackendV2
 
 from qiskit_ibm_runtime import QiskitRuntimeService
 from .session import Session
+from .utils.deprecation import issue_deprecation_msg
 
 
 class Batch(Session):
@@ -98,6 +99,14 @@ class Batch(Session):
         Raises:
             ValueError: If an input value is invalid.
         """
+        if isinstance(backend, str):
+            issue_deprecation_msg(
+                msg="Passing a backend as a string is deprecated",
+                version="0.26.0",
+                remedy="Use the actual backend object instead.",
+                period="3 months",
+            )
+
         super().__init__(service=service, backend=backend, max_time=max_time)
 
     def _create_session(self) -> Optional[str]:
