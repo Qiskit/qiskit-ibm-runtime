@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict
+from dataclasses import asdict, fields
 from typing import Any, Dict, Iterable, Optional, Union
 import logging
 
@@ -23,6 +23,7 @@ from qiskit.providers import BackendV1, BackendV2
 from qiskit.primitives.containers import EstimatorPubLike
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
+from .base_primitive import _get_mode_service_backend
 from .constants import DEFAULT_DECODERS
 from .runtime_job_v2 import RuntimeJobV2
 from .ibm_backend import IBMBackend
@@ -96,7 +97,7 @@ class NoiseLearner:
 
     def __init__(
         self,
-        mode: Optional[Union[BackendV1, BackendV2, Session, Batch, str]] = None,
+        mode: Optional[Union[BackendV2, Session, Batch]] = None,
         options: Optional[Union[Dict, NoiseLearnerOptions, EstimatorOptions]] = None,
     ):
         """Initializes the noise learner.
@@ -111,51 +112,14 @@ class NoiseLearner:
                 Refer to the `Qiskit Runtime documentation <https://docs.quantum.ibm.com/run>`_.
                 for more information about the ``Execution modes``.
 
-            backend: Backend to run the primitive. This can be a backend name or an :class:`IBMBackend`
-                instance. If a name is specified, the default account (e.g. ``QiskitRuntimeService()``)
-                is used.
-
-            session: Session in which to call the primitive.
-
-                If both ``session`` and ``backend`` are specified, ``session`` takes precedence.
-                If neither is specified, and the primitive is created inside a
-                :class:`qiskit_ibm_runtime.Session` context manager, then the session is used.
-                Otherwise if IBM Cloud channel is used, a default backend is selected.
-
             options: :class:`NoiseLearnerOptions`. Alternatively, :class:`EstimatorOptions` can be
                 provided for convenience, in which case the estimator options get reformatted into
                 noise learner options and all the irrelevant fields are ignored.
         """
-        self._mode: Optional[Union[Session, Batch]] = None
-        self._service: QiskitRuntimeService | QiskitRuntimeLocalService = None
-        self._backend: Optional[BackendV1 | BackendV2] = None
-
-        if isinstance(mode, (Session, Batch)):
-            self._mode = mode
-            self._service = self._mode.service
-            self._backend = self._mode._backend
-        elif isinstance(mode, IBMBackend):  # type: ignore[unreachable]
-            self._service = mode.service
-            self._backend = mode
-        elif isinstance(mode, (BackendV1, BackendV2)):
-            self._service = QiskitRuntimeLocalService()
-            self._backend = mode
-        elif isinstance(mode, str):
-            self._service = (
-                QiskitRuntimeService()
-                if QiskitRuntimeService.global_service is None
-                else QiskitRuntimeService.global_service
-            )
-            self._backend = self._service.backend(mode)
-        elif get_cm_session():
-            self._mode = get_cm_session()  # type: ignore[assignment]
-            self._service = self._mode.service
-            self._backend = self._service.backend(  # type: ignore
-                name=self._mode.backend(), instance=self._mode._instance
-            )
-        else:
-            raise ValueError("A backend or session must be specified.")
-
+        self._mode, self._service, self._backend = _get_mode_service_backend(mode)
+        if isinstance(self._service, QiskitRuntimeLocalService):
+            raise ValueError("``NoiseLearner`` not currently supported in local mode.")
+        
         self._set_options(options)
 
     @property
@@ -249,6 +213,9 @@ class NoiseLearner:
             d = asdict(options.resilience.layer_noise_learning)  # type: ignore[union-attr]
             d.update({"twirling_strategy": options.twirling.strategy})  # type: ignore[union-attr]
             d.update({"max_execution_time": options.max_execution_time})
+            d.update({"simulator": options.simulator})
+            d.update({"environment": options.environment})
+            d.update({"experimental": options.experimental})
             self._options = NoiseLearnerOptions(**d)
         else:
             self._options = NoiseLearnerOptions(**options)
@@ -259,16 +226,23 @@ class NoiseLearner:
         filtering out every option that is not part of the NoiseLearningOptions."""
         ret = {}
 
-        for key in [
+        input_option_names = [
+            "simulator",
             "max_layers_to_learn",
             "shots_per_randomization",
             "num_randomizations",
             "layer_pair_depths",
             "twirling_strategy",
-            "simulator",
-        ]:
-            if key in options_dict:
-                ret[key] = options_dict[key]
+            "experimental",
+        ]
+
+        for field in fields(NoiseLearnerOptions):
+            name = field.name
+            if name in options_dict and name in input_option_names:
+                ret[name] = options_dict[name]
+
+        # Remove image
+        ret.get("experimental", {}).pop("image", None)
 
         remove_dict_unset_values(ret)
         remove_empty_dict(ret)

@@ -51,6 +51,48 @@ logger = logging.getLogger(__name__)
 OptionsT = TypeVar("OptionsT", bound=BaseOptions)
 
 
+def _get_mode_service_backend(
+    mode: Optional[Union[BackendV1, BackendV2, Session, Batch, str]] = None
+) -> tuple[
+    Union[Session, Batch, None],
+    Union[QiskitRuntimeService, QiskitRuntimeLocalService, None],
+    Union[BackendV1, BackendV2, None],
+]:
+    """
+    A utility function that returns mode, service, and backend for a given execution mode.
+
+    Args:
+        mode: The execution mode used to make the primitive query. It can be
+
+            * A :class:`Backend` if you are using job mode.
+            * A :class:`Session` if you are using session execution mode.
+            * A :class:`Batch` if you are using batch execution mode.
+    """
+
+    if isinstance(mode, (Session, Batch)):
+        return mode, mode.service, mode._backend
+    elif isinstance(mode, IBMBackend):  # type: ignore[unreachable]
+        return None, mode.service, mode
+    elif isinstance(mode, (BackendV1, BackendV2)):
+        return None, QiskitRuntimeLocalService(), mode
+    elif isinstance(mode, str):
+        service = (
+            QiskitRuntimeService()
+            if QiskitRuntimeService.global_service is None
+            else QiskitRuntimeService.global_service
+        )
+        return None, service, service.backend(mode)
+    elif mode is not None:  # type: ignore[unreachable]
+        raise ValueError("mode must be of type Backend, Session, Batch or None")
+    elif get_cm_session():
+        mode = get_cm_session()
+        service = mode.service
+        backend = service.backend(name=mode.backend(), instance=mode._instance)  # type: ignore
+        return mode, service, backend
+    else:
+        raise ValueError("A backend or session must be specified.")
+
+
 class BasePrimitiveV2(ABC, Generic[OptionsT]):
     """Base class for Qiskit Runtime primitives."""
 
@@ -78,39 +120,8 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
         Raises:
             ValueError: Invalid arguments are given.
         """
-        self._mode: Optional[Union[Session, Batch]] = None
-        self._service: QiskitRuntimeService | QiskitRuntimeLocalService = None
-        self._backend: Optional[BackendV1 | BackendV2] = None
-
+        self._mode, self._service, self._backend = _get_mode_service_backend(mode)
         self._set_options(options)
-
-        if isinstance(mode, (Session, Batch)):
-            self._mode = mode
-            self._service = self._mode.service
-            self._backend = self._mode._backend
-        elif isinstance(mode, IBMBackend):  # type: ignore[unreachable]
-            self._service = mode.service
-            self._backend = mode
-        elif isinstance(mode, (BackendV1, BackendV2)):
-            self._service = QiskitRuntimeLocalService()
-            self._backend = mode
-        elif isinstance(mode, str):
-            self._service = (
-                QiskitRuntimeService()
-                if QiskitRuntimeService.global_service is None
-                else QiskitRuntimeService.global_service
-            )
-            self._backend = self._service.backend(mode)
-        elif mode is not None:  # type: ignore[unreachable]
-            raise ValueError("mode must be of type Backend, Session, Batch or None")
-        elif get_cm_session():
-            self._mode = get_cm_session()
-            self._service = self._mode.service
-            self._backend = self._service.backend(  # type: ignore
-                name=self._mode.backend(), instance=self._mode._instance
-            )
-        else:
-            raise ValueError("A backend or session must be specified.")
 
     def _run(self, pubs: Union[list[EstimatorPub], list[SamplerPub]]) -> RuntimeJobV2:
         """Run the primitive.
