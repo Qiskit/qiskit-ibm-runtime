@@ -118,14 +118,7 @@ class TestEstimatorV2(IBMTestCase):
         inst = NoiseLearner(backend, options)
         self.assertEqual(inst.options, expected)
 
-    def test_not_isa_circuit(self):
+    def test_not_supported_in_local_mode(self):
         """Test exception when circuits is not ISA."""
-        backend = FakeSherbrooke()
-
-        circuit = QuantumCircuit(1)
-        circuit.h(0)
-
-        inst = NoiseLearner(backend)
-
-        with self.assertRaisesRegex(IBMInputValueError, " h "):
-            inst.run([circuit])
+        with self.assertRaisesRegex(ValueError, "not currently supported in local mode"):
+            NoiseLearner(FakeSherbrooke())

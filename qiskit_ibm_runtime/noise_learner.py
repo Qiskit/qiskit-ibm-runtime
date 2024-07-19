@@ -119,7 +119,7 @@ class NoiseLearner:
         self._mode, self._service, self._backend = _get_mode_service_backend(mode)
         if isinstance(self._service, QiskitRuntimeLocalService):
             raise ValueError("``NoiseLearner`` not currently supported in local mode.")
-        
+
         self._set_options(options)
 
     @property
@@ -241,10 +241,10 @@ class NoiseLearner:
             if name in options_dict and name in input_option_names:
                 ret[name] = options_dict[name]
 
-        # Remove image
-        ret.get("experimental", {}).pop("image", None)
-
         remove_dict_unset_values(ret)
         remove_empty_dict(ret)
+
+        # Remove image
+        ret.get("experimental", {}).pop("image", None)
 
         return ret
