@@ -41,7 +41,7 @@ from .hub_group_project import HubGroupProject  # pylint: disable=cyclic-import
 from .utils.result_decoder import ResultDecoder
 from .runtime_job import RuntimeJob
 from .runtime_job_v2 import RuntimeJobV2
-from .utils import RuntimeDecoder, RuntimeEncoder, validate_job_tags
+from .utils import validate_job_tags
 from .api.client_parameters import ClientParameters
 from .runtime_options import RuntimeOptions
 from .ibm_backend import IBMBackend
@@ -804,7 +804,6 @@ class QiskitRuntimeService:
             inputs: Program input parameters. These input values are passed
                 to the runtime program.
             options: Runtime options that control the execution environment.
-                See :class:`RuntimeOptions` for all available options.
 
             callback: Callback function to be invoked for any interim results and final result.
                 The callback function will receive 2 positional parameters:
@@ -862,6 +861,9 @@ class QiskitRuntimeService:
             warnings.warn(
                 f"The backend {backend.name} currently has a status of {status.status_msg}."
             )
+
+        if hgp_name == "ibm-q/open/main":
+            self.check_pending_jobs()
 
         version = inputs.get("version", 1) if inputs else 1
         try:
@@ -926,6 +928,35 @@ class QiskitRuntimeService:
     def _run(self, *args: Any, **kwargs: Any) -> Union[RuntimeJob, RuntimeJobV2]:
         """Private run method"""
         return self.run(*args, **kwargs)
+
+    def check_pending_jobs(self) -> None:
+        """Check the number of pending jobs and wait for the oldest pending job if
+        the maximum number of pending jobs has been reached.
+        """
+        try:
+            usage = self.usage().get("byInstance")[0]
+            pending_jobs = usage.get("pendingJobs")
+            max_pending_jobs = usage.get("maxPendingJobs")
+            if pending_jobs >= max_pending_jobs:
+                oldest_running = self.jobs(limit=1, descending=False, pending=True)
+                if oldest_running:
+                    logger.warning(
+                        "The pending jobs limit has been reached. "
+                        "Waiting for job %s to finish before submitting the next one.",
+                        oldest_running[0],
+                    )
+                    try:
+                        oldest_running[0].wait_for_final_state(timeout=300)
+
+                    except Exception as ex:  # pylint: disable=broad-except
+                        logger.debug(
+                            "An error occurred while waiting for job %s to finish: %s",
+                            oldest_running[0].job_id(),
+                            ex,
+                        )
+
+        except Exception as ex:  # pylint: disable=broad-except
+            logger.warning("Unable to retrieve open plan pending jobs details. %s", ex)
 
     def job(self, job_id: str) -> Union[RuntimeJob, RuntimeJobV2]:
         """Retrieve a runtime job.
@@ -1063,6 +1094,21 @@ class QiskitRuntimeService:
                 raise RuntimeJobNotFound(f"Job not found: {ex.message}") from None
             raise IBMRuntimeError(f"Failed to delete job: {ex}") from None
 
+    def usage(self) -> Dict[str, Any]:
+        """Return monthly open plan usage information.
+
+        Returns:
+            Dict with usage details.
+
+        Raises:
+            IBMInputValueError: If method is called when using the ibm_cloud channel
+        """
+        if self._channel == "ibm_cloud":
+            raise IBMInputValueError(
+                "Usage is only available for the ``ibm_quantum`` channel open plan."
+            )
+        return self._api_client.usage()
+
     def _decode_job(self, raw_data: Dict) -> Union[RuntimeJob, RuntimeJobV2]:
         """Decode job data received from the server.
 
@@ -1101,9 +1147,7 @@ class QiskitRuntimeService:
         if not isinstance(params, str):
             if params:
                 version = params.get("version", 1)
-            params = json.dumps(params, cls=RuntimeEncoder)
 
-        decoded = json.loads(params, cls=RuntimeDecoder)
         if version == 2:
             return RuntimeJobV2(
                 backend=backend,
@@ -1112,7 +1156,6 @@ class QiskitRuntimeService:
                 service=self,
                 job_id=raw_data["id"],
                 program_id=raw_data.get("program", {}).get("id", ""),
-                params=decoded,
                 creation_date=raw_data.get("created", None),
                 session_id=raw_data.get("session_id"),
                 tags=raw_data.get("tags"),
@@ -1124,7 +1167,6 @@ class QiskitRuntimeService:
             service=self,
             job_id=raw_data["id"],
             program_id=raw_data.get("program", {}).get("id", ""),
-            params=decoded,
             creation_date=raw_data.get("created", None),
             session_id=raw_data.get("session_id"),
             tags=raw_data.get("tags"),

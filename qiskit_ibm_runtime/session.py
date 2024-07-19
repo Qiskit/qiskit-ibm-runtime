@@ -130,6 +130,12 @@ class Session:
                     else QiskitRuntimeService.global_service
                 )
             if isinstance(backend, str):
+                issue_deprecation_msg(
+                    msg="Passing a backend as a string is deprecated",
+                    version="0.26.0",
+                    remedy="Use the actual backend object instead.",
+                    period="3 months",
+                )
                 self._backend = self._service.backend(backend)
             elif backend is None:
                 raise ValueError('"backend" is required')
@@ -172,7 +178,6 @@ class Session:
             inputs: Program input parameters. These input values are passed
                 to the runtime program.
             options: Runtime options that control the execution environment.
-                See :class:`qiskit_ibm_runtime.RuntimeOptions` for all available options.
             callback: Callback function to be invoked for any interim results and final result.
 
         Returns:

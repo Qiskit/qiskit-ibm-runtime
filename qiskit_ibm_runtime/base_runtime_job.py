@@ -66,7 +66,6 @@ class BaseRuntimeJob(ABC):
         job_id: str,
         program_id: str,
         service: "qiskit_runtime_service.QiskitRuntimeService",
-        params: Optional[Dict] = None,
         creation_date: Optional[str] = None,
         user_callback: Optional[Callable] = None,
         result_decoder: Optional[Union[Type[ResultDecoder], Sequence[Type[ResultDecoder]]]] = None,
@@ -83,7 +82,6 @@ class BaseRuntimeJob(ABC):
             client_params: Parameters used for server connection.
             job_id: Job ID.
             program_id: ID of the program this job is for.
-            params: Job parameters.
             creation_date: Job creation date, in UTC.
             user_callback: User callback function.
             result_decoder: A :class:`ResultDecoder` subclass used to decode job results.
@@ -97,10 +95,10 @@ class BaseRuntimeJob(ABC):
         self._job_id = job_id
         self._api_client = api_client
         self._interim_results: Optional[Any] = None
-        self._params = params or {}
         self._creation_date = creation_date
         self._program_id = program_id
         self._reason: Optional[str] = None
+        self._reason_code: Optional[int] = None
         self._error_message: Optional[str] = None
         self._image = image
         self._final_interim_results = False
@@ -239,15 +237,14 @@ class BaseRuntimeJob(ABC):
         """
         try:
             reason = job_response["state"].get("reason")
-            reason_code = job_response["state"].get("reason_code")
+            reason_code = job_response["state"].get("reasonCode") or job_response["state"].get(
+                "reason_code"
+            )
             if reason:
-                # TODO remove this in https://github.com/Qiskit/qiskit-ibm-runtime/issues/989
-                if reason.upper() == "RAN TOO LONG":
-                    self._reason = reason.upper()
-                else:
-                    self._reason = reason
+                self._reason = reason
                 if reason_code:
                     self._reason = f"Error code {reason_code}; {self._reason}"
+                    self._reason_code = reason_code
             self._status = self._status_from_job_response(job_response)
         except KeyError:
             raise IBMError(f"Unknown status: {job_response['state']['status']}")
@@ -286,7 +283,7 @@ class BaseRuntimeJob(ABC):
         if index != -1:
             job_result_raw = job_result_raw[index:]
 
-        if status == "CANCELLED" and self._reason == "RAN TOO LONG":
+        if status == "CANCELLED" and self._reason_code == 1305:
             error_msg = API_TO_JOB_ERROR_MESSAGE["CANCELLED - RAN TOO LONG"]
             return error_msg.format(self.job_id(), job_result_raw)
         else:
@@ -386,10 +383,9 @@ class BaseRuntimeJob(ABC):
         Returns:
             Input parameters used in this job.
         """
-        if not self._params:
-            response = self._api_client.job_get(job_id=self.job_id(), exclude_params=False)
-            self._params = response.get("params", {})
-        return self._params
+
+        response = self._api_client.job_get(job_id=self.job_id(), exclude_params=False)
+        return response.get("params", {})
 
     @property
     def primitive_id(self) -> str:

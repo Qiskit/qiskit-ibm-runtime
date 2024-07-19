@@ -21,7 +21,7 @@ from qiskit import QuantumCircuit, transpile, QuantumRegister, ClassicalRegister
 from qiskit.primitives.containers.sampler_pub import SamplerPub
 from qiskit.circuit.library import RealAmplitudes
 from qiskit_ibm_runtime import Sampler, Session, SamplerV2, SamplerOptions, IBMInputValueError
-from qiskit_ibm_runtime.fake_provider import FakeFractionalBackend
+from qiskit_ibm_runtime.fake_provider import FakeFractionalBackend, FakeSherbrooke
 
 from ..ibm_test_case import IBMTestCase
 from ..utils import bell, MockSession, dict_paritally_equal, get_mocked_backend, transpile_pubs
@@ -245,3 +245,22 @@ class TestSamplerV2(IBMTestCase):
         inst = SamplerV2(mode=backend)
         with self.assertRaises(IBMInputValueError):
             inst.run([dynamic_circuit, fractional_circuit])
+
+    def test_gate_not_in_target(self):
+        """Test exception when circuits contain gates that are not basis gates"""
+        # pylint: disable=invalid-name,not-context-manager
+        backend = FakeSherbrooke()
+        sampler = SamplerV2(backend=backend)
+
+        circ = QuantumCircuit(1, 1)
+        circ.x(0)
+        circ.measure(0, 0)
+        with circ.if_test((0, 1)):
+            with circ.if_test((0, 0)) as else_:
+                circ.x(0)
+            with else_:
+                circ.h(0)
+        circ.measure(0, 0)
+
+        with self.assertRaisesRegex(IBMInputValueError, " h "):
+            sampler.run(pubs=[(circ)])

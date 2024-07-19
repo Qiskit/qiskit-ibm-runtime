@@ -163,6 +163,12 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
                 " the service using `QiskitRuntimeService().backend('ibm_backend')`",
                 3,
             )
+            issue_deprecation_msg(
+                msg="Passing a backend as a string is deprecated",
+                version="0.26.0",
+                remedy="Use the actual backend object instead.",
+                period="3 months",
+            )
         if mode is None:
             mode = session if backend and session else backend if backend else session
         BasePrimitiveV2.__init__(self, mode=mode, options=options)
@@ -227,6 +233,12 @@ class EstimatorV2(BasePrimitiveV2[EstimatorOptions], Estimator, BaseEstimatorV2)
 
 class EstimatorV1(BasePrimitiveV1, Estimator, BaseEstimator):
     """Class for interacting with Qiskit Runtime Estimator primitive service.
+
+    .. deprecated:: 0.23
+       The ``EstimatorV1`` primitives have been deprecated in 0.23, released on April 15, 2024.
+       See the `V2 migration guide <https://docs.quantum.ibm.com/api/migration-guides/v2-primitives>`_.
+       for more details.
+       The ``EstimatorV1`` support will be removed no earlier than July 15, 2024.
 
     Qiskit Runtime Estimator primitive service estimates expectation values of quantum circuits and
     observables.
@@ -322,7 +334,6 @@ class EstimatorV1(BasePrimitiveV1, Estimator, BaseEstimator):
             parameter_values: Concrete parameters to be bound.
 
             **kwargs: Individual options to overwrite the default primitive options.
-                These include the runtime options in :class:`qiskit_ibm_runtime.RuntimeOptions`.
 
         Returns:
             Submitted job.
@@ -358,7 +369,6 @@ class EstimatorV1(BasePrimitiveV1, Estimator, BaseEstimator):
             parameter_values: An optional list of concrete parameters to be bound.
 
             **kwargs: Individual options to overwrite the default primitive options.
-                These include the runtime options in :class:`~qiskit_ibm_runtime.RuntimeOptions`.
 
         Returns:
             Submitted job

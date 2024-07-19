@@ -64,7 +64,6 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         job_id: str,
         program_id: str,
         service: "qiskit_runtime_service.QiskitRuntimeService",
-        params: Optional[Dict] = None,
         creation_date: Optional[str] = None,
         user_callback: Optional[Callable] = None,
         result_decoder: Optional[Union[Type[ResultDecoder], Sequence[Type[ResultDecoder]]]] = None,
@@ -81,7 +80,6 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
             client_params: Parameters used for server connection.
             job_id: Job ID.
             program_id: ID of the program this job is for.
-            params: Job parameters.
             creation_date: Job creation date, in UTC.
             user_callback: User callback function.
             result_decoder: A :class:`ResultDecoder` subclass used to decode job results.
@@ -100,7 +98,6 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
             job_id=job_id,
             program_id=program_id,
             service=service,
-            params=params,
             creation_date=creation_date,
             user_callback=user_callback,
             result_decoder=result_decoder,
@@ -136,7 +133,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         self.wait_for_final_state(timeout=timeout)
         if self._status == "ERROR":
             error_message = self._reason if self._reason else self._error_message
-            if self._reason == "RAN TOO LONG":
+            if self._reason_code == 1305:
                 raise RuntimeJobMaxTimeoutError(error_message)
             raise RuntimeJobFailureError(f"Unable to retrieve job result. {error_message}")
         if self._status == "CANCELLED":
@@ -187,7 +184,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
         api_status = response["state"]["status"].upper()
         if api_status in API_TO_JOB_STATUS:
             mapped_job_status = API_TO_JOB_STATUS[api_status]
-            if mapped_job_status == "CANCELLED" and self._reason == "RAN TOO LONG":
+            if mapped_job_status == "CANCELLED" and self._reason_code == 1305:
                 mapped_job_status = "ERROR"
             return mapped_job_status
         return api_status
