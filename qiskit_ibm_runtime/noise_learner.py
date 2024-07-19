@@ -123,7 +123,7 @@ class NoiseLearner:
                 Otherwise if IBM Cloud channel is used, a default backend is selected.
 
             options: :class:`NoiseLearnerOptions`. Alternatively, :class:`EstimatorOptions` can be
-                provided, in which case the estimator options get reformatted into noise learner options
+                provided for convenience, in which case the estimator options get reformatted into noise learner options
                 and all the irrelevant fields are ignored.
         """
         self._mode: Optional[Union[Session, Batch]] = None
