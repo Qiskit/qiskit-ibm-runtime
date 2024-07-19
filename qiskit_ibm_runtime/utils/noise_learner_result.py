@@ -14,9 +14,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+# from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Iterator, Sequence, Iterable
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info import PauliList
@@ -40,9 +40,9 @@ class NoiseLearnerDatum:
     """
 
     circuit: QuantumCircuit
-    qubits: Iterable[int]
+    qubits: Sequence[int]
     generators: PauliList
-    rates: Iterable[float]
+    rates: Sequence[float]
 
     def __post_init__(self) -> None:
         if len({self.circuit.num_qubits, len(self.qubits), self.generators.num_qubits}) != 1:
@@ -56,7 +56,7 @@ class NoiseLearnerDatum:
 class NoiseLearnerResult:
     """A container for the results of a noise learner experiment."""
 
-    def __init__(self, data: Iterable[NoiseLearnerDatum], metadata: dict[str, Any] | None = None):
+    def __init__(self, data: Sequence[NoiseLearnerDatum], metadata: dict[str, Any] | None = None):
         """
         Args:
             data: The data of a noise learner experiment.
@@ -88,7 +88,7 @@ class NoiseLearnerResult:
         return NoiseLearnerResult(data)
 
     @property
-    def data(self) -> dict[str, Any]:
+    def data(self) -> Sequence[NoiseLearnerDatum]:
         """The data of this noise learner result."""
         return self._data
 
@@ -97,7 +97,7 @@ class NoiseLearnerResult:
         """The metadata of this noise learner result."""
         return self._metadata
 
-    def __getitem__(self, index) -> NoiseLearnerDatum:
+    def __getitem__(self, index: int) -> NoiseLearnerDatum:
         return self.data[index]
 
     def __len__(self) -> int:
@@ -106,5 +106,5 @@ class NoiseLearnerResult:
     def __repr__(self) -> str:
         return f"NoiseLearnerResult(data={self.data}, metadata={self.metadata})"
 
-    def __iter__(self) -> Iterable[NoiseLearnerDatum]:
+    def __iter__(self) -> Iterator[NoiseLearnerDatum]:
         return iter(self.data)

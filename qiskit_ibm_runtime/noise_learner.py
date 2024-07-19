@@ -148,7 +148,7 @@ class NoiseLearner:
             )
             self._backend = self._service.backend(mode)
         elif get_cm_session():
-            self._mode = get_cm_session()
+            self._mode = get_cm_session()  # type: ignore[assignment]
             self._service = self._mode.service
             self._backend = self._service.backend(  # type: ignore
                 name=self._mode.backend(), instance=self._mode._instance
@@ -237,7 +237,7 @@ class NoiseLearner:
 
     def _set_options(
         self, options: Optional[Union[Dict, NoiseLearnerOptions, EstimatorOptions]] = None
-    ):
+    ) -> None:
         """
         Sets the options, ensuring that they are of type ``NoiseLearnerOptions``.
         """
@@ -246,15 +246,15 @@ class NoiseLearner:
         elif isinstance(options, NoiseLearnerOptions):
             self._options = options
         elif isinstance(options, EstimatorOptions):
-            options_d = asdict(options.resilience.layer_noise_learning)
-            options_d.update({"twirling_strategy": options.twirling.strategy})
+            options_d = asdict(options.resilience.layer_noise_learning)  # type: ignore[union-attr]
+            options_d.update({"twirling_strategy": options.twirling.strategy})  # type: ignore[union-attr]
             options_d.update({"max_execution_time": options.max_execution_time})
             self._options = NoiseLearnerOptions(**options_d)
         else:
             self._options = NoiseLearnerOptions(**options)
 
     @staticmethod
-    def _get_inputs_options(options_dict: dict[str, Any]):
+    def _get_inputs_options(options_dict: dict[str, Any]) -> dict[str, str]:
         """Returns a dictionary of options that must be included in the program inputs,
         filtering out every option that is not part of the NoiseLearningOptions."""
         ret = {}
