@@ -154,7 +154,6 @@ class QiskitRuntimeLocalService:
             inputs: Program input parameters. These input values are passed
                 to the runtime program.
             options: Runtime options that control the execution environment.
-                See :class:`RuntimeOptions` for all available options.
 
         Returns:
             A job representing the execution.

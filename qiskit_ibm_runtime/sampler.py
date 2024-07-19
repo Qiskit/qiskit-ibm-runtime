@@ -266,7 +266,6 @@ class SamplerV1(BasePrimitiveV1, Sampler, BaseSampler):
                 a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
             parameter_values: Concrete parameters to be bound.
             **kwargs: Individual options to overwrite the default primitive options.
-                These include the runtime options in :class:`qiskit_ibm_runtime.RuntimeOptions`.
 
         Returns:
             Submitted job.
@@ -296,7 +295,6 @@ class SamplerV1(BasePrimitiveV1, Sampler, BaseSampler):
                 a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
             parameter_values: An optional list of concrete parameters to be bound.
             **kwargs: Individual options to overwrite the default primitive options.
-                These include the runtime options in :class:`qiskit_ibm_runtime.RuntimeOptions`.
 
         Returns:
             Submitted job.
