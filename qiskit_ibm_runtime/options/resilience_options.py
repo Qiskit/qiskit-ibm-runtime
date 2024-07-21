@@ -48,12 +48,16 @@ class ResilienceOptionsV2:
             See :class:`MeasureNoiseLearningOptions` for all options.
 
         zne_mitigation: Whether to turn on Zero Noise Extrapolation error mitigation method.
+            If you enable ZNE, you can fine tune its options by using :attr:`~zne`.
+            See :class:`ZneOptions` for additional ZNE related options.
             Default: False.
 
         zne: Additional zero noise extrapolation mitigation options.
             See :class:`ZneOptions` for all options.
 
         pec_mitigation: Whether to turn on Probabilistic Error Cancellation error mitigation method.
+            If you enable PEC, you can fine tune its options by using :attr:`~pec`.
+            See :class:`PecOptions` for additional PEC related options.
             Default: False.
 
         pec: Additional probabalistic error cancellation mitigation options.
