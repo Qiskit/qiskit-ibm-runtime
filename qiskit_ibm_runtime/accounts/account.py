@@ -26,7 +26,7 @@ from ..api.auth import QuantumAuth, CloudAuth
 from ..utils import resolve_crn
 
 AccountType = Optional[Literal["cloud", "legacy"]]
-ChannelType = Optional[Literal["ibm_cloud", "ibm_quantum"]]
+ChannelType = Optional[Literal["ibm_cloud", "ibm_quantum", "local"]]
 
 IBM_QUANTUM_API_URL = "https://auth.quantum-computing.ibm.com/api"
 IBM_CLOUD_API_URL = "https://cloud.ibm.com"
