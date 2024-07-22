@@ -216,7 +216,6 @@ from .exceptions import *
 from .utils.utils import setup_logger
 from .version import __version__
 
-from .noise_learner import NoiseLearner
 from .estimator import (  # pylint: disable=reimported
     EstimatorV2,
     EstimatorV1,

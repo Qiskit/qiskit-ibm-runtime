@@ -13,7 +13,7 @@
 """Integration tests for NoiseLearner."""
 
 from qiskit.circuit import QuantumCircuit
-from qiskit_ibm_runtime import NoiseLearner
+from qiskit_ibm_runtime.noise_learner import NoiseLearner
 
 from ..decorators import run_integration_test
 from ..ibm_test_case import IBMIntegrationTestCase
@@ -36,7 +36,7 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
         self.circuits = [c1, c2]
 
     @run_integration_test
-    def test_noise_learner_session(self):
+    def test_noise_learner(self):
         """Verify if estimator primitive returns expected results"""
 
         learner = NoiseLearner(self.backend)

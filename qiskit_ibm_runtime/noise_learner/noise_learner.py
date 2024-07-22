@@ -14,33 +14,33 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
 from dataclasses import asdict, fields
 from typing import Any, Dict, Iterable, Optional, Union
 import logging
 
 from qiskit.circuit import QuantumCircuit
-from qiskit.providers import BackendV1, BackendV2
+from qiskit.providers import BackendV2
 from qiskit.primitives.containers import EstimatorPubLike
 from qiskit.primitives.containers.estimator_pub import EstimatorPub
 
-from .base_primitive import _get_mode_service_backend
-from .constants import DEFAULT_DECODERS
-from .runtime_job_v2 import RuntimeJobV2
-from .ibm_backend import IBMBackend
-from .options.estimator_options import EstimatorOptions
-from .options.noise_learner_options import NoiseLearnerOptions
-from .options.utils import remove_dict_unset_values, remove_empty_dict
-from .utils import validate_isa_circuits
-from .utils.utils import is_simulator
+from ..base_primitive import _get_mode_service_backend
+from ..constants import DEFAULT_DECODERS
+from ..runtime_job_v2 import RuntimeJobV2
+from ..ibm_backend import IBMBackend
+from ..options.estimator_options import EstimatorOptions
+from ..options.noise_learner_options import NoiseLearnerOptions
+from ..options.utils import remove_dict_unset_values, remove_empty_dict
+from ..utils import validate_isa_circuits
+from ..utils.utils import is_simulator
 
-from .fake_provider.local_service import QiskitRuntimeLocalService
-from .qiskit_runtime_service import QiskitRuntimeService
-from .provider_session import get_cm_session
+from ..fake_provider.local_service import QiskitRuntimeLocalService
+from ..qiskit_runtime_service import QiskitRuntimeService
 
 
 # pylint: disable=unused-import,cyclic-import
-from .session import Session
-from .batch import Batch
+from ..session import Session
+from ..batch import Batch
 
 logger = logging.getLogger(__name__)
 
@@ -86,6 +86,11 @@ class NoiseLearner:
         # run the noise learner job
         learner = NoiseLearner(backend, options)
         job = learner.run(circuits)
+        
+    .. note::
+        Currently, the :class:`.NoiseLearner` is released an experimental feature.
+        As such, it is subject to change without notification and its stability is not
+        guaranteed.
 
     References:
         1. E. van den Berg, Z. Minev, A. Kandala, K. Temme, *Probabilistic error
@@ -149,6 +154,10 @@ class NoiseLearner:
         options_dict = asdict(self.options)
         learner_options = {"options": self._get_inputs_options(options_dict)}
         runtime_options = NoiseLearnerOptions._get_runtime_options(options_dict)
+
+        print(options_dict, "\n")
+        print(learner_options, "\n")
+        print(runtime_options, "\n")
 
         # Define the program inputs
         inputs = {"circuits": tasks}
@@ -226,20 +235,16 @@ class NoiseLearner:
         filtering out every option that is not part of the NoiseLearningOptions."""
         ret = {}
 
-        input_option_names = [
-            "simulator",
-            "max_layers_to_learn",
-            "shots_per_randomization",
-            "num_randomizations",
-            "layer_pair_depths",
-            "twirling_strategy",
-            "experimental",
+        ignored_names = [
+            "_VERSION",
+            "max_execution_time",
+            "environment",
         ]
 
         for field in fields(NoiseLearnerOptions):
             name = field.name
-            if name in options_dict and name in input_option_names:
-                ret[name] = options_dict[name]
+            if name in options_dict and name not in ignored_names:
+                ret[name] = deepcopy(options_dict[name])
 
         remove_dict_unset_values(ret)
         remove_empty_dict(ret)

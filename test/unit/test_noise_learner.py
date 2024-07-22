@@ -16,7 +16,8 @@ from ddt import ddt
 
 from qiskit import QuantumCircuit, transpile
 
-from qiskit_ibm_runtime import NoiseLearner, EstimatorOptions, IBMInputValueError
+from qiskit_ibm_runtime import EstimatorOptions
+from qiskit_ibm_runtime.noise_learner import NoiseLearner
 from qiskit_ibm_runtime.options import NoiseLearnerOptions
 from qiskit_ibm_runtime.fake_provider import FakeSherbrooke
 

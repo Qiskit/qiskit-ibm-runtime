@@ -86,9 +86,9 @@ def _get_mode_service_backend(
         raise ValueError("mode must be of type Backend, Session, Batch or None")
     elif get_cm_session():
         mode = get_cm_session()
-        service = mode.service
+        service = mode.service  # type: ignore
         backend = service.backend(name=mode.backend(), instance=mode._instance)  # type: ignore
-        return mode, service, backend
+        return mode, service, backend  # type: ignore
     else:
         raise ValueError("A backend or session must be specified.")
 
