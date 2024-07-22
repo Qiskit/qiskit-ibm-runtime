@@ -16,39 +16,39 @@ import os
 import re
 import sys
 
-sys.path.insert(0, os.path.abspath("."))
+sys.path.insert(0, os.path.abspath('.'))
 
 # -- Project information -----------------------------------------------------
-project = "Qiskit Runtime IBM Client"
-project_copyright = "2022, Qiskit Development Team"
-author = "Qiskit Development Team"
-language = "en"
+project = 'Qiskit Runtime IBM Client'
+project_copyright = '2022, Qiskit Development Team'
+author = 'Qiskit Development Team'
+language = 'en'
 
 # The short X.Y version
-version = ""
+version = ''
 # The full version, including alpha/beta/rc tags
-release = "0.26.0"
+release = '0.26.0'
 
 # -- General configuration ---------------------------------------------------
 
 extensions = [
-    "sphinx.ext.napoleon",
-    "sphinx.ext.autodoc",
-    "sphinx.ext.autosummary",
-    "sphinx.ext.intersphinx",
+    'sphinx.ext.napoleon',
+    'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
+    'sphinx.ext.intersphinx',
     # This is used by qiskit/documentation to generate links to github.com.
     "sphinx.ext.linkcode",
-    "jupyter_sphinx",
-    "sphinx_autodoc_typehints",
-    "nbsphinx",
-    "sphinxcontrib.katex",
-    "matplotlib.sphinxext.plot_directive",
+    'jupyter_sphinx',
+    'sphinx_autodoc_typehints',
+    'nbsphinx',
+    'sphinxcontrib.katex',
+    'matplotlib.sphinxext.plot_directive',
 ]
-templates_path = ["_templates"]
+templates_path = ['_templates']
 
 nbsphinx_timeout = 300
 nbsphinx_execute = "never"
-nbsphinx_widgets_path = ""
+nbsphinx_widgets_path = ''
 
 nbsphinx_prolog = """
 {% set docname = env.doc2path(env.docname, base=None) %}
@@ -85,7 +85,7 @@ intersphinx_mapping = {
 autosummary_generate = True
 
 autodoc_default_options = {
-    "inherited-members": None,
+    'inherited-members': None,
 }
 
 
@@ -96,7 +96,9 @@ numfig = True
 # A dictionary mapping 'figure', 'table', 'code-block' and 'section' to
 # strings that are used for format of figure numbers. As a special character,
 # %s will be replaced to figure number.
-numfig_format = {"table": "Table %s"}
+numfig_format = {
+    'table': 'Table %s'
+}
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -104,7 +106,7 @@ numfig_format = {"table": "Table %s"}
 exclude_patterns = ["**site-packages", "_build", "**.ipynb_checkpoints"]
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = "colorful"
+pygments_style = 'colorful'
 
 # A boolean that decides whether module names are prepended to all object names
 # (for object types where a “module” of some kind is defined), e.g. for
@@ -115,7 +117,7 @@ add_module_names = False
 # (e.g., if this is set to ['foo.'], then foo.bar is shown under B, not F).
 # This can be handy if you document a project that consists of a single
 # package. Works only for the HTML builder currently.
-modindex_common_prefix = ["qiskit."]
+modindex_common_prefix = ['qiskit.']
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -126,15 +128,14 @@ modindex_common_prefix = ["qiskit."]
 html_theme = "alabaster"
 html_title = f"{project} {release}"
 
-html_last_updated_fmt = "%Y/%m/%d"
-html_sourcelink_suffix = ""
-autoclass_content = "both"
+html_last_updated_fmt = '%Y/%m/%d'
+html_sourcelink_suffix = ''
+autoclass_content = 'both'
 
 
 # ----------------------------------------------------------------------------------
 # Source code links
 # ----------------------------------------------------------------------------------
-
 
 def determine_github_branch() -> str:
     """Determine the GitHub branch name to use for source code links.
@@ -156,7 +157,11 @@ def determine_github_branch() -> str:
     # Check if the ref_name is a tag like `1.0.0` or `1.0.0rc1`. If so, we need
     # to transform it to a Git branch like `stable/1.0`.
     version_without_patch = re.match(r"(\d+\.\d+)", ref_name)
-    return f"stable/{version_without_patch.group()}" if version_without_patch else ref_name
+    return (
+        f"stable/{version_without_patch.group()}"
+        if version_without_patch
+        else ref_name
+    )
 
 
 GITHUB_BRANCH = determine_github_branch()
