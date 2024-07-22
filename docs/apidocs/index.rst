@@ -12,4 +12,3 @@ qiskit-ibm-runtime API reference
    transpiler
    qiskit_ibm_runtime.transpiler.passes.scheduling
    fake_provider
-   noise_learner
