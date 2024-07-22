@@ -155,10 +155,6 @@ class NoiseLearner:
         learner_options = {"options": self._get_inputs_options(options_dict)}
         runtime_options = NoiseLearnerOptions._get_runtime_options(options_dict)
 
-        print(options_dict, "\n")
-        print(learner_options, "\n")
-        print(runtime_options, "\n")
-
         # Define the program inputs
         inputs = {"circuits": tasks}
         inputs.update(learner_options)
@@ -197,7 +193,7 @@ class NoiseLearner:
                 result_decoder=DEFAULT_DECODERS.get(self._program_id()),
             )
 
-        return self._service.run(
+        return self._service.run(  # type: ignore[attr-defined]
             program_id=self._program_id(),  # type: ignore[arg-type]
             options=runtime_options,
             inputs=inputs,
