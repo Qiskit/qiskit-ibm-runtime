@@ -36,6 +36,7 @@ class Runtime(RestAdapterBase):
         "jobs": "/jobs",
         "backends": "/backends",
         "cloud_instance": "/instance",
+        "usage": "/usage",
     }
 
     def program_job(self, job_id: str) -> "ProgramJob":
@@ -239,3 +240,12 @@ class Runtime(RestAdapterBase):
         """
         url = self.get_url("cloud_instance")
         return self.session.get(url).json().get("qctrl_enabled")
+
+    def usage(self) -> Dict[str, Any]:
+        """Return monthly open plan usage information.
+
+        Returns:
+            JSON response.
+        """
+        url = self.get_url("usage")
+        return self.session.get(url).json()

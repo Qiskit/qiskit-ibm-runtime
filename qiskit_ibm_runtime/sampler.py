@@ -122,6 +122,14 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
                 " the service using `QiskitRuntimeService().backend('ibm_backend')`",
                 3,
             )
+            issue_deprecation_msg(
+                msg="Passing a backend as a string is deprecated",
+                version="0.26.0",
+                remedy="Use the actual backend object instead.",
+                period="3 months",
+                stacklevel=2,
+            )
+
         if mode is None:
             mode = session if backend and session else backend if backend else session
         BasePrimitiveV2.__init__(self, mode=mode, options=options)
@@ -258,7 +266,6 @@ class SamplerV1(BasePrimitiveV1, Sampler, BaseSampler):
                 a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
             parameter_values: Concrete parameters to be bound.
             **kwargs: Individual options to overwrite the default primitive options.
-                These include the runtime options in :class:`qiskit_ibm_runtime.RuntimeOptions`.
 
         Returns:
             Submitted job.
@@ -288,7 +295,6 @@ class SamplerV1(BasePrimitiveV1, Sampler, BaseSampler):
                 a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
             parameter_values: An optional list of concrete parameters to be bound.
             **kwargs: Individual options to overwrite the default primitive options.
-                These include the runtime options in :class:`qiskit_ibm_runtime.RuntimeOptions`.
 
         Returns:
             Submitted job.

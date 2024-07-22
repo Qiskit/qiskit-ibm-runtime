@@ -233,7 +233,7 @@ class OptionsV2(BaseOptions):
 
 @dataclass
 class Options(BaseOptions):
-    """Options for the primitives, used by V1 primitives.
+    """Options for V1 primitives.
 
     Args:
         optimization_level: How much optimization to perform on the circuits.
