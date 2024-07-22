@@ -17,7 +17,7 @@ Primitive options (:mod:`qiskit_ibm_runtime.options`)
 
 .. currentmodule:: qiskit_ibm_runtime.options
 
-Options that can be passed to the primitives.
+Options that can be passed to the Qiskit Runtime primitives.
 
 V2 Primitives
 =============
@@ -75,11 +75,23 @@ You can also pass dictionaries to each sub-category, for example::
 Classes
 =======
 
+Base primitive options
+----------------------
+
 .. autosummary::
    :toctree: ../stubs/
 
    EstimatorOptions
    SamplerOptions
+   Options
+
+
+Suboptions for V2 primitives only
+---------------------------------
+
+.. autosummary::
+   :toctree: ../stubs/
+
    DynamicalDecouplingOptions
    ResilienceOptionsV2
    LayerNoiseLearningOptions
@@ -88,13 +100,28 @@ Classes
    ZneOptions
    TwirlingOptions
    ExecutionOptionsV2
-   Options
-   TranspilationOptions
-   ResilienceOptions
-   ExecutionOptions
+   SamplerExecutionOptionsV2
+
+
+Suboptions for both V1 and V2 primitives
+----------------------------------------
+
+.. autosummary::
+   :toctree: ../stubs/
+
    EnvironmentOptions
    SimulatorOptions
-   SamplerExecutionOptionsV2
+
+
+Suboptions for V1 primitives only
+---------------------------------
+
+.. autosummary::
+   :toctree: ../stubs/
+
+   TranspilationOptions
+   ExecutionOptions
+   ResilienceOptions
 
 """
 

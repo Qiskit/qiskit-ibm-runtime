@@ -141,7 +141,7 @@ class QiskitRuntimeLocalService:
         """
         return self.backends(min_num_qubits=min_num_qubits, filters=filters)[0]
 
-    def run(
+    def _run(
         self,
         program_id: Literal["sampler", "estimator"],
         inputs: Dict,

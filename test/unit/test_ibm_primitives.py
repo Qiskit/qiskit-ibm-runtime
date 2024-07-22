@@ -140,8 +140,8 @@ class TestPrimitives(IBMTestCase):
             inst = primitive(backend=backend_name)
             self.assertIsNone(inst.session)
             inst.run(self.qx, observables=self.obs)
-            mock_service_inst.run.assert_called_once()
-            runtime_options = mock_service_inst.run.call_args.kwargs["options"]
+            mock_service_inst._run.assert_called_once()
+            runtime_options = mock_service_inst._run.call_args.kwargs["options"]
             self.assertEqual(runtime_options["backend"], mock_backend)
 
     def test_init_with_session_backend_str(self):
@@ -240,8 +240,8 @@ class TestPrimitives(IBMTestCase):
                 inst = cls(backend)
                 inst.run(self.qx, observables=self.obs)
                 self.assertIsNone(inst.session)
-                service.run.assert_called_once()
-                kwargs_list = service.run.call_args.kwargs
+                service._run.assert_called_once()
+                kwargs_list = service._run.call_args.kwargs
                 self.assertNotIn("session_id", kwargs_list)
                 self.assertNotIn("start_session", kwargs_list)
 
