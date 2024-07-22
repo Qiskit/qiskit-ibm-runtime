@@ -575,8 +575,15 @@ class FakeBackendV2(BackendV2):
             service: A :class:`QiskitRuntimeService` instance
 
         Raises:
+            ValueError: if the provided service is a non-QiskitRuntimeService instance.
             Exception: If the real target doesn't exist or can't be accessed
         """
+        if not isinstance(service, QiskitRuntimeService):
+            raise ValueError(
+                "The provided service to update the fake backend is invalid. A QiskitRuntimeService is"
+                " required to retrieve the real backend's current properties and settings."
+            )
+
         version = self.backend_version
         prod_name = self.backend_name.replace("fake", "ibm")
         try:
