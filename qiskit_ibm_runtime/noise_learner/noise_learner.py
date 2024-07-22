@@ -86,7 +86,7 @@ class NoiseLearner:
         # run the noise learner job
         learner = NoiseLearner(backend, options)
         job = learner.run(circuits)
-        
+
     .. note::
         Currently, the :class:`.NoiseLearner` is released an experimental feature.
         As such, it is subject to change without notification and its stability is not
