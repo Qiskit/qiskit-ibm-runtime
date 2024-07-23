@@ -36,6 +36,9 @@ class FakeRuntimeService(QiskitRuntimeService):
     DEFAULT_COMMON_BACKEND = "common_backend"
     DEFAULT_UNIQUE_BACKEND_PREFIX = "unique_backend_"
 
+    def __new__(cls, *args, num_hgps=2, runtime_client=None, backend_specs=None, **kwargs):
+        return super().__new__(cls, *args, **kwargs)
+
     def __init__(self, *args, num_hgps=2, runtime_client=None, backend_specs=None, **kwargs):
         self._test_num_hgps = num_hgps
         self._fake_runtime_client = runtime_client
