@@ -15,7 +15,7 @@ Fake Reuschlikon device (16 qubit).
 """
 
 from qiskit.providers.models import GateConfig, QasmBackendConfiguration
-from qiskit.providers.fake_provider.fake_backend import FakeBackend
+from qiskit_ibm_runtime.fake_provider.fake_backend import FakeBackend
 
 
 class FakeRueschlikon(FakeBackend):
@@ -71,4 +71,4 @@ class FakeRueschlikon(FakeBackend):
             coupling_map=cmap,
         )
 
-        super().__init__(configuration)
+        super().__init__(configuration)  # type: ignore

@@ -22,8 +22,9 @@ from qiskit.providers.models import (
     QasmBackendConfiguration,
     BackendProperties,
 )
-from qiskit.providers.fake_provider.fake_backend import FakeBackend
+
 from qiskit_ibm_runtime.fake_provider import fake_backend
+from qiskit_ibm_runtime.fake_provider.fake_backend import FakeBackend
 
 
 class FakePoughkeepsieV2(fake_backend.FakeBackendV2):
@@ -117,7 +118,7 @@ class FakePoughkeepsie(FakeBackend):
             coupling_map=cmap,
         )
 
-        super().__init__(configuration)
+        super().__init__(configuration)  # type: ignore
 
     def properties(self) -> BackendProperties:
         """Returns a snapshot of device properties"""

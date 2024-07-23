@@ -22,7 +22,7 @@ from qiskit.providers.models import (
     QasmBackendConfiguration,
     BackendProperties,
 )
-from qiskit.providers.fake_provider.fake_backend import FakeBackend
+from qiskit_ibm_runtime.fake_provider.fake_backend import FakeBackend
 
 
 class FakeTenerife(FakeBackend):
@@ -57,7 +57,7 @@ class FakeTenerife(FakeBackend):
             coupling_map=cmap,
         )
 
-        super().__init__(configuration)
+        super().__init__(configuration)  # type: ignore
 
     def properties(self) -> BackendProperties:
         """Returns a snapshot of device properties as recorded on 8/30/19."""
