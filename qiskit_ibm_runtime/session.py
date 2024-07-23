@@ -178,7 +178,6 @@ class Session:
             inputs: Program input parameters. These input values are passed
                 to the runtime program.
             options: Runtime options that control the execution environment.
-                See :class:`qiskit_ibm_runtime.RuntimeOptions` for all available options.
             callback: Callback function to be invoked for any interim results and final result.
 
         Returns:
@@ -214,7 +213,7 @@ class Session:
             if self._backend is None:
                 self._backend = job.backend()
         else:
-            job = self._service.run(  # type: ignore[call-arg]
+            job = self._service._run(  # type: ignore[call-arg]
                 program_id=program_id,  # type: ignore[arg-type]
                 options=options,
                 inputs=inputs,

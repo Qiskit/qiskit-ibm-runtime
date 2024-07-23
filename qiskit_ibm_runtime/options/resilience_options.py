@@ -39,21 +39,25 @@ class ResilienceOptionsV2:
 
     Args:
         measure_mitigation: Whether to enable measurement error mitigation method.
-            Further suboptions are available in :attr:`~measure_noise_learning`.
+            If you enable measurement mitigation, you can fine tune its noise learning
+            by using :attr:`~measure_noise_learning`. See :class:`MeasureNoiseLearningOptions`
+            for all measurement mitigation noise learning options.
             Default: True.
 
         measure_noise_learning: Additional measurement noise learning options.
             See :class:`MeasureNoiseLearningOptions` for all options.
 
         zne_mitigation: Whether to turn on Zero Noise Extrapolation error mitigation method.
-            Further suboptions are available in :attr:`~zne`.
+            If you enable ZNE, you can fine tune its options by using :attr:`~zne`.
+            See :class:`ZneOptions` for additional ZNE related options.
             Default: False.
 
         zne: Additional zero noise extrapolation mitigation options.
             See :class:`ZneOptions` for all options.
 
         pec_mitigation: Whether to turn on Probabilistic Error Cancellation error mitigation method.
-            Further suboptions are available in :attr:`~pec`.
+            If you enable PEC, you can fine tune its options by using :attr:`~pec`.
+            See :class:`PecOptions` for additional PEC related options.
             Default: False.
 
         pec: Additional probabalistic error cancellation mitigation options.

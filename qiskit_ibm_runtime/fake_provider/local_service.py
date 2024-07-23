@@ -141,7 +141,7 @@ class QiskitRuntimeLocalService:
         """
         return self.backends(min_num_qubits=min_num_qubits, filters=filters)[0]
 
-    def run(
+    def _run(
         self,
         program_id: Literal["sampler", "estimator"],
         inputs: Dict,
@@ -154,7 +154,6 @@ class QiskitRuntimeLocalService:
             inputs: Program input parameters. These input values are passed
                 to the runtime program.
             options: Runtime options that control the execution environment.
-                See :class:`RuntimeOptions` for all available options.
 
         Returns:
             A job representing the execution.
