@@ -20,7 +20,7 @@ from qiskit.quantum_info import SparsePauliOp
 from qiskit.primitives import EstimatorResult, SamplerResult
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 
-from qiskit_ibm_runtime import Estimator, Session, Sampler, Options, Batch
+from qiskit_ibm_runtime import Estimator, Session, Sampler, Options, Batch, SamplerV2
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
 
 from ..utils import bell
@@ -113,3 +113,11 @@ class TestIntegrationSession(IBMIntegrationTestCase):
 
         with self.assertRaises(IBMInputValueError):
             Batch.from_id(session_id=session._session_id, service=service)
+
+    @run_integration_test
+    def test_job_mode_warning(self, service):
+        """Test deprecation warning is raised when using job mode inside a session."""
+        backend = service.backend("ibmq_qasm_simulator")
+        with Session(service, backend=backend):
+            with self.assertWarns(DeprecationWarning):
+                _ = SamplerV2(mode=backend)
