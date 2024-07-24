@@ -14,7 +14,6 @@
 
 import random
 import time
-from unittest.mock import MagicMock, patch
 
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.jobstatus import JobStatus
@@ -224,18 +223,3 @@ class TestRuntimeJob(IBMTestCase):
         service.delete_job(job.job_id())
         with self.assertRaises(RuntimeJobNotFound):
             service.job(job.job_id())
-
-    @run_quantum_and_cloud_fake
-    def test_download_external_job_result(self, service):
-        """Test downloading the job result from an external URL."""
-        with patch("qiskit_ibm_runtime.base_runtime_job.requests") as request_mock:
-            job = run_program(service=service)
-            with mock_wait_for_final_state(service, job):
-                mock_response = MagicMock()
-                mock_response.text = "content-from-external-url"
-                request_mock.get.return_value = mock_response
-                with mock_wait_for_final_state(service, job):
-                    job.wait_for_final_state()
-                    result = job.result()
-
-        self.assertTrue(result)

@@ -34,6 +34,7 @@ class FakeCircuitRunnerJob(RuntimeJob):
         """
         self._data = data
         api_client = MagicMock()
+        api_client.job_results = MagicMock(return_value=self._data)
         client_params = MagicMock()
         backend = job_id = program_id = service = None
         super().__init__(
@@ -61,9 +62,6 @@ class FakeCircuitRunnerJob(RuntimeJob):
             Status of this job.
         """
         return JOB_FINAL_STATES
-
-    def _download_external_result(self, response: Any) -> Any:
-        return self._data
 
     def submit(self) -> None:
         """Fake submit"""
