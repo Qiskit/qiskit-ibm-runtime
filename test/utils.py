@@ -467,17 +467,22 @@ def get_primitive_inputs(primitive, backend=None, num_sets=1):
         raise ValueError(f"Invalid primitive type {type(primitive)}")
 
 
-def transpile_pubs(in_pubs, backend):
+def transpile_pubs(in_pubs, backend, program):
     """Return pubs with transformed circuits and observables."""
     t_pubs = []
     for pub in in_pubs:
         t_circ = transpile(pub[0], backend=backend)
-        if len(pub) > 2:
+        if program == "estimator":
             t_obs = remap_observables(pub[1], t_circ)
             t_pub = [t_circ, t_obs]
             for elem in pub[2:]:
                 t_pub.append(elem)
-            t_pubs.append(tuple(t_pub))
+        if program == "sampler":
+            if len(pub) == 2:
+                t_pub = [t_circ, pub[1]]
+            else:
+                t_pub = [t_circ]
+        t_pubs.append(tuple(t_pub))
     return t_pubs
 
 
