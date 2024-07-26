@@ -10,12 +10,14 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-# type: ignore
-
 """Class for backend status."""
 
 import html
+from typing import Dict, Any, TypeVar, Type
+
 from qiskit.exceptions import QiskitError
+
+BackendStatusT = TypeVar("BackendStatusT", bound="BackendStatus")
 
 
 class BackendStatus:
@@ -50,7 +52,7 @@ class BackendStatus:
         self.status_msg = status_msg
 
     @classmethod
-    def from_dict(cls, data):
+    def from_dict(cls: Type[BackendStatusT], data: Dict[str, Any]) -> BackendStatusT:
         """Create a new BackendStatus object from a dictionary.
 
         Args:
@@ -63,7 +65,7 @@ class BackendStatus:
         """
         return cls(**data)
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         """Return a dictionary format representation of the BackendStatus.
 
         Returns:
@@ -71,7 +73,7 @@ class BackendStatus:
         """
         return self.__dict__
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         if isinstance(other, BackendStatus):
             if self.__dict__ == other.__dict__:
                 return True
