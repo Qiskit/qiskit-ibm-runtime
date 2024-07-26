@@ -10,9 +10,10 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-# type: ignore
-
 """Class for job status."""
+from typing import Any, Dict, TypeVar, Type
+
+JobStatusT = TypeVar("JobStatusT", bound="JobStatus")
 
 
 class JobStatus:
@@ -24,9 +25,9 @@ class JobStatus:
         status_msg (str): status message.
     """
 
-    _data = {}
+    _data: Dict[str, str] = {}
 
-    def __init__(self, job_id, status, status_msg, **kwargs):
+    def __init__(self, job_id: str, status: str, status_msg: str, **kwargs: Any):
         self._data = {}
         self.job_id = job_id
         self.status = status
@@ -34,7 +35,7 @@ class JobStatus:
         self._data.update(kwargs)
 
     @classmethod
-    def from_dict(cls, data):
+    def from_dict(cls: Type[JobStatusT], data: Dict[str, str]) -> JobStatusT:
         """Create a new JobStatus object from a dictionary.
 
         Args:
@@ -47,7 +48,7 @@ class JobStatus:
         """
         return cls(**data)
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, str]:
         """Return a dictionary format representation of the JobStatus.
 
         Returns:
@@ -61,7 +62,7 @@ class JobStatus:
         out_dict.update(self._data)
         return out_dict
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> str:
         try:
             return self._data[name]
         except KeyError as ex:
