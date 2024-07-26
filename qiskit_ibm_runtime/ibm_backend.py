@@ -32,7 +32,7 @@ from qiskit.pulse.channels import (
 )
 from qiskit.transpiler.target import Target
 
-from .providers.models import (
+from .models import (
     BackendStatus,
     BackendProperties,
     PulseDefaults,

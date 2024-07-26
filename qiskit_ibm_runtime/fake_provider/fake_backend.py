@@ -43,7 +43,7 @@ from qiskit_ibm_runtime.utils.backend_converter import convert_to_target
 from .. import QiskitRuntimeService
 from ..utils.backend_encoder import BackendEncoder
 
-from ..providers.models import (
+from ..models import (
     BackendProperties,
     BackendConfiguration,
     PulseDefaults,

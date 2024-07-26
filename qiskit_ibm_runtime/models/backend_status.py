@@ -10,6 +10,8 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
+# type: ignore
+
 """Class for backend status."""
 
 import html
@@ -82,7 +84,7 @@ class BackendStatus:
             Representation used in Jupyter notebook and other IDE's that call the method
 
         """
-        rpr = self.__repr__()
+        rpr = repr(self)
         html_code = (
             f"<pre>{html.escape(rpr)}</pre>"
             f"<b>name</b>: {self.backend_name}<br/>"

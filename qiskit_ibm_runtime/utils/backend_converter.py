@@ -38,7 +38,7 @@ from qiskit.providers.backend import QubitProperties
 from qiskit.providers.exceptions import BackendPropertyError
 from qiskit.transpiler.target import InstructionProperties, Target
 
-from ..providers.models import BackendConfiguration, BackendProperties, PulseDefaults
+from ..models import BackendConfiguration, BackendProperties, PulseDefaults
 
 
 logger = logging.getLogger(__name__)

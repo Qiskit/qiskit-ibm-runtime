@@ -23,7 +23,7 @@ from qiskit.providers.fake_provider.utils.json_decoder import (
     decode_backend_properties,
 )
 from .fake_backend import FakeBackend
-from ..providers.models import BackendProperties, QasmBackendConfiguration
+from ..models import BackendProperties, QasmBackendConfiguration
 
 
 class FakeQasmBackend(FakeBackend):

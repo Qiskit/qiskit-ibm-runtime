@@ -40,7 +40,7 @@ from qiskit_ibm_runtime import (
 from qiskit_ibm_runtime.fake_provider import FakeManila
 from qiskit_ibm_runtime.hub_group_project import HubGroupProject
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
-from qiskit_ibm_runtime.providers.models import (
+from qiskit_ibm_runtime.models import (
     BackendStatus,
     BackendProperties,
     BackendConfiguration,

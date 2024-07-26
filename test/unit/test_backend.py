@@ -21,7 +21,7 @@ from qiskit.circuit import ForLoopOp, IfElseOp, Reset, SwitchCaseOp, WhileLoopOp
 from qiskit_ibm_runtime import SamplerV2
 from qiskit_ibm_runtime.fake_provider import FakeManila, FakeSherbrooke, FakeFractionalBackend
 from qiskit_ibm_runtime.ibm_backend import IBMBackend
-from qiskit_ibm_runtime.providers.models import (
+from qiskit_ibm_runtime.models import (
     BackendConfiguration,
     BackendProperties,
     BackendStatus,

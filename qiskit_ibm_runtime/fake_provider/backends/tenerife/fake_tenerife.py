@@ -18,7 +18,7 @@ import os
 import json
 
 from qiskit.providers.fake_provider.fake_backend import FakeBackend
-from ....providers.models import (
+from ....models import (
     GateConfig,
     QasmBackendConfiguration,
     BackendProperties,

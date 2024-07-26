@@ -18,7 +18,7 @@ from qiskit.exceptions import QiskitError
 from qiskit.providers.fake_provider.utils.json_decoder import decode_pulse_defaults
 
 from .fake_qasm_backend import FakeQasmBackend
-from ..providers.models import PulseBackendConfiguration, PulseDefaults
+from ..models import PulseBackendConfiguration, PulseDefaults
 
 
 class FakePulseBackend(FakeQasmBackend):

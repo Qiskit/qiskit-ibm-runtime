@@ -39,7 +39,7 @@ from .exceptions import (
     IBMRuntimeError,
 )
 from .utils.result_decoder import ResultDecoder
-from .providers.models import BackendProperties
+from .models import BackendProperties
 from .api.clients import RuntimeClient, RuntimeWebsocketClient, WebsocketClientCloseCode
 from .api.exceptions import RequestsApiError
 from .api.client_parameters import ClientParameters

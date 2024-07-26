@@ -19,7 +19,7 @@ import json
 
 from qiskit.providers.fake_provider.fake_backend import FakeBackend
 from qiskit_ibm_runtime.fake_provider import fake_backend
-from ....providers.models import (
+from ....models import (
     GateConfig,
     QasmBackendConfiguration,
     BackendProperties,
