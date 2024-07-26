@@ -83,11 +83,11 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
                 Refer to the `Qiskit Runtime documentation <https://docs.quantum.ibm.com/run>`_.
                 for more information about the ``Execution modes``.
 
-            backend: Backend to run the primitive. This can be a backend name or an :class:`IBMBackend`
-                instance. If a name is specified, the default account (e.g. ``QiskitRuntimeService()``)
-                is used.
+            backend: (DEPRECATED) Backend to run the primitive. This can be a backend name or
+                an :class:`IBMBackend` instance. If a name is specified, the default account
+                (e.g. ``QiskitRuntimeService()``) is used.
 
-            session: Session in which to call the primitive.
+            session: (DEPRECATED) Session in which to call the primitive.
 
                 If both ``session`` and ``backend`` are specified, ``session`` takes precedence.
                 If neither is specified, and the primitive is created inside a
@@ -122,6 +122,14 @@ class SamplerV2(BasePrimitiveV2[SamplerOptions], Sampler, BaseSamplerV2):
                 " the service using `QiskitRuntimeService().backend('ibm_backend')`",
                 3,
             )
+            issue_deprecation_msg(
+                msg="Passing a backend as a string is deprecated",
+                version="0.26.0",
+                remedy="Use the actual backend object instead.",
+                period="3 months",
+                stacklevel=2,
+            )
+
         if mode is None:
             mode = session if backend and session else backend if backend else session
         BasePrimitiveV2.__init__(self, mode=mode, options=options)
@@ -258,7 +266,6 @@ class SamplerV1(BasePrimitiveV1, Sampler, BaseSampler):
                 a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
             parameter_values: Concrete parameters to be bound.
             **kwargs: Individual options to overwrite the default primitive options.
-                These include the runtime options in :class:`qiskit_ibm_runtime.RuntimeOptions`.
 
         Returns:
             Submitted job.
@@ -288,7 +295,6 @@ class SamplerV1(BasePrimitiveV1, Sampler, BaseSampler):
                 a list of (parameterized) :class:`~qiskit.circuit.QuantumCircuit`.
             parameter_values: An optional list of concrete parameters to be bound.
             **kwargs: Individual options to overwrite the default primitive options.
-                These include the runtime options in :class:`qiskit_ibm_runtime.RuntimeOptions`.
 
         Returns:
             Submitted job.

@@ -67,7 +67,7 @@ class TestSamplerV2(IBMTestCase):
     def test_run_program_inputs(self, in_pubs):
         """Verify program inputs are correct."""
         backend = get_mocked_backend()
-        t_pubs = transpile_pubs(in_pubs, backend)
+        t_pubs = transpile_pubs(in_pubs, backend, "sampler")
         inst = SamplerV2(backend=backend)
         inst.run(t_pubs)
         input_params = backend.service.run.call_args.kwargs["inputs"]

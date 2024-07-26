@@ -141,9 +141,7 @@ class RuntimeJobV2(BasePrimitiveJob[PrimitiveResult, JobStatus], BaseRuntimeJob)
                 "Unable to retrieve result for job {}. " "Job was cancelled.".format(self.job_id())
             )
 
-        result_raw = self._download_external_result(
-            self._api_client.job_results(job_id=self.job_id())
-        )
+        result_raw = self._api_client.job_results(job_id=self.job_id())
 
         return _decoder.decode(result_raw) if result_raw else None  # type: ignore
 
