@@ -10,20 +10,23 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-# type: ignore
-
 """Model and schema for pulse defaults."""
-from typing import Any, Dict, List
+from typing import Any, Dict, List, TypeVar, Type
 
 from qiskit.pulse.instruction_schedule_map import InstructionScheduleMap, PulseQobjDef
 from qiskit.qobj import PulseLibraryItem, PulseQobjInstruction
 from qiskit.qobj.converters import QobjToInstructionConverter
 
+MeasurementKernelT = TypeVar("MeasurementKernelT", bound="MeasurementKernel")
+DiscriminatorT = TypeVar("DiscriminatorT", bound="Discriminator")
+CommandT = TypeVar("CommandT", bound="Command")
+PulseDefaultsT = TypeVar("PulseDefaultsT", bound="PulseDefaults")
+
 
 class MeasurementKernel:
     """Class representing a Measurement Kernel."""
 
-    def __init__(self, name, params):
+    def __init__(self, name: str, params: Any) -> None:
         """Initialize a MeasurementKernel object
 
         Args:
@@ -33,7 +36,7 @@ class MeasurementKernel:
         self.name = name
         self.params = params
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         """Return a dictionary format representation of the MeasurementKernel.
 
         Returns:
@@ -42,7 +45,7 @@ class MeasurementKernel:
         return {"name": self.name, "params": self.params}
 
     @classmethod
-    def from_dict(cls, data):
+    def from_dict(cls: Type[MeasurementKernelT], data: Dict[str, Any]) -> MeasurementKernelT:
         """Create a new MeasurementKernel object from a dictionary.
 
         Args:
@@ -59,7 +62,7 @@ class MeasurementKernel:
 class Discriminator:
     """Class representing a Discriminator."""
 
-    def __init__(self, name, params):
+    def __init__(self, name: str, params: Any):
         """Initialize a Discriminator object
 
         Args:
@@ -69,7 +72,7 @@ class Discriminator:
         self.name = name
         self.params = params
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         """Return a dictionary format representation of the Discriminator.
 
         Returns:
@@ -78,7 +81,7 @@ class Discriminator:
         return {"name": self.name, "params": self.params}
 
     @classmethod
-    def from_dict(cls, data):
+    def from_dict(cls: Type[DiscriminatorT], data: Dict[str, Any]) -> DiscriminatorT:
         """Create a new Discriminator object from a dictionary.
 
         Args:
@@ -99,9 +102,9 @@ class Command:
         name: Pulse command name.
     """
 
-    _data = {}
+    _data: Dict[Any, Any] = {}
 
-    def __init__(self, name: str, qubits=None, sequence=None, **kwargs):
+    def __init__(self, name: str, qubits: Any = None, sequence: Any = None, **kwargs: Any):
         """Initialize a Command object
 
         Args:
@@ -118,19 +121,19 @@ class Command:
             self.sequence = sequence
         self._data.update(kwargs)
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> Any:
         try:
             return self._data[name]
         except KeyError as ex:
             raise AttributeError(f"Attribute {name} is not defined") from ex
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         """Return a dictionary format representation of the Command.
 
         Returns:
             dict: The dictionary form of the Command.
         """
-        out_dict = {"name": self.name}
+        out_dict: Dict[str, Any] = {"name": self.name}
         if hasattr(self, "qubits"):
             out_dict["qubits"] = self.qubits
         if hasattr(self, "sequence"):
@@ -139,7 +142,7 @@ class Command:
         return out_dict
 
     @classmethod
-    def from_dict(cls, data):
+    def from_dict(cls: Type[CommandT], data: Dict[str, Any]) -> CommandT:
         """Create a new Command object from a dictionary.
 
         Args:
@@ -152,7 +155,7 @@ class Command:
         """
         # Pulse command data is nested dictionary.
         # To avoid deepcopy and avoid mutating the source object, create new dict here.
-        in_data = {}
+        in_data: Dict[str, Any] = {}
         for key, value in data.items():
             if key == "sequence":
                 in_data[key] = list(map(PulseQobjInstruction.from_dict, value))
@@ -167,7 +170,7 @@ class PulseDefaults:
     scheduling.
     """
 
-    _data = {}
+    _data: Dict[Any, Any] = {}
 
     def __init__(
         self,
@@ -219,13 +222,13 @@ class PulseDefaults:
 
         self._data.update(kwargs)
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> Any:
         try:
             return self._data[name]
         except KeyError as ex:
             raise AttributeError(f"Attribute {name} is not defined") from ex
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         """Return a dictionary format representation of the PulseDefaults.
         Returns:
             dict: The dictionary form of the PulseDefaults.
@@ -261,7 +264,7 @@ class PulseDefaults:
         return out_dict
 
     @classmethod
-    def from_dict(cls, data):
+    def from_dict(cls: Type[PulseDefaultsT], data: Dict[str, Any]) -> PulseDefaultsT:
         """Create a new PulseDefaults object from a dictionary.
 
         Args:
@@ -280,7 +283,7 @@ class PulseDefaults:
 
         # Pulse defaults data is nested dictionary.
         # To avoid deepcopy and avoid mutating the source object, create new dict here.
-        in_data = {}
+        in_data: Dict[Any, Any] = {}
         for key, value in data.items():
             if key in schema:
                 if isinstance(value, list):
@@ -292,7 +295,7 @@ class PulseDefaults:
 
         return cls(**in_data)
 
-    def __str__(self):
+    def __str__(self) -> str:
         qubit_freqs = [freq / 1e9 for freq in self.qubit_freq_est]
         meas_freqs = [freq / 1e9 for freq in self.meas_freq_est]
         qfreq = f"Qubit Frequencies [GHz]\n{qubit_freqs}"

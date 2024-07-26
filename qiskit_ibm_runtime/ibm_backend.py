@@ -189,9 +189,9 @@ class IBMBackend(Backend):
         self._service = service
         self._api_client = api_client
         self._configuration = configuration
-        self._properties = None
-        self._defaults = None
-        self._target = None
+        self._properties: Any = None
+        self._defaults: Any = None
+        self._target: Any = None
         self._max_circuits = configuration.max_experiments
         self._session: ProviderSession = None
         if (
