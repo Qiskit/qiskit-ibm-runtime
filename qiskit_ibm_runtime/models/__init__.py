@@ -18,7 +18,7 @@ from .backend_configuration import (  # type: ignore[attr-defined]
     PulseBackendConfiguration,
     QasmBackendConfiguration,
     UchannelLO,
-    GateConfig
+    GateConfig,
 )
 from .backend_properties import BackendProperties, GateProperties, Nduv  # type: ignore[attr-defined]
 from .backend_status import BackendStatus  # type: ignore[attr-defined]
