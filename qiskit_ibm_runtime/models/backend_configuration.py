@@ -10,13 +10,13 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-# type: ignore
 
 """Backend Configuration Classes."""
+import datetime
 import re
 import copy
 import numbers
-from typing import Dict, List, Any, Iterable, Tuple, Union
+from typing import Dict, List, Any, Iterable, Tuple, Union, TypeVar, Type
 from collections import defaultdict
 
 from qiskit.exceptions import QiskitError
@@ -28,6 +28,11 @@ from qiskit.pulse.channels import (
     DriveChannel,
     MeasureChannel,
 )
+
+
+GateConfigT = TypeVar("GateConfigT", bound="GateConfig")
+UchannelLOT = TypeVar("UchannelLOT", bound="UchannelLO")
+QasmBackendConfigurationT = TypeVar("QasmBackendConfigurationT", bound="QasmBackendConfiguration")
 
 
 class GateConfig:
@@ -42,13 +47,13 @@ class GateConfig:
 
     def __init__(
         self,
-        name,
-        parameters,
-        qasm_def,
-        coupling_map=None,
-        latency_map=None,
-        conditional=None,
-        description=None,
+        name: str,
+        parameters: List[str],
+        qasm_def: str,
+        coupling_map: list = None,
+        latency_map: list = None,
+        conditional: bool = None,
+        description: str =None,
     ):
         """Initialize a GateConfig object
 
@@ -86,7 +91,7 @@ class GateConfig:
             self.description = description
 
     @classmethod
-    def from_dict(cls, data):
+    def from_dict(cls: Type[GateConfigT], data: Dict[str, Any]) -> GateConfigT:
         """Create a new GateConfig object from a dictionary.
 
         Args:
@@ -99,13 +104,13 @@ class GateConfig:
         """
         return cls(**data)
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         """Return a dictionary format representation of the GateConfig.
 
         Returns:
             dict: The dictionary form of the GateConfig.
         """
-        out_dict = {
+        out_dict: Dict[str, Any] = {
             "name": self.name,
             "parameters": self.parameters,
             "qasm_def": self.qasm_def,
@@ -120,13 +125,13 @@ class GateConfig:
             out_dict["description"] = self.description
         return out_dict
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         if isinstance(other, GateConfig):
             if self.to_dict() == other.to_dict():
                 return True
         return False
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         out_str = f"GateConfig({self.name}, {self.parameters}, {self.qasm_def}"
         for i in ["coupling_map", "latency_map", "conditional", "description"]:
             if hasattr(self, i):
@@ -143,7 +148,7 @@ class UchannelLO:
         scale: Scale factor for qubit frequency.
     """
 
-    def __init__(self, q, scale):
+    def __init__(self, q: int, scale: complex) -> None:
         """Initialize a UchannelLOSchema object
 
         Args:
@@ -159,7 +164,7 @@ class UchannelLO:
         self.scale = scale
 
     @classmethod
-    def from_dict(cls, data):
+    def from_dict(cls: Type[UchannelLOT], data: Dict[str, Any]) -> UchannelLOT:
         """Create a new UchannelLO object from a dictionary.
 
         Args:
@@ -172,25 +177,25 @@ class UchannelLO:
         """
         return cls(**data)
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         """Return a dictionary format representation of the UChannelLO.
 
         Returns:
             dict: The dictionary form of the UChannelLO.
         """
-        out_dict = {
+        out_dict: Dict[str, Any] = {
             "q": self.q,
             "scale": self.scale,
         }
         return out_dict
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         if isinstance(other, UchannelLO):
             if self.to_dict() == other.to_dict():
                 return True
         return False
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"UchannelLO({self.q}, {self.scale})"
 
 
@@ -211,41 +216,41 @@ class QasmBackendConfiguration:
         max_shots: maximum number of shots supported.
     """
 
-    _data = {}
+    _data: Dict[Any, Any] = {}
 
     def __init__(
         self,
-        backend_name,
-        backend_version,
-        n_qubits,
-        basis_gates,
-        gates,
-        local,
-        simulator,
-        conditional,
-        open_pulse,
-        memory,
-        max_shots,
-        coupling_map,
-        supported_instructions=None,
-        dynamic_reprate_enabled=False,
-        rep_delay_range=None,
-        default_rep_delay=None,
-        max_experiments=None,
-        sample_name=None,
-        n_registers=None,
-        register_map=None,
-        configurable=None,
-        credits_required=None,
-        online_date=None,
-        display_name=None,
-        description=None,
-        tags=None,
-        dt=None,
-        dtm=None,
-        processor_type=None,
-        parametric_pulses=None,
-        **kwargs,
+        backend_name: str,
+        backend_version: str,
+        n_qubits: int,
+        basis_gates: list,
+        gates: list,
+        local: bool,
+        simulator: bool,
+        conditional: bool,
+        open_pulse: bool,
+        memory: bool,
+        max_shots: int,
+        coupling_map: list,
+        supported_instructions: List[str] = None,
+        dynamic_reprate_enabled: bool = False,
+        rep_delay_range: List[float] = None,
+        default_rep_delay: float = None,
+        max_experiments: int = None,
+        sample_name: str = None,
+        n_registers: int = None,
+        register_map: list = None,
+        configurable: bool = None,
+        credits_required: bool = None,
+        online_date: datetime.datetime = None,
+        display_name: str = None,
+        description: str = None,
+        tags: list = None,
+        dt: float = None,
+        dtm: float = None,
+        processor_type: dict = None,
+        parametric_pulses: list = None,
+        **kwargs: Any,
     ):
         """Initialize a QasmBackendConfiguration Object
 
@@ -379,14 +384,14 @@ class QasmBackendConfiguration:
 
         self._data.update(kwargs)
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> Any:
         try:
             return self._data[name]
         except KeyError as ex:
             raise AttributeError(f"Attribute {name} is not defined") from ex
 
     @classmethod
-    def from_dict(cls, data):
+    def from_dict(cls: Type[QasmBackendConfigurationT], data: Dict[str, Any]) -> QasmBackendConfigurationT:
         """Create a new GateConfig object from a dictionary.
 
         Args:
@@ -407,7 +412,7 @@ class QasmBackendConfiguration:
         Returns:
             dict: The dictionary form of the GateConfig.
         """
-        out_dict = {
+        out_dict: Dict[str, Any] = {
             "backend_name": self.backend_name,
             "backend_version": self.backend_version,
             "n_qubits": self.n_qubits,
@@ -473,7 +478,7 @@ class QasmBackendConfiguration:
         return out_dict
 
     @property
-    def num_qubits(self):
+    def num_qubits(self) -> int:
         """Returns the number of qubits.
 
         In future, `n_qubits` should be replaced in favor of `num_qubits` for consistent use
@@ -482,13 +487,13 @@ class QasmBackendConfiguration:
         """
         return self.n_qubits
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         if isinstance(other, QasmBackendConfiguration):
             if self.to_dict() == other.to_dict():
                 return True
         return False
 
-    def __contains__(self, item):
+    def __contains__(self, item: str) -> bool:
         return item in self.__dict__
 
 
