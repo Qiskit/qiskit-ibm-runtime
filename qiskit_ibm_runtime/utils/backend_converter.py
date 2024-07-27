@@ -87,7 +87,7 @@ def convert_to_target(
 
     # Parse global configuration properties
     if hasattr(configuration, "dt"):
-        in_data["dt"] = configuration.dt
+        in_data["dt"] = configuration.dt  # type: ignore[assignment]
     if hasattr(configuration, "timing_constraints"):
         in_data.update(configuration.timing_constraints)
 
@@ -199,7 +199,7 @@ def convert_to_target(
                     )[0],
                 )
             )
-        in_data["qubit_properties"] = qubit_properties
+        in_data["qubit_properties"] = qubit_properties  # type: ignore[assignment]
 
         for name in all_instructions:
             try:

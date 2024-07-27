@@ -322,7 +322,7 @@ def get_mocked_backend(
     mock_service._api_client = mock_api_client
 
     configuration = (
-        FakeManila().configuration()
+        FakeManila().configuration()  # type: ignore[assignment]
         if configuration is None
         else BackendConfiguration.from_dict(configuration)
     )

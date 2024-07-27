@@ -259,7 +259,7 @@ class IBMBackend(Backend):
         """Converts backend configuration, properties and defaults to Target object"""
         if refresh or not self._target:
             self._target = convert_to_target(
-                configuration=self._configuration,
+                configuration=self._configuration,  # type: ignore[arg-type]
                 properties=self._properties,
                 defaults=self._defaults,
                 # In IBM backend architecture as of today

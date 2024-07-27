@@ -31,7 +31,7 @@ from qiskit.pulse.channels import (
 
 
 GateConfigT = TypeVar("GateConfigT", bound="GateConfig")
-UchannelLOT = TypeVar("UchannelLOT", bound="UchannelLO")
+UchannelLOT = TypeVar("UchannelLOT", bound="UchannelLO")  # pylint: disable=[invalid-name]
 QasmBackendConfigurationT = TypeVar("QasmBackendConfigurationT", bound="QasmBackendConfiguration")
 
 
@@ -53,7 +53,7 @@ class GateConfig:
         coupling_map: list = None,
         latency_map: list = None,
         conditional: bool = None,
-        description: str =None,
+        description: str = None,
     ):
         """Initialize a GateConfig object
 
@@ -391,7 +391,9 @@ class QasmBackendConfiguration:
             raise AttributeError(f"Attribute {name} is not defined") from ex
 
     @classmethod
-    def from_dict(cls: Type[QasmBackendConfigurationT], data: Dict[str, Any]) -> QasmBackendConfigurationT:
+    def from_dict(
+        cls: Type[QasmBackendConfigurationT], data: Dict[str, Any]
+    ) -> QasmBackendConfigurationT:
         """Create a new GateConfig object from a dictionary.
 
         Args:
@@ -401,12 +403,12 @@ class QasmBackendConfiguration:
         Returns:
             GateConfig: The GateConfig from the input dictionary.
         """
-        in_data = copy.copy(data)
+        in_data: Dict[str, Any] = copy.copy(data)
         gates = [GateConfig.from_dict(x) for x in in_data.pop("gates")]
         in_data["gates"] = gates
         return cls(**in_data)
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         """Return a dictionary format representation of the GateConfig.
 
         Returns:
@@ -514,14 +516,14 @@ class PulseBackendConfiguration(QasmBackendConfiguration):
         backend_version: str,
         n_qubits: int,
         basis_gates: List[str],
-        gates: GateConfig,
+        gates: list,
         local: bool,
         simulator: bool,
         conditional: bool,
         open_pulse: bool,
         memory: bool,
         max_shots: int,
-        coupling_map,
+        coupling_map: list,
         n_uchannels: int,
         u_channel_lo: List[List[UchannelLO]],
         meas_levels: List[int],
@@ -533,23 +535,23 @@ class PulseBackendConfiguration(QasmBackendConfiguration):
         meas_kernels: List[str],
         discriminators: List[str],
         hamiltonian: Dict[str, Any] = None,
-        channel_bandwidth=None,
-        acquisition_latency=None,
-        conditional_latency=None,
-        meas_map=None,
-        max_experiments=None,
-        sample_name=None,
-        n_registers=None,
-        register_map=None,
-        configurable=None,
-        credits_required=None,
-        online_date=None,
-        display_name=None,
-        description=None,
-        tags=None,
-        channels: Dict[str, Any] = None,
-        **kwargs,
-    ):
+        channel_bandwidth: list = None,
+        acquisition_latency: list = None,
+        conditional_latency: list = None,
+        meas_map: list = None,
+        max_experiments: int = None,
+        sample_name: str = None,
+        n_registers: int = None,
+        register_map: list = None,
+        configurable: bool = None,
+        credits_required: bool = None,
+        online_date: datetime.datetime = None,
+        display_name: str = None,
+        description: str = None,
+        tags: list = None,
+        channels: Dict[set, Any] = None,
+        **kwargs: Any,
+    ) -> None:
         """
         Initialize a backend configuration that contains all the extra configuration that is made
         available for OpenPulse backends.
@@ -624,7 +626,7 @@ class PulseBackendConfiguration(QasmBackendConfiguration):
         if hamiltonian is not None:
             self.hamiltonian = dict(hamiltonian)
             self.hamiltonian["vars"] = {
-                k: v * 1e9 if isinstance(v, numbers.Number) else v
+                k: v * 1e9 if isinstance(v, numbers.Number) else v  # type: ignore[operator]
                 for k, v in self.hamiltonian["vars"].items()
             }
 
@@ -681,7 +683,9 @@ class PulseBackendConfiguration(QasmBackendConfiguration):
         )
 
     @classmethod
-    def from_dict(cls, data):
+    def from_dict(
+        cls: Type[QasmBackendConfigurationT], data: Dict[str, Any]
+    ) -> QasmBackendConfigurationT:
         """Create a new GateConfig object from a dictionary.
 
         Args:
@@ -701,7 +705,7 @@ class PulseBackendConfiguration(QasmBackendConfiguration):
         in_data["u_channel_lo"] = u_channels
         return cls(**in_data)
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         """Return a dictionary format representation of the GateConfig.
 
         Returns:
@@ -770,7 +774,7 @@ class PulseBackendConfiguration(QasmBackendConfiguration):
         if self.hamiltonian:
             hamiltonian = copy.deepcopy(self.hamiltonian)
             hamiltonian["vars"] = {
-                k: v * 1e-9 if isinstance(v, numbers.Number) else v
+                k: v * 1e-9 if isinstance(v, numbers.Number) else v  # type: ignore[operator]
                 for k, v in hamiltonian["vars"].items()
             }
             out_dict["hamiltonian"] = hamiltonian
@@ -780,7 +784,7 @@ class PulseBackendConfiguration(QasmBackendConfiguration):
 
         return out_dict
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         if isinstance(other, QasmBackendConfiguration):
             if self.to_dict() == other.to_dict():
                 return True
@@ -947,7 +951,7 @@ class PulseBackendConfiguration(QasmBackendConfiguration):
             result[DriveChannel(u_chan_lo.q)] = u_chan_lo.scale
         return result
 
-    def _parse_channels(self, channels: Dict[set, Any]) -> Dict[Any, Any]:
+    def _parse_channels(self, channels: dict) -> tuple:
         r"""
         Generates a dictionaries of ``Channel``\s, and tuple of qubit(s) they operate on.
 
@@ -971,14 +975,14 @@ class PulseBackendConfiguration(QasmBackendConfiguration):
             "acquire": AcquireChannel,
         }
         for channel, config in channels.items():
-            channel_prefix, index = self._get_channel_prefix_index(channel)
-            channel_type = channels_dict[channel_prefix]
+            channel_prefix, index = self._get_channel_prefix_index(channel)  # type: ignore[misc]
+            channel_type = channels_dict[channel_prefix]  # type: ignore[has-type]
             qubits = tuple(config["operates"]["qubits"])
-            if channel_prefix in channels_dict:
-                qubit_channel_map[qubits].append(channel_type(index))
-                channel_qubit_map[(channel_type(index))].extend(list(qubits))
-                if channel_prefix == ControlChannel.prefix:
-                    control_channels[qubits].append(channel_type(index))
+            if channel_prefix in channels_dict:  # type: ignore[has-type]
+                qubit_channel_map[qubits].append(channel_type(index))  # type: ignore[has-type]
+                channel_qubit_map[(channel_type(index))].extend(list(qubits))  # type: ignore[has-type]
+                if channel_prefix == ControlChannel.prefix:  # type: ignore[has-type]
+                    control_channels[qubits].append(channel_type(index))  # type: ignore[has-type]
         return dict(qubit_channel_map), dict(channel_qubit_map), dict(control_channels)
 
     def _get_channel_prefix_index(self, channel: str) -> str:
@@ -996,6 +1000,9 @@ class PulseBackendConfiguration(QasmBackendConfiguration):
         """
         channel_prefix = re.match(r"(?P<channel>[a-z]+)(?P<index>[0-9]+)", channel)
         try:
-            return channel_prefix.group("channel"), int(channel_prefix.group("index"))
+            return (
+                channel_prefix.group("channel"),
+                int(channel_prefix.group("index")),
+            )  # type: ignore[return-value]
         except AttributeError as ex:
             raise BackendConfigurationError(f"Invalid channel name - '{channel}' found.") from ex

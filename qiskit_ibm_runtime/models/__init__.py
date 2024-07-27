@@ -10,17 +10,16 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-
 """Module for Backend Objects."""
 
-from .backend_configuration import (  # type: ignore[attr-defined]
+from .backend_configuration import (
     BackendConfiguration,
     PulseBackendConfiguration,
     QasmBackendConfiguration,
     UchannelLO,
     GateConfig,
 )
-from .backend_properties import BackendProperties, GateProperties, Nduv  # type: ignore[attr-defined]
-from .backend_status import BackendStatus  # type: ignore[attr-defined]
-from .job_status import JobStatus  # type: ignore[attr-defined]
-from .pulse_defaults import PulseDefaults  # type: ignore[attr-defined]
+from .backend_properties import BackendProperties, GateProperties, Nduv
+from .backend_status import BackendStatus
+from .job_status import JobStatus
+from .pulse_defaults import PulseDefaults
