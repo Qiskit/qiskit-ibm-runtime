@@ -174,10 +174,17 @@ class BackendProperties:
     or other general properties of the backend.
     """
 
-    _data = {}
+    _data: dict = {}
 
     def __init__(
-        self, backend_name, backend_version, last_update_date, qubits, gates, general, **kwargs
+        self,
+        backend_name: str,
+        backend_version: str,
+        last_update_date: Union[datetime.datetime, str],
+        qubits: list,
+        gates: list,
+        general: list,
+        **kwargs: Any,
     ) -> None:
         """Initialize a BackendProperties instance.
 
@@ -212,7 +219,7 @@ class BackendProperties:
                 formatted_props[prop.name] = (value, prop.date)
                 self._qubits[qubit] = formatted_props
 
-        self._gates = {}
+        self._gates: dict = {}
         for gate in gates:
             if gate.gate not in self._gates:
                 self._gates[gate.gate] = {}
@@ -223,14 +230,14 @@ class BackendProperties:
             self._gates[gate.gate][tuple(gate.qubits)] = formatted_props
         self._data.update(kwargs)
 
-    def __getattr__(self, name) -> str:
+    def __getattr__(self, name: str) -> str:
         try:
             return self._data[name]
         except KeyError as ex:
             raise AttributeError(f"Attribute {name} is not defined") from ex
 
     @classmethod
-    def from_dict(cls, data):
+    def from_dict(cls: Type[BackendPropertiesT], data: dict) -> BackendPropertiesT:
         """Create a new BackendProperties object from a dictionary.
 
         Args:
@@ -262,7 +269,7 @@ class BackendProperties:
         Returns:
             dict: The dictionary form of the BackendProperties.
         """
-        out_dict = {
+        out_dict: dict = {
             "backend_name": self.backend_name,
             "backend_version": self.backend_version,
             "last_update_date": self.last_update_date,
@@ -278,7 +285,7 @@ class BackendProperties:
         out_dict.update(self._data)
         return out_dict
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: Any) -> bool:
         if isinstance(other, BackendProperties):
             if self.to_dict() == other.to_dict():
                 return True
@@ -353,7 +360,7 @@ class BackendProperties:
         """
         properties = self.gate_property(gate, qubits)
         if "operational" in properties:
-            return bool(properties["operational"][0])
+            return bool(properties["operational"][0])  # type: ignore[index, misc]
         return True  # if property operational not existent, then True.
 
     def gate_error(self, gate: str, qubits: Union[int, Iterable[int]]) -> float:
@@ -367,7 +374,7 @@ class BackendProperties:
         Returns:
             Gate error of the given gate and qubit(s).
         """
-        return self.gate_property(gate, qubits, "gate_error")[0]  # Throw away datetime at index 1
+        return self.gate_property(gate, qubits, "gate_error")[0]  # type: ignore[index, return-value]
 
     def gate_length(self, gate: str, qubits: Union[int, Iterable[int]]) -> float:
         """
@@ -380,7 +387,7 @@ class BackendProperties:
         Returns:
             Gate length of the given gate and qubit(s).
         """
-        return self.gate_property(gate, qubits, "gate_length")[0]  # Throw away datetime at index 1
+        return self.gate_property(gate, qubits, "gate_length")[0]  # type: ignore[index, return-value]
 
     def qubit_property(
         self,
@@ -406,7 +413,7 @@ class BackendProperties:
         try:
             result = self._qubits[qubit]
             if name is not None:
-                result = result[name]
+                result = result[name]  # type: ignore[assignment]
         except KeyError as ex:
             formatted_name = "y '" + name + "'" if name else "ies"
             raise BackendPropertyError(
@@ -424,7 +431,7 @@ class BackendProperties:
         Returns:
             T1 time of the given qubit.
         """
-        return self.qubit_property(qubit, "T1")[0]  # Throw away datetime at index 1
+        return self.qubit_property(qubit, "T1")[0]  # type: ignore[index, return-value]
 
     def t2(self, qubit: int) -> float:  # pylint: disable=invalid-name
         """
@@ -436,7 +443,7 @@ class BackendProperties:
         Returns:
             T2 time of the given qubit.
         """
-        return self.qubit_property(qubit, "T2")[0]  # Throw away datetime at index 1
+        return self.qubit_property(qubit, "T2")[0]  # type: ignore[index, return-value]
 
     def frequency(self, qubit: int) -> float:
         """
@@ -448,7 +455,7 @@ class BackendProperties:
         Returns:
             Frequency of the given qubit.
         """
-        return self.qubit_property(qubit, "frequency")[0]  # Throw away datetime at index 1
+        return self.qubit_property(qubit, "frequency")[0]  # type: ignore[index, return-value]
 
     def readout_error(self, qubit: int) -> float:
         """
@@ -460,7 +467,7 @@ class BackendProperties:
         Return:
             Readout error of the given qubit.
         """
-        return self.qubit_property(qubit, "readout_error")[0]  # Throw away datetime at index 1
+        return self.qubit_property(qubit, "readout_error")[0]  # type: ignore[index, return-value]
 
     def readout_length(self, qubit: int) -> float:
         """
@@ -472,7 +479,7 @@ class BackendProperties:
         Return:
             Readout length of the given qubit.
         """
-        return self.qubit_property(qubit, "readout_length")[0]  # Throw away datetime at index 1
+        return self.qubit_property(qubit, "readout_length")[0]  # type: ignore[index, return-value]
 
     def is_qubit_operational(self, qubit: int) -> bool:
         """
@@ -486,7 +493,7 @@ class BackendProperties:
         """
         properties = self.qubit_property(qubit)
         if "operational" in properties:
-            return bool(properties["operational"][0])
+            return bool(properties["operational"][0])  # type: ignore[index, return-value, misc]
         return True  # if property operational not existent, then True.
 
     def _apply_prefix(self, value: float, unit: str) -> float:

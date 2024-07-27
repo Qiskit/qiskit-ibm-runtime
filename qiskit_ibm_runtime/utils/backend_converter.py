@@ -192,16 +192,20 @@ def convert_to_target(
                 continue
             qubit_properties.append(
                 QubitProperties(
-                    t1=prop_dict.get("T1", (None, None))[0],
-                    t2=prop_dict.get("T2", (None, None))[0],
-                    frequency=prop_dict.get("frequency", (None, None))[0],
+                    t1=prop_dict.get("T1", (None, None))[0],  # type: ignore[arg-type, union-attr]
+                    t2=prop_dict.get("T2", (None, None))[0],  # type: ignore[arg-type, union-attr]
+                    frequency=prop_dict.get(  # type: ignore[arg-type, union-attr]
+                        "frequency", (None, None)
+                    )[0],
                 )
             )
         in_data["qubit_properties"] = qubit_properties
 
         for name in all_instructions:
             try:
-                for qubits, param_dict in properties.gate_property(name).items():
+                for qubits, param_dict in properties.gate_property(
+                    name
+                ).items():  # type: ignore[arg-type, union-attr]
                     if filter_faulty and (
                         set.intersection(faulty_qubits, qubits)
                         or not properties.is_gate_operational(name, qubits)
@@ -219,8 +223,8 @@ def convert_to_target(
                         # i.e. gate config is not provided, and instruction has been globally defined.
                         prop_name_map[name] = {}
                     prop_name_map[name][qubits] = InstructionProperties(
-                        error=_get_value(param_dict, "gate_error"),
-                        duration=_get_value(param_dict, "gate_length"),
+                        error=_get_value(param_dict, "gate_error"),  # type: ignore[arg-type]
+                        duration=_get_value(param_dict, "gate_length"),  # type: ignore[arg-type]
                     )
                 if isinstance(prop_name_map[name], dict) and any(
                     v is None for v in prop_name_map[name].values()
@@ -245,8 +249,8 @@ def convert_to_target(
                 continue
             qubit_prop = properties.qubit_property(qubit_idx)
             prop_name_map["measure"][(qubit_idx,)] = InstructionProperties(
-                error=_get_value(qubit_prop, "readout_error"),
-                duration=_get_value(qubit_prop, "readout_length"),
+                error=_get_value(qubit_prop, "readout_error"),  # type: ignore[arg-type]
+                duration=_get_value(qubit_prop, "readout_length"),  # type: ignore[arg-type]
             )
 
     for op in required:
