@@ -10,19 +10,20 @@
 # copyright notice, and modified files need to carry a notice indicating
 # that they have been altered from the originals.
 
-# type: ignore
-
 """Backend Properties classes."""
 
 import copy
 import datetime
-from typing import Any, Iterable, Tuple, Union, Dict
+from typing import Any, Iterable, Tuple, Union, Dict, TypeVar, Type, List
 import dateutil.parser
 
 from qiskit.providers.exceptions import BackendPropertyError
 from qiskit.utils.units import apply_prefix
 
 PropertyT = Tuple[Any, datetime.datetime]
+NduvT = TypeVar("NduvT", bound="Nduv")
+GatePropertiesT = TypeVar("GatePropertiesT", bound="GateProperties")
+BackendPropertiesT = TypeVar("BackendPropertiesT", bound="BackendProperties")
 
 
 class Nduv:
@@ -50,7 +51,7 @@ class Nduv:
         self.value = value
 
     @classmethod
-    def from_dict(cls, data: dict):
+    def from_dict(cls: Type[NduvT], data: Dict[str, Any]) -> NduvT:
         """Create a new Nduv object from a dictionary.
 
         Args:
@@ -63,7 +64,7 @@ class Nduv:
         """
         return cls(**data)
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict[str, Any]:
         """Return a dictionary format representation of the object.
 
         Returns:
@@ -77,7 +78,7 @@ class Nduv:
         }
         return out_dict
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: Any) -> bool:
         if isinstance(other, Nduv):
             if self.to_dict() == other.to_dict():
                 return True
@@ -96,9 +97,9 @@ class GateProperties:
         parameters: parameters.
     """
 
-    _data = {}
+    _data: Dict[Any, Any] = {}
 
-    def __init__(self, qubits, gate, parameters, **kwargs) -> None:
+    def __init__(self, qubits: List[int], gate: str, parameters: List[Nduv], **kwargs: Any) -> None:
         """Initialize a new :class:`GateProperties` object
 
         Args:
@@ -114,14 +115,14 @@ class GateProperties:
         self.parameters = parameters
         self._data.update(kwargs)
 
-    def __getattr__(self, name) -> str:
+    def __getattr__(self, name: str) -> str:
         try:
             return self._data[name]
         except KeyError as ex:
             raise AttributeError(f"Attribute {name} is not defined") from ex
 
     @classmethod
-    def from_dict(cls, data):
+    def from_dict(cls: Type[GatePropertiesT], data: Dict[str, Any]) -> GatePropertiesT:
         """Create a new Gate object from a dictionary.
 
         Args:
@@ -132,7 +133,7 @@ class GateProperties:
         Returns:
             GateProperties: The Nduv from the input dictionary.
         """
-        in_data = {}
+        in_data: Dict[Any, Any] = {}
         for key, value in data.items():
             if key == "parameters":
                 in_data[key] = list(map(Nduv.from_dict, value))
@@ -140,20 +141,21 @@ class GateProperties:
                 in_data[key] = value
         return cls(**in_data)
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> Dict[str, Any]:
         """Return a dictionary format representation of the BackendStatus.
 
         Returns:
             dict: The dictionary form of the Gate.
         """
-        out_dict = {}
-        out_dict["qubits"] = self.qubits
-        out_dict["gate"] = self.gate
-        out_dict["parameters"] = [x.to_dict() for x in self.parameters]
+        out_dict: Dict[str, Any] = {
+            "qubits": self.qubits,
+            "gate": self.gate,
+            "parameters": [x.to_dict() for x in self.parameters],
+        }
         out_dict.update(self._data)
         return out_dict
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: Any) -> bool:
         if isinstance(other, GateProperties):
             if self.to_dict() == other.to_dict():
                 return True
