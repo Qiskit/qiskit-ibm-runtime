@@ -21,5 +21,4 @@ from .backend_configuration import (
 )
 from .backend_properties import BackendProperties, GateProperties, Nduv
 from .backend_status import BackendStatus
-from .job_status import JobStatus
 from .pulse_defaults import PulseDefaults
