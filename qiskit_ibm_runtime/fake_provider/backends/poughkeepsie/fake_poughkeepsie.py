@@ -17,13 +17,13 @@ Fake Poughkeepsie device (20 qubit).
 import os
 import json
 
-from qiskit.providers.models import (
+from qiskit.providers.fake_provider.fake_backend import FakeBackend
+from qiskit_ibm_runtime.fake_provider import fake_backend
+from ....models import (
     GateConfig,
     QasmBackendConfiguration,
     BackendProperties,
 )
-from qiskit.providers.fake_provider.fake_backend import FakeBackend
-from qiskit_ibm_runtime.fake_provider import fake_backend
 
 
 class FakePoughkeepsieV2(fake_backend.FakeBackendV2):

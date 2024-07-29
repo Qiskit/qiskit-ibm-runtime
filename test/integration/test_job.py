@@ -47,6 +47,17 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
         self.assertTrue(job.result())
 
     @run_integration_test
+    def test_run_with_simplejson(self, service):
+        """Test retrieving job results with simplejson package installed."""
+        try:
+            __import__("simplejson")
+            job = self._run_program(service=service)
+            job.wait_for_final_state()
+            self.assertTrue(job.result())
+        except ImportError:
+            self.assertRaises(ImportError)
+
+    @run_integration_test
     @quantum_only
     def test_run_program_log_level(self, service):
         """Test running with a custom log level."""
