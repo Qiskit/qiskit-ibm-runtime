@@ -17,7 +17,7 @@ import logging
 import traceback
 
 import dateutil.parser
-from qiskit.providers.models import (
+from ..models import (
     BackendProperties,
     PulseDefaults,
     PulseBackendConfiguration,

@@ -17,12 +17,12 @@ Fake Tenerife device (5 qubit).
 import os
 import json
 
-from qiskit.providers.models import (
+from qiskit.providers.fake_provider.fake_backend import FakeBackend
+from ....models import (
     GateConfig,
     QasmBackendConfiguration,
     BackendProperties,
 )
-from qiskit.providers.fake_provider.fake_backend import FakeBackend
 
 
 class FakeTenerife(FakeBackend):
