@@ -89,12 +89,40 @@ class BasePrimitiveV2(ABC, Generic[OptionsT]):
             self._service = self._mode.service
             self._backend = self._mode._backend
         elif isinstance(mode, IBMBackend):  # type: ignore[unreachable]
+            if get_cm_session():
+                warnings.warn(
+                    (
+                        "Passing a backend as the mode currently runs the job in job mode even "
+                        "if inside of a session/batch context manager. As of qiskit-ibm-runtime "
+                        "version 0.26.0, this behavior is deprecated and in a future "
+                        "release no sooner than than 3 months "
+                        "after the release date, the session/batch will take precendence and "
+                        "the job will not run in job mode. To ensure that jobs are run in session/batch "
+                        "mode, pass in the session/batch or leave the mode parameter emtpy."
+                    ),
+                    DeprecationWarning,
+                    stacklevel=3,
+                )
             self._service = mode.service
             self._backend = mode
         elif isinstance(mode, (BackendV1, BackendV2)):
             self._service = QiskitRuntimeLocalService()
             self._backend = mode
         elif isinstance(mode, str):
+            if get_cm_session():
+                warnings.warn(
+                    (
+                        "Passing a backend as the mode currently runs the job in job mode even "
+                        "if inside of a session/batch context manager. As of qiskit-ibm-runtime "
+                        "version 0.26.0, this behavior is deprecated and in a future "
+                        "release no sooner than than 3 months "
+                        "after the release date, the session/batch will take precendence and "
+                        "the job will not run in job mode. To ensure that jobs are run in session/batch "
+                        "mode, pass in the session/batch or leave the mode parameter emtpy."
+                    ),
+                    DeprecationWarning,
+                    stacklevel=3,
+                )
             self._service = (
                 QiskitRuntimeService()
                 if QiskitRuntimeService.global_service is None
