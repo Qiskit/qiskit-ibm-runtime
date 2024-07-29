@@ -21,7 +21,6 @@ import queue
 from datetime import datetime
 
 from qiskit.providers.backend import Backend
-from qiskit.providers.models import BackendProperties
 from qiskit.providers.jobstatus import JobStatus as RuntimeJobStatus
 
 # pylint: disable=unused-import,cyclic-import
@@ -38,6 +37,7 @@ from .exceptions import (
     IBMRuntimeError,
 )
 from .utils.result_decoder import ResultDecoder
+from .models import BackendProperties
 from .api.clients import RuntimeClient, RuntimeWebsocketClient, WebsocketClientCloseCode
 from .api.exceptions import RequestsApiError
 from .api.client_parameters import ClientParameters

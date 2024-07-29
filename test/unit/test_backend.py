@@ -17,16 +17,16 @@ from unittest import mock
 from ddt import named_data, ddt
 from qiskit import QuantumCircuit, qasm3, transpile
 from qiskit.circuit import ForLoopOp, IfElseOp, Reset, SwitchCaseOp, WhileLoopOp
-from qiskit.providers.models import (
+
+from qiskit_ibm_runtime import SamplerV2
+from qiskit_ibm_runtime.fake_provider import FakeManila, FakeSherbrooke, FakeFractionalBackend
+from qiskit_ibm_runtime.ibm_backend import IBMBackend
+from qiskit_ibm_runtime.models import (
     BackendConfiguration,
     BackendProperties,
     BackendStatus,
     PulseDefaults,
 )
-
-from qiskit_ibm_runtime import SamplerV2
-from qiskit_ibm_runtime.fake_provider import FakeManila, FakeSherbrooke, FakeFractionalBackend
-from qiskit_ibm_runtime.ibm_backend import IBMBackend
 from qiskit_ibm_runtime.utils.backend_converter import convert_to_target
 
 from ..ibm_test_case import IBMTestCase
