@@ -83,7 +83,7 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
         options = NoiseLearnerOptions()
         options.max_layers_to_learn = 1
         options.layer_pair_depths = [0, 1]
-        
+
         input_options = deepcopy(self.default_input_options)
         input_options["max_layers_to_learn"] = 1
         input_options["layer_pair_depths"] = [0, 1]
@@ -92,14 +92,14 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
             options.twirling_strategy = "all"
             learner1 = NoiseLearner(mode=session, options=options)
             job1 = learner1.run(self.circuits)
-            
+
             input_options["twirling_strategy"] = "all"
             self._verify(job1, input_options)
 
             options.twirling_strategy = "active-circuit"
             learner2 = NoiseLearner(mode=session, options=options)
             job2 = learner2.run(self.circuits)
-            
+
             input_options["twirling_strategy"] = "active-circuit"
             self._verify(job2, input_options)
 
@@ -129,4 +129,3 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
             metadatum = metadata["input_options"].pop(key, None)
             self.assertEqual(val, metadatum)
         self.assertEqual(metadata["input_options"], {})
-
