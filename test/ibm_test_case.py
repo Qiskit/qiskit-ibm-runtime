@@ -214,9 +214,9 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
 
     @classmethod
     def _find_sim_backends(cls):
-        """Find a simulator backend for each service."""
+        """Find a simulator or test backend for each service."""
         backends = cls.service.backends()
-        # Simulators can be not available
+        # Simulators or tests backends can be not available
         cls.sim_backends[cls.service.channel] = None
         for backend in backends:
             if backend.simulator or backend.name.startswith("test_"):
