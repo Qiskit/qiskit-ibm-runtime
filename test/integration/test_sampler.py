@@ -12,18 +12,13 @@
 
 """Integration tests for Sampler primitive."""
 
-from math import sqrt
-
-from qiskit.circuit import QuantumCircuit, Gate
 from qiskit.circuit.library import RealAmplitudes
 
 from qiskit.primitives import BaseSampler, SamplerResult
-from qiskit.result import QuasiDistribution
 from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 
 from qiskit_ibm_runtime import Sampler, Session
-from qiskit_ibm_runtime.exceptions import RuntimeJobFailureError
 
 from ..decorators import run_integration_test
 from ..ibm_test_case import IBMIntegrationTestCase
@@ -145,12 +140,10 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
     #         self.assertEqual(len(job_ids), 1)
     #         self.assertEqual(job.job_id(), job_ids.pop())
 
-    @run_integration_test
-    def test_sampler_no_session(self, service):
+    def test_sampler_no_session(self):
         """Test sampler without session."""
         sampler = Sampler(backend=self._backend)
         self.assertIsInstance(sampler, BaseSampler)
-        pm = generate_preset_pass_manager(optimization_level=1, target=self._backend.target)
 
         circuits = [self.isa_circuit] * 3
         job = sampler.run(circuits=circuits)
@@ -160,8 +153,7 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
         self.assertEqual(len(result.metadata), len(circuits))
         self.assertIsNone(job.session_id)
 
-    @run_integration_test
-    def test_sampler_backend_str(self, service):
+    def test_sampler_backend_str(self):
         """Test v1 primitive with string as backend."""
         # pylint: disable=unused-argument
         with self.assertRaisesRegex(QiskitBackendNotFoundError, "No backend matches"):

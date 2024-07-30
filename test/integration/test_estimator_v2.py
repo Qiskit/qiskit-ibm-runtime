@@ -66,11 +66,10 @@ class TestEstimatorV2(IBMIntegrationTestCase):
             result3 = job3.result()
             self._verify_result_type(result3, num_pubs=3, shapes=[(), (), ()])
 
-    @run_integration_test
-    def test_estimator_v2_options(self, service):
+    def test_estimator_v2_options(self):
         """Test V2 Estimator with different options."""
-
         pass_mgr = generate_preset_pass_manager(backend=self._backend, optimization_level=1)
+
         circuit = pass_mgr.run(IQP([[6, 5, 3], [5, 4, 5], [3, 5, 1]]))
         observable = SparsePauliOp("X" * circuit.num_qubits)
 
@@ -106,8 +105,7 @@ class TestEstimatorV2(IBMIntegrationTestCase):
         self.assertEqual(result[0].metadata["shots"], 1600)
 
     @skip("Skip until simulator options are accepted by server.")
-    @run_integration_test
-    def test_pec(self, service):
+    def test_pec(self):
         """Test running with PEC."""
         pass_mgr = generate_preset_pass_manager(backend=self._backend, optimization_level=1)
         circuit = pass_mgr.run(IQP([[6, 5, 3], [5, 4, 5], [3, 5, 1]]))

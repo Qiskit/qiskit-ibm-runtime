@@ -26,7 +26,6 @@ from qiskit_ibm_runtime import Estimator, Session
 
 from ..decorators import run_integration_test
 from ..ibm_test_case import IBMIntegrationTestCase
-from ..utils import bell
 
 
 class TestIntegrationEstimator(IBMIntegrationTestCase):
@@ -200,8 +199,7 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
         self.assertEqual(len(chsh2_runtime.values), len(chsh2_terra.values))
         self.assertEqual(len(chsh2_runtime.metadata), len(chsh2_terra.metadata))
 
-    @run_integration_test
-    def test_estimator_no_session(self, service):
+    def test_estimator_no_session(self):
         """Test estimator primitive without a session."""
         pm = generate_preset_pass_manager(optimization_level=1, target=self._backend.target)
         circ_count = 3
