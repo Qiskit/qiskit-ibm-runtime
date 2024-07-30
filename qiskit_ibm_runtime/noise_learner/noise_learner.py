@@ -249,6 +249,7 @@ class NoiseLearner:
 
         remove_dict_unset_values(ret)
         remove_empty_dict(ret)
+        ret["support_qiskit"] = True
 
         # Remove image
         ret.get("experimental", {}).pop("image", None)
