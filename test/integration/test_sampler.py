@@ -90,22 +90,6 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
             self.assertEqual(len(result.quasi_dists), len(circuits0))
             self.assertEqual(len(result.metadata), len(circuits0))
 
-    # @run_integration_test
-    # def test_sampler_skip_transpile(self, service):
-    #     """Test skip transpilation option."""
-    #     circ = QuantumCircuit(1, 1)
-    #     custom_gate = Gate("my_custom_gate", 1, [3.14, 1])
-    #     circ.append(custom_gate, [0])
-    #     circ.measure(0, 0)
-    #     pm = generate_preset_pass_manager(optimization_level=1, target=self._backend.target)
-    #
-    #     with Session(service, self.dependencies.device) as session:
-    #         sampler = Sampler(session=session)
-    #         with self.assertRaises(RuntimeJobFailureError) as err:
-    #             sampler.run(circuits=pm.run(circ), skip_transpilation=True).result()
-    #             # If transpilation not skipped the error would be something about cannot expand.
-    #             self.assertIn("invalid instructions", err.exception.message)
-
     @run_integration_test
     def test_sampler_optimization_level(self, service):
         """Test transpiler optimization level is properly mapped."""
@@ -116,29 +100,24 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
             self.assertEqual(result.quasi_dists[0].shots, shots)
             self.assertEqual(len(result.metadata), 1)
 
-    # @run_integration_test
-    # def test_sampler_callback(self, service):
-    #     """Test Sampler callback function."""
-    #
-    #     def _callback(job_id_, result_):
-    #         nonlocal ws_result
-    #         ws_result.append(result_)
-    #         nonlocal job_ids
-    #         job_ids.add(job_id_)
-    #
-    #     ws_result = []
-    #     job_ids = set()
-    #
-    #     with Session(service, self.backend) as session:
-    #         sampler = Sampler(session=session)
-    #         job = sampler.run(circuits=[self.bell] * 20, callback=_callback)
-    #         result = job.result()
-    #
-    #         self.assertIsInstance(ws_result[-1], dict)
-    #         ws_result_quasi = [QuasiDistribution(quasi) for quasi in ws_result[-1]["quasi_dists"]]
-    #         self.assertEqual(result.quasi_dists, ws_result_quasi)
-    #         self.assertEqual(len(job_ids), 1)
-    #         self.assertEqual(job.job_id(), job_ids.pop())
+    @run_integration_test
+    def test_sampler_callback(self, service):
+        """Test Sampler callback function."""
+
+        def _callback(job_id_):
+            nonlocal job_ids
+            job_ids.add(job_id_)
+
+        job_ids = set()
+        with Session(service, self.dependencies.device) as session:
+            sampler = Sampler(session=session)
+            job = sampler.run(circuits=[self.isa_circuit] * 20, callback=_callback)
+            result = job.result()
+            self.assertIsInstance(result, SamplerResult)
+            self.assertEqual(len(result.quasi_dists), 20)
+            self.assertEqual(len(result.metadata), 20)
+            self.assertEqual(len(job_ids), 1)
+            self.assertEqual(job.job_id(), job_ids.pop())
 
     def test_sampler_no_session(self):
         """Test sampler without session."""
