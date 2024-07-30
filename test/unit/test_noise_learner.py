@@ -74,7 +74,10 @@ class TestEstimatorV2(IBMTestCase):
 
         input_params = backend.service.run.call_args.kwargs["inputs"]
         self.assertEqual(input_params["circuits"], [transpile(c) for c in self.circuits])
-        self.assertEqual(input_params["options"], self.dict_options)
+
+        expected = self.dict_options
+        expected["support_qiskit"] = True
+        self.assertEqual(input_params["options"], expected)
 
     @combine(task_type=["circs", "pubs"])
     def test_run_program_inputs_with_default_options(self, task_type):
@@ -91,7 +94,7 @@ class TestEstimatorV2(IBMTestCase):
 
         input_params = backend.service.run.call_args.kwargs["inputs"]
         self.assertEqual(input_params["circuits"], [transpile(c) for c in self.circuits])
-        self.assertEqual(input_params["options"], {})
+        self.assertEqual(input_params["options"], {"support_qiskit": True})
 
     def test_run_program_inputs_with_no_learnable_layers(self):
         """Test a circuit with no learnable layers."""
