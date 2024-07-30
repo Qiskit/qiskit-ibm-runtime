@@ -87,7 +87,7 @@ class Batch(Session):
                 If ``None``, the service associated with the backend, if known, is used.
                 Otherwise ``QiskitRuntimeService()`` is used to initialize
                 your default saved account.
-            backend: Instance of ``Backend`` class or backend string name. Note that passing a 
+            backend: Instance of ``Backend`` class or backend string name. Note that passing a
                 backend name is deprecated.
 
             max_time:

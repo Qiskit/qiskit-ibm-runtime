@@ -96,7 +96,8 @@ class Session:
                 If ``None``, the service associated with the backend, if known, is used.
                 Otherwise ``QiskitRuntimeService()`` is used to initialize
                 your default saved account.
-            backend: Instance of ``Backend`` class or string name of backend.
+            backend: Instance of ``Backend`` class or string name of backend. Note that passing a
+                backend name is deprecated.
 
             max_time:
                 Maximum amount of time, a runtime session can be open before being
