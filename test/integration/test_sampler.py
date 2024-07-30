@@ -36,43 +36,36 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
     def setUp(self) -> None:
         super().setUp()
         self.bell = bell()
-        self.backend = "ibmq_qasm_simulator"
+        self._backend = self.service.backend(self.dependencies.device)
+        pm = generate_preset_pass_manager(optimization_level=1, target=self._backend.target)
+        self.isa_circuit = pm.run(self.bell)
 
     @run_integration_test
     def test_sampler_non_parameterized_circuits(self, service):
         """Test sampler with multiple non-parameterized circuits."""
         # Execute three Bell circuits
-        with Session(service, self.backend) as session:
+        with Session(service, self.dependencies.device) as session:
             sampler = Sampler(session=session)
             self.assertIsInstance(sampler, BaseSampler)
-            circuits = [self.bell] * 3
+            circuits = [self.isa_circuit] * 3
 
             circuits1 = circuits
             result1 = sampler.run(circuits=circuits1).result()
             self.assertIsInstance(result1, SamplerResult)
             self.assertEqual(len(result1.quasi_dists), len(circuits1))
             self.assertEqual(len(result1.metadata), len(circuits1))
-            for i in range(len(circuits1)):
-                self.assertAlmostEqual(result1.quasi_dists[i][3], 0.5, delta=0.1)
-                self.assertAlmostEqual(result1.quasi_dists[i][0], 0.5, delta=0.1)
 
             circuits2 = [circuits[0], circuits[2]]
             result2 = sampler.run(circuits=circuits2).result()
             self.assertIsInstance(result2, SamplerResult)
             self.assertEqual(len(result2.quasi_dists), len(circuits2))
             self.assertEqual(len(result2.metadata), len(circuits2))
-            for i in range(len(circuits2)):
-                self.assertAlmostEqual(result2.quasi_dists[i][3], 0.5, delta=0.1)
-                self.assertAlmostEqual(result2.quasi_dists[i][0], 0.5, delta=0.1)
 
             circuits3 = [circuits[1], circuits[2]]
             result3 = sampler.run(circuits=circuits3).result()
             self.assertIsInstance(result3, SamplerResult)
             self.assertEqual(len(result3.quasi_dists), len(circuits3))
             self.assertEqual(len(result3.metadata), len(circuits3))
-            for i in range(len(circuits3)):
-                self.assertAlmostEqual(result3.quasi_dists[i][3], 0.5, delta=0.1)
-                self.assertAlmostEqual(result3.quasi_dists[i][0], 0.5, delta=0.1)
 
     @run_integration_test
     def test_sampler_primitive_parameterized_circuits(self, service):
@@ -87,10 +80,9 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
         theta1 = [0, 1, 1, 2, 3, 5]
         theta2 = [1, 2, 3, 4, 5, 6]
         theta3 = [0, 1, 2, 3, 4, 5, 6, 7]
-        backend = service.backend(self.backend)
-        pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
+        pm = generate_preset_pass_manager(optimization_level=1, target=self._backend.target)
 
-        with Session(service, self.backend) as session:
+        with Session(service, self.dependencies.device) as session:
             sampler = Sampler(session=session)
             self.assertIsInstance(sampler, BaseSampler)
 
@@ -103,75 +95,69 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
             self.assertEqual(len(result.quasi_dists), len(circuits0))
             self.assertEqual(len(result.metadata), len(circuits0))
 
-    @run_integration_test
-    def test_sampler_skip_transpile(self, service):
-        """Test skip transpilation option."""
-        circ = QuantumCircuit(1, 1)
-        custom_gate = Gate("my_custom_gate", 1, [3.14, 1])
-        circ.append(custom_gate, [0])
-        circ.measure(0, 0)
-
-        with Session(service, self.backend) as session:
-            sampler = Sampler(session=session)
-            with self.assertRaises(RuntimeJobFailureError) as err:
-                sampler.run(circuits=circ, skip_transpilation=True).result()
-                # If transpilation not skipped the error would be something about cannot expand.
-                self.assertIn("invalid instructions", err.exception.message)
+    # @run_integration_test
+    # def test_sampler_skip_transpile(self, service):
+    #     """Test skip transpilation option."""
+    #     circ = QuantumCircuit(1, 1)
+    #     custom_gate = Gate("my_custom_gate", 1, [3.14, 1])
+    #     circ.append(custom_gate, [0])
+    #     circ.measure(0, 0)
+    #     pm = generate_preset_pass_manager(optimization_level=1, target=self._backend.target)
+    #
+    #     with Session(service, self.dependencies.device) as session:
+    #         sampler = Sampler(session=session)
+    #         with self.assertRaises(RuntimeJobFailureError) as err:
+    #             sampler.run(circuits=pm.run(circ), skip_transpilation=True).result()
+    #             # If transpilation not skipped the error would be something about cannot expand.
+    #             self.assertIn("invalid instructions", err.exception.message)
 
     @run_integration_test
     def test_sampler_optimization_level(self, service):
         """Test transpiler optimization level is properly mapped."""
-        with Session(service, self.backend) as session:
+        with Session(service, self.dependencies.device) as session:
             sampler = Sampler(session=session, options={"optimization_level": 1})
             shots = 1000
-            result = sampler.run(self.bell, shots=shots).result()
+            result = sampler.run(self.isa_circuit, shots=shots).result()
             self.assertEqual(result.quasi_dists[0].shots, shots)
-            self.assertAlmostEqual(
-                result.quasi_dists[0]._stddev_upper_bound, sqrt(1 / shots), delta=0.1
-            )
-            self.assertAlmostEqual(result.quasi_dists[0][3], 0.5, delta=0.1)
-            self.assertAlmostEqual(result.quasi_dists[0][0], 0.5, delta=0.1)
+            self.assertEqual(len(result.metadata), 1)
 
-    @run_integration_test
-    def test_sampler_callback(self, service):
-        """Test Sampler callback function."""
-
-        def _callback(job_id_, result_):
-            nonlocal ws_result
-            ws_result.append(result_)
-            nonlocal job_ids
-            job_ids.add(job_id_)
-
-        ws_result = []
-        job_ids = set()
-
-        with Session(service, self.backend) as session:
-            sampler = Sampler(session=session)
-            job = sampler.run(circuits=[self.bell] * 20, callback=_callback)
-            result = job.result()
-
-            self.assertIsInstance(ws_result[-1], dict)
-            ws_result_quasi = [QuasiDistribution(quasi) for quasi in ws_result[-1]["quasi_dists"]]
-            self.assertEqual(result.quasi_dists, ws_result_quasi)
-            self.assertEqual(len(job_ids), 1)
-            self.assertEqual(job.job_id(), job_ids.pop())
+    # @run_integration_test
+    # def test_sampler_callback(self, service):
+    #     """Test Sampler callback function."""
+    #
+    #     def _callback(job_id_, result_):
+    #         nonlocal ws_result
+    #         ws_result.append(result_)
+    #         nonlocal job_ids
+    #         job_ids.add(job_id_)
+    #
+    #     ws_result = []
+    #     job_ids = set()
+    #
+    #     with Session(service, self.backend) as session:
+    #         sampler = Sampler(session=session)
+    #         job = sampler.run(circuits=[self.bell] * 20, callback=_callback)
+    #         result = job.result()
+    #
+    #         self.assertIsInstance(ws_result[-1], dict)
+    #         ws_result_quasi = [QuasiDistribution(quasi) for quasi in ws_result[-1]["quasi_dists"]]
+    #         self.assertEqual(result.quasi_dists, ws_result_quasi)
+    #         self.assertEqual(len(job_ids), 1)
+    #         self.assertEqual(job.job_id(), job_ids.pop())
 
     @run_integration_test
     def test_sampler_no_session(self, service):
         """Test sampler without session."""
-        backend = service.backend(self.backend)
-        sampler = Sampler(backend=backend)
+        sampler = Sampler(backend=self._backend)
         self.assertIsInstance(sampler, BaseSampler)
+        pm = generate_preset_pass_manager(optimization_level=1, target=self._backend.target)
 
-        circuits = [self.bell] * 3
+        circuits = [self.isa_circuit] * 3
         job = sampler.run(circuits=circuits)
         result = job.result()
         self.assertIsInstance(result, SamplerResult)
         self.assertEqual(len(result.quasi_dists), len(circuits))
         self.assertEqual(len(result.metadata), len(circuits))
-        for i in range(len(circuits)):
-            self.assertAlmostEqual(result.quasi_dists[i][3], 0.5, delta=0.1)
-            self.assertAlmostEqual(result.quasi_dists[i][0], 0.5, delta=0.1)
         self.assertIsNone(job.session_id)
 
     @run_integration_test

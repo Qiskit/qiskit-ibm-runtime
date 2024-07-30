@@ -215,7 +215,13 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
     @classmethod
     def _find_sim_backends(cls):
         """Find a simulator backend for each service."""
-        cls.sim_backends[cls.service.channel] = cls.service.backends(simulator=True)[0].name
+        backends = cls.service.backends()
+        # Simulators can be not available
+        cls.sim_backends[cls.service.channel] = None
+        for backend in backends:
+            if backend.simulator or backend.name.startswith("test_"):
+                cls.sim_backends[cls.service.channel] = backend.name
+                break
 
     def _run_program(
         self,
@@ -234,16 +240,19 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
     ):
         """Run a program."""
         self.log.debug("Running program on %s", service.channel)
+        pid = program_id or self.program_ids[service.channel]
+        backend_name = backend if backend is not None else self.sim_backends[service.channel]
+        backend = service.backend(backend_name)
+        pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
         inputs = (
             inputs
             if inputs is not None
             else {
                 "interim_results": interim_results or {},
-                "circuits": circuits or bell(),
+                "circuits": pm.run(circuits) if circuits else pm.run(bell()),
             }
         )
-        pid = program_id or self.program_ids[service.channel]
-        backend_name = backend if backend is not None else self.sim_backends[service.channel]
+
         options = {
             "backend": backend_name,
             "log_level": log_level,
@@ -251,7 +260,6 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
             "max_execution_time": max_execution_time,
         }
         if pid == "sampler":
-            backend = service.backend(backend_name)
             options = Options()
             if log_level:
                 options.environment.log_level = log_level
@@ -260,13 +268,10 @@ class IBMIntegrationJobTestCase(IBMIntegrationTestCase):
             if max_execution_time:
                 options.max_execution_time = max_execution_time
             sampler = Sampler(backend=backend, options=options)
-            job = sampler.run(circuits or bell(), callback=callback)
+            job = sampler.run(pm.run(circuits) if circuits else pm.run(bell()), callback=callback)
         elif pid == "samplerv2":
-            backend = service.backend(backend_name)
             sampler = SamplerV2(backend=backend)
-            pm = generate_preset_pass_manager(backend=backend, optimization_level=1)
-            isa_qc = pm.run(bell())
-            job = sampler.run([isa_qc])
+            job = sampler.run([pm.run(bell())])
         else:
             job = service._run(
                 program_id=pid,
