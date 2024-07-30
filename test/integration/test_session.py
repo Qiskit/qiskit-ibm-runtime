@@ -41,7 +41,7 @@ class TestIntegrationSession(IBMIntegrationTestCase):
         theta1 = [0, 1, 1, 2, 3, 5]
 
         options = Options(resilience_level=0)
-        backend = service.backend("ibmq_qasm_simulator")
+        backend = service.backend(self.dependencies.device)
         pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
 
         with Session(service, backend=backend) as session:
@@ -117,7 +117,7 @@ class TestIntegrationSession(IBMIntegrationTestCase):
     @run_integration_test
     def test_job_mode_warning(self, service):
         """Test deprecation warning is raised when using job mode inside a session."""
-        backend = service.backend("ibmq_qasm_simulator")
+        backend = service.backend(self.dependencies.device)
         with Session(service, backend=backend):
             with self.assertWarns(DeprecationWarning):
                 _ = SamplerV2(mode=backend)
