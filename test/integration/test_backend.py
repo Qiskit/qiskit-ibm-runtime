@@ -233,7 +233,7 @@ class TestIBMBackend(IBMIntegrationTestCase):
 
     def test_sim_backend_options(self):
         """Test simulator backend options."""
-        backend = self.service.backend("ibmq_qasm_simulator")
+        backend = self.backend
         backend.options.shots = 2048
         backend.set_options(memory=True)
         sampler = Sampler(backend=backend)
@@ -243,7 +243,7 @@ class TestIBMBackend(IBMIntegrationTestCase):
     @production_only
     def test_paused_backend_warning(self):
         """Test that a warning is given when running jobs on a paused backend."""
-        backend = self.service.backend("ibmq_qasm_simulator")
+        backend = self.backend
         paused_status = backend.status()
         paused_status.status_msg = "internal"
         backend.status = mock.MagicMock(return_value=paused_status)
