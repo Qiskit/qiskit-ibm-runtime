@@ -1,0 +1,4 @@
+Passing a backend as the mode in :class:`SamplerV2` and :class:`EstimatorV2`
+currently runs a job in job mode even if inside of a :class:`Session` or 
+:class:`Batch` context manager. This behavior is deprecated and in a future release
+the the Session/Batch will take precedence.

@@ -24,14 +24,7 @@ import re
 from typing import List, Iterable, Union
 
 from qiskit import circuit, QuantumCircuit
-from qiskit.providers.models import (
-    BackendProperties,
-    BackendConfiguration,
-    PulseDefaults,
-    BackendStatus,
-    QasmBackendConfiguration,
-    PulseBackendConfiguration,
-)
+
 from qiskit.providers import BackendV2, BackendV1
 from qiskit import pulse
 from qiskit.exceptions import QiskitError
@@ -50,6 +43,14 @@ from qiskit_ibm_runtime.utils.backend_converter import convert_to_target
 from .. import QiskitRuntimeService
 from ..utils.backend_encoder import BackendEncoder
 
+from ..models import (
+    BackendProperties,
+    BackendConfiguration,
+    PulseDefaults,
+    BackendStatus,
+    QasmBackendConfiguration,
+    PulseBackendConfiguration,
+)
 from ..utils.deprecation import issue_deprecation_msg
 
 logger = logging.getLogger(__name__)

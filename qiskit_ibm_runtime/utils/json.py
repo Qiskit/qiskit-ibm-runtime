@@ -319,6 +319,8 @@ class RuntimeDecoder(json.JSONDecoder):
     """JSON Decoder used by runtime service."""
 
     def __init__(self, *args: Any, **kwargs: Any):
+        if "encoding" in kwargs:
+            kwargs.pop("encoding")
         super().__init__(object_hook=self.object_hook, *args, **kwargs)
 
     def object_hook(self, obj: Any) -> Any:

@@ -1,0 +1,2 @@
+Fixed an issue where users were unable to retrieve job results if 
+the python library ``simplejson`` was installed in their environment.
