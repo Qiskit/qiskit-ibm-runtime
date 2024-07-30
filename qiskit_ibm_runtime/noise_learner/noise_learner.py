@@ -48,32 +48,35 @@ logger = logging.getLogger(__name__)
 class NoiseLearner:
     """Class for executing noise learning experiments.
 
-    The noise learner allows characterizing the noise processes affecting the gates in one or more
+    The noise learner class allows characterizing the noise processes affecting the gates in one or more
     circuits of interest, based on the Pauli-Lindblad noise model described in [1].
 
-    The :meth:`run` allows runnig a noise learner job for a list of circuits. After the job is
+    The :meth:`run` method allows runnig a noise learner job for a list of circuits. After the job is
     submitted, the gates are collected into independent layers, and subsequently the resulting layers are
     are characterized individually. The way in which the gates are collected into layers depends on the
     ``twirling_strategy`` specified in the given ``options`` (see :class:`NoiseLearnerOptions` for more
     details).
 
-    Here is an example of how the estimator is used.
+    The following snippet shows an example where the noise learner is used to characterized the layers
+    of two GHZ circuits.
 
     .. code-block:: python
 
         from qiskit.circuit import QuantumCircuit
         from qiskit.transpiler.preset_passmanagers import generate_preset_pass_manager
-        from qiskit_ibm_runtime import QiskitRuntimeService, NoiseLearner
+        from qiskit_ibm_runtime import QiskitRuntimeService
+        from qiskit_ibm_runtime.noise_learner import NoiseLearner
+        from qiskit_ibm_runtime.options import NoiseLearnerOptions
 
         service = QiskitRuntimeService()
         backend = service.least_busy(operational=True, simulator=False)
 
-        # a two-qubit GHZ circuit
+        # a circuit returning a two-qubit GHZ state
         ghz = QuantumCircuit(2)
         ghz.h(0)
         ghz.cx(0, 1)
 
-        # another two-qubit GHZ circuit
+        # another circuit returning a two-qubit GHZ state
         another_ghz = QuantumCircuit(3)
         another_ghz.h(0)
         another_ghz.cx(0, 1)
@@ -83,6 +86,10 @@ class NoiseLearner:
         pm = generate_preset_pass_manager(backend=backend, optimization_level=1)
         circuits = pm.run([ghz, another_ghz])
 
+        # set the options
+        options = NoiseLearnerOptions()
+        options.layer_pair_depths = [0, 1, 10]
+
         # run the noise learner job
         learner = NoiseLearner(backend, options)
         job = learner.run(circuits)
@@ -91,6 +98,20 @@ class NoiseLearner:
         Currently, the :class:`.NoiseLearner` is released an experimental feature.
         As such, it is subject to change without notification and its stability is not
         guaranteed.
+
+    Args:
+        mode: The execution mode used to make the primitive query. It can be:
+
+            * A :class:`Backend` if you are using job mode.
+            * A :class:`Session` if you are using session execution mode.
+            * A :class:`Batch` if you are using batch execution mode.
+
+            Refer to the `Qiskit Runtime documentation <https://docs.quantum.ibm.com/run>`_
+            for more information about the execution modes.
+
+        options: :class:`NoiseLearnerOptions`. Alternatively, :class:`EstimatorOptions` can be
+            provided for convenience, in which case the estimator options get reformatted into
+            noise learner options and all the irrelevant fields are ignored.
 
     References:
         1. E. van den Berg, Z. Minev, A. Kandala, K. Temme, *Probabilistic error
@@ -105,22 +126,6 @@ class NoiseLearner:
         mode: Optional[Union[BackendV2, Session, Batch]] = None,
         options: Optional[Union[Dict, NoiseLearnerOptions, EstimatorOptions]] = None,
     ):
-        """Initializes the noise learner.
-
-        Args:
-            mode: The execution mode used to make the primitive query. It can be:
-
-                * A :class:`Backend` if you are using job mode.
-                * A :class:`Session` if you are using session execution mode.
-                * A :class:`Batch` if you are using batch execution mode.
-
-                Refer to the `Qiskit Runtime documentation <https://docs.quantum.ibm.com/run>`_.
-                for more information about the ``Execution modes``.
-
-            options: :class:`NoiseLearnerOptions`. Alternatively, :class:`EstimatorOptions` can be
-                provided for convenience, in which case the estimator options get reformatted into
-                noise learner options and all the irrelevant fields are ignored.
-        """
         self._mode, self._service, self._backend = _get_mode_service_backend(mode)
         if isinstance(self._service, QiskitRuntimeLocalService):
             raise ValueError("``NoiseLearner`` not currently supported in local mode.")
@@ -132,23 +137,23 @@ class NoiseLearner:
         """The options in this noise learner."""
         return self._options
 
-    def run(self, tasks: Iterable[Union[QuantumCircuit, EstimatorPubLike]]) -> RuntimeJobV2:
+    def run(self, circuits: Iterable[Union[QuantumCircuit, EstimatorPubLike]]) -> RuntimeJobV2:
         """Submit a request to the noise learner program.
 
         Args:
-            tasks: An iterable of circuits to run the noise learner program for. Alternatively,
+            circuits: An iterable of circuits to run the noise learner program for. Alternatively,
                 pub-like (primitive unified bloc) objects can be specified, such as
                 tuples ``(circuit, observables)`` or ``(circuit, observables, parameter_values)``.
                 In this case, the pub-like objects are converted to a list of circuits, and all
                 the other fields (such as ``observables`` and ``parameter_values``) are ignored.
 
         Returns:
-            Submitted job.
+            The submitted job.
 
         """
-        if not all(isinstance(t, QuantumCircuit) for t in tasks):
-            coerced_pubs = [EstimatorPub.coerce(pub) for pub in tasks]
-            tasks = [p.circuit for p in coerced_pubs]
+        if not all(isinstance(t, QuantumCircuit) for t in circuits):
+            coerced_pubs = [EstimatorPub.coerce(pub) for pub in circuits]
+            circuits = [p.circuit for p in coerced_pubs]
 
         # Store learner-specific and runtime options in different dictionaries
         options_dict = asdict(self.options)
@@ -156,11 +161,11 @@ class NoiseLearner:
         runtime_options = NoiseLearnerOptions._get_runtime_options(options_dict)
 
         # Define the program inputs
-        inputs = {"circuits": tasks}
+        inputs = {"circuits": circuits}
         inputs.update(learner_options)
 
         if self._backend:
-            for task in tasks:
+            for task in circuits:
                 if getattr(self._backend, "target", None) and not is_simulator(self._backend):
                     validate_isa_circuits([task], self._backend.target)
 

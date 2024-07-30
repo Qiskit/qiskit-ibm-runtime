@@ -17,7 +17,7 @@ Noise learner (:mod:`qiskit_ibm_runtime.noise_learner.NoiseLearner`)
 
 .. currentmodule:: qiskit_ibm_runtime.noise_learner
 
-A tool to characterize the noise processes affecting the gates in noisy
+The tools to characterize the noise processes affecting the gates in noisy
 quantum circuits.
 
 Classes
