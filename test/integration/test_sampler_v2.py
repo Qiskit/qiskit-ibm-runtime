@@ -181,7 +181,6 @@ class TestSampler(IBMIntegrationTestCase):
                 for param, target in param_target:
                     with self.subTest(f"{circuit.name} w/ {param}"):
                         result = sampler.run([(self._isa_bell, param)]).result()
-                        self.assertEqual(len(result), 1)
                         self._verify_result_type(result, num_pubs=1, targets=[np.array(target)])
 
             with self.subTest("One parameter"):
@@ -200,8 +199,7 @@ class TestSampler(IBMIntegrationTestCase):
                 for param, target in param_target:
                     with self.subTest(f"{circuit.name} w/ {param}"):
                         result = sampler.run([(pm.run(circuit), param)]).result()
-                        self.assertEqual(len(result), 1)
-                        self._verify_result_type(result, num_pubs=1, targets=[np.array(target)])
+                        self._verify_result_type(result, num_pubs=1)
 
             with self.subTest("More than one parameter"):
                 circuit, param, target = self._cases[3]
@@ -215,8 +213,7 @@ class TestSampler(IBMIntegrationTestCase):
                 ]
                 for param, target in param_target:
                     with self.subTest(f"{circuit.name} w/ {param}"):
-                        result = sampler.run([(circuit, param)]).result()
-                        self.assertEqual(len(result), 1)
+                        result = sampler.run([(pm.run(circuit), param)]).result()
                         self._verify_result_type(result, num_pubs=1, targets=[np.array(target)])
 
     def test_run_reverse_meas_order(self):
@@ -235,7 +232,6 @@ class TestSampler(IBMIntegrationTestCase):
 
         sampler = Sampler(backend=self._backend, options=self._options)
         result = sampler.run([(pm.run(qc), [0, 0]), (pm.run(qc), [np.pi / 2, 0])]).result()
-        self.assertEqual(len(result), 2)
         self._verify_result_type(result, num_pubs=2)
 
     @run_integration_test
@@ -248,13 +244,11 @@ class TestSampler(IBMIntegrationTestCase):
             sampler = Sampler(session=session, options=self._options)
             with self.subTest("one circuit"):
                 result = sampler.run([qc]).result()
-                self.assertEqual(len(result), 1)
                 self._verify_result_type(result, num_pubs=1)
 
             with self.subTest("two circuits"):
                 result = sampler.run([qc, qc]).result()
-                self.assertEqual(len(result), 2)
-                self._verify_result_type(result, num_pubs=1)
+                self._verify_result_type(result, num_pubs=2)
 
     @run_integration_test
     def test_run_numpy_params(self, service):
@@ -271,13 +265,11 @@ class TestSampler(IBMIntegrationTestCase):
 
             with self.subTest("ndarray"):
                 result = sampler.run([(qc, params_array)]).result()
-                self.assertEqual(len(result), 1)
                 self._verify_result_type(result, num_pubs=1, targets=[np.array(target)])
 
             with self.subTest("split a list"):
                 result = sampler.run([(qc, params) for params in params_list]).result()
-                self.assertEqual(len(result), k)
-                self._verify_result_type(result, num_pubs=1, targets=[np.array(target)])
+                self._verify_result_type(result, num_pubs=len(params_list), targets=[np.array(target)])
 
     @run_integration_test
     def test_run_with_shots_option(self, service):
@@ -288,7 +280,6 @@ class TestSampler(IBMIntegrationTestCase):
             with self.subTest("init option"):
                 sampler = Sampler(session=session, options={"default_shots": shots})
                 result = sampler.run([self._isa_bell]).result()
-                self.assertEqual(len(result), 1)
                 self.assertEqual(result[0].data.meas.num_shots, shots)
                 self.assertEqual(sum(result[0].data.meas.get_counts().values()), shots)
                 self._verify_result_type(result, num_pubs=1)
@@ -297,7 +288,6 @@ class TestSampler(IBMIntegrationTestCase):
                 sampler = Sampler(session=session)
                 sampler.options.default_shots = shots
                 result = sampler.run([self._isa_bell]).result()
-                self.assertEqual(len(result), 1)
                 self.assertEqual(result[0].data.meas.num_shots, shots)
                 self.assertEqual(sum(result[0].data.meas.get_counts().values()), shots)
                 self._verify_result_type(result, num_pubs=1)
@@ -305,7 +295,6 @@ class TestSampler(IBMIntegrationTestCase):
             with self.subTest("run arg"):
                 sampler = Sampler(session=session)
                 result = sampler.run(pubs=[self._isa_bell], shots=shots).result()
-                self.assertEqual(len(result), 1)
                 self.assertEqual(result[0].data.meas.num_shots, shots)
                 self.assertEqual(sum(result[0].data.meas.get_counts().values()), shots)
                 self._verify_result_type(result, num_pubs=1)
@@ -313,7 +302,6 @@ class TestSampler(IBMIntegrationTestCase):
             with self.subTest("run arg"):
                 sampler = Sampler(session=session)
                 result = sampler.run(pubs=[self._isa_bell], shots=shots).result()
-                self.assertEqual(len(result), 1)
                 self.assertEqual(result[0].data.meas.num_shots, shots)
                 self.assertEqual(sum(result[0].data.meas.get_counts().values()), shots)
                 self._verify_result_type(result, num_pubs=1)
@@ -321,7 +309,6 @@ class TestSampler(IBMIntegrationTestCase):
             with self.subTest("pub-like"):
                 sampler = Sampler(session=session)
                 result = sampler.run([(self._isa_bell, None, shots)]).result()
-                self.assertEqual(len(result), 1)
                 self.assertEqual(result[0].data.meas.num_shots, shots)
                 self.assertEqual(sum(result[0].data.meas.get_counts().values()), shots)
                 self._verify_result_type(result, num_pubs=1)
@@ -329,7 +316,6 @@ class TestSampler(IBMIntegrationTestCase):
             with self.subTest("pub"):
                 sampler = Sampler(session=session)
                 result = sampler.run([SamplerPub(self._isa_bell, shots=shots)]).result()
-                self.assertEqual(len(result), 1)
                 self.assertEqual(result[0].data.meas.num_shots, shots)
                 self.assertEqual(sum(result[0].data.meas.get_counts().values()), shots)
                 self._verify_result_type(result, num_pubs=1)
@@ -344,7 +330,6 @@ class TestSampler(IBMIntegrationTestCase):
                         SamplerPub(self._isa_bell, shots=shots2),
                     ]
                 ).result()
-                self.assertEqual(len(result), 2)
                 self.assertEqual(result[0].data.meas.num_shots, shots1)
                 self.assertEqual(sum(result[0].data.meas.get_counts().values()), shots1)
                 self.assertEqual(result[1].data.meas.num_shots, shots2)
@@ -360,7 +345,6 @@ class TestSampler(IBMIntegrationTestCase):
         pm = generate_preset_pass_manager(optimization_level=1, target=self._backend.target)
         sampler = Sampler(backend=self._backend, options=self._options)
         result = sampler.run([pm.run(qc)]).result()
-        self.assertEqual(len(result), 1)
         self.assertLessEqual(result[0].data.meas.num_shots, self._shots)
         self.assertEqual(sum(result[0].data.meas.get_counts().values()), self._shots)
         self._verify_result_type(result, num_pubs=1)
@@ -387,7 +371,6 @@ class TestSampler(IBMIntegrationTestCase):
 
                 sampler = Sampler(session=session, options=self._options)
                 result = sampler.run([pm.run(circuit)]).result()
-                self.assertEqual(len(result), 1)
                 self._verify_result_type(result, num_pubs=1)
 
             with self.subTest("X"):
@@ -399,7 +382,6 @@ class TestSampler(IBMIntegrationTestCase):
 
                 sampler = Sampler(session=session, options=self._options)
                 result = sampler.run([pm.run(circuit)]).result()
-                self.assertEqual(len(result), 1)
                 self._verify_result_type(result, num_pubs=1)
 
     def test_metadata(self):
@@ -408,7 +390,6 @@ class TestSampler(IBMIntegrationTestCase):
         qc, _, _ = self._cases[1]
         sampler = Sampler(backend=self._backend, options=self._options)
         result = sampler.run([pm.run(qc)]).result()
-        self.assertEqual(len(result), 1)
         self.assertEqual(result[0].data.meas.num_shots, self._shots)
         self._verify_result_type(result, num_pubs=1)
 
@@ -481,10 +462,9 @@ class TestSampler(IBMIntegrationTestCase):
                 with self.subTest(title):
                     sampler = Sampler(session=session, options=self._options)
                     result = sampler.run([qc]).result()
-                    self.assertEqual(len(result), 1)
                     data = result[0].data
                     self.assertEqual(len(data), 3)
-                    self._verify_result_type(result, num_pubs=1, targets=[np.array(target)])
+                    self._verify_result_type(result, num_pubs=1)
 
     def test_sampler_v2_options(self):
         """Test SamplerV2 options."""
