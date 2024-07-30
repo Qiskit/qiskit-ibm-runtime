@@ -82,7 +82,7 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
 
     @run_integration_test
     def test_in_session(self, service):
-        """Test noise learner with non-default options."""
+        """Test noise learner when used within a session."""
         backend = service.backend(self.backend)
 
         options = NoiseLearnerOptions()
@@ -107,6 +107,23 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
 
             input_options["twirling_strategy"] = "active-circuit"
             self._verify(job2, input_options)
+
+    @run_integration_test
+    def test_with_no_layers(self, service):
+        """Test noise learner when `max_layers_to_learn` is `0`."""
+        backend = service.backend(self.backend)
+
+        options = NoiseLearnerOptions()
+        options.max_layers_to_learn = 0
+
+        learner = NoiseLearner(mode=backend, options=options)
+        job = learner.run(self.circuits)
+
+        self.assertEqual(job.result().data, [])
+
+        input_options = deepcopy(self.default_input_options)
+        input_options["max_layers_to_learn"] = 0
+        self._verify(job, input_options)
 
     def _verify(self, job: RuntimeJob, expected_input_options: dict) -> None:
         job.wait_for_final_state()
