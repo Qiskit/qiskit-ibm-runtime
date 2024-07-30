@@ -108,7 +108,7 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
             input_options["twirling_strategy"] = "active-circuit"
             self._verify(job2, input_options)
 
-    def _verify(self, job: RuntimeJob, expected_input_options: dict):
+    def _verify(self, job: RuntimeJob, expected_input_options: dict) -> None:
         job.wait_for_final_state()
         self.assertEqual(job.status(), JobStatus.DONE, job.error_message())
 
@@ -129,7 +129,7 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
             self.assertEqual(len(generators), len(rates))
 
         metadata = deepcopy(result.metadata)
-        self.assertEqual(metadata.pop("backend", None), self.backend.name)
+        self.assertEqual(metadata.pop("backend", None), self.backend)
         for key, val in expected_input_options.items():
             metadatum = metadata["input_options"].pop(key, None)
             self.assertEqual(val, metadatum)
