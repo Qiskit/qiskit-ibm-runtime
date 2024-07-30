@@ -269,7 +269,9 @@ class TestSampler(IBMIntegrationTestCase):
 
             with self.subTest("split a list"):
                 result = sampler.run([(qc, params) for params in params_list]).result()
-                self._verify_result_type(result, num_pubs=len(params_list), targets=[np.array(target)])
+                self._verify_result_type(
+                    result, num_pubs=len(params_list), targets=[np.array(target)]
+                )
 
     @run_integration_test
     def test_run_with_shots_option(self, service):
