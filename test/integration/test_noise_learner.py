@@ -12,8 +12,8 @@
 
 """Integration tests for NoiseLearner."""
 
-import numpy as np
 from copy import deepcopy
+import numpy as np
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info import PauliList
@@ -56,20 +56,23 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
     @run_integration_test
     def test_with_default_options(self, service):
         """Test noise learner with default options."""
-        options = NoiseLearnerOptions()
+        backend = service.backend(self.backend)
 
-        learner = NoiseLearner(mode=self.backend, options=options)
+        options = NoiseLearnerOptions()
+        learner = NoiseLearner(mode=backend, options=options)
         job = learner.run(self.circuits)
         self._verify(job, self.default_input_options)
 
     @run_integration_test
     def test_with_non_default_options(self, service):
         """Test noise learner with non-default options."""
+        backend = service.backend(self.backend)
+
         options = NoiseLearnerOptions()
         options.max_layers_to_learn = 1
         options.layer_pair_depths = [0, 1]
 
-        learner = NoiseLearner(mode=self.backend, options=options)
+        learner = NoiseLearner(mode=backend, options=options)
         job = learner.run(self.circuits)
 
         input_options = deepcopy(self.default_input_options)
@@ -80,6 +83,8 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
     @run_integration_test
     def test_in_session(self, service):
         """Test noise learner with non-default options."""
+        backend = service.backend(self.backend)
+
         options = NoiseLearnerOptions()
         options.max_layers_to_learn = 1
         options.layer_pair_depths = [0, 1]
@@ -88,7 +93,7 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
         input_options["max_layers_to_learn"] = 1
         input_options["layer_pair_depths"] = [0, 1]
 
-        with Session(service, self.backend) as session:
+        with Session(service, backend) as session:
             options.twirling_strategy = "all"
             learner1 = NoiseLearner(mode=session, options=options)
             job1 = learner1.run(self.circuits)
