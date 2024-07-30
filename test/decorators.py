@@ -198,9 +198,12 @@ def integration_test_setup_with_backend(
                 _backend = service.backend(name=backend_name)
             else:
                 _backend = service.backend(name=self.dependencies.device)
+
             if not _backend:
-                # pylint: disable=broad-exception-raised
-                raise Exception("Unable to find a suitable backend.")
+                _backend = service.least_busy(
+                    min_num_qubits=min_num_qubits,
+                    simulator=simulator,
+                )
 
             kwargs["backend"] = _backend
             func(self, *args, **kwargs)
