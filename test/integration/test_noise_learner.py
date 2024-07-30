@@ -49,7 +49,7 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
             "max_layers_to_learn": 4,
             "shots_per_randomization": 128,
             "num_randomizations": 32,
-            "layer_pair_depths": [0, 1],
+            "layer_pair_depths": [0, 1, 2, 4, 16, 32],
             "twirling_strategy": "active-accum",
         }
 
