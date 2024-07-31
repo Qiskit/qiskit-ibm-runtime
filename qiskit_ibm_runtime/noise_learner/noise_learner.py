@@ -48,6 +48,11 @@ logger = logging.getLogger(__name__)
 class NoiseLearner:
     """Class for executing noise learning experiments.
 
+    .. note::
+        Currently, the :class:`.NoiseLearner` is released an experimental feature.
+        As such, it is subject to change without notification and its stability is not
+        guaranteed.
+
     The noise learner class allows characterizing the noise processes affecting the gates in one or more
     circuits of interest, based on the Pauli-Lindblad noise model described in [1].
 
@@ -97,11 +102,6 @@ class NoiseLearner:
         # run the noise learner job
         learner = NoiseLearner(backend, options)
         job = learner.run(circuits)
-
-    .. note::
-        Currently, the :class:`.NoiseLearner` is released an experimental feature.
-        As such, it is subject to change without notification and its stability is not
-        guaranteed.
 
     Args:
         mode: The execution mode used to make the primitive query. It can be:
