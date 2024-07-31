@@ -197,7 +197,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     @run_integration_test
     def test_wait_for_final_state(self, service):
         """Test wait for final state."""
-        job = self._run_program(service, backend="ibmq_qasm_simulator")
+        job = self._run_program(service, backend=self.dependencies.device)
         job.wait_for_final_state()
         self.assertEqual(JobStatus.DONE, job.status())
 
@@ -215,7 +215,7 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
     @run_integration_test
     def test_wait_for_final_state_after_job_status(self, service):
         """Test wait for final state on a completed job when the status is updated first."""
-        job = self._run_program(service, backend="ibmq_qasm_simulator")
+        job = self._run_program(service, backend=self.dependencies.device)
         status = job.status()
         while status not in JOB_FINAL_STATES:
             status = job.status()

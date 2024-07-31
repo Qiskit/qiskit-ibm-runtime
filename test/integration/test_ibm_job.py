@@ -206,27 +206,26 @@ class TestIBMJob(IBMIntegrationTestCase):
                 "job {} creation date {} not within range".format(job.job_id(), job.creation_date),
             )
 
-    def test_retrieve_jobs_between_datetimes(self):
-        """Test retrieving jobs created between two specified datetimes."""
+    def test_retrieve_jobs_between_datetime(self):
+        """Test retrieving jobs created between two specified datetime."""
         date_today = datetime.now()
-        past_month = date_today - timedelta(30)
-        past_two_month = date_today - timedelta(60)
+        past_one_month = date_today - timedelta(30)
 
         # Add local tz in order to compare to `creation_date` which is tz aware.
-        past_month_tz_aware = past_month.replace(tzinfo=tz.tzlocal())
-        past_two_month_tz_aware = past_two_month.replace(tzinfo=tz.tzlocal())
+        today_tz_aware = date_today.replace(tzinfo=tz.tzlocal())
+        past_one_month_tz_aware = past_one_month.replace(tzinfo=tz.tzlocal())
 
         with self.subTest():
             job_list = self.service.jobs(
                 backend_name=self.sim_backend.name,
                 limit=2,
-                created_after=past_two_month,
-                created_before=past_month,
+                created_after=past_one_month,
+                created_before=date_today,
             )
             self.assertTrue(job_list)
             for job in job_list:
                 self.assertTrue(
-                    (past_two_month_tz_aware <= job.creation_date <= past_month_tz_aware),
+                    (past_one_month_tz_aware <= job.creation_date <= today_tz_aware),
                     "job {} creation date {} not within range".format(
                         job.job_id(), job.creation_date
                     ),
