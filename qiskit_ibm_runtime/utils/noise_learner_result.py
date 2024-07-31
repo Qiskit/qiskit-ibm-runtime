@@ -19,7 +19,6 @@ from typing import Any, Iterator, Sequence
 
 from qiskit.circuit import QuantumCircuit
 from qiskit.quantum_info import PauliList
-from qiskit.primitives import EstimatorResult
 
 
 @dataclass(frozen=True)
