@@ -153,7 +153,7 @@ class NoiseLearner:
 
         Args:
             circuits: An iterable of circuits to run the noise learner program for. Alternatively,
-                pub-like (primitive unified bloc) objects can be specified, such as
+                estimator pub-like (primitive unified bloc) objects can be specified, such as
                 tuples ``(circuit, observables)`` or ``(circuit, observables, parameter_values)``.
                 In this case, the pub-like objects are converted to a list of circuits, and all
                 the other fields (such as ``observables`` and ``parameter_values``) are ignored.
