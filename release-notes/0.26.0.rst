@@ -1,0 +1,52 @@
+0.26.0 (2024-07-31)
+===================
+
+Deprecation Notes
+-----------------
+
+- Passing in a backend as a string into ``Session``, ``Batch``, ``EstimatorV2``, and ``SamplerV2``
+  has been deprecated. Use the actual backend object instead. (`1804 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1804>`__)
+- Passing a backend as the mode in :class:`SamplerV2` and :class:`EstimatorV2`
+  currently runs a job in job mode even if inside of a :class:`Session` or 
+  :class:`Batch` context manager. This behavior is deprecated and in a future release
+  the the Session/Batch will take precedence. (`1816 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1816>`__)
+- Passing in ``service`` in ``Session``, ``Batch``
+  has been deprecated. The ``service`` parameter is no longer necessary because the service
+  can be extracted from the backend. (`1826 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1826>`__)
+
+
+New Features
+------------
+
+- The methods ``properties``, ``defaults``, ``configuration``,
+  and ``check_faulty`` have been added to :class:`FakeBackendV2`. (`1765 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1765>`__)
+- If jobs are run in a session created with :meth:`QiskitRuntimeService.Session.from_id` where the 
+  session is already closed, the jobs are rejected immediately. (`1780 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1780>`__)
+- The input parameters for jobs will no longer be cached. These parameters can include large circuits
+  and should not be automatically kept in memory. (`1783 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1783>`__)
+- :class:`QiskitRuntimeLocalService` was created to support a local
+  testing mode. To avoid having to initialize a separate class, "local"
+  has been added as a valid :class:`QiskitRuntimeService` channel.
+
+  .. code-block:: python
+
+      service = QiskitRuntimeService(channel="local")
+
+  will return a :class:`QiskitRuntimeLocalService` instance. (`1793 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1793>`__)
+- When running jobs on the open plan, there will now be a warning if the limit for the 
+  maximum number of pending jobs has been reached. The service will also attempt to wait 
+  for the oldest pending jobs to finish running before submitting a new job. (`1794 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1794>`__)
+- Added :class:`NoiseLearner` and related functionality, such as
+  :class:`NoiseLearnerOptions` and :class:`NoiseLearnerResults`. (`1805 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1805>`__)
+
+
+Bug Fixes
+---------
+
+- Every circuit is checked to be ISA compliant. As part of this check, an error is raised if instructions that are not supported by the backend are detected. Previously, a bug caused some of the instructions to be skipped (those that reside inside bodies of control flow operations). We have fixed the bug in this release. (`1784 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1784>`__)
+- Fixed an issue where calling :meth:`IBMBackend.target_history` would cache the backend target and
+  then calling :meth:`IBMBackend.target` would incorrectly return that cached target. (`1791 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1791>`__)
+- The options validation for checking if ``zne_mitigation`` or ``pec_mitigation`` are set 
+  to ``True`` when using other related options has been removed. (`1792 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1792>`__)
+- Fixed an issue where users were unable to retrieve job results if 
+  the python library ``simplejson`` was installed in their environment. (`1800 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1800>`__)

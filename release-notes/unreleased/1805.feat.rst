@@ -1,2 +1,0 @@
-Added :class:`NoiseLearner` and related functionality, such as
-:class:`NoiseLearnerOptions` and :class:`NoiseLearnerResults`.
