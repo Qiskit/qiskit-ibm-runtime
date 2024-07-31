@@ -62,8 +62,8 @@ class NoiseLearnerResult:
             metadata: Metadata that is common to all pub results; metadata specific to particular
                 pubs should be placed in their metadata fields. Keys are expected to be strings.
         """
-        self._data = data
-        self._metadata = metadata or {}
+        self._data = list(data)
+        self._metadata = metadata.copy() or {}
 
     @property
     def data(self) -> Sequence[NoiseLearnerDatum]:
