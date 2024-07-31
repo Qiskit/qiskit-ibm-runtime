@@ -51,7 +51,7 @@ class NoiseLearner:
     The noise learner class allows characterizing the noise processes affecting the gates in one or more
     circuits of interest, based on the Pauli-Lindblad noise model described in [1].
 
-    The :meth:`run` method allows runnig a noise learner job for a list of circuits. After the job is
+    The :meth:`~run` method allows runnig a noise learner job for a list of circuits. After the job is
     submitted, the gates are collected into independent layers, and subsequently the resulting layers are
     are characterized individually. The way in which the gates are collected into layers depends on the
     ``twirling_strategy`` specified in the given ``options`` (see :class:`NoiseLearnerOptions` for more
