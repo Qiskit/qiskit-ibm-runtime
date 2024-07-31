@@ -60,7 +60,7 @@ class NoiseLearner:
     strategies obey barriers. For example, if you have three ISA entangling layers of interest,
     consider putting them into one circuit separated by barriers acting on the qubits you wish to
     twirl, and select ``strategy="active-circuit"``.
-    
+
     The following snippet shows an example where the noise learner is used to characterized the layers
     of two GHZ circuits.
 
