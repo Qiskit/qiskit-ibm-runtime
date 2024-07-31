@@ -145,7 +145,7 @@ class NoiseLearner:
         """Submit a request to the noise learner program.
 
         This function breaks the given list of circuits into a list of unique layers, following
-        the strategy set by the ``twirling-strategy`` field specified in the ``options`` (see
+        the strategy set by the ``twirling_strategy`` field specified in the ``options`` (see
         :class:`NoiseLearnerOptions` for more details) and sorting them based on the number of
         times they occur in the various circuits. Then, it runs the noise learning experiment
         for as many layers as specified by the ``max_layers_to_learn`` field in the ``options``,
