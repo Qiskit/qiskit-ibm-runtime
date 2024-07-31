@@ -1,0 +1,3 @@
+Passing in ``service`` in ``Session``, ``Batch``
+has been deprecated. The ``service`` parameter is no longer necessary because the service
+can be extracted from the backend.

@@ -92,12 +92,12 @@ class Session:
         """Session constructor.
 
         Args:
-            service: Optional instance of the ``QiskitRuntimeService`` class.
+            service: (DEPRECATED) Optional instance of the ``QiskitRuntimeService`` class.
                 If ``None``, the service associated with the backend, if known, is used.
                 Otherwise ``QiskitRuntimeService()`` is used to initialize
                 your default saved account.
-            backend: Optional instance of ``Backend`` class or string name of backend.
-                If not specified, a backend will be selected automatically (IBM Cloud channel only).
+            backend: Instance of ``Backend`` class or string name of backend. Note that passing a
+                backend name is deprecated.
 
             max_time:
                 Maximum amount of time, a runtime session can be open before being
@@ -114,6 +114,17 @@ class Session:
         self._instance = None
         self._active = True
         self._session_id = None
+
+        if service:
+            issue_deprecation_msg(
+                msg="The service parameter is deprecated",
+                version="0.26.0",
+                remedy=(
+                    "The service can be extracted from the backend object so "
+                    "it is no longer necessary."
+                ),
+                period="3 months",
+            )
 
         self._service = service
         if isinstance(backend, IBMBackend):
