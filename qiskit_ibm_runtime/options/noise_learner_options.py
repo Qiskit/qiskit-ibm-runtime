@@ -32,8 +32,8 @@ class NoiseLearnerOptions(OptionsV2):
     A ``None`` value indicates that there is no limit.
     If there are more unique layers present, then some layers will not be learned or
     mitigated. The learned layers are prioritized based on the number of times they
-    occur in a set of run estimator PUBs, and for equally occurring layers are
-    further sorted by the number of two-qubit gates in the layer. Default: 4.
+    occur, and for equally occurring layers are further sorted by the number of two-qubit
+    gates in the layer. Default: 4.
     """
 
     shots_per_randomization: Union[UnsetType, int] = Unset
@@ -71,6 +71,9 @@ class NoiseLearnerOptions(OptionsV2):
         * ``"active-accum"``: in each individual twirled layer, the union of instructions qubits
             in the circuit up to the current twirled layer are twirled.
         * ``"all"``: in each individual twirled layer, all qubits in the input circuit are twirled.
+
+    .. note::
+        Barriers and delay instructions are ignored when determining whether a qubit is active.
 
     Default: "active-accum".
     """

@@ -65,27 +65,6 @@ class NoiseLearnerResult:
         self._data = data
         self._metadata = metadata or {}
 
-    @classmethod
-    def from_estimator_result(cls, result: EstimatorResult) -> NoiseLearnerResult:
-        """Construct noise learner results from estimator results.
-
-        Args:
-            result: The estimator results.
-        """
-        resilience = result.metadata["resilience"]
-        try:
-            noise_model = resilience["layer_noise_model"]
-        except KeyError:
-            return NoiseLearnerResult(data=[])
-
-        data = []
-        for layer in noise_model:
-            datum = NoiseLearnerDatum(
-                layer[0]["circuit"], layer[0]["qubits"], layer[1]["generators"], layer[1]["rates"]
-            )
-            data.append(datum)
-        return NoiseLearnerResult(data)
-
     @property
     def data(self) -> Sequence[NoiseLearnerDatum]:
         """The data of this noise learner result."""

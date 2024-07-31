@@ -15,7 +15,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from dataclasses import asdict, fields
+from dataclasses import asdict, fields, replace
 from typing import Any, Dict, Iterable, Optional, Union
 import logging
 
@@ -140,6 +140,13 @@ class NoiseLearner:
     def run(self, circuits: Iterable[Union[QuantumCircuit, EstimatorPubLike]]) -> RuntimeJobV2:
         """Submit a request to the noise learner program.
 
+        This function breaks the given list of circuits into a list of unique layers, following
+        the strategy set by the ``twirling-strategy`` field specified in the ``options`` (see
+        :class:`NoiseLearnerOptions` for more details) and sorting them based on the number of
+        times they occur in the various circuits. Then, it runs the noise learning experiment
+        for as many layers as specified by the ``max_layers_to_learn`` field in the ``options``,
+        prioritizing layers that occurr more frequently.
+
         Args:
             circuits: An iterable of circuits to run the noise learner program for. Alternatively,
                 pub-like (primitive unified bloc) objects can be specified, such as
@@ -218,14 +225,14 @@ class NoiseLearner:
         if not options:
             self._options = NoiseLearnerOptions()
         elif isinstance(options, NoiseLearnerOptions):
-            self._options = options
+            self._options = replace(options)
         elif isinstance(options, EstimatorOptions):
             d = asdict(options.resilience.layer_noise_learning)  # type: ignore[union-attr]
-            d.update({"twirling_strategy": options.twirling.strategy})  # type: ignore[union-attr]
-            d.update({"max_execution_time": options.max_execution_time})
-            d.update({"simulator": options.simulator})
-            d.update({"environment": options.environment})
-            d.update({"experimental": options.experimental})
+            d["twirling_strategy"] = options.twirling.strategy  # type: ignore[union-attr]
+            d["max_execution_time"] = options.max_execution_time
+            d["simulator"] = options.simulator
+            d["environment"] = options.environment
+            d["experimental"] = options.experimental
             self._options = NoiseLearnerOptions(**d)
         else:
             self._options = NoiseLearnerOptions(**options)
