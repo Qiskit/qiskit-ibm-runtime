@@ -21,7 +21,7 @@ from dataclasses import dataclass
 SliceType = tuple[Union[slice, int, list[int]], ...]
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)  # TODO: add `slots=True` when we move to Python >= 3.10
 class ExecutionSpan:
     """Stores an execution time span for a subset of job data."""
 
@@ -58,6 +58,8 @@ class ExecutionSpan:
 
 
 class ExecutionSpanCollection(Sequence[ExecutionSpan]):
+    """A collection of timings for the PUB result."""
+
     def __init__(self, spans: Iterable[ExecutionSpan]):
         self._spans = spans
 
@@ -69,10 +71,12 @@ class ExecutionSpanCollection(Sequence[ExecutionSpan]):
 
     @property
     def start(self) -> datetime:
+        """The start time of the entire collection, in UTC."""
         return min(span.start for span in self)
 
     @property
     def stop(self) -> datetime:
+        """The stop time of the entire collection, in UTC."""
         return max(span.stop for span in self)
 
     def plot(self):
