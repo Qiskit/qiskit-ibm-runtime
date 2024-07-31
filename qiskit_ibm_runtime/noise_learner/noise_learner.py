@@ -53,10 +53,14 @@ class NoiseLearner:
 
     The :meth:`~run` method allows runnig a noise learner job for a list of circuits. After the job is
     submitted, the gates are collected into independent layers, and subsequently the resulting layers are
-    are characterized individually. The way in which the gates are collected into layers depends on the
-    ``twirling_strategy`` specified in the given ``options`` (see :class:`NoiseLearnerOptions` for more
+    are characterized individually.
+    
+    The way in which the gates are collected into layers depends on the twirling
+    ``strategy`` specified in the given ``options`` (see :class:`NoiseLearnerOptions` for more
     details).
-
+    Note that all strategies obey barriers.
+    For example, if you have three ISA entangling layers of interest, consider putting them into one circuit
+    separated by barriers acting on the qubits you wish to twirl, and select ``strategy="active-circuit"``.
     The following snippet shows an example where the noise learner is used to characterized the layers
     of two GHZ circuits.
 
