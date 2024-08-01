@@ -13,6 +13,7 @@
 """Integration tests for NoiseLearner."""
 
 from copy import deepcopy
+from unittest import SkipTest
 import numpy as np
 
 from qiskit.circuit import QuantumCircuit
@@ -33,7 +34,10 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
 
     def setUp(self) -> None:
         super().setUp()
-        self.backend = "test_eagle"
+        try:
+            self.backend = self.service.backend("test_eagle")
+        except:
+            raise SkipTest("test_eagle not available in this environment")
 
         c1 = QuantumCircuit(2)
         c1.cx(0, 1)
@@ -55,9 +59,9 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
         }
 
     @run_integration_test
-    def test_with_default_options(self, service):
+    def test_with_default_options(self, service):  # pylint: disable=unused-argument
         """Test noise learner with default options."""
-        backend = service.backend(self.backend)
+        backend = self.backend
 
         options = NoiseLearnerOptions()
         learner = NoiseLearner(mode=backend, options=options)
@@ -68,9 +72,9 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
         self._verify(job, self.default_input_options)
 
     @run_integration_test
-    def test_with_non_default_options(self, service):
+    def test_with_non_default_options(self, service):  # pylint: disable=unused-argument
         """Test noise learner with non-default options."""
-        backend = service.backend(self.backend)
+        backend = self.backend
 
         options = NoiseLearnerOptions()
         options.max_layers_to_learn = 1
@@ -88,7 +92,7 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
     @run_integration_test
     def test_in_session(self, service):
         """Test noise learner when used within a session."""
-        backend = service.backend(self.backend)
+        backend = self.backend
 
         options = NoiseLearnerOptions()
         options.max_layers_to_learn = 1
@@ -116,9 +120,9 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
             self._verify(job2, input_options)
 
     @run_integration_test
-    def test_with_no_layers(self, service):
+    def test_with_no_layers(self, service):  # pylint: disable=unused-argument
         """Test noise learner when `max_layers_to_learn` is `0`."""
-        backend = service.backend(self.backend)
+        backend = self.backend
 
         options = NoiseLearnerOptions()
         options.max_layers_to_learn = 0
@@ -154,7 +158,7 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
             self.assertEqual(len(generators), len(rates))
 
         metadata = deepcopy(result.metadata)
-        self.assertEqual(metadata.pop("backend", None), self.backend)
+        self.assertEqual(metadata.pop("backend", None), self.backend.name)
         for key, val in expected_input_options.items():
             metadatum = metadata["input_options"].pop(key, None)
             self.assertEqual(val, metadatum)
