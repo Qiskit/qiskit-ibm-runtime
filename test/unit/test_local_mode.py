@@ -221,6 +221,20 @@ class TestLocalModeV2(IBMTestCase):
                 self.assertIsInstance(pub_result.metadata, dict)
 
     @combine(session_cls=[Session, Batch], backend=[FakeManila(), FakeManilaV2(), AerSimulator()])
+    def test_sampler_v2_session_no_params(self, session_cls, backend):
+        """Testing running v2 sampler inside session."""
+        with session_cls(backend=backend):
+            inst = SamplerV2()
+            job = inst.run(**get_primitive_inputs(inst, backend=backend))
+            result = job.result()
+            self.assertIsInstance(result, PrimitiveResult)
+            self.assertEqual(len(result), 1)
+            for pub_result in result:
+                self.assertIsInstance(pub_result, PubResult)
+                self.assertIsInstance(pub_result.data, DataBin)
+                self.assertIsInstance(pub_result.metadata, dict)
+
+    @combine(session_cls=[Session, Batch], backend=[FakeManila(), FakeManilaV2(), AerSimulator()])
     def test_estimator_v2_session(self, session_cls, backend):
         """Testing running v2 estimator inside session."""
         with session_cls(backend=backend) as session:
