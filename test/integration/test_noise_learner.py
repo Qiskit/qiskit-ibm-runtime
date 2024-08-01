@@ -59,7 +59,7 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
         }
 
     @run_integration_test
-    def test_with_default_options(self):
+    def test_with_default_options(self, service):  # pylint: disable=unused-argument
         """Test noise learner with default options."""
         backend = self.backend
 
@@ -72,7 +72,7 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
         self._verify(job, self.default_input_options)
 
     @run_integration_test
-    def test_with_non_default_options(self):
+    def test_with_non_default_options(self, service):  # pylint: disable=unused-argument
         """Test noise learner with non-default options."""
         backend = self.backend
 
@@ -120,7 +120,7 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
             self._verify(job2, input_options)
 
     @run_integration_test
-    def test_with_no_layers(self):
+    def test_with_no_layers(self, service):  # pylint: disable=unused-argument
         """Test noise learner when `max_layers_to_learn` is `0`."""
         backend = self.backend
 
