@@ -72,10 +72,38 @@ def _get_mode_service_backend(
     if isinstance(mode, (Session, Batch)):
         return mode, mode.service, mode._backend
     elif isinstance(mode, IBMBackend):  # type: ignore[unreachable]
+        if get_cm_session():
+            warnings.warn(
+                (
+                    "Passing a backend as the mode currently runs the job in job mode even "
+                    "if inside of a session/batch context manager. As of qiskit-ibm-runtime "
+                    "version 0.26.0, this behavior is deprecated and in a future "
+                    "release no sooner than than 3 months "
+                    "after the release date, the session/batch will take precendence and "
+                    "the job will not run in job mode. To ensure that jobs are run in session/batch "
+                    "mode, pass in the session/batch or leave the mode parameter emtpy."
+                ),
+                DeprecationWarning,
+                stacklevel=4,
+            )
         return None, mode.service, mode
     elif isinstance(mode, (BackendV1, BackendV2)):
         return None, QiskitRuntimeLocalService(), mode
     elif isinstance(mode, str):
+        if get_cm_session():
+            warnings.warn(
+                (
+                    "Passing a backend as the mode currently runs the job in job mode even "
+                    "if inside of a session/batch context manager. As of qiskit-ibm-runtime "
+                    "version 0.26.0, this behavior is deprecated and in a future "
+                    "release no sooner than than 3 months "
+                    "after the release date, the session/batch will take precendence and "
+                    "the job will not run in job mode. To ensure that jobs are run in session/batch "
+                    "mode, pass in the session/batch or leave the mode parameter emtpy."
+                ),
+                DeprecationWarning,
+                stacklevel=4,
+            )
         service = (
             QiskitRuntimeService()
             if QiskitRuntimeService.global_service is None
