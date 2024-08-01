@@ -1,2 +1,0 @@
-Passing in a backend as a string into ``Session``, ``Batch``, ``EstimatorV2``, and ``SamplerV2``
-has been deprecated. Use the actual backend object instead. 

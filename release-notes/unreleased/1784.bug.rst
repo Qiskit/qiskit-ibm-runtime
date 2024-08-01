@@ -1,1 +1,0 @@
-Every circuit is checked to be ISA compliant. As part of this check, an error is raised if instructions that are not supported by the backend are detected. Previously, a bug caused some of the instructions to be skipped (those that reside inside bodies of control flow operations). We have fixed the bug in this release.

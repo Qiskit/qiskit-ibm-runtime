@@ -1,2 +1,0 @@
-Fixed an issue where calling :meth:`IBMBackend.target_history` would cache the backend target and
-then calling :meth:`IBMBackend.target` would incorrectly return that cached target.
