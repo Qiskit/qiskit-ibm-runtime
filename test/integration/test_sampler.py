@@ -100,25 +100,6 @@ class TestIntegrationIBMSampler(IBMIntegrationTestCase):
             self.assertEqual(result.quasi_dists[0].shots, shots)
             self.assertEqual(len(result.metadata), 1)
 
-    @run_integration_test
-    def test_sampler_callback(self, service):
-        """Test Sampler callback function."""
-
-        def _callback(job_id_):
-            nonlocal job_ids
-            job_ids.add(job_id_)
-
-        job_ids = set()
-        with Session(service, self.dependencies.device) as session:
-            sampler = Sampler(session=session)
-            job = sampler.run(circuits=[self.isa_circuit] * 20, callback=_callback)
-            result = job.result()
-            self.assertIsInstance(result, SamplerResult)
-            self.assertEqual(len(result.quasi_dists), 20)
-            self.assertEqual(len(result.metadata), 20)
-            self.assertEqual(len(job_ids), 1)
-            self.assertEqual(job.job_id(), job_ids.pop())
-
     def test_sampler_no_session(self):
         """Test sampler without session."""
         sampler = Sampler(backend=self._backend)

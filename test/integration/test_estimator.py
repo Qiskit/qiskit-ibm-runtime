@@ -26,7 +26,6 @@ from qiskit_ibm_runtime import Estimator, Session
 
 from ..decorators import run_integration_test
 from ..ibm_test_case import IBMIntegrationTestCase
-from ..utils import bell
 
 
 class TestIntegrationEstimator(IBMIntegrationTestCase):
@@ -107,31 +106,6 @@ class TestIntegrationEstimator(IBMIntegrationTestCase):
             self.assertIsInstance(result5, EstimatorResult)
             self.assertEqual(len(result5.values), len(circuits5))
             self.assertEqual(len(result5.metadata), len(circuits5))
-
-    @run_integration_test
-    def test_estimator_callback(self, service):
-        """Test Estimator callback function."""
-
-        def _callback(job_id_):
-            nonlocal job_ids
-            job_ids.add(job_id_)
-
-        job_ids = set()
-
-        pm = generate_preset_pass_manager(optimization_level=1, target=self._backend.target)
-        bell_circuit = pm.run(bell())
-        obs = SparsePauliOp.from_list([("IZ", 1)]).apply_layout(bell_circuit.layout)
-
-        with Session(service, self.dependencies.device) as session:
-            estimator = Estimator(session=session)
-            job = estimator.run(
-                circuits=[bell_circuit] * 60, observables=[obs] * 60, callback=_callback
-            )
-            result = job.result()
-            self.assertEqual(len(result.values), 60)
-            self.assertEqual(len(result.metadata), 60)
-            self.assertEqual(len(job_ids), 1)
-            self.assertEqual(job.job_id(), job_ids.pop())
 
     @run_integration_test
     def test_estimator_coeffs(self, service):

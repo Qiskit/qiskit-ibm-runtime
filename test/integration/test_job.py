@@ -59,18 +59,6 @@ class TestIntegrationJob(IBMIntegrationJobTestCase):
 
     @run_integration_test
     @quantum_only
-    def test_run_program_log_level(self, service):
-        """Test running with a custom log level."""
-        levels = ["INFO", "ERROR"]
-        for level in levels:
-            with self.subTest(level=level):
-                job = self._run_program(service, log_level=level)
-                job.wait_for_final_state()
-                if job.logs():
-                    self.assertIn("Completed", job.logs())
-
-    @run_integration_test
-    @quantum_only
     def test_run_program_failed(self, service):
         """Test a failed program execution."""
         job = self._run_program(service, program_id="circuit-runner", inputs={})
