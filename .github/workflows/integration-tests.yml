@@ -12,13 +12,13 @@
 
 name: Integration Tests
 on:
-  push:
-      branches:
-        - migrate-test-to-test-eagle-device
+  schedule:
+    - cron: '0 4 * * *'
   # allow everyone with write access to the repository to trigger the workflow run manually
   workflow_dispatch:
 jobs:
   integration-tests:
+    if: github.repository_owner == 'Qiskit'
     name: Run integration tests - ${{ matrix.environment }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -27,7 +27,7 @@ jobs:
       matrix:
         python-version: [ 3.9 ]
         os: [ "ubuntu-latest" ]
-        environment: ["ibm-quantum-production", "ibm-quantum-staging"]
+        environment: [ "ibm-quantum-production", "ibm-quantum-staging", "ibm-cloud-production", "ibm-cloud-staging" ]
     environment: ${{ matrix.environment }}
     env:
       QISKIT_IBM_TOKEN: ${{ secrets.QISKIT_IBM_TOKEN }}
