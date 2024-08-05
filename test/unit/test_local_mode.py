@@ -178,7 +178,7 @@ class TestLocalModeV2(IBMTestCase):
         inst = EstimatorV2(backend=backend, options=options)
         job = inst.run(**get_primitive_inputs(inst, backend=backend))
         pub_result = job.result()[0]
-        self.assertDictContainsSubset({"target_precision": 0.03125}, pub_result.metadata)
+        self.assertIn(("target_precision", 0.03125), pub_result.metadata.items())
         self.assertEqual(pub_result.data.evs[0], 0.056640625)
 
     @data(FakeManila(), FakeManilaV2(), AerSimulator.from_backend(FakeManila()))
@@ -188,7 +188,7 @@ class TestLocalModeV2(IBMTestCase):
         inst = EstimatorV2(backend=backend, options=options)
         job = inst.run(**get_primitive_inputs(inst, backend=backend))
         pub_result = job.result()[0]
-        self.assertDictContainsSubset({"target_precision": 0.1}, pub_result.metadata)
+        self.assertIn(("target_precision", 0.1), pub_result.metadata.items())
 
     @combine(
         primitive=[SamplerV2, EstimatorV2], backend=[FakeManila(), FakeManilaV2(), AerSimulator()]
