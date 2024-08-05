@@ -103,12 +103,18 @@ class QiskitRuntimeLocalService:
         err = QiskitBackendNotFoundError("No backend matches the criteria.")
 
         if name:
-            for b in backends:
-                if b.name == name:
-                    backends = [b]
-                    break
+            if name == "aer_simulator":
+                # pylint: disable=import-outside-toplevel
+                from qiskit_aer import AerSimulator
+
+                backends = [AerSimulator()]
             else:
-                raise err
+                for b in backends:
+                    if b.name == name:
+                        backends = [b]
+                        break
+                else:
+                    raise err
 
         if min_num_qubits:
             backends = [b for b in backends if b.num_qubits >= min_num_qubits]
