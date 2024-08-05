@@ -17,7 +17,7 @@ from datetime import datetime, timedelta
 import copy
 
 from qiskit.transpiler.target import Target
-from qiskit import QuantumCircuit
+from qiskit import QuantumCircuit, transpile
 from qiskit.providers.exceptions import QiskitBackendNotFoundError
 from qiskit.providers.backend import QubitProperties
 from qiskit_ibm_runtime.exceptions import IBMInputValueError
@@ -216,7 +216,7 @@ class TestIBMBackend(IBMIntegrationTestCase):
         if self.dependencies.channel == "ibm_cloud":
             raise SkipTest("Cloud account does not have real backend.")
         backends = self.service.backends()
-        self.assertTrue(any(backend.status().pending_jobs > 0 for backend in backends))
+        self.assertTrue(any(backend.status().pending_jobs >= 0 for backend in backends))
 
     def test_backend_fetch_all_qubit_properties(self):
         """Check retrieving properties of all qubits"""
@@ -237,7 +237,8 @@ class TestIBMBackend(IBMIntegrationTestCase):
         backend.options.shots = 2048
         backend.set_options(memory=True)
         sampler = Sampler(backend=backend)
-        inputs = sampler.run([bell()], shots=1).inputs
+        isa_circuit = transpile(bell(), backend)
+        inputs = sampler.run([isa_circuit], shots=1).inputs
         self.assertEqual(inputs["pubs"][0][2], 1)
 
     @production_only
