@@ -13,7 +13,6 @@
 """Integration tests for NoiseLearner."""
 
 from copy import deepcopy
-from unittest import SkipTest
 import numpy as np
 
 from qiskit.circuit import QuantumCircuit
