@@ -198,7 +198,7 @@ class TestIBMJob(IBMIntegrationTestCase):
             limit=2,
             created_before=past_month,
         )
-        self.assertTrue(job_list)
+        self.assertIsInstance(job_list, list)
         for job in job_list:
             self.assertLessEqual(
                 job.creation_date,
