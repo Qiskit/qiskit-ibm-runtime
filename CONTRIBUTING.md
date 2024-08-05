@@ -162,7 +162,7 @@ and the release notes in particular will be located at
 ### Test
 
 #### Test Types
-There are two different types of tests in `qiskit-ibm-runtime`. The 
+There are three different types of tests in `qiskit-ibm-runtime`. The 
 implementation is based upon the well-documented [unittest](https://docs.python.org/3/library/unittest.html) 
 Unit testing framework.
 
