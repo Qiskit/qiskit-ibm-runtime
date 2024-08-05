@@ -13,6 +13,9 @@ Deprecation Notes
 - Passing in ``service`` in ``Session``, ``Batch``
   has been deprecated. The ``service`` parameter is no longer necessary because the service
   can be extracted from the backend. (`1826 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1826>`__)
+- Since backend modules from ``qiskit.providers.models`` including ``BackendProperties`` and ``BackendConfiguration`` are deprecated in 
+  Qiskit 1.2, they have been copied into ``qiskit-ibm-runtime``. Make sure to upgrade to the latest version, ``0.26.0``,
+  to use these classes. (`1803 <https://github.com/Qiskit/qiskit-ibm-runtime/pull/1803>`__)
 
 
 New Features
