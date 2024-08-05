@@ -152,20 +152,24 @@ class TestIntegrationOptions(IBMIntegrationTestCase):
             2: "zne",
             3: "standard_error",
         }
-        psi1 = RealAmplitudes(num_qubits=2, reps=2)
-        h_1 = SparsePauliOp.from_list([("II", 1), ("IZ", 2), ("XI", 3)])
-
-        backend = service.get_backend(self.dependencies.device)
+        backend = service.backend(self.dependencies.device)
         pm = generate_preset_pass_manager(optimization_level=1, target=backend.target)
+
+        circ = QuantumCircuit(1, 1)
+        circ.measure_all(add_bits=False)
+        isa_circuit = pm.run(circ)
+        obs = SparsePauliOp.from_list([("I", 1)]).apply_layout(isa_circuit.layout)
+
         options = Options()
-        options.simulator.coupling_map = [[0, 1], [1, 0]]
 
         for level, value in resilience_values.items():
             options.resilience_level = level
             inst = Estimator(backend=backend, options=options)
-            theta1 = [0, 1, 1, 2, 3, 5]
-            result = inst.run(
-                circuits=pm.run([psi1]), observables=[h_1], parameter_values=[theta1]
-            ).result()
+
+            job = inst.run(
+                circuits=[isa_circuit], observables=[obs]
+            )
+
+            result = job.result()
             metadata = result.metadata[0]
             self.assertTrue(value in metadata)

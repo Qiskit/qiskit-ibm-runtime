@@ -248,9 +248,10 @@ class TestIBMBackend(IBMIntegrationTestCase):
         paused_status = backend.status()
         paused_status.status_msg = "internal"
         backend.status = mock.MagicMock(return_value=paused_status)
+        isa_circuit = transpile(bell(), backend)
         with self.assertWarns(Warning):
             sampler = Sampler(backend=backend)
-            sampler.run([bell()])
+            sampler.run([isa_circuit])
 
     def test_backend_wrong_instance(self):
         """Test that an error is raised when retrieving a backend not in the instance."""
