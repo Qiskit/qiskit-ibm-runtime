@@ -64,9 +64,19 @@ class ExecutionSpanCollection(Sequence[ExecutionSpan]):
         self._spans = spans
 
     def __len__(self):
+        # Not sure if we have to reimplement
         pass
 
     def __getitem__(self, index):
+        # Not sure if we have to reimplement
+        pass
+
+    def __repr__(self):
+        # Not sure if we have to reimplement
+        pass
+
+    def __iter__(self):
+        # Not sure if we have to reimplement
         pass
 
     @property
