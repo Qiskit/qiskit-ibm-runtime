@@ -1,2 +1,0 @@
-The input parameters for jobs will no longer be cached. These parameters can include large circuits
-and should not be automatically kept in memory. 

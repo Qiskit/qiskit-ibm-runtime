@@ -1,2 +1,0 @@
-This options validation for checking if ``zne_mitigation`` or ``pec_mitigation`` are set 
-to ``True`` when using other related options has been removed. 

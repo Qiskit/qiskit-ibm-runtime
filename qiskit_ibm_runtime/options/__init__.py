@@ -128,6 +128,7 @@ Suboptions for V1 primitives only
 from .environment_options import EnvironmentOptions
 from .execution_options import ExecutionOptions
 from .execution_options import ExecutionOptionsV2
+from .noise_learner_options import NoiseLearnerOptions
 from .options import Options, OptionsV2
 from .simulator_options import SimulatorOptions
 from .transpilation_options import TranspilationOptions
