@@ -166,9 +166,7 @@ class TestIntegrationOptions(IBMIntegrationTestCase):
             options.resilience_level = level
             inst = Estimator(backend=backend, options=options)
 
-            job = inst.run(
-                circuits=[isa_circuit], observables=[obs]
-            )
+            job = inst.run(circuits=[isa_circuit], observables=[obs])
 
             result = job.result()
             metadata = result.metadata[0]
