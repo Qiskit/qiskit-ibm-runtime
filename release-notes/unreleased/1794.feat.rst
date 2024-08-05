@@ -1,3 +1,0 @@
-When running jobs on the open plan, there will now be a warning if the limit for the 
-maximum number of pending jobs has been reached. The service will also attempt to wait 
-for the oldest pending jobs to finish running before submitting a new job. 

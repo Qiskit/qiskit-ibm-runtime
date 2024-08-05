@@ -1,2 +1,0 @@
-The methods ``properties``, ``defaults``, ``configuration``,
-and ``check_faulty`` have been added to :class:`FakeBackendV2`.

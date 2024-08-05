@@ -1,2 +1,0 @@
-If jobs are run in a session created with :meth:`QiskitRuntimeService.Session.from_id` where the 
-session is already closed, the jobs are rejected immediately.
