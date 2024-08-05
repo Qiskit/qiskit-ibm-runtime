@@ -34,10 +34,8 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
 
     def setUp(self) -> None:
         super().setUp()
-        try:
-            self.backend = self.service.backend("test_eagle")
-        except:
-            raise SkipTest("test_eagle not available in this environment")
+
+        self._backend = self.service.backend(self.dependencies.device)
 
         c1 = QuantumCircuit(2)
         c1.cx(0, 1)
@@ -61,12 +59,10 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
     @run_integration_test
     def test_with_default_options(self, service):  # pylint: disable=unused-argument
         """Test noise learner with default options."""
-        backend = self.backend
-
         options = NoiseLearnerOptions()
-        learner = NoiseLearner(mode=backend, options=options)
+        learner = NoiseLearner(mode=self._backend, options=options)
 
-        circuits = transpile(self.circuits, backend=backend)
+        circuits = transpile(self.circuits, backend=self._backend)
         job = learner.run(circuits)
 
         self._verify(job, self.default_input_options)
@@ -74,14 +70,12 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
     @run_integration_test
     def test_with_non_default_options(self, service):  # pylint: disable=unused-argument
         """Test noise learner with non-default options."""
-        backend = self.backend
-
         options = NoiseLearnerOptions()
         options.max_layers_to_learn = 1
         options.layer_pair_depths = [0, 1]
-        learner = NoiseLearner(mode=backend, options=options)
+        learner = NoiseLearner(mode=self._backend, options=options)
 
-        circuits = transpile(self.circuits, backend=backend)
+        circuits = transpile(self.circuits, backend=self._backend)
         job = learner.run(circuits)
 
         input_options = deepcopy(self.default_input_options)
@@ -92,8 +86,6 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
     @run_integration_test
     def test_in_session(self, service):
         """Test noise learner when used within a session."""
-        backend = self.backend
-
         options = NoiseLearnerOptions()
         options.max_layers_to_learn = 1
         options.layer_pair_depths = [0, 1]
@@ -102,9 +94,9 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
         input_options["max_layers_to_learn"] = 1
         input_options["layer_pair_depths"] = [0, 1]
 
-        circuits = transpile(self.circuits, backend=backend)
+        circuits = transpile(self.circuits, backend=self._backend)
 
-        with Session(service, backend) as session:
+        with Session(service, self._backend) as session:
             options.twirling_strategy = "all"
             learner1 = NoiseLearner(mode=session, options=options)
             job1 = learner1.run(circuits)
@@ -122,13 +114,11 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
     @run_integration_test
     def test_with_no_layers(self, service):  # pylint: disable=unused-argument
         """Test noise learner when `max_layers_to_learn` is `0`."""
-        backend = self.backend
-
         options = NoiseLearnerOptions()
         options.max_layers_to_learn = 0
-        learner = NoiseLearner(mode=backend, options=options)
+        learner = NoiseLearner(mode=self._backend, options=options)
 
-        circuits = transpile(self.circuits, backend=backend)
+        circuits = transpile(self.circuits, backend=self._backend)
         job = learner.run(circuits)
 
         self.assertEqual(job.result().data, [])
@@ -158,7 +148,7 @@ class TestIntegrationNoiseLearner(IBMIntegrationTestCase):
             self.assertEqual(len(generators), len(rates))
 
         metadata = deepcopy(result.metadata)
-        self.assertEqual(metadata.pop("backend", None), self.backend.name)
+        self.assertEqual(metadata.pop("backend", None), self._backend.name)
         for key, val in expected_input_options.items():
             metadatum = metadata["input_options"].pop(key, None)
             self.assertEqual(val, metadatum)
