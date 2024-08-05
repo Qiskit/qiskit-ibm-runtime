@@ -12,7 +12,6 @@
 
 """Account related classes and functions."""
 
-from abc import abstractmethod
 import logging
 from typing import Optional, Literal
 from urllib.parse import urlparse
@@ -43,6 +42,7 @@ class Account:
         proxies: Optional[ProxyConfiguration] = None,
         verify: Optional[bool] = True,
         channel_strategy: Optional[str] = None,
+        url: Optional[str] = None,
     ):
         """Account constructor.
 
@@ -56,7 +56,7 @@ class Account:
             channel_strategy: Error mitigation strategy.
         """
         self.channel: str = None
-        self.url: str = None
+        self.url: str = url
         self.token = token
         self.instance = instance
         self.proxies = proxies
@@ -126,6 +126,15 @@ class Account:
                 channel_strategy=channel_strategy,
                 private_endpoint=private_endpoint,
             )
+        elif not channel:
+            return Account(
+                url=url,
+                token=token,
+                instance=instance,
+                proxies=proxies,
+                verify=verify,
+                channel_strategy=channel_strategy,
+            )
         else:
             raise InvalidAccountError(
                 f"Invalid `channel` value. Expected one of "
@@ -184,7 +193,7 @@ class Account:
     @staticmethod
     def _assert_valid_channel(channel: ChannelType) -> None:
         """Assert that the channel parameter is valid."""
-        if not (channel in ["ibm_cloud", "ibm_quantum"]):
+        if channel and not (channel in ["ibm_cloud", "ibm_quantum"]):
             raise InvalidAccountError(
                 f"Invalid `channel` value. Expected one of "
                 f"['ibm_cloud', 'ibm_quantum'], got '{channel}'."
@@ -213,7 +222,6 @@ class Account:
             config.validate()
 
     @staticmethod
-    @abstractmethod
     def _assert_valid_instance(instance: str) -> None:
         """Assert that the instance name is valid for the given account type."""
         pass
